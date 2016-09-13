@@ -29,4 +29,62 @@
 
 #include "LineCoolingDataLocation.hpp"
 
-#endif  // LINECOOLINGDATA_HPP
+/**
+ * @brief Names of supported elements
+ */
+enum LineCoolingDataElements {
+  /*! @brief Nitrogen I */
+  NI = 0,
+  /*! @brief Nitrogen II */
+  NII,
+  /*! @brief Oxygen I */
+  OI,
+  /*! @brief Oxygen II */
+  OII,
+  /*! @brief Oxygen III */
+  OIII,
+  /*! @brief Neon III */
+  NEIII,
+  /*! @brief Sulfur II */
+  SII,
+  /*! @brief Sulfur III */
+  SIII,
+  /*! @brief Carbon II */
+  CII,
+  /*! @brief Carbon III */
+  CIII,
+  /*! @brief Number of elements stored in the internal arrays */
+  LINECOOLINGDATA_NUMELEMENTS
+};
+
+/**
+ * @brief Internal representation of the line cooling data in "atom4.dat"
+ */
+class LineCoolingData {
+private:
+  /*! @brief Omega values */
+  double _cs[LINECOOLINGDATA_NUMELEMENTS][10];
+
+  /*! @brief Omega exponent values */
+  double _cse[LINECOOLINGDATA_NUMELEMENTS][10];
+
+  /*! @brief Einstein A values */
+  double _ea[LINECOOLINGDATA_NUMELEMENTS][10];
+
+  /*! @brief Energy levels */
+  double _en[LINECOOLINGDATA_NUMELEMENTS][10];
+
+  /*! @brief sw values */
+  double _sw[LINECOOLINGDATA_NUMELEMENTS][5];
+
+public:
+  LineCoolingData();
+
+  double get_cs(unsigned int element, unsigned int level);
+  double get_cse(unsigned int element, unsigned int level);
+  double get_ea(unsigned int element, unsigned int level);
+  double get_en(unsigned int element, unsigned int level);
+  double get_sw(unsigned int element, unsigned int level);
+};
+
+#endif // LINECOOLINGDATA_HPP

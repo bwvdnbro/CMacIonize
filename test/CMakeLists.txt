@@ -56,6 +56,10 @@ set(TESTLINECOOLINGDATA_SOURCES
 # Call the macro that creates the unit test
 add_unit_test(NAME testLineCoolingData
               SOURCES ${TESTLINECOOLINGDATA_SOURCES})
+# Make sure the output file containing the Fortran data is put in place
+configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
+               COPYONLY)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
