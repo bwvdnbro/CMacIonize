@@ -25,9 +25,44 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "LineCoolingData.hpp"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 using namespace std;
+
+/**
+ * @brief Read a given number of values from the given string into the given
+ * array
+ *
+ * @param line string containing comma separated values.
+ * @param array Pointer to a double array of at least the given size which will
+ * be filled with values.
+ * @param size Number of values to read.
+ * @return True if the read was successful, false otherwise.
+ */
+bool LineCoolingData::read_values(string line, double *array,
+                                  unsigned int size) {
+  int start, end;
+  unsigned int index;
+  start = 0;
+  end = line.find(',', start);
+  index = 0;
+  while (end > 0 && index < size) {
+    array[index] = atof(line.substr(start, end - start).c_str());
+    start = end + 1;
+    end = line.find(',', start);
+    ++index;
+  }
+  if (end < 0) {
+    // try to extract a value from the remainder of the string
+    array[index] = atof(line.substr(start, end - start).c_str());
+    ++index;
+  }
+  // if index == size, we know we were able to read size values
+  // if not, we failed to fill the array and we return false
+  return (index == size);
+}
 
 /**
  * @brief Constructor
@@ -38,35 +73,34 @@ LineCoolingData::LineCoolingData() {
   double enlev[5];
 
   ifstream file(LINECOOLINGDATALOCATION);
+  string line;
+
   // there are 10 groups of 5 rows
   for (unsigned int i = 0; i < LINECOOLINGDATA_NUMELEMENTS; ++i) {
     // the first row holds energy level information
-    file >> enlev[0] >> enlev[1] >> enlev[2] >> enlev[3] >> enlev[4];
-    cout << enlev[0] << "\t" << enlev[1] << "\t" << enlev[2] << "\t" << enlev[3]
-         << "\t" << enlev[4] << endl;
+    getline(file, line);
+    read_values(line, enlev, 5);
     // these values need to be converted before we can store them
     unsigned int l = 0;
     for (unsigned int j = 0; j < 5; ++j) {
-      for (unsigned int k = j + 1; k < 4; ++k) {
+      for (unsigned int k = j + 1; k < 5; ++k) {
         // the factor converts from cm^-1 to K
         _en[i][l] = (enlev[k] - enlev[j]) * 1.439;
         ++l;
       }
     }
     // the second row contains the Einstein A values
-    for (unsigned int j = 0; j < 10; ++j) {
-      file >> _ea[i][j];
-    }
+    getline(file, line);
+    read_values(line, _ea[i], 10);
     // the third row contains the omega values
-    for (unsigned int j = 0; j < 10; ++j) {
-      file >> _cs[i][j];
-    }
+    getline(file, line);
+    read_values(line, _cs[i], 10);
     // the fourth row contains the exponential omega values
-    for (unsigned int j = 0; j < 10; ++j) {
-      file >> _cse[i][j];
-    }
+    getline(file, line);
+    read_values(line, _cse[i], 10);
     // the fifth row contains the sw values
-    file >> _sw[i][0] >> _sw[i][1] >> _sw[i][2] >> _sw[i][3] >> _sw[i][4];
+    getline(file, line);
+    read_values(line, _sw[i], 5);
   }
 }
 

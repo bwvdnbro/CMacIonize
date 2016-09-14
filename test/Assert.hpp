@@ -12,6 +12,10 @@
 #include <cstdlib>
 #include <iostream>
 
-#define assert_values_equal(a, b) if(abs(a-b) > 1.e-5 && abs(a-b) > 1.e-5*abs(a+b)){ std::cerr << "Assertion failed: " << a << " =/= " << b << std::endl; abort(); }
+#define assert_values_equal(a, b)                                              \
+  if (abs(a - b) > 1.e-5 && abs(a - b) > 1.e-5 * abs(a + b)) {                 \
+    std::cerr << "Assertion failed: " << a << " != " << b << std::endl;        \
+    abort();                                                                   \
+  }
 
 #endif // ASSERT_HPP

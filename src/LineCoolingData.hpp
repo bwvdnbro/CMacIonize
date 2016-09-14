@@ -28,6 +28,7 @@
 #define LINECOOLINGDATA_HPP
 
 #include "LineCoolingDataLocation.hpp"
+#include <string>
 
 /**
  * @brief Names of supported elements
@@ -76,6 +77,8 @@ private:
 
   /*! @brief sw values */
   double _sw[LINECOOLINGDATA_NUMELEMENTS][5];
+
+  bool read_values(std::string line, double *array, unsigned int size);
 
 public:
   LineCoolingData();
