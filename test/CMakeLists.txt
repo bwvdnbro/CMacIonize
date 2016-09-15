@@ -61,6 +61,16 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
                COPYONLY)
 
+# Unit test for CommandLineParser
+set(TESTCOMMANDLINEPARSER_SOURCES
+    testCommandLineParser.cpp
+
+    ../src/CommandLineParser.cpp
+    ../src/CommandLineParser.hpp
+)
+add_unit_test(NAME testCommandLineParser
+              SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})

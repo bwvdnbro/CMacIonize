@@ -17,24 +17,13 @@
  ******************************************************************************/
 
 /**
- * @file Assert.hpp
+ * @file CommandLineParser.hpp
  *
- * @brief Custom assert macros
+ * @brief Parser for command line arguments to a program: header
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef ASSERT_HPP
-#define ASSERT_HPP
+#ifndef COMMANDLINEPARSER_HPP
+#define COMMANDLINEPARSER_HPP
 
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-
-#define assert_values_equal(a, b)                                              \
-  if (abs(a - b) > 1.e-4 && abs(a - b) > 1.e-4 * abs(a + b)) {                 \
-    std::cerr << __FILE__ << ":" << __LINE__ << std::endl;                     \
-    std::cerr << "Assertion failed: " << a << " != " << b << std::endl;        \
-    abort();                                                                   \
-  }
-
-#endif // ASSERT_HPP
+#endif // COMMANDLINEPARSER_HPP
