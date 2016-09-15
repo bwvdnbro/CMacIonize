@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "LineCoolingData.hpp"
 #include <iostream>
 using namespace std;
 
@@ -42,6 +43,7 @@ int main(int argc, char **argv) {
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
   // stored in a CMake configured header
+  LineCoolingData line_cooling_data;
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
