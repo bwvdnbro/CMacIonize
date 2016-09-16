@@ -26,6 +26,9 @@ set(CMACIONIZE_VERSION_MINOR 1)
 # Enable unit testing using CTest
 enable_testing()
 
+# Enable all standard compiler warnings and enforce them
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)

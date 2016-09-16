@@ -26,4 +26,24 @@
 #ifndef COMMANDLINEPARSER_HPP
 #define COMMANDLINEPARSER_HPP
 
+#include <ostream>
+#include <string>
+
+/**
+ * @brief Parser for command line arguments.
+ *
+ * The parser is initialized with the command line arguments as they are passed
+ * on to the program by the operating system. It then acts as a dictionary that
+ * can be queried.
+ */
+class CommandLineParser {
+private:
+  std::string _commands;
+
+public:
+  CommandLineParser(int argc, char **argv);
+
+  void print_contents(std::ostream &stream);
+};
+
 #endif // COMMANDLINEPARSER_HPP

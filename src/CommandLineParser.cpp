@@ -23,3 +23,27 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "CommandLineParser.hpp"
+#include <iostream>
+using namespace std;
+
+/**
+ * @brief Constructor.
+ *
+ * Parses the command line arguments and stores them.
+ */
+CommandLineParser::CommandLineParser(int argc, char **argv) {
+  for (int i = 0; i < argc; ++i) {
+    cout << argv[i] << endl;
+    _commands += argv[i];
+  }
+}
+
+/**
+ * @brief Print the contents of the internal dictionary to the given stream.
+ *
+ * @param stream std::ostream to write to.
+ */
+void CommandLineParser::print_contents(std::ostream &stream) {
+  stream << _commands << endl;
+}
