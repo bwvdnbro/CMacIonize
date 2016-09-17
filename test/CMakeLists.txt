@@ -65,7 +65,9 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
 set(TESTCOMMANDLINEPARSER_SOURCES
     testCommandLineParser.cpp
 
+    ../src/CommandLineOption.cpp
     ../src/CommandLineParser.cpp
+    ../src/CommandLineOption.hpp
     ../src/CommandLineParser.hpp
 )
 add_unit_test(NAME testCommandLineParser

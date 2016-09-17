@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include <cstring>
 #include <iostream>
@@ -98,6 +99,13 @@ int main(int argc, char **argv) {
   generate_arguments(
       test_argc, test_argv,
       "--test   --more \"andmore\" --less 2.0 --complicated \"and this?\"");
+
+  vector<CommandLineOption> options;
+  options.push_back(CommandLineOption(
+      "test", 't', "A parameter to test the CommandLineParser.",
+      COMMANDLINEOPTION_NOARGUMENT));
+
+  options[0].print_description(cout);
 
   CommandLineParser parser(test_argc, test_argv);
 
