@@ -24,18 +24,41 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CommandLineOption.hpp"
+#include <sstream>
 using namespace std;
 
 /**
  * @brief Get a description of an argument with the given type.
  *
  * @param argument Type of command line option argument.
+ * @param default_value Default value of the argument (always a std::string).
  * @return std::string that describes the argument.
  */
-std::string CommandLineOption::get_argument_description(int argument) {
+std::string
+CommandLineOption::get_argument_description(int argument,
+                                            std::string default_value) {
   switch (argument) {
   case COMMANDLINEOPTION_NOARGUMENT:
     return "This command line option takes no arguments.";
+  case COMMANDLINEOPTION_INTARGUMENT: {
+    stringstream sstream;
+    sstream << "This command line option takes an integer argument (default: "
+            << atoi(default_value.c_str()) << ").";
+    return sstream.str();
+  }
+  case COMMANDLINEOPTION_DOUBLEARGUMENT: {
+    stringstream sstream;
+    sstream << "This command line option takes a double precision floating"
+            << "point argument (default: " << atof(default_value.c_str())
+            << ").";
+    return sstream.str();
+  }
+  case COMMANDLINEOPTION_STRINGARGUMENT: {
+    stringstream sstream;
+    sstream << "This command line option takes a string argument (default: "
+            << default_value << ").";
+    return sstream.str();
+  }
   }
   return "";
 }
@@ -50,10 +73,13 @@ std::string CommandLineOption::get_argument_description(int argument) {
  * command line option.
  * @param argument Type of argument associated with the command line option (if
  * any).
+ * @param default_value Default value of the argument associated with the
+ * command line option (if any).
  */
 CommandLineOption::CommandLineOption(std::string name, char abbreviation,
-                                     std::string description, int argument)
-    : _name(name), _description(description) {
+                                     std::string description, int argument,
+                                     std::string default_value)
+    : _name(name), _description(description), _default_value(default_value) {
   _abbreviation = abbreviation;
   _argument = argument;
 }
@@ -67,5 +93,5 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
 void CommandLineOption::print_description(std::ostream &stream) {
   stream << "--" << _name << " (-" << _abbreviation << ")\n";
   stream << _description << "\n";
-  stream << get_argument_description(_argument) << "\n";
+  stream << get_argument_description(_argument, _default_value) << "\n";
 }

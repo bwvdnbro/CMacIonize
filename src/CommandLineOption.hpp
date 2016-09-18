@@ -26,6 +26,7 @@
 #ifndef COMMANDLINEOPTION_HPP
 #define COMMANDLINEOPTION_HPP
 
+#include <cstdlib>
 #include <ostream>
 #include <string>
 
@@ -34,7 +35,13 @@
  */
 enum CommandLineOptionArgumentType {
   /*! @brief No argument. */
-  COMMANDLINEOPTION_NOARGUMENT = 0
+  COMMANDLINEOPTION_NOARGUMENT = 0,
+  /*! @brief Integer argument. */
+  COMMANDLINEOPTION_INTARGUMENT,
+  /*! @brief Double precision floating point argument. */
+  COMMANDLINEOPTION_DOUBLEARGUMENT,
+  /*! @brief String argument. */
+  COMMANDLINEOPTION_STRINGARGUMENT
 };
 
 /**
@@ -55,11 +62,18 @@ private:
   /*! @brief Type of argument for the command line option (if any). */
   int _argument;
 
-  static std::string get_argument_description(int argument);
+  /*! @brief Default value of the argument of the command line option (if any).
+   */
+  std::string _default_value;
+
+  static std::string get_argument_description(int argument,
+                                              std::string default_value);
 
 public:
   CommandLineOption(std::string name, char abbreviation,
-                    std::string description, int argument);
+                    std::string description,
+                    int argument = COMMANDLINEOPTION_NOARGUMENT,
+                    std::string default_value = "");
 
   void print_description(std::ostream &stream);
 };

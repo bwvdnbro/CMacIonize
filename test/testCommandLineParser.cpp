@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
   vector<CommandLineOption> options;
   options.push_back(CommandLineOption(
       "test", 't', "A parameter to test the CommandLineParser.",
-      COMMANDLINEOPTION_NOARGUMENT));
+      COMMANDLINEOPTION_INTARGUMENT, "42"));
 
   options[0].print_description(cout);
 
