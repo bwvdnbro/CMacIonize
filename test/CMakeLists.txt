@@ -61,7 +61,7 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
                COPYONLY)
 
-# Unit test for CommandLineParser
+## Unit test for CommandLineParser
 set(TESTCOMMANDLINEPARSER_SOURCES
     testCommandLineParser.cpp
 
@@ -72,6 +72,19 @@ set(TESTCOMMANDLINEPARSER_SOURCES
 )
 add_unit_test(NAME testCommandLineParser
               SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
+
+## Unit test for DensityGrid
+set(TESTDENSITYGRID_SOURCES
+    testDensityGrid.cpp
+
+    ../src/Box.hpp
+    ../src/CoordinateVector.hpp
+    ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
+    ../src/DensityGrid.hpp
+)
+add_unit_test(NAME testDensityGrid
+              SOURCES ${TESTDENSITYGRID_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
