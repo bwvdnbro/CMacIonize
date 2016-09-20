@@ -33,6 +33,8 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  HDF5Tools::initialize();
+
   HDF5Tools::HDF5FileHandle file =
       HDF5Tools::open("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 

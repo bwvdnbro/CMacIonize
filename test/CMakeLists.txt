@@ -106,6 +106,7 @@ if(HAVE_HDF5)
 set(TESTHDF5TOOLS_SOURCES
     testHDF5Tools.cpp
 
+    ../src/Error.hpp
     ../src/HDF5Tools.hpp
 )
 add_unit_test(NAME testHDF5Tools

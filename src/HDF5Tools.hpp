@@ -27,6 +27,7 @@
 #ifndef HDF5TOOLS_HPP
 #define HDF5TOOLS_HPP
 
+#include "Error.hpp"
 #include <hdf5.h>
 #include <string>
 
@@ -47,6 +48,20 @@ enum HDF5FileMode {
   HDF5FILEMODE_WRITE
 };
 
+/**
+ * @brief Turn off default HDF5 error handling.
+ */
+inline void initialize() {
+#ifdef HDF5_OLD_API
+  herr_t status = H5Eset_auto(NULL, NULL);
+#else
+  herr_t status = H5Eset_auto(H5E_DEFAULT, NULL, NULL);
+#endif
+  if (status < 0) {
+    error("Unable to turn off default HDF5 error handling!");
+  }
+}
+
 inline HDF5FileHandle open(std::string name, int mode) {
   hid_t file_mode;
   if (mode == HDF5FILEMODE_READ) {
@@ -54,13 +69,13 @@ inline HDF5FileHandle open(std::string name, int mode) {
   } else if (mode == HDF5FILEMODE_WRITE) {
     file_mode = H5F_ACC_TRUNC;
   } else {
-    //    error("Unknown file mode: %i", mode);
+    error("Unknown file mode: %i", mode);
   }
   hid_t file = H5Fopen(name.c_str(), file_mode, H5P_DEFAULT);
   if (file > 0) {
     return file;
   } else {
-    //    error("Unable to open file: %s", name.c_str());
+    error("Unable to open file: %s", name.c_str());
     return -1;
   }
 }

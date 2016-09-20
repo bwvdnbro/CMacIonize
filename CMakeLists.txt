@@ -41,6 +41,25 @@ if(HDF5_FOUND)
   # Link the appropriate headers and libraries.
   include_directories(${HDF5_INCLUDE_DIRS})
   link_directories(${HDF5_LIBRARY_DIRS})
+  # HDF5 changed its API after version 1.6. As a result, some commonly used
+  # functions changed their number of parameters. To allow for backwards
+  # compatibility with older versions, two versions of these functions were
+  # created: function_name1 and function_name2. The original function_name was
+  # redefined as a macro that links to function_name2 (the new version) by
+  # default. However, it is possible to redefine them to link to the old version
+  # instead by specifying the -DH5_USE_16_API flag. This way, we can support
+  # systems with old and new versions of HDF5 with a single API.
+  # We opted not to take this approach, and use both the old and the new API,
+  # with an appropriate ifdef to distinguish the two cases whereever they are
+  # used. Below, we check which API is used by the HDF5 library version that was
+  # found on the local system and set the compilation flag for the old API if
+  # necessary.
+  # This approach might seem too much of a hassle, but it ensures that we won't
+  # need to rewrite a lot of code if HDF5 at some point decide to no longer
+  # support the old API.
+  if(NOT ${HDF5_VERSION} VERSION_GREATER "1.6")
+    add_definitions(-DHDF5_OLD_API)
+  endif(NOT ${HDF5_VERSION} VERSION_GREATER "1.6")
 else(HDF5_FOUND)
   set(HAVE_HDF5 False)
   message(WARNING "HDF5 not found, some modules will not be build!")
