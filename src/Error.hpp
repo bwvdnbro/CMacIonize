@@ -28,14 +28,44 @@
 
 #include <cstdlib>
 
+#define print_indent(stream, s, ...)                                           \
+  {                                                                            \
+    char buffer[10000];                                                        \
+    sprintf(buffer, s, ##__VA_ARGS__);                                         \
+    fprintf(stream, "%s\n", buffer);                                           \
+    int pos = 0;                                                               \
+    int linepos = 0;                                                           \
+    /* we scan the string char by char. If a tab is encountered, it is */      \
+    /* replaced with four spaces. If a newline is found, we print */           \
+    /* immediately. If a space is found, we need to figure out the position */ \
+    /* of the next space and check if the next word fits on the line. */       \
+    char line[65];                                                             \
+    char numline[65];                                                          \
+    while (buffer[pos] != '\0') {                                              \
+      line[linepos] = buffer[pos];                                             \
+      numline[linepos] = '0' + (pos % 10);                                     \
+      ++linepos;                                                               \
+      if (linepos == 65) {                                                     \
+        fprintf(stream, "     %65s\n", numline);                               \
+        fprintf(stream, "     %65s\n", line);                                  \
+        linepos = 0;                                                           \
+      }                                                                        \
+      ++pos;                                                                   \
+    }                                                                          \
+    if (linepos) {                                                             \
+      line[linepos] = '\0';                                                    \
+      fprintf(stream, "     %65s\n", line);                                    \
+    }                                                                          \
+  }
+
 /**
  * @brief Error macro. Prints the given error message (with C style formatting)
  * and aborts the code.
  */
 #define error(s, ...)                                                          \
   {                                                                            \
-    fprintf(stderr, "%s:%s():%i: Error: " s "\n", __FILE__, __FUNCTION__,      \
-            __LINE__, ##__VA_ARGS__);                                          \
+    fprintf(stderr, "%s:%s():%i: Error:\n", __FILE__, __FUNCTION__, __LINE__); \
+    print_indent(stderr, s, ##__VA_ARGS__);                                    \
     abort();                                                                   \
   }
 
@@ -45,8 +75,9 @@
  */
 #define warning(s, ...)                                                        \
   {                                                                            \
-    fprintf(stderr, "%s:%s():%i: Warning: " s "\n", __FILE__, __FUNCTION__,    \
-            __LINE__, ##__VA_ARGS__);                                          \
+    fprintf(stderr, "%s:%s():%i: Warning:\n", __FILE__, __FUNCTION__,          \
+            __LINE__);                                                         \
+    print_indent(stderr, s, ##__VA_ARGS__);                                    \
   }
 
 /**
@@ -55,8 +86,8 @@
  */
 #define message(s, ...)                                                        \
   {                                                                            \
-    fprintf(stdout, "%s:%s():%i: " s "\n", __FILE__, __FUNCTION__, __LINE__,   \
-            ##__VA_ARGS__);                                                    \
+    fprintf(stdout, "%s:%s():%i:\n", __FILE__, __FUNCTION__, __LINE__);        \
+    print_indent(stdout, s, ##__VA_ARGS__);                                    \
   }
 
 #endif // ERROR_HPP
