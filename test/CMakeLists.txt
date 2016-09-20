@@ -86,6 +86,21 @@ set(TESTDENSITYGRID_SOURCES
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
 
+## Unit test for GadgetSnapshotDensityFunction
+set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
+    testGadgetSnapshotDensityFunction.cpp
+
+    ../src/Box.hpp
+    ../src/CoordinateVector.hpp
+    ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
+    ../src/DensityGrid.hpp
+    ../src/GadgetSnapshotDensityFunction.cpp
+    ../src/GadgetSnapshotDensityFunction.hpp
+)
+add_unit_test(NAME testGadgetSnapshotDensityFunction
+              SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
