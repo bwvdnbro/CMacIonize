@@ -101,6 +101,18 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES})
 
+## Unit test for HDF5tools
+if(HAVE_HDF5)
+set(TESTHDF5TOOLS_SOURCES
+    testHDF5Tools.cpp
+
+    ../src/HDF5Tools.hpp
+)
+add_unit_test(NAME testHDF5Tools
+              SOURCES ${TESTHDF5TOOLS_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})

@@ -33,6 +33,19 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
+# Find HDF5.
+find_package(HDF5)
+if(HDF5_FOUND)
+  set(HAVE_HDF5 True)
+  message(STATUS "HDF5 found: ${HDF5_VERSION}")
+  # Link the appropriate headers and libraries.
+  include_directories(${HDF5_INCLUDE_DIRS})
+  link_directories(${HDF5_LIBRARY_DIRS})
+else(HDF5_FOUND)
+  set(HAVE_HDF5 False)
+  message(WARNING "HDF5 not found, some modules will not be build!")
+endif(HDF5_FOUND)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 

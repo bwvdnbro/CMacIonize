@@ -17,23 +17,28 @@
  ******************************************************************************/
 
 /**
- * @file testGadgetSnapshotDensityFunction.cpp
+ * @file testHDF5Tools.cpp
  *
- * @brief Unit test for the GadgetSnapshotDensityFunction class.
+ * @brief Unit test for the HDF5Tools header.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "HDF5Tools.hpp"
 
 /**
- * @brief Unit test for the GadgetSnapshotDensityFunction class.
+ * @brief Unit test for the HDF5Tools header.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  // before we can test this, we need to make sure we can open and read a
-  // Gadget2 snapshot file.
+  HDF5Tools::HDF5FileHandle file =
+      HDF5Tools::open("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
+
+  if (file > 0) {
+    file += 2;
+  }
 
   return 0;
 }
