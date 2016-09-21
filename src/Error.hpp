@@ -40,21 +40,50 @@
     /* immediately. If a space is found, we need to figure out the position */ \
     /* of the next space and check if the next word fits on the line. */       \
     char line[65];                                                             \
-    char numline[65];                                                          \
     while (buffer[pos] != '\0') {                                              \
-      line[linepos] = buffer[pos];                                             \
-      numline[linepos] = '0' + (pos % 10);                                     \
-      ++linepos;                                                               \
-      if (linepos == 65) {                                                     \
-        fprintf(stream, "     %65s\n", numline);                               \
-        fprintf(stream, "     %65s\n", line);                                  \
+      if (buffer[pos] == '\n') {                                               \
+        fprintf(stream, "     %-65s\n", line);                                 \
+        ++pos;                                                                 \
         linepos = 0;                                                           \
+      } else {                                                                 \
+        if (buffer[pos] == ' ' || buffer[pos] == '\t') {                       \
+          int old_linepos = linepos;                                           \
+          if (buffer[pos] == '\t') {                                           \
+            for (unsigned int j = 0; j < 4; ++j) {                             \
+              line[linepos] = ' ';                                             \
+              ++linepos;                                                       \
+            }                                                                  \
+          } else {                                                             \
+            line[linepos] = ' ';                                               \
+            ++linepos;                                                         \
+          }                                                                    \
+          /* find the end of the next word */                                  \
+          int nextpos = 1;                                                     \
+          while (buffer[pos + nextpos] != '\t' &&                              \
+                 buffer[pos + nextpos] != ' ' &&                               \
+                 buffer[pos + nextpos] != '\n' &&                              \
+                 buffer[pos + nextpos] != '\0') {                              \
+            ++nextpos;                                                         \
+          }                                                                    \
+          if (linepos + nextpos > 65) {                                        \
+            /* print the line and reset */                                     \
+            line[old_linepos] = '\0';                                          \
+            linepos = 65;                                                      \
+          }                                                                    \
+        } else {                                                               \
+          line[linepos] = buffer[pos];                                         \
+          ++linepos;                                                           \
+        }                                                                      \
+        if (linepos == 65) {                                                   \
+          fprintf(stream, "     %-65s\n", line);                               \
+          linepos = 0;                                                         \
+        }                                                                      \
+        ++pos;                                                                 \
       }                                                                        \
-      ++pos;                                                                   \
     }                                                                          \
     if (linepos) {                                                             \
       line[linepos] = '\0';                                                    \
-      fprintf(stream, "     %65s\n", line);                                    \
+      fprintf(stream, "     %-65s\n", line);                                   \
     }                                                                          \
   }
 

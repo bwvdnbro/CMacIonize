@@ -33,9 +33,6 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  message("Dit is een hele lange boodschap met veel nummertjes en zo: %g\t%i",
-          1. / 3., 42);
-
   HDF5Tools::initialize();
 
   HDF5Tools::HDF5FileHandle file =
