@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "HDF5Tools.hpp"
+#include <cassert>
 
 /**
  * @brief Unit test for the HDF5Tools header.
@@ -38,9 +39,11 @@ int main(int argc, char **argv) {
   HDF5Tools::HDF5FileHandle file =
       HDF5Tools::open("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 
-  if (file > 0) {
-    file += 2;
-  }
+  assert(file > 0);
+
+  HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/Header");
+
+  assert(group > 0);
 
   return 0;
 }

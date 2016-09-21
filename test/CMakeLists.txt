@@ -103,6 +103,10 @@ add_unit_test(NAME testGadgetSnapshotDensityFunction
 
 ## Unit test for HDF5tools
 if(HAVE_HDF5)
+# copy the test HDF5 file.
+configure_file(${PROJECT_SOURCE_DIR}/test/test.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/test.hdf5
+               COPYONLY)
 set(TESTHDF5TOOLS_SOURCES
     testHDF5Tools.cpp
 

@@ -40,6 +40,9 @@ namespace HDF5Tools {
 /*! @brief More convenient name for a HDF5 file handle. */
 typedef hid_t HDF5FileHandle;
 
+/*! @brief More convenient name for a HDF5 group handle. */
+typedef hid_t HDF5Group;
+
 /*! @brief Modes with which an HDF5 file can be opened. */
 enum HDF5FileMode {
   /*! @brief Read mode (actually: read only). */
@@ -72,12 +75,24 @@ inline HDF5FileHandle open(std::string name, int mode) {
     error("Unknown file mode: %i", mode);
   }
   hid_t file = H5Fopen(name.c_str(), file_mode, H5P_DEFAULT);
-  if (file > 0) {
-    return file;
-  } else {
+  if (file < 0) {
     error("Unable to open file: %s", name.c_str());
-    return -1;
   }
+
+  return file;
+}
+
+inline HDF5Group open_group(int file, std::string name) {
+#ifdef HDF5_OLD_API
+  hid_t group = H5Gopen(file, name.c_str());
+#else
+  hid_t group = H5Gopen(file, name.c_str(), H5P_DEFAULT);
+#endif
+  if (group < 0) {
+    error("Unable to open group: %s", name.c_str());
+  }
+
+  return group;
 }
 }
 
