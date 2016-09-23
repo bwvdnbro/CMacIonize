@@ -27,9 +27,11 @@
 #ifndef HDF5TOOLS_HPP
 #define HDF5TOOLS_HPP
 
+#include "CoordinateVector.hpp"
 #include "Error.hpp"
 #include <hdf5.h>
 #include <string>
+#include <vector>
 
 /**
  * @brief Custom wrappers around some HDF5 library functions that feel more like
@@ -73,7 +75,7 @@ inline void initialize() {
  * values are HDF5FILEMODE_READ for reading and HDF5FILEMODE_WRITE for writing.
  * @return HDF5File handle to the open file that can be used by other methods.
  */
-inline HDF5File open(std::string name, int mode) {
+inline HDF5File open_file(std::string name, int mode) {
   hid_t file_mode;
   if (mode == HDF5FILEMODE_READ) {
     file_mode = H5F_ACC_RDONLY;
@@ -84,10 +86,22 @@ inline HDF5File open(std::string name, int mode) {
   }
   hid_t file = H5Fopen(name.c_str(), file_mode, H5P_DEFAULT);
   if (file < 0) {
-    error("Unable to open file: %s", name.c_str());
+    error("Unable to open file \"%s\"", name.c_str());
   }
 
   return file;
+}
+
+/**
+ * @brief Close the given open file.
+ *
+ * @param file HDF5File handle to an open file.
+ */
+inline void close_file(hid_t file) {
+  herr_t status = H5Fclose(file);
+  if (status < 0) {
+    error("Failed to close file!");
+  }
 }
 
 /**
@@ -104,10 +118,22 @@ inline HDF5Group open_group(hid_t file, std::string name) {
   hid_t group = H5Gopen(file, name.c_str(), H5P_DEFAULT);
 #endif
   if (group < 0) {
-    error("Unable to open group: %s", name.c_str());
+    error("Unable to open group \"%s\"", name.c_str());
   }
 
   return group;
+}
+
+/**
+ * @brief Close the given open group.
+ *
+ * @param group HDF5Group handle to an open group.
+ */
+inline void close_group(hid_t group) {
+  herr_t status = H5Gclose(group);
+  if (status < 0) {
+    error("Failed to close group!");
+  }
 }
 
 /**
@@ -131,6 +157,24 @@ template <> inline hid_t get_datatype_name<double>() {
 }
 
 /**
+ * @brief get_datatype_name specialization for a 32 bit unsigned integer.
+ *
+ * @return H5T_NATIVE_UINT32.
+ */
+template <> inline hid_t get_datatype_name<unsigned int>() {
+  return H5T_NATIVE_UINT32;
+}
+
+/**
+ * @brief get_datatype_name specialization for a 64 bit unsigned integer.
+ *
+ * @return H5T_NATIVE_UINT64.
+ */
+template <> inline hid_t get_datatype_name<unsigned long long>() {
+  return H5T_NATIVE_UINT64;
+}
+
+/**
  * @brief Read the attribute with the given name of the given group.
  *
  * @param group HDF5Group handle to an open HDF5 group.
@@ -138,24 +182,24 @@ template <> inline hid_t get_datatype_name<double>() {
  * @return Value of the attribute.
  */
 template <typename T> inline T read_attribute(hid_t group, std::string name) {
-  hid_t datatype = get_datatype_name<double>();
+  hid_t datatype = get_datatype_name<T>();
   // open attribute
   hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
-    error("Failed to open attribute %s!", name.c_str());
+    error("Failed to open attribute \"%s\"!", name.c_str());
   }
 
   // read attribute
   T value;
   herr_t status = H5Aread(attr, datatype, &value);
   if (status < 0) {
-    error("Failed to read attribute %s!", name.c_str());
+    error("Failed to read attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
   status = H5Aclose(attr);
   if (status < 0) {
-    error("Failed to close attribute %s!", name.c_str());
+    error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   return value;
@@ -173,14 +217,14 @@ inline std::string read_attribute<std::string>(hid_t group, std::string name) {
   // open attribute
   hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
-    error("Failed to open attribute %s!", name.c_str());
+    error("Failed to open attribute \"%s\"!", name.c_str());
   }
 
   // retrieve the length of the string
   H5A_info_t info;
   herr_t status = H5Aget_info(attr, &info);
   if (status < 0) {
-    error("Failed to retrieve info for attribute %s!", name.c_str());
+    error("Failed to retrieve info for attribute \"%s\"!", name.c_str());
   }
   hsize_t length = info.data_size;
 
@@ -190,32 +234,34 @@ inline std::string read_attribute<std::string>(hid_t group, std::string name) {
   // create C-string datatype
   hid_t strtype = H5Tcopy(H5T_C_S1);
   if (strtype < 0) {
-    error("Failed to create C-string datatype for attribute %s!", name.c_str());
+    error("Failed to create C-string datatype for attribute \"%s\"!",
+          name.c_str());
   }
 
   // set datatype length to variable
   status = H5Tset_size(strtype, length);
   if (status < 0) {
-    error("Failed to set size of C-string datatype for attribute %s!",
+    error("Failed to set size of C-string datatype for attribute \"%s\"!",
           name.c_str());
   }
 
   // read attribute
   status = H5Aread(attr, strtype, data);
   if (status < 0) {
-    error("Failed to read string attribute %s!", name.c_str());
+    error("Failed to read string attribute \"%s\"!", name.c_str());
   }
 
   // close string type
   status = H5Tclose(strtype);
   if (status < 0) {
-    error("Failed to close C-string datatype for attribute %s!", name.c_str());
+    error("Failed to close C-string datatype for attribute \"%s\"!",
+          name.c_str());
   }
 
   // close attribute
   status = H5Aclose(attr);
   if (status < 0) {
-    error("Failed to close attribute %s!", name.c_str());
+    error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   std::string value(data);
@@ -223,6 +269,123 @@ inline std::string read_attribute<std::string>(hid_t group, std::string name) {
 
   return value;
 };
+
+/**
+ * @brief Read the dataset with the given name from the given group.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to read.
+ * @return std::vector containing the contents of the dataset.
+ */
+template <typename T>
+inline std::vector<T> read_dataset(hid_t group, std::string name) {
+  hid_t datatype = get_datatype_name<T>();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  // open dataspace
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    error("Failed to open dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // query dataspace extents
+  hsize_t size[1];
+  hsize_t maxsize[1];
+  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  if (ndim < 0) {
+    error("Unable to query extent of dataset \"%s\"", name.c_str());
+  }
+
+  // read dataset
+  std::vector<T> data(size[0]);
+  herr_t status =
+      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
+  if (status < 0) {
+    error("Failed to read dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  return data;
+}
+
+/**
+ * @brief read_dataset specialization for a CoordinateVector dataset.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to read.
+ * @return std::vector containing the contents of the dataset.
+ */
+template <>
+inline std::vector<CoordinateVector>
+read_dataset<CoordinateVector>(hid_t group, std::string name) {
+  hid_t datatype = get_datatype_name<double>();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  // open dataspace
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    error("Failed to open dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // query dataspace extents
+  hsize_t size[2];
+  hsize_t maxsize[2];
+  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  if (ndim < 0) {
+    error("Unable to query extent of dataset \"%s\"", name.c_str());
+  }
+
+  // read dataset
+  std::vector<CoordinateVector> data(size[0] * 3);
+  herr_t status =
+      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
+  if (status < 0) {
+    error("Failed to read dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  return data;
+}
 }
 
 #endif // HDF5TOOLS_HPP

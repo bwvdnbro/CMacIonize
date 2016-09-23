@@ -24,8 +24,10 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CoordinateVector.hpp"
 #include "HDF5Tools.hpp"
 #include <cassert>
+#include <vector>
 
 /**
  * @brief Unit test for the HDF5Tools header.
@@ -38,7 +40,7 @@ int main(int argc, char **argv) {
   //  HDF5Tools::initialize();
 
   HDF5Tools::HDF5File file =
-      HDF5Tools::open("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
+      HDF5Tools::open_file("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 
   assert(file > 0);
 
@@ -46,12 +48,45 @@ int main(int argc, char **argv) {
 
   assert(group > 0);
 
+  // test reading various types of attributes.
+
   double cfl = HDF5Tools::read_attribute<double>(group, "CFL parameter");
 
   assert_values_equal(cfl, 0.1);
 
+  unsigned int dimension =
+      HDF5Tools::read_attribute<unsigned int>(group, "Dimension");
+
+  assert(dimension == 3);
+
   std::string scheme = HDF5Tools::read_attribute<std::string>(group, "Scheme");
-  message("scheme: %s", scheme.c_str());
+
+  assert(scheme == "Gadget-2 version of SPH (Springel 2005)");
+
+  HDF5Tools::close_group(group);
+
+  group = HDF5Tools::open_group(file, "PartType0");
+
+  std::vector<double> density =
+      HDF5Tools::read_dataset<double>(group, "Density");
+
+  assert_values_equal(density[0], 0.12052436);
+
+  std::vector<unsigned long long> ids =
+      HDF5Tools::read_dataset<unsigned long long>(group, "ParticleIDs");
+
+  assert(ids[0] == 47);
+
+  std::vector<CoordinateVector> coordinates =
+      HDF5Tools::read_dataset<CoordinateVector>(group, "Coordinates");
+
+  assert_values_equal(coordinates[0].x(), 0.09859136052607954);
+  assert_values_equal(coordinates[0].y(), 0.1422694476979986);
+  assert_values_equal(coordinates[0].z(), 0.10086706479716455);
+
+  HDF5Tools::close_group(group);
+
+  HDF5Tools::close_file(file);
 
   return 0;
 }
