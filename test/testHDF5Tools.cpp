@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "HDF5Tools.hpp"
 #include <cassert>
 
@@ -34,16 +35,23 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  HDF5Tools::initialize();
+  //  HDF5Tools::initialize();
 
-  HDF5Tools::HDF5FileHandle file =
+  HDF5Tools::HDF5File file =
       HDF5Tools::open("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 
   assert(file > 0);
 
-  HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/Header");
+  HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/HydroScheme");
 
   assert(group > 0);
+
+  double cfl = HDF5Tools::read_attribute<double>(group, "CFL parameter");
+
+  assert_values_equal(cfl, 0.1);
+
+  std::string scheme = HDF5Tools::read_attribute<std::string>(group, "Scheme");
+  message("scheme: %s", scheme.c_str());
 
   return 0;
 }

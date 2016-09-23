@@ -32,7 +32,6 @@
   {                                                                            \
     char buffer[10000];                                                        \
     sprintf(buffer, s, ##__VA_ARGS__);                                         \
-    fprintf(stream, "%s\n", buffer);                                           \
     int pos = 0;                                                               \
     int linepos = 0;                                                           \
     /* we scan the string char by char. If a tab is encountered, it is */      \
