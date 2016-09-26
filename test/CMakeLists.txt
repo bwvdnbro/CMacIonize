@@ -87,6 +87,7 @@ add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
 
 ## Unit test for GadgetSnapshotDensityFunction
+if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     testGadgetSnapshotDensityFunction.cpp
 
@@ -99,7 +100,9 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/GadgetSnapshotDensityFunction.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
-              SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
 
 ## Unit test for HDF5tools
 if(HAVE_HDF5)

@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "GadgetSnapshotDensityFunction.hpp"
 
 /**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.
@@ -34,6 +35,7 @@
 int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
+  GadgetSnapshotDensityFunction density("test.hdf5");
 
   return 0;
 }

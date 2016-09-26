@@ -68,7 +68,7 @@ DensityGrid::DensityGrid(double anchor_x, double anchor_y, double anchor_z,
         double x = _anchor[0] + (i + 0.5) * cellside_x;
         double y = _anchor[1] + (j + 0.5) * cellside_y;
         double z = _anchor[2] + (k + 0.5) * cellside_z;
-        _density[i][j][k] = density_function(x, y, z);
+        _density[i][j][k] = density_function(CoordinateVector(x, y, z));
       }
     }
   }

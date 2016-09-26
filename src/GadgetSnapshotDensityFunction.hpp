@@ -27,4 +27,30 @@
 #ifndef GADGETSNAPSHOTDENSITYFUNCTION_HPP
 #define GADGETSNAPSHOTDENSITYFUNCTION_HPP
 
+#include "DensityFunction.hpp"
+#include <string>
+#include <vector>
+
+/**
+ * @brief DensityFunction that reads a density field from a Gadget snapshot.
+ */
+class GadgetSnapshotDensityFunction : public DensityFunction {
+private:
+  /*! @brief Positions of the SPH particles in the snapshot. */
+  std::vector<CoordinateVector> _positions;
+
+  /*! @brief Masses of the SPH particles in the snapshot. */
+  std::vector<double> _masses;
+
+  /*! @brief Smoothing lengths of the SPH particles in the snapshot. */
+  std::vector<double> _smoothing_lengths;
+
+  double cubic_spline_kernel(double u, double h);
+
+public:
+  GadgetSnapshotDensityFunction(std::string name);
+
+  virtual double operator()(CoordinateVector position);
+};
+
 #endif // GADGETSNAPSHOTDENSITYFUNCTION_HPP

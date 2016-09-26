@@ -26,17 +26,17 @@
 #ifndef DENSITYFUNCTION_HPP
 #define DENSITYFUNCTION_HPP
 
+#include "CoordinateVector.hpp"
+
 class DensityFunction {
 public:
   /**
    * @brief Function that gives the density for a given coordinate.
    *
-   * @param x x coordinate.
-   * @param y y coordinate.
-   * @param z z coordinate.
+   * @param position CoordinateVector specifying a coordinate position.
    * @return Density at the given coordinate.
    */
-  virtual double operator()(double x, double y, double z) = 0;
+  virtual double operator()(CoordinateVector position) = 0;
 };
 
 #endif // DENSITYFUNCTION_HPP

@@ -34,12 +34,10 @@ class TestDensityFunction : public DensityFunction {
   /**
    * @brief Get the density at the given coordinate.
    *
-   * @param x x coordinate.
-   * @param y y coordinate.
-   * @param z z coordinate.
+   * @param position CoordinateVector specifying a coordinate position.
    * @return A constant density 1.
    */
-  virtual double operator()(double x, double y, double z) { return 1.; }
+  virtual double operator()(CoordinateVector position) { return 1.; }
 };
 
 /**
