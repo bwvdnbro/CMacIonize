@@ -33,14 +33,22 @@
  */
 class CoordinateVector {
 private:
-  /*! @brief x coordinate. */
-  double _x;
+  union {
+    /*! @brief Array that is used together with the union and anonymous struct
+     *  to allow indexing the components. */
+    double _c[3];
 
-  /*! @brief y coordinate. */
-  double _y;
+    struct {
+      /*! @brief x coordinate. */
+      double _x;
 
-  /*! @brief z coordinate */
-  double _z;
+      /*! @brief y coordinate. */
+      double _y;
+
+      /*! @brief z coordinate */
+      double _z;
+    };
+  };
 
 public:
   /**
@@ -115,6 +123,14 @@ public:
    * geometrical vector with the same components.
    */
   inline double norm() { return sqrt(norm2()); }
+
+  /**
+   * @brief Index operator. Get a reference to the component at the given index.
+   *
+   * @param i Index which we want to access.
+   * @return Reference to the requested component.
+   */
+  inline double &operator[](unsigned int i) { return _c[i]; }
 };
 
 /**

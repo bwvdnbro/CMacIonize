@@ -27,6 +27,7 @@
 #ifndef GADGETSNAPSHOTDENSITYFUNCTION_HPP
 #define GADGETSNAPSHOTDENSITYFUNCTION_HPP
 
+#include "Box.hpp"
 #include "DensityFunction.hpp"
 #include <string>
 #include <vector>
@@ -36,10 +37,9 @@
  */
 class GadgetSnapshotDensityFunction : public DensityFunction {
 private:
-  /*! @brief Size of the simulation box, only initialized if the box is periodic
-   *  (if the box is not periodic, the components of the CoordinateVector will
-   *  all be zero). */
-  CoordinateVector _box;
+  /*! @brief Simulation box, only initialized if the box is periodic (if the box
+   *  is not periodic, the components of the Box will all be zero). */
+  Box _box;
 
   /*! @brief Positions of the SPH particles in the snapshot. */
   std::vector<CoordinateVector> _positions;

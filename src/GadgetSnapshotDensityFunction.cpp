@@ -73,7 +73,11 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
     // open the Header group
     HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
     // Read the box size
-    _box = HDF5Tools::read_attribute<CoordinateVector>(header, "BoxSize");
+    CoordinateVector sides =
+        HDF5Tools::read_attribute<CoordinateVector>(header, "BoxSize");
+    // in this case, the anchor is just (0., 0., 0.)
+    CoordinateVector anchor;
+    _box = Box(anchor, sides);
     // close the Header group
     HDF5Tools::close_group(header);
   }
@@ -103,31 +107,10 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector position) {
   double density = 0.;
   for (unsigned int i = 0; i < _positions.size(); ++i) {
     double r;
-    if (!_box.x()) {
+    if (!_box.get_sides().x()) {
       r = (position - _positions[i]).norm();
     } else {
-      double dx = position.x() - _positions[i].x();
-      if (dx > 0.5 * _box.x()) {
-        dx -= _box.x();
-      }
-      if (dx <= -0.5 * _box.x()) {
-        dx += _box.x();
-      }
-      double dy = position.y() - _positions[i].y();
-      if (dy > 0.5 * _box.y()) {
-        dy -= _box.y();
-      }
-      if (dy <= -0.5 * _box.y()) {
-        dy += _box.y();
-      }
-      double dz = position.z() - _positions[i].z();
-      if (dz > 0.5 * _box.z()) {
-        dz -= _box.z();
-      }
-      if (dz <= -0.5 * _box.z()) {
-        dz += _box.z();
-      }
-      r = sqrt(dx * dx + dy * dy + dz * dz);
+      r = _box.periodic_distance(position, _positions[i]).norm();
     }
     double h = _smoothing_lengths[i];
     double u = r / h;
