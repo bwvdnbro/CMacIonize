@@ -49,7 +49,10 @@ class TestDensityFunction : public DensityFunction {
  */
 int main(int argc, char **argv) {
   TestDensityFunction testfunction;
-  DensityGrid grid(0., 0., 0., 1., 1., 1., 64, testfunction);
+  CoordinateVector anchor;
+  CoordinateVector sides(1., 1., 1.);
+  Box box(anchor, sides);
+  DensityGrid grid(box, 64, testfunction);
 
   assert_values_equal(1., grid.get_total_mass());
 

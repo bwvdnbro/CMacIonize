@@ -26,15 +26,14 @@
 #ifndef DENSITYGRID_HPP
 #define DENSITYGRID_HPP
 
+#include "Box.hpp"
+
 class DensityFunction;
 
 class DensityGrid {
 private:
-  /*! @brief Bottom front left corner of the box containing the grid. */
-  double _anchor[3];
-
-  /*! @brief Side lengths of the box containing the grid. */
-  double _side[3];
+  /*! @brief Box containing the grid. */
+  Box _box;
 
   /*! @brief Number of cells in 1 dimension. */
   unsigned int _n1D;
@@ -43,9 +42,7 @@ private:
   double ***_density;
 
 public:
-  DensityGrid(double anchor_x, double anchor_y, double anchor_z, double side_x,
-              double side_y, double side_z, unsigned int n1D,
-              DensityFunction &density_function);
+  DensityGrid(Box box, unsigned int n1D, DensityFunction &density_function);
 
   ~DensityGrid();
 

@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
 #include "Error.hpp"
@@ -41,13 +42,11 @@ int main(int argc, char **argv) {
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
 
-  CoordinateVector testpoint(0.5, 0.5, 0.5);
-  message("Density(%g, %g, %g): %g", testpoint.x(), testpoint.y(),
-          testpoint.z(), density(testpoint));
-
-  DensityGrid grid(0., 0., 0., 1., 1., 1., 32, density);
-  message("Total mass: %g (%g)", grid.get_total_mass(),
-          density.get_total_mass());
+  CoordinateVector anchor;
+  CoordinateVector sides(1., 1., 1.);
+  Box box(anchor, sides);
+  DensityGrid grid(box, 32, density);
+  assert_values_equal(grid.get_total_mass(), density.get_total_mass());
 
   return 0;
 }
