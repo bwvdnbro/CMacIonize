@@ -157,6 +157,14 @@ template <> inline hid_t get_datatype_name<double>() {
 }
 
 /**
+ * @brief get_datatype_name specialization for a single precision floating point
+ * value.
+ *
+ * @return H5T_NATIVE_FLOAT.
+ */
+template <> inline hid_t get_datatype_name<float>() { return H5T_NATIVE_FLOAT; }
+
+/**
  * @brief get_datatype_name specialization for a 32 bit unsigned integer.
  *
  * @return H5T_NATIVE_UINT32.
@@ -365,7 +373,7 @@ read_dataset<CoordinateVector>(hid_t group, std::string name) {
   }
 
   // read dataset
-  std::vector<CoordinateVector> data(size[0] * 3);
+  std::vector<CoordinateVector> data(size[0]);
   herr_t status =
       H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
   if (status < 0) {

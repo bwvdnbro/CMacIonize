@@ -23,7 +23,10 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "CoordinateVector.hpp"
+#include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
+using namespace std;
 
 /**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.
@@ -36,6 +39,10 @@ int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
+
+  CoordinateVector testpoint(0.5, 0.5, 0.5);
+  message("Density(%g, %g, %g): %g", testpoint.x(), testpoint.y(),
+          testpoint.z(), density(testpoint));
 
   return 0;
 }

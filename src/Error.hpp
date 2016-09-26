@@ -26,6 +26,7 @@
 #ifndef ERROR_HPP
 #define ERROR_HPP
 
+#include <cstdio>
 #include <cstdlib>
 
 #define print_indent(stream, s, ...)                                           \

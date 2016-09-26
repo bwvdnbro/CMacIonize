@@ -26,6 +26,8 @@
 #ifndef COORDINATEVECTOR_HPP
 #define COORDINATEVECTOR_HPP
 
+#include <cmath>
+
 /**
  * @brief 3 element array that can be manipulated as an algebraic vector.
  */
@@ -83,6 +85,48 @@ public:
    * @return z coordinate.
    */
   inline double z() { return _z; }
+
+  /**
+   * @brief Subtract another CoordinateVector from this one.
+   *
+   * @param v CoordinateVector to subtract.
+   * @return Reference to this CoordinateVector.
+   */
+  inline CoordinateVector &operator-=(CoordinateVector v) {
+    _x -= v._x;
+    _y -= v._y;
+    _z -= v._z;
+    return *this;
+  }
+
+  /**
+   * @brief Get the squared norm of this CoordinateVector.
+   *
+   * @return Squared norm, defined as the quadratic sum of the components.
+   */
+  inline double norm2() { return _x * _x + _y * _y + _z * _z; }
+
+  /**
+   * @brief Get the norm of this CoordinateVector.
+   *
+   * This function simply takes the square root of norm2().
+   *
+   * @return Norm of the CoordinateVector, defined as the length of the
+   * geometrical vector with the same components.
+   */
+  inline double norm() { return sqrt(norm2()); }
 };
+
+/**
+ * @brief Free operator that subtracts a CoordinateVector from another
+ * CoordinateVector and returns a CoordinateVector.
+ *
+ * @param a First CoordinateVector.
+ * @param b Second CoordinateVector that is subtracted from the first one.
+ * @return Resulting CoordinateVector.
+ */
+inline CoordinateVector operator-(CoordinateVector a, CoordinateVector b) {
+  return a -= b;
+}
 
 #endif // COORDINATEVECTOR_HPP

@@ -84,5 +84,13 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
  * @return Density at the given coordinate.
  */
 double GadgetSnapshotDensityFunction::operator()(CoordinateVector position) {
-  return 0.;
+  double density = 0.;
+  for (unsigned int i = 0; i < _positions.size(); ++i) {
+    double r = (position - _positions[i]).norm();
+    double h = _smoothing_lengths[i];
+    double u = r / h;
+    double m = _masses[i];
+    density += m * cubic_spline_kernel(u, h);
+  }
+  return density;
 }

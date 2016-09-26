@@ -70,16 +70,19 @@ int main(int argc, char **argv) {
   std::vector<double> density =
       HDF5Tools::read_dataset<double>(group, "Density");
 
+  assert(density.size() == 100);
   assert_values_equal(density[0], 0.12052436);
 
   std::vector<unsigned long long> ids =
       HDF5Tools::read_dataset<unsigned long long>(group, "ParticleIDs");
 
+  assert(ids.size() == 100);
   assert(ids[0] == 47);
 
   std::vector<CoordinateVector> coordinates =
       HDF5Tools::read_dataset<CoordinateVector>(group, "Coordinates");
 
+  assert(coordinates.size() == 100);
   assert_values_equal(coordinates[0].x(), 0.09859136052607954);
   assert_values_equal(coordinates[0].y(), 0.1422694476979986);
   assert_values_equal(coordinates[0].z(), 0.10086706479716455);
