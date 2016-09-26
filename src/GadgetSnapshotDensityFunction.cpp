@@ -63,6 +63,22 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
   // open the file for reading
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
+  // open the RuntimePars group
+  HDF5Tools::HDF5Group runtimepars =
+      HDF5Tools::open_group(file, "/RuntimePars");
+  // read the PeriodicBoundariesOn flag
+  int periodic =
+      HDF5Tools::read_attribute<int>(runtimepars, "PeriodicBoundariesOn");
+  if (periodic) {
+    // open the Header group
+    HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
+    // Read the box size
+    _box = HDF5Tools::read_attribute<CoordinateVector>(header, "BoxSize");
+    // close the Header group
+    HDF5Tools::close_group(header);
+  }
+  // close the group
+  HDF5Tools::close_group(runtimepars);
   // open the group containing the SPH particle data
   HDF5Tools::HDF5Group gasparticles = HDF5Tools::open_group(file, "/PartType0");
   // read the positions, masses and smoothing lengths
@@ -86,11 +102,50 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
 double GadgetSnapshotDensityFunction::operator()(CoordinateVector position) {
   double density = 0.;
   for (unsigned int i = 0; i < _positions.size(); ++i) {
-    double r = (position - _positions[i]).norm();
+    double r;
+    if (!_box.x()) {
+      r = (position - _positions[i]).norm();
+    } else {
+      double dx = position.x() - _positions[i].x();
+      if (dx > 0.5 * _box.x()) {
+        dx -= _box.x();
+      }
+      if (dx <= -0.5 * _box.x()) {
+        dx += _box.x();
+      }
+      double dy = position.y() - _positions[i].y();
+      if (dy > 0.5 * _box.y()) {
+        dy -= _box.y();
+      }
+      if (dy <= -0.5 * _box.y()) {
+        dy += _box.y();
+      }
+      double dz = position.z() - _positions[i].z();
+      if (dz > 0.5 * _box.z()) {
+        dz -= _box.z();
+      }
+      if (dz <= -0.5 * _box.z()) {
+        dz += _box.z();
+      }
+      r = sqrt(dx * dx + dy * dy + dz * dz);
+    }
     double h = _smoothing_lengths[i];
     double u = r / h;
     double m = _masses[i];
     density += m * cubic_spline_kernel(u, h);
   }
   return density;
+}
+
+/**
+ * @brief Get the total mass of all SPH particles in the snapshot.
+ *
+ * @return Sum of the masses of all SPH particles.
+ */
+double GadgetSnapshotDensityFunction::get_total_mass() {
+  double mtot = 0.;
+  for (unsigned int i = 0; i < _masses.size(); ++i) {
+    mtot += _masses[i];
+  }
+  return mtot;
 }

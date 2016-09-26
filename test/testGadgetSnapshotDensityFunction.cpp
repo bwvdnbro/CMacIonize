@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CoordinateVector.hpp"
+#include "DensityGrid.hpp"
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 using namespace std;
@@ -43,6 +44,10 @@ int main(int argc, char **argv) {
   CoordinateVector testpoint(0.5, 0.5, 0.5);
   message("Density(%g, %g, %g): %g", testpoint.x(), testpoint.y(),
           testpoint.z(), density(testpoint));
+
+  DensityGrid grid(0., 0., 0., 1., 1., 1., 32, density);
+  message("Total mass: %g (%g)", grid.get_total_mass(),
+          density.get_total_mass());
 
   return 0;
 }

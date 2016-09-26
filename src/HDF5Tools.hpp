@@ -174,6 +174,13 @@ template <> inline hid_t get_datatype_name<unsigned int>() {
 }
 
 /**
+ * @brief get_datatype_name specialization for a 32 bit signed integer.
+ *
+ * @return H5T_NATIVE_INT32.
+ */
+template <> inline hid_t get_datatype_name<int>() { return H5T_NATIVE_INT32; }
+
+/**
  * @brief get_datatype_name specialization for a 64 bit unsigned integer.
  *
  * @return H5T_NATIVE_UINT64.
@@ -274,6 +281,39 @@ inline std::string read_attribute<std::string>(hid_t group, std::string name) {
 
   std::string value(data);
   free(data);
+
+  return value;
+};
+
+/**
+ * @brief read_attribute specialization for CoordinateVector.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to read.
+ * @return CoordinateVector containing the values of the attribute.
+ */
+template <>
+inline CoordinateVector read_attribute<CoordinateVector>(hid_t group,
+                                                         std::string name) {
+  hid_t datatype = get_datatype_name<double>();
+  // open attribute
+  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  if (attr < 0) {
+    error("Failed to open attribute \"%s\"!", name.c_str());
+  }
+
+  // read attribute
+  CoordinateVector value;
+  herr_t status = H5Aread(attr, datatype, &value);
+  if (status < 0) {
+    error("Failed to read attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
 
   return value;
 };

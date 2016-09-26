@@ -36,6 +36,11 @@
  */
 class GadgetSnapshotDensityFunction : public DensityFunction {
 private:
+  /*! @brief Size of the simulation box, only initialized if the box is periodic
+   *  (if the box is not periodic, the components of the CoordinateVector will
+   *  all be zero). */
+  CoordinateVector _box;
+
   /*! @brief Positions of the SPH particles in the snapshot. */
   std::vector<CoordinateVector> _positions;
 
@@ -51,6 +56,8 @@ public:
   GadgetSnapshotDensityFunction(std::string name);
 
   virtual double operator()(CoordinateVector position);
+
+  double get_total_mass();
 };
 
 #endif // GADGETSNAPSHOTDENSITYFUNCTION_HPP
