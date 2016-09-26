@@ -121,6 +121,15 @@ add_unit_test(NAME testHDF5Tools
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
+## CoordinateVector test
+set(TESTCOORDINATEVECTOR_SOURCES
+    testCoordinateVector.cpp
+
+    ../src/CoordinateVector.hpp
+)
+add_unit_test(NAME testCoordinateVector
+              SOURCES ${TESTCOORDINATEVECTOR_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
