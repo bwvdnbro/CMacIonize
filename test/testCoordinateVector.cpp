@@ -72,6 +72,30 @@ int main(int argc, char **argv) {
     assert(d.z() == 1.);
   }
 
+  // test addition
+  {
+    CoordinateVector a(1., 2., 3.);
+    CoordinateVector b(2., 3., 4.);
+    a += b;
+    assert(a.x() == 3.);
+    assert(a.y() == 5.);
+    assert(a.z() == 7.);
+  }
+
+  // test multiplication
+  {
+    CoordinateVector a(1., 2., 3.);
+    a *= 2.;
+    assert(a.x() == 2.);
+    assert(a.y() == 4.);
+    assert(a.z() == 6.);
+
+    CoordinateVector b = 3. * a;
+    assert(b.x() == 6.);
+    assert(b.y() == 12.);
+    assert(b.z() == 18.);
+  }
+
   // test norm
   {
     CoordinateVector a(1.);

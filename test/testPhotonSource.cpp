@@ -23,7 +23,9 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
@@ -49,6 +51,20 @@ int main(int argc, char **argv) {
     assert(photon.get_position().x() == 0.5);
     assert(photon.get_position().y() == 0.5);
     assert(photon.get_position().z() == 0.5);
+  }
+
+  // check if the returned directions are really isotropic
+  {
+    CoordinateVector mean_direction;
+    unsigned int numphoton = 1000000;
+    double weight = 1. / numphoton;
+    for (unsigned int i = 0; i < numphoton; ++i) {
+      Photon photon = source.get_random_photon();
+      mean_direction += weight * photon.get_direction();
+    }
+    assert(abs(mean_direction.x()) < 1.e-3);
+    assert(abs(mean_direction.y()) < 1.e-3);
+    assert(abs(mean_direction.z()) < 1.e-3);
   }
 
   return 0;

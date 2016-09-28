@@ -108,6 +108,32 @@ public:
   }
 
   /**
+   * @brief Add another CoordinateVector to this one.
+   *
+   * @param v CoordinateVector to add.
+   * @return Reference to this CoordinateVector.
+   */
+  inline CoordinateVector &operator+=(CoordinateVector v) {
+    _x += v._x;
+    _y += v._y;
+    _z += v._z;
+    return *this;
+  }
+
+  /**
+   * @brief Multiply the components of the CoordinateVector with a scalar.
+   *
+   * @param s Scalar to multiply with.
+   * @return Reference to this CoordinateVector.
+   */
+  inline CoordinateVector &operator*=(double s) {
+    _x *= s;
+    _y *= s;
+    _z *= s;
+    return *this;
+  }
+
+  /**
    * @brief Get the squared norm of this CoordinateVector.
    *
    * @return Squared norm, defined as the quadratic sum of the components.
@@ -143,6 +169,18 @@ public:
  */
 inline CoordinateVector operator-(CoordinateVector a, CoordinateVector b) {
   return a -= b;
+}
+
+/**
+ * @brief Free operator that multiplies a scalar with a CoordinateVector and
+ * returns a CoordinateVector.
+ *
+ * @param s Scalar to multiply with.
+ * @param v CoordinateVector that should be multiplied.
+ * @return Resulting CoordinateVector.
+ */
+inline CoordinateVector operator*(double s, CoordinateVector v) {
+  return v *= s;
 }
 
 #endif // COORDINATEVECTOR_HPP
