@@ -130,6 +130,20 @@ set(TESTCOORDINATEVECTOR_SOURCES
 add_unit_test(NAME testCoordinateVector
               SOURCES ${TESTCOORDINATEVECTOR_SOURCES})
 
+## PhotonSource test
+set(TESTPHOTONSOURCE_SOURCES
+    testPhotonSource.cpp
+
+    ../src/CoordinateVector.hpp
+    ../src/Photon.hpp
+    ../src/PhotonSource.cpp
+    ../src/PhotonSource.hpp
+    ../src/PhotonSourceDistribution.hpp
+    ../src/SingleStarPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testPhotonSource
+              SOURCES ${TESTPHOTONSOURCE_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
