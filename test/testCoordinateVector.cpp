@@ -23,8 +23,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "CoordinateVector.hpp"
-#include <cassert>
 #include <cmath>
 
 /**
@@ -39,21 +39,21 @@ int main(int argc, char **argv) {
   {
     // empty constructor
     CoordinateVector a;
-    assert(a.x() == 0.);
-    assert(a.y() == 0.);
-    assert(a.z() == 0.);
+    assert_condition(a.x() == 0.);
+    assert_condition(a.y() == 0.);
+    assert_condition(a.z() == 0.);
 
     // single value constructor
     CoordinateVector b(1.);
-    assert(b.x() == 1.);
-    assert(b.y() == 1.);
-    assert(b.z() == 1.);
+    assert_condition(b.x() == 1.);
+    assert_condition(b.y() == 1.);
+    assert_condition(b.z() == 1.);
 
     // normal constructor
     CoordinateVector c(1., 2., 3.);
-    assert(c.x() == 1.);
-    assert(c.y() == 2.);
-    assert(c.z() == 3.);
+    assert_condition(c.x() == 1.);
+    assert_condition(c.y() == 2.);
+    assert_condition(c.z() == 3.);
   }
 
   // test subtraction
@@ -61,15 +61,15 @@ int main(int argc, char **argv) {
     CoordinateVector a(2., 3., 4.);
     CoordinateVector b(1., 2., 3.);
     a -= b;
-    assert(a.x() == 1.);
-    assert(a.y() == 1.);
-    assert(a.z() == 1.);
+    assert_condition(a.x() == 1.);
+    assert_condition(a.y() == 1.);
+    assert_condition(a.z() == 1.);
 
     CoordinateVector c(2., 3., 4.);
     CoordinateVector d = c - b;
-    assert(d.x() == 1.);
-    assert(d.y() == 1.);
-    assert(d.z() == 1.);
+    assert_condition(d.x() == 1.);
+    assert_condition(d.y() == 1.);
+    assert_condition(d.z() == 1.);
   }
 
   // test addition
@@ -77,30 +77,30 @@ int main(int argc, char **argv) {
     CoordinateVector a(1., 2., 3.);
     CoordinateVector b(2., 3., 4.);
     a += b;
-    assert(a.x() == 3.);
-    assert(a.y() == 5.);
-    assert(a.z() == 7.);
+    assert_condition(a.x() == 3.);
+    assert_condition(a.y() == 5.);
+    assert_condition(a.z() == 7.);
   }
 
   // test multiplication
   {
     CoordinateVector a(1., 2., 3.);
     a *= 2.;
-    assert(a.x() == 2.);
-    assert(a.y() == 4.);
-    assert(a.z() == 6.);
+    assert_condition(a.x() == 2.);
+    assert_condition(a.y() == 4.);
+    assert_condition(a.z() == 6.);
 
     CoordinateVector b = 3. * a;
-    assert(b.x() == 6.);
-    assert(b.y() == 12.);
-    assert(b.z() == 18.);
+    assert_condition(b.x() == 6.);
+    assert_condition(b.y() == 12.);
+    assert_condition(b.z() == 18.);
   }
 
   // test norm
   {
     CoordinateVector a(1.);
-    assert(a.norm2() == 3.);
-    assert(a.norm() == sqrt(3.));
+    assert_condition(a.norm2() == 3.);
+    assert_condition(a.norm() == sqrt(3.));
   }
 
   return 0;

@@ -29,7 +29,6 @@
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
-#include <cassert>
 using namespace std;
 
 /**
@@ -48,9 +47,9 @@ int main(int argc, char **argv) {
   // check if the returned position is what we expect it to be
   {
     Photon photon = source.get_random_photon();
-    assert(photon.get_position().x() == 0.5);
-    assert(photon.get_position().y() == 0.5);
-    assert(photon.get_position().z() == 0.5);
+    assert_condition(photon.get_position().x() == 0.5);
+    assert_condition(photon.get_position().y() == 0.5);
+    assert_condition(photon.get_position().z() == 0.5);
   }
 
   // check if the returned directions are really isotropic
@@ -62,9 +61,9 @@ int main(int argc, char **argv) {
       Photon photon = source.get_random_photon();
       mean_direction += weight * photon.get_direction();
     }
-    assert(abs(mean_direction.x()) < 1.e-3);
-    assert(abs(mean_direction.y()) < 1.e-3);
-    assert(abs(mean_direction.z()) < 1.e-3);
+    assert_condition(abs(mean_direction.x()) < 1.e-3);
+    assert_condition(abs(mean_direction.y()) < 1.e-3);
+    assert_condition(abs(mean_direction.z()) < 1.e-3);
   }
 
   return 0;

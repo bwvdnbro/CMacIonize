@@ -26,7 +26,6 @@
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
 #include "HDF5Tools.hpp"
-#include <cassert>
 #include <vector>
 
 /**
@@ -42,11 +41,11 @@ int main(int argc, char **argv) {
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file("test.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 
-  assert(file > 0);
+  assert_condition(file > 0);
 
   HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/HydroScheme");
 
-  assert(group > 0);
+  assert_condition(group > 0);
 
   // test reading various types of attributes.
 
@@ -57,11 +56,11 @@ int main(int argc, char **argv) {
   unsigned int dimension =
       HDF5Tools::read_attribute<unsigned int>(group, "Dimension");
 
-  assert(dimension == 3);
+  assert_condition(dimension == 3);
 
   std::string scheme = HDF5Tools::read_attribute<std::string>(group, "Scheme");
 
-  assert(scheme == "Gadget-2 version of SPH (Springel 2005)");
+  assert_condition(scheme == "Gadget-2 version of SPH (Springel 2005)");
 
   HDF5Tools::close_group(group);
 
@@ -70,19 +69,19 @@ int main(int argc, char **argv) {
   std::vector<double> density =
       HDF5Tools::read_dataset<double>(group, "Density");
 
-  assert(density.size() == 100);
+  assert_condition(density.size() == 100);
   assert_values_equal(density[0], 0.12052436);
 
   std::vector<unsigned long long> ids =
       HDF5Tools::read_dataset<unsigned long long>(group, "ParticleIDs");
 
-  assert(ids.size() == 100);
-  assert(ids[0] == 47);
+  assert_condition(ids.size() == 100);
+  assert_condition(ids[0] == 47);
 
   std::vector<CoordinateVector> coordinates =
       HDF5Tools::read_dataset<CoordinateVector>(group, "Coordinates");
 
-  assert(coordinates.size() == 100);
+  assert_condition(coordinates.size() == 100);
   assert_values_equal(coordinates[0].x(), 0.09859136052607954);
   assert_values_equal(coordinates[0].y(), 0.1422694476979986);
   assert_values_equal(coordinates[0].z(), 0.10086706479716455);
