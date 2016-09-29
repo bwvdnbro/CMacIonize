@@ -144,6 +144,17 @@ set(TESTPHOTONSOURCE_SOURCES
 add_unit_test(NAME testPhotonSource
               SOURCES ${TESTPHOTONSOURCE_SOURCES})
 
+## PhotonSourceSpectrum test
+set(TESTPHOTONSOURCESPECTRUM_SOURCES
+    testPhotonSourceSpectrum.cpp
+
+    ../src/PhotonSourceSpectrum.hpp
+    ../src/PlanckPhotonSourceSpectrum.cpp
+    ../src/PlanckPhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testPhotonSourceSpectrum
+              SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
