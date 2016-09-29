@@ -51,14 +51,27 @@ public:
    *
    * @return 1, as this distribution contains a single stellar source
    */
-  virtual unsigned int number_of_sources() { return 1; };
+  virtual unsigned int get_number_of_sources() { return 1; };
 
   /**
    * @brief Get a valid position from the distribution.
    *
+   * @param index Index of the photon source, must be in between 0 and
+   * get_number_of_sources().
    * @return CoordinateVector of the single stellar source position.
    */
-  virtual CoordinateVector operator()() { return _position; };
+  virtual CoordinateVector get_position(unsigned int index) {
+    return _position;
+  };
+
+  /**
+   * @brief Get the weight of a photon source.
+   *
+   * @param index Index of the photon source, must be in between 0 and
+   * get_number_of_sources().
+   * @return Weight of the single photon source: 1.
+   */
+  virtual double get_weight(unsigned int index) { return 1.; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

@@ -44,11 +44,23 @@ class PhotonSourceDistribution;
  */
 class PhotonSource {
 private:
+  /*! @brief Total number of photons emitted by all discrete sources. */
+  unsigned int _number_of_photons;
+  /*! @brief Number of photons emitted by the currently active source. */
+  unsigned int _active_number_of_photons;
+  /*! @brief Currently emitted photon index. */
+  unsigned int _active_photon_index;
+  /*! @brief Currently active photon source index. */
+  unsigned int _active_source_index;
+
   /*! @brief Positions of the discrete photon sources. */
   std::vector<CoordinateVector> _positions;
+  /*! @brief Weights of the discrete photon sources. */
+  std::vector<double> _weights;
 
 public:
-  PhotonSource(PhotonSourceDistribution &distribution);
+  PhotonSource(unsigned int number_of_photons,
+               PhotonSourceDistribution &distribution);
 
   Photon get_random_photon();
 };

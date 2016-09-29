@@ -41,14 +41,26 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int number_of_sources() = 0;
+  virtual unsigned int get_number_of_sources() = 0;
 
   /**
    * @brief Get a valid position from the distribution.
    *
+   * @param index Index of the photon source, must be in between 0 and
+   * get_number_of_sources().
    * @return CoordinateVector of a valid and photon source position.
    */
-  virtual CoordinateVector operator()() = 0;
+  virtual CoordinateVector get_position(unsigned int index) = 0;
+
+  /**
+   * @brief Get the weight of a photon source.
+   *
+   * @param index Index of the photon source, must be in between 0 and
+   * get_number_of_sources().
+   * @return Weight of the photon source, used to determine how many photons are
+   * emitted from this particular source.
+   */
+  virtual double get_weight(unsigned int index) = 0;
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

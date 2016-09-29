@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "PhotonSource.hpp"
+#include "Error.hpp"
 #include "PhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
 #include <cmath>
@@ -32,14 +33,24 @@ using namespace std;
 /**
  * @brief Constructor.
  *
+ * @param number_of_photons Total number of photons emitted from all discrete
+ * photon sources together.
  * @param distribution PhotonSourceDistribution giving the positions of the
  * discrete photon sources.
  */
-PhotonSource::PhotonSource(PhotonSourceDistribution &distribution) {
-  _positions.resize(distribution.number_of_sources());
+PhotonSource::PhotonSource(unsigned int number_of_photons,
+                           PhotonSourceDistribution &distribution)
+    : _number_of_photons(number_of_photons) {
+  _positions.resize(distribution.get_number_of_sources());
+  _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
-    _positions[i] = distribution();
+    _positions[i] = distribution.get_position(i);
+    _weights[i] = distribution.get_weight(i);
   }
+
+  _active_source_index = 0;
+  _active_photon_index = 0;
+  _active_number_of_photons = _number_of_photons * _weights[0];
 }
 
 /**
@@ -49,7 +60,11 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution) {
  * @return Photon.
  */
 Photon PhotonSource::get_random_photon() {
-  CoordinateVector position = _positions[0];
+  if (_active_source_index == _positions.size()) {
+    error("No more photons available!");
+  }
+
+  CoordinateVector position = _positions[_active_source_index];
 
   double cost = 2. * Utilities::random_double() - 1.;
   double sint = 1. - cost * cost;
@@ -60,6 +75,16 @@ Photon PhotonSource::get_random_photon() {
   CoordinateVector direction(sint * cosp, sint * sinp, cost);
 
   double energy = 0.;
+
+  ++_active_photon_index;
+  if (_active_photon_index == _active_number_of_photons) {
+    _active_photon_index = 0;
+    ++_active_source_index;
+    if (_active_source_index < _positions.size()) {
+      _active_number_of_photons =
+          _number_of_photons * _weights[_active_source_index];
+    }
+  }
 
   return Photon(position, direction, energy);
 }
