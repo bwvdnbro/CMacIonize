@@ -80,6 +80,11 @@ int main(int argc, char **argv) {
     assert_condition(a.x() == 3.);
     assert_condition(a.y() == 5.);
     assert_condition(a.z() == 7.);
+
+    CoordinateVector c = a + b;
+    assert_condition(c.x() == 5.);
+    assert_condition(c.y() == 8.);
+    assert_condition(c.z() == 11.);
   }
 
   // test multiplication

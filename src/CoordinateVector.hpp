@@ -172,6 +172,17 @@ inline CoordinateVector operator-(CoordinateVector a, CoordinateVector b) {
 }
 
 /**
+ * @brief Free operator that adds two CoordinateVectors
+ *
+ * @param a First CoordinateVector.
+ * @param b Second CoordinateVector that is added to the first one.
+ * @return Resulting CoordinateVector.
+ */
+inline CoordinateVector operator+(CoordinateVector a, CoordinateVector b) {
+  return a += b;
+}
+
+/**
  * @brief Free operator that multiplies a scalar with a CoordinateVector and
  * returns a CoordinateVector.
  *

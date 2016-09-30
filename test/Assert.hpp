@@ -36,9 +36,11 @@
     error("Assertion failed (%s)!", #condition);                               \
   }
 
-#define assert_values_equal(a, b)                                              \
-  if (abs(a - b) > 1.e-4 && abs(a - b) > 1.e-4 * abs(a + b)) {                 \
+#define assert_values_equal_tol(a, b, tol)                                     \
+  if (std::abs(a - b) > tol && std::abs(a - b) > tol * std::abs(a + b)) {      \
     error("Assertion failed: %s (%g) != %s (%g)", #a, a, #b, b);               \
   }
+
+#define assert_values_equal(a, b) assert_values_equal_tol(a, b, 1.e-4)
 
 #endif // ASSERT_HPP

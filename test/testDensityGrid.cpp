@@ -56,5 +56,11 @@ int main(int argc, char **argv) {
 
   assert_values_equal(1., grid.get_total_mass());
 
+  CoordinateVector photon_origin(0.5, 0.5, 0.5);
+  CoordinateVector photon_direction(1., 0., 0.);
+  double S = grid.get_distance(photon_origin, photon_direction, 0.125);
+
+  assert_values_equal(S, 0.125);
+
   return 0;
 }

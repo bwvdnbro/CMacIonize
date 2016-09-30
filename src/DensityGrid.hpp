@@ -47,6 +47,9 @@ public:
   ~DensityGrid();
 
   double get_total_mass();
+
+  double get_distance(CoordinateVector photon_origin,
+                      CoordinateVector photon_direction, double optical_depth);
 };
 
 #endif // DENSITYGRID_HPP
