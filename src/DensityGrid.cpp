@@ -218,6 +218,8 @@ double DensityGrid::get_distance(CoordinateVector photon_origin,
     S += ds;
     optical_depth -= ds;
 
+    photon_origin = next_wall;
+
     // if the optical depth exceeds or equals the wanted value: exit the loop
 
     // if the optical depth exceeded the wanted value: find out where in the
