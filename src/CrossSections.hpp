@@ -1,0 +1,67 @@
+/*******************************************************************************
+ * This file is part of CMacIonize
+ * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *
+ * CMacIonize is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * CMacIonize is distributed in the hope that it will be useful,
+ * but WITOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
+/**
+ * @file CrossSections.hpp
+ *
+ * @brief Scattering cross sections: header.
+ *
+ * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ */
+#ifndef CROSSSECTIONS_HPP
+#define CROSSSECTIONS_HPP
+
+/**
+ * @brief Names of supported elements.
+ */
+enum CrossSectionElements {
+  /*! @brief Hydrogen. */
+  ELEMENT_H = 0,
+  /*! @brief Helium. */
+  ELEMENT_He,
+  /*! @brief Number of supported elements. */
+  CROSSSECTIONS_NUMELEMENTS
+};
+
+class CrossSections {
+private:
+  /*! L array from Verner's script. */
+  unsigned char _L[7];
+
+  /*! NINN array from Verner's script. */
+  unsigned char _NINN[30];
+
+  /*! NTOT array from Verner's script. */
+  unsigned char _NTOT[30];
+
+  /*! PH1 array from Verner's script. */
+  double _PH1[6][30][30][7];
+
+  /*! PH2 array from Verner's script. */
+  double _PH2[7][30][30];
+
+public:
+  CrossSections();
+
+  double get_cross_section_verner(unsigned char nz, unsigned char ne,
+                                  unsigned char is, double e);
+
+  double get_cross_section(int element, double energy);
+};
+
+#endif // CROSSSECTIONS_HPP

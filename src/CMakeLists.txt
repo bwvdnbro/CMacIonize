@@ -25,6 +25,13 @@ set(LINECOOLINGDATALOCATION ${PROJECT_BINARY_DIR}/data/atom4.dat)
 message(STATUS "LineCoolingDataLocation.hpp: ${LINECOOLINGDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
+# CrossSectionsDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_data.txt
+               ${PROJECT_BINARY_DIR}/data/verner_data.txt COPYONLY)
+set(CROSSSECTIONSDATALOCATION ${PROJECT_BINARY_DIR}/data/verner_data.txt)
+message(STATUS "CrossSectionsDataLocation.hpp: ${CROSSSECTIONSDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/CrossSectionsDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/CrossSectionsDataLocation.hpp @ONLY)
 
 set(CMACIONIZE_SOURCES
     CMacIonize.cpp
