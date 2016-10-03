@@ -35,7 +35,7 @@
 class SingleStarPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Position of the single stellar source. */
-  CoordinateVector _position;
+  CoordinateVector<> _position;
 
 public:
   /**
@@ -43,7 +43,7 @@ public:
    *
    * @param position Position of the single stellar source.
    */
-  SingleStarPhotonSourceDistribution(CoordinateVector position)
+  SingleStarPhotonSourceDistribution(CoordinateVector<> position)
       : _position(position) {}
 
   /**
@@ -60,7 +60,7 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of the single stellar source position.
    */
-  virtual CoordinateVector get_position(unsigned int index) {
+  virtual CoordinateVector<> get_position(unsigned int index) {
     return _position;
   };
 

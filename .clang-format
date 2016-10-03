@@ -1,0 +1,6 @@
+---
+# We need this style option to make sure "vector<vector<double>>" is converted
+# into "vector< vector< double > >", since the former does not compile without
+# -std=c++0x
+SpacesInAngles: true
+...

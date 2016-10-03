@@ -34,10 +34,10 @@
 class Box {
 private:
   /*! Bottom left front corner of the box. */
-  CoordinateVector _anchor;
+  CoordinateVector<> _anchor;
 
   /*! Side lengths of the box. */
-  CoordinateVector _sides;
+  CoordinateVector<> _sides;
 
 public:
   /**
@@ -47,7 +47,7 @@ public:
    * the box.
    * @param sides CoordinateVector containing the side lengths of the box.
    */
-  inline Box(CoordinateVector anchor, CoordinateVector sides)
+  inline Box(CoordinateVector<> anchor, CoordinateVector<> sides)
       : _anchor(anchor), _sides(sides) {}
 
   /**
@@ -61,14 +61,14 @@ public:
    * @return CoordinateVector containing the bottom left front corner of the
    * box.
    */
-  inline CoordinateVector &get_anchor() { return _anchor; }
+  inline CoordinateVector<> &get_anchor() { return _anchor; }
 
   /**
    * @brief Get the side lengths of the box.
    *
    * @return CoordinateVector containing the side lengths of the box.
    */
-  inline CoordinateVector &get_sides() { return _sides; }
+  inline CoordinateVector<> &get_sides() { return _sides; }
 
   /**
    * @brief Get the corner opposite the anchor of the box.
@@ -76,15 +76,15 @@ public:
    * @return CoordinateVector containing the coordinates of the corner of the
    * box opposite of the anchor.
    */
-  inline CoordinateVector get_top_anchor() { return _anchor + _sides; }
+  inline CoordinateVector<> get_top_anchor() { return _anchor + _sides; }
 
   /**
    * @brief Get the shortest distance vector between the given two
    * CoordinateVectors, given that this box is periodic.
    */
-  inline CoordinateVector periodic_distance(CoordinateVector a,
-                                            CoordinateVector b) {
-    CoordinateVector c = a - b;
+  inline CoordinateVector<> periodic_distance(CoordinateVector<> a,
+                                              CoordinateVector<> b) {
+    CoordinateVector<> c = a - b;
     for (unsigned int i = 0; i < 3; ++i) {
       if (c[i] < -0.5 * _sides[i]) {
         c[i] += _sides[i];

@@ -40,7 +40,7 @@ using namespace std;
  */
 int main(int argc, char **argv) {
   SingleStarPhotonSourceDistribution distribution(
-      CoordinateVector(0.5, 0.5, 0.5));
+      CoordinateVector<>(0.5, 0.5, 0.5));
 
   PhotonSource source(1000001, distribution);
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
   // check if the returned directions are really isotropic
   {
-    CoordinateVector mean_direction;
+    CoordinateVector<> mean_direction;
     unsigned int numphoton = 1000000;
     double weight = 1. / numphoton;
     for (unsigned int i = 0; i < numphoton; ++i) {

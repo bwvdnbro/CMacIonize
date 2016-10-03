@@ -49,16 +49,17 @@ int main(int argc, char **argv) {
 
   // test reading various types of attributes.
 
-  double cfl = HDF5Tools::read_attribute<double>(group, "CFL parameter");
+  double cfl = HDF5Tools::read_attribute< double >(group, "CFL parameter");
 
   assert_values_equal(cfl, 0.1);
 
   unsigned int dimension =
-      HDF5Tools::read_attribute<unsigned int>(group, "Dimension");
+      HDF5Tools::read_attribute< unsigned int >(group, "Dimension");
 
   assert_condition(dimension == 3);
 
-  std::string scheme = HDF5Tools::read_attribute<std::string>(group, "Scheme");
+  std::string scheme =
+      HDF5Tools::read_attribute< std::string >(group, "Scheme");
 
   assert_condition(scheme == "Gadget-2 version of SPH (Springel 2005)");
 
@@ -66,20 +67,20 @@ int main(int argc, char **argv) {
 
   group = HDF5Tools::open_group(file, "PartType0");
 
-  std::vector<double> density =
-      HDF5Tools::read_dataset<double>(group, "Density");
+  std::vector< double > density =
+      HDF5Tools::read_dataset< double >(group, "Density");
 
   assert_condition(density.size() == 100);
   assert_values_equal(density[0], 0.12052436);
 
-  std::vector<unsigned long long> ids =
-      HDF5Tools::read_dataset<unsigned long long>(group, "ParticleIDs");
+  std::vector< unsigned long long > ids =
+      HDF5Tools::read_dataset< unsigned long long >(group, "ParticleIDs");
 
   assert_condition(ids.size() == 100);
   assert_condition(ids[0] == 47);
 
-  std::vector<CoordinateVector> coordinates =
-      HDF5Tools::read_dataset<CoordinateVector>(group, "Coordinates");
+  std::vector< CoordinateVector<> > coordinates =
+      HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
 
   assert_condition(coordinates.size() == 100);
   assert_values_equal(coordinates[0].x(), 0.09859136052607954);

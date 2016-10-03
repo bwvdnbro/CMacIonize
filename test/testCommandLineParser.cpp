@@ -48,7 +48,7 @@ void generate_arguments(int &argc, char **&argv, string command_line) {
   // parse the arguments and store them in a vector
   istringstream command_stream(command_line);
   string argument;
-  vector<string> commands;
+  vector< string > commands;
   while (command_stream >> argument) {
     if (argument.c_str()[0] == '"') {
       argument = argument.substr(1, argument.size());
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
       test_argc, test_argv,
       "--test   --more \"andmore\" --less 2.0 --complicated \"and this?\"");
 
-  vector<CommandLineOption> options;
+  vector< CommandLineOption > options;
   options.push_back(CommandLineOption(
       "test", 't', "A parameter to test the CommandLineParser.",
       COMMANDLINEOPTION_INTARGUMENT, "42"));

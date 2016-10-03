@@ -37,7 +37,7 @@ class TestDensityFunction : public DensityFunction {
    * @param position CoordinateVector specifying a coordinate position.
    * @return A constant density 1.
    */
-  virtual double operator()(CoordinateVector position) { return 1.; }
+  virtual double operator()(CoordinateVector<> position) { return 1.; }
 };
 
 /**
@@ -49,14 +49,14 @@ class TestDensityFunction : public DensityFunction {
  */
 int main(int argc, char **argv) {
   TestDensityFunction testfunction;
-  CoordinateVector anchor;
-  CoordinateVector sides(1., 1., 1.);
+  CoordinateVector<> anchor;
+  CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   DensityGrid grid(box, 64, testfunction);
 
   assert_values_equal(1., grid.get_total_mass());
 
-  CoordinateVector photon_origin(0.51, 0.51, 0.51);
+  CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
   unsigned int ix, iy, iz;
   grid.get_cell_indices(photon_origin, ix, iy, iz);
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   assert_condition(cell.get_sides().y() == 0.015625);
   assert_condition(cell.get_sides().z() == 0.015625);
 
-  CoordinateVector cell_top_anchor = cell.get_top_anchor();
+  CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
   assert_condition(cell_top_anchor.x() == 0.515625);
   assert_condition(cell_top_anchor.y() == 0.515625);
@@ -84,8 +84,8 @@ int main(int argc, char **argv) {
   double ds;
   {
     // positive x direction
-    CoordinateVector photon_direction(1., 0., 0.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(1., 0., 0.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 1);
     assert_condition(niy == 0);
@@ -97,8 +97,8 @@ int main(int argc, char **argv) {
   }
   {
     // negative x direction
-    CoordinateVector photon_direction(-1., 0., 0.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(-1., 0., 0.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == -1);
     assert_condition(niy == 0);
@@ -110,8 +110,8 @@ int main(int argc, char **argv) {
   }
   {
     // positive y direction
-    CoordinateVector photon_direction(0., 1., 0.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(0., 1., 0.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 0);
     assert_condition(niy == 1);
@@ -123,8 +123,8 @@ int main(int argc, char **argv) {
   }
   {
     // negative y direction
-    CoordinateVector photon_direction(0., -1., 0.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(0., -1., 0.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 0);
     assert_condition(niy == -1);
@@ -136,8 +136,8 @@ int main(int argc, char **argv) {
   }
   {
     // positive z direction
-    CoordinateVector photon_direction(0., 0., 1.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(0., 0., 1.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 0);
     assert_condition(niy == 0);
@@ -149,8 +149,8 @@ int main(int argc, char **argv) {
   }
   {
     // negative z direction
-    CoordinateVector photon_direction(0., 0., -1.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(0., 0., -1.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 0);
     assert_condition(niy == 0);
@@ -162,12 +162,12 @@ int main(int argc, char **argv) {
   }
   {
     // general direction
-    CoordinateVector photon_direction(1., 2., -3.);
+    CoordinateVector<> photon_direction(1., 2., -3.);
     // funny thing: the direction vector does not need to be normalized:
     // the norm cancels out in the equation for the intersection point
     // and all l parameters will always be in units of the norm, so values
     // can be safely compared
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     // the solution:
     //  l_x = 0.005625
@@ -189,8 +189,8 @@ int main(int argc, char **argv) {
   }
   {
     // intersection point on edge of two walls
-    CoordinateVector photon_direction(0., 1., 1.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(0., 1., 1.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 0);
     assert_condition(niy == 1);
@@ -202,8 +202,8 @@ int main(int argc, char **argv) {
   }
   {
     // intersection point on corner of cell
-    CoordinateVector photon_direction(1., 1., 1.);
-    CoordinateVector intersection = grid.get_wall_intersection(
+    CoordinateVector<> photon_direction(1., 1., 1.);
+    CoordinateVector<> intersection = grid.get_wall_intersection(
         photon_origin, photon_direction, cell, nix, niy, niz, ds);
     assert_condition(nix == 1);
     assert_condition(niy == 1);
@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
     assert_values_equal(ds, 0.009742785793);
   }
 
-  CoordinateVector photon_direction(1., 0., 0.);
+  CoordinateVector<> photon_direction(1., 0., 0.);
   double S = grid.get_distance(photon_origin, photon_direction, 0.125);
 
   assert_values_equal(S, 0.125);

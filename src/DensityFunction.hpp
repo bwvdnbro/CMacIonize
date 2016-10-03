@@ -36,7 +36,7 @@ public:
    * @param position CoordinateVector specifying a coordinate position.
    * @return Density at the given coordinate.
    */
-  virtual double operator()(CoordinateVector position) = 0;
+  virtual double operator()(CoordinateVector<> position) = 0;
 };
 
 #endif // DENSITYFUNCTION_HPP

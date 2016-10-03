@@ -68,15 +68,15 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
       HDF5Tools::open_group(file, "/RuntimePars");
   // read the PeriodicBoundariesOn flag
   int periodic =
-      HDF5Tools::read_attribute<int>(runtimepars, "PeriodicBoundariesOn");
+      HDF5Tools::read_attribute< int >(runtimepars, "PeriodicBoundariesOn");
   if (periodic) {
     // open the Header group
     HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
     // Read the box size
-    CoordinateVector sides =
-        HDF5Tools::read_attribute<CoordinateVector>(header, "BoxSize");
+    CoordinateVector<> sides =
+        HDF5Tools::read_attribute< CoordinateVector<> >(header, "BoxSize");
     // in this case, the anchor is just (0., 0., 0.)
-    CoordinateVector anchor;
+    CoordinateVector<> anchor;
     _box = Box(anchor, sides);
     // close the Header group
     HDF5Tools::close_group(header);
@@ -86,11 +86,11 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
   // open the group containing the SPH particle data
   HDF5Tools::HDF5Group gasparticles = HDF5Tools::open_group(file, "/PartType0");
   // read the positions, masses and smoothing lengths
-  _positions =
-      HDF5Tools::read_dataset<CoordinateVector>(gasparticles, "Coordinates");
-  _masses = HDF5Tools::read_dataset<double>(gasparticles, "Masses");
+  _positions = HDF5Tools::read_dataset< CoordinateVector<> >(gasparticles,
+                                                             "Coordinates");
+  _masses = HDF5Tools::read_dataset< double >(gasparticles, "Masses");
   _smoothing_lengths =
-      HDF5Tools::read_dataset<double>(gasparticles, "SmoothingLength");
+      HDF5Tools::read_dataset< double >(gasparticles, "SmoothingLength");
   // close the group
   HDF5Tools::close_group(gasparticles);
   // close the file
@@ -103,7 +103,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
  * @param position CoordinateVector specifying a coordinate position.
  * @return Density at the given coordinate.
  */
-double GadgetSnapshotDensityFunction::operator()(CoordinateVector position) {
+double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
   double density = 0.;
   for (unsigned int i = 0; i < _positions.size(); ++i) {
     double r;

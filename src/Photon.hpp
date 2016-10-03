@@ -34,10 +34,10 @@
 class Photon {
 private:
   /*! @brief Current position of the photon. */
-  CoordinateVector _position;
+  CoordinateVector<> _position;
 
   /*! @brief Current direction the photon is moving in. */
-  CoordinateVector _direction;
+  CoordinateVector<> _direction;
 
   /*! @brief Current energy contents of the photon. */
   double _energy;
@@ -50,7 +50,7 @@ public:
    * @param direction Initial direction of the photon.
    * @param energy Initial energy of the photon.
    */
-  inline Photon(CoordinateVector position, CoordinateVector direction,
+  inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy)
       : _position(position), _direction(direction), _energy(energy) {}
 
@@ -59,14 +59,14 @@ public:
    *
    * @return Current position of the photon.
    */
-  inline CoordinateVector get_position() { return _position; }
+  inline CoordinateVector<> get_position() { return _position; }
 
   /**
    * @brief Get the current direction the photon is moving in.
    *
    * @return Current movement direction of the photon.
    */
-  inline CoordinateVector get_direction() { return _direction; }
+  inline CoordinateVector<> get_direction() { return _direction; }
 
   /**
    * @brief Get the current energy of the photon.

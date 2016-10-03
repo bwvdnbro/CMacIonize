@@ -54,9 +54,9 @@ private:
   unsigned int _active_source_index;
 
   /*! @brief Positions of the discrete photon sources. */
-  std::vector<CoordinateVector> _positions;
+  std::vector< CoordinateVector<> > _positions;
   /*! @brief Weights of the discrete photon sources. */
-  std::vector<double> _weights;
+  std::vector< double > _weights;
 
 public:
   PhotonSource(unsigned int number_of_photons,

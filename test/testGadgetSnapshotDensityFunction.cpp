@@ -42,8 +42,8 @@ int main(int argc, char **argv) {
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
 
-  CoordinateVector anchor;
-  CoordinateVector sides(1., 1., 1.);
+  CoordinateVector<> anchor;
+  CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   DensityGrid grid(box, 32, density);
   assert_values_equal(grid.get_total_mass(), density.get_total_mass());

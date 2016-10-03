@@ -64,7 +64,7 @@ Photon PhotonSource::get_random_photon() {
     error("No more photons available!");
   }
 
-  CoordinateVector position = _positions[_active_source_index];
+  CoordinateVector<> position = _positions[_active_source_index];
 
   double cost = 2. * Utilities::random_double() - 1.;
   double sint = 1. - cost * cost;
@@ -72,7 +72,7 @@ Photon PhotonSource::get_random_photon() {
   double phi = 2. * M_PI * Utilities::random_double();
   double cosp = cos(phi);
   double sinp = sin(phi);
-  CoordinateVector direction(sint * cosp, sint * sinp, cost);
+  CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
 
   double energy = 0.;
 

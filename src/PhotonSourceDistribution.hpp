@@ -50,7 +50,7 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of a valid and photon source position.
    */
-  virtual CoordinateVector get_position(unsigned int index) = 0;
+  virtual CoordinateVector<> get_position(unsigned int index) = 0;
 
   /**
    * @brief Get the weight of a photon source.
