@@ -134,6 +134,21 @@ public:
   }
 
   /**
+   * @brief Divide the components of the CoordinateVector by a scalar.
+   *
+   * This method does not check if the scalar is zero!
+   *
+   * @param s Scalar to divide by.
+   * @return Reference to this CoordinateVector.
+   */
+  inline CoordinateVector &operator/=(double s) {
+    _x /= s;
+    _y /= s;
+    _z /= s;
+    return *this;
+  }
+
+  /**
    * @brief Get the squared norm of this CoordinateVector.
    *
    * @return Squared norm, defined as the quadratic sum of the components.

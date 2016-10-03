@@ -101,6 +101,15 @@ int main(int argc, char **argv) {
     assert_condition(b.z() == 18.);
   }
 
+  // test division
+  {
+    CoordinateVector a(1., 2., 3.);
+    a /= 2.;
+    assert_condition(a.x() == 0.5);
+    assert_condition(a.y() == 1.);
+    assert_condition(a.z() == 1.5);
+  }
+
   // test norm
   {
     CoordinateVector a(1.);

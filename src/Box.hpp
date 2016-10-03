@@ -71,6 +71,14 @@ public:
   inline CoordinateVector &get_sides() { return _sides; }
 
   /**
+   * @brief Get the corner opposite the anchor of the box.
+   *
+   * @return CoordinateVector containing the coordinates of the corner of the
+   * box opposite of the anchor.
+   */
+  inline CoordinateVector get_top_anchor() { return _anchor + _sides; }
+
+  /**
    * @brief Get the shortest distance vector between the given two
    * CoordinateVectors, given that this box is periodic.
    */

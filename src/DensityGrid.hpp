@@ -35,6 +35,12 @@ private:
   /*! @brief Box containing the grid. */
   Box _box;
 
+  /*! @brief Side lengths of a single cell. */
+  CoordinateVector _cellside;
+
+  /*! @brief Maximal cell side among the three dimensions. */
+  double _cellside_max;
+
   /*! @brief Number of cells in 1 dimension. */
   unsigned int _n1D;
 
@@ -47,6 +53,14 @@ public:
   ~DensityGrid();
 
   double get_total_mass();
+
+  void get_cell_indices(CoordinateVector position, unsigned int &ix,
+                        unsigned int &iy, unsigned int &iz);
+  Box get_cell(unsigned int ix, unsigned int iy, unsigned int iz);
+  CoordinateVector get_wall_intersection(CoordinateVector &photon_origin,
+                                         CoordinateVector &photon_direction,
+                                         Box &cell, char &ix, char &iy,
+                                         char &iz, double &ds);
 
   double get_distance(CoordinateVector photon_origin,
                       CoordinateVector photon_direction, double optical_depth);
