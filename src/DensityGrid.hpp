@@ -41,26 +41,29 @@ private:
   /*! @brief Maximal cell side among the three dimensions. */
   double _cellside_max;
 
-  /*! @brief Number of cells in 1 dimension. */
-  unsigned int _n1D;
+  /*! @brief Number of cells per dimension. Note that by choosing an unsigned
+   *  char type, we automatically limit grid sizes to 256^3. */
+  CoordinateVector< unsigned char > _ncell;
 
   /*! @brief Density grid. */
   double ***_density;
 
 public:
-  DensityGrid(Box box, unsigned int n1D, DensityFunction &density_function);
+  DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
+              DensityFunction &density_function);
 
   ~DensityGrid();
 
   double get_total_mass();
 
-  void get_cell_indices(CoordinateVector<> position, unsigned int &ix,
-                        unsigned int &iy, unsigned int &iz);
-  Box get_cell(unsigned int ix, unsigned int iy, unsigned int iz);
+  CoordinateVector< unsigned int >
+  get_cell_indices(CoordinateVector<> position);
+  Box get_cell(CoordinateVector< unsigned int > index);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
-                                           Box &cell, char &ix, char &iy,
-                                           char &iz, double &ds);
+                                           Box &cell,
+                                           CoordinateVector< char > &next_index,
+                                           double &ds);
 
   double get_distance(CoordinateVector<> photon_origin,
                       CoordinateVector<> photon_direction,

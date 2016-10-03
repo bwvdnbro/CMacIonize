@@ -114,10 +114,11 @@ public:
    * @param v CoordinateVector to add.
    * @return Reference to this CoordinateVector.
    */
-  inline CoordinateVector &operator+=(CoordinateVector v) {
-    _x += v._x;
-    _y += v._y;
-    _z += v._z;
+  template < typename othertype >
+  inline CoordinateVector &operator+=(CoordinateVector< othertype > v) {
+    _x += v.x();
+    _y += v.y();
+    _z += v.z();
     return *this;
   }
 

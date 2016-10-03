@@ -34,26 +34,25 @@ using namespace std;
  * @param n1D Number of cells in 1 dimensions.
  * @param density_function DensityFunction that defines the density field.
  */
-DensityGrid::DensityGrid(Box box, unsigned int n1D,
+DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
                          DensityFunction &density_function)
-    : _box(box) {
-  _n1D = n1D;
-  _density = new double **[_n1D];
-  for (unsigned int i = 0; i < _n1D; ++i) {
-    _density[i] = new double *[_n1D];
-    for (unsigned int j = 0; j < _n1D; ++j) {
-      _density[i][j] = new double[_n1D];
+    : _box(box), _ncell(ncell) {
+  _density = new double **[_ncell.x()];
+  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+    _density[i] = new double *[_ncell.y()];
+    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+      _density[i][j] = new double[_ncell.z()];
     }
   }
 
   // fill the density grid
-  double cellside_x = _box.get_sides().x() / _n1D;
-  double cellside_y = _box.get_sides().y() / _n1D;
-  double cellside_z = _box.get_sides().z() / _n1D;
+  double cellside_x = _box.get_sides().x() / _ncell.x();
+  double cellside_y = _box.get_sides().y() / _ncell.y();
+  double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-  for (unsigned int i = 0; i < _n1D; ++i) {
-    for (unsigned int j = 0; j < _n1D; ++j) {
-      for (unsigned int k = 0; k < _n1D; ++k) {
+  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+      for (unsigned int k = 0; k < _ncell.z(); ++k) {
         double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
         double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
         double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
@@ -77,8 +76,8 @@ DensityGrid::DensityGrid(Box box, unsigned int n1D,
  * Free the memory used by the internal arrays.
  */
 DensityGrid::~DensityGrid() {
-  for (unsigned int i = 0; i < _n1D; ++i) {
-    for (unsigned int j = 0; j < _n1D; ++j) {
+  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+    for (unsigned int j = 0; j < _ncell.y(); ++j) {
       delete[] _density[i][j];
     }
     delete[] _density[i];
@@ -95,9 +94,9 @@ double DensityGrid::get_total_mass() {
   double mtot = 0;
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
 
-  for (unsigned int i = 0; i < _n1D; ++i) {
-    for (unsigned int j = 0; j < _n1D; ++j) {
-      for (unsigned int k = 0; k < _n1D; ++k) {
+  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+      for (unsigned int k = 0; k < _ncell.z(); ++k) {
         mtot += _density[i][j][k] * cellvolume;
       }
     }
@@ -110,16 +109,15 @@ double DensityGrid::get_total_mass() {
  * @brief Get the indices of the cell containing the given coordinates.
  *
  * @param position CoordinateVector containing coordinates we want to locate.
- * @param ix Variable to store the x index of the cell in.
- * @param iy Variable to store the y index of the cell in.
- * @param iz Variable to store the z index of the cell in.
+ * @return CoordinateVector<unsigned int> containing the three indices of the
+ * cell.
  */
-void DensityGrid::get_cell_indices(CoordinateVector<> position,
-                                   unsigned int &ix, unsigned int &iy,
-                                   unsigned int &iz) {
-  ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
-  iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
-  iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
+CoordinateVector< unsigned int >
+DensityGrid::get_cell_indices(CoordinateVector<> position) {
+  unsigned int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
+  unsigned int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
+  unsigned int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
+  return CoordinateVector< unsigned int >(ix, iy, iz);
 }
 
 /**
@@ -129,16 +127,14 @@ void DensityGrid::get_cell_indices(CoordinateVector<> position,
  * right corner, the Box we return does not use a side and anchor, but rather
  * two anchors.
  *
- * @param ix x index of the cell.
- * @param iy y index of the cell.
- * @param iz z index of the cell.
+ * @param index Indices of the cell.
  * @return Box containing the bottom front left corner and the upper back right
  * corner of the cell.
  */
-Box DensityGrid::get_cell(unsigned int ix, unsigned int iy, unsigned int iz) {
-  double cell_xmin = _box.get_anchor().x() + _cellside.x() * ix;
-  double cell_ymin = _box.get_anchor().y() + _cellside.y() * iy;
-  double cell_zmin = _box.get_anchor().z() + _cellside.z() * iz;
+Box DensityGrid::get_cell(CoordinateVector< unsigned int > index) {
+  double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
+  double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
+  double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
   return Box(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin), _cellside);
 }
 
@@ -166,9 +162,8 @@ Box DensityGrid::get_cell(unsigned int ix, unsigned int iy, unsigned int iz) {
  * @param photon_origin Current position of the photon.
  * @param photon_direction Direction the photon is travelling in.
  * @param cell Cell in which the photon currently resides.
- * @param ix x index of the neighbouring cell relative to the current cell.
- * @param iy y index of the neighbouring cell relative to the current cell.
- * @param iz z index of the neighbouring cell relative to the current cell.
+ * @param next_index Index of the neighbouring cell, relative with respect to
+ * the current cell.
  * @param ds Distance covered from the photon position to the intersection
  * point.
  * @return CoordinateVector containing the coordinates of the intersection point
@@ -176,7 +171,7 @@ Box DensityGrid::get_cell(unsigned int ix, unsigned int iy, unsigned int iz) {
  */
 CoordinateVector<> DensityGrid::get_wall_intersection(
     CoordinateVector<> &photon_origin, CoordinateVector<> &photon_direction,
-    Box &cell, char &ix, char &iy, char &iz, double &ds) {
+    Box &cell, CoordinateVector< char > &next_index, double &ds) {
   CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
   CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
@@ -190,10 +185,10 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
     // we know that the photon hits the next x wall when the x-component of
     // this expression equals cell_xmax, so we can solve for l:
     l = (cell_top_anchor.x() - photon_origin.x()) / photon_direction.x();
-    ix = 1;
+    next_index[0] = 1;
   } else if (photon_direction.x() < 0.) {
     l = (cell_bottom_anchor.x() - photon_origin.x()) / photon_direction.x();
-    ix = -1;
+    next_index[0] = -1;
   } else {
     // we never reach an x wall, since the photon travels parallel with it
     // we just set l to a ridiculous value that will always cause dx
@@ -211,7 +206,7 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
     // in other words: if we set l > \sqrt{3}*cellside_max, we are sure dy or
     // dz will always be smaller
     l = 1000. * _cellside_max;
-    ix = 0;
+    next_index[0] = 0;
   }
   // the y and z coordinates are then trivially found
   next_x = photon_origin + l * photon_direction;
@@ -220,13 +215,13 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
   CoordinateVector<> next_y;
   if (photon_direction.y() > 0.) {
     l = (cell_top_anchor.y() - photon_origin.y()) / photon_direction.y();
-    iy = 1;
+    next_index[1] = 1;
   } else if (photon_direction.y() < 0.) {
     l = (cell_bottom_anchor.y() - photon_origin.y()) / photon_direction.y();
-    iy = -1;
+    next_index[1] = -1;
   } else {
     l = 1000. * _cellside_max;
-    iy = 0;
+    next_index[1] = 0;
   }
   next_y = photon_origin + l * photon_direction;
   double dy = (next_y - photon_origin).norm2();
@@ -234,13 +229,13 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
   CoordinateVector<> next_z;
   if (photon_direction.z() > 0.) {
     l = (cell_top_anchor.z() - photon_origin.z()) / photon_direction.z();
-    iz = 1;
+    next_index[2] = 1;
   } else if (photon_direction.z() < 0.) {
     l = (cell_bottom_anchor.z() - photon_origin.z()) / photon_direction.z();
-    iz = -1;
+    next_index[2] = -1;
   } else {
     l = 1000. * _cellside_max;
-    iz = 0;
+    next_index[2] = 0;
   }
   next_z = photon_origin + l * photon_direction;
   double dz = (next_z - photon_origin).norm2();
@@ -249,33 +244,33 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
   if (dx < dy && dx < dz) {
     next_wall = next_x;
     ds = dx;
-    iy = 0;
-    iz = 0;
+    next_index[1] = 0;
+    next_index[2] = 0;
   } else if (dy < dx && dy < dz) {
     next_wall = next_y;
     ds = dy;
-    ix = 0;
-    iz = 0;
+    next_index[0] = 0;
+    next_index[2] = 0;
   } else if (dz < dx && dz < dy) {
     next_wall = next_z;
     ds = dz;
-    ix = 0;
-    iy = 0;
+    next_index[0] = 0;
+    next_index[1] = 0;
   } else {
     // special cases: at least two of the smallest values are equal
     if (dx == dy && dx < dz) {
       // it does not matter which values we pick, they will be the same
       next_wall = next_x;
       ds = dx;
-      iz = 0;
+      next_index[2] = 0;
     } else if (dx == dz && dx < dy) {
       next_wall = next_x;
       ds = dx;
-      iy = 0;
+      next_index[1] = 0;
     } else if (dy == dz && dy < dx) {
       next_wall = next_y;
       ds = dy;
-      ix = 0;
+      next_index[0] = 0;
     } else {
       // all values are equal, we sit on a corner of the box
       next_wall = next_x;
@@ -304,17 +299,16 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
   double S = 0.;
 
   // find out in which cell the photon is currently hiding
-  unsigned int ix, iy, iz;
-  get_cell_indices(photon_origin, ix, iy, iz);
+  CoordinateVector< unsigned int > index = get_cell_indices(photon_origin);
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (optical_depth > 0.) {
-    Box cell = get_cell(ix, iy, iz);
+    Box cell = get_cell(index);
 
     double ds;
-    char next_ix, next_iy, next_iz;
+    CoordinateVector< char > next_index;
     CoordinateVector<> next_wall = get_wall_intersection(
-        photon_origin, photon_direction, cell, next_ix, next_iy, next_iz, ds);
+        photon_origin, photon_direction, cell, next_index, ds);
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
@@ -322,9 +316,10 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
     optical_depth -= ds;
 
     photon_origin = next_wall;
-    ix += next_ix;
-    iy += next_iy;
-    iz += next_iz;
+    // the line below can be susceptible to overflow: if index[i] = 0 and
+    // next_index[i] = -1, index[i] will become 2**32-1
+    // we should implement a check for this...
+    index += next_index;
 
     // if the optical depth exceeds or equals the wanted value: exit the loop
 
