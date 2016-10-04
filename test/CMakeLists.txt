@@ -89,6 +89,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
+    ../src/DensityValues.hpp
     ../src/Error.hpp
 )
 add_unit_test(NAME testDensityGrid
@@ -107,6 +108,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
+    ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetSnapshotDensityFunction.cpp
     ../src/GadgetSnapshotDensityFunction.hpp

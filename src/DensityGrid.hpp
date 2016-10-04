@@ -30,6 +30,7 @@
 
 class CrossSections;
 class DensityFunction;
+class DensityValues;
 
 class DensityGrid {
 private:
@@ -47,7 +48,7 @@ private:
   CoordinateVector< unsigned char > _ncell;
 
   /*! @brief Density grid. */
-  double ***_density;
+  DensityValues ***_density;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;

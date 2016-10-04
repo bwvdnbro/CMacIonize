@@ -26,6 +26,7 @@
 #include "DensityGrid.hpp"
 #include "CrossSections.hpp"
 #include "DensityFunction.hpp"
+#include "DensityValues.hpp"
 using namespace std;
 
 /**
@@ -40,11 +41,11 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
                          DensityFunction &density_function,
                          CrossSections &cross_sections)
     : _box(box), _ncell(ncell), _cross_sections(cross_sections) {
-  _density = new double **[_ncell.x()];
+  _density = new DensityValues **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
-    _density[i] = new double *[_ncell.y()];
+    _density[i] = new DensityValues *[_ncell.y()];
     for (unsigned int j = 0; j < _ncell.y(); ++j) {
-      _density[i][j] = new double[_ncell.z()];
+      _density[i][j] = new DensityValues[_ncell.z()];
     }
   }
 
@@ -59,7 +60,8 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
         double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
         double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
         double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
-        _density[i][j][k] = density_function(CoordinateVector<>(x, y, z));
+        _density[i][j][k].set_total_density(
+            density_function(CoordinateVector<>(x, y, z)));
       }
     }
   }
@@ -100,7 +102,7 @@ double DensityGrid::get_total_mass() {
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
     for (unsigned int j = 0; j < _ncell.y(); ++j) {
       for (unsigned int k = 0; k < _ncell.z(); ++k) {
-        mtot += _density[i][j][k] * cellvolume;
+        mtot += _density[i][j][k].get_total_density() * cellvolume;
       }
     }
   }
