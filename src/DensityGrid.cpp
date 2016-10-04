@@ -115,12 +115,12 @@ double DensityGrid::get_total_mass() {
  * @return CoordinateVector<unsigned int> containing the three indices of the
  * cell.
  */
-CoordinateVector< unsigned int >
+CoordinateVector< int >
 DensityGrid::get_cell_indices(CoordinateVector<> position) {
-  unsigned int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
-  unsigned int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
-  unsigned int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
-  return CoordinateVector< unsigned int >(ix, iy, iz);
+  int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
+  int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
+  int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
+  return CoordinateVector< int >(ix, iy, iz);
 }
 
 /**
@@ -134,11 +134,24 @@ DensityGrid::get_cell_indices(CoordinateVector<> position) {
  * @return Box containing the bottom front left corner and the upper back right
  * corner of the cell.
  */
-Box DensityGrid::get_cell(CoordinateVector< unsigned int > index) {
+Box DensityGrid::get_cell(CoordinateVector< int > index) {
   double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
   double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
   double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
   return Box(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin), _cellside);
+}
+
+/**
+ * @brief Check whether the given index points to a valid cell.
+ *
+ * @param index Indices of the cell.
+ * @return True if the indices are valid, false otherwise.
+ */
+bool DensityGrid::is_inside(CoordinateVector< int > index) {
+  bool inside = (index.x() >= 0 && index.x() < _ncell.x());
+  inside &= (index.y() >= 0 && index.y() < _ncell.y());
+  inside &= (index.z() >= 0 && index.z() < _ncell.z());
+  return inside;
 }
 
 /**
@@ -302,10 +315,10 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
   double S = 0.;
 
   // find out in which cell the photon is currently hiding
-  CoordinateVector< unsigned int > index = get_cell_indices(photon_origin);
+  CoordinateVector< int > index = get_cell_indices(photon_origin);
 
   // while the photon has not exceeded the optical depth and is still in the box
-  while (optical_depth > 0.) {
+  while (is_inside(index) && optical_depth > 0.) {
     Box cell = get_cell(index);
 
     double ds;
@@ -319,9 +332,6 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
     optical_depth -= ds;
 
     photon_origin = next_wall;
-    // the line below can be susceptible to overflow: if index[i] = 0 and
-    // next_index[i] = -1, index[i] will become 2**32-1
-    // we should implement a check for this...
     index += next_index;
 
     // if the optical depth exceeds or equals the wanted value: exit the loop

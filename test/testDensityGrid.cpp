@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
   assert_values_equal(1., grid.get_total_mass());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
-  CoordinateVector< unsigned int > index = grid.get_cell_indices(photon_origin);
+  CoordinateVector< int > index = grid.get_cell_indices(photon_origin);
 
   assert_condition(index.x() == 32);
   assert_condition(index.y() == 32);

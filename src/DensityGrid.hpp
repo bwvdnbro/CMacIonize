@@ -60,9 +60,9 @@ public:
 
   double get_total_mass();
 
-  CoordinateVector< unsigned int >
-  get_cell_indices(CoordinateVector<> position);
-  Box get_cell(CoordinateVector< unsigned int > index);
+  CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
+  Box get_cell(CoordinateVector< int > index);
+  bool is_inside(CoordinateVector< int > index);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
                                            Box &cell,
