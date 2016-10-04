@@ -63,6 +63,9 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
         double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
         _density[i][j][k].set_total_density(
             density_function(CoordinateVector<>(x, y, z)));
+        // initialize the neutral fractions to very low values
+        _density[i][j][k].set_neutral_fraction_H(1.e-6);
+        _density[i][j][k].set_neutral_fraction_He(1.e-6);
       }
     }
   }
@@ -371,5 +374,5 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
   photon.set_position(photon_origin);
 
-  return S;
+  return is_inside(index);
 }

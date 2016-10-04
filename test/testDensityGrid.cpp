@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
   Photon photon(photon_origin, photon_direction, 1.);
   bool inside = grid.interact(photon, 0.125);
 
-  assert_condition(inside == true);
+  assert_condition(inside == false);
 
   return 0;
 }
