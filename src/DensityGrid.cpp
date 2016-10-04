@@ -339,7 +339,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
-    S += ds;
     DensityValues &density = _density[index.x()][index.y()][index.z()];
     double tau = ds * density.get_total_density() *
                  (xsecH * density.get_neutral_fraction_H() +
@@ -355,11 +354,19 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
     // we end up, and correct S
     if (optical_depth < 0.) {
       double Scorr = ds * optical_depth / tau;
-      S += Scorr;
+      // order is important here!
       photon_origin += (next_wall - photon_origin) * (ds + Scorr) / ds;
+      ds += Scorr;
     } else {
       photon_origin = next_wall;
     }
+
+    // ds is now the actual distance travelled in the cell
+    // update contributions to mean intensity integrals
+    density.increase_mean_intensity_H(ds * xsecH);
+    density.increase_mean_intensity_He(ds * xsecHe);
+
+    S += ds;
   }
 
   photon.set_position(photon_origin);

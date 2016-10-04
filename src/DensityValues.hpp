@@ -40,12 +40,19 @@ private:
   /*! @brief Neutral fraction of helium. */
   double _neutral_fraction_He;
 
+  /*! @brief Mean intensity of hydrogen ionizing radiation. */
+  double _mean_intensity_H;
+
+  /*! @brief Mean intensity of helium ionizing radiation. */
+  double _mean_intensity_He;
+
 public:
   /**
    * @brief Empty constructor.
    */
   inline DensityValues()
-      : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.) {}
+      : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
+        _mean_intensity_H(0.), _mean_intensity_He(0.) {}
 
   /**
    * @brief Set the total density.
@@ -75,6 +82,26 @@ public:
   }
 
   /**
+   * @brief Increase the value of the mean intensity of hydrogen ionizing
+   * radiation by the given amount.
+   *
+   * @param dmean_intensity_H Increment.
+   */
+  inline void increase_mean_intensity_H(double dmean_intensity_H) {
+    _mean_intensity_H += dmean_intensity_H;
+  }
+
+  /**
+   * @brief Increase the value of the mean intensity of helium ionizing
+   * radiation by the given amount.
+   *
+   * @param dmean_intensity_He Increment.
+   */
+  inline void increase_mean_intensity_He(double dmean_intensity_He) {
+    _mean_intensity_He += dmean_intensity_He;
+  }
+
+  /**
    * @brief Get the total density.
    *
    * @return Total density.
@@ -94,6 +121,20 @@ public:
    * @return Neutral fraction of helium.
    */
   inline double get_neutral_fraction_He() { return _neutral_fraction_He; }
+
+  /**
+   * @brief Get the mean intensity of hydrogen ionizing radiation.
+   *
+   * @return Mean intensity of hydrogen ionizing radiation.
+   */
+  inline double get_mean_intensity_H() { return _mean_intensity_H; }
+
+  /**
+   * @brief Get the mean intensity of helium ionizing radiation.
+   *
+   * @return Mean intensity of helium ionizing radiation.
+   */
+  inline double get_mean_intensity_He() { return _mean_intensity_He; }
 };
 
 #endif // DENSITYVALUES_HPP
