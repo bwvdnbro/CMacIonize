@@ -28,6 +28,7 @@
 
 #include "Box.hpp"
 
+class CrossSections;
 class DensityFunction;
 
 class DensityGrid {
@@ -48,9 +49,12 @@ private:
   /*! @brief Density grid. */
   double ***_density;
 
+  /*! @brief Cross sections for photoionization. */
+  CrossSections &_cross_sections;
+
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-              DensityFunction &density_function);
+              DensityFunction &density_function, CrossSections &cross_sections);
 
   ~DensityGrid();
 

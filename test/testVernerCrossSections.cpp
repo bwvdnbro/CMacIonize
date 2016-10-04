@@ -17,29 +17,29 @@
  ******************************************************************************/
 
 /**
- * @file testCrossSections.cpp
+ * @file testVernerCrossSections.cpp
  *
- * @brief Unit test for the CrossSections class.
+ * @brief Unit test for the VernerCrossSections class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "CrossSections.hpp"
 #include "Error.hpp"
+#include "VernerCrossSections.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 using namespace std;
 
 /**
- * @brief Unit test for the CrossSections class.
+ * @brief Unit test for the VernerCrossSections class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  CrossSections cross_sections;
+  VernerCrossSections cross_sections;
 
   ifstream file("verner_testdata.txt");
   string line;

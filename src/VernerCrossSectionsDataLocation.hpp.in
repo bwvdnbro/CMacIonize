@@ -17,19 +17,19 @@
  ******************************************************************************/
 
 /**
- * @file CrossSectionsDataLocation.hpp
+ * @file VernerCrossSectionsDataLocation.hpp
  *
  * @brief CMake configured file storing the location of the cross sections data
  * file on the local system.
  *
  * This file should never be edited directly. Instead, edit
- * CrossSectionsDataLocation.hpp.in.
+ * VernerCrossSectionsDataLocation.hpp.in.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef CROSSSECTIONSDATALOCATION_HPP
-#define CROSSSECTIONSDATALOCATION_HPP
+#ifndef VERNERCROSSSECTIONSDATALOCATION_HPP
+#define VERNERCROSSSECTIONSDATALOCATION_HPP
 
-#define CROSSSECTIONSDATALOCATION "@CROSSSECTIONSDATALOCATION@"
+#define VERNERCROSSSECTIONSDATALOCATION "@VERNERCROSSSECTIONSDATALOCATION@"
 
-#endif // CROSSSECTIONSDATALOCATION_HPP
+#endif // VERNERCROSSSECTIONSDATALOCATION_HPP

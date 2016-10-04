@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityGrid.hpp"
 
@@ -41,6 +42,22 @@ class TestDensityFunction : public DensityFunction {
 };
 
 /**
+ * @brief Test implementation of CrossSections.
+ */
+class TestCrossSections : public CrossSections {
+public:
+  /**
+   * @brief Get the photoionization cross section for the given element at the
+   * given photon energy.
+   *
+   * @param element CrossSectionElements index for an element.
+   * @param energy Photon energy.
+   * @return Photoionization cross section.
+   */
+  virtual double get_cross_section(int element, double energy) { return 1.; }
+};
+
+/**
  * @brief Unit test for the DensityGrid class.
  *
  * @param argc Number of command line arguments.
@@ -49,6 +66,7 @@ class TestDensityFunction : public DensityFunction {
  */
 int main(int argc, char **argv) {
   TestDensityFunction testfunction;
+  TestCrossSections testcrosssections;
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
@@ -59,7 +77,7 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  DensityGrid grid(box, 64, testfunction);
+  DensityGrid grid(box, 64, testfunction, testcrosssections);
 
   assert_values_equal(1., grid.get_total_mass());
 

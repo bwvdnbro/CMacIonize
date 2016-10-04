@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "DensityGrid.hpp"
+#include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 using namespace std;
 
@@ -33,10 +34,12 @@ using namespace std;
  * @param box Box containing the grid.
  * @param n1D Number of cells in 1 dimensions.
  * @param density_function DensityFunction that defines the density field.
+ * @param cross_sections Photoionization cross sections.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-                         DensityFunction &density_function)
-    : _box(box), _ncell(ncell) {
+                         DensityFunction &density_function,
+                         CrossSections &cross_sections)
+    : _box(box), _ncell(ncell), _cross_sections(cross_sections) {
   _density = new double **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new double *[_ncell.y()];

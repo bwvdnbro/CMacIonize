@@ -25,10 +25,27 @@
  */
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
+#include "CrossSections.hpp"
 #include "DensityGrid.hpp"
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 using namespace std;
+
+/**
+ * @brief Test implementation of CrossSections.
+ */
+class TestCrossSections : public CrossSections {
+public:
+  /**
+   * @brief Get the photoionization cross section for the given element at the
+   * given photon energy.
+   *
+   * @param element CrossSectionElements index for an element.
+   * @param energy Photon energy.
+   * @return Photoionization cross section.
+   */
+  virtual double get_cross_section(int element, double energy) { return 1.; }
+};
 
 /**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.
@@ -41,11 +58,12 @@ int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
+  TestCrossSections testcrosssections;
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
-  DensityGrid grid(box, 32, density);
+  DensityGrid grid(box, 32, density, testcrosssections);
   assert_values_equal(grid.get_total_mass(), density.get_total_mass());
 
   return 0;

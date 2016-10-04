@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file CrossSections.cpp
+ * @file VernerCrossSections.cpp
  *
- * @brief Scattering cross sections: implementation.
+ * @brief Verner photoionization cross sections: implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "CrossSections.hpp"
-#include "CrossSectionsDataLocation.hpp"
+#include "VernerCrossSections.hpp"
+#include "VernerCrossSectionsDataLocation.hpp"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -36,8 +36,8 @@ using namespace std;
  *
  * Reads in the data from a file.
  */
-CrossSections::CrossSections() {
-  ifstream file(CROSSSECTIONSDATALOCATION);
+VernerCrossSections::VernerCrossSections() {
+  ifstream file(VERNERCROSSSECTIONSDATALOCATION);
   string line;
   // skip initial comment line
   getline(file, line);
@@ -127,9 +127,10 @@ CrossSections::CrossSections() {
  * @param e Photon energy (in eV).
  * @return Photoionization cross section.
  */
-double CrossSections::get_cross_section_verner(unsigned char nz,
-                                               unsigned char ne,
-                                               unsigned char is, double e) {
+double VernerCrossSections::get_cross_section_verner(unsigned char nz,
+                                                     unsigned char ne,
+                                                     unsigned char is,
+                                                     double e) {
   double s = 0.;
   if (nz < 1 || nz > 30) {
     return 0.;
@@ -198,7 +199,7 @@ double CrossSections::get_cross_section_verner(unsigned char nz,
  * @return Photoionization cross section for the given element and for the given
  * photon energy.
  */
-double CrossSections::get_cross_section(int element, double energy) {
+double VernerCrossSections::get_cross_section(int element, double energy) {
   switch (element) {
   case ELEMENT_H:
     return get_cross_section_verner(1, 1, 1, energy);

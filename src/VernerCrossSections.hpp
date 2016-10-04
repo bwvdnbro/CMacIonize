@@ -17,41 +17,44 @@
  ******************************************************************************/
 
 /**
- * @file CrossSections.hpp
+ * @file VernerCrossSections.hpp
  *
- * @brief General interface for photoionization cross sections.
+ * @brief Verner photoionization cross sections: header.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef CROSSSECTIONS_HPP
-#define CROSSSECTIONS_HPP
+#ifndef VERNERCROSSSECTIONS_HPP
+#define VERNERCROSSSECTIONS_HPP
+
+#include "CrossSections.hpp"
 
 /**
- * @brief Names of supported elements.
+ * @brief CrossSections implementation for Verner's cross sections.
  */
-enum CrossSectionElements {
-  /*! @brief Hydrogen. */
-  ELEMENT_H = 0,
-  /*! @brief Helium. */
-  ELEMENT_He,
-  /*! @brief Number of supported elements. */
-  CROSSSECTIONS_NUMELEMENTS
-};
+class VernerCrossSections : public CrossSections {
+private:
+  /*! L array from Verner's script. */
+  unsigned char _L[7];
 
-/**
- * @brief General interface for photoionization cross sections.
- */
-class CrossSections {
+  /*! NINN array from Verner's script. */
+  unsigned char _NINN[30];
+
+  /*! NTOT array from Verner's script. */
+  unsigned char _NTOT[30];
+
+  /*! PH1 array from Verner's script. */
+  double _PH1[6][30][30][7];
+
+  /*! PH2 array from Verner's script. */
+  double _PH2[7][30][30];
+
 public:
-  /**
-   * @brief Get the photoionization cross section for the given element at the
-   * given photon energy.
-   *
-   * @param element CrossSectionElements index for an element.
-   * @param energy Photon energy (in eV).
-   * @return Photoionization cross section.
-   */
-  virtual double get_cross_section(int element, double energy) = 0;
+  VernerCrossSections();
+
+  double get_cross_section_verner(unsigned char nz, unsigned char ne,
+                                  unsigned char is, double e);
+
+  virtual double get_cross_section(int element, double energy);
 };
 
 #endif // CROSSSECTIONS_HPP

@@ -155,19 +155,20 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
 add_unit_test(NAME testPhotonSourceSpectrum
               SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES})
 
-## CrossSections test
+## VernerCrossSections test
 configure_file(${PROJECT_SOURCE_DIR}/test/verner_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/verner_testdata.txt
                COPYONLY)
-set(TESTCROSSSECTIONS_SOURCES
-    testCrossSections.cpp
+set(TESTVERNERCROSSSECTIONS_SOURCES
+    testVernerCrossSections.cpp
 
-    ../src/CrossSections.cpp
     ../src/CrossSections.hpp
-    ../src/CrossSectionsDataLocation.hpp
+    ../src/VernerCrossSections.cpp
+    ../src/VernerCrossSections.hpp
+    ../src/VernerCrossSectionsDataLocation.hpp
 )
-add_unit_test(NAME testCrossSections
-              SOURCES ${TESTCROSSSECTIONS_SOURCES})
+add_unit_test(NAME testVernerCrossSections
+              SOURCES ${TESTVERNERCROSSSECTIONS_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
