@@ -46,9 +46,13 @@ endmacro(add_unit_test)
 
 ## Unit test for LineCoolingData
 # Create the list of source files for this test
+# This list contains ALL .cpp and .hpp files necessary to make the test work.
 set(TESTLINECOOLINGDATA_SOURCES
     testLineCoolingData.cpp
 
+    Assert.hpp
+
+    ../src/Error.hpp
     ../src/LineCoolingData.cpp
     ../src/LineCoolingData.hpp
     ../src/LineCoolingDataLocation.hpp
@@ -77,11 +81,15 @@ add_unit_test(NAME testCommandLineParser
 set(TESTDENSITYGRID_SOURCES
     testDensityGrid.cpp
 
+    Assert.hpp
+
     ../src/Box.hpp
     ../src/CoordinateVector.hpp
+    ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
+    ../src/Error.hpp
 )
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
@@ -91,13 +99,18 @@ if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     testGadgetSnapshotDensityFunction.cpp
 
+    Assert.hpp
+
     ../src/Box.hpp
     ../src/CoordinateVector.hpp
+    ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
+    ../src/Error.hpp
     ../src/GadgetSnapshotDensityFunction.cpp
     ../src/GadgetSnapshotDensityFunction.hpp
+    ../src/HDF5Tools.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
@@ -113,6 +126,9 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test.hdf5
 set(TESTHDF5TOOLS_SOURCES
     testHDF5Tools.cpp
 
+    Assert.hpp
+
+    ../src/CoordinateVector.hpp
     ../src/Error.hpp
     ../src/HDF5Tools.hpp
 )
@@ -125,7 +141,10 @@ endif(HAVE_HDF5)
 set(TESTCOORDINATEVECTOR_SOURCES
     testCoordinateVector.cpp
 
+    Assert.hpp
+
     ../src/CoordinateVector.hpp
+    ../src/Error.hpp
 )
 add_unit_test(NAME testCoordinateVector
               SOURCES ${TESTCOORDINATEVECTOR_SOURCES})
@@ -134,12 +153,16 @@ add_unit_test(NAME testCoordinateVector
 set(TESTPHOTONSOURCE_SOURCES
     testPhotonSource.cpp
 
+    Assert.hpp
+
     ../src/CoordinateVector.hpp
+    ../src/Error.hpp
     ../src/Photon.hpp
     ../src/PhotonSource.cpp
     ../src/PhotonSource.hpp
     ../src/PhotonSourceDistribution.hpp
     ../src/SingleStarPhotonSourceDistribution.hpp
+    ../src/Utilities.hpp
 )
 add_unit_test(NAME testPhotonSource
               SOURCES ${TESTPHOTONSOURCE_SOURCES})
@@ -148,9 +171,13 @@ add_unit_test(NAME testPhotonSource
 set(TESTPHOTONSOURCESPECTRUM_SOURCES
     testPhotonSourceSpectrum.cpp
 
+    Assert.hpp
+
+    ../src/Error.hpp
     ../src/PhotonSourceSpectrum.hpp
     ../src/PlanckPhotonSourceSpectrum.cpp
     ../src/PlanckPhotonSourceSpectrum.hpp
+    ../src/Utilities.hpp
 )
 add_unit_test(NAME testPhotonSourceSpectrum
               SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES})
@@ -162,7 +189,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/verner_testdata.txt
 set(TESTVERNERCROSSSECTIONS_SOURCES
     testVernerCrossSections.cpp
 
+    Assert.hpp
+
     ../src/CrossSections.hpp
+    ../src/Error.hpp
     ../src/VernerCrossSections.cpp
     ../src/VernerCrossSections.hpp
     ../src/VernerCrossSectionsDataLocation.hpp
