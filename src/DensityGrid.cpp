@@ -27,6 +27,7 @@
 #include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "Photon.hpp"
 using namespace std;
 
 /**
@@ -303,21 +304,29 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
 }
 
 /**
- * @brief Get the distance that needs to be travelled by a photon with the given
- * origin in the given direction to cover the given optical depth.
+ * @brief Let the given Photon travel through the density grid until the given
+ * optical depth is reached.
  *
- * @param photon_origin Origin of the photon.
- * @param photon_direction Direction the photon is moving in.
+ * @param photon Photon.
  * @param optical_depth Optical depth the photon should travel in total.
- * @return Total distance covered by the photon.
+ * @return True if the Photon is still in the box after the optical depth has
+ * been reached, false otherwise.
  */
-double DensityGrid::get_distance(CoordinateVector<> photon_origin,
-                                 CoordinateVector<> photon_direction,
-                                 double optical_depth) {
+bool DensityGrid::interact(Photon &photon, double optical_depth) {
   double S = 0.;
+
+  CoordinateVector<> photon_origin = photon.get_position();
+  CoordinateVector<> photon_direction = photon.get_direction();
 
   // find out in which cell the photon is currently hiding
   CoordinateVector< int > index = get_cell_indices(photon_origin);
+
+  double xsecH =
+      _cross_sections.get_cross_section(ELEMENT_H, photon.get_energy());
+  double xsecHe =
+      _cross_sections.get_cross_section(ELEMENT_He, photon.get_energy());
+  // Helium mass fraction. Should be a parameter.
+  double AHe = 0.1;
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index) && optical_depth > 0.) {
@@ -331,9 +340,12 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
     S += ds;
-    optical_depth -= ds;
+    DensityValues &density = _density[index.x()][index.y()][index.z()];
+    double tau = ds * density.get_total_density() *
+                 (xsecH * density.get_neutral_fraction_H() +
+                  AHe * xsecHe * density.get_neutral_fraction_He());
+    optical_depth -= tau;
 
-    photon_origin = next_wall;
     index += next_index;
 
     // if the optical depth exceeds or equals the wanted value: exit the loop
@@ -342,9 +354,15 @@ double DensityGrid::get_distance(CoordinateVector<> photon_origin,
     // cell
     // we end up, and correct S
     if (optical_depth < 0.) {
-      S += optical_depth;
+      double Scorr = ds * optical_depth / tau;
+      S += Scorr;
+      photon_origin += (next_wall - photon_origin) * (ds + Scorr) / ds;
+    } else {
+      photon_origin = next_wall;
     }
   }
+
+  photon.set_position(photon_origin);
 
   return S;
 }

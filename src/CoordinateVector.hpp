@@ -220,4 +220,32 @@ inline CoordinateVector< datatype > operator*(scalartype s,
   return v *= s;
 }
 
+/**
+ * @brief Free operator that multiplies a CoordinateVector with a scalar and
+ * returns a CoordinateVector.
+ *
+ * @param v CoordinateVector that should be multiplied.
+ * @param s Scalar to multiply with.
+ * @return Resulting CoordinateVector.
+ */
+template < typename datatype, typename scalartype >
+inline CoordinateVector< datatype > operator*(CoordinateVector< datatype > v,
+                                              scalartype s) {
+  return v *= s;
+}
+
+/**
+ * @brief Free operator that divides a CoordinateVector by a scalar and
+ * returns a CoordinateVector.
+ *
+ * @param v CoordinateVector that should be divided.
+ * @param s Scalar to divide by.
+ * @return Resulting CoordinateVector.
+ */
+template < typename datatype, typename scalartype >
+inline CoordinateVector< datatype > operator/(CoordinateVector< datatype > v,
+                                              scalartype s) {
+  return v /= s;
+}
+
 #endif // COORDINATEVECTOR_HPP

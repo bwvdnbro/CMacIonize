@@ -27,6 +27,7 @@
 #include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityGrid.hpp"
+#include "Photon.hpp"
 
 /**
  * @brief Test implementation of DensityFunction.
@@ -239,9 +240,10 @@ int main(int argc, char **argv) {
   }
 
   CoordinateVector<> photon_direction(1., 0., 0.);
-  double S = grid.get_distance(photon_origin, photon_direction, 0.125);
+  Photon photon(photon_origin, photon_direction, 1.);
+  bool inside = grid.interact(photon, 0.125);
 
-  assert_values_equal(S, 0.125);
+  assert_condition(inside == true);
 
   return 0;
 }

@@ -74,6 +74,15 @@ public:
    * @return Current energy of the photon.
    */
   inline double get_energy() { return _energy; }
+
+  /**
+   * @brief Set the position of the photon.
+   *
+   * @param position New position of the photon.
+   */
+  inline void set_position(CoordinateVector<> position) {
+    _position = position;
+  }
 };
 
 #endif // PHOTON_HPP

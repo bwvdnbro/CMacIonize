@@ -31,6 +31,7 @@
 class CrossSections;
 class DensityFunction;
 class DensityValues;
+class Photon;
 
 class DensityGrid {
 private:
@@ -70,9 +71,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  double get_distance(CoordinateVector<> photon_origin,
-                      CoordinateVector<> photon_direction,
-                      double optical_depth);
+  bool interact(Photon &photon, double optical_depth);
 };
 
 #endif // DENSITYGRID_HPP

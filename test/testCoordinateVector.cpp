@@ -99,6 +99,11 @@ int main(int argc, char **argv) {
     assert_condition(b.x() == 6.);
     assert_condition(b.y() == 12.);
     assert_condition(b.z() == 18.);
+
+    CoordinateVector<> c = a * 2.;
+    assert_condition(c.x() == 4.);
+    assert_condition(c.y() == 8.);
+    assert_condition(c.z() == 12.);
   }
 
   // test division
@@ -108,6 +113,11 @@ int main(int argc, char **argv) {
     assert_condition(a.x() == 0.5);
     assert_condition(a.y() == 1.);
     assert_condition(a.z() == 1.5);
+
+    CoordinateVector<> b = a / 2.;
+    assert_condition(b.x() == 0.25);
+    assert_condition(b.y() == 0.5);
+    assert_condition(b.z() == 0.75);
   }
 
   // test norm
