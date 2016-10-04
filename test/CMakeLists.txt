@@ -208,6 +208,8 @@ add_unit_test(NAME testVernerCrossSections
 set(TESTPARAMETERFILE_SOURCES
     testParameterFile.cpp
 
+    Assert.hpp
+
     ../src/Error.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp

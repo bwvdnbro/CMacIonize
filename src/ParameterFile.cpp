@@ -117,7 +117,8 @@ ParameterFile::read_keyvaluepair(std::string &line) {
  * @param line Line to strip.
  */
 void ParameterFile::strip_whitespace_line(std::string &line) {
-  if (!line.size()) {
+  if (is_empty_line(line)) {
+    line = "";
     return;
   }
   unsigned int firstpos = line.find_first_not_of(" \t");
@@ -145,13 +146,44 @@ ParameterFile::ParameterFile(std::string filename) {
     error("Failed to open parameter file \"%s\"", filename.c_str());
   }
 
+  // the current read algorithm does not work with multi line strings and groups
+  // that go deeper than 1 level
   string line;
   string groupname;
+  unsigned int current_level = 0;
   while (getline(file, line)) {
     if (!is_comment_line(line) && !is_empty_line(line)) {
       strip_comments_line(line);
       pair< string, string > keyvaluepair = read_keyvaluepair(line);
-      cout << keyvaluepair.first << "\t" << keyvaluepair.second << endl;
+      if (keyvaluepair.second.empty()) {
+        groupname = keyvaluepair.first + ".";
+      } else {
+        unsigned int indentation = is_indented_line(line);
+        if (indentation) {
+          if (groupname.empty()) {
+            error("Indented block found outside a group!");
+          }
+          current_level = indentation;
+        } else {
+          if (current_level) {
+            current_level = 0;
+            groupname = "";
+          }
+        }
+        _dictionary[groupname + keyvaluepair.first] = keyvaluepair.second;
+      }
     }
+  }
+}
+
+/**
+ * @brief Print the contents of the internal dictionary to the given stream.
+ *
+ * @param stream std::ostream to write to.
+ */
+void ParameterFile::print_contents(std::ostream &stream) {
+  for (map< string, string >::iterator it = _dictionary.begin();
+       it != _dictionary.end(); ++it) {
+    stream << it->first << ": " << it->second << endl;
   }
 }

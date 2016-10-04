@@ -26,7 +26,12 @@
 #ifndef PARAMETERFILE_HPP
 #define PARAMETERFILE_HPP
 
+#include "Error.hpp"
+
+#include <algorithm>
+#include <cstdlib>
 #include <map>
+#include <ostream>
 #include <string>
 #include <utility>
 
@@ -50,6 +55,88 @@ private:
 
 public:
   ParameterFile(std::string filename);
+
+  void print_contents(std::ostream &stream);
+
+  /**
+   * @brief Read a value of the given template type from the internal
+   * dictionary.
+   *
+   * This template function needs to be specialized for every typename that is
+   * used.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter.
+   * @return Value of that key, as a variable with the given template type.
+   */
+  template < typename T > T get_value(std::string key);
 };
+
+/**
+ * @brief ParameterFile::get_value specialization for std::string.
+ *
+ * This function is called by all other specializations before converting to the
+ * actual template type. It is the only version that checks if the key is in the
+ * dictionary and throws an error if it is not.
+ *
+ * @param key Key in the dictionary.
+ * @return Value of the parameter, as a std::string.
+ */
+template <>
+inline std::string ParameterFile::get_value< std::string >(std::string key) {
+  std::map< std::string, std::string >::iterator it = _dictionary.find(key);
+  if (it == _dictionary.end()) {
+    error("Parameter \"%s\" not found!", key.c_str());
+  }
+  return it->second;
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for a floating point value.
+ *
+ * Note that the parameter can be both a single or a double precision floating
+ * point value.
+ *
+ * @param key Key in the dictionary.
+ * @return Floating point value of the parameter.
+ */
+template <> inline double ParameterFile::get_value< double >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  char *str_end;
+  double dvalue = strtod(svalue.c_str(), &str_end);
+  if (str_end == svalue.c_str()) {
+    error("Error reading parameter \"%s\". Expected a floating point, but got "
+          "\"%s\".",
+          key.c_str(), svalue.c_str());
+  }
+  return dvalue;
+}
+
+template <> inline int ParameterFile::get_value< int >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  char *str_end;
+  int ivalue = strtol(svalue.c_str(), &str_end, 0);
+  if (str_end == svalue.c_str()) {
+    error(
+        "Error reading parameter \"%s\". Expected an integer, but got \"%s\".",
+        key.c_str(), svalue.c_str());
+  }
+  return ivalue;
+}
+
+template <> inline bool ParameterFile::get_value< bool >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  // convert to lowercase
+  std::transform(svalue.begin(), svalue.end(), svalue.begin(), ::tolower);
+  if (svalue == "true" || svalue == "yes" || svalue == "on" || svalue == "y") {
+    return true;
+  } else if (svalue == "false" || svalue == "no" || svalue == "off" ||
+             svalue == "n") {
+    return false;
+  } else {
+    error("Error reading parameter \"%s\". Expected a boolean expression, but "
+          "got \"%s\".",
+          key.c_str(), svalue.c_str());
+  }
+}
 
 #endif // PARAMETERFILE_HPP

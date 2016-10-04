@@ -23,7 +23,10 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "ParameterFile.hpp"
+#include <iostream>
+using namespace std;
 
 /**
  * @brief Unit test for the ParameterFile class.
@@ -34,6 +37,28 @@
  */
 int main(int argc, char **argv) {
   ParameterFile params("test.param");
+
+  params.print_contents(cout);
+
+  assert_condition(params.get_value< int >("test_integer1") == 42);
+  assert_condition(params.get_value< int >("test_integer2") == 42);
+  assert_condition(params.get_value< int >("test_integer3") == 42);
+  assert_condition(params.get_value< double >("test_float") == 3.14);
+  assert_condition(params.get_value< bool >("test_bool1") == true);
+  assert_condition(params.get_value< bool >("test_bool2") == true);
+  assert_condition(params.get_value< bool >("test_bool3") == true);
+  assert_condition(params.get_value< bool >("test_bool4") == true);
+  assert_condition(params.get_value< bool >("test_bool5") == false);
+  assert_condition(params.get_value< bool >("test_bool6") == false);
+  assert_condition(params.get_value< bool >("test_bool7") == false);
+  assert_condition(params.get_value< bool >("test_bool8") == false);
+  assert_condition(params.get_value< string >("test_string") ==
+                   "This is a test string.");
+  assert_condition(params.get_value< int >("test_group.test_group_member") ==
+                   42);
+  assert_condition(
+      params.get_value< string >("test_comments_group.test_comments_value") ==
+      "test comments string");
 
   return 0;
 }
