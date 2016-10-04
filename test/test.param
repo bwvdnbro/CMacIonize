@@ -1,0 +1,31 @@
+# Test parameter file. File uses YAML data format.
+
+# General test parameters:
+
+# Integer values
+test_integer1: 42
+test_integer2: 0x2a
+test_integer3: 0x2A
+# Floating point values
+test_float: 3.14
+# Boolean values
+test_bool1: true
+test_bool2: Yes
+test_bool3: ON
+test_bool4: y
+test_bool5: False
+test_bool6: no
+test_bool7: off
+test_bool8: N
+# String value
+test_string: This is a test string.
+
+# Group test:
+
+test_group:
+  test_group_member: 42
+
+# Inline comments test:
+
+test_comments_group: # test comments
+  test_comments_value: test comments string # actual comments

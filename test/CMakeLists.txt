@@ -204,6 +204,20 @@ set(TESTVERNERCROSSSECTIONS_SOURCES
 add_unit_test(NAME testVernerCrossSections
               SOURCES ${TESTVERNERCROSSSECTIONS_SOURCES})
 
+## ParameterFile test
+set(TESTPARAMETERFILE_SOURCES
+    testParameterFile.cpp
+
+    ../src/Error.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
+)
+add_unit_test(NAME testParameterFile
+              SOURCES ${TESTPARAMETERFILE_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test.param
+               COPYONLY)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
