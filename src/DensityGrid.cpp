@@ -43,7 +43,8 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
                          double helium_mass_fraction,
                          DensityFunction &density_function,
                          CrossSections &cross_sections)
-    : _box(box), _ncell(ncell), _helium_mass_fraction(helium_mass_fraction), _cross_sections(cross_sections) {
+    : _box(box), _ncell(ncell), _helium_mass_fraction(helium_mass_fraction),
+      _cross_sections(cross_sections) {
   _density = new DensityValues **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];

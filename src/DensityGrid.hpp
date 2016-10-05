@@ -65,8 +65,8 @@ private:
 
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-              double helium_mass_fraction,
-              DensityFunction &density_function, CrossSections &cross_sections);
+              double helium_mass_fraction, DensityFunction &density_function,
+              CrossSections &cross_sections);
 
   ~DensityGrid();
 
