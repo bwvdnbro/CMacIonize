@@ -66,8 +66,9 @@ private:
    */
   std::string _default_value;
 
-  static std::string get_argument_description(int argument,
-                                              std::string default_value);
+  static std::string get_argument_description(int argument);
+  static std::string get_default_value_description(int argument,
+                                                   std::string default_value);
 
 public:
   CommandLineOption(std::string name, char abbreviation,

@@ -26,8 +26,11 @@
 #ifndef COMMANDLINEPARSER_HPP
 #define COMMANDLINEPARSER_HPP
 
+#include "CommandLineOption.hpp"
+
 #include <ostream>
 #include <string>
+#include <vector>
 
 /**
  * @brief Parser for command line arguments.
@@ -38,12 +41,16 @@
  */
 class CommandLineParser {
 private:
-  /*! @brief Temporary variable that will be replaced by a dictionary. */
-  std::string _commands;
+  /*! @brief Accepted command line options. */
+  std::vector< CommandLineOption > _options;
 
 public:
-  CommandLineParser(int argc, char **argv);
+  void add_option(std::string long_name, char short_name,
+                  std::string description,
+                  CommandLineOptionArgumentType argument_type,
+                  std::string default_value);
 
+  void print_description(std::ostream &stream);
   void print_contents(std::ostream &stream);
 };
 

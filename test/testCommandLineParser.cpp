@@ -96,19 +96,27 @@ int main(int argc, char **argv) {
   // generate command line arguments
   int test_argc;
   char **test_argv;
+  // an example command line input, containing string literals, superfluous
+  // spaces and various types of options
   generate_arguments(
       test_argc, test_argv,
       "--test   --more \"andmore\" --less 2.0 --complicated \"and this?\"");
 
-  vector< CommandLineOption > options;
-  options.push_back(CommandLineOption(
-      "test", 't', "A parameter to test the CommandLineParser.",
-      COMMANDLINEOPTION_INTARGUMENT, "42"));
+  CommandLineParser parser;
 
-  options[0].print_description(cout);
+  parser.add_option("test", 't', "A parameter to test the CommandLineParser.",
+                    COMMANDLINEOPTION_INTARGUMENT, "42");
+  parser.add_option("more", 'm', "A parameter taking a string argument.",
+                    COMMANDLINEOPTION_STRINGARGUMENT, "");
+  parser.add_option("less", 'l',
+                    "A parameter taking a floating point argument.",
+                    COMMANDLINEOPTION_DOUBLEARGUMENT, "3.14");
+  parser.add_option(
+      "complicated", 'c',
+      "A parameter taking a string containing a whitespace character.",
+      COMMANDLINEOPTION_STRINGARGUMENT, "42");
 
-  CommandLineParser parser(test_argc, test_argv);
-
+  parser.print_description(cout);
   parser.print_contents(cout);
 
   delete_arguments(test_argc, test_argv);

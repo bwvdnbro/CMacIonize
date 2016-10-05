@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CommandLineOption.hpp"
+#include "Utilities.hpp"
 #include <sstream>
 using namespace std;
 
@@ -31,34 +32,59 @@ using namespace std;
  * @brief Get a description of an argument with the given type.
  *
  * @param argument Type of command line option argument.
- * @param default_value Default value of the argument (always a std::string).
  * @return std::string that describes the argument.
  */
-std::string
-CommandLineOption::get_argument_description(int argument,
-                                            std::string default_value) {
+std::string CommandLineOption::get_argument_description(int argument) {
   switch (argument) {
   case COMMANDLINEOPTION_NOARGUMENT:
-    return "This command line option takes no arguments.";
+    return "This command line option takes no arguments";
+  case COMMANDLINEOPTION_INTARGUMENT:
+    return "This command line option takes an integer argument";
+  case COMMANDLINEOPTION_DOUBLEARGUMENT:
+    return "This command line option takes a double precision floating point "
+           "argument";
+  case COMMANDLINEOPTION_STRINGARGUMENT:
+    return "This command line option takes a string argument";
+  }
+  return "";
+}
+
+/**
+ * @brief Get a string description of the default value of an argument with the
+ * given type.
+ *
+ * The default value is first converted into its argument type using the same
+ * conversion routine that will also be applied to the actual command line
+ * argument, and is then converted back into a string.
+ *
+ * @param argument Argument type.
+ * @param default_value Default value string literal.
+ * @return String version of the parsed default value.
+ */
+std::string
+CommandLineOption::get_default_value_description(int argument,
+                                                 std::string default_value) {
+  if (!default_value.size()) {
+    return "";
+  }
+  switch (argument) {
+  case COMMANDLINEOPTION_NOARGUMENT: {
+    stringstream sstream;
+    sstream << Utilities::convert< bool >(default_value);
+    return sstream.str();
+  }
   case COMMANDLINEOPTION_INTARGUMENT: {
     stringstream sstream;
-    sstream << "This command line option takes an integer argument (default: "
-            << atoi(default_value.c_str()) << ").";
+    sstream << Utilities::convert< int >(default_value);
     return sstream.str();
   }
   case COMMANDLINEOPTION_DOUBLEARGUMENT: {
     stringstream sstream;
-    sstream << "This command line option takes a double precision floating"
-            << "point argument (default: " << atof(default_value.c_str())
-            << ").";
+    sstream << Utilities::convert< double >(default_value);
     return sstream.str();
   }
-  case COMMANDLINEOPTION_STRINGARGUMENT: {
-    stringstream sstream;
-    sstream << "This command line option takes a string argument (default: "
-            << default_value << ").";
-    return sstream.str();
-  }
+  case COMMANDLINEOPTION_STRINGARGUMENT:
+    return default_value;
   }
   return "";
 }
@@ -93,5 +119,13 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
 void CommandLineOption::print_description(std::ostream &stream) {
   stream << "--" << _name << " (-" << _abbreviation << ")\n";
   stream << _description << "\n";
-  stream << get_argument_description(_argument, _default_value) << "\n";
+  stream << get_argument_description(_argument);
+  string default_value_description =
+      get_default_value_description(_argument, _default_value);
+  if (default_value_description.size()) {
+    stream << " (default: " << default_value_description << ")";
+  } else {
+    stream << " and is required";
+  }
+  stream << ".\n";
 }
