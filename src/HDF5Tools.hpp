@@ -49,8 +49,10 @@ typedef hid_t HDF5Group;
 enum HDF5FileMode {
   /*! @brief Read mode (actually: read only). */
   HDF5FILEMODE_READ = 0,
-  /*! @brief Write mode. */
-  HDF5FILEMODE_WRITE
+  /*! @brief Write mode: file is created. */
+  HDF5FILEMODE_WRITE,
+  /*! @brief Append mode: file is opened for reading and writing. */
+  HDF5FILEMODE_APPEND
 };
 
 /**
@@ -76,17 +78,24 @@ inline void initialize() {
  * @return HDF5File handle to the open file that can be used by other methods.
  */
 inline HDF5File open_file(std::string name, int mode) {
-  hid_t file_mode;
+  hid_t file;
   if (mode == HDF5FILEMODE_READ) {
-    file_mode = H5F_ACC_RDONLY;
+    file = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    if (file < 0) {
+      error("Unable to open file \"%s\"", name.c_str());
+    }
   } else if (mode == HDF5FILEMODE_WRITE) {
-    file_mode = H5F_ACC_TRUNC;
+    file = H5Fcreate(name.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file < 0) {
+      error("Unable to create file \"%s\"", name.c_str());
+    }
+  } else if (mode == HDF5FILEMODE_APPEND) {
+    file = H5Fopen(name.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    if (file < 0) {
+      error("Unable to open file \"%s\"", name.c_str());
+    }
   } else {
     error("Unknown file mode: %i", mode);
-  }
-  hid_t file = H5Fopen(name.c_str(), file_mode, H5P_DEFAULT);
-  if (file < 0) {
-    error("Unable to open file \"%s\"", name.c_str());
   }
 
   return file;
@@ -102,6 +111,27 @@ inline void close_file(hid_t file) {
   if (status < 0) {
     error("Failed to close file!");
   }
+}
+
+/**
+ * @brief Create the HDF5 group with the given name in the given file.
+ *
+ * @param file HDF5File handle to an HDF5 file that is open in write mode.
+ * @param name Name of the group to create.
+ */
+inline HDF5Group create_group(hid_t file, std::string name) {
+#ifdef HDF5_OLD_API
+  hid_t group = H5Gcreate(file, name.c_str(), -1);
+#else
+  hid_t group =
+      H5Gcreate(file, name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+#endif
+
+  if (group < 0) {
+    error("Unable to open group \"%s\"", name.c_str());
+  }
+
+  return group;
 }
 
 /**
@@ -319,6 +349,169 @@ read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   return value;
+};
+
+/**
+ * @brief Write the attribute with the given name to the given group.
+ *
+ * @param group HDF5Group handle to an open HDF5 group.
+ * @param name Name of the attribute to write.
+ * @param value Value of the attribute.
+ */
+template < typename T >
+inline void write_attribute(hid_t group, std::string name, T &value) {
+  hid_t datatype = get_datatype_name< T >();
+  // create dataspace
+  hid_t attspace = H5Screate(H5S_SCALAR);
+  if (attspace < 0) {
+    error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
+  }
+
+// create attribute
+#ifdef HDF5_OLD_API
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+#else
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
+                         H5P_DEFAULT);
+#endif
+  if (attr < 0) {
+    error("Failed to create attribute \"%s\"!", name.c_str());
+  }
+
+  // write attribute
+  herr_t status = H5Awrite(attr, datatype, &value);
+  if (status < 0) {
+    error("Failed to write attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(attspace);
+  if (status < 0) {
+    error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
+  }
+};
+
+/**
+ * @brief write_attribute specialization for std::string.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to write.
+ * @param value std::string containing the value to write.
+ */
+template <>
+inline void write_attribute< std::string >(hid_t group, std::string name,
+                                           std::string &value) {
+  // create C-string datatype
+  hid_t strtype = H5Tcopy(H5T_C_S1);
+  if (strtype < 0) {
+    error("Failed to copy C-string datatype for attribute \"%s\"!",
+          name.c_str());
+  }
+
+  // set datatype length to length of string
+  // note that we need to add an extra character for the string termination
+  // character
+  herr_t status = H5Tset_size(strtype, value.size() + 1);
+  if (status < 0) {
+    error("Failed to set size of C-string datatype for attribute \"%s\"!",
+          name.c_str());
+  }
+
+  // create dataspace
+  hid_t attspace = H5Screate(H5S_SCALAR);
+  if (attspace < 0) {
+    error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
+  }
+
+// create attribute
+#ifdef HDF5_OLD_API
+  hid_t attr = H5Acreate(group, name.c_str(), strtype, attspace, H5P_DEFAULT);
+#else
+  hid_t attr = H5Acreate(group, name.c_str(), strtype, attspace, H5P_DEFAULT,
+                         H5P_DEFAULT);
+#endif
+  if (attr < 0) {
+    error("Failed to create attribute \"%s\"!", name.c_str());
+  }
+
+  // write attribute
+  status = H5Awrite(attr, strtype, value.c_str());
+  if (status < 0) {
+    error("Failed to write string attribute \"%s\"!", name.c_str());
+  }
+
+  // close string type
+  status = H5Tclose(strtype);
+  if (status < 0) {
+    error("Failed to close C-string datatype for attribute \"%s\"!",
+          name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(attspace);
+  if (status < 0) {
+    error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
+};
+
+/**
+ * @brief write_attribute specialization for CoordinateVector.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to write.
+ * @param value CoordinateVector containing the values to write.
+ */
+template < typename T >
+inline void write_attribute(hid_t group, std::string name,
+                            CoordinateVector<> &value) {
+  hid_t datatype = get_datatype_name< double >();
+  // create dataspace
+  hsize_t dims[1] = {3};
+  hid_t attspace = H5Screate_simple(1, dims, NULL);
+  if (attspace < 0) {
+    error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
+  }
+
+// create attribute
+#ifdef HDF5_OLD_API
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+#else
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
+                         H5P_DEFAULT);
+#endif
+  if (attr < 0) {
+    error("Failed to create attribute \"%s\"!", name.c_str());
+  }
+
+  // write attribute
+  herr_t status = H5Awrite(attr, datatype, &value);
+  if (status < 0) {
+    error("Failed to write attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(attspace);
+  if (status < 0) {
+    error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
+  }
 };
 
 /**
