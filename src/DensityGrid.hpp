@@ -54,6 +54,9 @@ private:
    *  char type, we automatically limit grid sizes to 256^3. */
   CoordinateVector< unsigned char > _ncell;
 
+  /*! @brief Helium mass fraction. */
+  double _helium_mass_fraction;
+
   /*! @brief Density grid. */
   DensityValues ***_density;
 
@@ -62,6 +65,7 @@ private:
 
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
+              double helium_mass_fraction,
               DensityFunction &density_function, CrossSections &cross_sections);
 
   ~DensityGrid();

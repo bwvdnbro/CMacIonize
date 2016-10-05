@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
-  DensityGrid grid(box, 32, density, testcrosssections);
+  DensityGrid grid(box, 32, 0.1, density, testcrosssections);
   assert_values_equal(grid.get_total_mass(), density.get_total_mass());
 
   return 0;

@@ -35,13 +35,15 @@ using namespace std;
  *
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
+ * @param helium_mass_fraction Mass fraction of helium.
  * @param density_function DensityFunction that defines the density field.
  * @param cross_sections Photoionization cross sections.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
+                         double helium_mass_fraction,
                          DensityFunction &density_function,
                          CrossSections &cross_sections)
-    : _box(box), _ncell(ncell), _cross_sections(cross_sections) {
+    : _box(box), _ncell(ncell), _helium_mass_fraction(helium_mass_fraction), _cross_sections(cross_sections) {
   _density = new DensityValues **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
@@ -329,7 +331,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   double xsecHe =
       _cross_sections.get_cross_section(ELEMENT_He, photon.get_energy());
   // Helium mass fraction. Should be a parameter.
-  double AHe = 0.1;
+  double AHe = _helium_mass_fraction;
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index) && optical_depth > 0.) {
