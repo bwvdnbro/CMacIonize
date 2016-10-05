@@ -60,5 +60,11 @@ int main(int argc, char **argv) {
       params.get_value< string >("test_comments_group.test_comments_value") ==
       "test comments string");
 
+  // default values
+  assert_condition(params.get_value< int >("not_in_file", 42) == 42);
+  assert_condition(params.get_value< double >("not_in_file", 3.14) == 3.14);
+  assert_condition(params.get_value< string >("not_in", "file?") == "file?");
+  assert_condition(params.get_value< bool >("not_in_file", true) == true);
+
   return 0;
 }

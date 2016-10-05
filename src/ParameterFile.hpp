@@ -60,15 +60,30 @@ public:
 
   /**
    * @brief Read a value of the given template type from the internal
-   * dictionary.
+   * dictionary and throw an error if it is not found.
+   *
+   * This template function needs to be specialized for every typename that is
+   * used.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter that
+   * needs to be present in the parameter file.
+   * @return Value of that key, as a variable with the given template type.
+   */
+  template < typename T > T get_value(std::string key);
+
+  /**
+   * @brief Read a value of the given template type from the internal
+   * dictionary and use the given default value if the parameter is not found.
    *
    * This template function needs to be specialized for every typename that is
    * used.
    *
    * @param key Key in the dictionary that relates to a unique parameter.
-   * @return Value of that key, as a variable with the given template type.
+   * @param default_value Default value for the parameter that is used if the
+   * parameter is not present in the file.
+   * @return Value of the parameter, as a variable with the given template type.
    */
-  template < typename T > T get_value(std::string key);
+  template < typename T > T get_value(std::string key, T default_value);
 };
 
 /**
@@ -140,6 +155,112 @@ template <> inline int ParameterFile::get_value< int >(std::string key) {
  */
 template <> inline bool ParameterFile::get_value< bool >(std::string key) {
   std::string svalue = get_value< std::string >(key);
+  // convert to lowercase
+  std::transform(svalue.begin(), svalue.end(), svalue.begin(), ::tolower);
+  if (svalue == "true" || svalue == "yes" || svalue == "on" || svalue == "y") {
+    return true;
+  } else if (svalue == "false" || svalue == "no" || svalue == "off" ||
+             svalue == "n") {
+    return false;
+  } else {
+    error("Error reading parameter \"%s\". Expected a boolean expression, but "
+          "got \"%s\".",
+          key.c_str(), svalue.c_str());
+  }
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for std::string.
+ *
+ * This function is called by all other specializations before converting to the
+ * actual template type.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Value of the parameter, as a std::string.
+ */
+template <>
+inline std::string
+ParameterFile::get_value< std::string >(std::string key,
+                                        std::string default_value) {
+  std::map< std::string, std::string >::iterator it = _dictionary.find(key);
+  if (it == _dictionary.end()) {
+    return default_value;
+  }
+  return it->second;
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for a floating point value.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Floating point value of the parameter.
+ */
+template <>
+inline double ParameterFile::get_value< double >(std::string key,
+                                                 double default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    return default_value;
+  }
+  char *str_end;
+  double dvalue = strtod(svalue.c_str(), &str_end);
+  if (str_end == svalue.c_str()) {
+    error("Error reading parameter \"%s\". Expected a floating point, but got "
+          "\"%s\".",
+          key.c_str(), svalue.c_str());
+  }
+  return dvalue;
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for an integer value.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Integer value of the parameter.
+ */
+template <>
+inline int ParameterFile::get_value< int >(std::string key, int default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    return default_value;
+  }
+  char *str_end;
+  int ivalue = strtol(svalue.c_str(), &str_end, 0);
+  if (str_end == svalue.c_str()) {
+    error(
+        "Error reading parameter \"%s\". Expected an integer, but got \"%s\".",
+        key.c_str(), svalue.c_str());
+  }
+  return ivalue;
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for a boolean value.
+ *
+ * The following strings are evaluated as true: "true", "yes", "on", "y".
+ * The following strings are evaluated as false: "false", "no", "off", "n".
+ * All values are converted to lower case before evaluating them, so variants
+ * like "True", "fAlse", "NO", "Y" are also accepted.
+ * All other values of the parameter will result in an error.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Bool value of the parameter.
+ */
+template <>
+inline bool ParameterFile::get_value< bool >(std::string key,
+                                             bool default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    return default_value;
+  }
   // convert to lowercase
   std::transform(svalue.begin(), svalue.end(), svalue.begin(), ::tolower);
   if (svalue == "true" || svalue == "yes" || svalue == "on" || svalue == "y") {

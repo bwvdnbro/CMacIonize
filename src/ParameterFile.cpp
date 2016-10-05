@@ -26,7 +26,6 @@
 #include "ParameterFile.hpp"
 #include "Error.hpp"
 #include <fstream>
-#include <iostream>
 using namespace std;
 
 /**
