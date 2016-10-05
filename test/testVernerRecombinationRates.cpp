@@ -25,6 +25,10 @@
  */
 #include "Assert.hpp"
 #include "VernerRecombinationRates.hpp"
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
 
 /**
  * @brief Unit test for the VernerRecombinationRates class.
@@ -36,8 +40,21 @@
 int main(int argc, char **argv) {
   VernerRecombinationRates recombination_rates;
 
-  assert_condition(recombination_rates.get_recombination_rate(ELEMENT_H, 0.) ==
-                   0.);
+  ifstream file("verner_rec_testdata.txt");
+  string line;
+  while (getline(file, line)) {
+    if (line[0] != '#') {
+      double T, alphaH, alphaHe;
+      stringstream linestream(line);
+      linestream >> T >> alphaH >> alphaHe;
+      assert_values_equal_tol(
+          recombination_rates.get_recombination_rate(ELEMENT_H, T), alphaH,
+          1.e-15);
+      assert_values_equal_tol(
+          recombination_rates.get_recombination_rate(ELEMENT_He, T), alphaHe,
+          1.e-15);
+    }
+  }
 
   return 0;
 }

@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
       unsigned int nz, ne, si;
       double e, s;
       linestream >> nz >> ne >> si >> e >> s;
-      assert_values_equal(
-          s, cross_sections.get_cross_section_verner(nz, ne, si, e));
+      assert_values_equal_tol(
+          s, cross_sections.get_cross_section_verner(nz, ne, si, e), 1.e-6);
     }
   }
 

@@ -224,6 +224,9 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test.param
                COPYONLY)
 
 ## VernerRecombinationRates test
+configure_file(${PROJECT_SOURCE_DIR}/test/verner_rec_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/verner_rec_testdata.txt
+               COPYONLY)
 set(TESTVERNERRECOMBINATIONRATES_SOURCES
     testVernerRecombinationRates.cpp
 

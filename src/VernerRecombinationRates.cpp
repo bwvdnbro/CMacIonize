@@ -25,6 +25,9 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "VernerRecombinationRates.hpp"
+#include "Error.hpp"
+#include <cmath>
+using namespace std;
 
 /**
  * @brief Get the recombination rate of the given element at the given
@@ -36,5 +39,17 @@
  */
 double VernerRecombinationRates::get_recombination_rate(ElementName element,
                                                         double temperature) {
+  switch (element) {
+  case ELEMENT_H:
+    return 7.982e-11 / (sqrt(temperature / 3.148) *
+                        pow(1. + sqrt(temperature / 3.148), 0.252) *
+                        pow(1. + sqrt(temperature / 7.036e5), 1.748));
+  case ELEMENT_He:
+    return 3.294e-11 / (sqrt(temperature / 15.54) *
+                        pow(1. + sqrt(temperature / 15.54), 0.309) *
+                        pow(1. + sqrt(temperature / 3.676e7), 1.691));
+  default:
+    error("Unknown element: %i", element);
+  }
   return 0.;
 }
