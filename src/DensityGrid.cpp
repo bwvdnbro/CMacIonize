@@ -34,7 +34,7 @@ using namespace std;
  * @brief Constructor
  *
  * @param box Box containing the grid.
- * @param n1D Number of cells in 1 dimensions.
+ * @param ncell Number of cells for each dimension.
  * @param density_function DensityFunction that defines the density field.
  * @param cross_sections Photoionization cross sections.
  */

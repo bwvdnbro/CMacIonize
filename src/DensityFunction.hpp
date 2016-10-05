@@ -28,6 +28,9 @@
 
 #include "CoordinateVector.hpp"
 
+/**
+ * @brief Interface for functors that can be used to fill a DensityGrid.
+ */
 class DensityFunction {
 public:
   /**

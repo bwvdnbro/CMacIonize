@@ -33,6 +33,12 @@ class DensityFunction;
 class DensityValues;
 class Photon;
 
+/**
+ * @brief Density grid.
+ *
+ * Contains the actual cells with densities and neutral fractions, and the
+ * routines used to calculate the optical depth along a photon path.
+ */
 class DensityGrid {
 private:
   /*! @brief Box containing the grid. */

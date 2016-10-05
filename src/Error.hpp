@@ -29,6 +29,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+/**
+ * @brief Macro that prints the given formatted string (with arguments) to the
+ * given stream as a 5 space indented block of 65 characters with proper limits.
+ */
 #define print_indent(stream, s, ...)                                           \
   {                                                                            \
     char buffer[10000];                                                        \

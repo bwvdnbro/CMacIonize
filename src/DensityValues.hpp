@@ -75,7 +75,7 @@ public:
   /**
    * @brief Set the neutral fraction of helium.
    *
-   * @param neutral_fraction_H Value for the neutral fraction of helium.
+   * @param neutral_fraction_He Value for the neutral fraction of helium.
    */
   inline void set_neutral_fraction_He(double neutral_fraction_He) {
     _neutral_fraction_He = neutral_fraction_He;

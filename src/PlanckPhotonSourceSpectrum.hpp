@@ -29,7 +29,9 @@
 
 #include "PhotonSourceSpectrum.hpp"
 
-// Number of frequency bins used in the internal table
+/**
+ * @brief Number of frequency bins used in the internal table.
+ */
 #define PLANCKPHOTONSOURCESPECTRUM_NUMFREQ 1000
 
 /**

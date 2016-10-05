@@ -98,6 +98,12 @@ unsigned int ParameterFile::is_indented_line(std::string &line) {
   return i;
 }
 
+/**
+ * @brief Read a key-value pair from the given line.
+ *
+ * @param line Line to parse.
+ * @return std::pair of a key and a value std::string.
+ */
 std::pair< std::string, std::string >
 ParameterFile::read_keyvaluepair(std::string &line) {
   unsigned int colonpos = line.find(':');

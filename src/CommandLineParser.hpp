@@ -38,6 +38,7 @@
  */
 class CommandLineParser {
 private:
+  /*! @brief Temporary variable that will be replaced by a dictionary. */
   std::string _commands;
 
 public:

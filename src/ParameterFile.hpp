@@ -93,9 +93,6 @@ inline std::string ParameterFile::get_value< std::string >(std::string key) {
 /**
  * @brief ParameterFile::get_value specialization for a floating point value.
  *
- * Note that the parameter can be both a single or a double precision floating
- * point value.
- *
  * @param key Key in the dictionary.
  * @return Floating point value of the parameter.
  */
@@ -111,6 +108,12 @@ template <> inline double ParameterFile::get_value< double >(std::string key) {
   return dvalue;
 }
 
+/**
+ * @brief ParameterFile::get_value specialization for an integer value.
+ *
+ * @param key Key in the dictionary.
+ * @return Integer value of the parameter.
+ */
 template <> inline int ParameterFile::get_value< int >(std::string key) {
   std::string svalue = get_value< std::string >(key);
   char *str_end;
@@ -123,6 +126,18 @@ template <> inline int ParameterFile::get_value< int >(std::string key) {
   return ivalue;
 }
 
+/**
+ * @brief ParameterFile::get_value specialization for a boolean value.
+ *
+ * The following strings are evaluated as true: "true", "yes", "on", "y".
+ * The following strings are evaluated as false: "false", "no", "off", "n".
+ * All values are converted to lower case before evaluating them, so variants
+ * like "True", "fAlse", "NO", "Y" are also accepted.
+ * All other values of the parameter will result in an error.
+ *
+ * @param key Key in the dictionary.
+ * @return Bool value of the parameter.
+ */
 template <> inline bool ParameterFile::get_value< bool >(std::string key) {
   std::string svalue = get_value< std::string >(key);
   // convert to lowercase
