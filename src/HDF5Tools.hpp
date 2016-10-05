@@ -630,6 +630,108 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
 
   return data;
 }
+
+/**
+ * @brief Write the dataset with the given name to the given group.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to write.
+ * @param values std::vector containing the contents of the dataset.
+ */
+template < typename T >
+inline void write_dataset(hid_t group, std::string name,
+                          std::vector< T > &values) {
+  hid_t datatype = get_datatype_name< T >();
+
+  hsize_t dims[1] = {values.size()};
+  // create dataspace
+  hid_t filespace = H5Screate_simple(1, dims, NULL);
+  if (filespace < 0) {
+    error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
+  }
+
+// create dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset =
+      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+#else
+  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to create dataset \"%s\"", name.c_str());
+  }
+
+  // write dataset
+  herr_t status =
+      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, &values[0]);
+  if (status < 0) {
+    error("Failed to write dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+}
+
+/**
+ * @brief write_dataset specialization for a CoordinateVector dataset.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to write.
+ * @param values std::vector containing the contents of the dataset.
+ */
+template <>
+inline void write_dataset(hid_t group, std::string name,
+                          std::vector< CoordinateVector<> > &values) {
+  hid_t datatype = get_datatype_name< double >();
+
+  hsize_t dims[2] = {values.size(), 3};
+  // create dataspace
+  hid_t filespace = H5Screate_simple(2, dims, NULL);
+  if (filespace < 0) {
+    error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
+  }
+
+// create dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset =
+      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+#else
+  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to create dataset \"%s\"", name.c_str());
+  }
+
+  // write dataset
+  herr_t status =
+      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, &values[0]);
+  if (status < 0) {
+    error("Failed to write dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+}
 }
 
 #endif // HDF5TOOLS_HPP

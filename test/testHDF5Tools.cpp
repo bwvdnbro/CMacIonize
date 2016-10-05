@@ -126,6 +126,23 @@ int main(int argc, char **argv) {
     HDF5Tools::write_attribute< CoordinateVector<> >(
         group, "CoordinateVector attribute", vtest);
 
+    std::vector< double > dvtest(100);
+    std::vector< unsigned long long > ivtest(100);
+    std::vector< CoordinateVector<> > vvtest(100);
+    for (unsigned int i = 0; i < 100; ++i) {
+      dvtest[i] = -0.05 * i;
+      ivtest[i] = 2 * i;
+      vvtest[i][0] = 0.1 * i;
+      vvtest[i][1] = 100. - 1.7 * i;
+      vvtest[i][2] = -0.01 * i * i;
+    }
+
+    HDF5Tools::write_dataset< double >(group, "Test doubles", dvtest);
+    HDF5Tools::write_dataset< unsigned long long >(group, "Test integers",
+                                                   ivtest);
+    HDF5Tools::write_dataset< CoordinateVector<> >(
+        group, "Test CoordinateVectors", vvtest);
+
     HDF5Tools::close_group(group);
 
     HDF5Tools::close_file(file);
@@ -149,6 +166,24 @@ int main(int argc, char **argv) {
     assert_condition(vtest2.x() == vtest.x());
     assert_condition(vtest2.y() == vtest.y());
     assert_condition(vtest2.z() == vtest.z());
+
+    std::vector< double > dvtest2 =
+        HDF5Tools::read_dataset< double >(group, "Test doubles");
+    assert_condition(dvtest2.size() == 100);
+    std::vector< unsigned long long > ivtest2 =
+        HDF5Tools::read_dataset< unsigned long long >(group, "Test integers");
+    assert_condition(ivtest2.size() == 100);
+    std::vector< CoordinateVector<> > vvtest2 =
+        HDF5Tools::read_dataset< CoordinateVector<> >(group,
+                                                      "Test CoordinateVectors");
+    assert_condition(vvtest2.size() == 100);
+    for (unsigned int i = 0; i < 100; ++i) {
+      assert_condition(dvtest2[i] == dvtest[i]);
+      assert_condition(ivtest2[i] == ivtest[i]);
+      assert_condition(vvtest2[i].x() == vvtest[i].x());
+      assert_condition(vvtest2[i].y() == vvtest[i].y());
+      assert_condition(vvtest2[i].z() == vvtest[i].z());
+    }
 
     HDF5Tools::close_group(group);
 
