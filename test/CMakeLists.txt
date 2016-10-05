@@ -90,6 +90,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
+    ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/Photon.hpp
 )
@@ -110,6 +111,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
+    ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/GadgetSnapshotDensityFunction.cpp
     ../src/GadgetSnapshotDensityFunction.hpp
@@ -196,6 +198,7 @@ set(TESTVERNERCROSSSECTIONS_SOURCES
     Assert.hpp
 
     ../src/CrossSections.hpp
+    ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/VernerCrossSections.cpp
     ../src/VernerCrossSections.hpp
@@ -219,6 +222,21 @@ add_unit_test(NAME testParameterFile
 configure_file(${PROJECT_SOURCE_DIR}/test/test.param
                ${PROJECT_BINARY_DIR}/rundir/test/test.param
                COPYONLY)
+
+## VernerRecombinationRates test
+set(TESTVERNERRECOMBINATIONRATES_SOURCES
+    testVernerRecombinationRates.cpp
+
+    Assert.hpp
+
+    ../src/ElementNames.hpp
+    ../src/Error.hpp
+    ../src/RecombinationRates.hpp
+    ../src/VernerRecombinationRates.cpp
+    ../src/VernerRecombinationRates.hpp
+)
+add_unit_test(NAME testVernerRecombinationRates
+              SOURCES ${TESTVERNERRECOMBINATIONRATES_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################

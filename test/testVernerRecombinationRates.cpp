@@ -17,44 +17,27 @@
  ******************************************************************************/
 
 /**
- * @file VernerCrossSections.hpp
+ * @brief testVernerRecombinationRates.cpp
  *
- * @brief Verner photoionization cross sections: header.
+ * @brief Unit test for the VernerRecombinationRates class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VERNERCROSSSECTIONS_HPP
-#define VERNERCROSSSECTIONS_HPP
-
-#include "CrossSections.hpp"
+#include "Assert.hpp"
+#include "VernerRecombinationRates.hpp"
 
 /**
- * @brief CrossSections implementation for Verner's cross sections.
+ * @brief Unit test for the VernerRecombinationRates class.
+ *
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ * @return Exit code: 0 on success.
  */
-class VernerCrossSections : public CrossSections {
-private:
-  /*! L array from Verner's script. */
-  unsigned char _L[7];
+int main(int argc, char **argv) {
+  VernerRecombinationRates recombination_rates;
 
-  /*! NINN array from Verner's script. */
-  unsigned char _NINN[30];
+  assert_condition(recombination_rates.get_recombination_rate(ELEMENT_H, 0.) ==
+                   0.);
 
-  /*! NTOT array from Verner's script. */
-  unsigned char _NTOT[30];
-
-  /*! PH1 array from Verner's script. */
-  double _PH1[6][30][30][7];
-
-  /*! PH2 array from Verner's script. */
-  double _PH2[7][30][30];
-
-public:
-  VernerCrossSections();
-
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e);
-
-  virtual double get_cross_section(ElementName element, double energy);
-};
-
-#endif // CROSSSECTIONS_HPP
+  return 0;
+}

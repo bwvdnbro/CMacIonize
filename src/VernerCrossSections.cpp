@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "VernerCrossSections.hpp"
+#include "Error.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
 #include <cmath>
 #include <fstream>
@@ -194,17 +195,20 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
 /**
  * @brief Get the photoionization cross section of the given element.
  *
- * @param element CrossSectionElements index of an element.
+ * @param element ElementName of an element.
  * @param energy Photon energy.
  * @return Photoionization cross section for the given element and for the given
  * photon energy.
  */
-double VernerCrossSections::get_cross_section(int element, double energy) {
+double VernerCrossSections::get_cross_section(ElementName element,
+                                              double energy) {
   switch (element) {
   case ELEMENT_H:
     return get_cross_section_verner(1, 1, 1, energy);
   case ELEMENT_He:
     return get_cross_section_verner(2, 2, 1, energy);
+  default:
+    error("Unknown element: %i", element);
   }
   return 0.;
 }

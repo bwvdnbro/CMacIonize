@@ -17,44 +17,24 @@
  ******************************************************************************/
 
 /**
- * @file VernerCrossSections.hpp
+ * @file VernerRecombinationRates.cpp
  *
- * @brief Verner photoionization cross sections: header.
+ * @brief RecombinationRates implementation with Verner's recombination rates:
+ * implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VERNERCROSSSECTIONS_HPP
-#define VERNERCROSSSECTIONS_HPP
-
-#include "CrossSections.hpp"
+#include "VernerRecombinationRates.hpp"
 
 /**
- * @brief CrossSections implementation for Verner's cross sections.
+ * @brief Get the recombination rate of the given element at the given
+ * temperature.
+ *
+ * @param element ElementName for an element.
+ * @param temperature Temperature.
+ * @return Recombination rate.
  */
-class VernerCrossSections : public CrossSections {
-private:
-  /*! L array from Verner's script. */
-  unsigned char _L[7];
-
-  /*! NINN array from Verner's script. */
-  unsigned char _NINN[30];
-
-  /*! NTOT array from Verner's script. */
-  unsigned char _NTOT[30];
-
-  /*! PH1 array from Verner's script. */
-  double _PH1[6][30][30][7];
-
-  /*! PH2 array from Verner's script. */
-  double _PH2[7][30][30];
-
-public:
-  VernerCrossSections();
-
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e);
-
-  virtual double get_cross_section(ElementName element, double energy);
-};
-
-#endif // CROSSSECTIONS_HPP
+double VernerRecombinationRates::get_recombination_rate(ElementName element,
+                                                        double temperature) {
+  return 0.;
+}

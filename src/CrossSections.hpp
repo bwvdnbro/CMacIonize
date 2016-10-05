@@ -26,17 +26,7 @@
 #ifndef CROSSSECTIONS_HPP
 #define CROSSSECTIONS_HPP
 
-/**
- * @brief Names of supported elements.
- */
-enum CrossSectionElements {
-  /*! @brief Hydrogen. */
-  ELEMENT_H = 0,
-  /*! @brief Helium. */
-  ELEMENT_He,
-  /*! @brief Number of supported elements. */
-  CROSSSECTIONS_NUMELEMENTS
-};
+#include "ElementNames.hpp"
 
 /**
  * @brief General interface for photoionization cross sections.
@@ -47,11 +37,11 @@ public:
    * @brief Get the photoionization cross section for the given element at the
    * given photon energy.
    *
-   * @param element CrossSectionElements index for an element.
+   * @param element ElementName for an element.
    * @param energy Photon energy (in eV).
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(int element, double energy) = 0;
+  virtual double get_cross_section(ElementName element, double energy) = 0;
 };
 
 #endif // CROSSSECTIONS_HPP

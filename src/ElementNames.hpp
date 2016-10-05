@@ -17,44 +17,26 @@
  ******************************************************************************/
 
 /**
- * @file VernerCrossSections.hpp
+ * @file ElementNames.hpp
  *
- * @brief Verner photoionization cross sections: header.
+ * @brief Names of elements used in cross section and recombination rate
+ * routines.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VERNERCROSSSECTIONS_HPP
-#define VERNERCROSSSECTIONS_HPP
-
-#include "CrossSections.hpp"
+#ifndef ELEMENTNAMES_HPP
+#define ELEMENTNAMES_HPP
 
 /**
- * @brief CrossSections implementation for Verner's cross sections.
+ * @brief Names of supported elements.
  */
-class VernerCrossSections : public CrossSections {
-private:
-  /*! L array from Verner's script. */
-  unsigned char _L[7];
-
-  /*! NINN array from Verner's script. */
-  unsigned char _NINN[30];
-
-  /*! NTOT array from Verner's script. */
-  unsigned char _NTOT[30];
-
-  /*! PH1 array from Verner's script. */
-  double _PH1[6][30][30][7];
-
-  /*! PH2 array from Verner's script. */
-  double _PH2[7][30][30];
-
-public:
-  VernerCrossSections();
-
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e);
-
-  virtual double get_cross_section(ElementName element, double energy);
+enum ElementName {
+  /*! @brief Hydrogen. */
+  ELEMENT_H = 0,
+  /*! @brief Helium. */
+  ELEMENT_He,
+  /*! @brief Number of supported elements. */
+  NUMBER_OF_ELEMENTS
 };
 
-#endif // CROSSSECTIONS_HPP
+#endif // ELEMENTNAMES_HPP
