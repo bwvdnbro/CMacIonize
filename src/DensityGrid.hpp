@@ -31,6 +31,7 @@
 class CrossSections;
 class DensityFunction;
 class DensityValues;
+class ParameterFile;
 class Photon;
 
 /**
@@ -67,6 +68,10 @@ public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
               double helium_mass_fraction, DensityFunction &density_function,
               CrossSections &cross_sections);
+
+  DensityGrid(ParameterFile &parameters, Box box,
+              CoordinateVector< unsigned char > ncell,
+              DensityFunction &density_function, CrossSections &cross_sections);
 
   ~DensityGrid();
 

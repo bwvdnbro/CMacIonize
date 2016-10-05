@@ -26,6 +26,9 @@ set(CMACIONIZE_VERSION_MINOR 1)
 # Enable unit testing using CTest
 enable_testing()
 
+# Enable C++11, since we need this for delegating constructors
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # Enable all standard compiler warnings and enforce them
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 

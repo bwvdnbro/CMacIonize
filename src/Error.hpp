@@ -117,7 +117,7 @@
  * @brief Message macro. Prints the given message (with C style formatting) to
  * the stdout.
  */
-#define message(s, ...)                                                        \
+#define status(s, ...)                                                         \
   {                                                                            \
     fprintf(stdout, "%s:%s():%i:\n", __FILE__, __FUNCTION__, __LINE__);        \
     print_indent(stdout, s, ##__VA_ARGS__);                                    \

@@ -92,6 +92,8 @@ set(TESTDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
     ../src/Photon.hpp
 )
 add_unit_test(NAME testDensityGrid
@@ -116,6 +118,8 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/GadgetSnapshotDensityFunction.cpp
     ../src/GadgetSnapshotDensityFunction.hpp
     ../src/HDF5Tools.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
     ../src/Photon.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction

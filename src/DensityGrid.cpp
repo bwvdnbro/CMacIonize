@@ -27,6 +27,7 @@
 #include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "ParameterFile.hpp"
 #include "Photon.hpp"
 using namespace std;
 
@@ -81,6 +82,27 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
     _cellside_max = _cellside.z();
   }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * Constructs a DensityGrid object using parameter values from the parameter
+ * file.
+ *
+ * @param parameters ParameterFile to read.
+ * @param box Box containing the entire grid.
+ * @param ncell Number of cells in each dimension.
+ * @param density_function DensityFunction used to set the densities in each
+ * cell.
+ * @param cross_sections Photoionization cross sections.
+ */
+DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
+                         CoordinateVector< unsigned char > ncell,
+                         DensityFunction &density_function,
+                         CrossSections &cross_sections)
+    : DensityGrid(box, ncell,
+                  parameters.get_value< double >("helium_mass_fraction", 0.1),
+                  density_function, cross_sections) {}
 
 /**
  * @brief Destructor
