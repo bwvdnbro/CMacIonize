@@ -60,7 +60,7 @@ template < typename T > T convert(std::string value);
  * @param value std::string value.
  * @return Double precision floating point stored in the string.
  */
-template <> double convert< double >(std::string value) {
+template <> inline double convert< double >(std::string value) {
   char *str_end;
   double dvalue = strtod(value.c_str(), &str_end);
   if (str_end == value.c_str()) {
@@ -75,7 +75,7 @@ template <> double convert< double >(std::string value) {
  * @param value std::string value.
  * @return Integer stored in the string.
  */
-template <> int convert< int >(std::string value) {
+template <> inline int convert< int >(std::string value) {
   char *str_end;
   int ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
@@ -96,7 +96,7 @@ template <> int convert< int >(std::string value) {
  * @param value std::string value.
  * @return True or false.
  */
-template <> bool convert< bool >(std::string value) {
+template <> inline bool convert< bool >(std::string value) {
   // convert to lowercase
   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
   if (value == "true" || value == "yes" || value == "on" || value == "y") {

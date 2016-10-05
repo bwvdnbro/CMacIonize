@@ -73,6 +73,8 @@ set(TESTCOMMANDLINEPARSER_SOURCES
     ../src/CommandLineParser.cpp
     ../src/CommandLineOption.hpp
     ../src/CommandLineParser.hpp
+    ../src/Error.hpp
+    ../src/Utilities.hpp
 )
 add_unit_test(NAME testCommandLineParser
               SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
@@ -220,6 +222,7 @@ set(TESTPARAMETERFILE_SOURCES
     ../src/Error.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
+    ../src/Utilities.hpp
 )
 add_unit_test(NAME testParameterFile
               SOURCES ${TESTPARAMETERFILE_SOURCES})

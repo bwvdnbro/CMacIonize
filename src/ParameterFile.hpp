@@ -27,6 +27,7 @@
 #define PARAMETERFILE_HPP
 
 #include "Error.hpp"
+#include "Utilities.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -113,14 +114,7 @@ inline std::string ParameterFile::get_value< std::string >(std::string key) {
  */
 template <> inline double ParameterFile::get_value< double >(std::string key) {
   std::string svalue = get_value< std::string >(key);
-  char *str_end;
-  double dvalue = strtod(svalue.c_str(), &str_end);
-  if (str_end == svalue.c_str()) {
-    error("Error reading parameter \"%s\". Expected a floating point, but got "
-          "\"%s\".",
-          key.c_str(), svalue.c_str());
-  }
-  return dvalue;
+  return Utilities::convert< double >(svalue);
 }
 
 /**
@@ -131,14 +125,7 @@ template <> inline double ParameterFile::get_value< double >(std::string key) {
  */
 template <> inline int ParameterFile::get_value< int >(std::string key) {
   std::string svalue = get_value< std::string >(key);
-  char *str_end;
-  int ivalue = strtol(svalue.c_str(), &str_end, 0);
-  if (str_end == svalue.c_str()) {
-    error(
-        "Error reading parameter \"%s\". Expected an integer, but got \"%s\".",
-        key.c_str(), svalue.c_str());
-  }
-  return ivalue;
+  return Utilities::convert< int >(svalue);
 }
 
 /**
@@ -155,18 +142,7 @@ template <> inline int ParameterFile::get_value< int >(std::string key) {
  */
 template <> inline bool ParameterFile::get_value< bool >(std::string key) {
   std::string svalue = get_value< std::string >(key);
-  // convert to lowercase
-  std::transform(svalue.begin(), svalue.end(), svalue.begin(), ::tolower);
-  if (svalue == "true" || svalue == "yes" || svalue == "on" || svalue == "y") {
-    return true;
-  } else if (svalue == "false" || svalue == "no" || svalue == "off" ||
-             svalue == "n") {
-    return false;
-  } else {
-    error("Error reading parameter \"%s\". Expected a boolean expression, but "
-          "got \"%s\".",
-          key.c_str(), svalue.c_str());
-  }
+  return Utilities::convert< bool >(svalue);
 }
 
 /**
@@ -206,14 +182,7 @@ inline double ParameterFile::get_value< double >(std::string key,
   if (svalue == "") {
     return default_value;
   }
-  char *str_end;
-  double dvalue = strtod(svalue.c_str(), &str_end);
-  if (str_end == svalue.c_str()) {
-    error("Error reading parameter \"%s\". Expected a floating point, but got "
-          "\"%s\".",
-          key.c_str(), svalue.c_str());
-  }
-  return dvalue;
+  return Utilities::convert< double >(svalue);
 }
 
 /**
@@ -230,14 +199,7 @@ inline int ParameterFile::get_value< int >(std::string key, int default_value) {
   if (svalue == "") {
     return default_value;
   }
-  char *str_end;
-  int ivalue = strtol(svalue.c_str(), &str_end, 0);
-  if (str_end == svalue.c_str()) {
-    error(
-        "Error reading parameter \"%s\". Expected an integer, but got \"%s\".",
-        key.c_str(), svalue.c_str());
-  }
-  return ivalue;
+  return Utilities::convert< int >(svalue);
 }
 
 /**
@@ -261,18 +223,7 @@ inline bool ParameterFile::get_value< bool >(std::string key,
   if (svalue == "") {
     return default_value;
   }
-  // convert to lowercase
-  std::transform(svalue.begin(), svalue.end(), svalue.begin(), ::tolower);
-  if (svalue == "true" || svalue == "yes" || svalue == "on" || svalue == "y") {
-    return true;
-  } else if (svalue == "false" || svalue == "no" || svalue == "off" ||
-             svalue == "n") {
-    return false;
-  } else {
-    error("Error reading parameter \"%s\". Expected a boolean expression, but "
-          "got \"%s\".",
-          key.c_str(), svalue.c_str());
-  }
+  return Utilities::convert< bool >(svalue);
 }
 
 #endif // PARAMETERFILE_HPP
