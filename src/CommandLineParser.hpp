@@ -28,7 +28,9 @@
 
 #include "CommandLineOption.hpp"
 
+#include <map>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -47,16 +49,97 @@ private:
   /*! @brief Accepted command line options. */
   std::vector< CommandLineOption > _options;
 
+  /*! @brief Dictionary with parsed command line parameters. */
+  std::map< std::string, std::string > _dictionary;
+
 public:
   CommandLineParser(std::string program_name);
 
   void add_option(std::string long_name, char short_name,
                   std::string description,
                   CommandLineOptionArgumentType argument_type,
-                  std::string default_value);
+                  std::string default_value = "");
+
+  template < typename T >
+  void add_option(std::string long_name, char short_name,
+                  std::string description, T default_value);
+
+  template < typename T >
+  void add_required_option(std::string long_name, char short_name,
+                           std::string description);
 
   void print_description(std::ostream &stream);
+
+  void parse_arguments(int argc, char **argv);
   void print_contents(std::ostream &stream);
 };
+
+template <>
+inline void CommandLineParser::add_option< double >(std::string long_name,
+                                                    char short_name,
+                                                    std::string description,
+                                                    double default_value) {
+  std::stringstream sstream;
+  sstream << default_value;
+  add_option(long_name, short_name, description,
+             COMMANDLINEOPTION_DOUBLEARGUMENT, sstream.str());
+}
+
+template <>
+inline void CommandLineParser::add_option< int >(std::string long_name,
+                                                 char short_name,
+                                                 std::string description,
+                                                 int default_value) {
+  std::stringstream sstream;
+  sstream << default_value;
+  add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT,
+             sstream.str());
+}
+
+template <>
+inline void CommandLineParser::add_option< bool >(std::string long_name,
+                                                  char short_name,
+                                                  std::string description,
+                                                  bool default_value) {
+  std::string default_string;
+  if (default_value) {
+    default_string = "true";
+  } else {
+    default_string = "false";
+  }
+  add_option(long_name, short_name, description, COMMANDLINEOPTION_NOARGUMENT,
+             default_string);
+}
+
+template <>
+inline void CommandLineParser::add_option< std::string >(
+    std::string long_name, char short_name, std::string description,
+    std::string default_value) {
+  add_option(long_name, short_name, description,
+             COMMANDLINEOPTION_STRINGARGUMENT, default_value);
+}
+
+template <>
+inline void CommandLineParser::add_required_option< double >(
+    std::string long_name, char short_name, std::string description) {
+  add_option(long_name, short_name, description,
+             COMMANDLINEOPTION_DOUBLEARGUMENT);
+}
+
+template <>
+inline void CommandLineParser::add_required_option< int >(
+    std::string long_name, char short_name, std::string description) {
+  add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT);
+}
+
+// no bool specialization for required options, because that does not make any
+// sense
+
+template <>
+inline void CommandLineParser::add_required_option< std::string >(
+    std::string long_name, char short_name, std::string description) {
+  add_option(long_name, short_name, description,
+             COMMANDLINEOPTION_STRINGARGUMENT);
+}
 
 #endif // COMMANDLINEPARSER_HPP

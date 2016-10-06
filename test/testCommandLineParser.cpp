@@ -104,17 +104,21 @@ int main(int argc, char **argv) {
 
   CommandLineParser parser("testCommandLineParser");
 
-  parser.add_option("test", 't', "A parameter to test the CommandLineParser.",
-                    COMMANDLINEOPTION_INTARGUMENT, "42");
-  parser.add_option("more", 'm', "A parameter taking a string argument.",
-                    COMMANDLINEOPTION_STRINGARGUMENT, "");
-  parser.add_option("less", 'l',
-                    "A parameter taking a floating point argument.",
-                    COMMANDLINEOPTION_DOUBLEARGUMENT, "3.14");
-  parser.add_option(
+  parser.add_option< int >("test", 't',
+                           "A parameter to test the CommandLineParser.", 42);
+  parser.add_required_option< string >("more", 'm',
+                                       "A parameter taking a string argument.");
+  parser.add_option< double >(
+      "less", 'l', "A parameter taking a floating point argument.", 3.14);
+  parser.add_option< string >(
       "complicated", 'c',
-      "A parameter taking a string containing a whitespace character.",
-      COMMANDLINEOPTION_STRINGARGUMENT, "42");
+      "A parameter taking a string containing a whitespace character.", "42");
+  parser.add_option< double >(
+      "double_default", 'd', "A parameter for which the default value is used.",
+      3.14);
+  parser.add_option< bool >(
+      "bool_default", 'b', "A boolean parameter for which the default is used.",
+      false);
 
   parser.print_description(cout);
   parser.print_contents(cout);

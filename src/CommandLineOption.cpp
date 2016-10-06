@@ -148,7 +148,9 @@ void CommandLineOption::print_description(std::ostream &stream) {
   string default_value_description =
       get_default_value_description(_argument, _default_value);
   if (default_value_description.size()) {
-    stream << " (default: " << default_value_description << ")";
+    if (_argument != COMMANDLINEOPTION_NOARGUMENT) {
+      stream << " (default: " << default_value_description << ")";
+    }
   } else {
     stream << " and is required";
   }
