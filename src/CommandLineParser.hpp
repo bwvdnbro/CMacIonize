@@ -60,10 +60,32 @@ public:
                   CommandLineOptionArgumentType argument_type,
                   std::string default_value = "");
 
+  /**
+   * @brief Template add_option method that is more user friendly.
+   *
+   * @param long_name Long name of the command line option, to be used with
+   * "--".
+   * @param short_name Single character name of the command line option, to be
+   * used with "-".
+   * @param description Description of the command line option, shown in the
+   * help message.
+   * @param default_value Default value for the command line argument, as a
+   * value of the template type.
+   */
   template < typename T >
   void add_option(std::string long_name, char short_name,
                   std::string description, T default_value);
 
+  /**
+   * @brief Template add_option method for required options.
+   *
+   * @param long_name Long name of the command line option, to be used with
+   * "--".
+   * @param short_name Single character name of the command line option, to be
+   * used with "-".
+   * @param description Description of the command line option, shown in the
+   * help message.
+   */
   template < typename T >
   void add_required_option(std::string long_name, char short_name,
                            std::string description);
@@ -74,6 +96,17 @@ public:
   void print_contents(std::ostream &stream);
 };
 
+/**
+ * @brief CommandLineParser::add_option() specialization for a double precision
+ * floating point command line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ * @param default_value Default value, as a double precision floating point.
+ */
 template <>
 inline void CommandLineParser::add_option< double >(std::string long_name,
                                                     char short_name,
@@ -84,7 +117,17 @@ inline void CommandLineParser::add_option< double >(std::string long_name,
   add_option(long_name, short_name, description,
              COMMANDLINEOPTION_DOUBLEARGUMENT, sstream.str());
 }
-
+/**
+ * @brief CommandLineParser::add_option() specialization for an integer command
+ * line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ * @param default_value Default value, as an integer.
+ */
 template <>
 inline void CommandLineParser::add_option< int >(std::string long_name,
                                                  char short_name,
@@ -96,21 +139,41 @@ inline void CommandLineParser::add_option< int >(std::string long_name,
              sstream.str());
 }
 
+/**
+ * @brief CommandLineParser::add_option() specialization for a boolean command
+ * line option argument.
+ *
+ * The boolean does not need to be specified; we just assume true if the option
+ * is present and false otherwise. This type of command line option always has
+ * a default value of false, and can never be required.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ * @param default_value Default value, ignored as this should always be false.
+ */
 template <>
 inline void CommandLineParser::add_option< bool >(std::string long_name,
                                                   char short_name,
                                                   std::string description,
                                                   bool default_value) {
-  std::string default_string;
-  if (default_value) {
-    default_string = "true";
-  } else {
-    default_string = "false";
-  }
   add_option(long_name, short_name, description, COMMANDLINEOPTION_NOARGUMENT,
-             default_string);
+             "false");
 }
 
+/**
+ * @brief CommandLineParser::add_option() specialization for a string command
+ * line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ * @param default_value Default value, as a string.
+ */
 template <>
 inline void CommandLineParser::add_option< std::string >(
     std::string long_name, char short_name, std::string description,
@@ -119,6 +182,16 @@ inline void CommandLineParser::add_option< std::string >(
              COMMANDLINEOPTION_STRINGARGUMENT, default_value);
 }
 
+/**
+ * @brief CommandLineParser::add_required_option() specialization for a double
+ * precision floating point command line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ */
 template <>
 inline void CommandLineParser::add_required_option< double >(
     std::string long_name, char short_name, std::string description) {
@@ -126,6 +199,16 @@ inline void CommandLineParser::add_required_option< double >(
              COMMANDLINEOPTION_DOUBLEARGUMENT);
 }
 
+/**
+ * @brief CommandLineParser::add_required_option() specialization for an integer
+ * command line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ */
 template <>
 inline void CommandLineParser::add_required_option< int >(
     std::string long_name, char short_name, std::string description) {
@@ -135,6 +218,16 @@ inline void CommandLineParser::add_required_option< int >(
 // no bool specialization for required options, because that does not make any
 // sense
 
+/**
+ * @brief CommandLineParser::add_required_option() specialization for a string
+ * command line option argument.
+ *
+ * @param long_name Long name of the command line option, to be used with "--".
+ * @param short_name Single character name of the command line option, to be
+ * used with "-".
+ * @param description Description of the command line option, shown in the help
+ * message.
+ */
 template <>
 inline void CommandLineParser::add_required_option< std::string >(
     std::string long_name, char short_name, std::string description) {

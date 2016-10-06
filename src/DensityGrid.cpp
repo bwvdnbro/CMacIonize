@@ -416,7 +416,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
  * @brief Solves the ionization and temperature equations based on the values of
  * the mean intensity integrals in each cell.
  *
- * @param Number of photons used in this particular iteration.
+ * @param nphoton Number of photons used in this particular iteration.
  */
 void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
   // factor in the mean intensity integrals
