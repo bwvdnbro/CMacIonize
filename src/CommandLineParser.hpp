@@ -41,10 +41,15 @@
  */
 class CommandLineParser {
 private:
+  /*! @brief Name of the program, shown in the help message. */
+  std::string _program_name;
+
   /*! @brief Accepted command line options. */
   std::vector< CommandLineOption > _options;
 
 public:
+  CommandLineParser(std::string program_name);
+
   void add_option(std::string long_name, char short_name,
                   std::string description,
                   CommandLineOptionArgumentType argument_type,

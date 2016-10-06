@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
       test_argc, test_argv,
       "--test   --more \"andmore\" --less 2.0 --complicated \"and this?\"");
 
-  CommandLineParser parser;
+  CommandLineParser parser("testCommandLineParser");
 
   parser.add_option("test", 't', "A parameter to test the CommandLineParser.",
                     COMMANDLINEOPTION_INTARGUMENT, "42");

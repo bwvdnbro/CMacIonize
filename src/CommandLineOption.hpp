@@ -76,6 +76,7 @@ public:
                     int argument = COMMANDLINEOPTION_NOARGUMENT,
                     std::string default_value = "");
 
+  void print_usage(std::ostream &stream);
   void print_description(std::ostream &stream);
 };
 

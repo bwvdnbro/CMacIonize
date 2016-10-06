@@ -111,6 +111,31 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
 }
 
 /**
+ * @brief Print the command line option as it should be used on the command
+ * line.
+ *
+ * Optional parameters (which have a default value) are enclosed within [].
+ *
+ * @param stream std::ostream to write to.
+ */
+void CommandLineOption::print_usage(std::ostream &stream) {
+  string uppercase_name(_name);
+  transform(_name.begin(), _name.end(), uppercase_name.begin(), ::toupper);
+  if (get_default_value_description(_argument, _default_value).size()) {
+    stream << "[--" << _name;
+    if (_argument != COMMANDLINEOPTION_NOARGUMENT) {
+      stream << " " << uppercase_name;
+    }
+    stream << "]";
+  } else {
+    stream << "--" << _name;
+    if (_argument != COMMANDLINEOPTION_NOARGUMENT) {
+      stream << " " << uppercase_name;
+    }
+  }
+}
+
+/**
  * @brief Print a comprehensive description of the command line option, its
  * name, abbreviation, use and possible values to the given stream
  *

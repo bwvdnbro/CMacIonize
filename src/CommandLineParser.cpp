@@ -28,6 +28,14 @@
 using namespace std;
 
 /**
+ * @brief Constructor.
+ *
+ * @param program_name Name of the program, shown in the help message.
+ */
+CommandLineParser::CommandLineParser(std::string program_name)
+    : _program_name(program_name) {}
+
+/**
  * @brief Add a new command line option to the parser.
  *
  * @param long_name Long name for the command line option, to be used with '--'.
@@ -54,6 +62,13 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
  * @param stream std::ostream to write to.
  */
 void CommandLineParser::print_description(std::ostream &stream) {
+  stream << "Usage:\n";
+  stream << "    " << _program_name;
+  for (auto it = _options.begin(); it != _options.end(); ++it) {
+    stream << " ";
+    it->print_usage(stream);
+  }
+  stream << "\nParameters:\n\n";
   for (auto it = _options.begin(); it != _options.end(); ++it) {
     it->print_description(stream);
   }
