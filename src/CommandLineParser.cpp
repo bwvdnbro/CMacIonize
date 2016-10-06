@@ -97,11 +97,81 @@ void CommandLineParser::print_description(std::ostream &stream) {
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  */
-void CommandLineParser::parse_arguments(int argc, char **argv) {}
+void CommandLineParser::parse_arguments(int argc, char **argv) {
+  // we discard the first argument, as this is simply the program name
+  int i = 1;
+  while (i < argc) {
+    if (argv[i][0] != '-') {
+      error("Found orphan argument in command line options (did you forget the "
+            "\"--\"?)");
+    }
+    string option(argv[i]);
+    // check if the option is --help or -h
+    if (option == "--help" || option == "-h") {
+      print_description(cout);
+      exit(0);
+    }
+    size_t eqpos = option.find('=');
+    string argument;
+    if (eqpos != string::npos) {
+      argument = option.substr(eqpos);
+      option = option.substr(0, eqpos);
+    } else {
+      if (i < argc - 1 && argv[i + 1][0] != '-') {
+        argument = argv[i + 1];
+        ++i;
+      }
+    }
+    // remove the "--" or "-"
+    while (option[0] == '-') {
+      option = option.substr(1);
+    }
+    // we now have the option and the (possibly empty) argument
+    // find an option in the list that corresponds to it:
+    unsigned int j = 0;
+    while (j < _options.size() && !_options[j].matches(option)) {
+      ++j;
+    }
+    if (j == _options.size()) {
+      cout << "Unknown option: --" << option << "\n";
+      print_description(cout);
+      exit(1);
+    }
+    _dictionary[_options[j].get_long_name()] =
+        _options[j].parse_argument(argument);
+    // the parsing above should automatically use the default value if an empty
+    // argument was provided. The dictionary entry can only be empty if the
+    // default value was empty, which means the argument is required.
+    if (!_dictionary[option].size()) {
+      cout << "Missing argument for option --" << option << "\n";
+      print_description(cout);
+      exit(1);
+    }
+    ++i;
+  }
+
+  // we parsed all options, now check if we found all required ones
+  // and add default values for options not present
+  for (auto it = _options.begin(); it != _options.end(); ++it) {
+    if (!_dictionary.count(it->get_long_name())) {
+      if (it->is_required()) {
+        cout << "Required option --" << it->get_long_name() << " not found!";
+        print_description(cout);
+        exit(1);
+      } else {
+        _dictionary[it->get_long_name()] = it->get_default_value();
+      }
+    }
+  }
+}
 
 /**
  * @brief Print the contents of the internal dictionary to the given stream.
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineParser::print_contents(std::ostream &stream) {}
+void CommandLineParser::print_contents(std::ostream &stream) {
+  for (auto it = _dictionary.begin(); it != _dictionary.end(); ++it) {
+    stream << it->first << ": " << it->second << "\n";
+  }
+}

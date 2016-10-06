@@ -27,6 +27,7 @@
 #define COMMANDLINEPARSER_HPP
 
 #include "CommandLineOption.hpp"
+#include "Utilities.hpp"
 
 #include <map>
 #include <ostream>
@@ -94,6 +95,15 @@ public:
 
   void parse_arguments(int argc, char **argv);
   void print_contents(std::ostream &stream);
+
+  /**
+   * @brief Get the argument value for the given option.
+   *
+   * @param option Option name.
+   * @return Argument value of that option, as a variable of the given template
+   * type.
+   */
+  template < typename T > T get_value(std::string option);
 };
 
 /**
@@ -233,6 +243,61 @@ inline void CommandLineParser::add_required_option< std::string >(
     std::string long_name, char short_name, std::string description) {
   add_option(long_name, short_name, description,
              COMMANDLINEOPTION_STRINGARGUMENT);
+}
+
+/**
+ * @brief CommandLineParser::get_value() specialization for std::string.
+ *
+ * This is the only version that also checks if the given option is a key in the
+ * dictionary; all other specializations call this version.
+ *
+ * @param option Command line option.
+ * @return Value of the command line option argument.
+ */
+template <>
+inline std::string
+CommandLineParser::get_value< std::string >(std::string option) {
+  auto it = _dictionary.find(option);
+  if (it == _dictionary.end()) {
+    error("Command line option \"%s\" not found!", option.c_str());
+  }
+  return it->second;
+}
+
+/**
+ * @brief CommandLineParser::get_value() specialization for a double precision
+ * floating point value.
+ *
+ * @param option Command line option.
+ * @return Value of the command line option argument.
+ */
+template <>
+inline double CommandLineParser::get_value< double >(std::string option) {
+  std::string svalue = get_value< std::string >(option);
+  return Utilities::convert< double >(svalue);
+}
+
+/**
+ * @brief CommandLineParser::get_value() specialization for an integer value.
+ *
+ * @param option Command line option.
+ * @return Value of the command line option argument.
+ */
+template <> inline int CommandLineParser::get_value< int >(std::string option) {
+  std::string svalue = get_value< std::string >(option);
+  return Utilities::convert< int >(svalue);
+}
+
+/**
+ * @brief CommandLineParser::get_value() specialization for a boolean value.
+ *
+ * @param option Command line option.
+ * @return Value of the command line option argument.
+ */
+template <>
+inline bool CommandLineParser::get_value< bool >(std::string option) {
+  std::string svalue = get_value< std::string >(option);
+  return Utilities::convert< bool >(svalue);
 }
 
 #endif // COMMANDLINEPARSER_HPP

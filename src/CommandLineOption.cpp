@@ -69,9 +69,11 @@ CommandLineOption::get_default_value_description(int argument,
   }
   switch (argument) {
   case COMMANDLINEOPTION_NOARGUMENT: {
-    stringstream sstream;
-    sstream << Utilities::convert< bool >(default_value);
-    return sstream.str();
+    if (Utilities::convert< bool >(default_value)) {
+      return "true";
+    } else {
+      return "false";
+    }
   }
   case COMMANDLINEOPTION_INTARGUMENT: {
     stringstream sstream;
@@ -155,4 +157,101 @@ void CommandLineOption::print_description(std::ostream &stream) {
     stream << " and is required";
   }
   stream << ".\n";
+}
+
+/**
+ * @brief Get the long name of the command line option (used with "--").
+ *
+ * @return Long name of the command line option.
+ */
+std::string CommandLineOption::get_long_name() { return _name; }
+
+/**
+ * @brief Get the short name of the command line option (used with "-").
+ *
+ * @return Short name of the command line option.
+ */
+char CommandLineOption::get_short_name() { return _abbreviation; }
+
+/**
+ * @brief Check if the command line option takes an argument.
+ *
+ * @return True if the command line option takes an argument.
+ */
+bool CommandLineOption::has_argument() {
+  return _argument != COMMANDLINEOPTION_NOARGUMENT;
+}
+
+/**
+ * @brief Check if the command line option is required.
+ *
+ * @return True if the command line option is required.
+ */
+bool CommandLineOption::is_required() {
+  return get_default_value_description(_argument, _default_value).size() == 0;
+}
+
+/**
+ * @brief Check if the given option string matches with this specific command
+ * line option.
+ *
+ * @param option Command line option to match. Can be either a long or short
+ * name.
+ * @return True if the given option matches this specific option.
+ */
+bool CommandLineOption::matches(std::string option) {
+  return option == _name || (option.size() == 1 && option[0] == _abbreviation);
+}
+
+/**
+ * @brief Parse the given command line option argument and return a string that
+ * is stored in the command line option dictionary.
+ *
+ * @param argument Command line option argument.
+ * @return Parsed command line argument that is stored in the dictionary.
+ */
+std::string CommandLineOption::parse_argument(std::string argument) {
+  switch (_argument) {
+  case COMMANDLINEOPTION_NOARGUMENT: {
+    // that we are here means the command line option is present, and hence its
+    // argument value is true
+    return "true";
+  }
+  case COMMANDLINEOPTION_INTARGUMENT: {
+    stringstream sstream;
+    if (argument.size()) {
+      sstream << Utilities::convert< int >(argument);
+    } else {
+      sstream << Utilities::convert< int >(_default_value);
+    }
+    return sstream.str();
+  }
+  case COMMANDLINEOPTION_DOUBLEARGUMENT: {
+    stringstream sstream;
+    if (argument.size()) {
+      sstream << Utilities::convert< double >(argument);
+    } else {
+      sstream << Utilities::convert< double >(_default_value);
+    }
+    return sstream.str();
+  }
+  case COMMANDLINEOPTION_STRINGARGUMENT: {
+    if (argument.size()) {
+      return argument;
+    } else {
+      return _default_value;
+    }
+  }
+  }
+  return "";
+}
+
+/**
+ * @brief Get a string description of the default value of the argument of this
+ * option.
+ *
+ * @return Default value of the argument of this command line option.
+ */
+std::string CommandLineOption::get_default_value() {
+  return get_default_value_description(_argument, _default_value);
 }

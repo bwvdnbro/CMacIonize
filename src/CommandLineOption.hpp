@@ -78,6 +78,15 @@ public:
 
   void print_usage(std::ostream &stream);
   void print_description(std::ostream &stream);
+
+  std::string get_long_name();
+  char get_short_name();
+  bool has_argument();
+  bool is_required();
+
+  bool matches(std::string option);
+  std::string parse_argument(std::string argument);
+  std::string get_default_value();
 };
 
 #endif // COMMANDLINEOPTION_HPP

@@ -69,6 +69,8 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
 set(TESTCOMMANDLINEPARSER_SOURCES
     testCommandLineParser.cpp
 
+    Assert.hpp
+
     ../src/CommandLineOption.cpp
     ../src/CommandLineParser.cpp
     ../src/CommandLineOption.hpp

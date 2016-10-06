@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include <cstring>
@@ -63,11 +64,13 @@ void generate_arguments(int &argc, char **&argv, string command_line) {
   }
 
   // copy the contents of the vector into the argc and argv variables
-  argc = commands.size();
+  // the first entry is the name of the program
+  argc = commands.size() + 1;
   argv = new char *[argc];
-  for (int i = 0; i < argc; ++i) {
-    argv[i] = new char[commands[i].size() + 1];
-    strcpy(argv[i], commands[i].c_str());
+  argv[0] = new char[1];
+  for (int i = 0; i < argc - 1; ++i) {
+    argv[i + 1] = new char[commands[i].size() + 1];
+    strcpy(argv[i + 1], commands[i].c_str());
   }
 }
 
@@ -100,7 +103,7 @@ int main(int argc, char **argv) {
   // spaces and various types of options
   generate_arguments(
       test_argc, test_argv,
-      "--test   --more \"andmore\" --less 2.0 --complicated \"and this?\"");
+      "--test   --more \"andmore\" --less 2.1 --complicated \"and this?\"");
 
   CommandLineParser parser("testCommandLineParser");
 
@@ -121,6 +124,16 @@ int main(int argc, char **argv) {
       false);
 
   parser.print_description(cout);
+
+  parser.parse_arguments(test_argc, test_argv);
+
+  assert_condition(parser.get_value< int >("test") == 42);
+  assert_condition(parser.get_value< string >("more") == "andmore");
+  assert_condition(parser.get_value< double >("less") == 2.1);
+  assert_condition(parser.get_value< string >("complicated") == "and this?");
+  assert_condition(parser.get_value< double >("double_default") == 3.14);
+  assert_condition(parser.get_value< bool >("bool_default") == false);
+
   parser.print_contents(cout);
 
   delete_arguments(test_argc, test_argv);
