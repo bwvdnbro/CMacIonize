@@ -33,6 +33,7 @@ class DensityFunction;
 class DensityValues;
 class ParameterFile;
 class Photon;
+class RecombinationRates;
 
 /**
  * @brief Density grid.
@@ -64,14 +65,19 @@ private:
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
 
+  /*! @brief Recombination rates used in ionization balance calculation. */
+  RecombinationRates &_recombination_rates;
+
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-              double helium_mass_fraction, DensityFunction &density_function,
-              CrossSections &cross_sections);
+              double helium_mass_fraction, double initial_temperature,
+              DensityFunction &density_function, CrossSections &cross_sections,
+              RecombinationRates &recombination_rates);
 
   DensityGrid(ParameterFile &parameters, Box box,
               CoordinateVector< unsigned char > ncell,
-              DensityFunction &density_function, CrossSections &cross_sections);
+              DensityFunction &density_function, CrossSections &cross_sections,
+              RecombinationRates &recombination_rates);
 
   ~DensityGrid();
 
@@ -87,6 +93,8 @@ public:
                                            double &ds);
 
   bool interact(Photon &photon, double optical_depth);
+
+  void calculate_ionization_state(unsigned int nphoton);
 };
 
 #endif // DENSITYGRID_HPP

@@ -28,6 +28,7 @@
 #include "DensityFunction.hpp"
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
+#include "RecombinationRates.hpp"
 
 /**
  * @brief Test implementation of DensityFunction.
@@ -61,6 +62,25 @@ public:
 };
 
 /**
+ * @brief Test implementation of RecombinationRates.
+ */
+class TestRecombinationRates : public RecombinationRates {
+public:
+  /**
+   * @brief Get the recombination rate for the given element at the given
+   * temperature.
+   *
+   * @param element ElementName for an element.
+   * @param temperature Temperature.
+   * @return Recombination rate.
+   */
+  virtual double get_recombination_rate(ElementName element,
+                                        double temperature) {
+    return 1.;
+  }
+};
+
+/**
  * @brief Unit test for the DensityGrid class.
  *
  * @param argc Number of command line arguments.
@@ -70,6 +90,7 @@ public:
 int main(int argc, char **argv) {
   TestDensityFunction testfunction;
   TestCrossSections testcrosssections;
+  TestRecombinationRates testrecombinationrates;
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
@@ -80,7 +101,8 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  DensityGrid grid(box, 64, 0.1, testfunction, testcrosssections);
+  DensityGrid grid(box, 64, 0.1, 8000., testfunction, testcrosssections,
+                   testrecombinationrates);
 
   assert_values_equal(1., grid.get_total_mass());
 

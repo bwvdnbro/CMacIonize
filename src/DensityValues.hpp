@@ -40,6 +40,9 @@ private:
   /*! @brief Neutral fraction of helium. */
   double _neutral_fraction_He;
 
+  /*! @brief Temperature. */
+  double _temperature;
+
   /*! @brief Mean intensity of hydrogen ionizing radiation. */
   double _mean_intensity_H;
 
@@ -52,7 +55,7 @@ public:
    */
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
-        _mean_intensity_H(0.), _mean_intensity_He(0.) {}
+        _temperature(0.), _mean_intensity_H(0.), _mean_intensity_He(0.) {}
 
   /**
    * @brief Set the total density.
@@ -79,6 +82,15 @@ public:
    */
   inline void set_neutral_fraction_He(double neutral_fraction_He) {
     _neutral_fraction_He = neutral_fraction_He;
+  }
+
+  /**
+   * @brief Set the temperature.
+   *
+   * @param temperature Temperature value.
+   */
+  inline void set_temperature(double temperature) {
+    _temperature = temperature;
   }
 
   /**
@@ -121,6 +133,13 @@ public:
    * @return Neutral fraction of helium.
    */
   inline double get_neutral_fraction_He() { return _neutral_fraction_He; }
+
+  /**
+   * @brief Get the temperature.
+   *
+   * @return Temperature.
+   */
+  inline double get_temperature() { return _temperature; }
 
   /**
    * @brief Get the mean intensity of hydrogen ionizing radiation.

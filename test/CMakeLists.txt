@@ -97,6 +97,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
+    ../src/RecombinationRates.hpp
 )
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
@@ -123,6 +124,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
+    ../src/RecombinationRates.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}

@@ -29,6 +29,7 @@
 #include "DensityValues.hpp"
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
+#include "RecombinationRates.hpp"
 using namespace std;
 
 /**
@@ -37,15 +38,20 @@ using namespace std;
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
  * @param helium_mass_fraction Mass fraction of helium.
+ * @param initial_temperature Initial temperature of the gas.
  * @param density_function DensityFunction that defines the density field.
  * @param cross_sections Photoionization cross sections.
+ * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
                          double helium_mass_fraction,
+                         double initial_temperature,
                          DensityFunction &density_function,
-                         CrossSections &cross_sections)
+                         CrossSections &cross_sections,
+                         RecombinationRates &recombination_rates)
     : _box(box), _ncell(ncell), _helium_mass_fraction(helium_mass_fraction),
-      _cross_sections(cross_sections) {
+      _cross_sections(cross_sections),
+      _recombination_rates(recombination_rates) {
   _density = new DensityValues **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
@@ -70,6 +76,7 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
         // initialize the neutral fractions to very low values
         _density[i][j][k].set_neutral_fraction_H(1.e-6);
         _density[i][j][k].set_neutral_fraction_He(1.e-6);
+        _density[i][j][k].set_temperature(initial_temperature);
       }
     }
   }
@@ -95,14 +102,17 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
  * @param density_function DensityFunction used to set the densities in each
  * cell.
  * @param cross_sections Photoionization cross sections.
+ * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
                          CoordinateVector< unsigned char > ncell,
                          DensityFunction &density_function,
-                         CrossSections &cross_sections)
+                         CrossSections &cross_sections,
+                         RecombinationRates &recombination_rates)
     : DensityGrid(box, ncell,
                   parameters.get_value< double >("helium_mass_fraction", 0.1),
-                  density_function, cross_sections) {}
+                  parameters.get_value< double >("initial_temperature", 8000.),
+                  density_function, cross_sections, recombination_rates) {}
 
 /**
  * @brief Destructor
@@ -400,4 +410,114 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   photon.set_position(photon_origin);
 
   return is_inside(index);
+}
+
+/**
+ * @brief Solves the ionization and temperature equations based on the values of
+ * the mean intensity integrals in each cell.
+ *
+ * @param Number of photons used in this particular iteration.
+ */
+void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
+  // factor in the mean intensity integrals
+  double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
+  double jfac = 1.e-18 * 4.26e49 / 3.086e18 / 3.086e18 / nphoton / cellvolume;
+  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+      for (unsigned int k = 0; k < _ncell.z(); ++k) {
+        DensityValues cell = _density[i][j][k];
+        double jH = jfac * cell.get_mean_intensity_H();
+        double jHe = jfac * cell.get_mean_intensity_He();
+        double T = cell.get_temperature();
+        double alphaH =
+            _recombination_rates.get_recombination_rate(ELEMENT_H, T);
+        double alphaHe =
+            _recombination_rates.get_recombination_rate(ELEMENT_He, T);
+        double alpha_e_2sP = 4.27e-14 * pow(T * 1.e-4, -0.695);
+        double ntot = cell.get_total_density();
+        if (jH > 0. && ntot > 0.) {
+          double ch1 = alphaH * ntot / jH;
+          double ch2 = _helium_mass_fraction * alpha_e_2sP * ntot / jH;
+          double che = 0.;
+          if (jHe) {
+            che = alphaHe * ntot / jHe;
+          }
+          // h0find
+          double h0old = 0.99 * (1. - exp(-0.5 / ch1));
+          double h0 = 0.9 * h0old;
+          double he0old = 1.;
+          if (che) {
+            he0old = 0.5 / che;
+            he0old = max(he0old, 1.);
+          }
+          double he0 = 0.;
+          unsigned int niter = 0;
+          while (abs(h0 - h0old) > 1.e-4 * h0old &&
+                 abs(he0 - he0old) > 1.e-4 * he0old) {
+            ++niter;
+            h0old = h0;
+            if (he0 > 0.) {
+              he0old = he0;
+            } else {
+              he0old = 0.;
+            }
+            double pHots = 1. / (1. + 77. * he0old / sqrt(T) / h0old);
+            double ch = ch1 -
+                        ch2 * _helium_mass_fraction * (1. - he0old) * pHots /
+                            (1. - h0old);
+
+            he0 = 1.;
+            if (che) {
+              double bhe = (1. + 2. * _helium_mass_fraction - h0) * che + 1.;
+              double t1he = 4. * _helium_mass_fraction *
+                            (1. + _helium_mass_fraction - h0) * che * che /
+                            bhe / bhe;
+              if (t1he < 1.e-3) {
+                he0 = (1. + _helium_mass_fraction - h0) * che / bhe;
+              } else {
+                he0 = (bhe - sqrt(bhe * bhe -
+                                  4. * _helium_mass_fraction *
+                                      (1. + _helium_mass_fraction - h0) * che *
+                                      che)) /
+                      (2. * _helium_mass_fraction * che);
+              }
+            }
+            double b = ch * (2. + _helium_mass_fraction -
+                             he0 * _helium_mass_fraction) +
+                       1.;
+            double t1 = 4. * ch * ch * (1. + _helium_mass_fraction -
+                                        he0 * _helium_mass_fraction) /
+                        b / b;
+            if (t1 < 1.e-3) {
+              h0 = ch *
+                   (1. + _helium_mass_fraction - he0 * _helium_mass_fraction) /
+                   b;
+            } else {
+              h0 = (b - sqrt(b * b -
+                             4. * ch * ch * (1. + _helium_mass_fraction -
+                                             he0 * _helium_mass_fraction))) /
+                   (2. * ch);
+            }
+            ch = ch1 - ch2 * _helium_mass_fraction * (1. - he0) / (1. - h0);
+            if (niter > 10) {
+              h0 = 0.5 * (h0 + h0old);
+              he0 = 0.5 * (he0 + he0old);
+            }
+            if (niter > 20) {
+              error("Too many iterations in ionization loop!");
+            }
+          }
+
+          cell.set_neutral_fraction_H(h0);
+          cell.set_neutral_fraction_He(he0);
+
+          // coolants. We don't do them for the moment...
+        } else {
+          cell.set_neutral_fraction_H(1.);
+          cell.set_neutral_fraction_He(1.);
+        }
+        // make shadow regions transparent? (part not active in Kenny's code)
+      }
+    }
+  }
 }

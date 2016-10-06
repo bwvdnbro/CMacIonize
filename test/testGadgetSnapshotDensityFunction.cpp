@@ -29,6 +29,7 @@
 #include "DensityGrid.hpp"
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
+#include "RecombinationRates.hpp"
 using namespace std;
 
 /**
@@ -50,6 +51,25 @@ public:
 };
 
 /**
+ * @brief Test implementation of RecombinationRates.
+ */
+class TestRecombinationRates : public RecombinationRates {
+public:
+  /**
+   * @brief Get the recombination rate for the given element at the given
+   * temperature.
+   *
+   * @param element ElementName for an element.
+   * @param temperature Temperature.
+   * @return Recombination rate.
+   */
+  virtual double get_recombination_rate(ElementName element,
+                                        double temperature) {
+    return 1.;
+  }
+};
+
+/**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.
  *
  * @param argc Number of command line arguments.
@@ -61,11 +81,13 @@ int main(int argc, char **argv) {
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
   TestCrossSections testcrosssections;
+  TestRecombinationRates testrecombinationrates;
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
-  DensityGrid grid(box, 32, 0.1, density, testcrosssections);
+  DensityGrid grid(box, 32, 0.1, 8000., density, testcrosssections,
+                   testrecombinationrates);
   assert_values_equal(grid.get_total_mass(), density.get_total_mass());
 
   return 0;
