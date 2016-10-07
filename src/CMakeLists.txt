@@ -35,36 +35,53 @@ configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/VernerCrossSectionsDataLocation.hpp
                @ONLY)
 
+# Configuration file
+configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
+               ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
+
 set(CMACIONIZE_SOURCES
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     DensityGrid.cpp
-    GadgetSnapshotDensityFunction.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
     Box.hpp
+    Configuration.hpp.in
     CoordinateVector.hpp
     CommandLineOption.hpp
     CommandLineParser.hpp
     CrossSections.hpp
     DensityFunction.hpp
+    DensityFunctionFactory.hpp
     DensityGrid.hpp
     DensityValues.hpp
     Error.hpp
-    GadgetSnapshotDensityFunction.hpp
-    HDF5Tools.hpp
     LineCoolingData.hpp
-    LineCoolingDataLocation.hpp
+    LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
     RecombinationRates.hpp
     Utilities.hpp
     VernerCrossSections.hpp
+    VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
 )
 
+# add HDF5 dependent sources, if we have found HDF5
+if(HAVE_HDF5)
+list(APPEND CMACIONIZE_SOURCES
+     GadgetSnapshotDensityFunction.cpp
+
+     GadgetSnapshotDensityFunction.hpp
+     HDF5Tools.hpp)
+endif(HAVE_HDF5)
+
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+
+# link to HDF5, if we have found it
+if(HAVE_HDF5)
 target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)

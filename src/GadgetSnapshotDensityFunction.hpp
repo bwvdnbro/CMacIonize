@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+class ParameterFile;
+
 /**
  * @brief DensityFunction that reads a density field from a Gadget snapshot.
  */
@@ -54,6 +56,10 @@ private:
 
 public:
   GadgetSnapshotDensityFunction(std::string name);
+
+  GadgetSnapshotDensityFunction(ParameterFile &params);
+
+  virtual ~GadgetSnapshotDensityFunction() {}
 
   virtual double operator()(CoordinateVector<> position);
 

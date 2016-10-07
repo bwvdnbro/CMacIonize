@@ -26,6 +26,7 @@
  */
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "HDF5Tools.hpp"
+#include "ParameterFile.hpp"
 using namespace std;
 
 /**
@@ -97,7 +98,17 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
   HDF5Tools::close_file(file);
 }
 
-/***
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read.
+ */
+GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
+    ParameterFile &params)
+    : GadgetSnapshotDensityFunction(
+          params.get_value< string >("densityfunction.filename")) {}
+
+/**
  * @brief Function that returns the density for the given coordinate.
  *
  * @param position CoordinateVector specifying a coordinate position.

@@ -27,8 +27,8 @@
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CoordinateVector.hpp"
+#include "DensityFunctionFactory.hpp"
 #include "DensityGrid.hpp"
-#include "GadgetSnapshotDensityFunction.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "VernerCrossSections.hpp"
@@ -66,10 +66,11 @@ int main(int argc, char **argv) {
   // DensityGrid object with geometrical and physical properties
   Box box(CoordinateVector<>(), CoordinateVector<>(1.));
   CoordinateVector< unsigned char > ncell(64);
-  GadgetSnapshotDensityFunction density_function("test.hdf5");
+  DensityFunction *density_function =
+      DensityFunctionFactory::generate("GadgetSnapshot", params);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid grid(params, box, ncell, density_function, cross_sections,
+  DensityGrid grid(params, box, ncell, *density_function, cross_sections,
                    recombination_rates);
 
   // fifth: construct the stellar sources. These should be stored in a
@@ -86,6 +87,8 @@ int main(int argc, char **argv) {
   // there is another object, a PhotonInteractor, that selects a random
   // optical depth for a photon and then moves it to a new position until
   // it leaves the system
+
+  delete density_function;
 
   return 0;
 }

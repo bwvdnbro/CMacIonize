@@ -55,7 +55,7 @@ set(TESTLINECOOLINGDATA_SOURCES
     ../src/Error.hpp
     ../src/LineCoolingData.cpp
     ../src/LineCoolingData.hpp
-    ../src/LineCoolingDataLocation.hpp
+    ../src/LineCoolingDataLocation.hpp.in
 )
 # Call the macro that creates the unit test
 add_unit_test(NAME testLineCoolingData
@@ -212,7 +212,7 @@ set(TESTVERNERCROSSSECTIONS_SOURCES
     ../src/Error.hpp
     ../src/VernerCrossSections.cpp
     ../src/VernerCrossSections.hpp
-    ../src/VernerCrossSectionsDataLocation.hpp
+    ../src/VernerCrossSectionsDataLocation.hpp.in
 )
 add_unit_test(NAME testVernerCrossSections
               SOURCES ${TESTVERNERCROSSSECTIONS_SOURCES})
