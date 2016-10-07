@@ -37,6 +37,9 @@
 
 #include <string>
 
+/**
+ * @brief Factory for DensityFunction implementations.
+ */
 class DensityFunctionFactory {
 public:
   /**

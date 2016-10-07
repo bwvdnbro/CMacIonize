@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CoordinateVector.hpp"
 #include "ParameterFile.hpp"
 #include <iostream>
 using namespace std;
@@ -60,11 +61,35 @@ int main(int argc, char **argv) {
       params.get_value< string >("test_comments_group.test_comments_value") ==
       "test comments string");
 
+  CoordinateVector<> cvtest =
+      params.get_value< CoordinateVector<> >("test_coordinatevector_double");
+  assert_condition(cvtest.x() == 0.1);
+  assert_condition(cvtest.y() == 0.2);
+  assert_condition(cvtest.z() == 0.3);
+
+  CoordinateVector< int > cvtest2 =
+      params.get_value< CoordinateVector< int > >("test_coordinatevector_int");
+  assert_condition(cvtest2.x() == 42);
+  assert_condition(cvtest2.y() == 42);
+  assert_condition(cvtest2.z() == 42);
+
   // default values
   assert_condition(params.get_value< int >("not_in_file", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file", 3.14) == 3.14);
   assert_condition(params.get_value< string >("not_in", "file?") == "file?");
   assert_condition(params.get_value< bool >("not_in_file", true) == true);
+
+  cvtest = params.get_value< CoordinateVector<> >(
+      "not_in_file", CoordinateVector<>(0.1, 0.2, 0.3));
+  assert_condition(cvtest.x() == 0.1);
+  assert_condition(cvtest.y() == 0.2);
+  assert_condition(cvtest.z() == 0.3);
+
+  cvtest2 = params.get_value< CoordinateVector< int > >(
+      "not_in_file", CoordinateVector< int >(42, 42, 42));
+  assert_condition(cvtest2.x() == 42);
+  assert_condition(cvtest2.y() == 42);
+  assert_condition(cvtest2.z() == 42);
 
   return 0;
 }

@@ -26,6 +26,7 @@
 #ifndef PARAMETERFILE_HPP
 #define PARAMETERFILE_HPP
 
+#include "CoordinateVector.hpp"
 #include "Error.hpp"
 #include "Utilities.hpp"
 
@@ -146,6 +147,34 @@ template <> inline bool ParameterFile::get_value< bool >(std::string key) {
 }
 
 /**
+ * @brief ParameterFile::get_value() specialization for a floating point
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @return Floating point CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector<>
+ParameterFile::get_value< CoordinateVector<> >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  return Utilities::convert< CoordinateVector<> >(svalue);
+}
+
+/**
+ * @brief ParameterFile::get_value() specialization for an integer
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @return Integer CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector< int >
+ParameterFile::get_value< CoordinateVector< int > >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  return Utilities::convert< CoordinateVector< int > >(svalue);
+}
+
+/**
  * @brief ParameterFile::get_value specialization for std::string.
  *
  * This function is called by all other specializations before converting to the
@@ -224,6 +253,45 @@ inline bool ParameterFile::get_value< bool >(std::string key,
     return default_value;
   }
   return Utilities::convert< bool >(svalue);
+}
+
+/**
+ * @brief ParameterFile::get_value() specialization for a floating point
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Floating point CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector<> ParameterFile::get_value< CoordinateVector<> >(
+    std::string key, CoordinateVector<> default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    return default_value;
+  }
+  return Utilities::convert< CoordinateVector<> >(svalue);
+}
+
+/**
+ * @brief ParameterFile::get_value() specialization for an integer
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Integer CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector< int >
+ParameterFile::get_value< CoordinateVector< int > >(
+    std::string key, CoordinateVector< int > default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    return default_value;
+  }
+  return Utilities::convert< CoordinateVector< int > >(svalue);
 }
 
 #endif // PARAMETERFILE_HPP

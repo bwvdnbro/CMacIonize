@@ -19,6 +19,9 @@ test_bool7: off
 test_bool8: N
 # String value
 test_string: This is a test string.
+# CoordinateVector value
+test_coordinatevector_double: [0.1, 2.e-1, 0.3]
+test_coordinatevector_int: [42, 0x2a, 0x2A]
 
 # Group test:
 

@@ -27,9 +27,11 @@
 #ifndef UTILITIES_HPP
 #define UTILITIES_HPP
 
+#include "CoordinateVector.hpp"
 #include "Error.hpp"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 
@@ -70,6 +72,24 @@ template <> inline double convert< double >(std::string value) {
 }
 
 /**
+ * @brief Convert the given string to a floating point CoordinateVector.
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector<> convert< CoordinateVector<> >(std::string value) {
+  CoordinateVector<> vvalue;
+  int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0], &vvalue[1],
+                         &vvalue[2]);
+  if (num_found != 3) {
+    error("Error converting \"%s\" to a floating point CoordinateVector!",
+          value.c_str());
+  }
+  return vvalue;
+}
+
+/**
  * @brief Convert the given string to an integer value.
  *
  * @param value std::string value.
@@ -82,6 +102,25 @@ template <> inline int convert< int >(std::string value) {
     error("Error converting \"%s\" to an integer value!", value.c_str());
   }
   return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an integer CoordinateVector.
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< int >
+convert< CoordinateVector< int > >(std::string value) {
+  CoordinateVector< int > vvalue;
+  int num_found =
+      sscanf(value.c_str(), "[%i,%i,%i]", &vvalue[0], &vvalue[1], &vvalue[2]);
+  if (num_found != 3) {
+    error("Error converting \"%s\" to an integer CoordinateVector!",
+          value.c_str());
+  }
+  return vvalue;
 }
 
 /**

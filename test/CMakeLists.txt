@@ -223,6 +223,7 @@ set(TESTPARAMETERFILE_SOURCES
 
     Assert.hpp
 
+    ../src/CoordinateVector.hpp
     ../src/Error.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
