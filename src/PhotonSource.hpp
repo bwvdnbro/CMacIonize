@@ -59,8 +59,10 @@ private:
   std::vector< double > _weights;
 
 public:
-  PhotonSource(unsigned int number_of_photons,
-               PhotonSourceDistribution &distribution);
+  PhotonSource(PhotonSourceDistribution &distribution,
+               unsigned int number_of_photons = 0);
+
+  void set_number_of_photons(unsigned int number_of_photons);
 
   Photon get_random_photon();
 };

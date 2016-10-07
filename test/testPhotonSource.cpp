@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   SingleStarPhotonSourceDistribution distribution(
       CoordinateVector<>(0.5, 0.5, 0.5));
 
-  PhotonSource source(1000001, distribution);
+  PhotonSource source(distribution, 1000001);
 
   // check if the returned position is what we expect it to be
   {

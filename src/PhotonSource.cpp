@@ -33,13 +33,13 @@ using namespace std;
 /**
  * @brief Constructor.
  *
- * @param number_of_photons Total number of photons emitted from all discrete
- * photon sources together.
  * @param distribution PhotonSourceDistribution giving the positions of the
  * discrete photon sources.
+ * @param number_of_photons Total number of photons emitted from all discrete
+ * photon sources together.
  */
-PhotonSource::PhotonSource(unsigned int number_of_photons,
-                           PhotonSourceDistribution &distribution)
+PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
+                           unsigned int number_of_photons)
     : _number_of_photons(number_of_photons) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
@@ -48,6 +48,21 @@ PhotonSource::PhotonSource(unsigned int number_of_photons,
     _weights[i] = distribution.get_weight(i);
   }
 
+  _active_source_index = 0;
+  _active_photon_index = 0;
+  _active_number_of_photons = _number_of_photons * _weights[0];
+}
+
+/**
+ * @brief Set the number of photons that should be emitted from this source
+ * during the next iteration.
+ *
+ * This also resets the internal counters.
+ *
+ * @param number_of_photons Number of photons during the next iteration.
+ */
+void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
+  _number_of_photons = number_of_photons;
   _active_source_index = 0;
   _active_photon_index = 0;
   _active_number_of_photons = _number_of_photons * _weights[0];

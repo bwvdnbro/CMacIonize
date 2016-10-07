@@ -46,6 +46,7 @@ set(CMACIONIZE_SOURCES
     DensityGrid.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
+    PhotonSource.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
@@ -63,7 +64,11 @@ set(CMACIONIZE_SOURCES
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
+    Photon.hpp
+    PhotonSource.hpp
+    PhotonSourceDistribution.hpp
     RecombinationRates.hpp
+    SingleStarPhotonSourceDistribution.hpp
     Utilities.hpp
     VernerCrossSections.hpp
     VernerCrossSectionsDataLocation.hpp.in
