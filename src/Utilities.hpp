@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include <string>
 
 /**
@@ -146,6 +147,59 @@ template <> inline bool convert< bool >(std::string value) {
   } else {
     error("Error converting \"%s\" to a boolean value!", value.c_str());
   }
+}
+
+/**
+ * @brief Convert the given value to a std::string.
+ *
+ * @param value Value to convert.
+ * @return std::string.
+ */
+template < typename T > std::string to_string(T value) {
+  std::stringstream sstream;
+  sstream << value;
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for boolean values.
+ *
+ * @param value Bool value.
+ * @return "true" or "false".
+ */
+template <> inline std::string to_string< bool >(bool value) {
+  if (value) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+/**
+ * @brief to_string specialization for a floating point CoordinateVector.
+ *
+ * @param value Floating point CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string to_string< CoordinateVector<> >(CoordinateVector<> value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for an integer CoordinateVector.
+ *
+ * @param value Integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string
+to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
 }
 }
 

@@ -39,8 +39,6 @@ using namespace std;
 int main(int argc, char **argv) {
   ParameterFile params("test.param");
 
-  params.print_contents(cout);
-
   assert_condition(params.get_value< int >("test_integer1") == 42);
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
@@ -74,22 +72,24 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.z() == 42);
 
   // default values
-  assert_condition(params.get_value< int >("not_in_file", 42) == 42);
-  assert_condition(params.get_value< double >("not_in_file", 3.14) == 3.14);
+  assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
+  assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
   assert_condition(params.get_value< string >("not_in", "file?") == "file?");
-  assert_condition(params.get_value< bool >("not_in_file", true) == true);
+  assert_condition(params.get_value< bool >("not_in_file3", true) == true);
 
   cvtest = params.get_value< CoordinateVector<> >(
-      "not_in_file", CoordinateVector<>(0.1, 0.2, 0.3));
+      "not_in_file4", CoordinateVector<>(0.1, 0.2, 0.3));
   assert_condition(cvtest.x() == 0.1);
   assert_condition(cvtest.y() == 0.2);
   assert_condition(cvtest.z() == 0.3);
 
   cvtest2 = params.get_value< CoordinateVector< int > >(
-      "not_in_file", CoordinateVector< int >(42, 42, 42));
+      "not_in_file5", CoordinateVector< int >(42, 42, 42));
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
+
+  params.print_contents(cout);
 
   return 0;
 }

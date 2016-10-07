@@ -80,6 +80,10 @@ public:
    * This template function needs to be specialized for every typename that is
    * used.
    *
+   * Values that were not found are added to the internal dictionary, so that
+   * the internal dictionary always contains a complete list of all parameters
+   * that were used, with the actual values for these parameters.
+   *
    * @param key Key in the dictionary that relates to a unique parameter.
    * @param default_value Default value for the parameter that is used if the
    * parameter is not present in the file.
@@ -191,6 +195,9 @@ ParameterFile::get_value< std::string >(std::string key,
                                         std::string default_value) {
   std::map< std::string, std::string >::iterator it = _dictionary.find(key);
   if (it == _dictionary.end()) {
+    // note that this value is overwritten by other type specializations if
+    // they called this method with default_value = ""
+    _dictionary[key] = default_value;
     return default_value;
   }
   return it->second;
@@ -209,6 +216,7 @@ inline double ParameterFile::get_value< double >(std::string key,
                                                  double default_value) {
   std::string svalue = get_value< std::string >(key, "");
   if (svalue == "") {
+    _dictionary[key] = Utilities::to_string< double >(default_value);
     return default_value;
   }
   return Utilities::convert< double >(svalue);
@@ -226,6 +234,7 @@ template <>
 inline int ParameterFile::get_value< int >(std::string key, int default_value) {
   std::string svalue = get_value< std::string >(key, "");
   if (svalue == "") {
+    _dictionary[key] = Utilities::to_string< int >(default_value);
     return default_value;
   }
   return Utilities::convert< int >(svalue);
@@ -250,6 +259,7 @@ inline bool ParameterFile::get_value< bool >(std::string key,
                                              bool default_value) {
   std::string svalue = get_value< std::string >(key, "");
   if (svalue == "") {
+    _dictionary[key] = Utilities::to_string< bool >(default_value);
     return default_value;
   }
   return Utilities::convert< bool >(svalue);
@@ -269,6 +279,8 @@ inline CoordinateVector<> ParameterFile::get_value< CoordinateVector<> >(
     std::string key, CoordinateVector<> default_value) {
   std::string svalue = get_value< std::string >(key, "");
   if (svalue == "") {
+    _dictionary[key] =
+        Utilities::to_string< CoordinateVector<> >(default_value);
     return default_value;
   }
   return Utilities::convert< CoordinateVector<> >(svalue);
@@ -289,6 +301,8 @@ ParameterFile::get_value< CoordinateVector< int > >(
     std::string key, CoordinateVector< int > default_value) {
   std::string svalue = get_value< std::string >(key, "");
   if (svalue == "") {
+    _dictionary[key] =
+        Utilities::to_string< CoordinateVector< int > >(default_value);
     return default_value;
   }
   return Utilities::convert< CoordinateVector< int > >(svalue);
