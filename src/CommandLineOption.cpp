@@ -25,7 +25,6 @@
  */
 #include "CommandLineOption.hpp"
 #include "Utilities.hpp"
-#include <sstream>
 using namespace std;
 
 /**
@@ -68,23 +67,15 @@ CommandLineOption::get_default_value_description(int argument,
     return "";
   }
   switch (argument) {
-  case COMMANDLINEOPTION_NOARGUMENT: {
-    if (Utilities::convert< bool >(default_value)) {
-      return "true";
-    } else {
-      return "false";
-    }
-  }
-  case COMMANDLINEOPTION_INTARGUMENT: {
-    stringstream sstream;
-    sstream << Utilities::convert< int >(default_value);
-    return sstream.str();
-  }
-  case COMMANDLINEOPTION_DOUBLEARGUMENT: {
-    stringstream sstream;
-    sstream << Utilities::convert< double >(default_value);
-    return sstream.str();
-  }
+  case COMMANDLINEOPTION_NOARGUMENT:
+    return Utilities::to_string< bool >(
+        Utilities::convert< bool >(default_value));
+  case COMMANDLINEOPTION_INTARGUMENT:
+    return Utilities::to_string< int >(
+        Utilities::convert< int >(default_value));
+  case COMMANDLINEOPTION_DOUBLEARGUMENT:
+    return Utilities::to_string< double >(
+        Utilities::convert< double >(default_value));
   case COMMANDLINEOPTION_STRINGARGUMENT:
     return default_value;
   }
@@ -218,22 +209,21 @@ std::string CommandLineOption::parse_argument(std::string argument) {
     return "true";
   }
   case COMMANDLINEOPTION_INTARGUMENT: {
-    stringstream sstream;
     if (argument.size()) {
-      sstream << Utilities::convert< int >(argument);
+      return Utilities::to_string< int >(Utilities::convert< int >(argument));
     } else {
-      sstream << Utilities::convert< int >(_default_value);
+      return Utilities::to_string< int >(
+          Utilities::convert< int >(_default_value));
     }
-    return sstream.str();
   }
   case COMMANDLINEOPTION_DOUBLEARGUMENT: {
-    stringstream sstream;
     if (argument.size()) {
-      sstream << Utilities::convert< double >(argument);
+      return Utilities::to_string< double >(
+          Utilities::convert< double >(argument));
     } else {
-      sstream << Utilities::convert< double >(_default_value);
+      return Utilities::to_string< double >(
+          Utilities::convert< double >(_default_value));
     }
-    return sstream.str();
   }
   case COMMANDLINEOPTION_STRINGARGUMENT: {
     if (argument.size()) {
