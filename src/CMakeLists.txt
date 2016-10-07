@@ -37,10 +37,34 @@ configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
 
 set(CMACIONIZE_SOURCES
     CMacIonize.cpp
+    CommandLineOption.cpp
+    CommandLineParser.cpp
+    DensityGrid.cpp
+    GadgetSnapshotDensityFunction.cpp
     LineCoolingData.cpp
+    ParameterFile.cpp
+    VernerCrossSections.cpp
+    VernerRecombinationRates.cpp
 
+    Box.hpp
+    CoordinateVector.hpp
+    CommandLineOption.hpp
+    CommandLineParser.hpp
+    CrossSections.hpp
+    DensityFunction.hpp
+    DensityGrid.hpp
+    DensityValues.hpp
+    Error.hpp
+    GadgetSnapshotDensityFunction.hpp
+    HDF5Tools.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp
+    ParameterFile.hpp
+    RecombinationRates.hpp
+    Utilities.hpp
+    VernerCrossSections.hpp
+    VernerRecombinationRates.hpp
 )
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+target_link_libraries(CMacIonize ${HDF5_LIBRARIES})

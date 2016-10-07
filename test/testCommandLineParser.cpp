@@ -101,9 +101,8 @@ int main(int argc, char **argv) {
   char **test_argv;
   // an example command line input, containing string literals, superfluous
   // spaces and various types of options
-  generate_arguments(
-      test_argc, test_argv,
-      "--test   --more \"andmore\" --less 2.1 --complicated \"and this?\"");
+  generate_arguments(test_argc, test_argv,
+                     "--test   --more \"andmore\" --less=2.1 -c \"and this?\"");
 
   CommandLineParser parser("testCommandLineParser");
 

@@ -102,8 +102,10 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
   int i = 1;
   while (i < argc) {
     if (argv[i][0] != '-') {
-      error("Found orphan argument in command line options (did you forget the "
-            "\"--\"?)");
+      cout << "Found orphan argument \"%s\" in command line options (did you "
+              "forget the \"--\"?)\n";
+      print_description(cout);
+      exit(1);
     }
     string option(argv[i]);
     // check if the option is --help or -h
@@ -114,7 +116,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
     size_t eqpos = option.find('=');
     string argument;
     if (eqpos != string::npos) {
-      argument = option.substr(eqpos);
+      argument = option.substr(eqpos + 1);
       option = option.substr(0, eqpos);
     } else {
       if (i < argc - 1 && argv[i + 1][0] != '-') {
@@ -133,7 +135,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
       ++j;
     }
     if (j == _options.size()) {
-      cout << "Unknown option: --" << option << "\n";
+      cout << "Unknown option: '" << option << "'\n";
       print_description(cout);
       exit(1);
     }
@@ -142,8 +144,8 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
     // the parsing above should automatically use the default value if an empty
     // argument was provided. The dictionary entry can only be empty if the
     // default value was empty, which means the argument is required.
-    if (!_dictionary[option].size()) {
-      cout << "Missing argument for option --" << option << "\n";
+    if (!_dictionary[_options[j].get_long_name()].size()) {
+      cout << "Missing argument for option '" << option << "'\n";
       print_description(cout);
       exit(1);
     }
@@ -155,7 +157,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
   for (auto it = _options.begin(); it != _options.end(); ++it) {
     if (!_dictionary.count(it->get_long_name())) {
       if (it->is_required()) {
-        cout << "Required option --" << it->get_long_name() << " not found!";
+        cout << "Required option --" << it->get_long_name() << " not found!\n";
         print_description(cout);
         exit(1);
       } else {

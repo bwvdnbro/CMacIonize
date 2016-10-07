@@ -23,8 +23,18 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Box.hpp"
+#include "CommandLineOption.hpp"
+#include "CommandLineParser.hpp"
+#include "CoordinateVector.hpp"
+#include "DensityGrid.hpp"
+#include "GadgetSnapshotDensityFunction.hpp"
 #include "LineCoolingData.hpp"
+#include "ParameterFile.hpp"
+#include "VernerCrossSections.hpp"
+#include "VernerRecombinationRates.hpp"
 #include <iostream>
+#include <string>
 using namespace std;
 
 /**
@@ -34,11 +44,14 @@ using namespace std;
  * @param argv Array containing the command line arguments.
  */
 int main(int argc, char **argv) {
-  cout << "Welcome to CMacIonize!" << endl;
-
   // first thing we should do: parse the command line arguments
   // we need to define a CommandLineParser object that does this and acts as a
   // dictionary that can be queried
+  CommandLineParser parser("CMacIonize");
+  parser.add_required_option< string >(
+      "params", 'p',
+      "Name of the parameter file containing the simulation parameters.");
+  parser.parse_arguments(argc, argv);
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -47,9 +60,17 @@ int main(int argc, char **argv) {
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
+  ParameterFile params(parser.get_value< string >("params"));
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CoordinateVector< unsigned char > ncell(64);
+  GadgetSnapshotDensityFunction density_function("test.hdf5");
+  VernerCrossSections cross_sections;
+  VernerRecombinationRates recombination_rates;
+  DensityGrid grid(params, box, ncell, density_function, cross_sections,
+                   recombination_rates);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate
