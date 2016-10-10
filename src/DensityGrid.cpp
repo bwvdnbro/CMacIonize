@@ -37,19 +37,18 @@ using namespace std;
  *
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
- * @param helium_mass_fraction Mass fraction of helium.
+ * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
  * @param initial_temperature Initial temperature of the gas.
  * @param density_function DensityFunction that defines the density field.
  * @param cross_sections Photoionization cross sections.
  * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-                         double helium_mass_fraction,
-                         double initial_temperature,
+                         double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
                          CrossSections &cross_sections,
                          RecombinationRates &recombination_rates)
-    : _box(box), _ncell(ncell), _helium_mass_fraction(helium_mass_fraction),
+    : _box(box), _ncell(ncell), _helium_abundance(helium_abundance),
       _cross_sections(cross_sections),
       _recombination_rates(recombination_rates) {
   _density = new DensityValues **[_ncell.x()];
@@ -110,7 +109,7 @@ DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
                          CrossSections &cross_sections,
                          RecombinationRates &recombination_rates)
     : DensityGrid(box, ncell,
-                  parameters.get_value< double >("helium_mass_fraction", 0.1),
+                  parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_value< double >("initial_temperature", 8000.),
                   density_function, cross_sections, recombination_rates) {}
 
@@ -166,10 +165,6 @@ DensityGrid::get_cell_indices(CoordinateVector<> position) {
 
 /**
  * @brief Get the geometrical box of the cell with the given indices.
- *
- * Since we care more about the bottom front left corner and the upper back
- * right corner, the Box we return does not use a side and anchor, but rather
- * two anchors.
  *
  * @param index Indices of the cell.
  * @return Box containing the bottom front left corner and the upper back right
@@ -363,8 +358,8 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
       _cross_sections.get_cross_section(ELEMENT_H, photon.get_energy());
   double xsecHe =
       _cross_sections.get_cross_section(ELEMENT_He, photon.get_energy());
-  // Helium mass fraction. Should be a parameter.
-  double AHe = _helium_mass_fraction;
+  // Helium abundance. Should be a parameter.
+  double AHe = _helium_abundance;
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index) && optical_depth > 0.) {
@@ -413,6 +408,168 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 }
 
 /**
+ * @brief Iteratively find the neutral fractions of hydrogen and helium based on
+ * the given value current values, the values of the intensity integrals and the
+ * recombination rate.
+ *
+ * The equation for the ionization balance of hydrogen is
+ * \f[
+ *   n({\rm{}H}^0)\int_{\nu{}_i}^\infty{} \frac{4\pi{}J_\nu{}}{h\nu{}}
+ *   a_\nu{}({\rm{}H}^0) {\rm{}d}\nu{} = n_e n({\rm{}H}^+)
+ *   \alpha{}({\rm{}H}^0, T_e) - n_e P({\rm{}H}_{\rm{}OTS})n({\rm{}He}^+)
+ *   \alpha{}_{2^1{\rm{}P}}^{\rm{}eff},
+ * \f]
+ * and that of helium
+ * \f[
+ *   n({\rm{}He}^0) \int_{\nu{}_i}^\infty{} \frac{4\pi{}J_\nu{}}{h\nu{}}
+ *   a_\nu{}({\rm{}He}^0) {\rm{}d}\nu{} = n({\rm{}He}^0) n_e
+ *   \alpha{}({\rm{}He}^0, T_e),
+ * \f]
+ * where the value of the integral on the left hand side of the equations, the
+ * temperature \f$T_e\f$, the recombination rates \f$\alpha{}\f$, and the
+ * current values of \f$n({\rm{}H}^0)\f$ and \f$n({\rm{}He}^0)\f$ (and hence all
+ * other densities) are given. We want to determine the new values for the
+ * densities.
+ *
+ * We start with helium. First, we derive the following expression for the
+ * electron density \f$n_e\f$:
+ * \f[
+ *   n_e = (1-n({\rm{}H}^0)) n_{\rm{}H} + (1-n({\rm{}He}^0)) n_{\rm{}He},
+ * \f]
+ * which follows from charge conservation (assuming other elements do not
+ * contribute free electrons due to their low abundances). Since the total
+ * density we store in every cell is the hydrogen density, and abundances are
+ * expressed relative to the hydrogen density, we can rewrite this as
+ * \f[
+ *   n_e = [(1-n({\rm{}H}^0)) + (1-n({\rm{}He}^0)) A_{\rm{}He}] n_{\rm{}tot}.
+ * \f]
+ * Using this, we can rewrite the helium ionization balance as
+ * \f[
+ *   n({\rm{}He}^0) = C_{\rm{}He} (1-n({\rm{}He}^0)) \frac{n_e}{n_{\rm{}tot}},
+ * \f]
+ * with \f$C_{\rm{}He} = \frac{\alpha{}({\rm{}He}^0, T_e) n_{\rm{}tot} }
+ * {J_{\rm{}He}}\f$, a constant for a given temperature. Due to the \f$n_e\f$
+ * factor, this equation is coupled to the ionization balance of hydrogen.
+ * However, if we assume the hydrogen neutral fraction to be known, we can find
+ * a closed expression for the helium neutral fraction:
+ * \f[
+ *   n({\rm{}He}^0) = \frac{-D - \sqrt{D^2 - 4A_{\rm{}He}C_{\rm{}He}B}}
+ *   {2A_{\rm{}He}C_{\rm{}He}},
+ * \f]
+ * where
+ * \f[
+ *   D = -1 - 2A_{\rm{}He}C_{\rm{}He} - C_{\rm{}He} + C_{\rm{}He}n({\rm{}H}^0),
+ * \f]
+ * and
+ * \f[
+ *   B = C_{\rm{}He} + C_{\rm{}He}n({\rm{}H}^0) - A_{\rm{}He} C_{\rm{}He}.
+ * \f]
+ * This expression can be found by solving the quadratic equation in
+ * \f$n({\rm{}He}^0)\f$. We choose the minus sign based on the fact that
+ * \f$D < 0\f$ and the requirement that the helium neutral fraction be positive.
+ *
+ * To find the hydrogen neutral fraction, we have to address the fact that the
+ * probability of a  Ly\f$\alpha{}\f$
+ * photon being absorbed on the spot (\f$P({\rm{}H}_{\rm{}OTS})\f$) also depends
+ * on the neutral fractions. We therefore use an iterative scheme to find the
+ * hydrogen neutral fraction. The equation we want to solve is
+ * \f[
+ *   n({\rm{}H}^0) = C_{\rm{}H} (1-n({\rm{}H}^0)) \frac{n_e}{n_{\rm{}tot}},
+ * \f]
+ * which (conveniently) has the same form as the equation for helium. But know
+ * we have
+ * \f[
+ *   C_{\rm{}H} = C_{{\rm{}H},1} + C_{{\rm{}H},2} P({\rm{}H}_{\rm{}OTS})
+ *   \frac{1-n({\rm{}He}^0)}{1-n({\rm{}H}^0)},
+ * \f]
+ * with \f$C_{{\rm{}H},1} = \frac{\alpha{}({\rm{}H}^0, T_e) n_{\rm{}tot} }
+ * {J_{\rm{}H}}\f$ and \f$C_{{\rm{}H},2} = \frac{A_{\rm{}He}
+ * \alpha{}_{2^1{\rm{}P}}^{\rm{}eff} n_{\rm{}tot} }
+ * {J_{\rm{}H}}\f$ two constants.
+ *
+ * For every iteration of the scheme, we calculate an approximate value for
+ * \f$C_{\rm{}H}\f$, based on the neutral fractions obtained during the previous
+ * iteration. We also calculate the helium neutral fraction, based on the
+ * hydrogen neutral fraction from the previous iteration. Using these values,
+ * we can then solve for the hydrogen neutral fraction. We repeat the process
+ * until the relative difference between the obtained neutral fractions is
+ * below some tolerance value.
+ *
+ * @param ch1 Value of the \f$C_{{\rm{}H},1}\f$ constant.
+ * @param ch2 Value of the \f$C_{{\rm{}H},2}\f$ constant.
+ * @param che Value of the \f$C_{\rm{}He}\f$ constant.
+ * @param AHe Helium abundance \f$A_{\rm{}He}\f$.
+ * @param T Temperature.
+ * @param h0 Variable to store resulting hydrogen neutral fraction in.
+ * @param he0 Variable to store resulting helium neutral fraction in.
+ */
+void DensityGrid::find_H0(double ch1, double ch2, double che, double AHe,
+                          double T, double &h0, double &he0) {
+  // initial guesses for the neutral fractions
+  double h0old = 0.99 * (1. - exp(-0.5 / ch1));
+  // by enforcing a relative difference of 10%, we make sure we have at least
+  // one iteration
+  h0 = 0.9 * h0old;
+  double he0old = 1.;
+  // we make sure che is 0 if the helium intensity integral is 0
+  if (che) {
+    he0old = 0.5 / che;
+    // make sure the neutral fraction is at most 100%
+    he0old = min(he0old, 1.);
+  }
+  // again, by using this value we make sure we have at least one iteration
+  he0 = 0.;
+  unsigned int niter = 0;
+  while (abs(h0 - h0old) > 1.e-4 * h0old &&
+         abs(he0 - he0old) > 1.e-4 * he0old) {
+    ++niter;
+    h0old = h0;
+    if (he0 > 0.) {
+      he0old = he0;
+    } else {
+      he0old = 0.;
+    }
+    // calculate a new guess for C_H
+    double pHots = 1. / (1. + 77. * he0old / sqrt(T) / h0old);
+    double ch = ch1 - ch2 * AHe * (1. - he0old) * pHots / (1. - h0old);
+
+    // find the helium neutral fraction
+    he0 = 1.;
+    if (che) {
+      double bhe = (1. + 2. * AHe - h0) * che + 1.;
+      double t1he = 4. * AHe * (1. + AHe - h0) * che * che / bhe / bhe;
+      if (t1he < 1.e-3) {
+        // first order expansion of the square root in the exact solution of the
+        // quadratic equation
+        he0 = (1. + AHe - h0) * che / bhe;
+      } else {
+        // exact solution of the quadratic equation
+        he0 = (bhe - sqrt(bhe * bhe - 4. * AHe * (1. + AHe - h0) * che * che)) /
+              (2. * AHe * che);
+      }
+    }
+    // find the hydrogen neutral fraction
+    double b = ch * (2. + AHe - he0 * AHe) + 1.;
+    double t1 = 4. * ch * ch * (1. + AHe - he0 * AHe) / b / b;
+    if (t1 < 1.e-3) {
+      h0 = ch * (1. + AHe - he0 * AHe) / b;
+    } else {
+      h0 =
+          (b - sqrt(b * b - 4. * ch * ch * (1. + AHe - he0 * AHe))) / (2. * ch);
+    }
+    if (niter > 10) {
+      // if we have a lot of iterations: use the mean value to speed up
+      // convergence
+      h0 = 0.5 * (h0 + h0old);
+      he0 = 0.5 * (he0 + he0old);
+    }
+    if (niter > 20) {
+      error("Too many iterations in ionization loop!");
+    }
+  }
+}
+
+/**
  * @brief Solves the ionization and temperature equations based on the values of
  * the mean intensity integrals in each cell.
  *
@@ -437,76 +594,14 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
         double ntot = cell.get_total_density();
         if (jH > 0. && ntot > 0.) {
           double ch1 = alphaH * ntot / jH;
-          double ch2 = _helium_mass_fraction * alpha_e_2sP * ntot / jH;
+          double ch2 = _helium_abundance * alpha_e_2sP * ntot / jH;
           double che = 0.;
           if (jHe) {
             che = alphaHe * ntot / jHe;
           }
           // h0find
-          double h0old = 0.99 * (1. - exp(-0.5 / ch1));
-          double h0 = 0.9 * h0old;
-          double he0old = 1.;
-          if (che) {
-            he0old = 0.5 / che;
-            he0old = max(he0old, 1.);
-          }
-          double he0 = 0.;
-          unsigned int niter = 0;
-          while (abs(h0 - h0old) > 1.e-4 * h0old &&
-                 abs(he0 - he0old) > 1.e-4 * he0old) {
-            ++niter;
-            h0old = h0;
-            if (he0 > 0.) {
-              he0old = he0;
-            } else {
-              he0old = 0.;
-            }
-            double pHots = 1. / (1. + 77. * he0old / sqrt(T) / h0old);
-            double ch = ch1 -
-                        ch2 * _helium_mass_fraction * (1. - he0old) * pHots /
-                            (1. - h0old);
-
-            he0 = 1.;
-            if (che) {
-              double bhe = (1. + 2. * _helium_mass_fraction - h0) * che + 1.;
-              double t1he = 4. * _helium_mass_fraction *
-                            (1. + _helium_mass_fraction - h0) * che * che /
-                            bhe / bhe;
-              if (t1he < 1.e-3) {
-                he0 = (1. + _helium_mass_fraction - h0) * che / bhe;
-              } else {
-                he0 = (bhe - sqrt(bhe * bhe -
-                                  4. * _helium_mass_fraction *
-                                      (1. + _helium_mass_fraction - h0) * che *
-                                      che)) /
-                      (2. * _helium_mass_fraction * che);
-              }
-            }
-            double b = ch * (2. + _helium_mass_fraction -
-                             he0 * _helium_mass_fraction) +
-                       1.;
-            double t1 = 4. * ch * ch * (1. + _helium_mass_fraction -
-                                        he0 * _helium_mass_fraction) /
-                        b / b;
-            if (t1 < 1.e-3) {
-              h0 = ch *
-                   (1. + _helium_mass_fraction - he0 * _helium_mass_fraction) /
-                   b;
-            } else {
-              h0 = (b - sqrt(b * b -
-                             4. * ch * ch * (1. + _helium_mass_fraction -
-                                             he0 * _helium_mass_fraction))) /
-                   (2. * ch);
-            }
-            ch = ch1 - ch2 * _helium_mass_fraction * (1. - he0) / (1. - h0);
-            if (niter > 10) {
-              h0 = 0.5 * (h0 + h0old);
-              he0 = 0.5 * (he0 + he0old);
-            }
-            if (niter > 20) {
-              error("Too many iterations in ionization loop!");
-            }
-          }
+          double h0, he0;
+          find_H0(ch1, ch2, che, _helium_abundance, T, h0, he0);
 
           cell.set_neutral_fraction_H(h0);
           cell.set_neutral_fraction_He(he0);

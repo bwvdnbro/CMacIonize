@@ -56,8 +56,8 @@ private:
    *  char type, we automatically limit grid sizes to 256^3. */
   CoordinateVector< unsigned char > _ncell;
 
-  /*! @brief Helium mass fraction. */
-  double _helium_mass_fraction;
+  /*! @brief Helium abundance. */
+  double _helium_abundance;
 
   /*! @brief Density grid. */
   DensityValues ***_density;
@@ -70,7 +70,7 @@ private:
 
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-              double helium_mass_fraction, double initial_temperature,
+              double helium_abundance, double initial_temperature,
               DensityFunction &density_function, CrossSections &cross_sections,
               RecombinationRates &recombination_rates);
 
@@ -93,6 +93,9 @@ public:
                                            double &ds);
 
   bool interact(Photon &photon, double optical_depth);
+
+  void find_H0(double ch1, double ch2, double che, double AHe, double T,
+               double &h0, double &he0);
 
   void calculate_ionization_state(unsigned int nphoton);
 };
