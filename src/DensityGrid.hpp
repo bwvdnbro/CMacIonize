@@ -94,8 +94,8 @@ public:
 
   bool interact(Photon &photon, double optical_depth);
 
-  void find_H0(double ch1, double ch2, double che, double AHe, double T,
-               double &h0, double &he0);
+  static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
+                      double nH, double AHe, double T, double &h0, double &he0);
 
   void calculate_ionization_state(unsigned int nphoton);
 };

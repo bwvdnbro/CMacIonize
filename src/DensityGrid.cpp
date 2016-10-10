@@ -495,16 +495,26 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
  * until the relative difference between the obtained neutral fractions is
  * below some tolerance value.
  *
- * @param ch1 Value of the \f$C_{{\rm{}H},1}\f$ constant.
- * @param ch2 Value of the \f$C_{{\rm{}H},2}\f$ constant.
- * @param che Value of the \f$C_{\rm{}He}\f$ constant.
- * @param AHe Helium abundance \f$A_{\rm{}He}\f$.
+ * @param alphaH Hydrogen recombination rate.
+ * @param alphaHe Helium recombination rate.
+ * @param jH Hydrogen intensity integral.
+ * @param jHe Helium intensity integral.
+ * @param nH Hydrogen number density.
+ * @param AHe Helium abundance \f$A_{\rm{}He}\f$ (relative w.r.t. hydrogen).
  * @param T Temperature.
  * @param h0 Variable to store resulting hydrogen neutral fraction in.
  * @param he0 Variable to store resulting helium neutral fraction in.
  */
-void DensityGrid::find_H0(double ch1, double ch2, double che, double AHe,
-                          double T, double &h0, double &he0) {
+void DensityGrid::find_H0(double alphaH, double alphaHe, double jH, double jHe,
+                          double nH, double AHe, double T, double &h0,
+                          double &he0) {
+  double alpha_e_2sP = 4.27e-14 * pow(T * 1.e-4, -0.695);
+  double ch1 = alphaH * nH / jH;
+  double ch2 = AHe * alpha_e_2sP * nH / jH;
+  double che = 0.;
+  if (jHe) {
+    che = alphaHe * nH / jHe;
+  }
   // initial guesses for the neutral fractions
   double h0old = 0.99 * (1. - exp(-0.5 / ch1));
   // by enforcing a relative difference of 10%, we make sure we have at least
@@ -585,23 +595,17 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
         DensityValues cell = _density[i][j][k];
         double jH = jfac * cell.get_mean_intensity_H();
         double jHe = jfac * cell.get_mean_intensity_He();
-        double T = cell.get_temperature();
-        double alphaH =
-            _recombination_rates.get_recombination_rate(ELEMENT_H, T);
-        double alphaHe =
-            _recombination_rates.get_recombination_rate(ELEMENT_He, T);
-        double alpha_e_2sP = 4.27e-14 * pow(T * 1.e-4, -0.695);
         double ntot = cell.get_total_density();
         if (jH > 0. && ntot > 0.) {
-          double ch1 = alphaH * ntot / jH;
-          double ch2 = _helium_abundance * alpha_e_2sP * ntot / jH;
-          double che = 0.;
-          if (jHe) {
-            che = alphaHe * ntot / jHe;
-          }
+          double T = cell.get_temperature();
+          double alphaH =
+              _recombination_rates.get_recombination_rate(ELEMENT_H, T);
+          double alphaHe =
+              _recombination_rates.get_recombination_rate(ELEMENT_He, T);
           // h0find
           double h0, he0;
-          find_H0(ch1, ch2, che, _helium_abundance, T, h0, he0);
+          find_H0(alphaH, alphaHe, jH, jHe, ntot, _helium_abundance, T, h0,
+                  he0);
 
           cell.set_neutral_fraction_H(h0);
           cell.set_neutral_fraction_He(he0);
