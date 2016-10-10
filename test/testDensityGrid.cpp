@@ -29,6 +29,10 @@
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
 
 /**
  * @brief Test implementation of DensityFunction.
@@ -268,6 +272,19 @@ int main(int argc, char **argv) {
   bool inside = grid.interact(photon, 0.125);
 
   assert_condition(inside == false);
+
+  // test find_H0
+  ifstream file("h0_testdata.txt");
+  string line;
+  while (getline(file, line)) {
+    stringstream linestream(line);
+    double jH, jHe, h0f, he0f, h0, he0;
+    linestream >> jH >> jHe >> h0f >> he0f;
+    DensityGrid::find_H0(3.12e-13, 3.51e-13, jH, jHe, 100., 0.1, 1.5e4, h0,
+                         he0);
+    assert_values_equal(h0, h0f);
+    assert_values_equal(he0, he0f);
+  }
 
   return 0;
 }

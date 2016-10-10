@@ -82,6 +82,9 @@ add_unit_test(NAME testCommandLineParser
               SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
 
 ## Unit test for DensityGrid
+configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/h0_testdata.txt
+               COPYONLY)
 set(TESTDENSITYGRID_SOURCES
     testDensityGrid.cpp
 
