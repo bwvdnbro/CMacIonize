@@ -257,6 +257,17 @@ set(TESTVERNERRECOMBINATIONRATES_SOURCES
 add_unit_test(NAME testVernerRecombinationRates
               SOURCES ${TESTVERNERRECOMBINATIONRATES_SOURCES})
 
+## RandomGenerator test
+set(TESTRANDOMGENERATOR_SOURCES
+    testRandomGenerator.cpp
+
+    Assert.hpp
+
+    ../src/RandomGenerator.hpp
+)
+add_unit_test(NAME testRandomGenerator
+              SOURCES ${TESTRANDOMGENERATOR_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
