@@ -26,6 +26,7 @@
 #include "PhotonSource.hpp"
 #include "Error.hpp"
 #include "PhotonSourceDistribution.hpp"
+#include "PhotonSourceSpectrum.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 using namespace std;
@@ -35,12 +36,14 @@ using namespace std;
  *
  * @param distribution PhotonSourceDistribution giving the positions of the
  * discrete photon sources.
+ * @param spectrum PhotonSourceSpectrum for the discrete photon sources.
  * @param number_of_photons Total number of photons emitted from all discrete
  * photon sources together.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
+                           PhotonSourceSpectrum &spectrum,
                            unsigned int number_of_photons)
-    : _number_of_photons(number_of_photons) {
+    : _number_of_photons(number_of_photons), _spectrum(spectrum) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -89,7 +92,7 @@ Photon PhotonSource::get_random_photon() {
   double sinp = sin(phi);
   CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
 
-  double energy = 0.;
+  double energy = _spectrum.get_random_frequency();
 
   ++_active_photon_index;
   if (_active_photon_index == _active_number_of_photons) {

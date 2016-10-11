@@ -31,6 +31,7 @@
 #include <vector>
 
 class PhotonSourceDistribution;
+class PhotonSourceSpectrum;
 
 /**
  * @brief Photon source, that contains the actual sources that are used during
@@ -58,8 +59,12 @@ private:
   /*! @brief Weights of the discrete photon sources. */
   std::vector< double > _weights;
 
+  /*! @brief Spectrum of the discrete photon sources. */
+  PhotonSourceSpectrum &_spectrum;
+
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
+               PhotonSourceSpectrum &spectrum,
                unsigned int number_of_photons = 0);
 
   void set_number_of_photons(unsigned int number_of_photons);

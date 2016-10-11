@@ -47,6 +47,7 @@ set(CMACIONIZE_SOURCES
     LineCoolingData.cpp
     ParameterFile.cpp
     PhotonSource.cpp
+    PlanckPhotonSourceSpectrum.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
@@ -67,6 +68,8 @@ set(CMACIONIZE_SOURCES
     Photon.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
+    PhotonSourceSpectrum.hpp
+    PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
     SingleStarPhotonSourceDistribution.hpp
     Utilities.hpp

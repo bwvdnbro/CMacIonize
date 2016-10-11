@@ -23,3 +23,20 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "PhotonScatterInteractor.hpp"
+#include "CoordinateVector.hpp"
+#include "Photon.hpp"
+#include "Utilities.hpp"
+#include <cmath>
+using namespace std;
+
+void PhotonScatterInteractor::scatter(Photon &photon) {
+  double cost = 2. * Utilities::random_double() - 1.;
+  double sint = 1. - cost * cost;
+  sint = sqrt(max(sint, 0.));
+  double phi = 2. * M_PI * Utilities::random_double();
+  double cosp = cos(phi);
+  double sinp = sin(phi);
+  CoordinateVector<> new_direction(sint * cosp, sint * sinp, cost);
+  photon.set_direction(new_direction);
+}

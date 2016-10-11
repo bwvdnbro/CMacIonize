@@ -28,8 +28,25 @@
 #include "Error.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
+#include "PhotonSourceSpectrum.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
+#include "Utilities.hpp"
 using namespace std;
+
+/**
+ * @brief Test implementation of PhotonSourceSpectrum.
+ */
+class TestPhotonSourceSpectrum : public PhotonSourceSpectrum {
+public:
+  /**
+   * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
+   *
+   * @return Uniform random frequency.
+   */
+  virtual double get_random_frequency() {
+    return Utilities::random_double() * (54.4 - 13.6) + 13.6;
+  }
+};
 
 /**
  * @brief Unit test for the PhotonSource class.
@@ -41,8 +58,9 @@ using namespace std;
 int main(int argc, char **argv) {
   SingleStarPhotonSourceDistribution distribution(
       CoordinateVector<>(0.5, 0.5, 0.5));
+  TestPhotonSourceSpectrum spectrum;
 
-  PhotonSource source(distribution, 1000001);
+  PhotonSource source(distribution, spectrum, 1000001);
 
   // check if the returned position is what we expect it to be
   {

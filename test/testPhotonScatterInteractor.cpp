@@ -23,6 +23,9 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
+#include "Photon.hpp"
+#include "PhotonScatterInteractor.hpp"
 
 /**
  * @brief Unit test for the PhotonScatterInteractor class.
@@ -31,4 +34,25 @@
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
-int main(int argc, char **argv) { return 0; }
+int main(int argc, char **argv) {
+  CoordinateVector<> photon_position(0.5);
+  CoordinateVector<> photon_direction;
+  Photon photon(photon_position, photon_direction, 54.4);
+
+  PhotonScatterInteractor scatter;
+  // check if the returned directions are really isotropic
+  {
+    CoordinateVector<> mean_direction;
+    unsigned int numphoton = 1000000;
+    double weight = 1. / numphoton;
+    for (unsigned int i = 0; i < numphoton; ++i) {
+      scatter.scatter(photon);
+      mean_direction += weight * photon.get_direction();
+    }
+    assert_condition(abs(mean_direction.x()) < 1.e-3);
+    assert_condition(abs(mean_direction.y()) < 1.e-3);
+    assert_condition(abs(mean_direction.z()) < 1.e-3);
+  }
+
+  return 0;
+}

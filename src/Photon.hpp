@@ -83,6 +83,22 @@ public:
   inline void set_position(CoordinateVector<> position) {
     _position = position;
   }
+
+  /**
+   * @brief Set the direction of the photon.
+   *
+   * @param direction New direction of the photon.
+   */
+  inline void set_direction(CoordinateVector<> direction) {
+    _direction = direction;
+  }
+
+  /**
+   * @brief Set the energy of the photon.
+   *
+   * @param energy Energy of the photon.
+   */
+  inline void set_energy(double energy) { _energy = energy; }
 };
 
 #endif // PHOTON_HPP

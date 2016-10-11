@@ -28,4 +28,14 @@
 #ifndef PHOTONSCATTERINTERACTOR_HPP
 #define PHOTONSCATTERINTERACTOR_HPP
 
+class Photon;
+
+/**
+ * @brief Interactor class that randomly scatters a photon.
+ */
+class PhotonScatterInteractor {
+public:
+  void scatter(Photon &photon);
+};
+
 #endif // PHOTONSCATTERINTERACTOR_HPP

@@ -180,6 +180,7 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/PhotonSource.cpp
     ../src/PhotonSource.hpp
     ../src/PhotonSourceDistribution.hpp
+    ../src/PhotonSourceSpectrum.hpp
     ../src/SingleStarPhotonSourceDistribution.hpp
     ../src/Utilities.hpp
 )
@@ -260,8 +261,13 @@ add_unit_test(NAME testVernerRecombinationRates
 set(TESTPHOTONSCATTERINTERACTOR_SOURCES
     testPhotonScatterInteractor.cpp
 
+    Assert.hpp
+
+    ../src/CoordinateVector.hpp
+    ../src/Photon.hpp
     ../src/PhotonScatterInteractor.cpp
     ../src/PhotonScatterInteractor.hpp
+    ../src/Utilities.hpp
 )
 add_unit_test(NAME testPhotonScatterInteractor
               SOURCES ${TESTPHOTONSCATTERINTERACTOR_SOURCES})
