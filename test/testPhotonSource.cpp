@@ -71,17 +71,21 @@ int main(int argc, char **argv) {
   }
 
   // check if the returned directions are really isotropic
+  // check if the spectrum is sampled correctly
   {
     CoordinateVector<> mean_direction;
     unsigned int numphoton = 1000000;
     double weight = 1. / numphoton;
+    double meanenergy = 0.;
     for (unsigned int i = 0; i < numphoton; ++i) {
       Photon photon = source.get_random_photon();
       mean_direction += weight * photon.get_direction();
+      meanenergy += weight * photon.get_energy();
     }
     assert_condition(abs(mean_direction.x()) < 1.e-3);
     assert_condition(abs(mean_direction.y()) < 1.e-3);
     assert_condition(abs(mean_direction.z()) < 1.e-3);
+    assert_values_equal_tol(meanenergy, 34., 1.e-2);
   }
 
   return 0;
