@@ -28,6 +28,9 @@
 
 #include "CoordinateVector.hpp"
 #include "Photon.hpp"
+#include "Utilities.hpp"
+
+#include <cmath>
 #include <vector>
 
 class PhotonSourceDistribution;
@@ -68,6 +71,22 @@ public:
                unsigned int number_of_photons = 0);
 
   void set_number_of_photons(unsigned int number_of_photons);
+
+  /**
+   * @brief Get a random direction.
+   *
+   * @return CoordinateVector containing the components of a random isotropic
+   * direction.
+   */
+  inline CoordinateVector<> get_random_direction() {
+    double cost = 2. * Utilities::random_double() - 1.;
+    double sint = 1. - cost * cost;
+    sint = std::sqrt(std::max(sint, 0.));
+    double phi = 2. * M_PI * Utilities::random_double();
+    double cosp = std::cos(phi);
+    double sinp = std::sin(phi);
+    return CoordinateVector<>(sint * cosp, sint * sinp, cost);
+  }
 
   Photon get_random_photon();
 };

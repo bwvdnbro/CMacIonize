@@ -84,13 +84,7 @@ Photon PhotonSource::get_random_photon() {
 
   CoordinateVector<> position = _positions[_active_source_index];
 
-  double cost = 2. * Utilities::random_double() - 1.;
-  double sint = 1. - cost * cost;
-  sint = sqrt(max(sint, 0.));
-  double phi = 2. * M_PI * Utilities::random_double();
-  double cosp = cos(phi);
-  double sinp = sin(phi);
-  CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
+  CoordinateVector<> direction = get_random_direction();
 
   double energy = _spectrum.get_random_frequency();
 

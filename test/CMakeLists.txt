@@ -257,21 +257,6 @@ set(TESTVERNERRECOMBINATIONRATES_SOURCES
 add_unit_test(NAME testVernerRecombinationRates
               SOURCES ${TESTVERNERRECOMBINATIONRATES_SOURCES})
 
-## PhotonScatterInteractor test
-set(TESTPHOTONSCATTERINTERACTOR_SOURCES
-    testPhotonScatterInteractor.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/Photon.hpp
-    ../src/PhotonScatterInteractor.cpp
-    ../src/PhotonScatterInteractor.hpp
-    ../src/Utilities.hpp
-)
-add_unit_test(NAME testPhotonScatterInteractor
-              SOURCES ${TESTPHOTONSCATTERINTERACTOR_SOURCES})
-
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
