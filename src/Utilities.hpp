@@ -201,6 +201,36 @@ to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
 }
+
+/**
+ * @brief Get the index of the last element in the given ordered array that is
+ * smaller than the given value.
+ *
+ * This routine uses bisection, and always returns a value in the range
+ * [0, length-2], even if the given value is outside the given array.
+ *
+ * @param x Value to locate.
+ * @param xarr Array in which to search.
+ * @param length Length of the array.
+ * @return Index of the last element in the ordered array that is smaller than
+ * the given value, i.e. value is in between xarr[index] and xarr[index+1].
+ */
+inline unsigned int locate(double x, double *xarr, unsigned int length) {
+  unsigned int jl = 0;
+  unsigned int ju = length + 1;
+  while (ju - jl > 1) {
+    unsigned int jm = (ju + jl) / 2;
+    if (x > xarr[jm]) {
+      jl = jm;
+    } else {
+      ju = jm;
+    }
+  }
+  if (jl == length - 1) {
+    --jl;
+  }
+  return jl;
+}
 }
 
 #endif // UTILITIES_HPP

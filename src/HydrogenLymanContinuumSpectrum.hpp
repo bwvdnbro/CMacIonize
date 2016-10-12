@@ -29,8 +29,31 @@
 
 #include "PhotonSourceSpectrum.hpp"
 
+class CrossSections;
+
+#define HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ 1000
+#define HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP 100
+
 class HydrogenLymanContinuumSpectrum : public PhotonSourceSpectrum {
+private:
+  /*! @brief Frequency bins. */
+  double _frequency[HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+
+  /*! @brief Temperature bins. */
+  double _temperature[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP];
+
+  /*! @brief Cumulative distribution function. */
+  double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
+                                 [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+
+  /*! @brief Current temperature. */
+  double _current_T;
+
 public:
+  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
+
+  void set_temperature(double T);
+
   virtual double get_random_frequency();
 };
 

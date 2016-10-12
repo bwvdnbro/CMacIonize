@@ -195,6 +195,7 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
 
     Assert.hpp
 
+    ../src/CrossSections.hpp
     ../src/Error.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
     ../src/HydrogenLymanContinuumSpectrum.hpp
@@ -202,6 +203,8 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
     ../src/PlanckPhotonSourceSpectrum.cpp
     ../src/PlanckPhotonSourceSpectrum.hpp
     ../src/Utilities.hpp
+    ../src/VernerCrossSections.cpp
+    ../src/VernerCrossSections.hpp
 )
 add_unit_test(NAME testPhotonSourceSpectrum
               SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES})

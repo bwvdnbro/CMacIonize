@@ -82,24 +82,13 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum() {
 double PlanckPhotonSourceSpectrum::get_random_frequency() {
   double x = Utilities::random_double();
 
-  unsigned int jl = 0;
-  unsigned int ju = PLANCKPHOTONSOURCESPECTRUM_NUMFREQ + 1;
-  while (ju - jl > 1) {
-    unsigned int jm = (ju + jl) / 2;
-    if (x > _cumulative_distribution[jm]) {
-      jl = jm;
-    } else {
-      ju = jm;
-    }
-  }
-  if (jl == PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1) {
-    --jl;
-  }
+  unsigned int ix = Utilities::locate(x, _log_cumulative_distribution,
+                                      PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
   double log_random_frequency =
-      (log10(x) - _log_cumulative_distribution[jl]) /
-          (_log_cumulative_distribution[jl + 1] -
-           _log_cumulative_distribution[jl]) *
-          (_log_frequency[jl + 1] - _log_frequency[jl]) +
-      _log_frequency[jl];
+      (log10(x) - _log_cumulative_distribution[ix]) /
+          (_log_cumulative_distribution[ix + 1] -
+           _log_cumulative_distribution[ix]) *
+          (_log_frequency[ix + 1] - _log_frequency[ix]) +
+      _log_frequency[ix];
   return pow(10., log_random_frequency);
 }
