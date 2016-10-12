@@ -65,15 +65,15 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
           exp(157919.667 * (_frequency[inu] - 1.) / _temperature[iT]);
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
-          0.5 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
+          0.5e25 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
               (_frequency[inu] - _frequency[inu - 1]);
     }
     // normalize
     for (unsigned int inu = 0; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       _cumulative_distribution[iT][inu] /=
-          _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP - 1]
-                                  [inu];
+          _cumulative_distribution[iT]
+                                  [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
     }
   }
 }
