@@ -34,6 +34,7 @@
 #include <vector>
 
 class CrossSections;
+class DensityValues;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 
@@ -93,6 +94,8 @@ public:
   }
 
   Photon get_random_photon();
+
+  void reemit(Photon &photon, DensityValues &cell, double helium_abundance);
 };
 
 #endif // PHOTONSOURCE_HPP

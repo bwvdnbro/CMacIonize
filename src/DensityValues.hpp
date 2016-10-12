@@ -43,6 +43,14 @@ private:
   /*! @brief Temperature. */
   double _temperature;
 
+  /*! @brief Probability of re-emitting an ionizing photon after absorption by
+   *  hydrogen. */
+  double _pHion;
+
+  /*! @brief Probabilities of re-emitting an ionizing photon after absorption by
+   *  helium. */
+  double _pHe_em[4];
+
   /*! @brief Mean intensity of hydrogen ionizing radiation. */
   double _mean_intensity_H;
 
@@ -140,6 +148,23 @@ public:
    * @return Temperature.
    */
   inline double get_temperature() { return _temperature; }
+
+  /**
+   * @brief Get the probability of a photon being re-emitted as an ionizing
+   * photon after absorption by hydrogen.
+   *
+   * @return Probability of ionizing photon re-emission.
+   */
+  inline double get_pHion() { return _pHion; }
+
+  /**
+   * @brief Get the probability of a photon being re-emitted as an ionizing
+   * photon after absorption by hydrogen.
+   *
+   * @param index Mode in which the photon is re-emitted.
+   * @return Probability of ionizing photon re-emission.
+   */
+  inline double get_pHe_em(unsigned char index) { return _pHe_em[index]; }
 
   /**
    * @brief Get the mean intensity of hydrogen ionizing radiation.

@@ -175,6 +175,7 @@ set(TESTPHOTONSOURCE_SOURCES
 
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
+    ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/Photon.hpp
