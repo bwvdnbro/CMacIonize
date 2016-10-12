@@ -196,6 +196,8 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
     Assert.hpp
 
     ../src/Error.hpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.hpp
     ../src/PhotonSourceSpectrum.hpp
     ../src/PlanckPhotonSourceSpectrum.cpp
     ../src/PlanckPhotonSourceSpectrum.hpp
@@ -272,4 +274,5 @@ add_unit_test(NAME testRandomGenerator
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                        DEPENDS ${TESTNAMES})

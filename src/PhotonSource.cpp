@@ -122,6 +122,7 @@ Photon PhotonSource::get_random_photon() {
  */
 void PhotonSource::reemit(Photon &photon, DensityValues &cell,
                           double helium_abundance) {
+  double new_frequency = 0.;
   double pHabs = 1. / (1. +
                        cell.get_neutral_fraction_He() * helium_abundance *
                            photon.get_helium_cross_section() /
@@ -181,4 +182,6 @@ void PhotonSource::reemit(Photon &photon, DensityValues &cell,
       // photon escapes?
     }
   }
+
+  photon.set_energy(new_frequency);
 }

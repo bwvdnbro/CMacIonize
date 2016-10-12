@@ -26,6 +26,7 @@
  */
 #include "Assert.hpp"
 #include "Error.hpp"
+#include "HydrogenLymanContinuumSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include <cmath>
 
@@ -55,20 +56,42 @@ double planck_luminosity(double frequency) {
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  PlanckPhotonSourceSpectrum spectrum;
+  // PlanckPhotonSourceSpectrum
+  {
+    PlanckPhotonSourceSpectrum spectrum;
 
-  unsigned int counts[100];
-  unsigned int numsample = 1000000;
-  for (unsigned int i = 0; i < numsample; ++i) {
-    double rand_freq = spectrum.get_random_frequency();
-    unsigned int index = (rand_freq - 1.) * 100. / 3.;
-    ++counts[index];
+    unsigned int counts[100];
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      double rand_freq = spectrum.get_random_frequency();
+      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      ++counts[index];
+    }
+
+    double enorm = planck_luminosity(1.) / counts[0];
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1. + i * 0.03;
+      assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm, 1.e-2);
+    }
   }
 
-  double enorm = planck_luminosity(1.) / counts[0];
-  for (unsigned int i = 0; i < 100; ++i) {
-    double nu = 1. + i * 0.03;
-    assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm, 1.e-2);
+  // HydrogenLymanContinuumSpectrum
+  {
+    HydrogenLymanContinuumSpectrum spectrum;
+
+    unsigned int counts[100];
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      double rand_freq = spectrum.get_random_frequency();
+      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      ++counts[index];
+    }
+
+    double enorm = planck_luminosity(1.) / counts[0];
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1. + i * 0.03;
+      assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm, 1.e-2);
+    }
   }
 
   return 0;
