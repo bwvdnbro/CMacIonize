@@ -72,6 +72,7 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
         _density[i][j][k].set_neutral_fraction_H(1.e-6);
         _density[i][j][k].set_neutral_fraction_He(1.e-6);
         _density[i][j][k].set_temperature(initial_temperature);
+        set_reemission_probabilities(initial_temperature, _density[i][j][k]);
       }
     }
   }
@@ -612,4 +613,30 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
       }
     }
   }
+}
+
+/**
+ * @brief Set the re-emission probabilities for the given cell for the given
+ * temperature.
+ *
+ * @param T Temperature.
+ * @param cell DensityValues of the cell.
+ */
+void DensityGrid::set_reemission_probabilities(double T, DensityValues &cell) {
+  double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
+  double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
+  cell.set_pHion(alpha_1_H / alpha_A_agn);
+
+  double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
+  double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
+  cell.set_pHe_em(0, alpha_1_He / alphaHe);
+
+  double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
+  cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
+
+  double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
+  cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
+
+  double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
+  cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
 }

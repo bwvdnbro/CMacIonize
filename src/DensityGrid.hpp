@@ -94,6 +94,7 @@ public:
                       double nH, double AHe, double T, double &h0, double &he0);
 
   void calculate_ionization_state(unsigned int nphoton);
+  static void set_reemission_probabilities(double T, DensityValues &cell);
 };
 
 #endif // DENSITYGRID_HPP

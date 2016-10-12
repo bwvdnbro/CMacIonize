@@ -63,7 +63,8 @@ public:
    */
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
-        _temperature(0.), _mean_intensity_H(0.), _mean_intensity_He(0.) {}
+        _temperature(0.), _pHion(0.), _pHe_em{0., 0., 0., 0.},
+        _mean_intensity_H(0.), _mean_intensity_He(0.) {}
 
   /**
    * @brief Set the total density.
@@ -99,6 +100,25 @@ public:
    */
   inline void set_temperature(double temperature) {
     _temperature = temperature;
+  }
+
+  /**
+   * @brief Set the probability of re-emitting an ionizing photon after photon
+   * absorption by hydrogen.
+   *
+   * @param pHion New value for the re-emission probability.
+   */
+  inline void set_pHion(double pHion) { _pHion = pHion; }
+
+  /**
+   * @brief Set one of the probabilities of re-emitting an ionizing photon after
+   * photon absorption by helium.
+   *
+   * @param index Mode in which the photon is re-emitted.
+   * @param pHe_em New value for the re-emission probability.
+   */
+  inline void set_pHe_em(unsigned char index, double pHe_em) {
+    _pHe_em[index] = pHe_em;
   }
 
   /**
