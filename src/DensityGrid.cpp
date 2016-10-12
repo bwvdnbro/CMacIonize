@@ -628,15 +628,16 @@ void DensityGrid::set_reemission_probabilities(double T, DensityValues &cell) {
   cell.set_pHion(alpha_1_H / alpha_A_agn);
 
   double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
-  double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
-  cell.set_pHe_em(0, alpha_1_He / alphaHe);
-
   double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
-  cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
-
   double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
-  cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
-
   double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
+  double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
+  // we overwrite the alphaHe value. This also guarantees that the sum of all
+  // probabilities is 1...
+  alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+
+  cell.set_pHe_em(0, alpha_1_He / alphaHe);
+  cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
+  cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
   cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
 }
