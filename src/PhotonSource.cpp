@@ -24,6 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "PhotonSource.hpp"
+#include "CrossSections.hpp"
+#include "ElementNames.hpp"
 #include "Error.hpp"
 #include "PhotonSourceDistribution.hpp"
 #include "PhotonSourceSpectrum.hpp"
@@ -37,13 +39,16 @@ using namespace std;
  * @param distribution PhotonSourceDistribution giving the positions of the
  * discrete photon sources.
  * @param spectrum PhotonSourceSpectrum for the discrete photon sources.
+ * @param cross_sections Cross sections for photoionization.
  * @param number_of_photons Total number of photons emitted from all discrete
  * photon sources together.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
                            PhotonSourceSpectrum &spectrum,
+                           CrossSections &cross_sections,
                            unsigned int number_of_photons)
-    : _number_of_photons(number_of_photons), _spectrum(spectrum) {
+    : _number_of_photons(number_of_photons), _spectrum(spectrum),
+      _cross_sections(cross_sections) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -87,6 +92,8 @@ Photon PhotonSource::get_random_photon() {
   CoordinateVector<> direction = get_random_direction();
 
   double energy = _spectrum.get_random_frequency();
+  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, energy);
+  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, energy);
 
   ++_active_photon_index;
   if (_active_photon_index == _active_number_of_photons) {
@@ -98,5 +105,5 @@ Photon PhotonSource::get_random_photon() {
     }
   }
 
-  return Photon(position, direction, energy);
+  return Photon(position, direction, energy, xsecH, xsecHe);
 }

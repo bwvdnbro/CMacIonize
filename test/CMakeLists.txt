@@ -116,7 +116,6 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
 
     ../src/Box.hpp
     ../src/CoordinateVector.hpp
-    ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
@@ -175,6 +174,8 @@ set(TESTPHOTONSOURCE_SOURCES
     Assert.hpp
 
     ../src/CoordinateVector.hpp
+    ../src/CrossSections.hpp
+    ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/Photon.hpp
     ../src/PhotonSource.cpp

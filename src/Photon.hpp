@@ -42,6 +42,12 @@ private:
   /*! @brief Current energy contents of the photon. */
   double _energy;
 
+  /*! @brief Hydrogen ionization cross section. */
+  double _xsecH;
+
+  /*! @brief Helium ionization cross section. */
+  double _xsecHe;
+
 public:
   /**
    * @brief Constructor.
@@ -51,8 +57,9 @@ public:
    * @param energy Initial energy of the photon.
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
-                double energy)
-      : _position(position), _direction(direction), _energy(energy) {}
+                double energy, double xsecH, double xsecHe)
+      : _position(position), _direction(direction), _energy(energy),
+        _xsecH(xsecH), _xsecHe(xsecHe) {}
 
   /**
    * @brief Get the current position of the photon.
@@ -74,6 +81,20 @@ public:
    * @return Current energy of the photon.
    */
   inline double get_energy() { return _energy; }
+
+  /**
+   * @brief Get the ionization cross section for hydrogen.
+   *
+   * @return Hydrogen ionization cross section.
+   */
+  inline double get_hydrogen_cross_section() { return _xsecH; }
+
+  /**
+   * @brief Get the ionization cross section for helium.
+   *
+   * @return Helium ionization cross section.
+   */
+  inline double get_helium_cross_section() { return _xsecHe; }
 
   /**
    * @brief Set the position of the photon.
@@ -99,6 +120,20 @@ public:
    * @param energy Energy of the photon.
    */
   inline void set_energy(double energy) { _energy = energy; }
+
+  /**
+   * @brief Set the hydrogen ionization cross section.
+   *
+   * @param xsecH Hydrogen ionization cross section.
+   */
+  inline void set_hydrogen_cross_section(double xsecH) { _xsecH = xsecH; }
+
+  /**
+   * @brief Set the helium ionization cross section.
+   *
+   * @param xsecHe Helium ionization cross section.
+   */
+  inline void set_helium_cross_section(double xsecHe) { _xsecHe = xsecHe; }
 };
 
 #endif // PHOTON_HPP

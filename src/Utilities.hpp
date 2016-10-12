@@ -29,7 +29,6 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
-#include "RandomGenerator.hpp"
 
 #include <algorithm>
 #include <cstdio>

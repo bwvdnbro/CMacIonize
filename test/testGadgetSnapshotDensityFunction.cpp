@@ -25,30 +25,11 @@
  */
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
-#include "CrossSections.hpp"
 #include "DensityGrid.hpp"
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "RecombinationRates.hpp"
 using namespace std;
-
-/**
- * @brief Test implementation of CrossSections.
- */
-class TestCrossSections : public CrossSections {
-public:
-  /**
-   * @brief Get the photoionization cross section for the given element at the
-   * given photon energy.
-   *
-   * @param element ElementName for an element.
-   * @param energy Photon energy.
-   * @return Photoionization cross section.
-   */
-  virtual double get_cross_section(ElementName element, double energy) {
-    return 1.;
-  }
-};
 
 /**
  * @brief Test implementation of RecombinationRates.
@@ -80,14 +61,12 @@ int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
   GadgetSnapshotDensityFunction density("test.hdf5");
-  TestCrossSections testcrosssections;
   TestRecombinationRates testrecombinationrates;
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
-  DensityGrid grid(box, 32, 0.1, 8000., density, testcrosssections,
-                   testrecombinationrates);
+  DensityGrid grid(box, 32, 0.1, 8000., density, testrecombinationrates);
   assert_values_equal(grid.get_total_mass(), density.get_total_mass());
 
   return 0;

@@ -33,6 +33,7 @@
 #include <cmath>
 #include <vector>
 
+class CrossSections;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 
@@ -65,9 +66,12 @@ private:
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum &_spectrum;
 
+  /*! @brief Cross sections for photoionization. */
+  CrossSections &_cross_sections;
+
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
-               PhotonSourceSpectrum &spectrum,
+               PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
                unsigned int number_of_photons = 0);
 
   void set_number_of_photons(unsigned int number_of_photons);

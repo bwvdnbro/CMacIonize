@@ -24,7 +24,6 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "DensityGrid.hpp"
-#include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
 #include "ParameterFile.hpp"
@@ -40,16 +39,13 @@ using namespace std;
  * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
  * @param initial_temperature Initial temperature of the gas.
  * @param density_function DensityFunction that defines the density field.
- * @param cross_sections Photoionization cross sections.
  * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
-                         CrossSections &cross_sections,
                          RecombinationRates &recombination_rates)
     : _box(box), _ncell(ncell), _helium_abundance(helium_abundance),
-      _cross_sections(cross_sections),
       _recombination_rates(recombination_rates) {
   _density = new DensityValues **[_ncell.x()];
   for (unsigned int i = 0; i < _ncell.x(); ++i) {
@@ -106,12 +102,11 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
 DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
                          CoordinateVector< unsigned char > ncell,
                          DensityFunction &density_function,
-                         CrossSections &cross_sections,
                          RecombinationRates &recombination_rates)
     : DensityGrid(box, ncell,
                   parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_value< double >("initial_temperature", 8000.),
-                  density_function, cross_sections, recombination_rates) {}
+                  density_function, recombination_rates) {}
 
 /**
  * @brief Destructor
@@ -354,10 +349,8 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   // find out in which cell the photon is currently hiding
   CoordinateVector< int > index = get_cell_indices(photon_origin);
 
-  double xsecH =
-      _cross_sections.get_cross_section(ELEMENT_H, photon.get_energy());
-  double xsecHe =
-      _cross_sections.get_cross_section(ELEMENT_He, photon.get_energy());
+  double xsecH = photon.get_hydrogen_cross_section();
+  double xsecHe = photon.get_helium_cross_section();
   // Helium abundance. Should be a parameter.
   double AHe = _helium_abundance;
 

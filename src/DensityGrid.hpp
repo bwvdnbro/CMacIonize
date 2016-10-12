@@ -28,7 +28,6 @@
 
 #include "Box.hpp"
 
-class CrossSections;
 class DensityFunction;
 class DensityValues;
 class ParameterFile;
@@ -62,21 +61,18 @@ private:
   /*! @brief Density grid. */
   DensityValues ***_density;
 
-  /*! @brief Cross sections for photoionization. */
-  CrossSections &_cross_sections;
-
   /*! @brief Recombination rates used in ionization balance calculation. */
   RecombinationRates &_recombination_rates;
 
 public:
   DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
               double helium_abundance, double initial_temperature,
-              DensityFunction &density_function, CrossSections &cross_sections,
+              DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
   DensityGrid(ParameterFile &parameters, Box box,
               CoordinateVector< unsigned char > ncell,
-              DensityFunction &density_function, CrossSections &cross_sections,
+              DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
   ~DensityGrid();

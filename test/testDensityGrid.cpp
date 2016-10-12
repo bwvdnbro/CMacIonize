@@ -105,8 +105,7 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  DensityGrid grid(box, 64, 0.1, 8000., testfunction, testcrosssections,
-                   testrecombinationrates);
+  DensityGrid grid(box, 64, 0.1, 8000., testfunction, testrecombinationrates);
 
   assert_values_equal(1., grid.get_total_mass());
 
@@ -268,7 +267,7 @@ int main(int argc, char **argv) {
   }
 
   CoordinateVector<> photon_direction(1., 0., 0.);
-  Photon photon(photon_origin, photon_direction, 1.);
+  Photon photon(photon_origin, photon_direction, 1., 1., 1.);
   bool inside = grid.interact(photon, 0.125);
 
   assert_condition(inside == false);

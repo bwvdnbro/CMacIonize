@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
+#include "CrossSections.hpp"
 #include "Error.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
@@ -32,6 +33,24 @@
 #include "SingleStarPhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
 using namespace std;
+
+/**
+ * @brief Test implementation of CrossSections.
+ */
+class TestCrossSections : public CrossSections {
+public:
+  /**
+   * @brief Get the photoionization cross section for the given element at the
+   * given photon energy.
+   *
+   * @param element ElementName for an element.
+   * @param energy Photon energy.
+   * @return Photoionization cross section.
+   */
+  virtual double get_cross_section(ElementName element, double energy) {
+    return 1.;
+  }
+};
 
 /**
  * @brief Test implementation of PhotonSourceSpectrum.
@@ -59,8 +78,9 @@ int main(int argc, char **argv) {
   SingleStarPhotonSourceDistribution distribution(
       CoordinateVector<>(0.5, 0.5, 0.5));
   TestPhotonSourceSpectrum spectrum;
+  TestCrossSections cross_sections;
 
-  PhotonSource source(distribution, spectrum, 1000001);
+  PhotonSource source(distribution, spectrum, cross_sections, 1000001);
 
   // check if the returned position is what we expect it to be
   {
