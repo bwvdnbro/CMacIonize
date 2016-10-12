@@ -82,7 +82,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum() {
 double PlanckPhotonSourceSpectrum::get_random_frequency() {
   double x = Utilities::random_double();
 
-  unsigned int ix = Utilities::locate(x, _log_cumulative_distribution,
+  unsigned int ix = Utilities::locate(x, _cumulative_distribution,
                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
   double log_random_frequency =
       (log10(x) - _log_cumulative_distribution[ix]) /
