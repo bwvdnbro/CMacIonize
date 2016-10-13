@@ -25,6 +25,7 @@
  */
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumDataLocation.hpp"
+#include "Utilities.hpp"
 #include <fstream>
 #include <vector>
 using namespace std;
@@ -59,6 +60,40 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
   vector< double > yHe2q;
   vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
+
+  double max_frequency = 4.;
+  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _frequency[i] = 1. +
+                    i * (max_frequency - 1.) /
+                        (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
+  }
+  _cumulative_distribution[0] = 0.;
+  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    double y1 = _frequency[i - 1] * 3.289e15 / 4.98e15;
+    double AHe2q1 = 0.;
+    if (y1 < 1.) {
+      unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
+      double f = (y1 - yHe2q[iHe1 - 1]) / (yHe2q[iHe1] - yHe2q[iHe1 - 1]);
+      AHe2q1 = AHe2q[iHe1 - 1] + f * (AHe2q[iHe1] - AHe2q[iHe1 - 1]);
+    }
+    double AHe2q2 = 0.;
+    double y2 = _frequency[i] * 3.289e15 / 4.98e15;
+    if (y2 < 1.) {
+      unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
+      double f = (y2 - yHe2q[iHe2 - 1]) / (yHe2q[iHe2] - yHe2q[iHe2 - 1]);
+      AHe2q2 = AHe2q[iHe2 - 1] + f * (AHe2q[iHe2] - AHe2q[iHe2 - 1]);
+    }
+    _cumulative_distribution[i] =
+        0.5 * (AHe2q1 + AHe2q2) * (_frequency[i] - _frequency[i - 1]);
+  }
+  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _cumulative_distribution[i] =
+        _cumulative_distribution[i - 1] + _cumulative_distribution[i] * 1.e25;
+  }
+  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _cumulative_distribution[i] /=
+        _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1];
+  }
 }
 
 /**
@@ -66,4 +101,9 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
  *
  * @return Random frequency.
  */
-double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() { return 42.; }
+double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
+  double x = Utilities::random_double();
+  unsigned int inu = Utilities::locate(
+      x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
+  return _frequency[inu];
+}
