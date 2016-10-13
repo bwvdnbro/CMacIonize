@@ -27,11 +27,14 @@
 #include "Assert.hpp"
 #include "Error.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
+#include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "Utilities.hpp"
 #include "VernerCrossSections.hpp"
 #include <cmath>
 #include <fstream>
+#include <vector>
 using namespace std;
 
 /**
@@ -83,6 +86,26 @@ double HeLyc_luminosity(CrossSections &cross_sections, double T,
         cross_sections.get_cross_section(ELEMENT_He, frequency * 13.6);
     return frequency * frequency * frequency * xsecHe *
            exp(-157919.667 * (frequency - 1.81) / T);
+  } else {
+    return 0.;
+  }
+}
+
+/**
+ * @brief Get the helium 2-photon continuum luminosity.
+ *
+ * @param yHe2q y values of the spectrum.
+ * @param AHe2q A values of the spectrum.
+ * @param frequency Frequency value.
+ * @return Helium 2-photon continuum luminosity.
+ */
+double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
+                        double frequency) {
+  double y = frequency * 3.289e15 / 4.98e15;
+  if (y < 1.) {
+    unsigned int i = Utilities::locate(y, &yHe2q[0], 41);
+    double f = (y - yHe2q[i - 1]) / (yHe2q[i] - yHe2q[i - 1]);
+    return AHe2q[i - 1] + f * (AHe2q[i] - AHe2q[i - 1]);
   } else {
     return 0.;
   }
@@ -183,6 +206,35 @@ int main(int argc, char **argv) {
         assert_values_equal_tol(HeLyc_luminosity(cross_sections, T, nu),
                                 counts[i] * enorm, 0.2);
       }
+    }
+  }
+
+  // HeliumTwoPhotonContinuumSpectrum
+  {
+    HeliumTwoPhotonContinuumSpectrum spectrum;
+    vector< double > yHe2q;
+    vector< double > AHe2q;
+    spectrum.get_spectrum(yHe2q, AHe2q);
+
+    unsigned int counts[100];
+    for (unsigned int i = 0; i < 100; ++i) {
+      counts[i] = 0;
+    }
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      double rand_freq = spectrum.get_random_frequency();
+      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      ++counts[index];
+    }
+
+    double enorm = He2pc_luminosity(yHe2q, AHe2q, 1.);
+    if (counts[0]) {
+      enorm /= counts[0];
+    }
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1. + i * 0.03;
+      assert_values_equal_tol(He2pc_luminosity(yHe2q, AHe2q, nu),
+                              counts[i] * enorm, 1.e-2);
     }
   }
 

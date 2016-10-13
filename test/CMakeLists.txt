@@ -199,6 +199,9 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
     ../src/Error.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp
     ../src/HeliumLymanContinuumSpectrum.hpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
+    ../src/HeliumTwoPhotonContinuumDataLocation.hpp.in
     ../src/HydrogenLymanContinuumSpectrum.cpp
     ../src/HydrogenLymanContinuumSpectrum.hpp
     ../src/PhotonSourceSpectrum.hpp

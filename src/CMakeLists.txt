@@ -34,6 +34,16 @@ message(STATUS
 configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/VernerCrossSectionsDataLocation.hpp
                @ONLY)
+# HeliumTwoPhotonContinuumDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/He2q.dat
+               ${PROJECT_BINARY_DIR}/data/He2q.dat COPYONLY)
+set(HELIUMTWOPHOTONCONTINUUMDATALOCATION ${PROJECT_BINARY_DIR}/data/He2q.dat)
+message(STATUS
+"HeliumTwoPhotonContinuumDataLocation.hpp: ${PROJECT_BINARY_DIR}/data/He2q.dat")
+configure_file(
+    ${PROJECT_SOURCE_DIR}/src/HeliumTwoPhotonContinuumDataLocation.hpp.in
+    ${PROJECT_BINARY_DIR}/src/HeliumTwoPhotonContinuumDataLocation.hpp
+    @ONLY)
 
 # Configuration file
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
