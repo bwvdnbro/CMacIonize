@@ -26,6 +26,7 @@
  */
 #include "Assert.hpp"
 #include "Error.hpp"
+#include "HeliumLymanContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "VernerCrossSections.hpp"
@@ -64,6 +65,27 @@ double HLyc_luminosity(CrossSections &cross_sections, double T,
   double xsecH = cross_sections.get_cross_section(ELEMENT_H, frequency * 13.6);
   return frequency * frequency * frequency * xsecH *
          exp(-157919.667 * (frequency - 1.) / T);
+}
+
+/**
+ * @brief Get the helium Lyman continuum luminosity at the given temperature
+ * and for the given frequency.
+ *
+ * @param cross_sections Photoionization cross sections.
+ * @param T Temperature.
+ * @param frequency Frequency.
+ * @return Helium Lyman continuum luminosity.
+ */
+double HeLyc_luminosity(CrossSections &cross_sections, double T,
+                        double frequency) {
+  if (frequency >= 1.81) {
+    double xsecHe =
+        cross_sections.get_cross_section(ELEMENT_He, frequency * 13.6);
+    return frequency * frequency * frequency * xsecHe *
+           exp(-157919.667 * (frequency - 1.81) / T);
+  } else {
+    return 0.;
+  }
 }
 
 /**
@@ -127,6 +149,39 @@ int main(int argc, char **argv) {
         double nu = 1. + i * 0.03;
         assert_values_equal_tol(HLyc_luminosity(cross_sections, T, nu),
                                 counts[i] * enorm, 1.e-1);
+      }
+    }
+  }
+
+  // HeliumLymanContinuumSpectrum
+  {
+    VernerCrossSections cross_sections;
+    HeliumLymanContinuumSpectrum spectrum(cross_sections);
+    for (unsigned int iT = 0; iT < 10; ++iT) {
+      double T = 1500. + (iT + 0.5) * 13500. / 10;
+      spectrum.set_temperature(T);
+
+      unsigned int counts[100];
+      for (unsigned int i = 0; i < 100; ++i) {
+        counts[i] = 0;
+      }
+      unsigned int numsample = 1000000;
+      for (unsigned int i = 0; i < numsample; ++i) {
+        double rand_freq = spectrum.get_random_frequency();
+        unsigned int index = (rand_freq - 1.) * 100. / 3.;
+        ++counts[index];
+      }
+
+      double enorm = HeLyc_luminosity(cross_sections, T, 1.81);
+      // we can obviously not normalize on the lowest frequency, as the spectrum
+      // is zero below frequencies of 1.81
+      if (counts[27]) {
+        enorm /= counts[27];
+      }
+      for (unsigned int i = 0; i < 100; ++i) {
+        double nu = 1. + i * 0.03;
+        assert_values_equal_tol(HeLyc_luminosity(cross_sections, T, nu),
+                                counts[i] * enorm, 0.2);
       }
     }
   }
