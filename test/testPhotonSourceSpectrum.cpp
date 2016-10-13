@@ -30,6 +30,8 @@
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "VernerCrossSections.hpp"
 #include <cmath>
+#include <fstream>
+using namespace std;
 
 /**
  * @brief Get the Planck black body luminosity for a given frequency.
@@ -46,6 +48,22 @@ double planck_luminosity(double frequency) {
          (exp(planck_constant * frequency * min_frequency /
               (boltzmann_constant * temperature_star)) -
           1.);
+}
+
+/**
+ * @brief Get the hydrogen Lyman continuum luminosity at the given temperature
+ * and for the given frequency.
+ *
+ * @param cross_sections Photoionization cross sections.
+ * @param T Temperature.
+ * @param frequency Frequency.
+ * @return Hydrogen Lyman continuum luminosity.
+ */
+double HLyc_luminosity(CrossSections &cross_sections, double T,
+                       double frequency) {
+  double xsecH = cross_sections.get_cross_section(ELEMENT_H, frequency * 13.6);
+  return frequency * frequency * frequency * xsecH *
+         exp(-157919.667 * (frequency - 1.) / T);
 }
 
 /**
@@ -85,6 +103,8 @@ int main(int argc, char **argv) {
   // HydrogenLymanContinuumSpectrum
   {
     VernerCrossSections cross_sections;
+    status("%g", cross_sections.get_cross_section(ELEMENT_H, 13.7));
+    status("%g", HLyc_luminosity(cross_sections, 1567.5, 1.003));
     HydrogenLymanContinuumSpectrum spectrum(cross_sections);
     spectrum.set_temperature(8000.);
 
@@ -99,15 +119,20 @@ int main(int argc, char **argv) {
       ++counts[index];
     }
 
-    double enorm = planck_luminosity(1.);
-    if (counts[0]) {
-      enorm /= counts[0];
+    double enorm = HLyc_luminosity(cross_sections, 8000., 1.03);
+    if (counts[1]) {
+      enorm /= counts[1];
     }
+    ofstream ofile("HLyc.txt");
     for (unsigned int i = 0; i < 100; ++i) {
       double nu = 1. + i * 0.03;
-      //      assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm,
-      //      1.e-3);
-      status("%g %g", planck_luminosity(nu), counts[i] * enorm);
+      //      assert_values_equal_tol(HLyc_luminosity(cross_sections, 8000.,
+      //      nu),
+      //                              counts[i] * enorm, 1.e-3);
+      status("%g %g", HLyc_luminosity(cross_sections, 8000., nu),
+             counts[i] * enorm);
+      ofile << nu << "\t" << HLyc_luminosity(cross_sections, 8000., nu) << "\t"
+            << counts[i] * enorm << "\n";
     }
   }
 

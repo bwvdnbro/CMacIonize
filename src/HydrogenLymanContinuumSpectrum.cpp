@@ -57,16 +57,22 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
       double jHIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecH *
-          exp(-157919.667 * (_frequency[inu - 1] - 1.) / _temperature[iT]);
+          std::exp(-157919.667 * (_frequency[inu - 1] - 1.) / _temperature[iT]);
       xsecH =
           cross_sections.get_cross_section(ELEMENT_H, _frequency[inu] * 13.6);
       double jHIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecH *
-          exp(157919.667 * (_frequency[inu] - 1.) / _temperature[iT]);
+          std::exp(-157919.667 * (_frequency[inu] - 1.) / _temperature[iT]);
+      _cumulative_distribution[iT][inu] =
+          0.5 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
+          (_frequency[inu] - _frequency[inu - 1]);
+    }
+    // make cumulative
+    for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
+         ++inu) {
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
-          0.5e25 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
-              (_frequency[inu] - _frequency[inu - 1]);
+          _cumulative_distribution[iT][inu] * 1.e25;
     }
     // normalize
     for (unsigned int inu = 0; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
@@ -74,7 +80,10 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
       _cumulative_distribution[iT][inu] /=
           _cumulative_distribution[iT]
                                   [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
+      status("%g %g %g", _temperature[iT], _frequency[inu],
+             _cumulative_distribution[iT][inu]);
     }
+    exit(1);
   }
 }
 

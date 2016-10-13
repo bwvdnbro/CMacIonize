@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "ElementNames.hpp"
 #include "Error.hpp"
 #include "VernerCrossSections.hpp"
 #include <fstream>
@@ -52,6 +53,13 @@ int main(int argc, char **argv) {
       assert_values_equal_tol(
           s, cross_sections.get_cross_section_verner(nz, ne, si, e), 1.e-6);
     }
+  }
+
+  for (unsigned int i = 0; i < 100; ++i) {
+    double nu = 1. + (i + 0.5) * 0.03;
+    assert_condition(
+        cross_sections.get_cross_section_verner(1, 1, 1, nu * 13.6) ==
+        cross_sections.get_cross_section(ELEMENT_H, nu * 13.6));
   }
 
   return 0;
