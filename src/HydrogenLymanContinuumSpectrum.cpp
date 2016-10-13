@@ -80,10 +80,7 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
       _cumulative_distribution[iT][inu] /=
           _cumulative_distribution[iT]
                                   [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
-      status("%g %g %g", _temperature[iT], _frequency[inu],
-             _cumulative_distribution[iT][inu]);
     }
-    exit(1);
   }
 }
 
@@ -105,7 +102,12 @@ double HydrogenLymanContinuumSpectrum::get_random_frequency() {
   unsigned int iT = Utilities::locate(_current_T, _temperature,
                                       HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = Utilities::random_double();
-  unsigned int inu = Utilities::locate(x, _cumulative_distribution[iT],
-                                       HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  return _frequency[inu];
+  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
+                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
+                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  return _frequency[inu1] +
+         (_current_T - _temperature[iT]) *
+             (_frequency[inu2] - _frequency[inu1]) /
+             (_temperature[iT + 1] - _temperature[iT]);
 }

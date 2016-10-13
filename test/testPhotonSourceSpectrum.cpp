@@ -103,36 +103,31 @@ int main(int argc, char **argv) {
   // HydrogenLymanContinuumSpectrum
   {
     VernerCrossSections cross_sections;
-    status("%g", cross_sections.get_cross_section(ELEMENT_H, 13.7));
-    status("%g", HLyc_luminosity(cross_sections, 1567.5, 1.003));
     HydrogenLymanContinuumSpectrum spectrum(cross_sections);
-    spectrum.set_temperature(8000.);
+    for (unsigned int iT = 0; iT < 10; ++iT) {
+      double T = 1500. + (iT + 0.5) * 13500. / 10;
+      spectrum.set_temperature(T);
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
-      counts[i] = 0;
-    }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
-      double rand_freq = spectrum.get_random_frequency();
-      unsigned int index = (rand_freq - 1.) * 100. / 3.;
-      ++counts[index];
-    }
+      unsigned int counts[100];
+      for (unsigned int i = 0; i < 100; ++i) {
+        counts[i] = 0;
+      }
+      unsigned int numsample = 1000000;
+      for (unsigned int i = 0; i < numsample; ++i) {
+        double rand_freq = spectrum.get_random_frequency();
+        unsigned int index = (rand_freq - 1.) * 100. / 3.;
+        ++counts[index];
+      }
 
-    double enorm = HLyc_luminosity(cross_sections, 8000., 1.03);
-    if (counts[1]) {
-      enorm /= counts[1];
-    }
-    ofstream ofile("HLyc.txt");
-    for (unsigned int i = 0; i < 100; ++i) {
-      double nu = 1. + i * 0.03;
-      //      assert_values_equal_tol(HLyc_luminosity(cross_sections, 8000.,
-      //      nu),
-      //                              counts[i] * enorm, 1.e-3);
-      status("%g %g", HLyc_luminosity(cross_sections, 8000., nu),
-             counts[i] * enorm);
-      ofile << nu << "\t" << HLyc_luminosity(cross_sections, 8000., nu) << "\t"
-            << counts[i] * enorm << "\n";
+      double enorm = HLyc_luminosity(cross_sections, T, 1.03);
+      if (counts[1]) {
+        enorm /= counts[1];
+      }
+      for (unsigned int i = 0; i < 100; ++i) {
+        double nu = 1. + i * 0.03;
+        assert_values_equal_tol(HLyc_luminosity(cross_sections, T, nu),
+                                counts[i] * enorm, 1.e-1);
+      }
     }
   }
 
