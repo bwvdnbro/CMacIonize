@@ -178,6 +178,12 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.hpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
     ../src/Photon.hpp
     ../src/PhotonSource.cpp
     ../src/PhotonSource.hpp

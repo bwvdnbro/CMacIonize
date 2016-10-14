@@ -49,7 +49,8 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
                            CrossSections &cross_sections,
                            unsigned int number_of_photons)
     : _number_of_photons(number_of_photons), _spectrum(spectrum),
-      _cross_sections(cross_sections) {
+      _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
+      _HeLyc_spectrum(cross_sections) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -119,8 +120,10 @@ Photon PhotonSource::get_random_photon() {
  * @param photon Photon to reemit.
  * @param cell DensityValues of the cell in which the Photon currently resides.
  * @param helium_abundance Helium abundance.
+ * @return True if the photon is re-emitted as an ionizing photon, false if it
+ * leaves the system.
  */
-void PhotonSource::reemit(Photon &photon, DensityValues &cell,
+bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
                           double helium_abundance) {
   double new_frequency = 0.;
   double pHabs = 1. / (1. +
@@ -135,22 +138,30 @@ void PhotonSource::reemit(Photon &photon, DensityValues &cell,
     x = Utilities::random_double();
     if (x <= cell.get_pHion()) {
       // sample new frequency from H Ly c
+      _HLyc_spectrum.set_temperature(cell.get_temperature());
+      new_frequency = _HLyc_spectrum.get_random_frequency();
     } else {
       // photon escapes
+      return false;
     }
   } else {
     // photon absorbed by helium
     x = Utilities::random_double();
     if (x <= cell.get_pHe_em(0)) {
       // sample new frequency from He Ly c
+      _HeLyc_spectrum.set_temperature(cell.get_temperature());
+      new_frequency = _HeLyc_spectrum.get_random_frequency();
     } else if (x <= cell.get_pHe_em(1)) {
       // new frequency is 19.8eV (no idea why)
+      new_frequency = 19.8 / 13.6;
     } else if (x <= cell.get_pHe_em(2)) {
       x = Utilities::random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
+        new_frequency = _He2pc_spectrum.get_random_frequency();
       } else {
         // photon escapes
+        return false;
       }
     } else if (x <= cell.get_pHe_em(3)) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
@@ -165,23 +176,40 @@ void PhotonSource::reemit(Photon &photon, DensityValues &cell,
         x = Utilities::random_double();
         if (x <= cell.get_pHion()) {
           // H Ly c, like above
+          _HLyc_spectrum.set_temperature(cell.get_temperature());
+          new_frequency = _HLyc_spectrum.get_random_frequency();
         } else {
           // photon escapes
+          return false;
         }
       } else {
         // He 2-photon continuum
         x = Utilities::random_double();
         if (x < 0.56) {
           // sample like above
+          new_frequency = _He2pc_spectrum.get_random_frequency();
         } else {
           // photon escapes
+          return false;
         }
       }
     } else {
-      // not in Kenny's code
-      // photon escapes?
+      // not in Kenny's code, since the probabilities above are forced to sum
+      // to 1.
+      // the code below is hence never executed
+      return false;
     }
   }
 
   photon.set_energy(new_frequency);
+
+  CoordinateVector<> direction = get_random_direction();
+  photon.set_direction(direction);
+
+  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, new_frequency);
+  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, new_frequency);
+  photon.set_hydrogen_cross_section(xsecH);
+  photon.set_helium_cross_section(xsecHe);
+
+  return true;
 }

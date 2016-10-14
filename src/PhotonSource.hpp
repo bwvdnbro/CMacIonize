@@ -27,6 +27,9 @@
 #define PHOTONSOURCE_HPP
 
 #include "CoordinateVector.hpp"
+#include "HeliumLymanContinuumSpectrum.hpp"
+#include "HeliumTwoPhotonContinuumSpectrum.hpp"
+#include "HydrogenLymanContinuumSpectrum.hpp"
 #include "Photon.hpp"
 #include "Utilities.hpp"
 
@@ -70,6 +73,15 @@ private:
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
 
+  /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
+  HydrogenLymanContinuumSpectrum _HLyc_spectrum;
+
+  /*! @brief Helium Lyman continuum spectrum, used for re-emission. */
+  HeliumLymanContinuumSpectrum _HeLyc_spectrum;
+
+  /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
+  HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
+
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
                PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
@@ -95,7 +107,7 @@ public:
 
   Photon get_random_photon();
 
-  void reemit(Photon &photon, DensityValues &cell, double helium_abundance);
+  bool reemit(Photon &photon, DensityValues &cell, double helium_abundance);
 };
 
 #endif // PHOTONSOURCE_HPP
