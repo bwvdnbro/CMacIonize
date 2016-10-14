@@ -135,12 +135,12 @@ int main(int argc, char **argv) {
       ++counts[index];
     }
 
-    double enorm = planck_luminosity(1.);
+    double enorm = planck_luminosity(1.015);
     if (counts[0]) {
       enorm /= counts[0];
     }
     for (unsigned int i = 0; i < 100; ++i) {
-      double nu = 1. + i * 0.03;
+      double nu = 1. + (i + 0.5) * 0.03;
       assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm, 1.e-2);
     }
   }
@@ -164,14 +164,14 @@ int main(int argc, char **argv) {
         ++counts[index];
       }
 
-      double enorm = HLyc_luminosity(cross_sections, T, 1.03);
+      double enorm = HLyc_luminosity(cross_sections, T, 1.045);
       if (counts[1]) {
         enorm /= counts[1];
       }
       for (unsigned int i = 0; i < 100; ++i) {
-        double nu = 1. + i * 0.03;
+        double nu = 1. + (i + 0.5) * 0.03;
         assert_values_equal_tol(HLyc_luminosity(cross_sections, T, nu),
-                                counts[i] * enorm, 1.e-1);
+                                counts[i] * enorm, 0.1);
       }
     }
   }
@@ -195,16 +195,16 @@ int main(int argc, char **argv) {
         ++counts[index];
       }
 
-      double enorm = HeLyc_luminosity(cross_sections, T, 1.81);
+      double enorm = HeLyc_luminosity(cross_sections, T, 1.825);
       // we can obviously not normalize on the lowest frequency, as the spectrum
       // is zero below frequencies of 1.81
       if (counts[27]) {
         enorm /= counts[27];
       }
       for (unsigned int i = 0; i < 100; ++i) {
-        double nu = 1. + i * 0.03;
+        double nu = 1. + (i + 0.5) * 0.03;
         assert_values_equal_tol(HeLyc_luminosity(cross_sections, T, nu),
-                                counts[i] * enorm, 0.2);
+                                counts[i] * enorm, 0.1);
       }
     }
   }
