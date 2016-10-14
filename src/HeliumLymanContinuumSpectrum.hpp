@@ -30,9 +30,15 @@
 
 class CrossSections;
 
+/*! @brief Number of frequencies in the internal table. */
 #define HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ 1000
+
+/*! @brief Number of temperatures in the internal table. */
 #define HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP 100
 
+/**
+ * @brief Helium Lyman continuum photoionization spectrum.
+ */
 class HeliumLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins. */

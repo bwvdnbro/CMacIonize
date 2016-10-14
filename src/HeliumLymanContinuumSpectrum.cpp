@@ -99,7 +99,7 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
 /**
  * @brief Set the current temperature for the interpolation.
  *
- * @param New value for the temperature.
+ * @param T New value for the temperature.
  */
 void HeliumLymanContinuumSpectrum::set_temperature(double T) { _current_T = T; }
 

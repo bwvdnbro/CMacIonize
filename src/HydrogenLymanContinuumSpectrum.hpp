@@ -31,9 +31,15 @@
 
 class CrossSections;
 
+/*! @brief Number of frequencies in the internal table. */
 #define HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ 1000
+
+/*! @brief Number of temperatures in the internal table. */
 #define HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP 100
 
+/**
+ * @brief Hydrogen Lyman continuum photoionization spectrum.
+ */
 class HydrogenLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins. */

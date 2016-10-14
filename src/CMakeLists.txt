@@ -54,6 +54,9 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     DensityGrid.cpp
+    HydrogenLymanContinuumSpectrum.cpp
+    HeliumLymanContinuumSpectrum.cpp
+    HeliumTwoPhotonContinuumSpectrum.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
     PhotonSource.cpp
@@ -72,6 +75,9 @@ set(CMACIONIZE_SOURCES
     DensityGrid.hpp
     DensityValues.hpp
     Error.hpp
+    HydrogenLymanContinuumSpectrum.hpp
+    HeliumLymanContinuumSpectrum.hpp
+    HeliumTwoPhotonContinuumSpectrum.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp

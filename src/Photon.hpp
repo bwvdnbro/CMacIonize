@@ -55,6 +55,8 @@ public:
    * @param position Initial position of the photon.
    * @param direction Initial direction of the photon.
    * @param energy Initial energy of the photon.
+   * @param xsecH Hydrogen photoionization cross section of the photon.
+   * @param xsecHe Helium photoionization cross section of the photon.
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy, double xsecH, double xsecHe)

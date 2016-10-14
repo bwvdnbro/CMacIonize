@@ -29,8 +29,12 @@
 #include "PhotonSourceSpectrum.hpp"
 #include <vector>
 
+/*! @brief Number of frequencies in the internal table. */
 #define HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ 1000
 
+/**
+ * @brief Helium 2-photon continuum photoionization spectrum.
+ */
 class HeliumTwoPhotonContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins. */

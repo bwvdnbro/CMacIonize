@@ -97,7 +97,6 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
  * @param ncell Number of cells in each dimension.
  * @param density_function DensityFunction used to set the densities in each
  * cell.
- * @param cross_sections Photoionization cross sections.
  * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(ParameterFile &parameters, Box box,

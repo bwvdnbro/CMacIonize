@@ -26,31 +26,66 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IM1 2147483563
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IM2 2147483399
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_AM (1. / RANDOMGENERATOR_IM1)
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IMM1 (RANDOMGENERATOR_IM1 - 1)
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IA1 40014
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IA2 40692
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IQ1 53668
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IQ2 52774
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IR1 12211
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IR2 3791
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_NTAB 32
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_NDIV (1 + RANDOMGENERATOR_IMM1 / RANDOMGENERATOR_NTAB)
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_EPS 1.2e-7
+
+/*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_RNMX (1. - RANDOMGENERATOR_EPS)
 
 #include <algorithm>
 
+/**
+ * @brief Kenny's custom random generator.
+ */
 class RandomGenerator {
 private:
   /*! @brief Seed for the next random value to generate. Is updated after every
    *  call to the random generator. */
   int _seed;
 
+  /*! @brief Second seed value. */
   int _idum2;
+
+  /*! @brief Table with previous values. */
   int _iv[RANDOMGENERATOR_NTAB];
+
+  /*! @brief Auxiliary value from previous calls. */
   int _iy;
 
 public:
