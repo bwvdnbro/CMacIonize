@@ -31,6 +31,52 @@
 using namespace std;
 
 /**
+ * @brief Constructor.
+ *
+ * Reads in the data file containing the spectrum and pre-calculates the
+ * cumulative distribution used for random sampling.
+ */
+HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
+  vector< double > yHe2q;
+  vector< double > AHe2q;
+  get_spectrum(yHe2q, AHe2q);
+
+  double max_frequency = 1.6;
+  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _frequency[i] = 1. +
+                    i * (max_frequency - 1.) /
+                        (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
+  }
+  _cumulative_distribution[0] = 0.;
+  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    double y1 = _frequency[i - 1] * 3.289e15 / 4.98e15;
+    double AHe2q1 = 0.;
+    if (y1 < 1.) {
+      unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
+      double f = (y1 - yHe2q[iHe1]) / (yHe2q[iHe1 + 1] - yHe2q[iHe1]);
+      AHe2q1 = AHe2q[iHe1] + f * (AHe2q[iHe1 + 1] - AHe2q[iHe1]);
+    }
+    double AHe2q2 = 0.;
+    double y2 = _frequency[i] * 3.289e15 / 4.98e15;
+    if (y2 < 1.) {
+      unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
+      double f = (y2 - yHe2q[iHe2]) / (yHe2q[iHe2 + 1] - yHe2q[iHe2]);
+      AHe2q2 = AHe2q[iHe2] + f * (AHe2q[iHe2 + 1] - AHe2q[iHe2]);
+    }
+    _cumulative_distribution[i] =
+        0.5 * (AHe2q1 + AHe2q2) * (_frequency[i] - _frequency[i - 1]);
+  }
+  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _cumulative_distribution[i] =
+        _cumulative_distribution[i - 1] + _cumulative_distribution[i] * 1.e25;
+  }
+  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _cumulative_distribution[i] /=
+        _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1];
+  }
+}
+
+/**
  * @brief Read the spectrum from the data file and store it in the given
  * vectors.
  *
@@ -51,49 +97,26 @@ void HeliumTwoPhotonContinuumSpectrum::get_spectrum(
 }
 
 /**
- * @brief Constructor.
+ * @brief Get the integral under the curve of the tabulated spectrum.
  *
- * Reads in the data file containing the spectrum and pre-calculates the
- * cumulative distribution used for random sampling.
+ * @param yHe2q y values of the spectrum.
+ * @param AHe2q A values of the spectrum.
+ * @return Integral under the curve in frequency space.
  */
-HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
-  vector< double > yHe2q;
-  vector< double > AHe2q;
-  get_spectrum(yHe2q, AHe2q);
-
-  double max_frequency = 4.;
-  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = 1. +
-                    i * (max_frequency - 1.) /
-                        (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
-  }
-  _cumulative_distribution[0] = 0.;
-  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    double y1 = _frequency[i - 1] * 3.289e15 / 4.98e15;
-    double AHe2q1 = 0.;
-    if (y1 < 1.) {
-      unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
-      double f = (y1 - yHe2q[iHe1 - 1]) / (yHe2q[iHe1] - yHe2q[iHe1 - 1]);
-      AHe2q1 = AHe2q[iHe1 - 1] + f * (AHe2q[iHe1] - AHe2q[iHe1 - 1]);
+double
+HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
+                                               std::vector< double > &AHe2q) {
+  double integral = 0.;
+  for (unsigned int i = 1; i < 41; ++i) {
+    if (yHe2q[i - 1] > 3.289e15 / 4.98e15) {
+      integral += 0.5 * (AHe2q[i - 1] + AHe2q[i]) * (yHe2q[i] - yHe2q[i - 1]);
+    } else {
+      if (yHe2q[i] > 3.289e15 / 4.98e15) {
+        integral += AHe2q[i] * (yHe2q[i] - 3.289e15 / 4.98e15);
+      }
     }
-    double AHe2q2 = 0.;
-    double y2 = _frequency[i] * 3.289e15 / 4.98e15;
-    if (y2 < 1.) {
-      unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
-      double f = (y2 - yHe2q[iHe2 - 1]) / (yHe2q[iHe2] - yHe2q[iHe2 - 1]);
-      AHe2q2 = AHe2q[iHe2 - 1] + f * (AHe2q[iHe2] - AHe2q[iHe2 - 1]);
-    }
-    _cumulative_distribution[i] =
-        0.5 * (AHe2q1 + AHe2q2) * (_frequency[i] - _frequency[i - 1]);
   }
-  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _cumulative_distribution[i] =
-        _cumulative_distribution[i - 1] + _cumulative_distribution[i] * 1.e25;
-  }
-  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _cumulative_distribution[i] /=
-        _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1];
-  }
+  return integral * 4.98e15 / 3.289e15;
 }
 
 /**

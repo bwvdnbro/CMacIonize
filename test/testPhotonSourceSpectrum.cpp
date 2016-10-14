@@ -223,21 +223,15 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       double rand_freq = spectrum.get_random_frequency();
-      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      unsigned int index = (rand_freq - 1.) * 100. / 0.6;
       ++counts[index];
     }
 
-    double enorm = He2pc_luminosity(yHe2q, AHe2q, 1.);
-    if (counts[0]) {
-      enorm /= counts[0];
-    }
-    ofstream ofile("He2pc.txt");
+    double enorm = spectrum.get_integral(yHe2q, AHe2q) / numsample / 0.006;
     for (unsigned int i = 0; i < 100; ++i) {
-      double nu = 1. + i * 0.03;
-      //      assert_values_equal_tol(He2pc_luminosity(yHe2q, AHe2q, nu),
-      //                              counts[i] * enorm, 1.e-2);
-      ofile << nu << "\t" << He2pc_luminosity(yHe2q, AHe2q, nu) << "\t"
-            << counts[i] * enorm << "\n";
+      double nu = 1. + (i + 0.5) * 0.006;
+      assert_values_equal_tol(He2pc_luminosity(yHe2q, AHe2q, nu),
+                              counts[i] * enorm, 0.1);
     }
   }
 
