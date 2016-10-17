@@ -107,6 +107,26 @@ set(TESTDENSITYGRID_SOURCES
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
 
+## Unit test for HDF5tools
+if(HAVE_HDF5)
+# copy the test HDF5 file.
+configure_file(${PROJECT_SOURCE_DIR}/test/test.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/test.hdf5
+               COPYONLY)
+set(TESTHDF5TOOLS_SOURCES
+    testHDF5Tools.cpp
+
+    Assert.hpp
+
+    ../src/CoordinateVector.hpp
+    ../src/Error.hpp
+    ../src/HDF5Tools.hpp
+)
+add_unit_test(NAME testHDF5Tools
+              SOURCES ${TESTHDF5TOOLS_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
 ## Unit test for GadgetSnapshotDensityFunction
 if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
@@ -132,26 +152,6 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-## Unit test for HDF5tools
-if(HAVE_HDF5)
-# copy the test HDF5 file.
-configure_file(${PROJECT_SOURCE_DIR}/test/test.hdf5
-               ${PROJECT_BINARY_DIR}/rundir/test/test.hdf5
-               COPYONLY)
-set(TESTHDF5TOOLS_SOURCES
-    testHDF5Tools.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/Error.hpp
-    ../src/HDF5Tools.hpp
-)
-add_unit_test(NAME testHDF5Tools
-              SOURCES ${TESTHDF5TOOLS_SOURCES}
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
@@ -306,6 +306,28 @@ set(TESTDENSITYGRIDWRITER_SOURCES
 )
 add_unit_test(NAME testDensityGridWriter
               SOURCES ${TESTDENSITYGRIDWRITER_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+## Unit test for GadgetSnapshotPhotonSourceDistribution
+if(HAVE_HDF5)
+set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
+    testGadgetSnapshotPhotonSourceDistribution.cpp
+
+    ../src/GadgetSnapshotPhotonSourceDistribution.cpp
+    ../src/GadgetSnapshotPhotonSourceDistribution.hpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.hpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumLymanContinuumSpectrum.hpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
+    ../src/PhotonSource.cpp
+    ../src/PhotonSource.hpp
+    ../src/PhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testGadgetSnapshotPhotonSourceDistribution
+              SOURCES ${TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES}
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 

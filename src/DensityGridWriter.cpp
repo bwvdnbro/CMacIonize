@@ -38,7 +38,10 @@
  * @param grid DensityGrid containing the data to write.
  */
 DensityGridWriter::DensityGridWriter(std::string name, DensityGrid &grid)
-    : _name(name), _grid(grid) {}
+    : _name(name), _grid(grid) {
+  // turn off default HDF5 error handling: we catch errors ourselves
+  HDF5Tools::initialize();
+}
 
 /**
  * @brief Write the file.

@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     assert_condition(numpart[1] == 0);
     assert_condition(numpart[2] == 0);
     assert_condition(numpart[3] == 0);
-    assert_condition(numpart[4] == 0);
+    assert_condition(numpart[4] == 1);
     assert_condition(numpart[5] == 0);
 
     std::vector< double > masstable =
