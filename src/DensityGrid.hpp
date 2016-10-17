@@ -51,9 +51,8 @@ private:
   /*! @brief Maximal cell side among the three dimensions. */
   double _cellside_max;
 
-  /*! @brief Number of cells per dimension. Note that by choosing an unsigned
-   *  char type, we automatically limit grid sizes to 256^3. */
-  CoordinateVector< unsigned char > _ncell;
+  /*! @brief Number of cells per dimension. */
+  CoordinateVector< int > _ncell;
 
   /*! @brief Helium abundance. */
   double _helium_abundance;
@@ -65,13 +64,11 @@ private:
   RecombinationRates &_recombination_rates;
 
 public:
-  DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
-              double helium_abundance, double initial_temperature,
-              DensityFunction &density_function,
+  DensityGrid(Box box, CoordinateVector< int > ncell, double helium_abundance,
+              double initial_temperature, DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
-  DensityGrid(ParameterFile &parameters, Box box,
-              CoordinateVector< unsigned char > ncell,
+  DensityGrid(ParameterFile &parameters, Box box, CoordinateVector< int > ncell,
               DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
@@ -79,9 +76,12 @@ public:
 
   double get_total_mass();
 
+  Box get_box();
+  unsigned int get_number_of_cells();
+
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
   Box get_cell(CoordinateVector< int > index);
-  DensityValues get_cell_values(CoordinateVector< int > index);
+  DensityValues &get_cell_values(CoordinateVector< int > index);
   bool is_inside(CoordinateVector< int > index);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
@@ -96,6 +96,104 @@ public:
 
   void calculate_ionization_state(unsigned int nphoton);
   static void set_reemission_probabilities(double T, DensityValues &cell);
+
+  /**
+   * @brief Iterator to loop over the cells in the grid.
+   */
+  class iterator {
+  private:
+    /*! @brief Index of the cell the iterator is currently pointing to. */
+    CoordinateVector< int > _index;
+
+    /*! @brief Maximum value of the index. */
+    CoordinateVector< int > _max_index;
+
+    /*! @brief Reference to the DensityGrid over which we iterate. */
+    DensityGrid &_grid;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param index Index of the cell the iterator is currently pointing to.
+     * @param max_index Maximum value of the index.
+     * @param grid DensityGrid over which we iterate.
+     */
+    inline iterator(CoordinateVector< int > index,
+                    CoordinateVector< int > max_index, DensityGrid &grid)
+        : _index(index), _max_index(max_index), _grid(grid) {}
+
+    /**
+     * @brief Get the Box of the cell the iterator is pointing to.
+     *
+     * @return Box of the cell the iterator is pointing to.
+     */
+    inline Box get_cell() { return _grid.get_cell(_index); }
+
+    /**
+     * @brief Get the DensityValues of the cell the iterator is pointing to.
+     *
+     * @return DensityValue the iterator is pointing to.
+     */
+    inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
+
+    /**
+     * @brief Increment operator.
+     *
+     * We only implemented the pre-increment version, since the post-increment
+     * version creates a new object and is computationally more expensive.
+     *
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator++() {
+      ++_index[0];
+      if (_index[0] == _max_index[0]) {
+        _index[0] = 0;
+        ++_index[1];
+        if (_index[1] == _max_index[1]) {
+          _index[1] = 0;
+          ++_index[2];
+        }
+      }
+      return *this;
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @return True if the iterators point to the same cell of the same grid.
+     */
+    inline bool operator==(iterator it) {
+      return (_index.x() == it._index.x() && _index.y() == it._index.y() &&
+              _index.z() == it._index.z() && &_grid == &it._grid);
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @return True if the iterators do not point to the same cell of the same
+     * grid.
+     */
+    inline bool operator!=(iterator it) { return !(*this == it); }
+  };
+
+  /**
+   * @brief Get an iterator to the first cell in the grid.
+   *
+   * @return Iterator to the first cell.
+   */
+  inline iterator begin() {
+    return iterator(CoordinateVector< int >(0), _ncell, *this);
+  }
+
+  /**
+   * @brief Get an iterator to the cell beyond the last cell in the grid.
+   *
+   * @return Iterator to the cell beyond the last cell in the grid.
+   */
+  inline iterator end() {
+    return iterator(CoordinateVector< int >(0, 0, _ncell.z()), _ncell, *this);
+  }
 };
 
 #endif // DENSITYGRID_HPP

@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> origin;
   CoordinateVector<> side(1.);
   Box box(origin, side);
-  CoordinateVector< unsigned char > ncell(8);
+  CoordinateVector< int > ncell(8);
   TestDensityFunction density_function;
   TestRecombinationRates recombination_rates;
   DensityGrid grid(box, ncell, 0.1, 8000., density_function,

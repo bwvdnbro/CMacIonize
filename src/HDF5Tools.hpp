@@ -679,6 +679,19 @@ write_attribute< std::vector< double > >(hid_t group, std::string name,
 }
 
 /**
+ * @brief write_attribute specialization for std::vector<unsigned int>.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to write.
+ * @param value std::vector<double> containing the values to write.
+ */
+template <>
+inline void write_attribute< std::vector< unsigned int > >(
+    hid_t group, std::string name, std::vector< unsigned int > &value) {
+  write_vector_attribute(group, name, value);
+}
+
+/**
  * @brief Read the dataset with the given name from the given group.
  *
  * @param group HDF5Group handle to an open group.

@@ -41,16 +41,16 @@ using namespace std;
  * @param density_function DensityFunction that defines the density field.
  * @param recombination_rates Recombination rates.
  */
-DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
+DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
                          RecombinationRates &recombination_rates)
     : _box(box), _ncell(ncell), _helium_abundance(helium_abundance),
       _recombination_rates(recombination_rates) {
   _density = new DensityValues **[_ncell.x()];
-  for (unsigned int i = 0; i < _ncell.x(); ++i) {
+  for (int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
-    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+    for (int j = 0; j < _ncell.y(); ++j) {
       _density[i][j] = new DensityValues[_ncell.z()];
     }
   }
@@ -60,9 +60,9 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-  for (unsigned int i = 0; i < _ncell.x(); ++i) {
-    for (unsigned int j = 0; j < _ncell.y(); ++j) {
-      for (unsigned int k = 0; k < _ncell.z(); ++k) {
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
+      for (int k = 0; k < _ncell.z(); ++k) {
         double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
         double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
         double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
@@ -100,7 +100,7 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< unsigned char > ncell,
  * @param recombination_rates Recombination rates.
  */
 DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
-                         CoordinateVector< unsigned char > ncell,
+                         CoordinateVector< int > ncell,
                          DensityFunction &density_function,
                          RecombinationRates &recombination_rates)
     : DensityGrid(box, ncell,
@@ -114,8 +114,8 @@ DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
  * Free the memory used by the internal arrays.
  */
 DensityGrid::~DensityGrid() {
-  for (unsigned int i = 0; i < _ncell.x(); ++i) {
-    for (unsigned int j = 0; j < _ncell.y(); ++j) {
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
       delete[] _density[i][j];
     }
     delete[] _density[i];
@@ -132,15 +132,31 @@ double DensityGrid::get_total_mass() {
   double mtot = 0;
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
 
-  for (unsigned int i = 0; i < _ncell.x(); ++i) {
-    for (unsigned int j = 0; j < _ncell.y(); ++j) {
-      for (unsigned int k = 0; k < _ncell.z(); ++k) {
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
+      for (int k = 0; k < _ncell.z(); ++k) {
         mtot += _density[i][j][k].get_total_density() * cellvolume;
       }
     }
   }
 
   return mtot;
+}
+
+/**
+ * @brief Get the box containing the grid.
+ *
+ * @return Box containing the grid.
+ */
+Box DensityGrid::get_box() { return _box; }
+
+/**
+ * @brief Get the total number of cells in this grid.
+ *
+ * @return Total number of cells.
+ */
+unsigned int DensityGrid::get_number_of_cells() {
+  return _ncell.x() * _ncell.y() * _ncell.z();
 }
 
 /**
@@ -178,7 +194,7 @@ Box DensityGrid::get_cell(CoordinateVector< int > index) {
  * @param index Index of a cell.
  * @return Values stored in the cell.
  */
-DensityValues DensityGrid::get_cell_values(CoordinateVector< int > index) {
+DensityValues &DensityGrid::get_cell_values(CoordinateVector< int > index) {
   return _density[index.x()][index.y()][index.z()];
 }
 
@@ -592,9 +608,9 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
   // factor in the mean intensity integrals
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
   double jfac = 1.e-18 * 4.26e49 / 3.086e18 / 3.086e18 / nphoton / cellvolume;
-  for (unsigned int i = 0; i < _ncell.x(); ++i) {
-    for (unsigned int j = 0; j < _ncell.y(); ++j) {
-      for (unsigned int k = 0; k < _ncell.z(); ++k) {
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
+      for (int k = 0; k < _ncell.z(); ++k) {
         DensityValues cell = _density[i][j][k];
         double jH = jfac * cell.get_mean_intensity_H();
         double jHe = jfac * cell.get_mean_intensity_He();

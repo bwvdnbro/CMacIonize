@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
   Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CoordinateVector< unsigned char > ncell(64);
+  CoordinateVector< int > ncell(64);
   DensityFunction *density_function =
       DensityFunctionFactory::generate("GadgetSnapshot", params);
   VernerCrossSections cross_sections;
