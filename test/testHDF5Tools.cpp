@@ -77,6 +77,29 @@ int main(int argc, char **argv) {
     assert_condition(box.y() == 1.);
     assert_condition(box.z() == 1.);
 
+    std::vector< unsigned int > numpart =
+        HDF5Tools::read_attribute< std::vector< unsigned int > >(
+            group, "NumPart_Total");
+
+    assert_condition(numpart.size() == 6);
+    assert_condition(numpart[0] == 100);
+    assert_condition(numpart[1] == 0);
+    assert_condition(numpart[2] == 0);
+    assert_condition(numpart[3] == 0);
+    assert_condition(numpart[4] == 0);
+    assert_condition(numpart[5] == 0);
+
+    std::vector< double > masstable =
+        HDF5Tools::read_attribute< std::vector< double > >(group, "MassTable");
+
+    assert_condition(masstable.size() == 6);
+    assert_condition(masstable[0] == 0.);
+    assert_condition(masstable[1] == 0.);
+    assert_condition(masstable[2] == 0.);
+    assert_condition(masstable[3] == 0.);
+    assert_condition(masstable[4] == 0.);
+    assert_condition(masstable[5] == 0.);
+
     HDF5Tools::close_group(group);
 
     group = HDF5Tools::open_group(file, "PartType0");
@@ -125,6 +148,9 @@ int main(int argc, char **argv) {
     CoordinateVector<> vtest(1., 2., 3.);
     HDF5Tools::write_attribute< CoordinateVector<> >(
         group, "CoordinateVector attribute", vtest);
+    std::vector< double > vatest(6, 3.14);
+    HDF5Tools::write_attribute< std::vector< double > >(
+        group, "Vector attribute", vatest);
 
     std::vector< double > dvtest(100);
     std::vector< unsigned long long > ivtest(100);
@@ -166,6 +192,13 @@ int main(int argc, char **argv) {
     assert_condition(vtest2.x() == vtest.x());
     assert_condition(vtest2.y() == vtest.y());
     assert_condition(vtest2.z() == vtest.z());
+    std::vector< double > vatest2 =
+        HDF5Tools::read_attribute< std::vector< double > >(group,
+                                                           "Vector attribute");
+    assert_condition(vatest.size() == vatest2.size());
+    for (unsigned int i = 0; i < vatest.size(); ++i) {
+      assert_condition(vatest[i] == vatest2[i]);
+    }
 
     std::vector< double > dvtest2 =
         HDF5Tools::read_dataset< double >(group, "Test doubles");

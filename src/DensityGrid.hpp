@@ -81,6 +81,7 @@ public:
 
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
   Box get_cell(CoordinateVector< int > index);
+  DensityValues get_cell_values(CoordinateVector< int > index);
   bool is_inside(CoordinateVector< int > index);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,

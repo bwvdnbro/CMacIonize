@@ -286,6 +286,26 @@ set(TESTRANDOMGENERATOR_SOURCES
 add_unit_test(NAME testRandomGenerator
               SOURCES ${TESTRANDOMGENERATOR_SOURCES})
 
+## DensityGridWriter test
+if(HAVE_HDF5)
+set(TESTDENSITYGRIDWRITER_SOURCES
+    testDensityGridWriter.cpp
+
+    ../src/Box.hpp
+    ../src/CoordinateVector.hpp
+    ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
+    ../src/DensityGrid.hpp
+    ../src/DensityGridWriter.cpp
+    ../src/DensityGridWriter.hpp
+    ../src/DensityValues.hpp
+    ../src/RecombinationRates.hpp
+)
+add_unit_test(NAME testDensityGridWriter
+              SOURCES ${TESTDENSITYGRIDWRITER_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

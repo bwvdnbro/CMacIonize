@@ -352,6 +352,103 @@ read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
 };
 
 /**
+ * @brief Template read_attribute() version for std::vector.
+ *
+ * This function exists because we cannot specialize read_attribute() with a
+ * template std::vector. Which means that we have to specialize read_attribute()
+ * for every std::vector we want to use separately. These specializations all
+ * call this function.
+ *
+ * If that is not clear: we cannot do this:
+ * \code{.cpp}
+ *  template<typename T>
+ *  inline std::vector<T> read_attribute< std::vector<T> >(group, name){}
+ * \endcode
+ * because this type of template usage is not allowed (no idea why...).
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to read.
+ * @return std::vector containing the values of the attribute.
+ */
+template < typename T >
+inline std::vector< T > read_vector_attribute(hid_t group, std::string name) {
+  hid_t datatype = get_datatype_name< T >();
+  // open attribute
+  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  if (attr < 0) {
+    error("Failed to open attribute \"%s\"!", name.c_str());
+  }
+
+  // open attribute dataspace
+  hid_t space = H5Aget_space(attr);
+  if (space < 0) {
+    error("Failed to open dataspace of attributes \"%s\"!", name.c_str());
+  }
+
+  // query dataspace size
+  hsize_t size[1];
+  hsize_t maxsize[1];
+  int ndim = H5Sget_simple_extent_dims(space, size, maxsize);
+  if (ndim < 0) {
+    error("Unable to query extent of attribute \"%s\"!", name.c_str());
+  }
+  if (!ndim) {
+    size[0] = 1;
+  }
+
+  // read attribute
+  std::vector< T > value(size[0]);
+  herr_t status = H5Aread(attr, datatype, &value[0]);
+  if (status < 0) {
+    error("Failed to read attribute \"%s\"!", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(space);
+  if (status < 0) {
+    error("Failed to close dataspace of attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
+
+  return value;
+};
+
+/**
+ * @brief read_attribute() specialization for std::vector<unsigned int>.
+ *
+ * This method calls read_vector_attribute().
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to read.
+ * @return std::vector<unsigned int> containing the values of the attribute.
+ */
+template <>
+inline std::vector< unsigned int >
+read_attribute< std::vector< unsigned int > >(hid_t group, std::string name) {
+  return read_vector_attribute< unsigned int >(group, name);
+}
+
+/**
+ * @brief read_attribute() specialization for std::vector<double>.
+ *
+ * This method calls read_vector_attribute().
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to read.
+ * @return std::vector<double> containing the values of the attribute.
+ */
+template <>
+inline std::vector< double >
+read_attribute< std::vector< double > >(hid_t group, std::string name) {
+  return read_vector_attribute< double >(group, name);
+}
+
+/**
  * @brief Write the attribute with the given name to the given group.
  *
  * @param group HDF5Group handle to an open HDF5 group.
@@ -473,9 +570,9 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
  * @param name Name of the attribute to write.
  * @param value CoordinateVector containing the values to write.
  */
-template < typename T >
-inline void write_attribute(hid_t group, std::string name,
-                            CoordinateVector<> &value) {
+template <>
+inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
+                                                  CoordinateVector<> &value) {
   hid_t datatype = get_datatype_name< double >();
   // create dataspace
   hsize_t dims[1] = {3};
@@ -513,6 +610,73 @@ inline void write_attribute(hid_t group, std::string name,
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
 };
+
+/**
+ * @brief write_attribute specialization for a general std::vector.
+ *
+ * Just as for reading, we cannot use partial template specialization, and have
+ * to do a workaround. Note that we could omit the <> and make it work without
+ * the workaround, but then the read and write syntax would be different, which
+ * could be confusing.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to write.
+ * @param value std::vector containing the values to write.
+ */
+template < typename T >
+inline void write_vector_attribute(hid_t group, std::string name,
+                                   std::vector< T > &value) {
+  hid_t datatype = get_datatype_name< T >();
+  // create dataspace
+  hsize_t dims[1] = {value.size()};
+  hid_t attspace = H5Screate_simple(1, dims, NULL);
+  if (attspace < 0) {
+    error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
+  }
+
+// create attribute
+#ifdef HDF5_OLD_API
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+#else
+  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
+                         H5P_DEFAULT);
+#endif
+  if (attr < 0) {
+    error("Failed to create attribute \"%s\"!", name.c_str());
+  }
+
+  // write attribute
+  herr_t status = H5Awrite(attr, datatype, &value[0]);
+  if (status < 0) {
+    error("Failed to write attribute \"%s\"!", name.c_str());
+  }
+
+  // close attribute
+  status = H5Aclose(attr);
+  if (status < 0) {
+    error("Failed to close attribute \"%s\"!", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(attspace);
+  if (status < 0) {
+    error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
+  }
+};
+
+/**
+ * @brief write_attribute specialization for std::vector<double>.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the attribute to write.
+ * @param value std::vector<double> containing the values to write.
+ */
+template <>
+inline void
+write_attribute< std::vector< double > >(hid_t group, std::string name,
+                                         std::vector< double > &value) {
+  write_vector_attribute(group, name, value);
+}
 
 /**
  * @brief Read the dataset with the given name from the given group.

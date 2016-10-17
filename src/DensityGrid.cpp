@@ -173,6 +173,16 @@ Box DensityGrid::get_cell(CoordinateVector< int > index) {
 }
 
 /**
+ * @brief Get the values stored in the cell with the given index.
+ *
+ * @param index Index of a cell.
+ * @return Values stored in the cell.
+ */
+DensityValues DensityGrid::get_cell_values(CoordinateVector< int > index) {
+  return _density[index.x()][index.y()][index.z()];
+}
+
+/**
  * @brief Check whether the given index points to a valid cell.
  *
  * @param index Indices of the cell.
