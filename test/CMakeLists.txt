@@ -291,6 +291,8 @@ if(HAVE_HDF5)
 set(TESTDENSITYGRIDWRITER_SOURCES
     testDensityGridWriter.cpp
 
+    Assert.hpp
+
     ../src/Box.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
@@ -299,6 +301,7 @@ set(TESTDENSITYGRIDWRITER_SOURCES
     ../src/DensityGridWriter.cpp
     ../src/DensityGridWriter.hpp
     ../src/DensityValues.hpp
+    ../src/Error.hpp
     ../src/RecombinationRates.hpp
 )
 add_unit_test(NAME testDensityGridWriter
