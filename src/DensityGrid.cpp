@@ -92,6 +92,12 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
  * Constructs a DensityGrid object using parameter values from the parameter
  * file.
  *
+ * The default parameters are:
+ *   - a box with anchor [0.,0.,0.] and sides [1.,1.,1.].
+ *   - 64 cells in every dimension (64^3 in total).
+ *   - a helium abundance of 0.1.
+ *   - an initial temperature for the gas of 8,000K.
+ *
  * @param parameters ParameterFile to read.
  * @param density_function DensityFunction used to set the densities in each
  * cell.

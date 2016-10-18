@@ -100,10 +100,12 @@ set(TESTDENSITYGRID_SOURCES
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/HomogeneousDensityFunction.hpp
+    ../src/Log.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
+    ../src/TerminalLog.hpp
 )
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
@@ -331,6 +333,17 @@ add_unit_test(NAME testGadgetSnapshotPhotonSourceDistribution
               SOURCES ${TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES}
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
+
+## Unit test for Log
+set(TESTLOG_SOURCES
+    testLog.cpp
+
+    ../src/FileLog.hpp
+    ../src/Log.hpp
+    ../src/TerminalLog.hpp
+)
+add_unit_test(NAME testLog
+              SOURCES ${TESTLOG_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
