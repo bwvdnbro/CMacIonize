@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
   assert_condition(params.get_value< double >("test_float") == 3.14);
-  assert_condition(params.get_value< QUANTITY_LENGTH >("test_unit") ==
+  assert_condition(params.get_physical_value< QUANTITY_LENGTH >("test_unit") ==
                    3.086e16);
   assert_condition(params.get_value< bool >("test_bool1") == true);
   assert_condition(params.get_value< bool >("test_bool2") == true);
@@ -73,11 +73,18 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
 
+  CoordinateVector<> cvtest_unit =
+      params.get_physical_vector< QUANTITY_LENGTH >(
+          "test_coordinatevector_unit");
+  assert_condition(cvtest_unit.x() == 3.086e16);
+  assert_condition(cvtest_unit.y() == 2.);
+  assert_condition(cvtest_unit.z() == 2.4e19);
+
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
-  assert_condition(params.get_value< QUANTITY_LENGTH >("unit_not_in_file",
-                                                       "1. pc") == 3.086e16);
+  assert_condition(params.get_physical_value< QUANTITY_LENGTH >(
+                       "unit_not_in_file", "1. pc") == 3.086e16);
   assert_condition(params.get_value< string >("not_in", "file?") == "file?");
   assert_condition(params.get_value< bool >("not_in_file3", true) == true);
 
@@ -92,6 +99,12 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
+
+  cvtest = params.get_physical_vector< QUANTITY_LENGTH >(
+      "coordinatevector_unit_not_in_file", "[1. pc,2.m,2.4e19m]");
+  assert_condition(cvtest_unit.x() == 3.086e16);
+  assert_condition(cvtest_unit.y() == 2.);
+  assert_condition(cvtest_unit.z() == 2.4e19);
 
   params.print_contents(cout);
 

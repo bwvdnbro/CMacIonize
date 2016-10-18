@@ -33,7 +33,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -89,6 +88,27 @@ inline CoordinateVector<> convert< CoordinateVector<> >(std::string value) {
           value.c_str());
   }
   return vvalue;
+}
+
+/**
+ * @brief Split a string of the form [str1, str2, str3] into its parts.
+ *
+ * @param value std::string having the form mentioned above.
+ * @param str1 Variable to store the first part in.
+ * @param str2 Variable to store the second part in.
+ * @param str3 Variable to store the third part in.
+ */
+inline void split_string(std::string value, std::string &str1,
+                         std::string &str2, std::string &str3) {
+  size_t pos1 = value.find('[') + 1;
+  size_t pos2 = value.find(',', pos1);
+  str1 = value.substr(pos1, pos2 - pos1);
+  pos1 = pos2 + 1;
+  pos2 = value.find(',', pos1);
+  str2 = value.substr(pos1, pos2 - pos1);
+  pos1 = pos2 + 1;
+  pos2 = value.find(']', pos1);
+  str3 = value.substr(pos1, pos2 - pos1);
 }
 
 /**

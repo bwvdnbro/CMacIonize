@@ -102,10 +102,31 @@ public:
    * @param key Key in the dictionary that relates to a unique parameter.
    * @return Value of that key, in SI units.
    */
-  template < Quantity quantity > double get_value(std::string key) {
+  template < Quantity quantity > double get_physical_value(std::string key) {
     std::string svalue = get_value< std::string >(key);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
     return UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+  }
+
+  /**
+   * @brief get_value() version for physical CoordinateVectors with a unit.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter.
+   * @return Value of that key, in SI units.
+   */
+  template < Quantity quantity >
+  CoordinateVector<> get_physical_vector(std::string key) {
+    std::string svalue = get_value< std::string >(key);
+    std::string parts[3];
+    Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
+    CoordinateVector<> vvalue;
+    for (unsigned int i = 0; i < 3; ++i) {
+      std::pair< double, std::string > valunit =
+          Utilities::split_value(parts[i]);
+      vvalue[i] =
+          UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+    }
+    return vvalue;
   }
 
   /**
@@ -121,10 +142,34 @@ public:
    * @return Value of that key, in SI units.
    */
   template < Quantity quantity >
-  double get_value(std::string key, std::string default_value) {
+  double get_physical_value(std::string key, std::string default_value) {
     std::string svalue = get_value< std::string >(key, default_value);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
     return UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+  }
+
+  /**
+   * @brief get_value() version for physical CoordinateVectors with a unit.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter.
+   * @param default_value Default value, also as a physical floating point
+   * vector with units.
+   * @return Value of that key, in SI units.
+   */
+  template < Quantity quantity >
+  CoordinateVector<> get_physical_vector(std::string key,
+                                         std::string default_value) {
+    std::string svalue = get_value< std::string >(key, default_value);
+    std::string parts[3];
+    Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
+    CoordinateVector<> vvalue;
+    for (unsigned int i = 0; i < 3; ++i) {
+      std::pair< double, std::string > valunit =
+          Utilities::split_value(parts[i]);
+      vvalue[i] =
+          UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+    }
+    return vvalue;
   }
 };
 
