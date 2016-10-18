@@ -68,8 +68,7 @@ public:
               double initial_temperature, DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
-  DensityGrid(ParameterFile &parameters, Box box, CoordinateVector< int > ncell,
-              DensityFunction &density_function,
+  DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
               RecombinationRates &recombination_rates);
 
   ~DensityGrid();

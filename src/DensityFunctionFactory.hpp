@@ -56,7 +56,8 @@ public:
    * management for the pointer needs to be done by the calling routine.
    */
   static DensityFunction *generate(ParameterFile &params) {
-    std::string type = params.get_value< std::string >("densityfunction.type");
+    std::string type =
+        params.get_value< std::string >("densityfunction.type", "Homogeneous");
     if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params);
     } else if (type == "GadgetSnapshot") {

@@ -67,12 +67,10 @@ int main(int argc, char **argv) {
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CoordinateVector< int > ncell(64);
   DensityFunction *density_function = DensityFunctionFactory::generate(params);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid grid(params, box, ncell, *density_function, recombination_rates);
+  DensityGrid grid(params, *density_function, recombination_rates);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate

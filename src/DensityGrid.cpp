@@ -93,17 +93,19 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
  * file.
  *
  * @param parameters ParameterFile to read.
- * @param box Box containing the entire grid.
- * @param ncell Number of cells in each dimension.
  * @param density_function DensityFunction used to set the densities in each
  * cell.
  * @param recombination_rates Recombination rates.
  */
-DensityGrid::DensityGrid(ParameterFile &parameters, Box box,
-                         CoordinateVector< int > ncell,
+DensityGrid::DensityGrid(ParameterFile &parameters,
                          DensityFunction &density_function,
                          RecombinationRates &recombination_rates)
-    : DensityGrid(box, ncell,
+    : DensityGrid(Box(parameters.get_value< CoordinateVector<> >(
+                          "box.anchor", CoordinateVector<>(0.)),
+                      parameters.get_value< CoordinateVector<> >(
+                          "box.sides", CoordinateVector<>(1.))),
+                  parameters.get_value< CoordinateVector< int > >(
+                      "box.ncell", CoordinateVector< int >(64)),
                   parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_value< double >("initial_temperature", 8000.),
                   density_function, recombination_rates) {}
