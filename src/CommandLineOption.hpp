@@ -66,6 +66,9 @@ private:
    */
   std::string _default_value;
 
+  /*! @brief Flag indicating if the option is required or optional. */
+  bool _required;
+
   static std::string get_argument_description(int argument);
   static std::string get_default_value_description(int argument,
                                                    std::string default_value);
@@ -74,7 +77,7 @@ public:
   CommandLineOption(std::string name, char abbreviation,
                     std::string description,
                     int argument = COMMANDLINEOPTION_NOARGUMENT,
-                    std::string default_value = "");
+                    std::string default_value = "", bool required = true);
 
   void print_usage(std::ostream &stream);
   void print_description(std::ostream &stream);

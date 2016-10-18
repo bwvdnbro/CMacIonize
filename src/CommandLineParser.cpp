@@ -38,7 +38,8 @@ CommandLineParser::CommandLineParser(std::string program_name)
   // add the --help option. We need to set a default value, since this option is
   // in no way required.
   _options.push_back(CommandLineOption("help", 'h', "Print this help message.",
-                                       COMMANDLINEOPTION_NOARGUMENT, "false"));
+                                       COMMANDLINEOPTION_NOARGUMENT, "false",
+                                       false));
 }
 
 /**
@@ -61,7 +62,7 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
     error("\"help\" and 'h' are reserved for the help command line option!");
   }
   _options.push_back(CommandLineOption(long_name, short_name, description,
-                                       argument_type, default_value));
+                                       argument_type, default_value, false));
 }
 
 /**
@@ -162,7 +163,10 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
         exit(1);
       } else {
         _dictionary[it->get_long_name()] = it->get_default_value();
+        _found[it->get_long_name()] = false;
       }
+    } else {
+      _found[it->get_long_name()] = true;
     }
   }
 }

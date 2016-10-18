@@ -53,6 +53,10 @@ private:
   /*! @brief Dictionary with parsed command line parameters. */
   std::map< std::string, std::string > _dictionary;
 
+  /*! @brief Dictionary with optional command line parameters, and whether they
+   *  were found or not. */
+  std::map< std::string, bool > _found;
+
 public:
   CommandLineParser(std::string program_name);
 
@@ -104,6 +108,14 @@ public:
    * type.
    */
   template < typename T > T get_value(std::string option);
+
+  /**
+   * @brief Check if the given option was found, or the default value was used.
+   *
+   * @param option Command line option.
+   * @return True if the command line option was present.
+   */
+  inline bool was_found(std::string option) { return _found[option]; }
 };
 
 /**

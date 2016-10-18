@@ -94,11 +94,13 @@ CommandLineOption::get_default_value_description(int argument,
  * any).
  * @param default_value Default value of the argument associated with the
  * command line option (if any).
+ * @param required Flag indicating if the option is required or optional.
  */
 CommandLineOption::CommandLineOption(std::string name, char abbreviation,
                                      std::string description, int argument,
-                                     std::string default_value)
-    : _name(name), _description(description), _default_value(default_value) {
+                                     std::string default_value, bool required)
+    : _name(name), _description(description), _default_value(default_value),
+      _required(required) {
   _abbreviation = abbreviation;
   _argument = argument;
 }
@@ -178,9 +180,7 @@ bool CommandLineOption::has_argument() {
  *
  * @return True if the command line option is required.
  */
-bool CommandLineOption::is_required() {
-  return get_default_value_description(_argument, _default_value).size() == 0;
-}
+bool CommandLineOption::is_required() { return _required; }
 
 /**
  * @brief Check if the given option string matches with this specific command

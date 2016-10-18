@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   parser.add_option("logfile", 'l', "Output program logs to a file with the "
                                     "given name, instead of to the standard "
                                     "output.",
-                    COMMANDLINEOPTION_STRINGARGUMENT, "");
+                    COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     loglevel = LOGLEVEL_INFO;
   }
   Log *log;
-  if (parser.get_value< std::string >("logfile").size()) {
+  if (parser.was_found("logfile")) {
     log = new FileLog(parser.get_value< std::string >("logfile"), loglevel);
   } else {
     log = new TerminalLog(loglevel);
