@@ -27,6 +27,7 @@
 #define HOMOGENEOUSDENSITYFUNCTION_HPP
 
 #include "DensityFunction.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 /**
@@ -43,17 +44,26 @@ public:
    * @brief Constructor.
    *
    * @param density Single density value for the entire box.
+   * @param log Log to write logging information to.
    */
-  HomogeneousDensityFunction(double density = 1.) : _density(density) {}
+  HomogeneousDensityFunction(double density = 1., Log *log = NULL)
+      : _density(density) {
+    if (log) {
+      log->write_status(
+          "Created HomogeneousDensityFunction with constant density ", _density,
+          ".");
+    }
+  }
 
   /**
    * @brief ParameterFile constructor.
    *
    * @param params ParameterFile to read from.
+   * @param log Log to write logging information to.
    */
-  HomogeneousDensityFunction(ParameterFile &params)
+  HomogeneousDensityFunction(ParameterFile &params, Log *log = NULL)
       : HomogeneousDensityFunction(
-            params.get_value< double >("densityfunction.density")) {}
+            params.get_value< double >("densityfunction.density"), log) {}
 
   /**
    * @brief Function that gives the density for a given coordinate.

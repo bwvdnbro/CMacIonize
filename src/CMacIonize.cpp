@@ -88,7 +88,8 @@ int main(int argc, char **argv) {
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
-  DensityFunction *density_function = DensityFunctionFactory::generate(params);
+  DensityFunction *density_function =
+      DensityFunctionFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
   DensityGrid grid(params, *density_function, recombination_rates, log);
@@ -97,7 +98,7 @@ int main(int argc, char **argv) {
   // separate
   // StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
-      PhotonSourceDistributionFactory::generate(params);
+      PhotonSourceDistributionFactory::generate(params, log);
   PlanckPhotonSourceSpectrum spectrum;
   PhotonSource source(*sourcedistribution, spectrum, cross_sections);
 

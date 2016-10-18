@@ -25,6 +25,7 @@
  */
 #include "GadgetSnapshotPhotonSourceDistribution.hpp"
 #include "HDF5Tools.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 /**
@@ -33,9 +34,11 @@
  * Reads in the sources from the file and stores them in internal arrays.
  *
  * @param filename Name of the snapshot file to read.
+ * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    std::string filename) {
+    std::string filename, Log *log)
+    : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -52,17 +55,23 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   HDF5Tools::close_group(starparticles);
   // close the file
   HDF5Tools::close_file(file);
+
+  if (_log) {
+    _log->write_status("Succesfully read in photon sources from \"", filename,
+                       "\".");
+  }
 }
 
 /**
  * @brief ParameterFile constructor.
  *
  * @param params ParameterFile to read from.
+ * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    ParameterFile &params)
+    ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("filename")) {}
+          params.get_value< std::string >("filename"), log) {}
 
 /**
  * @brief Get the number of sources in the snapshot file.

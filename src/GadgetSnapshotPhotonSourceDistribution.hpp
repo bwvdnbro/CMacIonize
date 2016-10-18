@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+class Log;
 class ParameterFile;
 
 /**
@@ -43,9 +44,13 @@ private:
   /*! @brief Positions of the sources in the snapshot file. */
   std::vector< CoordinateVector<> > _positions;
 
+  /*! @brief Log to write logging information to. */
+  Log *_log;
+
 public:
-  GadgetSnapshotPhotonSourceDistribution(std::string filename);
-  GadgetSnapshotPhotonSourceDistribution(ParameterFile &params);
+  GadgetSnapshotPhotonSourceDistribution(std::string filename, Log *log = NULL);
+  GadgetSnapshotPhotonSourceDistribution(ParameterFile &params,
+                                         Log *log = NULL);
 
   virtual unsigned int get_number_of_sources();
   virtual CoordinateVector<> get_position(unsigned int index);

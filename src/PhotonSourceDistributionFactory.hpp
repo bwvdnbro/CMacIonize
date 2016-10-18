@@ -28,6 +28,7 @@
 
 #include "Configuration.hpp"
 #include "Error.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
@@ -50,18 +51,28 @@ public:
    * parameter file.
    *
    * @param params ParameterFile to read from.
+   * @param log Log instance to write logging information to.
    * @return Pointer to a newly created PhotonSourceDistribution instance.
    * Memory management for the pointer needs to be done by the calling routine.
    */
-  static PhotonSourceDistribution *generate(ParameterFile &params) {
+  static PhotonSourceDistribution *generate(ParameterFile &params,
+                                            Log *log = NULL) {
     std::string type = params.get_value< std::string >(
         "photonsourcedistribution.type", "SingleStar");
+    if (log) {
+      log->write_info("Requested PhotonSourceDistribution type: ", type);
+    }
     if (type == "SingleStar") {
-      return new SingleStarPhotonSourceDistribution(params);
+      return new SingleStarPhotonSourceDistribution(params, log);
     } else if (type == "GadgetSnapshot") {
 #ifdef HAVE_HDF5
-      return new GadgetSnapshotPhotonSourceDistribution(params);
+      return new GadgetSnapshotPhotonSourceDistribution(params, log);
 #else
+      if (log) {
+        log->write_error("Cannot create instance of "
+                         "GadgetSnapshotPhotonSourceDistribution, since the "
+                         "code was compiled without HDF5 support.");
+      }
       error("A GadgetSnapshotPhotonSourceDistribution requires HDF5. However, "
             "the code was compiled without HDF5 support!");
       return NULL;

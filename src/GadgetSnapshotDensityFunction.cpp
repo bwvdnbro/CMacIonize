@@ -26,6 +26,7 @@
  */
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "HDF5Tools.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 using namespace std;
 
@@ -56,8 +57,10 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * @brief Constructor.
  *
  * @param name Name of the snapshot file to read.
+ * @param log Log to write logging information to.
  */
-GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
+GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
+                                                             Log *log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -96,17 +99,22 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name) {
   HDF5Tools::close_group(gasparticles);
   // close the file
   HDF5Tools::close_file(file);
+
+  if (log) {
+    log->write_status("Successfully read densities from file \"", name, "\".");
+  }
 }
 
 /**
  * @brief ParameterFile constructor.
  *
  * @param params ParameterFile to read.
+ * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
-    ParameterFile &params)
+    ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction.filename")) {}
+          params.get_value< string >("densityfunction.filename"), log) {}
 
 /**
  * @brief Function that returns the density for the given coordinate.

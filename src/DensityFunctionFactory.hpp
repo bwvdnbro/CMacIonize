@@ -29,6 +29,7 @@
 #include "Configuration.hpp"
 #include "DensityFunction.hpp"
 #include "Error.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
@@ -52,18 +53,27 @@ public:
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
+   * @param log Log to write logging information to.
    * @return Pointer to a newly created DensityFunction implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  static DensityFunction *generate(ParameterFile &params) {
+  static DensityFunction *generate(ParameterFile &params, Log *log = NULL) {
     std::string type =
         params.get_value< std::string >("densityfunction.type", "Homogeneous");
+    if (log) {
+      log->write_info("Requested DensityFunction type: ", type);
+    }
     if (type == "Homogeneous") {
-      return new HomogeneousDensityFunction(params);
+      return new HomogeneousDensityFunction(params, log);
     } else if (type == "GadgetSnapshot") {
 #ifdef HAVE_HDF5
-      return new GadgetSnapshotDensityFunction(params);
+      return new GadgetSnapshotDensityFunction(params, log);
 #else
+      if (log) {
+        log->write_error("Cannot create instance of "
+                         "GadgetSnapshotDensityFunction, since the code was "
+                         "compiled without HDF5 support.");
+      }
       error("A GadgetSnapshotDensityFunction requires HDF5. However, the code "
             "was compiled without HDF5 support!");
       return NULL;

@@ -27,6 +27,7 @@
 #ifndef SINGLESTARPHOTONSOURCEDISTRIBUTION_HPP
 #define SINGLESTARPHOTONSOURCEDISTRIBUTION_HPP
 
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
 
@@ -38,25 +39,37 @@ private:
   /*! @brief Position of the single stellar source. */
   CoordinateVector<> _position;
 
+  /*! @brief Log to write logging information to. */
+  Log *_log;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param position Position of the single stellar source.
+   * @param log Log to write logging information to.
    */
-  SingleStarPhotonSourceDistribution(CoordinateVector<> position)
-      : _position(position) {}
+  SingleStarPhotonSourceDistribution(CoordinateVector<> position,
+                                     Log *log = NULL)
+      : _position(position), _log(log) {
+    if (_log) {
+      _log->write_status(
+          "Created SingleStarPhotonSourceDistribution at position [",
+          _position.x(), ",", _position.y(), ",", _position.z(), "].");
+    }
+  }
 
   /**
    * @brief ParameterFile constructor.
    *
    * @param params ParameterFile to read from.
+   * @param log Log to write logging information to.
    */
-  SingleStarPhotonSourceDistribution(ParameterFile &params)
+  SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = NULL)
       : SingleStarPhotonSourceDistribution(
             params.get_value< CoordinateVector<> >(
-                "photonsourcedistribution.position", CoordinateVector<>(0.5))) {
-  }
+                "photonsourcedistribution.position", CoordinateVector<>(0.5)),
+            log) {}
 
   /**
    * @brief Get the number of sources contained within this distribution.

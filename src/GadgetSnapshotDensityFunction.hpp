@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+class Log;
 class ParameterFile;
 
 /**
@@ -55,9 +56,9 @@ private:
   double cubic_spline_kernel(double u, double h);
 
 public:
-  GadgetSnapshotDensityFunction(std::string name);
+  GadgetSnapshotDensityFunction(std::string name, Log *log = NULL);
 
-  GadgetSnapshotDensityFunction(ParameterFile &params);
+  GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = NULL);
 
   virtual ~GadgetSnapshotDensityFunction() {}
 
