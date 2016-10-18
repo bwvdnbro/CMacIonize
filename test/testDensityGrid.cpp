@@ -27,25 +27,13 @@
 #include "CrossSections.hpp"
 #include "DensityFunction.hpp"
 #include "DensityGrid.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 using namespace std;
-
-/**
- * @brief Test implementation of DensityFunction.
- */
-class TestDensityFunction : public DensityFunction {
-  /**
-   * @brief Get the density at the given coordinate.
-   *
-   * @param position CoordinateVector specifying a coordinate position.
-   * @return A constant density 1.
-   */
-  virtual double operator()(CoordinateVector<> position) { return 1.; }
-};
 
 /**
  * @brief Test implementation of CrossSections.
@@ -92,7 +80,7 @@ public:
  * @return Exit value: 0 on success.
  */
 int main(int argc, char **argv) {
-  TestDensityFunction testfunction;
+  HomogeneousDensityFunction testfunction;
   TestCrossSections testcrosssections;
   TestRecombinationRates testrecombinationrates;
   CoordinateVector<> anchor;

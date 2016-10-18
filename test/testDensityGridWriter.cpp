@@ -30,21 +30,9 @@
 #include "DensityGrid.hpp"
 #include "DensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "RecombinationRates.hpp"
 #include <vector>
-
-/**
- * @brief Test implementation of DensityFunction.
- */
-class TestDensityFunction : public DensityFunction {
-  /**
-   * @brief Get the density at the given coordinate.
-   *
-   * @param position CoordinateVector specifying a coordinate position.
-   * @return A constant density 1.
-   */
-  virtual double operator()(CoordinateVector<> position) { return 1.; }
-};
 
 /**
  * @brief Test implementation of RecombinationRates.
@@ -79,7 +67,7 @@ int main(int argc, char **argv) {
     CoordinateVector<> side(1.);
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
-    TestDensityFunction density_function;
+    HomogeneousDensityFunction density_function;
     TestRecombinationRates recombination_rates;
     DensityGrid grid(box, ncell, 0.1, 8000., density_function,
                      recombination_rates);

@@ -99,6 +99,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/HomogeneousDensityFunction.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
