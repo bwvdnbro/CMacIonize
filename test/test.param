@@ -8,6 +8,8 @@ test_integer2: 0x2a
 test_integer3: 0x2A
 # Floating point values
 test_float: 3.14
+# Floating point values with units
+test_unit: 1.0 pc
 # Boolean values
 test_bool1: true
 test_bool2: Yes

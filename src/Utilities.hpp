@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -200,6 +201,23 @@ to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
+}
+
+/**
+ * @brief Split the given string containing a value and an associated unit into
+ * a std::pair.
+ *
+ * @param svalue std::string containing a value - unit pair.
+ * @return std::pair containing the value and unit.
+ */
+inline std::pair< double, std::string > split_value(std::string svalue) {
+  size_t idx;
+  double value = std::stod(svalue, &idx);
+  while (svalue[idx] == ' ') {
+    ++idx;
+  }
+  std::string unit = svalue.substr(idx);
+  return make_pair(value, unit);
 }
 
 /**

@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
   assert_condition(params.get_value< double >("test_float") == 3.14);
+  assert_condition(params.get_value< QUANTITY_LENGTH >("test_unit") ==
+                   3.086e16);
   assert_condition(params.get_value< bool >("test_bool1") == true);
   assert_condition(params.get_value< bool >("test_bool2") == true);
   assert_condition(params.get_value< bool >("test_bool3") == true);
@@ -74,6 +76,8 @@ int main(int argc, char **argv) {
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
+  assert_condition(params.get_value< QUANTITY_LENGTH >("unit_not_in_file",
+                                                       "1. pc") == 3.086e16);
   assert_condition(params.get_value< string >("not_in", "file?") == "file?");
   assert_condition(params.get_value< bool >("not_in_file3", true) == true);
 

@@ -28,6 +28,7 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 
 #include <algorithm>
@@ -90,6 +91,41 @@ public:
    * @return Value of the parameter, as a variable with the given template type.
    */
   template < typename T > T get_value(std::string key, T default_value);
+
+  /**
+   * @brief get_value() version for physical floating point values with a unit.
+   *
+   * The value is first split into the actual floating point value and its unit
+   * using Utilities::split_value(), and is then converted to SI units by using
+   * a UnitConverter.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter.
+   * @return Value of that key, in SI units.
+   */
+  template < Quantity quantity > double get_value(std::string key) {
+    std::string svalue = get_value< std::string >(key);
+    std::pair< double, std::string > valunit = Utilities::split_value(svalue);
+    return UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+  }
+
+  /**
+   * @brief get_value() version for physical floating point values with a unit.
+   *
+   * The value is first split into the actual floating point value and its unit
+   * using Utilities::split_value(), and is then converted to SI units by using
+   * a UnitConverter.
+   *
+   * @param key Key in the dictionary that relates to a unique parameter.
+   * @param default_value Default value, also as a physical floating point value
+   * with a unit.
+   * @return Value of that key, in SI units.
+   */
+  template < Quantity quantity >
+  double get_value(std::string key, std::string default_value) {
+    std::string svalue = get_value< std::string >(key, default_value);
+    std::pair< double, std::string > valunit = Utilities::split_value(svalue);
+    return UnitConverter< quantity >::to_SI(valunit.first, valunit.second);
+  }
 };
 
 /**
