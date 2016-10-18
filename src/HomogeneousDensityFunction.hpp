@@ -27,6 +27,7 @@
 #define HOMOGENEOUSDENSITYFUNCTION_HPP
 
 #include "DensityFunction.hpp"
+#include "ParameterFile.hpp"
 
 /**
  * @brief DensityFunction that returns a constant value for all coordinates,
@@ -44,6 +45,15 @@ public:
    * @param density Single density value for the entire box.
    */
   HomogeneousDensityFunction(double density = 1.) : _density(density) {}
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   */
+  HomogeneousDensityFunction(ParameterFile &params)
+      : HomogeneousDensityFunction(
+            params.get_value< double >("densityfunction.density")) {}
 
   /**
    * @brief Function that gives the density for a given coordinate.

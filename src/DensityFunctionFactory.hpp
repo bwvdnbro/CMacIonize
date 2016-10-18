@@ -31,6 +31,10 @@
 #include "Error.hpp"
 #include "ParameterFile.hpp"
 
+// non library dependent implementations
+#include "HomogeneousDensityFunction.hpp"
+
+// HDF5 dependent implementations
 #ifdef HAVE_HDF5
 #include "GadgetSnapshotDensityFunction.hpp"
 #endif
@@ -43,16 +47,19 @@
 class DensityFunctionFactory {
 public:
   /**
-   * @brief Generate a DensityFunction of the given type.
+   * @brief Generate a DensityFunction based on the type chosen in the parameter
+   * file.
    *
-   * @param type std::string naming a DensityFunction implementation.
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
    * @return Pointer to a newly created DensityFunction implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  static DensityFunction *generate(std::string type, ParameterFile &params) {
-    if (type == "GadgetSnapshot") {
+  static DensityFunction *generate(ParameterFile &params) {
+    std::string type = params.get_value< std::string >("densityfunction.type");
+    if (type == "Homogeneous") {
+      return new HomogeneousDensityFunction(params);
+    } else if (type == "GadgetSnapshot") {
 #ifdef HAVE_HDF5
       return new GadgetSnapshotDensityFunction(params);
 #else
