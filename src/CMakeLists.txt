@@ -54,6 +54,7 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     DensityGrid.cpp
+    GadgetSnapshotPhotonSourceDistribution.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -75,6 +76,7 @@ set(CMACIONIZE_SOURCES
     DensityGrid.hpp
     DensityValues.hpp
     Error.hpp
+    GadgetSnapshotPhotonSourceDistribution.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
@@ -84,6 +86,7 @@ set(CMACIONIZE_SOURCES
     Photon.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
+    PhotonSourceDistributionFactory.hpp
     PhotonSourceSpectrum.hpp
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp

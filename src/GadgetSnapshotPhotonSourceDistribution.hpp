@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+class ParameterFile;
+
 /**
  * @brief PhotonSourceDistribution that reads photon sources from a Gadget2 type
  * 3 snapshot file.
@@ -43,6 +45,7 @@ private:
 
 public:
   GadgetSnapshotPhotonSourceDistribution(std::string filename);
+  GadgetSnapshotPhotonSourceDistribution(ParameterFile &params);
 
   virtual unsigned int get_number_of_sources();
   virtual CoordinateVector<> get_position(unsigned int index);

@@ -27,6 +27,7 @@
 #ifndef SINGLESTARPHOTONSOURCEDISTRIBUTION_HPP
 #define SINGLESTARPHOTONSOURCEDISTRIBUTION_HPP
 
+#include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
 
 /**
@@ -45,6 +46,17 @@ public:
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position)
       : _position(position) {}
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   */
+  SingleStarPhotonSourceDistribution(ParameterFile &params)
+      : SingleStarPhotonSourceDistribution(
+            params.get_value< CoordinateVector<> >(
+                "photonsourcedistribution.position", CoordinateVector<>(0.5))) {
+  }
 
   /**
    * @brief Get the number of sources contained within this distribution.

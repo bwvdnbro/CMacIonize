@@ -25,6 +25,7 @@
  */
 #include "GadgetSnapshotPhotonSourceDistribution.hpp"
 #include "HDF5Tools.hpp"
+#include "ParameterFile.hpp"
 
 /**
  * @brief Constructor.
@@ -52,6 +53,16 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   // close the file
   HDF5Tools::close_file(file);
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read from.
+ */
+GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
+    ParameterFile &params)
+    : GadgetSnapshotPhotonSourceDistribution(
+          params.get_value< std::string >("filename")) {}
 
 /**
  * @brief Get the number of sources in the snapshot file.

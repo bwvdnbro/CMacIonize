@@ -33,6 +33,8 @@
  */
 class PhotonSourceDistribution {
 public:
+  virtual ~PhotonSourceDistribution() {}
+
   /**
    * @brief Get the number of sources contained within this distribution.
    *
