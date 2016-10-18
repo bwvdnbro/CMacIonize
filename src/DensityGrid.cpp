@@ -26,9 +26,11 @@
 #include "DensityGrid.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include <sstream>
 using namespace std;
 
 /**
@@ -40,13 +42,19 @@ using namespace std;
  * @param initial_temperature Initial temperature of the gas.
  * @param density_function DensityFunction that defines the density field.
  * @param recombination_rates Recombination rates.
+ * @param log Log to write log messages to.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
-                         RecombinationRates &recombination_rates)
+                         RecombinationRates &recombination_rates, Log *log)
     : _box(box), _ncell(ncell), _helium_abundance(helium_abundance),
-      _recombination_rates(recombination_rates) {
+      _recombination_rates(recombination_rates), _log(log) {
+
+  if (_log) {
+    _log->write_status("Creating grid...");
+  }
+
   _density = new DensityValues **[_ncell.x()];
   for (int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
@@ -84,6 +92,10 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   if (_cellside.z() > _cellside_max) {
     _cellside_max = _cellside.z();
   }
+
+  if (_log) {
+    _log->write_status("Done creating grid.");
+  }
 }
 
 /**
@@ -102,10 +114,11 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
  * @param density_function DensityFunction used to set the densities in each
  * cell.
  * @param recombination_rates Recombination rates.
+ * @param log Log to write log messages to.
  */
 DensityGrid::DensityGrid(ParameterFile &parameters,
                          DensityFunction &density_function,
-                         RecombinationRates &recombination_rates)
+                         RecombinationRates &recombination_rates, Log *log)
     : DensityGrid(Box(parameters.get_value< CoordinateVector<> >(
                           "box.anchor", CoordinateVector<>(0.)),
                       parameters.get_value< CoordinateVector<> >(
@@ -114,7 +127,7 @@ DensityGrid::DensityGrid(ParameterFile &parameters,
                       "box.ncell", CoordinateVector< int >(64)),
                   parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_value< double >("initial_temperature", 8000.),
-                  density_function, recombination_rates) {}
+                  density_function, recombination_rates, log) {}
 
 /**
  * @brief Destructor

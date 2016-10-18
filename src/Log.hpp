@@ -138,7 +138,7 @@ public:
    *
    * @param message Message to write.
    */
-  inline void info(std::string message) {
+  inline void write_info(std::string message) {
     write_message(LOGLEVEL_INFO, message);
   }
 
@@ -151,7 +151,7 @@ public:
    *
    * @param message Message to write.
    */
-  inline void status(std::string message) {
+  inline void write_status(std::string message) {
     write_message(LOGLEVEL_STATUS, message);
   }
 
@@ -163,7 +163,7 @@ public:
    *
    * @param message Message to write.
    */
-  inline void warning(std::string message) {
+  inline void write_warning(std::string message) {
     write_message(LOGLEVEL_WARNING, message);
   }
 
@@ -175,7 +175,7 @@ public:
    *
    * @param message Message to write.
    */
-  inline void error(std::string message) {
+  inline void write_error(std::string message) {
     write_message(LOGLEVEL_ERROR, message);
   }
 };

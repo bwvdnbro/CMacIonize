@@ -36,17 +36,17 @@
 int main(int argc, char **argv) {
   TerminalLog tlog(LOGLEVEL_INFO);
 
-  tlog.info("Info message.");
-  tlog.status("Status message.");
-  tlog.warning("Warning message.");
-  tlog.error("Error message.");
+  tlog.write_info("Info message.");
+  tlog.write_status("Status message.");
+  tlog.write_warning("Warning message.");
+  tlog.write_error("Error message.");
 
   FileLog flog("test.log", LOGLEVEL_INFO);
 
-  flog.info("Info message.");
-  flog.status("Status message.");
-  flog.warning("Warning message.");
-  flog.error("Error message.");
+  flog.write_info("Info message.");
+  flog.write_status("Status message.");
+  flog.write_warning("Warning message.");
+  flog.write_error("Error message.");
 
   return 0;
 }

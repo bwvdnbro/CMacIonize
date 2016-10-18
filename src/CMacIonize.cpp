@@ -34,6 +34,7 @@
 #include "PhotonSource.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
+#include "TerminalLog.hpp"
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
 #include <iostream>
@@ -70,7 +71,8 @@ int main(int argc, char **argv) {
   DensityFunction *density_function = DensityFunctionFactory::generate(params);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid grid(params, *density_function, recombination_rates);
+  TerminalLog log(LOGLEVEL_STATUS);
+  DensityGrid grid(params, *density_function, recombination_rates, &log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate

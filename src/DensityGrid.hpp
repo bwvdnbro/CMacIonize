@@ -28,8 +28,11 @@
 
 #include "Box.hpp"
 
+#include <cstdlib>
+
 class DensityFunction;
 class DensityValues;
+class Log;
 class ParameterFile;
 class Photon;
 class RecombinationRates;
@@ -63,13 +66,16 @@ private:
   /*! @brief Recombination rates used in ionization balance calculation. */
   RecombinationRates &_recombination_rates;
 
+  /*! @brief Log to write log messages to. */
+  Log *_log;
+
 public:
   DensityGrid(Box box, CoordinateVector< int > ncell, double helium_abundance,
               double initial_temperature, DensityFunction &density_function,
-              RecombinationRates &recombination_rates);
+              RecombinationRates &recombination_rates, Log *log = NULL);
 
   DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              RecombinationRates &recombination_rates);
+              RecombinationRates &recombination_rates, Log *log = NULL);
 
   ~DensityGrid();
 
