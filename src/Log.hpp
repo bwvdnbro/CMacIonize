@@ -131,15 +131,43 @@ public:
   }
 
   /**
+   * @brief Convert the given template argument to a std::string by piping it
+   * through a std::stringstream.
+   *
+   * @param t Template argument.
+   * @return std::string containing a representation of the argument.
+   */
+  template < typename T > std::string get_message(T t) {
+    std::stringstream stream;
+    stream << t;
+    return stream.str();
+  }
+
+  /**
+   * @brief Recursive variadic version of get_message() that takes a variable
+   * number of arguments and parses them one by one.
+   *
+   * @param t Next argument in the list.
+   * @param args Remaining arguments.
+   * @return std::string containing the arguments one after another.
+   */
+  template < typename T, typename... Args >
+  std::string get_message(T t, Args... args) {
+    std::stringstream stream;
+    stream << t << get_message(args...);
+    return stream.str();
+  }
+
+  /**
    * @brief Write an info message to the logger.
    *
    * Info messages have the lowest priority and are only written if the logger
    * has the lowest level.
    *
-   * @param message Message to write.
+   * @param args Things to write to the logger.
    */
-  inline void write_info(std::string message) {
-    write_message(LOGLEVEL_INFO, message);
+  template < typename... Args > inline void write_info(Args... args) {
+    write_message(LOGLEVEL_INFO, get_message(args...));
   }
 
   /**
@@ -149,10 +177,10 @@ public:
    * should be written out regularly, so that the user has an idea of what the
    * program is currently doing.
    *
-   * @param message Message to write.
+   * @param args Things to write to the logger.
    */
-  inline void write_status(std::string message) {
-    write_message(LOGLEVEL_STATUS, message);
+  template < typename... Args > inline void write_status(Args... args) {
+    write_message(LOGLEVEL_STATUS, get_message(args...));
   }
 
   /**
@@ -161,10 +189,10 @@ public:
    * Warning messages indicate a problematic situation that can be overcome by
    * the program at run time, but should be noted by the user.
    *
-   * @param message Message to write.
+   * @param args Things to write to the logger.
    */
-  inline void write_warning(std::string message) {
-    write_message(LOGLEVEL_WARNING, message);
+  template < typename... Args > inline void write_warning(Args... args) {
+    write_message(LOGLEVEL_WARNING, get_message(args...));
   }
 
   /**
@@ -173,10 +201,10 @@ public:
    * Error messages indicate a problematic situation that is fatal for the
    * program. These are usually handled by calling the error macro.
    *
-   * @param message Message to write.
+   * @param args Things to write to the logger.
    */
-  inline void write_error(std::string message) {
-    write_message(LOGLEVEL_ERROR, message);
+  template < typename... Args > inline void write_error(Args... args) {
+    write_message(LOGLEVEL_ERROR, get_message(args...));
   }
 };
 

@@ -52,7 +52,8 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
       _recombination_rates(recombination_rates), _log(log) {
 
   if (_log) {
-    _log->write_status("Creating grid...");
+    _log->write_status("Creating grid of ", _ncell.x(), "x", _ncell.y(), "x",
+                       _ncell.z(), "...");
   }
 
   _density = new DensityValues **[_ncell.x()];
