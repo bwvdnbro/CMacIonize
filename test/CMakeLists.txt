@@ -345,6 +345,15 @@ set(TESTLOG_SOURCES
 add_unit_test(NAME testLog
               SOURCES ${TESTLOG_SOURCES})
 
+## Unit test for UnitConverter
+set(TESTUNITCONVERTER_SOURCES
+    testUnitConverter.cpp
+
+    ../src/UnitConverter.hpp
+)
+add_unit_test(NAME testUnitConverter
+              SOURCES ${TESTUNITCONVERTER_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
