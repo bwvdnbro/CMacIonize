@@ -53,7 +53,11 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
 
   if (_log) {
     _log->write_status("Creating grid of ", _ncell.x(), "x", _ncell.y(), "x",
-                       _ncell.z(), "...");
+                       _ncell.z(), " inside a box with anchor [",
+                       _box.get_anchor().x(), ",", _box.get_anchor().y(), ",",
+                       _box.get_anchor().z(), "] and sides [",
+                       _box.get_sides().x(), ",", _box.get_sides().y(), ",",
+                       _box.get_sides().z(), "]...");
   }
 
   _density = new DensityValues **[_ncell.x()];
@@ -95,6 +99,9 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   }
 
   if (_log) {
+    _log->write_info("Cell size is ", _cellside.x(), "x", _cellside.y(), "x",
+                     _cellside.z(), ", maximum side length is ", _cellside_max,
+                     ".");
     _log->write_status("Done creating grid.");
   }
 }
@@ -136,6 +143,9 @@ DensityGrid::DensityGrid(ParameterFile &parameters,
  * Free the memory used by the internal arrays.
  */
 DensityGrid::~DensityGrid() {
+  if (_log) {
+    _log->write_status("Cleaning up grid.");
+  }
   for (int i = 0; i < _ncell.x(); ++i) {
     for (int j = 0; j < _ncell.y(); ++j) {
       delete[] _density[i][j];

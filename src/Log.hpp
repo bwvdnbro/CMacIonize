@@ -113,6 +113,12 @@ public:
   inline Log(LogLevel level) : _level(level) {}
 
   /**
+   * @brief Virtual destructor, needs to be present in order to be able to
+   * remove child instances using delete.
+   */
+  virtual ~Log() {}
+
+  /**
    * @brief Write the given message with the given log level to the logger.
    *
    * The message is only written out if the given log level is higher or equal

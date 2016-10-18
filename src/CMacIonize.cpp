@@ -29,6 +29,7 @@
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGrid.hpp"
+#include "FileLog.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSource.hpp"
@@ -55,7 +56,26 @@ int main(int argc, char **argv) {
   parser.add_required_option< string >(
       "params", 'p',
       "Name of the parameter file containing the simulation parameters.");
+  parser.add_option("verbose", 'v', "Set the logging level to the lowest "
+                                    "possible value to allow more output to be "
+                                    "written to the log.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("logfile", 'l', "Output program logs to a file with the "
+                                    "given name, instead of to the standard "
+                                    "output.",
+                    COMMANDLINEOPTION_STRINGARGUMENT, "");
   parser.parse_arguments(argc, argv);
+
+  LogLevel loglevel = LOGLEVEL_STATUS;
+  if (parser.get_value< bool >("verbose")) {
+    loglevel = LOGLEVEL_INFO;
+  }
+  Log *log;
+  if (parser.get_value< std::string >("logfile").size()) {
+    log = new FileLog(parser.get_value< std::string >("logfile"), loglevel);
+  } else {
+    log = new TerminalLog(loglevel);
+  }
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -71,8 +91,7 @@ int main(int argc, char **argv) {
   DensityFunction *density_function = DensityFunctionFactory::generate(params);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  TerminalLog log(LOGLEVEL_STATUS);
-  DensityGrid grid(params, *density_function, recombination_rates, &log);
+  DensityGrid grid(params, *density_function, recombination_rates, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate
@@ -94,6 +113,11 @@ int main(int argc, char **argv) {
   // it leaves the system
 
   delete density_function;
+
+  // we cannot delete the log, since it is still used in the destructor of
+  // objects that are destructed at the return of the main program
+  // this is not really a problem, as the memory is freed up by the OS anyway
+  // delete log;
 
   return 0;
 }

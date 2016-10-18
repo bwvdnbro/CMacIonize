@@ -73,6 +73,8 @@ public:
    * @param level Lowest LogLevel that is written out by this logger.
    */
   TerminalLog(LogLevel level) : Log(level) {}
+
+  virtual ~TerminalLog() {}
 };
 
 #endif // TERMINALLOG_HPP

@@ -56,6 +56,8 @@ public:
    * @param level Lowest LogLevel that is written to the file.
    */
   FileLog(std::string filename, LogLevel level) : Log(level), _file(filename) {}
+
+  virtual ~FileLog() {}
 };
 
 #endif // FILELOG_HPP
