@@ -37,7 +37,13 @@
  * These are not only the basic SI quantities, but also all derived quantities
  * that are used in the program.
  */
-enum Quantity { QUANTITY_LENGTH = 0, QUANTITY_MASS, QUANTITY_TIME };
+enum Quantity {
+  QUANTITY_LENGTH = 0,
+  QUANTITY_MASS,
+  QUANTITY_TIME,
+  QUANTITY_TEMPERATURE,
+  QUANTITY_NUMBER_DENSITY
+};
 
 /**
  * @brief Class that can be used to convert values from one unit system to
@@ -83,6 +89,8 @@ public:
   }
 };
 
+/// QUANTITY_LENGTH
+
 /**
  * @brief UnitConverter::to_SI() specialization for a length.
  *
@@ -121,6 +129,92 @@ inline double UnitConverter< QUANTITY_LENGTH >::to_unit(double value,
     return value / 3.086e16;
   } else {
     error("Unknown length unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_TEMPERATURE
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a temperature.
+ *
+ * @param value Temperature value in strange units.
+ * @param unit Strange units.
+ * @return Temperature value in Kelvin.
+ */
+template <>
+inline double UnitConverter< QUANTITY_TEMPERATURE >::to_SI(double value,
+                                                           std::string unit) {
+  if (unit == "K") {
+    // quantity is already in SI units
+    return value;
+  } else {
+    error("Unknown temperature unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a temperature.
+ *
+ * @param value Temperature value in metres.
+ * @param unit Strange units.
+ * @return Temperature value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_TEMPERATURE >::to_unit(double value,
+                                                             std::string unit) {
+  if (unit == "K") {
+    // quantity is already in requested units
+    return value;
+  } else {
+    error("Unknown temperature unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_NUMBER_DENSITY
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a number density.
+ *
+ * @param value Number density value in strange units.
+ * @param unit Strange units.
+ * @return Number density value in Kelvin.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(double value,
+                                                std::string unit) {
+  if (unit == "m^-3") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "cm^-3") {
+    return value * 1.e-6;
+  } else {
+    error("Unknown number density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a number density.
+ *
+ * @param value Number density value in metres.
+ * @param unit Strange units.
+ * @return Number density value in strange units.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
+                                                  std::string unit) {
+  if (unit == "m^-3") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "cm^-3") {
+    return value * 1.e6;
+  } else {
+    error("Unknown number density unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

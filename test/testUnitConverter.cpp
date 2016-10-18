@@ -45,8 +45,18 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "m", "m") ==
+                   1.);
   assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "pc", "pc") ==
                    1.);
+
+  assert_condition(
+      UnitConverter< QUANTITY_TEMPERATURE >::convert(1., "K", "K") == 1.);
+
+  assert_condition(
+      UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "m^-3", "m^-3"));
+  assert_condition(
+      UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "cm^-3", "cm^-3"));
 
   return 0;
 }

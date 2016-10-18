@@ -63,7 +63,9 @@ public:
    */
   HomogeneousDensityFunction(ParameterFile &params, Log *log = NULL)
       : HomogeneousDensityFunction(
-            params.get_value< double >("densityfunction.density"), log) {}
+            params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
+                "densityfunction.density", "100. cm^-3"),
+            log) {}
 
   /**
    * @brief Function that gives the density for a given coordinate.

@@ -67,8 +67,8 @@ public:
    */
   SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = NULL)
       : SingleStarPhotonSourceDistribution(
-            params.get_value< CoordinateVector<> >(
-                "photonsourcedistribution.position", CoordinateVector<>(0.5)),
+            params.get_physical_vector< QUANTITY_LENGTH >(
+                "photonsourcedistribution.position", "[0.5 m, 0.5 m, 0.5 m]"),
             log) {}
 
   /**

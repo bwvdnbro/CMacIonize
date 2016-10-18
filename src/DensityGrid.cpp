@@ -127,14 +127,15 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
 DensityGrid::DensityGrid(ParameterFile &parameters,
                          DensityFunction &density_function,
                          RecombinationRates &recombination_rates, Log *log)
-    : DensityGrid(Box(parameters.get_value< CoordinateVector<> >(
-                          "box.anchor", CoordinateVector<>(0.)),
-                      parameters.get_value< CoordinateVector<> >(
-                          "box.sides", CoordinateVector<>(1.))),
+    : DensityGrid(Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
+                          "box.anchor", "[0. m, 0. m, 0. m]"),
+                      parameters.get_physical_vector< QUANTITY_LENGTH >(
+                          "box.sides", "[1. m, 1. m, 1. m]")),
                   parameters.get_value< CoordinateVector< int > >(
                       "box.ncell", CoordinateVector< int >(64)),
                   parameters.get_value< double >("helium_abundance", 0.1),
-                  parameters.get_value< double >("initial_temperature", 8000.),
+                  parameters.get_physical_value< QUANTITY_TEMPERATURE >(
+                      "initial_temperature", "8000. K"),
                   density_function, recombination_rates, log) {}
 
 /**
