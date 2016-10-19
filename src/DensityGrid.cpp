@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include "UnitConverter.hpp"
 #include <sstream>
 using namespace std;
 
@@ -39,7 +40,7 @@ using namespace std;
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
  * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
- * @param initial_temperature Initial temperature of the gas.
+ * @param initial_temperature Initial temperature of the gas (in K).
  * @param density_function DensityFunction that defines the density field.
  * @param recombination_rates Recombination rates.
  * @param log Log to write log messages to.
@@ -159,7 +160,7 @@ DensityGrid::~DensityGrid() {
 /**
  * @brief Get the total mass contained in the grid.
  *
- * @return Total mass contained in the grid.
+ * @return Total mass contained in the grid (in kg).
  */
 double DensityGrid::get_total_mass() {
   double mtot = 0;
@@ -179,7 +180,7 @@ double DensityGrid::get_total_mass() {
 /**
  * @brief Get the box containing the grid.
  *
- * @return Box containing the grid.
+ * @return Box containing the grid (in m).
  */
 Box DensityGrid::get_box() { return _box; }
 
@@ -212,7 +213,7 @@ DensityGrid::get_cell_indices(CoordinateVector<> position) {
  *
  * @param index Indices of the cell.
  * @return Box containing the bottom front left corner and the upper back right
- * corner of the cell.
+ * corner of the cell (in m).
  */
 Box DensityGrid::get_cell(CoordinateVector< int > index) {
   double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
@@ -265,15 +266,15 @@ bool DensityGrid::is_inside(CoordinateVector< int > index) {
  * We will also find a very small distance covered in the wrong direction in our
  * cell, but this distance is negligible.
  *
- * @param photon_origin Current position of the photon.
+ * @param photon_origin Current position of the photon (in m).
  * @param photon_direction Direction the photon is travelling in.
  * @param cell Cell in which the photon currently resides.
  * @param next_index Index of the neighbouring cell, relative with respect to
  * the current cell.
  * @param ds Distance covered from the photon position to the intersection
- * point.
+ * point (in m).
  * @return CoordinateVector containing the coordinates of the intersection point
- * of the photon and the closest wall.
+ * of the photon and the closest wall (in m).
  */
 CoordinateVector<> DensityGrid::get_wall_intersection(
     CoordinateVector<> &photon_origin, CoordinateVector<> &photon_direction,
@@ -395,7 +396,8 @@ CoordinateVector<> DensityGrid::get_wall_intersection(
  * optical depth is reached.
  *
  * @param photon Photon.
- * @param optical_depth Optical depth the photon should travel in total.
+ * @param optical_depth Optical depth the photon should travel in total
+ * (dimensionless).
  * @return True if the Photon is still in the box after the optical depth has
  * been reached, false otherwise.
  */
@@ -547,19 +549,29 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
  * until the relative difference between the obtained neutral fractions is
  * below some tolerance value.
  *
- * @param alphaH Hydrogen recombination rate.
- * @param alphaHe Helium recombination rate.
- * @param jH Hydrogen intensity integral.
- * @param jHe Helium intensity integral.
- * @param nH Hydrogen number density.
+ * @param alphaH Hydrogen recombination rate (in m^3s^-1).
+ * @param alphaHe Helium recombination rate (in m^3s^-1).
+ * @param jH Hydrogen intensity integral (in m^3s^-1).
+ * @param jHe Helium intensity integral (in m^3s^-1).
+ * @param nH Hydrogen number density (in m^-3).
  * @param AHe Helium abundance \f$A_{\rm{}He}\f$ (relative w.r.t. hydrogen).
- * @param T Temperature.
+ * @param T Temperature (in K).
  * @param h0 Variable to store resulting hydrogen neutral fraction in.
  * @param he0 Variable to store resulting helium neutral fraction in.
  */
 void DensityGrid::find_H0(double alphaH, double alphaHe, double jH, double jHe,
                           double nH, double AHe, double T, double &h0,
                           double &he0) {
+  // unit conversions
+  // we use Kenny's units inside this function, but all input and output units
+  // are SI units
+  alphaH = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(alphaH, "cm^3s^-1");
+  alphaHe =
+      UnitConverter< QUANTITY_REACTION_RATE >::to_unit(alphaHe, "cm^3s^-1");
+  jH = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(jH, "cm^3s^-1");
+  jHe = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(jHe, "cm^3s^-1");
+  nH = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(nH, "cm^-3");
+
   double alpha_e_2sP = 4.27e-14 * pow(T * 1.e-4, -0.695);
   double ch1 = alphaH * nH / jH;
   double ch2 = AHe * alpha_e_2sP * nH / jH;
@@ -677,7 +689,9 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
  * @brief Set the re-emission probabilities for the given cell for the given
  * temperature.
  *
- * @param T Temperature.
+ * These quantities are all dimensionless.
+ *
+ * @param T Temperature (in K).
  * @param cell DensityValues of the cell.
  */
 void DensityGrid::set_reemission_probabilities(double T, DensityValues &cell) {

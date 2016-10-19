@@ -38,8 +38,8 @@ public:
    * given photon energy.
    *
    * @param element ElementName for an element.
-   * @param energy Photon energy (in eV).
-   * @return Photoionization cross section.
+   * @param energy Photon frequency (in Hz).
+   * @return Photoionization cross section (in m^-2).
    */
   virtual double get_cross_section(ElementName element, double energy) = 0;
 };

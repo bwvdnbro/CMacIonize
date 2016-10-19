@@ -21,10 +21,16 @@
  *
  * @brief HeliumTwoPhotonContinuumSpectrum implementation.
  *
+ * We do not care about units inside this class, and just use the internal units
+ * as they were used in Kenny's code. However, we do convert the frequency when
+ * it leaves the class, so that the outer world does not need to know about our
+ * strange unit system.
+ *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumDataLocation.hpp"
+#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <fstream>
 #include <vector>
@@ -122,11 +128,12 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
 /**
  * @brief Get a random frequency distributed according to the spectrum.
  *
- * @return Random frequency.
+ * @return Random frequency (in Hz).
  */
 double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
   double x = Utilities::random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
-  return _frequency[inu];
+  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * _frequency[inu],
+                                                    "eV");
 }

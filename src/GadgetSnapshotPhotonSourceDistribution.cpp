@@ -27,6 +27,7 @@
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "UnitConverter.hpp"
 
 /**
  * @brief Constructor.
@@ -45,6 +46,15 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   // open the file for reading
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
+
+  // units
+  HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
+  double unit_length_in_cgs =
+      HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+  double unit_length_in_SI =
+      UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+  HDF5Tools::close_group(units);
+
   // open the group containing the star particle data
   HDF5Tools::HDF5Group starparticles =
       HDF5Tools::open_group(file, "/PartType4");
@@ -55,6 +65,13 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   HDF5Tools::close_group(starparticles);
   // close the file
   HDF5Tools::close_file(file);
+
+  // unit conversion
+  for (unsigned int i = 0; i < _positions.size(); ++i) {
+    _positions[i][0] *= unit_length_in_SI;
+    _positions[i][1] *= unit_length_in_SI;
+    _positions[i][2] *= unit_length_in_SI;
+  }
 
   if (_log) {
     _log->write_status("Succesfully read in photon sources from \"", filename,

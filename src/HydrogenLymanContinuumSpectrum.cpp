@@ -21,11 +21,17 @@
  *
  * @brief HydrogenLymanContinuumSpectrum implementation.
  *
+ * We do not care about units inside this class, and just use the internal units
+ * as they were used in Kenny's code. However, we do convert the frequency when
+ * it leaves the class, so that the outer world does not need to know about our
+ * strange unit system.
+ *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "CrossSections.hpp"
 #include "ElementNames.hpp"
+#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 using namespace std;
@@ -87,7 +93,7 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
 /**
  * @brief Set the current temperature for the interpolation.
  *
- * @param T New value for the temperature.
+ * @param T New value for the temperature (in K).
  */
 void HydrogenLymanContinuumSpectrum::set_temperature(double T) {
   _current_T = T;
@@ -96,7 +102,7 @@ void HydrogenLymanContinuumSpectrum::set_temperature(double T) {
 /**
  * @brief Get a random frequency from the spectrum.
  *
- * @return Random frequency.
+ * @return Random frequency (in Hz).
  */
 double HydrogenLymanContinuumSpectrum::get_random_frequency() {
   unsigned int iT = Utilities::locate(_current_T, _temperature,
@@ -106,8 +112,9 @@ double HydrogenLymanContinuumSpectrum::get_random_frequency() {
                                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
   unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
                                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  return _frequency[inu1] +
-         (_current_T - _temperature[iT]) *
-             (_frequency[inu2] - _frequency[inu1]) /
-             (_temperature[iT + 1] - _temperature[iT]);
+  double frequency = _frequency[inu1] +
+                     (_current_T - _temperature[iT]) *
+                         (_frequency[inu2] - _frequency[inu1]) /
+                         (_temperature[iT + 1] - _temperature[iT]);
+  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * frequency, "eV");
 }

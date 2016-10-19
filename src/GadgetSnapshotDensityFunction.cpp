@@ -28,6 +28,7 @@
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "UnitConverter.hpp"
 using namespace std;
 
 /**
@@ -87,6 +88,19 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
   }
   // close the group
   HDF5Tools::close_group(runtimepars);
+
+  // units
+  HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
+  double unit_length_in_cgs =
+      HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+  double unit_mass_in_cgs =
+      HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
+  double unit_length_in_SI =
+      UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+  double unit_mass_in_SI =
+      UnitConverter< QUANTITY_MASS >::to_SI(unit_mass_in_cgs, "g");
+  HDF5Tools::close_group(units);
+
   // open the group containing the SPH particle data
   HDF5Tools::HDF5Group gasparticles = HDF5Tools::open_group(file, "/PartType0");
   // read the positions, masses and smoothing lengths
@@ -99,6 +113,15 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
   HDF5Tools::close_group(gasparticles);
   // close the file
   HDF5Tools::close_file(file);
+
+  // unit conversion
+  for (unsigned int i = 0; i < _positions.size(); ++i) {
+    _positions[i][0] *= unit_length_in_SI;
+    _positions[i][1] *= unit_length_in_SI;
+    _positions[i][2] *= unit_length_in_SI;
+    _masses[i] *= unit_mass_in_SI;
+    _smoothing_lengths[i] *= unit_length_in_SI;
+  }
 
   if (log) {
     log->write_status("Successfully read densities from file \"", name, "\".");

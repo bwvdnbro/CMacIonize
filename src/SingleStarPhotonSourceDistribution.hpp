@@ -36,7 +36,7 @@
  */
 class SingleStarPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
-  /*! @brief Position of the single stellar source. */
+  /*! @brief Position of the single stellar source (in m). */
   CoordinateVector<> _position;
 
   /*! @brief Log to write logging information to. */
@@ -46,7 +46,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param position Position of the single stellar source.
+   * @param position Position of the single stellar source (in m).
    * @param log Log to write logging information to.
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position,
@@ -83,7 +83,7 @@ public:
    *
    * @param index Index of the photon source, must be in between 0 and
    * get_number_of_sources().
-   * @return CoordinateVector of the single stellar source position.
+   * @return CoordinateVector of the single stellar source position (in m).
    */
   virtual CoordinateVector<> get_position(unsigned int index) {
     return _position;

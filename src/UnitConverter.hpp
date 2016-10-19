@@ -36,13 +36,17 @@
  *
  * These are not only the basic SI quantities, but also all derived quantities
  * that are used in the program.
+ *
+ * For convenience, they are ordered alphabetically.
  */
 enum Quantity {
-  QUANTITY_LENGTH = 0,
+  QUANTITY_FREQUENCY,
+  QUANTITY_LENGTH,
   QUANTITY_MASS,
-  QUANTITY_TIME,
+  QUANTITY_NUMBER_DENSITY,
+  QUANTITY_REACTION_RATE,
   QUANTITY_TEMPERATURE,
-  QUANTITY_NUMBER_DENSITY
+  QUANTITY_TIME
 };
 
 /**
@@ -89,6 +93,55 @@ public:
   }
 };
 
+/// QUANTITY_FREQUENCY
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a frequency.
+ *
+ * @param value Frequency value in strange units.
+ * @param unit Strange units.
+ * @return Frequency value in per second (Hertz).
+ */
+template <>
+inline double UnitConverter< QUANTITY_FREQUENCY >::to_SI(double value,
+                                                         std::string unit) {
+  if (unit == "s^-1") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "Hz") {
+    // just an alias for the SI unit name
+    return value;
+  } else if (unit == "eV") {
+    return value / 4.135668e-15;
+  } else {
+    error("Unknown frequency unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a frequency.
+ *
+ * @param value Frequency value in per second (Hertz).
+ * @param unit Strange units.
+ * @return Frequency value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_FREQUENCY >::to_unit(double value,
+                                                           std::string unit) {
+  if (unit == "s^-1") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "Hz") {
+    return value;
+  } else if (unit == "eV") {
+    return value * 4.135668e-15;
+  } else {
+    error("Unknown frequency unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
 /// QUANTITY_LENGTH
 
 /**
@@ -104,6 +157,8 @@ inline double UnitConverter< QUANTITY_LENGTH >::to_SI(double value,
   if (unit == "m") {
     // quantity is already in SI units
     return value;
+  } else if (unit == "cm") {
+    return 0.01 * value;
   } else if (unit == "pc") {
     return 3.086e16 * value;
   } else {
@@ -125,10 +180,147 @@ inline double UnitConverter< QUANTITY_LENGTH >::to_unit(double value,
   if (unit == "m") {
     // quantity is already in requested units
     return value;
+  } else if (unit == "cm") {
+    return 100. * value;
   } else if (unit == "pc") {
     return value / 3.086e16;
   } else {
     error("Unknown length unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_MASS
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a mass.
+ *
+ * @param value Mass value in strange units.
+ * @param unit Strange units.
+ * @return Mass value in kilograms.
+ */
+template <>
+inline double UnitConverter< QUANTITY_MASS >::to_SI(double value,
+                                                    std::string unit) {
+  if (unit == "kg") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "g") {
+    return 0.001 * value;
+  } else {
+    error("Unknown mass unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a mass.
+ *
+ * @param value Mass value in kilograms.
+ * @param unit Strange units.
+ * @return Mass value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_MASS >::to_unit(double value,
+                                                      std::string unit) {
+  if (unit == "kg") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "g") {
+    return value * 1000.;
+  } else {
+    error("Unknown mass unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_NUMBER_DENSITY
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a number density.
+ *
+ * @param value Number density value in strange units.
+ * @param unit Strange units.
+ * @return Number density value in per cubic metres.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(double value,
+                                                std::string unit) {
+  if (unit == "m^-3") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "cm^-3") {
+    return value * 1.e-6;
+  } else {
+    error("Unknown number density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a number density.
+ *
+ * @param value Number density value in per cubic metres.
+ * @param unit Strange units.
+ * @return Number density value in strange units.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
+                                                  std::string unit) {
+  if (unit == "m^-3") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "cm^-3") {
+    return value * 1.e6;
+  } else {
+    error("Unknown number density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_REACTION_RATE
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a reaction rate.
+ *
+ * @param value Reaction rate value in strange units.
+ * @param unit Strange units.
+ * @return Reaction rate value in cubic metres per second.
+ */
+template <>
+inline double UnitConverter< QUANTITY_REACTION_RATE >::to_SI(double value,
+                                                             std::string unit) {
+  if (unit == "m^3s^-1") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "cm^3s^-1") {
+    return 1.e-6 * value;
+  } else {
+    error("Unknown reaction rate unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a reaction rate.
+ *
+ * @param value Reaction rate value in cubic metres per second.
+ * @param unit Strange units.
+ * @return Reaction rate value in strange units.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_REACTION_RATE >::to_unit(double value,
+                                                 std::string unit) {
+  if (unit == "m^3s^-1") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "cm^3s^-1") {
+    return 1.e6 * value;
+  } else {
+    error("Unknown reaction rate unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }
@@ -157,7 +349,7 @@ inline double UnitConverter< QUANTITY_TEMPERATURE >::to_SI(double value,
 /**
  * @brief UnitConverter::to_unit() specialization for a temperature.
  *
- * @param value Temperature value in metres.
+ * @param value Temperature value in Kelvin.
  * @param unit Strange units.
  * @return Temperature value in strange units.
  */
@@ -169,52 +361,6 @@ inline double UnitConverter< QUANTITY_TEMPERATURE >::to_unit(double value,
     return value;
   } else {
     error("Unknown temperature unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_NUMBER_DENSITY
-
-/**
- * @brief UnitConverter::to_SI() specialization for a number density.
- *
- * @param value Number density value in strange units.
- * @param unit Strange units.
- * @return Number density value in Kelvin.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(double value,
-                                                std::string unit) {
-  if (unit == "m^-3") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm^-3") {
-    return value * 1.e-6;
-  } else {
-    error("Unknown number density unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a number density.
- *
- * @param value Number density value in metres.
- * @param unit Strange units.
- * @return Number density value in strange units.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
-                                                  std::string unit) {
-  if (unit == "m^-3") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm^-3") {
-    return value * 1.e6;
-  } else {
-    error("Unknown number density unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

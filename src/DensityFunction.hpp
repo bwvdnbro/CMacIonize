@@ -38,8 +38,8 @@ public:
   /**
    * @brief Function that gives the density for a given coordinate.
    *
-   * @param position CoordinateVector specifying a coordinate position.
-   * @return Density at the given coordinate.
+   * @param position CoordinateVector specifying a coordinate position (in m).
+   * @return Density at the given coordinate (in m^-3).
    */
   virtual double operator()(CoordinateVector<> position) = 0;
 };
