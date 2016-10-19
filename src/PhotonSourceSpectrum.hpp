@@ -34,7 +34,7 @@ public:
   /**
    * @brief Get a random frequency from the spectrum.
    *
-   * @return Random frequency, distributed according to the spectrum.
+   * @return Random frequency, distributed according to the spectrum (in Hz).
    */
   virtual double get_random_frequency() = 0;
 };

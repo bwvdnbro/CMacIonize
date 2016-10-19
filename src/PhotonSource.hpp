@@ -62,7 +62,7 @@ private:
   /*! @brief Currently active photon source index. */
   unsigned int _active_source_index;
 
-  /*! @brief Positions of the discrete photon sources. */
+  /*! @brief Positions of the discrete photon sources (in m). */
   std::vector< CoordinateVector<> > _positions;
   /*! @brief Weights of the discrete photon sources. */
   std::vector< double > _weights;

@@ -45,6 +45,7 @@ enum Quantity {
   QUANTITY_MASS,
   QUANTITY_NUMBER_DENSITY,
   QUANTITY_REACTION_RATE,
+  QUANTITY_SURFACE_AREA,
   QUANTITY_TEMPERATURE,
   QUANTITY_TIME
 };
@@ -321,6 +322,51 @@ UnitConverter< QUANTITY_REACTION_RATE >::to_unit(double value,
     return 1.e6 * value;
   } else {
     error("Unknown reaction rate unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_SURFACE_AREA
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a surface area.
+ *
+ * @param value Surface area value in strange units.
+ * @param unit Strange units.
+ * @return Surface area value in squared metres.
+ */
+template <>
+inline double UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(double value,
+                                                            std::string unit) {
+  if (unit == "m^2") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "cm^2") {
+    return 1.e-4 * value;
+  } else {
+    error("Unknown surface area unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a surface area.
+ *
+ * @param value Surface area value in squared metres.
+ * @param unit Strange units.
+ * @return Surface area value in strange units.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(double value,
+                                                std::string unit) {
+  if (unit == "m^2") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "cm^2") {
+    return 1.e4 * value;
+  } else {
+    error("Unknown surface area unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

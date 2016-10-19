@@ -26,6 +26,7 @@
  */
 #include "VernerRecombinationRates.hpp"
 #include "Error.hpp"
+#include "UnitConverter.hpp"
 #include <cmath>
 using namespace std;
 
@@ -34,22 +35,26 @@ using namespace std;
  * temperature.
  *
  * @param element ElementName for an element.
- * @param temperature Temperature.
- * @return Recombination rate.
+ * @param temperature Temperature (in K).
+ * @return Recombination rate (in m^3s^-1).
  */
 double VernerRecombinationRates::get_recombination_rate(ElementName element,
                                                         double temperature) {
+  double rate = 0.;
   switch (element) {
   case ELEMENT_H:
-    return 7.982e-11 / (sqrt(temperature / 3.148) *
+    rate = 7.982e-11 / (sqrt(temperature / 3.148) *
                         pow(1. + sqrt(temperature / 3.148), 0.252) *
                         pow(1. + sqrt(temperature / 7.036e5), 1.748));
+    break;
   case ELEMENT_He:
-    return 3.294e-11 / (sqrt(temperature / 15.54) *
+    rate = 3.294e-11 / (sqrt(temperature / 15.54) *
                         pow(1. + sqrt(temperature / 15.54), 0.309) *
                         pow(1. + sqrt(temperature / 3.676e7), 1.691));
+    break;
   default:
     error("Unknown element: %i", element);
   }
-  return 0.;
+  rate = UnitConverter< QUANTITY_REACTION_RATE >::to_SI(rate, "cm^3s^-1");
+  return rate;
 }

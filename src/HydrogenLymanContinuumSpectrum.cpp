@@ -59,13 +59,19 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       double xsecH = cross_sections.get_cross_section(
-          ELEMENT_H, _frequency[inu - 1] * 13.6);
+          ELEMENT_H, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+                         _frequency[inu - 1] * 13.6, "eV"));
+      xsecH = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecH, "cm^2") /
+              1.e-18;
       double jHIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecH *
           std::exp(-157919.667 * (_frequency[inu - 1] - 1.) / _temperature[iT]);
-      xsecH =
-          cross_sections.get_cross_section(ELEMENT_H, _frequency[inu] * 13.6);
+      xsecH = cross_sections.get_cross_section(
+          ELEMENT_H, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+                         _frequency[inu] * 13.6, "eV"));
+      xsecH = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecH, "cm^2") /
+              1.e-18;
       double jHIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecH *
           std::exp(-157919.667 * (_frequency[inu] - 1.) / _temperature[iT]);

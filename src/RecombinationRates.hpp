@@ -38,8 +38,8 @@ public:
    * temperature.
    *
    * @param element ElementName for an element.
-   * @param temperature Temperature.
-   * @return Recombination rate.
+   * @param temperature Temperature (in K).
+   * @return Recombination rate (in m^3s^-1).
    */
   virtual double get_recombination_rate(ElementName element,
                                         double temperature) = 0;

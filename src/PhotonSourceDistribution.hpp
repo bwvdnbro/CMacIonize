@@ -50,7 +50,7 @@ public:
    *
    * @param index Index of the photon source, must be in between 0 and
    * get_number_of_sources().
-   * @return CoordinateVector of a valid and photon source position.
+   * @return CoordinateVector of a valid and photon source position (in m).
    */
   virtual CoordinateVector<> get_position(unsigned int index) = 0;
 

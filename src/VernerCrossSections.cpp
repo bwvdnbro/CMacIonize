@@ -25,6 +25,7 @@
  */
 #include "VernerCrossSections.hpp"
 #include "Error.hpp"
+#include "UnitConverter.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
 #include <cmath>
 #include <fstream>
@@ -35,7 +36,7 @@ using namespace std;
 /**
  * @brief Constructor.
  *
- * Reads in the data from a file.
+ * Reads in the data from the data file.
  */
 VernerCrossSections::VernerCrossSections() {
   ifstream file(VERNERCROSSSECTIONSDATALOCATION);
@@ -125,13 +126,15 @@ VernerCrossSections::VernerCrossSections() {
  * @param nz Atomic number.
  * @param ne Number of electrons.
  * @param is Shell number.
- * @param e Photon energy (in eV).
- * @return Photoionization cross section.
+ * @param e Photon energy (in Hz).
+ * @return Photoionization cross section (in m^2).
  */
 double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
                                                      double e) {
+  e = UnitConverter< QUANTITY_FREQUENCY >::to_unit(e, "eV");
+
   double s = 0.;
   if (nz < 1 || nz > 30) {
     return 0.;
@@ -189,16 +192,16 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     double b = 1. + sqrt(z / _PH2[2][nz - 1][ne - 1]);
     s = a * pow(z, q) * pow(b, p1);
   }
-  return s;
+  return UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(1.e-18 * s, "cm^2");
 }
 
 /**
  * @brief Get the photoionization cross section of the given element.
  *
  * @param element ElementName of an element.
- * @param energy Photon energy.
+ * @param energy Photon energy (in Hz).
  * @return Photoionization cross section for the given element and for the given
- * photon energy.
+ * photon energy (in m^2).
  */
 double VernerCrossSections::get_cross_section(ElementName element,
                                               double energy) {

@@ -26,6 +26,7 @@
 #include "Assert.hpp"
 #include "ElementNames.hpp"
 #include "Error.hpp"
+#include "UnitConverter.hpp"
 #include "VernerCrossSections.hpp"
 #include <fstream>
 #include <sstream>
@@ -51,15 +52,14 @@ int main(int argc, char **argv) {
       double e, s;
       linestream >> nz >> ne >> si >> e >> s;
       assert_values_equal_tol(
-          s, cross_sections.get_cross_section_verner(nz, ne, si, e), 1.e-6);
+          s, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                 cross_sections.get_cross_section_verner(
+                     nz, ne, si,
+                     UnitConverter< QUANTITY_FREQUENCY >::to_SI(e, "eV")),
+                 "cm^2") /
+                 1.e-18,
+          1.e-6);
     }
-  }
-
-  for (unsigned int i = 0; i < 100; ++i) {
-    double nu = 1. + (i + 0.5) * 0.03;
-    assert_condition(
-        cross_sections.get_cross_section_verner(1, 1, 1, nu * 13.6) ==
-        cross_sections.get_cross_section(ELEMENT_H, nu * 13.6));
   }
 
   return 0;

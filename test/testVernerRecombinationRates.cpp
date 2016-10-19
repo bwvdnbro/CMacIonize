@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "UnitConverter.hpp"
 #include "VernerRecombinationRates.hpp"
 #include <fstream>
 #include <sstream>
@@ -48,11 +49,15 @@ int main(int argc, char **argv) {
       stringstream linestream(line);
       linestream >> T >> alphaH >> alphaHe;
       assert_values_equal_tol(
-          recombination_rates.get_recombination_rate(ELEMENT_H, T), alphaH,
-          1.e-15);
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_H, T),
+              "cm^3s^-1"),
+          alphaH, 1.e-15);
       assert_values_equal_tol(
-          recombination_rates.get_recombination_rate(ELEMENT_He, T), alphaHe,
-          1.e-15);
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_He, T),
+              "cm^3s^-1"),
+          alphaHe, 1.e-15);
     }
   }
 

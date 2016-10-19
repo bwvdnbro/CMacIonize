@@ -39,13 +39,15 @@
  */
 class PlanckPhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
-  /*! @brief Frequency bins. */
+  /*! @brief Frequency bins (in 13.6 eV). */
   double _frequency[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief Base 10 logarithm of the frequency bins. */
+  /*! @brief Base 10 logarithm of the frequency bins (in log(frequency/13.6 eV).
+   */
   double _log_frequency[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief Luminosity in each bin. */
+  /*! @brief Luminosity in each bin (in some units that are not really
+   *  important, since we convert to the cumulative distribution). */
   double _luminosity[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
   /*! @brief Cumulative distribution in each bin. */
