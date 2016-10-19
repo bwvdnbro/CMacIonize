@@ -37,7 +37,7 @@
  */
 class HeliumTwoPhotonContinuumSpectrum : public PhotonSourceSpectrum {
 private:
-  /*! @brief Frequency bins. */
+  /*! @brief Frequency bins (in 13.6 eV). */
   double _frequency[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ];
 
   /*! @brief Cumulative distribution function. */

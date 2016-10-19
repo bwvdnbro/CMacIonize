@@ -78,7 +78,7 @@ void DensityGridWriter::write() {
   HDF5Tools::write_attribute< double >(group, "Time", time);
   HDF5Tools::close_group(group);
 
-  // write units
+  // write units, we use SI units everywhere
   group = HDF5Tools::create_group(file, "Units");
   double unit_value = 1;
   HDF5Tools::write_attribute< double >(group, "Unit current in cgs (U_I)",

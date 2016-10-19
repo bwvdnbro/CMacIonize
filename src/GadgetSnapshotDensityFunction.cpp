@@ -142,8 +142,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 /**
  * @brief Function that returns the density for the given coordinate.
  *
- * @param position CoordinateVector specifying a coordinate position.
- * @return Density at the given coordinate.
+ * @param position CoordinateVector specifying a coordinate position (in m).
+ * @return Density at the given coordinate (in m^-3).
  */
 double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
   double density = 0.;
@@ -165,7 +165,7 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
 /**
  * @brief Get the total mass of all SPH particles in the snapshot.
  *
- * @return Sum of the masses of all SPH particles.
+ * @return Sum of the masses of all SPH particles (in kg).
  */
 double GadgetSnapshotDensityFunction::get_total_mass() {
   double mtot = 0.;

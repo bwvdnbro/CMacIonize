@@ -31,7 +31,7 @@
  */
 class DensityValues {
 private:
-  /*! @brief Total density. */
+  /*! @brief Total density (in m^-3). */
   double _total_density;
 
   /*! @brief Neutral fraction of hydrogen. */
@@ -40,7 +40,7 @@ private:
   /*! @brief Neutral fraction of helium. */
   double _neutral_fraction_He;
 
-  /*! @brief Temperature. */
+  /*! @brief Temperature (in K). */
   double _temperature;
 
   /*! @brief Probability of re-emitting an ionizing photon after absorption by
@@ -51,10 +51,10 @@ private:
    *  helium. */
   double _pHe_em[4];
 
-  /*! @brief Mean intensity of hydrogen ionizing radiation. */
+  /*! @brief Mean intensity of hydrogen ionizing radiation (in m^3s^-1). */
   double _mean_intensity_H;
 
-  /*! @brief Mean intensity of helium ionizing radiation. */
+  /*! @brief Mean intensity of helium ionizing radiation (in m^3s^-1). */
   double _mean_intensity_He;
 
 public:
@@ -69,7 +69,7 @@ public:
   /**
    * @brief Set the total density.
    *
-   * @param total_density Value for the total density.
+   * @param total_density Value for the total density (in m^-3).
    */
   inline void set_total_density(double total_density) {
     _total_density = total_density;
@@ -96,7 +96,7 @@ public:
   /**
    * @brief Set the temperature.
    *
-   * @param temperature Temperature value.
+   * @param temperature Temperature value (in K).
    */
   inline void set_temperature(double temperature) {
     _temperature = temperature;
@@ -125,7 +125,7 @@ public:
    * @brief Increase the value of the mean intensity of hydrogen ionizing
    * radiation by the given amount.
    *
-   * @param dmean_intensity_H Increment.
+   * @param dmean_intensity_H Increment (in m^3s^-1).
    */
   inline void increase_mean_intensity_H(double dmean_intensity_H) {
     _mean_intensity_H += dmean_intensity_H;
@@ -135,7 +135,7 @@ public:
    * @brief Increase the value of the mean intensity of helium ionizing
    * radiation by the given amount.
    *
-   * @param dmean_intensity_He Increment.
+   * @param dmean_intensity_He Increment (in m^3s^-1).
    */
   inline void increase_mean_intensity_He(double dmean_intensity_He) {
     _mean_intensity_He += dmean_intensity_He;
@@ -144,7 +144,7 @@ public:
   /**
    * @brief Get the total density.
    *
-   * @return Total density.
+   * @return Total density (in m^-3).
    */
   inline double get_total_density() { return _total_density; }
 
@@ -165,7 +165,7 @@ public:
   /**
    * @brief Get the temperature.
    *
-   * @return Temperature.
+   * @return Temperature (in K).
    */
   inline double get_temperature() { return _temperature; }
 
@@ -189,14 +189,14 @@ public:
   /**
    * @brief Get the mean intensity of hydrogen ionizing radiation.
    *
-   * @return Mean intensity of hydrogen ionizing radiation.
+   * @return Mean intensity of hydrogen ionizing radiation (in m^3s^-1).
    */
   inline double get_mean_intensity_H() { return _mean_intensity_H; }
 
   /**
    * @brief Get the mean intensity of helium ionizing radiation.
    *
-   * @return Mean intensity of helium ionizing radiation.
+   * @return Mean intensity of helium ionizing radiation (in m^3s^-1).
    */
   inline double get_mean_intensity_He() { return _mean_intensity_He; }
 };

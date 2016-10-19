@@ -44,13 +44,13 @@ private:
    *  is not periodic, the components of the Box will all be zero). */
   Box _box;
 
-  /*! @brief Positions of the SPH particles in the snapshot. */
+  /*! @brief Positions of the SPH particles in the snapshot (in m). */
   std::vector< CoordinateVector<> > _positions;
 
-  /*! @brief Masses of the SPH particles in the snapshot. */
+  /*! @brief Masses of the SPH particles in the snapshot (in kg). */
   std::vector< double > _masses;
 
-  /*! @brief Smoothing lengths of the SPH particles in the snapshot. */
+  /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
   double cubic_spline_kernel(double u, double h);

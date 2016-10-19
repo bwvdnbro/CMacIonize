@@ -41,7 +41,7 @@ class ParameterFile;
  */
 class GadgetSnapshotPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
-  /*! @brief Positions of the sources in the snapshot file. */
+  /*! @brief Positions of the sources in the snapshot file (in m). */
   std::vector< CoordinateVector<> > _positions;
 
   /*! @brief Log to write logging information to. */

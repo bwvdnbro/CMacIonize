@@ -33,30 +33,30 @@
  */
 class Photon {
 private:
-  /*! @brief Current position of the photon. */
+  /*! @brief Current position of the photon (in m). */
   CoordinateVector<> _position;
 
   /*! @brief Current direction the photon is moving in. */
   CoordinateVector<> _direction;
 
-  /*! @brief Current energy contents of the photon. */
+  /*! @brief Current energy contents of the photon (in Hz). */
   double _energy;
 
-  /*! @brief Hydrogen ionization cross section. */
+  /*! @brief Hydrogen ionization cross section (in m^2). */
   double _xsecH;
 
-  /*! @brief Helium ionization cross section. */
+  /*! @brief Helium ionization cross section (in m^2). */
   double _xsecHe;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param position Initial position of the photon.
+   * @param position Initial position of the photon (in m).
    * @param direction Initial direction of the photon.
-   * @param energy Initial energy of the photon.
-   * @param xsecH Hydrogen photoionization cross section of the photon.
-   * @param xsecHe Helium photoionization cross section of the photon.
+   * @param energy Initial energy of the photon (in Hz).
+   * @param xsecH Hydrogen photoionization cross section of the photon (in m^2).
+   * @param xsecHe Helium photoionization cross section of the photon (in m^2).
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy, double xsecH, double xsecHe)
@@ -66,7 +66,7 @@ public:
   /**
    * @brief Get the current position of the photon.
    *
-   * @return Current position of the photon.
+   * @return Current position of the photon (in m).
    */
   inline CoordinateVector<> get_position() { return _position; }
 
@@ -80,28 +80,28 @@ public:
   /**
    * @brief Get the current energy of the photon.
    *
-   * @return Current energy of the photon.
+   * @return Current energy of the photon (in Hz).
    */
   inline double get_energy() { return _energy; }
 
   /**
    * @brief Get the ionization cross section for hydrogen.
    *
-   * @return Hydrogen ionization cross section.
+   * @return Hydrogen ionization cross section (in m^2).
    */
   inline double get_hydrogen_cross_section() { return _xsecH; }
 
   /**
    * @brief Get the ionization cross section for helium.
    *
-   * @return Helium ionization cross section.
+   * @return Helium ionization cross section (in m^2).
    */
   inline double get_helium_cross_section() { return _xsecHe; }
 
   /**
    * @brief Set the position of the photon.
    *
-   * @param position New position of the photon.
+   * @param position New position of the photon (in m).
    */
   inline void set_position(CoordinateVector<> position) {
     _position = position;
@@ -119,21 +119,21 @@ public:
   /**
    * @brief Set the energy of the photon.
    *
-   * @param energy Energy of the photon.
+   * @param energy Energy of the photon (in Hz).
    */
   inline void set_energy(double energy) { _energy = energy; }
 
   /**
    * @brief Set the hydrogen ionization cross section.
    *
-   * @param xsecH Hydrogen ionization cross section.
+   * @param xsecH Hydrogen ionization cross section (in m^2).
    */
   inline void set_hydrogen_cross_section(double xsecH) { _xsecH = xsecH; }
 
   /**
    * @brief Set the helium ionization cross section.
    *
-   * @param xsecHe Helium ionization cross section.
+   * @param xsecHe Helium ionization cross section (in m^2).
    */
   inline void set_helium_cross_section(double xsecHe) { _xsecHe = xsecHe; }
 };

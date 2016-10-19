@@ -104,7 +104,7 @@ unsigned int GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() {
  *
  * @param index Valid index of a source, must be an integer in between 0 and
  * get_number_of_sources().
- * @return Position of the given source.
+ * @return Position of the given source (in m).
  */
 CoordinateVector<>
 GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {

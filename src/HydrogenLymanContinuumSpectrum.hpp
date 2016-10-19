@@ -42,17 +42,17 @@ class CrossSections;
  */
 class HydrogenLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
-  /*! @brief Frequency bins. */
+  /*! @brief Frequency bins (in 13.6 eV). */
   double _frequency[HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Temperature bins. */
+  /*! @brief Temperature bins (in K). */
   double _temperature[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP];
 
   /*! @brief Cumulative distribution function. */
   double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
                                  [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Current temperature. */
+  /*! @brief Current temperature (in K). */
   double _current_T;
 
 public:

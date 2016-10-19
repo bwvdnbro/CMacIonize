@@ -41,17 +41,17 @@ class CrossSections;
  */
 class HeliumLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
-  /*! @brief Frequency bins. */
+  /*! @brief Frequency bins (in 13.6 eV). */
   double _frequency[HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Temperature bins. */
+  /*! @brief Temperature bins (in K). */
   double _temperature[HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP];
 
   /*! @brief Cumulative distribution function. */
   double _cumulative_distribution[HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP]
                                  [HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Current temperature. */
+  /*! @brief Current temperature (in K). */
   double _current_T;
 
 public:

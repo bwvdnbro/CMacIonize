@@ -36,14 +36,14 @@
  */
 class HomogeneousDensityFunction : public DensityFunction {
 private:
-  /*! @brief Single density value for the entire box. */
+  /*! @brief Single density value for the entire box (in m^-3). */
   double _density;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param density Single density value for the entire box.
+   * @param density Single density value for the entire box (in m^-3).
    * @param log Log to write logging information to.
    */
   HomogeneousDensityFunction(double density = 1., Log *log = NULL)
@@ -70,9 +70,9 @@ public:
   /**
    * @brief Function that gives the density for a given coordinate.
    *
-   * @param position CoordinateVector specifying a coordinate position.
+   * @param position CoordinateVector specifying a coordinate position (in m).
    * @return Density at the given coordinate: the single value stored
-   * internally.
+   * internally (in m^-3).
    */
   virtual double operator()(CoordinateVector<> position) { return _density; }
 };
