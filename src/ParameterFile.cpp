@@ -184,11 +184,33 @@ ParameterFile::ParameterFile(std::string filename) {
 /**
  * @brief Print the contents of the internal dictionary to the given stream.
  *
+ * This routine is meant to reproduce the parameter file that was actually used,
+ * containing all parameters, and not only the ones that were present in the
+ * original parameter file.
+ *
+ * We have to do some magic to produce yaml group syntax.
+ *
  * @param stream std::ostream to write to.
  */
 void ParameterFile::print_contents(std::ostream &stream) {
+  // note that we do assume here that all group members are nicely grouped
+  // together. This will always be the case, as the map contents is sorted
+  // alphabetically.
+  string groupname = "";
   for (map< string, string >::iterator it = _dictionary.begin();
        it != _dictionary.end(); ++it) {
-    stream << it->first << ": " << it->second << endl;
+    string keyname = it->first;
+    size_t ppos = keyname.find('.');
+    if (ppos != string::npos) {
+      string this_groupname = keyname.substr(0, ppos);
+      keyname = "  " + keyname.substr(ppos + 1);
+      if (groupname != this_groupname) {
+        groupname = this_groupname;
+        stream << groupname << ":\n";
+      }
+    } else {
+      groupname = "";
+    }
+    stream << keyname << ": " << it->second << "\n";
   }
 }

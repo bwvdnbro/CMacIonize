@@ -1,0 +1,28 @@
+# simulation box
+box:
+  # anchor of the box: corner with the smallest coordinates
+  anchor: [0. m, 0. m, 0. m]
+  # side lengths of the box
+  sides: [5. pc, 5. pc, 5. pc]
+  # number of cells in each dimension
+  ncell: [32, 32, 32]
+
+# density function that sets up the density field in the box
+densityfunction:
+  # type of densityfunction: a constant density throughout the box
+  type: Homogeneous
+  # value for the constant density
+  density: 100. cm^-3
+
+# assumed helium abundance for the ISM
+helium_abundance: 0.1
+
+# initial temperature of the ISM
+initial_temperature: 8000. K
+
+# distribution of photon sources in the box
+photonsourcedistribution:
+  # type of distribution: a single stellar source
+  type: SingleStar
+  # position of the single stellar source
+  position: [2.5 pc, 2.5 pc, 2.5 pc]

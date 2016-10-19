@@ -109,11 +109,11 @@ int main(int argc, char **argv) {
 
   // this should be an iteration
   {
-    unsigned int numphoton = 1000;
+    unsigned int numphoton = 100000;
     source.set_number_of_photons(numphoton);
     log->write_status("Start shooting photons...");
     for (unsigned int i = 0; i < numphoton; ++i) {
-      if (!(i % 100)) {
+      if (!(i % 10000)) {
         log->write_status("Photon ", i, " of ", numphoton, ".");
       }
       Photon photon = source.get_random_photon();
@@ -133,6 +133,9 @@ int main(int argc, char **argv) {
   // write snapshot
   DensityGridWriter writer("snapshot.hdf5", grid);
   writer.write();
+
+  ofstream pfile("parameters-usedvalues.param");
+  params.print_contents(pfile);
 
   // idea: the photons themselves should be a class, storing a current
   // position/cell, current direction, and the photon package energy
