@@ -28,6 +28,7 @@
 #include "DensityValues.hpp"
 #include "ElementNames.hpp"
 #include "Error.hpp"
+#include "Log.hpp"
 #include "PhotonSourceDistribution.hpp"
 #include "PhotonSourceSpectrum.hpp"
 #include "Utilities.hpp"
@@ -41,16 +42,14 @@ using namespace std;
  * discrete photon sources.
  * @param spectrum PhotonSourceSpectrum for the discrete photon sources.
  * @param cross_sections Cross sections for photoionization.
- * @param number_of_photons Total number of photons emitted from all discrete
- * photon sources together.
+ * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
                            PhotonSourceSpectrum &spectrum,
-                           CrossSections &cross_sections,
-                           unsigned int number_of_photons)
-    : _number_of_photons(number_of_photons), _spectrum(spectrum),
+                           CrossSections &cross_sections, Log *log)
+    : _number_of_photons(0), _spectrum(spectrum),
       _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
-      _HeLyc_spectrum(cross_sections) {
+      _HeLyc_spectrum(cross_sections), _log(log) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -58,9 +57,14 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
     _weights[i] = distribution.get_weight(i);
   }
 
+  if (_log) {
+    _log->write_status("Constructed PhotonSource with ", _positions.size(),
+                       " positions and weights.");
+  }
+
   _active_source_index = 0;
   _active_photon_index = 0;
-  _active_number_of_photons = _number_of_photons * _weights[0];
+  _active_number_of_photons = 0;
 }
 
 /**
@@ -76,6 +80,11 @@ void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   _active_source_index = 0;
   _active_photon_index = 0;
   _active_number_of_photons = _number_of_photons * _weights[0];
+
+  if (_log) {
+    _log->write_status("Number of photons for PhotonSource reset to ",
+                       _number_of_photons, ".");
+  }
 }
 
 /**

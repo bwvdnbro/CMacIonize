@@ -650,9 +650,16 @@ void DensityGrid::find_H0(double alphaH, double alphaHe, double jH, double jHe,
  * @param nphoton Number of photons used in this particular iteration.
  */
 void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
+  if (_log) {
+    _log->write_status("Calculating ionization state after shooting ", nphoton,
+                       " photons...");
+  }
   // factor in the mean intensity integrals
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
-  double jfac = 1.e-18 * 4.26e49 / 3.086e18 / 3.086e18 / nphoton / cellvolume;
+  // Kenny's jfac contains a lot of unit conversion factors. These drop out
+  // since we work in SI units.
+  // the 4.26e49 is in Hz and is the (hardcoded) photon luminosity of our source
+  double jfac = 4.26e49 / nphoton / cellvolume;
   for (int i = 0; i < _ncell.x(); ++i) {
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
@@ -682,6 +689,9 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
         // make shadow regions transparent? (part not active in Kenny's code)
       }
     }
+  }
+  if (_log) {
+    _log->write_status("Done calculating ionization state.");
   }
 }
 

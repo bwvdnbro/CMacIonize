@@ -80,7 +80,8 @@ int main(int argc, char **argv) {
   TestPhotonSourceSpectrum spectrum;
   TestCrossSections cross_sections;
 
-  PhotonSource source(distribution, spectrum, cross_sections, 1000001);
+  PhotonSource source(distribution, spectrum, cross_sections);
+  source.set_number_of_photons(1000001);
 
   // check if the returned position is what we expect it to be
   {

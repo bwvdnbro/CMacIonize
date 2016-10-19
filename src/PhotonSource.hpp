@@ -38,6 +38,7 @@
 
 class CrossSections;
 class DensityValues;
+class Log;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 
@@ -82,10 +83,13 @@ private:
   /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
   HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
 
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
                PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
-               unsigned int number_of_photons = 0);
+               Log *log = NULL);
 
   void set_number_of_photons(unsigned int number_of_photons);
 
