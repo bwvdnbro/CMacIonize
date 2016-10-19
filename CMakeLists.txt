@@ -77,6 +77,37 @@ add_subdirectory(src)
 # Enter the folder containing the unit tests
 add_subdirectory(test)
 
+# Copy the benchmark problems
+# Every benchmark has a description file NAME.txt.
+# This description file contains the names of all files necessary to run the
+# benchmark, as filenames preceded by "input:", on a separate line.
+# This loop reads in these files, and copies them (together with the description
+# file) into a new folder in rundir/benchmarks that has the name of the
+# benchmark.
+# Step 1: get a list of benchmark description files
+file(GLOB BENCHMARKS "${PROJECT_SOURCE_DIR}/benchmarks/*.txt")
+# Loop over them
+foreach(BENCHMARK ${BENCHMARKS})
+  # Extract the benchmark name, this is just the name of the description file
+  # (without the extension)
+  get_filename_component(BENCHMARK_NAME ${BENCHMARK} NAME_WE)
+  message(STATUS "Setting up ${BENCHMARK_NAME} benchmark")
+  # Get the list of necessary files
+  file(STRINGS ${BENCHMARK} BENCHMARK_FILES REGEX "input:")
+  # Create the benchmark folder
+  set(BENCHMARK_DIR ${PROJECT_BINARY_DIR}/rundir/benchmarks/${BENCHMARK_NAME})
+  file(MAKE_DIRECTORY ${BENCHMARK_DIR})
+  # Copy all necessary files to the folder
+  foreach(BENCHMARK_FILE ${BENCHMARK_FILES})
+    string(REPLACE "input:" "" BENCHMARK_FILE ${BENCHMARK_FILE})
+    configure_file(${PROJECT_SOURCE_DIR}/benchmarks/${BENCHMARK_FILE}
+                   ${BENCHMARK_DIR}/${BENCHMARK_FILE}
+                   COPYONLY)
+  endforeach(BENCHMARK_FILE ${BENCHMARK_FILES})
+  # Copy the description file
+  configure_file(${BENCHMARK} ${BENCHMARK_DIR}/${BENCHMARK_NAME}.txt COPYONLY)
+endforeach(BENCHMARK ${BENCHMARKS})
+
 # Generate documentation
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
