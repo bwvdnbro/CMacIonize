@@ -29,6 +29,25 @@
 #include "CoordinateVector.hpp"
 
 /**
+ * @brief Photon types.
+ *
+ * All photons start as type 0 (PHOTONTYPE_PRIMARY), but during scattering
+ * events their type changes.
+ * By recording a type, we can check how an observer would see the photon.
+ */
+enum PhotonType {
+  PHOTONTYPE_PRIMARY = 0,
+  PHOTONTYPE_DIFFUSE_HI,
+  PHOTONTYPE_DIFFUSE_HeI,
+  PHOTONTYPE_ABSORBED,
+  // THIS ELEMENT SHOULD ALWAYS BE LAST!
+  // It is used to initialize arrays that have an entry for each PhotonType.
+  // By putting it last, PHOTONTYPE_NUMBER will have an integer value equal to
+  // the number of defined types above.
+  PHOTONTYPE_NUMBER
+};
+
+/**
  * @brief Photon package.
  */
 class Photon {
@@ -48,6 +67,10 @@ private:
   /*! @brief Helium ionization cross section (in m^2). */
   double _xsecHe;
 
+  /*! @brief Type of the photon. All photons start off as PHOTONTYPE_PRIMARY,
+   *  but their type can change during reemission events. */
+  PhotonType _type;
+
 public:
   /**
    * @brief Constructor.
@@ -61,7 +84,7 @@ public:
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy, double xsecH, double xsecHe)
       : _position(position), _direction(direction), _energy(energy),
-        _xsecH(xsecH), _xsecHe(xsecHe) {}
+        _xsecH(xsecH), _xsecHe(xsecHe), _type(PHOTONTYPE_PRIMARY) {}
 
   /**
    * @brief Get the current position of the photon.
@@ -97,6 +120,13 @@ public:
    * @return Helium ionization cross section (in m^2).
    */
   inline double get_helium_cross_section() { return _xsecHe; }
+
+  /**
+   * @brief Get the type of the photon.
+   *
+   * @return PhotonType type identifier.
+   */
+  inline PhotonType get_type() { return _type; }
 
   /**
    * @brief Set the position of the photon.
@@ -136,6 +166,13 @@ public:
    * @param xsecHe Helium ionization cross section (in m^2).
    */
   inline void set_helium_cross_section(double xsecHe) { _xsecHe = xsecHe; }
+
+  /**
+   * @brief Set the photon type.
+   *
+   * @param type PhotonType type identifier.
+   */
+  inline void set_type(PhotonType type) { _type = type; }
 };
 
 #endif // PHOTON_HPP

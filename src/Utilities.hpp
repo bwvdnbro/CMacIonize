@@ -269,6 +269,29 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
   }
   return jl;
 }
+
+/**
+ * @brief Compose a filename made up by the given prefix and counter value,
+ * appropriately zero padded.
+ *
+ * @param prefix Prefix for the filename.
+ * @param extension Extension for the filename.
+ * @param counter Value of the counter.
+ * @param padding Number of digits the counter should have.
+ * @return std::string with format: "<prefix>XX<counter>XX.<extension>", where
+ * the number of Xs is equal to padding.
+ */
+inline std::string compose_filename(std::string prefix, std::string extension,
+                                    unsigned int counter,
+                                    unsigned int padding) {
+  std::stringstream namestring;
+  namestring << prefix;
+  namestring.fill('0');
+  namestring.width(padding);
+  namestring << counter;
+  namestring << ".hdf5";
+  return namestring.str();
+}
 }
 
 #endif // UTILITIES_HPP

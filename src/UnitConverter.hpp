@@ -252,7 +252,7 @@ UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(double value,
     // quantity is already in SI units
     return value;
   } else if (unit == "cm^-3") {
-    return value * 1.e-6;
+    return value * 1.e6;
   } else {
     error("Unknown number density unit: \"%s\".", unit.c_str());
     return 0.;
@@ -274,7 +274,7 @@ UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
     // quantity is already in requested units
     return value;
   } else if (unit == "cm^-3") {
-    return value * 1.e6;
+    return value * 1.e-6;
   } else {
     error("Unknown number density unit: \"%s\".", unit.c_str());
     return 0.;

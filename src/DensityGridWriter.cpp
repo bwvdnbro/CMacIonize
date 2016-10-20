@@ -29,26 +29,32 @@
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "HDF5Tools.hpp"
+#include "Utilities.hpp"
 #include <vector>
 
 /**
  * @brief Constructor.
  *
- * @param name Name of the file to write.
+ * @param prefix Prefix for the name of the file to write.
  * @param grid DensityGrid containing the data to write.
  */
-DensityGridWriter::DensityGridWriter(std::string name, DensityGrid &grid)
-    : _name(name), _grid(grid) {
+DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid)
+    : _prefix(prefix), _grid(grid) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 }
 
 /**
  * @brief Write the file.
+ *
+ * @param iteration Value of the counter to append to the filename.
  */
-void DensityGridWriter::write() {
+void DensityGridWriter::write(unsigned int iteration = 0) {
+  std::string filename =
+      Utilities::compose_filename(_prefix, "hdf5", iteration, 3);
+
   HDF5Tools::HDF5File file =
-      HDF5Tools::open_file(_name, HDF5Tools::HDF5FILEMODE_WRITE);
+      HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_WRITE);
 
   // write header
   HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "Header");

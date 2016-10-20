@@ -35,16 +35,16 @@ class DensityGrid;
  */
 class DensityGridWriter {
 private:
-  /*! @brief Name of the file to write. */
-  std::string _name;
+  /*! @brief Prefix of the name for the file to write. */
+  std::string _prefix;
 
   /*! @brief DensityGrid containing the data to write. */
   DensityGrid &_grid;
 
 public:
-  DensityGridWriter(std::string name, DensityGrid &grid);
+  DensityGridWriter(std::string prefix, DensityGrid &grid);
 
-  void write();
+  void write(unsigned int iteration);
 };
 
 #endif // DENSITYGRIDWRITER_HPP

@@ -149,8 +149,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
       // sample new frequency from H Ly c
       _HLyc_spectrum.set_temperature(cell.get_temperature());
       new_frequency = _HLyc_spectrum.get_random_frequency();
+      photon.set_type(PHOTONTYPE_DIFFUSE_HI);
     } else {
       // photon escapes
+      photon.set_type(PHOTONTYPE_ABSORBED);
       return false;
     }
   } else {
@@ -160,16 +162,20 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
       // sample new frequency from He Ly c
       _HeLyc_spectrum.set_temperature(cell.get_temperature());
       new_frequency = _HeLyc_spectrum.get_random_frequency();
+      photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(1)) {
       // new frequency is 19.8eV (no idea why)
       new_frequency = 19.8 / 13.6;
+      photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(2)) {
       x = Utilities::random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
         new_frequency = _He2pc_spectrum.get_random_frequency();
+        photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
       } else {
         // photon escapes
+        photon.set_type(PHOTONTYPE_ABSORBED);
         return false;
       }
     } else if (x <= cell.get_pHe_em(3)) {
@@ -187,8 +193,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
           // H Ly c, like above
           _HLyc_spectrum.set_temperature(cell.get_temperature());
           new_frequency = _HLyc_spectrum.get_random_frequency();
+          photon.set_type(PHOTONTYPE_DIFFUSE_HI);
         } else {
           // photon escapes
+          photon.set_type(PHOTONTYPE_ABSORBED);
           return false;
         }
       } else {
@@ -197,8 +205,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
         if (x < 0.56) {
           // sample like above
           new_frequency = _He2pc_spectrum.get_random_frequency();
+          photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
         } else {
           // photon escapes
+          photon.set_type(PHOTONTYPE_ABSORBED);
           return false;
         }
       }
@@ -206,6 +216,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
       // not in Kenny's code, since the probabilities above are forced to sum
       // to 1.
       // the code below is hence never executed
+      photon.set_type(PHOTONTYPE_ABSORBED);
       return false;
     }
   }

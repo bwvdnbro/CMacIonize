@@ -72,14 +72,14 @@ int main(int argc, char **argv) {
     DensityGrid grid(box, ncell, 0.1, 8000., density_function,
                      recombination_rates);
 
-    DensityGridWriter writer("testgrid.hdf5", grid);
-    writer.write();
+    DensityGridWriter writer("testgrid", grid);
+    writer.write(0);
   }
 
   // read file and check contents
   {
     HDF5Tools::HDF5File file =
-        HDF5Tools::open_file("testgrid.hdf5", HDF5Tools::HDF5FILEMODE_READ);
+        HDF5Tools::open_file("testgrid000.hdf5", HDF5Tools::HDF5FILEMODE_READ);
 
     HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "Header");
 

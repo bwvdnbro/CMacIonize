@@ -108,12 +108,13 @@ int main(int argc, char **argv) {
   // it would be nice to have some interactor classes that can do this
 
   // this should be an iteration
-  for (unsigned int loop = 0; loop < 2; ++loop) {
+  DensityGridWriter writer("snapshot", grid);
+  for (unsigned int loop = 0; loop < 10; ++loop) {
     grid.reset_grid();
     unsigned int numphoton = 1000000;
     source.set_number_of_photons(numphoton);
     log->write_status("Start shooting photons...");
-    unsigned int numabsorb = 0;
+    unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
     for (unsigned int i = 0; i < numphoton; ++i) {
       if (!(i % 100000)) {
         log->write_status("Photon ", i, " of ", numphoton, ".");
@@ -124,21 +125,33 @@ int main(int argc, char **argv) {
         if (!source.reemit(photon, grid.get_cell_values(grid.get_cell_indices(
                                        photon.get_position())),
                            params.get_value< double >("helium_abundance"))) {
-          ++numabsorb;
           break;
         }
         tau = -std::log(Utilities::random_double());
       }
+      ++typecount[photon.get_type()];
     }
     log->write_status("Done shooting photons.");
-    log->write_status(numabsorb,
+    log->write_status(typecount[PHOTONTYPE_ABSORBED],
                       " photons were reemitted as non-ionizing photons.");
+    log->write_status(typecount[PHOTONTYPE_DIFFUSE_HI] +
+                          typecount[PHOTONTYPE_DIFFUSE_HeI],
+                      " photons were scattered.");
+    double escape_fraction =
+        (100. * (numphoton - typecount[PHOTONTYPE_ABSORBED])) / numphoton;
+    log->write_status("Escape fraction: ", escape_fraction, "%.");
+    double escape_fraction_HI =
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / numphoton;
+    log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI, "%.");
+    double escape_fraction_HeI =
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / numphoton;
+    log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
+                      "%.");
     grid.calculate_ionization_state(numphoton);
-  }
 
-  // write snapshot
-  DensityGridWriter writer("snapshot.hdf5", grid);
-  writer.write();
+    // write snapshot
+    writer.write(loop);
+  }
 
   ofstream pfile("parameters-usedvalues.param");
   params.print_contents(pfile);
