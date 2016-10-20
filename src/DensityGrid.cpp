@@ -53,12 +53,12 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
       _recombination_rates(recombination_rates), _log(log) {
 
   if (_log) {
-    _log->write_status("Creating grid of ", _ncell.x(), "x", _ncell.y(), "x",
-                       _ncell.z(), " inside a box with anchor [",
-                       _box.get_anchor().x(), ",", _box.get_anchor().y(), ",",
-                       _box.get_anchor().z(), "] and sides [",
-                       _box.get_sides().x(), ",", _box.get_sides().y(), ",",
-                       _box.get_sides().z(), "]...");
+    _log->write_status("Creating grid of ", _ncell.x(), " x ", _ncell.y(),
+                       " x ", _ncell.z(), " inside a box with anchor [",
+                       _box.get_anchor().x(), " m,", _box.get_anchor().y(),
+                       " m,", _box.get_anchor().z(), " m] and sides [",
+                       _box.get_sides().x(), " m,", _box.get_sides().y(), " m,",
+                       _box.get_sides().z(), " m]...");
   }
 
   _density = new DensityValues **[_ncell.x()];
@@ -100,9 +100,9 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   }
 
   if (_log) {
-    _log->write_info("Cell size is ", _cellside.x(), "x", _cellside.y(), "x",
-                     _cellside.z(), ", maximum side length is ", _cellside_max,
-                     ".");
+    _log->write_info("Cell size is ", _cellside.x(), " m x ", _cellside.y(),
+                     " m x ", _cellside.z(), " m, maximum side length is ",
+                     _cellside_max, " m.");
     _log->write_status("Done creating grid.");
   }
 }
@@ -437,8 +437,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
     // if the optical depth exceeds or equals the wanted value: exit the loop
 
     // if the optical depth exceeded the wanted value: find out where in the
-    // cell
-    // we end up, and correct S
+    // cell we end up, and correct S
     if (optical_depth < 0.) {
       double Scorr = ds * optical_depth / tau;
       // order is important here!
@@ -551,8 +550,8 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
  *
  * @param alphaH Hydrogen recombination rate (in m^3s^-1).
  * @param alphaHe Helium recombination rate (in m^3s^-1).
- * @param jH Hydrogen intensity integral (in m^3s^-1).
- * @param jHe Helium intensity integral (in m^3s^-1).
+ * @param jH Hydrogen intensity integral (in s^-1).
+ * @param jHe Helium intensity integral (in s^-1).
  * @param nH Hydrogen number density (in m^-3).
  * @param AHe Helium abundance \f$A_{\rm{}He}\f$ (relative w.r.t. hydrogen).
  * @param T Temperature (in K).
@@ -568,8 +567,8 @@ void DensityGrid::find_H0(double alphaH, double alphaHe, double jH, double jHe,
   alphaH = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(alphaH, "cm^3s^-1");
   alphaHe =
       UnitConverter< QUANTITY_REACTION_RATE >::to_unit(alphaHe, "cm^3s^-1");
-  jH = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(jH, "cm^3s^-1");
-  jHe = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(jHe, "cm^3s^-1");
+  jH = UnitConverter< QUANTITY_FREQUENCY >::to_unit(jH, "s^-1");
+  jHe = UnitConverter< QUANTITY_FREQUENCY >::to_unit(jHe, "s^-1");
   nH = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(nH, "cm^-3");
 
   double alpha_e_2sP = 4.27e-14 * pow(T * 1.e-4, -0.695);
@@ -663,7 +662,7 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
   for (int i = 0; i < _ncell.x(); ++i) {
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
-        DensityValues cell = _density[i][j][k];
+        DensityValues &cell = _density[i][j][k];
         double jH = jfac * cell.get_mean_intensity_H();
         double jHe = jfac * cell.get_mean_intensity_He();
         double ntot = cell.get_total_density();
@@ -722,4 +721,20 @@ void DensityGrid::set_reemission_probabilities(double T, DensityValues &cell) {
   cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
   cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
   cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
+}
+
+/**
+ * @brief Reset the internal mean intensity counters and update reemission
+ * probabilities.
+ */
+void DensityGrid::reset_grid() {
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
+      for (int k = 0; k < _ncell.z(); ++k) {
+        DensityValues &cell = _density[i][j][k];
+        set_reemission_probabilities(cell.get_temperature(), cell);
+        cell.reset_mean_intensities();
+      }
+    }
+  }
 }

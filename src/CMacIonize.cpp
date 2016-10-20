@@ -108,12 +108,14 @@ int main(int argc, char **argv) {
   // it would be nice to have some interactor classes that can do this
 
   // this should be an iteration
-  {
-    unsigned int numphoton = 100000;
+  for (unsigned int loop = 0; loop < 2; ++loop) {
+    grid.reset_grid();
+    unsigned int numphoton = 1000000;
     source.set_number_of_photons(numphoton);
     log->write_status("Start shooting photons...");
+    unsigned int numabsorb = 0;
     for (unsigned int i = 0; i < numphoton; ++i) {
-      if (!(i % 10000)) {
+      if (!(i % 100000)) {
         log->write_status("Photon ", i, " of ", numphoton, ".");
       }
       Photon photon = source.get_random_photon();
@@ -122,11 +124,15 @@ int main(int argc, char **argv) {
         if (!source.reemit(photon, grid.get_cell_values(grid.get_cell_indices(
                                        photon.get_position())),
                            params.get_value< double >("helium_abundance"))) {
+          ++numabsorb;
           break;
         }
+        tau = -std::log(Utilities::random_double());
       }
     }
-    log->write_status("Done shooting photons");
+    log->write_status("Done shooting photons.");
+    log->write_status(numabsorb,
+                      " photons were reemitted as non-ionizing photons.");
     grid.calculate_ionization_state(numphoton);
   }
 

@@ -53,7 +53,7 @@ void DensityGridWriter::write() {
   // write header
   HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "Header");
   Box box = _grid.get_box();
-  CoordinateVector<> boxsize = box.get_sides() - box.get_anchor();
+  CoordinateVector<> boxsize = box.get_sides();
   HDF5Tools::write_attribute< CoordinateVector<> >(group, "BoxSize", boxsize);
   int dimension = 3;
   HDF5Tools::write_attribute< int >(group, "Dimension", dimension);
@@ -100,6 +100,8 @@ void DensityGridWriter::write() {
   std::vector< double > nfracH(numpart[0]);
   std::vector< double > nfracHe(numpart[0]);
   std::vector< double > temperature(numpart[0]);
+  std::vector< double > jH(numpart[0]);
+  std::vector< double > jHe(numpart[0]);
   unsigned int index = 0;
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     Box cellbox = it.get_cell();
@@ -110,6 +112,8 @@ void DensityGridWriter::write() {
     nfracH[index] = cellvals.get_neutral_fraction_H();
     nfracHe[index] = cellvals.get_neutral_fraction_He();
     temperature[index] = cellvals.get_temperature();
+    jH[index] = cellvals.get_mean_intensity_H();
+    jHe[index] = cellvals.get_mean_intensity_He();
     ++index;
   }
   HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates", coords);
@@ -117,6 +121,8 @@ void DensityGridWriter::write() {
   HDF5Tools::write_dataset< double >(group, "NeutralFractionH", nfracH);
   HDF5Tools::write_dataset< double >(group, "NeutralFractionHe", nfracHe);
   HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
+  HDF5Tools::write_dataset< double >(group, "MeanIntensityH", jH);
+  HDF5Tools::write_dataset< double >(group, "MeanIntensityHe", jHe);
   HDF5Tools::close_group(group);
 
   // close file

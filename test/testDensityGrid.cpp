@@ -270,8 +270,8 @@ int main(int argc, char **argv) {
     DensityGrid::find_H0(
         UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
         UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.51e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(jH, "cm^3s^-1"),
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(jHe, "cm^3s^-1"),
+        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
+        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"),
         UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 0.1,
         1.5e4, h0, he0);
     assert_values_equal(h0, h0f);

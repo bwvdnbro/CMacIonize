@@ -101,6 +101,7 @@ public:
 
   void calculate_ionization_state(unsigned int nphoton);
   static void set_reemission_probabilities(double T, DensityValues &cell);
+  void reset_grid();
 
   /**
    * @brief Iterator to loop over the cells in the grid.

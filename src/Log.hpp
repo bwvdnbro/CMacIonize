@@ -66,7 +66,18 @@ private:
     std::time_t timestamp = std::time(NULL);
     std::tm *time = std::localtime(&timestamp);
     std::stringstream timestream;
-    timestream << time->tm_hour << ":" << time->tm_min << ":" << time->tm_sec;
+    if (time->tm_hour < 10) {
+      timestream << "0";
+    }
+    timestream << time->tm_hour << ":";
+    if (time->tm_min < 10) {
+      timestream << "0";
+    }
+    timestream << time->tm_min << ":";
+    if (time->tm_sec < 10) {
+      timestream << "0";
+    }
+    timestream << time->tm_sec;
     return timestream.str();
   }
 

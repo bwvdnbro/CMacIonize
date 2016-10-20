@@ -142,6 +142,14 @@ public:
   }
 
   /**
+   * @brief Reset the values of the mean intensities to zero.
+   */
+  inline void reset_mean_intensities() {
+    _mean_intensity_H = 0.;
+    _mean_intensity_He = 0.;
+  }
+
+  /**
    * @brief Get the total density.
    *
    * @return Total density (in m^-3).
