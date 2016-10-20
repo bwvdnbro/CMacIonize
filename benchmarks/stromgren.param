@@ -26,3 +26,10 @@ photonsourcedistribution:
   type: SingleStar
   # position of the single stellar source
   position: [2.5 pc, 2.5 pc, 2.5 pc]
+
+# output options
+output:
+  # prefix to add to output files
+  prefix: snapshot
+  # number of digits to be used in the filename counter
+  padding: 3

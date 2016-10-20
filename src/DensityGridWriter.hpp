@@ -29,6 +29,8 @@
 #include <string>
 
 class DensityGrid;
+class Log;
+class ParameterFile;
 
 /**
  * @brief HDF5-file writer for the DensityGrid.
@@ -41,8 +43,16 @@ private:
   /*! @brief DensityGrid containing the data to write. */
   DensityGrid &_grid;
 
+  /*! @brief Number of digits used for the counter in the filenames. */
+  unsigned char _padding;
+
+  /*! @brief Log to write logging information to. */
+  Log *_log;
+
 public:
-  DensityGridWriter(std::string prefix, DensityGrid &grid);
+  DensityGridWriter(std::string prefix, DensityGrid &grid, Log *log = NULL,
+                    unsigned char padding = 3);
+  DensityGridWriter(ParameterFile &params, DensityGrid &grid, Log *log = NULL);
 
   void write(unsigned int iteration);
 };

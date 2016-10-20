@@ -29,6 +29,8 @@
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "HDF5Tools.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "Utilities.hpp"
 #include <vector>
 
@@ -37,12 +39,32 @@
  *
  * @param prefix Prefix for the name of the file to write.
  * @param grid DensityGrid containing the data to write.
+ * @param log Log to write logging information to.
+ * @param padding Number of digits used for the counter in the filenames.
  */
-DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid)
-    : _prefix(prefix), _grid(grid) {
+DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid,
+                                     Log *log, unsigned char padding)
+    : _prefix(prefix), _grid(grid), _padding(padding), _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
+  if (_log) {
+    _log->write_status("Set up DensityGridWriter with prefix \"", _prefix,
+                       "\".");
+  }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read.
+ * @param grid DensityGrid to write out.
+ * @param log Log to write logging information to.
+ */
+DensityGridWriter::DensityGridWriter(ParameterFile &params, DensityGrid &grid,
+                                     Log *log)
+    : DensityGridWriter(
+          params.get_value< std::string >("output.prefix", "snapshot"), grid,
+          log, params.get_value< unsigned char >("output.padding", 3)) {}
 
 /**
  * @brief Write the file.
@@ -51,7 +73,11 @@ DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid)
  */
 void DensityGridWriter::write(unsigned int iteration = 0) {
   std::string filename =
-      Utilities::compose_filename(_prefix, "hdf5", iteration, 3);
+      Utilities::compose_filename(_prefix, "hdf5", iteration, _padding);
+
+  if (_log) {
+    _log->write_status("Writing file \"", filename, "\".");
+  }
 
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_WRITE);

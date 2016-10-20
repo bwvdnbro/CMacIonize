@@ -215,6 +215,19 @@ template <> inline int ParameterFile::get_value< int >(std::string key) {
 }
 
 /**
+ * @brief ParameterFile::get_value specialization for an unsigned char value.
+ *
+ * @param key Key in the dictionary.
+ * @return Unsigned char value of the parameter.
+ */
+template <>
+inline unsigned char
+ParameterFile::get_value< unsigned char >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  return Utilities::convert< unsigned char >(svalue);
+}
+
+/**
  * @brief ParameterFile::get_value specialization for a boolean value.
  *
  * The following strings are evaluated as true: "true", "yes", "on", "y".
@@ -319,6 +332,26 @@ inline int ParameterFile::get_value< int >(std::string key, int default_value) {
     return default_value;
   }
   return Utilities::convert< int >(svalue);
+}
+
+/**
+ * @brief ParameterFile::get_value specialization for an unsigned char value.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Unsigned char value of the parameter.
+ */
+template <>
+inline unsigned char
+ParameterFile::get_value< unsigned char >(std::string key,
+                                          unsigned char default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    _dictionary[key] = Utilities::to_string< unsigned char >(default_value);
+    return default_value;
+  }
+  return Utilities::convert< unsigned char >(svalue);
 }
 
 /**

@@ -127,6 +127,21 @@ template <> inline int convert< int >(std::string value) {
 }
 
 /**
+ * @brief Convert the given string to an unsigned char value.
+ *
+ * @param value std::string value.
+ * @return Unsigned char stored in the string.
+ */
+template <> inline unsigned char convert< unsigned char >(std::string value) {
+  char *str_end;
+  unsigned char ivalue = strtol(value.c_str(), &str_end, 0);
+  if (str_end == value.c_str()) {
+    error("Error converting \"%s\" to an unsigned char value!", value.c_str());
+  }
+  return ivalue;
+}
+
+/**
  * @brief Convert the given string to an integer CoordinateVector.
  *
  * @param value std::string to convert.
@@ -179,6 +194,23 @@ template <> inline bool convert< bool >(std::string value) {
 template < typename T > std::string to_string(T value) {
   std::stringstream sstream;
   sstream << value;
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for unsigned char values.
+ *
+ * We have to convert the unsigned char to an integer before outputting,
+ * otherwise it is outputted as the character it is supposed to represent, which
+ * yields garbage.
+ *
+ * @param value Value to convert.
+ * @return std::string.
+ */
+template <> inline std::string to_string< unsigned char >(unsigned char value) {
+  std::stringstream sstream;
+  unsigned int ivalue = value;
+  sstream << ivalue;
   return sstream.str();
 }
 
