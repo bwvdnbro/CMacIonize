@@ -643,6 +643,37 @@ void DensityGrid::find_H0(double alphaH, double alphaHe, double jH, double jHe,
 }
 
 /**
+ * @brief find_H0() for a system without helium.
+ *
+ * We do not need to iterate in this case: the solution is simply given by the
+ * solution of a quadratic equation.
+ *
+ * @param alphaH Hydrogen recombination rate (in m^3s^-1).
+ * @param jH Hydrogen intensity integral (in s^-1).
+ * @param nH Hydrogen number density (in m^-3).
+ * @param T Temperature (in K).
+ * @param h0 Variable to store resulting hydrogen neutral fraction in.
+ */
+void DensityGrid::find_H0_simple(double alphaH, double jH, double nH, double T,
+                                 double &h0) {
+  // unit conversions
+  // we use Kenny's units inside this function, but all input and output units
+  // are SI units
+  alphaH = UnitConverter< QUANTITY_REACTION_RATE >::to_unit(alphaH, "cm^3s^-1");
+  jH = UnitConverter< QUANTITY_FREQUENCY >::to_unit(jH, "s^-1");
+  nH = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(nH, "cm^-3");
+
+  if (jH > 0. && nH > 0.) {
+    double aa = 0.5 * jH / nH / alphaH;
+    double bb = 2. / aa;
+    double cc = sqrt(bb + 1.);
+    h0 = 1. + aa * (1. - cc);
+  } else {
+    h0 = 1.;
+  }
+}
+
+/**
  * @brief Solves the ionization and temperature equations based on the values of
  * the mean intensity integrals in each cell.
  *
@@ -674,8 +705,13 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
               _recombination_rates.get_recombination_rate(ELEMENT_He, T);
           // h0find
           double h0, he0;
-          find_H0(alphaH, alphaHe, jH, jHe, ntot, _helium_abundance, T, h0,
-                  he0);
+          if (_helium_abundance) {
+            find_H0(alphaH, alphaHe, jH, jHe, ntot, _helium_abundance, T, h0,
+                    he0);
+          } else {
+            find_H0_simple(alphaH, jH, ntot, T, h0);
+            he0 = 0.;
+          }
 
           cell.set_neutral_fraction_H(h0);
           cell.set_neutral_fraction_He(he0);

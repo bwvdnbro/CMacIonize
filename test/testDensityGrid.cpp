@@ -276,6 +276,19 @@ int main(int argc, char **argv) {
         1.5e4, h0, he0);
     assert_values_equal(h0, h0f);
     assert_values_equal(he0, he0f);
+
+    double h0s;
+    DensityGrid::find_H0(
+        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
+        0., UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"), 0.,
+        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 0.,
+        1.5e4, h0, he0);
+    DensityGrid::find_H0_simple(
+        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
+        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
+        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 1.5e4,
+        h0s);
+    assert_values_equal_tol(h0, h0s, 1.e-7);
   }
 
   return 0;
