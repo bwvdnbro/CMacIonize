@@ -127,6 +127,22 @@ template <> inline int convert< int >(std::string value) {
 }
 
 /**
+ * @brief Convert the given string to an unsigned integer value.
+ *
+ * @param value std::string value.
+ * @return Unsigned integer stored in the string.
+ */
+template <> inline unsigned int convert< unsigned int >(std::string value) {
+  char *str_end;
+  unsigned int ivalue = strtol(value.c_str(), &str_end, 0);
+  if (str_end == value.c_str()) {
+    error("Error converting \"%s\" to an unsigned integer value!",
+          value.c_str());
+  }
+  return ivalue;
+}
+
+/**
  * @brief Convert the given string to an unsigned char value.
  *
  * @param value std::string value.

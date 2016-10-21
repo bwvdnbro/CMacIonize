@@ -57,6 +57,9 @@ private:
   /*! @brief Mean intensity of helium ionizing radiation (in m^3s^-1). */
   double _mean_intensity_He;
 
+  /*! @brief Neutral fraction of hydrogen during the previous step. */
+  double _old_neutral_fraction_H;
+
 public:
   /**
    * @brief Empty constructor.
@@ -64,7 +67,8 @@ public:
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
         _temperature(0.), _pHion(0.), _pHe_em{0., 0., 0., 0.},
-        _mean_intensity_H(0.), _mean_intensity_He(0.) {}
+        _mean_intensity_H(0.), _mean_intensity_He(0.),
+        _old_neutral_fraction_H(0.) {}
 
   /**
    * @brief Set the total density.
@@ -119,6 +123,16 @@ public:
    */
   inline void set_pHe_em(unsigned char index, double pHe_em) {
     _pHe_em[index] = pHe_em;
+  }
+
+  /**
+   * @brief Set the value of the hydrogen neutral fraction during the previous
+   * iteration.
+   *
+   * @param old_neutral_fraction_H Old hydrogen neutral fraction.
+   */
+  inline void set_old_neutral_fraction_H(double old_neutral_fraction_H) {
+    _old_neutral_fraction_H = old_neutral_fraction_H;
   }
 
   /**
@@ -207,6 +221,13 @@ public:
    * @return Mean intensity of helium ionizing radiation (in m^3s^-1).
    */
   inline double get_mean_intensity_He() { return _mean_intensity_He; }
+
+  /**
+   * @brief Get the hydrogen neutral fraction during the previous iteration.
+   *
+   * @return Old hydrogen neutral fraction.
+   */
+  inline double get_old_neutral_fraction_H() { return _old_neutral_fraction_H; }
 };
 
 #endif // DENSITYVALUES_HPP

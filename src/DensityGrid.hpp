@@ -106,6 +106,8 @@ public:
   static void set_reemission_probabilities(double T, DensityValues &cell);
   void reset_grid();
 
+  double get_chi_squared();
+
   /**
    * @brief Iterator to loop over the cells in the grid.
    */

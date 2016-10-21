@@ -694,6 +694,7 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
         DensityValues &cell = _density[i][j][k];
+        cell.set_old_neutral_fraction_H(cell.get_neutral_fraction_H());
         double jH = jfac * cell.get_mean_intensity_H();
         double jHe = jfac * cell.get_mean_intensity_He();
         double ntot = cell.get_total_density();
@@ -773,4 +774,25 @@ void DensityGrid::reset_grid() {
       }
     }
   }
+}
+
+/**
+ * @brief Get the total difference between the hydrogen neutral fractions after
+ * this iteration, and those after the previous iteration.
+ *
+ * @return Difference between current and previous neutral fraction estimates.
+ */
+double DensityGrid::get_chi_squared() {
+  double chi2 = 0.;
+  for (int i = 0; i < _ncell.x(); ++i) {
+    for (int j = 0; j < _ncell.y(); ++j) {
+      for (int k = 0; k < _ncell.z(); ++k) {
+        DensityValues &cell = _density[i][j][k];
+        double diff =
+            cell.get_neutral_fraction_H() - cell.get_old_neutral_fraction_H();
+        chi2 += diff * diff;
+      }
+    }
+  }
+  return chi2;
 }

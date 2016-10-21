@@ -5,7 +5,7 @@ box:
   # side lengths of the box
   sides: [10. pc, 10. pc, 10. pc]
   # number of cells in each dimension
-  ncell: [16, 16, 16]
+  ncell: [64, 64, 64]
 
 # density function that sets up the density field in the box
 densityfunction:
@@ -15,7 +15,7 @@ densityfunction:
   density: 100. cm^-3
 
 # assumed helium abundance for the ISM
-helium_abundance: 0.1
+helium_abundance: 0.
 
 # initial temperature of the ISM
 initial_temperature: 8000. K
@@ -26,6 +26,16 @@ photonsourcedistribution:
   type: SingleStar
   # position of the single stellar source
   position: [0. pc, 0. pc, 0. pc]
+
+# iteration control
+iterations:
+  # maximum number of iterations. The code will stop after this number of
+  # iterations, irrespective of whether the result is converged or not.
+  maxnumber: 20
+  # required tolerance. The tolerance is the relative difference between the
+  # chi2 values calculated for two successive steps in the iteration.
+  # If set to 0, the code will just perform maxnumber iterations and quit.
+  tolerance: 0.01
 
 # output options
 output:

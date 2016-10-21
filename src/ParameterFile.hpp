@@ -335,6 +335,26 @@ inline int ParameterFile::get_value< int >(std::string key, int default_value) {
 }
 
 /**
+ * @brief ParameterFile::get_value specialization for an unsigned integer value.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Unsigned integer value of the parameter.
+ */
+template <>
+inline unsigned int
+ParameterFile::get_value< unsigned int >(std::string key,
+                                         unsigned int default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    _dictionary[key] = Utilities::to_string< unsigned int >(default_value);
+    return default_value;
+  }
+  return Utilities::convert< unsigned int >(svalue);
+}
+
+/**
  * @brief ParameterFile::get_value specialization for an unsigned char value.
  *
  * @param key Key in the dictionary.
