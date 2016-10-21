@@ -29,7 +29,7 @@
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGrid.hpp"
-#include "DensityGridWriter.hpp"
+#include "DensityGridWriterFactory.hpp"
 #include "FileLog.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
@@ -105,11 +105,17 @@ int main(int argc, char **argv) {
   PhotonSource source(*sourcedistribution, spectrum, cross_sections, log);
 
   // set up output
-  DensityGridWriter writer(params, grid, log);
+  DensityGridWriter *writer =
+      DensityGridWriterFactory::generate(params, grid, log);
 
   unsigned int nloop =
       params.get_value< unsigned int >("iterations.maxnumber", 10);
   double chirel = params.get_value< double >("iterations.tolerance", 0.01);
+
+  unsigned int numphoton =
+      params.get_value< unsigned int >("number of photons", 1000000);
+  double Q = params.get_physical_value< QUANTITY_FREQUENCY >(
+      "ionizing luminosity", "4.26e49 s^-1");
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -127,7 +133,6 @@ int main(int argc, char **argv) {
   unsigned int loop = 0;
   while (loop < nloop && (chidiff > 0. || chidiff < -chirel)) {
     grid.reset_grid();
-    unsigned int numphoton = 1000000;
     source.set_number_of_photons(numphoton);
     log->write_status("Start shooting photons...");
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
@@ -163,7 +168,7 @@ int main(int argc, char **argv) {
         (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / numphoton;
     log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
                       "%.");
-    grid.calculate_ionization_state(numphoton);
+    grid.calculate_ionization_state(Q, numphoton);
 
     double chi2 = grid.get_chi_squared();
     log->write_status("Chi2: ", chi2, ".");
@@ -171,7 +176,7 @@ int main(int argc, char **argv) {
     log->write_status("Chidiff: ", chidiff, ".");
     old_chi2 = chi2;
     // write snapshot
-    writer.write(loop);
+    writer->write(loop);
     ++loop;
   }
 
@@ -180,7 +185,8 @@ int main(int argc, char **argv) {
                       ") reached, stopping.");
   }
   if ((chidiff < 0. && chidiff > -chirel)) {
-    log->write_status("Required tolerance (", chidiff, ") reached, stopping.");
+    log->write_status("Required tolerance (", (-chidiff),
+                      ") reached, stopping.");
   }
 
   // idea: the photons themselves should be a class, storing a current
@@ -192,6 +198,7 @@ int main(int argc, char **argv) {
 
   delete sourcedistribution;
   delete density_function;
+  delete writer;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program

@@ -17,49 +17,39 @@
  ******************************************************************************/
 
 /**
- * @file DensityGridWriter.hpp
+ * @file GadgetDensityGridWriter.hpp
  *
- * @brief Snapshot file writer for the DensityGrid.
+ * @brief HDF5-file writer for the DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef DENSITYGRIDWRITER_HPP
-#define DENSITYGRIDWRITER_HPP
+#ifndef GADGETDENSITYGRIDWRITER_HPP
+#define GADGETDENSITYGRIDWRITER_HPP
 
-#include <cstdlib>
+#include "DensityGridWriter.hpp"
 
-class DensityGrid;
-class Log;
+#include <string>
+
+class ParameterFile;
 
 /**
- * @brief Snapshot file writer for the DensityGrid.
+ * @brief HDF5-file writer for the DensityGrid.
  */
-class DensityGridWriter {
-protected:
-  /*! @brief DensityGrid containing the data to write. */
-  DensityGrid &_grid;
+class GadgetDensityGridWriter : public DensityGridWriter {
+private:
+  /*! @brief Prefix of the name for the file to write. */
+  std::string _prefix;
 
-  /*! @brief Log to write logging information to. */
-  Log *_log;
+  /*! @brief Number of digits used for the counter in the filenames. */
+  unsigned char _padding;
 
 public:
-  /**
-   * @brief Constructor.
-   *
-   * @param grid Grid to write out.
-   * @param log Log to write logging information to.
-   */
-  DensityGridWriter(DensityGrid &grid, Log *log = NULL)
-      : _grid(grid), _log(log) {}
+  GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
+                          Log *log = NULL, unsigned char padding = 3);
+  GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
+                          Log *log = NULL);
 
-  virtual ~DensityGridWriter() {}
-
-  /**
-   * @brief Write a snapshot.
-   *
-   * @param iteration Iteration number to use in the snapshot file name(s).
-   */
-  virtual void write(unsigned int iteration) = 0;
+  virtual void write(unsigned int iteration);
 };
 
-#endif // DENSITYGRIDWRITER_HPP
+#endif // GADGETDENSITYGRIDWRITER_HPP

@@ -102,7 +102,7 @@ public:
   static void find_H0_simple(double alphaH, double jH, double nH, double T,
                              double &h0);
 
-  void calculate_ionization_state(unsigned int nphoton);
+  void calculate_ionization_state(double Q, unsigned int nphoton);
   static void set_reemission_probabilities(double T, DensityValues &cell);
   void reset_grid();
 

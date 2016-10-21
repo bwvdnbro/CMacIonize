@@ -17,9 +17,9 @@
  ******************************************************************************/
 
 /**
- * @file testDensityGridWriter.cpp
+ * @file testGadgetDensityGridWriter.cpp
  *
- * @brief Unit test for the DensityGridWriter class.
+ * @brief Unit test for the GadgetDensityGridWriter class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
@@ -28,7 +28,7 @@
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
 #include "DensityGrid.hpp"
-#include "DensityGridWriter.hpp"
+#include "GadgetDensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "RecombinationRates.hpp"
@@ -54,7 +54,7 @@ public:
 };
 
 /**
- * @brief Unit test for the DensityGridWriter class.
+ * @brief Unit test for the GadgetDensityGridWriter class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     DensityGrid grid(box, ncell, 0.1, 8000., density_function,
                      recombination_rates);
 
-    DensityGridWriter writer("testgrid", grid);
+    GadgetDensityGridWriter writer("testgrid", grid);
     writer.write(0);
   }
 

@@ -289,10 +289,10 @@ set(TESTRANDOMGENERATOR_SOURCES
 add_unit_test(NAME testRandomGenerator
               SOURCES ${TESTRANDOMGENERATOR_SOURCES})
 
-## DensityGridWriter test
+## GadgetDensityGridWriter test
 if(HAVE_HDF5)
-set(TESTDENSITYGRIDWRITER_SOURCES
-    testDensityGridWriter.cpp
+set(TESTGADGETDENSITYGRIDWRITER_SOURCES
+    testGadgetDensityGridWriter.cpp
 
     Assert.hpp
 
@@ -301,14 +301,14 @@ set(TESTDENSITYGRIDWRITER_SOURCES
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
-    ../src/DensityGridWriter.cpp
-    ../src/DensityGridWriter.hpp
+    ../src/GadgetDensityGridWriter.cpp
+    ../src/GadgetDensityGridWriter.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/RecombinationRates.hpp
 )
-add_unit_test(NAME testDensityGridWriter
-              SOURCES ${TESTDENSITYGRIDWRITER_SOURCES}
+add_unit_test(NAME testGadgetDensityGridWriter
+              SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 

@@ -17,13 +17,13 @@
  ******************************************************************************/
 
 /**
- * @file DensityGridWriter.cpp
+ * @file GadgetDensityGridWriter.cpp
  *
- * @brief DensityGridWriter implementation.
+ * @brief GadgetDensityGridWriter implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "DensityGridWriter.hpp"
+#include "GadgetDensityGridWriter.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
@@ -42,13 +42,14 @@
  * @param log Log to write logging information to.
  * @param padding Number of digits used for the counter in the filenames.
  */
-DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid,
-                                     Log *log, unsigned char padding)
-    : _prefix(prefix), _grid(grid), _padding(padding), _log(log) {
+GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
+                                                 DensityGrid &grid, Log *log,
+                                                 unsigned char padding)
+    : DensityGridWriter(grid, log), _prefix(prefix), _padding(padding) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
   if (_log) {
-    _log->write_status("Set up DensityGridWriter with prefix \"", _prefix,
+    _log->write_status("Set up GadgetDensityGridWriter with prefix \"", _prefix,
                        "\".");
   }
 }
@@ -60,9 +61,9 @@ DensityGridWriter::DensityGridWriter(std::string prefix, DensityGrid &grid,
  * @param grid DensityGrid to write out.
  * @param log Log to write logging information to.
  */
-DensityGridWriter::DensityGridWriter(ParameterFile &params, DensityGrid &grid,
-                                     Log *log)
-    : DensityGridWriter(
+GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
+                                                 DensityGrid &grid, Log *log)
+    : GadgetDensityGridWriter(
           params.get_value< std::string >("output.prefix", "snapshot"), grid,
           log, params.get_value< unsigned char >("output.padding", 3)) {}
 
@@ -71,7 +72,7 @@ DensityGridWriter::DensityGridWriter(ParameterFile &params, DensityGrid &grid,
  *
  * @param iteration Value of the counter to append to the filename.
  */
-void DensityGridWriter::write(unsigned int iteration = 0) {
+void GadgetDensityGridWriter::write(unsigned int iteration = 0) {
   std::string filename =
       Utilities::compose_filename(_prefix, "hdf5", iteration, _padding);
 

@@ -27,6 +27,12 @@ photonsourcedistribution:
   # position of the single stellar source
   position: [0. pc, 0. pc, 0. pc]
 
+# number of photons to use during each iteration
+number of photons: 1000000
+
+# ionizing luminosity of all sources together
+ionizing luminosity: 4.26e49 s^-1
+
 # iteration control
 iterations:
   # maximum number of iterations. The code will stop after this number of
@@ -39,6 +45,8 @@ iterations:
 
 # output options
 output:
+  # type of output files to write
+  type: Gadget
   # prefix to add to output files
   prefix: snapshot
   # number of digits to be used in the filename counter

@@ -54,7 +54,7 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     DensityGrid.cpp
-    DensityGridWriter.cpp
+    GadgetDensityGridWriter.cpp
     GadgetSnapshotPhotonSourceDistribution.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
@@ -76,8 +76,10 @@ set(CMACIONIZE_SOURCES
     DensityFunctionFactory.hpp
     DensityGrid.hpp
     DensityGridWriter.hpp
+    DensityGridWriterFactory.hpp
     DensityValues.hpp
     Error.hpp
+    GadgetDensityGridWriter.hpp
     GadgetSnapshotPhotonSourceDistribution.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp

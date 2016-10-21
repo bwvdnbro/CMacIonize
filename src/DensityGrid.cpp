@@ -677,9 +677,10 @@ void DensityGrid::find_H0_simple(double alphaH, double jH, double nH, double T,
  * @brief Solves the ionization and temperature equations based on the values of
  * the mean intensity integrals in each cell.
  *
+ * @param Q Photon luminosity of the source (in s^-1).
  * @param nphoton Number of photons used in this particular iteration.
  */
-void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
+void DensityGrid::calculate_ionization_state(double Q, unsigned int nphoton) {
   if (_log) {
     _log->write_status("Calculating ionization state after shooting ", nphoton,
                        " photons...");
@@ -688,8 +689,7 @@ void DensityGrid::calculate_ionization_state(unsigned int nphoton) {
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
-  // the 4.26e49 is in Hz and is the (hardcoded) photon luminosity of our source
-  double jfac = 4.26e49 / nphoton / cellvolume;
+  double jfac = Q / nphoton / cellvolume;
   for (int i = 0; i < _ncell.x(); ++i) {
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
