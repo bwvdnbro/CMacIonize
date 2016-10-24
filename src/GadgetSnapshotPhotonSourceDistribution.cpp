@@ -73,6 +73,8 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     _positions[i][2] *= unit_length_in_SI;
   }
 
+  _total_luminosity = 0.;
+
   if (_log) {
     _log->write_status("Succesfully read in photon sources from \"", filename,
                        "\".");
@@ -122,4 +124,13 @@ GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {
  */
 double GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) {
   return 1. / _positions.size();
+}
+
+/**
+ * @brief Get the total luminosity of all sources in the snapshot file.
+ *
+ * @return Total luminosity (in s^-1).
+ */
+double GadgetSnapshotPhotonSourceDistribution::get_total_luminosity() {
+  return _total_luminosity;
 }

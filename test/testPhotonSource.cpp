@@ -76,7 +76,7 @@ public:
  */
 int main(int argc, char **argv) {
   SingleStarPhotonSourceDistribution distribution(
-      CoordinateVector<>(0.5, 0.5, 0.5));
+      CoordinateVector<>(0.5, 0.5, 0.5), 1.);
   TestPhotonSourceSpectrum spectrum;
   TestCrossSections cross_sections;
 

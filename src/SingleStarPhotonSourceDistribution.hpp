@@ -39,6 +39,9 @@ private:
   /*! @brief Position of the single stellar source (in m). */
   CoordinateVector<> _position;
 
+  /*! @brief Luminosity of the single stellar source (in s^-1). */
+  double _luminosity;
+
   /*! @brief Log to write logging information to. */
   Log *_log;
 
@@ -47,15 +50,17 @@ public:
    * @brief Constructor.
    *
    * @param position Position of the single stellar source (in m).
+   * @param luminosity Luminosity of the single stellar source (in s^-1).
    * @param log Log to write logging information to.
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position,
-                                     Log *log = nullptr)
-      : _position(position), _log(log) {
+                                     double luminosity, Log *log = nullptr)
+      : _position(position), _luminosity(luminosity), _log(log) {
     if (_log) {
       _log->write_status(
           "Created SingleStarPhotonSourceDistribution at position [",
-          _position.x(), " m,", _position.y(), " m,", _position.z(), " m].");
+          _position.x(), " m,", _position.y(), " m,", _position.z(),
+          " m], with luminosity ", _luminosity, " s^-1.");
     }
   }
 
@@ -69,6 +74,8 @@ public:
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "photonsourcedistribution.position", "[0.5 m, 0.5 m, 0.5 m]"),
+            params.get_physical_value< QUANTITY_FREQUENCY >(
+                "photonsourcedistribution.luminosity", "4.26e49 s^-1"),
             log) {}
 
   /**
@@ -76,7 +83,7 @@ public:
    *
    * @return 1, as this distribution contains a single stellar source
    */
-  virtual unsigned int get_number_of_sources() { return 1; };
+  virtual unsigned int get_number_of_sources() { return 1; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -97,6 +104,13 @@ public:
    * @return Weight of the single photon source: 1.
    */
   virtual double get_weight(unsigned int index) { return 1.; }
+
+  /**
+   * @brief Get the luminosity of the single source.
+   *
+   * @return Luminosity (in s^-1).
+   */
+  virtual double get_total_luminosity() { return _luminosity; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

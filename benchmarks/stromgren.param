@@ -26,12 +26,11 @@ photonsourcedistribution:
   type: SingleStar
   # position of the single stellar source
   position: [0. pc, 0. pc, 0. pc]
+  # ionizing luminosity of the single stellar source
+  luminosity: 4.26e49 s^-1
 
 # number of photons to use during each iteration
 number of photons: 1000000
-
-# ionizing luminosity of all sources together
-ionizing luminosity: 4.26e49 s^-1
 
 # iteration control
 iterations:

@@ -56,6 +56,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
     _positions[i] = distribution.get_position(i);
     _weights[i] = distribution.get_weight(i);
   }
+  _total_luminosity = distribution.get_total_luminosity();
 
   if (_log) {
     _log->write_status("Constructed PhotonSource with ", _positions.size(),
@@ -118,6 +119,13 @@ Photon PhotonSource::get_random_photon() {
 
   return Photon(position, direction, energy, xsecH, xsecHe);
 }
+
+/**
+ * @brief Get the total luminosity of all sources together.
+ *
+ * @return Total luminosity (in s^-1).
+ */
+double PhotonSource::get_total_luminosity() { return _total_luminosity; }
 
 /**
  * @brief Reemit the given Photon.

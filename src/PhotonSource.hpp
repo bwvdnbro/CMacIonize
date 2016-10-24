@@ -68,6 +68,9 @@ private:
   /*! @brief Weights of the discrete photon sources. */
   std::vector< double > _weights;
 
+  /*! @brief Total luminosity of all sources together (in s^-1). */
+  double _total_luminosity;
+
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum &_spectrum;
 
@@ -110,6 +113,8 @@ public:
   }
 
   Photon get_random_photon();
+
+  double get_total_luminosity();
 
   bool reemit(Photon &photon, DensityValues &cell, double helium_abundance);
 };

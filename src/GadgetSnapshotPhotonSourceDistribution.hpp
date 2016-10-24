@@ -44,6 +44,9 @@ private:
   /*! @brief Positions of the sources in the snapshot file (in m). */
   std::vector< CoordinateVector<> > _positions;
 
+  /*! @brief Total luminosity of all sources in the snapshot file (in s^-1). */
+  double _total_luminosity;
+
   /*! @brief Log to write logging information to. */
   Log *_log;
 
@@ -56,6 +59,7 @@ public:
   virtual unsigned int get_number_of_sources();
   virtual CoordinateVector<> get_position(unsigned int index);
   virtual double get_weight(unsigned int index);
+  virtual double get_total_luminosity();
 };
 
 #endif // GADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_HPP

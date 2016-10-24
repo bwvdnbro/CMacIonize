@@ -63,6 +63,13 @@ public:
    * emitted from this particular source.
    */
   virtual double get_weight(unsigned int index) = 0;
+
+  /**
+   * @brief Get the total luminosity of all sources together.
+   *
+   * @return Total luminosity (in s^-1).
+   */
+  virtual double get_total_luminosity() = 0;
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP
