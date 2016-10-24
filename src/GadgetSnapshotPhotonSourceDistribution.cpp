@@ -47,24 +47,45 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
+  // snapshot time
+  HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
+  double snaptime = HDF5Tools::read_attribute< double >(header, "Time");
+  HDF5Tools::close_group(header);
+
   // units
   HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
   double unit_length_in_cgs =
       HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+  double unit_time_in_cgs =
+      HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
   double unit_length_in_SI =
       UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+  // seconds are seconds
+  double unit_time_in_SI = unit_time_in_cgs;
   HDF5Tools::close_group(units);
 
   // open the group containing the star particle data
   HDF5Tools::HDF5Group starparticles =
       HDF5Tools::open_group(file, "/PartType4");
   // read the positions
-  _positions = HDF5Tools::read_dataset< CoordinateVector<> >(starparticles,
-                                                             "Coordinates");
+  std::vector< CoordinateVector<> > positions =
+      HDF5Tools::read_dataset< CoordinateVector<> >(starparticles,
+                                                    "Coordinates");
+  // read the formation times
+  std::vector< double > formtimes =
+      HDF5Tools::read_dataset< double >(starparticles, "FormationTime");
   // close the group
   HDF5Tools::close_group(starparticles);
   // close the file
   HDF5Tools::close_file(file);
+
+  // filter out all stars older than 5 Myr
+  for (unsigned int i = 0; i < formtimes.size(); ++i) {
+    double age = (snaptime - formtimes[i]) * unit_time_in_SI;
+    if (age <= 1.577e14) {
+      _positions.push_back(positions[i]);
+    }
+  }
 
   // unit conversion
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -73,11 +94,14 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     _positions[i][2] *= unit_length_in_SI;
   }
 
-  _total_luminosity = 0.;
+  _total_luminosity = _positions.size() * 4.72e50;
 
   if (_log) {
     _log->write_status("Succesfully read in photon sources from \"", filename,
                        "\".");
+    _log->write_status("Found ", _positions.size(),
+                       " active sources, with a total luminosity of ",
+                       _total_luminosity, " s^-1.");
   }
 }
 
@@ -90,7 +114,8 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("filename"), log) {}
+          params.get_value< std::string >("photonsourcedistribution.filename"),
+          log) {}
 
 /**
  * @brief Get the number of sources in the snapshot file.
