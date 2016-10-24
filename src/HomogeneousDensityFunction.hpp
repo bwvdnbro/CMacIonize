@@ -46,7 +46,7 @@ public:
    * @param density Single density value for the entire box (in m^-3).
    * @param log Log to write logging information to.
    */
-  HomogeneousDensityFunction(double density = 1., Log *log = NULL)
+  HomogeneousDensityFunction(double density = 1., Log *log = nullptr)
       : _density(density) {
     if (log) {
       log->write_status(
@@ -61,7 +61,7 @@ public:
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
-  HomogeneousDensityFunction(ParameterFile &params, Log *log = NULL)
+  HomogeneousDensityFunction(ParameterFile &params, Log *log = nullptr)
       : HomogeneousDensityFunction(
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
                 "densityfunction.density", "100. cm^-3"),

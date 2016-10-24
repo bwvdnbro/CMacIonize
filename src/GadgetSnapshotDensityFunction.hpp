@@ -56,9 +56,9 @@ private:
   double cubic_spline_kernel(double u, double h);
 
 public:
-  GadgetSnapshotDensityFunction(std::string name, Log *log = NULL);
+  GadgetSnapshotDensityFunction(std::string name, Log *log = nullptr);
 
-  GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = NULL);
+  GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   virtual ~GadgetSnapshotDensityFunction() {}
 

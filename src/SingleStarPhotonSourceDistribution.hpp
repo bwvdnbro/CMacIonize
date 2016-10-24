@@ -50,7 +50,7 @@ public:
    * @param log Log to write logging information to.
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position,
-                                     Log *log = NULL)
+                                     Log *log = nullptr)
       : _position(position), _log(log) {
     if (_log) {
       _log->write_status(
@@ -65,7 +65,7 @@ public:
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
-  SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = NULL)
+  SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "photonsourcedistribution.position", "[0.5 m, 0.5 m, 0.5 m]"),

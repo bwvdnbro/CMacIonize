@@ -56,7 +56,7 @@ public:
    * Memory management for the pointer needs to be done by the calling routine.
    */
   static PhotonSourceDistribution *generate(ParameterFile &params,
-                                            Log *log = NULL) {
+                                            Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
         "photonsourcedistribution.type", "SingleStar");
     if (log) {
@@ -75,11 +75,11 @@ public:
       }
       error("A GadgetSnapshotPhotonSourceDistribution requires HDF5. However, "
             "the code was compiled without HDF5 support!");
-      return NULL;
+      return nullptr;
 #endif
     } else {
       error("Unknown PhotonSourceDistribution type: \"%s\".", type.c_str());
-      return NULL;
+      return nullptr;
     }
   }
 };

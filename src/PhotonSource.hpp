@@ -89,7 +89,7 @@ private:
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
                PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
-               Log *log = NULL);
+               Log *log = nullptr);
 
   void set_number_of_photons(unsigned int number_of_photons);
 

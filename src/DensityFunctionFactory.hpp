@@ -57,7 +57,7 @@ public:
    * @return Pointer to a newly created DensityFunction implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  static DensityFunction *generate(ParameterFile &params, Log *log = NULL) {
+  static DensityFunction *generate(ParameterFile &params, Log *log = nullptr) {
     std::string type =
         params.get_value< std::string >("densityfunction.type", "Homogeneous");
     if (log) {
@@ -76,11 +76,11 @@ public:
       }
       error("A GadgetSnapshotDensityFunction requires HDF5. However, the code "
             "was compiled without HDF5 support!");
-      return NULL;
+      return nullptr;
 #endif
     } else {
       error("Unknown DensityFunction type: \"%s\".", type.c_str());
-      return NULL;
+      return nullptr;
     }
   }
 };

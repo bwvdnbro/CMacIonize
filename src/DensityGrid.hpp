@@ -72,10 +72,10 @@ private:
 public:
   DensityGrid(Box box, CoordinateVector< int > ncell, double helium_abundance,
               double initial_temperature, DensityFunction &density_function,
-              RecombinationRates &recombination_rates, Log *log = NULL);
+              RecombinationRates &recombination_rates, Log *log = nullptr);
 
   DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              RecombinationRates &recombination_rates, Log *log = NULL);
+              RecombinationRates &recombination_rates, Log *log = nullptr);
 
   ~DensityGrid();
 

@@ -63,7 +63,7 @@ private:
    * @return Time stamp.
    */
   inline std::string get_timestamp() {
-    std::time_t timestamp = std::time(NULL);
+    std::time_t timestamp = std::time(nullptr);
     std::tm *time = std::localtime(&timestamp);
     std::stringstream timestream;
     if (time->tm_hour < 10) {

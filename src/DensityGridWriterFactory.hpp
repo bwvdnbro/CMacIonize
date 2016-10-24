@@ -58,7 +58,7 @@ public:
    * management for the pointer needs to be done by the calling routine.
    */
   static DensityGridWriter *generate(ParameterFile &params, DensityGrid &grid,
-                                     Log *log = NULL) {
+                                     Log *log = nullptr) {
     std::string type = params.get_value< std::string >("output.type", "Gadget");
     if (log) {
       log->write_info("Requested DensityGridWriter type: ", type);
@@ -73,11 +73,11 @@ public:
       }
       error("A GadgetDensityGridWriter requires HDF5. However, the code was "
             "compiled without HDF5 support!");
-      return NULL;
+      return nullptr;
 #endif
     } else {
       error("Unknown DensityGridWriter type: \"%s\".", type.c_str());
-      return NULL;
+      return nullptr;
     }
   }
 };

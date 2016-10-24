@@ -48,9 +48,10 @@ private:
   Log *_log;
 
 public:
-  GadgetSnapshotPhotonSourceDistribution(std::string filename, Log *log = NULL);
+  GadgetSnapshotPhotonSourceDistribution(std::string filename,
+                                         Log *log = nullptr);
   GadgetSnapshotPhotonSourceDistribution(ParameterFile &params,
-                                         Log *log = NULL);
+                                         Log *log = nullptr);
 
   virtual unsigned int get_number_of_sources();
   virtual CoordinateVector<> get_position(unsigned int index);

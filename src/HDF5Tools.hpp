@@ -60,9 +60,9 @@ enum HDF5FileMode {
  */
 inline void initialize() {
 #ifdef HDF5_OLD_API
-  herr_t status = H5Eset_auto(NULL, NULL);
+  herr_t status = H5Eset_auto(nullptr, nullptr);
 #else
-  herr_t status = H5Eset_auto(H5E_DEFAULT, NULL, NULL);
+  herr_t status = H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
 #endif
   if (status < 0) {
     error("Unable to turn off default HDF5 error handling!");
@@ -576,7 +576,7 @@ inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
   hid_t datatype = get_datatype_name< double >();
   // create dataspace
   hsize_t dims[1] = {3};
-  hid_t attspace = H5Screate_simple(1, dims, NULL);
+  hid_t attspace = H5Screate_simple(1, dims, nullptr);
   if (attspace < 0) {
     error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
   }
@@ -629,7 +629,7 @@ inline void write_vector_attribute(hid_t group, std::string name,
   hid_t datatype = get_datatype_name< T >();
   // create dataspace
   hsize_t dims[1] = {value.size()};
-  hid_t attspace = H5Screate_simple(1, dims, NULL);
+  hid_t attspace = H5Screate_simple(1, dims, nullptr);
   if (attspace < 0) {
     error("Failed to create dataspace for attribute \"%s\"!", name.c_str());
   }
@@ -822,7 +822,7 @@ inline void write_dataset(hid_t group, std::string name,
 
   hsize_t dims[1] = {values.size()};
   // create dataspace
-  hid_t filespace = H5Screate_simple(1, dims, NULL);
+  hid_t filespace = H5Screate_simple(1, dims, nullptr);
   if (filespace < 0) {
     error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
@@ -873,7 +873,7 @@ inline void write_dataset(hid_t group, std::string name,
 
   hsize_t dims[2] = {values.size(), 3};
   // create dataspace
-  hid_t filespace = H5Screate_simple(2, dims, NULL);
+  hid_t filespace = H5Screate_simple(2, dims, nullptr);
   if (filespace < 0) {
     error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }

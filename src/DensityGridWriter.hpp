@@ -49,7 +49,7 @@ public:
    * @param grid Grid to write out.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(DensityGrid &grid, Log *log = NULL)
+  DensityGridWriter(DensityGrid &grid, Log *log = nullptr)
       : _grid(grid), _log(log) {}
 
   virtual ~DensityGridWriter() {}

@@ -45,9 +45,9 @@ private:
 
 public:
   GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
-                          Log *log = NULL, unsigned char padding = 3);
+                          Log *log = nullptr, unsigned char padding = 3);
   GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
-                          Log *log = NULL);
+                          Log *log = nullptr);
 
   virtual void write(unsigned int iteration);
 };
