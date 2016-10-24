@@ -61,7 +61,8 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
-                                                             Log *log) {
+                                                             Log *log)
+    : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -123,8 +124,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
     _smoothing_lengths[i] *= unit_length_in_SI;
   }
 
-  if (log) {
-    log->write_status("Successfully read densities from file \"", name, "\".");
+  if (_log) {
+    _log->write_status("Successfully read densities from file \"", name, "\".");
   }
 }
 
@@ -159,18 +160,18 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
     double m = _masses[i];
     density += m * cubic_spline_kernel(u, h);
   }
-  return density;
+  return density / 1.6737236e-27;
 }
 
 /**
- * @brief Get the total mass of all SPH particles in the snapshot.
+ * @brief Get the total number of hydrogen atoms in the snapshot.
  *
- * @return Sum of the masses of all SPH particles (in kg).
+ * @return Sum of the hydrogen number of all SPH particles in the snapshot.
  */
-double GadgetSnapshotDensityFunction::get_total_mass() {
+double GadgetSnapshotDensityFunction::get_total_hydrogen_number() {
   double mtot = 0.;
   for (unsigned int i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];
   }
-  return mtot;
+  return mtot / 1.6737236e-27;
 }

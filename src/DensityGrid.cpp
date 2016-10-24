@@ -75,6 +75,9 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
   for (int i = 0; i < _ncell.x(); ++i) {
+    if (_log) {
+      _log->write_info("Filled surface ", i, " of ", _ncell.x(), ".");
+    }
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
         double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
@@ -158,11 +161,11 @@ DensityGrid::~DensityGrid() {
 }
 
 /**
- * @brief Get the total mass contained in the grid.
+ * @brief Get the total number of hydrogen atoms contained in the grid.
  *
- * @return Total mass contained in the grid (in kg).
+ * @return Total number of hydrogen atoms contained in the grid.
  */
-double DensityGrid::get_total_mass() {
+double DensityGrid::get_total_hydrogen_number() {
   double mtot = 0;
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
 

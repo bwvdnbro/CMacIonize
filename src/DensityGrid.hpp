@@ -79,7 +79,7 @@ public:
 
   ~DensityGrid();
 
-  double get_total_mass();
+  double get_total_hydrogen_number();
 
   Box get_box();
   unsigned int get_number_of_cells();

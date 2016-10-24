@@ -53,6 +53,9 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
   double cubic_spline_kernel(double u, double h);
 
 public:
@@ -64,7 +67,7 @@ public:
 
   virtual double operator()(CoordinateVector<> position);
 
-  double get_total_mass();
+  double get_total_hydrogen_number();
 };
 
 #endif // GADGETSNAPSHOTDENSITYFUNCTION_HPP

@@ -29,6 +29,7 @@
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "RecombinationRates.hpp"
+#include "TerminalLog.hpp"
 using namespace std;
 
 /**
@@ -60,14 +61,16 @@ public:
 int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
-  GadgetSnapshotDensityFunction density("test.hdf5");
+  TerminalLog tlog(LOGLEVEL_INFO);
+  GadgetSnapshotDensityFunction density("test.hdf5", &tlog);
   TestRecombinationRates testrecombinationrates;
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   DensityGrid grid(box, 32, 0.1, 8000., density, testrecombinationrates);
-  assert_values_equal(grid.get_total_mass(), density.get_total_mass());
+  assert_values_equal(grid.get_total_hydrogen_number(),
+                      density.get_total_hydrogen_number());
 
   return 0;
 }

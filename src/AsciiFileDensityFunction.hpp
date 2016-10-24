@@ -60,7 +60,7 @@ public:
 
   virtual double operator()(CoordinateVector<> position);
 
-  double get_total_mass();
+  double get_total_hydrogen_number();
 };
 
 #endif // ASCIIFILEDENSITYFUNCTION_HPP

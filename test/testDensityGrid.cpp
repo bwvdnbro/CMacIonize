@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
   // CoordinateVector<unsigned char> argument.
   DensityGrid grid(box, 64, 0.1, 8000., testfunction, testrecombinationrates);
 
-  assert_values_equal(1., grid.get_total_mass());
+  assert_values_equal(1., grid.get_total_hydrogen_number());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
   CoordinateVector< int > index = grid.get_cell_indices(photon_origin);

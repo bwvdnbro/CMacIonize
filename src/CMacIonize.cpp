@@ -37,6 +37,7 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "TerminalLog.hpp"
+#include "Timer.hpp"
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
 #include <iostream>
@@ -52,6 +53,8 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  Timer programtimer;
+
   // first thing we should do: parse the command line arguments
   // we need to define a CommandLineParser object that does this and acts as a
   // dictionary that can be queried
@@ -190,6 +193,9 @@ int main(int argc, char **argv) {
     log->write_status("Required tolerance (", (-chidiff),
                       ") reached, stopping.");
   }
+
+  programtimer.stop();
+  log->write_status("Total program time: ", programtimer.value(), " s.");
 
   delete sourcedistribution;
   delete density_function;

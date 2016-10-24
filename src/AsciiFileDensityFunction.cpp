@@ -157,11 +157,11 @@ double AsciiFileDensityFunction::operator()(CoordinateVector<> position) {
 }
 
 /**
- * @brief Get the total mass contained in the grid.
+ * @brief Get the total number of hydrogen atoms in the file.
  *
- * @return Total mass (in kg).
+ * @return Total number of hydrogen atoms.
  */
-double AsciiFileDensityFunction::get_total_mass() {
+double AsciiFileDensityFunction::get_total_hydrogen_number() {
   double side_x, side_y, side_z, cellvolume;
   side_x = _box.get_sides().x() / _ncell.x();
   side_y = _box.get_sides().y() / _ncell.y();
