@@ -50,6 +50,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
 
 set(CMACIONIZE_SOURCES
+    AsciiFileDensityFunction.cpp
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
@@ -66,6 +67,7 @@ set(CMACIONIZE_SOURCES
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    AsciiFileDensityFunction.hpp
     Box.hpp
     Configuration.hpp.in
     CoordinateVector.hpp

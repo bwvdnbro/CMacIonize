@@ -33,6 +33,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "AsciiFileDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 
 // HDF5 dependent implementations
@@ -65,6 +66,8 @@ public:
     }
     if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
+    } else if (type == "AsciiFile") {
+      return new AsciiFileDensityFunction(params, log);
     } else if (type == "GadgetSnapshot") {
 #ifdef HAVE_HDF5
       return new GadgetSnapshotDensityFunction(params, log);

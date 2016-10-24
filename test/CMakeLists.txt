@@ -354,6 +354,19 @@ set(TESTUNITCONVERTER_SOURCES
 add_unit_test(NAME testUnitConverter
               SOURCES ${TESTUNITCONVERTER_SOURCES})
 
+## Unit test for AsciiFileDensityFunction
+set(TESTASCIIFILEDENSITYFUNCTION_SOURCES
+    testAsciiFileDensityFunction.cpp
+
+    ../src/AsciiFileDensityFunction.cpp
+    ../src/AsciiFileDensityFunction.hpp
+)
+add_unit_test(NAME testAsciiFileDensityFunction
+              SOURCES ${TESTASCIIFILEDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/testgrid.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/testgrid.txt
+               COPYONLY)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
