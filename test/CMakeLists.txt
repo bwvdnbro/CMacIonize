@@ -367,6 +367,16 @@ configure_file(${PROJECT_SOURCE_DIR}/test/testgrid.txt
                ${PROJECT_BINARY_DIR}/rundir/test/testgrid.txt
                COPYONLY)
 
+## Unit test for Octree
+set(TESTOCTREE_SOURCES
+    testOctree.cpp
+
+    ../src/Octree.hpp
+    ../src/OctreeNode.hpp
+)
+add_unit_test(NAME testOctree
+              SOURCES ${TESTOCTREE_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
