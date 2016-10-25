@@ -96,9 +96,16 @@ int main(int argc, char **argv) {
   }
   {
     // point inside (pathological case)
-    Box boxCaseG(CoordinateVector<>(0.), CoordinateVector<>(0.25));
+    Box boxCaseG(CoordinateVector<>(0., 0., 0.5), CoordinateVector<>(0.5));
     CoordinateVector<> vecCaseG(0., 0., 0.);
     assert_condition(box.periodic_distance(boxCaseG, vecCaseG) == 0.);
+  }
+  {
+    // point outside, non-periodically wrapped distance seems short enough,
+    // but wrapped distance is shorter
+    Box boxCaseH(CoordinateVector<>(0., 0.5, 0.), CoordinateVector<>(0.5));
+    CoordinateVector<> vecCaseH(0.125, 0.125, 0.125);
+    assert_condition(box.periodic_distance(boxCaseH, vecCaseH) == 0.125);
   }
 
   unsigned int numpos = 100;
@@ -142,7 +149,7 @@ int main(int argc, char **argv) {
     Octree tree(positions, box, true);
     tree.set_auxiliaries(hs, Octree::max< double >);
 
-    CoordinateVector<> centre(0.);
+    CoordinateVector<> centre(0.1);
     std::vector< unsigned int > ngbs_brute_force;
     for (unsigned int i = 0; i < numpos; ++i) {
       double r = box.periodic_distance(positions[i], centre).norm();

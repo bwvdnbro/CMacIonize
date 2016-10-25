@@ -29,6 +29,7 @@
 
 #include "Box.hpp"
 #include "DensityFunction.hpp"
+#include "Octree.hpp"
 #include <string>
 #include <vector>
 
@@ -53,6 +54,9 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Octree used to speed up neighbour searching. */
+  Octree *_octree;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
@@ -63,7 +67,7 @@ public:
 
   GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
-  virtual ~GadgetSnapshotDensityFunction() {}
+  virtual ~GadgetSnapshotDensityFunction();
 
   virtual double operator()(CoordinateVector<> position);
 

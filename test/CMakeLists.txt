@@ -380,4 +380,5 @@ add_unit_test(NAME testOctree
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                                --exclude-regex PhotonSourceSpectrum
                         DEPENDS ${TESTNAMES})

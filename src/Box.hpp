@@ -111,19 +111,18 @@ public:
   inline double periodic_distance(Box b, CoordinateVector<> v) {
     CoordinateVector<> dx;
     for (unsigned int i = 0; i < 3; ++i) {
-      if (v[i] >= b._anchor[i]) {
-        if (v[i] > b._anchor[i] + b._sides[i]) {
-          dx[i] = v[i] - b._anchor[i] - b._sides[i];
-          if (dx[i] >= 0.5 * _sides[i]) {
-            dx[i] = v[i] - b._anchor[i] - _sides[i];
-          }
-        }
-      } else {
-        dx[i] = v[i] - b._anchor[i];
-        if (dx[i] <= -0.5 * _sides[i]) {
-          dx[i] = v[i] - b._anchor[i] - b._sides[i] + _sides[i];
-        }
+      // very basic: in 1D, a coordinate is either smaller, inside, or larger
+      if (v[i] < b._anchor[i]) {
+        // smaller
+        // we take the sign into account
+        dx[i] = std::min(b._anchor[i] - v[i],
+                         v[i] - b._anchor[i] - b._sides[i] + _sides[i]);
+      } else if (v[i] > b._anchor[i] + b._sides[i]) {
+        // larger
+        dx[i] = std::min(v[i] - b._anchor[i] - b._sides[i],
+                         b._anchor[i] + _sides[i] - v[i]);
       }
+      // else: inside: distance 0
     }
     return dx.norm();
   }

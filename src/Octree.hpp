@@ -28,6 +28,7 @@
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
 #include "OctreeNode.hpp"
 
 #include <ostream>
@@ -124,7 +125,7 @@ public:
         } else {
           r = (_positions[next->get_index()] - centre).norm();
         }
-        if (r < next->get_variable()) {
+        if (r <= next->get_variable()) {
           ngbs.push_back(next->get_index());
         }
         next = next->get_sibling();
