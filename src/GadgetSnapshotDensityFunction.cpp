@@ -150,19 +150,23 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
     sides *= 1.01;
     box = Box(anchor, sides);
   }
-  _octree = new Octree(_positions, box, periodic);
-  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
-
   if (_log) {
     string pstring;
     if (periodic) {
       pstring = "periodic ";
     }
-    _log->write_status("Created octree in ", pstring, "box with anchor [",
-                       box.get_anchor().x(), ", ", box.get_anchor().y(), ", ",
-                       box.get_anchor().z(), "] and sides [",
-                       box.get_sides().x(), ", ", box.get_sides().y(), ", ",
-                       box.get_sides().z(), "].");
+    _log->write_status("Creating octree in ", pstring, "box with anchor [",
+                       box.get_anchor().x(), " m, ", box.get_anchor().y(),
+                       " m, ", box.get_anchor().z(), " m] and sides [",
+                       box.get_sides().x(), " m, ", box.get_sides().y(), " m, ",
+                       box.get_sides().z(), " m]...");
+  }
+
+  _octree = new Octree(_positions, box, periodic);
+  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+
+  if (_log) {
+    _log->write_status("Done creating octree.");
   }
 }
 

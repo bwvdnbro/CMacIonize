@@ -75,9 +75,6 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
   for (int i = 0; i < _ncell.x(); ++i) {
-    if (_log) {
-      _log->write_info("Filled surface ", i, " of ", _ncell.x(), ".");
-    }
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
         double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
