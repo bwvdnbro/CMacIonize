@@ -29,6 +29,7 @@
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 
+#include <ostream>
 #include <vector>
 
 /*! @brief Maximum possible key value, reserved to indicate that an OctreeNode
@@ -216,6 +217,168 @@ public:
    * @return Auxiliary variable.
    */
   inline double get_variable() { return _variable; }
+
+  /**
+   * @brief Print the node for visual inspection.
+   *
+   * @param stream std::ostream to write to.
+   * @param positions Positions underlying the tree.
+   */
+  inline void print(std::ostream &stream,
+                    std::vector< CoordinateVector<> > &positions) {
+    if (is_leaf()) {
+      stream << positions[_index].x() << "\t" << positions[_index].y() << "\t"
+             << positions[_index].z() << "\n\n";
+    } else {
+      // print children
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] != nullptr) {
+          _children[i]->print(stream, positions);
+        }
+      }
+
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t" << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() << "\n\n";
+
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t" << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t" << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t" << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + 0.5 * _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+
+      stream << _box.get_anchor().x() << "\t" << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() << "\n\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + 0.5 * _box.get_sides().z() << "\n\n";
+      stream << _box.get_anchor().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n";
+      stream << _box.get_anchor().x() + _box.get_sides().x() << "\t"
+             << _box.get_anchor().y() + 0.5 * _box.get_sides().y() << "\t"
+             << _box.get_anchor().z() + _box.get_sides().z() << "\n\n";
+    }
+  }
 };
 
 #endif // OCTREENODE_HPP

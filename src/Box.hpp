@@ -81,6 +81,10 @@ public:
   /**
    * @brief Get the shortest distance vector between the given two
    * CoordinateVectors, given that this box is periodic.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return Shortest distance vector between a and b.
    */
   inline CoordinateVector<> periodic_distance(CoordinateVector<> a,
                                               CoordinateVector<> b) {
@@ -97,6 +101,34 @@ public:
   }
 
   /**
+   * @brief Get the shortest distance between the given Box and
+   * CoordinateVector, given that this box is periodic.
+   *
+   * @param b Box.
+   * @param v CoordinateVector.
+   * @return Shortest distance between b and v.
+   */
+  inline double periodic_distance(Box b, CoordinateVector<> v) {
+    CoordinateVector<> dx;
+    for (unsigned int i = 0; i < 3; ++i) {
+      if (v[i] >= b._anchor[i]) {
+        if (v[i] > b._anchor[i] + b._sides[i]) {
+          dx[i] = v[i] - b._anchor[i] - b._sides[i];
+          if (dx[i] >= 0.5 * _sides[i]) {
+            dx[i] = v[i] - b._anchor[i] - _sides[i];
+          }
+        }
+      } else {
+        dx[i] = v[i] - b._anchor[i];
+        if (dx[i] <= -0.5 * _sides[i]) {
+          dx[i] = v[i] - b._anchor[i] - b._sides[i] + _sides[i];
+        }
+      }
+    }
+    return dx.norm();
+  }
+
+  /**
    * @brief Get the shortest distance between this box and the given
    * CoordinateVector.
    *
@@ -107,7 +139,7 @@ public:
   inline double get_distance(CoordinateVector<> v) {
     CoordinateVector<> dx;
     for (unsigned int i = 0; i < 3; ++i) {
-      if (v[i] > _anchor[i]) {
+      if (v[i] >= _anchor[i]) {
         if (v[i] > _anchor[i] + _sides[i]) {
           dx[i] = v[i] - _anchor[i] - _sides[i];
         }

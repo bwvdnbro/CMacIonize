@@ -30,6 +30,7 @@
 #include "CoordinateVector.hpp"
 #include "OctreeNode.hpp"
 
+#include <ostream>
 #include <vector>
 
 /**
@@ -116,14 +117,25 @@ public:
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
-        double r = (_positions[next->get_index()] - centre).norm();
+        double r;
+        if (_periodic) {
+          r = _box.periodic_distance(_positions[next->get_index()], centre)
+                  .norm();
+        } else {
+          r = (_positions[next->get_index()] - centre).norm();
+        }
         if (r < next->get_variable()) {
           ngbs.push_back(next->get_index());
         }
         next = next->get_sibling();
       } else {
         // check opening criterion
-        double r = next->get_box().get_distance(centre);
+        double r;
+        if (_periodic) {
+          r = _box.periodic_distance(next->get_box(), centre);
+        } else {
+          r = next->get_box().get_distance(centre);
+        }
         if (r > next->get_variable()) {
           next = next->get_sibling();
         } else {
@@ -133,6 +145,13 @@ public:
     }
     return ngbs;
   }
+
+  /**
+   * @brief Print the Octree for visual inspection.
+   *
+   * @param stream std::ostream to write to.
+   */
+  inline void print(std::ostream &stream) { _root->print(stream, _positions); }
 };
 
 #endif // OCTREE_HPP
