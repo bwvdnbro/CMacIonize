@@ -58,6 +58,8 @@ int main(int argc, char **argv) {
                    1.);
   assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "pc", "pc") ==
                    1.);
+  assert_condition(
+      UnitConverter< QUANTITY_LENGTH >::convert(1., "kpc", "kpc") == 1.);
 
   assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "kg", "kg") ==
                    1.);

@@ -29,6 +29,8 @@
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "UnitConverter.hpp"
+#include <cfloat>
+#include <fstream>
 using namespace std;
 
 /**
@@ -61,7 +63,8 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
-                                                             Log *log) {
+                                                             Log *log)
+    : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -114,17 +117,56 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
   // close the file
   HDF5Tools::close_file(file);
 
-  // unit conversion
+  // unit conversion + treebox data collection
+  CoordinateVector<> minpos(DBL_MAX);
+  CoordinateVector<> maxpos(-DBL_MAX);
   for (unsigned int i = 0; i < _positions.size(); ++i) {
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
     _masses[i] *= unit_mass_in_SI;
     _smoothing_lengths[i] *= unit_length_in_SI;
+    minpos = CoordinateVector<>::min(minpos, _positions[i]);
+    maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
+  }
+  if (periodic) {
+    _box.get_anchor()[0] *= unit_length_in_SI;
+    _box.get_anchor()[1] *= unit_length_in_SI;
+    _box.get_anchor()[2] *= unit_length_in_SI;
+    _box.get_sides()[0] *= unit_length_in_SI;
+    _box.get_sides()[1] *= unit_length_in_SI;
+    _box.get_sides()[2] *= unit_length_in_SI;
   }
 
-  if (log) {
-    log->write_status("Successfully read densities from file \"", name, "\".");
+  if (_log) {
+    _log->write_status("Successfully read densities from file \"", name, "\".");
+  }
+
+  Box box(_box);
+  if (!periodic) {
+    // set box to particle extents + small margin
+    CoordinateVector<> sides = maxpos - minpos;
+    CoordinateVector<> anchor = minpos - 0.005 * sides;
+    sides *= 1.01;
+    box = Box(anchor, sides);
+  }
+  if (_log) {
+    string pstring;
+    if (periodic) {
+      pstring = "periodic ";
+    }
+    _log->write_status("Creating octree in ", pstring, "box with anchor [",
+                       box.get_anchor().x(), " m, ", box.get_anchor().y(),
+                       " m, ", box.get_anchor().z(), " m] and sides [",
+                       box.get_sides().x(), " m, ", box.get_sides().y(), " m, ",
+                       box.get_sides().z(), " m]...");
+  }
+
+  _octree = new Octree(_positions, box, periodic);
+  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+
+  if (_log) {
+    _log->write_status("Done creating octree.");
   }
 }
 
@@ -140,13 +182,21 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
           params.get_value< string >("densityfunction.filename"), log) {}
 
 /**
+ * @brief Destructor.
+ */
+GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
+  delete _octree;
+}
+
+/**
  * @brief Function that returns the density for the given coordinate.
  *
  * @param position CoordinateVector specifying a coordinate position (in m).
  * @return Density at the given coordinate (in m^-3).
  */
 double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
-  double density = 0.;
+  // brute force version: slow
+  /*double density = 0.;
   for (unsigned int i = 0; i < _positions.size(); ++i) {
     double r;
     if (!_box.get_sides().x()) {
@@ -159,18 +209,36 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
     double m = _masses[i];
     density += m * cubic_spline_kernel(u, h);
   }
-  return density;
+  return density / 1.6737236e-27;*/
+  // tree version
+  double density = 0.;
+  std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
+  const unsigned int numngbs = ngbs.size();
+  for (unsigned int i = 0; i < numngbs; ++i) {
+    unsigned int index = ngbs[i];
+    double r;
+    if (!_box.get_sides().x()) {
+      r = (position - _positions[index]).norm();
+    } else {
+      r = _box.periodic_distance(position, _positions[index]).norm();
+    }
+    double h = _smoothing_lengths[index];
+    double u = r / h;
+    double m = _masses[index];
+    density += m * cubic_spline_kernel(u, h);
+  }
+  return density / 1.6737236e-27;
 }
 
 /**
- * @brief Get the total mass of all SPH particles in the snapshot.
+ * @brief Get the total number of hydrogen atoms in the snapshot.
  *
- * @return Sum of the masses of all SPH particles (in kg).
+ * @return Sum of the hydrogen number of all SPH particles in the snapshot.
  */
-double GadgetSnapshotDensityFunction::get_total_mass() {
+double GadgetSnapshotDensityFunction::get_total_hydrogen_number() {
   double mtot = 0.;
   for (unsigned int i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];
   }
-  return mtot;
+  return mtot / 1.6737236e-27;
 }

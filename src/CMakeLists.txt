@@ -50,6 +50,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
 
 set(CMACIONIZE_SOURCES
+    AsciiFileDensityFunction.cpp
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
@@ -63,9 +64,11 @@ set(CMACIONIZE_SOURCES
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
+    Timer.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    AsciiFileDensityFunction.hpp
     Box.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
@@ -95,6 +98,7 @@ set(CMACIONIZE_SOURCES
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
     SingleStarPhotonSourceDistribution.hpp
+    Timer.hpp
     Utilities.hpp
     VernerCrossSections.hpp
     VernerCrossSectionsDataLocation.hpp.in

@@ -78,9 +78,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
  */
 void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   _number_of_photons = number_of_photons;
+
   _active_source_index = 0;
   _active_photon_index = 0;
-  _active_number_of_photons = _number_of_photons * _weights[0];
+  _active_number_of_photons = round(_number_of_photons * _weights[0]);
 
   if (_log) {
     _log->write_status("Number of photons for PhotonSource reset to ",
@@ -96,7 +97,10 @@ void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
  */
 Photon PhotonSource::get_random_photon() {
   if (_active_source_index == _positions.size()) {
-    error("No more photons available!");
+    if (_log) {
+      _log->write_warning("Too many photons requested!");
+      --_active_source_index;
+    }
   }
 
   CoordinateVector<> position = _positions[_active_source_index];
@@ -113,7 +117,7 @@ Photon PhotonSource::get_random_photon() {
     ++_active_source_index;
     if (_active_source_index < _positions.size()) {
       _active_number_of_photons =
-          _number_of_photons * _weights[_active_source_index];
+          round(_number_of_photons * _weights[_active_source_index]);
     }
   }
 

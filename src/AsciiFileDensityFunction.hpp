@@ -17,61 +17,50 @@
  ******************************************************************************/
 
 /**
- * @file GadgetSnapshotDensityFunction.hpp
+ * @file AsciiFileDensityFunction.hpp
  *
- * @brief DensityFunction that reads a density field from a Gadget HDF5 snapshot
- * file: header.
+ * @brief DensityFunction that reads a density grid from an ASCII text file.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef GADGETSNAPSHOTDENSITYFUNCTION_HPP
-#define GADGETSNAPSHOTDENSITYFUNCTION_HPP
+#ifndef ASCIIFILEDENSITYFUNCTION_HPP
+#define ASCIIFILEDENSITYFUNCTION_HPP
 
 #include "Box.hpp"
 #include "DensityFunction.hpp"
-#include "Octree.hpp"
+
 #include <string>
-#include <vector>
 
 class Log;
 class ParameterFile;
 
 /**
- * @brief DensityFunction that reads a density field from a Gadget snapshot.
+ * @brief DensityFunction that reads a density grid from an ASCII text file.
  */
-class GadgetSnapshotDensityFunction : public DensityFunction {
+class AsciiFileDensityFunction : public DensityFunction {
 private:
-  /*! @brief Simulation box, only initialized if the box is periodic (if the box
-   *  is not periodic, the components of the Box will all be zero). */
+  /*! @brief Density grid (in m^-3). */
+  double ***_grid;
+
+  /*! @brief Dimensions of the grid. */
+  CoordinateVector< int > _ncell;
+
+  /*! @brief Box containing the grid. */
   Box _box;
-
-  /*! @brief Positions of the SPH particles in the snapshot (in m). */
-  std::vector< CoordinateVector<> > _positions;
-
-  /*! @brief Masses of the SPH particles in the snapshot (in kg). */
-  std::vector< double > _masses;
-
-  /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
-  std::vector< double > _smoothing_lengths;
-
-  /*! @brief Octree used to speed up neighbour searching. */
-  Octree *_octree;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  double cubic_spline_kernel(double u, double h);
-
 public:
-  GadgetSnapshotDensityFunction(std::string name, Log *log = nullptr);
-
-  GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
-
-  virtual ~GadgetSnapshotDensityFunction();
+  AsciiFileDensityFunction(std::string filename, CoordinateVector< int > ncell,
+                           Box box, double length_unit_in_SI = 1.,
+                           double density_unit_in_SI = 1., Log *log = nullptr);
+  AsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
+  ~AsciiFileDensityFunction();
 
   virtual double operator()(CoordinateVector<> position);
 
   double get_total_hydrogen_number();
 };
 
-#endif // GADGETSNAPSHOTDENSITYFUNCTION_HPP
+#endif // ASCIIFILEDENSITYFUNCTION_HPP

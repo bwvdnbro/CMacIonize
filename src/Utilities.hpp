@@ -280,7 +280,14 @@ to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
  */
 inline std::pair< double, std::string > split_value(std::string svalue) {
   size_t idx;
-  double value = std::stod(svalue, &idx);
+  double value;
+  try {
+    value = std::stod(svalue, &idx);
+  } catch (std::invalid_argument e) {
+    error("Error extracting value from \"%s\" unit-value pair!",
+          svalue.c_str());
+  }
+
   while (svalue[idx] == ' ') {
     ++idx;
   }

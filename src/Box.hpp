@@ -81,6 +81,10 @@ public:
   /**
    * @brief Get the shortest distance vector between the given two
    * CoordinateVectors, given that this box is periodic.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return Shortest distance vector between a and b.
    */
   inline CoordinateVector<> periodic_distance(CoordinateVector<> a,
                                               CoordinateVector<> b) {
@@ -94,6 +98,55 @@ public:
       }
     }
     return c;
+  }
+
+  /**
+   * @brief Get the shortest distance between the given Box and
+   * CoordinateVector, given that this box is periodic.
+   *
+   * @param b Box.
+   * @param v CoordinateVector.
+   * @return Shortest distance between b and v.
+   */
+  inline double periodic_distance(Box b, CoordinateVector<> v) {
+    CoordinateVector<> dx;
+    for (unsigned int i = 0; i < 3; ++i) {
+      // very basic: in 1D, a coordinate is either smaller, inside, or larger
+      if (v[i] < b._anchor[i]) {
+        // smaller
+        // we take the sign into account
+        dx[i] = std::min(b._anchor[i] - v[i],
+                         v[i] - b._anchor[i] - b._sides[i] + _sides[i]);
+      } else if (v[i] > b._anchor[i] + b._sides[i]) {
+        // larger
+        dx[i] = std::min(v[i] - b._anchor[i] - b._sides[i],
+                         b._anchor[i] + _sides[i] - v[i]);
+      }
+      // else: inside: distance 0
+    }
+    return dx.norm();
+  }
+
+  /**
+   * @brief Get the shortest distance between this box and the given
+   * CoordinateVector.
+   *
+   * @param v CoordinateVector for a position.
+   * @return Distance between the point in the Box closest to the position, and
+   * the position.
+   */
+  inline double get_distance(CoordinateVector<> v) {
+    CoordinateVector<> dx;
+    for (unsigned int i = 0; i < 3; ++i) {
+      if (v[i] >= _anchor[i]) {
+        if (v[i] > _anchor[i] + _sides[i]) {
+          dx[i] = v[i] - _anchor[i] - _sides[i];
+        }
+      } else {
+        dx[i] = v[i] - _anchor[i];
+      }
+    }
+    return dx.norm();
   }
 };
 

@@ -37,6 +37,7 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "TerminalLog.hpp"
+#include "Timer.hpp"
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
 #include <iostream>
@@ -52,6 +53,8 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  Timer programtimer;
+
   // first thing we should do: parse the command line arguments
   // we need to define a CommandLineParser object that does this and acts as a
   // dictionary that can be queried
@@ -130,13 +133,17 @@ int main(int argc, char **argv) {
   double chidiff = 1.;
   unsigned int loop = 0;
   while (loop < nloop && (chidiff > 0. || chidiff < -chirel)) {
+    unsigned int lnumphoton = numphoton;
+    if (loop > 4) {
+      lnumphoton *= 10;
+    }
     grid.reset_grid();
-    source.set_number_of_photons(numphoton);
+    source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
-    for (unsigned int i = 0; i < numphoton; ++i) {
-      if (!(i % 100000)) {
-        log->write_status("Photon ", i, " of ", numphoton, ".");
+    for (unsigned int i = 0; i < lnumphoton; ++i) {
+      if (!(i % (lnumphoton / 10))) {
+        log->write_status("Photon ", i, " of ", lnumphoton, ".");
       }
       Photon photon = source.get_random_photon();
       double tau = -std::log(Utilities::random_double());
@@ -157,16 +164,16 @@ int main(int argc, char **argv) {
                           typecount[PHOTONTYPE_DIFFUSE_HeI],
                       " photons were scattered.");
     double escape_fraction =
-        (100. * (numphoton - typecount[PHOTONTYPE_ABSORBED])) / numphoton;
+        (100. * (lnumphoton - typecount[PHOTONTYPE_ABSORBED])) / lnumphoton;
     log->write_status("Escape fraction: ", escape_fraction, "%.");
     double escape_fraction_HI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / numphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / lnumphoton;
     log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI, "%.");
     double escape_fraction_HeI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / numphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / lnumphoton;
     log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
                       "%.");
-    grid.calculate_ionization_state(Q, numphoton);
+    grid.calculate_ionization_state(Q, lnumphoton);
 
     double chi2 = grid.get_chi_squared();
     log->write_status("Chi2: ", chi2, ".");
@@ -186,6 +193,9 @@ int main(int argc, char **argv) {
     log->write_status("Required tolerance (", (-chidiff),
                       ") reached, stopping.");
   }
+
+  programtimer.stop();
+  log->write_status("Total program time: ", programtimer.value(), " s.");
 
   delete sourcedistribution;
   delete density_function;

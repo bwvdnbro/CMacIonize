@@ -26,6 +26,7 @@
 #ifndef COORDINATEVECTOR_HPP
 #define COORDINATEVECTOR_HPP
 
+#include <algorithm>
 #include <cmath>
 
 /**
@@ -177,6 +178,59 @@ public:
    * @return Reference to the requested component.
    */
   inline datatype &operator[](unsigned int i) { return _c[i]; }
+
+  /**
+   * @brief Compare this CoordinateVector with another CoordinateVector.
+   *
+   * @param v CoordinateVector to compare with.
+   * @return True if both CoordinateVector instances have the same member
+   * component values.
+   */
+  inline bool operator==(const CoordinateVector< datatype > &v) {
+    return (_x == v._x && _y == v._y && _z == v._z);
+  }
+
+  /**
+   * @brief Get the minimum of two CoordinateVector instances.
+   *
+   * We declare this function as static member function to distinguish it from
+   * std::min.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return CoordinateVector with components that are the minimum of the
+   * components of a and b.
+   */
+  static inline CoordinateVector< datatype >
+  min(const CoordinateVector< datatype > &a,
+      const CoordinateVector< datatype > &b) {
+    CoordinateVector< datatype > minvec;
+    minvec._x = std::min(a._x, b._x);
+    minvec._y = std::min(a._y, b._y);
+    minvec._z = std::min(a._z, b._z);
+    return minvec;
+  }
+
+  /**
+   * @brief Get the maximum of two CoordinateVector instances.
+   *
+   * We declare this function as static member function to distinguish it from
+   * std::max.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return CoordinateVector with components that are the maximum of the
+   * components of a and b.
+   */
+  static inline CoordinateVector< datatype >
+  max(const CoordinateVector< datatype > &a,
+      const CoordinateVector< datatype > &b) {
+    CoordinateVector< datatype > maxvec;
+    maxvec._x = std::max(a._x, b._x);
+    maxvec._y = std::max(a._y, b._y);
+    maxvec._z = std::max(a._z, b._z);
+    return maxvec;
+  }
 };
 
 /**

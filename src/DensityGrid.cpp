@@ -158,11 +158,11 @@ DensityGrid::~DensityGrid() {
 }
 
 /**
- * @brief Get the total mass contained in the grid.
+ * @brief Get the total number of hydrogen atoms contained in the grid.
  *
- * @return Total mass contained in the grid (in kg).
+ * @return Total number of hydrogen atoms contained in the grid.
  */
-double DensityGrid::get_total_mass() {
+double DensityGrid::get_total_hydrogen_number() {
   double mtot = 0;
   double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
 

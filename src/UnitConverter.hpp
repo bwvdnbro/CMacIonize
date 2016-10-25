@@ -162,6 +162,8 @@ inline double UnitConverter< QUANTITY_LENGTH >::to_SI(double value,
     return 0.01 * value;
   } else if (unit == "pc") {
     return 3.086e16 * value;
+  } else if (unit == "kpc") {
+    return 3.086e19 * value;
   } else {
     error("Unknown length unit: \"%s\".", unit.c_str());
     return 0.;
@@ -185,6 +187,8 @@ inline double UnitConverter< QUANTITY_LENGTH >::to_unit(double value,
     return 100. * value;
   } else if (unit == "pc") {
     return value / 3.086e16;
+  } else if (unit == "kpc") {
+    return value / 3.086e19;
   } else {
     error("Unknown length unit: \"%s\".", unit.c_str());
     return 0.;
