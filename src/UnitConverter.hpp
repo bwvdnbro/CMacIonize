@@ -212,6 +212,8 @@ inline double UnitConverter< QUANTITY_MASS >::to_SI(double value,
     return value;
   } else if (unit == "g") {
     return 0.001 * value;
+  } else if (unit == "Msol") {
+    return 1.98855e30 * value;
   } else {
     error("Unknown mass unit: \"%s\".", unit.c_str());
     return 0.;
@@ -233,6 +235,8 @@ inline double UnitConverter< QUANTITY_MASS >::to_unit(double value,
     return value;
   } else if (unit == "g") {
     return value * 1000.;
+  } else if (unit == "Msol") {
+    return value / 1.98855e30;
   } else {
     error("Unknown mass unit: \"%s\".", unit.c_str());
     return 0.;
@@ -411,6 +415,50 @@ inline double UnitConverter< QUANTITY_TEMPERATURE >::to_unit(double value,
     return value;
   } else {
     error("Unknown temperature unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_TIME
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a time.
+ *
+ * @param value Time value in strange units.
+ * @param unit Strange units.
+ * @return Time value in seconds.
+ */
+template <>
+inline double UnitConverter< QUANTITY_TIME >::to_SI(double value,
+                                                    std::string unit) {
+  if (unit == "s") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "Gyr") {
+    return 3.154e16 * value;
+  } else {
+    error("Unknown time unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a time.
+ *
+ * @param value Time value in seconds.
+ * @param unit Strange units.
+ * @return Time value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_TIME >::to_unit(double value,
+                                                      std::string unit) {
+  if (unit == "s") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "Gyr") {
+    return value / 3.154e16;
+  } else {
+    error("Unknown time unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

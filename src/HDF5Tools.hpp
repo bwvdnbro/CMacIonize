@@ -114,6 +114,18 @@ inline void close_file(hid_t file) {
 }
 
 /**
+ * @brief Check whether a group with the given name exists in the given file.
+ *
+ * @param file HDF5File handle to an open file.
+ * @param name Name of a group that might or might not exist.
+ * @return True if the group exists.
+ */
+inline bool group_exists(hid_t file, std::string name) {
+  htri_t check = H5Lexists(file, name.c_str(), H5P_DEFAULT);
+  return check > 0;
+}
+
+/**
  * @brief Create the HDF5 group with the given name in the given file.
  *
  * @param file HDF5File handle to an HDF5 file that is open in write mode.

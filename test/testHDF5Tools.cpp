@@ -46,6 +46,10 @@ int main(int argc, char **argv) {
 
     assert_condition(file > 0);
 
+    assert_condition(HDF5Tools::group_exists(file, "/HydroScheme") == true);
+    assert_condition(HDF5Tools::group_exists(file, "/NonExistingGroup") ==
+                     false);
+
     HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/HydroScheme");
 
     assert_condition(group > 0);

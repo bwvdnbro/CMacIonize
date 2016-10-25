@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
   TerminalLog tlog(LOGLEVEL_INFO);
-  GadgetSnapshotDensityFunction density("test.hdf5", &tlog);
+  GadgetSnapshotDensityFunction density("test.hdf5", false, 0., 0., &tlog);
   TestRecombinationRates testrecombinationrates;
 
   CoordinateVector<> anchor;

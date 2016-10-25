@@ -64,6 +64,8 @@ int main(int argc, char **argv) {
   assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "kg", "kg") ==
                    1.);
   assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "g", "g") == 1.);
+  assert_condition(
+      UnitConverter< QUANTITY_MASS >::convert(1., "Msol", "Msol") == 1.);
 
   assert_condition(
       UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "m^-3", "m^-3"));
@@ -77,6 +79,10 @@ int main(int argc, char **argv) {
 
   assert_condition(
       UnitConverter< QUANTITY_TEMPERATURE >::convert(1., "K", "K") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "s", "s") == 1.);
+  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "Gyr", "Gyr") ==
+                   1.);
 
   return 0;
 }
