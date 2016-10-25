@@ -74,6 +74,33 @@ public:
   inline ~Octree() { delete _root; }
 
   /**
+   * @brief Custom version of std::max that can be used as a template operation.
+   *
+   * If we try to pass std::max as a template argument, the compiler does not
+   * know which version to use. If we wrap it in a custom function, it does...
+   *
+   * @param a Variable a.
+   * @param b Variable b.
+   * @return std::max(a,b).
+   */
+  template < typename T > inline static const T &max(const T &a, const T &b) {
+    return std::max(a, b);
+  }
+
+  /**
+   * @brief Set the auxiliary variables and accumulate the variables in the
+   * nodes using the given operation.
+   *
+   * @param v std::vector containing the values of the auxiliary variables (for
+   * each leaf, there is exactly one corresponding variable).
+   * @param op Operation used to accumulate variables within nodes.
+   */
+  template < typename operation >
+  inline void set_auxiliaries(std::vector< double > &v, operation op) {
+    _root->set_variable(v, op);
+  }
+
+  /**
    * @brief Get the indices of the neighbours of the given position.
    *
    * A neighbour is a position in the internal list for which the given position
@@ -81,37 +108,26 @@ public:
    * corresponding smoothing length in the given list as radius.
    *
    * @param centre Position for which we search neighbours.
-   * @param hs Smoothing lengths for the positions in the internal list.
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre.
    */
-  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre,
-                                              std::vector< double > &hs) {
+  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) {
     std::vector< unsigned int > ngbs;
-    if (_root) {
-      // set auxiliary variables in the nodes
-      _root->set_variable(hs, std::max< double >);
-
-      OctreeNode *next = _root->get_child();
-      while (next != nullptr) {
-        if (next->is_leaf()) {
-          // brute force for now
-          double r = (_positions[next->get_index()] - centre).norm();
-          if (r < hs[next->get_index()]) {
-            ngbs.push_back(next->get_index());
-          }
+    OctreeNode *next = _root->get_child();
+    while (next != nullptr) {
+      if (next->is_leaf()) {
+        double r = (_positions[next->get_index()] - centre).norm();
+        if (r < next->get_variable()) {
+          ngbs.push_back(next->get_index());
+        }
+        next = next->get_sibling();
+      } else {
+        // check opening criterion
+        double r = next->get_box().get_distance(centre);
+        if (r > next->get_variable()) {
           next = next->get_sibling();
         } else {
-          // check opening criterion
           next = next->get_child();
-        }
-      }
-    } else {
-      // no tree created, use a brute force algorithm
-      for (auto i = _positions.size(); i--;) {
-        double r = (_positions[i] - centre).norm();
-        if (r < hs[i]) {
-          ngbs.push_back(i);
         }
       }
     }

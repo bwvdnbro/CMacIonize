@@ -177,6 +177,17 @@ public:
    * @return Reference to the requested component.
    */
   inline datatype &operator[](unsigned int i) { return _c[i]; }
+
+  /**
+   * @brief Compare this CoordinateVector with another CoordinateVector.
+   *
+   * @param v CoordinateVector to compare with.
+   * @return True if both CoordinateVector instances have the same member
+   * component values.
+   */
+  inline bool operator==(const CoordinateVector< datatype > &v) {
+    return (_x == v._x && _y == v._y && _z == v._z);
+  }
 };
 
 /**

@@ -39,6 +39,24 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  // first test the Box-CoordinateVector distance function
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  {
+    // point outside and smaller coordinate
+    CoordinateVector<> caseA(-0.5, 0., 0.);
+    assert_condition(box.get_distance(caseA) == 0.5);
+  }
+  {
+    // point inside
+    CoordinateVector<> caseB(0., 0.5, 0.);
+    assert_condition(box.get_distance(caseB) == 0.);
+  }
+  {
+    // point outside and larger coordinate
+    CoordinateVector<> caseC(0., 0., 1.5);
+    assert_condition(box.get_distance(caseC) == 0.5);
+  }
+
   unsigned int numpos = 100;
   std::vector< CoordinateVector<> > positions(numpos);
   std::vector< double > hs(numpos);
@@ -48,9 +66,9 @@ int main(int argc, char **argv) {
     positions[i][2] = Utilities::random_double();
     hs[i] = 0.5 * Utilities::random_double();
   }
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
 
   Octree tree(positions, box, false);
+  tree.set_auxiliaries(hs, Octree::max< double >);
 
   CoordinateVector<> centre(0.5);
   std::vector< unsigned int > ngbs_brute_force;
@@ -62,7 +80,7 @@ int main(int argc, char **argv) {
   }
   status("Number of ngbs (brute force): %lu.", ngbs_brute_force.size());
 
-  std::vector< unsigned int > ngbs_tree = tree.get_ngbs(centre, hs);
+  std::vector< unsigned int > ngbs_tree = tree.get_ngbs(centre);
   status("Number of ngbs (tree): %lu.", ngbs_tree.size());
 
   assert_condition(ngbs_brute_force.size() == ngbs_tree.size());

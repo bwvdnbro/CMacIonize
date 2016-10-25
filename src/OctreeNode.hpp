@@ -29,7 +29,6 @@
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 
-#include <functional>
 #include <vector>
 
 /*! @brief Maximum possible key value, reserved to indicate that an OctreeNode
@@ -52,6 +51,9 @@ private:
 
   /*! @brief Index of the underlying position, if this node is a leaf. */
   unsigned int _index;
+
+  /*! @brief Geometrical box corresponding to this node. */
+  Box _box;
 
   /*! @brief Auxiliary variable. */
   double _variable;
@@ -82,6 +84,8 @@ public:
                            unsigned int index, Box &box) {
     unsigned char ix, iy, iz;
     if (_index < OCTREE_NOLEAF) {
+      // this OctreeNode becomes a node: set its box
+      _box = box;
       // find out in which of the 8 subboxes the old index lives
       CoordinateVector<> &p = positions[_index];
       ix = 2 * (p.x() - box.get_anchor().x()) / box.get_sides().x();
@@ -166,6 +170,13 @@ public:
   inline bool is_leaf() { return _index < OCTREE_NOLEAF; }
 
   /**
+   * @brief Get the Box of this node.
+   *
+   * @return Box containing this node.
+   */
+  inline Box &get_box() { return _box; }
+
+  /**
    * @brief Get the index of the leaf.
    *
    * @return Index of the leaf.
@@ -179,25 +190,20 @@ public:
    * @param variables List of variables.
    * @param op Accumulation operation to perform on the variables: the variable
    * stored in a node will be the accumulated result of applying this operation
-   * on its children (default: sum of variable in the children).
+   * on its children.
    * @return Accumulated value: for leaves this is the variable in the list
    * corresponding to the leaf element, for nodes this is the accumulated value.
    */
-  template < typename operation = std::plus< double > >
-  double set_variable(std::vector< double > &variables, operation op) {
+  template < typename operation >
+  inline double set_variable(std::vector< double > &variables, operation op) {
     if (_index < OCTREE_NOLEAF) {
       _variable = variables[_index];
     } else {
-      // find first existing child
-      unsigned char i = 0;
-      while (_children[i] == nullptr) {
-        ++i;
-      }
       _variable = _child->set_variable(variables, op);
       // process other children
       OctreeNode *next = _child->get_sibling();
       while (next != _sibling) {
-        _variable = op(_variable, _children[i]->set_variable(variables, op));
+        _variable = op(_variable, next->set_variable(variables, op));
         next = next->get_sibling();
       }
     }

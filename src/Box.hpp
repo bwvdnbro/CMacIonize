@@ -95,6 +95,28 @@ public:
     }
     return c;
   }
+
+  /**
+   * @brief Get the shortest distance between this box and the given
+   * CoordinateVector.
+   *
+   * @param v CoordinateVector for a position.
+   * @return Distance between the point in the Box closest to the position, and
+   * the position.
+   */
+  inline double get_distance(CoordinateVector<> v) {
+    CoordinateVector<> dx;
+    for (unsigned int i = 0; i < 3; ++i) {
+      if (v[i] > _anchor[i]) {
+        if (v[i] > _anchor[i] + _sides[i]) {
+          dx[i] = v[i] - _anchor[i] - _sides[i];
+        }
+      } else {
+        dx[i] = v[i] - _anchor[i];
+      }
+    }
+    return dx.norm();
+  }
 };
 
 #endif // BOX_HPP
