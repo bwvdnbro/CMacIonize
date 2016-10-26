@@ -28,6 +28,7 @@
 
 #include "Box.hpp"
 #include "DensityValues.hpp"
+#include "Error.hpp"
 
 #include <ostream>
 
@@ -59,6 +60,29 @@ public:
       if (_children[i] != nullptr) {
         delete _children[i];
       }
+    }
+  }
+
+  /**
+   * @brief Access operator.
+   *
+   * If we have reached the correct level, the key will be one, and we simply
+   * return the contents of this cell. If not, we extract the part of the key
+   * that belongs to this level, and go deeper into the hierarchy.
+   *
+   * @param key Key linking to a unique cell in the hierarchy.
+   * @return Contents of that cell.
+   */
+  inline DensityValues &operator[](unsigned int &key) {
+    if (key == 1) {
+      return *_values;
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      return (*_children[cell])[key];
     }
   }
 

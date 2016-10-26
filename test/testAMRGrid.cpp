@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "AMRGrid.hpp"
+#include "Assert.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include <fstream>
@@ -36,13 +37,22 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  AMRGrid grid(Box(CoordinateVector<>(), CoordinateVector<>(1.)),
-               CoordinateVector< int >(1));
+  AMRGrid grid(Box(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
+               CoordinateVector< int >(2, 1, 1));
 
   grid.create_cell(2, CoordinateVector<>(0.1));
+  grid.create_cell(2, CoordinateVector<>(1.1, 0.1, 0.1));
 
   std::ofstream gfile("amrgrid.dump");
   grid.print(gfile);
+
+  unsigned long key = grid.get_key(2, CoordinateVector<>(0.1));
+  assert_condition(key == 64);
+  key = grid.get_key(2, CoordinateVector<>(1.1, 0.1, 0.1));
+  assert_condition(key == 0x0010000000000040);
+
+  assert_condition(grid[64].get_total_density() == 0.);
+  assert_condition(grid[0x0010000000000040].get_total_density() == 0.);
 
   return 0;
 }

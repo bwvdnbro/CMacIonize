@@ -85,6 +85,75 @@ public:
   }
 
   /**
+   * @brief Access operator.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Contents of that cell.
+   */
+  inline DensityValues &operator[](unsigned long key) {
+    // the key consists of two parts: a part (first 32 bits) that encodes the
+    // top level block information, and a part (last 32 bits) that encodes the
+    // cell information within the block
+    unsigned int block = key & 0xffffffff00000000;
+    // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
+    // tell the compiler this is an unsigned long long (ull)
+    unsigned int cell = key & 0xffffffffull;
+    // the block info consists of 3 10-bit keys, for the x, y, and z dimension
+    unsigned int ix = block & 0x3ff00000;
+    unsigned int iy = block & 0x000ffc00;
+    unsigned int iz = block & 0x000003ff;
+    return _top_level[ix][iy][iz][cell];
+  }
+
+  /**
+   * @brief Convert the given position into a key that can be used to access the
+   * cell containing that position on the given level.
+   *
+   * @param level Level of the cell.
+   * @param position CoordinateVector specifying a position in the cell.
+   * @return Key that can be used to access the cell directly.
+   */
+  inline unsigned long get_key(unsigned char level,
+                               CoordinateVector<> position) {
+    // find out in which block the position lives
+    unsigned int ix, iy, iz;
+    ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
+         _box.get_sides().x();
+    iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
+         _box.get_sides().y();
+    iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
+         _box.get_sides().z();
+    // encode the block part of the key:
+    unsigned int block = (ix << 20) + (iy << 10) + iz;
+    // find out what the cell part of the key is
+    // get the box of the block
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    CoordinateVector<> anchor;
+    anchor[0] = _box.get_anchor().x() + ix * sides.x();
+    anchor[1] = _box.get_anchor().y() + iy * sides.y();
+    anchor[2] = _box.get_anchor().z() + iz * sides.z();
+    Box box(anchor, sides);
+    // the highest bit is reserved to indicate the end of the cell key
+    unsigned int cell = 1;
+    for (unsigned char ilevel = 0; ilevel < level; ++ilevel) {
+      ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
+      iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
+      iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
+      cell = (cell << 3) + (ix << 2) + (iy << 1) + iz;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+    }
+    unsigned long key = block;
+    key = (key << 32) + cell;
+    return key;
+  }
+
+  /**
    * @brief Create a new cell at the given level, which contains the given
    * position.
    *
