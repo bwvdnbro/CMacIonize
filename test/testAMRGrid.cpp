@@ -37,8 +37,9 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  AMRGrid grid(Box(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
-               CoordinateVector< int >(2, 1, 1));
+  AMRGrid< double > grid(
+      Box(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
+      CoordinateVector< int >(2, 1, 1));
 
   grid.create_cell(2, CoordinateVector<>(0.1));
   grid.create_cell(2, CoordinateVector<>(1.1, 0.1, 0.1));
@@ -51,24 +52,20 @@ int main(int argc, char **argv) {
   key = grid.get_key(2, CoordinateVector<>(1.1, 0.1, 0.1));
   assert_condition(key == 0x0010000000000040);
 
-  grid.get_cell(CoordinateVector<>(0.1)).set_total_density(42.);
-  assert_condition(grid[64].get_total_density() == 42.);
-  grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)).set_total_density(3.14);
-  assert_condition(grid[0x0010000000000040].get_total_density() == 3.14);
+  grid.get_cell(CoordinateVector<>(0.1)) = 42.;
+  assert_condition(grid[64] == 42.);
+  grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) = 3.14;
+  assert_condition(grid[0x0010000000000040] == 3.14);
 
-  grid[64].set_total_density(3.14);
-  assert_condition(grid.get_cell(CoordinateVector<>(0.1)).get_total_density() ==
-                   3.14);
-  grid[0x0010000000000040].set_total_density(42.);
-  assert_condition(
-      grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)).get_total_density() ==
-      42.);
+  grid[64] = 3.14;
+  assert_condition(grid.get_cell(CoordinateVector<>(0.1)) == 3.14);
+  grid[0x0010000000000040] = 42.;
+  assert_condition(grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) == 42.);
 
   key = grid.get_key(2, CoordinateVector<>(0.7));
   assert_condition(key == 71);
-  grid.create_cell(key).set_total_density(5.5);
-  assert_condition(grid.get_cell(CoordinateVector<>(0.7)).get_total_density() ==
-                   5.5);
+  grid.create_cell(key) = 5.5;
+  assert_condition(grid.get_cell(CoordinateVector<>(0.7)) == 5.5);
 
   return 0;
 }

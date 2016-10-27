@@ -35,7 +35,7 @@
 /**
  * @brief Hierarchical AMR grid.
  */
-class AMRGrid {
+template < typename CellContents > class AMRGrid {
 private:
   /*! @brief Extents of the entire grid. */
   Box _box;
@@ -44,7 +44,7 @@ private:
   CoordinateVector< int > _ncell;
 
   /*! @brief Top level blocks of the grid. */
-  AMRGridCell ***_top_level;
+  AMRGridCell< CellContents > ***_top_level;
 
 public:
   /**
@@ -66,11 +66,11 @@ public:
    */
   inline AMRGrid(Box box, CoordinateVector< int > ncell)
       : _box(box), _ncell(ncell) {
-    _top_level = new AMRGridCell **[_ncell.x()];
+    _top_level = new AMRGridCell< CellContents > **[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
-      _top_level[i] = new AMRGridCell *[_ncell.y()];
+      _top_level[i] = new AMRGridCell< CellContents > *[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell[_ncell.z()];
+        _top_level[i][j] = new AMRGridCell< CellContents >[ _ncell.z() ];
       }
     }
   }
@@ -91,7 +91,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline DensityValues &operator[](unsigned long key) {
+  inline CellContents &operator[](unsigned long key) {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -191,7 +191,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of the cell.
    */
-  inline DensityValues &create_cell(unsigned long key) {
+  inline CellContents &create_cell(unsigned long key) {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -213,7 +213,7 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains that
    * position.
    */
-  inline DensityValues &get_cell(CoordinateVector<> position) {
+  inline CellContents &get_cell(CoordinateVector<> position) {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
