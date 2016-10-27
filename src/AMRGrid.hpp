@@ -64,7 +64,8 @@ public:
    * @param ncell Number of blocks in each dimension. The actual number of cells
    * in a given dimensions is limited to this number times a power of 2.
    */
-  AMRGrid(Box box, CoordinateVector< int > ncell) : _box(box), _ncell(ncell) {
+  inline AMRGrid(Box box, CoordinateVector< int > ncell)
+      : _box(box), _ncell(ncell) {
     _top_level = new AMRGridCell **[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell *[_ncell.y()];
@@ -74,7 +75,7 @@ public:
     }
   }
 
-  ~AMRGrid() {
+  inline ~AMRGrid() {
     for (int i = 0; i < _ncell.x(); ++i) {
       for (int j = 0; j < _ncell.y(); ++j) {
         delete[] _top_level[i][j];
@@ -94,13 +95,13 @@ public:
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
-    unsigned int block = key & 0xffffffff00000000;
+    unsigned int block = key >> 32;
     // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
     // tell the compiler this is an unsigned long long (ull)
     unsigned int cell = key & 0xffffffffull;
     // the block info consists of 3 10-bit keys, for the x, y, and z dimension
-    unsigned int ix = block & 0x3ff00000;
-    unsigned int iy = block & 0x000ffc00;
+    unsigned int ix = (block & 0x3ff00000) >> 20;
+    unsigned int iy = (block & 0x000ffc00) >> 10;
     unsigned int iz = block & 0x000003ff;
     return _top_level[ix][iy][iz][cell];
   }
@@ -136,18 +137,19 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
-    // the highest bit is reserved to indicate the end of the cell key
-    unsigned int cell = 1;
+    unsigned int cell = 0;
     for (unsigned char ilevel = 0; ilevel < level; ++ilevel) {
       ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
-      cell = (cell << 3) + (ix << 2) + (iy << 1) + iz;
+      cell += ((ix << 2) + (iy << 1) + iz) << (3 * ilevel);
       box.get_sides() *= 0.5;
       box.get_anchor()[0] += ix * box.get_sides().x();
       box.get_anchor()[1] += iy * box.get_sides().y();
       box.get_anchor()[2] += iz * box.get_sides().z();
     }
+    // the highest bit is reserved to indicate the end of the cell key
+    cell += 1 << (3 * level);
     unsigned long key = block;
     key = (key << 32) + cell;
     return key;
@@ -161,7 +163,7 @@ public:
    * power of 2 subdivision, the level goes up by 1.
    * @param position CoordinateVector<> of a position inside the bounding box.
    */
-  void create_cell(unsigned char level, CoordinateVector<> position) {
+  inline void create_cell(unsigned char level, CoordinateVector<> position) {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
@@ -184,11 +186,61 @@ public:
   }
 
   /**
+   * @brief Create the cell with the given key and return its contents.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Contents of the cell.
+   */
+  inline DensityValues &create_cell(unsigned long key) {
+    // the key consists of two parts: a part (first 32 bits) that encodes the
+    // top level block information, and a part (last 32 bits) that encodes the
+    // cell information within the block
+    unsigned int block = key >> 32;
+    // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
+    // tell the compiler this is an unsigned long long (ull)
+    unsigned int cell = key & 0xffffffffull;
+    // the block info consists of 3 10-bit keys, for the x, y, and z dimension
+    unsigned int ix = (block & 0x3ff00000) >> 20;
+    unsigned int iy = (block & 0x000ffc00) >> 10;
+    unsigned int iz = block & 0x000003ff;
+    return _top_level[ix][iy][iz].create_cell(cell);
+  }
+
+  /**
+   * @brief Access the deepest cell that contains the given position.
+   *
+   * @param position CoordinateVector specifying a position within the box.
+   * @return Contents of the deepest cell in the hierarchy that contains that
+   * position.
+   */
+  inline DensityValues &get_cell(CoordinateVector<> position) {
+    // find out in which block the position lives
+    unsigned int ix, iy, iz;
+    ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
+         _box.get_sides().x();
+    iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
+         _box.get_sides().y();
+    iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
+         _box.get_sides().z();
+    // get the box of the block
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    CoordinateVector<> anchor;
+    anchor[0] = _box.get_anchor().x() + ix * sides.x();
+    anchor[1] = _box.get_anchor().y() + iy * sides.y();
+    anchor[2] = _box.get_anchor().z() + iz * sides.z();
+    Box box(anchor, sides);
+    return _top_level[ix][iy][iz].get_cell(position, box);
+  }
+
+  /**
    * @brief Print the grid to the given stream.
    *
    * @param stream std::ostream to write to.
    */
-  void print(std::ostream &stream) {
+  inline void print(std::ostream &stream) {
     CoordinateVector<> sides;
     sides[0] = _box.get_sides().x() / _ncell.x();
     sides[1] = _box.get_sides().y() / _ncell.y();

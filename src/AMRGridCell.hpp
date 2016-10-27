@@ -50,9 +50,9 @@ public:
   /**
    * @brief Empty constructor.
    */
-  AMRGridCell() : _values(nullptr), _children{nullptr} {}
+  inline AMRGridCell() : _values(nullptr), _children{nullptr} {}
 
-  ~AMRGridCell() {
+  inline ~AMRGridCell() {
     if (_values != nullptr) {
       delete _values;
     }
@@ -95,8 +95,8 @@ public:
    * @param position CoordinateVector<> of a position inside the cell box.
    * @param box Box specifying the geometrical extents of the cell.
    */
-  void create_cell(unsigned char current_level, unsigned char level,
-                   CoordinateVector<> position, Box &box) {
+  inline void create_cell(unsigned char current_level, unsigned char level,
+                          CoordinateVector<> position, Box &box) {
     if (current_level == level) {
       // ready: create DensityValues
       _values = new DensityValues();
@@ -121,12 +121,62 @@ public:
   }
 
   /**
+   * @brief Create the cell with the given key and return its contents.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Contents of that cell.
+   */
+  inline DensityValues &create_cell(unsigned int &key) {
+    if (key == 1) {
+      _values = new DensityValues();
+      return *_values;
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        _children[cell] = new AMRGridCell();
+      }
+      return _children[cell]->create_cell(key);
+    }
+  }
+
+  /**
+   * @brief Acces the deepest cell that contains the given position.
+   *
+   * @param position CoordinateVector specifying a position within the cell.
+   * @param box Geometrical extents of the cell.
+   * @return Contents of the deepest cell in the hierarchy that contains the
+   * position.
+   */
+  inline DensityValues &get_cell(CoordinateVector<> position, Box &box) {
+    if (_values != nullptr) {
+      return *_values;
+    } else {
+      // find out in which child the position lives
+      unsigned char ix, iy, iz;
+      ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
+      iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
+      iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
+      // check if the cell exists. If not, throw an error.
+      if (_children[4 * ix + 2 * iy + iz] == nullptr) {
+        error("Cell does not exist!");
+      }
+      // go deeper
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[4 * ix + 2 * iy + iz]->get_cell(position, box);
+    }
+  }
+
+  /**
    * @brief Print the cell to the given stream.
    *
    * @param stream std::ostream to write to.
    * @param box Box specifying the geometrical extents of the cell.
    */
-  void print(std::ostream &stream, Box &box) {
+  inline void print(std::ostream &stream, Box &box) {
     // print cell
     stream << box.get_anchor().x() << "\t" << box.get_anchor().y() << "\t"
            << box.get_anchor().z() << "\n";
