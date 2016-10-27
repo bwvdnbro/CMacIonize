@@ -30,6 +30,7 @@
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 
+#include <array>
 #include <hdf5.h>
 #include <map>
 #include <string>
@@ -808,6 +809,132 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   return data;
+}
+
+/**
+ * @brief Multidimensional data block.
+ */
+template < typename T, unsigned char Tsize > class HDF5DataBlock {
+private:
+  /*! @brief Size of the multidimensional array. */
+  std::array< unsigned int, Tsize > _size;
+
+  /*! @brief Data. */
+  T *_data;
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param dimensions Size of the data block in each dimension.
+   * @param data Data for the block, should be an array with total size equal to
+   * the product of the given dimensions.
+   */
+  HDF5DataBlock(std::array< unsigned int, Tsize > dimensions, T *data)
+      : _size(dimensions) {
+    unsigned int datasize = 1;
+    for (unsigned char i = 0; i < Tsize; ++i) {
+      datasize *= _size[i];
+    }
+    _data = new T[datasize];
+    for (unsigned int i = 0; i < datasize; ++i) {
+      _data[i] = data[i];
+    }
+  }
+
+  ~HDF5DataBlock() { delete[] _data; }
+
+  /**
+   * @brief Access the element at the given position.
+   *
+   * @param index Multidimensional index.
+   * @return Element at that position.
+   */
+  inline T &operator[](std::array< unsigned int, Tsize > index) {
+    unsigned int dataindex = 0;
+    unsigned int product = 1;
+    for (unsigned char i = 0; i < Tsize; ++i) {
+      dataindex += index[Tsize - 1 - i] * product;
+      product *= _size[Tsize - 1 - i];
+    }
+    return _data[dataindex];
+  }
+
+  /**
+   * @brief Get the size of the multidimensional array.
+   *
+   * @return Size of the array.
+   */
+  inline std::array< unsigned int, Tsize > size() { return _size; }
+};
+
+/**
+ * @brief read_dataset specialization for a HDF5DataBlock, a multidimensional
+ * data array.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to read.
+ * @return HDF5DataBlock containing the contents of the dataset.
+ */
+template < typename T, unsigned char Tsize >
+HDF5DataBlock< T, Tsize > read_dataset(hid_t group, std::string name) {
+  hid_t datatype = get_datatype_name< T >();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  // open dataspace
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    error("Failed to open dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // query dataspace extents
+  hsize_t size[Tsize];
+  hsize_t maxsize[Tsize];
+  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  if (ndim < 0) {
+    error("Unable to query extent of dataset \"%s\"", name.c_str());
+  }
+
+  // read dataset
+  std::array< unsigned int, Tsize > dimensions;
+  unsigned int dprod = 1;
+  for (unsigned char i = 0; i < Tsize; ++i) {
+    dimensions[i] = size[i];
+    dprod *= size[i];
+  }
+  T *data = new T[dprod];
+  herr_t status =
+      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (status < 0) {
+    error("Failed to read dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  HDF5DataBlock< T, Tsize > block(dimensions, data);
+
+  delete[] data;
+
+  return block;
 }
 
 /**

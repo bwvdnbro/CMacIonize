@@ -229,18 +229,20 @@ public:
            << box.get_anchor().y() + box.get_sides().y() << "\t"
            << box.get_anchor().z() + box.get_sides().z() << "\n\n";
 
-    // print children
-    CoordinateVector<> sides = 0.5 * box.get_sides();
-    for (unsigned int ix = 0; ix < 2; ++ix) {
-      for (unsigned int iy = 0; iy < 2; ++iy) {
-        for (unsigned int iz = 0; iz < 2; ++iz) {
-          if (_children[4 * ix + 2 * iy + iz] != nullptr) {
-            CoordinateVector<> anchor;
-            anchor[0] = box.get_anchor().x() + ix * sides.x();
-            anchor[1] = box.get_anchor().y() + iy * sides.y();
-            anchor[2] = box.get_anchor().z() + iz * sides.z();
-            Box cbox(anchor, sides);
-            _children[4 * ix + 2 * iy + iz]->print(stream, cbox);
+    // print children (only for cells that are refined)
+    if (_values == nullptr) {
+      CoordinateVector<> sides = 0.5 * box.get_sides();
+      for (unsigned int ix = 0; ix < 2; ++ix) {
+        for (unsigned int iy = 0; iy < 2; ++iy) {
+          for (unsigned int iz = 0; iz < 2; ++iz) {
+            if (_children[4 * ix + 2 * iy + iz] != nullptr) {
+              CoordinateVector<> anchor;
+              anchor[0] = box.get_anchor().x() + ix * sides.x();
+              anchor[1] = box.get_anchor().y() + iy * sides.y();
+              anchor[2] = box.get_anchor().z() + iz * sides.z();
+              Box cbox(anchor, sides);
+              _children[4 * ix + 2 * iy + iz]->print(stream, cbox);
+            }
           }
         }
       }

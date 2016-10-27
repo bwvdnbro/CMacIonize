@@ -65,6 +65,54 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
 
   // fill the grid with values
 
+  // read the block extents
+  HDF5Tools::HDF5DataBlock< double, 3 > extents =
+      HDF5Tools::read_dataset< double, 3 >(file, "bounding box");
+  // read the densities
+  HDF5Tools::HDF5DataBlock< double, 4 > densities =
+      HDF5Tools::read_dataset< double, 4 >(file, "dens");
+  // read the refinement levels
+  std::vector< int > levels =
+      HDF5Tools::read_dataset< int >(file, "refine level");
+  // read the node types
+  std::vector< int > nodetypes =
+      HDF5Tools::read_dataset< int >(file, "node type");
+  // add them to the grid
+  for (unsigned int i = 0; i < extents.size()[0]; ++i) {
+    if (nodetypes[i] == 1) {
+      CoordinateVector<> anchor;
+      anchor[0] = extents[{i, 0, 0}];
+      anchor[1] = extents[{i, 1, 0}];
+      anchor[2] = extents[{i, 2, 0}];
+      CoordinateVector<> top_anchor;
+      top_anchor[0] = extents[{i, 0, 1}];
+      top_anchor[1] = extents[{i, 1, 1}];
+      top_anchor[2] = extents[{i, 2, 1}];
+      CoordinateVector<> sides = top_anchor - anchor;
+      for (unsigned int ix = 0; ix < densities.size()[1]; ++ix) {
+        for (unsigned int iy = 0; iy < densities.size()[2]; ++iy) {
+          for (unsigned int iz = 0; iz < densities.size()[3]; ++iz) {
+            CoordinateVector<> centre;
+            centre[0] =
+                anchor.x() + (ix + 0.5) * sides.x() / densities.size()[1];
+            centre[1] =
+                anchor.y() + (iy + 0.5) * sides.y() / densities.size()[2];
+            centre[2] =
+                anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
+            // this is the ordering as it is in the file
+            double rho = densities[{i, iz, iy, ix}];
+            // each block contains 8x8x8 cells, hence level + 3 (but levels[i]
+            // is 1 larger than in our definition, Fortran counts from 1)
+            // note that we assume here that each block is 8x8x8, while we
+            // should actually obtain that information from the file...
+            unsigned long key = _grid.get_key(levels[i] + 2, centre);
+            _grid.create_cell(key) = rho;
+          }
+        }
+      }
+    }
+  }
+
   HDF5Tools::close_file(file);
 }
 
@@ -75,5 +123,5 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
  * @return Density at that position.
  */
 double FlashSnapshotDensityFunction::operator()(CoordinateVector<> position) {
-  return 0.;
+  return _grid.get_cell(position);
 }

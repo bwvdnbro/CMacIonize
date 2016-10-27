@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "FLASHSnapshotDensityFunction.hpp"
+#include <fstream>
 
 /**
  * @brief Unit test for the FLASHSnapshotDensityFunction class.
@@ -34,6 +35,13 @@
  */
 int main(int argc, char **argv) {
   FlashSnapshotDensityFunction density("SILCC_hdf5_plt_cnt_0000");
+
+  std::ofstream ofile("slice_z.txt");
+  unsigned int np = 1024;
+  for (unsigned int i = 0; i < np; ++i) {
+    CoordinateVector<> p(0., 0., -3.8575e20 + (i + 0.5) * 7.715e20 / np);
+    ofile << p.z() << "\t" << density(p) << "\n";
+  }
 
   return 0;
 }
