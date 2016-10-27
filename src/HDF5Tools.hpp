@@ -29,7 +29,9 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+
 #include <hdf5.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -250,7 +252,7 @@ template < typename T > inline T read_attribute(hid_t group, std::string name) {
   }
 
   return value;
-};
+}
 
 /**
  * @brief read_attribute specialization for std::string.
@@ -316,7 +318,7 @@ inline std::string read_attribute< std::string >(hid_t group,
   free(data);
 
   return value;
-};
+}
 
 /**
  * @brief read_attribute specialization for CoordinateVector.
@@ -349,7 +351,7 @@ read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   return value;
-};
+}
 
 /**
  * @brief Template read_attribute() version for std::vector.
@@ -416,7 +418,7 @@ inline std::vector< T > read_vector_attribute(hid_t group, std::string name) {
   }
 
   return value;
-};
+}
 
 /**
  * @brief read_attribute() specialization for std::vector<unsigned int>.
@@ -492,7 +494,7 @@ inline void write_attribute(hid_t group, std::string name, T &value) {
   if (status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
-};
+}
 
 /**
  * @brief write_attribute specialization for std::string.
@@ -561,7 +563,7 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
   if (status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
-};
+}
 
 /**
  * @brief write_attribute specialization for CoordinateVector.
@@ -609,7 +611,7 @@ inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
   if (status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
-};
+}
 
 /**
  * @brief write_attribute specialization for a general std::vector.
@@ -662,7 +664,7 @@ inline void write_vector_attribute(hid_t group, std::string name,
   if (status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
-};
+}
 
 /**
  * @brief write_attribute specialization for std::vector<double>.
@@ -806,6 +808,162 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   return data;
+}
+
+/**
+ * @brief Struct used to read in compound datasets consisting of a key and a
+ * value, like in FLASH snapshots.
+ */
+template < typename T > struct HDF5CompoundKeyValueType {
+  /*! @brief Key name. */
+  char _name[20];
+  /*! @brief Value. */
+  T _value;
+};
+
+/**
+ * @brief Wrapper for std::map that checks if accessed elements exist.
+ */
+template < typename T > class HDF5Dictionary {
+private:
+  /*! @brief std::map for which this class is a wrapper. */
+  std::map< std::string, T > _map;
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param map std::map for which this class is a wrapper.
+   */
+  inline HDF5Dictionary(std::map< std::string, T > &map) : _map(map) {}
+
+  /**
+   * @brief Access operator.
+   *
+   * Contrary to a real std::map, this operator checks if the requested element
+   * exists.
+   *
+   * @param key Key in the dictionary that we want to access.
+   * @return Element belonging to that key.
+   */
+  inline T &operator[](std::string key) {
+    auto it = _map.find(key);
+    if (it == _map.end()) {
+      error("Element \"%s\" not found in dictionary!", key.c_str());
+    }
+    return it->second;
+  }
+};
+
+/**
+ * @brief Read in a compound dataset as a dictionary.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the compound dataset to read.
+ * @return Contents of the compound dataset, as a dictionary.
+ */
+template < typename T >
+inline HDF5Dictionary< T > read_dictionary(hid_t group, std::string name) {
+  hid_t valuetype = get_datatype_name< T >();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  // open dataspace
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    error("Failed to open dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // query dataspace extents
+  hsize_t size[1];
+  hsize_t maxsize[1];
+  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  if (ndim < 0) {
+    error("Unable to query extent of dataset \"%s\"", name.c_str());
+  }
+
+  // create compound data type
+  hid_t datatype =
+      H5Tcreate(H5T_COMPOUND, sizeof(HDF5CompoundKeyValueType< T >));
+  if (datatype < 0) {
+    error("Failed to create datatype for dataset \"%s\"", name.c_str());
+  }
+
+  // set the contents of the compound data type
+  hid_t string20 = H5Tcopy(H5T_C_S1);
+  herr_t status = H5Tset_size(string20, 20);
+  if (status < 0) {
+    error("Failed to initialize string type for dataset \"%s\"", name.c_str());
+  }
+
+  status = H5Tinsert(datatype, "name",
+                     HOFFSET(HDF5CompoundKeyValueType< T >, _name), string20);
+  if (status < 0) {
+    error("Failed to insert name type for dataset \"%s\"", name.c_str());
+  }
+  status = H5Tinsert(datatype, "value",
+                     HOFFSET(HDF5CompoundKeyValueType< T >, _value), valuetype);
+  if (status < 0) {
+    error("Failed to insert value type for dataset \"%s\"", name.c_str());
+  }
+
+  // read the data
+  HDF5CompoundKeyValueType< T > *data =
+      new HDF5CompoundKeyValueType< T >[ size[0] ];
+
+  status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (status < 0) {
+    error("Failed to read dataset \"%s\"", name.c_str());
+  }
+
+  // close the datatype
+  status = H5Tclose(string20);
+  if (status < 0) {
+    error("Failed to close string type for dataset \"%s\"", name.c_str());
+  }
+
+  status = H5Tclose(datatype);
+  if (status < 0) {
+    error("Failed to close data type for dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  status = H5Sclose(filespace);
+  if (status < 0) {
+    error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  status = H5Dclose(dataset);
+  if (status < 0) {
+    error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  // construct the dictionary
+  std::map< std::string, T > dictionary;
+  for (int i = 0; i < size[0]; ++i) {
+    // strip spaces at the end of the string
+    unsigned int j = 18;
+    while (data[i]._name[j] == ' ') {
+      data[i]._name[j] = '\0';
+      --j;
+    }
+    std::string key(data[i]._name);
+    dictionary[key] = data[i]._value;
+  }
+
+  // free memory
+  delete[] data;
+
+  return HDF5Dictionary< T >(dictionary);
 }
 
 /**

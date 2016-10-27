@@ -48,6 +48,11 @@ private:
 
 public:
   /**
+   * @brief Empty constructor.
+   */
+  inline AMRGrid() : _top_level(nullptr) {}
+
+  /**
    * @brief Constructor.
    *
    * The grid consists of a number of blocks, which can each be subdivided in
@@ -66,6 +71,26 @@ public:
    */
   inline AMRGrid(Box box, CoordinateVector< int > ncell)
       : _box(box), _ncell(ncell) {
+    _top_level = new AMRGridCell< CellContents > **[_ncell.x()];
+    for (int i = 0; i < _ncell.x(); ++i) {
+      _top_level[i] = new AMRGridCell< CellContents > *[_ncell.y()];
+      for (int j = 0; j < _ncell.y(); ++j) {
+        _top_level[i][j] = new AMRGridCell< CellContents >[ _ncell.z() ];
+      }
+    }
+  }
+
+  /**
+   * @brief Assignment operator.
+   *
+   * We have to implement this ourselves, since the default assignment operator
+   * does not know how to do the memory allocations.
+   *
+   * @param grid Grid that is copied into this grid.
+   */
+  inline void operator=(const AMRGrid &grid) {
+    _box = grid._box;
+    _ncell = grid._ncell;
     _top_level = new AMRGridCell< CellContents > **[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell< CellContents > *[_ncell.y()];

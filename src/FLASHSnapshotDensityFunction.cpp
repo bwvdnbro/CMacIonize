@@ -38,6 +38,33 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
+  // find out the dimensions of the box
+  HDF5Tools::HDF5Dictionary< double > real_runtime_pars =
+      HDF5Tools::read_dictionary< double >(file, "real runtime parameters");
+  CoordinateVector<> anchor;
+  anchor[0] = real_runtime_pars["xmin"];
+  anchor[1] = real_runtime_pars["ymin"];
+  anchor[2] = real_runtime_pars["zmin"];
+  CoordinateVector<> top_anchor;
+  top_anchor[0] = real_runtime_pars["xmax"];
+  top_anchor[1] = real_runtime_pars["ymax"];
+  top_anchor[2] = real_runtime_pars["zmax"];
+  CoordinateVector<> sides = top_anchor - anchor;
+  Box box(anchor, sides);
+
+  // find out the number of blocks in each dimension
+  HDF5Tools::HDF5Dictionary< int > integer_runtime_pars =
+      HDF5Tools::read_dictionary< int >(file, "integer runtime parameters");
+  CoordinateVector< int > nblock;
+  nblock[0] = integer_runtime_pars["nblockx"];
+  nblock[1] = integer_runtime_pars["nblocky"];
+  nblock[2] = integer_runtime_pars["nblockz"];
+
+  // make the grid
+  _grid = AMRGrid< double >(box, nblock);
+
+  // fill the grid with values
+
   HDF5Tools::close_file(file);
 }
 

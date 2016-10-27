@@ -26,6 +26,7 @@
 #ifndef FLASHSNAPSHOTDENSITYFUNCTION_HPP
 #define FLASHSNAPSHOTDENSITYFUNCTION_HPP
 
+#include "AMRGrid.hpp"
 #include "DensityFunction.hpp"
 
 #include <string>
@@ -34,6 +35,10 @@
  * @brief DensityFunction that reads densities from a FLASH snapshot.
  */
 class FlashSnapshotDensityFunction : public DensityFunction {
+private:
+  /*! @brief AMRGrid containing the snapshot file contents. */
+  AMRGrid< double > _grid;
+
 public:
   FlashSnapshotDensityFunction(std::string filename);
 

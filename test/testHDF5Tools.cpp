@@ -126,6 +126,15 @@ int main(int argc, char **argv) {
 
     HDF5Tools::close_group(group);
 
+    HDF5Tools::HDF5Dictionary< double > ddictionary =
+        HDF5Tools::read_dictionary< double >(file, "compound_double");
+    assert_condition(ddictionary["answer"] == 42.42);
+
+    HDF5Tools::HDF5Dictionary< int > idictionary =
+        HDF5Tools::read_dictionary< int >(file, "compound_integer");
+    status("answer: %i", idictionary["answer"]);
+    assert_condition(idictionary["answer"] == 42);
+
     HDF5Tools::close_file(file);
   }
 
