@@ -77,6 +77,13 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
   // read the node types
   std::vector< int > nodetypes =
       HDF5Tools::read_dataset< int >(file, "node type");
+  // determine the level of each block
+  unsigned int level = 0;
+  unsigned int dsize = densities.size()[1];
+  while(dsize > 1){
+    ++level;
+    dsize >>= 1;
+  }
   // add them to the grid
   for (unsigned int i = 0; i < extents.size()[0]; ++i) {
     if (nodetypes[i] == 1) {
@@ -101,11 +108,10 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
                 anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
             // this is the ordering as it is in the file
             double rho = densities[{i, iz, iy, ix}];
-            // each block contains 8x8x8 cells, hence level + 3 (but levels[i]
-            // is 1 larger than in our definition, Fortran counts from 1)
-            // note that we assume here that each block is 8x8x8, while we
-            // should actually obtain that information from the file...
-            unsigned long key = _grid.get_key(levels[i] + 2, centre);
+            // each block contains level^3 cells, hence levels[i] + level
+            // (but levels[i] is 1 larger than in our definition, Fortran counts
+            // from 1)
+            unsigned long key = _grid.get_key(levels[i] + level -1, centre);
             _grid.create_cell(key) = rho;
           }
         }
