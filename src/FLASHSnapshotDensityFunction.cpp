@@ -80,7 +80,7 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
   // determine the level of each block
   unsigned int level = 0;
   unsigned int dsize = densities.size()[1];
-  while(dsize > 1){
+  while (dsize > 1) {
     ++level;
     dsize >>= 1;
   }
@@ -111,7 +111,7 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
             // each block contains level^3 cells, hence levels[i] + level
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)
-            unsigned long key = _grid.get_key(levels[i] + level -1, centre);
+            unsigned long key = _grid.get_key(levels[i] + level - 1, centre);
             _grid.create_cell(key) = rho;
           }
         }
