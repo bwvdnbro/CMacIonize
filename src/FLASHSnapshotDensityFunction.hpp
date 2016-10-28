@@ -31,16 +31,23 @@
 
 #include <string>
 
+class Log;
+class ParameterFile;
+
 /**
  * @brief DensityFunction that reads densities from a FLASH snapshot.
  */
-class FlashSnapshotDensityFunction : public DensityFunction {
+class FLASHSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief AMRGrid containing the snapshot file contents. */
   AMRGrid< double > _grid;
 
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
 public:
-  FlashSnapshotDensityFunction(std::string filename);
+  FLASHSnapshotDensityFunction(std::string filename, Log *log = nullptr);
+  FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   virtual double operator()(CoordinateVector<> position);
 };

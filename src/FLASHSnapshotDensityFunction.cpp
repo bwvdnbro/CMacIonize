@@ -25,6 +25,8 @@
  */
 #include "FLASHSnapshotDensityFunction.hpp"
 #include "HDF5Tools.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 
 /**
  * @brief Constructor.
@@ -32,9 +34,11 @@
  * This reads in the data and stores it internally.
  *
  * @param filename Name of the snapshot file to read.
+ * @param log Log to write logging info to.
  */
-FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
-    std::string filename) {
+FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
+                                                           Log *log)
+    : _log(log) {
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
@@ -120,7 +124,23 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
   }
 
   HDF5Tools::close_file(file);
+
+  if (_log) {
+    _log->write_status("Successfully read densities from file \"", filename,
+                       "\".");
+  }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read.
+ * @param log Log to write logging info to.
+ */
+FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
+    ParameterFile &params, Log *log)
+    : FLASHSnapshotDensityFunction(
+          params.get_value< std::string >("densityfunction.filename"), log) {}
 
 /**
  * @brief Function that returns the density at the given coordinate position.
@@ -128,6 +148,6 @@ FlashSnapshotDensityFunction::FlashSnapshotDensityFunction(
  * @param position CoordinateVector<> specifying a position.
  * @return Density at that position.
  */
-double FlashSnapshotDensityFunction::operator()(CoordinateVector<> position) {
+double FLASHSnapshotDensityFunction::operator()(CoordinateVector<> position) {
   return _grid.get_cell(position);
 }

@@ -34,7 +34,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  FlashSnapshotDensityFunction density("SILCC_hdf5_plt_cnt_0000");
+  FLASHSnapshotDensityFunction density("SILCC_hdf5_plt_cnt_0000");
 
   std::ofstream ofile("slice_z.txt");
   unsigned int np = 1024;
