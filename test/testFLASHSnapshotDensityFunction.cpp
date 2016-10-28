@@ -23,8 +23,19 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "FLASHSnapshotDensityFunction.hpp"
-#include <fstream>
+
+/**
+ * @brief Expected density function.
+ *
+ * @param x CoordinateVector<> specifying a position.
+ * @return Expected density at that position.
+ */
+double expected_density(CoordinateVector<> x) {
+  return (1. + 100. * x.x() + 100. * x.y() + 100. * x.z()) * 1.e3 /
+         1.6737236e-27;
+}
 
 /**
  * @brief Unit test for the FLASHSnapshotDensityFunction class.
@@ -34,14 +45,19 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  FLASHSnapshotDensityFunction density("SILCC_hdf5_plt_cnt_0000");
+  FLASHSnapshotDensityFunction density("FLASHtest.hdf5");
 
-  std::ofstream ofile("slice_z.txt");
-  unsigned int np = 1024;
+  unsigned int np = 128;
+  double xi2 = 0.;
   for (unsigned int i = 0; i < np; ++i) {
-    CoordinateVector<> p(0., 0., -3.8575e20 + (i + 0.5) * 7.715e20 / np);
-    ofile << p.z() << "\t" << density(p) << "\n";
+    CoordinateVector<> p((i + 0.5) * 0.02 / np, (i + 0.5) * 0.01 / np,
+                         (i + 0.5) * 0.01 / np);
+    double rho = density(p);
+    double rho_ex = expected_density(p);
+    double diff = (rho - rho_ex) / (rho + rho_ex);
+    xi2 += diff * diff;
   }
+  assert_values_equal(xi2, 0.0106294);
 
   return 0;
 }

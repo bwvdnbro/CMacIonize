@@ -388,6 +388,9 @@ set(TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES
 add_unit_test(NAME testFLASHSnapshotDensityFunction
               SOURCES ${TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES}
               LIBS ${HDF5_LIBRARIES})
+configure_file(${PROJECT_SOURCE_DIR}/test/FLASHtest.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/FLASHtest.hdf5
+               COPYONLY)
 endif(HAVE_HDF5)
 
 ## Unit test for AMRGrid
