@@ -85,7 +85,9 @@ public:
    * @param b Variable b.
    * @return std::max(a,b).
    */
-  template < typename T > inline static const T &max(const T &a, const T &b) {
+  template < typename _datatype_ >
+  inline static const _datatype_ &max(const _datatype_ &a,
+                                      const _datatype_ &b) {
     return std::max(a, b);
   }
 
@@ -97,8 +99,8 @@ public:
    * each leaf, there is exactly one corresponding variable).
    * @param op Operation used to accumulate variables within nodes.
    */
-  template < typename operation >
-  inline void set_auxiliaries(std::vector< double > &v, operation op) {
+  template < typename _operation_ >
+  inline void set_auxiliaries(std::vector< double > &v, _operation_ op) {
     _root->set_variable(v, op);
   }
 

@@ -47,6 +47,25 @@
 class DensityGridWriterFactory {
 public:
   /**
+   * @brief Method that checks if the requested DensityGridWriter implementation
+   * requires HDF5.
+   *
+   * @param type Requested DensityGridWriter type.
+   * @param log Log to write logging info to.
+   */
+  static void check_hdf5(std::string type, Log *log = nullptr) {
+    if (type == "Gadget") {
+      if (log) {
+        log->write_error("Cannot create an instance of ", type,
+                         "DensityGridWriter, since the code was "
+                         "compiled without HDF5 support.");
+      }
+      error("A %sDensityGridWriter requires HDF5. However, the code "
+            "was compiled without HDF5 support!",
+            type.c_str());
+    }
+  }
+  /**
    * @brief Generate a DensityGridWriter based on the type chosen in the
    * parameter file.
    *
@@ -63,22 +82,18 @@ public:
     if (log) {
       log->write_info("Requested DensityGridWriter type: ", type);
     }
-    if (type == "Gadget") {
-#ifdef HAVE_HDF5
-      return new GadgetDensityGridWriter(params, grid, log);
-#else
-      if (log) {
-        log->write_error("Cannot create instance of GadgetDensityGridWriter, "
-                         "since the code was compiled without HDF5 support.");
-      }
-      error("A GadgetDensityGridWriter requires HDF5. However, the code was "
-            "compiled without HDF5 support!");
-      return nullptr;
+#ifndef HAVE_HDF5
+    check_hdf5(type, log);
 #endif
+#ifdef HAVE_HDF5
+    if (type == "Gadget") {
+      return new GadgetDensityGridWriter(params, grid, log);
     } else {
       error("Unknown DensityGridWriter type: \"%s\".", type.c_str());
       return nullptr;
     }
+#endif
+    return nullptr;
   }
 };
 

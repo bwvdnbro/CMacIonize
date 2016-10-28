@@ -195,8 +195,8 @@ public:
    * @return Accumulated value: for leaves this is the variable in the list
    * corresponding to the leaf element, for nodes this is the accumulated value.
    */
-  template < typename operation >
-  inline double set_variable(std::vector< double > &variables, operation op) {
+  template < typename _operation_ >
+  inline double set_variable(std::vector< double > &variables, _operation_ op) {
     if (_index < OCTREE_NOLEAF) {
       _variable = variables[_index];
     } else {

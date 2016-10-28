@@ -40,6 +40,7 @@
  * For convenience, they are ordered alphabetically.
  */
 enum Quantity {
+  QUANTITY_DENSITY,
   QUANTITY_FREQUENCY,
   QUANTITY_LENGTH,
   QUANTITY_MASS,
@@ -54,7 +55,7 @@ enum Quantity {
  * @brief Class that can be used to convert values from one unit system to
  * another.
  */
-template < Quantity quantity > class UnitConverter {
+template < Quantity _quantity_ > class UnitConverter {
 public:
   /**
    * @brief Convert the given value with the given unit to the equivalent value
@@ -93,6 +94,50 @@ public:
     return to_unit(to_SI(value, unit_from), unit_to);
   }
 };
+
+/// QUANTITY_DENSITY
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a density.
+ *
+ * @param value Density value in strange units.
+ * @param unit Strange units.
+ * @return Density value in kilograms per cubic metres.
+ */
+template <>
+inline double UnitConverter< QUANTITY_DENSITY >::to_SI(double value,
+                                                       std::string unit) {
+  if (unit == "kg m^-3") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "g cm^-3") {
+    return value * 1.e3;
+  } else {
+    error("Unknown density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a density.
+ *
+ * @param value Density value in kilograms per cubic metres.
+ * @param unit Strange units.
+ * @return Density value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_DENSITY >::to_unit(double value,
+                                                         std::string unit) {
+  if (unit == "kg m^-3") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "g cm^-3") {
+    return value * 1.e-3;
+  } else {
+    error("Unknown density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
 
 /// QUANTITY_FREQUENCY
 
