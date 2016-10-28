@@ -88,10 +88,13 @@ public:
 #ifndef HAVE_HDF5
     check_hdf5(type, log);
 #endif
-    if (type == "Homogeneous") {
-      return new HomogeneousDensityFunction(params, log);
-    } else if (type == "AsciiFile") {
+    // there is some order here: first the non-library dependent
+    // implementations, then the library dependent ones (sorted alphabetically
+    // on library name). Each group is sorted alphabetically as well.
+    if (type == "AsciiFile") {
       return new AsciiFileDensityFunction(params, log);
+    } else if (type == "Homogeneous") {
+      return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "FlashSnapshot") {
       return new FLASHSnapshotDensityFunction(params, log);
