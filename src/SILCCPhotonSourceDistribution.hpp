@@ -26,6 +26,8 @@
 #ifndef SILCCPHOTONSOURCEDISTRIBUTION_HPP
 #define SILCCPHOTONSOURCEDISTRIBUTION_HPP
 
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
 
@@ -35,7 +37,7 @@
  * We assume a fixed number of sources, uniformly distributed in a rectangular
  * disk in x and y, with a Gaussian distribution in z.
  */
-class SILCCPhotonSourceDistribution {
+class SILCCPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Number of individual sources. */
   unsigned int _num_sources;
@@ -52,11 +54,14 @@ private:
   /*! @brief y side length of the rectangular disk (in m). */
   double _sides_y;
 
-  /*! @brief Origin of the Gaussian disk height distribution. */
+  /*! @brief Origin of the Gaussian disk height distribution (in m). */
   double _origin_z;
 
-  /*! @brief Scale height of the Gaussian disk height distribution. */
+  /*! @brief Scale height of the Gaussian disk height distribution (in m). */
   double _scaleheight_z;
+
+  /*! @brief Luminosity of a single source (in s^-1). */
+  double _luminosity;
 
 public:
   /**
@@ -67,15 +72,55 @@ public:
    * @param sides_x x side length of the rectangular disk (in m).
    * @param anchor_y  y component of the anchor of the rectangular disk (in m).
    * @param sides_y y side length of the rectangular disk (in m).
-   * @param origin_z Origin of the Gaussian disk height distribution.
-   * @param scaleheight_z Scale height of the Gaussian disk height distribution.
+   * @param origin_z Origin of the Gaussian disk height distribution (in m).
+   * @param scaleheight_z Scale height of the Gaussian disk height distribution
+   * (in m).
+   * @param luminosity Luminosity of a single source (in s^-1).
+   * @param log Log to write logging info to.
    */
   SILCCPhotonSourceDistribution(unsigned int num_sources, double anchor_x,
                                 double sides_x, double anchor_y, double sides_y,
-                                double origin_z, double scaleheight_z)
+                                double origin_z, double scaleheight_z,
+                                double luminosity, Log *log = nullptr)
       : _num_sources(num_sources), _anchor_x(anchor_x), _anchor_y(anchor_y),
         _sides_x(sides_x), _sides_y(sides_y), _origin_z(origin_z),
-        _scaleheight_z(scaleheight_z) {}
+        _scaleheight_z(scaleheight_z), _luminosity(luminosity) {
+    if (log) {
+      log->write_status("Constructed ", _num_sources,
+                        " SILCC sources within the rectangle with anchor [",
+                        _anchor_x, " m, ", _anchor_y, " m] and sides [",
+                        _sides_x, " m, ", _sides_y, " m], a vertical origin ",
+                        _origin_z, " m and scale height ", _scaleheight_z,
+                        " m, and a total luminosity of ",
+                        _num_sources * _luminosity, " s^-1.");
+    }
+  }
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   */
+  SILCCPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
+      : SILCCPhotonSourceDistribution(
+            params.get_value< unsigned int >(
+                "photonsourcedistribution.num_sources", 24),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.anchor_x", "0. m"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.sides_x", "1. m"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.anchor_y", "0. m"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.sides_y", "1. m"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.origin_z", "0. m"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "photonsourcedistribution.scaleheight_z", "0.2 m"),
+            params.get_physical_value< QUANTITY_FREQUENCY >(
+                "photonsourcedistribution.luminosity", "4.26e49 s^-1"),
+            log) {}
 
   virtual ~SILCCPhotonSourceDistribution() {}
 
@@ -113,6 +158,13 @@ public:
    * weight.
    */
   virtual double get_weight(unsigned int index) { return 1. / _num_sources; }
+
+  /**
+   * @brief Get the total luminosity of all sources together.
+   *
+   * @return Total luminosity (in s^-1).
+   */
+  virtual double get_total_luminosity() { return _num_sources * _luminosity; }
 };
 
 #endif // SILCCPHOTONSOURCEDISTRIBUTION_HPP

@@ -34,9 +34,11 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  SILCCPhotonSourceDistribution distribution(10000000, 0., 1., 0., 1., 0., 0.2);
+  SILCCPhotonSourceDistribution distribution(10000000, 0., 1., 0., 1., 0., 0.2,
+                                             4.26e49);
 
   assert_condition(distribution.get_number_of_sources() == 10000000);
+  assert_condition(distribution.get_total_luminosity() == 4.26e56);
 
   CoordinateVector<> mean_x;
   double std_z = 0.;

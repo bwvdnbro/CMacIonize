@@ -93,6 +93,7 @@ set(CMACIONIZE_SOURCES
     PhotonSourceSpectrum.hpp
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
+    SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
     Timer.hpp
     Utilities.hpp
