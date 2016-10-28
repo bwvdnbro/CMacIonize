@@ -23,3 +23,59 @@ Now compile the program using `make`.
 Documentation can be generated using `make doc`.
 
 Unit tests can be run using `make check`.
+
+A number (currently only 1) of benchmark problems is provided in the folder
+`build/rundir/benchmark`. Each benchmark problem consists of at least a
+parameter file that can be used to run the benchmark, and a `.txt` file
+containing some more information about the benchmark problem.
+
+## Dependencies
+
+The only thing you need to compile and run CMacIonize is the CMake build system
+and a C++ compiler. However, some plugins for reading and writing files require
+the HDF5 library as well. The CMake build system automatically tries to locate
+a working HDF5 installation on your system. If this fails, the program will
+still compile, but the following functionality will not work:
+  - reading a density field from a Gadget snapshot file
+  - reading a density field from a FLASH snapshot file
+  - reading ionizing sources from a Gadget snapshot file
+  - writing Gadget output files. Since this is currently the only supported
+    output format, this means output will not work, and the program is in fact
+    useless.
+
+To install the HDF5 (development) libraries on a Linux system, use
+```
+sudo apt-get install libhdf5-dev
+```
+
+On Mac OS X, the easiest way to install the HDF5 (development) libraries is a
+manual installation. Get the latest HDF5 release tarball from the
+[HDF5 website](https://support.hdfgroup.org/HDF5/release/obtainsrc.html)
+(make sure to choose a distribution with UNIX line endings). Extract the
+tarball in a folder of choice, and configure and build the program:
+```
+./configure
+make
+make install
+```
+Depending on where the HDF5 library is installed, you might need to tell CMake
+where to find HDF5: locate the folder containing `libhdf5.so` (or similar).
+This folder should be named `lib`, and should be part of a parent folder that
+also contains folders named `include` and `bin`. You should set the environment
+variable `HDF5_ROOT` to the name of this folder:
+```
+export HDF5_ROOT=/name/of/the/folder
+```
+Check the messages generated when you run CMake, as it will tell you whether or
+not a working HDF5 development installation was found.
+
+CMacIonize uses Doxygen to generate code documentation, but this is in no way
+necessary to compile or run the program. CMake will automatically try to find
+a Doxygen installation. If it finds one, you can generate documentation using
+`make doc`. If not, `make doc` will not work.
+
+Some scripts used for analyzing benchmark results, or for writing files used
+by the unit tests, require Python, and the `numpy`, `matplotlib` and `h5py`
+libraries. However, all files that are necessary for the unit tests are also
+included in the repository (even if the scripts to generate them are), so
+it is still possible to compile and run the code without Python.
