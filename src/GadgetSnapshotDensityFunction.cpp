@@ -60,10 +60,17 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * @brief Constructor.
  *
  * @param name Name of the snapshot file to read.
+ * @param fallback_periodic Periodicity flag used in case RuntimePars group is
+ * not found in the snapshot file.
+ * @param fallback_unit_length_in_SI Length unit to use if the Units group is
+ * not found in the snapshot file.
+ * @param fallback_unit_mass_in_SI Mass unit to use if the Units group is not
+ * found in the snapshot file.
  * @param log Log to write logging information to.
  */
-GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
-                                                             Log *log)
+GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
+    std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
+    double fallback_unit_mass_in_SI, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -72,11 +79,23 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
   // open the RuntimePars group
-  HDF5Tools::HDF5Group runtimepars =
-      HDF5Tools::open_group(file, "/RuntimePars");
-  // read the PeriodicBoundariesOn flag
-  int periodic =
-      HDF5Tools::read_attribute< int >(runtimepars, "PeriodicBoundariesOn");
+  bool periodic = fallback_periodic;
+  if (HDF5Tools::group_exists(file, "/RuntimePars")) {
+    HDF5Tools::HDF5Group runtimepars =
+        HDF5Tools::open_group(file, "/RuntimePars");
+    // read the PeriodicBoundariesOn flag
+    periodic = HDF5Tools::read_attribute< int >(runtimepars,
+                                                "PeriodicBoundariesOn") != 0;
+    // close the group
+    HDF5Tools::close_group(runtimepars);
+  } else {
+    _log->write_warning("No RuntimePars found!");
+    if (periodic) {
+      _log->write_warning("Assuming a periodic box.");
+    } else {
+      _log->write_warning("Assuming a non-periodic box.");
+    }
+  }
   if (periodic) {
     // open the Header group
     HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
@@ -89,20 +108,34 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
     // close the Header group
     HDF5Tools::close_group(header);
   }
-  // close the group
-  HDF5Tools::close_group(runtimepars);
 
   // units
-  HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-  double unit_length_in_cgs =
-      HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-  double unit_mass_in_cgs =
-      HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
-  double unit_length_in_SI =
-      UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
-  double unit_mass_in_SI =
-      UnitConverter< QUANTITY_MASS >::to_SI(unit_mass_in_cgs, "g");
-  HDF5Tools::close_group(units);
+  double unit_length_in_SI = fallback_unit_length_in_SI;
+  double unit_mass_in_SI = fallback_unit_mass_in_SI;
+  if (HDF5Tools::group_exists(file, "/Units")) {
+    HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
+    double unit_length_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+    double unit_mass_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
+    unit_length_in_SI =
+        UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+    unit_mass_in_SI =
+        UnitConverter< QUANTITY_MASS >::to_SI(unit_mass_in_cgs, "g");
+    HDF5Tools::close_group(units);
+  } else {
+    if (_log) {
+      _log->write_warning("No Units group found!");
+    }
+    if (fallback_unit_length_in_SI == 0. || fallback_unit_mass_in_SI == 0.) {
+      _log->write_warning(
+          "No fallback units found in parameter file either, using SI units.");
+      unit_length_in_SI = 1.;
+      unit_mass_in_SI = 1.;
+    } else {
+      _log->write_warning("Using fallback units.");
+    }
+  }
 
   // open the group containing the SPH particle data
   HDF5Tools::HDF5Group gasparticles = HDF5Tools::open_group(file, "/PartType0");
@@ -179,7 +212,14 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(std::string name,
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction.filename"), log) {}
+          params.get_value< string >("densityfunction.filename"),
+          params.get_value< bool >("densityfunction.fallback_periodic_flag",
+                                   false),
+          params.get_physical_value< QUANTITY_LENGTH >(
+              "densityfunction.fallback_unit_length", "0. m"),
+          params.get_physical_value< QUANTITY_MASS >(
+              "densityfunction.fallback_unit_mass", "0. kg"),
+          log) {}
 
 /**
  * @brief Destructor.

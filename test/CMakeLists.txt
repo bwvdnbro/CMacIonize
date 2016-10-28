@@ -106,6 +106,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
     ../src/TerminalLog.hpp
+    ../src/Timer.cpp
 )
 add_unit_test(NAME testDensityGrid
               SOURCES ${TESTDENSITYGRID_SOURCES})
@@ -152,6 +153,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
+    ../src/Timer.cpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
@@ -306,6 +308,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/RecombinationRates.hpp
+    ../src/Timer.cpp
 )
 add_unit_test(NAME testGadgetDensityGridWriter
               SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}

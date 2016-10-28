@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include <sstream>
 using namespace std;
@@ -74,6 +75,11 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
+  unsigned int ntot = _ncell.x() * _ncell.y() * _ncell.z();
+  unsigned int nguess = 0.01 * ntot;
+  unsigned int ninfo = 0.1 * ntot;
+  unsigned int ndone = 0;
+  Timer guesstimer;
   for (int i = 0; i < _ncell.x(); ++i) {
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
@@ -87,6 +93,18 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
         _density[i][j][k].set_neutral_fraction_He(1.e-6);
         _density[i][j][k].set_temperature(initial_temperature);
         set_reemission_probabilities(initial_temperature, _density[i][j][k]);
+        ++ndone;
+        if (_log) {
+          if (ndone == nguess) {
+            unsigned int tguess = round(99. * guesstimer.stop());
+            _log->write_status("Filling grid will take approximately ", tguess,
+                               " seconds.");
+          }
+          if (ndone % ninfo == 0) {
+            unsigned int pdone = round(100. * ndone / ntot);
+            _log->write_info("Did ", pdone, " percent.");
+          }
+        }
       }
     }
   }

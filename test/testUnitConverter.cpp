@@ -99,6 +99,11 @@ int main(int argc, char **argv) {
   // a gramme is less than a kilogram
   assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "g") < 1.);
 
+  assert_condition(
+      UnitConverter< QUANTITY_MASS >::convert(1., "Msol", "Msol") == 1.);
+  // a solar mass weighs much more than a kilogram
+  assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "Msol") > 1.);
+
   /// NUMBER DENSITY
   assert_condition(
       UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "m^-3", "m^-3"));
@@ -133,6 +138,14 @@ int main(int argc, char **argv) {
   /// TEMPERATURE
   assert_condition(
       UnitConverter< QUANTITY_TEMPERATURE >::convert(1., "K", "K") == 1.);
+
+  /// TIME
+  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "s", "s") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "Gyr", "Gyr") ==
+                   1.);
+  // a Gyr takes longer than a second
+  assert_condition(UnitConverter< QUANTITY_TIME >::to_SI(1., "Gyr") > 1.);
 
   return 0;
 }

@@ -35,10 +35,15 @@
  * Reads in the sources from the file and stores them in internal arrays.
  *
  * @param filename Name of the snapshot file to read.
+ * @param fallback_unit_length_in_SI Length unit to use if the units group is
+ * not found in the snapshot file.
+ * @param fallback_unit_time_in_SI Time unit to use if the units group is not
+ * found in the snapshot file.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    std::string filename, Log *log)
+    std::string filename, double fallback_unit_length_in_SI,
+    double fallback_unit_time_in_SI, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -53,16 +58,32 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   HDF5Tools::close_group(header);
 
   // units
-  HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-  double unit_length_in_cgs =
-      HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-  double unit_time_in_cgs =
-      HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
-  double unit_length_in_SI =
-      UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
-  // seconds are seconds
-  double unit_time_in_SI = unit_time_in_cgs;
-  HDF5Tools::close_group(units);
+  double unit_length_in_SI = fallback_unit_length_in_SI;
+  double unit_time_in_SI = fallback_unit_time_in_SI;
+  if (HDF5Tools::group_exists(file, "/Units")) {
+    HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
+    double unit_length_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+    double unit_time_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
+    unit_length_in_SI =
+        UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+    // seconds are seconds
+    unit_time_in_SI = unit_time_in_cgs;
+    HDF5Tools::close_group(units);
+  } else {
+    if (_log) {
+      _log->write_warning("No Units group found!");
+    }
+    if (fallback_unit_length_in_SI == 0. || fallback_unit_time_in_SI == 0.) {
+      _log->write_warning(
+          "No fallback units found in parameter file either, using SI units.");
+      unit_length_in_SI = 1.;
+      unit_time_in_SI = 1.;
+    } else {
+      _log->write_warning("Using fallback units.");
+    }
+  }
 
   // open the group containing the star particle data
   HDF5Tools::HDF5Group starparticles =
@@ -115,6 +136,10 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
           params.get_value< std::string >("photonsourcedistribution.filename"),
+          params.get_physical_value< QUANTITY_LENGTH >(
+              "photonsourcedistribution.fallback_unit_length", "0. m"),
+          params.get_physical_value< QUANTITY_TIME >(
+              "photonsourcedistribution.fallback_unit_time", "0. s"),
           log) {}
 
 /**
