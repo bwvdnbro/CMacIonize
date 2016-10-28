@@ -40,41 +40,97 @@
  * same. This will fail if the two other methods are inconsistent, indicating
  * that at least one of them is wrong.
  *
+ * To check for both methods being wrong, we implement a simple sanity check
+ * test: we get the value of the unit in SI units, and then check if this value
+ * is larger or smaller than the SI unit.
+ *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  /// DENSITY
+  assert_condition(UnitConverter< QUANTITY_DENSITY >::convert(1., "kg m^-3",
+                                                              "kg m^-3") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_DENSITY >::convert(1., "g cm^-3",
+                                                              "g cm^-3") == 1.);
+  // 1 g in a cubic centimetre is more than 1 kg in a cubic metre
+  assert_condition(UnitConverter< QUANTITY_DENSITY >::to_SI(1, "g cm^-3") > 1.);
+
+  /// FREQUENCY
   assert_condition(
       UnitConverter< QUANTITY_FREQUENCY >::convert(1., "s^-1", "s^-1") == 1.);
+
   assert_condition(
       UnitConverter< QUANTITY_FREQUENCY >::convert(1., "Hz", "Hz") == 1.);
+  // Hz is just another name for s^-1
+  assert_condition(UnitConverter< QUANTITY_FREQUENCY >::to_SI(1., "Hz") == 1.);
+
   assert_condition(
       UnitConverter< QUANTITY_FREQUENCY >::convert(1., "eV", "eV") == 1.);
+  // 1 eV corresponds to a very high frequency in Hz
+  assert_condition(UnitConverter< QUANTITY_FREQUENCY >::to_SI(1., "eV") > 1.);
 
+  /// LENGTH
   assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "m", "m") ==
                    1.);
+
   assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "cm", "cm") ==
                    1.);
+  // cm is smaller than m
+  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "cm") < 1.);
+
   assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "pc", "pc") ==
                    1.);
+  // a parsec is a *bit* larger than a metre
+  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "pc") > 1.);
+
   assert_condition(
       UnitConverter< QUANTITY_LENGTH >::convert(1., "kpc", "kpc") == 1.);
+  // a kpc is even larger
+  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "kpc") > 1.);
 
+  /// MASS
   assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "kg", "kg") ==
                    1.);
-  assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "g", "g") == 1.);
 
+  assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "g", "g") == 1.);
+  // a gramme is less than a kilogram
+  assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "g") < 1.);
+
+  /// NUMBER DENSITY
   assert_condition(
       UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "m^-3", "m^-3"));
+
   assert_condition(
       UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "cm^-3", "cm^-3"));
+  // 1 particle in a cubic centimetre is much more than 1 particle in a cubic
+  // metre
+  assert_condition(
+      UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(1., "cm^-3") > 1.);
 
+  /// REACTION RATE
   assert_condition(UnitConverter< QUANTITY_REACTION_RATE >::convert(
                        1., "m^3s^-1", "m^3s^-1") == 1.);
+
   assert_condition(UnitConverter< QUANTITY_REACTION_RATE >::convert(
                        1., "cm^3s^-1", "cm^3s^-1") == 1.);
+  // a cubic centimetre per second is less than a cubic metre per second
+  assert_condition(
+      UnitConverter< QUANTITY_REACTION_RATE >::to_SI(1., "cm^3s^-1") < 1.);
 
+  /// SURFACE AREA
+  assert_condition(
+      UnitConverter< QUANTITY_SURFACE_AREA >::convert(1., "m^2", "m^2") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_SURFACE_AREA >::convert(
+                       1., "cm^2", "cm^2") == 1.);
+  // a square centimetre is less than a square metre
+  assert_condition(UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(1., "cm^2") <
+                   1.);
+
+  /// TEMPERATURE
   assert_condition(
       UnitConverter< QUANTITY_TEMPERATURE >::convert(1., "K", "K") == 1.);
 

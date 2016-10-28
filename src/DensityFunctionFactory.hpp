@@ -96,7 +96,7 @@ public:
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
-    } else if (type == "FlashSnapshot") {
+    } else if (type == "FLASHSnapshot") {
       return new FLASHSnapshotDensityFunction(params, log);
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotDensityFunction(params, log);

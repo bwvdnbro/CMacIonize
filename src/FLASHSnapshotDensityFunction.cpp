@@ -27,6 +27,7 @@
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "UnitConverter.hpp"
 
 /**
  * @brief Constructor.
@@ -42,17 +43,22 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
+  // units
+  double unit_length_in_SI = UnitConverter< QUANTITY_LENGTH >::to_SI(1., "cm");
+  double unit_density_in_SI =
+      UnitConverter< QUANTITY_DENSITY >::to_SI(1., "g cm^-3");
+
   // find out the dimensions of the box
   HDF5Tools::HDF5Dictionary< double > real_runtime_pars =
       HDF5Tools::read_dictionary< double >(file, "real runtime parameters");
   CoordinateVector<> anchor;
-  anchor[0] = real_runtime_pars["xmin"];
-  anchor[1] = real_runtime_pars["ymin"];
-  anchor[2] = real_runtime_pars["zmin"];
+  anchor[0] = real_runtime_pars["xmin"] * unit_length_in_SI;
+  anchor[1] = real_runtime_pars["ymin"] * unit_length_in_SI;
+  anchor[2] = real_runtime_pars["zmin"] * unit_length_in_SI;
   CoordinateVector<> top_anchor;
-  top_anchor[0] = real_runtime_pars["xmax"];
-  top_anchor[1] = real_runtime_pars["ymax"];
-  top_anchor[2] = real_runtime_pars["zmax"];
+  top_anchor[0] = real_runtime_pars["xmax"] * unit_length_in_SI;
+  top_anchor[1] = real_runtime_pars["ymax"] * unit_length_in_SI;
+  top_anchor[2] = real_runtime_pars["zmax"] * unit_length_in_SI;
   CoordinateVector<> sides = top_anchor - anchor;
   Box box(anchor, sides);
 
@@ -92,13 +98,13 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   for (unsigned int i = 0; i < extents.size()[0]; ++i) {
     if (nodetypes[i] == 1) {
       CoordinateVector<> anchor;
-      anchor[0] = extents[{i, 0, 0}];
-      anchor[1] = extents[{i, 1, 0}];
-      anchor[2] = extents[{i, 2, 0}];
+      anchor[0] = extents[{i, 0, 0}] * unit_length_in_SI;
+      anchor[1] = extents[{i, 1, 0}] * unit_length_in_SI;
+      anchor[2] = extents[{i, 2, 0}] * unit_length_in_SI;
       CoordinateVector<> top_anchor;
-      top_anchor[0] = extents[{i, 0, 1}];
-      top_anchor[1] = extents[{i, 1, 1}];
-      top_anchor[2] = extents[{i, 2, 1}];
+      top_anchor[0] = extents[{i, 0, 1}] * unit_length_in_SI;
+      top_anchor[1] = extents[{i, 1, 1}] * unit_length_in_SI;
+      top_anchor[2] = extents[{i, 2, 1}] * unit_length_in_SI;
       CoordinateVector<> sides = top_anchor - anchor;
       for (unsigned int ix = 0; ix < densities.size()[1]; ++ix) {
         for (unsigned int iy = 0; iy < densities.size()[2]; ++iy) {
@@ -116,7 +122,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)
             unsigned long key = _grid.get_key(levels[i] + level - 1, centre);
-            _grid.create_cell(key) = rho;
+            _grid.create_cell(key) = rho * unit_density_in_SI;
           }
         }
       }
@@ -146,8 +152,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
  * @brief Function that returns the density at the given coordinate position.
  *
  * @param position CoordinateVector<> specifying a position.
- * @return Density at that position.
+ * @return Density at that position (in m^-3).
  */
 double FLASHSnapshotDensityFunction::operator()(CoordinateVector<> position) {
-  return _grid.get_cell(position);
+  return _grid.get_cell(position) / 1.6737236e-27;
 }
