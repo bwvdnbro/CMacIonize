@@ -406,6 +406,15 @@ set(TESTAMRGRID_SOURCES
 add_unit_test(NAME testAMRGrid
               SOURCES ${TESTAMRGRID_SOURCES})
 
+## Unit test for SILCCPhotonSourceDistribution
+set(TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES
+    testSILCCPhotonSourceDistribution.cpp
+
+    ../src/SILCCPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testSILCCPhotonSourceDistribution
+              SOURCES ${TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
