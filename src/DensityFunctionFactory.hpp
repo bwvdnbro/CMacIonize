@@ -38,6 +38,7 @@
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
+#include "FLASHSnapshotDensityFunction.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #endif
 
@@ -48,6 +49,26 @@
  */
 class DensityFunctionFactory {
 public:
+  /**
+   * @brief Method that checks if the requested DensityFunction implementation
+   * requires HDF5.
+   *
+   * @param type Requested DensityFunction type.
+   * @param log Log to write logging info to.
+   */
+  static void check_hdf5(std::string type, Log *log = nullptr) {
+    if (type == "GadgetSnapshot" || type == "FLASHSnapshot") {
+      if (log) {
+        log->write_error("Cannot create an instance of ", type,
+                         "DensityFunction, since the code was "
+                         "compiled without HDF5 support.");
+      }
+      error("A %sDensityFunction requires HDF5. However, the code "
+            "was compiled without HDF5 support!",
+            type.c_str());
+    }
+  }
+
   /**
    * @brief Generate a DensityFunction based on the type chosen in the parameter
    * file.
@@ -64,22 +85,21 @@ public:
     if (log) {
       log->write_info("Requested DensityFunction type: ", type);
     }
-    if (type == "Homogeneous") {
-      return new HomogeneousDensityFunction(params, log);
-    } else if (type == "AsciiFile") {
+#ifndef HAVE_HDF5
+    check_hdf5(type, log);
+#endif
+    // there is some order here: first the non-library dependent
+    // implementations, then the library dependent ones (sorted alphabetically
+    // on library name). Each group is sorted alphabetically as well.
+    if (type == "AsciiFile") {
       return new AsciiFileDensityFunction(params, log);
-    } else if (type == "GadgetSnapshot") {
+    } else if (type == "Homogeneous") {
+      return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
+    } else if (type == "FLASHSnapshot") {
+      return new FLASHSnapshotDensityFunction(params, log);
+    } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotDensityFunction(params, log);
-#else
-      if (log) {
-        log->write_error("Cannot create instance of "
-                         "GadgetSnapshotDensityFunction, since the code was "
-                         "compiled without HDF5 support.");
-      }
-      error("A GadgetSnapshotDensityFunction requires HDF5. However, the code "
-            "was compiled without HDF5 support!");
-      return nullptr;
 #endif
     } else {
       error("Unknown DensityFunction type: \"%s\".", type.c_str());

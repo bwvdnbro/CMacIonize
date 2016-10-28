@@ -32,22 +32,22 @@
 /**
  * @brief 3 element array that can be manipulated as an algebraic vector.
  */
-template < typename datatype = double > class CoordinateVector {
+template < typename _datatype_ = double > class CoordinateVector {
 private:
   union {
     /*! @brief Array that is used together with the union and anonymous struct
      *  to allow indexing the components. */
-    datatype _c[3];
+    _datatype_ _c[3];
 
     struct {
       /*! @brief x coordinate. */
-      datatype _x;
+      _datatype_ _x;
 
       /*! @brief y coordinate. */
-      datatype _y;
+      _datatype_ _y;
 
       /*! @brief z coordinate */
-      datatype _z;
+      _datatype_ _z;
     };
   };
 
@@ -64,7 +64,7 @@ public:
    * @param y y coordinate.
    * @param z z coordinate.
    */
-  inline CoordinateVector(datatype x, datatype y, datatype z)
+  inline CoordinateVector(_datatype_ x, _datatype_ y, _datatype_ z)
       : _x(x), _y(y), _z(z) {}
 
   /**
@@ -72,7 +72,7 @@ public:
    *
    * @param single_value Single value used for all three coordinates.
    */
-  inline CoordinateVector(datatype single_value)
+  inline CoordinateVector(_datatype_ single_value)
       : _x(single_value), _y(single_value), _z(single_value) {}
 
   /**
@@ -80,21 +80,21 @@ public:
    *
    * @return x coordinate.
    */
-  inline datatype x() { return _x; }
+  inline _datatype_ x() { return _x; }
 
   /**
    * @brief Get the y coordinate.
    *
    * @return y coordinate.
    */
-  inline datatype y() { return _y; }
+  inline _datatype_ y() { return _y; }
 
   /**
    * @brief Get the z coordinate.
    *
    * @return z coordinate.
    */
-  inline datatype z() { return _z; }
+  inline _datatype_ z() { return _z; }
 
   /**
    * @brief Subtract another CoordinateVector from this one.
@@ -115,8 +115,8 @@ public:
    * @param v CoordinateVector to add.
    * @return Reference to this CoordinateVector.
    */
-  template < typename othertype >
-  inline CoordinateVector &operator+=(CoordinateVector< othertype > v) {
+  template < typename _othertype_ >
+  inline CoordinateVector &operator+=(CoordinateVector< _othertype_ > v) {
     _x += v.x();
     _y += v.y();
     _z += v.z();
@@ -129,8 +129,8 @@ public:
    * @param s Scalar to multiply with.
    * @return Reference to this CoordinateVector.
    */
-  template < typename scalartype >
-  inline CoordinateVector &operator*=(scalartype s) {
+  template < typename _scalartype_ >
+  inline CoordinateVector &operator*=(_scalartype_ s) {
     _x *= s;
     _y *= s;
     _z *= s;
@@ -145,8 +145,8 @@ public:
    * @param s Scalar to divide by.
    * @return Reference to this CoordinateVector.
    */
-  template < typename scalartype >
-  inline CoordinateVector &operator/=(scalartype s) {
+  template < typename _scalartype_ >
+  inline CoordinateVector &operator/=(_scalartype_ s) {
     _x /= s;
     _y /= s;
     _z /= s;
@@ -158,7 +158,7 @@ public:
    *
    * @return Squared norm, defined as the quadratic sum of the components.
    */
-  inline datatype norm2() { return _x * _x + _y * _y + _z * _z; }
+  inline _datatype_ norm2() { return _x * _x + _y * _y + _z * _z; }
 
   /**
    * @brief Get the norm of this CoordinateVector.
@@ -177,7 +177,7 @@ public:
    * @param i Index which we want to access.
    * @return Reference to the requested component.
    */
-  inline datatype &operator[](unsigned int i) { return _c[i]; }
+  inline _datatype_ &operator[](unsigned int i) { return _c[i]; }
 
   /**
    * @brief Compare this CoordinateVector with another CoordinateVector.
@@ -186,7 +186,7 @@ public:
    * @return True if both CoordinateVector instances have the same member
    * component values.
    */
-  inline bool operator==(const CoordinateVector< datatype > &v) {
+  inline bool operator==(const CoordinateVector< _datatype_ > &v) {
     return (_x == v._x && _y == v._y && _z == v._z);
   }
 
@@ -201,10 +201,10 @@ public:
    * @return CoordinateVector with components that are the minimum of the
    * components of a and b.
    */
-  static inline CoordinateVector< datatype >
-  min(const CoordinateVector< datatype > &a,
-      const CoordinateVector< datatype > &b) {
-    CoordinateVector< datatype > minvec;
+  static inline CoordinateVector< _datatype_ >
+  min(const CoordinateVector< _datatype_ > &a,
+      const CoordinateVector< _datatype_ > &b) {
+    CoordinateVector< _datatype_ > minvec;
     minvec._x = std::min(a._x, b._x);
     minvec._y = std::min(a._y, b._y);
     minvec._z = std::min(a._z, b._z);
@@ -222,10 +222,10 @@ public:
    * @return CoordinateVector with components that are the maximum of the
    * components of a and b.
    */
-  static inline CoordinateVector< datatype >
-  max(const CoordinateVector< datatype > &a,
-      const CoordinateVector< datatype > &b) {
-    CoordinateVector< datatype > maxvec;
+  static inline CoordinateVector< _datatype_ >
+  max(const CoordinateVector< _datatype_ > &a,
+      const CoordinateVector< _datatype_ > &b) {
+    CoordinateVector< _datatype_ > maxvec;
     maxvec._x = std::max(a._x, b._x);
     maxvec._y = std::max(a._y, b._y);
     maxvec._z = std::max(a._z, b._z);
@@ -241,9 +241,9 @@ public:
  * @param b Second CoordinateVector that is subtracted from the first one.
  * @return Resulting CoordinateVector.
  */
-template < typename datatype >
-inline CoordinateVector< datatype > operator-(CoordinateVector< datatype > a,
-                                              CoordinateVector< datatype > b) {
+template < typename _datatype_ >
+inline CoordinateVector< _datatype_ >
+operator-(CoordinateVector< _datatype_ > a, CoordinateVector< _datatype_ > b) {
   return a -= b;
 }
 
@@ -254,9 +254,9 @@ inline CoordinateVector< datatype > operator-(CoordinateVector< datatype > a,
  * @param b Second CoordinateVector that is added to the first one.
  * @return Resulting CoordinateVector.
  */
-template < typename datatype >
-inline CoordinateVector< datatype > operator+(CoordinateVector< datatype > a,
-                                              CoordinateVector< datatype > b) {
+template < typename _datatype_ >
+inline CoordinateVector< _datatype_ >
+operator+(CoordinateVector< _datatype_ > a, CoordinateVector< _datatype_ > b) {
   return a += b;
 }
 
@@ -268,9 +268,9 @@ inline CoordinateVector< datatype > operator+(CoordinateVector< datatype > a,
  * @param v CoordinateVector that should be multiplied.
  * @return Resulting CoordinateVector.
  */
-template < typename datatype, typename scalartype >
-inline CoordinateVector< datatype > operator*(scalartype s,
-                                              CoordinateVector< datatype > v) {
+template < typename _datatype_, typename _scalartype_ >
+inline CoordinateVector< _datatype_ >
+operator*(_scalartype_ s, CoordinateVector< _datatype_ > v) {
   return v *= s;
 }
 
@@ -282,9 +282,9 @@ inline CoordinateVector< datatype > operator*(scalartype s,
  * @param s Scalar to multiply with.
  * @return Resulting CoordinateVector.
  */
-template < typename datatype, typename scalartype >
-inline CoordinateVector< datatype > operator*(CoordinateVector< datatype > v,
-                                              scalartype s) {
+template < typename _datatype_, typename _scalartype_ >
+inline CoordinateVector< _datatype_ >
+operator*(CoordinateVector< _datatype_ > v, _scalartype_ s) {
   return v *= s;
 }
 
@@ -296,9 +296,9 @@ inline CoordinateVector< datatype > operator*(CoordinateVector< datatype > v,
  * @param s Scalar to divide by.
  * @return Resulting CoordinateVector.
  */
-template < typename datatype, typename scalartype >
-inline CoordinateVector< datatype > operator/(CoordinateVector< datatype > v,
-                                              scalartype s) {
+template < typename _datatype_, typename _scalartype_ >
+inline CoordinateVector< _datatype_ >
+operator/(CoordinateVector< _datatype_ > v, _scalartype_ s) {
   return v /= s;
 }
 

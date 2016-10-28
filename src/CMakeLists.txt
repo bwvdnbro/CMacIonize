@@ -55,8 +55,6 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     DensityGrid.cpp
-    GadgetDensityGridWriter.cpp
-    GadgetSnapshotPhotonSourceDistribution.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -82,8 +80,6 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityValues.hpp
     Error.hpp
-    GadgetDensityGridWriter.hpp
-    GadgetSnapshotPhotonSourceDistribution.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
@@ -108,10 +104,16 @@ set(CMACIONIZE_SOURCES
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
 list(APPEND CMACIONIZE_SOURCES
-     GadgetSnapshotDensityFunction.cpp
+    FLASHSnapshotDensityFunction.cpp
+    GadgetDensityGridWriter.cpp
+    GadgetSnapshotDensityFunction.cpp
+    GadgetSnapshotPhotonSourceDistribution.cpp
 
-     GadgetSnapshotDensityFunction.hpp
-     HDF5Tools.hpp)
+    FLASHSnapshotDensityFunction.hpp
+    GadgetDensityGridWriter.hpp
+    GadgetSnapshotDensityFunction.hpp
+    GadgetSnapshotPhotonSourceDistribution.hpp
+    HDF5Tools.hpp)
 endif(HAVE_HDF5)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})

@@ -47,6 +47,26 @@
 class PhotonSourceDistributionFactory {
 public:
   /**
+   * @brief Method that checks if the requested PhotonSourceDistribution
+   * implementation requires HDF5.
+   *
+   * @param type Requested PhotonSourceDistribution type.
+   * @param log Log to write logging info to.
+   */
+  static void check_hdf5(std::string type, Log *log = nullptr) {
+    if (type == "GadgetSnapshot") {
+      if (log) {
+        log->write_error("Cannot create an instance of ", type,
+                         "PhotonSourceDistribution, since the code was "
+                         "compiled without HDF5 support.");
+      }
+      error("A %sPhotonSourceDistribution requires HDF5. However, the code "
+            "was compiled without HDF5 support!",
+            type.c_str());
+    }
+  }
+
+  /**
    * @brief Generate a PhotonSourceDistribution based on the type chosen in the
    * parameter file.
    *
@@ -62,20 +82,14 @@ public:
     if (log) {
       log->write_info("Requested PhotonSourceDistribution type: ", type);
     }
+#ifndef HAVE_HDF5
+    check_hdf5(type, log);
+#endif
     if (type == "SingleStar") {
       return new SingleStarPhotonSourceDistribution(params, log);
-    } else if (type == "GadgetSnapshot") {
 #ifdef HAVE_HDF5
+    } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotPhotonSourceDistribution(params, log);
-#else
-      if (log) {
-        log->write_error("Cannot create instance of "
-                         "GadgetSnapshotPhotonSourceDistribution, since the "
-                         "code was compiled without HDF5 support.");
-      }
-      error("A GadgetSnapshotPhotonSourceDistribution requires HDF5. However, "
-            "the code was compiled without HDF5 support!");
-      return nullptr;
 #endif
     } else {
       error("Unknown PhotonSourceDistribution type: \"%s\".", type.c_str());

@@ -380,6 +380,32 @@ set(TESTOCTREE_SOURCES
 add_unit_test(NAME testOctree
               SOURCES ${TESTOCTREE_SOURCES})
 
+## Unit test for FLASHSnapshotDensityFunction
+if(HAVE_HDF5)
+set(TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES
+    testFLASHSnapshotDensityFunction.cpp
+
+    ../src/FLASHSnapshotDensityFunction.cpp
+    ../src/FLASHSnapshotDensityFunction.hpp
+)
+add_unit_test(NAME testFLASHSnapshotDensityFunction
+              SOURCES ${TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+configure_file(${PROJECT_SOURCE_DIR}/test/FLASHtest.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/FLASHtest.hdf5
+               COPYONLY)
+endif(HAVE_HDF5)
+
+## Unit test for AMRGrid
+set(TESTAMRGRID_SOURCES
+    testAMRGrid.cpp
+
+    ../src/AMRGrid.hpp
+    ../src/AMRGridCell.hpp
+)
+add_unit_test(NAME testAMRGrid
+              SOURCES ${TESTAMRGRID_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch this line unless you know what you're doing! ##################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

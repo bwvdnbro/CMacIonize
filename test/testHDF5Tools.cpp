@@ -128,7 +128,32 @@ int main(int argc, char **argv) {
     assert_values_equal(coordinates[0].y(), 0.1422694476979986);
     assert_values_equal(coordinates[0].z(), 0.10086706479716455);
 
+    // test the HDF5DataBlock
+    int data[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    HDF5Tools::HDF5DataBlock< int, 4 > block({2, 2, 2, 2}, data);
+    int element = block[{1, 1, 0, 0}];
+    assert_condition(element == 13);
+
+    HDF5Tools::HDF5DataBlock< double, 2 > coordinateblock =
+        HDF5Tools::read_dataset< double, 2 >(group, "Coordinates");
+    assert_condition(coordinateblock.size()[0] == 100);
+    assert_condition(coordinateblock.size()[1] == 3);
+    double ctest = coordinateblock[{0, 0}];
+    assert_values_equal(ctest, 0.09859136052607954);
+    ctest = coordinateblock[{0, 1}];
+    assert_values_equal(ctest, 0.1422694476979986);
+    ctest = coordinateblock[{0, 2}];
+    assert_values_equal(ctest, 0.10086706479716455);
+
     HDF5Tools::close_group(group);
+
+    HDF5Tools::HDF5Dictionary< double > ddictionary =
+        HDF5Tools::read_dictionary< double >(file, "compound_double");
+    assert_condition(ddictionary["answer"] == 42.42);
+
+    HDF5Tools::HDF5Dictionary< int > idictionary =
+        HDF5Tools::read_dictionary< int >(file, "compound_integer");
+    assert_condition(idictionary["answer"] == 42);
 
     HDF5Tools::close_file(file);
   }

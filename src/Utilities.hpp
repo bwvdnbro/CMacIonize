@@ -55,7 +55,7 @@ inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
  * @return Variable of the given template type containing the parsed contents of
  * the given std::string.
  */
-template < typename T > T convert(std::string value);
+template < typename _datatype_ > _datatype_ convert(std::string value);
 
 /**
  * @brief Convert the given string to a double precision floating point value.
@@ -207,7 +207,7 @@ template <> inline bool convert< bool >(std::string value) {
  * @param value Value to convert.
  * @return std::string.
  */
-template < typename T > std::string to_string(T value) {
+template < typename _datatype_ > std::string to_string(_datatype_ value) {
   std::stringstream sstream;
   sstream << value;
   return sstream.str();
