@@ -37,10 +37,10 @@
  * The cell can either contain cells itself, or can be a single cell containing
  * values.
  */
-template < typename CellContents > class AMRGridCell {
+template < typename _CellContents_ > class AMRGridCell {
 private:
   /*! @brief DensityValues stored in the cell, if this is a single cell. */
-  CellContents *_values;
+  _CellContents_ *_values;
 
   /*! @brief Refinement levels, if this is not a single cell. */
   AMRGridCell *_children[8];
@@ -72,7 +72,7 @@ public:
    * @param key Key linking to a unique cell in the hierarchy.
    * @return Contents of that cell.
    */
-  inline CellContents &operator[](unsigned int &key) {
+  inline _CellContents_ &operator[](unsigned int &key) {
     if (key == 1) {
       return *_values;
     } else {
@@ -98,7 +98,7 @@ public:
                           CoordinateVector<> position, Box &box) {
     if (current_level == level) {
       // ready: create DensityValues
-      _values = new CellContents();
+      _values = new _CellContents_();
     } else {
       // find out in which child the position lives
       unsigned char ix, iy, iz;
@@ -125,9 +125,9 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline CellContents &create_cell(unsigned int &key) {
+  inline _CellContents_ &create_cell(unsigned int &key) {
     if (key == 1) {
-      _values = new CellContents();
+      _values = new _CellContents_();
       return *_values;
     } else {
       unsigned char cell = key & 7;
@@ -147,7 +147,7 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains the
    * position.
    */
-  inline CellContents &get_cell(CoordinateVector<> position, Box &box) {
+  inline _CellContents_ &get_cell(CoordinateVector<> position, Box &box) {
     if (_values != nullptr) {
       return *_values;
     } else {

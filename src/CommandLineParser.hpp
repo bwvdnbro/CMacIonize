@@ -77,9 +77,9 @@ public:
    * @param default_value Default value for the command line argument, as a
    * value of the template type.
    */
-  template < typename T >
+  template < typename _datatype_ >
   void add_option(std::string long_name, char short_name,
-                  std::string description, T default_value);
+                  std::string description, _datatype_ default_value);
 
   /**
    * @brief Template add_option method for required options.
@@ -91,7 +91,7 @@ public:
    * @param description Description of the command line option, shown in the
    * help message.
    */
-  template < typename T >
+  template < typename _datatype_ >
   void add_required_option(std::string long_name, char short_name,
                            std::string description);
 
@@ -107,7 +107,7 @@ public:
    * @return Argument value of that option, as a variable of the given template
    * type.
    */
-  template < typename T > T get_value(std::string option);
+  template < typename _datatype_ > _datatype_ get_value(std::string option);
 
   /**
    * @brief Check if the given option was found, or the default value was used.

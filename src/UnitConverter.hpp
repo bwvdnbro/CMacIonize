@@ -54,7 +54,7 @@ enum Quantity {
  * @brief Class that can be used to convert values from one unit system to
  * another.
  */
-template < Quantity quantity > class UnitConverter {
+template < Quantity _quantity_ > class UnitConverter {
 public:
   /**
    * @brief Convert the given value with the given unit to the equivalent value

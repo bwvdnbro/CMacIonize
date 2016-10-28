@@ -154,7 +154,7 @@ public:
    * @param t Template argument.
    * @return std::string containing a representation of the argument.
    */
-  template < typename T > std::string get_message(T t) {
+  template < typename _datatype_ > std::string get_message(_datatype_ t) {
     std::stringstream stream;
     stream << t;
     return stream.str();
@@ -168,8 +168,8 @@ public:
    * @param args Remaining arguments.
    * @return std::string containing the arguments one after another.
    */
-  template < typename T, typename... Args >
-  std::string get_message(T t, Args... args) {
+  template < typename _datatype_, typename... _arguments_ >
+  std::string get_message(_datatype_ t, _arguments_... args) {
     std::stringstream stream;
     stream << t << get_message(args...);
     return stream.str();
@@ -183,7 +183,8 @@ public:
    *
    * @param args Things to write to the logger.
    */
-  template < typename... Args > inline void write_info(Args... args) {
+  template < typename... _arguments_ >
+  inline void write_info(_arguments_... args) {
     write_message(LOGLEVEL_INFO, get_message(args...));
   }
 
@@ -196,7 +197,8 @@ public:
    *
    * @param args Things to write to the logger.
    */
-  template < typename... Args > inline void write_status(Args... args) {
+  template < typename... _arguments_ >
+  inline void write_status(_arguments_... args) {
     write_message(LOGLEVEL_STATUS, get_message(args...));
   }
 
@@ -208,7 +210,8 @@ public:
    *
    * @param args Things to write to the logger.
    */
-  template < typename... Args > inline void write_warning(Args... args) {
+  template < typename... _arguments_ >
+  inline void write_warning(_arguments_... args) {
     write_message(LOGLEVEL_WARNING, get_message(args...));
   }
 
@@ -220,7 +223,8 @@ public:
    *
    * @param args Things to write to the logger.
    */
-  template < typename... Args > inline void write_error(Args... args) {
+  template < typename... _arguments_ >
+  inline void write_error(_arguments_... args) {
     write_message(LOGLEVEL_ERROR, get_message(args...));
   }
 };
