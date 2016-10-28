@@ -32,6 +32,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 
 // library dependent implementations
@@ -85,7 +86,9 @@ public:
 #ifndef HAVE_HDF5
     check_hdf5(type, log);
 #endif
-    if (type == "SingleStar") {
+    if (type == "SILCC") {
+      return new SILCCPhotonSourceDistribution(params, log);
+    } else if (type == "SingleStar") {
       return new SingleStarPhotonSourceDistribution(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "GadgetSnapshot") {
