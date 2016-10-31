@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 /**

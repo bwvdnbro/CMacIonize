@@ -40,6 +40,9 @@
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
                                                            Log *log)
     : _log(log) {
+  // turn off default HDF5 error handling: we catch errors ourselves
+  HDF5Tools::initialize();
+
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
@@ -98,13 +101,19 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   for (unsigned int i = 0; i < extents.size()[0]; ++i) {
     if (nodetypes[i] == 1) {
       CoordinateVector<> anchor;
-      anchor[0] = extents[{i, 0, 0}] * unit_length_in_SI;
-      anchor[1] = extents[{i, 1, 0}] * unit_length_in_SI;
-      anchor[2] = extents[{i, 2, 0}] * unit_length_in_SI;
+      std::array< unsigned int, 3 > ix0 = {{i, 0, 0}};
+      anchor[0] = extents[ix0] * unit_length_in_SI;
+      std::array< unsigned int, 3 > iy0 = {{i, 1, 0}};
+      anchor[1] = extents[iy0] * unit_length_in_SI;
+      std::array< unsigned int, 3 > iz0 = {{i, 2, 0}};
+      anchor[2] = extents[iz0] * unit_length_in_SI;
       CoordinateVector<> top_anchor;
-      top_anchor[0] = extents[{i, 0, 1}] * unit_length_in_SI;
-      top_anchor[1] = extents[{i, 1, 1}] * unit_length_in_SI;
-      top_anchor[2] = extents[{i, 2, 1}] * unit_length_in_SI;
+      std::array< unsigned int, 3 > ix1 = {{i, 0, 1}};
+      top_anchor[0] = extents[ix1] * unit_length_in_SI;
+      std::array< unsigned int, 3 > iy1 = {{i, 1, 1}};
+      top_anchor[1] = extents[iy1] * unit_length_in_SI;
+      std::array< unsigned int, 3 > iz1 = {{i, 2, 1}};
+      top_anchor[2] = extents[iz1] * unit_length_in_SI;
       CoordinateVector<> sides = top_anchor - anchor;
       for (unsigned int ix = 0; ix < densities.size()[1]; ++ix) {
         for (unsigned int iy = 0; iy < densities.size()[2]; ++iy) {
@@ -117,7 +126,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
             centre[2] =
                 anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
             // this is the ordering as it is in the file
-            double rho = densities[{i, iz, iy, ix}];
+            std::array< unsigned int, 4 > irho = {{i, iz, iy, ix}};
+            double rho = densities[irho];
             // each block contains level^3 cells, hence levels[i] + level
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)

@@ -63,11 +63,11 @@ enum HDF5FileMode {
  */
 inline void initialize() {
 #ifdef HDF5_OLD_API
-  herr_t status = H5Eset_auto(nullptr, nullptr);
+  herr_t hdf5status = H5Eset_auto(nullptr, nullptr);
 #else
-  herr_t status = H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
+  herr_t hdf5status = H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
 #endif
-  if (status < 0) {
+  if (hdf5status < 0) {
     error("Unable to turn off default HDF5 error handling!");
   }
 }
@@ -110,8 +110,8 @@ inline HDF5File open_file(std::string name, int mode) {
  * @param file HDF5File handle to an open file.
  */
 inline void close_file(hid_t file) {
-  herr_t status = H5Fclose(file);
-  if (status < 0) {
+  herr_t hdf5status = H5Fclose(file);
+  if (hdf5status < 0) {
     error("Failed to close file!");
   }
 }
@@ -175,8 +175,8 @@ inline HDF5Group open_group(hid_t file, std::string name) {
  * @param group HDF5Group handle to an open group.
  */
 inline void close_group(hid_t group) {
-  herr_t status = H5Gclose(group);
-  if (status < 0) {
+  herr_t hdf5status = H5Gclose(group);
+  if (hdf5status < 0) {
     error("Failed to close group!");
   }
 }
@@ -254,14 +254,14 @@ inline _datatype_ read_attribute(hid_t group, std::string name) {
 
   // read attribute
   _datatype_ value;
-  herr_t status = H5Aread(attr, datatype, &value);
-  if (status < 0) {
+  herr_t hdf5status = H5Aread(attr, datatype, &value);
+  if (hdf5status < 0) {
     error("Failed to read attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
@@ -286,14 +286,14 @@ inline std::string read_attribute< std::string >(hid_t group,
 
   // retrieve the length of the string
   H5A_info_t info;
-  herr_t status = H5Aget_info(attr, &info);
-  if (status < 0) {
+  herr_t hdf5status = H5Aget_info(attr, &info);
+  if (hdf5status < 0) {
     error("Failed to retrieve info for attribute \"%s\"!", name.c_str());
   }
   hsize_t length = info.data_size;
 
   // C-string buffer to store the result in.
-  char *data = (char *)malloc(length);
+  char *data = new char[length + 1];
 
   // create C-string datatype
   hid_t strtype = H5Tcopy(H5T_C_S1);
@@ -303,33 +303,35 @@ inline std::string read_attribute< std::string >(hid_t group,
   }
 
   // set datatype length to variable
-  status = H5Tset_size(strtype, length);
-  if (status < 0) {
+  hdf5status = H5Tset_size(strtype, length);
+  if (hdf5status < 0) {
     error("Failed to set size of C-string datatype for attribute \"%s\"!",
           name.c_str());
   }
 
   // read attribute
-  status = H5Aread(attr, strtype, data);
-  if (status < 0) {
+  hdf5status = H5Aread(attr, strtype, data);
+  if (hdf5status < 0) {
     error("Failed to read string attribute \"%s\"!", name.c_str());
   }
+  data[length] = '\0';
 
   // close string type
-  status = H5Tclose(strtype);
-  if (status < 0) {
+  hdf5status = H5Tclose(strtype);
+  if (hdf5status < 0) {
     error("Failed to close C-string datatype for attribute \"%s\"!",
           name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   std::string value(data);
-  free(data);
+
+  delete[] data;
 
   return value;
 }
@@ -352,19 +354,19 @@ read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   // read attribute
-  CoordinateVector<> value;
-  herr_t status = H5Aread(attr, datatype, &value);
-  if (status < 0) {
+  double data[3];
+  herr_t hdf5status = H5Aread(attr, datatype, data);
+  if (hdf5status < 0) {
     error("Failed to read attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
-  return value;
+  return CoordinateVector<>(data[0], data[1], data[2]);
 }
 
 /**
@@ -414,25 +416,32 @@ inline std::vector< _datatype_ > read_vector_attribute(hid_t group,
   }
 
   // read attribute
-  std::vector< _datatype_ > value(size[0]);
-  herr_t status = H5Aread(attr, datatype, &value[0]);
-  if (status < 0) {
+  _datatype_ *data = new _datatype_[size[0]];
+  herr_t hdf5status = H5Aread(attr, datatype, data);
+  if (hdf5status < 0) {
     error("Failed to read attribute \"%s\"!", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(space);
-  if (status < 0) {
+  hdf5status = H5Sclose(space);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
-  return value;
+  std::vector< _datatype_ > data_vector(size[0]);
+  for (hsize_t i = 0; i < size[0]; ++i) {
+    data_vector[i] = data[i];
+  }
+
+  delete[] data;
+
+  return data_vector;
 }
 
 /**
@@ -493,20 +502,20 @@ inline void write_attribute(hid_t group, std::string name, _datatype_ &value) {
   }
 
   // write attribute
-  herr_t status = H5Awrite(attr, datatype, &value);
-  if (status < 0) {
+  herr_t hdf5status = H5Awrite(attr, datatype, &value);
+  if (hdf5status < 0) {
     error("Failed to write attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(attspace);
-  if (status < 0) {
+  hdf5status = H5Sclose(attspace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
 }
@@ -531,8 +540,8 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
   // set datatype length to length of string
   // note that we need to add an extra character for the string termination
   // character
-  herr_t status = H5Tset_size(strtype, value.size() + 1);
-  if (status < 0) {
+  herr_t hdf5status = H5Tset_size(strtype, value.size() + 1);
+  if (hdf5status < 0) {
     error("Failed to set size of C-string datatype for attribute \"%s\"!",
           name.c_str());
   }
@@ -555,27 +564,27 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
   }
 
   // write attribute
-  status = H5Awrite(attr, strtype, value.c_str());
-  if (status < 0) {
+  hdf5status = H5Awrite(attr, strtype, value.c_str());
+  if (hdf5status < 0) {
     error("Failed to write string attribute \"%s\"!", name.c_str());
   }
 
   // close string type
-  status = H5Tclose(strtype);
-  if (status < 0) {
+  hdf5status = H5Tclose(strtype);
+  if (hdf5status < 0) {
     error("Failed to close C-string datatype for attribute \"%s\"!",
           name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(attspace);
-  if (status < 0) {
+  hdf5status = H5Sclose(attspace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 }
@@ -610,20 +619,24 @@ inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
   }
 
   // write attribute
-  herr_t status = H5Awrite(attr, datatype, &value);
-  if (status < 0) {
+  double data[3];
+  data[0] = value.x();
+  data[1] = value.y();
+  data[2] = value.z();
+  herr_t hdf5status = H5Awrite(attr, datatype, data);
+  if (hdf5status < 0) {
     error("Failed to write attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(attspace);
-  if (status < 0) {
+  hdf5status = H5Sclose(attspace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
 }
@@ -663,22 +676,28 @@ inline void write_vector_attribute(hid_t group, std::string name,
   }
 
   // write attribute
-  herr_t status = H5Awrite(attr, datatype, &value[0]);
-  if (status < 0) {
+  _datatype_ *data = new _datatype_[value.size()];
+  for (unsigned int i = 0; i < value.size(); ++i) {
+    data[i] = value[i];
+  }
+  herr_t hdf5status = H5Awrite(attr, datatype, data);
+  if (hdf5status < 0) {
     error("Failed to write attribute \"%s\"!", name.c_str());
   }
 
   // close attribute
-  status = H5Aclose(attr);
-  if (status < 0) {
+  hdf5status = H5Aclose(attr);
+  if (hdf5status < 0) {
     error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(attspace);
-  if (status < 0) {
+  hdf5status = H5Sclose(attspace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace for attribute \"%s\"!", name.c_str());
   }
+
+  delete[] data;
 }
 
 /**
@@ -744,26 +763,33 @@ inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
   }
 
   // read dataset
-  std::vector< _datatype_ > data(size[0]);
-  herr_t status =
-      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
-  if (status < 0) {
+  _datatype_ *data = new _datatype_[size[0]];
+  herr_t hdf5status =
+      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
     error("Failed to read dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
 
-  return data;
+  std::vector< _datatype_ > datavector(size[0]);
+  for (hsize_t i = 0; i < size[0]; ++i) {
+    datavector[i] = data[i];
+  }
+
+  delete[] data;
+
+  return datavector;
 }
 
 /**
@@ -803,26 +829,33 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
   }
 
   // read dataset
-  std::vector< CoordinateVector<> > data(size[0]);
-  herr_t status =
-      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
-  if (status < 0) {
+  double *data = new double[size[0] * 3];
+  herr_t hdf5status =
+      H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
     error("Failed to read dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
 
-  return data;
+  std::vector< CoordinateVector<> > datavector(size[0]);
+  for (hsize_t i = 0; i < size[0]; ++i) {
+    datavector[i][0] = data[3 * i];
+    datavector[i][1] = data[3 * i + 1];
+    datavector[i][2] = data[3 * i + 2];
+  }
+
+  return datavector;
 }
 
 /**
@@ -853,6 +886,26 @@ public:
     _data = new _datatype_[datasize];
     for (unsigned int i = 0; i < datasize; ++i) {
       _data[i] = data[i];
+    }
+  }
+
+  /**
+   * @brief Assignment operator.
+   *
+   * We have to implement this ourselves, since the default assignment operator
+   * does not know how to do the memory allocations.
+   *
+   * @param block HDF5DataBlock that is copied into this one.
+   */
+  void operator=(const HDF5DataBlock &block) {
+    _size = block._size;
+    unsigned int datasize = 1;
+    for (unsigned char i = 0; i < _size_; ++i) {
+      datasize *= _size[i];
+    }
+    _data = new _datatype_[datasize];
+    for (unsigned int i = 0; i < datasize; ++i) {
+      _data[i] = block._data[i];
     }
   }
 
@@ -927,21 +980,21 @@ HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
     dprod *= size[i];
   }
   _datatype_ *data = new _datatype_[dprod];
-  herr_t status =
+  herr_t hdf5status =
       H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-  if (status < 0) {
+  if (hdf5status < 0) {
     error("Failed to read dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
 
@@ -1042,21 +1095,21 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
 
   // set the contents of the compound data type
   hid_t string20 = H5Tcopy(H5T_C_S1);
-  herr_t status = H5Tset_size(string20, 20);
-  if (status < 0) {
+  herr_t hdf5status = H5Tset_size(string20, 20);
+  if (hdf5status < 0) {
     error("Failed to initialize string type for dataset \"%s\"", name.c_str());
   }
 
-  status = H5Tinsert(datatype, "name",
-                     HOFFSET(HDF5CompoundKeyValueType< _datatype_ >, _name),
-                     string20);
-  if (status < 0) {
+  hdf5status = H5Tinsert(datatype, "name",
+                         HOFFSET(HDF5CompoundKeyValueType< _datatype_ >, _name),
+                         string20);
+  if (hdf5status < 0) {
     error("Failed to insert name type for dataset \"%s\"", name.c_str());
   }
-  status = H5Tinsert(datatype, "value",
-                     HOFFSET(HDF5CompoundKeyValueType< _datatype_ >, _value),
-                     valuetype);
-  if (status < 0) {
+  hdf5status = H5Tinsert(
+      datatype, "value",
+      HOFFSET(HDF5CompoundKeyValueType< _datatype_ >, _value), valuetype);
+  if (hdf5status < 0) {
     error("Failed to insert value type for dataset \"%s\"", name.c_str());
   }
 
@@ -1064,31 +1117,31 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
   HDF5CompoundKeyValueType< _datatype_ > *data =
       new HDF5CompoundKeyValueType< _datatype_ >[ size[0] ];
 
-  status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-  if (status < 0) {
+  hdf5status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
     error("Failed to read dataset \"%s\"", name.c_str());
   }
 
   // close the datatype
-  status = H5Tclose(string20);
-  if (status < 0) {
+  hdf5status = H5Tclose(string20);
+  if (hdf5status < 0) {
     error("Failed to close string type for dataset \"%s\"", name.c_str());
   }
 
-  status = H5Tclose(datatype);
-  if (status < 0) {
+  hdf5status = H5Tclose(datatype);
+  if (hdf5status < 0) {
     error("Failed to close data type for dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
 
@@ -1143,23 +1196,29 @@ inline void write_dataset(hid_t group, std::string name,
   }
 
   // write dataset
-  herr_t status =
-      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, &values[0]);
-  if (status < 0) {
+  _datatype_ *data = new _datatype_[values.size()];
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    data[i] = values[i];
+  }
+  herr_t hdf5status =
+      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
     error("Failed to write dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
+
+  delete[] data;
 }
 
 /**
@@ -1194,23 +1253,31 @@ inline void write_dataset(hid_t group, std::string name,
   }
 
   // write dataset
-  herr_t status =
-      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, &values[0]);
-  if (status < 0) {
+  double *data = new double[3 * values.size()];
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    data[3 * i] = values[i].x();
+    data[3 * i + 1] = values[i].y();
+    data[3 * i + 2] = values[i].z();
+  }
+  herr_t hdf5status =
+      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
     error("Failed to write dataset \"%s\"", name.c_str());
   }
 
   // close dataspace
-  status = H5Sclose(filespace);
-  if (status < 0) {
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
     error("Failed to close dataspace of dataset \"%s\"", name.c_str());
   }
 
   // close dataset
-  status = H5Dclose(dataset);
-  if (status < 0) {
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
     error("Failed to close dataset \"%s\"", name.c_str());
   }
+
+  delete[] data;
 }
 }
 

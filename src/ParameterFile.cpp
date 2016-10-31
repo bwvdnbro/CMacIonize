@@ -72,7 +72,7 @@ bool ParameterFile::is_empty_line(std::string &line) {
  */
 void ParameterFile::strip_comments_line(std::string &line) {
   unsigned int hashpos = line.find('#');
-  if (hashpos != string::npos) {
+  if (hashpos != line.npos) {
     line = line.substr(0, hashpos);
   }
 }
@@ -106,7 +106,7 @@ unsigned int ParameterFile::is_indented_line(std::string &line) {
 std::pair< std::string, std::string >
 ParameterFile::read_keyvaluepair(std::string &line) {
   unsigned int colonpos = line.find(':');
-  if (colonpos == string::npos) {
+  if (colonpos == line.npos) {
     error("Error while parsing line \"%s\"", line.c_str());
   }
   string key = line.substr(0, colonpos);
@@ -127,7 +127,7 @@ void ParameterFile::strip_whitespace_line(std::string &line) {
     return;
   }
   unsigned int firstpos = line.find_first_not_of(" \t");
-  if (firstpos == string::npos) {
+  if (firstpos == line.npos) {
     line = "";
     return;
   }

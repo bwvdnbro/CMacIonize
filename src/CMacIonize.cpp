@@ -41,7 +41,6 @@
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
 #include <iostream>
-#include <omp.h>
 #include <string>
 using namespace std;
 

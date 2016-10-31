@@ -216,8 +216,8 @@ grid[1].set_order(None)
 numblocks = grid[0].get_num_cells() + grid[1].get_num_cells()
 bbox = np.zeros((numblocks, 3, 2), dtype='f')
 rho = np.zeros((numblocks, 8, 8, 8), dtype='f')
-levels = np.zeros((numblocks, 1), dtype='i')
-ntypes = np.zeros((numblocks, 1), dtype='i')
+levels = np.zeros((numblocks,), dtype='i')
+ntypes = np.zeros((numblocks,), dtype='i')
 index = 0
 for iblock in range(2):
   child = grid[iblock]

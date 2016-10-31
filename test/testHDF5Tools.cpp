@@ -130,19 +130,19 @@ int main(int argc, char **argv) {
 
     // test the HDF5DataBlock
     int data[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    HDF5Tools::HDF5DataBlock< int, 4 > block({2, 2, 2, 2}, data);
-    int element = block[{1, 1, 0, 0}];
+    HDF5Tools::HDF5DataBlock< int, 4 > block({{2, 2, 2, 2}}, data);
+    int element = block[{{1, 1, 0, 0}}];
     assert_condition(element == 13);
 
     HDF5Tools::HDF5DataBlock< double, 2 > coordinateblock =
         HDF5Tools::read_dataset< double, 2 >(group, "Coordinates");
     assert_condition(coordinateblock.size()[0] == 100);
     assert_condition(coordinateblock.size()[1] == 3);
-    double ctest = coordinateblock[{0, 0}];
+    double ctest = coordinateblock[{{0, 0}}];
     assert_values_equal(ctest, 0.09859136052607954);
-    ctest = coordinateblock[{0, 1}];
+    ctest = coordinateblock[{{0, 1}}];
     assert_values_equal(ctest, 0.1422694476979986);
-    ctest = coordinateblock[{0, 2}];
+    ctest = coordinateblock[{{0, 2}}];
     assert_values_equal(ctest, 0.10086706479716455);
 
     HDF5Tools::close_group(group);
