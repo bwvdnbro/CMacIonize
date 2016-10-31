@@ -44,13 +44,16 @@ using namespace std;
  * @param initial_temperature Initial temperature of the gas (in K).
  * @param density_function DensityFunction that defines the density field.
  * @param recombination_rates Recombination rates.
+ * @param periodic Periodicity flags.
  * @param log Log to write log messages to.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
-                         RecombinationRates &recombination_rates, Log *log)
-    : _box(box), _ncell(ncell), _helium_abundance(helium_abundance),
+                         RecombinationRates &recombination_rates,
+                         CoordinateVector< bool > periodic, Log *log)
+    : _box(box), _periodic(periodic), _ncell(ncell),
+      _helium_abundance(helium_abundance),
       _recombination_rates(recombination_rates), _log(log) {
 
   if (_log) {
@@ -155,7 +158,12 @@ DensityGrid::DensityGrid(ParameterFile &parameters,
                   parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_physical_value< QUANTITY_TEMPERATURE >(
                       "initial_temperature", "8000. K"),
-                  density_function, recombination_rates, log) {}
+                  density_function, recombination_rates,
+                  CoordinateVector< bool >(
+                      parameters.get_value< bool >("periodicity.x", false),
+                      parameters.get_value< bool >("periodicity.y", false),
+                      parameters.get_value< bool >("periodicity.z", false)),
+                  log) {}
 
 /**
  * @brief Destructor
@@ -253,13 +261,51 @@ DensityValues &DensityGrid::get_cell_values(CoordinateVector< int > index) {
 /**
  * @brief Check whether the given index points to a valid cell.
  *
+ * This method also applies periodic boundary conditions (if applicable).
+ *
  * @param index Indices of the cell.
+ * @param position Current position of the photon.
  * @return True if the indices are valid, false otherwise.
  */
-bool DensityGrid::is_inside(CoordinateVector< int > index) {
-  bool inside = (index.x() >= 0 && index.x() < _ncell.x());
-  inside &= (index.y() >= 0 && index.y() < _ncell.y());
-  inside &= (index.z() >= 0 && index.z() < _ncell.z());
+bool DensityGrid::is_inside(CoordinateVector< int > &index,
+                            CoordinateVector<> &position) {
+  bool inside = true;
+  if (!_periodic.x()) {
+    inside &= (index.x() >= 0 && index.x() < _ncell.x());
+  } else {
+    if (index.x() < 0) {
+      index[0] = _ncell.x() - 1;
+      position[0] += _box.get_sides().x();
+    }
+    if (index.x() >= _ncell.x()) {
+      index[0] = 0;
+      position[0] -= _box.get_sides().x();
+    }
+  }
+  if (!_periodic.y()) {
+    inside &= (index.y() >= 0 && index.y() < _ncell.y());
+  } else {
+    if (index.y() < 0) {
+      index[1] = _ncell.y() - 1;
+      position[1] += _box.get_sides().y();
+    }
+    if (index.y() >= _ncell.y()) {
+      index[1] = 0;
+      position[1] -= _box.get_sides().y();
+    }
+  }
+  if (!_periodic.z()) {
+    inside &= (index.z() >= 0 && index.z() < _ncell.z());
+  } else {
+    if (index.z() < 0) {
+      index[2] = _ncell.z() - 1;
+      position[2] += _box.get_sides().z();
+    }
+    if (index.z() >= _ncell.z()) {
+      index[2] = 0;
+      position[2] -= _box.get_sides().z();
+    }
+  }
   return inside;
 }
 
@@ -434,7 +480,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   double AHe = _helium_abundance;
 
   // while the photon has not exceeded the optical depth and is still in the box
-  while (is_inside(index) && optical_depth > 0.) {
+  while (is_inside(index, photon_origin) && optical_depth > 0.) {
     Box cell = get_cell(index);
 
     double ds;
@@ -450,8 +496,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
                   AHe * xsecHe * density.get_neutral_fraction_He());
     optical_depth -= tau;
 
-    index += next_index;
-
     // if the optical depth exceeds or equals the wanted value: exit the loop
 
     // if the optical depth exceeded the wanted value: find out where in the
@@ -463,6 +507,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
       ds += Scorr;
     } else {
       photon_origin = next_wall;
+      index += next_index;
     }
 
     // ds is now the actual distance travelled in the cell
@@ -475,7 +520,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
   photon.set_position(photon_origin);
 
-  return is_inside(index);
+  return is_inside(index, photon_origin);
 }
 
 /**
