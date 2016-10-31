@@ -63,6 +63,21 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                        " m,", _box.get_anchor().z(), " m] and sides [",
                        _box.get_sides().x(), " m,", _box.get_sides().y(), " m,",
                        _box.get_sides().z(), " m]...");
+    if (_periodic.x()) {
+      _log->write_status("x boundary is periodic.");
+    } else {
+      _log->write_status("x boundary is not periodic.");
+    }
+    if (_periodic.y()) {
+      _log->write_status("y boundary is periodic.");
+    } else {
+      _log->write_status("y boundary is not periodic.");
+    }
+    if (_periodic.z()) {
+      _log->write_status("z boundary is periodic.");
+    } else {
+      _log->write_status("z boundary is not periodic.");
+    }
   }
 
   _density = new DensityValues **[_ncell.x()];
