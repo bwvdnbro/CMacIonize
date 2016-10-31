@@ -48,6 +48,9 @@ private:
   /*! @brief Box containing the grid. */
   Box _box;
 
+  /*! @brief Periodicity flags. */
+  CoordinateVector< bool > _periodic;
+
   /*! @brief Side lengths of a single cell. */
   CoordinateVector<> _cellside;
 
@@ -70,9 +73,12 @@ private:
   Log *_log;
 
 public:
-  DensityGrid(Box box, CoordinateVector< int > ncell, double helium_abundance,
-              double initial_temperature, DensityFunction &density_function,
-              RecombinationRates &recombination_rates, Log *log = nullptr);
+  DensityGrid(
+      Box box, CoordinateVector< int > ncell, double helium_abundance,
+      double initial_temperature, DensityFunction &density_function,
+      RecombinationRates &recombination_rates,
+      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
+      Log *log = nullptr);
 
   DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
               RecombinationRates &recombination_rates, Log *log = nullptr);
@@ -87,7 +93,7 @@ public:
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
   Box get_cell(CoordinateVector< int > index);
   DensityValues &get_cell_values(CoordinateVector< int > index);
-  bool is_inside(CoordinateVector< int > index);
+  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
                                            Box &cell,
