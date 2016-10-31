@@ -293,7 +293,7 @@ inline std::string read_attribute< std::string >(hid_t group,
   hsize_t length = info.data_size;
 
   // C-string buffer to store the result in.
-  char *data = (char *)malloc(length);
+  char *data = new char[length + 1];
 
   // create C-string datatype
   hid_t strtype = H5Tcopy(H5T_C_S1);
@@ -314,6 +314,7 @@ inline std::string read_attribute< std::string >(hid_t group,
   if (status < 0) {
     error("Failed to read string attribute \"%s\"!", name.c_str());
   }
+  data[length] = '\0';
 
   // close string type
   status = H5Tclose(strtype);
@@ -329,7 +330,8 @@ inline std::string read_attribute< std::string >(hid_t group,
   }
 
   std::string value(data);
-  free(data);
+
+  delete[] data;
 
   return value;
 }
