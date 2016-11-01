@@ -23,9 +23,9 @@ macro(add_compiler_flag FLAG)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
   try_compile(FLAG_WORKS ${PROJECT_BINARY_DIR}
                          ${PROJECT_BINARY_DIR}/mintest.cpp)
-  if(${FLAG_WORKS} EQUAL "FALSE")
+  if(NOT FLAG_WORKS)
     message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
-  endif(${FLAG_WORKS} EQUAL "FALSE")
+  endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
 # The version number.
