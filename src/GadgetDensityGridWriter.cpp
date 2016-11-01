@@ -117,26 +117,11 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write code info
   group = HDF5Tools::create_group(file, "Code");
-  std::string git_version = CompilerInfo::get_git_version();
-  HDF5Tools::write_attribute< std::string >(group, "Git version", git_version);
-  std::string compilation_date = CompilerInfo::get_compilation_date();
-  HDF5Tools::write_attribute< std::string >(group, "Compilation date",
-                                            compilation_date);
-  std::string compilation_time = CompilerInfo::get_compilation_time();
-  HDF5Tools::write_attribute< std::string >(group, "Compilation time",
-                                            compilation_time);
-  std::string compiler = CompilerInfo::get_short_compiler_name();
-  HDF5Tools::write_attribute< std::string >(group, "Compiler", compiler);
-  std::string operating_system = CompilerInfo::get_os_name();
-  HDF5Tools::write_attribute< std::string >(group, "Operating system",
-                                            operating_system);
-  std::string kernel_name = CompilerInfo::get_kernel_name();
-  HDF5Tools::write_attribute< std::string >(group, "Kernel name", kernel_name);
-  std::string hardware_name = CompilerInfo::get_hardware_name();
-  HDF5Tools::write_attribute< std::string >(group, "Hardware name",
-                                            hardware_name);
-  std::string host_name = CompilerInfo::get_host_name();
-  HDF5Tools::write_attribute< std::string >(group, "Host name", host_name);
+  for (auto it = CompilerInfo::begin(); it != CompilerInfo::end(); ++it) {
+    std::string key = it.get_key();
+    std::string value = it.get_value();
+    HDF5Tools::write_attribute< std::string >(group, key, value);
+  }
   HDF5Tools::close_group(group);
 
   // write parameters

@@ -26,6 +26,8 @@
 #ifndef COMPILERINFO_HPP
 #define COMPILERINFO_HPP
 
+#include "Error.hpp"
+
 #include <sstream>
 #include <string>
 
@@ -210,6 +212,142 @@ public:
   static inline std::string get_host_name() {
     return std::string(_os_host_name);
   }
+
+  /**
+   * @brief Fields written to output files.
+   */
+  enum OutputFields {
+    OUTPUTFIELD_GIT_VERSION = 0,
+    OUTPUTFIELD_COMPILATION_DATE,
+    OUTPUTFIELD_COMPILATION_TIME,
+    OUTPUTFIELD_COMPILER,
+    OUTPUTFIELD_OPERATING_SYSTEM,
+    OUTPUTFIELD_KERNEL_NAME,
+    OUTPUTFIELD_HARDWARE_NAME,
+    OUTPUTFIELD_HOST_NAME,
+    // reserved element for beyond end iterator
+    OUTPUTFIELD_END_OF_OUTPUT
+  };
+
+  /**
+   * @brief Iterator used to iterate over the information that should be written
+   * to the output files.
+   *
+   * By implementing this as an iterator, the DensityGridWriter implementation
+   * does not need to worry about the actual info that is written out. It only
+   * needs to write out everything the iterator gives it.
+   */
+  class iterator {
+  private:
+    /*! @brief Field the iterator points to. */
+    int _field;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param field Field this iterator points to.
+     */
+    inline iterator(OutputFields field) : _field(field) {}
+
+    /**
+     * @brief Increment operator.
+     *
+     * @return Reference to the incremented operator.
+     */
+    inline iterator &operator++() {
+      ++_field;
+      return *this;
+    }
+
+    /**
+     * @brief Comparison operator.
+     *
+     * @param it iterator to compare with.
+     * @return True if both operators point to the same field.
+     */
+    inline bool operator==(iterator it) { return _field == it._field; }
+
+    /**
+     * @brief Comparison operator.
+     *
+     * @param it iterator to compare with.
+     * @return True if both operators point to a different field.
+     */
+    inline bool operator!=(iterator it) { return !(*this == it); }
+
+    /**
+     * @brief Get the key this iterator points to.
+     *
+     * @return Key.
+     */
+    inline std::string get_key() {
+      switch (_field) {
+      case OUTPUTFIELD_GIT_VERSION:
+        return std::string("Git version");
+      case OUTPUTFIELD_COMPILATION_DATE:
+        return std::string("Compilation date");
+      case OUTPUTFIELD_COMPILATION_TIME:
+        return std::string("Compilation time");
+      case OUTPUTFIELD_COMPILER:
+        return std::string("Compiler");
+      case OUTPUTFIELD_OPERATING_SYSTEM:
+        return std::string("Operating system");
+      case OUTPUTFIELD_KERNEL_NAME:
+        return std::string("Kernel name");
+      case OUTPUTFIELD_HARDWARE_NAME:
+        return std::string("Hardware name");
+      case OUTPUTFIELD_HOST_NAME:
+        return std::string("Host name");
+      default:
+        error("Requested unknown output field!");
+        return std::string("Unknown field");
+      }
+    }
+
+    /**
+     * @brief Get the value this iterator points to.
+     *
+     * @return Value.
+     */
+    inline std::string get_value() {
+      switch (_field) {
+      case OUTPUTFIELD_GIT_VERSION:
+        return get_git_version();
+      case OUTPUTFIELD_COMPILATION_DATE:
+        return get_compilation_date();
+      case OUTPUTFIELD_COMPILATION_TIME:
+        return get_compilation_time();
+      case OUTPUTFIELD_COMPILER:
+        return get_short_compiler_name();
+      case OUTPUTFIELD_OPERATING_SYSTEM:
+        return get_os_name();
+      case OUTPUTFIELD_KERNEL_NAME:
+        return get_kernel_name();
+      case OUTPUTFIELD_HARDWARE_NAME:
+        return get_hardware_name();
+      case OUTPUTFIELD_HOST_NAME:
+        return get_host_name();
+      default:
+        error("Requested unknown output field!");
+        return std::string("Unknown field");
+      }
+    }
+  };
+
+  /**
+   * @brief iterator to the first element that should be written out.
+   *
+   * @return iterator to first element.
+   */
+  inline static iterator begin() { return iterator(OUTPUTFIELD_GIT_VERSION); }
+
+  /**
+   * @brief iterator to the beyond last element that should be written out.
+   *
+   * @return iterator to the beyond last element.
+   */
+  inline static iterator end() { return iterator(OUTPUTFIELD_END_OF_OUTPUT); }
 };
 
 #endif // COMPILERINFO_HPP
