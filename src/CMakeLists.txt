@@ -49,11 +49,22 @@ configure_file(
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
 
+# Add the command that creates the CompilerInfo.cpp file
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                   COMMAND ${CMAKE_COMMAND}
+                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
+                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
+
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
+    CompilerInfo.cpp.in
     DensityGrid.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
@@ -72,6 +83,7 @@ set(CMACIONIZE_SOURCES
     CoordinateVector.hpp
     CommandLineOption.hpp
     CommandLineParser.hpp
+    CompilerInfo.hpp
     CrossSections.hpp
     DensityFunction.hpp
     DensityFunctionFactory.hpp
@@ -100,6 +112,8 @@ set(CMACIONIZE_SOURCES
     VernerCrossSections.hpp
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
+
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
 
 # add HDF5 dependent sources, if we have found HDF5

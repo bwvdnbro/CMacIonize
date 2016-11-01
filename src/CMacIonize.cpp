@@ -26,6 +26,7 @@
 #include "Box.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
+#include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGrid.hpp"
@@ -82,6 +83,8 @@ int main(int argc, char **argv) {
     log = new TerminalLog(loglevel);
   }
 
+  log->write_status("This is CMacIonize, version ", git_build_string, ".");
+
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
   // stored in a CMake configured header
@@ -103,7 +106,7 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  RandomGenerator random_generator(params.get_value< int >("random_seed"));
+  RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
   PlanckPhotonSourceSpectrum spectrum(random_generator);
   PhotonSource source(*sourcedistribution, spectrum, cross_sections,
                       random_generator, log);
