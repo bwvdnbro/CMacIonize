@@ -85,7 +85,12 @@ int main(int argc, char **argv) {
 
   log->write_status("This is CMacIonize, version ",
                     CompilerInfo::get_git_version(), ".");
-  log->write_status("Code was compiled on ", CompilerInfo::get_full_date());
+  log->write_status("Code was compiled on ", CompilerInfo::get_full_date(),
+                    " using ", CompilerInfo::get_full_compiler_name(), ".");
+  log->write_status("Code was compiled for ", CompilerInfo::get_os_name(), ", ",
+                    CompilerInfo::get_kernel_name(), " on ",
+                    CompilerInfo::get_hardware_name(), " (",
+                    CompilerInfo::get_host_name(), ").");
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is

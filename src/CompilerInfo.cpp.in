@@ -30,13 +30,33 @@
 
 /// Git specific info
 
-const char git_build_string[] = "@GIT_BUILD_STRING@";
+const char CompilerInfo::_git_build_string[] = "@GIT_BUILD_STRING@";
 
 /// Compilation time info
 
-const unsigned int compilation_time_day = @COMPILATION_TIME_DAY @;
-const unsigned int compilation_time_month = @COMPILATION_TIME_MONTH @;
-const unsigned int compilation_time_year = @COMPILATION_TIME_YEAR @;
-const unsigned int compilation_time_hour = @COMPILATION_TIME_HOUR @;
-const unsigned int compilation_time_minutes = @COMPILATION_TIME_MINUTES @;
-const unsigned int compilation_time_seconds = @COMPILATION_TIME_SECONDS @;
+const unsigned int CompilerInfo::_compilation_time_day =
+    @COMPILATION_TIME_DAY@;
+const unsigned int CompilerInfo::_compilation_time_month =
+    @COMPILATION_TIME_MONTH@;
+const unsigned int CompilerInfo::_compilation_time_year =
+    @COMPILATION_TIME_YEAR@;
+const unsigned int CompilerInfo::_compilation_time_hour =
+    @COMPILATION_TIME_HOUR@;
+const unsigned int CompilerInfo::_compilation_time_minutes =
+    @COMPILATION_TIME_MINUTES@;
+const unsigned int CompilerInfo::_compilation_time_seconds =
+    @COMPILATION_TIME_SECONDS@;
+
+// Compiler info
+
+const char CompilerInfo::_compiler_name[] = "@COMPILER_NAME@";
+const char CompilerInfo::_compiler_version[] = "@COMPILER_VERSION@";
+
+/// Operating system info
+
+const char CompilerInfo::_os_name[] = "@OS_NAME@";
+const char CompilerInfo::_os_kernel_name[] = "@OS_KERNEL_NAME@";
+const char CompilerInfo::_os_kernel_release[] = "@OS_KERNEL_RELEASE@";
+const char CompilerInfo::_os_kernel_version[] = "@OS_KERNEL_VERSION@";
+const char CompilerInfo::_os_hardware_name[] = "@OS_HARDWARE_NAME@";
+const char CompilerInfo::_os_host_name[] = "@OS_HOST_NAME@";

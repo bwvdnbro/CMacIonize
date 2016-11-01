@@ -54,6 +54,8 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                           CompilerInfo
                    COMMAND ${CMAKE_COMMAND}
                            -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
+                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
                            -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
                            -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
                            -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake

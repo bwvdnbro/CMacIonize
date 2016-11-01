@@ -41,5 +41,25 @@ string(REGEX REPLACE ".*Minutes: ([0-9]*).*" "\\1" COMPILATION_TIME_MINUTES
 string(REGEX REPLACE ".*Seconds: ([0-9]*).*" "\\1" COMPILATION_TIME_SECONDS
        ${FULL_DATE})
 
+# Gather OS information
+execute_process(COMMAND uname --operating-system
+                OUTPUT_VARIABLE OS_NAME
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND uname --kernel-name
+                OUTPUT_VARIABLE OS_KERNEL_NAME
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND uname --kernel-release
+                OUTPUT_VARIABLE OS_KERNEL_RELEASE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND uname --kernel-version
+                OUTPUT_VARIABLE OS_KERNEL_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND uname --machine
+                OUTPUT_VARIABLE OS_HARDWARE_NAME
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND uname --nodename
+                OUTPUT_VARIABLE OS_HOST_NAME
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 configure_file(${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
                ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp @ONLY)
