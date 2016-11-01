@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  RandomGenerator random_generator;
+  RandomGenerator random_generator(params.get_value< int >("random_seed"));
   PlanckPhotonSourceSpectrum spectrum(random_generator);
   PhotonSource source(*sourcedistribution, spectrum, cross_sections,
                       random_generator, log);
@@ -138,15 +138,15 @@ int main(int argc, char **argv) {
     if (loop > 4) {
       lnumphoton *= 10;
     }
+    grid.reset_grid();
+    source.set_number_of_photons(lnumphoton);
+    log->write_status("Start shooting photons...");
 
     // timing information for user
     unsigned int nguess = 0.01 * lnumphoton;
     unsigned int ninfo = 0.1 * lnumphoton;
     Timer guesstimer;
 
-    grid.reset_grid();
-    source.set_number_of_photons(lnumphoton);
-    log->write_status("Start shooting photons...");
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
     for (unsigned int i = 0; i < lnumphoton; ++i) {
       if (!(i % ninfo)) {
