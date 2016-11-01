@@ -83,7 +83,9 @@ int main(int argc, char **argv) {
     log = new TerminalLog(loglevel);
   }
 
-  log->write_status("This is CMacIonize, version ", git_build_string, ".");
+  log->write_status("This is CMacIonize, version ",
+                    CompilerInfo::get_git_version(), ".");
+  log->write_status("Code was compiled on ", CompilerInfo::get_full_date());
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is

@@ -20,5 +20,26 @@ execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
                 OUTPUT_VARIABLE GIT_BUILD_STRING
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# We want to get the entire date in one command, to have a single time stamp.
+set(DATE_STRING
+    "+Day: %-d, Month: %-m, Year: %Y, Hour: %-H, Minutes: %-M, Seconds: %-S")
+execute_process(COMMAND date ${DATE_STRING}
+                OUTPUT_VARIABLE FULL_DATE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# We extract the various components and store them in separate variables
+string(REGEX REPLACE ".*Day: ([0-9]*).*" "\\1" COMPILATION_TIME_DAY
+       ${FULL_DATE})
+string(REGEX REPLACE ".*Month: ([0-9]*).*" "\\1" COMPILATION_TIME_MONTH
+       ${FULL_DATE})
+string(REGEX REPLACE ".*Year: ([0-9]*).*" "\\1" COMPILATION_TIME_YEAR
+       ${FULL_DATE})
+string(REGEX REPLACE ".*Hour: ([0-9]*).*" "\\1" COMPILATION_TIME_HOUR
+       ${FULL_DATE})
+string(REGEX REPLACE ".*Minutes: ([0-9]*).*" "\\1" COMPILATION_TIME_MINUTES
+       ${FULL_DATE})
+string(REGEX REPLACE ".*Seconds: ([0-9]*).*" "\\1" COMPILATION_TIME_SECONDS
+       ${FULL_DATE})
+
 configure_file(${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
                ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp @ONLY)

@@ -51,6 +51,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
 
 # Add the command that creates the CompilerInfo.cpp file
 add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                          CompilerInfo
                    COMMAND ${CMAKE_COMMAND}
                            -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
                            -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
