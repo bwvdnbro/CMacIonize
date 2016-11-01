@@ -27,6 +27,7 @@
 #define HELIUMTWOPHOTONCONTINUUMSPECTRUM_HPP
 
 #include "PhotonSourceSpectrum.hpp"
+#include "RandomGenerator.hpp"
 #include <vector>
 
 /*! @brief Number of frequencies in the internal table. */
@@ -43,8 +44,11 @@ private:
   /*! @brief Cumulative distribution function. */
   double _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ];
 
+  /*! @brief RandomGenerator used to generate random numbers. */
+  RandomGenerator &_random_generator;
+
 public:
-  HeliumTwoPhotonContinuumSpectrum();
+  HeliumTwoPhotonContinuumSpectrum(RandomGenerator &random_generator);
 
   void get_spectrum(std::vector< double > &yHe2q, std::vector< double > &AHe2q);
   double get_integral(std::vector< double > &yHe2q,

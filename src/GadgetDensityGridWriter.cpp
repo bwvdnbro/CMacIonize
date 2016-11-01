@@ -25,6 +25,7 @@
  */
 #include "GadgetDensityGridWriter.hpp"
 #include "Box.hpp"
+#include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
@@ -71,8 +72,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
  * @brief Write the file.
  *
  * @param iteration Value of the counter to append to the filename.
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
  */
-void GadgetDensityGridWriter::write(unsigned int iteration = 0) {
+void GadgetDensityGridWriter::write(unsigned int iteration,
+                                    ParameterFile &params) {
   std::string filename =
       Utilities::compose_filename(_prefix, "hdf5", iteration, _padding);
 
@@ -109,6 +113,29 @@ void GadgetDensityGridWriter::write(unsigned int iteration = 0) {
       group, "NumPart_Total_HighWord", numpart_high);
   double time = 0.;
   HDF5Tools::write_attribute< double >(group, "Time", time);
+  HDF5Tools::close_group(group);
+
+  // write code info
+  group = HDF5Tools::create_group(file, "Code");
+  for (auto it = CompilerInfo::begin(); it != CompilerInfo::end(); ++it) {
+    std::string key = it.get_key();
+    std::string value = it.get_value();
+    HDF5Tools::write_attribute< std::string >(group, key, value);
+  }
+  HDF5Tools::close_group(group);
+
+  // write parameters
+  group = HDF5Tools::create_group(file, "Parameters");
+  for (auto it = params.begin(); it != params.end(); ++it) {
+    std::string key = it.get_key();
+    std::string value = it.get_value();
+    HDF5Tools::write_attribute< std::string >(group, key, value);
+  }
+  HDF5Tools::close_group(group);
+
+  // write runtime parameters
+  group = HDF5Tools::create_group(file, "RuntimePars");
+  HDF5Tools::write_attribute< unsigned int >(group, "Iteration", iteration);
   HDF5Tools::close_group(group);
 
   // write units, we use SI units everywhere

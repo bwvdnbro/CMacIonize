@@ -121,9 +121,11 @@ double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  RandomGenerator random_generator;
+
   // PlanckPhotonSourceSpectrum
   {
-    PlanckPhotonSourceSpectrum spectrum;
+    PlanckPhotonSourceSpectrum spectrum(random_generator);
 
     unsigned int counts[100];
     for (unsigned int i = 0; i < 100; ++i) {
@@ -151,7 +153,7 @@ int main(int argc, char **argv) {
   // HydrogenLymanContinuumSpectrum
   {
     VernerCrossSections cross_sections;
-    HydrogenLymanContinuumSpectrum spectrum(cross_sections);
+    HydrogenLymanContinuumSpectrum spectrum(cross_sections, random_generator);
     for (unsigned int iT = 0; iT < 10; ++iT) {
       double T = 1500. + (iT + 0.5) * 13500. / 10;
       spectrum.set_temperature(T);
@@ -184,7 +186,7 @@ int main(int argc, char **argv) {
   // HeliumLymanContinuumSpectrum
   {
     VernerCrossSections cross_sections;
-    HeliumLymanContinuumSpectrum spectrum(cross_sections);
+    HeliumLymanContinuumSpectrum spectrum(cross_sections, random_generator);
     for (unsigned int iT = 0; iT < 10; ++iT) {
       double T = 1500. + (iT + 0.5) * 13500. / 10;
       spectrum.set_temperature(T);
@@ -218,7 +220,7 @@ int main(int argc, char **argv) {
 
   // HeliumTwoPhotonContinuumSpectrum
   {
-    HeliumTwoPhotonContinuumSpectrum spectrum;
+    HeliumTwoPhotonContinuumSpectrum spectrum(random_generator);
     vector< double > yHe2q;
     vector< double > AHe2q;
     spectrum.get_spectrum(yHe2q, AHe2q);

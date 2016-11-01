@@ -178,6 +178,7 @@ public:
     /**
      * @brief Compare iterators.
      *
+     * @param it Iterator to compare with.
      * @return True if the iterators point to the same cell of the same grid.
      */
     inline bool operator==(iterator it) {
@@ -188,6 +189,7 @@ public:
     /**
      * @brief Compare iterators.
      *
+     * @param it Iterator to compare with.
      * @return True if the iterators do not point to the same cell of the same
      * grid.
      */

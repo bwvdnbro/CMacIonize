@@ -39,8 +39,12 @@
  * @brief Constructor.
  *
  * Sets up the internal arrays used for random sampling.
+ *
+ * @param random_generator RandomGenerator used to generate random numbers.
  */
-PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum() {
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
+    RandomGenerator &random_generator)
+    : _random_generator(random_generator) {
   // some constants
   double max_frequency = 4.;
   double min_frequency = 3.289e15;
@@ -86,7 +90,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum() {
  * @return Random frequency (in Hz).
  */
 double PlanckPhotonSourceSpectrum::get_random_frequency() {
-  double x = Utilities::random_double();
+  double x = _random_generator.get_uniform_random_double();
 
   unsigned int ix = Utilities::locate(x, _cumulative_distribution,
                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);

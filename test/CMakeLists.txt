@@ -299,17 +299,24 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
-    ../src/GadgetDensityGridWriter.cpp
-    ../src/GadgetDensityGridWriter.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
+    ../src/GadgetDensityGridWriter.cpp
+    ../src/GadgetDensityGridWriter.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
     ../src/RecombinationRates.hpp
     ../src/Timer.cpp
+
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
+set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                            PROPERTIES GENERATED TRUE)
 add_unit_test(NAME testGadgetDensityGridWriter
               SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}
               LIBS ${HDF5_LIBRARIES})
@@ -416,7 +423,6 @@ add_unit_test(NAME testSILCCPhotonSourceDistribution
               SOURCES ${TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
-### Do not touch this line unless you know what you're doing! ##################
+### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-                                --exclude-regex PhotonSourceSpectrum
                         DEPENDS ${TESTNAMES})

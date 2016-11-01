@@ -42,14 +42,18 @@ using namespace std;
  * discrete photon sources.
  * @param spectrum PhotonSourceSpectrum for the discrete photon sources.
  * @param cross_sections Cross sections for photoionization.
+ * @param random_generator RandomGenerator used to generate random numbers.
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
                            PhotonSourceSpectrum &spectrum,
-                           CrossSections &cross_sections, Log *log)
+                           CrossSections &cross_sections,
+                           RandomGenerator &random_generator, Log *log)
     : _number_of_photons(0), _spectrum(spectrum),
-      _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
-      _HeLyc_spectrum(cross_sections), _log(log) {
+      _cross_sections(cross_sections), _random_generator(random_generator),
+      _HLyc_spectrum(cross_sections, random_generator),
+      _HeLyc_spectrum(cross_sections, random_generator),
+      _He2pc_spectrum(random_generator), _log(log) {
   _positions.resize(distribution.get_number_of_sources());
   _weights.resize(distribution.get_number_of_sources());
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -153,10 +157,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
                            cell.get_neutral_fraction_H() /
                            photon.get_hydrogen_cross_section());
 
-  double x = Utilities::random_double();
+  double x = _random_generator.get_uniform_random_double();
   if (x <= pHabs) {
     // photon absorbed by hydrogen
-    x = Utilities::random_double();
+    x = _random_generator.get_uniform_random_double();
     if (x <= cell.get_pHion()) {
       // sample new frequency from H Ly c
       _HLyc_spectrum.set_temperature(cell.get_temperature());
@@ -169,7 +173,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
     }
   } else {
     // photon absorbed by helium
-    x = Utilities::random_double();
+    x = _random_generator.get_uniform_random_double();
     if (x <= cell.get_pHe_em(0)) {
       // sample new frequency from He Ly c
       _HeLyc_spectrum.set_temperature(cell.get_temperature());
@@ -180,7 +184,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
       new_frequency = 19.8 / 13.6;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(2)) {
-      x = Utilities::random_double();
+      x = _random_generator.get_uniform_random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
         new_frequency = _He2pc_spectrum.get_random_frequency();
@@ -197,10 +201,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
                            77. * cell.get_neutral_fraction_He() /
                                sqrt(cell.get_temperature()) /
                                cell.get_neutral_fraction_H());
-      x = Utilities::random_double();
+      x = _random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot
-        x = Utilities::random_double();
+        x = _random_generator.get_uniform_random_double();
         if (x <= cell.get_pHion()) {
           // H Ly c, like above
           _HLyc_spectrum.set_temperature(cell.get_temperature());
@@ -213,7 +217,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
         }
       } else {
         // He 2-photon continuum
-        x = Utilities::random_double();
+        x = _random_generator.get_uniform_random_double();
         if (x < 0.56) {
           // sample like above
           new_frequency = _He2pc_spectrum.get_random_frequency();

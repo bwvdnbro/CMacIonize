@@ -72,8 +72,9 @@ int main(int argc, char **argv) {
     DensityGrid grid(box, ncell, 0.1, 8000., density_function,
                      recombination_rates);
 
+    ParameterFile params("test.param");
     GadgetDensityGridWriter writer("testgrid", grid);
-    writer.write(0);
+    writer.write(0, params);
   }
 
   // read file and check contents

@@ -28,6 +28,7 @@
 #define HYDROGENLYMANCONTINUUMSPECTRUM_HPP
 
 #include "PhotonSourceSpectrum.hpp"
+#include "RandomGenerator.hpp"
 
 class CrossSections;
 
@@ -55,8 +56,12 @@ private:
   /*! @brief Current temperature (in K). */
   double _current_T;
 
+  /*! @brief RandomGenerator used to generate random numbers. */
+  RandomGenerator &_random_generator;
+
 public:
-  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
+  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections,
+                                 RandomGenerator &random_generator);
 
   void set_temperature(double T);
 

@@ -26,6 +26,7 @@
 #include "Box.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
+#include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGrid.hpp"
@@ -82,6 +83,15 @@ int main(int argc, char **argv) {
     log = new TerminalLog(loglevel);
   }
 
+  log->write_status("This is CMacIonize, version ",
+                    CompilerInfo::get_git_version(), ".");
+  log->write_status("Code was compiled on ", CompilerInfo::get_full_date(),
+                    " using ", CompilerInfo::get_full_compiler_name(), ".");
+  log->write_status("Code was compiled for ", CompilerInfo::get_os_name(), ", ",
+                    CompilerInfo::get_kernel_name(), " on ",
+                    CompilerInfo::get_hardware_name(), " (",
+                    CompilerInfo::get_host_name(), ").");
+
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
   // stored in a CMake configured header
@@ -103,8 +113,10 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  PlanckPhotonSourceSpectrum spectrum;
-  PhotonSource source(*sourcedistribution, spectrum, cross_sections, log);
+  RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
+  PlanckPhotonSourceSpectrum spectrum(random_generator);
+  PhotonSource source(*sourcedistribution, spectrum, cross_sections,
+                      random_generator, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -139,10 +151,21 @@ int main(int argc, char **argv) {
     grid.reset_grid();
     source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
+
+    // timing information for user
+    unsigned int nguess = 0.01 * lnumphoton;
+    unsigned int ninfo = 0.1 * lnumphoton;
+    Timer guesstimer;
+
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
     for (unsigned int i = 0; i < lnumphoton; ++i) {
-      if (!(i % (lnumphoton / 10))) {
+      if (!(i % ninfo)) {
         log->write_status("Photon ", i, " of ", lnumphoton, ".");
+      }
+      if (i == nguess) {
+        unsigned int tguess = round(99. * guesstimer.stop());
+        log->write_status("Shooting photons will take approximately ", tguess,
+                          " seconds.");
       }
       Photon photon = source.get_random_photon();
       double tau = -std::log(Utilities::random_double());
@@ -181,7 +204,7 @@ int main(int argc, char **argv) {
     log->write_status("Chidiff: ", chidiff, ".");
     old_chi2 = chi2;
     // write snapshot
-    writer->write(loop);
+    writer->write(loop, params);
     ++loop;
   }
 
