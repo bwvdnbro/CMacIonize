@@ -133,6 +133,11 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   }
   HDF5Tools::close_group(group);
 
+  // write runtime parameters
+  group = HDF5Tools::create_group(file, "RuntimePars");
+  HDF5Tools::write_attribute< unsigned int >(group, "Iteration", iteration);
+  HDF5Tools::close_group(group);
+
   // write units, we use SI units everywhere
   group = HDF5Tools::create_group(file, "Units");
   double unit_value = 1;
