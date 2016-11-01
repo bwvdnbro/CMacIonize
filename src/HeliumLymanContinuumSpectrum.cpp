@@ -41,9 +41,11 @@
  * Fills the precalculated tables.
  *
  * @param cross_sections Photoionization cross sections.
+ * @param random_generator RandomGenerator used to generate random numbers.
  */
 HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
-    CrossSections &cross_sections) {
+    CrossSections &cross_sections, RandomGenerator &random_generator)
+    : _random_generator(random_generator) {
   double max_frequency = 4.;
   // set up the frequency bins
   // there is a hard lower limit on the spectrum, which we manually enforce here
@@ -123,7 +125,7 @@ void HeliumLymanContinuumSpectrum::set_temperature(double T) { _current_T = T; }
 double HeliumLymanContinuumSpectrum::get_random_frequency() {
   unsigned int iT = Utilities::locate(_current_T, _temperature,
                                       HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
-  double x = Utilities::random_double();
+  double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(x, _cumulative_distribution[iT],
                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
   if (_frequency[inu] < 1.81) {

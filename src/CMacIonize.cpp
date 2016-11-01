@@ -103,8 +103,10 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  PlanckPhotonSourceSpectrum spectrum;
-  PhotonSource source(*sourcedistribution, spectrum, cross_sections, log);
+  RandomGenerator random_generator;
+  PlanckPhotonSourceSpectrum spectrum(random_generator);
+  PhotonSource source(*sourcedistribution, spectrum, cross_sections,
+                      random_generator, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -136,13 +138,24 @@ int main(int argc, char **argv) {
     if (loop > 4) {
       lnumphoton *= 10;
     }
+
+    // timing information for user
+    unsigned int nguess = 0.01 * lnumphoton;
+    unsigned int ninfo = 0.1 * lnumphoton;
+    Timer guesstimer;
+
     grid.reset_grid();
     source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
     for (unsigned int i = 0; i < lnumphoton; ++i) {
-      if (!(i % (lnumphoton / 10))) {
+      if (!(i % ninfo)) {
         log->write_status("Photon ", i, " of ", lnumphoton, ".");
+      }
+      if (i == nguess) {
+        unsigned int tguess = round(99. * guesstimer.stop());
+        log->write_status("Shooting photons will take approximately ", tguess,
+                          " seconds.");
       }
       Photon photon = source.get_random_photon();
       double tau = -std::log(Utilities::random_double());

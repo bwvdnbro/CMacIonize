@@ -31,6 +31,7 @@
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "Photon.hpp"
+#include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
 #include <cmath>
@@ -77,6 +78,9 @@ private:
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
 
+  /*! @brief RandomGenerator used to generate random numbers. */
+  RandomGenerator &_random_generator;
+
   /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
   HydrogenLymanContinuumSpectrum _HLyc_spectrum;
 
@@ -92,7 +96,7 @@ private:
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
                PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
-               Log *log = nullptr);
+               RandomGenerator &random_generator, Log *log = nullptr);
 
   void set_number_of_photons(unsigned int number_of_photons);
 
@@ -103,10 +107,10 @@ public:
    * direction.
    */
   inline CoordinateVector<> get_random_direction() {
-    double cost = 2. * Utilities::random_double() - 1.;
+    double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
     double sint = 1. - cost * cost;
     sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * Utilities::random_double();
+    double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
     double cosp = std::cos(phi);
     double sinp = std::sin(phi);
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);

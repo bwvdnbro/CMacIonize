@@ -29,6 +29,7 @@
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
+#include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
 /**
@@ -63,6 +64,11 @@ private:
   /*! @brief Luminosity of a single source (in s^-1). */
   double _luminosity;
 
+  /*! @brief RandomGenerator used to generate random numbers. We use a separate
+   *  instance for this PhotonSourceDistribution, so that we can change the
+   *  sources completely independently from the rest of the algorithm. */
+  RandomGenerator _random_generator;
+
 public:
   /**
    * @brief Constructor.
@@ -76,15 +82,18 @@ public:
    * @param scaleheight_z Scale height of the Gaussian disk height distribution
    * (in m).
    * @param luminosity Luminosity of a single source (in s^-1).
+   * @param random_seed Seed used for the random generator.
    * @param log Log to write logging info to.
    */
   SILCCPhotonSourceDistribution(unsigned int num_sources, double anchor_x,
                                 double sides_x, double anchor_y, double sides_y,
                                 double origin_z, double scaleheight_z,
-                                double luminosity, Log *log = nullptr)
+                                double luminosity, int random_seed = 42,
+                                Log *log = nullptr)
       : _num_sources(num_sources), _anchor_x(anchor_x), _anchor_y(anchor_y),
         _sides_x(sides_x), _sides_y(sides_y), _origin_z(origin_z),
-        _scaleheight_z(scaleheight_z), _luminosity(luminosity) {
+        _scaleheight_z(scaleheight_z), _luminosity(luminosity),
+        _random_generator(random_seed) {
     if (log) {
       log->write_status("Constructed ", _num_sources,
                         " SILCC sources within the rectangle with anchor [",
@@ -120,6 +129,7 @@ public:
                 "photonsourcedistribution.scaleheight_z", "0.2 m"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
                 "photonsourcedistribution.luminosity", "4.26e49 s^-1"),
+            params.get_value< int >("photonsourcedistribution.random_seed", 42),
             log) {}
 
   virtual ~SILCCPhotonSourceDistribution() {}
@@ -139,13 +149,18 @@ public:
    * @return CoordinateVector of a valid and photon source position (in m).
    */
   virtual CoordinateVector<> get_position(unsigned int index) {
-    double x = _anchor_x + Utilities::random_double() * _sides_x;
-    double y = _anchor_y + Utilities::random_double() * _sides_y;
+    double x =
+        _anchor_x + _random_generator.get_uniform_random_double() * _sides_x;
+    double y =
+        _anchor_y + _random_generator.get_uniform_random_double() * _sides_y;
     // we use the Box-Muller method to sample the Gaussian
-    double z = _scaleheight_z *
-                   std::sqrt(-2. * std::log(Utilities::random_double())) *
-                   std::cos(2. * M_PI * Utilities::random_double()) +
-               _origin_z;
+    double z =
+        _scaleheight_z *
+            std::sqrt(-2. *
+                      std::log(_random_generator.get_uniform_random_double())) *
+            std::cos(2. * M_PI *
+                     _random_generator.get_uniform_random_double()) +
+        _origin_z;
     return CoordinateVector<>(x, y, z);
   }
 

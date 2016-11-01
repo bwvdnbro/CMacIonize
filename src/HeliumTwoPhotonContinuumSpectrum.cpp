@@ -41,8 +41,12 @@ using namespace std;
  *
  * Reads in the data file containing the spectrum and pre-calculates the
  * cumulative distribution used for random sampling.
+ *
+ * @param random_generator RandomGenerator used to generate random numbers.
  */
-HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
+HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum(
+    RandomGenerator &random_generator)
+    : _random_generator(random_generator) {
   vector< double > yHe2q;
   vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
@@ -131,7 +135,7 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
  * @return Random frequency (in Hz).
  */
 double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
-  double x = Utilities::random_double();
+  double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
   return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * _frequency[inu],

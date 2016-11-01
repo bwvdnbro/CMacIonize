@@ -42,9 +42,11 @@ using namespace std;
  * Fills the precalculated tables.
  *
  * @param cross_sections Photoionization cross sections.
+ * @param random_generator RandomGenerator used to generate random numbers.
  */
 HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
-    CrossSections &cross_sections) {
+    CrossSections &cross_sections, RandomGenerator &random_generator)
+    : _random_generator(random_generator) {
   double max_frequency = 4.;
   // set up the frequency bins
   for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
@@ -113,7 +115,7 @@ void HydrogenLymanContinuumSpectrum::set_temperature(double T) {
 double HydrogenLymanContinuumSpectrum::get_random_frequency() {
   unsigned int iT = Utilities::locate(_current_T, _temperature,
                                       HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
-  double x = Utilities::random_double();
+  double x = _random_generator.get_uniform_random_double();
   unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
                                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
   unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],

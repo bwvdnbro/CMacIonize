@@ -28,6 +28,7 @@
 #define PLANCKPHOTONSOURCESPECTRUM_HPP
 
 #include "PhotonSourceSpectrum.hpp"
+#include "RandomGenerator.hpp"
 
 /**
  * @brief Number of frequency bins used in the internal table.
@@ -56,8 +57,11 @@ private:
   /*! @brief Base 10 logarithm of the cumulative distribution in each bin. */
   double _log_cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
+  /*! @brief RandomGenerator used to generate random numbers. */
+  RandomGenerator &_random_generator;
+
 public:
-  PlanckPhotonSourceSpectrum();
+  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator);
 
   virtual double get_random_frequency();
 };

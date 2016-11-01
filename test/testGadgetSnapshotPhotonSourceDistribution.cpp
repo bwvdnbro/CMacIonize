@@ -73,7 +73,8 @@ int main(int argc, char **argv) {
   GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5");
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
-  PhotonSource source(distribution, spectrum, cross_sections);
+  RandomGenerator random_generator;
+  PhotonSource source(distribution, spectrum, cross_sections, random_generator);
 
   Photon photon = source.get_random_photon();
   assert_condition(photon.get_position().x() == 0.5);

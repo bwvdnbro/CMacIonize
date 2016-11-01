@@ -79,8 +79,9 @@ int main(int argc, char **argv) {
       CoordinateVector<>(0.5, 0.5, 0.5), 1.);
   TestPhotonSourceSpectrum spectrum;
   TestCrossSections cross_sections;
+  RandomGenerator random_generator;
 
-  PhotonSource source(distribution, spectrum, cross_sections);
+  PhotonSource source(distribution, spectrum, cross_sections, random_generator);
   source.set_number_of_photons(1000001);
 
   // check if the returned position is what we expect it to be
