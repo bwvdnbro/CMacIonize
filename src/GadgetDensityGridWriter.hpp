@@ -45,6 +45,7 @@ private:
 
 public:
   GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
+                          std::string output_folder = std::string("."),
                           Log *log = nullptr, unsigned char padding = 3);
   GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
                           Log *log = nullptr);

@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
                                     "given name, instead of to the standard "
                                     "output.",
                     COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
+  parser.add_option("dirty", 'd', "Allow running a dirty code version.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -91,6 +93,18 @@ int main(int argc, char **argv) {
                     CompilerInfo::get_kernel_name(), " on ",
                     CompilerInfo::get_hardware_name(), " (",
                     CompilerInfo::get_host_name(), ").");
+
+  if (CompilerInfo::is_dirty()) {
+    log->write_warning("This is a dirty code version.");
+    if (!parser.get_value< bool >("dirty")) {
+      log->write_error("Running a dirty code version is disabled by default. "
+                       "If you still want to run this version, add the "
+                       "\"--dirty\" flag to the run command.");
+      error("Running a dirty code version is disabled by default.");
+    } else {
+      log->write_warning("However, dirty running is enabled.");
+    }
+  }
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -133,7 +147,9 @@ int main(int argc, char **argv) {
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file
-  ofstream pfile("parameters-usedvalues.param");
+  std::string folder = Utilities::get_absolute_path(
+      params.get_value< std::string >("output.folder", "."));
+  ofstream pfile(folder + "/parameters-usedvalues.param");
   params.print_contents(pfile);
   pfile.close();
 

@@ -330,6 +330,7 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
  * @brief Compose a filename made up by the given prefix and counter value,
  * appropriately zero padded.
  *
+ * @param folder Folder to add to the filename.
  * @param prefix Prefix for the filename.
  * @param extension Extension for the filename.
  * @param counter Value of the counter.
@@ -337,16 +338,40 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
  * @return std::string with format: "<prefix>XX<counter>XX.<extension>", where
  * the number of Xs is equal to padding.
  */
-inline std::string compose_filename(std::string prefix, std::string extension,
-                                    unsigned int counter,
+inline std::string compose_filename(std::string folder, std::string prefix,
+                                    std::string extension, unsigned int counter,
                                     unsigned int padding) {
   std::stringstream namestring;
+  if (!folder.empty()) {
+    namestring << folder << "/";
+  }
   namestring << prefix;
   namestring.fill('0');
   namestring.width(padding);
   namestring << counter;
-  namestring << ".hdf5";
+  namestring << "." << extension;
   return namestring.str();
+}
+
+/**
+ * @brief Get the absolute path corresponding to the given path.
+ *
+ * @param path Path, can be relative or absolute.
+ * @return Absolute path.
+ */
+inline std::string get_absolute_path(std::string path) {
+  // strip trailing / from path
+  if (path[path.size() - 1] == '/') {
+    path = path.substr(0, path.size() - 1);
+  }
+
+  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
+  if (absolute_path_ptr == nullptr) {
+    error("Unable to resolve path \"%s\"!", path.c_str());
+  }
+  std::string absolute_path(absolute_path_ptr);
+  free(absolute_path_ptr);
+  return absolute_path;
 }
 }
 
