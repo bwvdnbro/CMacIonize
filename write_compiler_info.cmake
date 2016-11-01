@@ -16,7 +16,7 @@
 # along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
                 OUTPUT_VARIABLE GIT_BUILD_STRING
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
