@@ -25,6 +25,7 @@
  */
 #include "GadgetDensityGridWriter.hpp"
 #include "Box.hpp"
+#include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
@@ -71,8 +72,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
  * @brief Write the file.
  *
  * @param iteration Value of the counter to append to the filename.
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
  */
-void GadgetDensityGridWriter::write(unsigned int iteration = 0) {
+void GadgetDensityGridWriter::write(unsigned int iteration,
+                                    ParameterFile &params) {
   std::string filename =
       Utilities::compose_filename(_prefix, "hdf5", iteration, _padding);
 
@@ -109,6 +113,39 @@ void GadgetDensityGridWriter::write(unsigned int iteration = 0) {
       group, "NumPart_Total_HighWord", numpart_high);
   double time = 0.;
   HDF5Tools::write_attribute< double >(group, "Time", time);
+  HDF5Tools::close_group(group);
+
+  // write code info
+  group = HDF5Tools::create_group(file, "Code");
+  std::string git_version = CompilerInfo::get_git_version();
+  HDF5Tools::write_attribute< std::string >(group, "Git version", git_version);
+  std::string compilation_date = CompilerInfo::get_compilation_date();
+  HDF5Tools::write_attribute< std::string >(group, "Compilation date",
+                                            compilation_date);
+  std::string compilation_time = CompilerInfo::get_compilation_time();
+  HDF5Tools::write_attribute< std::string >(group, "Compilation time",
+                                            compilation_time);
+  std::string compiler = CompilerInfo::get_short_compiler_name();
+  HDF5Tools::write_attribute< std::string >(group, "Compiler", compiler);
+  std::string operating_system = CompilerInfo::get_os_name();
+  HDF5Tools::write_attribute< std::string >(group, "Operating system",
+                                            operating_system);
+  std::string kernel_name = CompilerInfo::get_kernel_name();
+  HDF5Tools::write_attribute< std::string >(group, "Kernel name", kernel_name);
+  std::string hardware_name = CompilerInfo::get_hardware_name();
+  HDF5Tools::write_attribute< std::string >(group, "Hardware name",
+                                            hardware_name);
+  std::string host_name = CompilerInfo::get_host_name();
+  HDF5Tools::write_attribute< std::string >(group, "Host name", host_name);
+  HDF5Tools::close_group(group);
+
+  // write parameters
+  group = HDF5Tools::create_group(file, "Parameters");
+  for (auto it = params.begin(); it != params.end(); ++it) {
+    std::string key = it.get_key();
+    std::string value = it.get_value();
+    HDF5Tools::write_attribute< std::string >(group, key, value);
+  }
   HDF5Tools::close_group(group);
 
   // write units, we use SI units everywhere

@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
     log->write_status("Chidiff: ", chidiff, ".");
     old_chi2 = chi2;
     // write snapshot
-    writer->write(loop);
+    writer->write(loop, params);
     ++loop;
   }
 

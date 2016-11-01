@@ -172,6 +172,79 @@ public:
     }
     return vvalue;
   }
+
+  /**
+   * @brief Wrapper around std::map::iterator.
+   */
+  class iterator {
+  private:
+    /*! The iterator we wrap. */
+    std::map< std::string, std::string >::iterator _it;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param it std::map::string iterator this class wraps.
+     */
+    inline iterator(std::map< std::string, std::string >::iterator it)
+        : _it(it) {}
+
+    /**
+     * @brief Increment operator.
+     *
+     * @return Reference to the incremented operator.
+     */
+    inline iterator &operator++() {
+      ++_it;
+      return *this;
+    }
+
+    /**
+     * @brief Comparison iterator.
+     *
+     * @param it Iterator to compare with.
+     * @return True if both iterators are the same.
+     */
+    inline bool operator==(iterator it) { return _it == it._it; }
+
+    /**
+     * @brief Comparison iterator.
+     *
+     * @param it Iterator to compare with.
+     * @return True if both iterators are not the same.
+     */
+    inline bool operator!=(iterator it) { return !(*this == it); }
+
+    /**
+     * @brief Get the key this iterator points to.
+     *
+     * @return Key.
+     */
+    inline std::string get_key() { return _it->first; }
+
+    /**
+     * @brief Get the value this iterator points to.
+     *
+     * @return Value.
+     */
+    inline std::string get_value() { return _it->second; }
+  };
+
+  /**
+   * @brief Get an iterator to the first element in the internal dictionary.
+   *
+   * @return iterator to the first element.
+   */
+  inline iterator begin() { return iterator(_dictionary.begin()); }
+
+  /**
+   * @brief Get an iterator to the beyond last element in the internal
+   * dictionary.
+   *
+   * @return iterator to the beyond last element.
+   */
+  inline iterator end() { return iterator(_dictionary.end()); }
 };
 
 /**
