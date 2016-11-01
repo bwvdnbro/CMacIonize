@@ -63,7 +63,7 @@ public:
       : _grid(grid), _output_folder(output_folder), _log(log) {
     _output_folder = Utilities::get_absolute_path(_output_folder);
     if (_log) {
-      _log->write_status("Output is written to ", _output_folder, "/");
+      _log->write_status("Output will be written to ", _output_folder, "/");
     }
   }
 

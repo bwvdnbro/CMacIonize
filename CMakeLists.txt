@@ -19,6 +19,15 @@
 cmake_minimum_required(VERSION 2.6)
 project(CMacIonize)
 
+macro(add_compiler_flag FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+  try_compile(FLAG_WORKS ${PROJECT_BINARY_DIR}
+                         ${PROJECT_BINARY_DIR}/mintest.cpp)
+  if(${FLAG_WORKS} EQUAL "FALSE")
+    message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
+  endif(${FLAG_WORKS} EQUAL "FALSE")
+endmacro(add_compiler_flag)
+
 # The version number.
 set(CMACIONIZE_VERSION_MAJOR 0)
 set(CMACIONIZE_VERSION_MINOR 1)
@@ -26,11 +35,15 @@ set(CMACIONIZE_VERSION_MINOR 1)
 # Enable unit testing using CTest
 enable_testing()
 
+# Add minimal cpp file for flag testing
+execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
 # Enable C++11, since we need this for delegating constructors
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_compiler_flag("-std=c++11")
 
 # Enable all standard compiler warnings and enforce them
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+add_compiler_flag("-Wall -Werror")
 
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
