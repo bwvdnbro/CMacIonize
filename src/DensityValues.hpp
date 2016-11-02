@@ -43,6 +43,9 @@ private:
   /*! @brief Temperature (in K). */
   double _temperature;
 
+  /*! @brief Helium abundance. */
+  double _helium_abundance;
+
   /*! @brief Probability of re-emitting an ionizing photon after absorption by
    *  hydrogen. */
   double _pHion;
@@ -66,8 +69,8 @@ public:
    */
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
-        _temperature(0.), _pHion(0.), _pHe_em{0., 0., 0., 0.},
-        _mean_intensity_H(0.), _mean_intensity_He(0.),
+        _temperature(0.), _helium_abundance(0.), _pHion(0.),
+        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H(0.), _mean_intensity_He(0.),
         _old_neutral_fraction_H(0.) {}
 
   /**
@@ -104,6 +107,15 @@ public:
    */
   inline void set_temperature(double temperature) {
     _temperature = temperature;
+  }
+
+  /**
+   * @brief Set the helium abundance.
+   *
+   * @param helium_abundance Helium abundance value.
+   */
+  inline void set_helium_abundance(double helium_abundance) {
+    _helium_abundance = helium_abundance;
   }
 
   /**
@@ -190,6 +202,13 @@ public:
    * @return Temperature (in K).
    */
   inline double get_temperature() { return _temperature; }
+
+  /**
+   * @brief Get the helium abundance.
+   *
+   * @return Helium abundance.
+   */
+  inline double get_helium_abundance() { return _helium_abundance; }
 
   /**
    * @brief Get the probability of a photon being re-emitted as an ionizing

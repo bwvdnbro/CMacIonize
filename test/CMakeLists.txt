@@ -96,6 +96,7 @@ set(TESTDENSITYGRID_SOURCES
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
+    ../src/DensityGridInterface.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp

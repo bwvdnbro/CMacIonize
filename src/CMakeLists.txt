@@ -83,6 +83,7 @@ set(CMACIONIZE_SOURCES
 
     AsciiFileDensityFunction.hpp
     Box.hpp
+    ChiSquaredCalculator.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
     CommandLineOption.hpp

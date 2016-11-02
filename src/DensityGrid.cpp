@@ -51,8 +51,8 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
                          CoordinateVector< bool > periodic, Log *log)
-    : _box(box), _periodic(periodic), _ncell(ncell),
-      _helium_abundance(helium_abundance), _log(log) {
+    : DensityGridInterface(box, periodic, log), _box(box), _periodic(periodic),
+      _ncell(ncell), _log(log) {
 
   if (_log) {
     _log->write_status("Creating grid of ", _ncell.x(), " x ", _ncell.y(),
@@ -105,10 +105,7 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
         _density[i][j][k].set_total_density(
             density_function(CoordinateVector<>(x, y, z)));
         // initialize the neutral fractions to very low values
-        _density[i][j][k].set_neutral_fraction_H(1.e-6);
-        _density[i][j][k].set_neutral_fraction_He(1.e-6);
-        _density[i][j][k].set_temperature(initial_temperature);
-        set_reemission_probabilities(initial_temperature, _density[i][j][k]);
+        initialize(initial_temperature, helium_abundance, _density[i][j][k]);
         ++ndone;
         if (_log) {
           if (ndone == nguess) {
@@ -487,8 +484,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
   double xsecH = photon.get_hydrogen_cross_section();
   double xsecHe = photon.get_helium_cross_section();
-  // Helium abundance. Should be a parameter.
-  double AHe = _helium_abundance;
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
@@ -502,6 +497,10 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
     DensityValues &density = _density[index.x()][index.y()][index.z()];
+
+    // Helium abundance. Should be a parameter.
+    double AHe = density.get_helium_abundance();
+
     double tau = ds * density.get_total_density() *
                  (xsecH * density.get_neutral_fraction_H() +
                   AHe * xsecHe * density.get_neutral_fraction_He());
@@ -535,35 +534,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 }
 
 /**
- * @brief Set the re-emission probabilities for the given cell for the given
- * temperature.
- *
- * These quantities are all dimensionless.
- *
- * @param T Temperature (in K).
- * @param cell DensityValues of the cell.
- */
-void DensityGrid::set_reemission_probabilities(double T, DensityValues &cell) {
-  double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
-  double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
-  cell.set_pHion(alpha_1_H / alpha_A_agn);
-
-  double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
-  double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
-  double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
-  double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
-  double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
-  // we overwrite the alphaHe value. This also guarantees that the sum of all
-  // probabilities is 1...
-  alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
-
-  cell.set_pHe_em(0, alpha_1_He / alphaHe);
-  cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
-  cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
-  cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
-}
-
-/**
  * @brief Reset the internal mean intensity counters and update reemission
  * probabilities.
  */
@@ -577,25 +547,4 @@ void DensityGrid::reset_grid() {
       }
     }
   }
-}
-
-/**
- * @brief Get the total difference between the hydrogen neutral fractions after
- * this iteration, and those after the previous iteration.
- *
- * @return Difference between current and previous neutral fraction estimates.
- */
-double DensityGrid::get_chi_squared() {
-  double chi2 = 0.;
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
-        DensityValues &cell = _density[i][j][k];
-        double diff =
-            cell.get_neutral_fraction_H() - cell.get_old_neutral_fraction_H();
-        chi2 += diff * diff;
-      }
-    }
-  }
-  return chi2;
 }

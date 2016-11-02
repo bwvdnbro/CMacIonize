@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Box.hpp"
+#include "ChiSquaredCalculator.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
@@ -192,8 +193,7 @@ int main(int argc, char **argv) {
       while (grid.interact(photon, tau)) {
         CoordinateVector< int > new_index =
             grid.get_cell_indices(photon.get_position());
-        if (!source.reemit(photon, grid.get_cell_values(new_index),
-                           params.get_value< double >("helium_abundance"))) {
+        if (!source.reemit(photon, grid.get_cell_values(new_index))) {
           break;
         }
         tau = -std::log(Utilities::random_double());
@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
     ionization_state_calculator.calculate_ionization_state(lnumphoton, grid);
     log->write_status("Done calculating ionization state.");
 
-    double chi2 = grid.get_chi_squared();
+    double chi2 = ChiSquaredCalculator::get_chi_squared(grid);
     log->write_status("Chi2: ", chi2, ".");
     chidiff = (chi2 - old_chi2) / (chi2 + old_chi2);
     log->write_status("Chidiff: ", chidiff, ".");

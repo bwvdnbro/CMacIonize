@@ -144,13 +144,12 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  *
  * @param photon Photon to reemit.
  * @param cell DensityValues of the cell in which the Photon currently resides.
- * @param helium_abundance Helium abundance.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
-                          double helium_abundance) {
+bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
+  double helium_abundance = cell.get_helium_abundance();
   double pHabs = 1. / (1. +
                        cell.get_neutral_fraction_He() * helium_abundance *
                            photon.get_helium_cross_section() /

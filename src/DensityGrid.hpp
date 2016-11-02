@@ -27,6 +27,7 @@
 #define DENSITYGRID_HPP
 
 #include "Box.hpp"
+#include "DensityGridInterface.hpp"
 
 #include <cstdlib>
 
@@ -43,7 +44,7 @@ class RecombinationRates;
  * Contains the actual cells with densities and neutral fractions, and the
  * routines used to calculate the optical depth along a photon path.
  */
-class DensityGrid {
+class DensityGrid : public DensityGridInterface {
 private:
   /*! @brief Box containing the grid. */
   Box _box;
@@ -59,9 +60,6 @@ private:
 
   /*! @brief Number of cells per dimension. */
   CoordinateVector< int > _ncell;
-
-  /*! @brief Helium abundance. */
-  double _helium_abundance;
 
   /*! @brief Density grid. */
   DensityValues ***_density;
@@ -79,7 +77,7 @@ public:
   DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
               Log *log = nullptr);
 
-  ~DensityGrid();
+  virtual ~DensityGrid();
 
   double get_total_hydrogen_number();
 
@@ -98,10 +96,7 @@ public:
 
   bool interact(Photon &photon, double optical_depth);
 
-  static void set_reemission_probabilities(double T, DensityValues &cell);
   void reset_grid();
-
-  double get_chi_squared();
 
   /**
    * @brief Iterator to loop over the cells in the grid.

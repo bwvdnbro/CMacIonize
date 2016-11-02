@@ -120,7 +120,7 @@ public:
 
   double get_total_luminosity();
 
-  bool reemit(Photon &photon, DensityValues &cell, double helium_abundance);
+  bool reemit(Photon &photon, DensityValues &cell);
 };
 
 #endif // PHOTONSOURCE_HPP
