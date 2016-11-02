@@ -44,18 +44,15 @@ using namespace std;
  * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
  * @param initial_temperature Initial temperature of the gas (in K).
  * @param density_function DensityFunction that defines the density field.
- * @param recombination_rates Recombination rates.
  * @param periodic Periodicity flags.
  * @param log Log to write log messages to.
  */
 DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
                          double helium_abundance, double initial_temperature,
                          DensityFunction &density_function,
-                         RecombinationRates &recombination_rates,
                          CoordinateVector< bool > periodic, Log *log)
     : _box(box), _periodic(periodic), _ncell(ncell),
-      _helium_abundance(helium_abundance),
-      _recombination_rates(recombination_rates), _log(log) {
+      _helium_abundance(helium_abundance), _log(log) {
 
   if (_log) {
     _log->write_status("Creating grid of ", _ncell.x(), " x ", _ncell.y(),
@@ -159,12 +156,10 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
  * @param parameters ParameterFile to read.
  * @param density_function DensityFunction used to set the densities in each
  * cell.
- * @param recombination_rates Recombination rates.
  * @param log Log to write log messages to.
  */
 DensityGrid::DensityGrid(ParameterFile &parameters,
-                         DensityFunction &density_function,
-                         RecombinationRates &recombination_rates, Log *log)
+                         DensityFunction &density_function, Log *log)
     : DensityGrid(Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
                           "box.anchor", "[0. m, 0. m, 0. m]"),
                       parameters.get_physical_vector< QUANTITY_LENGTH >(
@@ -174,7 +169,7 @@ DensityGrid::DensityGrid(ParameterFile &parameters,
                   parameters.get_value< double >("helium_abundance", 0.1),
                   parameters.get_physical_value< QUANTITY_TEMPERATURE >(
                       "initial_temperature", "8000. K"),
-                  density_function, recombination_rates,
+                  density_function,
                   CoordinateVector< bool >(
                       parameters.get_value< bool >("periodicity.x", false),
                       parameters.get_value< bool >("periodicity.y", false),
@@ -537,64 +532,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   photon.set_position(photon_origin);
 
   return is_inside(index, photon_origin);
-}
-
-/**
- * @brief Solves the ionization and temperature equations based on the values of
- * the mean intensity integrals in each cell.
- *
- * @param Q Photon luminosity of the source (in s^-1).
- * @param nphoton Number of photons used in this particular iteration.
- */
-void DensityGrid::calculate_ionization_state(double Q, unsigned int nphoton) {
-  if (_log) {
-    _log->write_status("Calculating ionization state after shooting ", nphoton,
-                       " photons...");
-  }
-  // factor in the mean intensity integrals
-  double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
-  // Kenny's jfac contains a lot of unit conversion factors. These drop out
-  // since we work in SI units.
-  double jfac = Q / nphoton / cellvolume;
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
-        DensityValues &cell = _density[i][j][k];
-        cell.set_old_neutral_fraction_H(cell.get_neutral_fraction_H());
-        double jH = jfac * cell.get_mean_intensity_H();
-        double jHe = jfac * cell.get_mean_intensity_He();
-        double ntot = cell.get_total_density();
-        if (jH > 0. && ntot > 0.) {
-          double T = cell.get_temperature();
-          double alphaH =
-              _recombination_rates.get_recombination_rate(ELEMENT_H, T);
-          double alphaHe =
-              _recombination_rates.get_recombination_rate(ELEMENT_He, T);
-          // h0find
-          double h0, he0;
-          if (_helium_abundance) {
-            IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, ntot,
-                                               _helium_abundance, T, h0, he0);
-          } else {
-            IonizationStateCalculator::find_H0_simple(alphaH, jH, ntot, T, h0);
-            he0 = 0.;
-          }
-
-          cell.set_neutral_fraction_H(h0);
-          cell.set_neutral_fraction_He(he0);
-
-          // coolants. We don't do them for the moment...
-        } else {
-          cell.set_neutral_fraction_H(1.);
-          cell.set_neutral_fraction_He(1.);
-        }
-        // make shadow regions transparent? (part not active in Kenny's code)
-      }
-    }
-  }
-  if (_log) {
-    _log->write_status("Done calculating ionization state.");
-  }
 }
 
 /**

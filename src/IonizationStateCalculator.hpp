@@ -27,12 +27,30 @@
 #ifndef IONIZATIONSTATECALCULATOR_HPP
 #define IONIZATIONSTATECALCULATOR_HPP
 
+class DensityGrid;
+class RecombinationRates;
+
 /**
  * @brief Class that calculates the ionization state on a grid after the photon
  * shoot loop.
  */
 class IonizationStateCalculator {
+private:
+  /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
+  double _luminosity;
+
+  /*! @brief Helium abundance. */
+  double _helium_abundance;
+
+  /*! @brief Recombination rates used in ionization balance calculation. */
+  RecombinationRates &_recombination_rates;
+
 public:
+  IonizationStateCalculator(double luminosity, double helium_abundance,
+                            RecombinationRates &recombination_rates);
+
+  void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
+
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);
 

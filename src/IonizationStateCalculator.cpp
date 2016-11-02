@@ -24,10 +24,72 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "IonizationStateCalculator.hpp"
+#include "DensityGrid.hpp"
+#include "DensityValues.hpp"
 #include "Error.hpp"
+#include "RecombinationRates.hpp"
 #include "UnitConverter.hpp"
 #include <algorithm>
 #include <cmath>
+
+/**
+ * @brief Constructor.
+ *
+ * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
+ * @param helium_abundance Helium abundance.
+ * @param recombination_rates RecombinationRates used in ionization balance
+ * calculation.
+ */
+IonizationStateCalculator::IonizationStateCalculator(
+    double luminosity, double helium_abundance,
+    RecombinationRates &recombination_rates)
+    : _luminosity(luminosity), _helium_abundance(helium_abundance),
+      _recombination_rates(recombination_rates) {}
+
+/**
+ * @brief Solves the ionization and temperature equations based on the values of
+ * the mean intensity integrals in each cell.
+ *
+ * @param nphoton Number of ionizing photons emitted by all sources.
+ * @param grid DensityGrid for which the calculation is done.
+ */
+void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
+                                                           DensityGrid &grid) {
+  // Kenny's jfac contains a lot of unit conversion factors. These drop out
+  // since we work in SI units.
+  double jfac = _luminosity / nphoton;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    double cellvolume = it.get_volume();
+    DensityValues &cell = it.get_values();
+    double jfaccell = jfac / cellvolume;
+    cell.set_old_neutral_fraction_H(cell.get_neutral_fraction_H());
+    double jH = jfaccell * cell.get_mean_intensity_H();
+    double jHe = jfaccell * cell.get_mean_intensity_He();
+    double ntot = cell.get_total_density();
+    if (jH > 0. && ntot > 0.) {
+      double T = cell.get_temperature();
+      double alphaH = _recombination_rates.get_recombination_rate(ELEMENT_H, T);
+      double alphaHe =
+          _recombination_rates.get_recombination_rate(ELEMENT_He, T);
+      // h0find
+      double h0, he0;
+      if (_helium_abundance) {
+        find_H0(alphaH, alphaHe, jH, jHe, ntot, _helium_abundance, T, h0, he0);
+      } else {
+        find_H0_simple(alphaH, jH, ntot, T, h0);
+        he0 = 0.;
+      }
+
+      cell.set_neutral_fraction_H(h0);
+      cell.set_neutral_fraction_He(he0);
+
+      // coolants. We don't do them for the moment...
+    } else {
+      cell.set_neutral_fraction_H(1.);
+      cell.set_neutral_fraction_He(1.);
+    }
+  }
+}
 
 /**
  * @brief Iteratively find the neutral fractions of hydrogen and helium based on

@@ -66,9 +66,6 @@ private:
   /*! @brief Density grid. */
   DensityValues ***_density;
 
-  /*! @brief Recombination rates used in ionization balance calculation. */
-  RecombinationRates &_recombination_rates;
-
   /*! @brief Log to write log messages to. */
   Log *_log;
 
@@ -76,12 +73,11 @@ public:
   DensityGrid(
       Box box, CoordinateVector< int > ncell, double helium_abundance,
       double initial_temperature, DensityFunction &density_function,
-      RecombinationRates &recombination_rates,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr);
 
   DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              RecombinationRates &recombination_rates, Log *log = nullptr);
+              Log *log = nullptr);
 
   ~DensityGrid();
 
@@ -102,7 +98,6 @@ public:
 
   bool interact(Photon &photon, double optical_depth);
 
-  void calculate_ionization_state(double Q, unsigned int nphoton);
   static void set_reemission_probabilities(double T, DensityValues &cell);
   void reset_grid();
 
@@ -147,6 +142,16 @@ public:
      * @return DensityValue the iterator is pointing to.
      */
     inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
+
+    /**
+     * @brief Get the volume of the cell the iterator is pointing to.
+     *
+     * @return Volume of the cell (in m^3).
+     */
+    inline double get_volume() {
+      Box cell = _grid.get_cell(_index);
+      return cell.get_sides().x() * cell.get_sides().y() * cell.get_sides().z();
+    }
 
     /**
      * @brief Increment operator.

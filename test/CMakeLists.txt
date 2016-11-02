@@ -432,8 +432,12 @@ add_unit_test(NAME testSILCCPhotonSourceDistribution
 set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     testIonizationStateCalculator.cpp
 
+    ../src/DensityGrid.cpp
+    ../src/DensityGrid.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
+    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
 add_unit_test(NAME testIonizationStateCalculator
               SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})

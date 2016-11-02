@@ -31,27 +31,7 @@
 #include "GadgetDensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
 #include "HomogeneousDensityFunction.hpp"
-#include "RecombinationRates.hpp"
 #include <vector>
-
-/**
- * @brief Test implementation of RecombinationRates.
- */
-class TestRecombinationRates : public RecombinationRates {
-public:
-  /**
-   * @brief Get the recombination rate for the given element at the given
-   * temperature.
-   *
-   * @param element ElementName for an element.
-   * @param temperature Temperature.
-   * @return Recombination rate.
-   */
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature) {
-    return 1.;
-  }
-};
 
 /**
  * @brief Unit test for the GadgetDensityGridWriter class.
@@ -68,9 +48,7 @@ int main(int argc, char **argv) {
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
-    TestRecombinationRates recombination_rates;
-    DensityGrid grid(box, ncell, 0.1, 8000., density_function,
-                     recombination_rates);
+    DensityGrid grid(box, ncell, 0.1, 8000., density_function);
 
     ParameterFile params("test.param");
     GadgetDensityGridWriter writer("testgrid", grid);

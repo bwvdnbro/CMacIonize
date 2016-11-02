@@ -32,6 +32,7 @@
 #include "DensityGrid.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "FileLog.hpp"
+#include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSource.hpp"
@@ -121,7 +122,7 @@ int main(int argc, char **argv) {
       DensityFunctionFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid grid(params, *density_function, recombination_rates, log);
+  DensityGrid grid(params, *density_function, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -143,6 +144,9 @@ int main(int argc, char **argv) {
   unsigned int numphoton =
       params.get_value< unsigned int >("number of photons", 1000000);
   double Q = sourcedistribution->get_total_luminosity();
+
+  IonizationStateCalculator ionization_state_calculator(
+      Q, params.get_value< double >("helium_abundance"), recombination_rates);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -212,7 +216,11 @@ int main(int argc, char **argv) {
         (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / lnumphoton;
     log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
                       "%.");
-    grid.calculate_ionization_state(Q, lnumphoton);
+
+    log->write_status("Calculating ionization state after shooting ",
+                      lnumphoton, " photons...");
+    ionization_state_calculator.calculate_ionization_state(lnumphoton, grid);
+    log->write_status("Done calculating ionization state.");
 
     double chi2 = grid.get_chi_squared();
     log->write_status("Chi2: ", chi2, ".");
