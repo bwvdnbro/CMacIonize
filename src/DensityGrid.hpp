@@ -84,9 +84,59 @@ public:
   Box get_box();
   unsigned int get_number_of_cells();
 
+  /**
+   * @brief Convert the given three component index into a single long index.
+   *
+   * @param index Index to convert.
+   * @return Single long index.
+   */
+  inline unsigned long get_long_index(CoordinateVector< int > index) {
+    unsigned long long_index = index.x();
+    long_index *= _ncell.y() * _ncell.z();
+    long_index += index.y() * _ncell.z();
+    long_index += index.z();
+    return long_index;
+  }
+
+  /**
+   * @brief Convert the given long index into a three component index.
+   *
+   * @param long_index Single long index.
+   * @return Three component index.
+   */
+  inline CoordinateVector< int > get_indices(unsigned long long_index) {
+    unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
+    long_index -= index_x;
+    unsigned long index_y = long_index / _ncell.z();
+    long_index -= index_y;
+    return CoordinateVector< int >(index_x, index_y, long_index);
+  }
+
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
   Box get_cell(CoordinateVector< int > index);
+
+  /**
+   * @brief Get the cell corresponding to the given long index.
+   *
+   * @param index Long index.
+   * @return Box specifying the geometry of the cell.
+   */
+  inline Box get_cell(unsigned long index) {
+    return get_cell(get_indices(index));
+  }
+
   DensityValues &get_cell_values(CoordinateVector< int > index);
+
+  /**
+   * @brief Get the cell contents corresponding to the given long index.
+   *
+   * @param index Long index.
+   * @return DensityValues containing the contents of that cell.
+   */
+  DensityValues &get_cell_values(unsigned long index) {
+    return get_cell_values(get_indices(index));
+  }
+
   bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
