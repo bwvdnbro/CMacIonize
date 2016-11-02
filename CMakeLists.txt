@@ -19,12 +19,18 @@
 cmake_minimum_required(VERSION 2.6)
 project(CMacIonize)
 
-macro(add_compiler_flag FLAG)
+macro(add_compiler_flag FLAG FATAL)
+  set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
   try_compile(FLAG_WORKS ${PROJECT_BINARY_DIR}
                          ${PROJECT_BINARY_DIR}/mintest.cpp)
   if(NOT FLAG_WORKS)
-    message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
+    if(${FATAL} STREQUAL "REQUIRED")
+      message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
+    else(${FATAL} STREQUAL "REQUIRED")
+      message(STATUS "Not using unsupported compiler flag ${FLAG}.")
+      set(CMAKE_CXX_FLAGS ${BACKUP_CXX_FLAGS})
+    endif(${FATAL} STREQUAL "REQUIRED")
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
@@ -40,10 +46,10 @@ execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
                 OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
-add_compiler_flag("-std=c++11")
+add_compiler_flag("-std=c++11" REQUIRED)
 
 # Enable all standard compiler warnings and enforce them
-add_compiler_flag("-Wall -Werror")
+add_compiler_flag("-Wall -Werror" OPTIONAL)
 
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
