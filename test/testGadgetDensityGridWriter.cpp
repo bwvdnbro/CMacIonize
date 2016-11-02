@@ -43,7 +43,9 @@
 int main(int argc, char **argv) {
   // write file
   {
-    CoordinateVector<> origin;
+    // we pick a box with origin not 0, just to make sure coordinates are
+    // translated to a box with origin 0.
+    CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
@@ -163,9 +165,9 @@ int main(int argc, char **argv) {
         for (unsigned int k = 0; k < 8; ++k) {
           // the cells happen to be outputted in this way, with the x index
           // being the inner loop index...
-          assert_condition(coords[index].x() == (k + 0.5) * 0.125);
+          assert_condition(coords[index].x() == (i + 0.5) * 0.125);
           assert_condition(coords[index].y() == (j + 0.5) * 0.125);
-          assert_condition(coords[index].z() == (i + 0.5) * 0.125);
+          assert_condition(coords[index].z() == (k + 0.5) * 0.125);
           assert_condition(nfracH[index] == 1.e-6);
           assert_condition(nfracHe[index] == 1.e-6);
           assert_condition(ntot[index] == 1.);

@@ -191,8 +191,7 @@ int main(int argc, char **argv) {
       Photon photon = source.get_random_photon();
       double tau = -std::log(Utilities::random_double());
       while (grid.interact(photon, tau)) {
-        CoordinateVector< int > new_index =
-            grid.get_cell_indices(photon.get_position());
+        unsigned long new_index = grid.get_cell_index(photon.get_position());
         if (!source.reemit(photon, grid.get_cell_values(new_index))) {
           break;
         }

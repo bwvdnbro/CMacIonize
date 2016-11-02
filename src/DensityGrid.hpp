@@ -67,23 +67,6 @@ private:
   /*! @brief Log to write log messages to. */
   Log *_log;
 
-public:
-  DensityGrid(
-      Box box, CoordinateVector< int > ncell, double helium_abundance,
-      double initial_temperature, DensityFunction &density_function,
-      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr);
-
-  DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              Log *log = nullptr);
-
-  virtual ~DensityGrid();
-
-  double get_total_hydrogen_number();
-
-  Box get_box();
-  unsigned int get_number_of_cells();
-
   /**
    * @brief Convert the given three component index into a single long index.
    *
@@ -106,14 +89,67 @@ public:
    */
   inline CoordinateVector< int > get_indices(unsigned long long_index) {
     unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
-    long_index -= index_x;
+    long_index -= index_x * _ncell.y() * _ncell.z();
     unsigned long index_y = long_index / _ncell.z();
-    long_index -= index_y;
+    long_index -= index_y * _ncell.z();
     return CoordinateVector< int >(index_x, index_y, long_index);
   }
 
-  CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
   Box get_cell(CoordinateVector< int > index);
+
+  /**
+   * @brief Get the midpoint of the given cell.
+   *
+   * @param index Indices of a cell.
+   * @return Midpoint of that cell (in m).
+   */
+  inline CoordinateVector<> get_cell_midpoint(CoordinateVector< int > index) {
+    Box box = get_cell(index);
+    CoordinateVector<> midpoint = box.get_anchor() + 0.5 * box.get_sides();
+    return midpoint;
+  }
+
+  DensityValues &get_cell_values(CoordinateVector< int > index);
+
+  /**
+   * @brief Get the volume of the cell with the given indices.
+   *
+   * @param index Indices of a cell.
+   * @return Volume of any cell in the grid, since all cells have the same
+   * volume (in m^3).
+   */
+  double get_cell_volume(CoordinateVector< int > index) {
+    return _cellside.x() * _cellside.y() * _cellside.z();
+  }
+
+  CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
+
+public:
+  DensityGrid(
+      Box box, CoordinateVector< int > ncell, double helium_abundance,
+      double initial_temperature, DensityFunction &density_function,
+      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
+      Log *log = nullptr);
+
+  DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
+              Log *log = nullptr);
+
+  virtual ~DensityGrid();
+
+  double get_total_hydrogen_number();
+
+  Box get_box();
+  unsigned int get_number_of_cells();
+
+  /**
+   * @brief Get the long index of the cell containing the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return Long index of the cell containing that position.
+   */
+  inline unsigned long get_cell_index(CoordinateVector<> position) {
+    return get_long_index(get_cell_indices(position));
+  }
 
   /**
    * @brief Get the cell corresponding to the given long index.
@@ -125,7 +161,16 @@ public:
     return get_cell(get_indices(index));
   }
 
-  DensityValues &get_cell_values(CoordinateVector< int > index);
+  /**
+   * @brief Get the midpoint of the cell with the given long index.
+   *
+   * @param long_index Long index of a cell.
+   * @return Midpoint of that cell (in m).
+   */
+  virtual inline CoordinateVector<>
+  get_cell_midpoint(unsigned long long_index) {
+    return get_cell_midpoint(get_indices(long_index));
+  }
 
   /**
    * @brief Get the cell contents corresponding to the given long index.
@@ -133,8 +178,18 @@ public:
    * @param index Long index.
    * @return DensityValues containing the contents of that cell.
    */
-  DensityValues &get_cell_values(unsigned long index) {
+  virtual DensityValues &get_cell_values(unsigned long index) {
     return get_cell_values(get_indices(index));
+  }
+
+  /**
+   * @brief Get the volume of the cell with the given long index.
+   *
+   * @param long_index Long index of a cell.
+   * @return Volume of that cell (in m^3).
+   */
+  virtual double get_cell_volume(unsigned long long_index) {
+    return get_cell_volume(get_indices(long_index));
   }
 
   bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
@@ -149,104 +204,12 @@ public:
   void reset_grid();
 
   /**
-   * @brief Iterator to loop over the cells in the grid.
-   */
-  class iterator {
-  private:
-    /*! @brief Index of the cell the iterator is currently pointing to. */
-    CoordinateVector< int > _index;
-
-    /*! @brief Maximum value of the index. */
-    CoordinateVector< int > _max_index;
-
-    /*! @brief Reference to the DensityGrid over which we iterate. */
-    DensityGrid &_grid;
-
-  public:
-    /**
-     * @brief Constructor.
-     *
-     * @param index Index of the cell the iterator is currently pointing to.
-     * @param max_index Maximum value of the index.
-     * @param grid DensityGrid over which we iterate.
-     */
-    inline iterator(CoordinateVector< int > index,
-                    CoordinateVector< int > max_index, DensityGrid &grid)
-        : _index(index), _max_index(max_index), _grid(grid) {}
-
-    /**
-     * @brief Get the Box of the cell the iterator is pointing to.
-     *
-     * @return Box of the cell the iterator is pointing to.
-     */
-    inline Box get_cell() { return _grid.get_cell(_index); }
-
-    /**
-     * @brief Get the DensityValues of the cell the iterator is pointing to.
-     *
-     * @return DensityValue the iterator is pointing to.
-     */
-    inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
-
-    /**
-     * @brief Get the volume of the cell the iterator is pointing to.
-     *
-     * @return Volume of the cell (in m^3).
-     */
-    inline double get_volume() {
-      Box cell = _grid.get_cell(_index);
-      return cell.get_sides().x() * cell.get_sides().y() * cell.get_sides().z();
-    }
-
-    /**
-     * @brief Increment operator.
-     *
-     * We only implemented the pre-increment version, since the post-increment
-     * version creates a new object and is computationally more expensive.
-     *
-     * @return Reference to the incremented iterator.
-     */
-    inline iterator &operator++() {
-      ++_index[0];
-      if (_index[0] == _max_index[0]) {
-        _index[0] = 0;
-        ++_index[1];
-        if (_index[1] == _max_index[1]) {
-          _index[1] = 0;
-          ++_index[2];
-        }
-      }
-      return *this;
-    }
-
-    /**
-     * @brief Compare iterators.
-     *
-     * @param it Iterator to compare with.
-     * @return True if the iterators point to the same cell of the same grid.
-     */
-    inline bool operator==(iterator it) {
-      return (_index.x() == it._index.x() && _index.y() == it._index.y() &&
-              _index.z() == it._index.z() && &_grid == &it._grid);
-    }
-
-    /**
-     * @brief Compare iterators.
-     *
-     * @param it Iterator to compare with.
-     * @return True if the iterators do not point to the same cell of the same
-     * grid.
-     */
-    inline bool operator!=(iterator it) { return !(*this == it); }
-  };
-
-  /**
    * @brief Get an iterator to the first cell in the grid.
    *
    * @return Iterator to the first cell.
    */
-  inline iterator begin() {
-    return iterator(CoordinateVector< int >(0), _ncell, *this);
+  virtual inline DensityGridInterface::iterator begin() {
+    return iterator(0, *this);
   }
 
   /**
@@ -254,8 +217,8 @@ public:
    *
    * @return Iterator to the cell beyond the last cell in the grid.
    */
-  inline iterator end() {
-    return iterator(CoordinateVector< int >(0, 0, _ncell.z()), _ncell, *this);
+  virtual inline DensityGridInterface::iterator end() {
+    return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
   }
 };
 

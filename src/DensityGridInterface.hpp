@@ -105,6 +105,124 @@ public:
   }
 
   virtual ~DensityGridInterface() {}
+
+  /**
+   * @brief Get the midpoint of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Midpoint of that cell (in m).
+   */
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
+
+  /**
+   * @brief Get the values stored in the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return DensityValues stored in that cell.
+   */
+  virtual DensityValues &get_cell_values(unsigned long index) = 0;
+
+  /**
+   * @brief Get the volume of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Volume of that cell (in m^3).
+   */
+  virtual double get_cell_volume(unsigned long index) = 0;
+
+  /**
+   * @brief Iterator to loop over the cells in the grid.
+   */
+  class iterator {
+  private:
+    /*! @brief Long index of the cell the iterator is currently pointing to. */
+    unsigned long _long_index;
+
+    /*! @brief Reference to the DensityGrid over which we iterate. */
+    DensityGridInterface &_grid;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param long_index Long index of the cell the iterator is currently
+     * pointing to.
+     * @param grid DensityGrid over which we iterate.
+     */
+    inline iterator(unsigned long long_index, DensityGridInterface &grid)
+        : _long_index(long_index), _grid(grid) {}
+
+    /**
+     * @brief Get the midpoint of the cell the iterator is pointing to.
+     *
+     * @return Cell midpoint (in m).
+     */
+    inline CoordinateVector<> get_cell_midpoint() {
+      return _grid.get_cell_midpoint(_long_index);
+    }
+
+    /**
+     * @brief Get the DensityValues of the cell the iterator is pointing to.
+     *
+     * @return DensityValue the iterator is pointing to.
+     */
+    inline DensityValues &get_values() {
+      return _grid.get_cell_values(_long_index);
+    }
+
+    /**
+     * @brief Get the volume of the cell the iterator is pointing to.
+     *
+     * @return Volume of the cell (in m^3).
+     */
+    inline double get_volume() { return _grid.get_cell_volume(_long_index); }
+
+    /**
+     * @brief Increment operator.
+     *
+     * We only implemented the pre-increment version, since the post-increment
+     * version creates a new object and is computationally more expensive.
+     *
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator++() {
+      ++_long_index;
+      return *this;
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators point to the same cell of the same grid.
+     */
+    inline bool operator==(iterator it) {
+      return (&_grid == &it._grid && _long_index == it._long_index);
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators do not point to the same cell of the same
+     * grid.
+     */
+    inline bool operator!=(iterator it) { return !(*this == it); }
+  };
+
+  /**
+   * @brief Get an iterator to the first cell in the grid.
+   *
+   * @return Iterator to the first cell in the grid.
+   */
+  virtual iterator begin() = 0;
+
+  /**
+   * @brief Get an iterator to the last cell in the grid.
+   *
+   * @return Iterator to the last cell in the grid.
+   */
+  virtual iterator end() = 0;
 };
 
 #endif // DENSITYGRIDINTERFACE_HPP

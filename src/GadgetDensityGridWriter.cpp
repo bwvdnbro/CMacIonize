@@ -169,10 +169,8 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   std::vector< double > jHe(numpart[0]);
   unsigned int index = 0;
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-    Box cellbox = it.get_cell();
     DensityValues cellvals = it.get_values();
-    coords[index] =
-        cellbox.get_anchor() + 0.5 * cellbox.get_sides() - box.get_anchor();
+    coords[index] = it.get_cell_midpoint() - box.get_anchor();
     ntot[index] = cellvals.get_total_density();
     nfracH[index] = cellvals.get_neutral_fraction_H();
     nfracHe[index] = cellvals.get_neutral_fraction_He();

@@ -57,11 +57,9 @@ int main(int argc, char **argv) {
   assert_values_equal(1., grid.get_total_hydrogen_number());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
-  CoordinateVector< int > index = grid.get_cell_indices(photon_origin);
+  unsigned long index = grid.get_cell_index(photon_origin);
 
-  assert_condition(index.x() == 32);
-  assert_condition(index.y() == 32);
-  assert_condition(index.z() == 32);
+  assert_condition(index == 32 * 64 * 64 + 32 * 64 + 32);
 
   Box cell = grid.get_cell(index);
 
