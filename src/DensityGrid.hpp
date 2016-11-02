@@ -139,7 +139,8 @@ public:
   double get_total_hydrogen_number();
 
   Box get_box();
-  unsigned int get_number_of_cells();
+
+  virtual unsigned int get_number_of_cells();
 
   /**
    * @brief Get the long index of the cell containing the given position.

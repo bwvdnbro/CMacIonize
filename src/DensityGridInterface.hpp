@@ -28,9 +28,10 @@
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include "DensityFunction.hpp"
 #include "DensityValues.hpp"
-
-class Log;
+#include "Log.hpp"
+#include "Timer.hpp"
 
 /**
  * @brief General interface for density grids.
@@ -105,6 +106,13 @@ public:
   }
 
   virtual ~DensityGridInterface() {}
+
+  /**
+   * @brief Get the total number of cells in the grid.
+   *
+   * @return Number of cells in the grid.
+   */
+  virtual unsigned int get_number_of_cells() = 0;
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -223,6 +231,39 @@ public:
    * @return Iterator to the last cell in the grid.
    */
   virtual iterator end() = 0;
+
+  /**
+   * @brief Initialize the cells in the grid.
+   *
+   * @param initial_temperature Initial temperature.
+   * @param helium_abundance Helium abundance.
+   * @param function DensityFunction that sets the density.
+   */
+  void initialize(double initial_temperature, double helium_abundance,
+                  DensityFunction &function) {
+    unsigned int ntot = get_number_of_cells();
+    unsigned int nguess = 0.01 * ntot;
+    unsigned int ninfo = 0.1 * ntot;
+    unsigned int ndone = 0;
+    Timer guesstimer;
+    for (auto it = begin(); it != end(); ++it) {
+      DensityValues &cell = it.get_values();
+      cell.set_total_density(function(it.get_cell_midpoint()));
+      initialize(initial_temperature, helium_abundance, cell);
+      ++ndone;
+      if (_log) {
+        if (ndone == nguess) {
+          unsigned int tguess = round(99. * guesstimer.stop());
+          _log->write_status("Filling grid will take approximately ", tguess,
+                             " seconds.");
+        }
+        if (ndone % ninfo == 0) {
+          unsigned int pdone = round(100. * ndone / ntot);
+          _log->write_info("Did ", pdone, " percent.");
+        }
+      }
+    }
+  }
 };
 
 #endif // DENSITYGRIDINTERFACE_HPP

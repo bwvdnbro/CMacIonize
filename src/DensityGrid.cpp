@@ -91,36 +91,39 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-  unsigned int ntot = _ncell.x() * _ncell.y() * _ncell.z();
-  unsigned int nguess = 0.01 * ntot;
-  unsigned int ninfo = 0.1 * ntot;
-  unsigned int ndone = 0;
-  Timer guesstimer;
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
-        double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
-        double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
-        double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
-        _density[i][j][k].set_total_density(
-            density_function(CoordinateVector<>(x, y, z)));
-        // initialize the neutral fractions to very low values
-        initialize(initial_temperature, helium_abundance, _density[i][j][k]);
-        ++ndone;
-        if (_log) {
-          if (ndone == nguess) {
-            unsigned int tguess = round(99. * guesstimer.stop());
-            _log->write_status("Filling grid will take approximately ", tguess,
-                               " seconds.");
-          }
-          if (ndone % ninfo == 0) {
-            unsigned int pdone = round(100. * ndone / ntot);
-            _log->write_info("Did ", pdone, " percent.");
-          }
-        }
-      }
-    }
-  }
+  //  unsigned int ntot = _ncell.x() * _ncell.y() * _ncell.z();
+  //  unsigned int nguess = 0.01 * ntot;
+  //  unsigned int ninfo = 0.1 * ntot;
+  //  unsigned int ndone = 0;
+  //  Timer guesstimer;
+  //  for (int i = 0; i < _ncell.x(); ++i) {
+  //    for (int j = 0; j < _ncell.y(); ++j) {
+  //      for (int k = 0; k < _ncell.z(); ++k) {
+  //        double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
+  //        double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
+  //        double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
+  //        _density[i][j][k].set_total_density(
+  //            density_function(CoordinateVector<>(x, y, z)));
+  //        // initialize the neutral fractions to very low values
+  //        initialize(initial_temperature, helium_abundance,
+  //        _density[i][j][k]);
+  //        ++ndone;
+  //        if (_log) {
+  //          if (ndone == nguess) {
+  //            unsigned int tguess = round(99. * guesstimer.stop());
+  //            _log->write_status("Filling grid will take approximately ",
+  //            tguess,
+  //                               " seconds.");
+  //          }
+  //          if (ndone % ninfo == 0) {
+  //            unsigned int pdone = round(100. * ndone / ntot);
+  //            _log->write_info("Did ", pdone, " percent.");
+  //          }
+  //        }
+  //      }
+  //    }
+  //  }
+  initialize(initial_temperature, helium_abundance, density_function);
 
   _cellside_max = _cellside.x();
   if (_cellside.y() > _cellside_max) {
