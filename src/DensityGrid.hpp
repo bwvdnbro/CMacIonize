@@ -73,8 +73,8 @@ private:
    * @param index Index to convert.
    * @return Single long index.
    */
-  inline unsigned long get_long_index(CoordinateVector< int > index) {
-    unsigned long long_index = index.x();
+  inline long get_long_index(CoordinateVector< int > index) {
+    long long_index = index.x();
     long_index *= _ncell.y() * _ncell.z();
     long_index += index.y() * _ncell.z();
     long_index += index.z();
@@ -87,10 +87,10 @@ private:
    * @param long_index Single long index.
    * @return Three component index.
    */
-  inline CoordinateVector< int > get_indices(unsigned long long_index) {
-    unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
+  inline CoordinateVector< int > get_indices(long long_index) {
+    long index_x = long_index / (_ncell.y() * _ncell.z());
     long_index -= index_x * _ncell.y() * _ncell.z();
-    unsigned long index_y = long_index / _ncell.z();
+    long index_y = long_index / _ncell.z();
     long_index -= index_y * _ncell.z();
     return CoordinateVector< int >(index_x, index_y, long_index);
   }
@@ -124,6 +124,8 @@ private:
 
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
 
+  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
+
 public:
   DensityGrid(
       Box box, CoordinateVector< int > ncell, double helium_abundance,
@@ -148,7 +150,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Long index of the cell containing that position.
    */
-  inline unsigned long get_cell_index(CoordinateVector<> position) {
+  inline long get_cell_index(CoordinateVector<> position) {
     return get_long_index(get_cell_indices(position));
   }
 
@@ -158,9 +160,7 @@ public:
    * @param index Long index.
    * @return Box specifying the geometry of the cell.
    */
-  inline Box get_cell(unsigned long index) {
-    return get_cell(get_indices(index));
-  }
+  inline Box get_cell(long index) { return get_cell(get_indices(index)); }
 
   /**
    * @brief Get the midpoint of the cell with the given long index.
@@ -168,8 +168,7 @@ public:
    * @param long_index Long index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual inline CoordinateVector<>
-  get_cell_midpoint(unsigned long long_index) {
+  virtual inline CoordinateVector<> get_cell_midpoint(long long_index) {
     return get_cell_midpoint(get_indices(long_index));
   }
 
@@ -179,7 +178,7 @@ public:
    * @param index Long index.
    * @return DensityValues containing the contents of that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) {
+  virtual DensityValues &get_cell_values(long index) {
     return get_cell_values(get_indices(index));
   }
 
@@ -189,11 +188,25 @@ public:
    * @param long_index Long index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long long_index) {
+  virtual double get_cell_volume(long long_index) {
     return get_cell_volume(get_indices(long_index));
   }
 
-  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
+  /**
+   * @brief Check if the given position is inside the box and apply periodic
+   * boundaries (if applicable).
+   *
+   * @param long_index Index of the cell the position is in.
+   * @param position CoordinateVector specifying a position.
+   * @return True if the position is inside the box.
+   */
+  bool is_inside(long &long_index, CoordinateVector<> &position) {
+    CoordinateVector< int > index = get_indices(long_index);
+    bool inside = is_inside(index, position);
+    long_index = get_long_index(index);
+    return inside;
+  }
+
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
                                            Box &cell,

@@ -91,38 +91,7 @@ DensityGrid::DensityGrid(Box box, CoordinateVector< int > ncell,
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-  //  unsigned int ntot = _ncell.x() * _ncell.y() * _ncell.z();
-  //  unsigned int nguess = 0.01 * ntot;
-  //  unsigned int ninfo = 0.1 * ntot;
-  //  unsigned int ndone = 0;
-  //  Timer guesstimer;
-  //  for (int i = 0; i < _ncell.x(); ++i) {
-  //    for (int j = 0; j < _ncell.y(); ++j) {
-  //      for (int k = 0; k < _ncell.z(); ++k) {
-  //        double x = _box.get_anchor().x() + (i + 0.5) * _cellside.x();
-  //        double y = _box.get_anchor().y() + (j + 0.5) * _cellside.y();
-  //        double z = _box.get_anchor().z() + (k + 0.5) * _cellside.z();
-  //        _density[i][j][k].set_total_density(
-  //            density_function(CoordinateVector<>(x, y, z)));
-  //        // initialize the neutral fractions to very low values
-  //        initialize(initial_temperature, helium_abundance,
-  //        _density[i][j][k]);
-  //        ++ndone;
-  //        if (_log) {
-  //          if (ndone == nguess) {
-  //            unsigned int tguess = round(99. * guesstimer.stop());
-  //            _log->write_status("Filling grid will take approximately ",
-  //            tguess,
-  //                               " seconds.");
-  //          }
-  //          if (ndone % ninfo == 0) {
-  //            unsigned int pdone = round(100. * ndone / ntot);
-  //            _log->write_info("Did ", pdone, " percent.");
-  //          }
-  //        }
-  //      }
-  //    }
-  //  }
+
   initialize(initial_temperature, helium_abundance, density_function);
 
   _cellside_max = _cellside.x();
@@ -484,6 +453,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
   // find out in which cell the photon is currently hiding
   CoordinateVector< int > index = get_cell_indices(photon_origin);
+  long long_index = get_cell_index(photon_origin);
 
   double xsecH = photon.get_hydrogen_cross_section();
   double xsecHe = photon.get_helium_cross_section();
@@ -494,12 +464,13 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
     double ds;
     CoordinateVector< char > next_index;
+    long next_long_index = 0;
     CoordinateVector<> next_wall = get_wall_intersection(
         photon_origin, photon_direction, cell, next_index, ds);
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
-    DensityValues &density = _density[index.x()][index.y()][index.z()];
+    DensityValues &density = get_cell_values(index);
 
     // Helium abundance. Should be a parameter.
     double AHe = density.get_helium_abundance();
@@ -521,6 +492,8 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
     } else {
       photon_origin = next_wall;
       index += next_index;
+      long_index += next_long_index;
+      long_index = get_long_index(index);
     }
 
     // ds is now the actual distance travelled in the cell

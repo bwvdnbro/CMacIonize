@@ -120,7 +120,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
+  virtual CoordinateVector<> get_cell_midpoint(long index) = 0;
 
   /**
    * @brief Get the values stored in the cell with the given index.
@@ -128,7 +128,7 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) = 0;
+  virtual DensityValues &get_cell_values(long index) = 0;
 
   /**
    * @brief Get the volume of the cell with the given index.
@@ -136,15 +136,15 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) = 0;
+  virtual double get_cell_volume(long index) = 0;
 
   /**
    * @brief Iterator to loop over the cells in the grid.
    */
   class iterator {
   private:
-    /*! @brief Long index of the cell the iterator is currently pointing to. */
-    unsigned long _long_index;
+    /*! @brief Index of the cell the iterator is currently pointing to. */
+    long _index;
 
     /*! @brief Reference to the DensityGrid over which we iterate. */
     DensityGridInterface &_grid;
@@ -153,12 +153,11 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param long_index Long index of the cell the iterator is currently
-     * pointing to.
+     * @param index Index of the cell the iterator is currently pointing to.
      * @param grid DensityGrid over which we iterate.
      */
-    inline iterator(unsigned long long_index, DensityGridInterface &grid)
-        : _long_index(long_index), _grid(grid) {}
+    inline iterator(long index, DensityGridInterface &grid)
+        : _index(index), _grid(grid) {}
 
     /**
      * @brief Get the midpoint of the cell the iterator is pointing to.
@@ -166,7 +165,7 @@ public:
      * @return Cell midpoint (in m).
      */
     inline CoordinateVector<> get_cell_midpoint() {
-      return _grid.get_cell_midpoint(_long_index);
+      return _grid.get_cell_midpoint(_index);
     }
 
     /**
@@ -174,16 +173,14 @@ public:
      *
      * @return DensityValue the iterator is pointing to.
      */
-    inline DensityValues &get_values() {
-      return _grid.get_cell_values(_long_index);
-    }
+    inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() { return _grid.get_cell_volume(_long_index); }
+    inline double get_volume() { return _grid.get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -194,7 +191,7 @@ public:
      * @return Reference to the incremented iterator.
      */
     inline iterator &operator++() {
-      ++_long_index;
+      ++_index;
       return *this;
     }
 
@@ -205,7 +202,7 @@ public:
      * @return True if the iterators point to the same cell of the same grid.
      */
     inline bool operator==(iterator it) {
-      return (&_grid == &it._grid && _long_index == it._long_index);
+      return (&_grid == &it._grid && _index == it._index);
     }
 
     /**
@@ -234,6 +231,9 @@ public:
 
   /**
    * @brief Initialize the cells in the grid.
+   *
+   * All implementations should call this method in their constructor, after the
+   * grid itself has been set up.
    *
    * @param initial_temperature Initial temperature.
    * @param helium_abundance Helium abundance.
