@@ -72,6 +72,7 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    IonizationStateCalculator.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
     PhotonSource.cpp
@@ -98,6 +99,7 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    IonizationStateCalculator.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
