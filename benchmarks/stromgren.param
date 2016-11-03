@@ -4,6 +4,11 @@ box:
   anchor: [-5. pc, -5. pc, -5. pc]
   # side lengths of the box
   sides: [10. pc, 10. pc, 10. pc]
+
+# density grid
+densitygrid:
+  # type: a cartesian density grid
+  type: Cartesian
   # number of cells in each dimension
   ncell: [64, 64, 64]
 

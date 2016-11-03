@@ -55,12 +55,12 @@ CartesianDensityGrid::CartesianDensityGrid(
       _ncell(ncell), _log(log) {
 
   if (_log) {
-    _log->write_status("Creating grid of ", _ncell.x(), " x ", _ncell.y(),
-                       " x ", _ncell.z(), " inside a box with anchor [",
-                       _box.get_anchor().x(), " m,", _box.get_anchor().y(),
-                       " m,", _box.get_anchor().z(), " m] and sides [",
-                       _box.get_sides().x(), " m,", _box.get_sides().y(), " m,",
-                       _box.get_sides().z(), " m]...");
+    _log->write_status(
+        "Creating CartesianDensityGrid of ", _ncell.x(), " x ", _ncell.y(),
+        " x ", _ncell.z(), " inside a box with anchor [", _box.get_anchor().x(),
+        " m,", _box.get_anchor().y(), " m,", _box.get_anchor().z(),
+        " m] and sides [", _box.get_sides().x(), " m,", _box.get_sides().y(),
+        " m,", _box.get_sides().z(), " m]...");
     if (_periodic.x()) {
       _log->write_status("x boundary is periodic.");
     } else {
@@ -136,7 +136,7 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
               parameters.get_physical_vector< QUANTITY_LENGTH >(
                   "box.sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
-              "box.ncell", CoordinateVector< int >(64)),
+              "densitygrid.ncell", CoordinateVector< int >(64)),
           parameters.get_value< double >("helium_abundance", 0.1),
           parameters.get_physical_value< QUANTITY_TEMPERATURE >(
               "initial_temperature", "8000. K"),
