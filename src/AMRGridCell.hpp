@@ -120,6 +120,32 @@ public:
   }
 
   /**
+   * @brief Create all cells up to the given level in depth.
+   *
+   * @param current_level Level we are currently at.
+   * @param level Desired level.
+   */
+  inline void create_all_cells(unsigned char current_level,
+                               unsigned char level) {
+    if (current_level == level) {
+      _values = new _CellContents_();
+    } else {
+      // remove contents
+      if (_values != nullptr) {
+        delete _values;
+        _values = nullptr;
+      }
+      // create children
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] == nullptr) {
+          _children[i] = new AMRGridCell();
+        }
+        _children[i]->create_all_cells(current_level + 1, level);
+      }
+    }
+  }
+
+  /**
    * @brief Create the cell with the given key and return its contents.
    *
    * @param key Key linking to a unique cell in the AMR hierarchy.
@@ -166,6 +192,27 @@ public:
       box.get_anchor()[1] += iy * box.get_sides().y();
       box.get_anchor()[2] += iz * box.get_sides().z();
       return _children[4 * ix + 2 * iy + iz]->get_cell(position, box);
+    }
+  }
+
+  /**
+   * @brief Get the number of lowest level cells in this cell.
+   *
+   * @return Number of lowest level cells in this cell.
+   */
+  inline unsigned long get_number_of_cells() {
+    if (_values == nullptr) {
+      // cell has children, go deeper
+      unsigned long ncell = 0;
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] != nullptr) {
+          ncell += _children[i]->get_number_of_cells();
+        }
+      }
+      return ncell;
+    } else {
+      // this is 1 lowest level cell
+      return 1;
     }
   }
 

@@ -160,7 +160,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual long get_cell_index(CoordinateVector<> position) = 0;
+  virtual unsigned long get_cell_index(CoordinateVector<> position) = 0;
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -168,7 +168,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(long index) = 0;
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
 
   /**
    * @brief Get the values stored in the cell with the given index.
@@ -176,7 +176,7 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(long index) = 0;
+  virtual DensityValues &get_cell_values(unsigned long index) = 0;
 
   /**
    * @brief Get the volume of the cell with the given index.
@@ -184,7 +184,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(long index) = 0;
+  virtual double get_cell_volume(unsigned long index) = 0;
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -204,7 +204,7 @@ public:
   class iterator {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */
-    long _index;
+    unsigned long _index;
 
     /*! @brief Reference to the DensityGrid over which we iterate. */
     DensityGrid &_grid;
@@ -216,7 +216,7 @@ public:
      * @param index Index of the cell the iterator is currently pointing to.
      * @param grid DensityGrid over which we iterate.
      */
-    inline iterator(long index, DensityGrid &grid)
+    inline iterator(unsigned long index, DensityGrid &grid)
         : _index(index), _grid(grid) {}
 
     /**

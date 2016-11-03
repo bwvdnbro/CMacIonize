@@ -67,5 +67,8 @@ int main(int argc, char **argv) {
   grid.create_cell(key) = 5.5;
   assert_condition(grid.get_cell(CoordinateVector<>(0.7)) == 5.5);
 
+  grid.create_all_cells(3);
+  assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8);
+
   return 0;
 }

@@ -81,7 +81,7 @@ set(TESTCOMMANDLINEPARSER_SOURCES
 add_unit_test(NAME testCommandLineParser
               SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
 
-## Unit test for DensityGrid
+## Unit test for CartesianDensityGrid
 configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/h0_testdata.txt
                COPYONLY)
@@ -442,6 +442,15 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
 )
 add_unit_test(NAME testIonizationStateCalculator
               SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})
+
+## Unit test for AMRDensityGrid
+set(TESTAMRDENSITYGRID_SOURCES
+    testAMRDensityGrid.cpp
+
+    ../src/AMRDensityGrid.hpp
+)
+add_unit_test(NAME testAMRDensityGrid
+              SOURCES ${TESTAMRDENSITYGRID_SOURCES})
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################

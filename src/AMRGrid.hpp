@@ -211,6 +211,21 @@ public:
   }
 
   /**
+   * @brief Create all cells up to the given level in depth.
+   *
+   * @param level Deepest level to create.
+   */
+  inline void create_all_cells(unsigned char level) {
+    for (int ix = 0; ix < _ncell.x(); ++ix) {
+      for (int iy = 0; iy < _ncell.y(); ++iy) {
+        for (int iz = 0; iz < _ncell.z(); ++iz) {
+          _top_level[ix][iy][iz].create_all_cells(0, level);
+        }
+      }
+    }
+  }
+
+  /**
    * @brief Create the cell with the given key and return its contents.
    *
    * @param key Key linking to a unique cell in the AMR hierarchy.
@@ -258,6 +273,26 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     return _top_level[ix][iy][iz].get_cell(position, box);
+  }
+
+  /**
+   * @brief Get the number of lowest level cells in the grid.
+   *
+   * The lowest level cells are cells that have no children themselves, and
+   * together cover the entire box exactly once.
+   *
+   * @return Number of lowest level cells in the grid.
+   */
+  inline unsigned long get_number_of_cells() {
+    unsigned long ncell = 0;
+    for (int ix = 0; ix < _ncell.x(); ++ix) {
+      for (int iy = 0; iy < _ncell.y(); ++iy) {
+        for (int iz = 0; iz < _ncell.z(); ++iz) {
+          ncell += _top_level[ix][iy][iz].get_number_of_cells();
+        }
+      }
+    }
+    return ncell;
   }
 
   /**
