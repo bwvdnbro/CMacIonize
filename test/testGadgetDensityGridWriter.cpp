@@ -25,9 +25,9 @@
  */
 #include "Assert.hpp"
 #include "Box.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
-#include "DensityGrid.hpp"
 #include "GadgetDensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
 #include "HomogeneousDensityFunction.hpp"
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
-    DensityGrid grid(box, ncell, 0.1, 8000., density_function);
+    CartesianDensityGrid grid(box, ncell, 0.1, 8000., density_function);
 
     ParameterFile params("test.param");
     GadgetDensityGridWriter writer("testgrid", grid);

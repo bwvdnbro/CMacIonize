@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file DensityGrid.hpp
+ * @file CartesianDensityGrid.hpp
  *
- * @brief Density grid: header
+ * @brief Cartesian density grid: header
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef DENSITYGRID_HPP
-#define DENSITYGRID_HPP
+#ifndef CARTESIANDENSITYGRID_HPP
+#define CARTESIANDENSITYGRID_HPP
 
 #include "Box.hpp"
 #include "DensityGridInterface.hpp"
@@ -39,12 +39,12 @@ class Photon;
 class RecombinationRates;
 
 /**
- * @brief Density grid.
+ * @brief Cartesian density grid.
  *
  * Contains the actual cells with densities and neutral fractions, and the
  * routines used to calculate the optical depth along a photon path.
  */
-class DensityGrid : public DensityGridInterface {
+class CartesianDensityGrid : public DensityGridInterface {
 private:
   /*! @brief Box containing the grid. */
   Box _box;
@@ -127,16 +127,16 @@ private:
   bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
 
 public:
-  DensityGrid(
+  CartesianDensityGrid(
       Box box, CoordinateVector< int > ncell, double helium_abundance,
       double initial_temperature, DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr);
 
-  DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              Log *log = nullptr);
+  CartesianDensityGrid(ParameterFile &parameters,
+                       DensityFunction &density_function, Log *log = nullptr);
 
-  virtual ~DensityGrid();
+  virtual ~CartesianDensityGrid();
 
   virtual unsigned int get_number_of_cells();
 
@@ -230,4 +230,4 @@ public:
   }
 };
 
-#endif // DENSITYGRID_HPP
+#endif // CARTESIANDENSITYGRID_HPP

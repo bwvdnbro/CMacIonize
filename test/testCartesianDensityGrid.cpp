@@ -17,15 +17,15 @@
  ******************************************************************************/
 
 /**
- * @file testDensityGrid.cpp
+ * @file testCartesianDensityGrid.cpp
  *
- * @brief Unit test for the DensityGrid class
+ * @brief Unit test for the CartesianDensityGrid class
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "DensityFunction.hpp"
-#include "DensityGrid.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "Photon.hpp"
 #include <fstream>
@@ -34,7 +34,7 @@
 using namespace std;
 
 /**
- * @brief Unit test for the DensityGrid class.
+ * @brief Unit test for the CartesianDensityGrid class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  DensityGrid grid(box, 64, 0.1, 8000., testfunction);
+  CartesianDensityGrid grid(box, 64, 0.1, 8000., testfunction);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
 

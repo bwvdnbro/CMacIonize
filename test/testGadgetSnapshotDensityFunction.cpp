@@ -24,8 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "CoordinateVector.hpp"
-#include "DensityGrid.hpp"
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "TerminalLog.hpp"
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
-  DensityGrid grid(box, 32, 0.1, 8000., density);
+  CartesianDensityGrid grid(box, 32, 0.1, 8000., density);
   assert_values_equal(grid.get_total_hydrogen_number(),
                       density.get_total_hydrogen_number());
 

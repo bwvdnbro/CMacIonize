@@ -85,17 +85,17 @@ add_unit_test(NAME testCommandLineParser
 configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/h0_testdata.txt
                COPYONLY)
-set(TESTDENSITYGRID_SOURCES
-    testDensityGrid.cpp
+set(TESTCARTESIANDENSITYGRID_SOURCES
+    testCartesianDensityGrid.cpp
 
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
     ../src/DensityGridInterface.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
@@ -111,8 +111,8 @@ set(TESTDENSITYGRID_SOURCES
     ../src/TerminalLog.hpp
     ../src/Timer.cpp
 )
-add_unit_test(NAME testDensityGrid
-              SOURCES ${TESTDENSITYGRID_SOURCES})
+add_unit_test(NAME testCartesianDensityGrid
+              SOURCES ${TESTCARTESIANDENSITYGRID_SOURCES})
 
 ## Unit test for HDF5tools
 if(HAVE_HDF5)
@@ -142,10 +142,10 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
@@ -304,11 +304,11 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp
@@ -433,8 +433,8 @@ add_unit_test(NAME testSILCCPhotonSourceDistribution
 set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     testIonizationStateCalculator.cpp
 
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.cpp

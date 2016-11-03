@@ -64,11 +64,11 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
+    CartesianDensityGrid.cpp
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
-    DensityGrid.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -83,6 +83,7 @@ set(CMACIONIZE_SOURCES
 
     AsciiFileDensityFunction.hpp
     Box.hpp
+    CartesianDensityGrid.hpp
     ChiSquaredCalculator.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
@@ -92,7 +93,6 @@ set(CMACIONIZE_SOURCES
     CrossSections.hpp
     DensityFunction.hpp
     DensityFunctionFactory.hpp
-    DensityGrid.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
