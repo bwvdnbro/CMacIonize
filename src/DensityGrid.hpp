@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file DensityGridInterface.hpp
+ * @file DensityGrid.hpp
  *
  * @brief General interface for density grids.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef DENSITYGRIDINTERFACE_HPP
-#define DENSITYGRIDINTERFACE_HPP
+#ifndef DENSITYGRID_HPP
+#define DENSITYGRID_HPP
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
@@ -37,7 +37,7 @@
 /**
  * @brief General interface for density grids.
  */
-class DensityGridInterface {
+class DensityGrid {
 protected:
   /*! @brief Box containing the grid. */
   Box _box;
@@ -117,9 +117,9 @@ public:
    * @param periodic Periodicity flags.
    * @param log Log to write log messages to.
    */
-  DensityGridInterface(Box box, CoordinateVector< bool > periodic =
-                                    CoordinateVector< bool >(false),
-                       Log *log = nullptr)
+  DensityGrid(Box box, CoordinateVector< bool > periodic =
+                           CoordinateVector< bool >(false),
+              Log *log = nullptr)
       : _box(box), _periodic(periodic), _log(log) {}
 
   /**
@@ -138,7 +138,7 @@ public:
     set_reemission_probabilities(initial_temperature, cell);
   }
 
-  virtual ~DensityGridInterface() {}
+  virtual ~DensityGrid() {}
 
   /**
    * @brief Get the total number of cells in the grid.
@@ -207,7 +207,7 @@ public:
     long _index;
 
     /*! @brief Reference to the DensityGrid over which we iterate. */
-    DensityGridInterface &_grid;
+    DensityGrid &_grid;
 
   public:
     /**
@@ -216,7 +216,7 @@ public:
      * @param index Index of the cell the iterator is currently pointing to.
      * @param grid DensityGrid over which we iterate.
      */
-    inline iterator(long index, DensityGridInterface &grid)
+    inline iterator(long index, DensityGrid &grid)
         : _index(index), _grid(grid) {}
 
     /**
@@ -354,4 +354,4 @@ public:
   }
 };
 
-#endif // DENSITYGRIDINTERFACE_HPP
+#endif // DENSITYGRID_HPP

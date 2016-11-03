@@ -51,7 +51,7 @@ CartesianDensityGrid::CartesianDensityGrid(
     Box box, CoordinateVector< int > ncell, double helium_abundance,
     double initial_temperature, DensityFunction &density_function,
     CoordinateVector< bool > periodic, Log *log)
-    : DensityGridInterface(box, periodic, log), _box(box), _periodic(periodic),
+    : DensityGrid(box, periodic, log), _box(box), _periodic(periodic),
       _ncell(ncell), _log(log) {
 
   if (_log) {

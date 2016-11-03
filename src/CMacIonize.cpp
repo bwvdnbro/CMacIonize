@@ -123,8 +123,7 @@ int main(int argc, char **argv) {
       DensityFunctionFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGridInterface *grid =
-      new CartesianDensityGrid(params, *density_function, log);
+  DensityGrid *grid = new CartesianDensityGrid(params, *density_function, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.

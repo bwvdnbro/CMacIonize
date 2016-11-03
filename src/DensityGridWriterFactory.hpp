@@ -76,8 +76,7 @@ public:
    * @return Pointer to a newly created DensityGridWriter implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  static DensityGridWriter *generate(ParameterFile &params,
-                                     DensityGridInterface &grid,
+  static DensityGridWriter *generate(ParameterFile &params, DensityGrid &grid,
                                      Log *log = nullptr) {
     std::string type = params.get_value< std::string >("output.type", "Gadget");
     if (log) {

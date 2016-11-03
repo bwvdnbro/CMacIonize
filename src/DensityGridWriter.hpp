@@ -32,7 +32,7 @@
 #include <cstdlib>
 #include <string>
 
-class DensityGridInterface;
+class DensityGrid;
 class ParameterFile;
 
 /**
@@ -41,7 +41,7 @@ class ParameterFile;
 class DensityGridWriter {
 protected:
   /*! @brief DensityGrid containing the data to write. */
-  DensityGridInterface &_grid;
+  DensityGrid &_grid;
 
   /*! @brief Name of the folder where output files should be placed. */
   std::string _output_folder;
@@ -58,7 +58,7 @@ public:
    * placed.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(DensityGridInterface &grid, std::string output_folder,
+  DensityGridWriter(DensityGrid &grid, std::string output_folder,
                     Log *log = nullptr)
       : _grid(grid), _output_folder(output_folder), _log(log) {
     _output_folder = Utilities::get_absolute_path(_output_folder);

@@ -27,7 +27,7 @@
 #ifndef IONIZATIONSTATECALCULATOR_HPP
 #define IONIZATIONSTATECALCULATOR_HPP
 
-class DensityGridInterface;
+class DensityGrid;
 class RecombinationRates;
 
 /**
@@ -49,8 +49,7 @@ public:
   IonizationStateCalculator(double luminosity, double helium_abundance,
                             RecombinationRates &recombination_rates);
 
-  void calculate_ionization_state(unsigned int nphoton,
-                                  DensityGridInterface &grid);
+  void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);

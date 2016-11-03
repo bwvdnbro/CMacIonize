@@ -27,7 +27,7 @@
 #include "Box.hpp"
 #include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
-#include "DensityGridInterface.hpp"
+#include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
@@ -45,7 +45,7 @@
  * @param padding Number of digits used for the counter in the filenames.
  */
 GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
-                                                 DensityGridInterface &grid,
+                                                 DensityGrid &grid,
                                                  std::string output_folder,
                                                  Log *log,
                                                  unsigned char padding)
@@ -67,8 +67,7 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
  * @param log Log to write logging information to.
  */
 GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
-                                                 DensityGridInterface &grid,
-                                                 Log *log)
+                                                 DensityGrid &grid, Log *log)
     : GadgetDensityGridWriter(
           params.get_value< std::string >("output.prefix", "snapshot"), grid,
           params.get_value< std::string >("output.folder", "."), log,

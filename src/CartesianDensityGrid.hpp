@@ -27,7 +27,7 @@
 #define CARTESIANDENSITYGRID_HPP
 
 #include "Box.hpp"
-#include "DensityGridInterface.hpp"
+#include "DensityGrid.hpp"
 
 #include <cstdlib>
 
@@ -44,7 +44,7 @@ class RecombinationRates;
  * Contains the actual cells with densities and neutral fractions, and the
  * routines used to calculate the optical depth along a photon path.
  */
-class CartesianDensityGrid : public DensityGridInterface {
+class CartesianDensityGrid : public DensityGrid {
 private:
   /*! @brief Box containing the grid. */
   Box _box;
@@ -216,16 +216,14 @@ public:
    *
    * @return Iterator to the first cell.
    */
-  virtual inline DensityGridInterface::iterator begin() {
-    return iterator(0, *this);
-  }
+  virtual inline DensityGrid::iterator begin() { return iterator(0, *this); }
 
   /**
    * @brief Get an iterator to the cell beyond the last cell in the grid.
    *
    * @return Iterator to the cell beyond the last cell in the grid.
    */
-  virtual inline DensityGridInterface::iterator end() {
+  virtual inline DensityGrid::iterator end() {
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
   }
 };

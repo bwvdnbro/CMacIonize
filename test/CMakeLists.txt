@@ -96,7 +96,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGridInterface.hpp
+    ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
