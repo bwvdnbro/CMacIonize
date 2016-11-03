@@ -52,6 +52,11 @@ int main(int argc, char **argv) {
   key = grid.get_key(2, CoordinateVector<>(1.1, 0.1, 0.1));
   assert_condition(key == 0x0010000000000040);
 
+  key = grid.get_key(CoordinateVector<>(0.1));
+  assert_condition(key == 64);
+  key = grid.get_key(CoordinateVector<>(1.1, 0.1, 0.1));
+  assert_condition(key == 0x0010000000000040);
+
   grid.get_cell(CoordinateVector<>(0.1)) = 42.;
   assert_condition(grid[64] == 42.);
   grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) = 3.14;
@@ -63,6 +68,10 @@ int main(int argc, char **argv) {
   assert_condition(grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) == 42.);
 
   assert_condition(grid.get_volume(64) == 0.015625);
+  CoordinateVector<> midpoint = grid.get_midpoint(64);
+  assert_condition(midpoint.x() == 0.125);
+  assert_condition(midpoint.y() == 0.125);
+  assert_condition(midpoint.z() == 0.125);
 
   key = grid.get_key(2, CoordinateVector<>(0.7));
   assert_condition(key == 71);
@@ -71,6 +80,27 @@ int main(int argc, char **argv) {
 
   grid.create_all_cells(3);
   assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8);
+
+  assert_condition(grid.get_first_key() == 512);
+  unsigned long next_key = grid.get_next_key(512);
+  // 576: 1*512 + (0*256 + 0*128 + 1*64) + (0*32 + 0*16 + 0*8) +
+  //              (0*4 + 0*2 + 0*1)
+  assert_condition(next_key == 576);
+  // 1023: the above with all ones
+  next_key = grid.get_next_key(1023);
+  // the number below is 512 in the second block
+  assert_condition(next_key == 0x0010000000000200);
+  // the number below is 1023 in the second block
+  next_key = grid.get_next_key(0x00100000000003ff);
+  assert_condition(next_key == grid.get_max_key());
+
+  key = grid.get_first_key();
+  unsigned int ncell = 0;
+  while (key != grid.get_max_key()) {
+    key = grid.get_next_key(key);
+    ++ncell;
+  }
+  assert_condition(ncell == grid.get_number_of_cells());
 
   return 0;
 }

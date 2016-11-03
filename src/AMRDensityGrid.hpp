@@ -131,7 +131,7 @@ public:
    * @return Index of the cell containing that position.
    */
   virtual unsigned long get_cell_index(CoordinateVector<> position) {
-    return 0;
+    return _grid.get_key(position);
   }
 
   /**
@@ -141,7 +141,7 @@ public:
    * @return Midpoint of that cell (in m).
    */
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) {
-    return CoordinateVector<>(0.);
+    return _grid.get_midpoint(index);
   }
 
   /**
@@ -177,18 +177,34 @@ public:
   virtual bool interact(Photon &photon, double optical_depth) { return false; }
 
   /**
+   * @brief Increment the iterator index.
+   *
+   * In this case, the index encodes a lot of extra information and we cannot
+   * simply increment it by 1.
+   *
+   * @param index Index to increment.
+   */
+  virtual void increase_index(unsigned long &index) {
+    _grid.get_next_key(index);
+  }
+
+  /**
    * @brief Get an iterator to the first cell in the grid.
    *
    * @return Iterator to the first cell in the grid.
    */
-  virtual DensityGrid::iterator begin() { return iterator(0, *this); }
+  virtual DensityGrid::iterator begin() {
+    return iterator(_grid.get_first_key(), *this);
+  }
 
   /**
    * @brief Get an iterator to the last cell in the grid.
    *
    * @return Iterator to the last cell in the grid.
    */
-  virtual DensityGrid::iterator end() { return iterator(0, *this); }
+  virtual DensityGrid::iterator end() {
+    return iterator(_grid.get_max_key(), *this);
+  }
 };
 
 #endif // AMRDENSITYGRID_HPP

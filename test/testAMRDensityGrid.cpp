@@ -40,10 +40,23 @@ int main(int argc, char **argv) {
                       false, &log);
 
   assert_condition(grid.get_number_of_cells() == 32 * 32 * 32);
-  // 512 is the grid in the lower left front corner, which has indices 000 on
+  // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
-  // the 512 bit is set to indicate its level: 3
-  assert_condition(grid.get_cell_volume(512) == 0.001953125);
+  // the 32768 bit is set to indicate its level: 5
+  assert_condition(grid.get_cell_volume(32768) ==
+                   (1. / 32) * (1. / 32) * (1. / 32));
+  unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
+  assert_condition(key == 32768);
+  CoordinateVector<> midpoint = grid.get_cell_midpoint(32768);
+  assert_condition(midpoint.x() == 0.015625);
+  assert_condition(midpoint.y() == 0.015625);
+  assert_condition(midpoint.z() == 0.015625);
+
+  //  unsigned int ncell = 0;
+  //  for(auto it = grid.begin(); it != grid.end(); ++it){
+  //    ++ncell;
+  //  }
+  //  assert_condition(ncell == grid.get_number_of_cells());
 
   return 0;
 }

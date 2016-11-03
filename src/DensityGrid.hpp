@@ -199,6 +199,16 @@ public:
   virtual bool interact(Photon &photon, double optical_depth) = 0;
 
   /**
+   * @brief Index increment used in the iterator.
+   *
+   * More sofisticated grids (like the AMR grid) might implement their own
+   * version.
+   *
+   * @param index Index to increase.
+   */
+  virtual void increase_index(unsigned long &index) { ++index; }
+
+  /**
    * @brief Iterator to loop over the cells in the grid.
    */
   class iterator {
@@ -251,7 +261,7 @@ public:
      * @return Reference to the incremented iterator.
      */
     inline iterator &operator++() {
-      ++_index;
+      _grid.increase_index(_index);
       return *this;
     }
 

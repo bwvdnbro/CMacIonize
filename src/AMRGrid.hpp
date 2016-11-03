@@ -32,6 +32,9 @@
 
 #include <ostream>
 
+/*! @brief The maximal value a key can take. */
+#define AMRGRID_MAXKEY 0xffffffffffffffffull
+
 /**
  * @brief Hierarchical AMR grid.
  */
@@ -192,6 +195,29 @@ public:
   }
 
   /**
+   * @brief Get the midpoint of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Midpoint of that cell.
+   */
+  inline CoordinateVector<> get_midpoint(unsigned long key) {
+    unsigned int cell = get_cell_key(key);
+    unsigned int ix, iy, iz;
+    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
+    // get the box of the block
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    CoordinateVector<> anchor;
+    anchor[0] = _box.get_anchor().x() + ix * sides.x();
+    anchor[1] = _box.get_anchor().y() + iy * sides.y();
+    anchor[2] = _box.get_anchor().z() + iz * sides.z();
+    Box box(anchor, sides);
+    return block.get_midpoint(cell, box);
+  }
+
+  /**
    * @brief Convert the given position into a key that can be used to access the
    * cell containing that position on the given level.
    *
@@ -235,6 +261,42 @@ public:
     }
     // the highest bit is reserved to indicate the end of the cell key
     cell += 1 << (3 * level);
+    unsigned long key = block;
+    key = (key << 32) + cell;
+    return key;
+  }
+
+  /**
+   * @brief Get the key of the lowest level cell that contains the given
+   * position.
+   *
+   * @param position CoordinateVector specifying a position.
+   * @return Key of the lowest level cell containing that position.
+   */
+  inline unsigned long get_key(CoordinateVector<> position) {
+    // find out in which block the position lives
+    unsigned int ix, iy, iz;
+    ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
+         _box.get_sides().x();
+    iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
+         _box.get_sides().y();
+    iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
+         _box.get_sides().z();
+    // encode the block part of the key:
+    unsigned int block = (ix << 20) + (iy << 10) + iz;
+    // find out what the cell part of the key is
+    // get the box of the block
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    CoordinateVector<> anchor;
+    anchor[0] = _box.get_anchor().x() + ix * sides.x();
+    anchor[1] = _box.get_anchor().y() + iy * sides.y();
+    anchor[2] = _box.get_anchor().z() + iz * sides.z();
+    Box box(anchor, sides);
+    // recursively get the key until we have reached the lowest level
+    unsigned int cell = _top_level[ix][iy][iz].get_key(0, position, box);
     unsigned long key = block;
     key = (key << 32) + cell;
     return key;
@@ -323,6 +385,61 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     return _top_level[ix][iy][iz].get_cell(position, box);
+  }
+
+  /**
+   * @brief Get the maximal value a key can take.
+   *
+   * This value is reserved to indicate a key outside the grid range.
+   *
+   * @return Maximal value of a key.
+   */
+  inline unsigned long get_max_key() { return AMRGRID_MAXKEY; }
+
+  /**
+   * @brief Get the first key in the grid, assuming a Morton orering.
+   *
+   * @return First key in the grid, in Morton order.
+   */
+  inline unsigned long get_first_key() {
+    // no need to encode block information, since this is simply 0
+    return _top_level[0][0][0].get_first_key(0);
+  }
+
+  /**
+   * @brief Get the next key in the grid, assuming a Morton ordering of the
+   * cells.
+   *
+   * @param key Key pointing to a cell in the AMR structure.
+   * @return Key pointing to the next grid, in Morton order.
+   */
+  inline unsigned long get_next_key(unsigned long key) {
+    unsigned int ix, iy, iz;
+    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
+    unsigned int cell = get_cell_key(key);
+    unsigned int next_cell = block.get_next_key(cell, 0);
+    if (next_cell == AMRGRIDCELL_MAXKEY) {
+      // no valid next key in this block
+      // try the next block
+      ++iz;
+      if (iz == _ncell.z()) {
+        iz = 0;
+        ++iy;
+        if (iy == _ncell.y()) {
+          iy = 0;
+          ++ix;
+          if (ix == _ncell.x()) {
+            // no more valid blocks, return no valid key
+            return AMRGRID_MAXKEY;
+          }
+        }
+      }
+      next_cell = _top_level[ix][iy][iz].get_first_key(0);
+    }
+    unsigned int block_key = (ix << 20) + (iy << 10) + iz;
+    unsigned long next_key = block_key;
+    next_key = (next_key << 32) + next_cell;
+    return next_key;
   }
 
   /**
