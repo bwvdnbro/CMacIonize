@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
   grid[0x0010000000000040] = 42.;
   assert_condition(grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) == 42.);
 
+  assert_condition(grid.get_volume(64) == 0.015625);
+
   key = grid.get_key(2, CoordinateVector<>(0.7));
   assert_condition(key == 71);
   grid.create_cell(key) = 5.5;

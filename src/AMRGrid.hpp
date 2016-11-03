@@ -46,6 +46,53 @@ private:
   /*! @brief Top level blocks of the grid. */
   AMRGridCell< _CellContents_ > ***_top_level;
 
+  /**
+   * @brief Get the block that contains the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param ix Variable to store the x index in.
+   * @param iy Variable to store the y index in.
+   * @param iz Variable to store the z index in.
+   * @return Block containing that cell.
+   */
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key,
+                                                  unsigned int &ix,
+                                                  unsigned int &iy,
+                                                  unsigned int &iz) {
+    // the key consists of two parts: a part (first 32 bits) that encodes the
+    // top level block information, and a part (last 32 bits) that encodes the
+    // cell information within the block
+    unsigned int block = key >> 32;
+    // the block info consists of 3 10-bit keys, for the x, y, and z dimension
+    ix = (block & 0x3ff00000) >> 20;
+    iy = (block & 0x000ffc00) >> 10;
+    iz = block & 0x000003ff;
+    return _top_level[ix][iy][iz];
+  }
+
+  /**
+   * @brief Get the block that contains the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Block containing that cell.
+   */
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) {
+    unsigned int ix, iy, iz;
+    return get_block(key, ix, iy, iz);
+  }
+
+  /**
+   * @brief Get the cell key part of the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Cell part of the key (without block information).
+   */
+  inline unsigned int get_cell_key(unsigned long key) {
+    // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
+    // tell the compiler this is an unsigned long long (ull)
+    return (key & 0xffffffffull);
+  }
+
 public:
   /**
    * @brief Empty constructor.
@@ -117,18 +164,31 @@ public:
    * @return Contents of that cell.
    */
   inline _CellContents_ &operator[](unsigned long key) {
-    // the key consists of two parts: a part (first 32 bits) that encodes the
-    // top level block information, and a part (last 32 bits) that encodes the
-    // cell information within the block
-    unsigned int block = key >> 32;
-    // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
-    // tell the compiler this is an unsigned long long (ull)
-    unsigned int cell = key & 0xffffffffull;
-    // the block info consists of 3 10-bit keys, for the x, y, and z dimension
-    unsigned int ix = (block & 0x3ff00000) >> 20;
-    unsigned int iy = (block & 0x000ffc00) >> 10;
-    unsigned int iz = block & 0x000003ff;
-    return _top_level[ix][iy][iz][cell];
+    unsigned int cell = get_cell_key(key);
+    return get_block(key)[cell];
+  }
+
+  /**
+   * @brief Get the volume of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @return Volume of that cell.
+   */
+  inline double get_volume(unsigned long key) {
+    unsigned int cell = get_cell_key(key);
+    unsigned int ix, iy, iz;
+    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
+    // get the box of the block
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    CoordinateVector<> anchor;
+    anchor[0] = _box.get_anchor().x() + ix * sides.x();
+    anchor[1] = _box.get_anchor().y() + iy * sides.y();
+    anchor[2] = _box.get_anchor().z() + iz * sides.z();
+    Box box(anchor, sides);
+    return block.get_volume(cell, box);
   }
 
   /**
@@ -232,18 +292,8 @@ public:
    * @return Contents of the cell.
    */
   inline _CellContents_ &create_cell(unsigned long key) {
-    // the key consists of two parts: a part (first 32 bits) that encodes the
-    // top level block information, and a part (last 32 bits) that encodes the
-    // cell information within the block
-    unsigned int block = key >> 32;
-    // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
-    // tell the compiler this is an unsigned long long (ull)
-    unsigned int cell = key & 0xffffffffull;
-    // the block info consists of 3 10-bit keys, for the x, y, and z dimension
-    unsigned int ix = (block & 0x3ff00000) >> 20;
-    unsigned int iy = (block & 0x000ffc00) >> 10;
-    unsigned int iz = block & 0x000003ff;
-    return _top_level[ix][iy][iz].create_cell(cell);
+    unsigned int cell = get_cell_key(key);
+    return get_block(key).create_cell(cell);
   }
 
   /**

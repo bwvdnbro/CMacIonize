@@ -160,7 +160,9 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) { return 0.; }
+  virtual double get_cell_volume(unsigned long index) {
+    return _grid.get_volume(index);
+  }
 
   /**
    * @brief Let the given Photon travel through the density grid until the given

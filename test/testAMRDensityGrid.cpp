@@ -40,6 +40,10 @@ int main(int argc, char **argv) {
                       false, &log);
 
   assert_condition(grid.get_number_of_cells() == 32 * 32 * 32);
+  // 512 is the grid in the lower left front corner, which has indices 000 on
+  // all levels
+  // the 512 bit is set to indicate its level: 3
+  assert_condition(grid.get_cell_volume(512) == 0.001953125);
 
   return 0;
 }

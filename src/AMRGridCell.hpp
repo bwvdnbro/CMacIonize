@@ -86,6 +86,33 @@ public:
   }
 
   /**
+   * @brief Get the volume of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param box Box specifying the geometry of the current cell.
+   * @return Volume of the cell with the given key.
+   */
+  inline double get_volume(unsigned int &key, Box &box) {
+    if (key == 1) {
+      return box.get_sides().x() * box.get_sides().y() * box.get_sides().z();
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned char ix = (cell & 4) >> 2;
+      unsigned char iy = (cell & 2) >> 1;
+      unsigned char iz = cell & 1;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[cell]->get_volume(key, box);
+    }
+  }
+
+  /**
    * @brief Recursively initialize a cell on the given level containing the
    * given position.
    *
