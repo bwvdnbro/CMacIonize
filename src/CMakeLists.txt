@@ -94,6 +94,7 @@ set(CMACIONIZE_SOURCES
     DensityFunction.hpp
     DensityFunctionFactory.hpp
     DensityGrid.hpp
+    DensityGridFactory.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp

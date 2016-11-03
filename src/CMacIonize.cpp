@@ -24,13 +24,13 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Box.hpp"
-#include "CartesianDensityGrid.hpp"
 #include "ChiSquaredCalculator.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
+#include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
@@ -123,7 +123,8 @@ int main(int argc, char **argv) {
       DensityFunctionFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid *grid = new CartesianDensityGrid(params, *density_function, log);
+  DensityGrid *grid =
+      DensityGridFactory::generate(params, *density_function, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
