@@ -348,6 +348,17 @@ public:
   }
 
   /**
+   * @brief Refine the cell with the given key, by splitting it up in 8 cells
+   * at a deeper level.
+   *
+   * @param key Key pointing to an existing cell in the grid.
+   */
+  inline void refine_cell(unsigned long key) {
+    unsigned int cell = get_cell_key(key);
+    get_block(key).refine(cell);
+  }
+
+  /**
    * @brief Create the cell with the given key and return its contents.
    *
    * @param key Key linking to a unique cell in the AMR hierarchy.

@@ -96,11 +96,44 @@ int main(int argc, char **argv) {
 
   key = grid.get_first_key();
   unsigned int ncell = 0;
+  // we need a way to make sure all cells are traversed (exactly once)
+  // to this end, we calculate the sum of all keys
+  unsigned long keysum = 0;
   while (key != grid.get_max_key()) {
+    keysum += key;
     key = grid.get_next_key(key);
     ++ncell;
   }
   assert_condition(ncell == grid.get_number_of_cells());
+  // the sum should be the sum of all number between 512 and 1023
+  // + all numbers between 0x0010000000000200 and 0x00100000000003ff
+  unsigned long refsum =
+      256 * (512 + 1023) + 256 * (0x0010000000000200 + 0x00100000000003ff);
+  assert_condition(keysum == refsum);
+
+  // refine a cell
+  grid.refine_cell(703);
+  // count again
+  assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8 + 7);
+  key = grid.get_first_key();
+  ncell = 0;
+  keysum = 0;
+  while (key != grid.get_max_key()) {
+    keysum += key;
+    key = grid.get_next_key(key);
+    ++ncell;
+  }
+  assert_condition(ncell == grid.get_number_of_cells());
+  // the sum should now be the same as before, but without the cell we refined
+  // (703), and with the 8 new cells added
+  // the key for each of these cells consists of the part of 703 without the
+  // level bit (512): 191, and a new level bit (4096)
+  // to find the new part of the key, we just alternate all possible
+  // combinations of 2048, 1024, and 512
+  refsum = 256 * (512 + 1023) +
+           256 * (0x0010000000000200 + 0x00100000000003ff) - 703 +
+           8 * (4096 + 191) + 4 * 2048 + 4 * 1024 + 4 * 512;
+  assert_condition(keysum == refsum);
 
   return 0;
 }

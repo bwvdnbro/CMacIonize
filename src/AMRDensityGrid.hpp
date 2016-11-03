@@ -185,7 +185,7 @@ public:
    * @param index Index to increment.
    */
   virtual void increase_index(unsigned long &index) {
-    _grid.get_next_key(index);
+    index = _grid.get_next_key(index);
   }
 
   /**

@@ -237,6 +237,38 @@ public:
   }
 
   /**
+   * @brief Refine the cell with the given key by dividing it into 8 cells at a
+   * deeper level.
+   *
+   * @param key Key pointing to an existing cell.
+   */
+  inline void refine(unsigned int &key) {
+    if (key == 1) {
+      // remove contents
+      if (_values != nullptr) {
+        delete _values;
+        _values = nullptr;
+      }
+      // create children
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] == nullptr) {
+          _children[i] = new AMRGridCell();
+        }
+        _children[i] = new AMRGridCell();
+        // we hack this method to initialize the cell
+        _children[i]->create_all_cells(0, 0);
+      }
+    } else {
+      unsigned int cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      _children[cell]->refine(key);
+    }
+  }
+
+  /**
    * @brief Create the cell with the given key and return its contents.
    *
    * @param key Key linking to a unique cell in the AMR hierarchy.

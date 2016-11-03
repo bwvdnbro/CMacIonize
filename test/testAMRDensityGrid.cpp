@@ -52,11 +52,11 @@ int main(int argc, char **argv) {
   assert_condition(midpoint.y() == 0.015625);
   assert_condition(midpoint.z() == 0.015625);
 
-  //  unsigned int ncell = 0;
-  //  for(auto it = grid.begin(); it != grid.end(); ++it){
-  //    ++ncell;
-  //  }
-  //  assert_condition(ncell == grid.get_number_of_cells());
+  unsigned int ncell = 0;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    ++ncell;
+  }
+  assert_condition(ncell == grid.get_number_of_cells());
 
   return 0;
 }
