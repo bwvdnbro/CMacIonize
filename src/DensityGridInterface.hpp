@@ -31,6 +31,7 @@
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
 #include "Log.hpp"
+#include "Photon.hpp"
 #include "Timer.hpp"
 
 /**
@@ -76,6 +77,38 @@ protected:
     cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
   }
 
+  /**
+   * @brief Get the optical depth for a photon travelling the given path in the
+   * given cell.
+   *
+   * @param ds Path length the photon traverses (in m).
+   * @param cell DensityValues of the cell the photon travels in.
+   * @param photon Photon.
+   * @return Optical depth.
+   */
+  inline double get_optical_depth(const double ds, DensityValues &cell,
+                                  Photon &photon) {
+    return ds * cell.get_total_density() *
+           (photon.get_hydrogen_cross_section() *
+                cell.get_neutral_fraction_H() +
+            cell.get_helium_abundance() * photon.get_helium_cross_section() *
+                cell.get_neutral_fraction_He());
+  }
+
+  /**
+   * @brief Update the contributions to the mean intensity integrals due to the
+   * given photon travelling the given path length in the given cell.
+   *
+   * @param ds Path length the photon traverses (in m).
+   * @param cell DensityValues of the cell the photon travels in.
+   * @param photon Photon.
+   */
+  inline void update_integrals(const double ds, DensityValues &cell,
+                               Photon &photon) {
+    cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
+    cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -113,6 +146,13 @@ public:
    * @return Number of cells in the grid.
    */
   virtual unsigned int get_number_of_cells() = 0;
+
+  /**
+   * @brief Get the Box containing the grid.
+   *
+   * @return Box containing the grid (in m).
+   */
+  inline Box get_box() { return _box; }
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -263,6 +303,34 @@ public:
         }
       }
     }
+  }
+
+  /**
+   * @brief Reset the mean intensity counters and update the reemission
+   * probabilities for all cells.
+   */
+  void reset_grid() {
+    for (auto it = begin(); it != end(); ++it) {
+      DensityValues &cell = it.get_values();
+      set_reemission_probabilities(cell.get_temperature(), cell);
+      cell.reset_mean_intensities();
+    }
+  }
+
+  /**
+   * @brief Get the total number of hydrogen atoms contained in the grid.
+   *
+   * This method is used in the unit tests to check whether the grid contains
+   * the correct density field.
+   *
+   * @return Total number of hydrogen atoms contained in the grid.
+   */
+  inline double get_total_hydrogen_number() {
+    double mtot = 0.;
+    for (auto it = begin(); it != end(); ++it) {
+      mtot += it.get_values().get_total_density() * it.get_volume();
+    }
+    return mtot;
   }
 };
 

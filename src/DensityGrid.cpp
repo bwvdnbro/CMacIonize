@@ -164,33 +164,6 @@ DensityGrid::~DensityGrid() {
 }
 
 /**
- * @brief Get the total number of hydrogen atoms contained in the grid.
- *
- * @return Total number of hydrogen atoms contained in the grid.
- */
-double DensityGrid::get_total_hydrogen_number() {
-  double mtot = 0;
-  double cellvolume = _cellside.x() * _cellside.y() * _cellside.z();
-
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
-        mtot += _density[i][j][k].get_total_density() * cellvolume;
-      }
-    }
-  }
-
-  return mtot;
-}
-
-/**
- * @brief Get the box containing the grid.
- *
- * @return Box containing the grid (in m).
- */
-Box DensityGrid::get_box() { return _box; }
-
-/**
  * @brief Get the total number of cells in this grid.
  *
  * @return Total number of cells.
@@ -453,10 +426,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
   // find out in which cell the photon is currently hiding
   CoordinateVector< int > index = get_cell_indices(photon_origin);
-  long long_index = get_cell_index(photon_origin);
-
-  double xsecH = photon.get_hydrogen_cross_section();
-  double xsecHe = photon.get_helium_cross_section();
 
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
@@ -464,7 +433,6 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
 
     double ds;
     CoordinateVector< char > next_index;
-    long next_long_index = 0;
     CoordinateVector<> next_wall = get_wall_intersection(
         photon_origin, photon_direction, cell, next_index, ds);
 
@@ -473,11 +441,7 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
     DensityValues &density = get_cell_values(index);
 
     // Helium abundance. Should be a parameter.
-    double AHe = density.get_helium_abundance();
-
-    double tau = ds * density.get_total_density() *
-                 (xsecH * density.get_neutral_fraction_H() +
-                  AHe * xsecHe * density.get_neutral_fraction_He());
+    double tau = get_optical_depth(ds, density, photon);
     optical_depth -= tau;
 
     // if the optical depth exceeds or equals the wanted value: exit the loop
@@ -491,15 +455,19 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
       ds += Scorr;
     } else {
       photon_origin = next_wall;
+      // we don't want to do this if the photon does not actually leave the
+      // cell, since this might trigger a periodic boundary position change:
+      // the position of the photon is adapted for a traversal of the periodic
+      // boundaries, while it does not traverse them
+      // if there are no periodic boundaries, it does not matter where we
+      // update the index, since the index will not be used any more after
+      // leaving this loop
       index += next_index;
-      long_index += next_long_index;
-      long_index = get_long_index(index);
     }
 
     // ds is now the actual distance travelled in the cell
     // update contributions to mean intensity integrals
-    density.increase_mean_intensity_H(ds * xsecH);
-    density.increase_mean_intensity_He(ds * xsecHe);
+    update_integrals(ds, density, photon);
 
     S += ds;
   }
@@ -509,18 +477,18 @@ bool DensityGrid::interact(Photon &photon, double optical_depth) {
   return is_inside(index, photon_origin);
 }
 
-/**
- * @brief Reset the internal mean intensity counters and update reemission
- * probabilities.
- */
-void DensityGrid::reset_grid() {
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
-        DensityValues &cell = _density[i][j][k];
-        set_reemission_probabilities(cell.get_temperature(), cell);
-        cell.reset_mean_intensities();
-      }
-    }
-  }
-}
+///**
+// * @brief Reset the internal mean intensity counters and update reemission
+// * probabilities.
+// */
+// void DensityGrid::reset_grid() {
+//  for (int i = 0; i < _ncell.x(); ++i) {
+//    for (int j = 0; j < _ncell.y(); ++j) {
+//      for (int k = 0; k < _ncell.z(); ++k) {
+//        DensityValues &cell = _density[i][j][k];
+//        set_reemission_probabilities(cell.get_temperature(), cell);
+//        cell.reset_mean_intensities();
+//      }
+//    }
+//  }
+//}

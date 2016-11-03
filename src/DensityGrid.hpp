@@ -138,10 +138,6 @@ public:
 
   virtual ~DensityGrid();
 
-  double get_total_hydrogen_number();
-
-  Box get_box();
-
   virtual unsigned int get_number_of_cells();
 
   /**
@@ -214,8 +210,6 @@ public:
                                            double &ds);
 
   bool interact(Photon &photon, double optical_depth);
-
-  void reset_grid();
 
   /**
    * @brief Get an iterator to the first cell in the grid.
