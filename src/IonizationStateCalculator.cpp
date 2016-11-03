@@ -24,7 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "IonizationStateCalculator.hpp"
-#include "DensityGrid.hpp"
+#include "DensityGridInterface.hpp"
 #include "DensityValues.hpp"
 #include "Error.hpp"
 #include "RecombinationRates.hpp"
@@ -53,8 +53,8 @@ IonizationStateCalculator::IonizationStateCalculator(
  * @param nphoton Number of ionizing photons emitted by all sources.
  * @param grid DensityGrid for which the calculation is done.
  */
-void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
-                                                           DensityGrid &grid) {
+void IonizationStateCalculator::calculate_ionization_state(
+    unsigned int nphoton, DensityGridInterface &grid) {
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
   double jfac = _luminosity / nphoton;

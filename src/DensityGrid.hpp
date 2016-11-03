@@ -146,7 +146,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Long index of the cell containing that position.
    */
-  inline long get_cell_index(CoordinateVector<> position) {
+  virtual inline long get_cell_index(CoordinateVector<> position) {
     return get_long_index(get_cell_indices(position));
   }
 
@@ -209,7 +209,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  bool interact(Photon &photon, double optical_depth);
+  virtual bool interact(Photon &photon, double optical_depth);
 
   /**
    * @brief Get an iterator to the first cell in the grid.

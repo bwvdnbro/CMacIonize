@@ -26,7 +26,7 @@
 #ifndef CHISQUAREDCALCULATOR_HPP
 #define CHISQUAREDCALCULATOR_HPP
 
-#include "DensityGrid.hpp"
+#include "DensityGridInterface.hpp"
 #include "DensityValues.hpp"
 
 /**
@@ -40,7 +40,7 @@ public:
    * @param grid DensityGrid.
    * @return Chi squared value.
    */
-  inline static double get_chi_squared(DensityGrid &grid) {
+  inline static double get_chi_squared(DensityGridInterface &grid) {
     double chi2 = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       DensityValues &cell = it.get_values();

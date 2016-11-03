@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
       DensityFunctionFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
-  DensityGrid grid(params, *density_function, log);
+  DensityGridInterface *grid = new DensityGrid(params, *density_function, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
 
   // set up output
   DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(params, grid, log);
+      DensityGridWriterFactory::generate(params, *grid, log);
 
   unsigned int nloop =
       params.get_value< unsigned int >("iterations.maxnumber", 10);
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     if (loop > 4) {
       lnumphoton *= 10;
     }
-    grid.reset_grid();
+    grid->reset_grid();
     source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
 
@@ -190,9 +190,9 @@ int main(int argc, char **argv) {
       }
       Photon photon = source.get_random_photon();
       double tau = -std::log(Utilities::random_double());
-      while (grid.interact(photon, tau)) {
-        unsigned long new_index = grid.get_cell_index(photon.get_position());
-        if (!source.reemit(photon, grid.get_cell_values(new_index))) {
+      while (grid->interact(photon, tau)) {
+        unsigned long new_index = grid->get_cell_index(photon.get_position());
+        if (!source.reemit(photon, grid->get_cell_values(new_index))) {
           break;
         }
         tau = -std::log(Utilities::random_double());
@@ -218,10 +218,10 @@ int main(int argc, char **argv) {
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
-    ionization_state_calculator.calculate_ionization_state(lnumphoton, grid);
+    ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
     log->write_status("Done calculating ionization state.");
 
-    double chi2 = ChiSquaredCalculator::get_chi_squared(grid);
+    double chi2 = ChiSquaredCalculator::get_chi_squared(*grid);
     log->write_status("Chi2: ", chi2, ".");
     chidiff = (chi2 - old_chi2) / (chi2 + old_chi2);
     log->write_status("Chidiff: ", chidiff, ".");
@@ -246,6 +246,7 @@ int main(int argc, char **argv) {
   delete sourcedistribution;
   delete density_function;
   delete writer;
+  delete grid;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program

@@ -155,6 +155,14 @@ public:
   inline Box get_box() { return _box; }
 
   /**
+   * @brief Get the index of the cell containing the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return Index of the cell containing that position.
+   */
+  virtual long get_cell_index(CoordinateVector<> position) = 0;
+
+  /**
    * @brief Get the midpoint of the cell with the given index.
    *
    * @param index Index of a cell.
@@ -177,6 +185,18 @@ public:
    * @return Volume of that cell (in m^3).
    */
   virtual double get_cell_volume(long index) = 0;
+
+  /**
+   * @brief Let the given Photon travel through the density grid until the given
+   * optical depth is reached.
+   *
+   * @param photon Photon.
+   * @param optical_depth Optical depth the photon should travel in total
+   * (dimensionless).
+   * @return True if the Photon is still in the box after the optical depth has
+   * been reached, false otherwise.
+   */
+  virtual bool interact(Photon &photon, double optical_depth) = 0;
 
   /**
    * @brief Iterator to loop over the cells in the grid.
