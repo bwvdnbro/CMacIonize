@@ -27,6 +27,7 @@
 #define AMRDENSITYGRID_HPP
 
 #include "AMRGrid.hpp"
+#include "AMRRefinementScheme.hpp"
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
 
@@ -78,12 +79,15 @@ public:
    * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
    * @param initial_temperature Initial temperature of the gas (in K).
    * @param density_function DensityFunction that defines the density field.
+   * @param refinement_scheme Refinement scheme used to refine cells. Memory
+   * management for this pointer is taken over by this class.
    * @param periodic Periodicity flags.
    * @param log Log to write logging info to.
    */
   AMRDensityGrid(
       Box box, CoordinateVector< int > ncell, double helium_abundance,
       double initial_temperature, DensityFunction &density_function,
+      AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
       : DensityGrid(box, periodic, log) {
@@ -119,14 +123,17 @@ public:
     initialize(initial_temperature, helium_abundance, density_function);
 
     // apply mesh refinement
-    for (auto it = begin(); it != end(); ++it) {
-      if (it.get_values().get_total_density() > 1.) {
-        _grid.refine_cell(it.get_index());
+    if (refinement_scheme) {
+      for (auto it = begin(); it != end(); ++it) {
+        if (refinement_scheme->refine(it.get_values())) {
+          _grid.refine_cell(it.get_index());
+        }
       }
-    }
 
-    // reinitialize the density values
-    initialize(initial_temperature, helium_abundance, density_function);
+      // reinitialize the density values
+      initialize(initial_temperature, helium_abundance, density_function);
+    }
+    delete refinement_scheme;
   }
 
   /**
@@ -148,7 +155,7 @@ public:
                        params.get_value< double >("helium_abundance", 0.1),
                        params.get_physical_value< QUANTITY_TEMPERATURE >(
                            "initial_temperature", "8000. K"),
-                       density_function,
+                       density_function, nullptr,
                        CoordinateVector< bool >(
                            params.get_value< bool >("periodicity.x", false),
                            params.get_value< bool >("periodicity.y", false),

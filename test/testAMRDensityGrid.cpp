@@ -48,6 +48,22 @@ public:
 };
 
 /**
+ * @brief Test implementation of AMRRefinementScheme.
+ */
+class TestAMRRefinementScheme : public AMRRefinementScheme {
+public:
+  /**
+   * @brief Decide if the given cell should be refine or not.
+   *
+   * @param cell DensityValues of a cell.
+   * @return True if the density is larger than 1.
+   */
+  virtual bool refine(DensityValues &cell) {
+    return cell.get_total_density() > 1.;
+  }
+};
+
+/**
  * @brief Unit test for the AMRDensityGrid class.
  *
  * @param argc Number of command line arguments.
@@ -56,9 +72,10 @@ public:
  */
 int main(int argc, char **argv) {
   TestDensityFunction density_function;
+  AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      0.1, 8000., density_function, false, &log);
+                      0.1, 8000., density_function, scheme, false, &log);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
 
