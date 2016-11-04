@@ -77,7 +77,6 @@ set(CMACIONIZE_SOURCES
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
-    Timer.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 

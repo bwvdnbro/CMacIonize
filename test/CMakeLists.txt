@@ -109,7 +109,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
     ../src/TerminalLog.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
 add_unit_test(NAME testCartesianDensityGrid
               SOURCES ${TESTCARTESIANDENSITYGRID_SOURCES})
@@ -158,7 +158,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
@@ -318,7 +318,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/RecombinationRates.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
@@ -437,7 +437,6 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     ../src/CartesianDensityGrid.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
-    ../src/Timer.cpp
     ../src/Timer.hpp
 )
 add_unit_test(NAME testIonizationStateCalculator
@@ -448,7 +447,6 @@ set(TESTAMRDENSITYGRID_SOURCES
     testAMRDensityGrid.cpp
 
     ../src/AMRDensityGrid.hpp
-    ../src/Timer.cpp
     ../src/Timer.hpp
 )
 add_unit_test(NAME testAMRDensityGrid
