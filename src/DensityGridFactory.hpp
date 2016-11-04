@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "AMRDensityGrid.hpp"
 #include "CartesianDensityGrid.hpp"
 
 /**
@@ -57,7 +58,9 @@ public:
     if (log) {
       log->write_info("Requested DensityGrid type: ", type);
     }
-    if (type == "Cartesian") {
+    if (type == "AMR") {
+      return new AMRDensityGrid(params, function, log);
+    } else if (type == "Cartesian") {
       return new CartesianDensityGrid(params, function, log);
     } else {
       error("Unknown DensityGrid type: \"%s\".", type.c_str());

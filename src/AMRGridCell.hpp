@@ -143,6 +143,33 @@ public:
   }
 
   /**
+   * @brief Get the geometry of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param box Box specifying the geometry of the current cell.
+   * @return Box specifying the geometry of the requested cell.
+   */
+  inline Box get_geometry(unsigned int &key, Box &box) {
+    if (key == 1) {
+      return box;
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned char ix = (cell & 4) >> 2;
+      unsigned char iy = (cell & 2) >> 1;
+      unsigned char iz = cell & 1;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[cell]->get_geometry(key, box);
+    }
+  }
+
+  /**
    * @brief Get the key of the lowest level cell containing the given position.
    *
    * @param level Level we are currently at.
@@ -369,6 +396,131 @@ public:
           next_key += (key - ((key >> (3 * level)) << (3 * level))) +
                       ((cell + 1) << (3 * level));
         }
+      }
+      return next_key;
+    } else {
+      // if the cell has no children, it cannot have a next key
+      return AMRGRIDCELL_MAXKEY;
+    }
+  }
+
+  /**
+   * @brief Get the first key in this cell in the given direction, containing
+   * the given position.
+   *
+   * @param level Level we are currently at.
+   * @param direction Direction to look in.
+   * @param position CoordinateVector specifying a position.
+   * @param box Box specifying the geometry of the cell.
+   * @return First key in the cell in the given direction, containing the given
+   * position.
+   */
+  inline unsigned int get_first_key(unsigned char level,
+                                    CoordinateVector< char > direction,
+                                    CoordinateVector<> position, Box &box) {
+    if (_values == nullptr) {
+      // find the child that contains the position in the given direction
+      unsigned char ix, iy, iz;
+      if (direction.x() == 0) {
+        ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
+      } else {
+        // if direction.x() == -1, we are in the top x part
+        ix = direction.x() < 0;
+      }
+      if (direction.y() == 0) {
+        iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
+      } else {
+        iy = direction.y() < 0;
+      }
+      if (direction.z() == 0) {
+        iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
+      } else {
+        iz = direction.z() < 0;
+      }
+      unsigned int child = 4 * ix + 2 * iy + iz;
+      if (_children[child] == nullptr) {
+        error("Cell does not exist!");
+      }
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      unsigned int next_key =
+          _children[child]->get_first_key(level + 1, direction, position, box);
+      // add the part of the key due to this cell
+      next_key += child << (3 * level);
+      return next_key;
+    } else {
+      return 1 << (3 * level);
+    }
+  }
+
+  /**
+   * @brief Get the neighbour of the cell with the given key in the given
+   * direction, containing the given position.
+   *
+   * @param key Key pointing to a cell in the AMR structure.
+   * @param level Level we are currently at.
+   * @param direction Relative direction of the neighbour w.r.t. the current
+   * cell.
+   * @param position CoordinateVector specifying a position.
+   * @param box Box specifying the geometry of the cell.
+   * @return Key of the neighbouring cell in the given direction, containing the
+   * given position.
+   */
+  inline unsigned int get_neighbour(unsigned int key, unsigned char level,
+                                    CoordinateVector< char > direction,
+                                    CoordinateVector<> position, Box &box) {
+    if (_values == nullptr) {
+      // cell has children, find out in which child we are
+      unsigned int cell = (key >> (3 * level)) & 7;
+      // get the child next key
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      char ix, iy, iz;
+      ix = (cell & 4) >> 2;
+      iy = (cell & 2) >> 1;
+      iz = cell & 1;
+      Box child_box(box);
+      child_box.get_sides() *= 0.5;
+      child_box.get_anchor()[0] += ix * child_box.get_sides().x();
+      child_box.get_anchor()[1] += iy * child_box.get_sides().y();
+      child_box.get_anchor()[2] += iz * child_box.get_sides().z();
+      unsigned int next_key = _children[cell]->get_neighbour(
+          key, level + 1, direction, position, child_box);
+      // if the child does not have the neighbour, we have to look at the
+      // neighbouring child
+      if (next_key == AMRGRIDCELL_MAXKEY) {
+        ix = (cell & 4) >> 2;
+        iy = (cell & 2) >> 1;
+        iz = cell & 1;
+        ix += direction.x();
+        if (ix != 0 && ix != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        iy += direction.y();
+        if (iy != 0 && iy != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        iz += direction.z();
+        if (iz != 0 && iz != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        unsigned int next_cell = 4 * ix + 2 * iy + iz;
+        // the next key is the first key of the next child
+        if (_children[next_cell] == nullptr) {
+          error("Cell does not exist!");
+        }
+        box.get_sides() *= 0.5;
+        box.get_anchor()[0] += ix * box.get_sides().x();
+        box.get_anchor()[1] += iy * box.get_sides().y();
+        box.get_anchor()[2] += iz * box.get_sides().z();
+        next_key = _children[next_cell]->get_first_key(level + 1, direction,
+                                                       position, box);
+        // add the part of the key due to this cell
+        next_key += (key - ((key >> (3 * level)) << (3 * level))) +
+                    ((next_cell) << (3 * level));
       }
       return next_key;
     } else {

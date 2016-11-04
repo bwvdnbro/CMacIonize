@@ -28,7 +28,9 @@
 
 #include "AMRGrid.hpp"
 #include "DensityGrid.hpp"
-#include <fstream>
+#include "ParameterFile.hpp"
+
+#include <cfloat>
 
 /**
  * @brief AMR density grid.
@@ -127,6 +129,32 @@ public:
     initialize(initial_temperature, helium_abundance, density_function);
   }
 
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read.
+   * @param density_function DensityFunction used to set the densities in each
+   * cell.
+   * @param log Log to write log messages to.
+   */
+  AMRDensityGrid(ParameterFile &params, DensityFunction &density_function,
+                 Log *log)
+      : AMRDensityGrid(Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                               "box.anchor", "[0. m, 0. m, 0. m]"),
+                           params.get_physical_vector< QUANTITY_LENGTH >(
+                               "box.sides", "[1. m, 1. m, 1. m]")),
+                       params.get_value< CoordinateVector< int > >(
+                           "densitygrid.ncell", CoordinateVector< int >(64)),
+                       params.get_value< double >("helium_abundance", 0.1),
+                       params.get_physical_value< QUANTITY_TEMPERATURE >(
+                           "initial_temperature", "8000. K"),
+                       density_function,
+                       CoordinateVector< bool >(
+                           params.get_value< bool >("periodicity.x", false),
+                           params.get_value< bool >("periodicity.y", false),
+                           params.get_value< bool >("periodicity.z", false)),
+                       log) {}
+
   virtual ~AMRDensityGrid() {}
 
   /**
@@ -182,6 +210,168 @@ public:
   }
 
   /**
+   * @brief Get the intersection point of a photon with one of the walls of a
+   * cell.
+   *
+   * We assume the photon is in the cell and find the closest intersection point
+   * with one of the walls of the cell (in the travel direction). We also set
+   * the index of the cell at the other side of the wall.
+   *
+   * @param photon_origin Current position of the photon (in m).
+   * @param photon_direction Direction the photon is travelling in.
+   * @param cell Geometry of the cell in which the photon currently resides.
+   * @param index Index of the cell that contains the photon. Is updated to the
+   * new neighbouring cell index.
+   * @param ds Distance covered from the photon position to the intersection
+   * point (in m).
+   * @param periodic_correction CoordinateVector used to store periodic
+   * correction terms that will be applied to the photon position if we jump to
+   * the neighbouring cell.
+   * @return CoordinateVector containing the coordinates of the intersection
+   * point of the photon and the closest wall (in m).
+   */
+  inline CoordinateVector<>
+  get_wall_intersection(CoordinateVector<> &photon_origin,
+                        CoordinateVector<> &photon_direction, Box &cell,
+                        unsigned long &index, double &ds,
+                        CoordinateVector<> &periodic_correction) {
+    CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
+    CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
+
+    CoordinateVector< char > next_direction;
+
+    // find out which cell wall the photon is going to hit next
+    CoordinateVector<> next_x;
+    double l;
+    if (photon_direction.x() > 0.) {
+      l = (cell_top_anchor.x() - photon_origin.x()) / photon_direction.x();
+      next_direction[0] = 1;
+    } else if (photon_direction.x() < 0.) {
+      l = (cell_bottom_anchor.x() - photon_origin.x()) / photon_direction.x();
+      next_direction[0] = -1;
+    } else {
+      l = DBL_MAX;
+      next_direction[0] = 0;
+    }
+    // the y and z coordinates are then trivially found
+    next_x = photon_origin + l * photon_direction;
+    double dx = (next_x - photon_origin).norm2();
+
+    CoordinateVector<> next_y;
+    if (photon_direction.y() > 0.) {
+      l = (cell_top_anchor.y() - photon_origin.y()) / photon_direction.y();
+      next_direction[1] = 1;
+    } else if (photon_direction.y() < 0.) {
+      l = (cell_bottom_anchor.y() - photon_origin.y()) / photon_direction.y();
+      next_direction[1] = -1;
+    } else {
+      l = DBL_MAX;
+      next_direction[1] = 0;
+    }
+    next_y = photon_origin + l * photon_direction;
+    double dy = (next_y - photon_origin).norm2();
+
+    CoordinateVector<> next_z;
+    if (photon_direction.z() > 0.) {
+      l = (cell_top_anchor.z() - photon_origin.z()) / photon_direction.z();
+      next_direction[2] = 1;
+    } else if (photon_direction.z() < 0.) {
+      l = (cell_bottom_anchor.z() - photon_origin.z()) / photon_direction.z();
+      next_direction[2] = -1;
+    } else {
+      l = DBL_MAX;
+      next_direction[2] = 0;
+    }
+    next_z = photon_origin + l * photon_direction;
+    double dz = (next_z - photon_origin).norm2();
+
+    CoordinateVector<> next_wall;
+    if (dx < dy && dx < dz) {
+      next_wall = next_x;
+      ds = dx;
+      next_direction[1] = 0;
+      next_direction[2] = 0;
+    } else if (dy < dx && dy < dz) {
+      next_wall = next_y;
+      ds = dy;
+      next_direction[0] = 0;
+      next_direction[2] = 0;
+    } else if (dz < dx && dz < dy) {
+      next_wall = next_z;
+      ds = dz;
+      next_direction[0] = 0;
+      next_direction[1] = 0;
+    } else {
+      // special cases: at least two of the smallest values are equal
+      if (dx == dy && dx < dz) {
+        // it does not matter which values we pick, they will be the same
+        next_wall = next_x;
+        ds = dx;
+        next_direction[2] = 0;
+      } else if (dx == dz && dx < dy) {
+        next_wall = next_x;
+        ds = dx;
+        next_direction[1] = 0;
+      } else if (dy == dz && dy < dx) {
+        next_wall = next_y;
+        ds = dy;
+        next_direction[0] = 0;
+      } else {
+        // all values are equal, we sit on a corner of the box
+        next_wall = next_x;
+        ds = dx;
+      }
+    }
+
+    // ds contains the squared norm, take the square root
+    ds = sqrt(ds);
+
+    // find the next index
+    // next_direction stores the index of the cell AT THE SAME LEVEL, relative
+    // w.r.t. the current cell
+    // to find the index of the next cell, we need to
+    // - find that cell or the lowest lying parent cell
+    // - if that cell has children: find the child that contains the
+    //   intersection point
+    // If the next cell is outside the box, we set the next index to
+    // AMRGRID_MAXINDEX. However, if the box is periodic in that dimension, we
+    // need to figure out what the index of the next cell at the other side of
+    // the boundary is.
+    unsigned long new_index =
+        _grid.get_neighbour(index, next_direction, next_wall);
+    if (index == AMRGRID_MAXKEY) {
+      // we are outside the box. Check if periodic boundaries should be applied
+      // for now, we assume we move in one direction only, because moving in
+      // more directions at the same time requires extra checks...
+      unsigned int num_0 = (next_direction.x() != 0);
+      num_0 += (next_direction.y() != 0);
+      num_0 += (next_direction.z() != 0);
+      if (num_0 != 2) {
+        error("Not supported yet!");
+      }
+      CoordinateVector<> new_position = next_wall;
+      if (next_direction.x() != 0 && _periodic.x()) {
+        new_position[0] -= next_direction.x() * _box.get_sides().x();
+        periodic_correction[0] = -next_direction.x() * _box.get_sides().x();
+        new_index = _grid.get_first_key(next_direction, new_position);
+      }
+      if (next_direction.y() != 0 && _periodic.y()) {
+        new_position[1] -= next_direction.y() * _box.get_sides().y();
+        periodic_correction[1] = -next_direction.y() * _box.get_sides().y();
+        new_index = _grid.get_first_key(next_direction, new_position);
+      }
+      if (next_direction.z() != 0 && _periodic.z()) {
+        new_position[2] -= next_direction.z() * _box.get_sides().z();
+        periodic_correction[2] = -next_direction.z() * _box.get_sides().z();
+        new_index = _grid.get_first_key(next_direction, new_position);
+      }
+    }
+    index = new_index;
+
+    return next_wall;
+  }
+
+  /**
    * @brief Let the given Photon travel through the density grid until the given
    * optical depth is reached.
    *
@@ -191,7 +381,58 @@ public:
    * @return True if the Photon is still in the box after the optical depth has
    * been reached, false otherwise.
    */
-  virtual bool interact(Photon &photon, double optical_depth) { return false; }
+  virtual bool interact(Photon &photon, double optical_depth) {
+    CoordinateVector<> photon_origin = photon.get_position();
+    CoordinateVector<> photon_direction = photon.get_direction();
+
+    // find out in which cell the photon is currently hiding
+    unsigned long index = get_cell_index(photon_origin);
+
+    // while the photon has not exceeded the optical depth and is still in the
+    // box
+    while (index != AMRGRID_MAXKEY && optical_depth > 0.) {
+      Box cell = _grid.get_geometry(index);
+
+      double ds = 0.;
+      unsigned long old_index = index;
+      CoordinateVector<> periodic_correction;
+      CoordinateVector<> next_wall =
+          get_wall_intersection(photon_origin, photon_direction, cell, index,
+                                ds, periodic_correction);
+
+      // get the optical depth of the path from the current photon location to
+      // the
+      // cell wall, update S
+      DensityValues &density = get_cell_values(old_index);
+
+      // Helium abundance. Should be a parameter.
+      double tau = get_optical_depth(ds, density, photon);
+      optical_depth -= tau;
+
+      // if the optical depth exceeds or equals the wanted value: exit the loop
+
+      // if the optical depth exceeded the wanted value: find out where in the
+      // cell we end up, and correct S
+      if (optical_depth < 0.) {
+        double Scorr = ds * optical_depth / tau;
+        // order is important here!
+        photon_origin += (next_wall - photon_origin) * (ds + Scorr) / ds;
+        ds += Scorr;
+      } else {
+        photon_origin = next_wall;
+        // apply periodic boundaries if necessary
+        photon_origin += periodic_correction;
+      }
+
+      // ds is now the actual distance travelled in the cell
+      // update contributions to mean intensity integrals
+      update_integrals(ds, density, photon);
+    }
+
+    photon.set_position(photon_origin);
+
+    return index != AMRGRID_MAXKEY;
+  }
 
   /**
    * @brief Increment the iterator index.
