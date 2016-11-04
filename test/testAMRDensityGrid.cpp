@@ -28,6 +28,26 @@
 #include "TerminalLog.hpp"
 
 /**
+ * @brief Test implementation of DensityFunction.
+ */
+class TestDensityFunction : public DensityFunction {
+public:
+  /**
+   * @brief Get the density at the given position.
+   *
+   * @param position CoordinateVector specifying a position.
+   * @return Density at that position.
+   */
+  double operator()(CoordinateVector<> position) {
+    if (position.z() < 0.5) {
+      return 1.;
+    } else {
+      return 2.;
+    }
+  }
+};
+
+/**
  * @brief Unit test for the AMRDensityGrid class.
  *
  * @param argc Number of command line arguments.
@@ -35,11 +55,14 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  TestDensityFunction density_function;
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      false, &log);
+                      0.1, 8000., density_function, false, &log);
 
-  assert_condition(grid.get_number_of_cells() == 32 * 32 * 32);
+  assert_values_equal(1.5, grid.get_total_hydrogen_number());
+
+  assert_condition(grid.get_number_of_cells() == 32 * 32 * 16 + 32 * 64 * 64);
   // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
   // the 32768 bit is set to indicate its level: 5

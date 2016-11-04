@@ -29,6 +29,16 @@
 #include <iostream>
 using namespace std;
 
+/**
+ * @brief Read test line cooling data from a file outputted by Kenny's Fortran
+ * program.
+ *
+ * @param cs Array to store cs values in.
+ * @param cse Array to store cse values in.
+ * @param ea Array to store ea values in.
+ * @param en Array to store en values in.
+ * @param sw Array to store sw values in.
+ */
 void read_fortran_file(double *cs, double *cse, double *ea, double *en,
                        double *sw) {
   ifstream file("linecool_fortran_data.txt");

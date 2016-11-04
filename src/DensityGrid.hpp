@@ -266,6 +266,13 @@ public:
     }
 
     /**
+     * @brief Get the index of the cell the iterator is currently pointing to.
+     *
+     * @return Index of the current cell.
+     */
+    inline unsigned long get_index() { return _index; }
+
+    /**
      * @brief Compare iterators.
      *
      * @param it Iterator to compare with.

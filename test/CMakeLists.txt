@@ -448,6 +448,8 @@ set(TESTAMRDENSITYGRID_SOURCES
     testAMRDensityGrid.cpp
 
     ../src/AMRDensityGrid.hpp
+    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
 add_unit_test(NAME testAMRDensityGrid
               SOURCES ${TESTAMRDENSITYGRID_SOURCES})

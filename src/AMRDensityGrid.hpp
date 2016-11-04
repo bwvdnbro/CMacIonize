@@ -28,6 +28,7 @@
 
 #include "AMRGrid.hpp"
 #include "DensityGrid.hpp"
+#include <fstream>
 
 /**
  * @brief AMR density grid.
@@ -72,11 +73,15 @@ public:
    *
    * @param box Box containing the grid.
    * @param ncell Number of cells in the low resolution grid.
+   * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
+   * @param initial_temperature Initial temperature of the gas (in K).
+   * @param density_function DensityFunction that defines the density field.
    * @param periodic Periodicity flags.
    * @param log Log to write logging info to.
    */
   AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell,
+      Box box, CoordinateVector< int > ncell, double helium_abundance,
+      double initial_temperature, DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
       : DensityGrid(box, periodic, log) {
@@ -108,6 +113,18 @@ public:
                          "x", nblock.z(), " top level blocks, going ", levelint,
                          " levels deep.");
     }
+
+    initialize(initial_temperature, helium_abundance, density_function);
+
+    // apply mesh refinement
+    for (auto it = begin(); it != end(); ++it) {
+      if (it.get_values().get_total_density() > 1.) {
+        _grid.refine_cell(it.get_index());
+      }
+    }
+
+    // reinitialize the density values
+    initialize(initial_temperature, helium_abundance, density_function);
   }
 
   virtual ~AMRDensityGrid() {}
