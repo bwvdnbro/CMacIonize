@@ -26,6 +26,8 @@
 #ifndef AMRREFINEMENTSCHEME_HPP
 #define AMRREFINEMENTSCHEME_HPP
 
+#include "CoordinateVector.hpp"
+
 class DensityValues;
 
 /**
@@ -42,10 +44,13 @@ public:
   /**
    * @brief Decide if the given cell should be refined or not.
    *
+   * @param midpoint Midpoint of the cell (in m).
    * @param cell DensityValues of a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(DensityValues &cell) { return false; }
+  virtual bool refine(CoordinateVector<> midpoint, DensityValues &cell) {
+    return false;
+  }
 };
 
 #endif // AMRREFINEMENTSCHEME_HPP

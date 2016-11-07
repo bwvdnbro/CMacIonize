@@ -80,6 +80,8 @@ set(CMACIONIZE_SOURCES
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    AMRRefinementScheme.hpp
+    AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
     Box.hpp
     CartesianDensityGrid.hpp
@@ -114,6 +116,7 @@ set(CMACIONIZE_SOURCES
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
+    SpatialAMRRefinementScheme.hpp
     Timer.hpp
     Utilities.hpp
     VernerCrossSections.hpp

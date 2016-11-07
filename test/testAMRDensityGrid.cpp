@@ -55,10 +55,11 @@ public:
   /**
    * @brief Decide if the given cell should be refine or not.
    *
+   * @param midpoint Midpoint of the cell (in m).
    * @param cell DensityValues of a cell.
    * @return True if the density is larger than 1.
    */
-  virtual bool refine(DensityValues &cell) {
+  virtual bool refine(CoordinateVector<> midpoint, DensityValues &cell) {
     return cell.get_total_density() > 1.;
   }
 };

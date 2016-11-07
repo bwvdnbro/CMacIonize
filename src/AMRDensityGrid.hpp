@@ -27,7 +27,7 @@
 #define AMRDENSITYGRID_HPP
 
 #include "AMRGrid.hpp"
-#include "AMRRefinementScheme.hpp"
+#include "AMRRefinementSchemeFactory.hpp"
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
 
@@ -124,14 +124,36 @@ public:
 
     // apply mesh refinement
     if (refinement_scheme) {
-      for (auto it = begin(); it != end(); ++it) {
-        if (refinement_scheme->refine(it.get_values())) {
-          _grid.refine_cell(it.get_index());
+      if (_log) {
+        _log->write_status("Applying refinement.");
+      }
+
+      // refining a cell could affect the iterator
+      // we therefore take care to update the iterator before refining the cell
+      // this way, we already have the next cell in the iteration before we
+      // start playing around with the current one.
+      auto it = begin();
+      while (it != end()) {
+        unsigned long index = it.get_index();
+        DensityValues &values = it.get_values();
+        CoordinateVector<> midpoint = it.get_cell_midpoint();
+        ++it;
+        if (refinement_scheme->refine(midpoint, values)) {
+          _grid.refine_cell(index);
         }
+      }
+
+      if (_log) {
+        _log->write_status("Done refining, will initialize new cells.");
       }
 
       // reinitialize the density values
       initialize(initial_temperature, helium_abundance, density_function);
+
+      if (_log) {
+        _log->write_status("Number of cells after refinement: ",
+                           _grid.get_number_of_cells());
+      }
     }
     delete refinement_scheme;
   }
@@ -155,7 +177,8 @@ public:
                        params.get_value< double >("helium_abundance", 0.1),
                        params.get_physical_value< QUANTITY_TEMPERATURE >(
                            "initial_temperature", "8000. K"),
-                       density_function, nullptr,
+                       density_function,
+                       AMRRefinementSchemeFactory::generate(params, log),
                        CoordinateVector< bool >(
                            params.get_value< bool >("periodicity.x", false),
                            params.get_value< bool >("periodicity.y", false),
