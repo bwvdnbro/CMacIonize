@@ -36,7 +36,7 @@ endmacro(add_compiler_flag)
 
 # The version number.
 set(CMACIONIZE_VERSION_MAJOR 0)
-set(CMACIONIZE_VERSION_MINOR 1)
+set(CMACIONIZE_VERSION_MINOR 3)
 
 # Enable unit testing using CTest
 enable_testing()
