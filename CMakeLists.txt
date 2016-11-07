@@ -34,9 +34,20 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+# Find Git
+find_package(Git)
+
 # The version number.
-set(CMACIONIZE_VERSION_MAJOR 0)
-set(CMACIONIZE_VERSION_MINOR 3)
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+                OUTPUT_VARIABLE GIT_BUILD_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE "v([0-9]*).*" "\\1" GIT_VERSION_MAJOR ${GIT_BUILD_STRING})
+string(REGEX REPLACE "v[0-9]*.([0-9]*).*" "\\1" GIT_VERSION_MINOR
+       ${GIT_BUILD_STRING})
+message(STATUS
+        "This is CMacIonize version ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}")
+set(CMACIONIZE_VERSION_MAJOR ${GIT_VERSION_MAJOR})
+set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 
 # Enable unit testing using CTest
 enable_testing()
@@ -90,9 +101,6 @@ endif(HDF5_FOUND)
 # Find OpenMP.
 find_package(OpenMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-
-# Find Git
-find_package(Git)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)

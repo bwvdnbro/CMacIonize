@@ -70,9 +70,9 @@ for fname in sorted(glob.glob("snapshot*.hdf5")):
   radius /= pc
 
   # plot the stromgren radius for reference
-  pl.plot([Rs, Rs], [0., 1.], "r--", label = "Stromgren radius")
+  pl.plot([Rs, Rs], [1.e-7, 1.], "r--", label = "Stromgren radius")
   # plot neutral fraction as a function of radius
-  pl.plot(radius, nfracH, "k.")
+  pl.semilogy(radius, nfracH, "k.")
   
   # labels, legend and formatting...
   pl.xlabel(r"$r$ (pc)")
