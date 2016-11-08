@@ -101,10 +101,10 @@ void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
  */
 Photon PhotonSource::get_random_photon() {
   if (_active_source_index == _positions.size()) {
-    if (_log) {
-      _log->write_warning("Too many photons requested!");
-      --_active_source_index;
-    }
+    // we completed a cycle, reset the counters
+    _active_source_index = 0;
+    _active_photon_index = 0;
+    _active_number_of_photons = round(_number_of_photons * _weights[0]);
   }
 
   CoordinateVector<> position = _positions[_active_source_index];

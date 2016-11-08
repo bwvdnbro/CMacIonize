@@ -57,6 +57,10 @@ private:
   /*! @brief Mean intensity of hydrogen ionizing radiation (in m^3s^-1). */
   double _mean_intensity_H;
 
+  /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
+   *  sub-step (in m^3s^-1). */
+  double _mean_intensity_H_old;
+
   /*! @brief Mean intensity of helium ionizing radiation (in m^3s^-1). */
   double _mean_intensity_He;
 
@@ -70,7 +74,8 @@ public:
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
         _temperature(0.), _helium_abundance(0.), _pHion(0.),
-        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H(0.), _mean_intensity_He(0.),
+        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H(0.),
+        _mean_intensity_H_old(0.), _mean_intensity_He(0.),
         _old_neutral_fraction_H(0.) {}
 
   /**
@@ -138,6 +143,17 @@ public:
   }
 
   /**
+   * @brief Set the mean intensity of hydrogen ionizing radiation during the
+   * previous sub-step.
+   *
+   * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
+   * during the previous sub-step (in m^3s^-1).
+   */
+  inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
+    _mean_intensity_H_old = mean_intensity_H_old;
+  }
+
+  /**
    * @brief Set the value of the hydrogen neutral fraction during the previous
    * iteration.
    *
@@ -173,6 +189,7 @@ public:
   inline void reset_mean_intensities() {
     _mean_intensity_H = 0.;
     _mean_intensity_He = 0.;
+    _mean_intensity_H_old = 0.;
   }
 
   /**
@@ -233,6 +250,15 @@ public:
    * @return Mean intensity of hydrogen ionizing radiation (in m^3s^-1).
    */
   inline double get_mean_intensity_H() { return _mean_intensity_H; }
+
+  /**
+   * @brief Get the mean intensity of hydrogen ionizing radiation during the
+   * previous sub-step.
+   *
+   * @return Mean intensity of hydrogen ionizing radiation during the previous
+   * sub-step (in m^3s^-1).
+   */
+  inline double get_mean_intensity_H_old() { return _mean_intensity_H_old; }
 
   /**
    * @brief Get the mean intensity of helium ionizing radiation.

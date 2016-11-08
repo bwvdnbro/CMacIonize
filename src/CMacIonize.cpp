@@ -36,6 +36,7 @@
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
+#include "PhotonNumberConvergenceChecker.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
@@ -139,12 +140,15 @@ int main(int argc, char **argv) {
   DensityGridWriter *writer =
       DensityGridWriterFactory::generate(params, *grid, log);
 
+  // set up convergence checking
+  PhotonNumberConvergenceChecker convergence_checker(*grid, params, log);
+
   unsigned int nloop =
       params.get_value< unsigned int >("iterations.maxnumber", 10);
   double chirel = params.get_value< double >("iterations.tolerance", 0.01);
 
   unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 1000000);
+      params.get_value< unsigned int >("number of photons", 100);
   double Q = sourcedistribution->get_total_luminosity();
 
   IonizationStateCalculator ionization_state_calculator(
@@ -168,39 +172,38 @@ int main(int argc, char **argv) {
   unsigned int loop = 0;
   while (loop < nloop && (chidiff > 0. || chidiff < -chirel)) {
     unsigned int lnumphoton = numphoton;
-    if (loop > 4) {
-      lnumphoton *= 10;
-    }
     grid->reset_grid();
     source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
 
-    // timing information for user
-    unsigned int nguess = 0.01 * lnumphoton;
-    unsigned int ninfo = 0.1 * lnumphoton;
-    Timer guesstimer;
-
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
-    for (unsigned int i = 0; i < lnumphoton; ++i) {
-      if (!(i % ninfo)) {
-        log->write_status("Photon ", i, " of ", lnumphoton, ".");
-      }
-      if (i == nguess) {
-        unsigned int tguess = round(99. * guesstimer.stop());
-        log->write_status("Shooting photons will take approximately ", tguess,
-                          " seconds.");
-      }
-      Photon photon = source.get_random_photon();
-      double tau = -std::log(Utilities::random_double());
-      while (grid->interact(photon, tau)) {
-        unsigned long new_index = grid->get_cell_index(photon.get_position());
-        if (!source.reemit(photon, grid->get_cell_values(new_index))) {
-          break;
+
+    unsigned int numsubstep = 0;
+    unsigned int totnumphoton = 0;
+    while (!convergence_checker.is_converged(totnumphoton)) {
+      log->write_status("Substep ", numsubstep);
+
+      for (unsigned int i = 0; i < lnumphoton; ++i) {
+        Photon photon = source.get_random_photon();
+        ++totnumphoton;
+        double tau = -std::log(Utilities::random_double());
+        while (grid->interact(photon, tau)) {
+          unsigned long new_index = grid->get_cell_index(photon.get_position());
+          if (!source.reemit(photon, grid->get_cell_values(new_index))) {
+            break;
+          }
+          tau = -std::log(Utilities::random_double());
         }
-        tau = -std::log(Utilities::random_double());
+        ++typecount[photon.get_type()];
       }
-      ++typecount[photon.get_type()];
+
+      if (lnumphoton < 0.1 * totnumphoton) {
+        lnumphoton = 0.1 * totnumphoton;
+      }
+
+      ++numsubstep;
     }
+    lnumphoton = totnumphoton;
     log->write_status("Done shooting photons.");
     log->write_status(typecount[PHOTONTYPE_ABSORBED],
                       " photons were reemitted as non-ionizing photons.");
@@ -230,6 +233,10 @@ int main(int argc, char **argv) {
     old_chi2 = chi2;
     // write snapshot
     writer->write(loop, params);
+
+    // use the current number of photons as a guess for the new number
+    numphoton = convergence_checker.get_new_number_of_photons(lnumphoton);
+    convergence_checker.output_chi2_curve(loop);
     ++loop;
   }
 

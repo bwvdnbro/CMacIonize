@@ -108,6 +108,7 @@ set(CMACIONIZE_SOURCES
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
     Photon.hpp
+    PhotonNumberConvergenceChecker.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
