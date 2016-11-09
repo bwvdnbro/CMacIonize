@@ -34,18 +34,41 @@ photonsourcedistribution:
   # ionizing luminosity of the single stellar source
   luminosity: 4.26e49 s^-1
 
-# number of photons to use during each iteration
-number of photons: 1000000
+# number of photons to use during the first iteration (number is automatically
+# adapted to the desired tolerance)
+number of photons: 100
 
 # iteration control
 iterations:
   # maximum number of iterations. The code will stop after this number of
   # iterations, irrespective of whether the result is converged or not.
   maxnumber: 20
-  # required tolerance. The tolerance is the relative difference between the
-  # chi2 values calculated for two successive steps in the iteration.
-  # If set to 0, the code will just perform maxnumber iterations and quit.
+
+# iteration convergence: used to control convergence of the neutral fraction
+# calculation
+iterationconvergencechecker:
+  # desired tolerance. The algorithm will stop if the average squared relative
+  # difference between the hydrogen neutral fraction after two successive
+  # iterations falls below this value
   tolerance: 0.01
+  # correction factor to apply to the photon number after an iteration, if the
+  # chi2 value after that iteration was detected to be larger than a previous
+  # chi2 value (which hints at a serious undersampling of the integrals)
+  photon_number_correction: 10.
+
+# photon number convergence: used to control convergence of the photon shooting
+# sub steps during a single iteration of the algorithm
+photonnumberconvergencechecker:
+  # desired tolerance for the mean intensity integrals. Photon shooting will
+  # stop if the average squared relative difference between the hydrogen
+  # mean intensity after two successive substeps falls below this value
+  tolerance: 0.01
+  # number of photons to use for the initial sub step of the next iteration, as
+  # a fraction of the number used during the last iteration.
+  photon_fraction: 0.1
+  # minimum number of photons to use for a single sub step as a fraction of the
+  # total number of photons that has already been used during that iteration
+  minimum_photon_ratio: 0.1
 
 # output options
 output:

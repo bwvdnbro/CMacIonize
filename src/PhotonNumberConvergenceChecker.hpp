@@ -85,6 +85,11 @@ private:
    *  on the number needed for convergence during the last iteration. */
   double _new_photon_fraction;
 
+  /*! @brief Factor that sets the minimum number of photons to use for a substep
+   *  as a fraction of the total number of photons that has already been used.
+   */
+  double _minimum_photon_ratio;
+
 #ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
   /// chi2 curve
   /*! @brief Number of photons per sub step. */
@@ -114,17 +119,23 @@ public:
    * @param new_photon_fraction Factor that sets the number of photons for the
    * next iteration based on the number needed for convergence during the last
    * iteration.
+   * @param minimum_photon_ratio Factor that sets the minimum number of photons
+   * to use for a substep as a fraction of the total number of photons that has
+   * already been used.
    * @param log Log to write logging info to.
    */
   inline PhotonNumberConvergenceChecker(DensityGrid &grid, double tolerance,
                                         double new_photon_fraction,
+                                        double minimum_photon_ratio,
                                         Log *log = nullptr)
       : _grid(grid), _tolerance(tolerance),
-        _new_photon_fraction(new_photon_fraction), _log(log) {
+        _new_photon_fraction(new_photon_fraction),
+        _minimum_photon_ratio(minimum_photon_ratio), _log(log) {
     if (_log) {
       _log->write_status(
           "Created PhotonNumberConvergenceChecker with tolerance ", _tolerance,
-          " and new photon fraction ", new_photon_fraction, ".");
+          ",new photon fraction ", new_photon_fraction,
+          ", and minimum photon ratio", _minimum_photon_ratio, ".");
     }
 
 #ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
@@ -153,8 +164,12 @@ public:
                                         ParameterFile &params,
                                         Log *log = nullptr)
       : PhotonNumberConvergenceChecker(
-            grid, params.get_value< double >("convergence.tolerance", 0.01),
-            params.get_value< double >("convergence.photon_fraction", 0.02),
+            grid, params.get_value< double >(
+                      "photonnumberconvergencechecker.tolerance", 0.01),
+            params.get_value< double >(
+                "photonnumberconvergencechecker.photon_fraction", 0.1),
+            params.get_value< double >(
+                "photonnnumberconvergencechecker.minimum_photon_ratio", 0.1),
             log) {}
 
   /**
@@ -266,7 +281,8 @@ public:
   inline unsigned int
   get_number_of_photons_next_substep(unsigned int number_last_step,
                                      unsigned int total_number) {
-    return std::max(number_last_step, total_number / 10);
+    unsigned int next_number = total_number * _minimum_photon_ratio;
+    return std::max(number_last_step, next_number);
   }
 
 #ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE

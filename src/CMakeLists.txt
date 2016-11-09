@@ -85,7 +85,6 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.hpp
     Box.hpp
     CartesianDensityGrid.hpp
-    ChiSquaredCalculator.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
     CommandLineOption.hpp
@@ -104,6 +103,7 @@ set(CMACIONIZE_SOURCES
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
     IonizationStateCalculator.hpp
+    IterationConvergenceChecker.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
