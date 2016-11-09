@@ -134,8 +134,8 @@ public:
     if (_log) {
       _log->write_status(
           "Created PhotonNumberConvergenceChecker with tolerance ", _tolerance,
-          ",new photon fraction ", new_photon_fraction,
-          ", and minimum photon ratio", _minimum_photon_ratio, ".");
+          ", new photon fraction ", new_photon_fraction,
+          ", and minimum photon ratio ", _minimum_photon_ratio, ".");
     }
 
 #ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
@@ -169,7 +169,7 @@ public:
             params.get_value< double >(
                 "photonnumberconvergencechecker.photon_fraction", 0.1),
             params.get_value< double >(
-                "photonnnumberconvergencechecker.minimum_photon_ratio", 0.1),
+                "photonnumberconvergencechecker.minimum_photon_ratio", 0.1),
             log) {}
 
   /**

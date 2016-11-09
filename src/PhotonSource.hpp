@@ -98,7 +98,7 @@ public:
                PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
                RandomGenerator &random_generator, Log *log = nullptr);
 
-  void set_number_of_photons(unsigned int number_of_photons);
+  unsigned int set_number_of_photons(unsigned int number_of_photons);
 
   /**
    * @brief Get a random direction.

@@ -171,10 +171,15 @@ int main(int argc, char **argv) {
   unsigned int loop = 0;
   while (loop < nloop && !itconvergence_checker.is_converged()) {
 
+    // run the number of photons by the IterationConvergenceChecker to allow for
+    // corrections
+    numphoton = itconvergence_checker.get_next_number_of_photons(numphoton);
+
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();
-    source.set_number_of_photons(lnumphoton);
+    lnumphoton = source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
+    log->write_status("Initial sub step number: ", lnumphoton, ".");
 
     unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
 
@@ -199,6 +204,8 @@ int main(int argc, char **argv) {
 
       lnumphoton = convergence_checker.get_number_of_photons_next_substep(
           lnumphoton, totnumphoton);
+
+      lnumphoton = source.set_number_of_photons(lnumphoton);
 
       ++numsubstep;
     }
@@ -230,10 +237,6 @@ int main(int argc, char **argv) {
 
     // use the current number of photons as a guess for the new number
     numphoton = convergence_checker.get_new_number_of_photons(lnumphoton);
-
-    // run this number by the IterationConvergenceChecker to allow for
-    // corrections
-    numphoton = itconvergence_checker.get_next_number_of_photons(numphoton);
 
 // print out a curve that shows the evolution of chi2
 #ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
