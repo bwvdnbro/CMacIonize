@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
   PhotonNumberConvergenceChecker convergence_checker(*grid, params, log);
 
   unsigned int nloop =
-      params.get_value< unsigned int >("iterations.maxnumber", 10);
+      params.get_value< unsigned int >("max_number_iterations", 10);
 
   unsigned int numphoton =
       params.get_value< unsigned int >("number of photons", 100);
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file
   std::string folder = Utilities::get_absolute_path(
-      params.get_value< std::string >("output.folder", "."));
+      params.get_value< std::string >("densitygridwriter.folder", "."));
   ofstream pfile(folder + "/parameters-usedvalues.param");
   params.print_contents(pfile);
   pfile.close();

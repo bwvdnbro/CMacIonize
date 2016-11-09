@@ -193,6 +193,8 @@ ParameterFile::ParameterFile(std::string filename) {
  * @param stream std::ostream to write to.
  */
 void ParameterFile::print_contents(std::ostream &stream) {
+  stream << "# file written on " << Utilities::get_timestamp() << ".\n";
+
   // note that we do assume here that all group members are nicely grouped
   // together. This will always be the case, as the map contents is sorted
   // alphabetically.

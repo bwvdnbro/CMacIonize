@@ -31,6 +31,7 @@
 #include "GadgetDensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
 #include "HomogeneousDensityFunction.hpp"
+#include "TerminalLog.hpp"
 #include <vector>
 
 /**
@@ -53,7 +54,8 @@ int main(int argc, char **argv) {
     CartesianDensityGrid grid(box, ncell, 0.1, 8000., density_function);
 
     ParameterFile params("test.param");
-    GadgetDensityGridWriter writer("testgrid", grid);
+    TerminalLog log(LOGLEVEL_INFO);
+    GadgetDensityGridWriter writer("testgrid", grid, ".", &log);
     writer.write(0, params);
   }
 

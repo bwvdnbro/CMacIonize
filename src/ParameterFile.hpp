@@ -347,6 +347,20 @@ ParameterFile::get_value< CoordinateVector< int > >(std::string key) {
 }
 
 /**
+ * @brief ParameterFile::get_value() specialization for a boolean
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @return Boolean CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector< bool >
+ParameterFile::get_value< CoordinateVector< bool > >(std::string key) {
+  std::string svalue = get_value< std::string >(key);
+  return Utilities::convert< CoordinateVector< bool > >(svalue);
+}
+
+/**
  * @brief ParameterFile::get_value specialization for std::string.
  *
  * This function is called by all other specializations before converting to the
@@ -514,6 +528,28 @@ ParameterFile::get_value< CoordinateVector< int > >(
     return default_value;
   }
   return Utilities::convert< CoordinateVector< int > >(svalue);
+}
+
+/**
+ * @brief ParameterFile::get_value() specialization for a boolean
+ * CoordinateVector.
+ *
+ * @param key Key in the dictionary.
+ * @param default_value Default value for the parameter, to be used if the
+ * parameter is not in the parameter file.
+ * @return Boolean CoordinateVector value of the parameter.
+ */
+template <>
+inline CoordinateVector< bool >
+ParameterFile::get_value< CoordinateVector< bool > >(
+    std::string key, CoordinateVector< bool > default_value) {
+  std::string svalue = get_value< std::string >(key, "");
+  if (svalue == "") {
+    _dictionary[key] =
+        Utilities::to_string< CoordinateVector< bool > >(default_value);
+    return default_value;
+  }
+  return Utilities::convert< CoordinateVector< bool > >(svalue);
 }
 
 #endif // PARAMETERFILE_HPP

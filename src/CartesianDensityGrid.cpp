@@ -132,19 +132,17 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
                                            Log *log)
     : CartesianDensityGrid(
           Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                  "box.anchor", "[0. m, 0. m, 0. m]"),
+                  "densitygrid.box_anchor", "[0. m, 0. m, 0. m]"),
               parameters.get_physical_vector< QUANTITY_LENGTH >(
-                  "box.sides", "[1. m, 1. m, 1. m]")),
+                  "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
               "densitygrid.ncell", CoordinateVector< int >(64)),
           parameters.get_value< double >("helium_abundance", 0.1),
           parameters.get_physical_value< QUANTITY_TEMPERATURE >(
-              "initial_temperature", "8000. K"),
+              "densitygrid.initial_temperature", "8000. K"),
           density_function,
-          CoordinateVector< bool >(
-              parameters.get_value< bool >("periodicity.x", false),
-              parameters.get_value< bool >("periodicity.y", false),
-              parameters.get_value< bool >("periodicity.z", false)),
+          parameters.get_value< CoordinateVector< bool > >(
+              "densitygrid.periodicity", CoordinateVector< bool >(false)),
           log) {}
 
 /**

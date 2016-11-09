@@ -24,6 +24,7 @@ test_string: This is a test string.
 # CoordinateVector value
 test_coordinatevector_double: [0.1, 2.e-1, 0.3]
 test_coordinatevector_int: [42, 0x2a, 0x2A]
+test_coordinatevector_bool: [false, true, ON ]
 # CoordinateVector with units
 test_coordinatevector_unit: [1.0 pc, 2.0 m, 2.4e19 m]
 

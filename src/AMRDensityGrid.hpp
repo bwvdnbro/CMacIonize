@@ -168,22 +168,20 @@ public:
    */
   AMRDensityGrid(ParameterFile &params, DensityFunction &density_function,
                  Log *log)
-      : AMRDensityGrid(Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                               "box.anchor", "[0. m, 0. m, 0. m]"),
-                           params.get_physical_vector< QUANTITY_LENGTH >(
-                               "box.sides", "[1. m, 1. m, 1. m]")),
-                       params.get_value< CoordinateVector< int > >(
-                           "densitygrid.ncell", CoordinateVector< int >(64)),
-                       params.get_value< double >("helium_abundance", 0.1),
-                       params.get_physical_value< QUANTITY_TEMPERATURE >(
-                           "initial_temperature", "8000. K"),
-                       density_function,
-                       AMRRefinementSchemeFactory::generate(params, log),
-                       CoordinateVector< bool >(
-                           params.get_value< bool >("periodicity.x", false),
-                           params.get_value< bool >("periodicity.y", false),
-                           params.get_value< bool >("periodicity.z", false)),
-                       log) {}
+      : AMRDensityGrid(
+            Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction.box_anchor", "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
+            params.get_value< CoordinateVector< int > >(
+                "densitygrid.ncell", CoordinateVector< int >(64)),
+            params.get_value< double >("helium_abundance", 0.1),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "densitygrid.initial_temperature", "8000. K"),
+            density_function, AMRRefinementSchemeFactory::generate(params, log),
+            params.get_value< CoordinateVector< bool > >(
+                "densitygrid.periodicity", CoordinateVector< bool >(false)),
+            log) {}
 
   virtual ~AMRDensityGrid() {}
 

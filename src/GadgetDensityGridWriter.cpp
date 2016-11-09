@@ -69,9 +69,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
 GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
                                                  DensityGrid &grid, Log *log)
     : GadgetDensityGridWriter(
-          params.get_value< std::string >("output.prefix", "snapshot"), grid,
-          params.get_value< std::string >("output.folder", "."), log,
-          params.get_value< unsigned char >("output.padding", 3)) {}
+          params.get_value< std::string >("densitygridwriter.prefix",
+                                          "snapshot"),
+          grid,
+          params.get_value< std::string >("densitygridwriter.folder", "."), log,
+          params.get_value< unsigned char >("densitygridwriter.padding", 3)) {}
 
 /**
  * @brief Write the file.
@@ -140,6 +142,8 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write runtime parameters
   group = HDF5Tools::create_group(file, "RuntimePars");
+  std::string timestamp = Utilities::get_timestamp();
+  HDF5Tools::write_attribute< std::string >(group, "Creation time", timestamp);
   HDF5Tools::write_attribute< unsigned int >(group, "Iteration", iteration);
   HDF5Tools::close_group(group);
 

@@ -73,6 +73,13 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
 
+  CoordinateVector< bool > cvtest3 =
+      params.get_value< CoordinateVector< bool > >(
+          "test_coordinatevector_bool");
+  assert_condition(cvtest3.x() == false);
+  assert_condition(cvtest3.y() == true);
+  assert_condition(cvtest3.z() == true);
+
   CoordinateVector<> cvtest_unit =
       params.get_physical_vector< QUANTITY_LENGTH >(
           "test_coordinatevector_unit");
@@ -99,6 +106,12 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
+
+  cvtest3 = params.get_value< CoordinateVector< bool > >(
+      "not_in_file6", CoordinateVector< bool >(true, false, true));
+  assert_condition(cvtest3.x() == true);
+  assert_condition(cvtest3.y() == false);
+  assert_condition(cvtest3.z() == true);
 
   cvtest = params.get_physical_vector< QUANTITY_LENGTH >(
       "coordinatevector_unit_not_in_file", "[1. pc,2.m,2.4e19m]");
