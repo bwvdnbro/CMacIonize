@@ -31,12 +31,43 @@
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 
+/*! @brief Activate this define to enable output of a file containing the chi2
+ *  value as a function of number of photons. */
+//#define PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
 /// chi2 curve
 #include "Utilities.hpp"
 #include <fstream>
 #include <string>
 #include <vector>
+
+/*! @brief Name of the file containing reference values. */
+//#define PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES "reference_values.txt"
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+
+/// Macros to print out preprocessor variable values.
+/// You need both to make it work. Only verified to work with gcc.
+/// If they are ever needed elsewhere, they should be moved to a separate
+/// header file.
+/*! @brief Macro to convert a given value to a string. */
+#define MACRO_CONVERT_VALUE_TO_STR(x) #x
+/*! @brief Macro that prints out the contents of the given preprocessor
+ *  variable. */
+#define MACRO_SHOW_PREPROCESSOR_VARIABLE(x) MACRO_CONVERT_VALUE_TO_STR(x)
+
+#pragma message                                                                \
+    "Comparing chi2 values with values in " MACRO_SHOW_PREPROCESSOR_VARIABLE(  \
+        PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES) "."
+
+/// reference values
+#include <map>
+#include <sstream>
+#endif
+
 ///
+#endif
 
 /**
  * @brief Class used to check if the intensity counters in the grid cells are
@@ -54,12 +85,22 @@ private:
    *  on the number needed for convergence during the last iteration. */
   double _new_photon_fraction;
 
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
   /// chi2 curve
   /*! @brief Number of photons per sub step. */
   std::vector< double > _curve_nphoton;
   /*! @brief Chi2 per sub step. */
   std::vector< double > _curve_chi2;
-  ///
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+  /*! @brief Reference chi2 per sub step. */
+  std::vector< double > _curve_refchi2;
+
+  /*! @brief Reference values per cell. */
+  std::map< unsigned long, double > _ref_map;
+#endif
+///
+#endif
 
   /*! @brief Log to write logging information to. */
   Log *_log;
@@ -79,7 +120,27 @@ public:
                                         double new_photon_fraction,
                                         Log *log = nullptr)
       : _grid(grid), _tolerance(tolerance),
-        _new_photon_fraction(new_photon_fraction), _log(log) {}
+        _new_photon_fraction(new_photon_fraction), _log(log) {
+    if (_log) {
+      _log->write_status(
+          "Created PhotonNumberConvergenceChecker with tolerance ", _tolerance,
+          " and new photon fraction ", new_photon_fraction, ".");
+    }
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+    /// chi2 curve
+    std::ifstream ifile(PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES);
+    std::string line;
+    while (getline(ifile, line)) {
+      std::istringstream lstream(line);
+      unsigned long index;
+      double value;
+      lstream >> index >> value;
+      _ref_map[index] = value;
+    }
+/// chi2 curve
+#endif
+  }
 
   /**
    * @brief ParameterFile constructor.
@@ -111,6 +172,12 @@ public:
     double norm = 1. / number_of_photons;
     unsigned int numcell = 0;
 
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+    /// chi2 curve
+    double ref_chi2 = 0.;
+/// chi2 curve
+#endif
+
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
       double jH = it.get_values().get_mean_intensity_H() * norm;
       double jHold = it.get_values().get_mean_intensity_H_old();
@@ -121,7 +188,15 @@ public:
         diff /= sum;
       } // else: both sum and diff will be zero, since jH cannot be negative
       it.get_values().set_mean_intensity_H_old(jH);
-      chi2 += diff * diff;
+      chi2 += diff * diff * std::abs(diff);
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+      /// chi2 curve
+      diff = jH - _ref_map[it.get_index()];
+      diff /= _ref_map[it.get_index()];
+      ref_chi2 += diff * diff;
+///
+#endif
     }
     // we only take into account cells that have values
     chi2 /= numcell;
@@ -130,10 +205,17 @@ public:
       _log->write_info("Chi2: ", chi2);
     }
 
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
     /// chi2 curve
     _curve_nphoton.push_back(number_of_photons);
     _curve_chi2.push_back(chi2);
-    ///
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+    ref_chi2 /= _grid.get_number_of_cells();
+    _curve_refchi2.push_back(ref_chi2);
+#endif
+///
+#endif
 
     // if the grid is entirely empty, chi2 will be exactly zero
     // we need more photons in this case (because we did not have any yet)
@@ -159,9 +241,35 @@ public:
    */
   inline unsigned int
   get_new_number_of_photons(unsigned int old_number_of_photons) {
-    return _new_photon_fraction * old_number_of_photons;
+    return std::max(100., _new_photon_fraction * old_number_of_photons);
   }
 
+  /**
+   * @brief Get the number of photons to emit during the next sub step.
+   *
+   * We use this function to make sure we shoot enough photons to guarantee a
+   * reliable chi2 for every cell. If the total photons per sub step is too
+   * small, then only a small number of cells can be affected by the photons
+   * during the next step, and their effect is overshadowed by the pre factor
+   * in the emission integral (which is the reciprocal total number of photons).
+   *
+   * For this reason, we always make sure the number of photons added to the
+   * system is at least 10% of the total number of photons. This works very well
+   * to compensate an optimistically low estimate of the initial number of
+   * photons in the parameter file.
+   *
+   * @param number_last_step Number of photons used during the previous sub
+   * step.
+   * @param total_number Total number of photons that was already used.
+   * @return Number of photons to use during the next sub step.
+   */
+  inline unsigned int
+  get_number_of_photons_next_substep(unsigned int number_last_step,
+                                     unsigned int total_number) {
+    return std::max(number_last_step, total_number / 10);
+  }
+
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
   /// chi2 curve
   /**
    * @brief Write the chi2 curve to a file with the given number.
@@ -173,13 +281,21 @@ public:
         Utilities::compose_filename(".", "chi2_curve", "txt", loop, 3);
     std::ofstream ofile(filename);
     for (unsigned int i = 0; i < _curve_nphoton.size(); ++i) {
-      ofile << _curve_nphoton[i] << "\t" << _curve_chi2[i] << "\n";
+      ofile << _curve_nphoton[i] << "\t" << _curve_chi2[i];
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+      ofile << "\t" << _curve_refchi2[i];
+#endif
+      ofile << "\n";
     }
     // reset data
     _curve_nphoton.clear();
     _curve_chi2.clear();
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES
+    _curve_refchi2.clear();
+#endif
   }
-  ///
+///
+#endif
 };
 
 #endif // PHOTONNUMBERCONVERGENCECHECKER_HPP

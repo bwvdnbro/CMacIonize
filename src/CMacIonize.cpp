@@ -171,6 +171,7 @@ int main(int argc, char **argv) {
   double chidiff = 1.;
   unsigned int loop = 0;
   while (loop < nloop && (chidiff > 0. || chidiff < -chirel)) {
+
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();
     source.set_number_of_photons(lnumphoton);
@@ -197,9 +198,8 @@ int main(int argc, char **argv) {
         ++typecount[photon.get_type()];
       }
 
-      if (lnumphoton < 0.1 * totnumphoton) {
-        lnumphoton = 0.1 * totnumphoton;
-      }
+      lnumphoton = convergence_checker.get_number_of_photons_next_substep(
+          lnumphoton, totnumphoton);
 
       ++numsubstep;
     }
@@ -236,7 +236,13 @@ int main(int argc, char **argv) {
 
     // use the current number of photons as a guess for the new number
     numphoton = convergence_checker.get_new_number_of_photons(lnumphoton);
+
+// print out a curve that shows the evolution of chi2
+#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
+#pragma message "Outputting chi2 curve!"
     convergence_checker.output_chi2_curve(loop);
+#endif
+
     ++loop;
   }
 
