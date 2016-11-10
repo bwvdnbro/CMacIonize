@@ -17,39 +17,41 @@
  ******************************************************************************/
 
 /**
- * @file testGadgetSnapshotDensityFunction.cpp
+ * @file testOpacityAMRRefinementScheme.cpp
  *
- * @brief Unit test for the GadgetSnapshotDensityFunction class.
+ * @brief Unit test for the OpacityAMRRefinementScheme class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "AMRDensityGrid.hpp"
 #include "Assert.hpp"
-#include "CartesianDensityGrid.hpp"
-#include "CoordinateVector.hpp"
-#include "Error.hpp"
-#include "GadgetSnapshotDensityFunction.hpp"
-#include "TerminalLog.hpp"
-using namespace std;
+#include "HomogeneousDensityFunction.hpp"
+#include "OpacityAMRRefinementScheme.hpp"
 
 /**
- * @brief Unit test for the GadgetSnapshotDensityFunction class.
+ * @brief Unit test for the OpacityAMRRefinementScheme class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  // before we can test this, we need to make sure we can open and read a
-  // Gadget2 snapshot file.
-  TerminalLog tlog(LOGLEVEL_INFO);
-  GadgetSnapshotDensityFunction density("test.hdf5", false, 0., 0., &tlog);
+  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  CoordinateVector< int > ncell(8);
+  HomogeneousDensityFunction density_function(1.);
+  AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1.);
 
-  CoordinateVector<> anchor;
-  CoordinateVector<> sides(1., 1., 1.);
-  Box box(anchor, sides);
-  CartesianDensityGrid grid(box, 32, 0.1, 8000., density);
-  assert_values_equal(grid.get_total_hydrogen_number(),
-                      density.get_total_hydrogen_number());
+  AMRDensityGrid grid(box, ncell, 0., 8000., density_function, scheme);
+
+  assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
+
+  unsigned long index = grid.get_cell_index(CoordinateVector<>(0.5));
+  grid.get_cell_values(index).set_total_density(2.e22);
+  grid.get_cell_values(index).set_neutral_fraction_H(1.);
+
+  grid.reset_grid();
+
+  assert_condition(grid.get_number_of_cells() == 8 * 8 * 8 + 7);
 
   return 0;
 }

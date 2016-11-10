@@ -79,8 +79,25 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
  * This also resets the internal counters.
  *
  * @param number_of_photons Number of photons during the next iteration.
+ * @return Actual number of photons that was set (since the weights might not
+ * sum nicely to 1).
  */
-void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
+unsigned int
+PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
+  _number_of_photons = 0;
+
+  if (number_of_photons < 10 * _weights.size()) {
+    number_of_photons = 10 * _weights.size();
+  }
+
+  while (number_of_photons != _number_of_photons) {
+    _number_of_photons = 0;
+    for (unsigned int i = 0; i < _weights.size(); ++i) {
+      _number_of_photons += std::round(number_of_photons * _weights[i]);
+    }
+    number_of_photons = _number_of_photons;
+  }
+
   _number_of_photons = number_of_photons;
 
   _active_source_index = 0;
@@ -88,9 +105,11 @@ void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   _active_number_of_photons = round(_number_of_photons * _weights[0]);
 
   if (_log) {
-    _log->write_status("Number of photons for PhotonSource reset to ",
-                       _number_of_photons, ".");
+    _log->write_info("Number of photons for PhotonSource reset to ",
+                     _number_of_photons, ".");
   }
+
+  return _number_of_photons;
 }
 
 /**
@@ -101,10 +120,10 @@ void PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
  */
 Photon PhotonSource::get_random_photon() {
   if (_active_source_index == _positions.size()) {
-    if (_log) {
-      _log->write_warning("Too many photons requested!");
-      --_active_source_index;
-    }
+    // we completed a cycle, reset the counters
+    _active_source_index = 0;
+    _active_photon_index = 0;
+    _active_number_of_photons = round(_number_of_photons * _weights[0]);
   }
 
   CoordinateVector<> position = _positions[_active_source_index];
@@ -144,13 +163,12 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  *
  * @param photon Photon to reemit.
  * @param cell DensityValues of the cell in which the Photon currently resides.
- * @param helium_abundance Helium abundance.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
-                          double helium_abundance) {
+bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
+  double helium_abundance = cell.get_helium_abundance();
   double pHabs = 1. / (1. +
                        cell.get_neutral_fraction_He() * helium_abundance *
                            photon.get_helium_cross_section() /

@@ -19,7 +19,7 @@
 /**
  * @file DensityGrid.hpp
  *
- * @brief Density grid: header
+ * @brief General interface for density grids.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
@@ -27,92 +27,187 @@
 #define DENSITYGRID_HPP
 
 #include "Box.hpp"
-
-#include <cstdlib>
-
-class DensityFunction;
-class DensityValues;
-class Log;
-class ParameterFile;
-class Photon;
-class RecombinationRates;
+#include "CoordinateVector.hpp"
+#include "DensityFunction.hpp"
+#include "DensityValues.hpp"
+#include "Log.hpp"
+#include "Photon.hpp"
+#include "Timer.hpp"
 
 /**
- * @brief Density grid.
- *
- * Contains the actual cells with densities and neutral fractions, and the
- * routines used to calculate the optical depth along a photon path.
+ * @brief General interface for density grids.
  */
 class DensityGrid {
-private:
+protected:
   /*! @brief Box containing the grid. */
   Box _box;
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
 
-  /*! @brief Side lengths of a single cell. */
-  CoordinateVector<> _cellside;
-
-  /*! @brief Maximal cell side among the three dimensions. */
-  double _cellside_max;
-
-  /*! @brief Number of cells per dimension. */
-  CoordinateVector< int > _ncell;
-
-  /*! @brief Helium abundance. */
-  double _helium_abundance;
-
-  /*! @brief Density grid. */
-  DensityValues ***_density;
-
-  /*! @brief Recombination rates used in ionization balance calculation. */
-  RecombinationRates &_recombination_rates;
-
   /*! @brief Log to write log messages to. */
   Log *_log;
 
+  /**
+   * @brief Get the optical depth for a photon travelling the given path in the
+   * given cell.
+   *
+   * @param ds Path length the photon traverses (in m).
+   * @param cell DensityValues of the cell the photon travels in.
+   * @param photon Photon.
+   * @return Optical depth.
+   */
+  inline double get_optical_depth(const double ds, DensityValues &cell,
+                                  Photon &photon) {
+    return ds * cell.get_total_density() *
+           (photon.get_hydrogen_cross_section() *
+                cell.get_neutral_fraction_H() +
+            cell.get_helium_abundance() * photon.get_helium_cross_section() *
+                cell.get_neutral_fraction_He());
+  }
+
+  /**
+   * @brief Update the contributions to the mean intensity integrals due to the
+   * given photon travelling the given path length in the given cell.
+   *
+   * @param ds Path length the photon traverses (in m).
+   * @param cell DensityValues of the cell the photon travels in.
+   * @param photon Photon.
+   */
+  inline void update_integrals(const double ds, DensityValues &cell,
+                               Photon &photon) {
+    cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
+    cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+  }
+
+protected:
+  /**
+   * @brief Set the re-emission probabilities for the given cell for the given
+   * temperature.
+   *
+   * These quantities are all dimensionless.
+   *
+   * @param T Temperature (in K).
+   * @param cell DensityValues of the cell.
+   */
+  void set_reemission_probabilities(double T, DensityValues &cell) {
+    double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
+    double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
+    cell.set_pHion(alpha_1_H / alpha_A_agn);
+
+    double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
+    double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
+    double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
+    double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
+    double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
+    // we overwrite the alphaHe value. This also guarantees that the sum of all
+    // probabilities is 1...
+    alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+
+    cell.set_pHe_em(0, alpha_1_He / alphaHe);
+    cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
+    cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
+    cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
+  }
+
 public:
-  DensityGrid(
-      Box box, CoordinateVector< int > ncell, double helium_abundance,
-      double initial_temperature, DensityFunction &density_function,
-      RecombinationRates &recombination_rates,
-      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr);
+  /**
+   * @brief Constructor.
+   *
+   * @param box Box containing the grid.
+   * @param periodic Periodicity flags.
+   * @param log Log to write log messages to.
+   */
+  DensityGrid(Box box, CoordinateVector< bool > periodic =
+                           CoordinateVector< bool >(false),
+              Log *log = nullptr)
+      : _box(box), _periodic(periodic), _log(log) {}
 
-  DensityGrid(ParameterFile &parameters, DensityFunction &density_function,
-              RecombinationRates &recombination_rates, Log *log = nullptr);
+  /**
+   * @brief Initialize the given cell.
+   *
+   * @param initial_temperature Initial temperature (in K).
+   * @param helium_abundance Helium abundance.
+   * @param cell Cell to initialize.
+   */
+  void initialize(double initial_temperature, double helium_abundance,
+                  DensityValues &cell) {
+    cell.set_neutral_fraction_H(1.e-6);
+    cell.set_neutral_fraction_He(1.e-6);
+    cell.set_temperature(initial_temperature);
+    cell.set_helium_abundance(helium_abundance);
+    set_reemission_probabilities(initial_temperature, cell);
+  }
 
-  ~DensityGrid();
+  virtual ~DensityGrid() {}
 
-  double get_total_hydrogen_number();
+  /**
+   * @brief Get the total number of cells in the grid.
+   *
+   * @return Number of cells in the grid.
+   */
+  virtual unsigned int get_number_of_cells() = 0;
 
-  Box get_box();
-  unsigned int get_number_of_cells();
+  /**
+   * @brief Get the Box containing the grid.
+   *
+   * @return Box containing the grid (in m).
+   */
+  inline Box get_box() { return _box; }
 
-  CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
-  Box get_cell(CoordinateVector< int > index);
-  DensityValues &get_cell_values(CoordinateVector< int > index);
-  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
-  CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
-                                           CoordinateVector<> &photon_direction,
-                                           Box &cell,
-                                           CoordinateVector< char > &next_index,
-                                           double &ds);
+  /**
+   * @brief Get the index of the cell containing the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return Index of the cell containing that position.
+   */
+  virtual unsigned long get_cell_index(CoordinateVector<> position) = 0;
 
-  bool interact(Photon &photon, double optical_depth);
+  /**
+   * @brief Get the midpoint of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Midpoint of that cell (in m).
+   */
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
 
-  static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
-                      double nH, double AHe, double T, double &h0, double &he0);
+  /**
+   * @brief Get the values stored in the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return DensityValues stored in that cell.
+   */
+  virtual DensityValues &get_cell_values(unsigned long index) = 0;
 
-  static void find_H0_simple(double alphaH, double jH, double nH, double T,
-                             double &h0);
+  /**
+   * @brief Get the volume of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Volume of that cell (in m^3).
+   */
+  virtual double get_cell_volume(unsigned long index) = 0;
 
-  void calculate_ionization_state(double Q, unsigned int nphoton);
-  static void set_reemission_probabilities(double T, DensityValues &cell);
-  void reset_grid();
+  /**
+   * @brief Let the given Photon travel through the density grid until the given
+   * optical depth is reached.
+   *
+   * @param photon Photon.
+   * @param optical_depth Optical depth the photon should travel in total
+   * (dimensionless).
+   * @return True if the Photon is still in the box after the optical depth has
+   * been reached, false otherwise.
+   */
+  virtual bool interact(Photon &photon, double optical_depth) = 0;
 
-  double get_chi_squared();
+  /**
+   * @brief Index increment used in the iterator.
+   *
+   * More sofisticated grids (like the AMR grid) might implement their own
+   * version.
+   *
+   * @param index Index to increase.
+   */
+  virtual void increase_index(unsigned long &index) { ++index; }
 
   /**
    * @brief Iterator to loop over the cells in the grid.
@@ -120,10 +215,7 @@ public:
   class iterator {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */
-    CoordinateVector< int > _index;
-
-    /*! @brief Maximum value of the index. */
-    CoordinateVector< int > _max_index;
+    unsigned long _index;
 
     /*! @brief Reference to the DensityGrid over which we iterate. */
     DensityGrid &_grid;
@@ -133,19 +225,19 @@ public:
      * @brief Constructor.
      *
      * @param index Index of the cell the iterator is currently pointing to.
-     * @param max_index Maximum value of the index.
      * @param grid DensityGrid over which we iterate.
      */
-    inline iterator(CoordinateVector< int > index,
-                    CoordinateVector< int > max_index, DensityGrid &grid)
-        : _index(index), _max_index(max_index), _grid(grid) {}
+    inline iterator(unsigned long index, DensityGrid &grid)
+        : _index(index), _grid(grid) {}
 
     /**
-     * @brief Get the Box of the cell the iterator is pointing to.
+     * @brief Get the midpoint of the cell the iterator is pointing to.
      *
-     * @return Box of the cell the iterator is pointing to.
+     * @return Cell midpoint (in m).
      */
-    inline Box get_cell() { return _grid.get_cell(_index); }
+    inline CoordinateVector<> get_cell_midpoint() {
+      return _grid.get_cell_midpoint(_index);
+    }
 
     /**
      * @brief Get the DensityValues of the cell the iterator is pointing to.
@@ -153,6 +245,13 @@ public:
      * @return DensityValue the iterator is pointing to.
      */
     inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
+
+    /**
+     * @brief Get the volume of the cell the iterator is pointing to.
+     *
+     * @return Volume of the cell (in m^3).
+     */
+    inline double get_volume() { return _grid.get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -163,17 +262,16 @@ public:
      * @return Reference to the incremented iterator.
      */
     inline iterator &operator++() {
-      ++_index[0];
-      if (_index[0] == _max_index[0]) {
-        _index[0] = 0;
-        ++_index[1];
-        if (_index[1] == _max_index[1]) {
-          _index[1] = 0;
-          ++_index[2];
-        }
-      }
+      _grid.increase_index(_index);
       return *this;
     }
+
+    /**
+     * @brief Get the index of the cell the iterator is currently pointing to.
+     *
+     * @return Index of the current cell.
+     */
+    inline unsigned long get_index() { return _index; }
 
     /**
      * @brief Compare iterators.
@@ -182,8 +280,7 @@ public:
      * @return True if the iterators point to the same cell of the same grid.
      */
     inline bool operator==(iterator it) {
-      return (_index.x() == it._index.x() && _index.y() == it._index.y() &&
-              _index.z() == it._index.z() && &_grid == &it._grid);
+      return (&_grid == &it._grid && _index == it._index);
     }
 
     /**
@@ -199,19 +296,79 @@ public:
   /**
    * @brief Get an iterator to the first cell in the grid.
    *
-   * @return Iterator to the first cell.
+   * @return Iterator to the first cell in the grid.
    */
-  inline iterator begin() {
-    return iterator(CoordinateVector< int >(0), _ncell, *this);
+  virtual iterator begin() = 0;
+
+  /**
+   * @brief Get an iterator to the last cell in the grid.
+   *
+   * @return Iterator to the last cell in the grid.
+   */
+  virtual iterator end() = 0;
+
+  /**
+   * @brief Initialize the cells in the grid.
+   *
+   * All implementations should call this method in their constructor, after the
+   * grid itself has been set up.
+   *
+   * @param initial_temperature Initial temperature.
+   * @param helium_abundance Helium abundance.
+   * @param function DensityFunction that sets the density.
+   */
+  void initialize(double initial_temperature, double helium_abundance,
+                  DensityFunction &function) {
+    unsigned int ntot = get_number_of_cells();
+    unsigned int nguess = 0.01 * ntot;
+    unsigned int ninfo = 0.1 * ntot;
+    unsigned int ndone = 0;
+    Timer guesstimer;
+    for (auto it = begin(); it != end(); ++it) {
+      DensityValues &cell = it.get_values();
+      cell.set_total_density(function(it.get_cell_midpoint()));
+      initialize(initial_temperature, helium_abundance, cell);
+      ++ndone;
+      if (_log) {
+        if (ndone == nguess) {
+          unsigned int tguess = round(99. * guesstimer.stop());
+          _log->write_status("Filling grid will take approximately ", tguess,
+                             " seconds.");
+        }
+        if (ndone % ninfo == 0) {
+          unsigned int pdone = round(100. * ndone / ntot);
+          _log->write_info("Did ", pdone, " percent.");
+        }
+      }
+    }
   }
 
   /**
-   * @brief Get an iterator to the cell beyond the last cell in the grid.
-   *
-   * @return Iterator to the cell beyond the last cell in the grid.
+   * @brief Reset the mean intensity counters and update the reemission
+   * probabilities for all cells.
    */
-  inline iterator end() {
-    return iterator(CoordinateVector< int >(0, 0, _ncell.z()), _ncell, *this);
+  virtual void reset_grid() {
+    for (auto it = begin(); it != end(); ++it) {
+      DensityValues &cell = it.get_values();
+      set_reemission_probabilities(cell.get_temperature(), cell);
+      cell.reset_mean_intensities();
+    }
+  }
+
+  /**
+   * @brief Get the total number of hydrogen atoms contained in the grid.
+   *
+   * This method is used in the unit tests to check whether the grid contains
+   * the correct density field.
+   *
+   * @return Total number of hydrogen atoms contained in the grid.
+   */
+  inline double get_total_hydrogen_number() {
+    double mtot = 0.;
+    for (auto it = begin(); it != end(); ++it) {
+      mtot += it.get_values().get_total_density() * it.get_volume();
+    }
+    return mtot;
   }
 };
 

@@ -17,40 +17,37 @@
  ******************************************************************************/
 
 /**
- * @file GadgetDensityGridWriter.hpp
+ * @file testSpatialAMRRefinementScheme.cpp
  *
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief Unit test for the SpatialAMRRefinementScheme class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef GADGETDENSITYGRIDWRITER_HPP
-#define GADGETDENSITYGRIDWRITER_HPP
-
-#include "DensityGridWriter.hpp"
-
-#include <string>
-
-class ParameterFile;
+#include "AMRDensityGrid.hpp"
+#include "Assert.hpp"
+#include "HomogeneousDensityFunction.hpp"
+#include "SpatialAMRRefinementScheme.hpp"
+#include <fstream>
 
 /**
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief Unit test for the SpatialAMRRefinementScheme class.
+ *
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ * @return Exit code: 0 on success.
  */
-class GadgetDensityGridWriter : public DensityGridWriter {
-private:
-  /*! @brief Prefix of the name for the file to write. */
-  std::string _prefix;
+int main(int argc, char **argv) {
+  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  CoordinateVector< int > ncell(8);
+  HomogeneousDensityFunction density_function(1.);
+  AMRRefinementScheme *scheme = new SpatialAMRRefinementScheme(
+      Box(CoordinateVector<>(0.3125), CoordinateVector<>(0.375)), 5);
 
-  /*! @brief Number of digits used for the counter in the filenames. */
-  unsigned char _padding;
+  AMRDensityGrid grid(box, ncell, 0., 8000., density_function, scheme);
 
-public:
-  GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
-                          std::string output_folder = std::string("."),
-                          Log *log = nullptr, unsigned char padding = 3);
-  GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
-                          Log *log = nullptr);
+  assert_condition(grid.get_number_of_cells() ==
+                   8 * 8 * 8 - 4 * 4 * 4 + 8 * 8 * 8 - 6 * 6 * 6 +
+                       12 * 12 * 12);
 
-  virtual void write(unsigned int iteration, ParameterFile &params);
-};
-
-#endif // GADGETDENSITYGRIDWRITER_HPP
+  return 0;
+}

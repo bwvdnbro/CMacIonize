@@ -64,24 +64,29 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
+    CartesianDensityGrid.cpp
     CMacIonize.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
-    DensityGrid.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    IonizationStateCalculator.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
-    Timer.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    AMRRefinementScheme.hpp
+    AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
     Box.hpp
+    CartesianDensityGrid.hpp
+    ChiSquaredIterationConvergenceChecker.hpp
+    ChiSquaredPhotonNumberConvergenceChecker.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
     CommandLineOption.hpp
@@ -91,6 +96,7 @@ set(CMACIONIZE_SOURCES
     DensityFunction.hpp
     DensityFunctionFactory.hpp
     DensityGrid.hpp
+    DensityGridFactory.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
@@ -98,10 +104,17 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    IonizationStateCalculator.hpp
+    IterationConvergenceChecker.hpp
+    IterationConvergenceCheckerFactory.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
+    PassiveIterationConvergenceChecker.hpp
+    PassivePhotonNumberConvergenceChecker.hpp
     Photon.hpp
+    PhotonNumberConvergenceChecker.hpp
+    PhotonNumberConvergenceCheckerFactory.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
@@ -110,6 +123,7 @@ set(CMACIONIZE_SOURCES
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
+    SpatialAMRRefinementScheme.hpp
     Timer.hpp
     Utilities.hpp
     VernerCrossSections.hpp

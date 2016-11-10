@@ -81,35 +81,38 @@ set(TESTCOMMANDLINEPARSER_SOURCES
 add_unit_test(NAME testCommandLineParser
               SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
 
-## Unit test for DensityGrid
+## Unit test for CartesianDensityGrid
 configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/h0_testdata.txt
                COPYONLY)
-set(TESTDENSITYGRID_SOURCES
-    testDensityGrid.cpp
+set(TESTCARTESIANDENSITYGRID_SOURCES
+    testCartesianDensityGrid.cpp
 
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/HomogeneousDensityFunction.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/IonizationStateCalculator.hpp
     ../src/Log.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
     ../src/TerminalLog.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
-add_unit_test(NAME testDensityGrid
-              SOURCES ${TESTDENSITYGRID_SOURCES})
+add_unit_test(NAME testCartesianDensityGrid
+              SOURCES ${TESTCARTESIANDENSITYGRID_SOURCES})
 
 ## Unit test for HDF5tools
 if(HAVE_HDF5)
@@ -139,21 +142,23 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/GadgetSnapshotDensityFunction.cpp
     ../src/GadgetSnapshotDensityFunction.hpp
     ../src/HDF5Tools.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/IonizationStateCalculator.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Photon.hpp
     ../src/RecombinationRates.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
@@ -299,19 +304,21 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     Assert.hpp
 
     ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp
     ../src/GadgetDensityGridWriter.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/IonizationStateCalculator.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/RecombinationRates.hpp
-    ../src/Timer.cpp
+    ../src/Timer.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
@@ -422,7 +429,52 @@ set(TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES
 add_unit_test(NAME testSILCCPhotonSourceDistribution
               SOURCES ${TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES})
 
+## Unit test for IonizationStateCalculator
+set(TESTIONIZATIONSTATECALCULATOR_SOURCES
+    testIonizationStateCalculator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/IonizationStateCalculator.hpp
+    ../src/Timer.hpp
+)
+add_unit_test(NAME testIonizationStateCalculator
+              SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})
+
+## Unit test for AMRDensityGrid
+set(TESTAMRDENSITYGRID_SOURCES
+    testAMRDensityGrid.cpp
+
+    ../src/AMRDensityGrid.hpp
+    ../src/AMRRefinementScheme.hpp
+    ../src/Timer.hpp
+)
+add_unit_test(NAME testAMRDensityGrid
+              SOURCES ${TESTAMRDENSITYGRID_SOURCES})
+
+## Unit test for SpatialAMRRefinementScheme
+set(TESTSPATIALAMRREFINEMENTSCHEME_SOURCES
+    testSpatialAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/SpatialAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testSpatialAMRRefinementScheme
+              SOURCES ${TESTSPATIALAMRREFINEMENTSCHEME_SOURCES})
+
+## Unit test for OpacityAMRRefinementScheme
+set(TESTOPACITYAMRREFINEMENTSCHEME_SOURCES
+    testOpacityAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/OpacityAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testOpacityAMRRefinementScheme
+              SOURCES ${TESTOPACITYAMRREFINEMENTSCHEME_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                        --exclude-regex PhotonSourceSpectrum
                         DEPENDS ${TESTNAMES})

@@ -105,15 +105,19 @@ int main(int argc, char **argv) {
   assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "Msol") > 1.);
 
   /// NUMBER DENSITY
-  assert_condition(
-      UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "m^-3", "m^-3"));
+  assert_condition(UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(
+                       1., "m^-3", "m^-3") == 1.);
 
-  assert_condition(
-      UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(1., "cm^-3", "cm^-3"));
+  assert_condition(UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(
+                       1., "cm^-3", "cm^-3") == 1.);
   // 1 particle in a cubic centimetre is much more than 1 particle in a cubic
   // metre
   assert_condition(
       UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(1., "cm^-3") > 1.);
+
+  /// QUANTITY_OPACITY
+  assert_condition(
+      UnitConverter< QUANTITY_OPACITY >::convert(1., "m^-1", "m^-1") == 1.);
 
   /// REACTION RATE
   assert_condition(UnitConverter< QUANTITY_REACTION_RATE >::convert(

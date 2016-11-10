@@ -110,11 +110,11 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
     : AsciiFileDensityFunction(
           params.get_value< std::string >("densityfunction.filename"),
           params.get_value< CoordinateVector< int > >(
-              "box.ncell", CoordinateVector< int >(64)),
+              "densityfunction.ncell", CoordinateVector< int >(64)),
           Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                  "box.anchor", "[0. m, 0. m, 0. m]"),
+                  "densityfunction.box_anchor", "[0. m, 0. m, 0. m]"),
               params.get_physical_vector< QUANTITY_LENGTH >(
-                  "box.sides", "[1. m, 1. m, 1. m]")),
+                  "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_LENGTH >(
               "densityfunction.length_unit", "1. m"),
           params.get_physical_value< QUANTITY_NUMBER_DENSITY >(

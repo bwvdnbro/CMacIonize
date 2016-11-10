@@ -100,6 +100,21 @@ public:
   }
 
   /**
+   * @brief Check if the git version is dirty.
+   *
+   * A version is dirty if there are uncommitted changes. We do not want to use
+   * a dirty version for production runs, since that makes it impossible to
+   * rerun them using exactly the same code version.
+   *
+   * @return True if the git version is dirty.
+   */
+  static inline bool is_dirty() {
+    std::string git_version = get_git_version();
+    size_t check = git_version.rfind("dirty");
+    return check == (git_version.size() - 5);
+  }
+
+  /**
    * @brief Get the compilation date, in the format day/month/year.
    *
    * @return std::string representation of the compilation date.

@@ -19,18 +19,48 @@
 cmake_minimum_required(VERSION 2.6)
 project(CMacIonize)
 
+macro(add_compiler_flag FLAG FATAL)
+  set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+  try_compile(FLAG_WORKS ${PROJECT_BINARY_DIR}
+                         ${PROJECT_BINARY_DIR}/mintest.cpp)
+  if(NOT FLAG_WORKS)
+    if(${FATAL} STREQUAL "REQUIRED")
+      message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
+    else(${FATAL} STREQUAL "REQUIRED")
+      message(STATUS "Not using unsupported compiler flag ${FLAG}.")
+      set(CMAKE_CXX_FLAGS ${BACKUP_CXX_FLAGS})
+    endif(${FATAL} STREQUAL "REQUIRED")
+  endif(NOT FLAG_WORKS)
+endmacro(add_compiler_flag)
+
+# Find Git
+find_package(Git)
+
 # The version number.
-set(CMACIONIZE_VERSION_MAJOR 0)
-set(CMACIONIZE_VERSION_MINOR 1)
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+                OUTPUT_VARIABLE GIT_BUILD_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE "v([0-9]*).*" "\\1" GIT_VERSION_MAJOR ${GIT_BUILD_STRING})
+string(REGEX REPLACE "v[0-9]*.([0-9]*).*" "\\1" GIT_VERSION_MINOR
+       ${GIT_BUILD_STRING})
+message(STATUS
+        "This is CMacIonize version ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}")
+set(CMACIONIZE_VERSION_MAJOR ${GIT_VERSION_MAJOR})
+set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 
 # Enable unit testing using CTest
 enable_testing()
 
+# Add minimal cpp file for flag testing
+execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
 # Enable C++11, since we need this for delegating constructors
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_compiler_flag("-std=c++11" REQUIRED)
 
 # Enable all standard compiler warnings and enforce them
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+add_compiler_flag("-Wall -Werror" OPTIONAL)
 
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -71,9 +101,6 @@ endif(HDF5_FOUND)
 # Find OpenMP.
 find_package(OpenMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-
-# Find Git
-find_package(Git)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)

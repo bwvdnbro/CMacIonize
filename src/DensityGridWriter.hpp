@@ -26,10 +26,13 @@
 #ifndef DENSITYGRIDWRITER_HPP
 #define DENSITYGRIDWRITER_HPP
 
+#include "Log.hpp"
+#include "Utilities.hpp"
+
 #include <cstdlib>
+#include <string>
 
 class DensityGrid;
-class Log;
 class ParameterFile;
 
 /**
@@ -40,6 +43,9 @@ protected:
   /*! @brief DensityGrid containing the data to write. */
   DensityGrid &_grid;
 
+  /*! @brief Name of the folder where output files should be placed. */
+  std::string _output_folder;
+
   /*! @brief Log to write logging information to. */
   Log *_log;
 
@@ -48,10 +54,18 @@ public:
    * @brief Constructor.
    *
    * @param grid Grid to write out.
+   * @param output_folder Name of the folder where output files should be
+   * placed.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(DensityGrid &grid, Log *log = nullptr)
-      : _grid(grid), _log(log) {}
+  DensityGridWriter(DensityGrid &grid, std::string output_folder,
+                    Log *log = nullptr)
+      : _grid(grid), _output_folder(output_folder), _log(log) {
+    _output_folder = Utilities::get_absolute_path(_output_folder);
+    if (_log) {
+      _log->write_status("Output will be written to ", _output_folder, "/");
+    }
+  }
 
   virtual ~DensityGridWriter() {}
 

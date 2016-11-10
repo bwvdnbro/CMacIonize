@@ -31,6 +31,9 @@
 
 #include <ostream>
 
+/*! @brief The maximal value a key can take. */
+#define AMRGRIDCELL_MAXKEY 0xffffffff
+
 /**
  * @brief Cell in the hierarchical AMR grid.
  *
@@ -86,6 +89,121 @@ public:
   }
 
   /**
+   * @brief Get the volume of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param box Box specifying the geometry of the current cell.
+   * @return Volume of the cell with the given key.
+   */
+  inline double get_volume(unsigned int &key, Box &box) {
+    if (key == 1) {
+      return box.get_sides().x() * box.get_sides().y() * box.get_sides().z();
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned char ix = (cell & 4) >> 2;
+      unsigned char iy = (cell & 2) >> 1;
+      unsigned char iz = cell & 1;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[cell]->get_volume(key, box);
+    }
+  }
+
+  /**
+   * @brief Get the midpoint of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param box Box specifying the geometry of the current cell.
+   * @return Midpoint of the cell with the given key.
+   */
+  inline CoordinateVector<> get_midpoint(unsigned int &key, Box &box) {
+    if (key == 1) {
+      return box.get_anchor() + 0.5 * box.get_sides();
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned char ix = (cell & 4) >> 2;
+      unsigned char iy = (cell & 2) >> 1;
+      unsigned char iz = cell & 1;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[cell]->get_midpoint(key, box);
+    }
+  }
+
+  /**
+   * @brief Get the geometry of the cell with the given key.
+   *
+   * @param key Key linking to a unique cell in the AMR hierarchy.
+   * @param box Box specifying the geometry of the current cell.
+   * @return Box specifying the geometry of the requested cell.
+   */
+  inline Box get_geometry(unsigned int &key, Box &box) {
+    if (key == 1) {
+      return box;
+    } else {
+      unsigned char cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned char ix = (cell & 4) >> 2;
+      unsigned char iy = (cell & 2) >> 1;
+      unsigned char iz = cell & 1;
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      return _children[cell]->get_geometry(key, box);
+    }
+  }
+
+  /**
+   * @brief Get the key of the lowest level cell containing the given position.
+   *
+   * @param level Level we are currently at.
+   * @param position CoordinateVector specifying a position.
+   * @param box Box specifying the geometry of the cell.
+   * @return Key of the lowest level cell containing the position.
+   */
+  inline unsigned int get_key(unsigned char level, CoordinateVector<> position,
+                              Box &box) {
+    if (_values == nullptr) {
+      // cell has children, find out in which child we live
+      unsigned char ix =
+          2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
+      unsigned char iy =
+          2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
+      unsigned char iz =
+          2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
+      unsigned char cell = 4 * ix + 2 * iy + iz;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      unsigned int key = cell << (3 * level);
+      return key + _children[cell]->get_key(level + 1, position, box);
+    } else {
+      // cell is lowest level, add level bit to key
+      return 1 << (3 * level);
+    }
+  }
+
+  /**
    * @brief Recursively initialize a cell on the given level containing the
    * given position.
    *
@@ -116,6 +234,67 @@ public:
       box.get_anchor()[2] += iz * box.get_sides().z();
       _children[4 * ix + 2 * iy + iz]->create_cell(current_level + 1, level,
                                                    position, box);
+    }
+  }
+
+  /**
+   * @brief Create all cells up to the given level in depth.
+   *
+   * @param current_level Level we are currently at.
+   * @param level Desired level.
+   */
+  inline void create_all_cells(unsigned char current_level,
+                               unsigned char level) {
+    if (current_level == level) {
+      _values = new _CellContents_();
+    } else {
+      // remove contents
+      if (_values != nullptr) {
+        delete _values;
+        _values = nullptr;
+      }
+      // create children
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] == nullptr) {
+          _children[i] = new AMRGridCell();
+        }
+        _children[i]->create_all_cells(current_level + 1, level);
+      }
+    }
+  }
+
+  /**
+   * @brief Refine the cell with the given key by dividing it into 8 cells at a
+   * deeper level.
+   *
+   * @param key Key pointing to an existing cell.
+   * @return Key of the first newly created child cell.
+   */
+  inline unsigned int refine(unsigned int &key) {
+    if (key == 1) {
+      // remove contents
+      if (_values != nullptr) {
+        delete _values;
+        _values = nullptr;
+      }
+      // create children
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] == nullptr) {
+          _children[i] = new AMRGridCell();
+        }
+        _children[i] = new AMRGridCell();
+        // we hack this method to initialize the cell
+        _children[i]->create_all_cells(0, 0);
+      }
+      return 8;
+    } else {
+      unsigned int cell = key & 7;
+      key >>= 3;
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned int newcell = _children[cell]->refine(key);
+      return (newcell << 3) + cell;
     }
   }
 
@@ -166,6 +345,211 @@ public:
       box.get_anchor()[1] += iy * box.get_sides().y();
       box.get_anchor()[2] += iz * box.get_sides().z();
       return _children[4 * ix + 2 * iy + iz]->get_cell(position, box);
+    }
+  }
+
+  /**
+   * @brief Get the first key in this cell, assuming a Morton ordering.
+   *
+   * This key is given by two to the power three times the level of the deepest
+   * cell you can reach by always taking the first child of every cell.
+   *
+   * @param level Level we are currently at.
+   * @return First key in the cell, in Morton order.
+   */
+  inline unsigned int get_first_key(unsigned char level) {
+    if (_values == nullptr) {
+      if (_children[0] == nullptr) {
+        error("Cell does not exist!");
+      }
+      return _children[0]->get_first_key(level + 1);
+    } else {
+      return 1 << (3 * level);
+    }
+  }
+
+  /**
+   * @brief Get the next key in the cell, assuming a Morton ordering.
+   *
+   * @param key Key pointing to a cell in the AMR structure.
+   * @param level Level we are currently at.
+   * @return Next key in the cell, in Morton order.
+   */
+  inline unsigned int get_next_key(unsigned int key, unsigned char level) {
+    if (_values == nullptr) {
+      // cell has children, find out in which child we are
+      unsigned int cell = (key >> (3 * level)) & 7;
+      // get the child next key
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      unsigned int next_key = _children[cell]->get_next_key(key, level + 1);
+      // if the child has no next key, we have to look at the next child
+      if (next_key == AMRGRIDCELL_MAXKEY) {
+        if (cell == 7) {
+          // if this is the last child, return no valid key
+          return AMRGRIDCELL_MAXKEY;
+        } else {
+          // the next key is the first key of the next child
+          if (_children[cell + 1] == nullptr) {
+            error("Cell does not exist!");
+          }
+          next_key = _children[cell + 1]->get_first_key(level + 1);
+          // add the part of the key due to this cell
+          next_key += (key - ((key >> (3 * level)) << (3 * level))) +
+                      ((cell + 1) << (3 * level));
+        }
+      }
+      return next_key;
+    } else {
+      // if the cell has no children, it cannot have a next key
+      return AMRGRIDCELL_MAXKEY;
+    }
+  }
+
+  /**
+   * @brief Get the first key in this cell in the given direction, containing
+   * the given position.
+   *
+   * @param level Level we are currently at.
+   * @param direction Direction to look in.
+   * @param position CoordinateVector specifying a position.
+   * @param box Box specifying the geometry of the cell.
+   * @return First key in the cell in the given direction, containing the given
+   * position.
+   */
+  inline unsigned int get_first_key(unsigned char level,
+                                    CoordinateVector< char > direction,
+                                    CoordinateVector<> position, Box &box) {
+    if (_values == nullptr) {
+      // find the child that contains the position in the given direction
+      unsigned char ix, iy, iz;
+      if (direction.x() == 0) {
+        ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
+      } else {
+        // if direction.x() == -1, we are in the top x part
+        ix = direction.x() < 0;
+      }
+      if (direction.y() == 0) {
+        iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
+      } else {
+        iy = direction.y() < 0;
+      }
+      if (direction.z() == 0) {
+        iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
+      } else {
+        iz = direction.z() < 0;
+      }
+      unsigned int child = 4 * ix + 2 * iy + iz;
+      if (_children[child] == nullptr) {
+        error("Cell does not exist!");
+      }
+      box.get_sides() *= 0.5;
+      box.get_anchor()[0] += ix * box.get_sides().x();
+      box.get_anchor()[1] += iy * box.get_sides().y();
+      box.get_anchor()[2] += iz * box.get_sides().z();
+      unsigned int next_key =
+          _children[child]->get_first_key(level + 1, direction, position, box);
+      // add the part of the key due to this cell
+      next_key += child << (3 * level);
+      return next_key;
+    } else {
+      return 1 << (3 * level);
+    }
+  }
+
+  /**
+   * @brief Get the neighbour of the cell with the given key in the given
+   * direction, containing the given position.
+   *
+   * @param key Key pointing to a cell in the AMR structure.
+   * @param level Level we are currently at.
+   * @param direction Relative direction of the neighbour w.r.t. the current
+   * cell.
+   * @param position CoordinateVector specifying a position.
+   * @param box Box specifying the geometry of the cell.
+   * @return Key of the neighbouring cell in the given direction, containing the
+   * given position.
+   */
+  inline unsigned int get_neighbour(unsigned int key, unsigned char level,
+                                    CoordinateVector< char > direction,
+                                    CoordinateVector<> position, Box &box) {
+    if (_values == nullptr) {
+      // cell has children, find out in which child we are
+      unsigned int cell = (key >> (3 * level)) & 7;
+      // get the child next key
+      if (_children[cell] == nullptr) {
+        error("Cell does not exist!");
+      }
+      char ix, iy, iz;
+      ix = (cell & 4) >> 2;
+      iy = (cell & 2) >> 1;
+      iz = cell & 1;
+      Box child_box(box);
+      child_box.get_sides() *= 0.5;
+      child_box.get_anchor()[0] += ix * child_box.get_sides().x();
+      child_box.get_anchor()[1] += iy * child_box.get_sides().y();
+      child_box.get_anchor()[2] += iz * child_box.get_sides().z();
+      unsigned int next_key = _children[cell]->get_neighbour(
+          key, level + 1, direction, position, child_box);
+      // if the child does not have the neighbour, we have to look at the
+      // neighbouring child
+      if (next_key == AMRGRIDCELL_MAXKEY) {
+        ix = (cell & 4) >> 2;
+        iy = (cell & 2) >> 1;
+        iz = cell & 1;
+        ix += direction.x();
+        if (ix != 0 && ix != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        iy += direction.y();
+        if (iy != 0 && iy != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        iz += direction.z();
+        if (iz != 0 && iz != 1) {
+          return AMRGRIDCELL_MAXKEY;
+        }
+        unsigned int next_cell = 4 * ix + 2 * iy + iz;
+        // the next key is the first key of the next child
+        if (_children[next_cell] == nullptr) {
+          error("Cell does not exist!");
+        }
+        box.get_sides() *= 0.5;
+        box.get_anchor()[0] += ix * box.get_sides().x();
+        box.get_anchor()[1] += iy * box.get_sides().y();
+        box.get_anchor()[2] += iz * box.get_sides().z();
+        next_key = _children[next_cell]->get_first_key(level + 1, direction,
+                                                       position, box);
+        // add the part of the key due to this cell
+        next_key += (key - ((key >> (3 * level)) << (3 * level))) +
+                    ((next_cell) << (3 * level));
+      }
+      return next_key;
+    } else {
+      // if the cell has no children, it cannot have a next key
+      return AMRGRIDCELL_MAXKEY;
+    }
+  }
+
+  /**
+   * @brief Get the number of lowest level cells in this cell.
+   *
+   * @return Number of lowest level cells in this cell.
+   */
+  inline unsigned long get_number_of_cells() {
+    if (_values == nullptr) {
+      // cell has children, go deeper
+      unsigned long ncell = 0;
+      for (unsigned int i = 0; i < 8; ++i) {
+        if (_children[i] != nullptr) {
+          ncell += _children[i]->get_number_of_cells();
+        }
+      }
+      return ncell;
+    } else {
+      // this is 1 lowest level cell
+      return 1;
     }
   }
 

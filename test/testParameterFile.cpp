@@ -73,12 +73,23 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
 
+  CoordinateVector< bool > cvtest3 =
+      params.get_value< CoordinateVector< bool > >(
+          "test_coordinatevector_bool");
+  assert_condition(cvtest3.x() == false);
+  assert_condition(cvtest3.y() == true);
+  assert_condition(cvtest3.z() == true);
+
   CoordinateVector<> cvtest_unit =
       params.get_physical_vector< QUANTITY_LENGTH >(
           "test_coordinatevector_unit");
   assert_condition(cvtest_unit.x() == 3.086e16);
   assert_condition(cvtest_unit.y() == 2.);
   assert_condition(cvtest_unit.z() == 2.4e19);
+
+  assert_condition(
+      params.get_value< int >(
+          "test_group2.test_group_group.test_group_group_member") == 42);
 
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
@@ -100,11 +111,21 @@ int main(int argc, char **argv) {
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);
 
+  cvtest3 = params.get_value< CoordinateVector< bool > >(
+      "not_in_file6", CoordinateVector< bool >(true, false, true));
+  assert_condition(cvtest3.x() == true);
+  assert_condition(cvtest3.y() == false);
+  assert_condition(cvtest3.z() == true);
+
   cvtest = params.get_physical_vector< QUANTITY_LENGTH >(
       "coordinatevector_unit_not_in_file", "[1. pc,2.m,2.4e19m]");
   assert_condition(cvtest_unit.x() == 3.086e16);
   assert_condition(cvtest_unit.y() == 2.);
   assert_condition(cvtest_unit.z() == 2.4e19);
+
+  assert_condition(params.get_value< std::string >(
+                       "test_group2.test_group_group.test_group_str_member",
+                       "hello!") == "hello!");
 
   params.print_contents(cout);
 

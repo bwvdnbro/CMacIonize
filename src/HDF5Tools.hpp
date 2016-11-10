@@ -1147,7 +1147,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
 
   // construct the dictionary
   std::map< std::string, _datatype_ > dictionary;
-  for (int i = 0; i < size[0]; ++i) {
+  for (hsize_t i = 0; i < size[0]; ++i) {
     // strip spaces at the end of the string
     unsigned int j = 18;
     while (data[i]._name[j] == ' ') {

@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -192,6 +193,17 @@ convert< CoordinateVector< int > >(std::string value) {
 template <> inline bool convert< bool >(std::string value) {
   // convert to lowercase
   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+  // strip trailing whitespace
+  unsigned int i = 0;
+  while (value[i] == ' ') {
+    ++i;
+  }
+  value = value.substr(i);
+  i = value.size() - 1;
+  while (value[i] == ' ') {
+    --i;
+  }
+  value = value.substr(0, i + 1);
   if (value == "true" || value == "yes" || value == "on" || value == "y") {
     return true;
   } else if (value == "false" || value == "no" || value == "off" ||
@@ -200,6 +212,24 @@ template <> inline bool convert< bool >(std::string value) {
   } else {
     error("Error converting \"%s\" to a boolean value!", value.c_str());
   }
+}
+
+/**
+ * @brief Convert the given string to a boolean CoordinateVector.
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< bool >
+convert< CoordinateVector< bool > >(std::string value) {
+  CoordinateVector< bool > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< bool >(x);
+  vvalue[1] = convert< bool >(y);
+  vvalue[2] = convert< bool >(z);
+  return vvalue;
 }
 
 /**
@@ -273,6 +303,22 @@ to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
 }
 
 /**
+ * @brief to_string specialization for a boolean CoordinateVector.
+ *
+ * @param value Boolean CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string
+to_string< CoordinateVector< bool > >(CoordinateVector< bool > value) {
+  std::stringstream sstream;
+  sstream << "[" << to_string< bool >(value.x()) << ", "
+          << to_string< bool >(value.y()) << ", "
+          << to_string< bool >(value.z()) << "]";
+  return sstream.str();
+}
+
+/**
  * @brief Split the given string containing a value and an associated unit into
  * a std::pair.
  *
@@ -330,6 +376,7 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
  * @brief Compose a filename made up by the given prefix and counter value,
  * appropriately zero padded.
  *
+ * @param folder Folder to add to the filename.
  * @param prefix Prefix for the filename.
  * @param extension Extension for the filename.
  * @param counter Value of the counter.
@@ -337,16 +384,74 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
  * @return std::string with format: "<prefix>XX<counter>XX.<extension>", where
  * the number of Xs is equal to padding.
  */
-inline std::string compose_filename(std::string prefix, std::string extension,
-                                    unsigned int counter,
+inline std::string compose_filename(std::string folder, std::string prefix,
+                                    std::string extension, unsigned int counter,
                                     unsigned int padding) {
   std::stringstream namestring;
+  if (!folder.empty()) {
+    namestring << folder << "/";
+  }
   namestring << prefix;
   namestring.fill('0');
   namestring.width(padding);
   namestring << counter;
-  namestring << ".hdf5";
+  namestring << "." << extension;
   return namestring.str();
+}
+
+/**
+ * @brief Get the absolute path corresponding to the given path.
+ *
+ * @param path Path, can be relative or absolute.
+ * @return Absolute path.
+ */
+inline std::string get_absolute_path(std::string path) {
+  // strip trailing / from path
+  if (path[path.size() - 1] == '/') {
+    path = path.substr(0, path.size() - 1);
+  }
+
+  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
+  if (absolute_path_ptr == nullptr) {
+    error("Unable to resolve path \"%s\"!", path.c_str());
+  }
+  std::string absolute_path(absolute_path_ptr);
+  free(absolute_path_ptr);
+  return absolute_path;
+}
+
+/**
+ * @brief Get a time stamp of the form day/month/year, hour:minutes:seconds.
+ *
+ * @return Time stamp.
+ */
+inline std::string get_timestamp() {
+  std::time_t timestamp = std::time(nullptr);
+  std::tm *time = std::localtime(&timestamp);
+  std::stringstream timestream;
+  if (time->tm_mday < 10) {
+    timestream << "0";
+  }
+  timestream << time->tm_mday << "/";
+  if (time->tm_mon < 9) {
+    timestream << "0";
+  }
+  // tm_mon counts from 0 to 11
+  // tm_year is the number of years since 1900
+  timestream << (time->tm_mon + 1) << "/" << (time->tm_year + 1900) << ", ";
+  if (time->tm_hour < 10) {
+    timestream << "0";
+  }
+  timestream << time->tm_hour << ":";
+  if (time->tm_min < 10) {
+    timestream << "0";
+  }
+  timestream << time->tm_min << ":";
+  if (time->tm_sec < 10) {
+    timestream << "0";
+  }
+  timestream << time->tm_sec;
+  return timestream.str();
 }
 }
 

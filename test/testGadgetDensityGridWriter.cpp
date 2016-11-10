@@ -25,33 +25,14 @@
  */
 #include "Assert.hpp"
 #include "Box.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
-#include "DensityGrid.hpp"
 #include "GadgetDensityGridWriter.hpp"
 #include "HDF5Tools.hpp"
 #include "HomogeneousDensityFunction.hpp"
-#include "RecombinationRates.hpp"
+#include "TerminalLog.hpp"
 #include <vector>
-
-/**
- * @brief Test implementation of RecombinationRates.
- */
-class TestRecombinationRates : public RecombinationRates {
-public:
-  /**
-   * @brief Get the recombination rate for the given element at the given
-   * temperature.
-   *
-   * @param element ElementName for an element.
-   * @param temperature Temperature.
-   * @return Recombination rate.
-   */
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature) {
-    return 1.;
-  }
-};
 
 /**
  * @brief Unit test for the GadgetDensityGridWriter class.
@@ -63,17 +44,18 @@ public:
 int main(int argc, char **argv) {
   // write file
   {
-    CoordinateVector<> origin;
+    // we pick a box with origin not 0, just to make sure coordinates are
+    // translated to a box with origin 0.
+    CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
-    TestRecombinationRates recombination_rates;
-    DensityGrid grid(box, ncell, 0.1, 8000., density_function,
-                     recombination_rates);
+    CartesianDensityGrid grid(box, ncell, 0.1, 8000., density_function);
 
     ParameterFile params("test.param");
-    GadgetDensityGridWriter writer("testgrid", grid);
+    TerminalLog log(LOGLEVEL_INFO);
+    GadgetDensityGridWriter writer("testgrid", grid, ".", &log);
     writer.write(0, params);
   }
 
@@ -185,9 +167,9 @@ int main(int argc, char **argv) {
         for (unsigned int k = 0; k < 8; ++k) {
           // the cells happen to be outputted in this way, with the x index
           // being the inner loop index...
-          assert_condition(coords[index].x() == (k + 0.5) * 0.125);
+          assert_condition(coords[index].x() == (i + 0.5) * 0.125);
           assert_condition(coords[index].y() == (j + 0.5) * 0.125);
-          assert_condition(coords[index].z() == (i + 0.5) * 0.125);
+          assert_condition(coords[index].z() == (k + 0.5) * 0.125);
           assert_condition(nfracH[index] == 1.e-6);
           assert_condition(nfracHe[index] == 1.e-6);
           assert_condition(ntot[index] == 1.);

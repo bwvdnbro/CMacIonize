@@ -33,7 +33,7 @@
 #include <sys/time.h> // for timeval
 
 /**
-  * @brief A simplified interface to the Unix system timer
+  * @brief A simplified interface to the Unix system timer.
   *
   * The Timer automatically registers the current system time when constructed
   * and returns the elapsed time in seconds when it is stopped.
@@ -47,22 +47,75 @@ class Timer {
 private:
   /*! @brief Starting time of the timer */
   timeval _start;
+
   /*! @brief Stop time of the timer */
   timeval _stop;
+
   /*! @brief Total time interval registered so far */
   timeval _diff;
 
 public:
-  Timer();
-  ~Timer() {}
+  /**
+   * @brief Clear the internal timeval difference.
+   */
+  inline void reset() { timerclear(&_diff); }
 
-  void reset();
-  void start();
-  double stop();
-  double value();
+  /**
+   * @brief Constructor.
+   *
+   * Intialize the internal timeval difference and register the current system
+   * time.
+   */
+  inline Timer() {
+    reset();
+    gettimeofday(&_start, nullptr);
+  }
 
-  double interval();
-  void restart();
+  /**
+   * @brief Record the current system time as starting time.
+   */
+  inline void start() { gettimeofday(&_start, nullptr); }
+
+  /**
+   * @brief Record the current system time as stopping time and add the
+   * difference between start and stop to the internal timeval difference.
+   *
+   * @return The current contents of the internal timeval difference in seconds
+   * (with microsecond precision).
+   */
+  inline double stop() {
+    gettimeofday(&_stop, NULL);
+    timeval interval_diff;
+    timersub(&_stop, &_start, &interval_diff);
+    timeradd(&_diff, &interval_diff, &_diff);
+    return _diff.tv_sec + 1.e-6 * _diff.tv_usec;
+  }
+
+  /**
+   * @brief Get the current internal timeval difference.
+   *
+   * @return The current contents of the internal timeval difference in seconds
+   * (with microsecond precision).
+   */
+  inline double value() { return _diff.tv_sec + 1.e-6 * _diff.tv_usec; }
+
+  /**
+   * @brief Get the current value of the timer without affecting it.
+   *
+   * @return The time in seconds since the timer was last started.
+   */
+  inline double interval() {
+    timeval tempstop;
+    gettimeofday(&tempstop, NULL);
+    timeval interval;
+    timersub(&tempstop, &_start, &interval);
+    return interval.tv_sec + 1.e-6 * interval.tv_usec;
+  }
+
+  /**
+   * @brief Restart the timer by overwriting the start time.
+   */
+  inline void restart() { gettimeofday(&_start, nullptr); }
 };
 
 #endif // TIMER_HPP

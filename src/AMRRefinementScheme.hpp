@@ -17,40 +17,42 @@
  ******************************************************************************/
 
 /**
- * @file GadgetDensityGridWriter.hpp
+ * @file AMRRefinementScheme.hpp
  *
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief General interface for schemes used to refine an AMRDensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef GADGETDENSITYGRIDWRITER_HPP
-#define GADGETDENSITYGRIDWRITER_HPP
+#ifndef AMRREFINEMENTSCHEME_HPP
+#define AMRREFINEMENTSCHEME_HPP
 
-#include "DensityGridWriter.hpp"
+#include "CoordinateVector.hpp"
 
-#include <string>
-
-class ParameterFile;
+class DensityValues;
 
 /**
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief General interface for schemes used to refine an AMRDensityGrid.
+ *
+ * We provide empty implementations for all routines, although in practice
+ * every implementation should implement the refine() method, as otherwise the
+ * implementation is completely useless.
  */
-class GadgetDensityGridWriter : public DensityGridWriter {
-private:
-  /*! @brief Prefix of the name for the file to write. */
-  std::string _prefix;
-
-  /*! @brief Number of digits used for the counter in the filenames. */
-  unsigned char _padding;
-
+class AMRRefinementScheme {
 public:
-  GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
-                          std::string output_folder = std::string("."),
-                          Log *log = nullptr, unsigned char padding = 3);
-  GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
-                          Log *log = nullptr);
+  virtual ~AMRRefinementScheme() {}
 
-  virtual void write(unsigned int iteration, ParameterFile &params);
+  /**
+   * @brief Decide if the given cell should be refined or not.
+   *
+   * @param level Current refinement level of the cell.
+   * @param midpoint Midpoint of the cell (in m).
+   * @param cell DensityValues of a cell.
+   * @return True if the cell should be refined.
+   */
+  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
+                      DensityValues &cell) {
+    return false;
+  }
 };
 
-#endif // GADGETDENSITYGRIDWRITER_HPP
+#endif // AMRREFINEMENTSCHEME_HPP

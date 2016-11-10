@@ -43,6 +43,9 @@ private:
   /*! @brief Temperature (in K). */
   double _temperature;
 
+  /*! @brief Helium abundance. */
+  double _helium_abundance;
+
   /*! @brief Probability of re-emitting an ionizing photon after absorption by
    *  hydrogen. */
   double _pHion;
@@ -53,6 +56,10 @@ private:
 
   /*! @brief Mean intensity of hydrogen ionizing radiation (in m^3s^-1). */
   double _mean_intensity_H;
+
+  /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
+   *  sub-step (in m^3s^-1). */
+  double _mean_intensity_H_old;
 
   /*! @brief Mean intensity of helium ionizing radiation (in m^3s^-1). */
   double _mean_intensity_He;
@@ -66,8 +73,9 @@ public:
    */
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
-        _temperature(0.), _pHion(0.), _pHe_em{0., 0., 0., 0.},
-        _mean_intensity_H(0.), _mean_intensity_He(0.),
+        _temperature(0.), _helium_abundance(0.), _pHion(0.),
+        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H(0.),
+        _mean_intensity_H_old(0.), _mean_intensity_He(0.),
         _old_neutral_fraction_H(0.) {}
 
   /**
@@ -107,6 +115,15 @@ public:
   }
 
   /**
+   * @brief Set the helium abundance.
+   *
+   * @param helium_abundance Helium abundance value.
+   */
+  inline void set_helium_abundance(double helium_abundance) {
+    _helium_abundance = helium_abundance;
+  }
+
+  /**
    * @brief Set the probability of re-emitting an ionizing photon after photon
    * absorption by hydrogen.
    *
@@ -123,6 +140,17 @@ public:
    */
   inline void set_pHe_em(unsigned char index, double pHe_em) {
     _pHe_em[index] = pHe_em;
+  }
+
+  /**
+   * @brief Set the mean intensity of hydrogen ionizing radiation during the
+   * previous sub-step.
+   *
+   * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
+   * during the previous sub-step (in m^3s^-1).
+   */
+  inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
+    _mean_intensity_H_old = mean_intensity_H_old;
   }
 
   /**
@@ -161,6 +189,7 @@ public:
   inline void reset_mean_intensities() {
     _mean_intensity_H = 0.;
     _mean_intensity_He = 0.;
+    _mean_intensity_H_old = 0.;
   }
 
   /**
@@ -192,6 +221,13 @@ public:
   inline double get_temperature() { return _temperature; }
 
   /**
+   * @brief Get the helium abundance.
+   *
+   * @return Helium abundance.
+   */
+  inline double get_helium_abundance() { return _helium_abundance; }
+
+  /**
    * @brief Get the probability of a photon being re-emitted as an ionizing
    * photon after absorption by hydrogen.
    *
@@ -214,6 +250,15 @@ public:
    * @return Mean intensity of hydrogen ionizing radiation (in m^3s^-1).
    */
   inline double get_mean_intensity_H() { return _mean_intensity_H; }
+
+  /**
+   * @brief Get the mean intensity of hydrogen ionizing radiation during the
+   * previous sub-step.
+   *
+   * @return Mean intensity of hydrogen ionizing radiation during the previous
+   * sub-step (in m^3s^-1).
+   */
+  inline double get_mean_intensity_H_old() { return _mean_intensity_H_old; }
 
   /**
    * @brief Get the mean intensity of helium ionizing radiation.

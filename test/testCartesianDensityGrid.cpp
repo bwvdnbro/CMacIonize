@@ -17,63 +17,24 @@
  ******************************************************************************/
 
 /**
- * @file testDensityGrid.cpp
+ * @file testCartesianDensityGrid.cpp
  *
- * @brief Unit test for the DensityGrid class
+ * @brief Unit test for the CartesianDensityGrid class
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "CrossSections.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "DensityFunction.hpp"
-#include "DensityGrid.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "Photon.hpp"
-#include "RecombinationRates.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 using namespace std;
 
 /**
- * @brief Test implementation of CrossSections.
- */
-class TestCrossSections : public CrossSections {
-public:
-  /**
-   * @brief Get the photoionization cross section for the given element at the
-   * given photon energy.
-   *
-   * @param element ElementName for an element.
-   * @param energy Photon energy.
-   * @return Photoionization cross section.
-   */
-  virtual double get_cross_section(ElementName element, double energy) {
-    return 1.;
-  }
-};
-
-/**
- * @brief Test implementation of RecombinationRates.
- */
-class TestRecombinationRates : public RecombinationRates {
-public:
-  /**
-   * @brief Get the recombination rate for the given element at the given
-   * temperature.
-   *
-   * @param element ElementName for an element.
-   * @param temperature Temperature.
-   * @return Recombination rate.
-   */
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature) {
-    return 1.;
-  }
-};
-
-/**
- * @brief Unit test for the DensityGrid class.
+ * @brief Unit test for the CartesianDensityGrid class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -81,8 +42,6 @@ public:
  */
 int main(int argc, char **argv) {
   HomogeneousDensityFunction testfunction;
-  TestCrossSections testcrosssections;
-  TestRecombinationRates testrecombinationrates;
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
@@ -93,16 +52,14 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  DensityGrid grid(box, 64, 0.1, 8000., testfunction, testrecombinationrates);
+  CartesianDensityGrid grid(box, 64, 0.1, 8000., testfunction);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
-  CoordinateVector< int > index = grid.get_cell_indices(photon_origin);
+  unsigned long index = grid.get_cell_index(photon_origin);
 
-  assert_condition(index.x() == 32);
-  assert_condition(index.y() == 32);
-  assert_condition(index.z() == 32);
+  assert_condition(index == 32 * 64 * 64 + 32 * 64 + 32);
 
   Box cell = grid.get_cell(index);
 
@@ -259,37 +216,6 @@ int main(int argc, char **argv) {
   bool inside = grid.interact(photon, 0.125);
 
   assert_condition(inside == false);
-
-  // test find_H0
-  ifstream file("h0_testdata.txt");
-  string line;
-  while (getline(file, line)) {
-    stringstream linestream(line);
-    double jH, jHe, h0f, he0f, h0, he0;
-    linestream >> jH >> jHe >> h0f >> he0f;
-    DensityGrid::find_H0(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.51e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"),
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 0.1,
-        1.5e4, h0, he0);
-    assert_values_equal(h0, h0f);
-    assert_values_equal(he0, he0f);
-
-    double h0s;
-    DensityGrid::find_H0(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        0., UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"), 0.,
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 0.,
-        1.5e4, h0, he0);
-    DensityGrid::find_H0_simple(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(100., "cm^-3"), 1.5e4,
-        h0s);
-    assert_values_equal_tol(h0, h0s, 1.e-7);
-  }
 
   return 0;
 }

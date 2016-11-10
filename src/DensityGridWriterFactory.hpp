@@ -71,14 +71,15 @@ public:
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
-   * @param grid DensityGrid to write out.
+   * @param grid DensityGridInterface to write out.
    * @param log Log to write logging information to.
    * @return Pointer to a newly created DensityGridWriter implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
   static DensityGridWriter *generate(ParameterFile &params, DensityGrid &grid,
                                      Log *log = nullptr) {
-    std::string type = params.get_value< std::string >("output.type", "Gadget");
+    std::string type =
+        params.get_value< std::string >("densitygridwriter.type", "Gadget");
     if (log) {
       log->write_info("Requested DensityGridWriter type: ", type);
     }
