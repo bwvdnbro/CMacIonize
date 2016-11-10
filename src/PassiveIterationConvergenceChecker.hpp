@@ -17,33 +17,32 @@
  ******************************************************************************/
 
 /**
- * @file IterationConvergenceChecker.hpp
+ * @file PassiveIterationConvergenceChecker.hpp
  *
- * @brief General interface for classes used to determine when the number of
- * iterations was sufficient to lead to converged neutral fractions in the
- * DensityGrid.
+ * @brief IterationConvergenceChecker implementation that does nothing.
+ *
+ * We use this to disable convergence checking, which means we just run a fixed
+ * number of iterations.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef ITERATIONCONVERGENCECHECKER_HPP
-#define ITERATIONCONVERGENCECHECKER_HPP
+#ifndef PASSIVEITERATIONCONVERGENCECHECKER_HPP
+#define PASSIVEITERATIONCONVERGENCECHECKER_HPP
+
+#include "IterationConvergenceChecker.hpp"
 
 /**
- * @brief General interface for classes used to determine when the number of
- * iterations was sufficient to lead to converged neutral fractions in the
- * DensityGrid.
+ * @brief IterationConvergenceChecker implementation that does nothing.
  */
-class IterationConvergenceChecker {
+class PassiveIterationConvergenceChecker : public IterationConvergenceChecker {
 public:
-  virtual ~IterationConvergenceChecker() {}
-
   /**
-   * @brief Check if the neutral fractions are sufficiently converged to end
-   * the radiative transfer loop.
+   * @brief Check if the neutral fraction is converged.
    *
-   * @return True if the neutral fractions are sufficiently converged.
+   * @return False, since we want a fixed number of iterations before
+   * terminating.
    */
-  virtual bool is_converged() = 0;
+  virtual bool is_converged() { return false; }
 
   /**
    * @brief Get the number of photons to use during the next iteration, given
@@ -51,11 +50,13 @@ public:
    *
    * @param proposed_number Estimated number of photons to use, based on the
    * previous iteration.
-   * @return Actual number of photons to use, including possible corrections to
-   * address convergence issues.
+   * @return The same as proposed number, since we do not interfere with the
+   * radiative transfer loop.
    */
   virtual unsigned int
-  get_next_number_of_photons(unsigned int proposed_number) = 0;
+  get_next_number_of_photons(unsigned int proposed_number) {
+    return proposed_number;
+  }
 };
 
-#endif // ITERATIONCONVERGENCECHECKER_HPP
+#endif // PASSIVEITERATIONCONVERGENCECHECKER_HPP

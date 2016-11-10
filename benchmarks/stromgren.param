@@ -43,6 +43,8 @@ max_number_iterations: 20
 # iteration convergence: used to control convergence of the neutral fraction
 # calculation
 iterationconvergencechecker:
+  # type of IterationConvergenceChecker: a ChiSquaredIterationConvergenceChecker
+  type: ChiSquared
   # desired tolerance. The algorithm will stop if the average squared relative
   # difference between the hydrogen neutral fraction after two successive
   # iterations falls below this value
