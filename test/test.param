@@ -37,3 +37,8 @@ test_group:
 
 test_comments_group: # test comments
   test_comments_value: test comments string # actual comments
+
+# group within group test:
+test_group2:
+  test_group_group:
+    test_group_group_member: 42

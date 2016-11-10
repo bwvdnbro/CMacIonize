@@ -54,12 +54,13 @@ public:
    * @param params ParameterFile to read from.
    */
   SpatialAMRRefinementScheme(ParameterFile &params)
-      : SpatialAMRRefinementScheme(Box(
-            params.get_physical_vector< QUANTITY_LENGTH >(
-                "densitygrid.amr_refinement_zone_anchor", "[0. m, 0. m, 0. m]"),
-            params.get_physical_vector< QUANTITY_LENGTH >(
-                "densitygrid.amr_refinement_zone_sides",
-                "[1. m, 1. m, 1. m]"))) {}
+      : SpatialAMRRefinementScheme(
+            Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid.amrrefinementscheme.zone_anchor",
+                    "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid.amrrefinementscheme.zone_sides",
+                    "[1. m, 1. m, 1. m]"))) {}
 
   /**
    * @brief Check if the given cell should be refined.

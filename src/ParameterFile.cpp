@@ -151,31 +151,74 @@ ParameterFile::ParameterFile(std::string filename) {
     error("Failed to open parameter file \"%s\"", filename.c_str());
   }
 
-  // the current read algorithm does not work with multi line strings and groups
-  // that go deeper than 1 level
   string line;
-  string groupname;
-  unsigned int current_level = 0;
+  std::vector< std::string > groupname;
+  std::vector< unsigned int > levels;
   while (getline(file, line)) {
     if (!is_comment_line(line) && !is_empty_line(line)) {
       strip_comments_line(line);
-      pair< string, string > keyvaluepair = read_keyvaluepair(line);
-      if (keyvaluepair.second.empty()) {
-        groupname = keyvaluepair.first + ".";
-      } else {
-        unsigned int indentation = is_indented_line(line);
-        if (indentation) {
-          if (groupname.empty()) {
-            error("Indented block found outside a group!");
+      // store the contents of the line, whatever its indentation
+      std::pair< std::string, std::string > keyvaluepair =
+          read_keyvaluepair(line);
+      std::string key, value;
+      value = keyvaluepair.second;
+
+      // get indentation level
+      unsigned int indentation = is_indented_line(line);
+      if (indentation > 0) {
+        // line is indented: check if it is more indented than the previous line
+        if (levels.size() > 0) {
+          if (indentation > levels.back()) {
+            // more indented level
+            levels.push_back(indentation);
+          } else {
+            while (indentation < levels.back()) {
+              // remove levels and corresponding names
+              levels.erase(levels.end() - 1);
+              groupname.erase(groupname.end() - 1);
+            }
           }
-          current_level = indentation;
         } else {
-          if (current_level) {
-            current_level = 0;
-            groupname = "";
-          }
+          levels.push_back(indentation);
         }
-        _dictionary[groupname + keyvaluepair.first] = keyvaluepair.second;
+
+        // check that we have a group name for this level
+        if (levels.size() != groupname.size()) {
+          error("Line has a different indentation than expected: \"%s\"!",
+                line.c_str());
+        }
+
+        // check if this line contains a value or a new group name
+        if (value.empty()) {
+          groupname.push_back(keyvaluepair.first);
+        } else {
+          // it contains a value: get the complete key name, which is composed
+          // of the various parent group names and the actual key name
+          key = "";
+          for (auto it = groupname.begin(); it != groupname.end(); ++it) {
+            key += *it + ".";
+          }
+          key += keyvaluepair.first;
+        }
+      } else {
+        if (groupname.size() != levels.size()) {
+          error("Wrong formatting!");
+        }
+
+        // remove previous indentation
+        while (levels.size() > 0) {
+          levels.erase(levels.end() - 1);
+          groupname.erase(groupname.end() - 1);
+        }
+
+        key = keyvaluepair.first;
+        if (value.empty()) {
+          groupname.push_back(key);
+        }
+      }
+
+      if (!value.empty()) {
+        _dictionary[key] = value;
       }
     }
   }
@@ -198,21 +241,72 @@ void ParameterFile::print_contents(std::ostream &stream) {
   // note that we do assume here that all group members are nicely grouped
   // together. This will always be the case, as the map contents is sorted
   // alphabetically.
-  string groupname = "";
-  for (map< string, string >::iterator it = _dictionary.begin();
-       it != _dictionary.end(); ++it) {
-    string keyname = it->first;
+  std::vector< std::string > groupname;
+  for (auto it = _dictionary.begin(); it != _dictionary.end(); ++it) {
+
+    // split the key into its group components
+    std::string keyname = it->first;
+    std::vector< std::string > keygroups;
+    size_t spos = 0;
     size_t ppos = keyname.find('.');
-    if (ppos != string::npos) {
-      string this_groupname = keyname.substr(0, ppos);
-      keyname = "  " + keyname.substr(ppos + 1);
-      if (groupname != this_groupname) {
-        groupname = this_groupname;
-        stream << groupname << ":\n";
+    while (ppos != keyname.npos) {
+      keygroups.push_back(keyname.substr(spos, ppos - spos));
+      spos = ppos + 1;
+      ppos = keyname.find('.', spos);
+    }
+
+    // print group info (if necessary) and get the correct indentation for the
+    // line
+    std::string indent = "";
+    if (keygroups.size() > groupname.size()) {
+      // Find the first value that is different
+      unsigned int i = 0;
+      while (i < groupname.size() && groupname[i] == keygroups[i]) {
+        ++i;
+      }
+      // indent as long as we are in the same group
+      for (unsigned int j = 0; j < i; ++j) {
+        indent += "  ";
+      }
+      // remove unequal elements
+      for (unsigned int j = i; j < groupname.size(); ++j) {
+        groupname.pop_back();
+      }
+      // add and print new group names
+      for (unsigned int j = i; j < keygroups.size(); ++j) {
+        groupname.push_back(keygroups[j]);
+        stream << indent << keygroups[j] << ":\n";
+        indent += "  ";
       }
     } else {
-      groupname = "";
+      while (keygroups.size() < groupname.size()) {
+        // remove elements from groupname
+        groupname.erase(groupname.end() - 1);
+      }
+      // both lists now have equal length. Find the first value that is
+      // different
+      unsigned int i = 0;
+      while (i < keygroups.size() && groupname[i] == keygroups[i]) {
+        ++i;
+      }
+      // indent as long as we are in the same group
+      for (unsigned int j = 0; j < i; ++j) {
+        indent += "  ";
+      }
+      // remove elements from groupname
+      for (unsigned int j = i; j < keygroups.size(); ++j) {
+        groupname.pop_back();
+      }
+      // add and print new group names
+      for (unsigned int j = i; j < keygroups.size(); ++j) {
+        groupname.push_back(keygroups[j]);
+        stream << indent << keygroups[j] << ":\n";
+        indent += "  ";
+      }
     }
-    stream << keyname << ": " << it->second << "\n";
+
+    // get the actual key and print the key-value pair
+    keyname = keyname.substr(spos);
+    stream << indent << keyname << ": " << it->second << "\n";
   }
 }

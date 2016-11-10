@@ -87,6 +87,10 @@ int main(int argc, char **argv) {
   assert_condition(cvtest_unit.y() == 2.);
   assert_condition(cvtest_unit.z() == 2.4e19);
 
+  assert_condition(
+      params.get_value< int >(
+          "test_group2.test_group_group.test_group_group_member") == 42);
+
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
@@ -118,6 +122,10 @@ int main(int argc, char **argv) {
   assert_condition(cvtest_unit.x() == 3.086e16);
   assert_condition(cvtest_unit.y() == 2.);
   assert_condition(cvtest_unit.z() == 2.4e19);
+
+  assert_condition(params.get_value< std::string >(
+                       "test_group2.test_group_group.test_group_str_member",
+                       "hello!") == "hello!");
 
   params.print_contents(cout);
 
