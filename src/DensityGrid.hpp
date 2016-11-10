@@ -49,35 +49,6 @@ protected:
   Log *_log;
 
   /**
-   * @brief Set the re-emission probabilities for the given cell for the given
-   * temperature.
-   *
-   * These quantities are all dimensionless.
-   *
-   * @param T Temperature (in K).
-   * @param cell DensityValues of the cell.
-   */
-  void set_reemission_probabilities(double T, DensityValues &cell) {
-    double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
-    double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
-    cell.set_pHion(alpha_1_H / alpha_A_agn);
-
-    double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
-    double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
-    double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
-    double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
-    double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
-    // we overwrite the alphaHe value. This also guarantees that the sum of all
-    // probabilities is 1...
-    alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
-
-    cell.set_pHe_em(0, alpha_1_He / alphaHe);
-    cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
-    cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
-    cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
-  }
-
-  /**
    * @brief Get the optical depth for a photon travelling the given path in the
    * given cell.
    *
@@ -107,6 +78,36 @@ protected:
                                Photon &photon) {
     cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
     cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+  }
+
+protected:
+  /**
+   * @brief Set the re-emission probabilities for the given cell for the given
+   * temperature.
+   *
+   * These quantities are all dimensionless.
+   *
+   * @param T Temperature (in K).
+   * @param cell DensityValues of the cell.
+   */
+  void set_reemission_probabilities(double T, DensityValues &cell) {
+    double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
+    double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
+    cell.set_pHion(alpha_1_H / alpha_A_agn);
+
+    double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
+    double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
+    double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
+    double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
+    double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
+    // we overwrite the alphaHe value. This also guarantees that the sum of all
+    // probabilities is 1...
+    alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+
+    cell.set_pHe_em(0, alpha_1_He / alphaHe);
+    cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
+    cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
+    cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
   }
 
 public:
@@ -346,7 +347,7 @@ public:
    * @brief Reset the mean intensity counters and update the reemission
    * probabilities for all cells.
    */
-  void reset_grid() {
+  virtual void reset_grid() {
     for (auto it = begin(); it != end(); ++it) {
       DensityValues &cell = it.get_values();
       set_reemission_probabilities(cell.get_temperature(), cell);

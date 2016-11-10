@@ -268,8 +268,9 @@ public:
    * deeper level.
    *
    * @param key Key pointing to an existing cell.
+   * @return Key of the first newly created child cell.
    */
-  inline void refine(unsigned int &key) {
+  inline unsigned int refine(unsigned int &key) {
     if (key == 1) {
       // remove contents
       if (_values != nullptr) {
@@ -285,13 +286,15 @@ public:
         // we hack this method to initialize the cell
         _children[i]->create_all_cells(0, 0);
       }
+      return 8;
     } else {
       unsigned int cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
         error("Cell does not exist!");
       }
-      _children[cell]->refine(key);
+      unsigned int newcell = _children[cell]->refine(key);
+      return (newcell << 3) + cell;
     }
   }
 

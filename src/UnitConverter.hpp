@@ -45,6 +45,7 @@ enum Quantity {
   QUANTITY_LENGTH,
   QUANTITY_MASS,
   QUANTITY_NUMBER_DENSITY,
+  QUANTITY_OPACITY,
   QUANTITY_REACTION_RATE,
   QUANTITY_SURFACE_AREA,
   QUANTITY_TEMPERATURE,
@@ -330,6 +331,46 @@ UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
     return value * 1.e-6;
   } else {
     error("Unknown number density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_OPACITY
+
+/**
+ * @brief UnitConverter::to_SI() specialization for an opacity.
+ *
+ * @param value Opacity value in strange units.
+ * @param unit Strange units.
+ * @return Opacity value in per metre.
+ */
+template <>
+inline double UnitConverter< QUANTITY_OPACITY >::to_SI(double value,
+                                                       std::string unit) {
+  if (unit == "m^-1") {
+    // quantity is already in SI units
+    return value;
+  } else {
+    error("Unknown opacity unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for an opacity.
+ *
+ * @param value Opacity value in per metre.
+ * @param unit Strange units.
+ * @return Opacity value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_OPACITY >::to_unit(double value,
+                                                         std::string unit) {
+  if (unit == "m^-1") {
+    // quantity is already in requested units
+    return value;
+  } else {
+    error("Unknown opacity unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

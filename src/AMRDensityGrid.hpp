@@ -32,6 +32,7 @@
 #include "ParameterFile.hpp"
 
 #include <cfloat>
+#include <ostream>
 
 /**
  * @brief AMR density grid.
@@ -40,6 +41,12 @@ class AMRDensityGrid : public DensityGrid {
 private:
   /*! @brief AMRGrid used as grid. */
   AMRGrid< DensityValues > _grid;
+
+  /*! @brief DensityFunction used to initialize densities. */
+  DensityFunction &_density_function;
+
+  /*! @brief AMRRefinementScheme used to refine cells. */
+  AMRRefinementScheme *_refinement_scheme;
 
   /**
    * @brief Get the largest odd factor of the given number.
@@ -70,6 +77,46 @@ private:
     return number / get_largest_odd_factor(number);
   }
 
+  /**
+   * @brief Refine the given cell using the given refinement scheme.
+   *
+   * @param refinement_scheme AMRRefinementScheme to apply.
+   * @param index Index of the cell.
+   * @param level Refinement level of the cell.
+   * @param midpoint CoordinateVector<> specifying the midpoint of the cell.
+   * @param values DensityValues of the cell.
+   * @param density_function DensityFunction used to initialize newly created
+   * cells.
+   * @param next_index Index of the next cell at the current level.
+   */
+  inline void refine_cell(AMRRefinementScheme *refinement_scheme,
+                          unsigned long index, unsigned char level,
+                          CoordinateVector<> midpoint, DensityValues &values,
+                          DensityFunction &density_function,
+                          unsigned long next_index) {
+    if (refinement_scheme->refine(level, midpoint, values)) {
+      // initialize and check refinement criterion for children
+      unsigned long child_index = _grid.refine_cell(index);
+      while (child_index != next_index) {
+        DensityValues &cell = _grid[child_index];
+        CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
+        cell.set_total_density(density_function(child_midpoint));
+        // copy all other values from parent
+        cell.set_neutral_fraction_H(values.get_neutral_fraction_H());
+        cell.set_neutral_fraction_He(values.get_neutral_fraction_He());
+        cell.set_temperature(values.get_temperature());
+        cell.set_helium_abundance(values.get_helium_abundance());
+        cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());
+        // set reemission probabilities
+        set_reemission_probabilities(cell.get_temperature(), cell);
+        unsigned long next_child_index = _grid.get_next_key(child_index);
+        refine_cell(refinement_scheme, child_index, level + 1, child_midpoint,
+                    cell, density_function, next_child_index);
+        child_index = next_child_index;
+      }
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -90,7 +137,8 @@ public:
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
-      : DensityGrid(box, periodic, log) {
+      : DensityGrid(box, periodic, log), _density_function(density_function),
+        _refinement_scheme(refinement_scheme) {
     // find the smallest number of blocks that fits the requested top level grid
     // for one dimension, this is the largest odd factor in that dimension
     // for all three dimensions, this is the factor you get when you divide the
@@ -123,7 +171,7 @@ public:
     initialize(initial_temperature, helium_abundance, density_function);
 
     // apply mesh refinement
-    if (refinement_scheme) {
+    if (_refinement_scheme) {
       if (_log) {
         _log->write_status("Applying refinement.");
       }
@@ -135,27 +183,19 @@ public:
       auto it = begin();
       while (it != end()) {
         unsigned long index = it.get_index();
+        unsigned char level = _grid.get_level(index);
         DensityValues &values = it.get_values();
         CoordinateVector<> midpoint = it.get_cell_midpoint();
         ++it;
-        if (refinement_scheme->refine(midpoint, values)) {
-          _grid.refine_cell(index);
-        }
+        refine_cell(_refinement_scheme, index, level, midpoint, values,
+                    _density_function, it.get_index());
       }
-
-      if (_log) {
-        _log->write_status("Done refining, will initialize new cells.");
-      }
-
-      // reinitialize the density values
-      initialize(initial_temperature, helium_abundance, density_function);
 
       if (_log) {
         _log->write_status("Number of cells after refinement: ",
                            _grid.get_number_of_cells());
       }
     }
-    delete refinement_scheme;
   }
 
   /**
@@ -183,7 +223,29 @@ public:
                 "densitygrid.periodicity", CoordinateVector< bool >(false)),
             log) {}
 
-  virtual ~AMRDensityGrid() {}
+  virtual ~AMRDensityGrid() {
+    if (_refinement_scheme != nullptr) {
+      delete _refinement_scheme;
+    }
+  }
+
+  /**
+   * @brief Reset the mean intensity counters, update the reemission
+   * probabilities, and reapply the refinement scheme to all cells.
+   */
+  virtual void reset_grid() {
+    auto it = begin();
+    while (it != end()) {
+      unsigned long index = it.get_index();
+      unsigned char level = _grid.get_level(index);
+      DensityValues &values = it.get_values();
+      values.reset_mean_intensities();
+      CoordinateVector<> midpoint = it.get_cell_midpoint();
+      ++it;
+      refine_cell(_refinement_scheme, index, level, midpoint, values,
+                  _density_function, it.get_index());
+    }
+  }
 
   /**
    * @brief Get the number of (lowest level) cells in the grid.
@@ -491,6 +553,13 @@ public:
   virtual DensityGrid::iterator end() {
     return iterator(_grid.get_max_key(), *this);
   }
+
+  /**
+   * @brief Print the grid to the given stream for visual inspection.
+   *
+   * @param stream std::ostream to write to.
+   */
+  inline void print(std::ostream &stream) { _grid.print(stream); }
 };
 
 #endif // AMRDENSITYGRID_HPP

@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "OpacityAMRRefinementScheme.hpp"
 #include "SpatialAMRRefinementScheme.hpp"
 
 /**
@@ -54,8 +55,10 @@ public:
     if (log) {
       log->write_info("Requested AMRRefinementScheme type: ", type);
     }
-    if (type == "Spatial") {
-      return new SpatialAMRRefinementScheme(params);
+    if (type == "Opacity") {
+      return new OpacityAMRRefinementScheme(params, log);
+    } else if (type == "Spatial") {
+      return new SpatialAMRRefinementScheme(params, log);
     } else {
       error("Unknown AMRRefinementScheme type: \"%s\".", type.c_str());
       return nullptr;

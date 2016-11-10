@@ -96,6 +96,9 @@ int main(int argc, char **argv) {
   grid.create_cell(key) = 5.5;
   assert_condition(grid.get_cell(CoordinateVector<>(0.7)) == 5.5);
 
+  // check the level
+  assert_condition(grid.get_level(71) == 2);
+
   /// advanced functionality
 
   // create all level 3 cells
@@ -246,7 +249,8 @@ int main(int argc, char **argv) {
   /// mesh refinement
 
   // refine a single cell
-  grid.refine_cell(703);
+  unsigned long refined_key = grid.refine_cell(703);
+  assert_condition(refined_key == 4287);
   // repeat the Morton iteration test
   assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8 + 7);
   key = grid.get_first_key();

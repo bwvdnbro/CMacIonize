@@ -290,6 +290,22 @@ public:
   }
 
   /**
+   * @brief Get the level of the cell with the given key.
+   *
+   * @param key Key of a cell in the AMR hierarchy.
+   * @return Level of that cell.
+   */
+  inline unsigned char get_level(unsigned long key) {
+    unsigned int cell = get_cell_key(key);
+    unsigned char level = 0;
+    while (cell > 1) {
+      cell >>= 3;
+      ++level;
+    }
+    return level;
+  }
+
+  /**
    * @brief Get the key of the lowest level cell that contains the given
    * position.
    *
@@ -375,10 +391,12 @@ public:
    * at a deeper level.
    *
    * @param key Key pointing to an existing cell in the grid.
+   * @return Key of the first newly created child cell.
    */
-  inline void refine_cell(unsigned long key) {
+  inline unsigned long refine_cell(unsigned long key) {
     unsigned int cell = get_cell_key(key);
-    get_block(key).refine(cell);
+    unsigned int newcell = get_block(key).refine(cell);
+    return (key & 0xffffffff00000000) + newcell;
   }
 
   /**

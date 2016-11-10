@@ -453,6 +453,26 @@ set(TESTAMRDENSITYGRID_SOURCES
 add_unit_test(NAME testAMRDensityGrid
               SOURCES ${TESTAMRDENSITYGRID_SOURCES})
 
+## Unit test for SpatialAMRRefinementScheme
+set(TESTSPATIALAMRREFINEMENTSCHEME_SOURCES
+    testSpatialAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/SpatialAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testSpatialAMRRefinementScheme
+              SOURCES ${TESTSPATIALAMRREFINEMENTSCHEME_SOURCES})
+
+## Unit test for OpacityAMRRefinementScheme
+set(TESTOPACITYAMRREFINEMENTSCHEME_SOURCES
+    testOpacityAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/OpacityAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testOpacityAMRRefinementScheme
+              SOURCES ${TESTOPACITYAMRREFINEMENTSCHEME_SOURCES})
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
