@@ -17,55 +17,56 @@
  ******************************************************************************/
 
 /**
- * @file IterationConvergenceCheckerFactory.hpp
+ * @file PhotonNumberConvergenceCheckerFactory.hpp
  *
- * @brief Factory for IterationConvergenceChecker implementations.
+ * @brief Factory for PhotonNumberConvergenceChecker implementations.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef ITERATIONCONVERGENCECHECKERFACTORY_HPP
-#define ITERATIONCONVERGENCECHECKERFACTORY_HPP
+#ifndef PHOTONNUMBERCONVERGENCECHECKERFACTORY_HPP
+#define PHOTONNUMBERCONVERGENCECHECKERFACTORY_HPP
 
-#include "IterationConvergenceChecker.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhotonNumberConvergenceChecker.hpp"
 
 // implementations
-#include "ChiSquaredIterationConvergenceChecker.hpp"
-#include "PassiveIterationConvergenceChecker.hpp"
+#include "ChiSquaredPhotonNumberConvergenceChecker.hpp"
+#include "PassivePhotonNumberConvergenceChecker.hpp"
 
 /**
- * @brief Factory for IterationConvergenceChecker implementations.
+ * @brief Factory for PhotonNumberConvergenceChecker implementations.
  */
-class IterationConvergenceCheckerFactory {
+class PhotonNumberConvergenceCheckerFactory {
 public:
   /**
-   * @brief Generate an IterationConvergenceChecker based on the type chosen
+   * @brief Generate a PhotonNumberConvergenceChecker based on the type chosen
    * in the parameter file.
    *
    * @param grid DensityGrid to operate on.
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
-   * @return Pointer to a newly created IterationConvergenceChecker instance.
+   * @return Pointer to a newly created PhotonNumberConvergenceChecker instance.
    * Memory management for the pointer should be handled by the calling routine.
    */
-  inline static IterationConvergenceChecker *
+  inline static PhotonNumberConvergenceChecker *
   generate(DensityGrid &grid, ParameterFile &params, Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "iterationconvergencechecker.type", "ChiSquared");
+        "photonnumberconvergencechecker.type", "ChiSquared");
     if (log) {
-      log->write_info("Requested IterationConvergenceChecker type: ", type,
+      log->write_info("Requested PhotonNumberConvergenceChecker type: ", type,
                       ".");
     }
     if (type == "ChiSquared") {
-      return new ChiSquaredIterationConvergenceChecker(grid, params, log);
+      return new ChiSquaredPhotonNumberConvergenceChecker(grid, params, log);
     } else if (type == "Passive") {
-      return new PassiveIterationConvergenceChecker();
+      return new PassivePhotonNumberConvergenceChecker();
     } else {
-      error("Unknown IterationConvergenceChecker type: \"%s\".", type.c_str());
+      error("Unknown PhotonNumberConvergenceChecker type: \"%s\".",
+            type.c_str());
       return nullptr;
     }
   }
 };
 
-#endif // ITERATIONCONVERGENCECHECKERFACTORY_HPP
+#endif // PHOTONNUMBERCONVERGENCECHECKERFACTORY_HPP

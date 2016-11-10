@@ -86,6 +86,7 @@ set(CMACIONIZE_SOURCES
     Box.hpp
     CartesianDensityGrid.hpp
     ChiSquaredIterationConvergenceChecker.hpp
+    ChiSquaredPhotonNumberConvergenceChecker.hpp
     Configuration.hpp.in
     CoordinateVector.hpp
     CommandLineOption.hpp
@@ -110,8 +111,10 @@ set(CMACIONIZE_SOURCES
     LineCoolingDataLocation.hpp.in
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
+    PassivePhotonNumberConvergenceChecker.hpp
     Photon.hpp
     PhotonNumberConvergenceChecker.hpp
+    PhotonNumberConvergenceCheckerFactory.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp

@@ -73,9 +73,10 @@ public:
         _photon_number_correction(photon_number_correction), _old_chi2(0.),
         _chi2(0.), _log(log) {
     if (_log) {
-      _log->write_status("Created IterationConvergenceChecker with tolerance ",
-                         _tolerance, " and photon number correction factor ",
-                         _photon_number_correction, ".");
+      _log->write_status(
+          "Created ChiSquaredIterationConvergenceChecker with tolerance ",
+          _tolerance, " and photon number correction factor ",
+          _photon_number_correction, ".");
     }
   }
 

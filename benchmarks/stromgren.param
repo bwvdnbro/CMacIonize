@@ -57,6 +57,9 @@ iterationconvergencechecker:
 # photon number convergence: used to control convergence of the photon shooting
 # sub steps during a single iteration of the algorithm
 photonnumberconvergencechecker:
+  # Type of PhotonNumberConvergenceChecker: a
+  # ChiSquaredPhotonNumberConvergenceChecker
+  type: ChiSquared
   # desired tolerance for the mean intensity integrals. Photon shooting will
   # stop if the average squared relative difference between the hydrogen
   # mean intensity after two successive substeps falls below this value

@@ -36,7 +36,7 @@
 #include "IterationConvergenceCheckerFactory.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
-#include "PhotonNumberConvergenceChecker.hpp"
+#include "PhotonNumberConvergenceCheckerFactory.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
@@ -141,7 +141,8 @@ int main(int argc, char **argv) {
       DensityGridWriterFactory::generate(params, *grid, log);
 
   // set up convergence checking
-  PhotonNumberConvergenceChecker convergence_checker(*grid, params, log);
+  PhotonNumberConvergenceChecker *convergence_checker =
+      PhotonNumberConvergenceCheckerFactory::generate(*grid, params, log);
 
   unsigned int nloop =
       params.get_value< unsigned int >("max_number_iterations", 10);
@@ -186,7 +187,7 @@ int main(int argc, char **argv) {
 
     unsigned int numsubstep = 0;
     unsigned int totnumphoton = 0;
-    while (!convergence_checker.is_converged(totnumphoton)) {
+    while (!convergence_checker->is_converged(totnumphoton)) {
       log->write_info("Substep ", numsubstep);
 
       for (unsigned int i = 0; i < lnumphoton; ++i) {
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
         ++typecount[photon.get_type()];
       }
 
-      lnumphoton = convergence_checker.get_number_of_photons_next_substep(
+      lnumphoton = convergence_checker->get_number_of_photons_next_substep(
           lnumphoton, totnumphoton);
 
       lnumphoton = source.set_number_of_photons(lnumphoton);
@@ -237,12 +238,13 @@ int main(int argc, char **argv) {
     writer->write(loop, params);
 
     // use the current number of photons as a guess for the new number
-    numphoton = convergence_checker.get_new_number_of_photons(lnumphoton);
+    numphoton = convergence_checker->get_new_number_of_photons(lnumphoton);
 
 // print out a curve that shows the evolution of chi2
-#ifdef PHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
+#ifdef CHISQUAREDPHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
 #pragma message "Outputting chi2 curve!"
-    convergence_checker.output_chi2_curve(loop);
+    ((ChiSquaredPhotonNumberConvergenceChecker *)convergence_checker)
+        ->output_chi2_curve(loop);
 #endif
 
     ++loop;
@@ -261,6 +263,7 @@ int main(int argc, char **argv) {
   delete writer;
   delete grid;
   delete itconvergence_checker;
+  delete convergence_checker;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program
