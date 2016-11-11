@@ -55,25 +55,42 @@ class PhotonSourceSpectrum;
  */
 class PhotonSource {
 private:
+  /// discrete sources
+
   /*! @brief Total number of photons emitted by all discrete sources. */
-  unsigned int _number_of_photons;
+  unsigned int _discrete_number_of_photons;
   /*! @brief Number of photons emitted by the currently active source. */
-  unsigned int _active_number_of_photons;
+  unsigned int _discrete_active_number_of_photons;
   /*! @brief Currently emitted photon index. */
-  unsigned int _active_photon_index;
+  unsigned int _discrete_active_photon_index;
   /*! @brief Currently active photon source index. */
-  unsigned int _active_source_index;
+  unsigned int _discrete_active_source_index;
 
   /*! @brief Positions of the discrete photon sources (in m). */
-  std::vector< CoordinateVector<> > _positions;
+  std::vector< CoordinateVector<> > _discrete_positions;
   /*! @brief Weights of the discrete photon sources. */
-  std::vector< double > _weights;
+  std::vector< double > _discrete_weights;
 
-  /*! @brief Total luminosity of all sources together (in s^-1). */
-  double _total_luminosity;
+  /*! @brief Total luminosity of all discrete sources together (in s^-1). */
+  double _discrete_total_luminosity;
 
   /*! @brief Spectrum of the discrete photon sources. */
-  PhotonSourceSpectrum &_spectrum;
+  PhotonSourceSpectrum &_discrete_spectrum;
+
+  ///
+
+  /// continuous sources
+
+  /*! @brief Total number of photons emitted by the continuous sources. */
+  unsigned int _continuous_number_of_photons;
+
+  /*! @brief Number of photons emitted by the continuous sources. */
+  unsigned int _continuous_active_number_of_photons;
+
+  /*! @brief Spectrum of the continuous sources. */
+  PhotonSourceSpectrum *_continous_spectrum;
+
+  ///
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
@@ -95,7 +112,7 @@ private:
 
 public:
   PhotonSource(PhotonSourceDistribution &distribution,
-               PhotonSourceSpectrum &spectrum, CrossSections &_cross_sections,
+               PhotonSourceSpectrum &spectrum, CrossSections &cross_sections,
                RandomGenerator &random_generator, Log *log = nullptr);
 
   unsigned int set_number_of_photons(unsigned int number_of_photons);

@@ -49,27 +49,27 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
                            PhotonSourceSpectrum &spectrum,
                            CrossSections &cross_sections,
                            RandomGenerator &random_generator, Log *log)
-    : _number_of_photons(0), _spectrum(spectrum),
+    : _discrete_number_of_photons(0), _discrete_spectrum(spectrum),
       _cross_sections(cross_sections), _random_generator(random_generator),
       _HLyc_spectrum(cross_sections, random_generator),
       _HeLyc_spectrum(cross_sections, random_generator),
       _He2pc_spectrum(random_generator), _log(log) {
-  _positions.resize(distribution.get_number_of_sources());
-  _weights.resize(distribution.get_number_of_sources());
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
-    _positions[i] = distribution.get_position(i);
-    _weights[i] = distribution.get_weight(i);
+  _discrete_positions.resize(distribution.get_number_of_sources());
+  _discrete_weights.resize(distribution.get_number_of_sources());
+  for (unsigned int i = 0; i < _discrete_positions.size(); ++i) {
+    _discrete_positions[i] = distribution.get_position(i);
+    _discrete_weights[i] = distribution.get_weight(i);
   }
-  _total_luminosity = distribution.get_total_luminosity();
+  _discrete_total_luminosity = distribution.get_total_luminosity();
 
   if (_log) {
-    _log->write_status("Constructed PhotonSource with ", _positions.size(),
-                       " positions and weights.");
+    _log->write_status("Constructed PhotonSource with ",
+                       _discrete_positions.size(), " positions and weights.");
   }
 
-  _active_source_index = 0;
-  _active_photon_index = 0;
-  _active_number_of_photons = 0;
+  _discrete_active_source_index = 0;
+  _discrete_active_photon_index = 0;
+  _discrete_active_number_of_photons = 0;
 }
 
 /**
@@ -84,32 +84,34 @@ PhotonSource::PhotonSource(PhotonSourceDistribution &distribution,
  */
 unsigned int
 PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
-  _number_of_photons = 0;
+  _discrete_number_of_photons = 0;
 
-  if (number_of_photons < 10 * _weights.size()) {
-    number_of_photons = 10 * _weights.size();
+  if (number_of_photons < 10 * _discrete_weights.size()) {
+    number_of_photons = 10 * _discrete_weights.size();
   }
 
-  while (number_of_photons != _number_of_photons) {
-    _number_of_photons = 0;
-    for (unsigned int i = 0; i < _weights.size(); ++i) {
-      _number_of_photons += std::round(number_of_photons * _weights[i]);
+  while (number_of_photons != _discrete_number_of_photons) {
+    _discrete_number_of_photons = 0;
+    for (unsigned int i = 0; i < _discrete_weights.size(); ++i) {
+      _discrete_number_of_photons +=
+          std::round(number_of_photons * _discrete_weights[i]);
     }
-    number_of_photons = _number_of_photons;
+    number_of_photons = _discrete_number_of_photons;
   }
 
-  _number_of_photons = number_of_photons;
+  _discrete_number_of_photons = number_of_photons;
 
-  _active_source_index = 0;
-  _active_photon_index = 0;
-  _active_number_of_photons = round(_number_of_photons * _weights[0]);
+  _discrete_active_source_index = 0;
+  _discrete_active_photon_index = 0;
+  _discrete_active_number_of_photons =
+      round(_discrete_number_of_photons * _discrete_weights[0]);
 
   if (_log) {
     _log->write_info("Number of photons for PhotonSource reset to ",
-                     _number_of_photons, ".");
+                     _discrete_number_of_photons, ".");
   }
 
-  return _number_of_photons;
+  return _discrete_number_of_photons;
 }
 
 /**
@@ -119,28 +121,31 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
  * @return Photon.
  */
 Photon PhotonSource::get_random_photon() {
-  if (_active_source_index == _positions.size()) {
+  if (_discrete_active_source_index == _discrete_positions.size()) {
     // we completed a cycle, reset the counters
-    _active_source_index = 0;
-    _active_photon_index = 0;
-    _active_number_of_photons = round(_number_of_photons * _weights[0]);
+    _discrete_active_source_index = 0;
+    _discrete_active_photon_index = 0;
+    _discrete_active_number_of_photons =
+        round(_discrete_number_of_photons * _discrete_weights[0]);
   }
 
-  CoordinateVector<> position = _positions[_active_source_index];
+  CoordinateVector<> position =
+      _discrete_positions[_discrete_active_source_index];
 
   CoordinateVector<> direction = get_random_direction();
 
-  double energy = _spectrum.get_random_frequency();
+  double energy = _discrete_spectrum.get_random_frequency();
   double xsecH = _cross_sections.get_cross_section(ELEMENT_H, energy);
   double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, energy);
 
-  ++_active_photon_index;
-  if (_active_photon_index == _active_number_of_photons) {
-    _active_photon_index = 0;
-    ++_active_source_index;
-    if (_active_source_index < _positions.size()) {
-      _active_number_of_photons =
-          round(_number_of_photons * _weights[_active_source_index]);
+  ++_discrete_active_photon_index;
+  if (_discrete_active_photon_index == _discrete_active_number_of_photons) {
+    _discrete_active_photon_index = 0;
+    ++_discrete_active_source_index;
+    if (_discrete_active_source_index < _discrete_positions.size()) {
+      _discrete_active_number_of_photons =
+          round(_discrete_number_of_photons *
+                _discrete_weights[_discrete_active_source_index]);
     }
   }
 
@@ -152,7 +157,9 @@ Photon PhotonSource::get_random_photon() {
  *
  * @return Total luminosity (in s^-1).
  */
-double PhotonSource::get_total_luminosity() { return _total_luminosity; }
+double PhotonSource::get_total_luminosity() {
+  return _discrete_total_luminosity;
+}
 
 /**
  * @brief Reemit the given Photon.
