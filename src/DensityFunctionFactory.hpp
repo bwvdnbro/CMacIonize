@@ -94,10 +94,10 @@ public:
     // on library name). Each group is sorted alphabetically as well.
     if (type == "AsciiFile") {
       return new AsciiFileDensityFunction(params, log);
-    } else if (type == "Homogeneous") {
-      return new HomogeneousDensityFunction(params, log);
     } else if (type == "BlockSyntax") {
       return new BlockSyntaxDensityFunction(params, log);
+    } else if (type == "Homogeneous") {
+      return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "FLASHSnapshot") {
       return new FLASHSnapshotDensityFunction(params, log);
