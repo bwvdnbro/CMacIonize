@@ -34,6 +34,7 @@
 
 // non library dependent implementations
 #include "AsciiFileDensityFunction.hpp"
+#include "BlockSyntaxDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 
 // HDF5 dependent implementations
@@ -93,6 +94,8 @@ public:
     // on library name). Each group is sorted alphabetically as well.
     if (type == "AsciiFile") {
       return new AsciiFileDensityFunction(params, log);
+    } else if (type == "BlockSyntax") {
+      return new BlockSyntaxDensityFunction(params, log);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
