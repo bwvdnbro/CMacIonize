@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
+#include "CartesianDensityGrid.hpp"
 
 /**
  * @brief Unit test for the BlockSyntaxDensityFunction class.
@@ -36,7 +37,15 @@
 int main(int argc, char **argv) {
   BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
 
-  assert_condition(density_function(CoordinateVector<>(0.5)) == 0.);
+  CoordinateVector<> anchor;
+  CoordinateVector<> sides(1., 1., 1.);
+  Box box(anchor, sides);
+  CartesianDensityGrid grid(box, 64, 0., 8000., density_function);
+  assert_values_equal_tol(grid.get_total_hydrogen_number(),
+                          4. * M_PI * 0.25 * 0.25 * 0.25 / 3 +
+                              4. * M_PI * 0.125 * 0.125 * 0.125 / 3. +
+                              4. * 0.125 * 0.125 * 0.125 / 3.,
+                          0.1);
 
   return 0;
 }

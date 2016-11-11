@@ -27,6 +27,7 @@
 #define BLOCKSYNTAXBLOCK_HPP
 
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
 
 /**
  * @brief Block structure used in the BlockSyntaxDensityFunction.
@@ -74,9 +75,15 @@ public:
     double r = 0.;
     for (unsigned int i = 0; i < 3; ++i) {
       double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
-      r += std::pow(x, _exponent);
+      if (_exponent < 10.) {
+        r += std::pow(x, _exponent);
+      } else {
+        r = std::max(r, x);
+      }
     }
-    r = std::pow(r, 1. / _exponent);
+    if (_exponent < 10.) {
+      r = std::pow(r, 1. / _exponent);
+    }
     return r <= 1.;
   }
 

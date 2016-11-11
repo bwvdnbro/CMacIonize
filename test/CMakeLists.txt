@@ -488,11 +488,14 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
 
     ../src/BlockSyntaxBlock.hpp
     ../src/BlockSyntaxDensityFunction.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
 )
 add_unit_test(NAME testBlockSyntaxDensityFunction
-              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
 configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
                ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
                COPYONLY)
