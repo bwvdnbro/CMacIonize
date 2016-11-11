@@ -1,0 +1,7 @@
+number of blocks: 1
+
+block[0]:
+  origin: [0.5 m, 0.5 m, 0.5 m]
+  sides: [1. m, 1. m, 1. m]
+  type: cube
+  number density: 0. m^-3

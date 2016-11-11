@@ -482,6 +482,21 @@ set(TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES
 add_unit_test(NAME testIsotropicContinuousPhotonSource
               SOURCES ${TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES})
 
+## Unit test for BlockSyntaxDensityFunction
+set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
+    testBlockSyntaxDensityFunction.cpp
+
+    ../src/BlockSyntaxBlock.hpp
+    ../src/BlockSyntaxDensityFunction.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
+)
+add_unit_test(NAME testBlockSyntaxDensityFunction
+              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
+               ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
+               COPYONLY)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
