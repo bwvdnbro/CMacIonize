@@ -34,6 +34,7 @@
 
 // non library dependent implementations
 #include "AsciiFileDensityFunction.hpp"
+#include "BlockSyntaxDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 
 // HDF5 dependent implementations
@@ -95,6 +96,8 @@ public:
       return new AsciiFileDensityFunction(params, log);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
+    } else if (type == "BlockSyntax") {
+      return new BlockSyntaxDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "FLASHSnapshot") {
       return new FLASHSnapshotDensityFunction(params, log);

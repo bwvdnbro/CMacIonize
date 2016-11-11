@@ -29,6 +29,7 @@
 
 #include "BlockSyntaxBlock.hpp"
 #include "DensityFunction.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 #include <sstream>
@@ -66,8 +67,9 @@ public:
    * @brief Constructor.
    *
    * @param filename Name of the YAML file containing the block information.
+   * @param log Log to write logging info to.
    */
-  BlockSyntaxDensityFunction(std::string filename) {
+  BlockSyntaxDensityFunction(std::string filename, Log *log = nullptr) {
     ParameterFile blockfile(filename);
 
     const int numblock = blockfile.get_value< int >("number of blocks");
@@ -90,7 +92,22 @@ public:
       }
       _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density));
     }
+
+    if (log) {
+      log->write_status("Created BlockSyntaxDensityFunction with ", numblock,
+                        " blocks.");
+    }
   }
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read.
+   * @param log Log to write logging info to.
+   */
+  BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
+      : BlockSyntaxDensityFunction(
+            params.get_value< std::string >("densityfunction.filename"), log) {}
 
   /**
    * @brief Function that gives the density for a given coordinate.

@@ -494,8 +494,7 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     ../src/ParameterFile.hpp
 )
 add_unit_test(NAME testBlockSyntaxDensityFunction
-              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
 configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
                ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
                COPYONLY)
