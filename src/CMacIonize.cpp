@@ -33,6 +33,7 @@
 #include "DensityGridWriterFactory.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
+#include "IsotropicContinuousPhotonSource.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
@@ -133,8 +134,17 @@ int main(int argc, char **argv) {
       PhotonSourceDistributionFactory::generate(params, log);
   RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
   PlanckPhotonSourceSpectrum spectrum(random_generator);
-  PhotonSource source(*sourcedistribution, spectrum, cross_sections,
-                      random_generator, log);
+  PhotonSource source(sourcedistribution, &spectrum, nullptr, nullptr, 1.,
+                      cross_sections, random_generator, log);
+
+  // external radiation test. Does not work (yet).
+  //  IsotropicContinuousPhotonSource isotropic_source(
+  //        Box(params.get_physical_vector<QUANTITY_LENGTH>("densitygrid.box_anchor"),
+  //            params.get_physical_vector<QUANTITY_LENGTH>("densitygrid.box_sides")),
+  //        random_generator);
+  //  PhotonSource source(nullptr, nullptr, &isotropic_source, &spectrum, 0.,
+  //  cross_sections,
+  //                      random_generator, log);
 
   // set up output
   DensityGridWriter *writer =

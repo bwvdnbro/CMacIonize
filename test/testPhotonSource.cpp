@@ -81,7 +81,8 @@ int main(int argc, char **argv) {
   TestCrossSections cross_sections;
   RandomGenerator random_generator;
 
-  PhotonSource source(distribution, spectrum, cross_sections, random_generator);
+  PhotonSource source(&distribution, &spectrum, nullptr, nullptr, 1.,
+                      cross_sections, random_generator);
   source.set_number_of_photons(1000001);
 
   // check if the returned position is what we expect it to be
