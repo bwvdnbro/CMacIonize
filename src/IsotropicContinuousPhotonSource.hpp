@@ -28,7 +28,11 @@
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
+
 #include <cfloat>
 
 /**
@@ -42,15 +46,48 @@ private:
   /*! @brief Random generator. */
   RandomGenerator &_random_generator;
 
+  /*! @brief Total luminosity of the radiation (in s^-1). */
+  double _luminosity;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param box Box in which the radiation enters.
    * @param random_generator Random generator.
+   * @param luminosity Total luminosity of the radiation (in s^-1).
+   * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(Box box, RandomGenerator &random_generator)
-      : _box(box), _random_generator(random_generator) {}
+  IsotropicContinuousPhotonSource(Box box, RandomGenerator &random_generator,
+                                  double luminosity, Log *log = nullptr)
+      : _box(box), _random_generator(random_generator),
+        _luminosity(luminosity) {
+    if (log) {
+      log->write_status(
+          "Constructed IsotropicContinuousPhotonSource with total luminosity ",
+          _luminosity, " s^-1.");
+    }
+  }
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParamterFile to read from.
+   * @param random_generator RandomGenerator.
+   * @param log Log to write logging info to.
+   */
+  IsotropicContinuousPhotonSource(ParameterFile &params,
+                                  RandomGenerator &random_generator,
+                                  Log *log = nullptr)
+      : IsotropicContinuousPhotonSource(
+            Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid.box_anchor"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid.box_sides")),
+            random_generator,
+            params.get_physical_value< QUANTITY_FREQUENCY >(
+                "continuousphotonsource.luminosity", "4.26e49 s^-1"),
+            log) {}
 
   /**
    * @brief Get the entrance position and direction of a random external photon.
@@ -130,8 +167,31 @@ public:
 
     CoordinateVector<> position = focus + maxl * direction;
 
+    // make sure the photon is inside the box
+    for (unsigned int i = 0; i < 3; ++i) {
+      // we cannot simply take the top anchor of the box as upper limit, since
+      // the top anchor itself strictly speaking lies outside the box (lower
+      // limits are inclusive, upper limits exclusive due to the way we
+      // calculate grid indices)
+      // we therefore take the closest value that is still in the box
+      // epsilon is the difference between 1.0 and the next floating point value
+      // larger than 1.0 that can be represented as a 64-bit floating point.
+      position[i] =
+          std::min(position[i], anchor_top[i] -
+                                    std::numeric_limits< double >::epsilon() *
+                                        _box.get_sides()[i]);
+      position[i] = std::max(position[i], anchor_bottom[i]);
+    }
+
     return std::make_pair(position, direction);
   }
+
+  /**
+   * @brief Get the total luminosity of the source.
+   *
+   * @return Total luminosity (in s^-1).
+   */
+  inline double get_total_luminosity() { return _luminosity; }
 };
 
 #endif // ISOTROPICCONTINUOUSPHOTONSOURCE_HPP

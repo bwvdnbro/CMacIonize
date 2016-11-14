@@ -88,6 +88,7 @@ set(CMACIONIZE_SOURCES
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp
     Configuration.hpp.in
+    ContinuousPhotonSourceFactory.hpp
     CoordinateVector.hpp
     CommandLineOption.hpp
     CommandLineParser.hpp

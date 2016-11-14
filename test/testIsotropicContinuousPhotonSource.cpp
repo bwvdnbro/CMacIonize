@@ -38,7 +38,7 @@
 int main(int argc, char **argv) {
   Box box(CoordinateVector<>(), CoordinateVector<>(1.));
   RandomGenerator random_generator(42);
-  IsotropicContinuousPhotonSource source(box, random_generator);
+  IsotropicContinuousPhotonSource source(box, random_generator, 1.);
 
   const unsigned int numphoton = 10000000;
 

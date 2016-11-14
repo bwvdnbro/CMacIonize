@@ -76,8 +76,10 @@ protected:
    */
   inline void update_integrals(const double ds, DensityValues &cell,
                                Photon &photon) {
-    cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
-    cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+    if (cell.get_total_density() > 0.) {
+      cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
+      cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+    }
   }
 
 protected:

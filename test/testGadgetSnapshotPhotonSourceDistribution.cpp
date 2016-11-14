@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;
-  PhotonSource source(&distribution, &spectrum, nullptr, nullptr, 1.,
+  PhotonSource source(&distribution, &spectrum, nullptr, nullptr,
                       cross_sections, random_generator);
 
   Photon photon = source.get_random_photon();

@@ -72,9 +72,6 @@ private:
   /*! @brief Weights of the discrete photon sources. */
   std::vector< double > _discrete_weights;
 
-  /*! @brief Total luminosity of all discrete sources together (in s^-1). */
-  double _discrete_total_luminosity;
-
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum *_discrete_spectrum;
 
@@ -96,8 +93,12 @@ private:
 
   ///
 
-  /*! @brief Relative weights of discrete and continuous sources. */
-  double _discrete_to_continuous_ratio;
+  /*! @brief Fraction of photons that is emitted by discrete sources. */
+  double _discrete_fraction;
+
+  /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
+   */
+  double _total_luminosity;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
@@ -167,7 +168,6 @@ public:
                PhotonSourceSpectrum *discrete_spectrum,
                IsotropicContinuousPhotonSource *continuous_source,
                PhotonSourceSpectrum *continuous_spectrum,
-               double discrete_to_continuous_ratio,
                CrossSections &cross_sections, RandomGenerator &random_generator,
                Log *log = nullptr);
 

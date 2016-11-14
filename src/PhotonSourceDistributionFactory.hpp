@@ -81,12 +81,14 @@ public:
     std::string type = params.get_value< std::string >(
         "photonsourcedistribution.type", "SingleStar");
     if (log) {
-      log->write_info("Requested PhotonSourceDistribution type: ", type);
+      log->write_info("Requested PhotonSourceDistribution type: ", type, ".");
     }
 #ifndef HAVE_HDF5
     check_hdf5(type, log);
 #endif
-    if (type == "SILCC") {
+    if (type == "None") {
+      return nullptr;
+    } else if (type == "SILCC") {
       return new SILCCPhotonSourceDistribution(params, log);
     } else if (type == "SingleStar") {
       return new SingleStarPhotonSourceDistribution(params, log);
