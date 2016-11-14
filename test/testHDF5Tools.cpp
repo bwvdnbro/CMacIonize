@@ -52,6 +52,10 @@ int main(int argc, char **argv) {
 
     HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/HydroScheme");
 
+    std::vector< std::string > attnames = HDF5Tools::get_attribute_names(group);
+
+    assert_condition(attnames.size() == 15);
+
     assert_condition(group > 0);
 
     // test reading various types of attributes.

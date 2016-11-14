@@ -53,15 +53,19 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param box Box in which the radiation enters.
+   * @param box Box in which the radiation enters (in m).
    * @param random_generator Random generator.
-   * @param luminosity Total luminosity of the radiation (in s^-1).
+   * @param flux Total flux of the radiation (in m^-2s^-1).
    * @param log Log to write logging info to.
    */
   IsotropicContinuousPhotonSource(Box box, RandomGenerator &random_generator,
-                                  double luminosity, Log *log = nullptr)
-      : _box(box), _random_generator(random_generator),
-        _luminosity(luminosity) {
+                                  double flux, Log *log = nullptr)
+      : _box(box), _random_generator(random_generator) {
+    double area = 2. * _box.get_sides().x() * _box.get_sides().y() +
+                  2. * _box.get_sides().x() * _box.get_sides().z() +
+                  2. * _box.get_sides().y() * _box.get_sides().z();
+    _luminosity = flux * area;
+
     if (log) {
       log->write_status(
           "Constructed IsotropicContinuousPhotonSource with total luminosity ",
@@ -85,8 +89,8 @@ public:
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid.box_sides")),
             random_generator,
-            params.get_physical_value< QUANTITY_FREQUENCY >(
-                "continuousphotonsource.luminosity", "4.26e49 s^-1"),
+            params.get_physical_value< QUANTITY_FLUX >(
+                "continuousphotonsource.flux", "5700 cm^-2s^-1"),
             log) {}
 
   /**

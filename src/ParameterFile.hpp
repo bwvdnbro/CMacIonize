@@ -57,7 +57,24 @@ private:
   void strip_whitespace_line(std::string &line);
 
 public:
+  /**
+   * @brief Empty constructor.
+   */
+  ParameterFile() {}
+
   ParameterFile(std::string filename);
+
+  /**
+   * @brief Add the given value and key to the internal dictionary.
+   *
+   * If the key already exists, the existing value is replaced.
+   *
+   * @param key Key.
+   * @param value Value.
+   */
+  inline void add_value(std::string key, std::string value) {
+    _dictionary[key] = value;
+  }
 
   void print_contents(std::ostream &stream);
 

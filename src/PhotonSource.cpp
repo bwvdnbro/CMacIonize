@@ -114,8 +114,14 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   _discrete_number_of_photons = 0;
   _continuous_number_of_photons = 0;
 
+  // make sure we have at least 10 photons per discrete source
   if (number_of_photons * _discrete_fraction < 10 * _discrete_weights.size()) {
     number_of_photons = 10 * _discrete_weights.size() / _discrete_fraction;
+  }
+
+  // make sure we have at least 100 photons for the continuous sources
+  if (number_of_photons * (1. - _discrete_fraction) < 100) {
+    number_of_photons = 100 / (1. - _discrete_fraction);
   }
 
   while (number_of_photons !=

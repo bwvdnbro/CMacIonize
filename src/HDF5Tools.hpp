@@ -475,6 +475,40 @@ read_attribute< std::vector< double > >(hid_t group, std::string name) {
 }
 
 /**
+ * @brief Add an attribute name to the list. Function used by H5Aiterate.
+ *
+ * @param group HDF5Group handle to the group we are reading.
+ * @param c_name C-string name of the attribute.
+ * @param info Attribute info.
+ * @param data Extra data passed on to the function.
+ * @return Error code used by H5Aiterate; just zero in our case.
+ */
+inline herr_t add_attribute_name(hid_t group, const char *c_name,
+                                 const H5A_info_t *info, void *data) {
+  std::vector< std::string > &names = *((std::vector< std::string > *)data);
+  std::string name(c_name);
+  names.push_back(name);
+  return 0;
+}
+
+/**
+ * @brief Get the names of all the attributes of the given group.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @return std::vector containing the names of all attributes in the group.
+ */
+inline std::vector< std::string > get_attribute_names(hid_t group) {
+  std::vector< std::string > names;
+  herr_t hdf5status = H5Aiterate(group, H5_INDEX_NAME, H5_ITER_INC, nullptr,
+                                 add_attribute_name, &names);
+  if (hdf5status < 0) {
+    error("Failed to read attribute names for group!");
+  }
+
+  return names;
+}
+
+/**
  * @brief Write the attribute with the given name to the given group.
  *
  * @param group HDF5Group handle to an open HDF5 group.

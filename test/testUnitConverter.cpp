@@ -58,6 +58,16 @@ int main(int argc, char **argv) {
   // 1 g in a cubic centimetre is more than 1 kg in a cubic metre
   assert_condition(UnitConverter< QUANTITY_DENSITY >::to_SI(1, "g cm^-3") > 1.);
 
+  /// FLUX
+  assert_condition(UnitConverter< QUANTITY_FLUX >::convert(1., "m^-2s^-1",
+                                                           "m^-2s^-1") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_FLUX >::convert(1., "cm^-2s^-1",
+                                                           "cm^-2s^-1") == 1.);
+  // 1 photon per square centimetres per second is more than 1 photon per square
+  // metres per second
+  assert_condition(UnitConverter< QUANTITY_FLUX >::to_SI(1, "cm^-2s^-1") > 1.);
+
   /// FREQUENCY
   assert_condition(
       UnitConverter< QUANTITY_FREQUENCY >::convert(1., "s^-1", "s^-1") == 1.);
