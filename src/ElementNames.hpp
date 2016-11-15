@@ -29,12 +29,42 @@
 
 /**
  * @brief Names of supported elements.
+ *
+ * These are the atoms/ions that can be ionized by radiation in our program. A
+ * suffix 'p' denotes an ion, and is followed by a number denoting the
+ * ionization state. Note that the total number of ionization states of a single
+ * element will be one more than listed below, since the highest ionized state
+ * is not mentioned (as it can not be ionized).
  */
 enum ElementName {
-  /*! @brief Hydrogen. */
+  /*! @brief Neutral hydrogen. */
   ELEMENT_H = 0,
-  /*! @brief Helium. */
+  /*! @brief Neutral helium. */
   ELEMENT_He,
+  /*! @brief Ionized carbon. */
+  ELEMENT_Cp1,
+  /*! @brief Double ionized carbon. */
+  ELEMENT_Cp2,
+  /*! @brief Neutral nytrogen. */
+  ELEMENT_N,
+  /*! @brief Ionized nytrogen. */
+  ELEMENT_Np1,
+  /*! @brief Double ionized nytrogen. */
+  ELEMENT_Np2,
+  /*! @brief Neutral oxygen. */
+  ELEMENT_O,
+  /*! @brief Ionized oxygen. */
+  ELEMENT_Op1,
+  /*! @brief Neutral neon. */
+  ELEMENT_Ne,
+  /*! @brief Ionized neon. */
+  ELEMENT_Nep1,
+  /*! @brief Ionized sulfur. */
+  ELEMENT_Sp1,
+  /*! @brief Double ionized sulfur. */
+  ELEMENT_Sp2,
+  /*! @brief Triple ionized sulfur. */
+  ELEMENT_Sp3,
   /*! @brief Number of supported elements. */
   NUMBER_OF_ELEMENTS
 };

@@ -206,10 +206,50 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
 double VernerCrossSections::get_cross_section(ElementName element,
                                               double energy) {
   switch (element) {
+
   case ELEMENT_H:
     return get_cross_section_verner(1, 1, 1, energy);
+
   case ELEMENT_He:
     return get_cross_section_verner(2, 2, 1, energy);
+
+  case ELEMENT_Cp1:
+    return get_cross_section_verner(6, 5, 3, energy) +
+           get_cross_section_verner(6, 5, 2, energy);
+  case ELEMENT_Cp2:
+    return get_cross_section_verner(6, 4, 2, energy);
+
+  case ELEMENT_N:
+    return get_cross_section_verner(7, 7, 3, energy) +
+           get_cross_section_verner(7, 7, 2, energy);
+  case ELEMENT_Np1:
+    return get_cross_section_verner(7, 6, 3, energy) +
+           get_cross_section_verner(7, 6, 2, energy);
+  case ELEMENT_Np2:
+    return get_cross_section_verner(7, 5, 3, energy);
+
+  case ELEMENT_O:
+    return get_cross_section_verner(8, 8, 3, energy) +
+           get_cross_section_verner(8, 8, 2, energy);
+  case ELEMENT_Op1:
+    return get_cross_section_verner(8, 7, 3, energy) +
+           get_cross_section_verner(8, 7, 2, energy);
+
+  case ELEMENT_Ne:
+    return get_cross_section_verner(10, 10, 3, energy) +
+           get_cross_section_verner(10, 10, 2, energy);
+  case ELEMENT_Nep1:
+    return get_cross_section_verner(10, 9, 3, energy);
+
+  case ELEMENT_Sp1:
+    return get_cross_section_verner(16, 15, 5, energy) +
+           get_cross_section_verner(16, 15, 4, energy);
+  case ELEMENT_Sp2:
+    return get_cross_section_verner(16, 14, 5, energy) +
+           get_cross_section_verner(16, 14, 4, energy);
+  case ELEMENT_Sp3:
+    return get_cross_section_verner(16, 13, 5, energy);
+
   default:
     error("Unknown element: %i", element);
   }

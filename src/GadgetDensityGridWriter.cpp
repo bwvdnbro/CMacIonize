@@ -179,8 +179,8 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     nfracH[index] = cellvals.get_neutral_fraction_H();
     nfracHe[index] = cellvals.get_neutral_fraction_He();
     temperature[index] = cellvals.get_temperature();
-    jH[index] = cellvals.get_mean_intensity_H();
-    jHe[index] = cellvals.get_mean_intensity_He();
+    jH[index] = cellvals.get_mean_intensity(ELEMENT_H);
+    jHe[index] = cellvals.get_mean_intensity(ELEMENT_He);
     ++index;
   }
   HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates", coords);

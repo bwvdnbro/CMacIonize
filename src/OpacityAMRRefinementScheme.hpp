@@ -85,7 +85,7 @@ public:
     double opacity =
         cell.get_total_density() * cell.get_neutral_fraction_H() * xsecH;
 
-    return opacity > xsecH;
+    return opacity > _target_opacity;
   }
 };
 

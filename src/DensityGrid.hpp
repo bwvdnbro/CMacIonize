@@ -60,9 +60,9 @@ protected:
   inline double get_optical_depth(const double ds, DensityValues &cell,
                                   Photon &photon) {
     return ds * cell.get_total_density() *
-           (photon.get_hydrogen_cross_section() *
+           (photon.get_cross_section(ELEMENT_H) *
                 cell.get_neutral_fraction_H() +
-            cell.get_helium_abundance() * photon.get_helium_cross_section() *
+            cell.get_helium_abundance() * photon.get_cross_section(ELEMENT_He) *
                 cell.get_neutral_fraction_He());
   }
 
@@ -77,8 +77,13 @@ protected:
   inline void update_integrals(const double ds, DensityValues &cell,
                                Photon &photon) {
     if (cell.get_total_density() > 0.) {
-      cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
-      cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+      // changing the value below from 2 to NUMBER_OF_ELEMENTS makes a huge
+      // difference in run time
+      for (int i = 0; i < 2; ++i) {
+        ElementName element = static_cast< ElementName >(i);
+        cell.increase_mean_intensity(element,
+                                     ds * photon.get_cross_section(element));
+      }
     }
   }
 

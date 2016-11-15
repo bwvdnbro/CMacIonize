@@ -26,6 +26,8 @@
 #ifndef DENSITYVALUES_HPP
 #define DENSITYVALUES_HPP
 
+#include "ElementNames.hpp"
+
 /**
  * @brief Density values associated with a single cell of the DensityGrid.
  */
@@ -54,15 +56,12 @@ private:
    *  helium. */
   double _pHe_em[4];
 
-  /*! @brief Mean intensity of hydrogen ionizing radiation (in m^3s^-1). */
-  double _mean_intensity_H;
+  /*! @brief Mean intensity integrals of ionizing radiation (in m^3s^-1). */
+  double _mean_intensity[NUMBER_OF_ELEMENTS];
 
   /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
    *  sub-step (in m^3s^-1). */
   double _mean_intensity_H_old;
-
-  /*! @brief Mean intensity of helium ionizing radiation (in m^3s^-1). */
-  double _mean_intensity_He;
 
   /*! @brief Neutral fraction of hydrogen during the previous step. */
   double _old_neutral_fraction_H;
@@ -74,9 +73,12 @@ public:
   inline DensityValues()
       : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
         _temperature(0.), _helium_abundance(0.), _pHion(0.),
-        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H(0.),
-        _mean_intensity_H_old(0.), _mean_intensity_He(0.),
-        _old_neutral_fraction_H(0.) {}
+        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
+        _old_neutral_fraction_H(0.) {
+    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+      _mean_intensity[i] = 0.;
+    }
+  }
 
   /**
    * @brief Set the total density.
@@ -164,31 +166,24 @@ public:
   }
 
   /**
-   * @brief Increase the value of the mean intensity of hydrogen ionizing
-   * radiation by the given amount.
+   * @brief Increase the value for the mean intensity integral of the given
+   * element by the given amount.
    *
-   * @param dmean_intensity_H Increment (in m^3s^-1).
+   * @param element ElementName of a valid element.
+   * @param dmean_intensity Increment (in m^3s^-1).
    */
-  inline void increase_mean_intensity_H(double dmean_intensity_H) {
-    _mean_intensity_H += dmean_intensity_H;
-  }
-
-  /**
-   * @brief Increase the value of the mean intensity of helium ionizing
-   * radiation by the given amount.
-   *
-   * @param dmean_intensity_He Increment (in m^3s^-1).
-   */
-  inline void increase_mean_intensity_He(double dmean_intensity_He) {
-    _mean_intensity_He += dmean_intensity_He;
+  inline void increase_mean_intensity(ElementName element,
+                                      double dmean_intensity) {
+    _mean_intensity[element] += dmean_intensity;
   }
 
   /**
    * @brief Reset the values of the mean intensities to zero.
    */
   inline void reset_mean_intensities() {
-    _mean_intensity_H = 0.;
-    _mean_intensity_He = 0.;
+    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+      _mean_intensity[i] = 0.;
+    }
     _mean_intensity_H_old = 0.;
   }
 
@@ -237,19 +232,12 @@ public:
 
   /**
    * @brief Get the probability of a photon being re-emitted as an ionizing
-   * photon after absorption by hydrogen.
+   * photon after absorption by helium.
    *
    * @param index Mode in which the photon is re-emitted.
    * @return Probability of ionizing photon re-emission.
    */
   inline double get_pHe_em(unsigned char index) { return _pHe_em[index]; }
-
-  /**
-   * @brief Get the mean intensity of hydrogen ionizing radiation.
-   *
-   * @return Mean intensity of hydrogen ionizing radiation (in m^3s^-1).
-   */
-  inline double get_mean_intensity_H() { return _mean_intensity_H; }
 
   /**
    * @brief Get the mean intensity of hydrogen ionizing radiation during the
@@ -261,11 +249,14 @@ public:
   inline double get_mean_intensity_H_old() { return _mean_intensity_H_old; }
 
   /**
-   * @brief Get the mean intensity of helium ionizing radiation.
+   * @brief Get the mean intensity integral for the given element.
    *
-   * @return Mean intensity of helium ionizing radiation (in m^3s^-1).
+   * @param element ElementName of a valid element.
+   * @return Mean intensity of ionizing radiation (in m^3s^-1).
    */
-  inline double get_mean_intensity_He() { return _mean_intensity_He; }
+  inline double get_mean_intensity(ElementName element) {
+    return _mean_intensity[element];
+  }
 
   /**
    * @brief Get the hydrogen neutral fraction during the previous iteration.

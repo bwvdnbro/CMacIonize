@@ -197,7 +197,7 @@ public:
 #endif
 
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      double jH = it.get_values().get_mean_intensity_H() * norm;
+      double jH = it.get_values().get_mean_intensity(ELEMENT_H) * norm;
       double jHold = it.get_values().get_mean_intensity_H_old();
       double sum = jH + jHold;
       double diff = jH - it.get_values().get_mean_intensity_H_old();

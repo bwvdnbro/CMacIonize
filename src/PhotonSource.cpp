@@ -223,9 +223,9 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double helium_abundance = cell.get_helium_abundance();
   double pHabs = 1. / (1. +
                        cell.get_neutral_fraction_He() * helium_abundance *
-                           photon.get_helium_cross_section() /
+                           photon.get_cross_section(ELEMENT_He) /
                            cell.get_neutral_fraction_H() /
-                           photon.get_hydrogen_cross_section());
+                           photon.get_cross_section(ELEMENT_H));
 
   double x = _random_generator.get_uniform_random_double();
   if (x <= pHabs) {
@@ -314,8 +314,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
 
   double xsecH = _cross_sections.get_cross_section(ELEMENT_H, new_frequency);
   double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, new_frequency);
-  photon.set_hydrogen_cross_section(xsecH);
-  photon.set_helium_cross_section(xsecHe);
+  photon.set_cross_section(ELEMENT_H, xsecH);
+  photon.set_cross_section(ELEMENT_He, xsecHe);
 
   return true;
 }

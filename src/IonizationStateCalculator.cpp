@@ -63,8 +63,8 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
     DensityValues &cell = it.get_values();
     double jfaccell = jfac / cellvolume;
     cell.set_old_neutral_fraction_H(cell.get_neutral_fraction_H());
-    double jH = jfaccell * cell.get_mean_intensity_H();
-    double jHe = jfaccell * cell.get_mean_intensity_He();
+    double jH = jfaccell * cell.get_mean_intensity(ELEMENT_H);
+    double jHe = jfaccell * cell.get_mean_intensity(ELEMENT_He);
     double ntot = cell.get_total_density();
     if (jH > 0. && ntot > 0.) {
       double T = cell.get_temperature();

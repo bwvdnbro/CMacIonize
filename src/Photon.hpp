@@ -27,6 +27,7 @@
 #define PHOTON_HPP
 
 #include "CoordinateVector.hpp"
+#include "ElementNames.hpp"
 
 /**
  * @brief Photon types.
@@ -61,11 +62,8 @@ private:
   /*! @brief Current energy contents of the photon (in Hz). */
   double _energy;
 
-  /*! @brief Hydrogen ionization cross section (in m^2). */
-  double _xsecH;
-
-  /*! @brief Helium ionization cross section (in m^2). */
-  double _xsecHe;
+  /*! @brief Ionization cross sections (in m^2). */
+  double _cross_sections[NUMBER_OF_ELEMENTS];
 
   /*! @brief Type of the photon. All photons start off as PHOTONTYPE_PRIMARY,
    *  but their type can change during reemission events. */
@@ -84,7 +82,10 @@ public:
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy, double xsecH, double xsecHe)
       : _position(position), _direction(direction), _energy(energy),
-        _xsecH(xsecH), _xsecHe(xsecHe), _type(PHOTONTYPE_PRIMARY) {}
+        _type(PHOTONTYPE_PRIMARY) {
+    _cross_sections[ELEMENT_H] = xsecH;
+    _cross_sections[ELEMENT_He] = xsecHe;
+  }
 
   /**
    * @brief Get the current position of the photon.
@@ -108,18 +109,14 @@ public:
   inline double get_energy() { return _energy; }
 
   /**
-   * @brief Get the ionization cross section for hydrogen.
+   * @brief Get the ionization cross section for the given element.
    *
-   * @return Hydrogen ionization cross section (in m^2).
+   * @param element ElementName of a valid element.
+   * @return Ionization cross section (in m^2).
    */
-  inline double get_hydrogen_cross_section() { return _xsecH; }
-
-  /**
-   * @brief Get the ionization cross section for helium.
-   *
-   * @return Helium ionization cross section (in m^2).
-   */
-  inline double get_helium_cross_section() { return _xsecHe; }
+  inline double get_cross_section(ElementName element) {
+    return _cross_sections[element];
+  }
 
   /**
    * @brief Get the type of the photon.
@@ -154,18 +151,14 @@ public:
   inline void set_energy(double energy) { _energy = energy; }
 
   /**
-   * @brief Set the hydrogen ionization cross section.
+   * @brief Set the ionization cross section for the given element.
    *
-   * @param xsecH Hydrogen ionization cross section (in m^2).
+   * @param element ElementName of a valid element.
+   * @param cross_section Ionization cross section (in m^2).
    */
-  inline void set_hydrogen_cross_section(double xsecH) { _xsecH = xsecH; }
-
-  /**
-   * @brief Set the helium ionization cross section.
-   *
-   * @param xsecHe Helium ionization cross section (in m^2).
-   */
-  inline void set_helium_cross_section(double xsecHe) { _xsecHe = xsecHe; }
+  inline void set_cross_section(ElementName element, double cross_section) {
+    _cross_sections[element] = cross_section;
+  }
 
   /**
    * @brief Set the photon type.
