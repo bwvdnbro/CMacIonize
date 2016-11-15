@@ -66,6 +66,7 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     CartesianDensityGrid.cpp
     CMacIonize.cpp
+    CMacIonizeSnapshotDensityFunction.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
@@ -87,7 +88,9 @@ set(CMACIONIZE_SOURCES
     CartesianDensityGrid.hpp
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp
+    CMacIonizeSnapshotDensityFunction.hpp
     Configuration.hpp.in
+    ContinuousPhotonSourceFactory.hpp
     CoordinateVector.hpp
     CommandLineOption.hpp
     CommandLineParser.hpp

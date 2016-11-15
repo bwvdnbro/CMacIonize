@@ -41,6 +41,7 @@
  */
 enum Quantity {
   QUANTITY_DENSITY,
+  QUANTITY_FLUX,
   QUANTITY_FREQUENCY,
   QUANTITY_LENGTH,
   QUANTITY_MASS,
@@ -136,6 +137,50 @@ inline double UnitConverter< QUANTITY_DENSITY >::to_unit(double value,
     return value * 1.e-3;
   } else {
     error("Unknown density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_FLUX
+
+/**
+ * @brief UnitConverter::to_SI() specialization for a flux.
+ *
+ * @param value Flux value in strange units.
+ * @param unit Strange units.
+ * @return Flux value in per square metres per second.
+ */
+template <>
+inline double UnitConverter< QUANTITY_FLUX >::to_SI(double value,
+                                                    std::string unit) {
+  if (unit == "m^-2s^-1") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "cm^-2s^-1") {
+    return value * 1.e4;
+  } else {
+    error("Unknown flux unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for a flux.
+ *
+ * @param value Flux value in per square metres per second.
+ * @param unit Strange units.
+ * @return Flux value in strange units.
+ */
+template <>
+inline double UnitConverter< QUANTITY_FLUX >::to_unit(double value,
+                                                      std::string unit) {
+  if (unit == "m^-2s^-1") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "cm^-2s^-1") {
+    return value * 1.e-4;
+  } else {
+    error("Unknown flux unit: \"%s\".", unit.c_str());
     return 0.;
   }
 }

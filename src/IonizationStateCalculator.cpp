@@ -85,8 +85,13 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
 
       // coolants. We don't do them for the moment...
     } else {
-      cell.set_neutral_fraction_H(1.);
-      cell.set_neutral_fraction_He(1.);
+      if (ntot > 0.) {
+        cell.set_neutral_fraction_H(1.);
+        cell.set_neutral_fraction_He(1.);
+      } else {
+        cell.set_neutral_fraction_H(0.);
+        cell.set_neutral_fraction_He(0.);
+      }
     }
   }
 }

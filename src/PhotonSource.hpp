@@ -39,6 +39,7 @@
 
 class CrossSections;
 class DensityValues;
+class IsotropicContinuousPhotonSource;
 class Log;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
@@ -71,26 +72,33 @@ private:
   /*! @brief Weights of the discrete photon sources. */
   std::vector< double > _discrete_weights;
 
-  /*! @brief Total luminosity of all discrete sources together (in s^-1). */
-  double _discrete_total_luminosity;
-
   /*! @brief Spectrum of the discrete photon sources. */
-  PhotonSourceSpectrum &_discrete_spectrum;
+  PhotonSourceSpectrum *_discrete_spectrum;
 
   ///
 
   /// continuous sources
 
-  /*! @brief Total number of photons emitted by the continuous sources. */
+  /*! @brief Total number of photons emitted by the continuous source. */
   unsigned int _continuous_number_of_photons;
 
-  /*! @brief Number of photons emitted by the continuous sources. */
+  /*! @brief Number of photons already emitted by the continuous source. */
   unsigned int _continuous_active_number_of_photons;
 
+  /*! @brief IsotropicContinuousPhotonSource instance used. */
+  IsotropicContinuousPhotonSource *_continuous_source;
+
   /*! @brief Spectrum of the continuous sources. */
-  PhotonSourceSpectrum *_continous_spectrum;
+  PhotonSourceSpectrum *_continuous_spectrum;
 
   ///
+
+  /*! @brief Fraction of photons that is emitted by discrete sources. */
+  double _discrete_fraction;
+
+  /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
+   */
+  double _total_luminosity;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
@@ -110,10 +118,58 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
+  /**
+   * @brief Update the internal counters that distribute the photon sampling
+   * over the various discrete and continuous sources.
+   */
+  inline void update_indices() {
+    if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
+      ++_continuous_number_of_photons;
+      if (_continuous_active_number_of_photons ==
+          _continuous_number_of_photons) {
+        // we did all continuous sources and completed the cycle, reset the
+        // counters and start again with the discrete sources
+        _discrete_active_source_index = 0;
+        _discrete_active_photon_index = 0;
+        _discrete_active_number_of_photons =
+            std::round(_discrete_number_of_photons * _discrete_weights[0]);
+        // in case there are no discrete sources
+        if (_discrete_active_source_index == _discrete_positions.size()) {
+          _continuous_active_number_of_photons = 0;
+        }
+      }
+    } else {
+      ++_discrete_active_photon_index;
+      if (_discrete_active_photon_index == _discrete_active_number_of_photons) {
+        _discrete_active_photon_index = 0;
+        ++_discrete_active_source_index;
+        if (_discrete_active_source_index < _discrete_positions.size()) {
+          _discrete_active_number_of_photons =
+              std::round(_discrete_number_of_photons *
+                         _discrete_weights[_discrete_active_source_index]);
+        } else {
+          // we did all discrete sources, now do the continuous source
+          _continuous_active_number_of_photons = 0;
+          // in case there are no continuous sources
+          if (_continuous_active_number_of_photons ==
+              _continuous_number_of_photons) {
+            _discrete_active_source_index = 0;
+            _discrete_active_photon_index = 0;
+            _discrete_active_number_of_photons =
+                std::round(_discrete_number_of_photons * _discrete_weights[0]);
+          }
+        }
+      }
+    }
+  }
+
 public:
-  PhotonSource(PhotonSourceDistribution &distribution,
-               PhotonSourceSpectrum &spectrum, CrossSections &cross_sections,
-               RandomGenerator &random_generator, Log *log = nullptr);
+  PhotonSource(PhotonSourceDistribution *distribution,
+               PhotonSourceSpectrum *discrete_spectrum,
+               IsotropicContinuousPhotonSource *continuous_source,
+               PhotonSourceSpectrum *continuous_spectrum,
+               CrossSections &cross_sections, RandomGenerator &random_generator,
+               Log *log = nullptr);
 
   unsigned int set_number_of_photons(unsigned int number_of_photons);
 

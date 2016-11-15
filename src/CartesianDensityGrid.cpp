@@ -428,8 +428,10 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
   // find out in which cell the photon is currently hiding
   CoordinateVector< int > index = get_cell_indices(photon_origin);
 
+  unsigned int ncell = 0;
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
+    ++ncell;
     Box cell = get_cell(index);
 
     double ds;
@@ -471,6 +473,13 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
     update_integrals(ds, density, photon);
 
     S += ds;
+  }
+
+  if (ncell == 0) {
+    error("Photon leaves the system immediately (position: %g %g %g, "
+          "direction: %g %g %g)!",
+          photon_origin.x(), photon_origin.y(), photon_origin.z(),
+          photon_direction.x(), photon_direction.y(), photon_direction.z());
   }
 
   photon.set_position(photon_origin);

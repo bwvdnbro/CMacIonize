@@ -27,6 +27,7 @@
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
+#include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
@@ -133,8 +134,12 @@ int main(int argc, char **argv) {
       PhotonSourceDistributionFactory::generate(params, log);
   RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
   PlanckPhotonSourceSpectrum spectrum(random_generator);
-  PhotonSource source(*sourcedistribution, spectrum, cross_sections,
-                      random_generator, log);
+
+  IsotropicContinuousPhotonSource *continuoussource =
+      ContinuousPhotonSourceFactory::generate(params, random_generator, log);
+
+  PhotonSource source(sourcedistribution, &spectrum, continuoussource,
+                      &spectrum, cross_sections, random_generator, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -149,7 +154,7 @@ int main(int argc, char **argv) {
 
   unsigned int numphoton =
       params.get_value< unsigned int >("number of photons", 100);
-  double Q = sourcedistribution->get_total_luminosity();
+  double Q = source.get_total_luminosity();
 
   IonizationStateCalculator ionization_state_calculator(
       Q, params.get_value< double >("helium_abundance"), recombination_rates);
@@ -258,7 +263,12 @@ int main(int argc, char **argv) {
   programtimer.stop();
   log->write_status("Total program time: ", programtimer.value(), " s.");
 
-  delete sourcedistribution;
+  if (sourcedistribution != nullptr) {
+    delete sourcedistribution;
+  }
+  if (continuoussource != nullptr) {
+    delete continuoussource;
+  }
   delete density_function;
   delete writer;
   delete grid;

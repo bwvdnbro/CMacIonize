@@ -39,6 +39,7 @@
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
+#include "CMacIonizeSnapshotDensityFunction.hpp"
 #include "FLASHSnapshotDensityFunction.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #endif
@@ -58,7 +59,8 @@ public:
    * @param log Log to write logging info to.
    */
   static void check_hdf5(std::string type, Log *log = nullptr) {
-    if (type == "GadgetSnapshot" || type == "FLASHSnapshot") {
+    if (type == "CMacIonizeSnapshot" || type == "FLASHSnapshot" ||
+        type == "GadgetSnapshot") {
       if (log) {
         log->write_error("Cannot create an instance of ", type,
                          "DensityFunction, since the code was "
@@ -99,6 +101,8 @@ public:
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
 #ifdef HAVE_HDF5
+    } else if (type == "CMacIonizeSnapshot") {
+      return new CMacIonizeSnapshotDensityFunction(params, log);
     } else if (type == "FLASHSnapshot") {
       return new FLASHSnapshotDensityFunction(params, log);
     } else if (type == "GadgetSnapshot") {
