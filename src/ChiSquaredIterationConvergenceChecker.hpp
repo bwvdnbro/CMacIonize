@@ -106,6 +106,9 @@ public:
     // before the first iteration, it makes no sense to calculate a chi2 value
     if (_chi2 == 0.) {
       _chi2 = 1.;
+      // we need to make sure _chi2 == _old_chi2, since otherwise the first
+      // iteration will use a larger number of photons than requested
+      _old_chi2 = 1.;
       return false;
     }
     _old_chi2 = _chi2;

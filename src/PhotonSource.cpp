@@ -120,7 +120,8 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   }
 
   // make sure we have at least 100 photons for the continuous sources
-  if (number_of_photons * (1. - _discrete_fraction) < 100) {
+  if (_discrete_fraction < 1. &&
+      number_of_photons * (1. - _discrete_fraction) < 100) {
     number_of_photons = 100 / (1. - _discrete_fraction);
   }
 
