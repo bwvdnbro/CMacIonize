@@ -34,6 +34,17 @@ message(STATUS
 configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/VernerCrossSectionsDataLocation.hpp
                @ONLY)
+# VernerRecombinationRatesDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_rec_data.txt
+               ${PROJECT_BINARY_DIR}/data/verner_rec_data.txt COPYONLY)
+set(VERNERRECOMBINATIONRATESDATALOCATION
+    ${PROJECT_BINARY_DIR}/data/verner_rec_data.txt)
+message(STATUS
+ "VernerRecombinationRatesDataLocation.hpp: ${VERNERCROSSSECTIONSDATALOCATION}")
+configure_file(
+    ${PROJECT_SOURCE_DIR}/src/VernerRecombinationRatesDataLocation.hpp.in
+    ${PROJECT_BINARY_DIR}/src/VernerRecombinationRatesDataLocation.hpp
+               @ONLY)
 # HeliumTwoPhotonContinuumDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/He2q.dat
                ${PROJECT_BINARY_DIR}/data/He2q.dat COPYONLY)
@@ -132,6 +143,7 @@ set(CMACIONIZE_SOURCES
     VernerCrossSections.hpp
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
+    VernerRecombinationRatesDataLocation.hpp.in
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )

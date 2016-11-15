@@ -17,44 +17,20 @@
  ******************************************************************************/
 
 /**
- * @file VernerCrossSections.hpp
+ * @file VernerRecombinationRatesDataLocation.hpp
  *
- * @brief Verner photoionization cross sections: header.
+ * @brief CMake configured file storing the location of the recombination rates
+ * data file on the local system.
+ *
+ * This file should never be edited directly. Instead, edit
+ * VernerRecombinationRatesDataLocation.hpp.in.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VERNERCROSSSECTIONS_HPP
-#define VERNERCROSSSECTIONS_HPP
+#ifndef VERNERRECOMBINATIONRATESDATALOCATION_HPP
+#define VERNERRECOMBINATIONRATESDATALOCATION_HPP
 
-#include "CrossSections.hpp"
+#define VERNERRECOMBINATIONRATESDATALOCATION                                   \
+  "@VERNERRECOMBINATIONRATESDATALOCATION@"
 
-/**
- * @brief CrossSections implementation for Verner's cross sections.
- */
-class VernerCrossSections : public CrossSections {
-private:
-  /*! @brief L array from Verner's script. */
-  unsigned char _L[7];
-
-  /*! @brief NINN array from Verner's script. */
-  unsigned char _NINN[30];
-
-  /*! @brief NTOT array from Verner's script. */
-  unsigned char _NTOT[30];
-
-  /*! @brief PH1 array from Verner's script. */
-  double _PH1[6][30][30][7];
-
-  /*! @brief PH2 array from Verner's script. */
-  double _PH2[7][30][30];
-
-public:
-  VernerCrossSections();
-
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e);
-
-  virtual double get_cross_section(ElementName element, double energy);
-};
-
-#endif // CROSSSECTIONS_HPP
+#endif // VERNERRECOMBINATIONRATESDATALOCATION_HPP
