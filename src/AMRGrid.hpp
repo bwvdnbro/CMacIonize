@@ -59,9 +59,9 @@ private:
    * @return Block containing that cell.
    */
   inline AMRGridCell< _CellContents_ > &get_block(unsigned long key,
-                                                  unsigned int &ix,
-                                                  unsigned int &iy,
-                                                  unsigned int &iz) {
+                                                  int &ix,
+                                                  int &iy,
+                                                  int &iz) {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -80,7 +80,7 @@ private:
    * @return Block containing that cell.
    */
   inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) {
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     return get_block(key, ix, iy, iz);
   }
 
@@ -179,7 +179,7 @@ public:
    */
   inline double get_volume(unsigned long key) {
     unsigned int cell = get_cell_key(key);
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     // get the box of the block
     CoordinateVector<> sides;
@@ -202,7 +202,7 @@ public:
    */
   inline CoordinateVector<> get_midpoint(unsigned long key) {
     unsigned int cell = get_cell_key(key);
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     // get the box of the block
     CoordinateVector<> sides;
@@ -225,7 +225,7 @@ public:
    */
   inline Box get_geometry(unsigned long key) {
     unsigned int cell = get_cell_key(key);
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     // get the box of the block
     CoordinateVector<> sides;
@@ -466,7 +466,7 @@ public:
    * @return Key pointing to the next grid, in Morton order.
    */
   inline unsigned long get_next_key(unsigned long key) {
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     unsigned int cell = get_cell_key(key);
     unsigned int next_cell = block.get_next_key(cell, 0);
@@ -560,7 +560,7 @@ public:
   inline unsigned long get_neighbour(unsigned long key,
                                      CoordinateVector< char > direction,
                                      CoordinateVector<> position) {
-    unsigned int ix, iy, iz;
+    int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     unsigned int cell = get_cell_key(key);
     CoordinateVector<> sides;
