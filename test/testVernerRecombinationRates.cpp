@@ -45,19 +45,93 @@ int main(int argc, char **argv) {
   string line;
   while (getline(file, line)) {
     if (line[0] != '#') {
-      double T, alphaH, alphaHe;
+
       stringstream linestream(line);
-      linestream >> T >> alphaH >> alphaHe;
+
+      double T, alphaH, alphaHe, alphaCp1, alphaCp2, alphaN, alphaNp1, alphaNp2,
+          alphaO, alphaOp1, alphaNe, alphaNep1, alphaSp1, alphaSp2, alphaSp3;
+
+      linestream >> T >> alphaH >> alphaHe >> alphaCp1 >> alphaCp2 >> alphaN >>
+          alphaNp1 >> alphaNp2 >> alphaO >> alphaOp1 >> alphaNe >> alphaNep1 >>
+          alphaSp1 >> alphaSp2 >> alphaSp3;
+
       assert_values_equal_tol(
           UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
               recombination_rates.get_recombination_rate(ELEMENT_H, T),
               "cm^3s^-1"),
           alphaH, 1.e-15);
+
       assert_values_equal_tol(
           UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
               recombination_rates.get_recombination_rate(ELEMENT_He, T),
               "cm^3s^-1"),
           alphaHe, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Cp1, T),
+              "cm^3s^-1"),
+          alphaCp1, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Cp2, T),
+              "cm^3s^-1"),
+          alphaCp2, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_N, T),
+              "cm^3s^-1"),
+          alphaN, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Np1, T),
+              "cm^3s^-1"),
+          alphaNp1, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Np2, T),
+              "cm^3s^-1"),
+          alphaNp2, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_O, T),
+              "cm^3s^-1"),
+          alphaO, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Op1, T),
+              "cm^3s^-1"),
+          alphaOp1, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Ne, T),
+              "cm^3s^-1"),
+          alphaNe, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Nep1, T),
+              "cm^3s^-1"),
+          alphaNep1, 1.e-15);
+
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Sp1, T),
+              "cm^3s^-1"),
+          alphaSp1, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Sp2, T),
+              "cm^3s^-1"),
+          alphaSp2, 1.e-15);
+      assert_values_equal_tol(
+          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+              recombination_rates.get_recombination_rate(ELEMENT_Sp3, T),
+              "cm^3s^-1"),
+          alphaSp3, 1.e-15);
     }
   }
 
