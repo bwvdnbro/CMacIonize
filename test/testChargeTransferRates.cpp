@@ -59,10 +59,12 @@ int main(int argc, char **argv) {
                                       stage, atom, temperature),
                                   "cm^3s^-1"),
                               1.e-14);
-      assert_values_equal_tol(
-          ionization_rate,
-          rates.get_charge_transfer_ionization_rate(stage, atom, temperature),
-          1.e-14);
+      assert_values_equal_tol(ionization_rate,
+                              UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+                                  rates.get_charge_transfer_ionization_rate(
+                                      stage, atom, temperature),
+                                  "cm^3s^-1"),
+                              1.e-14);
     }
   }
 
