@@ -83,7 +83,7 @@ public:
     const double xsecH = 1.e-22;
 
     double opacity =
-        cell.get_total_density() * cell.get_neutral_fraction_H() * xsecH;
+        cell.get_total_density() * cell.get_ionic_fraction(ELEMENT_H) * xsecH;
 
     return opacity > _target_opacity;
   }

@@ -102,8 +102,10 @@ private:
         CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
         cell.set_total_density(density_function(child_midpoint));
         // copy all other values from parent
-        cell.set_neutral_fraction_H(values.get_neutral_fraction_H());
-        cell.set_neutral_fraction_He(values.get_neutral_fraction_He());
+        for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+          ElementName element = static_cast< ElementName >(i);
+          cell.set_ionic_fraction(element, values.get_ionic_fraction(element));
+        }
         cell.set_temperature(values.get_temperature());
         cell.set_helium_abundance(values.get_helium_abundance());
         cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());

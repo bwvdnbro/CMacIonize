@@ -169,18 +169,26 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   std::vector< double > nfracH(numpart[0]);
   std::vector< double > nfracHe(numpart[0]);
   std::vector< double > temperature(numpart[0]);
-  std::vector< double > jH(numpart[0]);
-  std::vector< double > jHe(numpart[0]);
+  std::vector< double > hH(numpart[0]);
+  std::vector< double > hHe(numpart[0]);
+  std::vector< std::vector< double > > jmean(NUMBER_OF_ELEMENTS);
+  for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    jmean[i].resize(numpart[0]);
+  }
   unsigned int index = 0;
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     DensityValues cellvals = it.get_values();
     coords[index] = it.get_cell_midpoint() - box.get_anchor();
     ntot[index] = cellvals.get_total_density();
-    nfracH[index] = cellvals.get_neutral_fraction_H();
-    nfracHe[index] = cellvals.get_neutral_fraction_He();
+    nfracH[index] = cellvals.get_ionic_fraction(ELEMENT_H);
+    nfracHe[index] = cellvals.get_ionic_fraction(ELEMENT_He);
     temperature[index] = cellvals.get_temperature();
-    jH[index] = cellvals.get_mean_intensity(ELEMENT_H);
-    jHe[index] = cellvals.get_mean_intensity(ELEMENT_He);
+    hH[index] = cellvals.get_heating_H();
+    hHe[index] = cellvals.get_heating_He();
+    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+      ElementName element = static_cast< ElementName >(i);
+      jmean[i][index] = cellvals.get_mean_intensity(element);
+    }
     ++index;
   }
   HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates", coords);
@@ -188,8 +196,12 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   HDF5Tools::write_dataset< double >(group, "NeutralFractionH", nfracH);
   HDF5Tools::write_dataset< double >(group, "NeutralFractionHe", nfracHe);
   HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
-  HDF5Tools::write_dataset< double >(group, "MeanIntensityH", jH);
-  HDF5Tools::write_dataset< double >(group, "MeanIntensityHe", jHe);
+  for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    HDF5Tools::write_dataset< double >(
+        group, "MeanIntensity" + get_element_name(i), jmean[i]);
+  }
+  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
+  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
   HDF5Tools::close_group(group);
 
   // close file

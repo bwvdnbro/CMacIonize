@@ -27,6 +27,10 @@
 #ifndef ELEMENTNAMES_HPP
 #define ELEMENTNAMES_HPP
 
+#include "Error.hpp"
+
+#include <string>
+
 /**
  * @brief Names of supported elements.
  *
@@ -68,5 +72,55 @@ enum ElementName {
   /*! @brief Number of supported elements. */
   NUMBER_OF_ELEMENTS
 };
+
+/**
+ * @brief Get the name of the given element.
+ *
+ * @param element ElementName for a valid element.
+ * @return Textual representation of the element name.
+ */
+static inline std::string get_element_name(int element) {
+  switch (element) {
+
+  case ELEMENT_H:
+    return "H";
+
+  case ELEMENT_He:
+    return "He";
+
+  case ELEMENT_Cp1:
+    return "C+";
+  case ELEMENT_Cp2:
+    return "C++";
+
+  case ELEMENT_N:
+    return "N";
+  case ELEMENT_Np1:
+    return "N+";
+  case ELEMENT_Np2:
+    return "N++";
+
+  case ELEMENT_O:
+    return "O";
+  case ELEMENT_Op1:
+    return "O+";
+
+  case ELEMENT_Ne:
+    return "Ne";
+  case ELEMENT_Nep1:
+    return "Ne+";
+
+  case ELEMENT_Sp1:
+    return "S+";
+  case ELEMENT_Sp2:
+    return "S++";
+  case ELEMENT_Sp3:
+    return "S+++";
+
+  default:
+    error("Unknown element: %i!", element);
+    return "";
+  }
+}
 
 #endif // ELEMENTNAMES_HPP

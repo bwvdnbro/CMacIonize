@@ -33,6 +33,7 @@
 #include "Log.hpp"
 #include "Photon.hpp"
 #include "Timer.hpp"
+#include "UnitConverter.hpp"
 
 /**
  * @brief General interface for density grids.
@@ -44,6 +45,12 @@ protected:
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
+
+  /*! @brief Ionization energy of hydrogen (in Hz). */
+  double _ionization_energy_H;
+
+  /*! @brief Ionization energy of helium (in Hz). */
+  double _ionization_energy_He;
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -61,9 +68,9 @@ protected:
                                   Photon &photon) {
     return ds * cell.get_total_density() *
            (photon.get_cross_section(ELEMENT_H) *
-                cell.get_neutral_fraction_H() +
+                cell.get_ionic_fraction(ELEMENT_H) +
             cell.get_helium_abundance() * photon.get_cross_section(ELEMENT_He) *
-                cell.get_neutral_fraction_He());
+                cell.get_ionic_fraction(ELEMENT_He));
   }
 
   /**
@@ -79,11 +86,15 @@ protected:
     if (cell.get_total_density() > 0.) {
       // changing the value below from 2 to NUMBER_OF_ELEMENTS makes a huge
       // difference in run time
-      for (int i = 0; i < 2; ++i) {
+      for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
         ElementName element = static_cast< ElementName >(i);
         cell.increase_mean_intensity(element,
                                      ds * photon.get_cross_section(element));
       }
+      cell.increase_heating_H(ds * photon.get_cross_section(ELEMENT_H) *
+                              (photon.get_energy() - _ionization_energy_H));
+      cell.increase_heating_He(ds * photon.get_cross_section(ELEMENT_He) *
+                               (photon.get_energy() - _ionization_energy_He));
     }
   }
 
@@ -128,7 +139,13 @@ public:
   DensityGrid(Box box, CoordinateVector< bool > periodic =
                            CoordinateVector< bool >(false),
               Log *log = nullptr)
-      : _box(box), _periodic(periodic), _log(log) {}
+      : _box(box), _periodic(periodic), _log(log) {
+
+    _ionization_energy_H =
+        UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6, "eV");
+    _ionization_energy_He =
+        UnitConverter< QUANTITY_FREQUENCY >::to_SI(24.6, "eV");
+  }
 
   /**
    * @brief Initialize the given cell.
@@ -139,8 +156,8 @@ public:
    */
   void initialize(double initial_temperature, double helium_abundance,
                   DensityValues &cell) {
-    cell.set_neutral_fraction_H(1.e-6);
-    cell.set_neutral_fraction_He(1.e-6);
+    cell.set_ionic_fraction(ELEMENT_H, 1.e-6);
+    cell.set_ionic_fraction(ELEMENT_He, 1.e-6);
     cell.set_temperature(initial_temperature);
     cell.set_helium_abundance(helium_abundance);
     set_reemission_probabilities(initial_temperature, cell);

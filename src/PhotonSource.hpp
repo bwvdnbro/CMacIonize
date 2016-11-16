@@ -163,6 +163,8 @@ private:
     }
   }
 
+  void set_cross_sections(Photon &photon, double energy);
+
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
                PhotonSourceSpectrum *discrete_spectrum,

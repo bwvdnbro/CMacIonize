@@ -36,11 +36,11 @@ private:
   /*! @brief Total density (in m^-3). */
   double _total_density;
 
-  /*! @brief Neutral fraction of hydrogen. */
-  double _neutral_fraction_H;
-
-  /*! @brief Neutral fraction of helium. */
-  double _neutral_fraction_He;
+  /*! @brief Ionic fractions. For hydrogen and helium, these are the neutral
+   *  fractions. For other elements, they are the fraction of the end product
+   *  of ionization (e.g. _ionic_fraction[ELEMENT_Cp1] is the fraction of C that
+   *  is in the form of C++). */
+  double _ionic_fraction[NUMBER_OF_ELEMENTS];
 
   /*! @brief Temperature (in K). */
   double _temperature;
@@ -66,16 +66,22 @@ private:
   /*! @brief Neutral fraction of hydrogen during the previous step. */
   double _old_neutral_fraction_H;
 
+  /*! @brief Hydrogen ionization heating (in UNITS?). */
+  double _heating_H;
+
+  /*! @brief Helium ionization heating (in UNITS?). */
+  double _heating_He;
+
 public:
   /**
    * @brief Empty constructor.
    */
   inline DensityValues()
-      : _total_density(0.), _neutral_fraction_H(0.), _neutral_fraction_He(0.),
-        _temperature(0.), _helium_abundance(0.), _pHion(0.),
+      : _total_density(0.), _temperature(0.), _helium_abundance(0.), _pHion(0.),
         _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
-        _old_neutral_fraction_H(0.) {
+        _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.) {
     for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+      _ionic_fraction[i] = 0.;
       _mean_intensity[i] = 0.;
     }
   }
@@ -90,21 +96,13 @@ public:
   }
 
   /**
-   * @brief Set the neutral fraction of hydrogen.
+   * @brief Set the ionic fraction of the given element.
    *
-   * @param neutral_fraction_H Value for the neutral fraction of hydrogen.
+   * @param element ElementName of a valid element.
+   * @param ionic_fraction New value for the ionic fraction.
    */
-  inline void set_neutral_fraction_H(double neutral_fraction_H) {
-    _neutral_fraction_H = neutral_fraction_H;
-  }
-
-  /**
-   * @brief Set the neutral fraction of helium.
-   *
-   * @param neutral_fraction_He Value for the neutral fraction of helium.
-   */
-  inline void set_neutral_fraction_He(double neutral_fraction_He) {
-    _neutral_fraction_He = neutral_fraction_He;
+  inline void set_ionic_fraction(ElementName element, double ionic_fraction) {
+    _ionic_fraction[element] = ionic_fraction;
   }
 
   /**
@@ -178,6 +176,24 @@ public:
   }
 
   /**
+   * @brief Increase the hydrogen ionization heating integral.
+   *
+   * @param dheating_H Increment (in UNITS?).
+   */
+  inline void increase_heating_H(double dheating_H) {
+    _heating_H += dheating_H;
+  }
+
+  /**
+   * @brief Increase the helium ionization heating integral.
+   *
+   * @param dheating_He Increment (in UNITS?).
+   */
+  inline void increase_heating_He(double dheating_He) {
+    _heating_He += dheating_He;
+  }
+
+  /**
    * @brief Reset the values of the mean intensities to zero.
    */
   inline void reset_mean_intensities() {
@@ -185,6 +201,8 @@ public:
       _mean_intensity[i] = 0.;
     }
     _mean_intensity_H_old = 0.;
+    _heating_H = 0.;
+    _heating_He = 0.;
   }
 
   /**
@@ -195,18 +213,14 @@ public:
   inline double get_total_density() { return _total_density; }
 
   /**
-   * @brief Get the neutral fraction of hydrogen.
+   * @brief Get the ionic fraction of the given element.
    *
-   * @return Neutral fraction of hydrogen.
+   * @param element ElementName of a valid element.
+   * @return Ionic fraction.
    */
-  inline double get_neutral_fraction_H() { return _neutral_fraction_H; }
-
-  /**
-   * @brief Get the neutral fraction of helium.
-   *
-   * @return Neutral fraction of helium.
-   */
-  inline double get_neutral_fraction_He() { return _neutral_fraction_He; }
+  inline double get_ionic_fraction(ElementName element) {
+    return _ionic_fraction[element];
+  }
 
   /**
    * @brief Get the temperature.
@@ -264,6 +278,20 @@ public:
    * @return Old hydrogen neutral fraction.
    */
   inline double get_old_neutral_fraction_H() { return _old_neutral_fraction_H; }
+
+  /**
+   * @brief Get the hydrogen ionization heating integral.
+   *
+   * @return Hydrogen ionization heating (in UNITS?).
+   */
+  inline double get_heating_H() { return _heating_H; }
+
+  /**
+   * @brief Get the helium ionization heating integral.
+   *
+   * @return Helium ionization heating (in UNITS?).
+   */
+  inline double get_heating_He() { return _heating_He; }
 };
 
 #endif // DENSITYVALUES_HPP

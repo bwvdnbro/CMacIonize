@@ -76,15 +76,14 @@ public:
    * @param position Initial position of the photon (in m).
    * @param direction Initial direction of the photon.
    * @param energy Initial energy of the photon (in Hz).
-   * @param xsecH Hydrogen photoionization cross section of the photon (in m^2).
-   * @param xsecHe Helium photoionization cross section of the photon (in m^2).
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
-                double energy, double xsecH, double xsecHe)
+                double energy)
       : _position(position), _direction(direction), _energy(energy),
         _type(PHOTONTYPE_PRIMARY) {
-    _cross_sections[ELEMENT_H] = xsecH;
-    _cross_sections[ELEMENT_He] = xsecHe;
+    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+      _cross_sections[i] = 0.;
+    }
   }
 
   /**

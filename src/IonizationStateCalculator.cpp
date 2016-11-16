@@ -62,7 +62,7 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
     double cellvolume = it.get_volume();
     DensityValues &cell = it.get_values();
     double jfaccell = jfac / cellvolume;
-    cell.set_old_neutral_fraction_H(cell.get_neutral_fraction_H());
+    cell.set_old_neutral_fraction_H(cell.get_ionic_fraction(ELEMENT_H));
     double jH = jfaccell * cell.get_mean_intensity(ELEMENT_H);
     double jHe = jfaccell * cell.get_mean_intensity(ELEMENT_He);
     double ntot = cell.get_total_density();
@@ -80,17 +80,17 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
         he0 = 0.;
       }
 
-      cell.set_neutral_fraction_H(h0);
-      cell.set_neutral_fraction_He(he0);
+      cell.set_ionic_fraction(ELEMENT_H, h0);
+      cell.set_ionic_fraction(ELEMENT_He, he0);
 
       // coolants. We don't do them for the moment...
     } else {
       if (ntot > 0.) {
-        cell.set_neutral_fraction_H(1.);
-        cell.set_neutral_fraction_He(1.);
+        cell.set_ionic_fraction(ELEMENT_H, 1.);
+        cell.set_ionic_fraction(ELEMENT_He, 1.);
       } else {
-        cell.set_neutral_fraction_H(0.);
-        cell.set_neutral_fraction_He(0.);
+        cell.set_ionic_fraction(ELEMENT_H, 0.);
+        cell.set_ionic_fraction(ELEMENT_He, 0.);
       }
     }
   }

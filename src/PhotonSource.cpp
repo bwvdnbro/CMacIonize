@@ -169,6 +169,20 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
 }
 
 /**
+ * @brief Set the cross sections of the given photon with the given energy.
+ *
+ * @param photon Photon.
+ * @param energy Energy of the photon (in Hz).
+ */
+void PhotonSource::set_cross_sections(Photon &photon, double energy) {
+  for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    ElementName element = static_cast< ElementName >(i);
+    photon.set_cross_section(
+        element, _cross_sections.get_cross_section(element, energy));
+  }
+}
+
+/**
  * @brief Get a photon with a random direction and energy, originating at one
  * of the discrete sources.
  *
@@ -191,12 +205,12 @@ Photon PhotonSource::get_random_photon() {
     energy = _discrete_spectrum->get_random_frequency();
   }
 
-  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, energy);
-  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, energy);
+  Photon photon(position, direction, energy);
+  set_cross_sections(photon, energy);
 
   update_indices();
 
-  return Photon(position, direction, energy, xsecH, xsecHe);
+  return photon;
 }
 
 /**
@@ -222,9 +236,9 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
   double helium_abundance = cell.get_helium_abundance();
   double pHabs = 1. / (1. +
-                       cell.get_neutral_fraction_He() * helium_abundance *
+                       cell.get_ionic_fraction(ELEMENT_He) * helium_abundance *
                            photon.get_cross_section(ELEMENT_He) /
-                           cell.get_neutral_fraction_H() /
+                           cell.get_ionic_fraction(ELEMENT_H) /
                            photon.get_cross_section(ELEMENT_H));
 
   double x = _random_generator.get_uniform_random_double();
@@ -268,9 +282,9 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
       // 2-photon continuum
       double pHots = 1. / (1. +
-                           77. * cell.get_neutral_fraction_He() /
+                           77. * cell.get_ionic_fraction(ELEMENT_He) /
                                sqrt(cell.get_temperature()) /
-                               cell.get_neutral_fraction_H());
+                               cell.get_ionic_fraction(ELEMENT_H));
       x = _random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot
@@ -312,10 +326,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   CoordinateVector<> direction = get_random_direction();
   photon.set_direction(direction);
 
-  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, new_frequency);
-  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, new_frequency);
-  photon.set_cross_section(ELEMENT_H, xsecH);
-  photon.set_cross_section(ELEMENT_He, xsecHe);
+  set_cross_sections(photon, new_frequency);
 
   return true;
 }
