@@ -85,6 +85,10 @@ ChargeTransferRates::ChargeTransferRates() {
 double ChargeTransferRates::get_charge_transfer_recombination_rate(
     unsigned char stage, unsigned char atom, double temperature) {
   unsigned char ipIon = stage - 1;
+
+  if (ipIon == 0) {
+    return 0.;
+  }
   if (ipIon > 4) {
     // we multiplied Kenny's version with 1e-6 to convert from cm^3 to m^3
     return 1.92e-15 * ipIon;
@@ -112,5 +116,20 @@ double ChargeTransferRates::get_charge_transfer_recombination_rate(
  */
 double ChargeTransferRates::get_charge_transfer_ionization_rate(
     unsigned char stage, unsigned char atom, double temperature) {
-  return 0.;
+
+  unsigned char ipIon = stage;
+  if (_CTIon[0][ipIon - 1][atom - 1] == 0.) {
+    return 0.;
+  }
+
+  double tused = std::max(temperature, _CTIon[4][ipIon - 1][atom - 1]);
+  tused = std::min(tused, _CTIon[5][ipIon - 1][atom - 1]);
+  tused *= 1.e-4;
+
+  return _CTIon[0][ipIon - 1][atom - 1] * 1.e-9 *
+         std::pow(tused, _CTIon[1][ipIon - 1][atom - 1]) *
+         (1. +
+          _CTIon[2][ipIon - 1][atom - 1] *
+              std::exp(_CTIon[3][ipIon - 1][atom - 1] * tused)) *
+         std::exp(-_CTIon[6][ipIon - 1][atom - 1] / tused);
 }
