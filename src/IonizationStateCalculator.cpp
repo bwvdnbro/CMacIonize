@@ -83,7 +83,23 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
       cell.set_ionic_fraction(ELEMENT_H, h0);
       cell.set_ionic_fraction(ELEMENT_He, he0);
 
-      // coolants. We don't do them for the moment...
+      // coolants
+      double ne = ntot * (1. - h0 + _helium_abundance * (1. - he0));
+      double t4 = T * 1.e-4;
+
+      // carbon
+      double C21 = jfac * cell.get_mean_intensity(ELEMENT_Cp1) / ne /
+                   _recombination_rates.get_recombination_rate(ELEMENT_Cp1, T);
+      double CTHerecom = 1.e-9 * 0.046 * t4 * t4; // units?
+      double C32 =
+          jfac * cell.get_mean_intensity(ELEMENT_Cp2) /
+          (ne * _recombination_rates.get_recombination_rate(ELEMENT_Cp2, T)
+           /*+ ntot * h0 * HCTRecom(4,6,T)*/
+           + ntot * he0 * _helium_abundance * CTHerecom);
+      double C31 = C32 * C21;
+      double sumC = C21 + C31;
+      cell.set_ionic_fraction(ELEMENT_Cp1, C21 / (1. + sumC));
+      cell.set_ionic_fraction(ELEMENT_Cp2, C31 / (1. + sumC));
     } else {
       if (ntot > 0.) {
         cell.set_ionic_fraction(ELEMENT_H, 1.);
