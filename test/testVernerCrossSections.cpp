@@ -47,17 +47,102 @@ int main(int argc, char **argv) {
   string line;
   while (getline(file, line)) {
     if (line[0] != '#') {
+
       stringstream linestream(line);
-      unsigned int nz, ne, si;
-      double e, s;
-      linestream >> nz >> ne >> si >> e >> s;
+
+      double e, xsecH, xsecHe, xsecCp1, xsecCp2, xsecN, xsecNp1, xsecNp2, xsecO,
+          xsecOp1, xsecNe, xsecNep1, xsecSp1, xsecSp2, xsecSp3;
+
+      linestream >> e >> xsecH >> xsecHe >> xsecCp1 >> xsecCp2 >> xsecN >>
+          xsecNp1 >> xsecNp2 >> xsecO >> xsecOp1 >> xsecNe >> xsecNep1 >>
+          xsecSp1 >> xsecSp2 >> xsecSp3;
+
+      e = UnitConverter< QUANTITY_FREQUENCY >::to_SI(e * 13.6, "eV");
+
       assert_values_equal_tol(
-          s, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                 cross_sections.get_cross_section_verner(
-                     nz, ne, si,
-                     UnitConverter< QUANTITY_FREQUENCY >::to_SI(e, "eV")),
-                 "cm^2") /
-                 1.e-18,
+          xsecH, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                     cross_sections.get_cross_section(ELEMENT_H, e), "cm^2") *
+                     1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecHe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                      cross_sections.get_cross_section(ELEMENT_He, e), "cm^2") *
+                      1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecCp1,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Cp1, e), "cm^2") *
+              1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecCp2,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Cp2, e), "cm^2") *
+              1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecN, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                     cross_sections.get_cross_section(ELEMENT_N, e), "cm^2") *
+                     1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecNp1,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Np1, e), "cm^2") *
+              1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecNp2,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Np2, e), "cm^2") *
+              1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecO, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                     cross_sections.get_cross_section(ELEMENT_O, e), "cm^2") *
+                     1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecOp1,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Op1, e), "cm^2") *
+              1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecNe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                      cross_sections.get_cross_section(ELEMENT_Ne, e), "cm^2") *
+                      1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecNep1,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Nep1, e), "cm^2") *
+              1.e18,
+          1.e-6);
+
+      assert_values_equal_tol(
+          xsecSp1,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Sp1, e), "cm^2") *
+              1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecSp2,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Sp2, e), "cm^2") *
+              1.e18,
+          1.e-6);
+      assert_values_equal_tol(
+          xsecSp3,
+          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+              cross_sections.get_cross_section(ELEMENT_Sp3, e), "cm^2") *
+              1.e18,
           1.e-6);
     }
   }
