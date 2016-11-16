@@ -499,6 +499,19 @@ configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
                ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
                COPYONLY)
 
+## Unit test for ChargeTransferRates
+set(TESTCHARGETRANSFERRATES_SOURCES
+    testChargeTransferRates.cpp
+
+    ../src/ChargeTransferRates.cpp
+    ../src/ChargeTransferRates.hpp
+)
+add_unit_test(NAME testChargeTransferRates
+              SOURCES ${TESTCHARGETRANSFERRATES_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/KingdonFerland_testdata.txt
+               COPYONLY)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

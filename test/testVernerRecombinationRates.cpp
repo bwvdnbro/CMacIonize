@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
   while (getline(file, line)) {
     if (line[0] != '#') {
 
-      stringstream linestream(line);
+      istringstream linestream(line);
 
       double T, alphaH, alphaHe, alphaCp1, alphaCp2, alphaN, alphaNp1, alphaNp2,
           alphaO, alphaOp1, alphaNe, alphaNep1, alphaSp1, alphaSp2, alphaSp3;

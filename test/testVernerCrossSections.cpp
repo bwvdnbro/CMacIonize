@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   while (getline(file, line)) {
     if (line[0] != '#') {
 
-      stringstream linestream(line);
+      istringstream linestream(line);
 
       double e, xsecH, xsecHe, xsecCp1, xsecCp2, xsecN, xsecNp1, xsecNp2, xsecO,
           xsecOp1, xsecNe, xsecNep1, xsecSp1, xsecSp2, xsecSp3;

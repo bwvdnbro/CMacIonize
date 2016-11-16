@@ -18,6 +18,7 @@
 
 # Rules for files that need to be configured.
 message(STATUS "Configuring external data files...")
+
 # LineCoolingDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/atom4.dat
                ${PROJECT_BINARY_DIR}/data/atom4.dat COPYONLY)
@@ -25,6 +26,7 @@ set(LINECOOLINGDATALOCATION ${PROJECT_BINARY_DIR}/data/atom4.dat)
 message(STATUS "LineCoolingDataLocation.hpp: ${LINECOOLINGDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
+
 # VernerCrossSectionsDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/verner_data.txt
                ${PROJECT_BINARY_DIR}/data/verner_data.txt COPYONLY)
@@ -34,6 +36,7 @@ message(STATUS
 configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/VernerCrossSectionsDataLocation.hpp
                @ONLY)
+
 # VernerRecombinationRatesDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/verner_rec_data.txt
                ${PROJECT_BINARY_DIR}/data/verner_rec_data.txt COPYONLY)
@@ -45,6 +48,18 @@ configure_file(
     ${PROJECT_SOURCE_DIR}/src/VernerRecombinationRatesDataLocation.hpp.in
     ${PROJECT_BINARY_DIR}/src/VernerRecombinationRatesDataLocation.hpp
                @ONLY)
+
+# ChargeTransferRatesDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/KingdonFerland_ct1data.txt
+               ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt COPYONLY)
+set(CHARGETRANSFERRATESDATALOCATION
+    ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt)
+message(STATUS
+      "ChargeTransferRatesDataLocation.hpp: ${CHARGETRANSFERRATESDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/ChargeTransferRatesDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/ChargeTransferRatesDataLocation.hpp
+               @ONLY)
+
 # HeliumTwoPhotonContinuumDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/He2q.dat
                ${PROJECT_BINARY_DIR}/data/He2q.dat COPYONLY)
@@ -97,6 +112,7 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.hpp
     Box.hpp
     CartesianDensityGrid.hpp
+    ChargeTransferRatesDataLocation.hpp.in
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp
     CMacIonizeSnapshotDensityFunction.hpp
