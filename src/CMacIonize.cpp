@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Box.hpp"
+#include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
@@ -156,8 +157,11 @@ int main(int argc, char **argv) {
       params.get_value< unsigned int >("number of photons", 100);
   double Q = source.get_total_luminosity();
 
+  ChargeTransferRates charge_transfer_rates;
+
   IonizationStateCalculator ionization_state_calculator(
-      Q, params.get_value< double >("helium_abundance"), recombination_rates);
+      Q, params.get_value< double >("helium_abundance"), recombination_rates,
+      charge_transfer_rates);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)

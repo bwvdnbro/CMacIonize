@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "IonizationStateCalculator.hpp"
+#include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "Error.hpp"
@@ -39,12 +40,16 @@
  * @param helium_abundance Helium abundance.
  * @param recombination_rates RecombinationRates used in ionization balance
  * calculation.
+ * @param charge_transfer_rates ChargeTransferRate used in ionization balance
+ * calculation for coolants.
  */
 IonizationStateCalculator::IonizationStateCalculator(
     double luminosity, double helium_abundance,
-    RecombinationRates &recombination_rates)
+    RecombinationRates &recombination_rates,
+    ChargeTransferRates &charge_transfer_rates)
     : _luminosity(luminosity), _helium_abundance(helium_abundance),
-      _recombination_rates(recombination_rates) {}
+      _recombination_rates(recombination_rates),
+      _charge_transfer_rates(charge_transfer_rates) {}
 
 /**
  * @brief Solves the ionization and temperature equations based on the values of
@@ -86,20 +91,63 @@ void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
       // coolants
       double ne = ntot * (1. - h0 + _helium_abundance * (1. - he0));
       double t4 = T * 1.e-4;
+      double nhp = ntot * (1. - h0);
 
       // carbon
       double C21 = jfac * cell.get_mean_intensity(ELEMENT_Cp1) / ne /
                    _recombination_rates.get_recombination_rate(ELEMENT_Cp1, T);
-      double CTHerecom = 1.e-9 * 0.046 * t4 * t4; // units?
+      // as can be seen below, CTHerecom has the same units as a recombination
+      // rate: m^3s^-1
+      // in Kenny's code, recombination rates are in cm^3s^-1
+      // to put them in m^3s^-1 as well, we hence need to multiply Kenny's
+      // original factor 1.e-9 with 1.e-6
+      double CTHerecom = 1.e-15 * 0.046 * t4 * t4;
       double C32 =
           jfac * cell.get_mean_intensity(ELEMENT_Cp2) /
-          (ne * _recombination_rates.get_recombination_rate(ELEMENT_Cp2, T)
-           /*+ ntot * h0 * HCTRecom(4,6,T)*/
-           + ntot * he0 * _helium_abundance * CTHerecom);
+          (ne * _recombination_rates.get_recombination_rate(ELEMENT_Cp2, T) +
+           ntot * h0 *
+               _charge_transfer_rates.get_charge_transfer_recombination_rate(
+                   4, 6, T) +
+           ntot * he0 * _helium_abundance * CTHerecom);
       double C31 = C32 * C21;
       double sumC = C21 + C31;
       cell.set_ionic_fraction(ELEMENT_Cp1, C21 / (1. + sumC));
       cell.set_ionic_fraction(ELEMENT_Cp2, C31 / (1. + sumC));
+
+      // nitrogen
+      double N21 =
+          (jfac * cell.get_mean_intensity(ELEMENT_N) +
+           nhp *
+               _charge_transfer_rates.get_charge_transfer_ionization_rate(1, 7,
+                                                                          T)) /
+          (ne * _recombination_rates.get_recombination_rate(ELEMENT_N, T) +
+           ntot * h0 *
+               _charge_transfer_rates.get_charge_transfer_recombination_rate(
+                   2, 7, T));
+      CTHerecom =
+          1.e-15 * 0.33 * std::pow(t4, 0.29) * (1. + 1.3 * std::exp(-4.5 / t4));
+      double N32 =
+          jfac * cell.get_mean_intensity(ELEMENT_Np1) /
+          (ne * _recombination_rates.get_recombination_rate(ELEMENT_Np1, T) +
+           ntot * h0 *
+               _charge_transfer_rates.get_charge_transfer_recombination_rate(
+                   3, 7, T) +
+           ntot * he0 * _helium_abundance * CTHerecom);
+      CTHerecom = 1.e-15 * 0.15;
+      double N43 =
+          jfac * cell.get_mean_intensity(ELEMENT_Np2) /
+          (ne * _recombination_rates.get_recombination_rate(ELEMENT_Np2, T) +
+           ntot * h0 *
+               _charge_transfer_rates.get_charge_transfer_recombination_rate(
+                   4, 7, T) +
+           ntot * he0 * _helium_abundance * CTHerecom);
+      double N31 = N32 * N21;
+      double N41 = N43 * N31;
+      double sumN = N21 + N31 + N41;
+      cell.set_ionic_fraction(ELEMENT_N, N21 / (1. + sumN));
+      cell.set_ionic_fraction(ELEMENT_Np1, N31 / (1. + sumN));
+      cell.set_ionic_fraction(ELEMENT_Np2, N41 / (1. + sumN));
+
     } else {
       if (ntot > 0.) {
         cell.set_ionic_fraction(ELEMENT_H, 1.);

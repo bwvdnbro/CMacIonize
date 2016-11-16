@@ -58,10 +58,8 @@ private:
    * @param iz Variable to store the z index in.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key,
-                                                  int &ix,
-                                                  int &iy,
-                                                  int &iz) {
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key, int &ix,
+                                                  int &iy, int &iz) {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -125,7 +123,7 @@ public:
     for (int i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[ _ncell.z() ];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ >[_ncell.z()];
       }
     }
   }
@@ -145,7 +143,7 @@ public:
     for (int i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[ _ncell.z() ];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ >[_ncell.z()];
       }
     }
   }

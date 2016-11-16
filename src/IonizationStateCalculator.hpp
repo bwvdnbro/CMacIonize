@@ -27,6 +27,7 @@
 #ifndef IONIZATIONSTATECALCULATOR_HPP
 #define IONIZATIONSTATECALCULATOR_HPP
 
+class ChargeTransferRates;
 class DensityGrid;
 class RecombinationRates;
 
@@ -45,9 +46,14 @@ private:
   /*! @brief Recombination rates used in ionization balance calculation. */
   RecombinationRates &_recombination_rates;
 
+  /*! @brief Charge transfer recombination rates used in ionization balance
+   *  calculation for coolants. */
+  ChargeTransferRates &_charge_transfer_rates;
+
 public:
   IonizationStateCalculator(double luminosity, double helium_abundance,
-                            RecombinationRates &recombination_rates);
+                            RecombinationRates &recombination_rates,
+                            ChargeTransferRates &charge_transfer_rates);
 
   void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
 

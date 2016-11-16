@@ -93,6 +93,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
@@ -144,6 +145,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
     ../src/DensityValues.hpp
@@ -306,6 +308,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
@@ -435,6 +438,7 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
 
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.hpp

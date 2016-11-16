@@ -40,8 +40,13 @@ private:
 public:
   ChargeTransferRates();
 
-  double get_charge_transfer_rate(unsigned char stage, unsigned char atom,
-                                  double temperature);
+  double get_charge_transfer_recombination_rate(unsigned char stage,
+                                                unsigned char atom,
+                                                double temperature);
+
+  double get_charge_transfer_ionization_rate(unsigned char stage,
+                                             unsigned char atom,
+                                             double temperature);
 };
 
 #endif // CHARGETRANSFERRATES_HPP

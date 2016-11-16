@@ -80,23 +80,37 @@ ChargeTransferRates::ChargeTransferRates() {
  * @param stage Stage of ionization.
  * @param atom Atomic number.
  * @param temperature Temperature (in K).
- * @return Charge transfer recombination rate (in UNITS?).
+ * @return Charge transfer recombination rate (in m^3s^-1).
  */
-double ChargeTransferRates::get_charge_transfer_rate(unsigned char stage,
-                                                     unsigned char atom,
-                                                     double temperature) {
+double ChargeTransferRates::get_charge_transfer_recombination_rate(
+    unsigned char stage, unsigned char atom, double temperature) {
   unsigned char ipIon = stage - 1;
   if (ipIon > 4) {
-    return 1.92e-9 * ipIon;
+    // we multiplied Kenny's version with 1e-6 to convert from cm^3 to m^3
+    return 1.92e-15 * ipIon;
   }
 
   double tused = std::max(temperature, _CTRecomb[4][ipIon - 1][atom - 1]);
   tused = std::min(tused, _CTRecomb[5][ipIon - 1][atom - 1]);
   tused *= 1.e-4;
 
-  return _CTRecomb[0][ipIon - 1][atom - 1] * 1.e-9 *
+  // we multiplied Kenny's version with 1e-6 to convert from cm^3 to m^3
+  return _CTRecomb[0][ipIon - 1][atom - 1] * 1.e-15 *
          std::pow(tused, _CTRecomb[1][ipIon - 1][atom - 1]) *
          (1. +
           _CTRecomb[2][ipIon - 1][atom - 1] *
               std::exp(_CTRecomb[3][ipIon - 1][atom - 1] * tused));
+}
+
+/**
+ * @brief Get the charge transfer ionization rate.
+ *
+ * @param stage Stage of ionization.
+ * @param atom Atomic number.
+ * @param temperature Temperature (in K).
+ * @return Charge transfer ionization rate (in UNITS?).
+ */
+double ChargeTransferRates::get_charge_transfer_ionization_rate(
+    unsigned char stage, unsigned char atom, double temperature) {
+  return 0.;
 }

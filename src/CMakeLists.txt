@@ -91,6 +91,7 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     CartesianDensityGrid.cpp
+    ChargeTransferRates.cpp
     CMacIonize.cpp
     CMacIonizeSnapshotDensityFunction.cpp
     CommandLineOption.cpp
@@ -112,6 +113,7 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.hpp
     Box.hpp
     CartesianDensityGrid.hpp
+    ChargeTransferRates.hpp
     ChargeTransferRatesDataLocation.hpp.in
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp

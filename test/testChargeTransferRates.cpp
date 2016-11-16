@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "ChargeTransferRates.hpp"
+#include "UnitConverter.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -51,9 +52,12 @@ int main(int argc, char **argv) {
 
       linestream >> stage >> atom >> temperature >> rate;
 
-      assert_values_equal_tol(
-          rate, rates.get_charge_transfer_rate(stage, atom, temperature),
-          1.e-14);
+      assert_values_equal_tol(rate,
+                              UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+                                  rates.get_charge_transfer_recombination_rate(
+                                      stage, atom, temperature),
+                                  "cm^3s^-1"),
+                              1.e-14);
     }
   }
 
