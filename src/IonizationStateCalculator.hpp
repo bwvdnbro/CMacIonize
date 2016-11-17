@@ -29,6 +29,7 @@
 
 class ChargeTransferRates;
 class DensityGrid;
+class DensityValues;
 class RecombinationRates;
 
 /**
@@ -55,6 +56,7 @@ public:
                             RecombinationRates &recombination_rates,
                             ChargeTransferRates &charge_transfer_rates);
 
+  void calculate_ionization_state(double jfac, DensityValues &cell);
   void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,

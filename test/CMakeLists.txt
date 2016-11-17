@@ -442,6 +442,7 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.hpp
+    ../src/VernerRecombinationRates.cpp
 )
 add_unit_test(NAME testIonizationStateCalculator
               SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})
