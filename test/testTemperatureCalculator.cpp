@@ -17,50 +17,45 @@
  ******************************************************************************/
 
 /**
- * @file testIonizationStateCalculator.cpp
+ * @file testTemperatureCalculator.cpp
  *
- * @brief Unit test for the IonizationStateCalculator class.
+ * @brief Unit test for the TemperatureCalculator class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
-#include "IonizationStateCalculator.hpp"
+#include "TemperatureCalculator.hpp"
 #include "UnitConverter.hpp"
-#include "VernerRecombinationRates.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 
 /**
- * @brief Unit test for the IonizationStateCalculator class.
+ * @brief Unit test for the TemperatureCalculator class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  VernerRecombinationRates rr;
-  ChargeTransferRates ctr;
-  IonizationStateCalculator calculator(1., 0.1, rr, ctr);
+  TemperatureCalculator calculator;
 
   DensityValues cell;
-  // test find_H0
-  std::ifstream file("h0_testdata.txt");
+  std::ifstream file("tbal_testdata.txt");
   std::string line;
   while (getline(file, line)) {
     std::istringstream linestream(line);
 
     double jH, jHe, jCp1, jCp2, jN, jNp1, jNp2, jO, jOp1, jNe, jNep1, jSp1,
-        jSp2, jSp3, T, ntot, h0f, he0f, cp1f, cp2f, nf, np1f, np2f, of, op1f,
-        nef, nep1f, sp1f, sp2f, sp3f, h0, he0, cp1, cp2, n, np1, np2, o, op1,
-        ne, nep1, sp1, sp2, sp3;
+        jSp2, jSp3, hH, hHe, T, ntot, h0f, he0f, cp1f, cp2f, nf, np1f, np2f, of,
+        op1f, nef, nep1f, sp1f, sp2f, sp3f, h0, he0, cp1, cp2, n, np1, np2, o,
+        op1, ne, nep1, sp1, sp2, sp3, Tnewf, Tnew;
 
     linestream >> jH >> jHe >> jCp1 >> jCp2 >> jN >> jNp1 >> jNp2 >> jO >>
-        jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> T >> ntot >> h0f >>
-        he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >> op1f >> nef >>
-        nep1f >> sp1f >> sp2f >> sp3f;
+        jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
+        ntot >> h0f >> he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >>
+        op1f >> nef >> nep1f >> sp1f >> sp2f >> sp3f >> Tnewf;
 
     // set the cell values
     cell.reset_mean_intensities();
@@ -101,12 +96,15 @@ int main(int argc, char **argv) {
     cell.increase_mean_intensity(
         ELEMENT_Sp3, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
 
+    cell.increase_heating_H(hH);
+    cell.increase_heating_He(hHe);
+
     cell.set_total_density(
         UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
     cell.set_temperature(T);
 
     // calculate the ionization state of the cell
-    calculator.calculate_ionization_state(1., cell);
+    calculator.calculate_temperature(1., cell);
 
     h0 = cell.get_ionic_fraction(ELEMENT_H);
 
@@ -128,6 +126,8 @@ int main(int argc, char **argv) {
     sp1 = cell.get_ionic_fraction(ELEMENT_Sp1);
     sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
     sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
+
+    Tnew = cell.get_temperature();
 
     // check that the values match the expected values
     assert_values_equal(h0, h0f);
@@ -151,19 +151,7 @@ int main(int argc, char **argv) {
     assert_values_equal(sp2, sp2f);
     assert_values_equal(sp3, sp3f);
 
-    // check that find_H0 and find_H0_simple return the same values in the
-    // region where they should
-    double h0s;
-    IonizationStateCalculator::find_H0(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        0., UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"), 0.,
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"), 0., T,
-        h0, he0);
-    IonizationStateCalculator::find_H0_simple(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"), T, h0s);
-    assert_values_equal_tol(h0, h0s, 1.e-5);
+    assert_values_equal(Tnew, Tnewf);
   }
 
   return 0;
