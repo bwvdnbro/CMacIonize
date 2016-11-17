@@ -180,6 +180,33 @@ void TemperatureCalculator::ioneng(
   double sumO = O21 + O31;
   cell.set_ionic_fraction(ELEMENT_O, O21 / (1. + sumO));
   cell.set_ionic_fraction(ELEMENT_Op1, O31 / (1. + sumO));
+
+  double abundances[12];
+  abundances[0] = AN * (1. - cell.get_ionic_fraction(ELEMENT_N) -
+                        cell.get_ionic_fraction(ELEMENT_Np1) -
+                        cell.get_ionic_fraction(ELEMENT_Np2));
+  abundances[1] = AN * cell.get_ionic_fraction(ELEMENT_N);
+  abundances[2] = AO * (1. - cell.get_ionic_fraction(ELEMENT_O) -
+                        cell.get_ionic_fraction(ELEMENT_Op1));
+  abundances[3] = AO * cell.get_ionic_fraction(ELEMENT_O);
+  abundances[4] = AO * cell.get_ionic_fraction(ELEMENT_Op1);
+  abundances[5] = ANe * cell.get_ionic_fraction(ELEMENT_Nep1);
+  abundances[6] = AS * (1. - cell.get_ionic_fraction(ELEMENT_Sp1) -
+                        cell.get_ionic_fraction(ELEMENT_Sp2) -
+                        cell.get_ionic_fraction(ELEMENT_Sp3));
+  abundances[7] = AS * cell.get_ionic_fraction(ELEMENT_Sp1);
+  abundances[8] = AC * (1. - cell.get_ionic_fraction(ELEMENT_Cp1) -
+                        cell.get_ionic_fraction(ELEMENT_Cp2));
+  abundances[9] = AC * cell.get_ionic_fraction(ELEMENT_Cp1);
+  abundances[10] = AN * cell.get_ionic_fraction(ELEMENT_Np1);
+  abundances[11] = ANe * cell.get_ionic_fraction(ELEMENT_Ne);
+
+  // FFcool
+  // RECcool
+
+  double Lc = data.get_cooling(T, ne, abundances);
+
+  loss = Lc;
 }
 
 /**

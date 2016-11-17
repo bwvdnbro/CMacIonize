@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "LineCoolingData.hpp"
+#include "Utilities.hpp"
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -80,6 +81,37 @@ int main(int argc, char **argv) {
     for (unsigned int j = 0; j < 5; ++j) {
       assert_values_equal(sw_fortran[5 * i + j], data.get_sw(i, j));
     }
+  }
+
+  // test LineCoolingData::simq
+  // we generate coefficients at random and check that the equation
+  //  A x X = B is really satisfied
+  // since A and B are changed by simq, we store all initial values in Ac and Bc
+  // as well (note that B will contain X after simq exits)
+  // we then need to check if Ac x B = Bc
+  double A[5][5], Ac[5][5], B[5], Bc[5];
+  for (unsigned int i = 0; i < 5; ++i) {
+    for (unsigned int j = 0; j < 5; ++j) {
+      double a = Utilities::random_double();
+      if (i == j) {
+        a = 1.;
+      }
+      A[i][j] = a;
+      Ac[i][j] = a;
+    }
+    double b = Utilities::random_double();
+    B[i] = b;
+    Bc[i] = b;
+  }
+
+  LineCoolingData::simq(A, B);
+
+  for (unsigned int i = 0; i < 5; ++i) {
+    double a = 0.;
+    for (unsigned int j = 0; j < 5; ++j) {
+      a += Ac[i][j] * B[j];
+    }
+    assert_values_equal(a, Bc[i]);
   }
 
   return 0;

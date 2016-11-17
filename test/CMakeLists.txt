@@ -523,6 +523,7 @@ set(TESTTEMPERATURECALCULATOR_SOURCES
 
     ../src/ChargeTransferRates.cpp
     ../src/IonizationStateCalculator.cpp
+    ../src/LineCoolingData.cpp
     ../src/TemperatureCalculator.cpp
     ../src/TemperatureCalculator.hpp
 )

@@ -88,6 +88,11 @@ public:
   double get_ea(unsigned int element, unsigned int level);
   double get_en(unsigned int element, unsigned int level);
   double get_sw(unsigned int element, unsigned int level);
+
+  static void simq(double alev[5][5], double *lev);
+
+  double get_cooling(double temperature, double electron_density,
+                     double *abundances);
 };
 
 #endif // LINECOOLINGDATA_HPP
