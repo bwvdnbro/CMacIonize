@@ -41,6 +41,7 @@
  */
 enum Quantity {
   QUANTITY_DENSITY,
+  QUANTITY_ENERGY_CHANGE_RATE,
   QUANTITY_ENERGY_RATE,
   QUANTITY_FLUX,
   QUANTITY_FREQUENCY,
@@ -136,6 +137,59 @@ inline double UnitConverter< QUANTITY_DENSITY >::to_unit(double value,
     return value;
   } else if (unit == "g cm^-3") {
     return value * 1.e-3;
+  } else {
+    error("Unknown density unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/// QUANTITY_ENERGY_CHANGE_RATE
+
+/**
+ * @brief UnitConverter::to_SI() specialization for an energy change rate.
+ *
+ * @param value Energy change rate value in strange units.
+ * @param unit Strange units.
+ * @return Energy change rate value in kilograms per metre per seconds cubed
+ * (Joules per cubic metres per second).
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_SI(double value,
+                                                    std::string unit) {
+  if (unit == "kg m^-1s^-3") {
+    // quantity is already in SI units
+    return value;
+  } else if (unit == "J m^-3s^-1") {
+    // Joules per cubic metres per second is just an alias for the SI unit.
+    return value;
+  } else if (unit == "erg cm^-3s^-1") {
+    return value * 0.1;
+  } else {
+    error("Unknown energy rate unit: \"%s\".", unit.c_str());
+    return 0.;
+  }
+}
+
+/**
+ * @brief UnitConverter::to_unit() specialization for an energy change rate.
+ *
+ * @param value Energy change rate value in kilograms per metre per seconds
+ * cubed (Joules per cubic metres per second).
+ * @param unit Strange units.
+ * @return Energy change rate value in strange units.
+ */
+template <>
+inline double
+UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_unit(double value,
+                                                      std::string unit) {
+  if (unit == "kg m^-1s^-3") {
+    // quantity is already in requested units
+    return value;
+  } else if (unit == "J m^-3s^-1") {
+    return value;
+  } else if (unit == "erg cm^-3s^-1") {
+    return value * 10.;
   } else {
     error("Unknown density unit: \"%s\".", unit.c_str());
     return 0.;

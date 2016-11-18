@@ -529,11 +529,15 @@ set(TESTTEMPERATURECALCULATOR_SOURCES
     ../src/LineCoolingData.cpp
     ../src/TemperatureCalculator.cpp
     ../src/TemperatureCalculator.hpp
+    ../src/VernerRecombinationRates.cpp
 )
 add_unit_test(NAME testTemperatureCalculator
               SOURCES ${TESTTEMPERATURECALCULATOR_SOURCES})
 configure_file(${PROJECT_SOURCE_DIR}/test/tbal_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/tbal_testdata.txt
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/ioneng_testdata.txt
                COPYONLY)
 
 ### Done adding unit tests. Create the 'make check' target #####################

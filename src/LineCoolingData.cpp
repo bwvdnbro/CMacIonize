@@ -304,34 +304,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 
   double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
   double T4 = temperature * 1.e-4;
-  double A1 = std::pow(T4, 0.91);
-  double A2 = std::pow(T4, 1.11);
-  double A3 = std::pow(T4, 0.8);
 
   double Om[10][10];
-  Om[0][0] = 0.29 * A1;
-  Om[0][1] = 0.194 * A1;
-  Om[0][2] = 0.0567 * A1;
-  Om[0][3] = 0.113 * A1;
-  Om[0][4] = 0.269 * A2;
-  Om[0][5] = 0.109 * A3;
-  Om[0][6] = 0.266 * std::pow(T4, 0.715);
-  Om[0][7] = 0.097 * std::pow(T4, 0.69);
-  Om[0][8] = 0.147 * A3;
-  Om[0][9] = 0.071 * A2;
-
-  double T1 = 0.266 * A2;
-  double T2 = 0.0324 * A2;
-  Om[2][0] = 0.0987 * A2;
-  Om[2][1] = 0.0292 * T4;
-  Om[2][2] = 0.55556 * T1;
-  Om[2][3] = 0.55556 * T2;
-  Om[2][4] = 0.0264 * std::pow(T4, 1.24);
-  Om[2][5] = 0.333 * T1;
-  Om[2][6] = 0.333 * T2;
-  Om[2][7] = T1 / 9.;
-  Om[2][8] = T2 / 9.;
-  Om[2][9] = 0.105 * std::pow(T4, 0.52);
 
   double cooling = 0.;
   double alev[5][5], lev[5];
@@ -415,7 +389,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   // 2 level atoms
   double sw1 = 2.;
   double sw2 = 4.;
-  T1 = std::exp(-EnNIII / temperature);
+  double T1 = std::exp(-EnNIII / temperature);
   double CNIII =
       abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) * T1 *
       EaNIII /

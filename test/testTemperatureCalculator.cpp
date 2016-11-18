@@ -24,9 +24,12 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
+#include "LineCoolingData.hpp"
 #include "TemperatureCalculator.hpp"
 #include "UnitConverter.hpp"
+#include "VernerRecombinationRates.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -41,117 +44,217 @@
 int main(int argc, char **argv) {
   TemperatureCalculator calculator;
 
-  DensityValues cell;
-  std::ifstream file("tbal_testdata.txt");
-  std::string line;
-  while (getline(file, line)) {
-    std::istringstream linestream(line);
+  // test ioneng
+  {
+    DensityValues cell;
+    std::ifstream file("ioneng_testdata.txt");
+    std::string line;
+    LineCoolingData data;
+    VernerRecombinationRates rates;
+    ChargeTransferRates ctr;
+    while (getline(file, line)) {
+      std::istringstream lstream(line);
 
-    double jH, jHe, jCp1, jCp2, jN, jNp1, jNp2, jO, jOp1, jNe, jNep1, jSp1,
-        jSp2, jSp3, hH, hHe, T, ntot, h0f, he0f, cp1f, cp2f, nf, np1f, np2f, of,
-        op1f, nef, nep1f, sp1f, sp2f, sp3f, h0, he0, cp1, cp2, n, np1, np2, o,
-        op1, ne, nep1, sp1, sp2, sp3, Tnewf, Tnew;
+      double jH, jHe, jCp1, jCp2, jN, jNp1, jNp2, jO, jOp1, jNe, jNep1, jSp1,
+          jSp2, jSp3, hH, hHe, T, gainf, lossf, n, h0f, he0f, fCp1, fCp2, fN,
+          fNp1, fNp2, fO, fOp1, fNe, fNep1, fSp1, fSp2, fSp3;
 
-    linestream >> jH >> jHe >> jCp1 >> jCp2 >> jN >> jNp1 >> jNp2 >> jO >>
-        jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
-        ntot >> h0f >> he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >>
-        op1f >> nef >> nep1f >> sp1f >> sp2f >> sp3f >> Tnewf;
+      lstream >> jH >> jHe >> jCp1 >> jCp2 >> jN >> jNp1 >> jNp2 >> jO >>
+          jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
+          gainf >> lossf >> n >> h0f >> he0f >> fCp1 >> fCp2 >> fN >> fNp1 >>
+          fNp2 >> fO >> fOp1 >> fNe >> fNep1 >> fSp1 >> fSp2 >> fSp3;
 
-    // set the cell values
-    cell.reset_mean_intensities();
+      gainf = UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_SI(
+          gainf, "erg cm^-3s^-1");
+      lossf = UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_SI(
+          lossf, "erg cm^-3s^-1");
 
-    cell.increase_mean_intensity(
-        ELEMENT_H, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"));
+      cell.reset_mean_intensities();
+      cell.increase_mean_intensity(ELEMENT_H, jH);
+      cell.increase_mean_intensity(ELEMENT_He, jHe);
+      cell.increase_mean_intensity(ELEMENT_Cp1, jCp1);
+      cell.increase_mean_intensity(ELEMENT_Cp2, jCp2);
+      cell.increase_mean_intensity(ELEMENT_N, jN);
+      cell.increase_mean_intensity(ELEMENT_Np1, jNp1);
+      cell.increase_mean_intensity(ELEMENT_Np2, jNp2);
+      cell.increase_mean_intensity(ELEMENT_O, jO);
+      cell.increase_mean_intensity(ELEMENT_Op1, jOp1);
+      cell.increase_mean_intensity(ELEMENT_Ne, jNe);
+      cell.increase_mean_intensity(ELEMENT_Nep1, jNep1);
+      cell.increase_mean_intensity(ELEMENT_Sp1, jSp1);
+      cell.increase_mean_intensity(ELEMENT_Sp2, jSp2);
+      cell.increase_mean_intensity(ELEMENT_Sp3, jSp3);
+      cell.increase_heating_H(hH);
+      cell.increase_heating_He(hHe);
+      cell.set_total_density(
+          UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(n, "cm^-3"));
+      cell.set_temperature(T);
 
-    cell.increase_mean_intensity(
-        ELEMENT_He, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"));
+      double gain, loss, h0, he0;
+      TemperatureCalculator::ioneng(h0, he0, gain, loss, cell, 1., 0.1, 220.e-6,
+                                    40.e-6, 330.e-6, 9.e-6, 50.e-6, 1., 1.,
+                                    data, rates, ctr);
 
-    cell.increase_mean_intensity(
-        ELEMENT_Cp1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp1, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Cp2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp2, "s^-1"));
+      double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 
-    cell.increase_mean_intensity(
-        ELEMENT_N, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jN, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Np1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp1, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Np2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp2, "s^-1"));
+      Cp1 = cell.get_ionic_fraction(ELEMENT_Cp1);
+      Cp2 = cell.get_ionic_fraction(ELEMENT_Cp2);
+      N = cell.get_ionic_fraction(ELEMENT_N);
+      Np1 = cell.get_ionic_fraction(ELEMENT_Np1);
+      Np2 = cell.get_ionic_fraction(ELEMENT_Np2);
+      O = cell.get_ionic_fraction(ELEMENT_O);
+      Op1 = cell.get_ionic_fraction(ELEMENT_Op1);
+      Ne = cell.get_ionic_fraction(ELEMENT_Ne);
+      Nep1 = cell.get_ionic_fraction(ELEMENT_Nep1);
+      Sp1 = cell.get_ionic_fraction(ELEMENT_Sp1);
+      Sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
+      Sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
 
-    cell.increase_mean_intensity(
-        ELEMENT_O, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jO, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Op1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jOp1, "s^-1"));
+      // we need a tolerance of 10%, since a small deviation in the neutral
+      // fractions of h0 and he0 propagates into the other variables
+      // for some reason, Kenny's gain and loss values are multiplied with 1.e20
+      assert_values_equal_rel(gain, gainf * 1.e-20, 1.e-1);
+      assert_values_equal_rel(loss, lossf * 1.e-20, 1.e-1);
 
-    cell.increase_mean_intensity(
-        ELEMENT_Ne, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNe, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Nep1,
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNep1, "s^-1"));
+      assert_values_equal_rel(Cp1, fCp1, 1.e-1);
+      assert_values_equal_rel(Cp2, fCp2, 1.e-1);
+      assert_values_equal_rel(N, fN, 1.e-1);
+      assert_values_equal_rel(Np1, fNp1, 1.e-1);
+      assert_values_equal_rel(Np2, fNp2, 1.e-1);
+      assert_values_equal_rel(O, fO, 1.e-1);
+      assert_values_equal_rel(Op1, fOp1, 1.e-1);
+      assert_values_equal_rel(Ne, fNe, 1.e-1);
+      assert_values_equal_rel(Nep1, fNep1, 1.e-1);
+      assert_values_equal_rel(Sp1, fSp1, 1.e-1);
+      assert_values_equal_rel(Sp2, fSp2, 1.e-1);
+      assert_values_equal_rel(Sp3, fSp3, 1.e-1);
+    }
+  }
 
-    cell.increase_mean_intensity(
-        ELEMENT_Sp1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp1, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Sp2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp2, "s^-1"));
-    cell.increase_mean_intensity(
-        ELEMENT_Sp3, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
+  return 0;
 
-    cell.increase_heating_H(hH);
-    cell.increase_heating_He(hHe);
+  // test calculate_temperature
+  {
+    DensityValues cell;
+    std::ifstream file("tbal_testdata.txt");
+    std::string line;
+    while (getline(file, line)) {
+      std::istringstream linestream(line);
 
-    cell.set_total_density(
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
-    cell.set_temperature(T);
+      double jH, jHe, jCp1, jCp2, jN, jNp1, jNp2, jO, jOp1, jNe, jNep1, jSp1,
+          jSp2, jSp3, hH, hHe, T, ntot, h0f, he0f, cp1f, cp2f, nf, np1f, np2f,
+          of, op1f, nef, nep1f, sp1f, sp2f, sp3f, h0, he0, cp1, cp2, n, np1,
+          np2, o, op1, ne, nep1, sp1, sp2, sp3, Tnewf, Tnew;
 
-    // calculate the ionization state of the cell
-    calculator.calculate_temperature(1., cell);
+      linestream >> jH >> jHe >> jCp1 >> jCp2 >> jN >> jNp1 >> jNp2 >> jO >>
+          jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
+          ntot >> h0f >> he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >>
+          op1f >> nef >> nep1f >> sp1f >> sp2f >> sp3f >> Tnewf;
 
-    h0 = cell.get_ionic_fraction(ELEMENT_H);
+      // set the cell values
+      cell.reset_mean_intensities();
 
-    he0 = cell.get_ionic_fraction(ELEMENT_He);
+      cell.increase_mean_intensity(
+          ELEMENT_H, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"));
 
-    cp1 = cell.get_ionic_fraction(ELEMENT_Cp1);
-    cp2 = cell.get_ionic_fraction(ELEMENT_Cp2);
+      cell.increase_mean_intensity(
+          ELEMENT_He, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"));
 
-    n = cell.get_ionic_fraction(ELEMENT_N);
-    np1 = cell.get_ionic_fraction(ELEMENT_Np1);
-    np2 = cell.get_ionic_fraction(ELEMENT_Np2);
+      cell.increase_mean_intensity(
+          ELEMENT_Cp1,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp1, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Cp2,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp2, "s^-1"));
 
-    o = cell.get_ionic_fraction(ELEMENT_O);
-    op1 = cell.get_ionic_fraction(ELEMENT_Op1);
+      cell.increase_mean_intensity(
+          ELEMENT_N, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jN, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Np1,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp1, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Np2,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp2, "s^-1"));
 
-    ne = cell.get_ionic_fraction(ELEMENT_Ne);
-    nep1 = cell.get_ionic_fraction(ELEMENT_Nep1);
+      cell.increase_mean_intensity(
+          ELEMENT_O, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jO, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Op1,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jOp1, "s^-1"));
 
-    sp1 = cell.get_ionic_fraction(ELEMENT_Sp1);
-    sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
-    sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
+      cell.increase_mean_intensity(
+          ELEMENT_Ne, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNe, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Nep1,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNep1, "s^-1"));
 
-    Tnew = cell.get_temperature();
+      cell.increase_mean_intensity(
+          ELEMENT_Sp1,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp1, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Sp2,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp2, "s^-1"));
+      cell.increase_mean_intensity(
+          ELEMENT_Sp3,
+          UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
 
-    // check that the values match the expected values
-    assert_values_equal(h0, h0f);
+      cell.increase_heating_H(hH);
+      cell.increase_heating_He(hHe);
 
-    assert_values_equal(he0, he0f);
+      cell.set_total_density(
+          UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
+      cell.set_temperature(T);
 
-    assert_values_equal(cp1, cp1f);
-    assert_values_equal(cp2, cp2f);
+      // calculate the ionization state of the cell
+      calculator.calculate_temperature(1., cell);
 
-    assert_values_equal(n, nf);
-    assert_values_equal(np1, np1f);
-    assert_values_equal(np2, np2f);
+      h0 = cell.get_ionic_fraction(ELEMENT_H);
 
-    assert_values_equal(o, of);
-    assert_values_equal(op1, op1f);
+      he0 = cell.get_ionic_fraction(ELEMENT_He);
 
-    assert_values_equal(ne, nef);
-    assert_values_equal(nep1, nep1f);
+      cp1 = cell.get_ionic_fraction(ELEMENT_Cp1);
+      cp2 = cell.get_ionic_fraction(ELEMENT_Cp2);
 
-    assert_values_equal(sp1, sp1f);
-    assert_values_equal(sp2, sp2f);
-    assert_values_equal(sp3, sp3f);
+      n = cell.get_ionic_fraction(ELEMENT_N);
+      np1 = cell.get_ionic_fraction(ELEMENT_Np1);
+      np2 = cell.get_ionic_fraction(ELEMENT_Np2);
 
-    assert_values_equal(Tnew, Tnewf);
+      o = cell.get_ionic_fraction(ELEMENT_O);
+      op1 = cell.get_ionic_fraction(ELEMENT_Op1);
+
+      ne = cell.get_ionic_fraction(ELEMENT_Ne);
+      nep1 = cell.get_ionic_fraction(ELEMENT_Nep1);
+
+      sp1 = cell.get_ionic_fraction(ELEMENT_Sp1);
+      sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
+      sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
+
+      Tnew = cell.get_temperature();
+
+      // check that the values match the expected values
+      assert_values_equal(h0, h0f);
+
+      assert_values_equal(he0, he0f);
+
+      assert_values_equal(cp1, cp1f);
+      assert_values_equal(cp2, cp2f);
+
+      assert_values_equal(n, nf);
+      assert_values_equal(np1, np1f);
+      assert_values_equal(np2, np2f);
+
+      assert_values_equal(o, of);
+      assert_values_equal(op1, op1f);
+
+      assert_values_equal(ne, nef);
+      assert_values_equal(nep1, nep1f);
+
+      assert_values_equal(sp1, sp1f);
+      assert_values_equal(sp2, sp2f);
+      assert_values_equal(sp3, sp3f);
+
+      assert_values_equal(Tnew, Tnewf);
+    }
   }
 
   return 0;

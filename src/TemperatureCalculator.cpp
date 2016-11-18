@@ -29,13 +29,37 @@
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "RecombinationRates.hpp"
+#include "UnitConverter.hpp"
 #include <cmath>
 
+/**
+ * @brief Function that calculates the cooling and heating rate for a given
+ * cell.
+ *
+ * @param h0 Variable to store the hydrogen neutral fraction in.
+ * @param he0 Variable to store the helium neutral fraction in.
+ * @param gain Total energy gain due to heating.
+ * @param loss Total energy loss due to cooling.
+ * @param cell DensityValues of the cell.
+ * @param jfac Normalization factor for the mean intensities.
+ * @param AHe Helium abundance.
+ * @param AC Carbon abundance.
+ * @param AN Nitrogen abundance.
+ * @param AO Oxygen abundance.
+ * @param AS Sulfur abundance.
+ * @param ANe Neon abundance.
+ * @param hfac Normalization factor for the heating integrals.
+ * @param pahfac Normalization factor for PAH heating.
+ * @param data LineCoolingData used to calculate line cooling.
+ * @param rates RecombinationRates used to calculate ionic fractions.
+ * @param ctr ChargeTransferRates used to calculate ionic fractions.
+ */
 void TemperatureCalculator::ioneng(
     double &h0, double &he0, double &gain, double &loss, DensityValues &cell,
     double jfac, double AHe, double AC, double AN, double AO, double AS,
     double ANe, double hfac, double pahfac, LineCoolingData &data,
     RecombinationRates &rates, ChargeTransferRates &ctr) {
+
   double T = cell.get_temperature();
 
   double alphaH = rates.get_recombination_rate(ELEMENT_H, T);
@@ -73,16 +97,17 @@ void TemperatureCalculator::ioneng(
   double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
 
   // UNITS???????
-  double heatHeLa = pHots * 1.2196e-11 * alpha_e_2sP * ne * nhep * 1.e20;
-  gain = hfac * n *
+  // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
+  // we then multiplied with 0.1 to convert to J m^-3s^-1
+  double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
+  gain = hfac * n * 1.e-7 *
          (cell.get_heating_H() * h0 + cell.get_heating_He() * AHe * he0);
   // pahs
-  // the value of G1 is 0 in Kenny's code...
-  double G1 = 0.;
-  double heatpah = 3.e-25 * 5. * n * ne * pahfac;
+  // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
+  // we then multiplied with 0.1 to convert to J m^-3s^-1
+  double heatpah = 3.e-38 * 5. * n * ne * pahfac;
   gain += heatpah;
-  gain *= 1.e20;
-  gain += heatHeLa + G1;
+  gain += heatHeLa;
 
   // coolants
 
@@ -202,11 +227,23 @@ void TemperatureCalculator::ioneng(
   abundances[11] = ANe * cell.get_ionic_fraction(ELEMENT_Ne);
 
   // FFcool
+  double c = 5.5 - std::log(T);
+  double gff = 1.1 + 0.34 * std::exp(-c * c / 3.);
+  // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
+  // we then multiplied with 0.1 to convert them to J m^-3s^-1
+  double Lff = 1.42e-40 * gff * std::sqrt(T) * (nhp + nhep) * ne;
+
   // RECcool
+  // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
+  // we then multiplied with 0.1 to convert them to J m^-3s^-1
+  double Lhp = 2.85e-14 * ne * nhp * std::sqrt(T) *
+               (5.914 - 0.5 * std::log(T) + 0.01184 * std::pow(T, 0.33333));
+  double Lhep = 2.6e-13 * ne * nhep * std::pow(T, 0.32);
+  double LRec = 1.e-26 * (Lhp + Lhep);
 
-  double Lc = data.get_cooling(T, ne, abundances);
+  double Lc = data.get_cooling(T, ne, abundances) * n;
 
-  loss = Lc;
+  loss = Lc + Lff + LRec;
 }
 
 /**
