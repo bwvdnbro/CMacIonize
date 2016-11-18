@@ -38,14 +38,28 @@ class RecombinationRates;
  * the photon shoot loop.
  */
 class TemperatureCalculator {
+private:
+  /*! @brief LineCoolingData used to calculate cooling due to line emission. */
+  LineCoolingData &_line_cooling_data;
+
+  /*! @brief RecombinationRates used to calculate ionic fractions. */
+  RecombinationRates &_recombination_rates;
+
+  /*! @brief ChargeTransferRates used to calculate ionic fractions. */
+  ChargeTransferRates &_charge_transfer_rates;
+
 public:
+  TemperatureCalculator(LineCoolingData &line_cooling_data,
+                        RecombinationRates &recombination_rates,
+                        ChargeTransferRates &charge_transfer_rates);
+
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     DensityValues &cell, double jfac, double AHe, double AC,
-                     double AN, double AO, double AS, double ANe, double hfac,
-                     double pahfac, LineCoolingData &data,
+                     double T, DensityValues &cell, double jfac, double AHe,
+                     double AC, double AN, double AO, double AS, double ANe,
+                     double hfac, double pahfac, LineCoolingData &data,
                      RecombinationRates &rates, ChargeTransferRates &ctr);
 
-  void calculate_temperature(double jfac, DensityValues &cell);
+  void calculate_temperature(double jfac, double hfac, DensityValues &cell);
   void calculate_temperature(unsigned int nphoton, DensityGrid &grid);
 };
 

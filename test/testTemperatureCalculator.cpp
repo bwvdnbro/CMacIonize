@@ -42,16 +42,16 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  TemperatureCalculator calculator;
+  LineCoolingData data;
+  VernerRecombinationRates rates;
+  ChargeTransferRates ctr;
+  TemperatureCalculator calculator(data, rates, ctr);
 
   // test ioneng
   {
     DensityValues cell;
     std::ifstream file("ioneng_testdata.txt");
     std::string line;
-    LineCoolingData data;
-    VernerRecombinationRates rates;
-    ChargeTransferRates ctr;
     while (getline(file, line)) {
       std::istringstream lstream(line);
 
@@ -84,16 +84,18 @@ int main(int argc, char **argv) {
       cell.increase_mean_intensity(ELEMENT_Sp1, jSp1);
       cell.increase_mean_intensity(ELEMENT_Sp2, jSp2);
       cell.increase_mean_intensity(ELEMENT_Sp3, jSp3);
-      cell.increase_heating_H(hH);
-      cell.increase_heating_He(hHe);
+      cell.increase_heating_H(
+          UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(hH, "erg s^-1"));
+      cell.increase_heating_He(
+          UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(hHe, "erg s^-1"));
       cell.set_total_density(
           UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(n, "cm^-3"));
       cell.set_temperature(T);
 
       double gain, loss, h0, he0;
-      TemperatureCalculator::ioneng(h0, he0, gain, loss, cell, 1., 0.1, 220.e-6,
-                                    40.e-6, 330.e-6, 9.e-6, 50.e-6, 1., 1.,
-                                    data, rates, ctr);
+      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1., 0.1,
+                                    220.e-6, 40.e-6, 330.e-6, 9.e-6, 50.e-6, 1.,
+                                    1., data, rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 
@@ -130,8 +132,6 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(Sp3, fSp3, 1.e-1);
     }
   }
-
-  return 0;
 
   // test calculate_temperature
   {
@@ -198,15 +198,17 @@ int main(int argc, char **argv) {
           ELEMENT_Sp3,
           UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
 
-      cell.increase_heating_H(hH);
-      cell.increase_heating_He(hHe);
+      cell.increase_heating_H(
+          UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(hH, "erg s^-1"));
+      cell.increase_heating_He(
+          UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(hHe, "erg s^-1"));
 
       cell.set_total_density(
           UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
       cell.set_temperature(T);
 
       // calculate the ionization state of the cell
-      calculator.calculate_temperature(1., cell);
+      calculator.calculate_temperature(1., 1., cell);
 
       h0 = cell.get_ionic_fraction(ELEMENT_H);
 

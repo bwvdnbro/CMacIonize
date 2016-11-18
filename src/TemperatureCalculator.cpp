@@ -33,6 +33,23 @@
 #include <cmath>
 
 /**
+ * @brief Constructor.
+ *
+ * @param line_cooling_data LineCoolingData use to calculate cooling due to line
+ * emission.
+ * @param recombination_rates RecombinationRates used to calculate ionic
+ * fractions.
+ * @param charge_transfer_rates ChargeTransferRates used to calculate ionic
+ * fractions.
+ */
+TemperatureCalculator::TemperatureCalculator(
+    LineCoolingData &line_cooling_data, RecombinationRates &recombination_rates,
+    ChargeTransferRates &charge_transfer_rates)
+    : _line_cooling_data(line_cooling_data),
+      _recombination_rates(recombination_rates),
+      _charge_transfer_rates(charge_transfer_rates) {}
+
+/**
  * @brief Function that calculates the cooling and heating rate for a given
  * cell.
  *
@@ -40,6 +57,7 @@
  * @param he0 Variable to store the helium neutral fraction in.
  * @param gain Total energy gain due to heating.
  * @param loss Total energy loss due to cooling.
+ * @param T Temperature (in K).
  * @param cell DensityValues of the cell.
  * @param jfac Normalization factor for the mean intensities.
  * @param AHe Helium abundance.
@@ -54,13 +72,14 @@
  * @param rates RecombinationRates used to calculate ionic fractions.
  * @param ctr ChargeTransferRates used to calculate ionic fractions.
  */
-void TemperatureCalculator::ioneng(
-    double &h0, double &he0, double &gain, double &loss, DensityValues &cell,
-    double jfac, double AHe, double AC, double AN, double AO, double AS,
-    double ANe, double hfac, double pahfac, LineCoolingData &data,
-    RecombinationRates &rates, ChargeTransferRates &ctr) {
-
-  double T = cell.get_temperature();
+void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
+                                   double &loss, double T, DensityValues &cell,
+                                   double jfac, double AHe, double AC,
+                                   double AN, double AO, double AS, double ANe,
+                                   double hfac, double pahfac,
+                                   LineCoolingData &data,
+                                   RecombinationRates &rates,
+                                   ChargeTransferRates &ctr) {
 
   double alphaH = rates.get_recombination_rate(ELEMENT_H, T);
   double alphaHe = rates.get_recombination_rate(ELEMENT_He, T);
@@ -96,11 +115,10 @@ void TemperatureCalculator::ioneng(
   double nhep = (1. - he0) * n * AHe;
   double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
 
-  // UNITS???????
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
   double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
-  gain = hfac * n * 1.e-7 *
+  gain = hfac * n *
          (cell.get_heating_H() * h0 + cell.get_heating_He() * AHe * he0);
   // pahs
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
@@ -250,11 +268,20 @@ void TemperatureCalculator::ioneng(
  * @brief Calculate a new temperature for the given cell.
  *
  * @param jfac Normalization factor for the mean intensity integrals.
+ * @param hfac Normalization factor for the heating integrals.
  * @param cell DensityValues of the cell.
  */
-void TemperatureCalculator::calculate_temperature(double jfac,
+void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
                                                   DensityValues &cell) {
   const double eps = 1.e-3;
+  double AHe = 0.1;
+  double AC = 220.e-6;
+  double AN = 40.e-6;
+  double AO = 330.e-6;
+  double AS = 9.e-6;
+  double ANe = 50.e-6;
+  // this should be a parameter
+  double pahfac = 0.;
 
   if ((cell.get_heating_H() == 0. &&
        cell.get_mean_intensity(ELEMENT_He) == 0.) ||
@@ -301,13 +328,22 @@ void TemperatureCalculator::calculate_temperature(double jfac,
     ++niter;
     double T1 = 1.1 * T0;
     // ioneng
-    double gain1 = 0.;
-    double loss1 = 0.;
+    double h01, he01, gain1, loss1;
+    ioneng(h01, he01, gain1, loss1, T1, cell, jfac, AHe, AC, AN, AO, AS, ANe,
+           hfac, pahfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
 
     double T2 = 0.9 * T0;
     // ioneng
-    double gain2 = 0.;
-    double loss2 = 0.;
+    double h02, he02, gain2, loss2;
+    ioneng(h02, he02, gain2, loss2, T2, cell, jfac, AHe, AC, AN, AO, AS, ANe,
+           hfac, pahfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
+
+    // ioneng - this one sets h0, he0, gain0 and loss0
+    ioneng(h0, he0, gain0, loss0, T0, cell, jfac, AHe, AC, AN, AO, AS, ANe,
+           hfac, pahfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
 
     double expgain = std::log(gain1 / gain2) / std::log(T1 / T2);
     double exploss = std::log(loss1 / loss2) / std::log(T1 / T2);

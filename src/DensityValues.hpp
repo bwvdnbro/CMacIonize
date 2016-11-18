@@ -56,7 +56,8 @@ private:
    *  helium. */
   double _pHe_em[4];
 
-  /*! @brief Mean intensity integrals of ionizing radiation (in m^3s^-1). */
+  /*! @brief Mean intensity integrals of ionizing radiation without
+   *  normalization factor (in m^3). */
   double _mean_intensity[NUMBER_OF_ELEMENTS];
 
   /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
@@ -66,10 +67,12 @@ private:
   /*! @brief Neutral fraction of hydrogen during the previous step. */
   double _old_neutral_fraction_H;
 
-  /*! @brief Hydrogen ionization heating (in UNITS?). */
+  /*! @brief Hydrogen ionization heating without normalization factor (in
+   *  m^3s^-1). */
   double _heating_H;
 
-  /*! @brief Helium ionization heating (in UNITS?). */
+  /*! @brief Helium ionization heating without normalization factor (in
+   *  m^3s^-1). */
   double _heating_He;
 
 public:
@@ -168,7 +171,7 @@ public:
    * element by the given amount.
    *
    * @param element ElementName of a valid element.
-   * @param dmean_intensity Increment (in m^3s^-1).
+   * @param dmean_intensity Increment (in m^3).
    */
   inline void increase_mean_intensity(ElementName element,
                                       double dmean_intensity) {
@@ -178,7 +181,7 @@ public:
   /**
    * @brief Increase the hydrogen ionization heating integral.
    *
-   * @param dheating_H Increment (in UNITS?).
+   * @param dheating_H Increment (in m^3s^-1).
    */
   inline void increase_heating_H(double dheating_H) {
     _heating_H += dheating_H;
@@ -187,7 +190,7 @@ public:
   /**
    * @brief Increase the helium ionization heating integral.
    *
-   * @param dheating_He Increment (in UNITS?).
+   * @param dheating_He Increment (in m^3s^-1).
    */
   inline void increase_heating_He(double dheating_He) {
     _heating_He += dheating_He;
@@ -266,7 +269,8 @@ public:
    * @brief Get the mean intensity integral for the given element.
    *
    * @param element ElementName of a valid element.
-   * @return Mean intensity of ionizing radiation (in m^3s^-1).
+   * @return Mean intensity of ionizing radiation without normalization factor
+   * (in m^3).
    */
   inline double get_mean_intensity(ElementName element) {
     return _mean_intensity[element];
@@ -282,14 +286,16 @@ public:
   /**
    * @brief Get the hydrogen ionization heating integral.
    *
-   * @return Hydrogen ionization heating (in UNITS?).
+   * @return Hydrogen ionization heating without normalization factor (in
+   * m^3s^-1).
    */
   inline double get_heating_H() { return _heating_H; }
 
   /**
    * @brief Get the helium ionization heating integral.
    *
-   * @return Helium ionization heating (in UNITS?).
+   * @return Helium ionization heating without normalization factor (in
+   * m^3s^-1).
    */
   inline double get_heating_He() { return _heating_He; }
 };
