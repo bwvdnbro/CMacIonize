@@ -164,127 +164,119 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) {
 /**
  * @brief Solve a system of 5 coupled linear equations.
  *
- * @param alev Coefficients of the equations.
- * @param lev Resulting solutions.
+ * We assume a system of equations of the form
+ * \f[
+ *   A.X = B,
+ * \f]
+ * with
+ * \f[
+ * A = \begin{pmatrix}
+ * A00 & A01 & A02 & A03 & A04 \\
+ * A10 & A11 & A12 & A13 & A14 \\
+ * A20 & A21 & A22 & A23 & A24 \\
+ * A30 & A31 & A32 & A33 & A34 \\
+ * A40 & A41 & A42 & A43 & A44
+ * \end{pmatrix},
+ * \f]
+ * and
+ * \f[
+ * B = \begin{pmatrix}
+ * B0 \\
+ * B1 \\
+ * B2 \\
+ * B3 \\
+ * B4
+ * \end{pmatrix}.
+ * \f]
+ * We want to solve for the elements of the column matrix \f$X\f$.
+ *
+ * To do this, we first reduce the combined matrix \f$AB\f$ (the matrix \f$A\f$
+ * with the matrix \f$B\f$ added as an extra column) to an upper triangular
+ * matrix using Gaussian elimination. This automatically gives us the solution
+ * for the last element of \f$X\f$. We then use this element to recursively
+ * solve for the others by substitution.
+ *
+ * To avoid division by zero, we always use the next row with the largest
+ * coefficient, and interchange rows if necessary. This means that to eliminate
+ * e.g. row 2, we first check which of the rows 2-5 contains the largest value
+ * in column 2. Suppose this is row 4. We then interchange rows 2 and 4, and
+ * divide all columns of the new row 2 (the original row 4) by the value in
+ * column 2 of row 2. Row 2 now contains a 1 at position 2, which is what we
+ * want. We then use the values in row 2 to make sure all elements up to column
+ * 2 are zero in all rows below row 2. Since row 2, column 2 is 1, this can be
+ * achieved by simply subtracting row 2, column i multiplied by row j, column 2
+ * from row j, column i for all i and j larger than 2. We do not actually do the
+ * calculation for column 2 and smaller, since we know the result is zero
+ * (column 1 was already zero after the elimination of row 1).
+ *
+ * Note that both matrix \f$A\f$ and matrix \f$B\f$ are modified in place. When
+ * the method returns, \f$B\f$ contains the elements of the matrix \f$X\f$.
+ *
+ * @param A Elements of the matrix \f$A\f$.
+ * @param B Elements of the matrix \f$B\f$, and elements of the solution on
+ * exit.
  */
-void LineCoolingData::simq(double alev[5][5], double lev[5]) {
-  // the Fortran code uses strange logic to access the 5x5 array as a 1D array
-  // we cannot apply the same logic in C++, as the ordering of arrays is
-  // different...
-  // for simplicity, we therefore map the 5x5 array onto the equivalent 1D
-  // Fortran array
-  double A[25];
-  for (unsigned int i = 0; i < 5; ++i) {
-    for (unsigned int j = 0; j < 5; ++j) {
-      A[5 * j + i] = alev[i][j];
-    }
-  }
+void LineCoolingData::simq(double A[5][5], double B[5]) {
 
-  /// attempt at translating the fortran code into readable C++
-  //  for(unsigned int j = 0; j < 5; ++j){
-  //    // find the column with the maximum coefficient
-  //    unsigned int imax = 0;
-  //    double Amax = 0.;
-  //    for(unsigned int i = 0; i < 5; ++i){
-  //      if(std::abs(A[j][i]) > Amax){
-  //        Amax = A[j][i];
-  //        imax = i;
-  //      }
-  //    }
-  //    // check that the matrix is non-singular
-  //    if(Amax == 0.){
-  //      error("Singular matrix given to simq!");
-  //    }
-  //    // imax now contains the index of the column with the largest
-  //    coefficient
-  //    // interchange rows if necessary
-  //    for(unsigned int k = 0; k < 5; ++k){
-  //      if(imax != i){
-  //        double save = A[i][k];
-  //        A[i][k] = A[imax][k];
-  //        A[imax][k] = save;
-  //      }
-  //      A[i][k] /= Amax;
-  //    }
-  //    if(imax != i){
-  //      double save = lev[i];
-  //      lev[i] = lev[imax];
-  //      lev[imax] = save;
-  //    }
-  //    lev[i] /= Amax;
-  //    if(j < 5){
-
-  //      int iqs = 5*(j-1);
-  //      for(unsigned int ix = jy; ix < 6; ++ix){
-  //        int ixj = iqs + ix;
-  //        it = j-ix;
-  //        for(unsigned int jx = jy; jx < 6; ++jx){
-  //          int ixjx = 5*(jx-1)+ix;
-  //          int jjx = ixjx + it;
-  //          A[ixjx-1] = A[ixjx-1] - (A[ixj-1]*A[jjx-1]);
-  //        }
-  //        lev[ix-1] = lev[ix-1] - (lev[j-1]*A[ixj-1]);
-  //      }
-  //    }
-  //  }
-
-  double tol = 0.;
-  int jj = -5;
-  for (unsigned int j = 1; j < 6; ++j) {
-    unsigned int jy = j + 1;
-    jj += 6;
-    double bigA = 0.;
+  for (unsigned int j = 0; j < 5; ++j) {
+    // find the next row with the largest coefficient
     unsigned int imax = 0;
-    int it = jj - j;
-    for (unsigned int i = j; i < 6; ++i) {
-      int ij = it + i;
-      if (std::abs(bigA) < std::abs(A[ij - 1])) {
-        bigA = A[ij - 1];
+    double Amax = 0.;
+    for (unsigned int i = j; i < 5; ++i) {
+      if (std::abs(A[i][j]) > std::abs(Amax)) {
+        Amax = A[i][j];
         imax = i;
       }
     }
-    if (std::abs(bigA) <= tol) {
-      error("Just an error, no idea what it means...");
+    // check that the matrix is non-singular
+    if (Amax == 0.) {
+      error("Singular matrix given to simq!");
     }
-    unsigned int i1 = j + 5 * (j - 2);
-    it = imax - j;
-    for (unsigned int k = j; k < 6; ++k) {
-      i1 += 5;
-      int i2 = i1 + it;
-      double save = A[i1 - 1];
-      A[i1 - 1] = A[i2 - 1];
-      A[i2 - 1] = save;
-      A[i1 - 1] /= bigA;
+    // imax now contains the index of the row with the largest coefficient
+    // interchange rows if necessary to make sure that the row with the largest
+    // coefficient is the next row to eliminate with
+    for (unsigned int k = 0; k < 5; ++k) {
+      if (imax != j) {
+        double save = A[j][k];
+        A[j][k] = A[imax][k];
+        A[imax][k] = save;
+      }
+      A[j][k] /= Amax;
     }
-    double save = lev[imax - 1];
-    lev[imax - 1] = lev[j - 1];
-    lev[j - 1] = save / bigA;
-    if (j == 5) {
-      it = 25;
-      for (unsigned int l = 1; l < 5; ++l) {
-        int ia = it - l;
-        int ib = 5 - l;
-        int ic = 5;
-        for (unsigned int k = 1; k < l + 1; ++k) {
-          lev[ib - 1] = lev[ib - 1] - A[ia - 1] * lev[ic - 1];
-          ia -= 5;
-          --ic;
+    if (imax != j) {
+      double save = B[j];
+      B[j] = B[imax];
+      B[imax] = save;
+    }
+    B[j] /= Amax;
+    // row j now contains a 1 at position j
+    // all elements in columns with indices smaller than j are supposed to be
+    // zero due to previous eliminations (we do not set them to zero however to
+    // save computations)
+    if (j < 4) {
+      // we are not finished yet: use row j to eliminate all rows below row j
+      for (unsigned int i = j + 1; i < 5; ++i) {
+        for (unsigned int k = j + 1; k < 5; ++k) {
+          A[i][k] -= A[i][j] * A[j][k];
         }
+        B[i] -= A[i][j] * B[j];
       }
-      return;
-    }
-    int iqs = 5 * (j - 1);
-    for (unsigned int ix = jy; ix < 6; ++ix) {
-      int ixj = iqs + ix;
-      it = j - ix;
-      for (unsigned int jx = jy; jx < 6; ++jx) {
-        int ixjx = 5 * (jx - 1) + ix;
-        int jjx = ixjx + it;
-        A[ixjx - 1] = A[ixjx - 1] - (A[ixj - 1] * A[jjx - 1]);
-      }
-      lev[ix - 1] = lev[ix - 1] - (lev[j - 1] * A[ixj - 1]);
     }
   }
+  // the matrix now has the form
+  //  1  A01 A02 A03 A04 B0
+  //  0   1  A12 A13 A14 B1
+  //  0   0   1  A23 A24 B2
+  //  0   0   0   1  A34 B3
+  //  0   0   0   0   1  B4
+  // In other words: B[4] contains the value of the last variable
+  // use it to recursively solve for the others
+  for (unsigned int i = 0; i < 4; ++i) {
+    for (unsigned int j = 0; j < i + 1; ++j) {
+      B[3 - i] -= B[4 - j] * A[3 - i][4 - j];
+    }
+  }
+  return;
 }
 
 /**
