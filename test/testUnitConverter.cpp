@@ -58,6 +58,22 @@ int main(int argc, char **argv) {
   // 1 g in a cubic centimetre is more than 1 kg in a cubic metre
   assert_condition(UnitConverter< QUANTITY_DENSITY >::to_SI(1, "g cm^-3") > 1.);
 
+  /// ENERGY_RATE
+  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
+                       1., "kg m^2s^-3", "kg m^2s^-3") == 1.);
+
+  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
+                       1., "J s^-1", "J s^-1") == 1.);
+  // J s^-1 is just another name for kg m^2s^-3
+  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(1., "J s^-1") ==
+                   1.);
+
+  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
+                       1., "erg s^-1", "erg s^-1") == 1.);
+  // an erg per second is a lot less than a Joule per second
+  assert_condition(
+      UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(1., "erg s^-1") < 1.);
+
   /// FLUX
   assert_condition(UnitConverter< QUANTITY_FLUX >::convert(1., "m^-2s^-1",
                                                            "m^-2s^-1") == 1.);

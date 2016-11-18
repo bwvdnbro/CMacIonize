@@ -64,6 +64,9 @@ add_unit_test(NAME testLineCoolingData
 configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
                COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/linecool_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/linecool_testdata.txt
+               COPYONLY)
 
 ## Unit test for CommandLineParser
 set(TESTCOMMANDLINEPARSER_SOURCES

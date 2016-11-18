@@ -25,9 +25,11 @@
  */
 #include "Assert.hpp"
 #include "LineCoolingData.hpp"
+#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <fstream>
-#include <iostream>
+#include <sstream>
+#include <string>
 using namespace std;
 
 /**
@@ -112,6 +114,27 @@ int main(int argc, char **argv) {
       a += Ac[i][j] * B[j];
     }
     assert_values_equal(a, Bc[i]);
+  }
+
+  std::ifstream file("linecool_testdata.txt");
+  std::string line;
+  while (getline(file, line)) {
+    std::istringstream lstream(line);
+
+    double T, ne, abundances[12], coolf, cool;
+
+    lstream >> T >> ne;
+    for (unsigned int i = 0; i < 12; ++i) {
+      lstream >> abundances[i];
+    }
+    lstream >> coolf;
+
+    cool = data.get_cooling(
+        T, UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
+        abundances);
+    assert_values_equal_rel(
+        UnitConverter< QUANTITY_ENERGY_RATE >::to_unit(cool, "erg s^-1"), coolf,
+        1.e-2);
   }
 
   return 0;

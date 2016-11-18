@@ -26,6 +26,7 @@
  */
 #include "LineCoolingData.hpp"
 #include "Error.hpp"
+#include "UnitConverter.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -286,7 +287,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  * @param temperature Temperature (in K).
  * @param electron_density Electron density (in m^-3).
  * @param abundances Abdunances of coolants.
- * @return Radiative cooling in (kg m^-1s^-3).
+ * @return Radiative cooling per hydrogen atom (in kg m^2s^-3).
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     double *abundances) {
@@ -297,6 +298,9 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double EaNeII = 8.55e-3;
   double OmNeII = 0.368;
   double kb = 1.38e-16;
+
+  electron_density = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(
+      electron_density, "cm^-3");
 
   double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
   double T4 = temperature * 1.e-4;
@@ -342,6 +346,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     for (unsigned int mm = 0; mm < 10; ++mm) {
       Om[j][mm] = _cs[j][mm] * std::pow(T4, _cse[j][mm]);
     }
+
     alev[1][0] =
         cfac * Om[j][0] / (_sw[j][0] * std::exp(_en[j][0] / temperature));
     alev[1][1] =
@@ -353,6 +358,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     alev[1][2] = _ea[j][4] + (cfac / _sw[j][2]) * Om[j][4];
     alev[1][3] = _ea[j][5] + (cfac / _sw[j][3]) * Om[j][5];
     alev[1][4] = _ea[j][6] + (cfac / _sw[j][4]) * Om[j][6];
+
     alev[2][0] =
         cfac * Om[j][1] * std::exp(-_en[j][1] / temperature) / _sw[j][0];
     alev[2][1] =
@@ -364,8 +370,9 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
                                 Om[j][8] * std::exp(-_en[j][8] / temperature)));
     alev[2][3] = _ea[j][7] + cfac * Om[j][7] / _sw[j][3];
     alev[2][4] = _ea[j][8] + cfac * Om[j][8] / _sw[j][4];
+
     alev[3][0] =
-        cfac * Om[j][3] * std::exp(-_en[j][2] / temperature) / _sw[j][0];
+        cfac * Om[j][2] * std::exp(-_en[j][2] / temperature) / _sw[j][0];
     alev[3][1] =
         cfac * Om[j][5] * std::exp(-_en[j][5] / temperature) / _sw[j][1];
     alev[3][2] =
@@ -375,6 +382,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
           (cfac / _sw[j][3]) * (Om[j][2] + Om[j][5] + Om[j][7] +
                                 Om[j][9] * std::exp(-_en[j][9] / temperature)));
     alev[3][4] = _ea[j][9] + cfac * Om[j][9] / _sw[j][4];
+
     alev[4][0] =
         cfac * Om[j][3] * std::exp(-_en[j][3] / temperature) / _sw[j][0];
     alev[4][1] =
@@ -419,6 +427,10 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
                  (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
   cooling += CNIII + CNeII;
+
+  // cooling now is in erg/s/hydrogen atom
+  // convert to J/s (kg m^2s^-3)
+  cooling = UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(cooling, "erg s^-1");
 
   return cooling;
 }
