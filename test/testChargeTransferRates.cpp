@@ -53,18 +53,18 @@ int main(int argc, char **argv) {
       linestream >> stage >> atom >> temperature >> recombination_rate >>
           ionization_rate;
 
-      assert_values_equal_tol(recombination_rate,
+      assert_values_equal_rel(recombination_rate,
                               UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
                                   rates.get_charge_transfer_recombination_rate(
                                       stage, atom, temperature),
                                   "cm^3s^-1"),
-                              1.e-14);
-      assert_values_equal_tol(ionization_rate,
+                              1.e-6);
+      assert_values_equal_rel(ionization_rate,
                               UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
                                   rates.get_charge_transfer_ionization_rate(
                                       stage, atom, temperature),
                                   "cm^3s^-1"),
-                              1.e-14);
+                              1.e-6);
     }
   }
 

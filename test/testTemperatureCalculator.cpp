@@ -115,21 +115,22 @@ int main(int argc, char **argv) {
       // we need a tolerance of 10%, since a small deviation in the neutral
       // fractions of h0 and he0 propagates into the other variables
       // for some reason, Kenny's gain and loss values are multiplied with 1.e20
-      assert_values_equal_rel(gain, gainf * 1.e-20, 1.e-1);
-      assert_values_equal_rel(loss, lossf * 1.e-20, 1.e-1);
+      double tolerance = 1.e-9;
+      assert_values_equal_rel(gain, gainf * 1.e-20, tolerance);
+      assert_values_equal_rel(loss, lossf * 1.e-20, tolerance);
 
-      assert_values_equal_rel(Cp1, fCp1, 1.e-1);
-      assert_values_equal_rel(Cp2, fCp2, 1.e-1);
-      assert_values_equal_rel(N, fN, 1.e-1);
-      assert_values_equal_rel(Np1, fNp1, 1.e-1);
-      assert_values_equal_rel(Np2, fNp2, 1.e-1);
-      assert_values_equal_rel(O, fO, 1.e-1);
-      assert_values_equal_rel(Op1, fOp1, 1.e-1);
-      assert_values_equal_rel(Ne, fNe, 1.e-1);
-      assert_values_equal_rel(Nep1, fNep1, 1.e-1);
-      assert_values_equal_rel(Sp1, fSp1, 1.e-1);
-      assert_values_equal_rel(Sp2, fSp2, 1.e-1);
-      assert_values_equal_rel(Sp3, fSp3, 1.e-1);
+      assert_values_equal_rel(Cp1, fCp1, tolerance);
+      assert_values_equal_rel(Cp2, fCp2, tolerance);
+      assert_values_equal_rel(N, fN, tolerance);
+      assert_values_equal_rel(Np1, fNp1, tolerance);
+      assert_values_equal_rel(Np2, fNp2, tolerance);
+      assert_values_equal_rel(O, fO, tolerance);
+      assert_values_equal_rel(Op1, fOp1, tolerance);
+      assert_values_equal_rel(Ne, fNe, tolerance);
+      assert_values_equal_rel(Nep1, fNep1, tolerance);
+      assert_values_equal_rel(Sp1, fSp1, tolerance);
+      assert_values_equal_rel(Sp2, fSp2, tolerance);
+      assert_values_equal_rel(Sp3, fSp3, tolerance);
     }
   }
 
@@ -233,29 +234,52 @@ int main(int argc, char **argv) {
 
       Tnew = cell.get_temperature();
 
+      status("h0: %g %g", h0, h0f);
+
+      status("he0: %g %g", he0, he0f);
+
+      status("cp1: %g %g", cp1, cp1f);
+      status("cp2: %g %g", cp2, cp2f);
+
+      status("n: %g %g", n, nf);
+      status("np1: %g %g", np1, np1f);
+      status("np2: %g %g", np2, np2f);
+
+      status("o: %g %g", o, of);
+      status("op1: %g %g", op1, op1f);
+
+      status("ne: %g %g", ne, nef);
+      status("nep1: %g %g", nep1, nep1f);
+
+      status("sp1: %g %g", sp1, sp1f);
+      status("sp2: %g %g", sp2, sp2f);
+      status("sp3: %g %g", sp3, sp3f);
+
+      status("Tnew: %g %g", Tnew, Tnewf);
+
       // check that the values match the expected values
-      assert_values_equal(h0, h0f);
+      assert_values_equal_rel(h0, h0f, 0.1);
 
-      assert_values_equal(he0, he0f);
+      assert_values_equal_rel(he0, he0f, 0.1);
 
-      assert_values_equal(cp1, cp1f);
-      assert_values_equal(cp2, cp2f);
+      assert_values_equal_rel(cp1, cp1f, 0.1);
+      assert_values_equal_rel(cp2, cp2f, 0.1);
 
-      assert_values_equal(n, nf);
-      assert_values_equal(np1, np1f);
-      assert_values_equal(np2, np2f);
+      assert_values_equal_rel(n, nf, 0.1);
+      assert_values_equal_rel(np1, np1f, 0.1);
+      assert_values_equal_rel(np2, np2f, 0.1);
 
-      assert_values_equal(o, of);
-      assert_values_equal(op1, op1f);
+      assert_values_equal_rel(o, of, 0.1);
+      assert_values_equal_rel(op1, op1f, 0.1);
 
-      assert_values_equal(ne, nef);
-      assert_values_equal(nep1, nep1f);
+      assert_values_equal_rel(ne, nef, 0.1);
+      assert_values_equal_rel(nep1, nep1f, 0.1);
 
-      assert_values_equal(sp1, sp1f);
-      assert_values_equal(sp2, sp2f);
-      assert_values_equal(sp3, sp3f);
+      assert_values_equal_rel(sp1, sp1f, 0.1);
+      assert_values_equal_rel(sp2, sp2f, 0.1);
+      assert_values_equal_rel(sp3, sp3f, 0.1);
 
-      assert_values_equal(Tnew, Tnewf);
+      assert_values_equal_rel(Tnew, Tnewf, 0.1);
     }
   }
 

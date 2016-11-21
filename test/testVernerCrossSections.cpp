@@ -59,91 +59,93 @@ int main(int argc, char **argv) {
 
       e = UnitConverter< QUANTITY_FREQUENCY >::to_SI(e * 13.6, "eV");
 
-      assert_values_equal_tol(
+      double tolerance = 1.e-14;
+
+      assert_values_equal_rel(
           xsecH, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
                      cross_sections.get_cross_section(ELEMENT_H, e), "cm^2") *
                      1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecHe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
                       cross_sections.get_cross_section(ELEMENT_He, e), "cm^2") *
                       1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecCp1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Cp1, e), "cm^2") *
               1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecCp2,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Cp2, e), "cm^2") *
               1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecN, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
                      cross_sections.get_cross_section(ELEMENT_N, e), "cm^2") *
                      1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecNp1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Np1, e), "cm^2") *
               1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecNp2,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Np2, e), "cm^2") *
               1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecO, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
                      cross_sections.get_cross_section(ELEMENT_O, e), "cm^2") *
                      1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecOp1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Op1, e), "cm^2") *
               1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecNe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
                       cross_sections.get_cross_section(ELEMENT_Ne, e), "cm^2") *
                       1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecNep1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Nep1, e), "cm^2") *
               1.e18,
-          1.e-6);
+          tolerance);
 
-      assert_values_equal_tol(
+      assert_values_equal_rel(
           xsecSp1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Sp1, e), "cm^2") *
               1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecSp2,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Sp2, e), "cm^2") *
               1.e18,
-          1.e-6);
-      assert_values_equal_tol(
+          tolerance);
+      assert_values_equal_rel(
           xsecSp3,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
               cross_sections.get_cross_section(ELEMENT_Sp3, e), "cm^2") *
               1.e18,
-          1.e-6);
+          tolerance);
     }
   }
 

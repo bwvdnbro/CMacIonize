@@ -320,7 +320,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
   }
 
   unsigned int niter = 0;
-  double gain0 = 0.;
+  double gain0 = 1.;
   double loss0 = 0.;
   double h0 = 0.;
   double he0 = 0.;
@@ -358,16 +358,16 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
     }
   }
 
-  if (cell.get_mean_intensity(ELEMENT_H) == 0.) {
-    h0 = 1.;
-  }
-  if (cell.get_mean_intensity(ELEMENT_He) == 0.) {
-    he0 = 1.;
-  }
-
   cell.set_temperature(T0);
   cell.set_ionic_fraction(ELEMENT_H, h0);
   cell.set_ionic_fraction(ELEMENT_He, he0);
+
+  if (cell.get_mean_intensity(ELEMENT_H) == 0.) {
+    cell.set_ionic_fraction(ELEMENT_H, 1.);
+  }
+  if (cell.get_mean_intensity(ELEMENT_He) == 0.) {
+    cell.set_ionic_fraction(ELEMENT_He, 1.);
+  }
 
   if (h0 == 1.) {
     cell.set_ionic_fraction(ELEMENT_Cp1, 0.);

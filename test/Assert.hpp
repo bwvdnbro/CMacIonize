@@ -51,7 +51,8 @@
  *  round off error. */
 #define assert_values_equal_rel(a, b, tol)                                     \
   if (std::abs(a - b) > tol * std::abs(a + b)) {                               \
-    error("Assertion failed: %s (%g) != %s (%g)", #a, a, #b, b);               \
+    error("Assertion failed: %s (%g) != %s (%g) (relative_difference: %g)",    \
+          #a, a, #b, b, std::abs(a - b) / std::abs(a + b));                    \
   }
 
 /*! @brief Assert that the given values are equal up to a pre-defined relative

@@ -130,26 +130,27 @@ int main(int argc, char **argv) {
     sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
 
     // check that the values match the expected values
-    assert_values_equal(h0, h0f);
+    double tolerance = 1.e-10;
+    assert_values_equal_rel(h0, h0f, tolerance);
 
-    assert_values_equal(he0, he0f);
+    assert_values_equal_rel(he0, he0f, tolerance);
 
-    assert_values_equal(cp1, cp1f);
-    assert_values_equal(cp2, cp2f);
+    assert_values_equal_rel(cp1, cp1f, tolerance);
+    assert_values_equal_rel(cp2, cp2f, tolerance);
 
-    assert_values_equal(n, nf);
-    assert_values_equal(np1, np1f);
-    assert_values_equal(np2, np2f);
+    assert_values_equal_rel(n, nf, tolerance);
+    assert_values_equal_rel(np1, np1f, tolerance);
+    assert_values_equal_rel(np2, np2f, tolerance);
 
-    assert_values_equal(o, of);
-    assert_values_equal(op1, op1f);
+    assert_values_equal_rel(o, of, tolerance);
+    assert_values_equal_rel(op1, op1f, tolerance);
 
-    assert_values_equal(ne, nef);
-    assert_values_equal(nep1, nep1f);
+    assert_values_equal_rel(ne, nef, tolerance);
+    assert_values_equal_rel(nep1, nep1f, tolerance);
 
-    assert_values_equal(sp1, sp1f);
-    assert_values_equal(sp2, sp2f);
-    assert_values_equal(sp3, sp3f);
+    assert_values_equal_rel(sp1, sp1f, tolerance);
+    assert_values_equal_rel(sp2, sp2f, tolerance);
+    assert_values_equal_rel(sp3, sp3f, tolerance);
 
     // check that find_H0 and find_H0_simple return the same values in the
     // region where they should
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
         UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
         UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
         UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"), T, h0s);
-    assert_values_equal_tol(h0, h0s, 1.e-5);
+    assert_values_equal_tol(h0, h0s, 1.e-4);
   }
 
   return 0;

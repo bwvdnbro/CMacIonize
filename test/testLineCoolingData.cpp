@@ -75,13 +75,13 @@ int main(int argc, char **argv) {
   LineCoolingData data;
   for (unsigned int i = 0; i < 10; ++i) {
     for (unsigned int j = 0; j < 10; ++j) {
-      assert_values_equal(cs_fortran[10 * i + j], data.get_cs(i, j));
-      assert_values_equal(cse_fortran[10 * i + j], data.get_cse(i, j));
-      assert_values_equal(ea_fortran[10 * i + j], data.get_ea(i, j));
-      assert_values_equal(en_fortran[10 * i + j], data.get_en(i, j));
+      assert_condition(cs_fortran[10 * i + j] == data.get_cs(i, j));
+      assert_condition(cse_fortran[10 * i + j] == data.get_cse(i, j));
+      assert_condition(ea_fortran[10 * i + j] == data.get_ea(i, j));
+      assert_condition(en_fortran[10 * i + j] == data.get_en(i, j));
     }
     for (unsigned int j = 0; j < 5; ++j) {
-      assert_values_equal(sw_fortran[5 * i + j], data.get_sw(i, j));
+      assert_condition(sw_fortran[5 * i + j] == data.get_sw(i, j));
     }
   }
 
@@ -91,29 +91,31 @@ int main(int argc, char **argv) {
   // since A and B are changed by simq, we store all initial values in Ac and Bc
   // as well (note that B will contain X after simq exits)
   // we then need to check if Ac x B = Bc
-  double A[5][5], Ac[5][5], B[5], Bc[5];
-  for (unsigned int i = 0; i < 5; ++i) {
-    for (unsigned int j = 0; j < 5; ++j) {
-      double a = Utilities::random_double();
-      if (i == j) {
-        a = 1.;
+  for (unsigned int loop = 0; loop < 10000; ++loop) {
+    double A[5][5], Ac[5][5], B[5], Bc[5];
+    for (unsigned int i = 0; i < 5; ++i) {
+      for (unsigned int j = 0; j < 5; ++j) {
+        double a = Utilities::random_double();
+        if (i == j) {
+          a = 1.;
+        }
+        A[i][j] = a;
+        Ac[i][j] = a;
       }
-      A[i][j] = a;
-      Ac[i][j] = a;
+      double b = Utilities::random_double();
+      B[i] = b;
+      Bc[i] = b;
     }
-    double b = Utilities::random_double();
-    B[i] = b;
-    Bc[i] = b;
-  }
 
-  LineCoolingData::simq(A, B);
+    LineCoolingData::simq(A, B);
 
-  for (unsigned int i = 0; i < 5; ++i) {
-    double a = 0.;
-    for (unsigned int j = 0; j < 5; ++j) {
-      a += Ac[i][j] * B[j];
+    for (unsigned int i = 0; i < 5; ++i) {
+      double a = 0.;
+      for (unsigned int j = 0; j < 5; ++j) {
+        a += Ac[i][j] * B[j];
+      }
+      assert_values_equal_rel(a, Bc[i], 1.e-11);
     }
-    assert_values_equal(a, Bc[i]);
   }
 
   std::ifstream file("linecool_testdata.txt");
@@ -134,7 +136,7 @@ int main(int argc, char **argv) {
         abundances);
     assert_values_equal_rel(
         UnitConverter< QUANTITY_ENERGY_RATE >::to_unit(cool, "erg s^-1"), coolf,
-        1.e-2);
+        1.e-15);
   }
 
   return 0;
