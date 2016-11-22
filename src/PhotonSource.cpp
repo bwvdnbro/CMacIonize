@@ -183,7 +183,7 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) {
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }
-  photon.set_cross_section_He_corr(_abundances.get_abundance(ATOM_HELIUM) *
+  photon.set_cross_section_He_corr(_abundances.get_abundance(ELEMENT_He) *
                                    photon.get_cross_section(ION_He_n));
 }
 
@@ -239,7 +239,7 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  */
 bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
-  double helium_abundance = _abundances.get_abundance(ATOM_HELIUM);
+  double helium_abundance = _abundances.get_abundance(ELEMENT_He);
   double pHabs = 1. / (1. +
                        cell.get_ionic_fraction(ION_He_n) * helium_abundance *
                            photon.get_cross_section(ION_He_n) /

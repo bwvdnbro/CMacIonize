@@ -108,7 +108,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 
   double jH = jfac * cell.get_mean_intensity(ION_H_n);
   double jHe = jfac * cell.get_mean_intensity(ION_He_n);
-  double AHe = abundances.get_abundance(ATOM_HELIUM);
+  double AHe = abundances.get_abundance(ELEMENT_He);
   IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, n, AHe, T, h0,
                                      he0);
 
@@ -228,35 +228,35 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 
   double abund[12];
   abund[0] =
-      abundances.get_abundance(ATOM_NITROGEN) *
+      abundances.get_abundance(ELEMENT_N) *
       (1. - cell.get_ionic_fraction(ION_N_n) -
        cell.get_ionic_fraction(ION_N_p1) - cell.get_ionic_fraction(ION_N_p2));
-  abund[1] = abundances.get_abundance(ATOM_NITROGEN) *
-             cell.get_ionic_fraction(ION_N_n);
-  abund[2] = abundances.get_abundance(ATOM_OXYGEN) *
+  abund[1] =
+      abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_n);
+  abund[2] = abundances.get_abundance(ELEMENT_O) *
              (1. - cell.get_ionic_fraction(ION_O_n) -
               cell.get_ionic_fraction(ION_O_p1));
   abund[3] =
-      abundances.get_abundance(ATOM_OXYGEN) * cell.get_ionic_fraction(ION_O_n);
+      abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_n);
   abund[4] =
-      abundances.get_abundance(ATOM_OXYGEN) * cell.get_ionic_fraction(ION_O_p1);
+      abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_p1);
   abund[5] =
-      abundances.get_abundance(ATOM_NEON) * cell.get_ionic_fraction(ION_Ne_p1);
+      abundances.get_abundance(ELEMENT_Ne) * cell.get_ionic_fraction(ION_Ne_p1);
   abund[6] =
-      abundances.get_abundance(ATOM_SULFUR) *
+      abundances.get_abundance(ELEMENT_S) *
       (1. - cell.get_ionic_fraction(ION_S_p1) -
        cell.get_ionic_fraction(ION_S_p2) - cell.get_ionic_fraction(ION_S_p3));
   abund[7] =
-      abundances.get_abundance(ATOM_SULFUR) * cell.get_ionic_fraction(ION_S_p1);
-  abund[8] = abundances.get_abundance(ATOM_CARBON) *
+      abundances.get_abundance(ELEMENT_S) * cell.get_ionic_fraction(ION_S_p1);
+  abund[8] = abundances.get_abundance(ELEMENT_C) *
              (1. - cell.get_ionic_fraction(ION_C_p1) -
               cell.get_ionic_fraction(ION_C_p2));
   abund[9] =
-      abundances.get_abundance(ATOM_CARBON) * cell.get_ionic_fraction(ION_C_p1);
-  abund[10] = abundances.get_abundance(ATOM_NITROGEN) *
-              cell.get_ionic_fraction(ION_N_p1);
+      abundances.get_abundance(ELEMENT_C) * cell.get_ionic_fraction(ION_C_p1);
+  abund[10] =
+      abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_p1);
   abund[11] =
-      abundances.get_abundance(ATOM_NEON) * cell.get_ionic_fraction(ION_Ne_n);
+      abundances.get_abundance(ELEMENT_Ne) * cell.get_ionic_fraction(ION_Ne_n);
 
   // FFcool
   double c = 5.5 - std::log(T);

@@ -32,6 +32,30 @@
 #include <string>
 
 /**
+ * @brief Names of supported atoms.
+ *
+ * These names are currently only used by Abundances, that is the reason
+ * hydrogen is missing from the list. It should be perfectly fine to add it, but
+ * why should we if it is not used?
+ */
+enum ElementName {
+  /*! @brief Helium. */
+  ELEMENT_He = 0,
+  /*! @brief Carbon. */
+  ELEMENT_C,
+  /*! @brief Nitrogen. */
+  ELEMENT_N,
+  /*! @brief Oxygen. */
+  ELEMENT_O,
+  /*! @brief Neon. */
+  ELEMENT_Ne,
+  /*! @brief Sulfur. */
+  ELEMENT_S,
+  /*! @brief Atom number counter. Add new atoms above this element! */
+  NUMBER_OF_ELEMENTNAMES
+};
+
+/**
  * @brief Names of supported ions.
  *
  * These are the atoms/ions that can be ionized by radiation in our program. A
@@ -72,6 +96,32 @@ enum IonName {
   /*! @brief Number of supported elements. */
   NUMBER_OF_IONNAMES
 };
+
+/**
+ * @brief Get the name of the given element.
+ *
+ * @param element ElementName for a valid element.
+ * @return Textual representation of the element name.
+ */
+static inline std::string get_element_name(int element) {
+  switch (element) {
+  case ELEMENT_He:
+    return "He";
+  case ELEMENT_C:
+    return "C";
+  case ELEMENT_N:
+    return "N";
+  case ELEMENT_O:
+    return "O";
+  case ELEMENT_Ne:
+    return "Ne";
+  case ELEMENT_S:
+    return "S";
+  default:
+    error("Unknown element: %i!", element);
+    return "";
+  }
+}
 
 /**
  * @brief Get the name of the given ion.

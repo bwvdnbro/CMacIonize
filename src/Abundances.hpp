@@ -26,28 +26,9 @@
 #ifndef ABUNDANCES_HPP
 #define ABUNDANCES_HPP
 
+#include "ElementNames.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
-
-/**
- * @brief Names of the atoms that have abundances in the simulation.
- */
-enum AbundanceAtomNames {
-  /*! @brief Helium. */
-  ATOM_HELIUM = 0,
-  /*! @brief Carbon. */
-  ATOM_CARBON,
-  /*! @brief Nitrogen. */
-  ATOM_NITROGEN,
-  /*! @brief Oxygen. */
-  ATOM_OXYGEN,
-  /*! @brief Neon. */
-  ATOM_NEON,
-  /*! @brief Sulfur. */
-  ATOM_SULFUR,
-  /*! @brief Atom number counter. Add new atoms above this element! */
-  NUMBER_OF_ATOMS
-};
 
 /**
  * @brief Class that holds a list of abundances.
@@ -55,7 +36,7 @@ enum AbundanceAtomNames {
 class Abundances {
 private:
   /*! @brief List of abundances. */
-  double _abundances[NUMBER_OF_ATOMS];
+  double _abundances[NUMBER_OF_ELEMENTNAMES];
 
 public:
   /**
@@ -71,19 +52,18 @@ public:
    */
   Abundances(double AHe, double AC, double AN, double AO, double ANe, double AS,
              Log *log = nullptr) {
-    _abundances[ATOM_HELIUM] = AHe;
-    _abundances[ATOM_CARBON] = AC;
-    _abundances[ATOM_NITROGEN] = AN;
-    _abundances[ATOM_OXYGEN] = AO;
-    _abundances[ATOM_NEON] = ANe;
-    _abundances[ATOM_SULFUR] = AS;
+    _abundances[ELEMENT_He] = AHe;
+    _abundances[ELEMENT_C] = AC;
+    _abundances[ELEMENT_N] = AN;
+    _abundances[ELEMENT_O] = AO;
+    _abundances[ELEMENT_Ne] = ANe;
+    _abundances[ELEMENT_S] = AS;
 
     if (log) {
-      log->write_status(
-          "Abundances: He (", _abundances[ATOM_HELIUM], "), C (",
-          _abundances[ATOM_CARBON], "), N (", _abundances[ATOM_NITROGEN],
-          "), O (", _abundances[ATOM_OXYGEN], "), Ne (", _abundances[ATOM_NEON],
-          "), S (", _abundances[ATOM_SULFUR], ").");
+      log->write_status("Abundances:");
+      for (int i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+        log->write_status(get_element_name(i), ": ", _abundances[i]);
+      }
     }
   }
 
@@ -108,7 +88,7 @@ public:
    * @param name Valid AbundanceAtomNames name.
    * @return Abundance of the atom with that name.
    */
-  double get_abundance(AbundanceAtomNames name) { return _abundances[name]; }
+  double get_abundance(ElementName name) { return _abundances[name]; }
 };
 
 #endif // ABUNDANCES_HPP
