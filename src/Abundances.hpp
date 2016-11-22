@@ -85,7 +85,7 @@ public:
   /**
    * @brief Get the abundance of the atom with the given name.
    *
-   * @param name Valid AbundanceAtomNames name.
+   * @param name Valid ElementName.
    * @return Abundance of the atom with that name.
    */
   double get_abundance(ElementName name) { return _abundances[name]; }
