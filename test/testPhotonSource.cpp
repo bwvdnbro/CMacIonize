@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
 #include "CrossSections.hpp"
@@ -81,7 +82,8 @@ int main(int argc, char **argv) {
   TestCrossSections cross_sections;
   RandomGenerator random_generator;
 
-  PhotonSource source(&distribution, &spectrum, nullptr, nullptr,
+  Abundances abundances(0., 0., 0., 0., 0., 0.);
+  PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
                       cross_sections, random_generator);
   source.set_number_of_photons(1000001);
 

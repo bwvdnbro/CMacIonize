@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Assert.hpp"
 #include "CrossSections.hpp"
 #include "GadgetSnapshotPhotonSourceDistribution.hpp"
@@ -74,7 +75,8 @@ int main(int argc, char **argv) {
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;
-  PhotonSource source(&distribution, &spectrum, nullptr, nullptr,
+  Abundances abundances(0., 0., 0., 0., 0., 0.);
+  PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
                       cross_sections, random_generator);
 
   Photon photon = source.get_random_photon();

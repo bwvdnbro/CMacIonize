@@ -128,8 +128,8 @@ private:
 
 public:
   CartesianDensityGrid(
-      Box box, CoordinateVector< int > ncell, double helium_abundance,
-      double initial_temperature, DensityFunction &density_function,
+      Box box, CoordinateVector< int > ncell, double initial_temperature,
+      DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr);
 

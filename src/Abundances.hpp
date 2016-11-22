@@ -26,6 +26,7 @@
 #ifndef ABUNDANCES_HPP
 #define ABUNDANCES_HPP
 
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 
 /**
@@ -66,29 +67,40 @@ public:
    * @param AO Abundance of oxygen.
    * @param ANe Abundance of neon.
    * @param AS Abundance of sulfur.
+   * @param log Log to write logging info to.
    */
-  Abundances(double AHe, double AC, double AN, double AO, double ANe,
-             double AS) {
+  Abundances(double AHe, double AC, double AN, double AO, double ANe, double AS,
+             Log *log = nullptr) {
     _abundances[ATOM_HELIUM] = AHe;
     _abundances[ATOM_CARBON] = AC;
     _abundances[ATOM_NITROGEN] = AN;
     _abundances[ATOM_OXYGEN] = AO;
     _abundances[ATOM_NEON] = ANe;
     _abundances[ATOM_SULFUR] = AS;
+
+    if (log) {
+      log->write_status(
+          "Abundances: He (", _abundances[ATOM_HELIUM], "), C (",
+          _abundances[ATOM_CARBON], "), N (", _abundances[ATOM_NITROGEN],
+          "), O (", _abundances[ATOM_OXYGEN], "), Ne (", _abundances[ATOM_NEON],
+          "), S (", _abundances[ATOM_SULFUR], ").");
+    }
   }
 
   /**
    * @brief ParameterFile constructor.
    *
    * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
    */
-  Abundances(ParameterFile &params)
+  Abundances(ParameterFile &params, Log *log = nullptr)
       : Abundances(params.get_value< double >("abundances.helium", 0.1),
                    params.get_value< double >("abundances.carbon", 2.2e-4),
                    params.get_value< double >("abundances.nitrogen", 4.e-5),
                    params.get_value< double >("abundances.oxygen", 3.3e-4),
                    params.get_value< double >("abundances.neon", 5.e-5),
-                   params.get_value< double >("abundances.sulfur", 9.e-6)) {}
+                   params.get_value< double >("abundances.sulfur", 9.e-6),
+                   log) {}
 
   /**
    * @brief Get the abundance of the atom with the given name.

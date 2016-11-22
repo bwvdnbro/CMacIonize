@@ -28,6 +28,7 @@
 
 #include "AMRGrid.hpp"
 #include "AMRRefinementSchemeFactory.hpp"
+#include "Abundances.hpp"
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
 
@@ -107,7 +108,6 @@ private:
           cell.set_ionic_fraction(element, values.get_ionic_fraction(element));
         }
         cell.set_temperature(values.get_temperature());
-        cell.set_helium_abundance(values.get_helium_abundance());
         cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());
         // set reemission probabilities
         set_reemission_probabilities(cell.get_temperature(), cell);
@@ -125,7 +125,6 @@ public:
    *
    * @param box Box containing the grid.
    * @param ncell Number of cells in the low resolution grid.
-   * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
    * @param initial_temperature Initial temperature of the gas (in K).
    * @param density_function DensityFunction that defines the density field.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
@@ -134,8 +133,8 @@ public:
    * @param log Log to write logging info to.
    */
   AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell, double helium_abundance,
-      double initial_temperature, DensityFunction &density_function,
+      Box box, CoordinateVector< int > ncell, double initial_temperature,
+      DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
@@ -170,7 +169,7 @@ public:
                          " levels deep.");
     }
 
-    initialize(initial_temperature, helium_abundance, density_function);
+    initialize(initial_temperature, density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -217,7 +216,6 @@ public:
                     "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid.ncell", CoordinateVector< int >(64)),
-            params.get_value< double >("helium_abundance", 0.1),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "densitygrid.initial_temperature", "8000. K"),
             density_function, AMRRefinementSchemeFactory::generate(params, log),

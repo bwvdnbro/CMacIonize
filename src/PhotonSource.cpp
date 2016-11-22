@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "PhotonSource.hpp"
+#include "Abundances.hpp"
 #include "CrossSections.hpp"
 #include "DensityValues.hpp"
 #include "ElementNames.hpp"
@@ -46,6 +47,7 @@ using namespace std;
  * @param continuous_source IsotropicContinuousPhotonSource.
  * @param continuous_spectrum PhotonSourceSpectrum for the continuous photon
  * source.
+ * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
  * @param random_generator RandomGenerator used to generate random numbers.
  * @param log Log to write logging info to.
@@ -54,11 +56,12 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            PhotonSourceSpectrum *discrete_spectrum,
                            IsotropicContinuousPhotonSource *continuous_source,
                            PhotonSourceSpectrum *continuous_spectrum,
+                           Abundances &abundances,
                            CrossSections &cross_sections,
                            RandomGenerator &random_generator, Log *log)
     : _discrete_number_of_photons(0), _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
-      _continuous_spectrum(continuous_spectrum),
+      _continuous_spectrum(continuous_spectrum), _abundances(abundances),
       _cross_sections(cross_sections), _random_generator(random_generator),
       _HLyc_spectrum(cross_sections, random_generator),
       _HeLyc_spectrum(cross_sections, random_generator),
@@ -180,6 +183,8 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) {
     photon.set_cross_section(
         element, _cross_sections.get_cross_section(element, energy));
   }
+  photon.set_cross_section_He_corr(_abundances.get_abundance(ATOM_HELIUM) *
+                                   photon.get_cross_section(ELEMENT_He));
 }
 
 /**
@@ -234,7 +239,7 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  */
 bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
-  double helium_abundance = cell.get_helium_abundance();
+  double helium_abundance = _abundances.get_abundance(ATOM_HELIUM);
   double pHabs = 1. / (1. +
                        cell.get_ionic_fraction(ELEMENT_He) * helium_abundance *
                            photon.get_cross_section(ELEMENT_He) /

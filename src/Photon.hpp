@@ -65,6 +65,9 @@ private:
   /*! @brief Ionization cross sections (in m^2). */
   double _cross_sections[NUMBER_OF_ELEMENTS];
 
+  /*! @brief Abundance corrected helium cross section (in m^2). */
+  double _cross_section_He_corr;
+
   /*! @brief Type of the photon. All photons start off as PHOTONTYPE_PRIMARY,
    *  but their type can change during reemission events. */
   PhotonType _type;
@@ -80,7 +83,7 @@ public:
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy)
       : _position(position), _direction(direction), _energy(energy),
-        _type(PHOTONTYPE_PRIMARY) {
+        _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY) {
     for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
       _cross_sections[i] = 0.;
     }
@@ -116,6 +119,13 @@ public:
   inline double get_cross_section(ElementName element) {
     return _cross_sections[element];
   }
+
+  /**
+   * @brief Get the abundance corrected helium cross section.
+   *
+   * @return Abundance corrected helium cross section (in m^2).
+   */
+  inline double get_cross_section_He_corr() { return _cross_section_He_corr; }
 
   /**
    * @brief Get the type of the photon.
@@ -157,6 +167,16 @@ public:
    */
   inline void set_cross_section(ElementName element, double cross_section) {
     _cross_sections[element] = cross_section;
+  }
+
+  /**
+   * @brief Set the abundance corrected helium cross section.
+   *
+   * @param cross_section_He_corr Abundance corrected helium cross section (in
+   * m^2).
+   */
+  inline void set_cross_section_He_corr(double cross_section_He_corr) {
+    _cross_section_He_corr = cross_section_He_corr;
   }
 
   /**

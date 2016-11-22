@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  CartesianDensityGrid grid(box, 64, 0.1, 8000., testfunction);
+  CartesianDensityGrid grid(box, 64, 8000., testfunction);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
 

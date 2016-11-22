@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Assert.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
@@ -43,7 +44,8 @@
 int main(int argc, char **argv) {
   VernerRecombinationRates rr;
   ChargeTransferRates ctr;
-  IonizationStateCalculator calculator(1., 0.1, rr, ctr);
+  Abundances abundances(0.1, 0., 0., 0., 0., 0.);
+  IonizationStateCalculator calculator(1., abundances, rr, ctr);
 
   DensityValues cell;
   // test find_H0

@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Box.hpp"
 #include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
@@ -139,8 +140,11 @@ int main(int argc, char **argv) {
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, random_generator, log);
 
+  Abundances abundances(params, log);
+
   PhotonSource source(sourcedistribution, &spectrum, continuoussource,
-                      &spectrum, cross_sections, random_generator, log);
+                      &spectrum, abundances, cross_sections, random_generator,
+                      log);
 
   // set up output
   DensityGridWriter *writer =
@@ -160,8 +164,7 @@ int main(int argc, char **argv) {
   ChargeTransferRates charge_transfer_rates;
 
   IonizationStateCalculator ionization_state_calculator(
-      Q, params.get_value< double >("helium_abundance"), recombination_rates,
-      charge_transfer_rates);
+      Q, abundances, recombination_rates, charge_transfer_rates);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)

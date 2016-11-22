@@ -37,6 +37,7 @@
 #include <cmath>
 #include <vector>
 
+class Abundances;
 class CrossSections;
 class DensityValues;
 class IsotropicContinuousPhotonSource;
@@ -99,6 +100,9 @@ private:
   /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
    */
   double _total_luminosity;
+
+  /*! @brief Abundances of the elements in the ISM. */
+  Abundances &_abundances;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
@@ -170,8 +174,8 @@ public:
                PhotonSourceSpectrum *discrete_spectrum,
                IsotropicContinuousPhotonSource *continuous_source,
                PhotonSourceSpectrum *continuous_spectrum,
-               CrossSections &cross_sections, RandomGenerator &random_generator,
-               Log *log = nullptr);
+               Abundances &abundances, CrossSections &cross_sections,
+               RandomGenerator &random_generator, Log *log = nullptr);
 
   unsigned int set_number_of_photons(unsigned int number_of_photons);
 

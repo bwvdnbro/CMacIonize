@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      0.1, 8000., density_function, scheme, false, &log);
+                      8000., density_function, scheme, false, &log);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
 

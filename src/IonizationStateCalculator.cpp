@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "IonizationStateCalculator.hpp"
+#include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
@@ -37,17 +38,17 @@
  * @brief Constructor.
  *
  * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
- * @param helium_abundance Helium abundance.
+ * @param abundances Abundances.
  * @param recombination_rates RecombinationRates used in ionization balance
  * calculation.
  * @param charge_transfer_rates ChargeTransferRate used in ionization balance
  * calculation for coolants.
  */
 IonizationStateCalculator::IonizationStateCalculator(
-    double luminosity, double helium_abundance,
+    double luminosity, Abundances &abundances,
     RecombinationRates &recombination_rates,
     ChargeTransferRates &charge_transfer_rates)
-    : _luminosity(luminosity), _helium_abundance(helium_abundance),
+    : _luminosity(luminosity), _abundances(abundances),
       _recombination_rates(recombination_rates),
       _charge_transfer_rates(charge_transfer_rates) {}
 
@@ -70,8 +71,9 @@ void IonizationStateCalculator::calculate_ionization_state(
     double alphaHe = _recombination_rates.get_recombination_rate(ELEMENT_He, T);
     // h0find
     double h0, he0;
-    if (_helium_abundance) {
-      find_H0(alphaH, alphaHe, jH, jHe, ntot, _helium_abundance, T, h0, he0);
+    if (_abundances.get_abundance(ATOM_HELIUM) != 0.) {
+      find_H0(alphaH, alphaHe, jH, jHe, ntot,
+              _abundances.get_abundance(ATOM_HELIUM), T, h0, he0);
     } else {
       find_H0_simple(alphaH, jH, ntot, T, h0);
       he0 = 0.;
@@ -81,7 +83,8 @@ void IonizationStateCalculator::calculate_ionization_state(
     cell.set_ionic_fraction(ELEMENT_He, he0);
 
     // coolants
-    double ne = ntot * (1. - h0 + _helium_abundance * (1. - he0));
+    double ne =
+        ntot * (1. - h0 + _abundances.get_abundance(ATOM_HELIUM) * (1. - he0));
     double t4 = T * 1.e-4;
     double nhp = ntot * (1. - h0);
 
@@ -100,7 +103,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 6,
                                                                            T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double C31 = C32 * C21;
     double sumC = C21 + C31;
     cell.set_ionic_fraction(ELEMENT_Cp1, C21 / (1. + sumC));
@@ -125,7 +128,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 7,
                                                                            T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 0.15;
     double N43 =
@@ -134,7 +137,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 7,
                                                                            T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double N31 = N32 * N21;
     double N41 = N43 * N31;
     double sumN = N21 + N31 + N41;
@@ -157,7 +160,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  4, 16, T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 7.6e-4 * std::pow(t4, 0.32) *
                 (1. + 3.4 * std::exp(-5.25 * t4));
@@ -167,7 +170,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  5, 16, T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double S31 = S32 * S21;
     double S41 = S43 * S31;
     double sumS = S21 + S31 + S41;
@@ -187,7 +190,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  3, 10, T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double Ne31 = Ne32 * Ne21;
     double sumNe = Ne21 + Ne31;
     cell.set_ionic_fraction(ELEMENT_Ne, Ne21 / (1. + sumNe));
@@ -211,7 +214,7 @@ void IonizationStateCalculator::calculate_ionization_state(
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 8,
                                                                            T) +
-         ntot * he0 * _helium_abundance * CTHerecom);
+         ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double O31 = O32 * O21;
     double sumO = O21 + O31;
     cell.set_ionic_fraction(ELEMENT_O, O21 / (1. + sumO));

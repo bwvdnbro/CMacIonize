@@ -118,15 +118,6 @@ public:
   }
 
   /**
-   * @brief Set the helium abundance.
-   *
-   * @param helium_abundance Helium abundance value.
-   */
-  inline void set_helium_abundance(double helium_abundance) {
-    _helium_abundance = helium_abundance;
-  }
-
-  /**
    * @brief Set the probability of re-emitting an ionizing photon after photon
    * absorption by hydrogen.
    *
@@ -231,13 +222,6 @@ public:
    * @return Temperature (in K).
    */
   inline double get_temperature() { return _temperature; }
-
-  /**
-   * @brief Get the helium abundance.
-   *
-   * @return Helium abundance.
-   */
-  inline double get_helium_abundance() { return _helium_abundance; }
 
   /**
    * @brief Get the probability of a photon being re-emitted as an ionizing

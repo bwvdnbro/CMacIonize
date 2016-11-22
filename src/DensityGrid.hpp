@@ -26,6 +26,7 @@
 #ifndef DENSITYGRID_HPP
 #define DENSITYGRID_HPP
 
+#include "Abundances.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
@@ -69,7 +70,7 @@ protected:
     return ds * cell.get_total_density() *
            (photon.get_cross_section(ELEMENT_H) *
                 cell.get_ionic_fraction(ELEMENT_H) +
-            cell.get_helium_abundance() * photon.get_cross_section(ELEMENT_He) *
+            photon.get_cross_section_He_corr() *
                 cell.get_ionic_fraction(ELEMENT_He));
   }
 
@@ -151,15 +152,12 @@ public:
    * @brief Initialize the given cell.
    *
    * @param initial_temperature Initial temperature (in K).
-   * @param helium_abundance Helium abundance.
    * @param cell Cell to initialize.
    */
-  void initialize(double initial_temperature, double helium_abundance,
-                  DensityValues &cell) {
+  void initialize(double initial_temperature, DensityValues &cell) {
     cell.set_ionic_fraction(ELEMENT_H, 1.e-6);
     cell.set_ionic_fraction(ELEMENT_He, 1.e-6);
     cell.set_temperature(initial_temperature);
-    cell.set_helium_abundance(helium_abundance);
     set_reemission_probabilities(initial_temperature, cell);
   }
 
@@ -338,11 +336,9 @@ public:
    * grid itself has been set up.
    *
    * @param initial_temperature Initial temperature.
-   * @param helium_abundance Helium abundance.
    * @param function DensityFunction that sets the density.
    */
-  void initialize(double initial_temperature, double helium_abundance,
-                  DensityFunction &function) {
+  void initialize(double initial_temperature, DensityFunction &function) {
     unsigned int ntot = get_number_of_cells();
     unsigned int nguess = 0.01 * ntot;
     unsigned int ninfo = 0.1 * ntot;
@@ -351,7 +347,7 @@ public:
     for (auto it = begin(); it != end(); ++it) {
       DensityValues &cell = it.get_values();
       cell.set_total_density(function(it.get_cell_midpoint()));
-      initialize(initial_temperature, helium_abundance, cell);
+      initialize(initial_temperature, cell);
       ++ndone;
       if (_log) {
         if (ndone == nguess) {

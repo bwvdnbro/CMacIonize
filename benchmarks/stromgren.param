@@ -20,8 +20,9 @@ densityfunction:
   # value for the constant density
   density: 100. cm^-3
 
-# assumed helium abundance for the ISM
-helium_abundance: 0.
+# assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
+abundances:
+  helium: 0.
 
 # distribution of photon sources in the box
 photonsourcedistribution:
