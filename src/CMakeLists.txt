@@ -108,6 +108,7 @@ set(CMACIONIZE_SOURCES
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp

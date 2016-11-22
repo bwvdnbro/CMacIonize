@@ -24,7 +24,9 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "TemperatureCalculator.hpp"
+#include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
+#include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
@@ -35,6 +37,9 @@
 /**
  * @brief Constructor.
  *
+ * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
+ * @param abundances Abundances.
+ * @param pahfac PAH heating factor.
  * @param line_cooling_data LineCoolingData use to calculate cooling due to line
  * emission.
  * @param recombination_rates RecombinationRates used to calculate ionic
@@ -43,9 +48,11 @@
  * fractions.
  */
 TemperatureCalculator::TemperatureCalculator(
+    double luminosity, Abundances &abundances, double pahfac,
     LineCoolingData &line_cooling_data, RecombinationRates &recombination_rates,
     ChargeTransferRates &charge_transfer_rates)
-    : _line_cooling_data(line_cooling_data),
+    : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
+      _line_cooling_data(line_cooling_data),
       _recombination_rates(recombination_rates),
       _charge_transfer_rates(charge_transfer_rates) {}
 
@@ -60,12 +67,7 @@ TemperatureCalculator::TemperatureCalculator(
  * @param T Temperature (in K).
  * @param cell DensityValues of the cell.
  * @param jfac Normalization factor for the mean intensities.
- * @param AHe Helium abundance.
- * @param AC Carbon abundance.
- * @param AN Nitrogen abundance.
- * @param AO Oxygen abundance.
- * @param AS Sulfur abundance.
- * @param ANe Neon abundance.
+ * @param abundances Abundances.
  * @param hfac Normalization factor for the heating integrals.
  * @param pahfac Normalization factor for PAH heating.
  * @param data LineCoolingData used to calculate line cooling.
@@ -74,8 +76,7 @@ TemperatureCalculator::TemperatureCalculator(
  */
 void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
                                    double &loss, double T, DensityValues &cell,
-                                   double jfac, double AHe, double AC,
-                                   double AN, double AO, double AS, double ANe,
+                                   double jfac, Abundances &abundances,
                                    double hfac, double pahfac,
                                    LineCoolingData &data,
                                    RecombinationRates &rates,
@@ -107,6 +108,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 
   double jH = jfac * cell.get_mean_intensity(ELEMENT_H);
   double jHe = jfac * cell.get_mean_intensity(ELEMENT_He);
+  double AHe = abundances.get_abundance(ATOM_HELIUM);
   IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, n, AHe, T, h0,
                                      he0);
 
@@ -224,25 +226,37 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   cell.set_ionic_fraction(ELEMENT_O, O21 / (1. + sumO));
   cell.set_ionic_fraction(ELEMENT_Op1, O31 / (1. + sumO));
 
-  double abundances[12];
-  abundances[0] = AN * (1. - cell.get_ionic_fraction(ELEMENT_N) -
-                        cell.get_ionic_fraction(ELEMENT_Np1) -
-                        cell.get_ionic_fraction(ELEMENT_Np2));
-  abundances[1] = AN * cell.get_ionic_fraction(ELEMENT_N);
-  abundances[2] = AO * (1. - cell.get_ionic_fraction(ELEMENT_O) -
-                        cell.get_ionic_fraction(ELEMENT_Op1));
-  abundances[3] = AO * cell.get_ionic_fraction(ELEMENT_O);
-  abundances[4] = AO * cell.get_ionic_fraction(ELEMENT_Op1);
-  abundances[5] = ANe * cell.get_ionic_fraction(ELEMENT_Nep1);
-  abundances[6] = AS * (1. - cell.get_ionic_fraction(ELEMENT_Sp1) -
-                        cell.get_ionic_fraction(ELEMENT_Sp2) -
-                        cell.get_ionic_fraction(ELEMENT_Sp3));
-  abundances[7] = AS * cell.get_ionic_fraction(ELEMENT_Sp1);
-  abundances[8] = AC * (1. - cell.get_ionic_fraction(ELEMENT_Cp1) -
-                        cell.get_ionic_fraction(ELEMENT_Cp2));
-  abundances[9] = AC * cell.get_ionic_fraction(ELEMENT_Cp1);
-  abundances[10] = AN * cell.get_ionic_fraction(ELEMENT_Np1);
-  abundances[11] = ANe * cell.get_ionic_fraction(ELEMENT_Ne);
+  double abund[12];
+  abund[0] = abundances.get_abundance(ATOM_NITROGEN) *
+             (1. - cell.get_ionic_fraction(ELEMENT_N) -
+              cell.get_ionic_fraction(ELEMENT_Np1) -
+              cell.get_ionic_fraction(ELEMENT_Np2));
+  abund[1] = abundances.get_abundance(ATOM_NITROGEN) *
+             cell.get_ionic_fraction(ELEMENT_N);
+  abund[2] = abundances.get_abundance(ATOM_OXYGEN) *
+             (1. - cell.get_ionic_fraction(ELEMENT_O) -
+              cell.get_ionic_fraction(ELEMENT_Op1));
+  abund[3] = abundances.get_abundance(ATOM_OXYGEN) *
+             cell.get_ionic_fraction(ELEMENT_O);
+  abund[4] = abundances.get_abundance(ATOM_OXYGEN) *
+             cell.get_ionic_fraction(ELEMENT_Op1);
+  abund[5] = abundances.get_abundance(ATOM_NEON) *
+             cell.get_ionic_fraction(ELEMENT_Nep1);
+  abund[6] = abundances.get_abundance(ATOM_SULFUR) *
+             (1. - cell.get_ionic_fraction(ELEMENT_Sp1) -
+              cell.get_ionic_fraction(ELEMENT_Sp2) -
+              cell.get_ionic_fraction(ELEMENT_Sp3));
+  abund[7] = abundances.get_abundance(ATOM_SULFUR) *
+             cell.get_ionic_fraction(ELEMENT_Sp1);
+  abund[8] = abundances.get_abundance(ATOM_CARBON) *
+             (1. - cell.get_ionic_fraction(ELEMENT_Cp1) -
+              cell.get_ionic_fraction(ELEMENT_Cp2));
+  abund[9] = abundances.get_abundance(ATOM_CARBON) *
+             cell.get_ionic_fraction(ELEMENT_Cp1);
+  abund[10] = abundances.get_abundance(ATOM_NITROGEN) *
+              cell.get_ionic_fraction(ELEMENT_Np1);
+  abund[11] =
+      abundances.get_abundance(ATOM_NEON) * cell.get_ionic_fraction(ELEMENT_Ne);
 
   // FFcool
   double c = 5.5 - std::log(T);
@@ -259,7 +273,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   double Lhep = 2.6e-13 * ne * nhep * std::pow(T, 0.32);
   double LRec = 1.e-26 * (Lhp + Lhep);
 
-  double Lc = data.get_cooling(T, ne, abundances) * n;
+  double Lc = data.get_cooling(T, ne, abund) * n;
 
   loss = Lc + Lff + LRec;
 }
@@ -274,14 +288,6 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
                                                   DensityValues &cell) {
   const double eps = 1.e-3;
-  double AHe = 0.1;
-  double AC = 220.e-6;
-  double AN = 40.e-6;
-  double AO = 330.e-6;
-  double AS = 9.e-6;
-  double ANe = 50.e-6;
-  // this should be a parameter
-  double pahfac = 1.;
 
   if ((cell.get_heating_H() == 0. &&
        cell.get_mean_intensity(ELEMENT_He) == 0.) ||
@@ -329,21 +335,18 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
     double T1 = 1.1 * T0;
     // ioneng
     double h01, he01, gain1, loss1;
-    ioneng(h01, he01, gain1, loss1, T1, cell, jfac, AHe, AC, AN, AO, AS, ANe,
-           hfac, pahfac, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    ioneng(h01, he01, gain1, loss1, T1, cell, jfac, _abundances, hfac, _pahfac,
+           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
 
     double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
-    ioneng(h02, he02, gain2, loss2, T2, cell, jfac, AHe, AC, AN, AO, AS, ANe,
-           hfac, pahfac, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    ioneng(h02, he02, gain2, loss2, T2, cell, jfac, _abundances, hfac, _pahfac,
+           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
-    ioneng(h0, he0, gain0, loss0, T0, cell, jfac, AHe, AC, AN, AO, AS, ANe,
-           hfac, pahfac, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    ioneng(h0, he0, gain0, loss0, T0, cell, jfac, _abundances, hfac, _pahfac,
+           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
 
     double logtt = std::log(T1 / T2);
     double expgain = std::log(gain1 / gain2) / logtt;
@@ -398,5 +401,16 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
  */
 void TemperatureCalculator::calculate_temperature(unsigned int nphoton,
                                                   DensityGrid &grid) {
-  // do stuff
+  double jfac = _luminosity / nphoton;
+  // the integral calculation uses the photon frequency (in Hz)
+  // we want to convert this to the photon energy (in Joule)
+  // we do this by multiplying with the Planck constant (in Js)
+  double hfac = jfac * 6.626070040e-34;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    double cellvolume = it.get_volume();
+    DensityValues &cell = it.get_values();
+    double jfaccell = jfac / cellvolume;
+    double hfaccell = hfac / cellvolume;
+    calculate_temperature(jfaccell, hfaccell, cell);
+  }
 }

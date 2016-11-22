@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Assert.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
@@ -45,7 +46,8 @@ int main(int argc, char **argv) {
   LineCoolingData data;
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
-  TemperatureCalculator calculator(data, rates, ctr);
+  Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
+  TemperatureCalculator calculator(1., abundances, 1., data, rates, ctr);
 
   // test ioneng
   {
@@ -93,9 +95,8 @@ int main(int argc, char **argv) {
       cell.set_temperature(T);
 
       double gain, loss, h0, he0;
-      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1., 0.1,
-                                    220.e-6, 40.e-6, 330.e-6, 9.e-6, 50.e-6, 1.,
-                                    1., data, rates, ctr);
+      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1.,
+                                    abundances, 1., 1., data, rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 

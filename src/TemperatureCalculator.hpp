@@ -27,6 +27,7 @@
 #ifndef TEMPERATURECALCULATOR_HPP
 #define TEMPERATURECALCULATOR_HPP
 
+class Abundances;
 class ChargeTransferRates;
 class DensityGrid;
 class DensityValues;
@@ -39,6 +40,15 @@ class RecombinationRates;
  */
 class TemperatureCalculator {
 private:
+  /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
+  double _luminosity;
+
+  /*! @brief Abundances. */
+  Abundances &_abundances;
+
+  /*! @brief PAH heating factor. */
+  double _pahfac;
+
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
   LineCoolingData &_line_cooling_data;
 
@@ -49,15 +59,16 @@ private:
   ChargeTransferRates &_charge_transfer_rates;
 
 public:
-  TemperatureCalculator(LineCoolingData &line_cooling_data,
+  TemperatureCalculator(double luminosity, Abundances &abundances,
+                        double pahfac, LineCoolingData &line_cooling_data,
                         RecombinationRates &recombination_rates,
                         ChargeTransferRates &charge_transfer_rates);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     double T, DensityValues &cell, double jfac, double AHe,
-                     double AC, double AN, double AO, double AS, double ANe,
-                     double hfac, double pahfac, LineCoolingData &data,
-                     RecombinationRates &rates, ChargeTransferRates &ctr);
+                     double T, DensityValues &cell, double jfac,
+                     Abundances &abundances, double hfac, double pahfac,
+                     LineCoolingData &data, RecombinationRates &rates,
+                     ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac, DensityValues &cell);
   void calculate_temperature(unsigned int nphoton, DensityGrid &grid);
