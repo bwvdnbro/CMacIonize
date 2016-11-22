@@ -41,16 +41,14 @@ using namespace std;
 class TestCrossSections : public CrossSections {
 public:
   /**
-   * @brief Get the photoionization cross section for the given element at the
+   * @brief Get the photoionization cross section for the given ion at the
    * given photon energy.
    *
-   * @param element ElementName for an element.
+   * @param ion IonName for an ion.
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(ElementName element, double energy) {
-    return 1.;
-  }
+  virtual double get_cross_section(IonName ion, double energy) { return 1.; }
 };
 
 /**

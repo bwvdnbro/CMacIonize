@@ -61,14 +61,14 @@ IonizationStateCalculator::IonizationStateCalculator(
  */
 void IonizationStateCalculator::calculate_ionization_state(
     double jfac, DensityValues &cell) {
-  cell.set_old_neutral_fraction_H(cell.get_ionic_fraction(ELEMENT_H));
-  double jH = jfac * cell.get_mean_intensity(ELEMENT_H);
-  double jHe = jfac * cell.get_mean_intensity(ELEMENT_He);
+  cell.set_old_neutral_fraction_H(cell.get_ionic_fraction(ION_H_n));
+  double jH = jfac * cell.get_mean_intensity(ION_H_n);
+  double jHe = jfac * cell.get_mean_intensity(ION_He_n);
   double ntot = cell.get_total_density();
   if (jH > 0. && ntot > 0.) {
     double T = cell.get_temperature();
-    double alphaH = _recombination_rates.get_recombination_rate(ELEMENT_H, T);
-    double alphaHe = _recombination_rates.get_recombination_rate(ELEMENT_He, T);
+    double alphaH = _recombination_rates.get_recombination_rate(ION_H_n, T);
+    double alphaHe = _recombination_rates.get_recombination_rate(ION_He_n, T);
     // h0find
     double h0, he0;
     if (_abundances.get_abundance(ATOM_HELIUM) != 0.) {
@@ -79,8 +79,8 @@ void IonizationStateCalculator::calculate_ionization_state(
       he0 = 0.;
     }
 
-    cell.set_ionic_fraction(ELEMENT_H, h0);
-    cell.set_ionic_fraction(ELEMENT_He, he0);
+    cell.set_ionic_fraction(ION_H_n, h0);
+    cell.set_ionic_fraction(ION_He_n, he0);
 
     // coolants
     double ne =
@@ -89,8 +89,8 @@ void IonizationStateCalculator::calculate_ionization_state(
     double nhp = ntot * (1. - h0);
 
     // carbon
-    double C21 = jfac * cell.get_mean_intensity(ELEMENT_Cp1) / ne /
-                 _recombination_rates.get_recombination_rate(ELEMENT_Cp1, T);
+    double C21 = jfac * cell.get_mean_intensity(ION_C_p1) / ne /
+                 _recombination_rates.get_recombination_rate(ION_C_p1, T);
     // as can be seen below, CTHerecom has the same units as a recombination
     // rate: m^3s^-1
     // in Kenny's code, recombination rates are in cm^3s^-1
@@ -98,24 +98,24 @@ void IonizationStateCalculator::calculate_ionization_state(
     // original factor 1.e-9 with 1.e-6
     double CTHerecom = 1.e-15 * 0.046 * t4 * t4;
     double C32 =
-        jfac * cell.get_mean_intensity(ELEMENT_Cp2) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Cp2, T) +
+        jfac * cell.get_mean_intensity(ION_C_p2) /
+        (ne * _recombination_rates.get_recombination_rate(ION_C_p2, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 6,
                                                                            T) +
          ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double C31 = C32 * C21;
     double sumC = C21 + C31;
-    cell.set_ionic_fraction(ELEMENT_Cp1, C21 / (1. + sumC));
-    cell.set_ionic_fraction(ELEMENT_Cp2, C31 / (1. + sumC));
+    cell.set_ionic_fraction(ION_C_p1, C21 / (1. + sumC));
+    cell.set_ionic_fraction(ION_C_p2, C31 / (1. + sumC));
 
     // nitrogen
     double N21 =
-        (jfac * cell.get_mean_intensity(ELEMENT_N) +
+        (jfac * cell.get_mean_intensity(ION_N_n) +
          nhp *
              _charge_transfer_rates.get_charge_transfer_ionization_rate(1, 7,
                                                                         T)) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_N, T) +
+        (ne * _recombination_rates.get_recombination_rate(ION_N_n, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(2, 7,
                                                                            T));
@@ -123,8 +123,8 @@ void IonizationStateCalculator::calculate_ionization_state(
     CTHerecom =
         1.e-15 * 0.33 * std::pow(t4, 0.29) * (1. + 1.3 * std::exp(-4.5 / t4));
     double N32 =
-        jfac * cell.get_mean_intensity(ELEMENT_Np1) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Np1, T) +
+        jfac * cell.get_mean_intensity(ION_N_p1) /
+        (ne * _recombination_rates.get_recombination_rate(ION_N_p1, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 7,
                                                                            T) +
@@ -132,8 +132,8 @@ void IonizationStateCalculator::calculate_ionization_state(
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 0.15;
     double N43 =
-        jfac * cell.get_mean_intensity(ELEMENT_Np2) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Np2, T) +
+        jfac * cell.get_mean_intensity(ION_N_p2) /
+        (ne * _recombination_rates.get_recombination_rate(ION_N_p2, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 7,
                                                                            T) +
@@ -141,22 +141,22 @@ void IonizationStateCalculator::calculate_ionization_state(
     double N31 = N32 * N21;
     double N41 = N43 * N31;
     double sumN = N21 + N31 + N41;
-    cell.set_ionic_fraction(ELEMENT_N, N21 / (1. + sumN));
-    cell.set_ionic_fraction(ELEMENT_Np1, N31 / (1. + sumN));
-    cell.set_ionic_fraction(ELEMENT_Np2, N41 / (1. + sumN));
+    cell.set_ionic_fraction(ION_N_n, N21 / (1. + sumN));
+    cell.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
+    cell.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
 
     // Sulfur
     double S21 =
-        jfac * cell.get_mean_intensity(ELEMENT_Sp1) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Sp1, T) +
+        jfac * cell.get_mean_intensity(ION_S_p1) /
+        (ne * _recombination_rates.get_recombination_rate(ION_S_p1, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  3, 16, T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 1.1 * std::pow(t4, 0.56);
     double S32 =
-        jfac * cell.get_mean_intensity(ELEMENT_Sp2) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Sp2, T) +
+        jfac * cell.get_mean_intensity(ION_S_p2) /
+        (ne * _recombination_rates.get_recombination_rate(ION_S_p2, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  4, 16, T) +
@@ -165,8 +165,8 @@ void IonizationStateCalculator::calculate_ionization_state(
     CTHerecom = 1.e-15 * 7.6e-4 * std::pow(t4, 0.32) *
                 (1. + 3.4 * std::exp(-5.25 * t4));
     double S43 =
-        jfac * cell.get_mean_intensity(ELEMENT_Sp3) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Sp3, T) +
+        jfac * cell.get_mean_intensity(ION_S_p3) /
+        (ne * _recombination_rates.get_recombination_rate(ION_S_p3, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  5, 16, T) +
@@ -174,72 +174,72 @@ void IonizationStateCalculator::calculate_ionization_state(
     double S31 = S32 * S21;
     double S41 = S43 * S31;
     double sumS = S21 + S31 + S41;
-    cell.set_ionic_fraction(ELEMENT_Sp1, S21 / (1. + sumS));
-    cell.set_ionic_fraction(ELEMENT_Sp2, S31 / (1. + sumS));
-    cell.set_ionic_fraction(ELEMENT_Sp3, S41 / (1. + sumS));
+    cell.set_ionic_fraction(ION_S_p1, S21 / (1. + sumS));
+    cell.set_ionic_fraction(ION_S_p2, S31 / (1. + sumS));
+    cell.set_ionic_fraction(ION_S_p3, S41 / (1. + sumS));
 
     // Neon
     double Ne21 =
-        jfac * cell.get_mean_intensity(ELEMENT_Ne) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Ne, T));
+        jfac * cell.get_mean_intensity(ION_Ne_n) /
+        (ne * _recombination_rates.get_recombination_rate(ION_Ne_n, T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 1.e-5;
     double Ne32 =
-        jfac * cell.get_mean_intensity(ELEMENT_Nep1) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Nep1, T) +
+        jfac * cell.get_mean_intensity(ION_Ne_p1) /
+        (ne * _recombination_rates.get_recombination_rate(ION_Ne_p1, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(
                  3, 10, T) +
          ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double Ne31 = Ne32 * Ne21;
     double sumNe = Ne21 + Ne31;
-    cell.set_ionic_fraction(ELEMENT_Ne, Ne21 / (1. + sumNe));
-    cell.set_ionic_fraction(ELEMENT_Nep1, Ne31 / (1. + sumNe));
+    cell.set_ionic_fraction(ION_Ne_n, Ne21 / (1. + sumNe));
+    cell.set_ionic_fraction(ION_Ne_p1, Ne31 / (1. + sumNe));
 
     // Oxygen
     double O21 =
-        (jfac * cell.get_mean_intensity(ELEMENT_O) +
+        (jfac * cell.get_mean_intensity(ION_O_n) +
          nhp *
              _charge_transfer_rates.get_charge_transfer_ionization_rate(1, 8,
                                                                         T)) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_O, T) +
+        (ne * _recombination_rates.get_recombination_rate(ION_O_n, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(2, 8,
                                                                            T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 0.2e-15 * std::pow(t4, 0.95);
     double O32 =
-        jfac * cell.get_mean_intensity(ELEMENT_Op1) /
-        (ne * _recombination_rates.get_recombination_rate(ELEMENT_Op1, T) +
+        jfac * cell.get_mean_intensity(ION_O_p1) /
+        (ne * _recombination_rates.get_recombination_rate(ION_O_p1, T) +
          ntot * h0 *
              _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 8,
                                                                            T) +
          ntot * he0 * _abundances.get_abundance(ATOM_HELIUM) * CTHerecom);
     double O31 = O32 * O21;
     double sumO = O21 + O31;
-    cell.set_ionic_fraction(ELEMENT_O, O21 / (1. + sumO));
-    cell.set_ionic_fraction(ELEMENT_Op1, O31 / (1. + sumO));
+    cell.set_ionic_fraction(ION_O_n, O21 / (1. + sumO));
+    cell.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
 
   } else {
     if (ntot > 0.) {
-      cell.set_ionic_fraction(ELEMENT_H, 1.);
-      cell.set_ionic_fraction(ELEMENT_He, 1.);
+      cell.set_ionic_fraction(ION_H_n, 1.);
+      cell.set_ionic_fraction(ION_He_n, 1.);
       // all coolants are also neutral, so their ionic fraction are 0
-      cell.set_ionic_fraction(ELEMENT_Cp1, 0.);
-      cell.set_ionic_fraction(ELEMENT_Cp2, 0.);
-      cell.set_ionic_fraction(ELEMENT_N, 0.);
-      cell.set_ionic_fraction(ELEMENT_Np1, 0.);
-      cell.set_ionic_fraction(ELEMENT_Np2, 0.);
-      cell.set_ionic_fraction(ELEMENT_O, 0.);
-      cell.set_ionic_fraction(ELEMENT_Op1, 0.);
-      cell.set_ionic_fraction(ELEMENT_Ne, 0.);
-      cell.set_ionic_fraction(ELEMENT_Nep1, 0.);
-      cell.set_ionic_fraction(ELEMENT_Sp1, 0.);
-      cell.set_ionic_fraction(ELEMENT_Sp2, 0.);
-      cell.set_ionic_fraction(ELEMENT_Sp3, 0.);
+      cell.set_ionic_fraction(ION_C_p1, 0.);
+      cell.set_ionic_fraction(ION_C_p2, 0.);
+      cell.set_ionic_fraction(ION_N_n, 0.);
+      cell.set_ionic_fraction(ION_N_p1, 0.);
+      cell.set_ionic_fraction(ION_N_p2, 0.);
+      cell.set_ionic_fraction(ION_O_n, 0.);
+      cell.set_ionic_fraction(ION_O_p1, 0.);
+      cell.set_ionic_fraction(ION_Ne_n, 0.);
+      cell.set_ionic_fraction(ION_Ne_p1, 0.);
+      cell.set_ionic_fraction(ION_S_p1, 0.);
+      cell.set_ionic_fraction(ION_S_p2, 0.);
+      cell.set_ionic_fraction(ION_S_p3, 0.);
     } else {
-      cell.set_ionic_fraction(ELEMENT_H, 0.);
-      cell.set_ionic_fraction(ELEMENT_He, 0.);
+      cell.set_ionic_fraction(ION_H_n, 0.);
+      cell.set_ionic_fraction(ION_He_n, 0.);
     }
   }
 }

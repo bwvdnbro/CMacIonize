@@ -32,93 +32,93 @@
 #include <string>
 
 /**
- * @brief Names of supported elements.
+ * @brief Names of supported ions.
  *
  * These are the atoms/ions that can be ionized by radiation in our program. A
  * suffix 'p' denotes an ion, and is followed by a number denoting the
  * ionization state. Note that the total number of ionization states of a single
- * element will be one more than listed below, since the highest ionized state
+ * ion will be one more than listed below, since the highest ionized state
  * is not mentioned (as it can not be ionized).
  */
-enum ElementName {
+enum IonName {
   /*! @brief Neutral hydrogen. */
-  ELEMENT_H = 0,
+  ION_H_n = 0,
   /*! @brief Neutral helium. */
-  ELEMENT_He,
+  ION_He_n,
   /*! @brief Ionized carbon. */
-  ELEMENT_Cp1,
+  ION_C_p1,
   /*! @brief Double ionized carbon. */
-  ELEMENT_Cp2,
+  ION_C_p2,
   /*! @brief Neutral nytrogen. */
-  ELEMENT_N,
+  ION_N_n,
   /*! @brief Ionized nytrogen. */
-  ELEMENT_Np1,
+  ION_N_p1,
   /*! @brief Double ionized nytrogen. */
-  ELEMENT_Np2,
+  ION_N_p2,
   /*! @brief Neutral oxygen. */
-  ELEMENT_O,
+  ION_O_n,
   /*! @brief Ionized oxygen. */
-  ELEMENT_Op1,
+  ION_O_p1,
   /*! @brief Neutral neon. */
-  ELEMENT_Ne,
+  ION_Ne_n,
   /*! @brief Ionized neon. */
-  ELEMENT_Nep1,
+  ION_Ne_p1,
   /*! @brief Ionized sulfur. */
-  ELEMENT_Sp1,
+  ION_S_p1,
   /*! @brief Double ionized sulfur. */
-  ELEMENT_Sp2,
+  ION_S_p2,
   /*! @brief Triple ionized sulfur. */
-  ELEMENT_Sp3,
+  ION_S_p3,
   /*! @brief Number of supported elements. */
-  NUMBER_OF_ELEMENTS
+  NUMBER_OF_IONNAMES
 };
 
 /**
- * @brief Get the name of the given element.
+ * @brief Get the name of the given ion.
  *
- * @param element ElementName for a valid element.
- * @return Textual representation of the element name.
+ * @param ion IonName for a valid ion.
+ * @return Textual representation of the ion name.
  */
-static inline std::string get_element_name(int element) {
-  switch (element) {
+static inline std::string get_ion_name(int ion) {
+  switch (ion) {
 
-  case ELEMENT_H:
+  case ION_H_n:
     return "H";
 
-  case ELEMENT_He:
+  case ION_He_n:
     return "He";
 
-  case ELEMENT_Cp1:
+  case ION_C_p1:
     return "C+";
-  case ELEMENT_Cp2:
+  case ION_C_p2:
     return "C++";
 
-  case ELEMENT_N:
+  case ION_N_n:
     return "N";
-  case ELEMENT_Np1:
+  case ION_N_p1:
     return "N+";
-  case ELEMENT_Np2:
+  case ION_N_p2:
     return "N++";
 
-  case ELEMENT_O:
+  case ION_O_n:
     return "O";
-  case ELEMENT_Op1:
+  case ION_O_p1:
     return "O+";
 
-  case ELEMENT_Ne:
+  case ION_Ne_n:
     return "Ne";
-  case ELEMENT_Nep1:
+  case ION_Ne_p1:
     return "Ne+";
 
-  case ELEMENT_Sp1:
+  case ION_S_p1:
     return "S+";
-  case ELEMENT_Sp2:
+  case ION_S_p2:
     return "S++";
-  case ELEMENT_Sp3:
+  case ION_S_p3:
     return "S+++";
 
   default:
-    error("Unknown element: %i!", element);
+    error("Unknown ion: %i!", ion);
     return "";
   }
 }

@@ -196,62 +196,61 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
 }
 
 /**
- * @brief Get the photoionization cross section of the given element.
+ * @brief Get the photoionization cross section of the given ion.
  *
- * @param element ElementName of an element.
+ * @param ion IonName of a valid ion.
  * @param energy Photon energy (in Hz).
- * @return Photoionization cross section for the given element and for the given
+ * @return Photoionization cross section for the given ion and for the given
  * photon energy (in m^2).
  */
-double VernerCrossSections::get_cross_section(ElementName element,
-                                              double energy) {
-  switch (element) {
+double VernerCrossSections::get_cross_section(IonName ion, double energy) {
+  switch (ion) {
 
-  case ELEMENT_H:
+  case ION_H_n:
     return get_cross_section_verner(1, 1, 1, energy);
 
-  case ELEMENT_He:
+  case ION_He_n:
     return get_cross_section_verner(2, 2, 1, energy);
 
-  case ELEMENT_Cp1:
+  case ION_C_p1:
     return get_cross_section_verner(6, 5, 3, energy) +
            get_cross_section_verner(6, 5, 2, energy);
-  case ELEMENT_Cp2:
+  case ION_C_p2:
     return get_cross_section_verner(6, 4, 2, energy);
 
-  case ELEMENT_N:
+  case ION_N_n:
     return get_cross_section_verner(7, 7, 3, energy) +
            get_cross_section_verner(7, 7, 2, energy);
-  case ELEMENT_Np1:
+  case ION_N_p1:
     return get_cross_section_verner(7, 6, 3, energy) +
            get_cross_section_verner(7, 6, 2, energy);
-  case ELEMENT_Np2:
+  case ION_N_p2:
     return get_cross_section_verner(7, 5, 3, energy);
 
-  case ELEMENT_O:
+  case ION_O_n:
     return get_cross_section_verner(8, 8, 3, energy) +
            get_cross_section_verner(8, 8, 2, energy);
-  case ELEMENT_Op1:
+  case ION_O_p1:
     return get_cross_section_verner(8, 7, 3, energy) +
            get_cross_section_verner(8, 7, 2, energy);
 
-  case ELEMENT_Ne:
+  case ION_Ne_n:
     return get_cross_section_verner(10, 10, 3, energy) +
            get_cross_section_verner(10, 10, 2, energy);
-  case ELEMENT_Nep1:
+  case ION_Ne_p1:
     return get_cross_section_verner(10, 9, 3, energy);
 
-  case ELEMENT_Sp1:
+  case ION_S_p1:
     return get_cross_section_verner(16, 15, 5, energy) +
            get_cross_section_verner(16, 15, 4, energy);
-  case ELEMENT_Sp2:
+  case ION_S_p2:
     return get_cross_section_verner(16, 14, 5, energy) +
            get_cross_section_verner(16, 14, 4, energy);
-  case ELEMENT_Sp3:
+  case ION_S_p3:
     return get_cross_section_verner(16, 13, 5, energy);
 
   default:
-    error("Unknown element: %i", element);
+    error("Unknown ion: %i", ion);
   }
   return 0.;
 }

@@ -63,8 +63,8 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     for (unsigned int inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       double xsecHe = cross_sections.get_cross_section(
-          ELEMENT_He, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
-                          _frequency[inu - 1] * 13.6, "eV"));
+          ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+                        _frequency[inu - 1] * 13.6, "eV"));
       xsecHe = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecHe, "cm^2") /
                1.e-18;
       double jHeIi1;
@@ -77,8 +77,8 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
         jHeIi1 = 0.;
       }
       xsecHe = cross_sections.get_cross_section(
-          ELEMENT_He, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
-                          _frequency[inu] * 13.6, "eV"));
+          ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+                        _frequency[inu] * 13.6, "eV"));
       xsecHe = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecHe, "cm^2") /
                1.e-18;
       double jHeIi2;

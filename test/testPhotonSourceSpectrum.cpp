@@ -66,7 +66,7 @@ double planck_luminosity(double frequency) {
  */
 double HLyc_luminosity(CrossSections &cross_sections, double T,
                        double frequency) {
-  double xsecH = cross_sections.get_cross_section(ELEMENT_H, frequency * 13.6);
+  double xsecH = cross_sections.get_cross_section(ION_H_n, frequency * 13.6);
   return frequency * frequency * frequency * xsecH *
          exp(-157919.667 * (frequency - 1.) / T);
 }
@@ -84,7 +84,7 @@ double HeLyc_luminosity(CrossSections &cross_sections, double T,
                         double frequency) {
   if (frequency >= 1.81) {
     double xsecHe =
-        cross_sections.get_cross_section(ELEMENT_He, frequency * 13.6);
+        cross_sections.get_cross_section(ION_He_n, frequency * 13.6);
     return frequency * frequency * frequency * xsecHe *
            exp(-157919.667 * (frequency - 1.81) / T);
   } else {

@@ -68,10 +68,10 @@ protected:
   inline double get_optical_depth(const double ds, DensityValues &cell,
                                   Photon &photon) {
     return ds * cell.get_total_density() *
-           (photon.get_cross_section(ELEMENT_H) *
-                cell.get_ionic_fraction(ELEMENT_H) +
+           (photon.get_cross_section(ION_H_n) *
+                cell.get_ionic_fraction(ION_H_n) +
             photon.get_cross_section_He_corr() *
-                cell.get_ionic_fraction(ELEMENT_He));
+                cell.get_ionic_fraction(ION_He_n));
   }
 
   /**
@@ -87,14 +87,13 @@ protected:
     if (cell.get_total_density() > 0.) {
       // changing the value below from 2 to NUMBER_OF_ELEMENTS makes a huge
       // difference in run time
-      for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
-        ElementName element = static_cast< ElementName >(i);
-        cell.increase_mean_intensity(element,
-                                     ds * photon.get_cross_section(element));
+      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        IonName ion = static_cast< IonName >(i);
+        cell.increase_mean_intensity(ion, ds * photon.get_cross_section(ion));
       }
-      cell.increase_heating_H(ds * photon.get_cross_section(ELEMENT_H) *
+      cell.increase_heating_H(ds * photon.get_cross_section(ION_H_n) *
                               (photon.get_energy() - _ionization_energy_H));
-      cell.increase_heating_He(ds * photon.get_cross_section(ELEMENT_He) *
+      cell.increase_heating_He(ds * photon.get_cross_section(ION_He_n) *
                                (photon.get_energy() - _ionization_energy_He));
     }
   }
@@ -155,8 +154,8 @@ public:
    * @param cell Cell to initialize.
    */
   void initialize(double initial_temperature, DensityValues &cell) {
-    cell.set_ionic_fraction(ELEMENT_H, 1.e-6);
-    cell.set_ionic_fraction(ELEMENT_He, 1.e-6);
+    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+    cell.set_ionic_fraction(ION_He_n, 1.e-6);
     cell.set_temperature(initial_temperature);
     set_reemission_probabilities(initial_temperature, cell);
   }

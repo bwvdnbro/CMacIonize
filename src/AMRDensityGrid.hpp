@@ -103,9 +103,9 @@ private:
         CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
         cell.set_total_density(density_function(child_midpoint));
         // copy all other values from parent
-        for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
-          ElementName element = static_cast< ElementName >(i);
-          cell.set_ionic_fraction(element, values.get_ionic_fraction(element));
+        for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          IonName ion = static_cast< IonName >(i);
+          cell.set_ionic_fraction(ion, values.get_ionic_fraction(ion));
         }
         cell.set_temperature(values.get_temperature());
         cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());

@@ -63,7 +63,7 @@ private:
   double _energy;
 
   /*! @brief Ionization cross sections (in m^2). */
-  double _cross_sections[NUMBER_OF_ELEMENTS];
+  double _cross_sections[NUMBER_OF_IONNAMES];
 
   /*! @brief Abundance corrected helium cross section (in m^2). */
   double _cross_section_He_corr;
@@ -84,7 +84,7 @@ public:
                 double energy)
       : _position(position), _direction(direction), _energy(energy),
         _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY) {
-    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cross_sections[i] = 0.;
     }
   }
@@ -111,14 +111,12 @@ public:
   inline double get_energy() { return _energy; }
 
   /**
-   * @brief Get the ionization cross section for the given element.
+   * @brief Get the ionization cross section for the given ion.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @return Ionization cross section (in m^2).
    */
-  inline double get_cross_section(ElementName element) {
-    return _cross_sections[element];
-  }
+  inline double get_cross_section(IonName ion) { return _cross_sections[ion]; }
 
   /**
    * @brief Get the abundance corrected helium cross section.
@@ -160,13 +158,13 @@ public:
   inline void set_energy(double energy) { _energy = energy; }
 
   /**
-   * @brief Set the ionization cross section for the given element.
+   * @brief Set the ionization cross section for the given ion.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @param cross_section Ionization cross section (in m^2).
    */
-  inline void set_cross_section(ElementName element, double cross_section) {
-    _cross_sections[element] = cross_section;
+  inline void set_cross_section(IonName ion, double cross_section) {
+    _cross_sections[ion] = cross_section;
   }
 
   /**

@@ -178,13 +178,13 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
  * @param energy Energy of the photon (in Hz).
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) {
-  for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
-    ElementName element = static_cast< ElementName >(i);
-    photon.set_cross_section(
-        element, _cross_sections.get_cross_section(element, energy));
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    photon.set_cross_section(ion,
+                             _cross_sections.get_cross_section(ion, energy));
   }
   photon.set_cross_section_He_corr(_abundances.get_abundance(ATOM_HELIUM) *
-                                   photon.get_cross_section(ELEMENT_He));
+                                   photon.get_cross_section(ION_He_n));
 }
 
 /**
@@ -241,10 +241,10 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
   double helium_abundance = _abundances.get_abundance(ATOM_HELIUM);
   double pHabs = 1. / (1. +
-                       cell.get_ionic_fraction(ELEMENT_He) * helium_abundance *
-                           photon.get_cross_section(ELEMENT_He) /
-                           cell.get_ionic_fraction(ELEMENT_H) /
-                           photon.get_cross_section(ELEMENT_H));
+                       cell.get_ionic_fraction(ION_He_n) * helium_abundance *
+                           photon.get_cross_section(ION_He_n) /
+                           cell.get_ionic_fraction(ION_H_n) /
+                           photon.get_cross_section(ION_H_n));
 
   double x = _random_generator.get_uniform_random_double();
   if (x <= pHabs) {
@@ -287,9 +287,9 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
       // 2-photon continuum
       double pHots = 1. / (1. +
-                           77. * cell.get_ionic_fraction(ELEMENT_He) /
+                           77. * cell.get_ionic_fraction(ION_He_n) /
                                sqrt(cell.get_temperature()) /
-                               cell.get_ionic_fraction(ELEMENT_H));
+                               cell.get_ionic_fraction(ION_H_n));
       x = _random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot

@@ -49,8 +49,7 @@ public:
   double get_recombination_rate_verner(unsigned char iz, unsigned char in,
                                        double T);
 
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature);
+  virtual double get_recombination_rate(IonName ion, double temperature);
 };
 
 #endif // VERNERRECOMBINATIONRATES_HPP

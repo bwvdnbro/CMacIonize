@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
   unsigned long index = grid.get_cell_index(CoordinateVector<>(0.5));
   grid.get_cell_values(index).set_total_density(2.e22);
-  grid.get_cell_values(index).set_ionic_fraction(ELEMENT_H, 1.);
+  grid.get_cell_values(index).set_ionic_fraction(ION_H_n, 1.);
 
   grid.reset_grid();
 

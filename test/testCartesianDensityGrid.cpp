@@ -213,8 +213,8 @@ int main(int argc, char **argv) {
 
   CoordinateVector<> photon_direction(1., 0., 0.);
   Photon photon(photon_origin, photon_direction, 1.);
-  photon.set_cross_section(ELEMENT_H, 1.);
-  photon.set_cross_section(ELEMENT_He, 1.);
+  photon.set_cross_section(ION_H_n, 1.);
+  photon.set_cross_section(ION_He_n, 1.);
   bool inside = grid.interact(photon, 0.125);
 
   assert_condition(inside == false);

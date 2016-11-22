@@ -68,40 +68,39 @@ int main(int argc, char **argv) {
     cell.reset_mean_intensities();
 
     cell.increase_mean_intensity(
-        ELEMENT_H, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"));
+        ION_H_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_He, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"));
+        ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_Cp1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp1, "s^-1"));
+        ION_C_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp1, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Cp2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp2, "s^-1"));
+        ION_C_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp2, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_N, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jN, "s^-1"));
+        ION_N_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jN, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Np1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp1, "s^-1"));
+        ION_N_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp1, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Np2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp2, "s^-1"));
+        ION_N_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp2, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_O, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jO, "s^-1"));
+        ION_O_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jO, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Op1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jOp1, "s^-1"));
+        ION_O_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jOp1, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_Ne, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNe, "s^-1"));
+        ION_Ne_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNe, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Nep1,
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNep1, "s^-1"));
+        ION_Ne_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNep1, "s^-1"));
 
     cell.increase_mean_intensity(
-        ELEMENT_Sp1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp1, "s^-1"));
+        ION_S_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp1, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Sp2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp2, "s^-1"));
+        ION_S_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp2, "s^-1"));
     cell.increase_mean_intensity(
-        ELEMENT_Sp3, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
+        ION_S_p3, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
 
     cell.set_total_density(
         UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
@@ -110,26 +109,26 @@ int main(int argc, char **argv) {
     // calculate the ionization state of the cell
     calculator.calculate_ionization_state(1., cell);
 
-    h0 = cell.get_ionic_fraction(ELEMENT_H);
+    h0 = cell.get_ionic_fraction(ION_H_n);
 
-    he0 = cell.get_ionic_fraction(ELEMENT_He);
+    he0 = cell.get_ionic_fraction(ION_He_n);
 
-    cp1 = cell.get_ionic_fraction(ELEMENT_Cp1);
-    cp2 = cell.get_ionic_fraction(ELEMENT_Cp2);
+    cp1 = cell.get_ionic_fraction(ION_C_p1);
+    cp2 = cell.get_ionic_fraction(ION_C_p2);
 
-    n = cell.get_ionic_fraction(ELEMENT_N);
-    np1 = cell.get_ionic_fraction(ELEMENT_Np1);
-    np2 = cell.get_ionic_fraction(ELEMENT_Np2);
+    n = cell.get_ionic_fraction(ION_N_n);
+    np1 = cell.get_ionic_fraction(ION_N_p1);
+    np2 = cell.get_ionic_fraction(ION_N_p2);
 
-    o = cell.get_ionic_fraction(ELEMENT_O);
-    op1 = cell.get_ionic_fraction(ELEMENT_Op1);
+    o = cell.get_ionic_fraction(ION_O_n);
+    op1 = cell.get_ionic_fraction(ION_O_p1);
 
-    ne = cell.get_ionic_fraction(ELEMENT_Ne);
-    nep1 = cell.get_ionic_fraction(ELEMENT_Nep1);
+    ne = cell.get_ionic_fraction(ION_Ne_n);
+    nep1 = cell.get_ionic_fraction(ION_Ne_p1);
 
-    sp1 = cell.get_ionic_fraction(ELEMENT_Sp1);
-    sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
-    sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
+    sp1 = cell.get_ionic_fraction(ION_S_p1);
+    sp2 = cell.get_ionic_fraction(ION_S_p2);
+    sp3 = cell.get_ionic_fraction(ION_S_p3);
 
     // check that the values match the expected values
     double tolerance = 1.e-10;

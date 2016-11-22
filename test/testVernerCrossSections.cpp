@@ -63,88 +63,80 @@ int main(int argc, char **argv) {
 
       assert_values_equal_rel(
           xsecH, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                     cross_sections.get_cross_section(ELEMENT_H, e), "cm^2") *
+                     cross_sections.get_cross_section(ION_H_n, e), "cm^2") *
                      1.e18,
           tolerance);
 
       assert_values_equal_rel(
           xsecHe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                      cross_sections.get_cross_section(ELEMENT_He, e), "cm^2") *
+                      cross_sections.get_cross_section(ION_He_n, e), "cm^2") *
                       1.e18,
           tolerance);
 
       assert_values_equal_rel(
-          xsecCp1,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Cp1, e), "cm^2") *
-              1.e18,
+          xsecCp1, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_C_p1, e), "cm^2") *
+                       1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecCp2,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Cp2, e), "cm^2") *
-              1.e18,
+          xsecCp2, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_C_p2, e), "cm^2") *
+                       1.e18,
           tolerance);
 
       assert_values_equal_rel(
           xsecN, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                     cross_sections.get_cross_section(ELEMENT_N, e), "cm^2") *
+                     cross_sections.get_cross_section(ION_N_n, e), "cm^2") *
                      1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecNp1,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Np1, e), "cm^2") *
-              1.e18,
+          xsecNp1, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_N_p1, e), "cm^2") *
+                       1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecNp2,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Np2, e), "cm^2") *
-              1.e18,
+          xsecNp2, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_N_p2, e), "cm^2") *
+                       1.e18,
           tolerance);
 
       assert_values_equal_rel(
           xsecO, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                     cross_sections.get_cross_section(ELEMENT_O, e), "cm^2") *
+                     cross_sections.get_cross_section(ION_O_n, e), "cm^2") *
                      1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecOp1,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Op1, e), "cm^2") *
-              1.e18,
+          xsecOp1, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_O_p1, e), "cm^2") *
+                       1.e18,
           tolerance);
 
       assert_values_equal_rel(
           xsecNe, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-                      cross_sections.get_cross_section(ELEMENT_Ne, e), "cm^2") *
+                      cross_sections.get_cross_section(ION_Ne_n, e), "cm^2") *
                       1.e18,
           tolerance);
       assert_values_equal_rel(
           xsecNep1,
           UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Nep1, e), "cm^2") *
+              cross_sections.get_cross_section(ION_Ne_p1, e), "cm^2") *
               1.e18,
           tolerance);
 
       assert_values_equal_rel(
-          xsecSp1,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Sp1, e), "cm^2") *
-              1.e18,
+          xsecSp1, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_S_p1, e), "cm^2") *
+                       1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecSp2,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Sp2, e), "cm^2") *
-              1.e18,
+          xsecSp2, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_S_p2, e), "cm^2") *
+                       1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecSp3,
-          UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
-              cross_sections.get_cross_section(ELEMENT_Sp3, e), "cm^2") *
-              1.e18,
+          xsecSp3, UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(
+                       cross_sections.get_cross_section(ION_S_p3, e), "cm^2") *
+                       1.e18,
           tolerance);
     }
   }

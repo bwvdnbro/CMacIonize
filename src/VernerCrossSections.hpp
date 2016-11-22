@@ -54,7 +54,7 @@ public:
   double get_cross_section_verner(unsigned char nz, unsigned char ne,
                                   unsigned char is, double e);
 
-  virtual double get_cross_section(ElementName element, double energy);
+  virtual double get_cross_section(IonName ion, double energy);
 };
 
 #endif // CROSSSECTIONS_HPP

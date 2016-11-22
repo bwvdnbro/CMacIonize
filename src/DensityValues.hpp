@@ -38,9 +38,9 @@ private:
 
   /*! @brief Ionic fractions. For hydrogen and helium, these are the neutral
    *  fractions. For other elements, they are the fraction of the end product
-   *  of ionization (e.g. _ionic_fraction[ELEMENT_Cp1] is the fraction of C that
+   *  of ionization (e.g. _ionic_fraction[ION_C_p1] is the fraction of C that
    *  is in the form of C++). */
-  double _ionic_fraction[NUMBER_OF_ELEMENTS];
+  double _ionic_fraction[NUMBER_OF_IONNAMES];
 
   /*! @brief Temperature (in K). */
   double _temperature;
@@ -58,7 +58,7 @@ private:
 
   /*! @brief Mean intensity integrals of ionizing radiation without
    *  normalization factor (in m^3). */
-  double _mean_intensity[NUMBER_OF_ELEMENTS];
+  double _mean_intensity[NUMBER_OF_IONNAMES];
 
   /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
    *  sub-step (in m^3s^-1). */
@@ -83,7 +83,7 @@ public:
       : _total_density(0.), _temperature(0.), _helium_abundance(0.), _pHion(0.),
         _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
         _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.) {
-    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fraction[i] = 0.;
       _mean_intensity[i] = 0.;
     }
@@ -99,13 +99,13 @@ public:
   }
 
   /**
-   * @brief Set the ionic fraction of the given element.
+   * @brief Set the ionic fraction of the given ion.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @param ionic_fraction New value for the ionic fraction.
    */
-  inline void set_ionic_fraction(ElementName element, double ionic_fraction) {
-    _ionic_fraction[element] = ionic_fraction;
+  inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
+    _ionic_fraction[ion] = ionic_fraction;
   }
 
   /**
@@ -159,14 +159,13 @@ public:
 
   /**
    * @brief Increase the value for the mean intensity integral of the given
-   * element by the given amount.
+   * ion by the given amount.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @param dmean_intensity Increment (in m^3).
    */
-  inline void increase_mean_intensity(ElementName element,
-                                      double dmean_intensity) {
-    _mean_intensity[element] += dmean_intensity;
+  inline void increase_mean_intensity(IonName ion, double dmean_intensity) {
+    _mean_intensity[ion] += dmean_intensity;
   }
 
   /**
@@ -191,7 +190,7 @@ public:
    * @brief Reset the values of the mean intensities to zero.
    */
   inline void reset_mean_intensities() {
-    for (int i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _mean_intensity[i] = 0.;
     }
     _mean_intensity_H_old = 0.;
@@ -207,14 +206,12 @@ public:
   inline double get_total_density() { return _total_density; }
 
   /**
-   * @brief Get the ionic fraction of the given element.
+   * @brief Get the ionic fraction of the given ion.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @return Ionic fraction.
    */
-  inline double get_ionic_fraction(ElementName element) {
-    return _ionic_fraction[element];
-  }
+  inline double get_ionic_fraction(IonName ion) { return _ionic_fraction[ion]; }
 
   /**
    * @brief Get the temperature.
@@ -250,15 +247,13 @@ public:
   inline double get_mean_intensity_H_old() { return _mean_intensity_H_old; }
 
   /**
-   * @brief Get the mean intensity integral for the given element.
+   * @brief Get the mean intensity integral for the given ion.
    *
-   * @param element ElementName of a valid element.
+   * @param ion IonName of a valid ion.
    * @return Mean intensity of ionizing radiation without normalization factor
    * (in m^3).
    */
-  inline double get_mean_intensity(ElementName element) {
-    return _mean_intensity[element];
-  }
+  inline double get_mean_intensity(IonName ion) { return _mean_intensity[ion]; }
 
   /**
    * @brief Get the hydrogen neutral fraction during the previous iteration.
