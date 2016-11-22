@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
       Sp2 = cell.get_ionic_fraction(ELEMENT_Sp2);
       Sp3 = cell.get_ionic_fraction(ELEMENT_Sp3);
 
-      // we need a tolerance of 10%, since a small deviation in the neutral
-      // fractions of h0 and he0 propagates into the other variables
-      // for some reason, Kenny's gain and loss values are multiplied with 1.e20
+      // Kenny's gain and loss values are multiplied with 1.e20 to fit in single
+      // precision. We always use double precision and prefer to stick to SI
+      // units where possible.
       double tolerance = 1.e-9;
       assert_values_equal_rel(gain, gainf * 1.e-20, tolerance);
       assert_values_equal_rel(loss, lossf * 1.e-20, tolerance);
@@ -234,52 +234,31 @@ int main(int argc, char **argv) {
 
       Tnew = cell.get_temperature();
 
-      status("h0: %g %g", h0, h0f);
-
-      status("he0: %g %g", he0, he0f);
-
-      status("cp1: %g %g", cp1, cp1f);
-      status("cp2: %g %g", cp2, cp2f);
-
-      status("n: %g %g", n, nf);
-      status("np1: %g %g", np1, np1f);
-      status("np2: %g %g", np2, np2f);
-
-      status("o: %g %g", o, of);
-      status("op1: %g %g", op1, op1f);
-
-      status("ne: %g %g", ne, nef);
-      status("nep1: %g %g", nep1, nep1f);
-
-      status("sp1: %g %g", sp1, sp1f);
-      status("sp2: %g %g", sp2, sp2f);
-      status("sp3: %g %g", sp3, sp3f);
-
-      status("Tnew: %g %g", Tnew, Tnewf);
-
       // check that the values match the expected values
-      assert_values_equal_rel(h0, h0f, 0.1);
+      double tolerance = 1.e-9;
 
-      assert_values_equal_rel(he0, he0f, 0.1);
+      assert_values_equal_rel(h0, h0f, tolerance);
 
-      assert_values_equal_rel(cp1, cp1f, 0.1);
-      assert_values_equal_rel(cp2, cp2f, 0.1);
+      assert_values_equal_rel(he0, he0f, tolerance);
 
-      assert_values_equal_rel(n, nf, 0.1);
-      assert_values_equal_rel(np1, np1f, 0.1);
-      assert_values_equal_rel(np2, np2f, 0.1);
+      assert_values_equal_rel(cp1, cp1f, tolerance);
+      assert_values_equal_rel(cp2, cp2f, tolerance);
 
-      assert_values_equal_rel(o, of, 0.1);
-      assert_values_equal_rel(op1, op1f, 0.1);
+      assert_values_equal_rel(n, nf, tolerance);
+      assert_values_equal_rel(np1, np1f, tolerance);
+      assert_values_equal_rel(np2, np2f, tolerance);
 
-      assert_values_equal_rel(ne, nef, 0.1);
-      assert_values_equal_rel(nep1, nep1f, 0.1);
+      assert_values_equal_rel(o, of, tolerance);
+      assert_values_equal_rel(op1, op1f, tolerance);
 
-      assert_values_equal_rel(sp1, sp1f, 0.1);
-      assert_values_equal_rel(sp2, sp2f, 0.1);
-      assert_values_equal_rel(sp3, sp3f, 0.1);
+      assert_values_equal_rel(ne, nef, tolerance);
+      assert_values_equal_rel(nep1, nep1f, tolerance);
 
-      assert_values_equal_rel(Tnew, Tnewf, 0.1);
+      assert_values_equal_rel(sp1, sp1f, tolerance);
+      assert_values_equal_rel(sp2, sp2f, tolerance);
+      assert_values_equal_rel(sp3, sp3f, tolerance);
+
+      assert_values_equal_rel(Tnew, Tnewf, tolerance);
     }
   }
 

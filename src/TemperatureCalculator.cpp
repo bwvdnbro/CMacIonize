@@ -281,7 +281,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
   double AS = 9.e-6;
   double ANe = 50.e-6;
   // this should be a parameter
-  double pahfac = 0.;
+  double pahfac = 1.;
 
   if ((cell.get_heating_H() == 0. &&
        cell.get_mean_intensity(ELEMENT_He) == 0.) ||
@@ -345,10 +345,10 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
            hfac, pahfac, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
-    double expgain = std::log(gain1 / gain2) / std::log(T1 / T2);
-    double exploss = std::log(loss1 / loss2) / std::log(T1 / T2);
-    double Tnew = T0 * std::pow(loss0 / gain0, 1. / (expgain - exploss));
-    T0 = Tnew;
+    double logtt = std::log(T1 / T2);
+    double expgain = std::log(gain1 / gain2) / logtt;
+    double exploss = std::log(loss1 / loss2) / logtt;
+    T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
     if (T0 < 4000.) {
       T0 = 500.;
       h0 = 1.;
