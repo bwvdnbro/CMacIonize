@@ -15,8 +15,8 @@ densityfunction:
 
 densitygrid:
   type: Cartesian
-  box_anchor: [-5. pc, -5. pc, -5. pc]
-  box_sides: [10. pc, 10. pc, 10. pc]
+  box_anchor: [-3. pc, -3. pc, -3. pc]
+  box_sides: [6. pc, 6. pc, 6. pc]
   ncell: [64, 64, 64]
   periodicity: [false, false, false]
   initial_temperature: 8000. K

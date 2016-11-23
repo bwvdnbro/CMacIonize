@@ -26,7 +26,7 @@
 # as a function of radius. The 6 panel plots are identical to those in Figure 1
 # of Wood, Mathis & Ercolano (2004).
 #
-# We bin the results in 64 radial bins and plot the average with an error bar
+# We bin the results in 100 radial bins and plot the average with an error bar
 # showing the standard deviation within each bin. The limits of the axes are
 # set to the same limits as in the paper.
 #
@@ -58,13 +58,13 @@ def get_averages(values, ibins, size):
   sbins = np.zeros(size)
 
   for i in range(len(values)):
-    bins[ibins[i]] += values[i]
-    nbins[ibins[i]] += 1
+    bins[ibins[i]-1] += values[i]
+    nbins[ibins[i]-1] += 1
   bins /= nbins
 
   for i in range(len(values)):
-    dv = values[i] - bins[ibins[i]]
-    sbins[ibins[i]] += dv**2
+    dv = values[i] - bins[ibins[i]-1]
+    sbins[ibins[i]-1] += dv**2
   sbins /= nbins
   sbins = np.sqrt(sbins)
 
@@ -75,6 +75,9 @@ pc = 3.086e16 # in m
 
 # set the radial limits for the x axis
 xlims = [1., 5.5]
+
+# set the number of radial bins
+numbin = 100
 
 # loop over all snapshots in the folder
 for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
@@ -109,7 +112,9 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
   radius /= pc
 
   # set up the radial bins...
-  rbin = np.linspace(0., np.ceil(np.max(radius)), 65)
+  rbin = np.linspace(xlims[0], xlims[1], numbin+1)
+  rbin = np.concatenate(([0.], rbin))
+  rbin = np.concatenate((rbin, [np.max(radius)*1.1]))
   # ...and the centres of the bins
   rmid = 0.5*(rbin[:-1] + rbin[1:])
 
@@ -117,18 +122,18 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
   ibins = np.digitize(radius, rbin, right = False)
 
   # get the binned values and standard deviations
-  nfracHb, nfracHs = get_averages(nfracH, ibins, 64)
-  nfracHeb, nfracHes = get_averages(nfracHe, ibins, 64)
-  ifracOp1b, ifracOp1s = get_averages(ifracOp1, ibins, 64)
-  ifracOp2b, ifracOp2s = get_averages(ifracOp2, ibins, 64)
-  ifracCp2b, ifracCp2s = get_averages(ifracCp2, ibins, 64)
-  ifracCp3b, ifracCp3s = get_averages(ifracCp3, ibins, 64)
-  ifracNp1b, ifracNp1s = get_averages(ifracNp1, ibins, 64)
-  ifracNp2b, ifracNp2s = get_averages(ifracNp2, ibins, 64)
-  ifracNp3b, ifracNp3s = get_averages(ifracNp3, ibins, 64)
-  ifracNep1b, ifracNep1s = get_averages(ifracNep1, ibins, 64)
-  ifracNep2b, ifracNep2s = get_averages(ifracNep2, ibins, 64)
-  tempb, temps = get_averages(temp, ibins, 64)
+  nfracHb, nfracHs = get_averages(nfracH, ibins, numbin+2)
+  nfracHeb, nfracHes = get_averages(nfracHe, ibins, numbin+2)
+  ifracOp1b, ifracOp1s = get_averages(ifracOp1, ibins, numbin+2)
+  ifracOp2b, ifracOp2s = get_averages(ifracOp2, ibins, numbin+2)
+  ifracCp2b, ifracCp2s = get_averages(ifracCp2, ibins, numbin+2)
+  ifracCp3b, ifracCp3s = get_averages(ifracCp3, ibins, numbin+2)
+  ifracNp1b, ifracNp1s = get_averages(ifracNp1, ibins, numbin+2)
+  ifracNp2b, ifracNp2s = get_averages(ifracNp2, ibins, numbin+2)
+  ifracNp3b, ifracNp3s = get_averages(ifracNp3, ibins, numbin+2)
+  ifracNep1b, ifracNep1s = get_averages(ifracNep1, ibins, numbin+2)
+  ifracNep2b, ifracNep2s = get_averages(ifracNep2, ibins, numbin+2)
+  tempb, temps = get_averages(temp, ibins, numbin+2)
 
   # create the figure
   fig, ax = pl.subplots(2, 3, figsize = (16, 12))
@@ -138,7 +143,7 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
   ax[0][0].errorbar(rmid, nfracHeb, yerr = nfracHes, fmt = "o",
                     label = "He0/He")
   ax[0][0].set_xlim(xlims[0], xlims[1])
-  ax[0][0].set_ylim(1.e-5, 2.)
+  ax[0][0].set_ylim(1.e-4, 2.)
   ax[0][0].set_xlabel("$r$ (pc)")
   ax[0][0].set_ylabel("Neutral fraction")
   ax[0][0].legend(loc = "best")
