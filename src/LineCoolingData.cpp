@@ -315,8 +315,6 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
       lev[mm] = 0.;
     }
     lev[0] = 1.;
-    // for the attentive reader: this effectively overwrites the values assigned
-    // above. No idea what we're doing...
     for (unsigned int mm = 0; mm < 10; ++mm) {
       Om[j][mm] = _cs[j][mm] * std::pow(T4, _cse[j][mm]);
     }
@@ -407,4 +405,224 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   cooling = UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(cooling, "erg s^-1");
 
   return cooling;
+}
+
+/**
+ * @brief Calculate the strength of a number of emission lines for the given
+ * temperature, electron density and ion abundances.
+ *
+ * @param temperature Temperature (in K).
+ * @param electron_density Electron density (in m^-3).
+ * @param abundances Ion abundances.
+ * @param c6300 Variable to store the oxygen 6300 angstrom emission line
+ * strength in.
+ * @param c9405 Variable to store the sulfur 9405 angstrom emission line
+ * strength in.
+ * @param c6312 Variable to store the sulfur 6312 angstrom emission line
+ * strength in.
+ * @param c33mu Variable that is not used in the output.
+ * @param c19mu Variable to store the sulfur 18.7 micrometre emission line
+ * strength in.
+ * @param c3729 Variable to store the oxygen 3729 angstrom emission line
+ * strength in.
+ * @param c3727 Variable to store the oxygen 3727 angstrom emission line
+ * strength in.
+ * @param c7330 Variable to store the oxygen 7330 angstrom emission line
+ * strength in.
+ * @param c4363 Variable to store the oxygen 4363 angstrom emission line
+ * strength in.
+ * @param c5007 Variable to store the oxygen 5007 angstrom emission line
+ * strength in.
+ * @param c52mu Variable to store the oxygen 52 micrometre emission line
+ * strength in.
+ * @param c88mu Variable to store the oxygen 88 micrometre emission line
+ * strength in.
+ * @param c5755 Variable to store the nitrogen 5755 angstrom emission line
+ * strength in.
+ * @param c6584 Variable to store the nitrogen 6584 angstrom emission line
+ * strength in.
+ * @param c4072 Variable to store the sulfur 4072 angstrom emission line
+ * strength in.
+ * @param c6717 Variable to store the sulfur 6717 angstrom emission line
+ * strength in.
+ * @param c6725 Variable to store the sulfur 6725 angstrom emission line
+ * strength in.
+ * @param c3869 Variable to store the neon 3869 angstrom emission line strength
+ * in.
+ * @param cniii57 Variable to store the nitrogen 57.3 micrometre emission line
+ * strength in.
+ * @param cneii12 Variable to store the neon 12.8 micrometre emission line
+ * strength in.
+ * @param cneiii15 Variable to store the neon 15.5 micrometre emission line
+ * strength in.
+ * @param cnii122 Variable to store the nitrogen 122 micrometre emission line
+ * strength in.
+ * @param cii2325 Variable to store the carbon 2325 angstrom emission line
+ * strength in.
+ * @param ciii1908 Variable to store the carbon 1907 + 1909 angstrom emission
+ * line strength in.
+ * @param coii7325 Variable to store the oxygen 7320 + 7330 angstrom emission
+ * line strength in.
+ * @param csiv10 Variable to store the sulfur 10 micrometre (?) emission line
+ * strength in.
+ */
+void LineCoolingData::linestr(double temperature, double electron_density,
+                              double *abundances, double c6300, double c9405,
+                              double c6312, double c33mu, double c19mu,
+                              double c3729, double c3727, double c7330,
+                              double c4363, double c5007, double c52mu,
+                              double c88mu, double c5755, double c6584,
+                              double c4072, double c6717, double c6725,
+                              double c3869, double cniii57, double cneii12,
+                              double cneiii15, double cnii122, double cii2325,
+                              double ciii1908, double coii7325, double csiv10) {
+  double EnNIII = 251.;
+  double EaNIII = 4.77e-5;
+  double OmNIII = 0.701;
+  double EnNeII = 1125.;
+  double EaNeII = 8.55e-3;
+  double OmNeII = 0.368;
+  double kb = 1.38e-16;
+
+  electron_density = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(
+      electron_density, "cm^-3");
+
+  double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
+  double T4 = temperature * 1.e-4;
+
+  double Om[10][10];
+
+  double alev[5][5], lev[5];
+  for (unsigned int j = 0; j < 10; ++j) {
+    for (unsigned int mm = 0; mm < 5; ++mm) {
+      alev[0][mm] = 1.;
+      lev[mm] = 0.;
+    }
+    lev[0] = 1.;
+    for (unsigned int mm = 0; mm < 10; ++mm) {
+      Om[j][mm] = _cs[j][mm] * std::pow(T4, _cse[j][mm]);
+    }
+
+    alev[1][0] =
+        cfac * Om[j][0] / (_sw[j][0] * std::exp(_en[j][0] / temperature));
+    alev[1][1] =
+        -(_ea[j][0] +
+          (cfac / _sw[j][1]) *
+              (Om[j][0] + Om[j][4] * std::exp(-_en[j][4] / temperature) +
+               Om[j][5] * std::exp(-_en[j][5] / temperature) +
+               Om[j][6] * std::exp(-_en[j][6] / temperature)));
+    alev[1][2] = _ea[j][4] + (cfac / _sw[j][2]) * Om[j][4];
+    alev[1][3] = _ea[j][5] + (cfac / _sw[j][3]) * Om[j][5];
+    alev[1][4] = _ea[j][6] + (cfac / _sw[j][4]) * Om[j][6];
+
+    alev[2][0] =
+        cfac * Om[j][1] * std::exp(-_en[j][1] / temperature) / _sw[j][0];
+    alev[2][1] =
+        cfac * Om[j][4] * std::exp(-_en[j][4] / temperature) / _sw[j][1];
+    alev[2][2] =
+        -(_ea[j][1] + _ea[j][4] +
+          (cfac / _sw[j][2]) * (Om[j][1] + Om[j][4] +
+                                Om[j][7] * std::exp(-_en[j][7] / temperature) +
+                                Om[j][8] * std::exp(-_en[j][8] / temperature)));
+    alev[2][3] = _ea[j][7] + cfac * Om[j][7] / _sw[j][3];
+    alev[2][4] = _ea[j][8] + cfac * Om[j][8] / _sw[j][4];
+
+    alev[3][0] =
+        cfac * Om[j][2] * std::exp(-_en[j][2] / temperature) / _sw[j][0];
+    alev[3][1] =
+        cfac * Om[j][5] * std::exp(-_en[j][5] / temperature) / _sw[j][1];
+    alev[3][2] =
+        cfac * Om[j][7] * std::exp(-_en[j][7] / temperature) / _sw[j][2];
+    alev[3][3] =
+        -(_ea[j][2] + _ea[j][5] + _ea[j][7] +
+          (cfac / _sw[j][3]) * (Om[j][2] + Om[j][5] + Om[j][7] +
+                                Om[j][9] * std::exp(-_en[j][9] / temperature)));
+    alev[3][4] = _ea[j][9] + cfac * Om[j][9] / _sw[j][4];
+
+    alev[4][0] =
+        cfac * Om[j][3] * std::exp(-_en[j][3] / temperature) / _sw[j][0];
+    alev[4][1] =
+        cfac * Om[j][6] * std::exp(-_en[j][6] / temperature) / _sw[j][1];
+    alev[4][2] =
+        cfac * Om[j][8] * std::exp(-_en[j][8] / temperature) / _sw[j][2];
+    alev[4][3] =
+        cfac * Om[j][9] * std::exp(-_en[j][9] / temperature) / _sw[j][3];
+    alev[4][4] =
+        -(_ea[j][3] + _ea[j][6] + _ea[j][8] + _ea[j][9] +
+          (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
+
+    // find level populations
+    simq(alev, lev);
+
+    double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
+    double cl3 = abundances[j] * kb * lev[2] *
+                 (_ea[j][1] * _en[j][1] + _ea[j][4] * _en[j][4]);
+    double cl4 =
+        abundances[j] * kb * lev[3] *
+        (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5] + _ea[j][7] * _en[j][7]);
+    double cl5 = abundances[j] * kb * lev[4] *
+                 (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
+                  _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
+
+    if (j == 2) {
+      c6300 = abundances[j] * kb *
+              (lev[3] * _ea[j][2] * _en[j][2] + lev[3] * _ea[j][5] * _en[j][5]);
+    }
+    if (j == 7) {
+      c9405 = abundances[j] * kb * lev[3] *
+              (_ea[j][5] * _en[j][5] + _ea[j][7] * _en[j][7]);
+      c6312 = abundances[j] * kb * lev[4] * _ea[j][9] * _en[j][9];
+      c33mu = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
+      c19mu = abundances[j] * kb * lev[2] * _ea[j][4] * _en[j][4];
+    }
+    if (j == 3) {
+      c3729 = cl2;
+      c3727 = cl2 + cl3;
+      coii7325 = abundances[j] * kb *
+                 (lev[4] * (_ea[j][6] * _en[j][6] + _ea[j][8] * _en[j][8]) +
+                  lev[3] * (_ea[j][5] * _en[j][5] + _ea[j][7] * _en[j][7]));
+    }
+    if (j == 4) {
+      c4363 = abundances[j] * kb * lev[4] * _ea[j][9] * _en[j][9];
+      c5007 = abundances[j] * kb * lev[3] * _ea[j][7] * _en[j][7];
+      c52mu = abundances[j] * kb * lev[2] * _ea[j][4] * _en[j][4];
+      c88mu = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
+    }
+    if (j == 1) {
+      c5755 = abundances[j] * kb * lev[4] * _ea[j][9] * _en[j][9];
+      c6584 = abundances[j] * kb * lev[3] * _ea[j][7] * _en[j][7];
+      cnii122 = abundances[j] * kb * lev[2] * _ea[j][4] * _en[j][4];
+    }
+    if (j == 6) {
+      c4072 = abundances[j] * kb *
+              (lev[3] * _ea[j][2] * _en[j][2] + lev[4] * _ea[j][3] * _en[j][3]);
+      c6717 = cl3;
+      c6725 = cl2 + cl3;
+    }
+    if (j == 5) {
+      c3869 = abundances[j] * kb * lev[3] * _ea[j][2] * _en[j][2];
+      cneiii15 = cl2;
+    }
+    if (j == 8) {
+      cii2325 = cl3 + cl4 + cl5;
+    }
+    if (j == 9) {
+      ciii1908 = cl2 + cl3 + cl4;
+    }
+  }
+
+  // 2 level atoms
+  double sw1 = 2.;
+  double sw2 = 4.;
+  double T1 = std::exp(-EnNIII / temperature);
+  cniii57 =
+      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) * T1 *
+      EaNIII /
+      (sw1 *
+       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 / sw1)));
+  sw1 = 4.;
+  sw2 = 2.;
+  T1 = std::exp(-EnNeII / temperature);
+  cneii12 = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
+            (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
 }
