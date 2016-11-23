@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 
   // PlanckPhotonSourceSpectrum
   {
-    PlanckPhotonSourceSpectrum spectrum(random_generator);
+    PlanckPhotonSourceSpectrum spectrum(random_generator, 40000);
 
     unsigned int counts[100];
     for (unsigned int i = 0; i < 100; ++i) {

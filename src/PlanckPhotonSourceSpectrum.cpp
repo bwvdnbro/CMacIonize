@@ -31,6 +31,8 @@
  */
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "Error.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <cmath>
@@ -41,17 +43,17 @@
  * Sets up the internal arrays used for random sampling.
  *
  * @param random_generator RandomGenerator used to generate random numbers.
+ * @param temperature Temperature of the black body (in K).
+ * @param log Log to write logging info to.
  */
 PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator)
+    RandomGenerator &random_generator, double temperature, Log *log)
     : _random_generator(random_generator) {
   // some constants
   double max_frequency = 4.;
   double min_frequency = 3.289e15;
   double planck_constant = 6.626e-27;
   double boltzmann_constant = 1.38e-16;
-  // not a constant! Should be replaced by a parameter!
-  double temperature_star = 40000.;
   // set up the frequency bins and calculate the Planck luminosities
   for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequency[i] =
@@ -59,7 +61,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
         i * (max_frequency - 1.) / (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
     _luminosity[i] = _frequency[i] * _frequency[i] * _frequency[i] /
                      (exp(planck_constant * _frequency[i] * min_frequency /
-                          (boltzmann_constant * temperature_star)) -
+                          (boltzmann_constant * temperature)) -
                       1.);
   }
 
@@ -83,6 +85,20 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     _log_frequency[i] = log10(_frequency[i]);
   }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param random_generator RandomGenerator.
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
+    RandomGenerator &random_generator, ParameterFile &params, Log *log)
+    : PlanckPhotonSourceSpectrum(
+          random_generator, params.get_physical_value< QUANTITY_TEMPERATURE >(
+                                "photonsourcespectrum.temperature", "40000 K"),
+          log) {}
 
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.

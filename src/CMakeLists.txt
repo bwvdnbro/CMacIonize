@@ -105,6 +105,7 @@ set(CMACIONIZE_SOURCES
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
+    TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
@@ -157,6 +158,7 @@ set(CMACIONIZE_SOURCES
     SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
+    TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp
     VernerCrossSections.hpp

@@ -33,6 +33,11 @@ photonsourcedistribution:
   # ionizing luminosity of the single stellar source
   luminosity: 4.26e49 s^-1
 
+# spectrum of the photon sources
+photonsourcespectrum:
+  # temperature of the black body spectrum
+  temperature: 40000. K
+
 # number of photons to use during the first iteration (number is automatically
 # adapted to the desired tolerance)
 number of photons: 100

@@ -30,6 +30,9 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "RandomGenerator.hpp"
 
+class Log;
+class ParameterFile;
+
 /**
  * @brief Number of frequency bins used in the internal table.
  */
@@ -61,7 +64,11 @@ private:
   RandomGenerator &_random_generator;
 
 public:
-  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator);
+  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
+                             double temperature, Log *log = nullptr);
+
+  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
+                             ParameterFile &params, Log *log = nullptr);
 
   virtual double get_random_frequency();
 };

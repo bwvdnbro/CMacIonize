@@ -43,6 +43,7 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
 #include "VernerCrossSections.hpp"
@@ -135,7 +136,7 @@ int main(int argc, char **argv) {
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
   RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
-  PlanckPhotonSourceSpectrum spectrum(random_generator);
+  PlanckPhotonSourceSpectrum spectrum(random_generator, params);
 
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, random_generator, log);
@@ -163,8 +164,13 @@ int main(int argc, char **argv) {
 
   ChargeTransferRates charge_transfer_rates;
 
+  // used to calculate the ionization state at fixed temperature
   IonizationStateCalculator ionization_state_calculator(
       Q, abundances, recombination_rates, charge_transfer_rates);
+  // used to calculate both the ionization state and the temperature
+  TemperatureCalculator temperature_calculator(
+      Q, abundances, params.get_value< double >("pahfac", 1.),
+      line_cooling_data, recombination_rates, charge_transfer_rates);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -243,7 +249,11 @@ int main(int argc, char **argv) {
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
-    ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
+    if (loop < 4) {
+      ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
+    } else {
+      temperature_calculator.calculate_temperature(lnumphoton, *grid);
+    }
     log->write_status("Done calculating ionization state.");
 
     // write snapshot
