@@ -11,7 +11,7 @@ continuousphotonsource:
 
 densityfunction:
   type: BlockSyntax
-  filename: lexingtonHII40.yml
+  filename: lexingtonHII20.yml
 
 densitygrid:
   type: Cartesian
@@ -24,7 +24,7 @@ densitygrid:
 densitygridwriter:
   type: Gadget
   folder: .
-  prefix: lexingtonHII40_
+  prefix: lexingtonHII20_
   padding: 3
   
 iterationconvergencechecker:
@@ -42,9 +42,9 @@ photonnumberconvergencechecker:
 photonsourcedistribution:
   type: SingleStar
   position: [0. pc, 0. pc, 0. pc]
-  luminosity: 4.26e49 s^-1
+  luminosity: 1.e49 s^-1
 
 photonsourcespectrum:
-  temperature: 40000. K
+  temperature: 20000. K
 
 random_seed: 42

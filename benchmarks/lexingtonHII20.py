@@ -19,11 +19,11 @@
 ################################################################################
 
 ##
-# @file lexingtonHII40.py
+# @file lexingtonHII20.py
 #
 # @brief This script reads in the snapshots from the Lexington HII 40
 # benchmark run and plots the neutral fractions, ionic fractions and temperature
-# as a function of radius. The 6 panel plots are identical to those in Figure 1
+# as a function of radius. The 6 panel plots are identical to those in Figure 2
 # of Wood, Mathis & Ercolano (2004).
 #
 # We bin the results in 64 radial bins and plot the average with an error bar
@@ -74,10 +74,10 @@ def get_averages(values, ibins, size):
 pc = 3.086e16 # in m
 
 # set the radial limits for the x axis
-xlims = [1., 5.5]
+xlims = [1., 3.5]
 
 # loop over all snapshots in the folder
-for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
+for f in sorted(glob.glob("lexingtonHII20_*.hdf5")):
   # tell the user what we are doing
   print "processing", f, "..."
 
@@ -138,7 +138,7 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
   ax[0][0].errorbar(rmid, nfracHeb, yerr = nfracHes, fmt = "o",
                     label = "He0/He")
   ax[0][0].set_xlim(xlims[0], xlims[1])
-  ax[0][0].set_ylim(1.e-5, 2.)
+  ax[0][0].set_ylim(1.e-4, 2.)
   ax[0][0].set_xlabel("$r$ (pc)")
   ax[0][0].set_ylabel("Neutral fraction")
   ax[0][0].legend(loc = "best")
@@ -191,7 +191,7 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
 
   ax[1][2].errorbar(rmid, tempb, yerr = temps, fmt = "o")
   ax[1][2].set_xlim(xlims[0], xlims[1])
-  ax[1][2].set_ylim(6000., 11000.)
+  ax[1][2].set_ylim(5000., 9500.)
   ax[1][2].set_xlabel("$r$ (pc)")
   ax[1][2].set_ylabel("Temperature (K)")
 

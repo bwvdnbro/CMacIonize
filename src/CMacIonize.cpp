@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
   RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
-  PlanckPhotonSourceSpectrum spectrum(random_generator, params);
+  PlanckPhotonSourceSpectrum spectrum(random_generator, params, log);
 
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, random_generator, log);

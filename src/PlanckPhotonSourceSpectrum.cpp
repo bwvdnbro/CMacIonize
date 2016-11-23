@@ -84,6 +84,11 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     _log_cumulative_distribution[i] = log10(_cumulative_distribution[i]);
     _log_frequency[i] = log10(_frequency[i]);
   }
+
+  if (log) {
+    log->write_status("Set up a Planck black body spectrum with temperature ",
+                      temperature, " K.");
+  }
 }
 
 /**
