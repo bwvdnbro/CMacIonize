@@ -36,6 +36,14 @@
  * Initializes hydrogen and helium continuous emission coefficient tables.
  */
 EmissivityCalculator::EmissivityCalculator() {
+  // these values come from Brown & Mathew, 1970, ApJ, 160, 939
+  // the hmit and heplt tables correspond to wavelength 3646 in table 1 and
+  // wavelength 3680 in table 5 respectively
+  // the hplt and hemit tables correspond to the values you get when you
+  // linearly interpolate in table 1 to wavelength 3681 and in table 5 to
+  // wavelength 3646 respectively
+  // all values are in 1.e-40 erg cm^3s^-1Hz^-1 (except for the ttab values,
+  // which are in K).
   double ttab[8] = {4.e3, 6.e3, 8.e3, 1.e4, 1.2e4, 1.4e4, 1.6e4, 1.8e4};
   double hplt[8] = {0.162, 0.584, 1.046, 1.437, 1.742, 1.977, 2.159, 2.297};
   double hmit[8] = {92.6, 50.9, 33.8, 24.8, 19.53, 16.09, 13.7, 11.96};
@@ -56,10 +64,10 @@ EmissivityCalculator::EmissivityCalculator() {
  * the given temperature.
  *
  * @param T Temperature (in K).
- * @param emhpl Hydrogen coefficient 1.
- * @param emhmi Hydrogen coefficient 2.
- * @param emhepl Helium coefficient 1.
- * @param emhemi Helium coefficient 2.
+ * @param emhpl Hydrogen coefficient 1 (in J m^3s^-1).
+ * @param emhmi Hydrogen coefficient 2 (in J m^3s^-1).
+ * @param emhepl Helium coefficient 1 (in J m^3s^-1).
+ * @param emhemi Helium coefficient 2 (in J m^3s^-1).
  */
 void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
                                  double &emhepl, double &emhemi) {
@@ -87,6 +95,14 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
   emhmi = std::exp(emhmi) * 1.e-32 * 3.e18 / 3643. / 3643.;
   emhepl = std::exp(emhepl) * 1.e-32 * 3.e18 / 3681. / 3681.;
   emhemi = std::exp(emhemi) * 1.e-32 * 3.e18 / 3643. / 3643.;
+//  // these are now in erg cm^3s^-1
+//  // we need them in J m^3s^-1
+//  // multiply with 1.e-6 to get erg m^3s^-1
+//  // multiply with 1.e-7 to get J m^3s^-1
+//  emhpl *= 1.e-13;
+//  emhmi *= 1.e-13;
+//  emhepl *= 1.e-13;
+//  emhemi *= 1.e-13;
 }
 
 /**
