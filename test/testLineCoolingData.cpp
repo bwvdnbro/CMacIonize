@@ -118,25 +118,91 @@ int main(int argc, char **argv) {
     }
   }
 
-  std::ifstream file("linecool_testdata.txt");
-  std::string line;
-  while (getline(file, line)) {
-    std::istringstream lstream(line);
+  // linecool
+  {
+    std::ifstream file("linecool_testdata.txt");
+    std::string line;
+    while (getline(file, line)) {
+      std::istringstream lstream(line);
 
-    double T, ne, abundances[12], coolf, cool;
+      double T, ne, abundances[12], coolf, cool;
 
-    lstream >> T >> ne;
-    for (unsigned int i = 0; i < 12; ++i) {
-      lstream >> abundances[i];
+      lstream >> T >> ne;
+      for (unsigned int i = 0; i < 12; ++i) {
+        lstream >> abundances[i];
+      }
+      lstream >> coolf;
+
+      cool = data.get_cooling(
+          T, UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
+          abundances);
+      assert_values_equal_rel(
+          UnitConverter< QUANTITY_ENERGY_RATE >::to_unit(cool, "erg s^-1"),
+          coolf, 1.e-15);
     }
-    lstream >> coolf;
+  }
 
-    cool = data.get_cooling(
-        T, UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
-        abundances);
-    assert_values_equal_rel(
-        UnitConverter< QUANTITY_ENERGY_RATE >::to_unit(cool, "erg s^-1"), coolf,
-        1.e-15);
+  // linestr
+  {
+    std::ifstream file("linestr_testdata.txt");
+    std::string line;
+    while (getline(file, line)) {
+      std::istringstream lstream(line);
+
+      double T, ne, abundances[12], c6300f, c9405f, c6312f, c33muf, c19muf,
+          c3729f, c3727f, c7330f, c4363f, c5007f, c52muf, c88muf, c5755f,
+          c6584f, c4072f, c6717f, c6725f, c3869f, cniii57f, cneii12f, cneiii15f,
+          cnii122f, cii2325f, ciii1908f, coii7325f, csiv10f,
+          c6300 = 0., c9405 = 0., c6312 = 0., c33mu = 0., c19mu = 0.,
+          c3729 = 0., c3727 = 0., c7330 = 0., c4363 = 0., c5007 = 0.,
+          c52mu = 0., c88mu = 0., c5755 = 0., c6584 = 0., c4072 = 0.,
+          c6717 = 0., c6725 = 0., c3869 = 0., cniii57 = 0., cneii12 = 0.,
+          cneiii15 = 0., cnii122 = 0., cii2325 = 0., ciii1908 = 0.,
+          coii7325 = 0., csiv10 = 0.;
+
+      lstream >> T >> ne;
+      for (unsigned int i = 0; i < 12; ++i) {
+        lstream >> abundances[i];
+      }
+      lstream >> c6300f >> c9405f >> c6312f >> c33muf >> c19muf >> c3729f >>
+          c3727f >> c7330f >> c4363f >> c5007f >> c52muf >> c88muf >> c5755f >>
+          c6584f >> c4072f >> c6717f >> c6725f >> c3869f >> cniii57f >>
+          cneii12f >> cneiii15f >> cnii122f >> cii2325f >> ciii1908f >>
+          coii7325f >> csiv10f;
+
+      data.linestr(T,
+                   UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
+                   abundances, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
+                   c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
+                   c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
+                   cii2325, ciii1908, coii7325, csiv10);
+      assert_values_equal_rel(c6300, c6300f, 1.e-15);
+      assert_values_equal_rel(c9405, c9405f, 1.e-15);
+      assert_values_equal_rel(c6312, c6312f, 1.e-15);
+      assert_values_equal_rel(c33mu, c33muf, 1.e-15);
+      assert_values_equal_rel(c19mu, c19muf, 1.e-15);
+      assert_values_equal_rel(c3729, c3729f, 1.e-15);
+      assert_values_equal_rel(c3727, c3727f, 1.e-15);
+      assert_values_equal_rel(c7330, c7330f, 1.e-15);
+      assert_values_equal_rel(c4363, c4363f, 1.e-15);
+      assert_values_equal_rel(c5007, c5007f, 1.e-15);
+      assert_values_equal_rel(c52mu, c52muf, 1.e-15);
+      assert_values_equal_rel(c88mu, c88muf, 1.e-15);
+      assert_values_equal_rel(c5755, c5755f, 1.e-15);
+      assert_values_equal_rel(c6584, c6584f, 1.e-15);
+      assert_values_equal_rel(c4072, c4072f, 1.e-15);
+      assert_values_equal_rel(c6717, c6717f, 1.e-15);
+      assert_values_equal_rel(c6725, c6725f, 1.e-15);
+      assert_values_equal_rel(c3869, c3869f, 1.e-15);
+      assert_values_equal_rel(cniii57, cniii57f, 1.e-15);
+      assert_values_equal_rel(cneii12, cneii12f, 1.e-15);
+      assert_values_equal_rel(cneiii15, cneiii15f, 1.e-15);
+      assert_values_equal_rel(cnii122, cnii122f, 1.e-15);
+      assert_values_equal_rel(cii2325, cii2325f, 1.e-15);
+      assert_values_equal_rel(ciii1908, ciii1908f, 1.e-15);
+      assert_values_equal_rel(coii7325, coii7325f, 1.e-15);
+      assert_values_equal_rel(csiv10, csiv10f, 1.e-15);
+    }
   }
 
   return 0;

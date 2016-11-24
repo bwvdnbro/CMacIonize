@@ -67,6 +67,9 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
 configure_file(${PROJECT_SOURCE_DIR}/test/linecool_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_testdata.txt
                COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/linestr_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/linestr_testdata.txt
+               COPYONLY)
 
 ## Unit test for CommandLineParser
 set(TESTCOMMANDLINEPARSER_SOURCES
