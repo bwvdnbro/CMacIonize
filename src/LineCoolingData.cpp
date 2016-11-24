@@ -291,12 +291,21 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     double *abundances) {
+  // linecool1.f version
+  //  double EnNIII = 251.;
+  //  double EaNIII = 4.77e-5;
+  //  double OmNIII = 0.701;
+  //  double EnNeII = 1125.;
+  //  double EaNeII = 8.55e-3;
+  //  double OmNeII = 0.368;
+  // lines.f version
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
-  double OmNIII = 0.701;
+  double OmNIII = 1.45;
   double EnNeII = 1125.;
   double EaNeII = 8.55e-3;
-  double OmNeII = 0.368;
+  double OmNeII = 0.303;
+
   double kb = 1.38e-16;
 
   electron_density = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(
@@ -306,6 +315,39 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double T4 = temperature * 1.e-4;
 
   double Om[10][10];
+  double cs[10][10], cse[10][10];
+  for (unsigned int j = 0; j < 10; ++j) {
+    for (unsigned int mm = 0; mm < 10; ++mm) {
+      cs[j][mm] = _cs[j][mm];
+      cse[j][mm] = _cse[j][mm];
+    }
+  }
+  // lines.f addendum
+  double A1 = std::pow(T4, 0.91);
+  double A2 = std::pow(T4, 1.11);
+  double A3 = std::pow(T4, 0.8);
+  cs[0][0] = 0.29 * A1;
+  cs[0][1] = 0.194 * A1;
+  cs[0][2] = 0.113 * A1;
+  cs[0][3] = 0.0567 * A1;
+  cs[0][4] = 0.269 * A2;
+  cs[0][5] = 0.266 * std::pow(T4, 0.715);
+  cs[0][6] = 0.109 * A3;
+  cs[0][7] = 0.147 * A3;
+  cs[0][8] = 0.097 * std::pow(T4, 0.69);
+  cs[0][9] = 0.071 * A2;
+  double T1 = 0.266 * A2;
+  double T2 = 0.0324 * A2;
+  cs[2][0] = 0.0987 * A2;
+  cs[2][1] = 0.0292 * T4;
+  cs[2][2] = 0.55556 * T1;
+  cs[2][3] = 0.55556 * T2;
+  cs[2][4] = 0.0265 * std::pow(T4, 1.24);
+  cs[2][5] = 0.333 * T1;
+  cs[2][6] = 0.333 * T2;
+  cs[2][7] = T1 / 9.;
+  cs[2][8] = T2 / 9.;
+  cs[2][9] = 0.105 * std::pow(T4, 0.52);
 
   double cooling = 0.;
   double alev[5][5], lev[5];
@@ -316,7 +358,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     }
     lev[0] = 1.;
     for (unsigned int mm = 0; mm < 10; ++mm) {
-      Om[j][mm] = _cs[j][mm] * std::pow(T4, _cse[j][mm]);
+      Om[j][mm] = cs[j][mm] * std::pow(T4, cse[j][mm]);
     }
 
     alev[1][0] =
@@ -387,15 +429,26 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   // 2 level atoms
   double sw1 = 2.;
   double sw2 = 4.;
-  double T1 = std::exp(-EnNIII / temperature);
-  double CNIII =
-      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) * T1 *
-      EaNIII /
-      (sw1 *
-       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 / sw1)));
+  T1 = std::exp(-EnNIII / temperature);
+  // linecool1.f version
+  //  double CNIII =
+  //      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) *
+  //      T1 *
+  //      EaNIII /
+  //      (sw1 *
+  //       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 /
+  //       sw1)));
+  // lines.f version
+  double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
+                 (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
   sw1 = 4.;
   sw2 = 2.;
   T1 = std::exp(-EnNeII / temperature);
+  // linecool1.f version
+  //  double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII
+  //  /
+  //                 (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
+  // lines.f version
   double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
                  (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
   cooling += CNIII + CNeII;
@@ -594,8 +647,6 @@ void LineCoolingData::linestr(
                  (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
                   _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
 
-    status("%u: %g %g %g %g %g", j, lev[0], lev[1], lev[2], lev[3], lev[4]);
-
     if (j == 1) {
       c5755 = abundances[j] * kb * lev[4] * _ea[j][9] * _en[j][9];
       c6584 = abundances[j] * kb * lev[3] * _ea[j][7] * _en[j][7];
@@ -604,8 +655,6 @@ void LineCoolingData::linestr(
     if (j == 2) {
       c6300 = abundances[j] * kb * lev[3] *
               (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5]);
-      status("%g %g %g %g %g %g %g %g", abundances[j], kb, lev[3], _ea[j][2],
-             _en[j][2], _ea[j][5], _en[j][5], c6300);
     }
     if (j == 3) {
       c3729 = cl2;

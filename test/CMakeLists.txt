@@ -554,6 +554,12 @@ set(TESTEMISSIVITYCALCULATOR_SOURCES
 )
 add_unit_test(NAME testEmissivityCalculator
               SOURCES ${TESTEMISSIVITYCALCULATOR_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/bjump_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/bjump_testdata.txt
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/hiilines_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/hiilines_testdata.txt
+               COPYONLY)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################

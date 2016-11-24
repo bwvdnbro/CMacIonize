@@ -60,8 +60,8 @@ class EmissivityCalculator {
 public:
   EmissivityCalculator();
 
-  void bjump(double T, double emhpl, double emhmi, double emhepl,
-             double emhemi);
+  void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
+             double &emhemi);
 
   EmissivityValues calculate_emissivities(DensityValues &cell,
                                           Abundances &abundances,
