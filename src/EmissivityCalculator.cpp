@@ -187,6 +187,44 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     double emhepl = 0.;
     double emhemi = 0.;
     bjump(cell.get_temperature(), emhpl, emhmi, emhepl, emhemi);
+    eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_LOW,
+                        ne * (nhp * emhmi + nhep * emhemi));
+    eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,
+                        ne * (nhp * emhpl + nhep * emhepl));
+
+    double ntot = cell.get_total_density();
+    eval.set_emissivity(EMISSIONLINE_OI_6300, ntot * c6300);
+    eval.set_emissivity(EMISSIONLINE_OII_3727, ntot * c3727);
+    eval.set_emissivity(EMISSIONLINE_OIII_5007, ntot * c5007);
+    eval.set_emissivity(EMISSIONLINE_OIII_4363, ntot * c4363);
+    eval.set_emissivity(EMISSIONLINE_OIII_88mu, ntot * c88mu);
+    eval.set_emissivity(EMISSIONLINE_NII_5755, ntot * c5755);
+    eval.set_emissivity(EMISSIONLINE_NII_6584, ntot * c6584);
+    eval.set_emissivity(EMISSIONLINE_NeIII_3869, ntot * c3869);
+    eval.set_emissivity(EMISSIONLINE_SII_6725, ntot * c6725);
+    eval.set_emissivity(EMISSIONLINE_SII_4072, ntot * c4072);
+    eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
+    eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
+    eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
+    eval.set_emissivity(EMISSIONLINE_NEON_FRACTION,
+                        ntot * ne * cell.get_ionic_fraction(ION_Ne_n) *
+                            abundances.get_abundance(ELEMENT_Ne));
+    eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * cneii12);
+    eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * cniii57);
+    eval.set_emissivity(EMISSIONLINE_NeIII_15mu, ntot * cneiii15);
+    eval.set_emissivity(EMISSIONLINE_NII_122mu, ntot * cnii122);
+    eval.set_emissivity(EMISSIONLINE_CII_2325, ntot * cii2325);
+    eval.set_emissivity(EMISSIONLINE_CIII_1908, ntot * ciii1908);
+    eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
+    eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
+    eval.set_emissivity(EMISSIONLINE_HeI_5876,
+                        ne * nhep * 1.69e-5 * std::pow(t4, -1.065));
+    double T = cell.get_temperature();
+    eval.set_emissivity(EMISSIONLINE_Hrec_s,
+                        ne * nhp * 7.982e-11 /
+                            (std::sqrt(T / 3.148) *
+                             std::pow(1. + std::sqrt(T / 3.148), 0.252) *
+                             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
   }
 
   return eval;
