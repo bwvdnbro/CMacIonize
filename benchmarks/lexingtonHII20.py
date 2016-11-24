@@ -94,6 +94,7 @@ for f in sorted(glob.glob("lexingtonHII20_*.hdf5")):
   ifracOp2 = np.array(file["/PartType0/NeutralFractionO+"])
   ifracCp2 = np.array(file["/PartType0/NeutralFractionC+"])
   ifracCp3 = np.array(file["/PartType0/NeutralFractionC++"])
+  ifracCp1 = 1. - ifracCp2 - ifracCp3
   ifracNp1 = np.array(file["/PartType0/NeutralFractionN"])
   ifracNp2 = np.array(file["/PartType0/NeutralFractionN+"])
   ifracNp3 = np.array(file["/PartType0/NeutralFractionN++"])
@@ -126,6 +127,7 @@ for f in sorted(glob.glob("lexingtonHII20_*.hdf5")):
   nfracHeb, nfracHes = get_averages(nfracHe, ibins, numbin+2)
   ifracOp1b, ifracOp1s = get_averages(ifracOp1, ibins, numbin+2)
   ifracOp2b, ifracOp2s = get_averages(ifracOp2, ibins, numbin+2)
+  ifracCp1b, ifracCp1s = get_averages(ifracCp1, ibins, numbin+2)
   ifracCp2b, ifracCp2s = get_averages(ifracCp2, ibins, numbin+2)
   ifracCp3b, ifracCp3s = get_averages(ifracCp3, ibins, numbin+2)
   ifracNp1b, ifracNp1s = get_averages(ifracNp1, ibins, numbin+2)
@@ -160,6 +162,8 @@ for f in sorted(glob.glob("lexingtonHII20_*.hdf5")):
   ax[0][1].legend(loc = "best")
 
   ax[0][2].set_yscale("log", nonposy = "clip")
+  ax[0][2].errorbar(rmid, ifracCp1b, yerr = ifracCp1s, fmt = "o",
+                    label = "C+/C")
   ax[0][2].errorbar(rmid, ifracCp2b, yerr = ifracCp2s, fmt = "o",
                     label = "C++/C")
   ax[0][2].errorbar(rmid, ifracCp3b, yerr = ifracCp3s, fmt = "o",
