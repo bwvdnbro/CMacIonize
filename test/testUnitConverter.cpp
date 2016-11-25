@@ -94,6 +94,12 @@ int main(int argc, char **argv) {
     Unit unit2(1., 1, -1, 3, 1, 0);
     assert_condition(unit == unit2);
   }
+  {
+    assert_values_equal_rel(UnitConverter::convert(1., "eV", "Hz"), 2.417989e14,
+                            1.e-7);
+    assert_values_equal_rel(UnitConverter::convert(1., "Hz", "eV"),
+                            4.135668e-15, 1.e-7);
+  }
 
   /// DENSITY
   {
@@ -106,6 +112,20 @@ int main(int argc, char **argv) {
     unitlogic.push_back(1);
 
     check_quantity< QUANTITY_DENSITY >(unitnames, unitlogic);
+  }
+
+  /// ENERGY
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("J");
+    unitlogic.push_back(0);
+    unitnames.push_back("eV");
+    unitlogic.push_back(-1);
+    unitnames.push_back("erg");
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_ENERGY >(unitnames, unitlogic);
   }
 
   /// ENERGY CHANGE RATE

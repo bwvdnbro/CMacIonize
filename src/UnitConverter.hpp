@@ -31,6 +31,23 @@
 #include "Unit.hpp"
 
 #include <string>
+#include <vector>
+
+/// To add a new unit (such as "cm" or "kK"...):
+///   - add an entry in get_single_unit() below
+/// To add a new quantity (such as QUANTITY_TEMPERATURE_CHANGE...):
+///   - add an entry in the Quantity enum, AND
+///   - add an entry in get_SI_unit() that gives the SI unit of the new quantity
+///     (e.g. K s^-1)
+/// To add a new quantity conversion (such as QUANTITY_LENGTH to
+/// QUANTITY_FREQUENCY for photons):
+///   - add an entry in the designated part of try_conversion()
+///
+/// Also try adding checks to testUnitConverter. Especially when adding new
+/// units or new quantity conversions.
+///
+/// You should not normally change anything else, unless you really know what
+/// you're doing.
 
 /**
  * @brief List of supported quantities.
@@ -42,6 +59,7 @@
  */
 enum Quantity {
   QUANTITY_DENSITY,
+  QUANTITY_ENERGY,
   QUANTITY_ENERGY_CHANGE_RATE,
   QUANTITY_ENERGY_RATE,
   QUANTITY_FLUX,
@@ -97,14 +115,14 @@ private:
       /// frequency units
     } else if (name == "Hz") {
       return Unit(1., 0, -1, 0, 0, 0);
-    } else if (name == "eV") {
-      return Unit(2.417989e14, 0, -1, 0, 0, 0);
       /// multi-quantity units
       /// energy units
     } else if (name == "J") {
       return Unit(1., 2, -2, 1, 0, 0);
     } else if (name == "erg") {
       return Unit(1.e-7, 2, -2, 1, 0, 0);
+    } else if (name == "eV") {
+      return Unit(1.60217662e-19, 2, -2, 1, 0, 0);
     } else {
       /// error handler
       error("Unknown unit: \"%s\"!", name.c_str());
@@ -122,6 +140,8 @@ private:
     switch (quantity) {
     case QUANTITY_DENSITY:
       return get_unit("kg m^-3");
+    case QUANTITY_ENERGY:
+      return get_unit("J");
     case QUANTITY_ENERGY_CHANGE_RATE:
       return get_unit("J m^-3 s^-1");
     case QUANTITY_ENERGY_RATE:
@@ -150,6 +170,54 @@ private:
       error("Unknown quantity: %i!", quantity);
       return Unit(0., 0, 0, 0, 0, 0);
     }
+  }
+
+  /**
+   * @brief Try to convert a value in the given units to other given units,
+   * assuming the basic quantities of both units are not the same.
+   *
+   * This only works for some quantities, such as e.g. energies and frequencies.
+   *
+   * @param value Value.
+   * @param unit_from Unit of the value.
+   * @param unit_to Unit to convert to.
+   * @return Value in the new Unit.
+   */
+  static inline double try_conversion(double value, Unit unit_from,
+                                      Unit unit_to) {
+    std::vector< Quantity > Aunits;
+    std::vector< Quantity > Bunits;
+    std::vector< double > A_in_B;
+
+    /// add new quantity conversions below
+    // energy to frequency conversion for photons
+    Aunits.push_back(QUANTITY_ENERGY);
+    Bunits.push_back(QUANTITY_FREQUENCY);
+    A_in_B.push_back(1.5091902e33);
+
+    /// don't change the part below unless you know what you're doing
+    // just try every unit combination in the lists
+    for (unsigned int i = 0; i < Aunits.size(); ++i) {
+      Unit Aunit = get_SI_unit(Aunits[i]);
+      Unit Bunit = get_SI_unit(Bunits[i]);
+      if (unit_from.is_same_quantity(Aunit) &&
+          unit_to.is_same_quantity(Bunit)) {
+        double fval = 1. * unit_from;
+        double tval = 1. * unit_to;
+        return value * fval * A_in_B[i] / tval;
+      }
+      if (unit_from.is_same_quantity(Bunit) &&
+          unit_to.is_same_quantity(Aunit)) {
+        double fval = 1. * unit_from;
+        double tval = 1. * unit_to;
+        return value * fval / A_in_B[i] / tval;
+      }
+    }
+
+    // if we did not find any matches, we throw an error
+    error("No known conversion from \"%s\" to \"%s\"!",
+          unit_from.to_string().c_str(), unit_to.to_string().c_str());
+    return 0.;
   }
 
 public:
@@ -253,8 +321,7 @@ public:
     Unit SI_unit = get_SI_unit(_quantity_);
     Unit strange_unit = get_unit(unit);
     if (!SI_unit.is_same_quantity(strange_unit)) {
-      error("Units are not compatible: \"%s\" and \"%s\"!",
-            strange_unit.to_string().c_str(), SI_unit.to_string().c_str());
+      return try_conversion(value, strange_unit, SI_unit);
     }
     return strange_unit * value;
   }
@@ -274,8 +341,7 @@ public:
     Unit SI_unit = get_SI_unit(_quantity_);
     Unit strange_unit = get_unit(unit);
     if (!SI_unit.is_same_quantity(strange_unit)) {
-      error("Units are not compatible: \"%s\" and \"%s\"!",
-            strange_unit.to_string().c_str(), SI_unit.to_string().c_str());
+      return try_conversion(value, SI_unit, strange_unit);
     }
     return value / strange_unit;
   }
@@ -293,6 +359,7 @@ public:
     Unit strange_unit_from = get_unit(unit_from);
     Unit strange_unit_to = get_unit(unit_to);
     if (!strange_unit_to.is_same_quantity(strange_unit_from)) {
+      return try_conversion(value, strange_unit_from, strange_unit_to);
       error("Units are not compatible: \"%s\" and \"%s\"!",
             strange_unit_from.to_string().c_str(),
             strange_unit_to.to_string().c_str());
