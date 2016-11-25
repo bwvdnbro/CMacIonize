@@ -133,7 +133,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
                                                      double e) {
-  e = UnitConverter< QUANTITY_FREQUENCY >::to_unit(e, "eV");
+  e = UnitConverter::to_unit< QUANTITY_FREQUENCY >(e, "eV");
 
   double s = 0.;
   if (nz < 1 || nz > 30) {
@@ -192,7 +192,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     double b = 1. + sqrt(z / _PH2[2][nz - 1][ne - 1]);
     s = a * pow(z, q) * pow(b, p1);
   }
-  return UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(1.e-18 * s, "cm^2");
+  return UnitConverter::to_SI< QUANTITY_SURFACE_AREA >(1.e-18 * s, "cm^2");
 }
 
 /**

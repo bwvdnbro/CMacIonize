@@ -138,6 +138,6 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
   double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * _frequency[inu],
+  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * _frequency[inu],
                                                     "eV");
 }

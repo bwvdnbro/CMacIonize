@@ -58,79 +58,79 @@ int main(int argc, char **argv) {
       double tolerance = 1.e-15;
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_H_n, T),
               "cm^3s^-1"),
           alphaH, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_He_n, T),
               "cm^3s^-1"),
           alphaHe, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_C_p1, T),
               "cm^3s^-1"),
           alphaCp1, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_C_p2, T),
               "cm^3s^-1"),
           alphaCp2, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_N_n, T),
               "cm^3s^-1"),
           alphaN, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_N_p1, T),
               "cm^3s^-1"),
           alphaNp1, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_N_p2, T),
               "cm^3s^-1"),
           alphaNp2, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_O_n, T),
               "cm^3s^-1"),
           alphaO, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_O_p1, T),
               "cm^3s^-1"),
           alphaOp1, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_Ne_n, T),
               "cm^3s^-1"),
           alphaNe, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_Ne_p1, T),
               "cm^3s^-1"),
           alphaNep1, tolerance);
 
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_S_p1, T),
               "cm^3s^-1"),
           alphaSp1, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_S_p2, T),
               "cm^3s^-1"),
           alphaSp2, tolerance);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_S_p3, T),
               "cm^3s^-1"),
           alphaSp3, tolerance);

@@ -47,9 +47,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
   // units
-  double unit_length_in_SI = UnitConverter< QUANTITY_LENGTH >::to_SI(1., "cm");
+  double unit_length_in_SI = UnitConverter::to_SI< QUANTITY_LENGTH >(1., "cm");
   double unit_density_in_SI =
-      UnitConverter< QUANTITY_DENSITY >::to_SI(1., "g cm^-3");
+      UnitConverter::to_SI< QUANTITY_DENSITY >(1., "g cm^-3");
 
   // find out the dimensions of the box
   HDF5Tools::HDF5Dictionary< double > real_runtime_pars =

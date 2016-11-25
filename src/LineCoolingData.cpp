@@ -291,24 +291,25 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     double *abundances) {
-  // linecool1.f version
-  //  double EnNIII = 251.;
-  //  double EaNIII = 4.77e-5;
-  //  double OmNIII = 0.701;
-  //  double EnNeII = 1125.;
-  //  double EaNeII = 8.55e-3;
-  //  double OmNeII = 0.368;
-  // lines.f version
+#ifdef LINES_F_COOLING
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;
   double EnNeII = 1125.;
   double EaNeII = 8.55e-3;
   double OmNeII = 0.303;
+#else
+  double EnNIII = 251.;
+  double EaNIII = 4.77e-5;
+  double OmNIII = 0.701;
+  double EnNeII = 1125.;
+  double EaNeII = 8.55e-3;
+  double OmNeII = 0.368;
+#endif
 
   double kb = 1.38e-16;
 
-  electron_density = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(
+  electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
       electron_density, "cm^-3");
 
   double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
@@ -322,7 +323,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
       cse[j][mm] = _cse[j][mm];
     }
   }
-  // lines.f addendum
+  double T1;
+#ifdef LINES_F_COOLING
   double A1 = std::pow(T4, 0.91);
   double A2 = std::pow(T4, 1.11);
   double A3 = std::pow(T4, 0.8);
@@ -336,7 +338,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   cs[0][7] = 0.147 * A3;
   cs[0][8] = 0.097 * std::pow(T4, 0.69);
   cs[0][9] = 0.071 * A2;
-  double T1 = 0.266 * A2;
+  T1 = 0.266 * A2;
   double T2 = 0.0324 * A2;
   cs[2][0] = 0.0987 * A2;
   cs[2][1] = 0.0292 * T4;
@@ -348,6 +350,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   cs[2][7] = T1 / 9.;
   cs[2][8] = T2 / 9.;
   cs[2][9] = 0.105 * std::pow(T4, 0.52);
+#endif
 
   double cooling = 0.;
   double alev[5][5], lev[5];
@@ -430,32 +433,31 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double sw1 = 2.;
   double sw2 = 4.;
   T1 = std::exp(-EnNIII / temperature);
-  // linecool1.f version
-  //  double CNIII =
-  //      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) *
-  //      T1 *
-  //      EaNIII /
-  //      (sw1 *
-  //       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 /
-  //       sw1)));
-  // lines.f version
+#ifdef LINES_F_COOLING
   double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
                  (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
+#else
+  double CNIII =
+      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) * T1 *
+      EaNIII /
+      (sw1 *
+       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 / sw1)));
+#endif
   sw1 = 4.;
   sw2 = 2.;
   T1 = std::exp(-EnNeII / temperature);
-  // linecool1.f version
-  //  double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII
-  //  /
-  //                 (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
-  // lines.f version
+#ifdef LINES_F_COOLING
   double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
                  (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
+#else
+  double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
+                 (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
+#endif
   cooling += CNIII + CNeII;
 
   // cooling now is in erg/s/hydrogen atom
   // convert to J/s (kg m^2s^-3)
-  cooling = UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(cooling, "erg s^-1");
+  cooling = UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cooling, "erg s^-1");
 
   return cooling;
 }
@@ -535,7 +537,7 @@ void LineCoolingData::linestr(
   double OmNeII = 0.303;
   double kb = 1.38e-16;
 
-  electron_density = UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(
+  electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
       electron_density, "cm^-3");
 
   double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);

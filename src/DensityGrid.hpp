@@ -142,9 +142,9 @@ public:
       : _box(box), _periodic(periodic), _log(log) {
 
     _ionization_energy_H =
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6, "eV");
+        UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
     _ionization_energy_He =
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(24.6, "eV");
+        UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
   }
 
   /**

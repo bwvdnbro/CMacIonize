@@ -68,42 +68,42 @@ int main(int argc, char **argv) {
     cell.reset_mean_intensities();
 
     cell.increase_mean_intensity(
-        ION_H_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"));
+        ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jHe, "s^-1"));
+        ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jHe, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_C_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp1, "s^-1"));
+        ION_C_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jCp1, "s^-1"));
     cell.increase_mean_intensity(
-        ION_C_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jCp2, "s^-1"));
+        ION_C_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jCp2, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_N_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jN, "s^-1"));
+        ION_N_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jN, "s^-1"));
     cell.increase_mean_intensity(
-        ION_N_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp1, "s^-1"));
+        ION_N_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNp1, "s^-1"));
     cell.increase_mean_intensity(
-        ION_N_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNp2, "s^-1"));
+        ION_N_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNp2, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_O_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jO, "s^-1"));
+        ION_O_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jO, "s^-1"));
     cell.increase_mean_intensity(
-        ION_O_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jOp1, "s^-1"));
+        ION_O_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jOp1, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_Ne_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNe, "s^-1"));
+        ION_Ne_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNe, "s^-1"));
     cell.increase_mean_intensity(
-        ION_Ne_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jNep1, "s^-1"));
+        ION_Ne_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNep1, "s^-1"));
 
     cell.increase_mean_intensity(
-        ION_S_p1, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp1, "s^-1"));
+        ION_S_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp1, "s^-1"));
     cell.increase_mean_intensity(
-        ION_S_p2, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp2, "s^-1"));
+        ION_S_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp2, "s^-1"));
     cell.increase_mean_intensity(
-        ION_S_p3, UnitConverter< QUANTITY_FREQUENCY >::to_SI(jSp3, "s^-1"));
+        ION_S_p3, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp3, "s^-1"));
 
     cell.set_total_density(
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
+        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
     cell.set_temperature(T);
 
     // calculate the ionization state of the cell
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
     sp3 = cell.get_ionic_fraction(ION_S_p3);
 
     // check that the values match the expected values
-    double tolerance = 1.e-10;
+    double tolerance = 1.e-9;
     assert_values_equal_rel(h0, h0f, tolerance);
 
     assert_values_equal_rel(he0, he0f, tolerance);
@@ -157,14 +157,14 @@ int main(int argc, char **argv) {
     // region where they should
     double h0s;
     IonizationStateCalculator::find_H0(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        0., UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"), 0.,
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"), 0., T,
+        UnitConverter::to_SI< QUANTITY_REACTION_RATE >(3.12e-13, "cm^3s^-1"),
+        0., UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"), 0.,
+        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), 0., T,
         h0, he0);
     IonizationStateCalculator::find_H0_simple(
-        UnitConverter< QUANTITY_REACTION_RATE >::to_SI(3.12e-13, "cm^3s^-1"),
-        UnitConverter< QUANTITY_FREQUENCY >::to_SI(jH, "s^-1"),
-        UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"), T, h0s);
+        UnitConverter::to_SI< QUANTITY_REACTION_RATE >(3.12e-13, "cm^3s^-1"),
+        UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"),
+        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), T, h0s);
     assert_values_equal_tol(h0, h0s, 1.e-4);
   }
 

@@ -375,6 +375,7 @@ add_unit_test(NAME testLog
 set(TESTUNITCONVERTER_SOURCES
     testUnitConverter.cpp
 
+    ../src/Unit.hpp
     ../src/UnitConverter.hpp
 )
 add_unit_test(NAME testUnitConverter

@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
       }
 
       cell.set_total_density(
-          UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ntot, "cm^-3"));
+          UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
       cell.set_temperature(temp);
       cell.set_ionic_fraction(ION_H_n, nfracH);
       cell.set_ionic_fraction(ION_He_n, nfracHe);

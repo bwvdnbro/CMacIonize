@@ -123,7 +123,7 @@ public:
   template < Quantity _quantity_ > double get_physical_value(std::string key) {
     std::string svalue = get_value< std::string >(key);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
-    return UnitConverter< _quantity_ >::to_SI(valunit.first, valunit.second);
+    return UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
   }
 
   /**
@@ -142,7 +142,7 @@ public:
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
-          UnitConverter< _quantity_ >::to_SI(valunit.first, valunit.second);
+          UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
     }
     return vvalue;
   }
@@ -163,7 +163,7 @@ public:
   double get_physical_value(std::string key, std::string default_value) {
     std::string svalue = get_value< std::string >(key, default_value);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
-    return UnitConverter< _quantity_ >::to_SI(valunit.first, valunit.second);
+    return UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
   }
 
   /**
@@ -185,7 +185,7 @@ public:
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
-          UnitConverter< _quantity_ >::to_SI(valunit.first, valunit.second);
+          UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
     }
     return vvalue;
   }

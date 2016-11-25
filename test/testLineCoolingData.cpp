@@ -134,10 +134,10 @@ int main(int argc, char **argv) {
       lstream >> coolf;
 
       cool = data.get_cooling(
-          T, UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
+          T, UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
           abundances);
       assert_values_equal_rel(
-          UnitConverter< QUANTITY_ENERGY_RATE >::to_unit(cool, "erg s^-1"),
+          UnitConverter::to_unit< QUANTITY_ENERGY_RATE >(cool, "erg s^-1"),
           coolf, 1.e-15);
     }
   }
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
           coii7325f >> csiv10f;
 
       data.linestr(T,
-                   UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(ne, "cm^-3"),
+                   UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
                    abundances, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
                    c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
                    c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,

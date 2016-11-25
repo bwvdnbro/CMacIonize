@@ -63,9 +63,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     for (unsigned int inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       double xsecHe = cross_sections.get_cross_section(
-          ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+          ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
                         _frequency[inu - 1] * 13.6, "eV"));
-      xsecHe = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecHe, "cm^2") /
+      xsecHe = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecHe, "cm^2") /
                1.e-18;
       double jHeIi1;
       if (_frequency[inu - 1] > 1.81) {
@@ -77,9 +77,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
         jHeIi1 = 0.;
       }
       xsecHe = cross_sections.get_cross_section(
-          ION_He_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+          ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
                         _frequency[inu] * 13.6, "eV"));
-      xsecHe = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecHe, "cm^2") /
+      xsecHe = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecHe, "cm^2") /
                1.e-18;
       double jHeIi2;
       if (_frequency[inu] > 1.81) {
@@ -132,6 +132,6 @@ double HeliumLymanContinuumSpectrum::get_random_frequency() {
     error("This is not right... (%g, %g)", _frequency[inu],
           _frequency[inu + 1]);
   }
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * _frequency[inu],
+  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * _frequency[inu],
                                                     "eV");
 }

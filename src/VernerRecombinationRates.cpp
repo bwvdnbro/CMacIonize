@@ -216,6 +216,6 @@ double VernerRecombinationRates::get_recombination_rate(IonName ion,
   default:
     error("Unknown ion: %i", ion);
   }
-  rate = UnitConverter< QUANTITY_REACTION_RATE >::to_SI(rate, "cm^3s^-1");
+  rate = UnitConverter::to_SI< QUANTITY_REACTION_RATE >(rate, "cm^3s^-1");
   return rate;
 }

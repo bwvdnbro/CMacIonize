@@ -61,18 +61,18 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       double xsecH = cross_sections.get_cross_section(
-          ION_H_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+          ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
                        _frequency[inu - 1] * 13.6, "eV"));
-      xsecH = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecH, "cm^2") /
+      xsecH = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecH, "cm^2") /
               1.e-18;
       double jHIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecH *
           std::exp(-157919.667 * (_frequency[inu - 1] - 1.) / _temperature[iT]);
       xsecH = cross_sections.get_cross_section(
-          ION_H_n, UnitConverter< QUANTITY_FREQUENCY >::to_SI(
+          ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
                        _frequency[inu] * 13.6, "eV"));
-      xsecH = UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(xsecH, "cm^2") /
+      xsecH = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecH, "cm^2") /
               1.e-18;
       double jHIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecH *
@@ -124,5 +124,5 @@ double HydrogenLymanContinuumSpectrum::get_random_frequency() {
                      (_current_T - _temperature[iT]) *
                          (_frequency[inu2] - _frequency[inu1]) /
                          (_temperature[iT + 1] - _temperature[iT]);
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * frequency, "eV");
+  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * frequency, "eV");
 }

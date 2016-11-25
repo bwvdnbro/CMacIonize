@@ -95,14 +95,14 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
   emhmi = std::exp(emhmi) * 1.e-32 * 3.e18 / 3643. / 3643.;
   emhepl = std::exp(emhepl) * 1.e-32 * 3.e18 / 3681. / 3681.;
   emhemi = std::exp(emhemi) * 1.e-32 * 3.e18 / 3643. / 3643.;
-//  // these are now in erg cm^3s^-1
-//  // we need them in J m^3s^-1
-//  // multiply with 1.e-6 to get erg m^3s^-1
-//  // multiply with 1.e-7 to get J m^3s^-1
-//  emhpl *= 1.e-13;
-//  emhmi *= 1.e-13;
-//  emhepl *= 1.e-13;
-//  emhemi *= 1.e-13;
+  //  // these are now in erg cm^3s^-1
+  //  // we need them in J m^3s^-1
+  //  // multiply with 1.e-6 to get erg m^3s^-1
+  //  // multiply with 1.e-7 to get J m^3s^-1
+  //  emhpl *= 1.e-13;
+  //  emhmi *= 1.e-13;
+  //  emhepl *= 1.e-13;
+  //  emhemi *= 1.e-13;
 }
 
 /**

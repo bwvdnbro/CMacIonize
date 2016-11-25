@@ -119,9 +119,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_length_in_SI =
-        UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+        UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
     unit_mass_in_SI =
-        UnitConverter< QUANTITY_MASS >::to_SI(unit_mass_in_cgs, "g");
+        UnitConverter::to_SI< QUANTITY_MASS >(unit_mass_in_cgs, "g");
     HDF5Tools::close_group(units);
   } else {
     if (_log) {

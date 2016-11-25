@@ -25,174 +25,259 @@
  */
 #include "Assert.hpp"
 #include "UnitConverter.hpp"
+#include <string>
+#include <vector>
+
+/**
+ * @brief Perform unit tests for the given template quantity.
+ *
+ * For every unit name in the given list, we perform 3 checks:
+ *  - we check if the conversion of the unit name into itself yields 1.
+ *  - we do the same by explicitly converting from the unit to SI units and then
+ *    back to the unit
+ *  - we check if the SI value of the unit matches the expected logic: it is
+ *    either larger, smaller, or equal to the default SI unit for the quantity
+ *
+ * @param unitnames Names of the units to check.
+ * @param unitlogic Flags indicating if the SI value of the corresponding unit
+ * is equal, smaller or larger than 1.
+ */
+template < Quantity _quantity_ >
+void check_quantity(std::vector< std::string > unitnames,
+                    std::vector< int > unitlogic) {
+  for (unsigned int i = 0; i < unitnames.size(); ++i) {
+    assert_condition(UnitConverter::convert(1., unitnames[i], unitnames[i]) ==
+                     1.);
+    assert_condition(UnitConverter::to_unit< _quantity_ >(
+                         UnitConverter::to_SI< _quantity_ >(1., unitnames[i]),
+                         unitnames[i]) == 1.);
+    double SI_value = UnitConverter::to_SI< _quantity_ >(1., unitnames[i]);
+    if (unitlogic[i] > 0) {
+      assert_condition(SI_value > 1.);
+    } else if (unitlogic[i] < 0) {
+      assert_condition(SI_value < 1.);
+    } else {
+      assert_condition(SI_value == 1.);
+    }
+  }
+}
 
 /**
  * @brief Unit test for the UnitConverter class.
  *
- * The UnitConverter class supports three methods for each quantity:
+ * The UnitConverter class supports three methods:
  *   - a method that converts from a strange unit to SI units
  *   - a method that converts from SI units to a strange unit
  *   - a method that converts from one strange unit into another strange unit
- * The last method uses the other two and is independent of the quantity or
- * unit (and we know it works properly). To check whether the methods are
- * correctly implemented for a given unit, we can hence simply convert a value
- * from that unit into itself, and check if the resulting value is still the
- * same. This will fail if the two other methods are inconsistent, indicating
- * that at least one of them is wrong.
+ * To check whether the methods are correctly implemented, we only need to check
+ * one quantity. To check that the separate units are correctly implemented, we
+ * just check all of them.
  *
- * To check for both methods being wrong, we implement a simple sanity check
- * test: we get the value of the unit in SI units, and then check if this value
- * is larger or smaller than the SI unit.
+ * To check if the conversion from one unit into SI units is correct, we apply
+ * larger/smaller/equal logic: for each unit we check if the SI value of that
+ * unit is larger, smaller, or equal to 1. We have to specify the correct logic
+ * for each unit separately.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  {
+    Unit unit = UnitConverter::get_unit(" m");
+    Unit unit2(1., 1, 0, 0, 0, 0);
+    assert_condition(unit == unit2);
+  }
+
+  {
+    Unit unit = UnitConverter::get_unit("K kg^3 s^-1m ");
+    Unit unit2(1., 1, -1, 3, 1, 0);
+    assert_condition(unit == unit2);
+  }
+
   /// DENSITY
-  assert_condition(UnitConverter< QUANTITY_DENSITY >::convert(1., "kg m^-3",
-                                                              "kg m^-3") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("kg m^-3");
+    unitlogic.push_back(0);
+    unitnames.push_back("g cm^-3");
+    // 1 g in a cubic centimetre is more than 1 kg in a cubic metre
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_DENSITY >::convert(1., "g cm^-3",
-                                                              "g cm^-3") == 1.);
-  // 1 g in a cubic centimetre is more than 1 kg in a cubic metre
-  assert_condition(UnitConverter< QUANTITY_DENSITY >::to_SI(1, "g cm^-3") > 1.);
+    check_quantity< QUANTITY_DENSITY >(unitnames, unitlogic);
+  }
 
-  /// ENERGY_CHANGE_RATE
-  assert_condition(UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::convert(
-                       1., "kg m^-1s^-3", "kg m^-1s^-3") == 1.);
+  /// ENERGY CHANGE RATE
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("kg m^-1s^-3");
+    unitlogic.push_back(0);
+    unitnames.push_back("J m^-3s^-1");
+    // J m^-3s^-1 is just another name for kg m^-1s^-3
+    unitlogic.push_back(0);
+    unitnames.push_back("erg cm^-3s^-1");
+    // according to WolframAlpha, an erg per cubic centimetres per second is
+    // less than a Joule per cubic metres per second
+    unitlogic.push_back(-1);
 
-  assert_condition(UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::convert(
-                       1., "J m^-3s^-1", "J m^-3s^-1") == 1.);
-  // J m^-3s^-1 is just another name for kg m^-1s^-3
-  assert_condition(UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_SI(
-                       1., "J m^-3s^-1") == 1.);
-
-  assert_condition(UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::convert(
-                       1., "erg cm^-3s^-1", "erg cm^-3s^-1") == 1.);
-  // according to WolframAlpha, an erg per cubic centimetres per second is less
-  // than a Joule per cubic metres per second
-  assert_condition(UnitConverter< QUANTITY_ENERGY_CHANGE_RATE >::to_SI(
-                       1., "erg cm^-3s^-1") < 1.);
+    check_quantity< QUANTITY_ENERGY_CHANGE_RATE >(unitnames, unitlogic);
+  }
 
   /// ENERGY_RATE
-  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
-                       1., "kg m^2s^-3", "kg m^2s^-3") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("kg m^2s^-3");
+    unitlogic.push_back(0);
+    unitnames.push_back("J s^-1");
+    // J s^-1 is just another name for kg m^2s^-3
+    unitlogic.push_back(0);
+    unitnames.push_back("erg s^-1");
+    // an erg per second is a lot less than a Joule per second
+    unitlogic.push_back(-1);
 
-  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
-                       1., "J s^-1", "J s^-1") == 1.);
-  // J s^-1 is just another name for kg m^2s^-3
-  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(1., "J s^-1") ==
-                   1.);
-
-  assert_condition(UnitConverter< QUANTITY_ENERGY_RATE >::convert(
-                       1., "erg s^-1", "erg s^-1") == 1.);
-  // an erg per second is a lot less than a Joule per second
-  assert_condition(
-      UnitConverter< QUANTITY_ENERGY_RATE >::to_SI(1., "erg s^-1") < 1.);
+    check_quantity< QUANTITY_ENERGY_RATE >(unitnames, unitlogic);
+  }
 
   /// FLUX
-  assert_condition(UnitConverter< QUANTITY_FLUX >::convert(1., "m^-2s^-1",
-                                                           "m^-2s^-1") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m^-2s^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("cm^-2s^-1");
+    // 1 photon per square centimetres per second is more than 1 photon per
+    // square metres per second
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_FLUX >::convert(1., "cm^-2s^-1",
-                                                           "cm^-2s^-1") == 1.);
-  // 1 photon per square centimetres per second is more than 1 photon per square
-  // metres per second
-  assert_condition(UnitConverter< QUANTITY_FLUX >::to_SI(1, "cm^-2s^-1") > 1.);
+    check_quantity< QUANTITY_FLUX >(unitnames, unitlogic);
+  }
 
   /// FREQUENCY
-  assert_condition(
-      UnitConverter< QUANTITY_FREQUENCY >::convert(1., "s^-1", "s^-1") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("s^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("Hz");
+    // Hz is just another name for s^-1
+    unitlogic.push_back(0);
+    unitnames.push_back("eV");
+    // 1 eV corresponds to a very high frequency in Hz
+    unitlogic.push_back(1);
 
-  assert_condition(
-      UnitConverter< QUANTITY_FREQUENCY >::convert(1., "Hz", "Hz") == 1.);
-  // Hz is just another name for s^-1
-  assert_condition(UnitConverter< QUANTITY_FREQUENCY >::to_SI(1., "Hz") == 1.);
-
-  assert_condition(
-      UnitConverter< QUANTITY_FREQUENCY >::convert(1., "eV", "eV") == 1.);
-  // 1 eV corresponds to a very high frequency in Hz
-  assert_condition(UnitConverter< QUANTITY_FREQUENCY >::to_SI(1., "eV") > 1.);
+    check_quantity< QUANTITY_FREQUENCY >(unitnames, unitlogic);
+  }
 
   /// LENGTH
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "m", "m") ==
-                   1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m");
+    unitlogic.push_back(0);
+    unitnames.push_back("cm");
+    // cm is smaller than m
+    unitlogic.push_back(-1);
+    unitnames.push_back("pc");
+    // a parsec is a *bit* larger than a metre
+    unitlogic.push_back(1);
+    unitnames.push_back("kpc");
+    // a kpc is even larger
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "cm", "cm") ==
-                   1.);
-  // cm is smaller than m
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "cm") < 1.);
-
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::convert(1., "pc", "pc") ==
-                   1.);
-  // a parsec is a *bit* larger than a metre
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "pc") > 1.);
-
-  assert_condition(
-      UnitConverter< QUANTITY_LENGTH >::convert(1., "kpc", "kpc") == 1.);
-  // a kpc is even larger
-  assert_condition(UnitConverter< QUANTITY_LENGTH >::to_SI(1., "kpc") > 1.);
+    check_quantity< QUANTITY_LENGTH >(unitnames, unitlogic);
+  }
 
   /// MASS
-  assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "kg", "kg") ==
-                   1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("kg");
+    unitlogic.push_back(0);
+    unitnames.push_back("g");
+    // a gramme is less than a kilogram
+    unitlogic.push_back(-1);
+    unitnames.push_back("Msol");
+    // a solar mass weighs much more than a kilogram
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_MASS >::convert(1., "g", "g") == 1.);
-  // a gramme is less than a kilogram
-  assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "g") < 1.);
-
-  assert_condition(
-      UnitConverter< QUANTITY_MASS >::convert(1., "Msol", "Msol") == 1.);
-  // a solar mass weighs much more than a kilogram
-  assert_condition(UnitConverter< QUANTITY_MASS >::to_SI(1., "Msol") > 1.);
+    check_quantity< QUANTITY_MASS >(unitnames, unitlogic);
+  }
 
   /// NUMBER DENSITY
-  assert_condition(UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(
-                       1., "m^-3", "m^-3") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m^-3");
+    unitlogic.push_back(0);
+    unitnames.push_back("cm^-3");
+    // 1 particle in a cubic centimetre is much more than 1 particle in a cubic
+    // metre
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_NUMBER_DENSITY >::convert(
-                       1., "cm^-3", "cm^-3") == 1.);
-  // 1 particle in a cubic centimetre is much more than 1 particle in a cubic
-  // metre
-  assert_condition(
-      UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(1., "cm^-3") > 1.);
+    check_quantity< QUANTITY_NUMBER_DENSITY >(unitnames, unitlogic);
+  }
 
-  /// QUANTITY_OPACITY
-  assert_condition(
-      UnitConverter< QUANTITY_OPACITY >::convert(1., "m^-1", "m^-1") == 1.);
+  /// OPACITY
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m^-1");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_OPACITY >(unitnames, unitlogic);
+  }
 
   /// REACTION RATE
-  assert_condition(UnitConverter< QUANTITY_REACTION_RATE >::convert(
-                       1., "m^3s^-1", "m^3s^-1") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m^3s^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("cm^3s^-1");
+    // a cubic centimetre per second is less than a cubic metre per second
+    unitlogic.push_back(-1);
 
-  assert_condition(UnitConverter< QUANTITY_REACTION_RATE >::convert(
-                       1., "cm^3s^-1", "cm^3s^-1") == 1.);
-  // a cubic centimetre per second is less than a cubic metre per second
-  assert_condition(
-      UnitConverter< QUANTITY_REACTION_RATE >::to_SI(1., "cm^3s^-1") < 1.);
+    check_quantity< QUANTITY_REACTION_RATE >(unitnames, unitlogic);
+  }
 
   /// SURFACE AREA
-  assert_condition(
-      UnitConverter< QUANTITY_SURFACE_AREA >::convert(1., "m^2", "m^2") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m^2");
+    unitlogic.push_back(0);
+    unitnames.push_back("cm^2");
+    // a square centimetre is less than a square metre
+    unitlogic.push_back(-1);
 
-  assert_condition(UnitConverter< QUANTITY_SURFACE_AREA >::convert(
-                       1., "cm^2", "cm^2") == 1.);
-  // a square centimetre is less than a square metre
-  assert_condition(UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(1., "cm^2") <
-                   1.);
+    check_quantity< QUANTITY_SURFACE_AREA >(unitnames, unitlogic);
+  }
 
   /// TEMPERATURE
-  assert_condition(
-      UnitConverter< QUANTITY_TEMPERATURE >::convert(1., "K", "K") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("K");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_TEMPERATURE >(unitnames, unitlogic);
+  }
 
   /// TIME
-  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "s", "s") == 1.);
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("s");
+    unitlogic.push_back(0);
+    unitnames.push_back("Gyr");
+    // a Gyr takes longer than a second
+    unitlogic.push_back(1);
 
-  assert_condition(UnitConverter< QUANTITY_TIME >::convert(1., "Gyr", "Gyr") ==
-                   1.);
-  // a Gyr takes longer than a second
-  assert_condition(UnitConverter< QUANTITY_TIME >::to_SI(1., "Gyr") > 1.);
+    check_quantity< QUANTITY_TIME >(unitnames, unitlogic);
+  }
 
   return 0;
 }

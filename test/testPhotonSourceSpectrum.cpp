@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
     }
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
-      double rand_freq = UnitConverter< QUANTITY_FREQUENCY >::to_unit(
+      double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
                              spectrum.get_random_frequency(), "eV") /
                          13.6;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
       }
       unsigned int numsample = 1000000;
       for (unsigned int i = 0; i < numsample; ++i) {
-        double rand_freq = UnitConverter< QUANTITY_FREQUENCY >::to_unit(
+        double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
                                spectrum.get_random_frequency(), "eV") /
                            13.6;
         unsigned int index = (rand_freq - 1.) * 100. / 3.;
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
       }
       unsigned int numsample = 1000000;
       for (unsigned int i = 0; i < numsample; ++i) {
-        double rand_freq = UnitConverter< QUANTITY_FREQUENCY >::to_unit(
+        double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
                                spectrum.get_random_frequency(), "eV") /
                            13.6;
         unsigned int index = (rand_freq - 1.) * 100. / 3.;
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
     }
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
-      double rand_freq = UnitConverter< QUANTITY_FREQUENCY >::to_unit(
+      double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
                              spectrum.get_random_frequency(), "eV") /
                          13.6;
       unsigned int index = (rand_freq - 1.) * 100. / 0.6;

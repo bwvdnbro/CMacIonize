@@ -122,5 +122,5 @@ double PlanckPhotonSourceSpectrum::get_random_frequency() {
           (_log_frequency[ix + 1] - _log_frequency[ix]) +
       _log_frequency[ix];
   double frequency = pow(10., log_random_frequency);
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * frequency, "eV");
+  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * frequency, "eV");
 }
