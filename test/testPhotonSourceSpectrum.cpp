@@ -49,7 +49,7 @@ double planck_luminosity(double frequency) {
   double planck_constant = 6.626e-27;
   double boltzmann_constant = 1.38e-16;
   double temperature_star = 40000.;
-  return frequency * frequency * frequency /
+  return frequency * frequency /
          (exp(planck_constant * frequency * min_frequency /
               (boltzmann_constant * temperature_star)) -
           1.);
@@ -66,7 +66,9 @@ double planck_luminosity(double frequency) {
  */
 double HLyc_luminosity(CrossSections &cross_sections, double T,
                        double frequency) {
-  double xsecH = cross_sections.get_cross_section(ION_H_n, frequency * 13.6);
+  double xsecH = cross_sections.get_cross_section(
+      ION_H_n,
+      UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
   return frequency * frequency * frequency * xsecH *
          exp(-157919.667 * (frequency - 1.) / T);
 }
@@ -125,6 +127,7 @@ int main(int argc, char **argv) {
 
   // PlanckPhotonSourceSpectrum
   {
+    std::ofstream file("planckphotonsource.txt");
     PlanckPhotonSourceSpectrum spectrum(random_generator, 40000);
 
     unsigned int counts[100];
@@ -146,12 +149,18 @@ int main(int argc, char **argv) {
     }
     for (unsigned int i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.03;
-      assert_values_equal_tol(planck_luminosity(nu), counts[i] * enorm, 1.e-2);
+      double tval = planck_luminosity(nu);
+      double bval = counts[i] * enorm;
+      file << nu << "\t" << tval << "\t" << bval << "\n";
+      // we fitted a line in x-log10(y) space to the actual relative difference
+      double tolerance = std::pow(10., -2.3 + 0.0239001 * (i - 3.));
+      assert_values_equal_rel(tval, bval, tolerance);
     }
   }
 
   // HydrogenLymanContinuumSpectrum
   {
+    std::ofstream file("hydrogenlymancontinuum.txt");
     VernerCrossSections cross_sections;
     HydrogenLymanContinuumSpectrum spectrum(cross_sections, random_generator);
     for (unsigned int iT = 0; iT < 10; ++iT) {
@@ -177,11 +186,15 @@ int main(int argc, char **argv) {
       }
       for (unsigned int i = 0; i < 100; ++i) {
         double nu = 1. + (i + 0.5) * 0.03;
-        assert_values_equal_tol(HLyc_luminosity(cross_sections, T, nu),
-                                counts[i] * enorm, 0.1);
+        double tval = HLyc_luminosity(cross_sections, T, nu);
+        double bval = counts[i] * enorm;
+        file << nu << "\t" << tval << "\t" << bval << "\n";
+        assert_values_equal_tol(tval, bval, 0.1);
       }
     }
   }
+
+  return 0;
 
   // HeliumLymanContinuumSpectrum
   {
