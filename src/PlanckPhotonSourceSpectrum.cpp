@@ -49,7 +49,9 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     RandomGenerator &random_generator, double temperature, Log *log)
     : _random_generator(random_generator) {
   // some constants
+  // in units 13.6 eV (corresponds to 54.4 eV)
   const double max_frequency = 4.;
+  // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   const double planck_constant = 6.626e-27;
   const double boltzmann_constant = 1.38e-16;

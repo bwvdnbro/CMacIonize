@@ -84,14 +84,11 @@ double HLyc_luminosity(CrossSections &cross_sections, double T,
  */
 double HeLyc_luminosity(CrossSections &cross_sections, double T,
                         double frequency) {
-  if (frequency >= 1.81) {
-    double xsecHe =
-        cross_sections.get_cross_section(ION_He_n, frequency * 13.6);
-    return frequency * frequency * frequency * xsecHe *
-           exp(-157919.667 * (frequency - 1.81) / T);
-  } else {
-    return 0.;
-  }
+  double xsecHe = cross_sections.get_cross_section(
+      ION_He_n,
+      UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
+  return 1.e22 * frequency * frequency * xsecHe *
+         exp(-157919.667 * (frequency - 1.81) / T);
 }
 
 /**
@@ -196,42 +193,45 @@ int main(int argc, char **argv) {
     }
   }
 
-  return 0;
-
   // HeliumLymanContinuumSpectrum
   {
+    std::ofstream file("heliumlymancontinuum.txt");
     VernerCrossSections cross_sections;
     HeliumLymanContinuumSpectrum spectrum(cross_sections, random_generator);
-    for (unsigned int iT = 0; iT < 10; ++iT) {
-      double T = 1500. + (iT + 0.5) * 13500. / 10;
-      spectrum.set_temperature(T);
+    double T = 8888.;
+    spectrum.set_temperature(T);
 
-      unsigned int counts[100];
-      for (unsigned int i = 0; i < 100; ++i) {
-        counts[i] = 0;
-      }
-      unsigned int numsample = 1000000;
-      for (unsigned int i = 0; i < numsample; ++i) {
-        double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
-                               spectrum.get_random_frequency(), "eV") /
-                           13.6;
-        unsigned int index = (rand_freq - 1.) * 100. / 3.;
-        ++counts[index];
-      }
+    unsigned int counts[100];
+    for (unsigned int i = 0; i < 100; ++i) {
+      counts[i] = 0;
+    }
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      // we manually convert from Hz to 13.6 eV for efficiency reasons
+      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      unsigned int index = (rand_freq - 1.81) * 100. / (4. - 1.81);
+      ++counts[index];
+    }
 
-      double enorm = HeLyc_luminosity(cross_sections, T, 1.825);
-      // we can obviously not normalize on the lowest frequency, as the spectrum
-      // is zero below frequencies of 1.81
-      if (counts[27]) {
-        enorm /= counts[27];
-      }
-      for (unsigned int i = 0; i < 100; ++i) {
-        double nu = 1. + (i + 0.5) * 0.03;
-        assert_values_equal_tol(HeLyc_luminosity(cross_sections, T, nu),
-                                counts[i] * enorm, 0.1);
-      }
+    double enorm =
+        HeLyc_luminosity(cross_sections, T, 1.81 + 0.5 * (4. - 1.81) / 100.);
+    if (counts[0]) {
+      enorm /= counts[0];
+    }
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1.81 + (i + 0.5) * (4. - 1.81) / 100.;
+      double tval = HeLyc_luminosity(cross_sections, T, nu);
+      double bval = counts[i] * enorm;
+      double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
+      // we fitted a line in x-log10(y) space to the actual relative difference
+      double tolerance = std::pow(10., -1.9 + 0.0792572 * (i - 6.));
+      file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
+           << tolerance << "\n";
+      assert_values_equal_rel(tval, bval, tolerance);
     }
   }
+
+  return 0;
 
   // HeliumTwoPhotonContinuumSpectrum
   {

@@ -47,7 +47,9 @@ using namespace std;
 HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     CrossSections &cross_sections, RandomGenerator &random_generator)
     : _random_generator(random_generator) {
+  // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
+  // 54.4 eV in Hz
   const double max_frequency = 4. * min_frequency;
   const double planck_constant = 6.626e-27;
   const double boltzmann_constant = 1.38e-16;

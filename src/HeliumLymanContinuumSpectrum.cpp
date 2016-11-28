@@ -46,15 +46,17 @@
 HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     CrossSections &cross_sections, RandomGenerator &random_generator)
     : _random_generator(random_generator) {
-  double max_frequency = 4.;
+  // 24.6 eV in Hz (1.81 x 13.6 eV)
+  const double min_frequency = 1.81 * 3.288465385e15;
+  // 54.4 eV in Hz
+  const double max_frequency = 4. * 3.288465385e15;
+  const double planck_constant = 6.626e-27;
+  const double boltzmann_constant = 1.38e-16;
   // set up the frequency bins
-  // there is a hard lower limit on the spectrum, which we manually enforce here
-  _frequency[0] = 1.;
-  _frequency[1] = 1.81;
-  for (unsigned int i = 2; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = 1.81 +
-                    i * (max_frequency - 1.81) /
-                        (HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 3.);
+  for (unsigned int i = 0; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+    _frequency[i] = min_frequency +
+                    i * (max_frequency - min_frequency) /
+                        (HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
   for (unsigned int iT = 0; iT < HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
     _cumulative_distribution[iT][0] = 0.;
@@ -62,33 +64,18 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
         1500. + (iT + 0.5) * 13500. / HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP;
     for (unsigned int inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
-      double xsecHe = cross_sections.get_cross_section(
-          ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
-                        _frequency[inu - 1] * 13.6, "eV"));
-      xsecHe = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecHe, "cm^2") /
-               1.e-18;
-      double jHeIi1;
-      if (_frequency[inu - 1] > 1.81) {
-        jHeIi1 = _frequency[inu - 1] * _frequency[inu - 1] *
-                 _frequency[inu - 1] * xsecHe *
-                 std::exp(-157919.667 * (_frequency[inu - 1] - 1.81) /
-                          _temperature[iT]);
-      } else {
-        jHeIi1 = 0.;
-      }
-      xsecHe = cross_sections.get_cross_section(
-          ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
-                        _frequency[inu] * 13.6, "eV"));
-      xsecHe = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecHe, "cm^2") /
-               1.e-18;
-      double jHeIi2;
-      if (_frequency[inu] > 1.81) {
-        jHeIi2 =
-            _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecHe *
-            std::exp(-157919.667 * (_frequency[inu] - 1.81) / _temperature[iT]);
-      } else {
-        jHeIi2 = 0.;
-      }
+      double xsecHe =
+          cross_sections.get_cross_section(ION_He_n, _frequency[inu - 1]);
+      double jHeIi1 =
+          _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
+          xsecHe *
+          std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
+                   (boltzmann_constant * _temperature[iT]));
+      xsecHe = cross_sections.get_cross_section(ION_He_n, _frequency[inu]);
+      double jHeIi2 =
+          _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecHe *
+          std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /
+                   (boltzmann_constant * _temperature[iT]));
       _cumulative_distribution[iT][inu] =
           0.5 * (jHeIi1 / _frequency[inu] + jHeIi2 / _frequency[inu - 1]) *
           (_frequency[inu] - _frequency[inu - 1]);
@@ -98,7 +85,7 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
          ++inu) {
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
-          _cumulative_distribution[iT][inu] * 1.e25;
+          _cumulative_distribution[iT][inu];
     }
     // normalize
     for (unsigned int inu = 0; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
@@ -108,6 +95,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
                                   [HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
     }
   }
+
+  _current_T = 0.;
+  _current_iT = 0;
 }
 
 /**
@@ -115,7 +105,11 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
  *
  * @param T New value for the temperature (in K).
  */
-void HeliumLymanContinuumSpectrum::set_temperature(double T) { _current_T = T; }
+void HeliumLymanContinuumSpectrum::set_temperature(double T) {
+  _current_T = T;
+  _current_iT = Utilities::locate(_current_T, _temperature,
+                                  HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
+}
 
 /**
  * @brief Sample a random frequency from the spectrum.
@@ -123,15 +117,17 @@ void HeliumLymanContinuumSpectrum::set_temperature(double T) { _current_T = T; }
  * @return Random frequency (in Hz).
  */
 double HeliumLymanContinuumSpectrum::get_random_frequency() {
-  unsigned int iT = Utilities::locate(_current_T, _temperature,
-                                      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = _random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(x, _cumulative_distribution[iT],
-                                       HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  if (_frequency[inu] < 1.81) {
-    error("This is not right... (%g, %g)", _frequency[inu],
-          _frequency[inu + 1]);
-  }
-  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * _frequency[inu],
-                                                    "eV");
+  unsigned int inu1 =
+      Utilities::locate(x, _cumulative_distribution[_current_iT],
+                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 =
+      Utilities::locate(x, _cumulative_distribution[_current_iT + 1],
+                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  double frequency =
+      _frequency[inu1] +
+      (_current_T - _temperature[_current_iT]) *
+          (_frequency[inu2] - _frequency[inu1]) /
+          (_temperature[_current_iT + 1] - _temperature[_current_iT]);
+  return frequency;
 }
