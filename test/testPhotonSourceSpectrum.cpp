@@ -151,12 +151,16 @@ int main(int argc, char **argv) {
       double nu = 1. + (i + 0.5) * 0.03;
       double tval = planck_luminosity(nu);
       double bval = counts[i] * enorm;
-      file << nu << "\t" << tval << "\t" << bval << "\n";
+      double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
       // we fitted a line in x-log10(y) space to the actual relative difference
-      double tolerance = std::pow(10., -2.3 + 0.0239001 * (i - 3.));
+      double tolerance = std::pow(10., -2.29 + 0.0239001 * (i - 3.));
+      file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
+           << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);
     }
   }
+
+  return 0;
 
   // HydrogenLymanContinuumSpectrum
   {
@@ -193,8 +197,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-
-  return 0;
 
   // HeliumLymanContinuumSpectrum
   {

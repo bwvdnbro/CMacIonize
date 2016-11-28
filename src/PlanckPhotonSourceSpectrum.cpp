@@ -33,7 +33,6 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
-#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -50,10 +49,10 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     RandomGenerator &random_generator, double temperature, Log *log)
     : _random_generator(random_generator) {
   // some constants
-  double max_frequency = 4.;
-  double min_frequency = 3.289e15;
-  double planck_constant = 6.626e-27;
-  double boltzmann_constant = 1.38e-16;
+  const double max_frequency = 4.;
+  const double min_frequency = 3.289e15;
+  const double planck_constant = 6.626e-27;
+  const double boltzmann_constant = 1.38e-16;
   // set up the frequency bins and calculate the Planck luminosities
   for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequency[i] =
@@ -122,5 +121,7 @@ double PlanckPhotonSourceSpectrum::get_random_frequency() {
           (_log_frequency[ix + 1] - _log_frequency[ix]) +
       _log_frequency[ix];
   double frequency = pow(10., log_random_frequency);
-  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * frequency, "eV");
+  // we manually convert from 13.6 eV to Hz, since the UnitConverter is too
+  // slow (and binning the actual frequencies in Hz yields a bad interpolation)
+  return frequency * 3.288465385e15;
 }
