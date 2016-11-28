@@ -157,6 +157,9 @@ int main(int argc, char **argv) {
   }
 
   // HydrogenLymanContinuumSpectrum
+  // note that we don't test a range of temperature values, but just test a
+  // single temperature that is somewhere in between the temperature bins
+  // this should be sufficient to cover all cases
   {
     std::ofstream file("hydrogenlymancontinuum.txt");
     VernerCrossSections cross_sections;
