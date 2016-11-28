@@ -30,6 +30,7 @@
 #include "Error.hpp"
 #include "Unit.hpp"
 
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -96,6 +97,8 @@ private:
       return Unit(3.086e16, 1, 0, 0, 0, 0);
     } else if (name == "kpc") {
       return Unit(3.086e19, 1, 0, 0, 0, 0);
+    } else if (name == "angstrom") {
+      return Unit(1.e-10, 1, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
       return Unit(1., 0, 1, 0, 0, 0);
@@ -187,13 +190,20 @@ private:
                                       Unit unit_to) {
     std::vector< Quantity > Aunits;
     std::vector< Quantity > Bunits;
-    std::vector< double > A_in_B;
+    std::vector< double > A_in_B_fac;
+    std::vector< int > A_in_B_pow;
 
     /// add new quantity conversions below
     // energy to frequency conversion for photons
     Aunits.push_back(QUANTITY_ENERGY);
     Bunits.push_back(QUANTITY_FREQUENCY);
-    A_in_B.push_back(1.5091902e33);
+    A_in_B_fac.push_back(1.5091902e33);
+    A_in_B_pow.push_back(1);
+    // wavelength to frequency conversion for photons
+    Aunits.push_back(QUANTITY_LENGTH);
+    Bunits.push_back(QUANTITY_FREQUENCY);
+    A_in_B_fac.push_back(299792458.);
+    A_in_B_pow.push_back(-1);
 
     /// don't change the part below unless you know what you're doing
     // just try every unit combination in the lists
@@ -204,13 +214,56 @@ private:
           unit_to.is_same_quantity(Bunit)) {
         double fval = 1. * unit_from;
         double tval = 1. * unit_to;
-        return value * fval * A_in_B[i] / tval;
+        double Sval = value * fval;
+        if (A_in_B_pow[i] > 0) {
+          int j = 1;
+          double Sfac = Sval;
+          while (j < A_in_B_pow[i]) {
+            ++j;
+            Sval *= Sfac;
+          }
+        } else {
+          double Sfac = Sval;
+          Sval = 1.;
+          int j = 0;
+          while (j < std::abs(A_in_B_pow[i])) {
+            ++j;
+            Sval /= Sfac;
+          }
+        }
+        return Sval * A_in_B_fac[i] / tval;
       }
       if (unit_from.is_same_quantity(Bunit) &&
           unit_to.is_same_quantity(Aunit)) {
         double fval = 1. * unit_from;
         double tval = 1. * unit_to;
-        return value * fval / A_in_B[i] / tval;
+        double Sval = value * fval / A_in_B_fac[i];
+        double A_in_B_pow_inv = 1. / A_in_B_pow[i];
+        if (A_in_B_pow_inv > 0) {
+          if (A_in_B_pow_inv == 1.) {
+            int j = 1;
+            double Sfac = Sval;
+            while (j < A_in_B_pow_inv) {
+              ++j;
+              Sval *= Sfac;
+            }
+          } else {
+            Sval = std::pow(Sval, A_in_B_pow_inv);
+          }
+        } else {
+          if (A_in_B_pow_inv == -1.) {
+            double Sfac = Sval;
+            Sval = 1.;
+            int j = 0;
+            while (j < std::abs(A_in_B_pow_inv)) {
+              ++j;
+              Sval /= Sfac;
+            }
+          } else {
+            Sval = std::pow(Sval, A_in_B_pow_inv);
+          }
+        }
+        return Sval / tval;
       }
     }
 

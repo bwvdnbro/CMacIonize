@@ -53,8 +53,10 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
   const double max_frequency = 4.;
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
-  const double planck_constant = 6.626e-27;
-  const double boltzmann_constant = 1.38e-16;
+  // Planck constant (in J s)
+  const double planck_constant = 6.626e-34;
+  // Boltzmann constant (in J s^-1)
+  const double boltzmann_constant = 1.38e-23;
   // set up the frequency bins and calculate the Planck luminosities
   for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequency[i] =

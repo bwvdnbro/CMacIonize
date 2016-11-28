@@ -51,8 +51,10 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
   const double min_frequency = 3.289e15;
   // 54.4 eV in Hz
   const double max_frequency = 4. * min_frequency;
-  const double planck_constant = 6.626e-27;
-  const double boltzmann_constant = 1.38e-16;
+  // Planck constant (in J s)
+  const double planck_constant = 6.626e-34;
+  // Boltzmann constant (in J s^-1)
+  const double boltzmann_constant = 1.38e-23;
   // set up the frequency bins
   for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +

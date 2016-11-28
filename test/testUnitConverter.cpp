@@ -99,6 +99,13 @@ int main(int argc, char **argv) {
                             1.e-7);
     assert_values_equal_rel(UnitConverter::convert(1., "Hz", "eV"),
                             4.135668e-15, 1.e-7);
+
+    // the conversion from angstrom to Hz is non-linear, so we test with a value
+    // different than 1.
+    assert_values_equal_rel(UnitConverter::convert(2., "angstrom", "Hz"),
+                            1.499e18, 1.e-4);
+    assert_values_equal_rel(UnitConverter::convert(2., "Hz", "angstrom"),
+                            1.499e18, 1.e-4);
   }
 
   /// DENSITY
@@ -206,6 +213,9 @@ int main(int argc, char **argv) {
     unitnames.push_back("kpc");
     // a kpc is even larger
     unitlogic.push_back(1);
+    unitnames.push_back("angstrom");
+    // an angstrom is orders of magnitude smaller than a metre
+    unitlogic.push_back(-1);
 
     check_quantity< QUANTITY_LENGTH >(unitnames, unitlogic);
   }

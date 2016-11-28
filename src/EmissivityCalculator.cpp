@@ -64,10 +64,10 @@ EmissivityCalculator::EmissivityCalculator() {
  * the given temperature.
  *
  * @param T Temperature (in K).
- * @param emhpl Hydrogen coefficient 1 (in J m^3s^-1).
- * @param emhmi Hydrogen coefficient 2 (in J m^3s^-1).
- * @param emhepl Helium coefficient 1 (in J m^3s^-1).
- * @param emhemi Helium coefficient 2 (in J m^3s^-1).
+ * @param emhpl Hydrogen coefficient 1 (in J m^3s^-1angstrom^-1).
+ * @param emhmi Hydrogen coefficient 2 (in J m^3s^-1angstrom^-1).
+ * @param emhepl Helium coefficient 1 (in J m^3s^-1angstrom^-1).
+ * @param emhemi Helium coefficient 2 (in J m^3s^-1angstrom^-1).
  */
 void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
                                  double &emhepl, double &emhemi) {
@@ -90,19 +90,16 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
            (logt - _logttab[i]) * (_loghemit[i + 1] - _loghemit[i]) /
                (_logttab[i + 1] - _logttab[i]);
 
-  // we added correction factors 1.e-12 to convert to cm^-3
-  emhpl = std::exp(emhpl) * 1.e-32 * 3.e18 / 3681. / 3681.;
-  emhmi = std::exp(emhmi) * 1.e-32 * 3.e18 / 3643. / 3643.;
-  emhepl = std::exp(emhepl) * 1.e-32 * 3.e18 / 3681. / 3681.;
-  emhemi = std::exp(emhemi) * 1.e-32 * 3.e18 / 3643. / 3643.;
-  //  // these are now in erg cm^3s^-1
-  //  // we need them in J m^3s^-1
-  //  // multiply with 1.e-6 to get erg m^3s^-1
-  //  // multiply with 1.e-7 to get J m^3s^-1
-  //  emhpl *= 1.e-13;
-  //  emhmi *= 1.e-13;
-  //  emhepl *= 1.e-13;
-  //  emhemi *= 1.e-13;
+  emhpl = std::exp(emhpl);
+  emhmi = std::exp(emhmi);
+  emhepl = std::exp(emhepl);
+  emhemi = std::exp(emhemi);
+  // the values above are in 1.e-40 erg cm^3s^-1Hz^-1
+  // convert to J m^3s^-1angstrom^-1
+  emhpl *= 1.e-53 * 2.99792458e18 / 3681. / 3681.;
+  emhmi *= 1.e-53 * 2.99792458e18 / 3643. / 3643.;
+  emhepl *= 1.e-53 * 2.99792458e18 / 3681. / 3681.;
+  emhemi *= 1.e-53 * 2.99792458e18 / 3643. / 3643.;
 }
 
 /**
@@ -209,32 +206,33 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,
                         ne * (nhp * emhpl + nhep * emhepl));
 
-    eval.set_emissivity(EMISSIONLINE_OI_6300, 1.e-6 * ntot * c6300);
-    eval.set_emissivity(EMISSIONLINE_OII_3727, 1.e-6 * ntot * c3727);
-    eval.set_emissivity(EMISSIONLINE_OIII_5007, 1.e-6 * ntot * c5007);
-    eval.set_emissivity(EMISSIONLINE_OIII_4363, 1.e-6 * ntot * c4363);
-    eval.set_emissivity(EMISSIONLINE_OIII_88mu, 1.e-6 * ntot * c88mu);
-    eval.set_emissivity(EMISSIONLINE_NII_5755, 1.e-6 * ntot * c5755);
-    eval.set_emissivity(EMISSIONLINE_NII_6584, 1.e-6 * ntot * c6584);
-    eval.set_emissivity(EMISSIONLINE_NeIII_3869, 1.e-6 * ntot * c3869);
-    eval.set_emissivity(EMISSIONLINE_SII_6725, 1.e-6 * ntot * c6725);
-    eval.set_emissivity(EMISSIONLINE_SII_4072, 1.e-6 * ntot * c4072);
-    eval.set_emissivity(EMISSIONLINE_SIII_9405, 1.e-6 * ntot * c9405);
-    eval.set_emissivity(EMISSIONLINE_SIII_6312, 1.e-6 * ntot * c6312);
-    eval.set_emissivity(EMISSIONLINE_SIII_19mu, 1.e-6 * ntot * c19mu);
+    eval.set_emissivity(EMISSIONLINE_OI_6300, ntot * c6300);
+    eval.set_emissivity(EMISSIONLINE_OII_3727, ntot * c3727);
+    eval.set_emissivity(EMISSIONLINE_OIII_5007, ntot * c5007);
+    eval.set_emissivity(EMISSIONLINE_OIII_4363, ntot * c4363);
+    eval.set_emissivity(EMISSIONLINE_OIII_88mu, ntot * c88mu);
+    eval.set_emissivity(EMISSIONLINE_NII_5755, ntot * c5755);
+    eval.set_emissivity(EMISSIONLINE_NII_6584, ntot * c6584);
+    eval.set_emissivity(EMISSIONLINE_NeIII_3869, ntot * c3869);
+    eval.set_emissivity(EMISSIONLINE_SII_6725, ntot * c6725);
+    eval.set_emissivity(EMISSIONLINE_SII_4072, ntot * c4072);
+    eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
+    eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
+    eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
     eval.set_emissivity(EMISSIONLINE_NEON_FRACTION,
-                        1.e-12 * ntot * ne * cell.get_ionic_fraction(ION_Ne_n) *
+                        ntot * ne * cell.get_ionic_fraction(ION_Ne_n) *
                             abundances.get_abundance(ELEMENT_Ne));
-    eval.set_emissivity(EMISSIONLINE_NeII_12mu, 1.e-6 * ntot * cneii12);
-    eval.set_emissivity(EMISSIONLINE_NIII_57mu, 1.e-6 * ntot * cniii57);
-    eval.set_emissivity(EMISSIONLINE_NeIII_15mu, 1.e-6 * ntot * cneiii15);
-    eval.set_emissivity(EMISSIONLINE_NII_122mu, 1.e-6 * ntot * cnii122);
-    eval.set_emissivity(EMISSIONLINE_CII_2325, 1.e-6 * ntot * cii2325);
-    eval.set_emissivity(EMISSIONLINE_CIII_1908, 1.e-6 * ntot * ciii1908);
-    eval.set_emissivity(EMISSIONLINE_OII_7325, 1.e-6 * ntot * coii7325);
-    eval.set_emissivity(EMISSIONLINE_SIV_10mu, 1.e-6 * ntot * csiv10);
+    eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * cneii12);
+    eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * cniii57);
+    eval.set_emissivity(EMISSIONLINE_NeIII_15mu, ntot * cneiii15);
+    eval.set_emissivity(EMISSIONLINE_NII_122mu, ntot * cnii122);
+    eval.set_emissivity(EMISSIONLINE_CII_2325, ntot * cii2325);
+    eval.set_emissivity(EMISSIONLINE_CIII_1908, ntot * ciii1908);
+    eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
+    eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
+    // we converted Kenny's constant from erg/cm^6/s to J/m^6/s
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
-                        ne * nhep * 1.69e-17 * std::pow(t4, -1.065));
+                        ne * nhep * 1.69e-18 * std::pow(t4, -1.065));
     double T = cell.get_temperature();
     eval.set_emissivity(EMISSIONLINE_Hrec_s,
                         ne * nhp * 7.982e-23 /

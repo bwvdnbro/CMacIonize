@@ -307,7 +307,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double OmNeII = 0.368;
 #endif
 
-  double kb = 1.38e-16;
+  // Boltzmann constant (in J s^-1)
+  double kb = 1.38e-23;
 
   electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
       electron_density, "cm^-3");
@@ -455,10 +456,6 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 #endif
   cooling += CNIII + CNeII;
 
-  // cooling now is in erg/s/hydrogen atom
-  // convert to J/s (kg m^2s^-3)
-  cooling = UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cooling, "erg s^-1");
-
   return cooling;
 }
 
@@ -470,56 +467,56 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * @param electron_density Electron density (in m^-3).
  * @param abundances Ion abundances.
  * @param c6300 Variable to store the oxygen 6300 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c9405 Variable to store the sulfur 9405 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c6312 Variable to store the sulfur 6312 angstrom emission line
- * strength in.
- * @param c33mu Variable that is not used in the output.
+ * strength in (in J s^-1).
+ * @param c33mu Variable that is not used in the output (in J s^-1).
  * @param c19mu Variable to store the sulfur 18.7 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c3729 Variable to store the oxygen 3729 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c3727 Variable to store the oxygen 3727 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c7330 Variable to store the oxygen 7330 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c4363 Variable to store the oxygen 4363 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c5007 Variable to store the oxygen 5007 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c52mu Variable to store the oxygen 52 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c88mu Variable to store the oxygen 88 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c5755 Variable to store the nitrogen 5755 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c6584 Variable to store the nitrogen 6584 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c4072 Variable to store the sulfur 4072 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c6717 Variable to store the sulfur 6717 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c6725 Variable to store the sulfur 6725 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param c3869 Variable to store the neon 3869 angstrom emission line strength
- * in.
+ * in (in J s^-1).
  * @param cniii57 Variable to store the nitrogen 57.3 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param cneii12 Variable to store the neon 12.8 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param cneiii15 Variable to store the neon 15.5 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param cnii122 Variable to store the nitrogen 122 micrometre emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param cii2325 Variable to store the carbon 2325 angstrom emission line
- * strength in.
+ * strength in (in J s^-1).
  * @param ciii1908 Variable to store the carbon 1907 + 1909 angstrom emission
- * line strength in.
+ * line strength in (in J s^-1).
  * @param coii7325 Variable to store the oxygen 7320 + 7330 angstrom emission
- * line strength in.
+ * line strength in (in J s^-1).
  * @param csiv10 Variable to store the sulfur 10 micrometre (?) emission line
- * strength in.
+ * strength in (in J s^-1).
  */
 void LineCoolingData::linestr(
     double temperature, double electron_density, double *abundances,
@@ -535,7 +532,9 @@ void LineCoolingData::linestr(
   double EnNeII = 1125.;
   double EaNeII = 8.55e-3;
   double OmNeII = 0.303;
-  double kb = 1.38e-16;
+
+  // Boltzmann constant (in J s^-1)
+  double kb = 1.38e-23;
 
   electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
       electron_density, "cm^-3");

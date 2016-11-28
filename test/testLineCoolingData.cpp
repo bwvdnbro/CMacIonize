@@ -176,32 +176,110 @@ int main(int argc, char **argv) {
                    c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
                    c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
                    cii2325, ciii1908, coii7325, csiv10);
-      assert_values_equal_rel(c6300, c6300f, 1.e-15);
-      assert_values_equal_rel(c9405, c9405f, 1.e-15);
-      assert_values_equal_rel(c6312, c6312f, 1.e-15);
-      assert_values_equal_rel(c33mu, c33muf, 1.e-15);
-      assert_values_equal_rel(c19mu, c19muf, 1.e-15);
-      assert_values_equal_rel(c3729, c3729f, 1.e-15);
-      assert_values_equal_rel(c3727, c3727f, 1.e-15);
-      assert_values_equal_rel(c7330, c7330f, 1.e-15);
-      assert_values_equal_rel(c4363, c4363f, 1.e-15);
-      assert_values_equal_rel(c5007, c5007f, 1.e-15);
-      assert_values_equal_rel(c52mu, c52muf, 1.e-15);
-      assert_values_equal_rel(c88mu, c88muf, 1.e-15);
-      assert_values_equal_rel(c5755, c5755f, 1.e-15);
-      assert_values_equal_rel(c6584, c6584f, 1.e-15);
-      assert_values_equal_rel(c4072, c4072f, 1.e-15);
-      assert_values_equal_rel(c6717, c6717f, 1.e-15);
-      assert_values_equal_rel(c6725, c6725f, 1.e-15);
-      assert_values_equal_rel(c3869, c3869f, 1.e-15);
-      assert_values_equal_rel(cniii57, cniii57f, 1.e-15);
-      assert_values_equal_rel(cneii12, cneii12f, 1.e-15);
-      assert_values_equal_rel(cneiii15, cneiii15f, 1.e-15);
-      assert_values_equal_rel(cnii122, cnii122f, 1.e-15);
-      assert_values_equal_rel(cii2325, cii2325f, 1.e-15);
-      assert_values_equal_rel(ciii1908, ciii1908f, 1.e-15);
-      assert_values_equal_rel(coii7325, coii7325f, 1.e-15);
-      assert_values_equal_rel(csiv10, csiv10f, 1.e-15);
+      assert_values_equal_rel(
+          c6300,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6300f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c9405,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c9405f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6312,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6312f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c33mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c33muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c19mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c19muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3729,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3729f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3727,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3727f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c7330,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c7330f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c4363,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c4363f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c5007,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c5007f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c52mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c52muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c88mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c88muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c5755,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c5755f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6584,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6584f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c4072,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c4072f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6717,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6717f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6725,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6725f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3869,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3869f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cniii57,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cniii57f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cneii12,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cneii12f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cneiii15,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cneiii15f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cnii122,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cnii122f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cii2325,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cii2325f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          ciii1908,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(ciii1908f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          coii7325,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(coii7325f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          csiv10,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(csiv10f, "erg s^-1"),
+          1.e-15);
     }
   }
 
