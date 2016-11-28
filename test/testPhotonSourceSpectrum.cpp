@@ -69,7 +69,7 @@ double HLyc_luminosity(CrossSections &cross_sections, double T,
   double xsecH = cross_sections.get_cross_section(
       ION_H_n,
       UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
-  return frequency * frequency * frequency * xsecH *
+  return 1.e22 * frequency * frequency * xsecH *
          exp(-157919.667 * (frequency - 1.) / T);
 }
 
@@ -136,9 +136,8 @@ int main(int argc, char **argv) {
     }
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
-      double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
-                             spectrum.get_random_frequency(), "eV") /
-                         13.6;
+      // we manually convert from Hz to 13.6 eV for efficiency reasons
+      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
@@ -160,43 +159,44 @@ int main(int argc, char **argv) {
     }
   }
 
-  return 0;
-
   // HydrogenLymanContinuumSpectrum
   {
     std::ofstream file("hydrogenlymancontinuum.txt");
     VernerCrossSections cross_sections;
     HydrogenLymanContinuumSpectrum spectrum(cross_sections, random_generator);
-    for (unsigned int iT = 0; iT < 10; ++iT) {
-      double T = 1500. + (iT + 0.5) * 13500. / 10;
-      spectrum.set_temperature(T);
+    double T = 8888.;
+    spectrum.set_temperature(T);
 
-      unsigned int counts[100];
-      for (unsigned int i = 0; i < 100; ++i) {
-        counts[i] = 0;
-      }
-      unsigned int numsample = 1000000;
-      for (unsigned int i = 0; i < numsample; ++i) {
-        double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
-                               spectrum.get_random_frequency(), "eV") /
-                           13.6;
-        unsigned int index = (rand_freq - 1.) * 100. / 3.;
-        ++counts[index];
-      }
+    unsigned int counts[100];
+    for (unsigned int i = 0; i < 100; ++i) {
+      counts[i] = 0;
+    }
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      // we manually convert from Hz to 13.6 eV for efficiency reasons
+      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      ++counts[index];
+    }
 
-      double enorm = HLyc_luminosity(cross_sections, T, 1.045);
-      if (counts[1]) {
-        enorm /= counts[1];
-      }
-      for (unsigned int i = 0; i < 100; ++i) {
-        double nu = 1. + (i + 0.5) * 0.03;
-        double tval = HLyc_luminosity(cross_sections, T, nu);
-        double bval = counts[i] * enorm;
-        file << nu << "\t" << tval << "\t" << bval << "\n";
-        assert_values_equal_tol(tval, bval, 0.1);
-      }
+    double enorm = HLyc_luminosity(cross_sections, T, 1.045);
+    if (counts[1]) {
+      enorm /= counts[1];
+    }
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1. + (i + 0.5) * 0.03;
+      double tval = HLyc_luminosity(cross_sections, T, nu);
+      double bval = counts[i] * enorm;
+      double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
+      // we fitted a line in x-log10(y) space to the actual relative difference
+      double tolerance = std::pow(10., -2.12 + 0.121377 * (i - 4.));
+      file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
+           << tolerance << "\n";
+      assert_values_equal_rel(tval, bval, tolerance);
     }
   }
+
+  return 0;
 
   // HeliumLymanContinuumSpectrum
   {

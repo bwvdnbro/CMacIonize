@@ -47,11 +47,14 @@ using namespace std;
 HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     CrossSections &cross_sections, RandomGenerator &random_generator)
     : _random_generator(random_generator) {
-  double max_frequency = 4.;
+  const double min_frequency = 3.289e15;
+  const double max_frequency = 4. * min_frequency;
+  const double planck_constant = 6.626e-27;
+  const double boltzmann_constant = 1.38e-16;
   // set up the frequency bins
   for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = 1. +
-                    i * (max_frequency - 1.) /
+    _frequency[i] = min_frequency +
+                    i * (max_frequency - min_frequency) /
                         (HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
   for (unsigned int iT = 0; iT < HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
@@ -60,23 +63,18 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
         1500. + (iT + 0.5) * 13500. / HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP;
     for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
-      double xsecH = cross_sections.get_cross_section(
-          ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
-                       _frequency[inu - 1] * 13.6, "eV"));
-      xsecH = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecH, "cm^2") /
-              1.e-18;
+      double xsecH =
+          cross_sections.get_cross_section(ION_H_n, _frequency[inu - 1]);
       double jHIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecH *
-          std::exp(-157919.667 * (_frequency[inu - 1] - 1.) / _temperature[iT]);
-      xsecH = cross_sections.get_cross_section(
-          ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(
-                       _frequency[inu] * 13.6, "eV"));
-      xsecH = UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(xsecH, "cm^2") /
-              1.e-18;
+          std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
+                   (boltzmann_constant * _temperature[iT]));
+      xsecH = cross_sections.get_cross_section(ION_H_n, _frequency[inu]);
       double jHIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecH *
-          std::exp(-157919.667 * (_frequency[inu] - 1.) / _temperature[iT]);
+          std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /
+                   (boltzmann_constant * _temperature[iT]));
       _cumulative_distribution[iT][inu] =
           0.5 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
           (_frequency[inu] - _frequency[inu - 1]);
@@ -86,7 +84,7 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
          ++inu) {
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
-          _cumulative_distribution[iT][inu] * 1.e25;
+          _cumulative_distribution[iT][inu];
     }
     // normalize
     for (unsigned int inu = 0; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
@@ -96,6 +94,9 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
                                   [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
     }
   }
+
+  _current_T = 0.;
+  _current_iT = 0;
 }
 
 /**
@@ -105,6 +106,8 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
  */
 void HydrogenLymanContinuumSpectrum::set_temperature(double T) {
   _current_T = T;
+  _current_iT = Utilities::locate(_current_T, _temperature,
+                                  HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
 }
 
 /**
@@ -113,16 +116,17 @@ void HydrogenLymanContinuumSpectrum::set_temperature(double T) {
  * @return Random frequency (in Hz).
  */
 double HydrogenLymanContinuumSpectrum::get_random_frequency() {
-  unsigned int iT = Utilities::locate(_current_T, _temperature,
-                                      HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = _random_generator.get_uniform_random_double();
-  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
-                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
-                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency = _frequency[inu1] +
-                     (_current_T - _temperature[iT]) *
-                         (_frequency[inu2] - _frequency[inu1]) /
-                         (_temperature[iT + 1] - _temperature[iT]);
-  return UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6 * frequency, "eV");
+  unsigned int inu1 =
+      Utilities::locate(x, _cumulative_distribution[_current_iT],
+                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 =
+      Utilities::locate(x, _cumulative_distribution[_current_iT + 1],
+                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  double frequency =
+      _frequency[inu1] +
+      (_current_T - _temperature[_current_iT]) *
+          (_frequency[inu2] - _frequency[inu1]) /
+          (_temperature[_current_iT + 1] - _temperature[_current_iT]);
+  return frequency;
 }

@@ -56,6 +56,9 @@ private:
   /*! @brief Current temperature (in K). */
   double _current_T;
 
+  /*! @brief Index of the bin holding the current temperature. */
+  unsigned int _current_iT;
+
   /*! @brief RandomGenerator used to generate random numbers. */
   RandomGenerator &_random_generator;
 
