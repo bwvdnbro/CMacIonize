@@ -231,10 +231,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  return 0;
-
   // HeliumTwoPhotonContinuumSpectrum
   {
+    std::ofstream file("heliumtwophotoncontinuum.txt");
     HeliumTwoPhotonContinuumSpectrum spectrum(random_generator);
     vector< double > yHe2q;
     vector< double > AHe2q;
@@ -246,9 +245,8 @@ int main(int argc, char **argv) {
     }
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
-      double rand_freq = UnitConverter::to_unit< QUANTITY_FREQUENCY >(
-                             spectrum.get_random_frequency(), "eV") /
-                         13.6;
+      // we manually convert from Hz to 13.6 eV for efficiency reasons
+      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 0.6;
       ++counts[index];
     }
@@ -256,8 +254,14 @@ int main(int argc, char **argv) {
     double enorm = spectrum.get_integral(yHe2q, AHe2q) / numsample / 0.006;
     for (unsigned int i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.006;
-      assert_values_equal_tol(He2pc_luminosity(yHe2q, AHe2q, nu),
-                              counts[i] * enorm, 0.1);
+      double tval = He2pc_luminosity(yHe2q, AHe2q, nu);
+      double bval = counts[i] * enorm;
+      double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
+      // we fitted a line in x-log10(y) space to the actual relative difference
+      double tolerance = std::pow(10., -2.1 + 0.0191911 * (i - 17.));
+      file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
+           << tolerance << "\n";
+      assert_values_equal_rel(tval, bval, tolerance);
     }
   }
 
