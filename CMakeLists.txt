@@ -62,6 +62,9 @@ add_compiler_flag("-std=c++11" REQUIRED)
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 
+# Add a Profile CMAKE_BUILD_TYPE
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
+
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
