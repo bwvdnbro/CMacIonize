@@ -28,9 +28,15 @@ configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
 
 # VernerCrossSectionsDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/verner_data.txt
-               ${PROJECT_BINARY_DIR}/data/verner_data.txt COPYONLY)
-set(VERNERCROSSSECTIONSDATALOCATION ${PROJECT_BINARY_DIR}/data/verner_data.txt)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_A.dat
+               ${PROJECT_BINARY_DIR}/data/verner_A.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_B.dat
+               ${PROJECT_BINARY_DIR}/data/verner_B.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_C.dat
+               ${PROJECT_BINARY_DIR}/data/verner_C.dat COPYONLY)
+set(VERNERCROSSSECTIONSDATALOCATION_A ${PROJECT_BINARY_DIR}/data/verner_A.dat)
+set(VERNERCROSSSECTIONSDATALOCATION_B ${PROJECT_BINARY_DIR}/data/verner_B.dat)
+set(VERNERCROSSSECTIONSDATALOCATION_C ${PROJECT_BINARY_DIR}/data/verner_C.dat)
 message(STATUS
       "VernerCrossSectionsDataLocation.hpp: ${VERNERCROSSSECTIONSDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in

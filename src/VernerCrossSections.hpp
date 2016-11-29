@@ -28,25 +28,62 @@
 
 #include "CrossSections.hpp"
 
+#include <vector>
+
+/**
+ * @brief Enum used to identify the columns in verner_A.txt.
+ */
+enum VernerDataA {
+  VERNERDATA_A_l = 0,
+  VERNERDATA_A_E_th,
+  VERNERDATA_A_E_0,
+  VERNERDATA_A_sigma_0,
+  VERNERDATA_A_y_a,
+  VERNERDATA_A_P,
+  VERNERDATA_A_y_w_squared,
+  /*! @brief Counter. Should always be the last element. */
+  VERNERDATA_A_NUMELEMENTS
+};
+
+/**
+ * @brief Enum used to identify the columns in verner_B.txt.
+ */
+enum VernerDataB {
+  VERNERDATA_B_E_0 = 0,
+  VERNERDATA_B_sigma_0,
+  VERNERDATA_B_y_a,
+  VERNERDATA_B_P,
+  VERNERDATA_B_y_w_squared,
+  VERNERDATA_B_y_0,
+  VERNERDATA_B_y_1_squared,
+  /*! @brief Counter. Should always be the last element. */
+  VERNERDATA_B_NUMELEMENTS
+};
+
+/**
+ * @brief Enum used to identify the columns in verner_C.txt.
+ */
+enum VernerDataC {
+  VERNERDATA_C_Ninn = 0,
+  VERNERDATA_C_Ntot,
+  /*! @brief Counter. Should always be the last element. */
+  VERNERDATA_C_NUMELEMENTS
+};
+
 /**
  * @brief CrossSections implementation for Verner's cross sections.
  */
 class VernerCrossSections : public CrossSections {
 private:
-  /*! @brief L array from Verner's script. */
-  unsigned char _L[7];
+  /*! @brief Verner data A: inner shell cross sections. */
+  std::vector< std::vector< std::vector< std::vector< double > > > > _data_A;
 
-  /*! @brief NINN array from Verner's script. */
-  unsigned char _NINN[30];
+  /*! @brief Verner data B: better fits for low energies. */
+  std::vector< std::vector< std::vector< double > > > _data_B;
 
-  /*! @brief NTOT array from Verner's script. */
-  unsigned char _NTOT[30];
-
-  /*! @brief PH1 array from Verner's script. */
-  double _PH1[6][30][30][7];
-
-  /*! @brief PH2 array from Verner's script. */
-  double _PH2[7][30][30];
+  /*! @brief Verner data C: inner and outer shell numbers used to decide which
+   *  fit to use. */
+  std::vector< std::vector< double > > _data_C;
 
 public:
   VernerCrossSections();
