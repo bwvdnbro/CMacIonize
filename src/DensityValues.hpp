@@ -45,9 +45,6 @@ private:
   /*! @brief Temperature (in K). */
   double _temperature;
 
-  /*! @brief Helium abundance. */
-  double _helium_abundance;
-
   /*! @brief Probability of re-emitting an ionizing photon after absorption by
    *  hydrogen. */
   double _pHion;
@@ -80,7 +77,7 @@ public:
    * @brief Empty constructor.
    */
   inline DensityValues()
-      : _total_density(0.), _temperature(0.), _helium_abundance(0.), _pHion(0.),
+      : _total_density(0.), _temperature(0.), _pHion(0.),
         _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
         _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {

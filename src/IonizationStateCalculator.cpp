@@ -30,7 +30,6 @@
 #include "DensityValues.hpp"
 #include "Error.hpp"
 #include "RecombinationRates.hpp"
-#include "UnitConverter.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -366,17 +365,8 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
                                         double jH, double jHe, double nH,
                                         double AHe, double T, double &h0,
                                         double &he0) {
-  // unit conversions
-  // we use Kenny's units inside this function, but all input and output units
-  // are SI units
-  alphaH = UnitConverter::to_unit< QUANTITY_REACTION_RATE >(alphaH, "cm^3s^-1");
-  alphaHe =
-      UnitConverter::to_unit< QUANTITY_REACTION_RATE >(alphaHe, "cm^3s^-1");
-  jH = UnitConverter::to_unit< QUANTITY_FREQUENCY >(jH, "s^-1");
-  jHe = UnitConverter::to_unit< QUANTITY_FREQUENCY >(jHe, "s^-1");
-  nH = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(nH, "cm^-3");
-
-  double alpha_e_2sP = 4.27e-14 * std::pow(T * 1.e-4, -0.695);
+  // we multiplied Kenny's value with 1.e-6 to convert from cm^3s^-1 to m^3s^-1
+  double alpha_e_2sP = 4.27e-20 * std::pow(T * 1.e-4, -0.695);
   double ch1 = alphaH * nH / jH;
   double ch2 = AHe * alpha_e_2sP * nH / jH;
   double che = 0.;
@@ -463,13 +453,6 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
 void IonizationStateCalculator::find_H0_simple(double alphaH, double jH,
                                                double nH, double T,
                                                double &h0) {
-  // unit conversions
-  // we use Kenny's units inside this function, but all input and output units
-  // are SI units
-  alphaH = UnitConverter::to_unit< QUANTITY_REACTION_RATE >(alphaH, "cm^3s^-1");
-  jH = UnitConverter::to_unit< QUANTITY_FREQUENCY >(jH, "s^-1");
-  nH = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(nH, "cm^-3");
-
   if (jH > 0. && nH > 0.) {
     double aa = 0.5 * jH / nH / alphaH;
     double bb = 2. / aa;

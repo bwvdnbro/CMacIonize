@@ -26,7 +26,6 @@
  */
 #include "VernerRecombinationRates.hpp"
 #include "Error.hpp"
-#include "UnitConverter.hpp"
 #include "VernerRecombinationRatesDataLocation.hpp"
 #include <cmath>
 #include <fstream>
@@ -216,6 +215,7 @@ double VernerRecombinationRates::get_recombination_rate(IonName ion,
   default:
     error("Unknown ion: %i", ion);
   }
-  rate = UnitConverter::to_SI< QUANTITY_REACTION_RATE >(rate, "cm^3s^-1");
+  // convert cm^3s^-1 to m^3s^-1
+  rate *= 1.e-6;
   return rate;
 }

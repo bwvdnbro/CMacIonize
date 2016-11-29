@@ -249,10 +249,10 @@ int main(int argc, char **argv) {
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
-    if (loop < 4) {
-      ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
-    } else {
+    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
       temperature_calculator.calculate_temperature(lnumphoton, *grid);
+    } else {
+      ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
     }
     log->write_status("Done calculating ionization state.");
 

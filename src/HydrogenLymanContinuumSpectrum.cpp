@@ -31,7 +31,6 @@
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "CrossSections.hpp"
 #include "ElementNames.hpp"
-#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 using namespace std;

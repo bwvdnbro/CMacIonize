@@ -31,7 +31,6 @@
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "RecombinationRates.hpp"
-#include "UnitConverter.hpp"
 #include <cmath>
 
 /**

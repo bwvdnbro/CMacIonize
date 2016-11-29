@@ -26,7 +26,6 @@
  */
 #include "LineCoolingData.hpp"
 #include "Error.hpp"
-#include "UnitConverter.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -310,10 +309,9 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   // Boltzmann constant (in J s^-1)
   double kb = 1.38e-23;
 
-  electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
-      electron_density, "cm^-3");
-
-  double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
+  // we multiplied Kenny's value with 1.e-6 to take into account the fact that
+  // electron_density is in m^-3 and not in cm^-3
+  double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
   double T4 = temperature * 1.e-4;
 
   double Om[10][10];
@@ -536,10 +534,9 @@ void LineCoolingData::linestr(
   // Boltzmann constant (in J s^-1)
   double kb = 1.38e-23;
 
-  electron_density = UnitConverter::to_unit< QUANTITY_NUMBER_DENSITY >(
-      electron_density, "cm^-3");
-
-  double cfac = 8.63e-6 * electron_density / std::sqrt(temperature);
+  // we multiplied Kenny's value with 1.e-6 to take into account the fact that
+  // electron_density is in m^-3 and not in cm^-3
+  double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
   double T4 = temperature * 1.e-4;
 
   double Om[10][10];

@@ -25,7 +25,6 @@
  */
 #include "VernerCrossSections.hpp"
 #include "Error.hpp"
-#include "UnitConverter.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
 #include <cmath>
 #include <fstream>
@@ -133,7 +132,8 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
                                                      double e) {
-  e = UnitConverter::to_unit< QUANTITY_FREQUENCY >(e, "eV");
+  // convert Hz to eV
+  e /= (1.5091902e33 * 1.60217662e-19);
 
   double s = 0.;
   if (nz < 1 || nz > 30) {
@@ -192,7 +192,8 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     double b = 1. + sqrt(z / _PH2[2][nz - 1][ne - 1]);
     s = a * pow(z, q) * pow(b, p1);
   }
-  return UnitConverter::to_SI< QUANTITY_SURFACE_AREA >(1.e-18 * s, "cm^2");
+  // convert 1.e-18 cm^2 to m^2
+  return s * 1.e-22;
 }
 
 /**

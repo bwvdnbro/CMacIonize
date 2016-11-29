@@ -30,7 +30,6 @@
  */
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumDataLocation.hpp"
-#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <fstream>
 #include <vector>

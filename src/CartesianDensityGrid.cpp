@@ -32,7 +32,6 @@
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
 #include "Timer.hpp"
-#include "UnitConverter.hpp"
 #include <sstream>
 using namespace std;
 
@@ -486,19 +485,3 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
 
   return is_inside(index, photon_origin);
 }
-
-///**
-// * @brief Reset the internal mean intensity counters and update reemission
-// * probabilities.
-// */
-// void DensityGrid::reset_grid() {
-//  for (int i = 0; i < _ncell.x(); ++i) {
-//    for (int j = 0; j < _ncell.y(); ++j) {
-//      for (int k = 0; k < _ncell.z(); ++k) {
-//        DensityValues &cell = _density[i][j][k];
-//        set_reemission_probabilities(cell.get_temperature(), cell);
-//        cell.reset_mean_intensities();
-//      }
-//    }
-//  }
-//}
