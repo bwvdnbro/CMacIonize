@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 ################################################################################
 # This file is part of CMacIonize
 # Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)

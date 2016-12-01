@@ -30,7 +30,7 @@
 #include <boost/python/module.hpp>
 #include <cmath>
 
-boost::python::list python_linestr(LineCoolingData &lines,
+boost::python::list python_linestr(LineCoolingData &lines, double T, double ne,
                                    boost::python::list abundances) {
   double abund[12];
   for (unsigned int i = 0; i < 12; ++i) {
@@ -42,10 +42,10 @@ boost::python::list python_linestr(LineCoolingData &lines,
          c5755 = 0., c6584 = 0., c4072 = 0., c6717 = 0., c6725 = 0., c3869 = 0.,
          cniii57 = 0., cneii12 = 0., cneiii15 = 0., cnii122 = 0., cii2325 = 0.,
          ciii1908 = 0., coii7325 = 0., csiv10 = 0.;
-  lines.linestr(8000., 100., abund, c6300, c9405, c6312, c33mu, c19mu, c3729,
-                c3727, c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
-                c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
-                cii2325, ciii1908, coii7325, csiv10);
+  lines.linestr(T, ne, abund, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
+                c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072, c6717,
+                c6725, c3869, cniii57, cneii12, cneiii15, cnii122, cii2325,
+                ciii1908, coii7325, csiv10);
 
   boost::python::list linestrengths;
   linestrengths.append(c6300);

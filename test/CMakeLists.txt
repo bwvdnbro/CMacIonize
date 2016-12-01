@@ -562,6 +562,36 @@ configure_file(${PROJECT_SOURCE_DIR}/test/hiilines_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/hiilines_testdata.txt
                COPYONLY)
 
+### Python module unit tests ###################################################
+macro(add_python_unit_test)
+    set(oneValueArgs NAME)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
+                               "${multiValueArgs}" ${ARGN})
+    message(STATUS "generating python test " ${TEST_NAME})
+
+    # copy Python test script
+    configure_file(${PROJECT_SOURCE_DIR}/test/${TEST_NAME}
+                   ${PROJECT_BINARY_DIR}/rundir/test/${TEST_NAME}
+                   COPYONLY)
+    add_test(NAME ${TEST_NAME}
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
+             COMMAND ${PYTHON_EXECUTABLE} ${TEST_NAME})
+
+    set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+endmacro(add_python_unit_test)
+
+if(HAVE_PYTHON)
+
+## Configure the load_module script
+set(PYTHON_MODULEPATH ${PROJECT_BINARY_DIR})
+configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py
+               ${PROJECT_BINARY_DIR}/rundir/test/load_module.py @ONLY)
+
+## LineCoolingDataModule test
+add_python_unit_test(NAME test_linecoolingdata.py)
+
+endif(HAVE_PYTHON)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
