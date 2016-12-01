@@ -52,6 +52,7 @@ VernerCrossSections::VernerCrossSections() {
 
       unsigned int iZ = Z - 1;
       unsigned int iN = N - 1;
+
       // n and l need to be combined to get the shell number
       if (n < 3) {
         n += l;
@@ -187,7 +188,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
 
   unsigned int nint = _data_C[iN][VERNERDATA_C_Ninn];
   double einn;
-  if (nz == 15 || nz == 17 || nz == 19 || (nz > 20 && nz <= 26)) {
+  if (nz == 15 || nz == 17 || nz == 19 || (nz > 20 && nz != 26)) {
     einn = 0.;
   } else {
     if (ne < 3) {

@@ -96,6 +96,8 @@ private:
                           DensityFunction &density_function,
                           unsigned long next_index) {
     if (refinement_scheme->refine(level, midpoint, values)) {
+      // copy the initial values
+      DensityValues old_values = values;
       // initialize and check refinement criterion for children
       unsigned long child_index = _grid.refine_cell(index);
       while (child_index != next_index) {
@@ -105,10 +107,11 @@ private:
         // copy all other values from parent
         for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
           IonName ion = static_cast< IonName >(i);
-          cell.set_ionic_fraction(ion, values.get_ionic_fraction(ion));
+          cell.set_ionic_fraction(ion, old_values.get_ionic_fraction(ion));
         }
-        cell.set_temperature(values.get_temperature());
-        cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());
+        cell.set_temperature(old_values.get_temperature());
+        cell.set_old_neutral_fraction_H(
+            old_values.get_old_neutral_fraction_H());
         // set reemission probabilities
         set_reemission_probabilities(cell.get_temperature(), cell);
         unsigned long next_child_index = _grid.get_next_key(child_index);

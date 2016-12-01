@@ -62,6 +62,15 @@ add_compiler_flag("-std=c++11" REQUIRED)
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 
+# Enable the address sanitizer in debug builds
+# (to symbolize the code, run
+#   export ASAN_SYMBOLIZER_PATH=<path to llvm-symbolizer>
+#   export ASAN_OPTIONS=symbolize=1
+#  before running the code)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_compiler_flag("-fsanitize=address -fno-omit-frame-pointer" OPTIONAL)
+endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
 # Add a Profile CMAKE_BUILD_TYPE
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
