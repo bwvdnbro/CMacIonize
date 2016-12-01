@@ -34,6 +34,7 @@
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
+#include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
@@ -171,6 +172,8 @@ int main(int argc, char **argv) {
   TemperatureCalculator temperature_calculator(
       Q, abundances, params.get_value< double >("pahfac", 1.),
       line_cooling_data, recombination_rates, charge_transfer_rates);
+  // used to calculate emissivities at the end of the loop
+  EmissivityCalculator emissivity_calculator(abundances, line_cooling_data);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -255,6 +258,11 @@ int main(int argc, char **argv) {
       ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
     }
     log->write_status("Done calculating ionization state.");
+
+    // calculate emissivities
+    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
+      emissivity_calculator.calculate_emissivities(*grid);
+    }
 
     // write snapshot
     writer->write(loop, params);

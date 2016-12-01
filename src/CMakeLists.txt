@@ -103,6 +103,7 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
+    EmissivityCalculator.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -140,6 +141,8 @@ set(CMACIONIZE_SOURCES
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
+    EmissivityCalculator.hpp
+    EmissivityValues.hpp
     Error.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp

@@ -31,7 +31,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-using namespace std;
 
 /**
  * @brief Unit test for the VernerCrossSections class.
@@ -43,12 +42,12 @@ using namespace std;
 int main(int argc, char **argv) {
   VernerCrossSections cross_sections;
 
-  ifstream file("verner_testdata.txt");
-  string line;
+  std::ifstream file("verner_testdata.txt");
+  std::string line;
   while (getline(file, line)) {
     if (line[0] != '#') {
 
-      istringstream linestream(line);
+      std::istringstream linestream(line);
 
       double e, xsecH, xsecHe, xsecCp1, xsecCp2, xsecN, xsecNp1, xsecNp2, xsecO,
           xsecOp1, xsecNe, xsecNep1, xsecSp1, xsecSp2, xsecSp3;

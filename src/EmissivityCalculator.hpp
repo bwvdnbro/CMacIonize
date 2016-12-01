@@ -28,6 +28,8 @@
 
 #include "EmissivityValues.hpp"
 
+#include <vector>
+
 class Abundances;
 class DensityGrid;
 class DensityValues;
@@ -41,24 +43,30 @@ class EmissivityCalculator {
    *  coefficients (natural logarithm, in K). */
   double _logttab[8];
 
-  /*! @brief Plt table for hydrogen continuous emission coefficients (natural
-   *  logarithm, no idea what unit). */
+  /*! @brief Hydrogen continuous emission coefficient at 3681 angstrom (natural
+   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1). */
   double _loghplt[8];
 
-  /*! @brief Mit table for hydrogen continuous emission coefficients (natural
-   *  logarithm, no idea what unit). */
+  /*! @brief Hydrogen continuous emission coefficient at 3646 angstrom (natural
+   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1). */
   double _loghmit[8];
 
-  /*! @brief Plt table for helium continuous emission coefficients (natural
-   *  logarithm, no idea what unit). */
+  /*! @brief Helium continuous emission coefficient at 3681 angstrom (natural
+   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1).  */
   double _logheplt[8];
 
-  /*! @brief Mit table for helium continuous emission coefficients (natural
-   *  logarithm, no idea what unit). */
+  /*! @brief Helium continuous emission coefficient at 3646 angstrom (natural
+   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1).  */
   double _loghemit[8];
 
+  /*! @brief Abundances. */
+  Abundances &_abundances;
+
+  /*! @brief LineCoolingData used to calculate line strengths. */
+  LineCoolingData &_lines;
+
 public:
-  EmissivityCalculator();
+  EmissivityCalculator(Abundances &abundances, LineCoolingData &lines);
 
   void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
              double &emhemi);

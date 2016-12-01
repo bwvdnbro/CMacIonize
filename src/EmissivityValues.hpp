@@ -26,6 +26,10 @@
 #ifndef EMISSIVITYVALUES_HPP
 #define EMISSIVITYVALUES_HPP
 
+#include "Error.hpp"
+
+#include <string>
+
 /**
  * @brief Names for emission lines.
  */
@@ -98,6 +102,78 @@ public:
    */
   inline void set_emissivity(EmissionLine line, double emissivity) {
     _emissivities[line] = emissivity;
+  }
+
+  /**
+   * @brief Get a std::string representation of the given EmissionLine name.
+   *
+   * @param line Valid EmissionLine.
+   * @return std::string containing the name of the EmissionLine.
+   */
+  static inline std::string get_name(EmissionLine line) {
+    switch (line) {
+    case EMISSIONLINE_HAlpha:
+      return "Halpha";
+    case EMISSIONLINE_HBeta:
+      return "Hbeta";
+    case EMISSIONLINE_HII:
+      return "HII";
+    case EMISSIONLINE_BALMER_JUMP_LOW:
+      return "BaLow";
+    case EMISSIONLINE_BALMER_JUMP_HIGH:
+      return "BaHigh";
+    case EMISSIONLINE_OI_6300:
+      return "OI_6300";
+    case EMISSIONLINE_OII_3727:
+      return "OII_3727";
+    case EMISSIONLINE_OIII_5007:
+      return "OIII_5007";
+    case EMISSIONLINE_OIII_4363:
+      return "OIII_4363";
+    case EMISSIONLINE_OIII_88mu:
+      return "OIII_88mu";
+    case EMISSIONLINE_NII_5755:
+      return "NII_5755";
+    case EMISSIONLINE_NII_6584:
+      return "NII_6584";
+    case EMISSIONLINE_NeIII_3869:
+      return "NeIII_3869";
+    case EMISSIONLINE_SII_6725:
+      return "SII_6725";
+    case EMISSIONLINE_SII_4072:
+      return "SII_4072";
+    case EMISSIONLINE_SIII_9405:
+      return "SIII_9405";
+    case EMISSIONLINE_SIII_6312:
+      return "SIII_6213";
+    case EMISSIONLINE_SIII_19mu:
+      return "SIII_19mu";
+    case EMISSIONLINE_NEON_FRACTION:
+      return "NeonFraction";
+    case EMISSIONLINE_NeII_12mu:
+      return "NeII_12mu";
+    case EMISSIONLINE_NIII_57mu:
+      return "NIII_57mu";
+    case EMISSIONLINE_NeIII_15mu:
+      return "NeIII_15mu";
+    case EMISSIONLINE_NII_122mu:
+      return "NII_122mu";
+    case EMISSIONLINE_CII_2325:
+      return "CII_2325";
+    case EMISSIONLINE_CIII_1908:
+      return "CIII_1908";
+    case EMISSIONLINE_OII_7325:
+      return "OII_7325";
+    case EMISSIONLINE_SIV_10mu:
+      return "SIV_10mu";
+    case EMISSIONLINE_HeI_5876:
+      return "HeI_5876";
+    case EMISSIONLINE_Hrec_s:
+      return "Hrec_s";
+    default:
+      error("Unknown EmissionLine: %i!", line);
+      return "";
+    }
   }
 };
 

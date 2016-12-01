@@ -40,11 +40,11 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  EmissivityCalculator calculator;
-
-  DensityValues cell;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   LineCoolingData lines;
+  EmissivityCalculator calculator(abundances, lines);
+
+  DensityValues cell;
 
   // bjump
   {

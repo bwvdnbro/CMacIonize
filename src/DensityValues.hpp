@@ -27,6 +27,7 @@
 #define DENSITYVALUES_HPP
 
 #include "ElementNames.hpp"
+#include "EmissivityValues.hpp"
 
 /**
  * @brief Density values associated with a single cell of the DensityGrid.
@@ -72,6 +73,9 @@ private:
    *  m^3s^-1). */
   double _heating_He;
 
+  /*! @brief EmissivityValues for this cell. */
+  EmissivityValues *_emissivities;
+
 public:
   /**
    * @brief Empty constructor.
@@ -79,10 +83,20 @@ public:
   inline DensityValues()
       : _total_density(0.), _temperature(0.), _pHion(0.),
         _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
-        _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.) {
+        _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.),
+        _emissivities(nullptr) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fraction[i] = 0.;
       _mean_intensity[i] = 0.;
+    }
+  }
+
+  /**
+   * @brief Destructor.
+   */
+  inline ~DensityValues() {
+    if (_emissivities != nullptr) {
+      delete _emissivities;
     }
   }
 
@@ -196,6 +210,19 @@ public:
   }
 
   /**
+   * @brief Set the EmissivityValues for this cell.
+   *
+   * @param emissivities EmissivityValues.
+   */
+  inline void set_emissivities(EmissivityValues *emissivities) {
+    // free memory used by old values (if any)
+    if (_emissivities != nullptr) {
+      delete _emissivities;
+    }
+    _emissivities = emissivities;
+  }
+
+  /**
    * @brief Get the total density.
    *
    * @return Total density (in m^-3).
@@ -274,6 +301,13 @@ public:
    * m^3s^-1).
    */
   inline double get_heating_He() { return _heating_He; }
+
+  /**
+   * @brief Get the EmissivityValues of this cell.
+   *
+   * @return EmissivityValues.
+   */
+  inline EmissivityValues *get_emissivities() { return _emissivities; }
 };
 
 #endif // DENSITYVALUES_HPP
