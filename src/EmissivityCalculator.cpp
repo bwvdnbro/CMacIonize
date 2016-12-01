@@ -195,12 +195,13 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
 
     double t4 = cell.get_temperature() * 1.e-4;
     // we added correction factors 1.e-12 to convert densities to cm^-3
+    // and an extra factor 1.e-1 to convert to J m^-3s^-1
     eval.set_emissivity(EMISSIONLINE_HAlpha,
-                        ne * nhp * 2.87 * 1.24e-17 * std::pow(t4, -0.938));
+                        ne * nhp * 2.87 * 1.24e-38 * std::pow(t4, -0.938));
     eval.set_emissivity(EMISSIONLINE_HBeta,
-                        ne * nhp * 1.24e-17 * std::pow(t4, -0.878));
+                        ne * nhp * 1.24e-38 * std::pow(t4, -0.878));
     eval.set_emissivity(EMISSIONLINE_HII,
-                        nhp * ne * 4.9e-19 * std::pow(t4, -0.848));
+                        nhp * ne * 4.9e-40 * std::pow(t4, -0.848));
 
     double emhpl = 0.;
     double emhmi = 0.;
@@ -236,9 +237,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_CIII_1908, ntot * ciii1908);
     eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
     eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
-    // we converted Kenny's constant from erg/cm^6/s to J/m^6/s
+    // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
-                        ne * nhep * 1.69e-18 * std::pow(t4, -1.065));
+                        ne * nhep * 1.69e-38 * std::pow(t4, -1.065));
     double T = cell.get_temperature();
     eval.set_emissivity(EMISSIONLINE_Hrec_s,
                         ne * nhp * 7.982e-23 /

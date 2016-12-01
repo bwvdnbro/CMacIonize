@@ -122,12 +122,21 @@ int main(int argc, char **argv) {
       EmissivityValues values =
           calculator.calculate_emissivities(cell, abundances, lines);
 
-      assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_HAlpha), em[0],
-                              1.e-15);
-      assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_HBeta), em[1],
-                              1.e-15);
-      assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_HII), em[2],
-                              1.e-15);
+      assert_values_equal_rel(
+          values.get_emissivity(EMISSIONLINE_HAlpha),
+          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[0] * 1.e-20,
+                                                              "erg cm^-3 s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          values.get_emissivity(EMISSIONLINE_HBeta),
+          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[1] * 1.e-20,
+                                                              "erg cm^-3 s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          values.get_emissivity(EMISSIONLINE_HII),
+          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[2] * 1.e-20,
+                                                              "erg cm^-3 s^-1"),
+          1.e-15);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_BALMER_JUMP_LOW),
           UnitConverter::convert(1.e-20 * em[3], "erg cm^-3 s^-1 angstrom^-1",
@@ -253,7 +262,7 @@ int main(int argc, char **argv) {
           1.e-15);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HeI_5876),
-          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[28],
+          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[28] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
           1.e-15);
       assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_Hrec_s),

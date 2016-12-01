@@ -114,6 +114,24 @@ endif(HDF5_FOUND)
 find_package(OpenMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
+# Find Boost, Boost Python and Python
+find_package(Boost COMPONENTS "python")
+if(Boost_FOUND)
+  find_package(PythonLibs)
+  if(PYTHONLIBS_FOUND)
+    message(STATUS "Python and Boost Python found. Will build python modules.")
+    include_directories(${Boost_INCLUDE_DIRS})
+    include_directories(${PYTHON_INCLUDE_PATH})
+    set(HAVE_PYTHON True)
+  else(PYTHONLIBS_FOUND)
+    message(STATUS "Python not found. Not building Python modules.")
+    set(HAVE_PYTHON False)
+  endif(PYTHONLIBS_FOUND)
+else(Boost_FOUND)
+  message(STATUS "Boost Python not found. Not building Python modules.")
+  set(HAVE_PYTHON False)
+endif(Boost_FOUND)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 
@@ -122,6 +140,11 @@ add_subdirectory(src)
 
 # Enter the folder containing the unit tests
 add_subdirectory(test)
+
+# If we have Python, enter the folder containing the Python modules
+if(HAVE_PYTHON)
+  add_subdirectory(python)
+endif(HAVE_PYTHON)
 
 # Copy the benchmark problems
 # Every benchmark has a description file NAME.txt.
