@@ -52,12 +52,17 @@ def main():
 
     results = linecoolingdata.linestr(np.array([T]), np.array([ne]), abundances)
 
-    if len(results[0]) != len(fresults):
+    if len(results) != len(fresults):
       print "Error: expected {a} values, got {b}...".format(a = len(fresults),
-                                                            b = len(results[0]))
+                                                            b = len(results))
       sys.exit(1)
-    for i in range(len(results[0])):
-      a = results[0][i]
+    names = ["c6300", "c9405", "c6312", "c33mu", "c19mu", "c3729", "c3727",
+             "c7330", "c4363", "c5007", "c52mu", "c88mu", "c5755", "c6584",
+             "c4072", "c6717", "c6725", "c3869", "cniii57", "cneii12",
+             "cneiii15", "cnii122", "cii2325", "ciii1908", "coii7325",
+             "csiv10"]
+    for i in range(len(names)):
+      a = results[names[i]][0]
       # convert from erg s^-1 to J s^-1
       b = fresults[i]*1.e-7
       if abs(a-b) > 1.e-15*abs(a+b):

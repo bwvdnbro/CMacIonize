@@ -27,6 +27,7 @@
 #include "LineCoolingData.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
+#include <boost/python/dict.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/lvalue_from_pytype.hpp>
 #include <boost/python/module.hpp>
@@ -42,29 +43,77 @@
  * @brief Python version of LineCoolingData::linestr().
  *
  * @param lines LineCoolingData object that is wrapped by this function.
- * @param T Temperatures (in K).
- * @param ne Electron densities (in m^-3).
+ * @param T numpy.ndarray containing temperatures (in K).
+ * @param ne numpy.ndarray containing electron densities (in m^-3).
  * @param abundances boost::python::list of abundances.
- * @return boost::python::list containing the output of
- * LineCoolingData::linestr().
+ * @return boost::python::dict containing, for every line strength returned by
+ * LineCoolingData.linestr(), a numpy.ndarray containing the values for each
+ * temperature and electron density.
  */
-static boost::python::object python_linestr(LineCoolingData &lines,
-                                            boost::python::numeric::array &T,
-                                            boost::python::numeric::array &ne,
-                                            boost::python::list abundances) {
+static boost::python::dict python_linestr(LineCoolingData &lines,
+                                          boost::python::numeric::array &T,
+                                          boost::python::numeric::array &ne,
+                                          boost::python::list abundances) {
   double abund[12];
   for (unsigned int i = 0; i < 12; ++i) {
     abund[i] = boost::python::extract< double >(abundances[i]);
   }
 
+  // retrieve numpy.ndarray shape info and check if it is what we expect
   boost::python::tuple Tshape =
       boost::python::extract< boost::python::tuple >(T.attr("shape"));
-  const unsigned int numT = boost::python::len(Tshape);
+  const unsigned int Tdim = boost::python::len(Tshape);
+  if (Tdim != 1) {
+    cmac_error("Expected a 1D array, but got a %uD array!", Tdim);
+  }
+  boost::python::tuple neshape =
+      boost::python::extract< boost::python::tuple >(ne.attr("shape"));
+  const unsigned int nedim = boost::python::len(neshape);
+  if (nedim != 1) {
+    cmac_error("Expected a 1D-array, but got a %uD array!", nedim);
+  }
+  const unsigned int numT = boost::python::extract< unsigned int >(Tshape[0]);
+  const unsigned int numne = boost::python::extract< unsigned int >(neshape[0]);
+  if (numT != numne) {
+    cmac_error("Temperature and electron density arrays have different sizes "
+               "(len(T) = %u, len(ne) = %u)!",
+               numT, numne);
+  }
 
-  npy_intp size[2] = {numT, 26};
-  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
+  boost::python::dict result;
+
+  // we create a single ndarray with the correct size
+  npy_intp size = numT;
+  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
   boost::python::handle<> handle(narr);
   boost::python::numeric::array arr(handle);
+  // we now simply copy that array into the different dictionary elements
+  result["c6300"] = arr.copy();
+  result["c9405"] = arr.copy();
+  result["c6312"] = arr.copy();
+  result["c33mu"] = arr.copy();
+  result["c19mu"] = arr.copy();
+  result["c3729"] = arr.copy();
+  result["c3727"] = arr.copy();
+  result["c7330"] = arr.copy();
+  result["c4363"] = arr.copy();
+  result["c5007"] = arr.copy();
+  result["c52mu"] = arr.copy();
+  result["c88mu"] = arr.copy();
+  result["c5755"] = arr.copy();
+  result["c6584"] = arr.copy();
+  result["c4072"] = arr.copy();
+  result["c6717"] = arr.copy();
+  result["c6725"] = arr.copy();
+  result["c3869"] = arr.copy();
+  result["cniii57"] = arr.copy();
+  result["cneii12"] = arr.copy();
+  result["cneiii15"] = arr.copy();
+  result["cnii122"] = arr.copy();
+  result["cii2325"] = arr.copy();
+  result["ciii1908"] = arr.copy();
+  result["coii7325"] = arr.copy();
+  result["csiv10"] = arr.copy();
 
   for (unsigned int iT = 0; iT < numT; ++iT) {
     double Ti = boost::python::extract< double >(T[iT]);
@@ -81,35 +130,35 @@ static boost::python::object python_linestr(LineCoolingData &lines,
                   c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
                   cii2325, ciii1908, coii7325, csiv10);
 
-    arr[boost::python::make_tuple(iT, 0)] = c6300;
-    arr[boost::python::make_tuple(iT, 1)] = c9405;
-    arr[boost::python::make_tuple(iT, 2)] = c6312;
-    arr[boost::python::make_tuple(iT, 3)] = c33mu;
-    arr[boost::python::make_tuple(iT, 4)] = c19mu;
-    arr[boost::python::make_tuple(iT, 5)] = c3729;
-    arr[boost::python::make_tuple(iT, 6)] = c3727;
-    arr[boost::python::make_tuple(iT, 7)] = c7330;
-    arr[boost::python::make_tuple(iT, 8)] = c4363;
-    arr[boost::python::make_tuple(iT, 9)] = c5007;
-    arr[boost::python::make_tuple(iT, 10)] = c52mu;
-    arr[boost::python::make_tuple(iT, 11)] = c88mu;
-    arr[boost::python::make_tuple(iT, 12)] = c5755;
-    arr[boost::python::make_tuple(iT, 13)] = c6584;
-    arr[boost::python::make_tuple(iT, 14)] = c4072;
-    arr[boost::python::make_tuple(iT, 15)] = c6717;
-    arr[boost::python::make_tuple(iT, 16)] = c6725;
-    arr[boost::python::make_tuple(iT, 17)] = c3869;
-    arr[boost::python::make_tuple(iT, 18)] = cniii57;
-    arr[boost::python::make_tuple(iT, 19)] = cneii12;
-    arr[boost::python::make_tuple(iT, 20)] = cneiii15;
-    arr[boost::python::make_tuple(iT, 21)] = cnii122;
-    arr[boost::python::make_tuple(iT, 22)] = cii2325;
-    arr[boost::python::make_tuple(iT, 23)] = ciii1908;
-    arr[boost::python::make_tuple(iT, 24)] = coii7325;
-    arr[boost::python::make_tuple(iT, 25)] = csiv10;
+    result["c6300"][iT] = c6300;
+    result["c9405"][iT] = c9405;
+    result["c6312"][iT] = c6312;
+    result["c33mu"][iT] = c33mu;
+    result["c19mu"][iT] = c19mu;
+    result["c3729"][iT] = c3729;
+    result["c3727"][iT] = c3727;
+    result["c7330"][iT] = c7330;
+    result["c4363"][iT] = c4363;
+    result["c5007"][iT] = c5007;
+    result["c52mu"][iT] = c52mu;
+    result["c88mu"][iT] = c88mu;
+    result["c5755"][iT] = c5755;
+    result["c6584"][iT] = c6584;
+    result["c4072"][iT] = c4072;
+    result["c6717"][iT] = c6717;
+    result["c6725"][iT] = c6725;
+    result["c3869"][iT] = c3869;
+    result["cniii57"][iT] = cniii57;
+    result["cneii12"][iT] = cneii12;
+    result["cneiii15"][iT] = cneiii15;
+    result["cnii122"][iT] = cnii122;
+    result["cii2325"][iT] = cii2325;
+    result["ciii1908"][iT] = ciii1908;
+    result["coii7325"][iT] = coii7325;
+    result["csiv10"][iT] = csiv10;
   }
 
-  return arr.copy();
+  return result;
 }
 
 /**
