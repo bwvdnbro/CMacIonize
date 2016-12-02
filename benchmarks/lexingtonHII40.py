@@ -145,7 +145,7 @@ for f in sorted(glob.glob("lexingtonHII40_*.hdf5")):
   ax[0][0].errorbar(rmid, nfracHeb, yerr = nfracHes, fmt = "o",
                     label = "He0/He")
   ax[0][0].set_xlim(xlims[0], xlims[1])
-  ax[0][0].set_ylim(1.e-4, 2.)
+  ax[0][0].set_ylim(1.e-5, 2.)
   ax[0][0].set_xlabel("$r$ (pc)")
   ax[0][0].set_ylabel("Neutral fraction")
   ax[0][0].legend(loc = "best")

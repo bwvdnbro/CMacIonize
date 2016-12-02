@@ -54,6 +54,14 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Densities of the SPH particles in the snapshot (in kg m^-3). Note
+   *  that these are not the densities we return; they are only used to do the
+   *  correct kernel interpolation for the temperature. */
+  std::vector< double > _densities;
+
+  /*! @brief Temperatures of the SPH particles in the snapshot (in K). */
+  std::vector< double > _temperatures;
+
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
@@ -67,13 +75,14 @@ public:
                                 bool fallback_periodic = false,
                                 double fallback_unit_length_in_SI = 0.,
                                 double fallback_unit_mass_in_SI = 0.,
+                                double fallback_unit_temperature_in_SI = 0.,
                                 Log *log = nullptr);
 
   GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   virtual ~GadgetSnapshotDensityFunction();
 
-  virtual double operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position);
 
   double get_total_hydrogen_number();
 };

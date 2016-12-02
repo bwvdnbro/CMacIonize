@@ -38,12 +38,19 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return Density at that position.
    */
-  double operator()(CoordinateVector<> position) {
+  DensityValues operator()(CoordinateVector<> position) {
+    DensityValues cell;
+
+    double density;
     if (position.z() < 0.5) {
-      return 1.;
+      density = 1.;
     } else {
-      return 2.;
+      density = 2.;
     }
+
+    cell.set_total_density(density);
+    cell.set_temperature(4000.);
+    return cell;
   }
 };
 
@@ -78,9 +85,10 @@ int main(int argc, char **argv) {
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      8000., density_function, scheme, false, &log);
+                      density_function, scheme, false, &log);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
+  assert_values_equal(4000., grid.get_average_temperature());
 
   assert_condition(grid.get_number_of_cells() == 32 * 32 * 16 + 32 * 64 * 64);
   // 32768 is the grid in the lower left front corner, which has indices 000 on

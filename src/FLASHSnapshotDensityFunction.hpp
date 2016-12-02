@@ -42,14 +42,18 @@ private:
   /*! @brief AMRGrid containing the snapshot file contents. */
   AMRGrid< double > _grid;
 
+  /*! @brief Initial temperature for the ISM (in K). */
+  double _temperature;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
 public:
-  FLASHSnapshotDensityFunction(std::string filename, Log *log = nullptr);
+  FLASHSnapshotDensityFunction(std::string filename, double temperature,
+                               Log *log = nullptr);
   FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
-  virtual double operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position);
 };
 
 #endif // FLASHSNAPSHOTDENSITYFUNCTION_HPP

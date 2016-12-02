@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     Box box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
-    CartesianDensityGrid grid(box, ncell, 8000., density_function);
+    CartesianDensityGrid grid(box, ncell, density_function);
 
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);

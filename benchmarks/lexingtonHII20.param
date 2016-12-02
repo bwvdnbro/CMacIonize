@@ -19,7 +19,6 @@ densitygrid:
   box_sides: [6. pc, 6. pc, 6. pc]
   ncell: [64, 64, 64]
   periodicity: [false, false, false]
-  initial_temperature: 8000. K
 
 densitygridwriter:
   type: Gadget

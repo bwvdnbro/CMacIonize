@@ -43,14 +43,17 @@ private:
   /*! @brief Exponent of the block. */
   double _exponent;
 
-  /*! @brief Density inside the block. */
+  /*! @brief Density inside the block (in m^-3). */
   double _density;
+
+  /*! @brief Temperature inside the block (in K). */
+  double _temperature;
 
 public:
   /**
    * @brief Empty constructor.
    */
-  inline BlockSyntaxBlock() : _density(0.) {}
+  inline BlockSyntaxBlock() : _density(0.), _temperature(0.) {}
 
   /**
    * @brief Constructor.
@@ -59,11 +62,12 @@ public:
    * @param sides Side lengths of the block.
    * @param exponent Exponent of the block.
    * @param density Density inside the block.
+   * @param temperature Temperature inside the block.
    */
   inline BlockSyntaxBlock(CoordinateVector<> origin, CoordinateVector<> sides,
-                          double exponent, double density)
-      : _origin(origin), _sides(sides), _exponent(exponent), _density(density) {
-  }
+                          double exponent, double density, double temperature)
+      : _origin(origin), _sides(sides), _exponent(exponent), _density(density),
+        _temperature(temperature) {}
 
   /**
    * @brief Check if the given position lies inside this block.
@@ -93,6 +97,13 @@ public:
    * @return Number density inside this block (in m^-3).
    */
   inline double get_density() { return _density; }
+
+  /**
+   * @brief Get the temperature inside this block.
+   *
+   * @return Temperature inside this block (in K).
+   */
+  inline double get_temperature() { return _temperature; }
 };
 
 #endif // BLOCKSYNTAXBLOCK_HPP

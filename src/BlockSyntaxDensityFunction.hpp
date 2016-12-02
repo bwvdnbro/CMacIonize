@@ -87,10 +87,17 @@ public:
       double exponent = get_exponent(type);
       double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
           blockname.str() + ".number density");
+      double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
+          blockname.str() + ".initial temperature");
       if (density < 0.) {
         cmac_error("Negative density (%g) given for block %i!", density, i);
       }
-      _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density));
+      if (temperature < 0.) {
+        cmac_error("Negative temperature (%g) given for block %i!", temperature,
+                   i);
+      }
+      _blocks.push_back(
+          BlockSyntaxBlock(origin, sides, exponent, density, temperature));
     }
 
     if (log) {
@@ -110,23 +117,40 @@ public:
             params.get_value< std::string >("densityfunction.filename"), log) {}
 
   /**
-   * @brief Function that gives the density for a given coordinate.
+   * @brief Function that gives the DensityValues for a given coordinate.
+   *
+   * Due to the way this function is written, the values for the last block
+   * containing the given position are used. This means the order in which
+   * nested blocks are given is important!
    *
    * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return Density at the given coordinate (in m^-3).
+   * @return DensityValues at the given coordinate (in SI units).
    */
-  virtual double operator()(CoordinateVector<> position) {
+  virtual DensityValues operator()(CoordinateVector<> position) {
+    DensityValues cell;
+
     double density = -1.;
+    double temperature = -1.;
     for (unsigned int i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
         density = _blocks[i].get_density();
+        temperature = _blocks[i].get_temperature();
       }
     }
     if (density < 0.) {
       cmac_error("No block found containing position [%g m, %g m, %g m]!",
                  position.x(), position.y(), position.z());
     }
-    return density;
+    if (temperature < 0.) {
+      cmac_error("No block found containing position [%g m, %g m, %g m]!",
+                 position.x(), position.y(), position.z());
+    }
+
+    cell.set_total_density(density);
+    cell.set_temperature(temperature);
+    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+    cell.set_ionic_fraction(ION_He_n, 1.e-6);
+    return cell;
   }
 };
 

@@ -103,8 +103,10 @@ private:
       while (child_index != next_index) {
         DensityValues &cell = _grid[child_index];
         CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
-        cell.set_total_density(density_function(child_midpoint));
-        // copy all other values from parent
+        cell.set_total_density(
+            density_function(child_midpoint).get_total_density());
+        // copy all other values from parent, since the values given by
+        // the density_function are only initial conditions
         for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
           IonName ion = static_cast< IonName >(i);
           cell.set_ionic_fraction(ion, old_values.get_ionic_fraction(ion));
@@ -128,7 +130,6 @@ public:
    *
    * @param box Box containing the grid.
    * @param ncell Number of cells in the low resolution grid.
-   * @param initial_temperature Initial temperature of the gas (in K).
    * @param density_function DensityFunction that defines the density field.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
@@ -136,8 +137,7 @@ public:
    * @param log Log to write logging info to.
    */
   AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell, double initial_temperature,
-      DensityFunction &density_function,
+      Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
@@ -172,7 +172,7 @@ public:
                          " levels deep.");
     }
 
-    initialize(initial_temperature, density_function);
+    initialize(density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -219,8 +219,6 @@ public:
                     "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid.ncell", CoordinateVector< int >(64)),
-            params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "densitygrid.initial_temperature", "8000. K"),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid.periodicity", CoordinateVector< bool >(false)),

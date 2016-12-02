@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction density_function(1.);
   AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1.);
 
-  AMRDensityGrid grid(box, ncell, 8000., density_function, scheme);
+  AMRDensityGrid grid(box, ncell, density_function, scheme);
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 

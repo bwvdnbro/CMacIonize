@@ -147,19 +147,6 @@ public:
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
   }
 
-  /**
-   * @brief Initialize the given cell.
-   *
-   * @param initial_temperature Initial temperature (in K).
-   * @param cell Cell to initialize.
-   */
-  void initialize(double initial_temperature, DensityValues &cell) {
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    cell.set_temperature(initial_temperature);
-    set_reemission_probabilities(initial_temperature, cell);
-  }
-
   virtual ~DensityGrid() {}
 
   /**
@@ -334,10 +321,9 @@ public:
    * All implementations should call this method in their constructor, after the
    * grid itself has been set up.
    *
-   * @param initial_temperature Initial temperature.
    * @param function DensityFunction that sets the density.
    */
-  void initialize(double initial_temperature, DensityFunction &function) {
+  void initialize(DensityFunction &function) {
     unsigned int ntot = get_number_of_cells();
     unsigned int nguess = 0.01 * ntot;
     unsigned int ninfo = 0.1 * ntot;
@@ -345,8 +331,14 @@ public:
     Timer guesstimer;
     for (auto it = begin(); it != end(); ++it) {
       DensityValues &cell = it.get_values();
-      cell.set_total_density(function(it.get_cell_midpoint()));
-      initialize(initial_temperature, cell);
+      DensityValues vals = function(it.get_cell_midpoint());
+      cell.set_total_density(vals.get_total_density());
+      cell.set_temperature(vals.get_temperature());
+      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        IonName ion = static_cast< IonName >(i);
+        cell.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
+      }
+      set_reemission_probabilities(vals.get_temperature(), cell);
       ++ndone;
       if (_log) {
         if (ndone == nguess) {
@@ -388,6 +380,25 @@ public:
       mtot += it.get_values().get_total_density() * it.get_volume();
     }
     return mtot;
+  }
+
+  /**
+   * @brief Get the average temperature throughout the grid.
+   *
+   * This method is used in the unit tests to check whether the grid contains
+   * the correct temperature field.
+   *
+   * @return Average temperature in the grid (in K).
+   */
+  inline double get_average_temperature() {
+    double temperature = 0.;
+    double mtot = 0.;
+    for (auto it = begin(); it != end(); ++it) {
+      double m = it.get_values().get_total_density() * it.get_volume();
+      temperature += m * it.get_values().get_temperature();
+      mtot += m;
+    }
+    return temperature / mtot;
   }
 };
 

@@ -40,14 +40,12 @@ using namespace std;
  *
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
- * @param initial_temperature Initial temperature of the gas (in K).
  * @param density_function DensityFunction that defines the density field.
  * @param periodic Periodicity flags.
  * @param log Log to write log messages to.
  */
 CartesianDensityGrid::CartesianDensityGrid(Box box,
                                            CoordinateVector< int > ncell,
-                                           double initial_temperature,
                                            DensityFunction &density_function,
                                            CoordinateVector< bool > periodic,
                                            Log *log)
@@ -92,7 +90,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
 
-  initialize(initial_temperature, density_function);
+  initialize(density_function);
 
   _cellside_max = _cellside.x();
   if (_cellside.y() > _cellside_max) {
@@ -137,8 +135,6 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
                   "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
               "densitygrid.ncell", CoordinateVector< int >(64)),
-          parameters.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densitygrid.initial_temperature", "8000. K"),
           density_function,
           parameters.get_value< CoordinateVector< bool > >(
               "densitygrid.periodicity", CoordinateVector< bool >(false)),

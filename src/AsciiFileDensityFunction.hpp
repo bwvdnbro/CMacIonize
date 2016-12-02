@@ -48,17 +48,21 @@ private:
   /*! @brief Box containing the grid. */
   Box _box;
 
+  /*! @brief Initial temperature of the ISM (in K). */
+  double _temperature;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
 public:
   AsciiFileDensityFunction(std::string filename, CoordinateVector< int > ncell,
-                           Box box, double length_unit_in_SI = 1.,
+                           Box box, double temperature,
+                           double length_unit_in_SI = 1.,
                            double density_unit_in_SI = 1., Log *log = nullptr);
   AsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
   ~AsciiFileDensityFunction();
 
-  virtual double operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position);
 
   double get_total_hydrogen_number();
 };

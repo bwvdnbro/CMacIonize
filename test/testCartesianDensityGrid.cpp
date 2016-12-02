@@ -41,7 +41,7 @@ using namespace std;
  * @return Exit value: 0 on success.
  */
 int main(int argc, char **argv) {
-  HomogeneousDensityFunction testfunction;
+  HomogeneousDensityFunction testfunction(1., 2000.);
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
@@ -52,9 +52,10 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  CartesianDensityGrid grid(box, 64, 8000., testfunction);
+  CartesianDensityGrid grid(box, 64, testfunction);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
+  assert_values_equal(2000., grid.get_average_temperature());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
   unsigned long index = grid.get_cell_index(photon_origin);

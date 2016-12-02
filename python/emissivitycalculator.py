@@ -81,6 +81,6 @@ def get_emissivity(fractions, abundances, density, temperature):
     t4 = temperature * 1.e-4
     emissivities["Hbeta"] = ne * nhp * 1.24e-38 * t4**-0.878
     emissivities["HeI_5876"] = ne * nhep * 1.69e-38 * t4**-1.065
-    emissivities["OI_6300"] = density * linestrengths[0]
+    emissivities["OI_6300"] = density * linestrengths["c6300"]
 
   return emissivities

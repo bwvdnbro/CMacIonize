@@ -57,12 +57,19 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   _ncell = parameters.get_value< CoordinateVector< int > >("densitygrid.ncell");
   HDF5Tools::close_group(group);
 
-  // read cell midpoints and densities
+  // read cell midpoints, densities, and temperatures
   group = HDF5Tools::open_group(file, "/PartType0");
   std::vector< CoordinateVector<> > cell_midpoints =
       HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
   std::vector< double > cell_densities =
       HDF5Tools::read_dataset< double >(group, "NumberDensity");
+  std::vector< double > cell_temperatures =
+      HDF5Tools::read_dataset< double >(group, "Temperature");
+  std::vector< std::vector< double > > neutral_fractions(NUMBER_OF_IONNAMES);
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    neutral_fractions[i] = HDF5Tools::read_dataset< double >(
+        group, "NeutralFraction" + get_ion_name(i));
+  }
   HDF5Tools::close_group(group);
 
   HDF5Tools::close_file(file);
@@ -73,13 +80,13 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         _ncell.x(), " x ", _ncell.y(), " x ", _ncell.z(), " cells.");
   }
 
-  _grid = new double **[_ncell.x()];
+  _grid = new DensityValues **[_ncell.x()];
   for (int ix = 0; ix < _ncell.x(); ++ix) {
-    _grid[ix] = new double *[_ncell.y()];
+    _grid[ix] = new DensityValues *[_ncell.y()];
     for (int iy = 0; iy < _ncell.y(); ++iy) {
-      _grid[ix][iy] = new double[_ncell.z()];
+      _grid[ix][iy] = new DensityValues[_ncell.z()];
       for (int iz = 0; iz < _ncell.z(); ++iz) {
-        _grid[ix][iy][iz] = -1.;
+        _grid[ix][iy][iz].set_total_density(-1.);
       }
     }
   }
@@ -90,15 +97,19 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     int ix = _ncell.x() * p.x() / _box.get_sides().x();
     int iy = _ncell.y() * p.y() / _box.get_sides().y();
     int iz = _ncell.z() * p.z() / _box.get_sides().z();
-    _grid[ix][iy][iz] = cell_densities[i];
+    _grid[ix][iy][iz].set_total_density(cell_densities[i]);
+    _grid[ix][iy][iz].set_temperature(cell_temperatures[i]);
+    for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+      IonName ion = static_cast< IonName >(j);
+      _grid[ix][iy][iz].set_ionic_fraction(ion, neutral_fractions[j][i]);
+    }
   }
 
   for (int ix = 0; ix < _ncell.x(); ++ix) {
     for (int iy = 0; iy < _ncell.y(); ++iy) {
       for (int iz = 0; iz < _ncell.z(); ++iz) {
-        if (_grid[ix][iy][iz] < 0.) {
-          cmac_error("No density value found for cell (%i, %i, %i)!", ix, iy,
-                     iz);
+        if (_grid[ix][iy][iz].get_total_density() < 0.) {
+          cmac_error("No values found for cell (%i, %i, %i)!", ix, iy, iz);
         }
       }
     }
@@ -127,12 +138,12 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
 }
 
 /**
- * @brief Get the density at the given position.
+ * @brief Get the DensityValues at the given position.
  *
  * @param position CoordinateVector specifying a position (in m).
- * @return Density at that position (in m^-3).
+ * @return DensityValues at that position (in SI units).
  */
-double CMacIonizeSnapshotDensityFunction::
+DensityValues CMacIonizeSnapshotDensityFunction::
 operator()(CoordinateVector<> position) {
   // get the indices of the cell containing the position
   int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
@@ -141,5 +152,6 @@ operator()(CoordinateVector<> position) {
            _box.get_sides().y();
   int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
            _box.get_sides().z();
+
   return _grid[ix][iy][iz];
 }
