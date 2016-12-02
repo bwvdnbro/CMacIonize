@@ -62,7 +62,8 @@ public:
     } else if (type == "Passive") {
       return new PassiveIterationConvergenceChecker();
     } else {
-      error("Unknown IterationConvergenceChecker type: \"%s\".", type.c_str());
+      cmac_error("Unknown IterationConvergenceChecker type: \"%s\".",
+                 type.c_str());
       return nullptr;
     }
   }

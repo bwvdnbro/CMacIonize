@@ -59,7 +59,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 
   std::ifstream file(filename);
   if (!file.is_open()) {
-    error("Could not open file \"%s\"!", filename.c_str());
+    cmac_error("Could not open file \"%s\"!", filename.c_str());
   }
 
   std::string line;
@@ -87,7 +87,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
         if (_grid[i][j][k] < 0.) {
-          error("No value found for cell [%i, %i, %i]!", i, j, k);
+          cmac_error("No value found for cell [%i, %i, %i]!", i, j, k);
         }
       }
     }

@@ -118,7 +118,7 @@ static inline std::string get_element_name(int element) {
   case ELEMENT_S:
     return "S";
   default:
-    error("Unknown element: %i!", element);
+    cmac_error("Unknown element: %i!", element);
     return "";
   }
 }
@@ -168,7 +168,7 @@ static inline std::string get_ion_name(int ion) {
     return "S+++";
 
   default:
-    error("Unknown ion: %i!", ion);
+    cmac_error("Unknown ion: %i!", ion);
     return "";
   }
 }

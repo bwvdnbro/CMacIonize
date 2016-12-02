@@ -107,7 +107,7 @@ std::pair< std::string, std::string >
 ParameterFile::read_keyvaluepair(std::string &line) {
   unsigned int colonpos = line.find(':');
   if (colonpos == line.npos) {
-    error("Error while parsing line \"%s\"", line.c_str());
+    cmac_error("Error while parsing line \"%s\"", line.c_str());
   }
   string key = line.substr(0, colonpos);
   string value = line.substr(colonpos + 1);
@@ -148,7 +148,7 @@ ParameterFile::ParameterFile(std::string filename) {
   ifstream file(filename.c_str());
 
   if (!file) {
-    error("Failed to open parameter file \"%s\"", filename.c_str());
+    cmac_error("Failed to open parameter file \"%s\"", filename.c_str());
   }
 
   string line;
@@ -184,8 +184,8 @@ ParameterFile::ParameterFile(std::string filename) {
 
         // check that we have a group name for this level
         if (levels.size() != groupname.size()) {
-          error("Line has a different indentation than expected: \"%s\"!",
-                line.c_str());
+          cmac_error("Line has a different indentation than expected: \"%s\"!",
+                     line.c_str());
         }
 
         // check if this line contains a value or a new group name
@@ -202,7 +202,7 @@ ParameterFile::ParameterFile(std::string filename) {
         }
       } else {
         if (groupname.size() != levels.size()) {
-          error("Wrong formatting!");
+          cmac_error("Wrong formatting!");
         }
 
         // remove previous indentation

@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
       log->write_error("Running a dirty code version is disabled by default. "
                        "If you still want to run this version, add the "
                        "\"--dirty\" flag to the run command.");
-      error("Running a dirty code version is disabled by default.");
+      cmac_error("Running a dirty code version is disabled by default.");
     } else {
       log->write_warning("However, dirty running is enabled.");
     }

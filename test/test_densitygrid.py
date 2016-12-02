@@ -19,9 +19,9 @@
 ################################################################################
 
 ##
-# @file test_linecoolingdata.py
+# @file test_densitygrid.py
 #
-# @brief Unit test for the Python LineCoolingData module.
+# @brief Unit test for the Python DensityGrid module.
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
@@ -31,39 +31,16 @@ import load_module as pycmi
 # Load the sys module (for sys.exit())
 import sys
 
-import numpy as np
-
 ##
-# @brief Unit test for the Python LineCoolingData module.
+# @brief Unit test for the Python DensityGrid module.
 ##
 def main():
-  file = open("linestr_testdata.txt")
+  densitygrid = pycmi.libdensitygrid.DensityGrid("python_test.hdf5")
 
-  linecoolingdata = pycmi.liblinecoolingdata.LineCoolingData()
-
-  lines = file.readlines()
-  for line in lines:
-    data = line.split()
-    T = float(data[0])
-    # convert to m^-3
-    ne = float(data[1])*1.e6
-    abundances = [float(ab) for ab in data[2:14]]
-    fresults = [float(res) for res in data[14:]]
-
-    results = linecoolingdata.linestr(np.array([T]), np.array([ne]), abundances)
-
-    if len(results[0]) != len(fresults):
-      print "Error: expected {a} values, got {b}...".format(a = len(fresults),
-                                                            b = len(results[0]))
-      sys.exit(1)
-    for i in range(len(results[0])):
-      a = results[0][i]
-      # convert from erg s^-1 to J s^-1
-      b = fresults[i]*1.e-7
-      if abs(a-b) > 1.e-15*abs(a+b):
-        print "Error: {a} != {b} ({rel})!".format(a = a, b = b,
-                                                  rel = abs(a-b)/abs(a+b))
-        sys.exit(1)
+  if not densitygrid.get_number_of_cells() == 64:
+    print "Error: number of cells {a} (expected: {b})!".format(
+      a = densitygrid.get_number_of_cells(), b = 64)
+    sys.exit(1)
 
   sys.exit(0)
 

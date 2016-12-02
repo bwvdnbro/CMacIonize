@@ -27,6 +27,8 @@
 ##
 import liblinecoolingdata
 
+import numpy as np
+
 # global object that is initialized once at the import of the module
 lines = liblinecoolingdata.LineCoolingData()
 
@@ -38,7 +40,7 @@ lines = liblinecoolingdata.LineCoolingData()
 # @return True if it is safe to calculate an emissivity for this cell.
 ##
 def has_emissivity(fractions, temperature):
-  return (fractions[0] < 0.2 and temperature > 3000.)
+  return (fractions[0] < 0.25 and temperature > 3000.)
 
 ##
 # @brief Get the emissivity values for a cell with the given ionic and neutral
@@ -74,7 +76,7 @@ def get_emissivity(fractions, abundances, density, temperature):
              abundances[2]*fractions[3][1],
              abundances[5]*fractions[5][0]]
 
-    linestrengths = lines.linestr(abund)
+    linestrengths = lines.linestr(np.array([temperature]), np.array([ne]), abund)
 
     t4 = temperature * 1.e-4
     emissivities["Hbeta"] = ne * nhp * 1.24e-38 * t4**-0.878

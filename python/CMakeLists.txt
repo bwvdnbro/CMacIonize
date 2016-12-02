@@ -38,4 +38,30 @@ set(LINECOOLINGDATAMODULE_SOURCES
 add_library(linecoolingdata SHARED ${LINECOOLINGDATAMODULE_SOURCES})
 set_target_properties(linecoolingdata PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                       ${PROJECT_BINARY_DIR}/python_modules)
+set_target_properties(linecoolingdata PROPERTIES
+                     COMPILE_FLAGS "-Wno-unused-function -fno-sanitize=address")
+set_target_properties(linecoolingdata PROPERTIES
+                      LINK_FLAGS "-fno-sanitize=address")
 target_link_libraries(linecoolingdata ${Boost_LIBRARIES})
+
+# DensityGridModule
+if(HAVE_HDF5)
+
+  set(DENSITYGRIDMODULE_SOURCES
+      DensityGridModule.cpp
+
+      ../src/CartesianDensityGrid.cpp
+      ../src/CMacIonizeSnapshotDensityFunction.cpp
+  )
+
+  add_library(densitygrid SHARED ${DENSITYGRIDMODULE_SOURCES})
+  set_target_properties(densitygrid PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                        ${PROJECT_BINARY_DIR}/python_modules)
+  set_target_properties(densitygrid PROPERTIES
+                        COMPILE_FLAGS "-fno-sanitize=address")
+  set_target_properties(densitygrid PROPERTIES
+                        LINK_FLAGS "-fno-sanitize=address")
+  target_link_libraries(densitygrid ${Boost_LIBRARIES})
+  target_link_libraries(densitygrid ${HDF5_LIBRARIES})
+
+endif(HAVE_HDF5)

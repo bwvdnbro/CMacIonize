@@ -57,7 +57,7 @@ private:
     } else if (type == "cube") {
       return 10.;
     } else {
-      error("Unknown block type: \"%s\"!", type.c_str());
+      cmac_error("Unknown block type: \"%s\"!", type.c_str());
       return 0.;
     }
   }
@@ -88,7 +88,7 @@ public:
       double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
           blockname.str() + ".number density");
       if (density < 0.) {
-        error("Negative density (%g) given for block %i!", density, i);
+        cmac_error("Negative density (%g) given for block %i!", density, i);
       }
       _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density));
     }
@@ -123,8 +123,8 @@ public:
       }
     }
     if (density < 0.) {
-      error("No block found containing position [%g m, %g m, %g m]!",
-            position.x(), position.y(), position.z());
+      cmac_error("No block found containing position [%g m, %g m, %g m]!",
+                 position.x(), position.y(), position.z());
     }
     return density;
   }

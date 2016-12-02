@@ -95,7 +95,7 @@
  * @brief Error macro. Prints the given error message (with C style formatting)
  * and aborts the code.
  */
-#define error(s, ...)                                                          \
+#define cmac_error(s, ...)                                                     \
   {                                                                            \
     fprintf(stderr, "%s:%s():%i: Error:\n", __FILE__, __FUNCTION__, __LINE__); \
     print_indent(stderr, s, ##__VA_ARGS__);                                    \
@@ -106,7 +106,7 @@
  * @brief Warning macro. Prints the given warning message (with C style
  * formatting) to the stderr.
  */
-#define warning(s, ...)                                                        \
+#define cmac_warning(s, ...)                                                   \
   {                                                                            \
     fprintf(stderr, "%s:%s():%i: Warning:\n", __FILE__, __FUNCTION__,          \
             __LINE__);                                                         \
@@ -117,7 +117,7 @@
  * @brief Message macro. Prints the given message (with C style formatting) to
  * the stdout.
  */
-#define status(s, ...)                                                         \
+#define cmac_status(s, ...)                                                    \
   {                                                                            \
     fprintf(stdout, "%s:%s():%i:\n", __FILE__, __FUNCTION__, __LINE__);        \
     print_indent(stdout, s, ##__VA_ARGS__);                                    \

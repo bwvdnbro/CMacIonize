@@ -97,7 +97,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     for (int iy = 0; iy < _ncell.y(); ++iy) {
       for (int iz = 0; iz < _ncell.z(); ++iz) {
         if (_grid[ix][iy][iz] < 0.) {
-          error("No density value found for cell (%i, %i, %i)!", ix, iy, iz);
+          cmac_error("No density value found for cell (%i, %i, %i)!", ix, iy,
+                     iz);
         }
       }
     }

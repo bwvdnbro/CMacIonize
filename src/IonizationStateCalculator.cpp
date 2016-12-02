@@ -433,7 +433,7 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
       he0 = 0.5 * (he0 + he0old);
     }
     if (niter > 20) {
-      error("Too many iterations in ionization loop!");
+      cmac_error("Too many iterations in ionization loop!");
     }
   }
 }

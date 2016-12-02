@@ -288,7 +288,7 @@ double VernerCrossSections::get_cross_section(IonName ion, double energy) {
     return get_cross_section_verner(16, 13, 5, energy);
 
   default:
-    error("Unknown ion: %i", ion);
+    cmac_error("Unknown ion: %i", ion);
   }
   return 0.;
 }

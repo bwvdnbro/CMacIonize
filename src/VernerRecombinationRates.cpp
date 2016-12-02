@@ -102,11 +102,11 @@ double VernerRecombinationRates::get_recombination_rate_verner(unsigned char iz,
   double r = 0.;
 
   if (iz < 1 || iz > 30) {
-    error("Atomic number %u not supported!", iz);
+    cmac_error("Atomic number %u not supported!", iz);
   }
 
   if (in < 1 || in > iz) {
-    error("Number of electrons (%u) is too large!", in);
+    cmac_error("Number of electrons (%u) is too large!", in);
   }
 
   if (in <= 3 || in == 11 || (iz > 5 && iz < 9) || iz == 10 ||
@@ -213,7 +213,7 @@ double VernerRecombinationRates::get_recombination_rate(IonName ion,
     break;
 
   default:
-    error("Unknown ion: %i", ion);
+    cmac_error("Unknown ion: %i", ion);
   }
   // convert cm^3s^-1 to m^3s^-1
   rate *= 1.e-6;

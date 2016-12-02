@@ -440,7 +440,7 @@ public:
       num_0 += (next_direction.y() != 0);
       num_0 += (next_direction.z() != 0);
       if (num_0 != 2) {
-        error("Not supported yet!");
+        cmac_error("Not supported yet!");
       }
       CoordinateVector<> new_position = next_wall;
       if (next_direction.x() != 0 && _periodic.x()) {

@@ -171,7 +171,7 @@ public:
     case EMISSIONLINE_Hrec_s:
       return "Hrec_s";
     default:
-      error("Unknown EmissionLine: %i!", line);
+      cmac_error("Unknown EmissionLine: %i!", line);
       return "";
     }
   }

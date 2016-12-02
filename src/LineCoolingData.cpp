@@ -33,6 +33,8 @@
 #include <sstream>
 using namespace std;
 
+//#define LINES_F_COOLING
+
 /**
  * @brief Read a given number of values from the given string into the given
  * array
@@ -230,7 +232,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
     }
     // check that the matrix is non-singular
     if (Amax == 0.) {
-      error("Singular matrix given to simq!");
+      cmac_error("Singular matrix given to simq!");
     }
     // imax now contains the index of the row with the largest coefficient
     // interchange rows if necessary to make sure that the row with the largest

@@ -278,7 +278,7 @@ template <>
 inline std::string ParameterFile::get_value< std::string >(std::string key) {
   std::map< std::string, std::string >::iterator it = _dictionary.find(key);
   if (it == _dictionary.end()) {
-    error("Parameter \"%s\" not found!", key.c_str());
+    cmac_error("Parameter \"%s\" not found!", key.c_str());
   }
   return it->second;
 }

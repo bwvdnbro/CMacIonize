@@ -590,6 +590,13 @@ configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py
 ## LineCoolingDataModule test
 add_python_unit_test(NAME test_linecoolingdata.py)
 
+## DensityGridModule test
+if(HAVE_HDF5)
+  configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
+                 ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
+  add_python_unit_test(NAME test_densitygrid.py)
+endif(HAVE_HDF5)
+
 endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################

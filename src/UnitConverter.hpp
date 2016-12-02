@@ -128,7 +128,7 @@ private:
       return Unit(1.60217662e-19, 2, -2, 1, 0, 0);
     } else {
       /// error handler
-      error("Unknown unit: \"%s\"!", name.c_str());
+      cmac_error("Unknown unit: \"%s\"!", name.c_str());
       return Unit(0., 0, 0, 0, 0, 0);
     }
   }
@@ -170,7 +170,7 @@ private:
     case QUANTITY_TIME:
       return get_unit("s");
     default:
-      error("Unknown quantity: %i!", quantity);
+      cmac_error("Unknown quantity: %i!", quantity);
       return Unit(0., 0, 0, 0, 0, 0);
     }
   }
@@ -268,8 +268,8 @@ private:
     }
 
     // if we did not find any matches, we throw an error
-    error("No known conversion from \"%s\" to \"%s\"!",
-          unit_from.to_string().c_str(), unit_to.to_string().c_str());
+    cmac_error("No known conversion from \"%s\" to \"%s\"!",
+               unit_from.to_string().c_str(), unit_to.to_string().c_str());
     return 0.;
   }
 
@@ -297,7 +297,7 @@ public:
       ++pos1;
     }
     if (pos1 == name.size()) {
-      error("Empty unit provided!");
+      cmac_error("Empty unit provided!");
     }
     // find either a space or a '^' or the end of the string
     size_t pos2 = pos1 + 1;
@@ -413,9 +413,9 @@ public:
     Unit strange_unit_to = get_unit(unit_to);
     if (!strange_unit_to.is_same_quantity(strange_unit_from)) {
       return try_conversion(value, strange_unit_from, strange_unit_to);
-      error("Units are not compatible: \"%s\" and \"%s\"!",
-            strange_unit_from.to_string().c_str(),
-            strange_unit_to.to_string().c_str());
+      cmac_error("Units are not compatible: \"%s\" and \"%s\"!",
+                 strange_unit_from.to_string().c_str(),
+                 strange_unit_to.to_string().c_str());
     }
     strange_unit_from /= strange_unit_to;
     return value * strange_unit_from;

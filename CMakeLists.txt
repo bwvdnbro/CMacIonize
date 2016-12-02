@@ -114,27 +114,35 @@ endif(HDF5_FOUND)
 find_package(OpenMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
-# Find Boost, Boost Python and Python
+# Find Boost, Boost Python, Python, and NumPy
 find_package(Boost COMPONENTS "python")
 if(Boost_FOUND)
   find_package(PythonLibs 2.7)
-  if(PYTHONLIBS_FOUND)
-    message(STATUS "Python and Boost Python found. Will build python modules.")
-    include_directories(${Boost_INCLUDE_DIRS})
-    include_directories(${PYTHON_INCLUDE_PATH})
-    set(HAVE_PYTHON True)
-  else(PYTHONLIBS_FOUND)
-    message(STATUS "Python not found. Not building Python modules.")
-    set(HAVE_PYTHON False)
-  endif(PYTHONLIBS_FOUND)
   find_package(PythonInterp 2.7)
-  if(NOT PYTHONINTERP_FOUND)
-    message(WARNING
-            "Python interpreter not found. Python unit tests might not work.")
-    set(PYTHON_EXECUTABLE python)
-  endif(NOT PYTHONINTERP_FOUND)
+  if(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+                            "import numpy; print numpy.get_include()"
+                    RESULT_VARIABLE NUMPY_RESULT
+                    OUTPUT_VARIABLE NUMPY_OUTPUT
+                    ERROR_VARIABLE NUMPY_ERROR)
+    if(NUMPY_RESULT STREQUAL "0")
+      message(STATUS
+             "Python, NumPy and Boost Python found. Will build Python modules.")
+      include_directories(${Boost_INCLUDE_DIRS})
+      include_directories(${PYTHON_INCLUDE_PATH})
+      include_directories(${NUMPY_OUTPUT})
+      set(HAVE_PYTHON True)
+    else(NUMPY_RESULT STREQUAL "0")
+      message(WARNING
+              "NumPy not found: ${NUMPY_ERROR}. Not building Python modules.")
+      set(HAVE_PYTHON False)
+    endif(NUMPY_RESULT STREQUAL "0")
+  else(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
+    message(WARNING "Python not found. Not building Python modules.")
+    set(HAVE_PYTHON False)
+  endif(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
 else(Boost_FOUND)
-  message(STATUS "Boost Python not found. Not building Python modules.")
+  message(WARNING "Boost Python not found. Not building Python modules.")
   set(HAVE_PYTHON False)
 endif(Boost_FOUND)
 

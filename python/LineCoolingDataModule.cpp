@@ -23,62 +23,106 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Error.hpp"
 #include "LineCoolingData.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/list.hpp>
+#include <boost/python/lvalue_from_pytype.hpp>
 #include <boost/python/module.hpp>
+#include <boost/python/numeric.hpp>
+#include <boost/python/object.hpp>
 #include <cmath>
 
-boost::python::list python_linestr(LineCoolingData &lines, double T, double ne,
-                                   boost::python::list abundances) {
+/*! @brief Tell numpy to use the non deprecated API. */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarrayobject.h>
+
+/**
+ * @brief Python version of LineCoolingData::linestr().
+ *
+ * @param lines LineCoolingData object that is wrapped by this function.
+ * @param T Temperatures (in K).
+ * @param ne Electron densities (in m^-3).
+ * @param abundances boost::python::list of abundances.
+ * @return boost::python::list containing the output of
+ * LineCoolingData::linestr().
+ */
+static boost::python::object python_linestr(LineCoolingData &lines,
+                                            boost::python::numeric::array &T,
+                                            boost::python::numeric::array &ne,
+                                            boost::python::list abundances) {
   double abund[12];
   for (unsigned int i = 0; i < 12; ++i) {
     abund[i] = boost::python::extract< double >(abundances[i]);
   }
 
-  double c6300 = 0., c9405 = 0., c6312 = 0., c33mu = 0., c19mu = 0., c3729 = 0.,
-         c3727 = 0., c7330 = 0., c4363 = 0., c5007 = 0., c52mu = 0., c88mu = 0.,
-         c5755 = 0., c6584 = 0., c4072 = 0., c6717 = 0., c6725 = 0., c3869 = 0.,
-         cniii57 = 0., cneii12 = 0., cneiii15 = 0., cnii122 = 0., cii2325 = 0.,
-         ciii1908 = 0., coii7325 = 0., csiv10 = 0.;
-  lines.linestr(T, ne, abund, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
-                c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072, c6717,
-                c6725, c3869, cniii57, cneii12, cneiii15, cnii122, cii2325,
-                ciii1908, coii7325, csiv10);
+  boost::python::tuple Tshape =
+      boost::python::extract< boost::python::tuple >(T.attr("shape"));
+  const unsigned int numT = boost::python::len(Tshape);
 
-  boost::python::list linestrengths;
-  linestrengths.append(c6300);
-  linestrengths.append(c9405);
-  linestrengths.append(c6312);
-  linestrengths.append(c33mu);
-  linestrengths.append(c19mu);
-  linestrengths.append(c3729);
-  linestrengths.append(c3727);
-  linestrengths.append(c7330);
-  linestrengths.append(c4363);
-  linestrengths.append(c5007);
-  linestrengths.append(c52mu);
-  linestrengths.append(c88mu);
-  linestrengths.append(c5755);
-  linestrengths.append(c6584);
-  linestrengths.append(c4072);
-  linestrengths.append(c6717);
-  linestrengths.append(c6725);
-  linestrengths.append(c3869);
-  linestrengths.append(cniii57);
-  linestrengths.append(cneii12);
-  linestrengths.append(cneiii15);
-  linestrengths.append(cnii122);
-  linestrengths.append(cii2325);
-  linestrengths.append(ciii1908);
-  linestrengths.append(coii7325);
-  linestrengths.append(csiv10);
+  npy_intp size[2] = {numT, 26};
+  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
+  boost::python::handle<> handle(narr);
+  boost::python::numeric::array arr(handle);
 
-  return linestrengths;
+  for (unsigned int iT = 0; iT < numT; ++iT) {
+    double Ti = boost::python::extract< double >(T[iT]);
+    double nei = boost::python::extract< double >(ne[iT]);
+
+    double c6300 = 0., c9405 = 0., c6312 = 0., c33mu = 0., c19mu = 0.,
+           c3729 = 0., c3727 = 0., c7330 = 0., c4363 = 0., c5007 = 0.,
+           c52mu = 0., c88mu = 0., c5755 = 0., c6584 = 0., c4072 = 0.,
+           c6717 = 0., c6725 = 0., c3869 = 0., cniii57 = 0., cneii12 = 0.,
+           cneiii15 = 0., cnii122 = 0., cii2325 = 0., ciii1908 = 0.,
+           coii7325 = 0., csiv10 = 0.;
+    lines.linestr(Ti, nei, abund, c6300, c9405, c6312, c33mu, c19mu, c3729,
+                  c3727, c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
+                  c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
+                  cii2325, ciii1908, coii7325, csiv10);
+
+    arr[boost::python::make_tuple(iT, 0)] = c6300;
+    arr[boost::python::make_tuple(iT, 1)] = c9405;
+    arr[boost::python::make_tuple(iT, 2)] = c6312;
+    arr[boost::python::make_tuple(iT, 3)] = c33mu;
+    arr[boost::python::make_tuple(iT, 4)] = c19mu;
+    arr[boost::python::make_tuple(iT, 5)] = c3729;
+    arr[boost::python::make_tuple(iT, 6)] = c3727;
+    arr[boost::python::make_tuple(iT, 7)] = c7330;
+    arr[boost::python::make_tuple(iT, 8)] = c4363;
+    arr[boost::python::make_tuple(iT, 9)] = c5007;
+    arr[boost::python::make_tuple(iT, 10)] = c52mu;
+    arr[boost::python::make_tuple(iT, 11)] = c88mu;
+    arr[boost::python::make_tuple(iT, 12)] = c5755;
+    arr[boost::python::make_tuple(iT, 13)] = c6584;
+    arr[boost::python::make_tuple(iT, 14)] = c4072;
+    arr[boost::python::make_tuple(iT, 15)] = c6717;
+    arr[boost::python::make_tuple(iT, 16)] = c6725;
+    arr[boost::python::make_tuple(iT, 17)] = c3869;
+    arr[boost::python::make_tuple(iT, 18)] = cniii57;
+    arr[boost::python::make_tuple(iT, 19)] = cneii12;
+    arr[boost::python::make_tuple(iT, 20)] = cneiii15;
+    arr[boost::python::make_tuple(iT, 21)] = cnii122;
+    arr[boost::python::make_tuple(iT, 22)] = cii2325;
+    arr[boost::python::make_tuple(iT, 23)] = ciii1908;
+    arr[boost::python::make_tuple(iT, 24)] = coii7325;
+    arr[boost::python::make_tuple(iT, 25)] = csiv10;
+  }
+
+  return arr.copy();
 }
 
+/**
+ * @brief Python module exposure.
+ */
 BOOST_PYTHON_MODULE(liblinecoolingdata) {
+  // we need to tell Boost we mean numpy.ndarray whenever we write
+  // boost::python::numeric::array
+  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+  // we have to kindly ask numpy to initialize its array functionality
+  import_array();
+
+  // we tell Boost we want to expose our version of LineCoolingData.linestr()
   boost::python::class_< LineCoolingData >("LineCoolingData")
       .def("linestr", &python_linestr);
 }
