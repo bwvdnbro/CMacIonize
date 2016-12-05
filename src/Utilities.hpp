@@ -455,6 +455,44 @@ inline std::string get_timestamp() {
   timestream << time->tm_sec;
   return timestream.str();
 }
+
+/**
+ * @brief Convert a floating point time value in seconds to a human readable
+ * time string.
+ *
+ * If the time is larger than a minute, it is displayed as Xm Ys, and so on for
+ * larger subdivisions of time, up to years.
+ *
+ * @param time Double precision floating point time value.
+ * @return std::string containing a human readable version of the time value.
+ */
+inline std::string human_readable_time(double time) {
+  std::stringstream timestream;
+  // 2^32 minutes is 8166 years. We can safely assume no internal timer will
+  // ever reach that value
+  unsigned int minutes = time / 60.;
+  double seconds = time - 60. * minutes;
+  if (minutes > 0) {
+    unsigned int hours = minutes / 60;
+    if (hours > 0) {
+      minutes -= 60 * hours;
+      unsigned int days = hours / 24;
+      if (days > 0) {
+        hours -= 24 * days;
+        unsigned int years = days / 365;
+        if (years > 0) {
+          days -= 365 * years;
+          timestream << years << "y ";
+        }
+        timestream << days << "d ";
+      }
+      timestream << hours << "h ";
+    }
+    timestream << minutes << "m ";
+  }
+  timestream << seconds << "s";
+  return timestream.str();
+}
 }
 
 #endif // UTILITIES_HPP

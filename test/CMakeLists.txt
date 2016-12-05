@@ -562,6 +562,15 @@ configure_file(${PROJECT_SOURCE_DIR}/test/hiilines_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/hiilines_testdata.txt
                COPYONLY)
 
+## Unit test for Utilities
+set(TESTUTILITIES_SOURCES
+    testUtilities.cpp
+
+    ../src/Utilities.hpp
+)
+add_unit_test(NAME testUtilities
+              SOURCES ${TESTUTILITIES_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

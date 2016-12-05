@@ -290,7 +290,9 @@ int main(int argc, char **argv) {
   }
 
   programtimer.stop();
-  log->write_status("Total program time: ", programtimer.value(), " s.");
+  log->write_status("Total program time: ",
+                    Utilities::human_readable_time(programtimer.value()),
+                    " s.");
 
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;
