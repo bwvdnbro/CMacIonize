@@ -269,8 +269,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       new_frequency = _HeLyc_spectrum.get_random_frequency();
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(1)) {
-      // new frequency is 19.8eV (no idea why)
-      new_frequency = 19.8 / 13.6;
+      // new frequency is 19.8eV
+      new_frequency = 4.788e15;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(2)) {
       x = _random_generator.get_uniform_random_double();

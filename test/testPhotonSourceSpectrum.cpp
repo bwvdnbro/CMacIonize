@@ -26,6 +26,8 @@
  */
 #include "Assert.hpp"
 #include "Error.hpp"
+#include "FaucherGiguereDataLocation.hpp"
+#include "FaucherGiguerePhotonSourceSpectrum.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -109,6 +111,24 @@ double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
   } else {
     return 0.;
   }
+}
+
+/**
+ * @brief Interpolate on the given Faucher-Giguere reference spectrum.
+ *
+ * @param nuarr Frequencies (in Ryd).
+ * @param earr Energies (in 10^-21 s^-1 cm^-2 Hz^-1 sr^-1).
+ * @param nu Frequency for which we want the value (in Ryd).
+ * @return Energy at that frequency (in 10^-21 s^-1 cm^-2 Hz^-1 sr^-1).
+ */
+double FGspectrum(double *nuarr, double *earr, double nu) {
+  unsigned int inu = 0;
+  while (nu > nuarr[inu]) {
+    ++inu;
+  }
+  return earr[inu - 1] / nuarr[inu - 1] +
+         (earr[inu] / nuarr[inu] - earr[inu - 1] / nuarr[inu - 1]) *
+             (nu - nuarr[inu - 1]) / (nuarr[inu] - nuarr[inu - 1]);
 }
 
 /**
@@ -265,6 +285,69 @@ int main(int argc, char **argv) {
       file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
            << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);
+    }
+  }
+
+  // FaucherGiguerePhotonSourceSpectrum
+  {
+    // check that all redshifts are correctly mapped to files
+    for (unsigned int i = 0; i < 214; ++i) {
+      unsigned int iz = i * 5;
+      double z = iz * 0.01;
+      unsigned int iz100 = iz / 100;
+      iz -= 100 * iz100;
+      unsigned int iz10 = iz / 10;
+      iz -= 10 * iz10;
+      std::stringstream namestream;
+      namestream << FAUCHERGIGUEREDATALOCATION << "fg_uvb_dec11_z_" << iz100
+                 << "." << iz10;
+      if (iz > 0) {
+        namestream << iz;
+      }
+      namestream << ".dat";
+      assert_condition(FaucherGiguerePhotonSourceSpectrum::get_filename(z) ==
+                       namestream.str());
+    }
+
+    // read in the test spectrum
+    std::ifstream ifile(FaucherGiguerePhotonSourceSpectrum::get_filename(7.));
+    std::string line;
+    // skip two comment lines
+    getline(ifile, line);
+    getline(ifile, line);
+    double nuarr[261], earr[261];
+    for (unsigned int i = 0; i < 261; ++i) {
+      getline(ifile, line);
+      std::istringstream lstream(line);
+      lstream >> nuarr[i] >> earr[i];
+    }
+
+    std::ofstream file("fauchergiguere.txt");
+    FaucherGiguerePhotonSourceSpectrum spectrum(7., random_generator);
+
+    unsigned int counts[100];
+    for (unsigned int i = 0; i < 100; ++i) {
+      counts[i] = 0;
+    }
+    unsigned int numsample = 1000000;
+    for (unsigned int i = 0; i < numsample; ++i) {
+      // we manually convert from Hz to 13.6 eV for efficiency reasons
+      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      ++counts[index];
+    }
+
+    double enorm = FGspectrum(nuarr, earr, 1.015) / counts[0];
+    for (unsigned int i = 0; i < 100; ++i) {
+      double nu = 1. + (i + 0.5) * 0.03;
+      double tval = FGspectrum(nuarr, earr, nu);
+      double bval = counts[i] * enorm;
+      double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
+      // we fitted a line in x-log10(y) space to the actual relative difference
+      double tolerance = std::pow(10., -2.1 + 0.0191911 * (i - 17.));
+      file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
+           << tolerance << "\n";
+      //      assert_values_equal_rel(tval, bval, tolerance);
     }
   }
 

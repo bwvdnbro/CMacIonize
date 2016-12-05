@@ -221,6 +221,9 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
 
     ../src/CrossSections.hpp
     ../src/Error.hpp
+    ../src/FaucherGiguereDataLocation.hpp.in
+    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/FaucherGiguerePhotonSourceSpectrum.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp
     ../src/HeliumLymanContinuumSpectrum.hpp
     ../src/HeliumTwoPhotonContinuumSpectrum.cpp

@@ -77,6 +77,17 @@ configure_file(
     ${PROJECT_BINARY_DIR}/src/HeliumTwoPhotonContinuumDataLocation.hpp
     @ONLY)
 
+# FaucherGiguereDataLocation.hpp
+set(FG_DATA ${PROJECT_BINARY_DIR}/data/fg_uvb_dec11.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/fg_uvb_dec11.tar.gz
+               ${FG_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${FG_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(FAUCHERGIGUEREDATALOCATION ${PROJECT_BINARY_DIR}/data/fg_uvb_dec11/)
+message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
+
 # Configuration file
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
