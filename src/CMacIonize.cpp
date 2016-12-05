@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
       Q, abundances, params.get_value< double >("pahfac", 1.),
       line_cooling_data, recombination_rates, charge_transfer_rates);
   // used to calculate emissivities at the end of the loop
-  EmissivityCalculator emissivity_calculator(abundances, line_cooling_data);
+  EmissivityCalculator emissivity_calculator(abundances);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -197,6 +197,10 @@ int main(int argc, char **argv) {
     // run the number of photons by the IterationConvergenceChecker to allow for
     // corrections
     numphoton = itconvergence_checker->get_next_number_of_photons(numphoton);
+
+    if (loop == 3 || loop == 9) {
+      numphoton *= 10;
+    }
 
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();

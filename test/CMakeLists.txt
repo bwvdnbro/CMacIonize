@@ -597,6 +597,9 @@ if(HAVE_HDF5)
   add_python_unit_test(NAME test_densitygrid.py)
 endif(HAVE_HDF5)
 
+## EmissivityCalculatorModule test
+add_python_unit_test(NAME test_emissivitycalculator.py)
+
 endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################

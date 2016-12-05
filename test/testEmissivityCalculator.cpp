@@ -42,7 +42,7 @@
 int main(int argc, char **argv) {
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   LineCoolingData lines;
-  EmissivityCalculator calculator(abundances, lines);
+  EmissivityCalculator calculator(abundances);
 
   DensityValues cell;
 

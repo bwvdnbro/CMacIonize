@@ -65,3 +65,20 @@ if(HAVE_HDF5)
   target_link_libraries(densitygrid ${HDF5_LIBRARIES})
 
 endif(HAVE_HDF5)
+
+# EmissivityCalculatorModule
+set(EMISSIVITYCALCULATORMODULE_SOURCES
+    EmissivityCalculatorModule.cpp
+
+    ../src/EmissivityCalculator.cpp
+    ../src/LineCoolingData.cpp
+)
+
+add_library(emissivitycalculator SHARED ${EMISSIVITYCALCULATORMODULE_SOURCES})
+set_target_properties(emissivitycalculator PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                      ${PROJECT_BINARY_DIR}/python_modules)
+set_target_properties(emissivitycalculator PROPERTIES
+                      COMPILE_FLAGS "-fno-sanitize=address")
+set_target_properties(emissivitycalculator PROPERTIES
+                      LINK_FLAGS "-fno-sanitize=address")
+target_link_libraries(emissivitycalculator ${Boost_LIBRARIES})

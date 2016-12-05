@@ -37,11 +37,9 @@
  * Initializes hydrogen and helium continuous emission coefficient tables.
  *
  * @param abundances Abundances.
- * @param lines LineCoolingData used to calculate line strengths.
  */
-EmissivityCalculator::EmissivityCalculator(Abundances &abundances,
-                                           LineCoolingData &lines)
-    : _abundances(abundances), _lines(lines) {
+EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
+    : _abundances(abundances) {
   // these values come from Brown & Mathew, 1970, ApJ, 160, 939
   // the hmit and heplt tables correspond to wavelength 3646 in table 1 and
   // wavelength 3680 in table 5 respectively
@@ -252,11 +250,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
 }
 
 /**
- * @brief Calculate the emissivities for all cell in the given DensityGrid.
+ * @brief Calculate the emissivities for all cells in the given DensityGrid.
  *
  * @param grid DensityGrid to operate on.
- * @return std::vector containing EmissivityValues, one for each cell in the
- * grid (in the same order the grid is traversed).
  */
 void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -265,4 +261,23 @@ void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) {
         new EmissivityValues(calculate_emissivities(cell, _abundances, _lines));
     cell.set_emissivities(emissivities);
   }
+}
+
+/**
+ * @brief Get the emissivities for all cells in the given DensityGrid.
+ *
+ * @param grid DensityGrid to operate on.
+ * @return std::vector containing EmissivityValues, one for each cell in the
+ * grid (in the same order the grid is traversed).
+ */
+std::vector< EmissivityValues >
+EmissivityCalculator::get_emissivities(DensityGrid &grid) {
+  std::vector< EmissivityValues > result(grid.get_number_of_cells());
+  unsigned int index = 0;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    DensityValues &cell = it.get_values();
+    result[index] = calculate_emissivities(cell, _abundances, _lines);
+    ++index;
+  }
+  return result;
 }

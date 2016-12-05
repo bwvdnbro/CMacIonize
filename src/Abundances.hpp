@@ -83,6 +83,17 @@ public:
                    log) {}
 
   /**
+   * @brief Copy constructor.
+   *
+   * @param abundances Abundances to copy into this instance.
+   */
+  Abundances(Abundances &abundances) {
+    for (int i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+      _abundances[i] = abundances._abundances[i];
+    }
+  }
+
+  /**
    * @brief Get the abundance of the atom with the given name.
    *
    * @param name Valid ElementName.

@@ -19,17 +19,38 @@
 ################################################################################
 
 ##
-# @file __init__.py
+# @file test_emissivitycalculator.py
 #
-# @brief Initialization script for the Python modules.
-#
-# This script loads all relevant module files.
+# @brief Unit test for the Python EmissivityCalculator module.
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
 
-import emissivitycalculator
+# Load the module.
+import load_module as pycmi
+# Load the sys module (for sys.exit())
+import sys
 
-import libdensitygrid
+import numpy as np
 
-import libemissivitycalculator
+##
+# @brief Unit test for the Python EmissivityCalculator module.
+##
+def main():
+  densitygrid = pycmi.libdensitygrid.DensityGrid("python_test.hdf5")
+
+  abundances = {"helium": 0.1, "carbon": 2.2e-4, "nitrogen": 4.e-5,
+                "oxygen": 3.3e-4, "neon": 5.e-5, "sulfur": 9.e-6}
+  abundances = pycmi.libemissivitycalculator.Abundances(abundances)
+  emissivitycalculator = \
+      pycmi.libemissivitycalculator.EmissivityCalculator(abundances)
+
+  emissivities = emissivitycalculator.get_emissivities(densitygrid)
+
+  print emissivities
+
+  sys.exit(0)
+
+# make sure the main function is executed
+if __name__ == "__main__":
+  main()
