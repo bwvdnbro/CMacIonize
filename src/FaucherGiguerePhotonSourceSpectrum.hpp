@@ -49,8 +49,8 @@ private:
   /*! @brief Cumulative distribution of the spectrum. */
   double _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief Total ionizing luminosity of the spectrum (in s^-1). */
-  double _total_luminosity;
+  /*! @brief Total ionizing flux of the spectrum (in s^-1 m^-2). */
+  double _total_flux;
 
   /*! @brief RandomGenerator. */
   RandomGenerator &_random_generator;
@@ -61,6 +61,8 @@ public:
                                      Log *log = nullptr);
 
   static std::string get_filename(double z);
+
+  double get_total_flux();
 
   double get_random_frequency();
 };

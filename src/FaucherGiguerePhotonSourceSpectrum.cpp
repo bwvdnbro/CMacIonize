@@ -124,6 +124,19 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
          ++i) {
       _cumulative_distribution[i] += _cumulative_distribution[i - 1];
     }
+    // the total ionizing luminosity is the last element of
+    // _cumulative_distribution (using a zeroth order quadrature)
+    // its value is in 10^-21 erg Hz^-1 s^-1 cm^-2 sr^-1
+    // we convert to s^-1 cm^-2 sr^-1 by dividing by Planck's constant
+    // (in 10^-21 erg Hz^-1)
+    _total_flux =
+        _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ -
+                                 1] /
+        6.62607e-6;
+    // we integrate out over all solid angles
+    _total_flux *= 4. * M_PI;
+    // and convert from cm^-2 to m^-2
+    _total_flux *= 1e4;
     // normalize the spectrum
     for (unsigned int i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
@@ -137,7 +150,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
          ++i) {
       _cumulative_distribution[i] = 0.;
     }
-    _total_luminosity = 0.;
+    _total_flux = 0.;
   }
 
   if (log) {
@@ -177,6 +190,15 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
     cmac_error("File not found: %s!", name.c_str());
   }
   return name;
+}
+
+/**
+ * @brief Get the total ionizing flux.
+ *
+ * @return Total ionizing flux (in s^-1 m^-2).
+ */
+double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
+  return _total_flux;
 }
 
 /**

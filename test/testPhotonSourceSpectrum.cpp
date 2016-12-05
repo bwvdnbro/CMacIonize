@@ -349,6 +349,8 @@ int main(int argc, char **argv) {
            << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);
     }
+
+    assert_values_equal_rel(spectrum.get_total_flux(), 1.1352e+09, 1.e-6);
   }
 
   return 0;
