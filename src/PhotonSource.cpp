@@ -97,6 +97,9 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   _total_luminosity = luminosity_discrete + luminosity_continuous;
   _discrete_fraction = luminosity_discrete / _total_luminosity;
 
+  _discrete_photon_weight = 1.;
+  _continuous_photon_weight = 1.;
+
   if (_log) {
     _log->write_status(_discrete_fraction * 100.,
                        "% of the photons is emitted by discrete sources.");
@@ -198,6 +201,7 @@ Photon PhotonSource::get_random_photon() {
 
   CoordinateVector<> position, direction;
   double energy;
+  double weight;
   // check if we have a continuous or a discrete source photon
   if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
@@ -205,14 +209,18 @@ Photon PhotonSource::get_random_photon() {
     position = posdir.first;
     direction = posdir.second;
     energy = _continuous_spectrum->get_random_frequency();
+    weight = _continuous_photon_weight;
   } else {
     position = _discrete_positions[_discrete_active_source_index];
     direction = get_random_direction();
     energy = _discrete_spectrum->get_random_frequency();
+    weight = _discrete_photon_weight;
   }
 
   Photon photon(position, direction, energy);
   set_cross_sections(photon, energy);
+
+  photon.set_weight(weight);
 
   update_indices();
 

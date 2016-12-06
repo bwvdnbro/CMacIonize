@@ -87,15 +87,16 @@ protected:
   inline void update_integrals(const double ds, DensityValues &cell,
                                Photon &photon) {
     if (cell.get_total_density() > 0.) {
-      // changing the value below from 2 to NUMBER_OF_ELEMENTS makes a huge
-      // difference in run time
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.increase_mean_intensity(ion, ds * photon.get_cross_section(ion));
+        cell.increase_mean_intensity(ion, ds * photon.get_weight() *
+                                              photon.get_cross_section(ion));
       }
-      cell.increase_heating_H(ds * photon.get_cross_section(ION_H_n) *
+      cell.increase_heating_H(ds * photon.get_weight() *
+                              photon.get_cross_section(ION_H_n) *
                               (photon.get_energy() - _ionization_energy_H));
-      cell.increase_heating_He(ds * photon.get_cross_section(ION_He_n) *
+      cell.increase_heating_He(ds * photon.get_weight() *
+                               photon.get_cross_section(ION_He_n) *
                                (photon.get_energy() - _ionization_energy_He));
     }
   }

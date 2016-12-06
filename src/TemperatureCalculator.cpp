@@ -394,12 +394,12 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
  * @brief Calculate a new temperature for each cell after shooting the given
  * number of photons.
  *
- * @param nphoton Number of ionizing photons emitted by all sources.
+ * @param totweight Total weight of all photons that were used.
  * @param grid DensityGrid on which to operate.
  */
-void TemperatureCalculator::calculate_temperature(unsigned int nphoton,
+void TemperatureCalculator::calculate_temperature(double totweight,
                                                   DensityGrid &grid) {
-  double jfac = _luminosity / nphoton;
+  double jfac = _luminosity / totweight;
   // the integral calculation uses the photon frequency (in Hz)
   // we want to convert this to the photon energy (in Joule)
   // we do this by multiplying with the Planck constant (in Js)

@@ -72,6 +72,9 @@ private:
    *  but their type can change during reemission events. */
   PhotonType _type;
 
+  /*! @brief Weight of the photon. */
+  double _weight;
+
 public:
   /**
    * @brief Constructor.
@@ -83,7 +86,7 @@ public:
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy)
       : _position(position), _direction(direction), _energy(energy),
-        _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY) {
+        _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY), _weight(1.) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cross_sections[i] = 0.;
     }
@@ -183,6 +186,20 @@ public:
    * @param type PhotonType type identifier.
    */
   inline void set_type(PhotonType type) { _type = type; }
+
+  /**
+   * @brief Set the weight of the Photon.
+   *
+   * @param weight New weight for the Photon.
+   */
+  inline void set_weight(double weight) { _weight = weight; }
+
+  /**
+   * @brief Get the weight of the Photon.
+   *
+   * @return Weight of the Photon.
+   */
+  inline double get_weight() { return _weight; }
 };
 
 #endif // PHOTON_HPP

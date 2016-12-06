@@ -211,15 +211,17 @@ int main(int argc, char **argv) {
     log->write_status("Start shooting photons...");
     log->write_status("Initial sub step number: ", lnumphoton, ".");
 
-    unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
+    double typecount[PHOTONTYPE_NUMBER] = {0};
 
     unsigned int numsubstep = 0;
     unsigned int totnumphoton = 0;
+    double totweight = 0.;
     while (!convergence_checker->is_converged(totnumphoton)) {
       log->write_info("Substep ", numsubstep);
 
       for (unsigned int i = 0; i < lnumphoton; ++i) {
         Photon photon = source.get_random_photon();
+        totweight += photon.get_weight();
         ++totnumphoton;
         double tau = -std::log(Utilities::random_double());
         while (grid->interact(photon, tau)) {
@@ -229,7 +231,7 @@ int main(int argc, char **argv) {
           }
           tau = -std::log(Utilities::random_double());
         }
-        ++typecount[photon.get_type()];
+        typecount[photon.get_type()] += photon.get_weight();
       }
 
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(
@@ -241,28 +243,29 @@ int main(int argc, char **argv) {
     }
     lnumphoton = totnumphoton;
     log->write_status("Done shooting photons.");
-    log->write_status(typecount[PHOTONTYPE_ABSORBED],
-                      " photons were reemitted as non-ionizing photons.");
-    log->write_status(typecount[PHOTONTYPE_DIFFUSE_HI] +
-                          typecount[PHOTONTYPE_DIFFUSE_HeI],
-                      " photons were scattered.");
+    log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
+                      "% of photons were reemitted as non-ionizing photons.");
+    log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                              typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+                          totweight,
+                      "% of photons were scattered.");
     double escape_fraction =
-        (100. * (lnumphoton - typecount[PHOTONTYPE_ABSORBED])) / lnumphoton;
+        (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
     log->write_status("Escape fraction: ", escape_fraction, "%.");
     double escape_fraction_HI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / lnumphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
     log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI, "%.");
     double escape_fraction_HeI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / lnumphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
     log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
                       "%.");
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
     if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
-      temperature_calculator.calculate_temperature(lnumphoton, *grid);
+      temperature_calculator.calculate_temperature(totweight, *grid);
     } else {
-      ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
+      ionization_state_calculator.calculate_ionization_state(totweight, *grid);
     }
     log->write_status("Done calculating ionization state.");
 

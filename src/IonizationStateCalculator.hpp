@@ -58,7 +58,7 @@ public:
                             ChargeTransferRates &charge_transfer_rates);
 
   void calculate_ionization_state(double jfac, DensityValues &cell);
-  void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
+  void calculate_ionization_state(double totweight, DensityGrid &grid);
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);

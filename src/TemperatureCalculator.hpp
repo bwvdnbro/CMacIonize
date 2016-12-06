@@ -71,7 +71,7 @@ public:
                      ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac, DensityValues &cell);
-  void calculate_temperature(unsigned int nphoton, DensityGrid &grid);
+  void calculate_temperature(double totweight, DensityGrid &grid);
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

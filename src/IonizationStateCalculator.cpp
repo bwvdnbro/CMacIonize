@@ -247,14 +247,14 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @brief Solves the ionization and temperature equations based on the values of
  * the mean intensity integrals in each cell.
  *
- * @param nphoton Number of ionizing photons emitted by all sources.
+ * @param totweight Total weight off all photons used.
  * @param grid DensityGrid for which the calculation is done.
  */
-void IonizationStateCalculator::calculate_ionization_state(unsigned int nphoton,
+void IonizationStateCalculator::calculate_ionization_state(double totweight,
                                                            DensityGrid &grid) {
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
-  double jfac = _luminosity / nphoton;
+  double jfac = _luminosity / totweight;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     double cellvolume = it.get_volume();
     DensityValues &cell = it.get_values();

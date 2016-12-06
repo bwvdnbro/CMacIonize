@@ -76,6 +76,9 @@ private:
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum *_discrete_spectrum;
 
+  /*! @brief Weight of discrete photons. */
+  double _discrete_photon_weight;
+
   ///
 
   /// continuous sources
@@ -91,6 +94,9 @@ private:
 
   /*! @brief Spectrum of the continuous sources. */
   PhotonSourceSpectrum *_continuous_spectrum;
+
+  /*! @brief Weight of continuous photons. */
+  double _continuous_photon_weight;
 
   ///
 
