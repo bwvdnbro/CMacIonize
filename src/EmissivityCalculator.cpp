@@ -224,9 +224,13 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
     eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
     eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
-    eval.set_emissivity(EMISSIONLINE_NEON_FRACTION,
-                        ntot * ne * cell.get_ionic_fraction(ION_Ne_n) *
-                            abundances.get_abundance(ELEMENT_Ne));
+    double T = cell.get_temperature();
+    eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
+    eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
+    eval.set_emissivity(EMISSIONLINE_avg_nH_nHe,
+                        (1. - cell.get_ionic_fraction(ION_H_n)) *
+                            (1. - cell.get_ionic_fraction(ION_He_n)));
+    eval.set_emissivity(EMISSIONLINE_avg_nH_nHe_count, 1.);
     eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * cneii12);
     eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * cniii57);
     eval.set_emissivity(EMISSIONLINE_NeIII_15mu, ntot * cneiii15);
@@ -238,7 +242,6 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
                         ne * nhep * 1.69e-38 * std::pow(t4, -1.065));
-    double T = cell.get_temperature();
     eval.set_emissivity(EMISSIONLINE_Hrec_s,
                         ne * nhp * 7.982e-23 /
                             (std::sqrt(T / 3.148) *

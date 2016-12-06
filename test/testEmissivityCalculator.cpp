@@ -212,9 +212,6 @@ int main(int argc, char **argv) {
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[17] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
           1.e-15);
-      assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_NEON_FRACTION),
-                              UnitConverter::convert(em[18], "cm^-6", "m^-6"),
-                              1.e-15);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NeII_12mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[19] * 1.e-20,

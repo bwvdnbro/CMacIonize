@@ -52,7 +52,10 @@ enum EmissionLine {
   EMISSIONLINE_SIII_9405,
   EMISSIONLINE_SIII_6312,
   EMISSIONLINE_SIII_19mu,
-  EMISSIONLINE_NEON_FRACTION,
+  EMISSIONLINE_avg_T,
+  EMISSIONLINE_avg_T_count,
+  EMISSIONLINE_avg_nH_nHe,
+  EMISSIONLINE_avg_nH_nHe_count,
   EMISSIONLINE_NeII_12mu,
   EMISSIONLINE_NIII_57mu,
   EMISSIONLINE_NeIII_15mu,
@@ -148,8 +151,14 @@ public:
       return "SIII_6213";
     case EMISSIONLINE_SIII_19mu:
       return "SIII_19mu";
-    case EMISSIONLINE_NEON_FRACTION:
-      return "NeonFraction";
+    case EMISSIONLINE_avg_T:
+      return "avg_T";
+    case EMISSIONLINE_avg_T_count:
+      return "avg_T_count";
+    case EMISSIONLINE_avg_nH_nHe:
+      return "avg_nH_nHe";
+    case EMISSIONLINE_avg_nH_nHe_count:
+      return "avg_nH_nHe_count";
     case EMISSIONLINE_NeII_12mu:
       return "NeII_12mu";
     case EMISSIONLINE_NIII_57mu:
