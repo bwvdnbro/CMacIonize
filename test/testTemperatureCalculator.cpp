@@ -117,6 +117,8 @@ int main(int argc, char **argv) {
       // precision. We always use double precision and prefer to stick to SI
       // units where possible.
       double tolerance = 1.e-9;
+      assert_values_equal_rel(h0, h0f, tolerance);
+      assert_values_equal_rel(he0, he0f, tolerance);
       assert_values_equal_rel(gain, gainf * 1.e-20, tolerance);
       assert_values_equal_rel(loss, lossf * 1.e-20, tolerance);
 
@@ -228,6 +230,8 @@ int main(int argc, char **argv) {
 
       // check that the values match the expected values
       double tolerance = 1.e-9;
+
+      cmac_status("%s", line.c_str());
 
       assert_values_equal_rel(h0, h0f, tolerance);
 

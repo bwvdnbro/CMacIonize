@@ -79,6 +79,9 @@ private:
   /*! @brief Weight of discrete photons. */
   double _discrete_photon_weight;
 
+  /*! @brief Total luminosity of the discrete sources. */
+  double _discrete_luminosity;
+
   ///
 
   /// continuous sources
@@ -97,6 +100,9 @@ private:
 
   /*! @brief Weight of continuous photons. */
   double _continuous_photon_weight;
+
+  /*! @brief Total luminosity of the continuous source. */
+  double _continuous_luminosity;
 
   ///
 

@@ -33,7 +33,7 @@
 #include <sstream>
 using namespace std;
 
-//#define LINES_F_COOLING
+#define LINES_F_COOLING
 
 /**
  * @brief Read a given number of values from the given string into the given
@@ -447,13 +447,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   sw1 = 4.;
   sw2 = 2.;
   T1 = std::exp(-EnNeII / temperature);
-#ifdef LINES_F_COOLING
   double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
                  (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
-#else
-  double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
-                 (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
-#endif
   cooling += CNIII + CNeII;
 
   return cooling;
@@ -466,8 +461,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * @param temperature Temperature (in K).
  * @param electron_density Electron density (in m^-3).
  * @param abundances Ion abundances.
- * @param c6300 Variable to store the oxygen 6300 angstrom emission line
- * strength in (in J s^-1).
+ * @param c6300_6363 Variable to store the oxygen 6300 and 6363 angstrom
+ * emission line strengths in (in J s^-1).
  * @param c9405 Variable to store the sulfur 9405 angstrom emission line
  * strength in (in J s^-1).
  * @param c6312 Variable to store the sulfur 6312 angstrom emission line
@@ -520,10 +515,10 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  */
 void LineCoolingData::linestr(
     double temperature, double electron_density, double *abundances,
-    double &c6300, double &c9405, double &c6312, double &c33mu, double &c19mu,
-    double &c3729, double &c3727, double &c7330, double &c4363, double &c5007,
-    double &c52mu, double &c88mu, double &c5755, double &c6584, double &c4072,
-    double &c6717, double &c6725, double &c3869, double &cniii57,
+    double &c6300_6363, double &c9405, double &c6312, double &c33mu,
+    double &c19mu, double &c3729, double &c3727, double &c7330, double &c4363,
+    double &c5007, double &c52mu, double &c88mu, double &c5755, double &c6584,
+    double &c4072, double &c6717, double &c6725, double &c3869, double &cniii57,
     double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
     double &ciii1908, double &coii7325, double &csiv10) {
   double EnNIII = 251.;
@@ -653,8 +648,8 @@ void LineCoolingData::linestr(
       cnii122 = abundances[j] * kb * lev[2] * _ea[j][4] * _en[j][4];
     }
     if (j == 2) {
-      c6300 = abundances[j] * kb * lev[3] *
-              (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5]);
+      c6300_6363 = abundances[j] * kb * lev[3] *
+                   (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5]);
     }
     if (j == 3) {
       c3729 = cl2;

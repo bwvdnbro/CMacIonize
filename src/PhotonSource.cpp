@@ -67,8 +67,8 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
       _HeLyc_spectrum(cross_sections, random_generator),
       _He2pc_spectrum(random_generator), _log(log) {
 
-  double luminosity_discrete = 0.;
-  double luminosity_continuous = 0.;
+  _discrete_luminosity = 0.;
+  _continuous_luminosity = 0.;
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
     _discrete_weights.resize(distribution->get_number_of_sources());
@@ -76,7 +76,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
       _discrete_positions[i] = distribution->get_position(i);
       _discrete_weights[i] = distribution->get_weight(i);
     }
-    luminosity_discrete = distribution->get_total_luminosity();
+    _discrete_luminosity = distribution->get_total_luminosity();
 
     if (_log) {
       _log->write_status("Constructed PhotonSource with ",
@@ -90,17 +90,21 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   if (continuous_source != nullptr) {
     _continuous_active_number_of_photons = 0;
-    luminosity_continuous = continuous_source->get_total_surface_area() *
-                            continuous_spectrum->get_total_flux();
+    _continuous_luminosity = continuous_source->get_total_surface_area() *
+                             continuous_spectrum->get_total_flux();
   }
 
-  _total_luminosity = luminosity_discrete + luminosity_continuous;
-  _discrete_fraction = luminosity_discrete / _total_luminosity;
+  _total_luminosity = _discrete_luminosity + _continuous_luminosity;
+  _discrete_fraction = _discrete_luminosity / _total_luminosity;
 
   _discrete_photon_weight = 1.;
   _continuous_photon_weight = 1.;
 
   if (_log) {
+    _log->write_status("Total luminosity of discrete sources: ",
+                       _discrete_luminosity, " s^-1.");
+    _log->write_status("Total luminosity of continuous sources: ",
+                       _continuous_luminosity, " s^-1.");
     _log->write_status(_discrete_fraction * 100.,
                        "% of the photons is emitted by discrete sources.");
   }

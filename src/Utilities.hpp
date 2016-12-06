@@ -213,6 +213,7 @@ template <> inline bool convert< bool >(std::string value) {
     return false;
   } else {
     cmac_error("Error converting \"%s\" to a boolean value!", value.c_str());
+    return false;
   }
 }
 
