@@ -35,6 +35,7 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "EmissivityCalculator.hpp"
+#include "FaucherGiguerePhotonSourceSpectrum.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
@@ -141,12 +142,14 @@ int main(int argc, char **argv) {
 
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, random_generator, log);
+  FaucherGiguerePhotonSourceSpectrum continuousspectrum(params,
+                                                        random_generator, log);
 
   Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, &spectrum, continuoussource,
-                      &spectrum, abundances, cross_sections, random_generator,
-                      log);
+                      &continuousspectrum, abundances, cross_sections,
+                      random_generator, log);
 
   // set up output
   DensityGridWriter *writer =

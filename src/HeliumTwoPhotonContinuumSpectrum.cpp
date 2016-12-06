@@ -147,3 +147,16 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
           (_cumulative_distribution[inu + 1] - _cumulative_distribution[inu]);
   return frequency;
 }
+
+/**
+ * @brief Get the total ionizing flux of the spectrum.
+ *
+ * @warning This method is currently not used and therefore not implemented.
+ *
+ * @return Total ionizing flux (in m^-2 s^-1).
+ */
+double HeliumTwoPhotonContinuumSpectrum::get_total_flux() {
+  cmac_error(
+      "HeliumTwoPhotonContinuumSpectrum::get_total_flux() is not implemented!");
+  return 0.;
+}

@@ -132,3 +132,16 @@ double HeliumLymanContinuumSpectrum::get_random_frequency() {
           (_temperature[_current_iT + 1] - _temperature[_current_iT]);
   return frequency;
 }
+
+/**
+ * @brief Get the total ionizing flux of the spectrum.
+ *
+ * @warning This method is currently not used and therefore not implemented.
+ *
+ * @return Total ionizing flux (in m^-2 s^-1).
+ */
+double HeliumLymanContinuumSpectrum::get_total_flux() {
+  cmac_error(
+      "HeliumLymanContinuumSpectrum::get_total_flux() is not implemented!");
+  return 0.;
+}

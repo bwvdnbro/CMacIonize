@@ -129,3 +129,16 @@ double PlanckPhotonSourceSpectrum::get_random_frequency() {
   // slow (and binning the actual frequencies in Hz yields a bad interpolation)
   return frequency * 3.288465385e15;
 }
+
+/**
+ * @brief Get the total ionizing flux of the spectrum.
+ *
+ * @warning This method is currently not used and therefore not implemented.
+ *
+ * @return Total ionizing flux (in m^-2 s^-1).
+ */
+double PlanckPhotonSourceSpectrum::get_total_flux() {
+  cmac_error(
+      "PlanckPhotonSourceSpectrum::get_total_flux() is not implemented!");
+  return 0.;
+}

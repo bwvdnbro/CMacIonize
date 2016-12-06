@@ -90,7 +90,8 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   if (continuous_source != nullptr) {
     _continuous_active_number_of_photons = 0;
-    luminosity_continuous = continuous_source->get_total_luminosity();
+    luminosity_continuous = continuous_source->get_total_surface_area() *
+                            continuous_spectrum->get_total_flux();
   }
 
   _total_luminosity = luminosity_discrete + luminosity_continuous;

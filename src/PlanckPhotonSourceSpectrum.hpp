@@ -71,6 +71,8 @@ public:
                              ParameterFile &params, Log *log = nullptr);
 
   virtual double get_random_frequency();
+
+  virtual double get_total_flux();
 };
 
 #endif // PLANCKPHOTONSOURCESPECTRUM_HPP

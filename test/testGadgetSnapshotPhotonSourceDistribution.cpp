@@ -59,6 +59,13 @@ public:
   virtual double get_random_frequency() {
     return Utilities::random_double() * (54.4 - 13.6) + 13.6;
   }
+
+  /**
+   * @brief Get the total ionizing flux of the spectrum.
+   *
+   * @return Total ionizing flux (in m^-2 s^-1).
+   */
+  virtual double get_total_flux() { return 0.; }
 };
 
 /**

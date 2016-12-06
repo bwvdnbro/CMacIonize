@@ -27,6 +27,7 @@
 #include "Error.hpp"
 #include "FaucherGiguereDataLocation.hpp"
 #include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 #include <cmath>
@@ -156,9 +157,23 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
   if (log) {
     log->write_status(
         "Constructed FaucherGiguerePhotonSourceSpectrum at redshift ", redshift,
-        ".");
+        ", with total ionizing flux ", _total_flux, " m^-2 s^-1.");
   }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read from.
+ * @param random_generator RandomGenerator.
+ * @param log Log to write logging info to.
+ */
+FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
+    ParameterFile &params, RandomGenerator &random_generator, Log *log)
+    : FaucherGiguerePhotonSourceSpectrum(
+          params.get_value< double >("continuousphotonsourcespectrum.redshift",
+                                     0.),
+          random_generator, log) {}
 
 /**
  * @brief Get the name of the file containing the spectrum for the given
@@ -195,7 +210,7 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
 /**
  * @brief Get the total ionizing flux.
  *
- * @return Total ionizing flux (in s^-1 m^-2).
+ * @return Total ionizing flux (in m^-2 s^-1).
  */
 double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
   return _total_flux;

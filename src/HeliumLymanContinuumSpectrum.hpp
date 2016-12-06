@@ -68,6 +68,8 @@ public:
   void set_temperature(double T);
 
   virtual double get_random_frequency();
+
+  virtual double get_total_flux();
 };
 
 #endif // HELIUMLYMANCONTINUUMSPECTRUM_HPP

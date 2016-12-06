@@ -32,6 +32,7 @@
 #include <string>
 
 class Log;
+class ParameterFile;
 class RandomGenerator;
 
 /*! @brief Number of frequency bins. */
@@ -49,7 +50,7 @@ private:
   /*! @brief Cumulative distribution of the spectrum. */
   double _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief Total ionizing flux of the spectrum (in s^-1 m^-2). */
+  /*! @brief Total ionizing flux of the spectrum (in m^-2 s^-1). */
   double _total_flux;
 
   /*! @brief RandomGenerator. */
@@ -60,11 +61,15 @@ public:
                                      RandomGenerator &random_generator,
                                      Log *log = nullptr);
 
+  FaucherGiguerePhotonSourceSpectrum(ParameterFile &params,
+                                     RandomGenerator &random_generator,
+                                     Log *log = nullptr);
+
   static std::string get_filename(double z);
 
-  double get_total_flux();
+  virtual double get_total_flux();
 
-  double get_random_frequency();
+  virtual double get_random_frequency();
 };
 
 #endif // FAUCHERGIGUEREPHOTONSOURCESPECTRUM_HPP

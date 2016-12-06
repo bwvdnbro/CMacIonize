@@ -115,6 +115,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.cpp
     CompilerInfo.cpp.in
     EmissivityCalculator.cpp
+    FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -155,6 +156,7 @@ set(CMACIONIZE_SOURCES
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp
+    FaucherGiguerePhotonSourceSpectrum.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
