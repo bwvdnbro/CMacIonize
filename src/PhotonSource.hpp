@@ -106,9 +106,6 @@ private:
 
   ///
 
-  /*! @brief Fraction of photons that is emitted by discrete sources. */
-  double _discrete_fraction;
-
   /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
    */
   double _total_luminosity;

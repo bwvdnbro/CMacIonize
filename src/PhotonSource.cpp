@@ -95,7 +95,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   _total_luminosity = _discrete_luminosity + _continuous_luminosity;
-  _discrete_fraction = _discrete_luminosity / _total_luminosity;
+  double discrete_fraction = _discrete_luminosity / _total_luminosity;
 
   _discrete_photon_weight = 1.;
   _continuous_photon_weight = 1.;
@@ -105,8 +105,9 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                        _discrete_luminosity, " s^-1.");
     _log->write_status("Total luminosity of continuous sources: ",
                        _continuous_luminosity, " s^-1.");
-    _log->write_status(_discrete_fraction * 100.,
-                       "% of the photons is emitted by discrete sources.");
+    _log->write_status(
+        discrete_fraction * 100.,
+        "% of the ionizing radiation is emitted by discrete sources.");
   }
 }
 
@@ -122,52 +123,56 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
  */
 unsigned int
 PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
-  _discrete_number_of_photons = 0;
-  _continuous_number_of_photons = 0;
+  // this should be a parameter
+  const double discrete_fraction = 0.5;
 
-  // make sure we have at least 10 photons per discrete source
-  if (number_of_photons * _discrete_fraction < 10 * _discrete_weights.size()) {
-    number_of_photons = 10 * _discrete_weights.size() / _discrete_fraction;
-  }
-
-  // make sure we have at least 100 photons for the continuous sources
-  if (_discrete_fraction < 1. &&
-      number_of_photons * (1. - _discrete_fraction) < 100) {
-    number_of_photons = 100 / (1. - _discrete_fraction);
-  }
-
-  while (number_of_photons !=
-         _discrete_number_of_photons + _continuous_number_of_photons) {
-    _discrete_number_of_photons = 0;
+  if (_discrete_luminosity > 0. && _continuous_luminosity > 0.) {
+    _discrete_number_of_photons = discrete_fraction * number_of_photons;
+    // we need to make sure the sum of both is equal to number_of_photons
+    // if we would set the same expression as above, then we would be 1 photon
+    // short for uneven number_of_photons, since round off automatically rounds
+    // down.
     _continuous_number_of_photons =
-        std::round((1. - _discrete_fraction) * number_of_photons);
-    for (unsigned int i = 0; i < _discrete_weights.size(); ++i) {
-      _discrete_number_of_photons += std::round(
-          number_of_photons * _discrete_fraction * _discrete_weights[i]);
+        number_of_photons - _discrete_number_of_photons;
+  } else {
+    if (_discrete_luminosity > 0.) {
+      _discrete_number_of_photons = number_of_photons;
+    } else {
+      // we do not check for the case were both luminosities are zero
+      // it is assumed this will never happen (as radiative transfer is quite
+      // boring without sources)
+      _continuous_number_of_photons = number_of_photons;
     }
-    number_of_photons =
-        _discrete_number_of_photons + _continuous_number_of_photons;
   }
-
-  _discrete_number_of_photons =
-      std::round(number_of_photons * _discrete_fraction);
 
   _discrete_active_source_index = 0;
   _discrete_active_photon_index = 0;
-  if (_discrete_weights.size() > 0) {
+  if (_discrete_number_of_photons > 0) {
+    // make sure we have at least 10 photons per discrete source
+    if (_discrete_number_of_photons < 10 * _discrete_weights.size()) {
+      _discrete_number_of_photons = 10 * _discrete_weights.size();
+    }
+    // set the photon weights
+    _discrete_photon_weight =
+        _discrete_luminosity / _discrete_number_of_photons;
     _discrete_active_number_of_photons =
         std::round(_discrete_number_of_photons * _discrete_weights[0]);
+    // disable continuous source: we first emit discrete photons
+    _continuous_active_number_of_photons = _continuous_number_of_photons;
   } else {
     _discrete_active_number_of_photons = 0;
+    // no discrete sources: make sure continuous sources are enabled
+    _continuous_active_number_of_photons = 0;
   }
 
-  _continuous_number_of_photons =
-      std::round((1. - _discrete_fraction) * number_of_photons);
-  if (_discrete_number_of_photons == 0) {
-    _continuous_active_number_of_photons = 0;
-  } else {
-    // disable continuous sources and first do discrete sources
-    _continuous_active_number_of_photons = _continuous_number_of_photons;
+  if (_continuous_number_of_photons > 0) {
+    // make sure we have at least 100 photons for the continuous source
+    if (_continuous_number_of_photons < 100) {
+      _continuous_number_of_photons = 100;
+    }
+    // set the photon weights
+    _continuous_photon_weight =
+        _continuous_luminosity / _continuous_number_of_photons;
   }
 
   if (_log) {

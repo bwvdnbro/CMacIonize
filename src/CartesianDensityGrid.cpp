@@ -470,7 +470,7 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
     S += ds;
   }
 
-  if (ncell == 0) {
+  if (ncell == 0 && optical_depth > 0.) {
     cmac_error("Photon leaves the system immediately (position: %g %g %g, "
                "direction: %g %g %g)!",
                photon_origin.x(), photon_origin.y(), photon_origin.z(),

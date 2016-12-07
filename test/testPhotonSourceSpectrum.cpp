@@ -325,8 +325,8 @@ int main(int argc, char **argv) {
     std::ofstream file("fauchergiguere.txt");
     FaucherGiguerePhotonSourceSpectrum spectrum(7., random_generator);
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
+    unsigned int counts[101];
+    for (unsigned int i = 0; i < 101; ++i) {
       counts[i] = 0;
     }
     unsigned int numsample = 1000000;
@@ -334,6 +334,10 @@ int main(int argc, char **argv) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      // we dump frequencies outside the range in the last bin and ignore it
+      if (index > 100) {
+        index = 100;
+      }
       ++counts[index];
     }
 

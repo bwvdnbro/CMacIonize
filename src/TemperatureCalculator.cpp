@@ -360,7 +360,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
     }
   }
   if (niter == max_iterations) {
-    cmac_error("Maximum number of iterations reached!");
+    cmac_warning("Maximum number of iterations reached!");
   }
 
   cell.set_temperature(T0);
