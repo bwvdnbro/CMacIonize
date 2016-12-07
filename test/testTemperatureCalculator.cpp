@@ -228,10 +228,11 @@ int main(int argc, char **argv) {
 
       Tnew = cell.get_temperature();
 
-      // check that the values match the expected values
-      double tolerance = 1.e-9;
-
-      cmac_status("%s", line.c_str());
+      // check if the values match the expected values
+      // since TemperatureCalculator::calculate_temperature() uses an iterative
+      // scheme to find the temperature, small round off tends to accumulate and
+      // cause quite large relative differences
+      double tolerance = 1.e-4;
 
       assert_values_equal_rel(h0, h0f, tolerance);
 

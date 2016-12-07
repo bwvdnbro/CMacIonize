@@ -33,8 +33,6 @@
 #include <sstream>
 using namespace std;
 
-#define LINES_F_COOLING
-
 /**
  * @brief Read a given number of values from the given string into the given
  * array
@@ -292,21 +290,12 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     double *abundances) {
-#ifdef LINES_F_COOLING
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;
   double EnNeII = 1125.;
   double EaNeII = 8.55e-3;
   double OmNeII = 0.303;
-#else
-  double EnNIII = 251.;
-  double EaNIII = 4.77e-5;
-  double OmNIII = 0.701;
-  double EnNeII = 1125.;
-  double EaNeII = 8.55e-3;
-  double OmNeII = 0.368;
-#endif
 
   // Boltzmann constant (in J s^-1)
   double kb = 1.38e-23;
@@ -325,7 +314,6 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     }
   }
   double T1;
-#ifdef LINES_F_COOLING
   double A1 = std::pow(T4, 0.91);
   double A2 = std::pow(T4, 1.11);
   double A3 = std::pow(T4, 0.8);
@@ -351,7 +339,6 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   cs[2][7] = T1 / 9.;
   cs[2][8] = T2 / 9.;
   cs[2][9] = 0.105 * std::pow(T4, 0.52);
-#endif
 
   double cooling = 0.;
   double alev[5][5], lev[5];
@@ -434,16 +421,8 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double sw1 = 2.;
   double sw2 = 4.;
   T1 = std::exp(-EnNIII / temperature);
-#ifdef LINES_F_COOLING
   double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
                  (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
-#else
-  double CNIII =
-      abundances[10] * kb * cfac * EnNIII * OmNIII * std::pow(T4, 0.136) * T1 *
-      EaNIII /
-      (sw1 *
-       (EaNIII + cfac * OmNIII * std::pow(T4, 0.136) * (1. / sw2 + T1 / sw1)));
-#endif
   sw1 = 4.;
   sw2 = 2.;
   T1 = std::exp(-EnNeII / temperature);

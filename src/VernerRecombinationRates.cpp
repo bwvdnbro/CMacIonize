@@ -217,5 +217,8 @@ double VernerRecombinationRates::get_recombination_rate(IonName ion,
   }
   // convert cm^3s^-1 to m^3s^-1
   rate *= 1.e-6;
-  return rate;
+
+  // some rates become negative for large T: make sure we don't use these
+  // values
+  return std::max(0., rate);
 }

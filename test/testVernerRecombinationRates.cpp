@@ -29,7 +29,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-using namespace std;
 
 /**
  * @brief Unit test for the VernerRecombinationRates class.
@@ -41,12 +40,12 @@ using namespace std;
 int main(int argc, char **argv) {
   VernerRecombinationRates recombination_rates;
 
-  ifstream file("verner_rec_testdata.txt");
-  string line;
+  std::ifstream file("verner_rec_testdata.txt");
+  std::string line;
   while (getline(file, line)) {
     if (line[0] != '#') {
 
-      istringstream linestream(line);
+      std::istringstream linestream(line);
 
       double T, alphaH, alphaHe, alphaCp1, alphaCp2, alphaN, alphaNp1, alphaNp2,
           alphaO, alphaOp1, alphaNe, alphaNep1, alphaSp1, alphaSp2, alphaSp3;

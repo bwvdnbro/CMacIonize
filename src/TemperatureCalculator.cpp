@@ -80,7 +80,6 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
                                    LineCoolingData &data,
                                    RecombinationRates &rates,
                                    ChargeTransferRates &ctr) {
-
   double alphaH = rates.get_recombination_rate(ION_H_n, T);
   double alphaHe = rates.get_recombination_rate(ION_He_n, T);
   double alphaC[2];
@@ -287,6 +286,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
                                                   DensityValues &cell) {
   const double eps = 1.e-3;
+  const unsigned int max_iterations = 100;
 
   if ((cell.get_heating_H() == 0. && cell.get_mean_intensity(ION_He_n) == 0.) ||
       cell.get_total_density() == 0.) {
@@ -328,7 +328,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
   double loss0 = 0.;
   double h0 = 0.;
   double he0 = 0.;
-  while (std::abs(gain0 - loss0) > eps * gain0 && niter <= 10) {
+  while (std::abs(gain0 - loss0) > eps * gain0 && niter < max_iterations) {
     ++niter;
     double T1 = 1.1 * T0;
     // ioneng
@@ -350,6 +350,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
     double expgain = std::log(gain1 / gain2) / logtt;
     double exploss = std::log(loss1 / loss2) / logtt;
     T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
+
     if (T0 < 4000.) {
       T0 = 500.;
       h0 = 1.;
@@ -357,6 +358,9 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
       gain0 = 1.;
       loss0 = 1.;
     }
+  }
+  if (niter == max_iterations) {
+    cmac_error("Maximum number of iterations reached!");
   }
 
   cell.set_temperature(T0);
