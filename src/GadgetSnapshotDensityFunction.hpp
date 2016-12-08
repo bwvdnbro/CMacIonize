@@ -62,6 +62,10 @@ private:
   /*! @brief Temperatures of the SPH particles in the snapshot (in K). */
   std::vector< double > _temperatures;
 
+  /*! @brief Neutral fractions of the SPH particles in the snapshot (if
+   *  present). */
+  std::vector< double > _neutral_fractions;
+
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
@@ -76,6 +80,7 @@ public:
                                 double fallback_unit_length_in_SI = 0.,
                                 double fallback_unit_mass_in_SI = 0.,
                                 double fallback_unit_temperature_in_SI = 0.,
+                                bool use_neutral_fraction = false,
                                 Log *log = nullptr);
 
   GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);

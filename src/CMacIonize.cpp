@@ -201,9 +201,9 @@ int main(int argc, char **argv) {
     // corrections
     numphoton = itconvergence_checker->get_next_number_of_photons(numphoton);
 
-    if (loop == 3 || loop == 9) {
-      numphoton *= 10;
-    }
+    //    if (loop == 3 || loop == 9) {
+    //      numphoton *= 10;
+    //    }
 
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();

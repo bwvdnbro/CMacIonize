@@ -68,12 +68,15 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * found in the snapshot file.
  * @param fallback_unit_temperature_in_SI Temperature unit to use if the Units
  * group is not found in the snapshot file.
+ * @param use_neutral_fraction Whether or not to use the neutral fraction from
+ * the snapshot file as initial guess for the neutral fraction (if it is
+ * present in the snapshot).
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
     double fallback_unit_mass_in_SI, double fallback_unit_temperature_in_SI,
-    Log *log)
+    bool use_neutral_fraction, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -160,6 +163,11 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   _temperatures =
       HDF5Tools::read_dataset< double >(gasparticles, "Temperature");
   // close the group
+  if (use_neutral_fraction &&
+      HDF5Tools::group_exists(gasparticles, "NeutralFractionH")) {
+    _neutral_fractions =
+        HDF5Tools::read_dataset< double >(gasparticles, "NeutralFractionH");
+  }
   HDF5Tools::close_group(gasparticles);
   // close the file
   HDF5Tools::close_file(file);
@@ -237,6 +245,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
               "densityfunction.fallback_unit_mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction.fallback_unit_temperature", "0. K"),
+          params.get_value< bool >("densityfunction.use_neutral_fraction",
+                                   "false"),
           log) {}
 
 /**
@@ -274,6 +284,10 @@ operator()(CoordinateVector<> position) {
   // tree version
   double density = 0.;
   double temperature = 0.;
+  double neutral_fraction = -1.;
+  if (_neutral_fractions.size() > 0) {
+    neutral_fraction = 0.;
+  }
   std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
   const unsigned int numngbs = ngbs.size();
   for (unsigned int i = 0; i < numngbs; ++i) {
@@ -290,11 +304,18 @@ operator()(CoordinateVector<> position) {
     double splineval = m * cubic_spline_kernel(u, h);
     density += splineval;
     temperature += splineval * _temperatures[index] / _densities[index];
+    if (neutral_fraction >= 0.) {
+      neutral_fraction += splineval * _neutral_fractions[index];
+    }
   }
 
   cell.set_total_density(density / 1.6737236e-27);
   cell.set_temperature(temperature);
-  cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  if (neutral_fraction >= 0.) {
+    cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);
+  } else {
+    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  }
   cell.set_ionic_fraction(ION_He_n, 1.e-6);
   return cell;
 }
