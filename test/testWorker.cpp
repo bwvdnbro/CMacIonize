@@ -26,15 +26,31 @@
 #include "Assert.hpp"
 #include "Job.hpp"
 #include "JobMarket.hpp"
+#include "Timer.hpp"
 #include "Utilities.hpp"
 #include "Worker.hpp"
+#include <cmath>
+#include <omp.h>
 
 /*! @brief Length of the array used to test the routines. */
-#define ARRAY_LENGTH 100000
+#define ARRAY_LENGTH 1000000
 
 /**
- * @brief Test implementation of Job that computes the square of the elements of
- * part of an array.
+ * @brief Function to apply to all values in the array.
+ *
+ * This function should be computationally demanding enough to cause a
+ * considerable amount of work.
+ *
+ * @param x Array value.
+ * @return Function value.
+ */
+inline double test_function(double x) {
+  return std::sqrt(3. * std::sqrt(x)) * std::log(x) * std::exp(x);
+}
+
+/**
+ * @brief Test implementation of Job that applies test_function to all elements
+ * of part of an array.
  */
 class TestJob : public Job {
 private:
@@ -54,11 +70,11 @@ public:
   TestJob(double *array, unsigned int size) : _array(array), _size(size) {}
 
   /**
-   * @brief Perform the job: compute the square of each value in the array.
+   * @brief Perform the job: apply test_function to each value in the array.
    */
   void execute() {
     while (_size) {
-      *_array *= (*_array);
+      *_array = test_function(*_array);
       ++_array;
       --_size;
     }
@@ -66,7 +82,7 @@ public:
 };
 
 /**
- * @brief Test implementation of JobMarket that computes the square of the
+ * @brief Test implementation of JobMarket that applies test_function to all
  * elements in an array.
  */
 class TestJobMarket : public JobMarket {
@@ -80,6 +96,9 @@ private:
   /*! @brief Size of each job. */
   unsigned int _jobsize;
 
+  /*! @brief Lock needed to ensure secure access to the internal variables. */
+  omp_lock_t _lock;
+
 public:
   /**
    * @brief Constructor.
@@ -89,7 +108,11 @@ public:
    * @param jobsize Size to be done by each job.
    */
   TestJobMarket(double *array, unsigned int size, unsigned int jobsize = 100)
-      : _array(array), _size(size), _jobsize(jobsize) {}
+      : _array(array), _size(size), _jobsize(jobsize) {
+    omp_init_lock(&_lock);
+  }
+
+  ~TestJobMarket() { omp_destroy_lock(&_lock); }
 
   /**
    * @brief Get a job.
@@ -101,6 +124,7 @@ public:
       // no more jobs!
       return nullptr;
     }
+    omp_set_lock(&_lock);
     unsigned int size = std::min(_size, _jobsize);
     Job *job = new TestJob(_array, size);
     _array += size;
@@ -109,6 +133,7 @@ public:
     } else {
       _size = 0;
     }
+    omp_unset_lock(&_lock);
     return job;
   }
 };
@@ -121,22 +146,72 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  double A[ARRAY_LENGTH];
-  double Acopy[ARRAY_LENGTH];
+  // we create 2 identical arrays:
+  //  - 1 for serial running
+  //  - 1 for parallel running
+  // after the first (serial) run, we check the results by using the second
+  // array as reference. After the second (parallel) run, we use the first
+  // array (that already contains the correct value) as reference, to speed
+  // things up
+  double *A_serial = new double[ARRAY_LENGTH];
+  double *A_parallel = new double[ARRAY_LENGTH];
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
     double aval = Utilities::random_double();
-    A[i] = aval;
-    Acopy[i] = aval;
+    A_serial[i] = aval;
+    A_parallel[i] = aval;
   }
 
-  TestJobMarket jobs(A, ARRAY_LENGTH, 100);
-  Worker worker;
+  double time_serial;
+  {
+    Timer timer;
+    timer.start();
+    TestJobMarket jobs(A_serial, ARRAY_LENGTH, 10000);
+    Worker worker;
 
-  worker.do_work(jobs);
+    worker.do_work(jobs);
+    time_serial = timer.stop();
+  }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A[i] == Acopy[i] * Acopy[i]);
+    // note that A_parallel at this time still contains the initial values
+    assert_condition(A_serial[i] == test_function(A_parallel[i]));
   }
+
+#pragma omp parallel
+  {
+#pragma omp single
+    cmac_status("Running on %i threads.", omp_get_num_threads());
+  }
+
+  double time_parallel;
+  {
+    Timer timer;
+    TestJobMarket jobs(A_parallel, ARRAY_LENGTH, 10000);
+#pragma omp parallel shared(A_parallel)
+    {
+      const int numthreads = omp_get_num_threads();
+#pragma omp for
+      for (int i = 0; i < numthreads; ++i) {
+        {
+          Worker worker;
+          worker.do_work(jobs);
+        }
+      }
+    }
+    time_parallel = timer.stop();
+  }
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+    assert_condition(A_parallel[i] == A_serial[i]);
+  }
+
+  cmac_status("Serial time: %s, parallel time: %s.",
+              Utilities::human_readable_time(time_serial).c_str(),
+              Utilities::human_readable_time(time_parallel).c_str());
+  assert_condition(time_serial > time_parallel);
+
+  delete[] A_serial;
+  delete[] A_parallel;
 
   return 0;
 }

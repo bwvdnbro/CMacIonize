@@ -35,6 +35,8 @@ class Job;
  */
 class JobMarket {
 public:
+  virtual ~JobMarket() {}
+
   /**
    * @brief Get a Job that needs to be executed.
    *
