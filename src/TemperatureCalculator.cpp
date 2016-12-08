@@ -171,7 +171,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   cell.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
   cell.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
 
-  // Sulfur
+  // Sulphur
   double S21 = jfac * cell.get_mean_intensity(ION_S_p1) /
                (ne * alphaS[0] +
                 n * h0 * ctr.get_charge_transfer_recombination_rate(3, 16, T));

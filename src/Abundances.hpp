@@ -47,7 +47,7 @@ public:
    * @param AN Abundance of nitrogen.
    * @param AO Abundance of oxygen.
    * @param ANe Abundance of neon.
-   * @param AS Abundance of sulfur.
+   * @param AS Abundance of sulphur.
    * @param log Log to write logging info to.
    */
   Abundances(double AHe, double AC, double AN, double AO, double ANe, double AS,
@@ -79,7 +79,7 @@ public:
                    params.get_value< double >("abundances.nitrogen", 4.e-5),
                    params.get_value< double >("abundances.oxygen", 3.3e-4),
                    params.get_value< double >("abundances.neon", 5.e-5),
-                   params.get_value< double >("abundances.sulfur", 9.e-6),
+                   params.get_value< double >("abundances.sulphur", 9.e-6),
                    log) {}
 
   /**

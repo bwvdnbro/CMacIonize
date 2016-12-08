@@ -4,7 +4,7 @@ abundances:
   nitrogen: 4.e-5
   oxygen: 3.3e-4
   neon: 5.e-5
-  sulfur: 9.e-6
+  sulphur: 9.e-6
 
 continuousphotonsource:
   type: None

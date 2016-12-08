@@ -40,7 +40,7 @@ def main():
   densitygrid = pycmi.libdensitygrid.DensityGrid("python_test.hdf5")
 
   abundances = {"helium": 0.1, "carbon": 2.2e-4, "nitrogen": 4.e-5,
-                "oxygen": 3.3e-4, "neon": 5.e-5, "sulfur": 9.e-6}
+                "oxygen": 3.3e-4, "neon": 5.e-5, "sulphur": 9.e-6}
   abundances = pycmi.libemissivitycalculator.Abundances(abundances)
   emissivitycalculator = \
       pycmi.libemissivitycalculator.EmissivityCalculator(abundances)

@@ -442,12 +442,12 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * @param abundances Ion abundances.
  * @param c6300_6363 Variable to store the oxygen 6300 and 6363 angstrom
  * emission line strengths in (in J s^-1).
- * @param c9405 Variable to store the sulfur 9405 angstrom emission line
+ * @param c9405 Variable to store the sulphur 9405 angstrom emission line
  * strength in (in J s^-1).
- * @param c6312 Variable to store the sulfur 6312 angstrom emission line
+ * @param c6312 Variable to store the sulphur 6312 angstrom emission line
  * strength in (in J s^-1).
  * @param c33mu Variable that is not used in the output (in J s^-1).
- * @param c19mu Variable to store the sulfur 18.7 micrometre emission line
+ * @param c19mu Variable to store the sulphur 18.7 micrometre emission line
  * strength in (in J s^-1).
  * @param c3729 Variable to store the oxygen 3729 angstrom emission line
  * strength in (in J s^-1).
@@ -467,11 +467,11 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * strength in (in J s^-1).
  * @param c6584 Variable to store the nitrogen 6584 angstrom emission line
  * strength in (in J s^-1).
- * @param c4072 Variable to store the sulfur 4072 angstrom emission line
+ * @param c4072 Variable to store the sulphur 4072 angstrom emission line
  * strength in (in J s^-1).
- * @param c6717 Variable to store the sulfur 6717 angstrom emission line
+ * @param c6717 Variable to store the sulphur 6717 angstrom emission line
  * strength in (in J s^-1).
- * @param c6725 Variable to store the sulfur 6725 angstrom emission line
+ * @param c6725 Variable to store the sulphur 6725 angstrom emission line
  * strength in (in J s^-1).
  * @param c3869 Variable to store the neon 3869 angstrom emission line strength
  * in (in J s^-1).
@@ -489,7 +489,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * line strength in (in J s^-1).
  * @param coii7325 Variable to store the oxygen 7320 + 7330 angstrom emission
  * line strength in (in J s^-1).
- * @param csiv10 Variable to store the sulfur 10 micrometre (?) emission line
+ * @param csiv10 Variable to store the sulphur 10 micrometre (?) emission line
  * strength in (in J s^-1).
  */
 void LineCoolingData::linestr(

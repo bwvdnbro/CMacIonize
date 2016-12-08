@@ -46,9 +46,9 @@ enum LineCoolingDataElements {
   OIII,
   /*! @brief Neon III */
   NEIII,
-  /*! @brief Sulfur II */
+  /*! @brief Sulphur II */
   SII,
-  /*! @brief Sulfur III */
+  /*! @brief Sulphur III */
   SIII,
   /*! @brief Carbon II */
   CII,

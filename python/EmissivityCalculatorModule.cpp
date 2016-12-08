@@ -97,7 +97,7 @@ initAbundances(boost::python::dict abundances) {
   double AN = boost::python::extract< double >(abundances["nitrogen"]);
   double AO = boost::python::extract< double >(abundances["oxygen"]);
   double ANe = boost::python::extract< double >(abundances["neon"]);
-  double AS = boost::python::extract< double >(abundances["sulfur"]);
+  double AS = boost::python::extract< double >(abundances["sulphur"]);
   return boost::shared_ptr< Abundances >(
       new Abundances(AHe, AC, AN, AO, ANe, AS));
 }

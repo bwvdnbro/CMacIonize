@@ -49,7 +49,7 @@ enum ElementName {
   ELEMENT_O,
   /*! @brief Neon. */
   ELEMENT_Ne,
-  /*! @brief Sulfur. */
+  /*! @brief Sulphur. */
   ELEMENT_S,
   /*! @brief Atom number counter. Add new atoms above this element! */
   NUMBER_OF_ELEMENTNAMES
@@ -87,11 +87,11 @@ enum IonName {
   ION_Ne_n,
   /*! @brief Ionized neon. */
   ION_Ne_p1,
-  /*! @brief Ionized sulfur. */
+  /*! @brief Ionized sulphur. */
   ION_S_p1,
-  /*! @brief Double ionized sulfur. */
+  /*! @brief Double ionized sulphur. */
   ION_S_p2,
-  /*! @brief Triple ionized sulfur. */
+  /*! @brief Triple ionized sulphur. */
   ION_S_p3,
   /*! @brief Number of supported elements. */
   NUMBER_OF_IONNAMES

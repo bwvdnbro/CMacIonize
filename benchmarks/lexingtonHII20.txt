@@ -14,7 +14,7 @@ The abundances of the elements inside the region are:
  - nitrogen: 4.e-5
  - oxygen: 3.3e-4
  - neon: 5.e-5
- - sulfur: 9.e-6
+ - sulphur: 9.e-6
 
 List of files necessary for this benchmark test:
 input:lexingtonHII20.param
