@@ -104,8 +104,9 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
 PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     RandomGenerator &random_generator, ParameterFile &params, Log *log)
     : PlanckPhotonSourceSpectrum(
-          random_generator, params.get_physical_value< QUANTITY_TEMPERATURE >(
-                                "photonsourcespectrum.temperature", "40000 K"),
+          random_generator,
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "photonsourcespectrum.temperature", "40000 K"),
           log) {}
 
 /**

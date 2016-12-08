@@ -89,8 +89,8 @@ protected:
     if (cell.get_total_density() > 0.) {
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.increase_mean_intensity(ion, ds * photon.get_weight() *
-                                              photon.get_cross_section(ion));
+        cell.increase_mean_intensity(
+            ion, ds * photon.get_weight() * photon.get_cross_section(ion));
       }
       cell.increase_heating_H(ds * photon.get_weight() *
                               photon.get_cross_section(ION_H_n) *
@@ -137,9 +137,10 @@ public:
    * @param periodic Periodicity flags.
    * @param log Log to write log messages to.
    */
-  DensityGrid(Box box, CoordinateVector< bool > periodic =
-                           CoordinateVector< bool >(false),
-              Log *log = nullptr)
+  DensityGrid(
+      Box box,
+      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
+      Log *log = nullptr)
       : _box(box), _periodic(periodic), _log(log) {
 
     _ionization_energy_H =

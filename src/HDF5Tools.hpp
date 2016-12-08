@@ -893,6 +893,8 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
     datavector[i][2] = data[3 * i + 2];
   }
 
+  delete[] data;
+
   return datavector;
 }
 
@@ -1154,7 +1156,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
 
   // read the data
   HDF5CompoundKeyValueType< _datatype_ > *data =
-      new HDF5CompoundKeyValueType< _datatype_ >[ size[0] ];
+      new HDF5CompoundKeyValueType< _datatype_ >[size[0]];
 
   hdf5status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
   if (hdf5status < 0) {

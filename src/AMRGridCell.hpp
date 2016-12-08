@@ -282,7 +282,6 @@ public:
         if (_children[i] == nullptr) {
           _children[i] = new AMRGridCell();
         }
-        _children[i] = new AMRGridCell();
         // we hack this method to initialize the cell
         _children[i]->create_all_cells(0, 0);
       }

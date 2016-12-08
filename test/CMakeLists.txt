@@ -574,6 +574,17 @@ set(TESTUTILITIES_SOURCES
 add_unit_test(NAME testUtilities
               SOURCES ${TESTUTILITIES_SOURCES})
 
+## Unit test for Worker
+set(TESTWORKER_SOURCES
+    testWorker.cpp
+
+    ../src/Job.hpp
+    ../src/JobMarket.hpp
+    ../src/Worker.hpp
+)
+add_unit_test(NAME testWorker
+              SOURCES ${TESTWORKER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
