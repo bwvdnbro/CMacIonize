@@ -29,7 +29,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-using namespace std;
 
 /**
  * @brief Unit test for the VernerRecombinationRates class.
@@ -41,23 +40,99 @@ using namespace std;
 int main(int argc, char **argv) {
   VernerRecombinationRates recombination_rates;
 
-  ifstream file("verner_rec_testdata.txt");
-  string line;
+  std::ifstream file("verner_rec_testdata.txt");
+  std::string line;
   while (getline(file, line)) {
     if (line[0] != '#') {
-      double T, alphaH, alphaHe;
-      stringstream linestream(line);
-      linestream >> T >> alphaH >> alphaHe;
-      assert_values_equal_tol(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
-              recombination_rates.get_recombination_rate(ELEMENT_H, T),
+
+      std::istringstream linestream(line);
+
+      double T, alphaH, alphaHe, alphaCp1, alphaCp2, alphaN, alphaNp1, alphaNp2,
+          alphaO, alphaOp1, alphaNe, alphaNep1, alphaSp1, alphaSp2, alphaSp3;
+
+      linestream >> T >> alphaH >> alphaHe >> alphaCp1 >> alphaCp2 >> alphaN >>
+          alphaNp1 >> alphaNp2 >> alphaO >> alphaOp1 >> alphaNe >> alphaNep1 >>
+          alphaSp1 >> alphaSp2 >> alphaSp3;
+
+      double tolerance = 1.e-15;
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_H_n, T),
               "cm^3s^-1"),
-          alphaH, 1.e-15);
-      assert_values_equal_tol(
-          UnitConverter< QUANTITY_REACTION_RATE >::to_unit(
-              recombination_rates.get_recombination_rate(ELEMENT_He, T),
+          alphaH, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_He_n, T),
               "cm^3s^-1"),
-          alphaHe, 1.e-15);
+          alphaHe, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_C_p1, T),
+              "cm^3s^-1"),
+          alphaCp1, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_C_p2, T),
+              "cm^3s^-1"),
+          alphaCp2, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_N_n, T),
+              "cm^3s^-1"),
+          alphaN, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_N_p1, T),
+              "cm^3s^-1"),
+          alphaNp1, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_N_p2, T),
+              "cm^3s^-1"),
+          alphaNp2, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_O_n, T),
+              "cm^3s^-1"),
+          alphaO, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_O_p1, T),
+              "cm^3s^-1"),
+          alphaOp1, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_Ne_n, T),
+              "cm^3s^-1"),
+          alphaNe, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_Ne_p1, T),
+              "cm^3s^-1"),
+          alphaNep1, tolerance);
+
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_S_p1, T),
+              "cm^3s^-1"),
+          alphaSp1, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_S_p2, T),
+              "cm^3s^-1"),
+          alphaSp2, tolerance);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+              recombination_rates.get_recombination_rate(ION_S_p3, T),
+              "cm^3s^-1"),
+          alphaSp3, tolerance);
     }
   }
 

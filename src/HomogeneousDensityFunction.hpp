@@ -39,19 +39,24 @@ private:
   /*! @brief Single density value for the entire box (in m^-3). */
   double _density;
 
+  /*! @brief Single temperature value for the entire box (in K). */
+  double _temperature;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param density Single density value for the entire box (in m^-3).
+   * @param temperature Single temperature value for the entire box (in K).
    * @param log Log to write logging information to.
    */
-  HomogeneousDensityFunction(double density = 1., Log *log = nullptr)
-      : _density(density) {
+  HomogeneousDensityFunction(double density = 1., double temperature = 8000.,
+                             Log *log = nullptr)
+      : _density(density), _temperature(temperature) {
     if (log) {
       log->write_status(
           "Created HomogeneousDensityFunction with constant density ", _density,
-          ".");
+          " m^-3 and constant temperature ", _temperature, " K.");
     }
   }
 
@@ -65,6 +70,8 @@ public:
       : HomogeneousDensityFunction(
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
                 "densityfunction.density", "100. cm^-3"),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "densityfunction.temperature", "8000. K"),
             log) {}
 
   /**
@@ -74,7 +81,15 @@ public:
    * @return Density at the given coordinate: the single value stored
    * internally (in m^-3).
    */
-  virtual double operator()(CoordinateVector<> position) { return _density; }
+  virtual DensityValues operator()(CoordinateVector<> position) {
+    DensityValues cell;
+
+    cell.set_total_density(_density);
+    cell.set_temperature(_temperature);
+    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+    cell.set_ionic_fraction(ION_He_n, 1.e-6);
+    return cell;
+  }
 };
 
 #endif // HOMOGENEOUSDENSITYFUNCTION_HPP

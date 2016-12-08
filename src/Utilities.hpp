@@ -69,7 +69,8 @@ template <> inline double convert< double >(std::string value) {
   char *str_end;
   double dvalue = strtod(value.c_str(), &str_end);
   if (str_end == value.c_str()) {
-    error("Error converting \"%s\" to a floating point value!", value.c_str());
+    cmac_error("Error converting \"%s\" to a floating point value!",
+               value.c_str());
   }
   return dvalue;
 }
@@ -86,8 +87,8 @@ inline CoordinateVector<> convert< CoordinateVector<> >(std::string value) {
   int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0], &vvalue[1],
                          &vvalue[2]);
   if (num_found != 3) {
-    error("Error converting \"%s\" to a floating point CoordinateVector!",
-          value.c_str());
+    cmac_error("Error converting \"%s\" to a floating point CoordinateVector!",
+               value.c_str());
   }
   return vvalue;
 }
@@ -123,7 +124,7 @@ template <> inline int convert< int >(std::string value) {
   char *str_end;
   int ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
-    error("Error converting \"%s\" to an integer value!", value.c_str());
+    cmac_error("Error converting \"%s\" to an integer value!", value.c_str());
   }
   return ivalue;
 }
@@ -138,8 +139,8 @@ template <> inline unsigned int convert< unsigned int >(std::string value) {
   char *str_end;
   unsigned int ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
-    error("Error converting \"%s\" to an unsigned integer value!",
-          value.c_str());
+    cmac_error("Error converting \"%s\" to an unsigned integer value!",
+               value.c_str());
   }
   return ivalue;
 }
@@ -154,7 +155,8 @@ template <> inline unsigned char convert< unsigned char >(std::string value) {
   char *str_end;
   unsigned char ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
-    error("Error converting \"%s\" to an unsigned char value!", value.c_str());
+    cmac_error("Error converting \"%s\" to an unsigned char value!",
+               value.c_str());
   }
   return ivalue;
 }
@@ -172,8 +174,8 @@ convert< CoordinateVector< int > >(std::string value) {
   int num_found =
       sscanf(value.c_str(), "[%i,%i,%i]", &vvalue[0], &vvalue[1], &vvalue[2]);
   if (num_found != 3) {
-    error("Error converting \"%s\" to an integer CoordinateVector!",
-          value.c_str());
+    cmac_error("Error converting \"%s\" to an integer CoordinateVector!",
+               value.c_str());
   }
   return vvalue;
 }
@@ -210,7 +212,8 @@ template <> inline bool convert< bool >(std::string value) {
              value == "n") {
     return false;
   } else {
-    error("Error converting \"%s\" to a boolean value!", value.c_str());
+    cmac_error("Error converting \"%s\" to a boolean value!", value.c_str());
+    return false;
   }
 }
 
@@ -331,8 +334,8 @@ inline std::pair< double, std::string > split_value(std::string svalue) {
   try {
     value = std::stod(svalue, &idx);
   } catch (std::invalid_argument e) {
-    error("Error extracting value from \"%s\" unit-value pair!",
-          svalue.c_str());
+    cmac_error("Error extracting value from \"%s\" unit-value pair!",
+               svalue.c_str());
   }
 
   while (svalue[idx] == ' ') {
@@ -413,7 +416,7 @@ inline std::string get_absolute_path(std::string path) {
 
   char *absolute_path_ptr = realpath(path.c_str(), nullptr);
   if (absolute_path_ptr == nullptr) {
-    error("Unable to resolve path \"%s\"!", path.c_str());
+    cmac_error("Unable to resolve path \"%s\"!", path.c_str());
   }
   std::string absolute_path(absolute_path_ptr);
   free(absolute_path_ptr);
@@ -451,6 +454,44 @@ inline std::string get_timestamp() {
     timestream << "0";
   }
   timestream << time->tm_sec;
+  return timestream.str();
+}
+
+/**
+ * @brief Convert a floating point time value in seconds to a human readable
+ * time string.
+ *
+ * If the time is larger than a minute, it is displayed as Xm Ys, and so on for
+ * larger subdivisions of time, up to years.
+ *
+ * @param time Double precision floating point time value.
+ * @return std::string containing a human readable version of the time value.
+ */
+inline std::string human_readable_time(double time) {
+  std::stringstream timestream;
+  // 2^32 minutes is 8166 years. We can safely assume no internal timer will
+  // ever reach that value
+  unsigned int minutes = time / 60.;
+  double seconds = time - 60. * minutes;
+  if (minutes > 0) {
+    unsigned int hours = minutes / 60;
+    if (hours > 0) {
+      minutes -= 60 * hours;
+      unsigned int days = hours / 24;
+      if (days > 0) {
+        hours -= 24 * days;
+        unsigned int years = days / 365;
+        if (years > 0) {
+          days -= 365 * years;
+          timestream << years << "y ";
+        }
+        timestream << days << "d ";
+      }
+      timestream << hours << "h ";
+    }
+    timestream << minutes << "m ";
+  }
+  timestream << seconds << "s";
   return timestream.str();
 }
 }

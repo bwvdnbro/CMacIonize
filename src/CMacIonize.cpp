@@ -23,7 +23,9 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Box.hpp"
+#include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
@@ -32,6 +34,8 @@
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
+#include "EmissivityCalculator.hpp"
+#include "FaucherGiguerePhotonSourceSpectrum.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
@@ -41,6 +45,7 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
 #include "VernerCrossSections.hpp"
@@ -104,7 +109,7 @@ int main(int argc, char **argv) {
       log->write_error("Running a dirty code version is disabled by default. "
                        "If you still want to run this version, add the "
                        "\"--dirty\" flag to the run command.");
-      error("Running a dirty code version is disabled by default.");
+      cmac_error("Running a dirty code version is disabled by default.");
     } else {
       log->write_warning("However, dirty running is enabled.");
     }
@@ -133,13 +138,18 @@ int main(int argc, char **argv) {
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
   RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
-  PlanckPhotonSourceSpectrum spectrum(random_generator);
+  PlanckPhotonSourceSpectrum spectrum(random_generator, params, log);
 
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, random_generator, log);
+  FaucherGiguerePhotonSourceSpectrum continuousspectrum(params,
+                                                        random_generator, log);
+
+  Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, &spectrum, continuoussource,
-                      &spectrum, cross_sections, random_generator, log);
+                      &continuousspectrum, abundances, cross_sections,
+                      random_generator, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -156,8 +166,17 @@ int main(int argc, char **argv) {
       params.get_value< unsigned int >("number of photons", 100);
   double Q = source.get_total_luminosity();
 
+  ChargeTransferRates charge_transfer_rates;
+
+  // used to calculate the ionization state at fixed temperature
   IonizationStateCalculator ionization_state_calculator(
-      Q, params.get_value< double >("helium_abundance"), recombination_rates);
+      Q, abundances, recombination_rates, charge_transfer_rates);
+  // used to calculate both the ionization state and the temperature
+  TemperatureCalculator temperature_calculator(
+      Q, abundances, params.get_value< double >("pahfac", 1.),
+      line_cooling_data, recombination_rates, charge_transfer_rates);
+  // used to calculate emissivities at the end of the loop
+  EmissivityCalculator emissivity_calculator(abundances);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -182,21 +201,27 @@ int main(int argc, char **argv) {
     // corrections
     numphoton = itconvergence_checker->get_next_number_of_photons(numphoton);
 
+    //    if (loop == 3 || loop == 9) {
+    //      numphoton *= 10;
+    //    }
+
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();
     lnumphoton = source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
     log->write_status("Initial sub step number: ", lnumphoton, ".");
 
-    unsigned int typecount[PHOTONTYPE_NUMBER] = {0};
+    double typecount[PHOTONTYPE_NUMBER] = {0};
 
     unsigned int numsubstep = 0;
     unsigned int totnumphoton = 0;
+    double totweight = 0.;
     while (!convergence_checker->is_converged(totnumphoton)) {
       log->write_info("Substep ", numsubstep);
 
       for (unsigned int i = 0; i < lnumphoton; ++i) {
         Photon photon = source.get_random_photon();
+        totweight += photon.get_weight();
         ++totnumphoton;
         double tau = -std::log(Utilities::random_double());
         while (grid->interact(photon, tau)) {
@@ -206,7 +231,7 @@ int main(int argc, char **argv) {
           }
           tau = -std::log(Utilities::random_double());
         }
-        ++typecount[photon.get_type()];
+        typecount[photon.get_type()] += photon.get_weight();
       }
 
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(
@@ -218,26 +243,36 @@ int main(int argc, char **argv) {
     }
     lnumphoton = totnumphoton;
     log->write_status("Done shooting photons.");
-    log->write_status(typecount[PHOTONTYPE_ABSORBED],
-                      " photons were reemitted as non-ionizing photons.");
-    log->write_status(typecount[PHOTONTYPE_DIFFUSE_HI] +
-                          typecount[PHOTONTYPE_DIFFUSE_HeI],
-                      " photons were scattered.");
+    log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
+                      "% of photons were reemitted as non-ionizing photons.");
+    log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                              typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+                          totweight,
+                      "% of photons were scattered.");
     double escape_fraction =
-        (100. * (lnumphoton - typecount[PHOTONTYPE_ABSORBED])) / lnumphoton;
+        (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
     log->write_status("Escape fraction: ", escape_fraction, "%.");
     double escape_fraction_HI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / lnumphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
     log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI, "%.");
     double escape_fraction_HeI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / lnumphoton;
+        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
     log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
                       "%.");
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
-    ionization_state_calculator.calculate_ionization_state(lnumphoton, *grid);
+    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
+      temperature_calculator.calculate_temperature(totweight, *grid);
+    } else {
+      ionization_state_calculator.calculate_ionization_state(totweight, *grid);
+    }
     log->write_status("Done calculating ionization state.");
+
+    // calculate emissivities
+    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
+      emissivity_calculator.calculate_emissivities(*grid);
+    }
 
     // write snapshot
     writer->write(loop, params);
@@ -261,7 +296,8 @@ int main(int argc, char **argv) {
   }
 
   programtimer.stop();
-  log->write_status("Total program time: ", programtimer.value(), " s.");
+  log->write_status("Total program time: ",
+                    Utilities::human_readable_time(programtimer.value()), ".");
 
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;

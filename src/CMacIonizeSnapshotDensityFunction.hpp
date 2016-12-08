@@ -44,7 +44,7 @@ private:
   CoordinateVector< int > _ncell;
 
   /*! @brief Density grid. */
-  double ***_grid;
+  DensityValues ***_grid;
 
 public:
   CMacIonizeSnapshotDensityFunction(std::string filename, Log *log = nullptr);
@@ -53,7 +53,7 @@ public:
 
   virtual ~CMacIonizeSnapshotDensityFunction();
 
-  virtual double operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position);
 };
 
 #endif // CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

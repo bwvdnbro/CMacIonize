@@ -64,6 +64,12 @@ add_unit_test(NAME testLineCoolingData
 configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
                COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/linecool_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/linecool_testdata.txt
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/linestr_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/linestr_testdata.txt
+               COPYONLY)
 
 ## Unit test for CommandLineParser
 set(TESTCOMMANDLINEPARSER_SOURCES
@@ -93,6 +99,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
@@ -144,6 +151,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
     ../src/DensityValues.hpp
@@ -213,6 +221,9 @@ set(TESTPHOTONSOURCESPECTRUM_SOURCES
 
     ../src/CrossSections.hpp
     ../src/Error.hpp
+    ../src/FaucherGiguereDataLocation.hpp.in
+    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/FaucherGiguerePhotonSourceSpectrum.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp
     ../src/HeliumLymanContinuumSpectrum.hpp
     ../src/HeliumTwoPhotonContinuumSpectrum.cpp
@@ -306,6 +317,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
@@ -366,6 +378,7 @@ add_unit_test(NAME testLog
 set(TESTUNITCONVERTER_SOURCES
     testUnitConverter.cpp
 
+    ../src/Unit.hpp
     ../src/UnitConverter.hpp
 )
 add_unit_test(NAME testUnitConverter
@@ -435,9 +448,11 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
 
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.hpp
+    ../src/VernerRecombinationRates.cpp
 )
 add_unit_test(NAME testIonizationStateCalculator
               SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})
@@ -499,8 +514,107 @@ configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
                ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
                COPYONLY)
 
+## Unit test for ChargeTransferRates
+set(TESTCHARGETRANSFERRATES_SOURCES
+    testChargeTransferRates.cpp
+
+    ../src/ChargeTransferRates.cpp
+    ../src/ChargeTransferRates.hpp
+)
+add_unit_test(NAME testChargeTransferRates
+              SOURCES ${TESTCHARGETRANSFERRATES_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/KingdonFerland_testdata.txt
+               COPYONLY)
+
+## Unit test for TemperatureCalculator
+set(TESTTEMPERATURECALCULATOR_SOURCES
+    testTemperatureCalculator.cpp
+
+    ../src/ChargeTransferRates.cpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/LineCoolingData.cpp
+    ../src/TemperatureCalculator.cpp
+    ../src/TemperatureCalculator.hpp
+    ../src/VernerRecombinationRates.cpp
+)
+add_unit_test(NAME testTemperatureCalculator
+              SOURCES ${TESTTEMPERATURECALCULATOR_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/tbal_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/tbal_testdata.txt
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/ioneng_testdata.txt
+               COPYONLY)
+
+## Unit test for EmissivityCalculator
+set(TESTEMISSIVITYCALCULATOR_SOURCES
+    testEmissivityCalculator.cpp
+
+    ../src/EmissivityCalculator.cpp
+    ../src/EmissivityCalculator.hpp
+    ../src/EmissivityValues.hpp
+    ../src/LineCoolingData.cpp
+)
+add_unit_test(NAME testEmissivityCalculator
+              SOURCES ${TESTEMISSIVITYCALCULATOR_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/bjump_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/bjump_testdata.txt
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/hiilines_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/hiilines_testdata.txt
+               COPYONLY)
+
+## Unit test for Utilities
+set(TESTUTILITIES_SOURCES
+    testUtilities.cpp
+
+    ../src/Utilities.hpp
+)
+add_unit_test(NAME testUtilities
+              SOURCES ${TESTUTILITIES_SOURCES})
+
+### Python module unit tests ###################################################
+macro(add_python_unit_test)
+    set(oneValueArgs NAME)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
+                               "${multiValueArgs}" ${ARGN})
+    message(STATUS "generating python test " ${TEST_NAME})
+
+    # copy Python test script
+    configure_file(${PROJECT_SOURCE_DIR}/test/${TEST_NAME}
+                   ${PROJECT_BINARY_DIR}/rundir/test/${TEST_NAME}
+                   COPYONLY)
+    add_test(NAME ${TEST_NAME}
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
+             COMMAND ${PYTHON_EXECUTABLE} ${TEST_NAME})
+
+    set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+endmacro(add_python_unit_test)
+
+if(HAVE_PYTHON)
+
+## Configure the load_module script
+set(PYTHON_MODULEPATH ${PROJECT_BINARY_DIR})
+configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py
+               ${PROJECT_BINARY_DIR}/rundir/test/load_module.py @ONLY)
+
+## LineCoolingDataModule test
+add_python_unit_test(NAME test_linecoolingdata.py)
+
+## DensityGridModule test
+if(HAVE_HDF5)
+  configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
+                 ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
+  add_python_unit_test(NAME test_densitygrid.py)
+endif(HAVE_HDF5)
+
+## EmissivityCalculatorModule test
+add_python_unit_test(NAME test_emissivitycalculator.py)
+
+endif(HAVE_PYTHON)
+
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-                        --exclude-regex PhotonSourceSpectrum
                         DEPENDS ${TESTNAMES})

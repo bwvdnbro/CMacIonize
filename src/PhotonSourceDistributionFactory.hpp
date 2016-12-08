@@ -61,9 +61,10 @@ public:
                          "PhotonSourceDistribution, since the code was "
                          "compiled without HDF5 support.");
       }
-      error("A %sPhotonSourceDistribution requires HDF5. However, the code "
-            "was compiled without HDF5 support!",
-            type.c_str());
+      cmac_error(
+          "A %sPhotonSourceDistribution requires HDF5. However, the code "
+          "was compiled without HDF5 support!",
+          type.c_str());
     }
   }
 
@@ -97,7 +98,8 @@ public:
       return new GadgetSnapshotPhotonSourceDistribution(params, log);
 #endif
     } else {
-      error("Unknown PhotonSourceDistribution type: \"%s\".", type.c_str());
+      cmac_error("Unknown PhotonSourceDistribution type: \"%s\".",
+                 type.c_str());
       return nullptr;
     }
   }

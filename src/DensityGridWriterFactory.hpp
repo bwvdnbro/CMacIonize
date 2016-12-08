@@ -60,9 +60,9 @@ public:
                          "DensityGridWriter, since the code was "
                          "compiled without HDF5 support.");
       }
-      error("A %sDensityGridWriter requires HDF5. However, the code "
-            "was compiled without HDF5 support!",
-            type.c_str());
+      cmac_error("A %sDensityGridWriter requires HDF5. However, the code "
+                 "was compiled without HDF5 support!",
+                 type.c_str());
     }
   }
   /**
@@ -90,7 +90,7 @@ public:
     if (type == "Gadget") {
       return new GadgetDensityGridWriter(params, grid, log);
     } else {
-      error("Unknown DensityGridWriter type: \"%s\".", type.c_str());
+      cmac_error("Unknown DensityGridWriter type: \"%s\".", type.c_str());
       return nullptr;
     }
 #endif

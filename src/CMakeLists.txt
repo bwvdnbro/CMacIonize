@@ -18,6 +18,7 @@
 
 # Rules for files that need to be configured.
 message(STATUS "Configuring external data files...")
+
 # LineCoolingDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/atom4.dat
                ${PROJECT_BINARY_DIR}/data/atom4.dat COPYONLY)
@@ -25,15 +26,46 @@ set(LINECOOLINGDATALOCATION ${PROJECT_BINARY_DIR}/data/atom4.dat)
 message(STATUS "LineCoolingDataLocation.hpp: ${LINECOOLINGDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
+
 # VernerCrossSectionsDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/verner_data.txt
-               ${PROJECT_BINARY_DIR}/data/verner_data.txt COPYONLY)
-set(VERNERCROSSSECTIONSDATALOCATION ${PROJECT_BINARY_DIR}/data/verner_data.txt)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_A.dat
+               ${PROJECT_BINARY_DIR}/data/verner_A.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_B.dat
+               ${PROJECT_BINARY_DIR}/data/verner_B.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_C.dat
+               ${PROJECT_BINARY_DIR}/data/verner_C.dat COPYONLY)
+set(VERNERCROSSSECTIONSDATALOCATION_A ${PROJECT_BINARY_DIR}/data/verner_A.dat)
+set(VERNERCROSSSECTIONSDATALOCATION_B ${PROJECT_BINARY_DIR}/data/verner_B.dat)
+set(VERNERCROSSSECTIONSDATALOCATION_C ${PROJECT_BINARY_DIR}/data/verner_C.dat)
 message(STATUS
       "VernerCrossSectionsDataLocation.hpp: ${VERNERCROSSSECTIONSDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/VernerCrossSectionsDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/VernerCrossSectionsDataLocation.hpp
                @ONLY)
+
+# VernerRecombinationRatesDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/verner_rec_data.txt
+               ${PROJECT_BINARY_DIR}/data/verner_rec_data.txt COPYONLY)
+set(VERNERRECOMBINATIONRATESDATALOCATION
+    ${PROJECT_BINARY_DIR}/data/verner_rec_data.txt)
+message(STATUS
+ "VernerRecombinationRatesDataLocation.hpp: ${VERNERCROSSSECTIONSDATALOCATION}")
+configure_file(
+    ${PROJECT_SOURCE_DIR}/src/VernerRecombinationRatesDataLocation.hpp.in
+    ${PROJECT_BINARY_DIR}/src/VernerRecombinationRatesDataLocation.hpp
+               @ONLY)
+
+# ChargeTransferRatesDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/KingdonFerland_ct1data.txt
+               ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt COPYONLY)
+set(CHARGETRANSFERRATESDATALOCATION
+    ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt)
+message(STATUS
+      "ChargeTransferRatesDataLocation.hpp: ${CHARGETRANSFERRATESDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/ChargeTransferRatesDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/ChargeTransferRatesDataLocation.hpp
+               @ONLY)
+
 # HeliumTwoPhotonContinuumDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/He2q.dat
                ${PROJECT_BINARY_DIR}/data/He2q.dat COPYONLY)
@@ -44,6 +76,17 @@ configure_file(
     ${PROJECT_SOURCE_DIR}/src/HeliumTwoPhotonContinuumDataLocation.hpp.in
     ${PROJECT_BINARY_DIR}/src/HeliumTwoPhotonContinuumDataLocation.hpp
     @ONLY)
+
+# FaucherGiguereDataLocation.hpp
+set(FG_DATA ${PROJECT_BINARY_DIR}/data/fg_uvb_dec11.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/fg_uvb_dec11.tar.gz
+               ${FG_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${FG_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(FAUCHERGIGUEREDATALOCATION ${PROJECT_BINARY_DIR}/data/fg_uvb_dec11/)
+message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
 
 # Configuration file
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
@@ -65,11 +108,14 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     CartesianDensityGrid.cpp
+    ChargeTransferRates.cpp
     CMacIonize.cpp
     CMacIonizeSnapshotDensityFunction.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
+    EmissivityCalculator.cpp
+    FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -78,14 +124,18 @@ set(CMACIONIZE_SOURCES
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
+    TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
 
+    Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
     Box.hpp
     CartesianDensityGrid.hpp
+    ChargeTransferRates.hpp
+    ChargeTransferRatesDataLocation.hpp.in
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp
     CMacIonizeSnapshotDensityFunction.hpp
@@ -103,7 +153,10 @@ set(CMACIONIZE_SOURCES
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
+    EmissivityCalculator.hpp
+    EmissivityValues.hpp
     Error.hpp
+    FaucherGiguerePhotonSourceSpectrum.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
@@ -127,11 +180,13 @@ set(CMACIONIZE_SOURCES
     SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
+    TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp
     VernerCrossSections.hpp
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
+    VernerRecombinationRatesDataLocation.hpp.in
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )

@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Abundances.hpp"
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
 #include "CrossSections.hpp"
@@ -40,16 +41,14 @@ using namespace std;
 class TestCrossSections : public CrossSections {
 public:
   /**
-   * @brief Get the photoionization cross section for the given element at the
+   * @brief Get the photoionization cross section for the given ion at the
    * given photon energy.
    *
-   * @param element ElementName for an element.
+   * @param ion IonName for an ion.
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(ElementName element, double energy) {
-    return 1.;
-  }
+  virtual double get_cross_section(IonName ion, double energy) { return 1.; }
 };
 
 /**
@@ -65,6 +64,13 @@ public:
   virtual double get_random_frequency() {
     return Utilities::random_double() * (54.4 - 13.6) + 13.6;
   }
+
+  /**
+   * @brief Get the total ionizing flux of the spectrum.
+   *
+   * @return Total ionizing flux (in m^-2 s^-1).
+   */
+  virtual double get_total_flux() { return 0.; }
 };
 
 /**
@@ -81,7 +87,8 @@ int main(int argc, char **argv) {
   TestCrossSections cross_sections;
   RandomGenerator random_generator;
 
-  PhotonSource source(&distribution, &spectrum, nullptr, nullptr,
+  Abundances abundances(0., 0., 0., 0., 0., 0.);
+  PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
                       cross_sections, random_generator);
   source.set_number_of_photons(1000001);
 

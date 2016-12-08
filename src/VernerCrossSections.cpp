@@ -25,8 +25,8 @@
  */
 #include "VernerCrossSections.hpp"
 #include "Error.hpp"
-#include "UnitConverter.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -36,92 +36,111 @@ using namespace std;
 /**
  * @brief Constructor.
  *
- * Reads in the data from the data file.
+ * Reads in the data from the data files.
  */
 VernerCrossSections::VernerCrossSections() {
-  ifstream file(VERNERCROSSSECTIONSDATALOCATION);
-  string line;
-  // skip initial comment line
-  getline(file, line);
-  // read L values
-  {
-    // skip comment line
-    getline(file, line);
-    getline(file, line);
-    stringstream linestream(line);
-    for (unsigned int i = 0; i < 7; ++i) {
-      // we cannot simply use linestream >> _L[i], since then the integer value
-      // is converted to a char (so we add the numeric value of '0' to all
-      // L values...)
-      unsigned int integer;
-      linestream >> integer;
-      _L[i] = integer;
-    }
-  }
+  std::ifstream fileA(VERNERCROSSSECTIONSDATALOCATION_A);
+  std::string lineA;
+  while (getline(fileA, lineA)) {
+    if (lineA[0] != '#') {
+      std::istringstream lstream(lineA);
 
-  // read NINN values
-  {
-    // skip comment line
-    getline(file, line);
-    getline(file, line);
-    stringstream linestream(line);
-    for (unsigned int i = 0; i < 30; ++i) {
-      unsigned int integer;
-      linestream >> integer;
-      _NINN[i] = integer;
-    }
-  }
+      unsigned int Z, N, n, l;
+      double E_th, E_0, sigma_0, y_a, P, y_w;
 
-  // read NTOT values
-  {
-    // skip comment line
-    getline(file, line);
-    getline(file, line);
-    stringstream linestream(line);
-    for (unsigned int i = 0; i < 30; ++i) {
-      unsigned int integer;
-      linestream >> integer;
-      _NTOT[i] = integer;
-    }
-  }
+      lstream >> Z >> N >> n >> l >> E_th >> E_0 >> sigma_0 >> y_a >> P >> y_w;
 
-  // read PH1 values
-  {
-    // skip comment line
-    getline(file, line);
-    // we have a triple loop of lines
-    for (unsigned int i1 = 0; i1 < 6; i1++) {
-      for (unsigned int i2 = 0; i2 < 30; i2++) {
-        for (unsigned int i3 = 0; i3 < 30; i3++) {
-          getline(file, line);
-          stringstream linestream(line);
-          for (unsigned int i4 = 0; i4 < 7; ++i4) {
-            linestream >> _PH1[i1][i2][i3][i4];
-          }
+      unsigned int iZ = Z - 1;
+      unsigned int iN = N - 1;
+
+      // n and l need to be combined to get the shell number
+      if (n < 3) {
+        n += l;
+      } else {
+        ++n;
+        if (n < 5) {
+          n += l;
+        } else {
+          n += 2;
         }
       }
+
+      unsigned int in = n - 1;
+      if (Z > _data_A.size()) {
+        _data_A.resize(Z);
+      }
+      if (N > _data_A[iZ].size()) {
+        _data_A[iZ].resize(N);
+      }
+      if (n > _data_A[iZ][iN].size()) {
+        _data_A[iZ][iN].resize(n);
+      }
+      _data_A[iZ][iN][in].resize(VERNERDATA_A_NUMELEMENTS);
+      _data_A[iZ][iN][in][VERNERDATA_A_l] = l;
+      _data_A[iZ][iN][in][VERNERDATA_A_E_th] = E_th;
+      _data_A[iZ][iN][in][VERNERDATA_A_E_0] = E_0;
+      _data_A[iZ][iN][in][VERNERDATA_A_sigma_0] = sigma_0;
+      _data_A[iZ][iN][in][VERNERDATA_A_y_a] = y_a;
+      _data_A[iZ][iN][in][VERNERDATA_A_P] = P;
+      _data_A[iZ][iN][in][VERNERDATA_A_y_w_squared] = y_w * y_w;
     }
   }
 
-  // read PH2 values
-  {
-    // skip comment line
-    getline(file, line);
-    // we have a double loop
-    for (unsigned int i1 = 0; i1 < 7; ++i1) {
-      for (unsigned int i2 = 0; i2 < 30; ++i2) {
-        getline(file, line);
-        stringstream linestream(line);
-        for (unsigned int i3 = 0; i3 < 30; ++i3) {
-          linestream >> _PH2[i1][i2][i3];
-        }
+  std::ifstream fileB(VERNERCROSSSECTIONSDATALOCATION_B);
+  std::string lineB;
+  while (getline(fileB, lineB)) {
+    if (lineB[0] != '#') {
+      std::istringstream lstream(lineB);
+
+      unsigned int Z, N;
+      double E_th, E_max, E_0, sigma_0, y_a, P, y_w, y_0, y_1;
+
+      lstream >> Z >> N >> E_th >> E_max >> E_0 >> sigma_0 >> y_a >> P >> y_w >>
+          y_0 >> y_1;
+
+      unsigned int iZ = Z - 1;
+      unsigned int iN = N - 1;
+      if (Z > _data_B.size()) {
+        _data_B.resize(Z);
       }
+      if (N > _data_B[iZ].size()) {
+        _data_B[iZ].resize(N);
+      }
+      _data_B[iZ][iN].resize(VERNERDATA_B_NUMELEMENTS);
+      _data_B[iZ][iN][VERNERDATA_B_E_0] = E_0;
+      _data_B[iZ][iN][VERNERDATA_B_sigma_0] = sigma_0;
+      _data_B[iZ][iN][VERNERDATA_B_y_a] = y_a;
+      _data_B[iZ][iN][VERNERDATA_B_P] = P;
+      _data_B[iZ][iN][VERNERDATA_B_y_w_squared] = y_w * y_w;
+      _data_B[iZ][iN][VERNERDATA_B_y_0] = y_0;
+      _data_B[iZ][iN][VERNERDATA_B_y_1_squared] = y_1 * y_1;
+    }
+  }
+
+  std::ifstream fileC(VERNERCROSSSECTIONSDATALOCATION_C);
+  std::string lineC;
+  while (getline(fileC, lineC)) {
+    if (lineC[0] != '#') {
+      std::istringstream lstream(lineC);
+
+      unsigned int N, Ninn, Ntot;
+
+      lstream >> N >> Ninn >> Ntot;
+
+      unsigned int iN = N - 1;
+      if (N > _data_C.size()) {
+        _data_C.resize(N);
+      }
+      _data_C[iN].resize(VERNERDATA_C_NUMELEMENTS);
+      _data_C[iN][VERNERDATA_C_Ninn] = Ninn;
+      _data_C[iN][VERNERDATA_C_Ntot] = Ntot;
     }
   }
 }
 
 /**
- * @brief C++ version of Verner's phfit2 routine.
+ * @brief C++ version of Verner's phfit2 routine, completely rewritten based on
+ * Verner's papers and his original code.
  *
  * @param nz Atomic number.
  * @param ne Number of electrons.
@@ -133,17 +152,29 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
                                                      double e) {
-  e = UnitConverter< QUANTITY_FREQUENCY >::to_unit(e, "eV");
+  // convert Hz to eV
+  e /= (1.5091902e33 * 1.60217662e-19);
 
-  double s = 0.;
-  if (nz < 1 || nz > 30) {
+  // assertions. Most compilers optimize these out if optimization flags are
+  // given.
+  assert(nz > 0 && nz <= 30);
+  assert(ne > 0 && ne <= nz);
+
+  unsigned int iZ = nz - 1;
+  unsigned int iN = ne - 1;
+  unsigned int in = is - 1;
+
+  // if the energy is lower than the ionization threshold energy, the cross
+  // section is trivially 0
+  if (e < _data_A[iZ][iN][in][VERNERDATA_A_E_th]) {
     return 0.;
   }
-  if (ne < 1 || ne > nz) {
-    return 0.;
-  }
-  // Fortran counts from 1, we count from 0
-  unsigned char nout = _NTOT[ne - 1];
+
+  // now figure out which fitting formula to use:
+  //  - the fit in the range from E_th to E_inn, the inner shell photoionization
+  //    cross section jump (_data_B)
+  //  - the fit to the inner shell cross sections (_data_A)
+  unsigned int nout = _data_C[iN][VERNERDATA_C_Ntot];
   if (nz == ne && nz > 18) {
     nout = 7;
   }
@@ -154,10 +185,8 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
   if (is > nout) {
     return 0.;
   }
-  if (e < _PH1[0][nz - 1][ne - 1][is - 1]) {
-    return 0.;
-  }
-  unsigned char nint = _NINN[ne - 1];
+
+  unsigned int nint = _data_C[iN][VERNERDATA_C_Ninn];
   double einn;
   if (nz == 15 || nz == 17 || nz == 19 || (nz > 20 && nz != 26)) {
     einn = 0.;
@@ -165,53 +194,101 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     if (ne < 3) {
       einn = 1.e30;
     } else {
-      einn = _PH1[0][nz - 1][ne - 1][nint - 1];
+      einn = _data_A[iZ][iN][nint - 1][VERNERDATA_A_E_th];
     }
   }
+
   if (is < nout && is > nint && e < einn) {
     return 0.;
   }
+
   if (is <= nint || e >= einn) {
-    double p1 = -_PH1[4][nz - 1][ne - 1][is - 1];
-    double y = e / _PH1[1][nz - 1][ne - 1][is - 1];
-    double q = -0.5 * p1 - _L[is - 1] - 5.5;
-    double a =
-        _PH1[2][nz - 1][ne - 1][is - 1] *
-        ((y - 1.) * (y - 1.) +
-         _PH1[5][nz - 1][ne - 1][is - 1] * _PH1[5][nz - 1][ne - 1][is - 1]);
-    double b = sqrt(y / _PH1[3][nz - 1][ne - 1][is - 1]) + 1.;
-    s = a * pow(y, q) * pow(b, p1);
+    double E_0 = _data_A[iZ][iN][in][VERNERDATA_A_E_0];
+    double sigma_0 = _data_A[iZ][iN][in][VERNERDATA_A_sigma_0];
+    double y_a = _data_A[iZ][iN][in][VERNERDATA_A_y_a];
+    double P = _data_A[iZ][iN][in][VERNERDATA_A_P];
+    double y_w_squared = _data_A[iZ][iN][in][VERNERDATA_A_y_w_squared];
+    unsigned int l = _data_A[iZ][iN][in][VERNERDATA_A_l];
+
+    double y = e / E_0;
+    double ym1 = y - 1.;
+    double Fy = (ym1 * ym1 + y_w_squared) * std::pow(y, 0.5 * P - 5.5 - l) *
+                std::pow(1. + std::sqrt(y / y_a), -P);
+    return 1.e-22 * sigma_0 * Fy;
   } else {
-    double p1 = -_PH2[3][nz - 1][ne - 1];
-    double q = -0.5 * p1 - 5.5;
-    double x = e / _PH2[0][nz - 1][ne - 1] - _PH2[5][nz - 1][ne - 1];
-    double z = sqrt(x * x + _PH2[6][nz - 1][ne - 1] * _PH2[6][nz - 1][ne - 1]);
-    double a = _PH2[1][nz - 1][ne - 1] *
-               ((x - 1.) * (x - 1.) +
-                _PH2[4][nz - 1][ne - 1] * _PH2[4][nz - 1][ne - 1]);
-    double b = 1. + sqrt(z / _PH2[2][nz - 1][ne - 1]);
-    s = a * pow(z, q) * pow(b, p1);
+    double E_0 = _data_B[iZ][iN][VERNERDATA_B_E_0];
+    double y_0 = _data_B[iZ][iN][VERNERDATA_B_y_0];
+    double y_1_squared = _data_B[iZ][iN][VERNERDATA_B_y_1_squared];
+    double y_w_squared = _data_B[iZ][iN][VERNERDATA_B_y_w_squared];
+    double P = _data_B[iZ][iN][VERNERDATA_B_P];
+    double y_a = _data_B[iZ][iN][VERNERDATA_B_y_a];
+    double sigma_0 = _data_B[iZ][iN][VERNERDATA_B_sigma_0];
+
+    double x = e / E_0 - y_0;
+    double y = std::sqrt(x * x + y_1_squared);
+    double xm1 = x - 1.;
+    double Fy = (xm1 * xm1 + y_w_squared) * std::pow(y, 0.5 * P - 5.5) *
+                std::pow(1. + std::sqrt(y / y_a), -P);
+    return 1.e-22 * sigma_0 * Fy;
   }
-  return UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(1.e-18 * s, "cm^2");
 }
 
 /**
- * @brief Get the photoionization cross section of the given element.
+ * @brief Get the photoionization cross section of the given ion.
  *
- * @param element ElementName of an element.
+ * @param ion IonName of a valid ion.
  * @param energy Photon energy (in Hz).
- * @return Photoionization cross section for the given element and for the given
+ * @return Photoionization cross section for the given ion and for the given
  * photon energy (in m^2).
  */
-double VernerCrossSections::get_cross_section(ElementName element,
-                                              double energy) {
-  switch (element) {
-  case ELEMENT_H:
+double VernerCrossSections::get_cross_section(IonName ion, double energy) {
+  switch (ion) {
+
+  case ION_H_n:
     return get_cross_section_verner(1, 1, 1, energy);
-  case ELEMENT_He:
+
+  case ION_He_n:
     return get_cross_section_verner(2, 2, 1, energy);
+
+  case ION_C_p1:
+    return get_cross_section_verner(6, 5, 3, energy) +
+           get_cross_section_verner(6, 5, 2, energy);
+  case ION_C_p2:
+    return get_cross_section_verner(6, 4, 2, energy);
+
+  case ION_N_n:
+    return get_cross_section_verner(7, 7, 3, energy) +
+           get_cross_section_verner(7, 7, 2, energy);
+  case ION_N_p1:
+    return get_cross_section_verner(7, 6, 3, energy) +
+           get_cross_section_verner(7, 6, 2, energy);
+  case ION_N_p2:
+    return get_cross_section_verner(7, 5, 3, energy);
+
+  case ION_O_n:
+    return get_cross_section_verner(8, 8, 3, energy) +
+           get_cross_section_verner(8, 8, 2, energy);
+  case ION_O_p1:
+    return get_cross_section_verner(8, 7, 3, energy) +
+           get_cross_section_verner(8, 7, 2, energy);
+
+  case ION_Ne_n:
+    return get_cross_section_verner(10, 10, 3, energy) +
+           get_cross_section_verner(10, 10, 2, energy);
+  case ION_Ne_p1:
+    return get_cross_section_verner(10, 9, 3, energy);
+
+  case ION_S_p1:
+    return get_cross_section_verner(16, 15, 5, energy) +
+           get_cross_section_verner(16, 15, 4, energy);
+  case ION_S_p2:
+    return get_cross_section_verner(16, 14, 5, energy) +
+           get_cross_section_verner(16, 14, 4, energy);
+  case ION_S_p3:
+    return get_cross_section_verner(16, 13, 5, energy);
+
   default:
-    error("Unknown element: %i", element);
+    cmac_error("Unknown ion: %i", ion);
   }
   return 0.;
 }

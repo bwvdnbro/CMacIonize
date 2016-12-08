@@ -59,7 +59,8 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
                                    CommandLineOptionArgumentType argument_type,
                                    std::string default_value) {
   if (long_name == "help" || short_name == 'h') {
-    error("\"help\" and 'h' are reserved for the help command line option!");
+    cmac_error(
+        "\"help\" and 'h' are reserved for the help command line option!");
   }
   _options.push_back(CommandLineOption(long_name, short_name, description,
                                        argument_type, default_value, false));

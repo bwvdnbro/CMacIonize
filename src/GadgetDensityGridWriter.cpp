@@ -166,30 +166,59 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   group = HDF5Tools::create_group(file, "PartType0");
   std::vector< CoordinateVector<> > coords(numpart[0]);
   std::vector< double > ntot(numpart[0]);
-  std::vector< double > nfracH(numpart[0]);
-  std::vector< double > nfracHe(numpart[0]);
   std::vector< double > temperature(numpart[0]);
-  std::vector< double > jH(numpart[0]);
-  std::vector< double > jHe(numpart[0]);
+  std::vector< double > hH(numpart[0]);
+  std::vector< double > hHe(numpart[0]);
+  std::vector< std::vector< double > > ifrac(NUMBER_OF_IONNAMES);
+  std::vector< std::vector< double > > jmean(NUMBER_OF_IONNAMES);
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    ifrac[i].resize(numpart[0]);
+    jmean[i].resize(numpart[0]);
+  }
+  std::vector< std::vector< double > > emission(NUMBER_OF_EMISSIONLINES);
+  for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
+    emission[i].resize(numpart[0]);
+  }
   unsigned int index = 0;
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-    DensityValues cellvals = it.get_values();
+    DensityValues &cellvals = it.get_values();
     coords[index] = it.get_cell_midpoint() - box.get_anchor();
     ntot[index] = cellvals.get_total_density();
-    nfracH[index] = cellvals.get_neutral_fraction_H();
-    nfracHe[index] = cellvals.get_neutral_fraction_He();
     temperature[index] = cellvals.get_temperature();
-    jH[index] = cellvals.get_mean_intensity_H();
-    jHe[index] = cellvals.get_mean_intensity_He();
+    hH[index] = cellvals.get_heating_H();
+    hHe[index] = cellvals.get_heating_He();
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      IonName ion = static_cast< IonName >(i);
+      ifrac[i][index] = cellvals.get_ionic_fraction(ion);
+      jmean[i][index] = cellvals.get_mean_intensity(ion);
+    }
+    EmissivityValues *emissivities = cellvals.get_emissivities();
+    if (emissivities != nullptr) {
+      for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
+        EmissionLine line = static_cast< EmissionLine >(i);
+        emission[i][index] = emissivities->get_emissivity(line);
+      }
+    }
     ++index;
   }
   HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates", coords);
   HDF5Tools::write_dataset< double >(group, "NumberDensity", ntot);
-  HDF5Tools::write_dataset< double >(group, "NeutralFractionH", nfracH);
-  HDF5Tools::write_dataset< double >(group, "NeutralFractionHe", nfracHe);
   HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
-  HDF5Tools::write_dataset< double >(group, "MeanIntensityH", jH);
-  HDF5Tools::write_dataset< double >(group, "MeanIntensityHe", jHe);
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    HDF5Tools::write_dataset< double >(
+        group, "NeutralFraction" + get_ion_name(i), ifrac[i]);
+    HDF5Tools::write_dataset< double >(group, "MeanIntensity" + get_ion_name(i),
+                                       jmean[i]);
+  }
+  if (emission[0].size() > 0) {
+    for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
+      EmissionLine line = static_cast< EmissionLine >(i);
+      HDF5Tools::write_dataset< double >(
+          group, "Emissivity" + EmissivityValues::get_name(line), emission[i]);
+    }
+  }
+  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
+  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
   HDF5Tools::close_group(group);
 
   // close file

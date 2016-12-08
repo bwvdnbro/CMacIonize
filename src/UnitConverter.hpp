@@ -28,8 +28,27 @@
 #define UNITCONVERTER_HPP
 
 #include "Error.hpp"
+#include "Unit.hpp"
 
+#include <cmath>
 #include <string>
+#include <vector>
+
+/// To add a new unit (such as "cm" or "kK"...):
+///   - add an entry in get_single_unit() below
+/// To add a new quantity (such as QUANTITY_TEMPERATURE_CHANGE...):
+///   - add an entry in the Quantity enum, AND
+///   - add an entry in get_SI_unit() that gives the SI unit of the new quantity
+///     (e.g. K s^-1)
+/// To add a new quantity conversion (such as QUANTITY_LENGTH to
+/// QUANTITY_FREQUENCY for photons):
+///   - add an entry in the designated part of try_conversion()
+///
+/// Also try adding checks to testUnitConverter. Especially when adding new
+/// units or new quantity conversions.
+///
+/// You should not normally change anything else, unless you really know what
+/// you're doing.
 
 /**
  * @brief List of supported quantities.
@@ -41,6 +60,9 @@
  */
 enum Quantity {
   QUANTITY_DENSITY,
+  QUANTITY_ENERGY,
+  QUANTITY_ENERGY_CHANGE_RATE,
+  QUANTITY_ENERGY_RATE,
   QUANTITY_FLUX,
   QUANTITY_FREQUENCY,
   QUANTITY_LENGTH,
@@ -57,8 +79,286 @@ enum Quantity {
  * @brief Class that can be used to convert values from one unit system to
  * another.
  */
-template < Quantity _quantity_ > class UnitConverter {
+class UnitConverter {
+private:
+  /**
+   * @brief Get the Unit corresponding to a single, non composed unit string.
+   *
+   * @param name std::string containing the unique name of a unit.
+   * @return Unit corresponding to that name.
+   */
+  static inline Unit get_single_unit(std::string name) {
+    /// length units
+    if (name == "m") {
+      return Unit(1., 1, 0, 0, 0, 0);
+    } else if (name == "cm") {
+      return Unit(0.01, 1, 0, 0, 0, 0);
+    } else if (name == "pc") {
+      return Unit(3.086e16, 1, 0, 0, 0, 0);
+    } else if (name == "kpc") {
+      return Unit(3.086e19, 1, 0, 0, 0, 0);
+    } else if (name == "angstrom") {
+      return Unit(1.e-10, 1, 0, 0, 0, 0);
+      /// time units
+    } else if (name == "s") {
+      return Unit(1., 0, 1, 0, 0, 0);
+    } else if (name == "Gyr") {
+      return Unit(3.154e16, 0, 1, 0, 0, 0);
+      /// mass units
+    } else if (name == "kg") {
+      return Unit(1., 0, 0, 1, 0, 0);
+    } else if (name == "g") {
+      return Unit(0.001, 0, 0, 1, 0, 0);
+    } else if (name == "Msol") {
+      return Unit(1.98855e30, 0, 0, 1, 0, 0);
+      /// temperature units
+    } else if (name == "K") {
+      return Unit(1., 0, 0, 0, 1, 0);
+      /// alias units
+      /// frequency units
+    } else if (name == "Hz") {
+      return Unit(1., 0, -1, 0, 0, 0);
+      /// multi-quantity units
+      /// energy units
+    } else if (name == "J") {
+      return Unit(1., 2, -2, 1, 0, 0);
+    } else if (name == "erg") {
+      return Unit(1.e-7, 2, -2, 1, 0, 0);
+    } else if (name == "eV") {
+      return Unit(1.60217662e-19, 2, -2, 1, 0, 0);
+    } else {
+      /// error handler
+      cmac_error("Unknown unit: \"%s\"!", name.c_str());
+      return Unit(0., 0, 0, 0, 0, 0);
+    }
+  }
+
+  /**
+   * @brief Get the SI unit of the given quantity.
+   *
+   * @param quantity Quantity.
+   * @return SI Unit corresponding to the given quantity.
+   */
+  static inline Unit get_SI_unit(Quantity quantity) {
+    switch (quantity) {
+    case QUANTITY_DENSITY:
+      return get_unit("kg m^-3");
+    case QUANTITY_ENERGY:
+      return get_unit("J");
+    case QUANTITY_ENERGY_CHANGE_RATE:
+      return get_unit("J m^-3 s^-1");
+    case QUANTITY_ENERGY_RATE:
+      return get_unit("J s^-1");
+    case QUANTITY_FLUX:
+      return get_unit("m^-2 s^-1");
+    case QUANTITY_FREQUENCY:
+      return get_unit("Hz");
+    case QUANTITY_LENGTH:
+      return get_unit("m");
+    case QUANTITY_MASS:
+      return get_unit("kg");
+    case QUANTITY_NUMBER_DENSITY:
+      return get_unit("m^-3");
+    case QUANTITY_OPACITY:
+      return get_unit("m^-1");
+    case QUANTITY_REACTION_RATE:
+      return get_unit("m^3 s^-1");
+    case QUANTITY_SURFACE_AREA:
+      return get_unit("m^2");
+    case QUANTITY_TEMPERATURE:
+      return get_unit("K");
+    case QUANTITY_TIME:
+      return get_unit("s");
+    default:
+      cmac_error("Unknown quantity: %i!", quantity);
+      return Unit(0., 0, 0, 0, 0, 0);
+    }
+  }
+
+  /**
+   * @brief Try to convert a value in the given units to other given units,
+   * assuming the basic quantities of both units are not the same.
+   *
+   * This only works for some quantities, such as e.g. energies and frequencies.
+   *
+   * @param value Value.
+   * @param unit_from Unit of the value.
+   * @param unit_to Unit to convert to.
+   * @return Value in the new Unit.
+   */
+  static inline double try_conversion(double value, Unit unit_from,
+                                      Unit unit_to) {
+    std::vector< Quantity > Aunits;
+    std::vector< Quantity > Bunits;
+    std::vector< double > A_in_B_fac;
+    std::vector< int > A_in_B_pow;
+
+    /// add new quantity conversions below
+    // energy to frequency conversion for photons
+    Aunits.push_back(QUANTITY_ENERGY);
+    Bunits.push_back(QUANTITY_FREQUENCY);
+    A_in_B_fac.push_back(1.5091902e33);
+    A_in_B_pow.push_back(1);
+    // wavelength to frequency conversion for photons
+    Aunits.push_back(QUANTITY_LENGTH);
+    Bunits.push_back(QUANTITY_FREQUENCY);
+    A_in_B_fac.push_back(299792458.);
+    A_in_B_pow.push_back(-1);
+
+    /// don't change the part below unless you know what you're doing
+    // just try every unit combination in the lists
+    for (unsigned int i = 0; i < Aunits.size(); ++i) {
+      Unit Aunit = get_SI_unit(Aunits[i]);
+      Unit Bunit = get_SI_unit(Bunits[i]);
+      if (unit_from.is_same_quantity(Aunit) &&
+          unit_to.is_same_quantity(Bunit)) {
+        double fval = 1. * unit_from;
+        double tval = 1. * unit_to;
+        double Sval = value * fval;
+        if (A_in_B_pow[i] > 0) {
+          int j = 1;
+          double Sfac = Sval;
+          while (j < A_in_B_pow[i]) {
+            ++j;
+            Sval *= Sfac;
+          }
+        } else {
+          double Sfac = Sval;
+          Sval = 1.;
+          int j = 0;
+          while (j < std::abs(A_in_B_pow[i])) {
+            ++j;
+            Sval /= Sfac;
+          }
+        }
+        return Sval * A_in_B_fac[i] / tval;
+      }
+      if (unit_from.is_same_quantity(Bunit) &&
+          unit_to.is_same_quantity(Aunit)) {
+        double fval = 1. * unit_from;
+        double tval = 1. * unit_to;
+        double Sval = value * fval / A_in_B_fac[i];
+        double A_in_B_pow_inv = 1. / A_in_B_pow[i];
+        if (A_in_B_pow_inv > 0) {
+          if (A_in_B_pow_inv == 1.) {
+            int j = 1;
+            double Sfac = Sval;
+            while (j < A_in_B_pow_inv) {
+              ++j;
+              Sval *= Sfac;
+            }
+          } else {
+            Sval = std::pow(Sval, A_in_B_pow_inv);
+          }
+        } else {
+          if (A_in_B_pow_inv == -1.) {
+            double Sfac = Sval;
+            Sval = 1.;
+            int j = 0;
+            while (j < std::abs(A_in_B_pow_inv)) {
+              ++j;
+              Sval /= Sfac;
+            }
+          } else {
+            Sval = std::pow(Sval, A_in_B_pow_inv);
+          }
+        }
+        return Sval / tval;
+      }
+    }
+
+    // if we did not find any matches, we throw an error
+    cmac_error("No known conversion from \"%s\" to \"%s\"!",
+               unit_from.to_string().c_str(), unit_to.to_string().c_str());
+    return 0.;
+  }
+
 public:
+  /**
+   * @brief Get the Unit corresponding to the given string.
+   *
+   * The string should consist of valid unit names (present in
+   * get_single_unit()), and powers of these. Units can be in arbitrary order.
+   * Units without a power need to be separated from other units by at least 1
+   * space. Examples of valid unit names (these are tested in the unit test):
+   *  - " m"
+   *  - "K kg^3 s^-1m "
+   *
+   * Example of an invalid unit name:
+   *  - "kgs": there should be at least one space in between "kg" and "s"
+   *
+   * @param name std::string representation of a Unit.
+   * @return Unit corresponding to that name.
+   */
+  static inline Unit get_unit(std::string name) {
+    // find the first unit name
+    size_t pos1 = 0;
+    while (pos1 < name.size() && !isalpha(name[pos1])) {
+      ++pos1;
+    }
+    if (pos1 == name.size()) {
+      cmac_error("Empty unit provided!");
+    }
+    // find either a space or a '^' or the end of the string
+    size_t pos2 = pos1 + 1;
+    while (pos2 < name.size() && (name[pos2] != ' ' && name[pos2] != '^')) {
+      ++pos2;
+    }
+    Unit unit = get_single_unit(name.substr(pos1, pos2 - pos1));
+    if (pos2 == name.size()) {
+      return unit;
+    }
+    if (name[pos2] == '^') {
+      ++pos2;
+      pos1 = pos2;
+      ++pos2;
+      while (pos2 < name.size() &&
+             (isdigit(name[pos2]) || name[pos2] == '+' || name[pos2] == '-')) {
+        ++pos2;
+      }
+      std::string powstr = name.substr(pos1, pos2 - pos1);
+      int power = strtod(powstr.c_str(), nullptr);
+      unit ^= power;
+      if (pos2 == name.size()) {
+        return unit;
+      }
+    }
+    while (pos2 < name.size()) {
+      pos1 = pos2;
+      while (pos1 < name.size() && !isalpha(name[pos1])) {
+        ++pos1;
+      }
+      if (pos1 == name.size()) {
+        // it could happen that there are spaces at the end of the string
+        return unit;
+      }
+      // find either a space or a '^' or the end of the string
+      pos2 = pos1 + 1;
+      while (pos2 < name.size() && (name[pos2] != ' ' && name[pos2] != '^')) {
+        ++pos2;
+      }
+      Unit unit2 = get_single_unit(name.substr(pos1, pos2 - pos1));
+      if (pos2 == name.size()) {
+        unit *= unit2;
+        return unit;
+      }
+      if (name[pos2] == '^') {
+        ++pos2;
+        pos1 = pos2;
+        ++pos2;
+        while (pos2 < name.size() && (isdigit(name[pos2]) ||
+                                      name[pos2] == '+' || name[pos2] == '-')) {
+          ++pos2;
+        }
+        std::string powstr = name.substr(pos1, pos2 - pos1);
+        int power = strtod(powstr.c_str(), nullptr);
+        unit2 ^= power;
+      }
+      unit *= unit2;
+    }
+    return unit;
+  }
+
   /**
    * @brief Convert the given value with the given unit to the equivalent value
    * in SI units.
@@ -69,7 +369,15 @@ public:
    * @param unit Name of the obscure non SI unit.
    * @return Value in generally accepted SI units.
    */
-  static inline double to_SI(double value, std::string unit);
+  template < Quantity _quantity_ >
+  static inline double to_SI(double value, std::string unit) {
+    Unit SI_unit = get_SI_unit(_quantity_);
+    Unit strange_unit = get_unit(unit);
+    if (!SI_unit.is_same_quantity(strange_unit)) {
+      return try_conversion(value, strange_unit, SI_unit);
+    }
+    return strange_unit * value;
+  }
 
   /**
    * @brief Convert the given value in SI units to the equivalent value in the
@@ -81,7 +389,15 @@ public:
    * @param unit Name of an obscure non SI unit.
    * @return Value in that obscure non SI unit.
    */
-  static inline double to_unit(double value, std::string unit);
+  template < Quantity _quantity_ >
+  static inline double to_unit(double value, std::string unit) {
+    Unit SI_unit = get_SI_unit(_quantity_);
+    Unit strange_unit = get_unit(unit);
+    if (!SI_unit.is_same_quantity(strange_unit)) {
+      return try_conversion(value, SI_unit, strange_unit);
+    }
+    return value / strange_unit;
+  }
 
   /**
    * @brief Convert the given value from a given unit into another given unit.
@@ -93,505 +409,17 @@ public:
    */
   static inline double convert(double value, std::string unit_from,
                                std::string unit_to) {
-    return to_unit(to_SI(value, unit_from), unit_to);
+    Unit strange_unit_from = get_unit(unit_from);
+    Unit strange_unit_to = get_unit(unit_to);
+    if (!strange_unit_to.is_same_quantity(strange_unit_from)) {
+      return try_conversion(value, strange_unit_from, strange_unit_to);
+      cmac_error("Units are not compatible: \"%s\" and \"%s\"!",
+                 strange_unit_from.to_string().c_str(),
+                 strange_unit_to.to_string().c_str());
+    }
+    strange_unit_from /= strange_unit_to;
+    return value * strange_unit_from;
   }
 };
-
-/// QUANTITY_DENSITY
-
-/**
- * @brief UnitConverter::to_SI() specialization for a density.
- *
- * @param value Density value in strange units.
- * @param unit Strange units.
- * @return Density value in kilograms per cubic metres.
- */
-template <>
-inline double UnitConverter< QUANTITY_DENSITY >::to_SI(double value,
-                                                       std::string unit) {
-  if (unit == "kg m^-3") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "g cm^-3") {
-    return value * 1.e3;
-  } else {
-    error("Unknown density unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a density.
- *
- * @param value Density value in kilograms per cubic metres.
- * @param unit Strange units.
- * @return Density value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_DENSITY >::to_unit(double value,
-                                                         std::string unit) {
-  if (unit == "kg m^-3") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "g cm^-3") {
-    return value * 1.e-3;
-  } else {
-    error("Unknown density unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_FLUX
-
-/**
- * @brief UnitConverter::to_SI() specialization for a flux.
- *
- * @param value Flux value in strange units.
- * @param unit Strange units.
- * @return Flux value in per square metres per second.
- */
-template <>
-inline double UnitConverter< QUANTITY_FLUX >::to_SI(double value,
-                                                    std::string unit) {
-  if (unit == "m^-2s^-1") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm^-2s^-1") {
-    return value * 1.e4;
-  } else {
-    error("Unknown flux unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a flux.
- *
- * @param value Flux value in per square metres per second.
- * @param unit Strange units.
- * @return Flux value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_FLUX >::to_unit(double value,
-                                                      std::string unit) {
-  if (unit == "m^-2s^-1") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm^-2s^-1") {
-    return value * 1.e-4;
-  } else {
-    error("Unknown flux unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_FREQUENCY
-
-/**
- * @brief UnitConverter::to_SI() specialization for a frequency.
- *
- * @param value Frequency value in strange units.
- * @param unit Strange units.
- * @return Frequency value in per second (Hertz).
- */
-template <>
-inline double UnitConverter< QUANTITY_FREQUENCY >::to_SI(double value,
-                                                         std::string unit) {
-  if (unit == "s^-1") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "Hz") {
-    // just an alias for the SI unit name
-    return value;
-  } else if (unit == "eV") {
-    return value / 4.135668e-15;
-  } else {
-    error("Unknown frequency unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a frequency.
- *
- * @param value Frequency value in per second (Hertz).
- * @param unit Strange units.
- * @return Frequency value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_FREQUENCY >::to_unit(double value,
-                                                           std::string unit) {
-  if (unit == "s^-1") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "Hz") {
-    return value;
-  } else if (unit == "eV") {
-    return value * 4.135668e-15;
-  } else {
-    error("Unknown frequency unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_LENGTH
-
-/**
- * @brief UnitConverter::to_SI() specialization for a length.
- *
- * @param value Length value in strange units.
- * @param unit Strange units.
- * @return Length value in metres.
- */
-template <>
-inline double UnitConverter< QUANTITY_LENGTH >::to_SI(double value,
-                                                      std::string unit) {
-  if (unit == "m") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm") {
-    return 0.01 * value;
-  } else if (unit == "pc") {
-    return 3.086e16 * value;
-  } else if (unit == "kpc") {
-    return 3.086e19 * value;
-  } else {
-    error("Unknown length unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a length.
- *
- * @param value Length value in metres.
- * @param unit Strange units.
- * @return Length value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_LENGTH >::to_unit(double value,
-                                                        std::string unit) {
-  if (unit == "m") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm") {
-    return 100. * value;
-  } else if (unit == "pc") {
-    return value / 3.086e16;
-  } else if (unit == "kpc") {
-    return value / 3.086e19;
-  } else {
-    error("Unknown length unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_MASS
-
-/**
- * @brief UnitConverter::to_SI() specialization for a mass.
- *
- * @param value Mass value in strange units.
- * @param unit Strange units.
- * @return Mass value in kilograms.
- */
-template <>
-inline double UnitConverter< QUANTITY_MASS >::to_SI(double value,
-                                                    std::string unit) {
-  if (unit == "kg") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "g") {
-    return 0.001 * value;
-  } else if (unit == "Msol") {
-    return 1.98855e30 * value;
-  } else {
-    error("Unknown mass unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a mass.
- *
- * @param value Mass value in kilograms.
- * @param unit Strange units.
- * @return Mass value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_MASS >::to_unit(double value,
-                                                      std::string unit) {
-  if (unit == "kg") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "g") {
-    return value * 1000.;
-  } else if (unit == "Msol") {
-    return value / 1.98855e30;
-  } else {
-    error("Unknown mass unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_NUMBER_DENSITY
-
-/**
- * @brief UnitConverter::to_SI() specialization for a number density.
- *
- * @param value Number density value in strange units.
- * @param unit Strange units.
- * @return Number density value in per cubic metres.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_NUMBER_DENSITY >::to_SI(double value,
-                                                std::string unit) {
-  if (unit == "m^-3") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm^-3") {
-    return value * 1.e6;
-  } else {
-    error("Unknown number density unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a number density.
- *
- * @param value Number density value in per cubic metres.
- * @param unit Strange units.
- * @return Number density value in strange units.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_NUMBER_DENSITY >::to_unit(double value,
-                                                  std::string unit) {
-  if (unit == "m^-3") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm^-3") {
-    return value * 1.e-6;
-  } else {
-    error("Unknown number density unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_OPACITY
-
-/**
- * @brief UnitConverter::to_SI() specialization for an opacity.
- *
- * @param value Opacity value in strange units.
- * @param unit Strange units.
- * @return Opacity value in per metre.
- */
-template <>
-inline double UnitConverter< QUANTITY_OPACITY >::to_SI(double value,
-                                                       std::string unit) {
-  if (unit == "m^-1") {
-    // quantity is already in SI units
-    return value;
-  } else {
-    error("Unknown opacity unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for an opacity.
- *
- * @param value Opacity value in per metre.
- * @param unit Strange units.
- * @return Opacity value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_OPACITY >::to_unit(double value,
-                                                         std::string unit) {
-  if (unit == "m^-1") {
-    // quantity is already in requested units
-    return value;
-  } else {
-    error("Unknown opacity unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_REACTION_RATE
-
-/**
- * @brief UnitConverter::to_SI() specialization for a reaction rate.
- *
- * @param value Reaction rate value in strange units.
- * @param unit Strange units.
- * @return Reaction rate value in cubic metres per second.
- */
-template <>
-inline double UnitConverter< QUANTITY_REACTION_RATE >::to_SI(double value,
-                                                             std::string unit) {
-  if (unit == "m^3s^-1") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm^3s^-1") {
-    return 1.e-6 * value;
-  } else {
-    error("Unknown reaction rate unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a reaction rate.
- *
- * @param value Reaction rate value in cubic metres per second.
- * @param unit Strange units.
- * @return Reaction rate value in strange units.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_REACTION_RATE >::to_unit(double value,
-                                                 std::string unit) {
-  if (unit == "m^3s^-1") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm^3s^-1") {
-    return 1.e6 * value;
-  } else {
-    error("Unknown reaction rate unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_SURFACE_AREA
-
-/**
- * @brief UnitConverter::to_SI() specialization for a surface area.
- *
- * @param value Surface area value in strange units.
- * @param unit Strange units.
- * @return Surface area value in squared metres.
- */
-template <>
-inline double UnitConverter< QUANTITY_SURFACE_AREA >::to_SI(double value,
-                                                            std::string unit) {
-  if (unit == "m^2") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "cm^2") {
-    return 1.e-4 * value;
-  } else {
-    error("Unknown surface area unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a surface area.
- *
- * @param value Surface area value in squared metres.
- * @param unit Strange units.
- * @return Surface area value in strange units.
- */
-template <>
-inline double
-UnitConverter< QUANTITY_SURFACE_AREA >::to_unit(double value,
-                                                std::string unit) {
-  if (unit == "m^2") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "cm^2") {
-    return 1.e4 * value;
-  } else {
-    error("Unknown surface area unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_TEMPERATURE
-
-/**
- * @brief UnitConverter::to_SI() specialization for a temperature.
- *
- * @param value Temperature value in strange units.
- * @param unit Strange units.
- * @return Temperature value in Kelvin.
- */
-template <>
-inline double UnitConverter< QUANTITY_TEMPERATURE >::to_SI(double value,
-                                                           std::string unit) {
-  if (unit == "K") {
-    // quantity is already in SI units
-    return value;
-  } else {
-    error("Unknown temperature unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a temperature.
- *
- * @param value Temperature value in Kelvin.
- * @param unit Strange units.
- * @return Temperature value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_TEMPERATURE >::to_unit(double value,
-                                                             std::string unit) {
-  if (unit == "K") {
-    // quantity is already in requested units
-    return value;
-  } else {
-    error("Unknown temperature unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/// QUANTITY_TIME
-
-/**
- * @brief UnitConverter::to_SI() specialization for a time.
- *
- * @param value Time value in strange units.
- * @param unit Strange units.
- * @return Time value in seconds.
- */
-template <>
-inline double UnitConverter< QUANTITY_TIME >::to_SI(double value,
-                                                    std::string unit) {
-  if (unit == "s") {
-    // quantity is already in SI units
-    return value;
-  } else if (unit == "Gyr") {
-    return 3.154e16 * value;
-  } else {
-    error("Unknown time unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
-
-/**
- * @brief UnitConverter::to_unit() specialization for a time.
- *
- * @param value Time value in seconds.
- * @param unit Strange units.
- * @return Time value in strange units.
- */
-template <>
-inline double UnitConverter< QUANTITY_TIME >::to_unit(double value,
-                                                      std::string unit) {
-  if (unit == "s") {
-    // quantity is already in requested units
-    return value;
-  } else if (unit == "Gyr") {
-    return value / 3.154e16;
-  } else {
-    error("Unknown time unit: \"%s\".", unit.c_str());
-    return 0.;
-  }
-}
 
 #endif // UNITCONVERTER_HPP

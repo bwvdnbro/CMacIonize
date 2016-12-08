@@ -32,7 +32,6 @@
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
 #include "Timer.hpp"
-#include "UnitConverter.hpp"
 #include <sstream>
 using namespace std;
 
@@ -41,16 +40,15 @@ using namespace std;
  *
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
- * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
- * @param initial_temperature Initial temperature of the gas (in K).
  * @param density_function DensityFunction that defines the density field.
  * @param periodic Periodicity flags.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(
-    Box box, CoordinateVector< int > ncell, double helium_abundance,
-    double initial_temperature, DensityFunction &density_function,
-    CoordinateVector< bool > periodic, Log *log)
+CartesianDensityGrid::CartesianDensityGrid(Box box,
+                                           CoordinateVector< int > ncell,
+                                           DensityFunction &density_function,
+                                           CoordinateVector< bool > periodic,
+                                           Log *log)
     : DensityGrid(box, periodic, log), _box(box), _periodic(periodic),
       _ncell(ncell), _log(log) {
 
@@ -92,7 +90,7 @@ CartesianDensityGrid::CartesianDensityGrid(
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
 
-  initialize(initial_temperature, helium_abundance, density_function);
+  initialize(density_function);
 
   _cellside_max = _cellside.x();
   if (_cellside.y() > _cellside_max) {
@@ -137,9 +135,6 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
                   "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
               "densitygrid.ncell", CoordinateVector< int >(64)),
-          parameters.get_value< double >("helium_abundance", 0.1),
-          parameters.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densitygrid.initial_temperature", "8000. K"),
           density_function,
           parameters.get_value< CoordinateVector< bool > >(
               "densitygrid.periodicity", CoordinateVector< bool >(false)),
@@ -475,30 +470,15 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
     S += ds;
   }
 
-  if (ncell == 0) {
-    error("Photon leaves the system immediately (position: %g %g %g, "
-          "direction: %g %g %g)!",
-          photon_origin.x(), photon_origin.y(), photon_origin.z(),
-          photon_direction.x(), photon_direction.y(), photon_direction.z());
+  if (ncell == 0 && optical_depth > 0.) {
+    cmac_error("Photon leaves the system immediately (position: %g %g %g, "
+               "direction: %g %g %g)!",
+               photon_origin.x(), photon_origin.y(), photon_origin.z(),
+               photon_direction.x(), photon_direction.y(),
+               photon_direction.z());
   }
 
   photon.set_position(photon_origin);
 
   return is_inside(index, photon_origin);
 }
-
-///**
-// * @brief Reset the internal mean intensity counters and update reemission
-// * probabilities.
-// */
-// void DensityGrid::reset_grid() {
-//  for (int i = 0; i < _ncell.x(); ++i) {
-//    for (int j = 0; j < _ncell.y(); ++j) {
-//      for (int k = 0; k < _ncell.z(); ++k) {
-//        DensityValues &cell = _density[i][j][k];
-//        set_reemission_probabilities(cell.get_temperature(), cell);
-//        cell.reset_mean_intensities();
-//      }
-//    }
-//  }
-//}

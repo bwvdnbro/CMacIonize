@@ -66,9 +66,9 @@ public:
                          "DensityFunction, since the code was "
                          "compiled without HDF5 support.");
       }
-      error("A %sDensityFunction requires HDF5. However, the code "
-            "was compiled without HDF5 support!",
-            type.c_str());
+      cmac_error("A %sDensityFunction requires HDF5. However, the code "
+                 "was compiled without HDF5 support!",
+                 type.c_str());
     }
   }
 
@@ -109,7 +109,7 @@ public:
       return new GadgetSnapshotDensityFunction(params, log);
 #endif
     } else {
-      error("Unknown DensityFunction type: \"%s\".", type.c_str());
+      cmac_error("Unknown DensityFunction type: \"%s\".", type.c_str());
       return nullptr;
     }
   }

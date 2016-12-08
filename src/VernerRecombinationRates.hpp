@@ -33,9 +33,23 @@
  * @brief RecombinationRates implementation with Verner's recombination rates.
  */
 class VernerRecombinationRates : public RecombinationRates {
+private:
+  /*! @brief rrec array from Verner's script. */
+  double _rrec[2][30][30];
+
+  /*! @brief rnew array from Verner's script. */
+  double _rnew[4][30][30];
+
+  /*! @brief fe array from Verner's script. */
+  double _fe[3][13];
+
 public:
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature);
+  VernerRecombinationRates();
+
+  double get_recombination_rate_verner(unsigned char iz, unsigned char in,
+                                       double T);
+
+  virtual double get_recombination_rate(IonName ion, double temperature);
 };
 
 #endif // VERNERRECOMBINATIONRATES_HPP

@@ -64,7 +64,7 @@ public:
     } else if (type == "None") {
       return nullptr;
     } else {
-      error("Unknown ContinuousPhotonSource type: \"%s\".", type.c_str());
+      cmac_error("Unknown ContinuousPhotonSource type: \"%s\".", type.c_str());
       return nullptr;
     }
   }

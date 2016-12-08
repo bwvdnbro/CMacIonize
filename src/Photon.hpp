@@ -27,6 +27,7 @@
 #define PHOTON_HPP
 
 #include "CoordinateVector.hpp"
+#include "ElementNames.hpp"
 
 /**
  * @brief Photon types.
@@ -61,15 +62,18 @@ private:
   /*! @brief Current energy contents of the photon (in Hz). */
   double _energy;
 
-  /*! @brief Hydrogen ionization cross section (in m^2). */
-  double _xsecH;
+  /*! @brief Ionization cross sections (in m^2). */
+  double _cross_sections[NUMBER_OF_IONNAMES];
 
-  /*! @brief Helium ionization cross section (in m^2). */
-  double _xsecHe;
+  /*! @brief Abundance corrected helium cross section (in m^2). */
+  double _cross_section_He_corr;
 
   /*! @brief Type of the photon. All photons start off as PHOTONTYPE_PRIMARY,
    *  but their type can change during reemission events. */
   PhotonType _type;
+
+  /*! @brief Weight of the photon. */
+  double _weight;
 
 public:
   /**
@@ -78,13 +82,15 @@ public:
    * @param position Initial position of the photon (in m).
    * @param direction Initial direction of the photon.
    * @param energy Initial energy of the photon (in Hz).
-   * @param xsecH Hydrogen photoionization cross section of the photon (in m^2).
-   * @param xsecHe Helium photoionization cross section of the photon (in m^2).
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
-                double energy, double xsecH, double xsecHe)
+                double energy)
       : _position(position), _direction(direction), _energy(energy),
-        _xsecH(xsecH), _xsecHe(xsecHe), _type(PHOTONTYPE_PRIMARY) {}
+        _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY), _weight(1.) {
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _cross_sections[i] = 0.;
+    }
+  }
 
   /**
    * @brief Get the current position of the photon.
@@ -108,18 +114,19 @@ public:
   inline double get_energy() { return _energy; }
 
   /**
-   * @brief Get the ionization cross section for hydrogen.
+   * @brief Get the ionization cross section for the given ion.
    *
-   * @return Hydrogen ionization cross section (in m^2).
+   * @param ion IonName of a valid ion.
+   * @return Ionization cross section (in m^2).
    */
-  inline double get_hydrogen_cross_section() { return _xsecH; }
+  inline double get_cross_section(IonName ion) { return _cross_sections[ion]; }
 
   /**
-   * @brief Get the ionization cross section for helium.
+   * @brief Get the abundance corrected helium cross section.
    *
-   * @return Helium ionization cross section (in m^2).
+   * @return Abundance corrected helium cross section (in m^2).
    */
-  inline double get_helium_cross_section() { return _xsecHe; }
+  inline double get_cross_section_He_corr() { return _cross_section_He_corr; }
 
   /**
    * @brief Get the type of the photon.
@@ -154,18 +161,24 @@ public:
   inline void set_energy(double energy) { _energy = energy; }
 
   /**
-   * @brief Set the hydrogen ionization cross section.
+   * @brief Set the ionization cross section for the given ion.
    *
-   * @param xsecH Hydrogen ionization cross section (in m^2).
+   * @param ion IonName of a valid ion.
+   * @param cross_section Ionization cross section (in m^2).
    */
-  inline void set_hydrogen_cross_section(double xsecH) { _xsecH = xsecH; }
+  inline void set_cross_section(IonName ion, double cross_section) {
+    _cross_sections[ion] = cross_section;
+  }
 
   /**
-   * @brief Set the helium ionization cross section.
+   * @brief Set the abundance corrected helium cross section.
    *
-   * @param xsecHe Helium ionization cross section (in m^2).
+   * @param cross_section_He_corr Abundance corrected helium cross section (in
+   * m^2).
    */
-  inline void set_helium_cross_section(double xsecHe) { _xsecHe = xsecHe; }
+  inline void set_cross_section_He_corr(double cross_section_He_corr) {
+    _cross_section_He_corr = cross_section_He_corr;
+  }
 
   /**
    * @brief Set the photon type.
@@ -173,6 +186,20 @@ public:
    * @param type PhotonType type identifier.
    */
   inline void set_type(PhotonType type) { _type = type; }
+
+  /**
+   * @brief Set the weight of the Photon.
+   *
+   * @param weight New weight for the Photon.
+   */
+  inline void set_weight(double weight) { _weight = weight; }
+
+  /**
+   * @brief Get the weight of the Photon.
+   *
+   * @return Weight of the Photon.
+   */
+  inline double get_weight() { return _weight; }
 };
 
 #endif // PHOTON_HPP

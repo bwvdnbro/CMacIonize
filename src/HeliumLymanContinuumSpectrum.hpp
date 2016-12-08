@@ -55,6 +55,9 @@ private:
   /*! @brief Current temperature (in K). */
   double _current_T;
 
+  /*! @brief Index of the current temperature bin. */
+  unsigned int _current_iT;
+
   /*! @brief RandomGenerator used to generate random numbers. */
   RandomGenerator &_random_generator;
 
@@ -65,6 +68,8 @@ public:
   void set_temperature(double T);
 
   virtual double get_random_frequency();
+
+  virtual double get_total_flux();
 };
 
 #endif // HELIUMLYMANCONTINUUMSPECTRUM_HPP

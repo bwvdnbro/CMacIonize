@@ -36,14 +36,16 @@
  * @param filename Name of the ASCII text file to read.
  * @param ncell Dimensions of the grid.
  * @param box Box containing the grid (in m).
+ * @param temperature Initial temperature of the ISM (in K).
  * @param length_unit_in_SI Length unit used in the ASCII file (in m).
  * @param density_unit_in_SI Density unit used in the ASCII file (in m^-3).
  * @param log Log to write logging info to.
  */
 AsciiFileDensityFunction::AsciiFileDensityFunction(
     std::string filename, CoordinateVector< int > ncell, Box box,
-    double length_unit_in_SI, double density_unit_in_SI, Log *log)
-    : _ncell(ncell), _box(box), _log(log) {
+    double temperature, double length_unit_in_SI, double density_unit_in_SI,
+    Log *log)
+    : _ncell(ncell), _box(box), _temperature(temperature), _log(log) {
   _grid = new double **[_ncell.x()];
   for (int i = 0; i < _ncell.x(); ++i) {
     _grid[i] = new double *[_ncell.y()];
@@ -59,7 +61,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 
   std::ifstream file(filename);
   if (!file.is_open()) {
-    error("Could not open file \"%s\"!", filename.c_str());
+    cmac_error("Could not open file \"%s\"!", filename.c_str());
   }
 
   std::string line;
@@ -87,7 +89,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
     for (int j = 0; j < _ncell.y(); ++j) {
       for (int k = 0; k < _ncell.z(); ++k) {
         if (_grid[i][j][k] < 0.) {
-          error("No value found for cell [%i, %i, %i]!", i, j, k);
+          cmac_error("No value found for cell [%i, %i, %i]!", i, j, k);
         }
       }
     }
@@ -115,6 +117,8 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
                   "densityfunction.box_anchor", "[0. m, 0. m, 0. m]"),
               params.get_physical_vector< QUANTITY_LENGTH >(
                   "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction.temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(
               "densityfunction.length_unit", "1. m"),
           params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
@@ -145,7 +149,10 @@ AsciiFileDensityFunction::~AsciiFileDensityFunction() {
  * @param position CoordinateVector specifying a coordinate position (in m).
  * @return Density at the given coordinate (in m^-3).
  */
-double AsciiFileDensityFunction::operator()(CoordinateVector<> position) {
+DensityValues AsciiFileDensityFunction::
+operator()(CoordinateVector<> position) {
+  DensityValues cell;
+
   int ix, iy, iz;
   ix = (position.x() - _box.get_anchor().x()) / _box.get_sides().x() *
        _ncell.x();
@@ -153,7 +160,12 @@ double AsciiFileDensityFunction::operator()(CoordinateVector<> position) {
        _ncell.y();
   iz = (position.z() - _box.get_anchor().z()) / _box.get_sides().z() *
        _ncell.z();
-  return _grid[ix][iy][iz];
+
+  cell.set_total_density(_grid[ix][iy][iz]);
+  cell.set_temperature(_temperature);
+  cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  cell.set_ionic_fraction(ION_He_n, 1.e-6);
+  return cell;
 }
 
 /**

@@ -35,7 +35,7 @@
  *  not. */
 #define assert_condition(condition)                                            \
   if (!(condition)) {                                                          \
-    error("Assertion failed (%s)!", #condition);                               \
+    cmac_error("Assertion failed (%s)!", #condition);                          \
   }
 
 /*! @brief Assert that the given values are equal up to the given relative and
@@ -43,7 +43,17 @@
  *  with round off error. */
 #define assert_values_equal_tol(a, b, tol)                                     \
   if (std::abs(a - b) > tol && std::abs(a - b) > tol * std::abs(a + b)) {      \
-    error("Assertion failed: %s (%g) != %s (%g)", #a, a, #b, b);               \
+    cmac_error("Assertion failed: %s (%g) != %s (%g)", #a, a, #b, b);          \
+  }
+
+/*! @brief Assert that the given values are equal up to the given relative
+ *  tolerance level. This is useful for comparing floating point values with
+ *  round off error. */
+#define assert_values_equal_rel(a, b, tol)                                     \
+  if (std::abs(a - b) > tol * std::abs(a + b)) {                               \
+    cmac_error(                                                                \
+        "Assertion failed: %s (%g) != %s (%g) (relative_difference: %g)", #a,  \
+        a, #b, b, std::abs(a - b) / std::abs(a + b));                          \
   }
 
 /*! @brief Assert that the given values are equal up to a pre-defined relative

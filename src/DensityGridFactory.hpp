@@ -63,7 +63,7 @@ public:
     } else if (type == "Cartesian") {
       return new CartesianDensityGrid(params, function, log);
     } else {
-      error("Unknown DensityGrid type: \"%s\".", type.c_str());
+      cmac_error("Unknown DensityGrid type: \"%s\".", type.c_str());
       return nullptr;
     }
   }

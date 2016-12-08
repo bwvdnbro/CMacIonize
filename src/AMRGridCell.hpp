@@ -82,7 +82,7 @@ public:
       unsigned char cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       return (*_children[cell])[key];
     }
@@ -102,7 +102,7 @@ public:
       unsigned char cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       unsigned char ix = (cell & 4) >> 2;
       unsigned char iy = (cell & 2) >> 1;
@@ -129,7 +129,7 @@ public:
       unsigned char cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       unsigned char ix = (cell & 4) >> 2;
       unsigned char iy = (cell & 2) >> 1;
@@ -156,7 +156,7 @@ public:
       unsigned char cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       unsigned char ix = (cell & 4) >> 2;
       unsigned char iy = (cell & 2) >> 1;
@@ -189,7 +189,7 @@ public:
           2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
       unsigned char cell = 4 * ix + 2 * iy + iz;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       box.get_sides() *= 0.5;
       box.get_anchor()[0] += ix * box.get_sides().x();
@@ -291,7 +291,7 @@ public:
       unsigned int cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       unsigned int newcell = _children[cell]->refine(key);
       return (newcell << 3) + cell;
@@ -337,7 +337,7 @@ public:
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
       // check if the cell exists. If not, throw an error.
       if (_children[4 * ix + 2 * iy + iz] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       // go deeper
       box.get_sides() *= 0.5;
@@ -360,7 +360,7 @@ public:
   inline unsigned int get_first_key(unsigned char level) {
     if (_values == nullptr) {
       if (_children[0] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       return _children[0]->get_first_key(level + 1);
     } else {
@@ -381,7 +381,7 @@ public:
       unsigned int cell = (key >> (3 * level)) & 7;
       // get the child next key
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       unsigned int next_key = _children[cell]->get_next_key(key, level + 1);
       // if the child has no next key, we have to look at the next child
@@ -392,7 +392,7 @@ public:
         } else {
           // the next key is the first key of the next child
           if (_children[cell + 1] == nullptr) {
-            error("Cell does not exist!");
+            cmac_error("Cell does not exist!");
           }
           next_key = _children[cell + 1]->get_first_key(level + 1);
           // add the part of the key due to this cell
@@ -442,7 +442,7 @@ public:
       }
       unsigned int child = 4 * ix + 2 * iy + iz;
       if (_children[child] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       box.get_sides() *= 0.5;
       box.get_anchor()[0] += ix * box.get_sides().x();
@@ -479,7 +479,7 @@ public:
       unsigned int cell = (key >> (3 * level)) & 7;
       // get the child next key
       if (_children[cell] == nullptr) {
-        error("Cell does not exist!");
+        cmac_error("Cell does not exist!");
       }
       char ix, iy, iz;
       ix = (cell & 4) >> 2;
@@ -513,7 +513,7 @@ public:
         unsigned int next_cell = 4 * ix + 2 * iy + iz;
         // the next key is the first key of the next child
         if (_children[next_cell] == nullptr) {
-          error("Cell does not exist!");
+          cmac_error("Cell does not exist!");
         }
         box.get_sides() *= 0.5;
         box.get_anchor()[0] += ix * box.get_sides().x();

@@ -77,7 +77,7 @@ CoordinateVector<> get_sphere_position(CoordinateVector<> f,
 int main(int argc, char **argv) {
   Box box(CoordinateVector<>(-0.5), CoordinateVector<>(1.));
   RandomGenerator random_generator(44);
-  IsotropicContinuousPhotonSource source(box, random_generator, 1.);
+  IsotropicContinuousPhotonSource source(box, random_generator);
 
   // to see the angular dependence, this number should be a factor 100 larger
   // but then the unit test takes too long to complete

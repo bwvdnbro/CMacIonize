@@ -271,7 +271,7 @@ inline std::string
 CommandLineParser::get_value< std::string >(std::string option) {
   auto it = _dictionary.find(option);
   if (it == _dictionary.end()) {
-    error("Command line option \"%s\" not found!", option.c_str());
+    cmac_error("Command line option \"%s\" not found!", option.c_str());
   }
   return it->second;
 }

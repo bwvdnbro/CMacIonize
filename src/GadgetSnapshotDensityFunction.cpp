@@ -66,11 +66,17 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * not found in the snapshot file.
  * @param fallback_unit_mass_in_SI Mass unit to use if the Units group is not
  * found in the snapshot file.
+ * @param fallback_unit_temperature_in_SI Temperature unit to use if the Units
+ * group is not found in the snapshot file.
+ * @param use_neutral_fraction Whether or not to use the neutral fraction from
+ * the snapshot file as initial guess for the neutral fraction (if it is
+ * present in the snapshot).
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
-    double fallback_unit_mass_in_SI, Log *log)
+    double fallback_unit_mass_in_SI, double fallback_unit_temperature_in_SI,
+    bool use_neutral_fraction, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -112,30 +118,38 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   // units
   double unit_length_in_SI = fallback_unit_length_in_SI;
   double unit_mass_in_SI = fallback_unit_mass_in_SI;
+  double unit_temperature_in_SI = fallback_unit_temperature_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
     double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
     double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
+    unit_temperature_in_SI = HDF5Tools::read_attribute< double >(
+        units, "Unit temperature in cgs (U_T)");
     unit_length_in_SI =
-        UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+        UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
     unit_mass_in_SI =
-        UnitConverter< QUANTITY_MASS >::to_SI(unit_mass_in_cgs, "g");
+        UnitConverter::to_SI< QUANTITY_MASS >(unit_mass_in_cgs, "g");
     HDF5Tools::close_group(units);
   } else {
     if (_log) {
       _log->write_warning("No Units group found!");
     }
-    if (fallback_unit_length_in_SI == 0. || fallback_unit_mass_in_SI == 0.) {
+    if (fallback_unit_length_in_SI == 0. || fallback_unit_mass_in_SI == 0. ||
+        fallback_unit_temperature_in_SI == 0.) {
       _log->write_warning(
           "No fallback units found in parameter file either, using SI units.");
       unit_length_in_SI = 1.;
       unit_mass_in_SI = 1.;
+      unit_temperature_in_SI = 1.;
     } else {
       _log->write_warning("Using fallback units.");
     }
   }
+  double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
+  double unit_density_in_SI =
+      unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
 
   // open the group containing the SPH particle data
   HDF5Tools::HDF5Group gasparticles = HDF5Tools::open_group(file, "/PartType0");
@@ -145,7 +159,15 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   _masses = HDF5Tools::read_dataset< double >(gasparticles, "Masses");
   _smoothing_lengths =
       HDF5Tools::read_dataset< double >(gasparticles, "SmoothingLength");
+  _densities = HDF5Tools::read_dataset< double >(gasparticles, "Density");
+  _temperatures =
+      HDF5Tools::read_dataset< double >(gasparticles, "Temperature");
   // close the group
+  if (use_neutral_fraction &&
+      HDF5Tools::group_exists(gasparticles, "NeutralFractionH")) {
+    _neutral_fractions =
+        HDF5Tools::read_dataset< double >(gasparticles, "NeutralFractionH");
+  }
   HDF5Tools::close_group(gasparticles);
   // close the file
   HDF5Tools::close_file(file);
@@ -159,6 +181,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     _positions[i][2] *= unit_length_in_SI;
     _masses[i] *= unit_mass_in_SI;
     _smoothing_lengths[i] *= unit_length_in_SI;
+    _densities[i] *= unit_density_in_SI;
+    _temperatures[i] *= unit_temperature_in_SI;
     minpos = CoordinateVector<>::min(minpos, _positions[i]);
     maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
   }
@@ -219,6 +243,10 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
               "densityfunction.fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
               "densityfunction.fallback_unit_mass", "0. kg"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction.fallback_unit_temperature", "0. K"),
+          params.get_value< bool >("densityfunction.use_neutral_fraction",
+                                   "false"),
           log) {}
 
 /**
@@ -234,7 +262,10 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
  * @param position CoordinateVector specifying a coordinate position (in m).
  * @return Density at the given coordinate (in m^-3).
  */
-double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
+DensityValues GadgetSnapshotDensityFunction::
+operator()(CoordinateVector<> position) {
+  DensityValues cell;
+
   // brute force version: slow
   /*double density = 0.;
   for (unsigned int i = 0; i < _positions.size(); ++i) {
@@ -252,6 +283,11 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
   return density / 1.6737236e-27;*/
   // tree version
   double density = 0.;
+  double temperature = 0.;
+  double neutral_fraction = -1.;
+  if (_neutral_fractions.size() > 0) {
+    neutral_fraction = 0.;
+  }
   std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
   const unsigned int numngbs = ngbs.size();
   for (unsigned int i = 0; i < numngbs; ++i) {
@@ -265,9 +301,23 @@ double GadgetSnapshotDensityFunction::operator()(CoordinateVector<> position) {
     double h = _smoothing_lengths[index];
     double u = r / h;
     double m = _masses[index];
-    density += m * cubic_spline_kernel(u, h);
+    double splineval = m * cubic_spline_kernel(u, h);
+    density += splineval;
+    temperature += splineval * _temperatures[index] / _densities[index];
+    if (neutral_fraction >= 0.) {
+      neutral_fraction += splineval * _neutral_fractions[index];
+    }
   }
-  return density / 1.6737236e-27;
+
+  cell.set_total_density(density / 1.6737236e-27);
+  cell.set_temperature(temperature);
+  if (neutral_fraction >= 0.) {
+    cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);
+  } else {
+    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  }
+  cell.set_ionic_fraction(ION_He_n, 1.e-6);
+  return cell;
 }
 
 /**

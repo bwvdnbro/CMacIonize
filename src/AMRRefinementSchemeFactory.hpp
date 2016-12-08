@@ -60,7 +60,7 @@ public:
     } else if (type == "Spatial") {
       return new SpatialAMRRefinementScheme(params, log);
     } else {
-      error("Unknown AMRRefinementScheme type: \"%s\".", type.c_str());
+      cmac_error("Unknown AMRRefinementScheme type: \"%s\".", type.c_str());
       return nullptr;
     }
   }

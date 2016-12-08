@@ -315,7 +315,7 @@ public:
       case OUTPUTFIELD_HOST_NAME:
         return std::string("Host name");
       default:
-        error("Requested unknown output field!");
+        cmac_error("Requested unknown output field!");
         return std::string("Unknown field");
       }
     }
@@ -344,7 +344,7 @@ public:
       case OUTPUTFIELD_HOST_NAME:
         return get_host_name();
       default:
-        error("Requested unknown output field!");
+        cmac_error("Requested unknown output field!");
         return std::string("Unknown field");
       }
     }

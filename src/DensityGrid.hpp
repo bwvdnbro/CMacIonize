@@ -26,6 +26,7 @@
 #ifndef DENSITYGRID_HPP
 #define DENSITYGRID_HPP
 
+#include "Abundances.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
@@ -33,6 +34,9 @@
 #include "Log.hpp"
 #include "Photon.hpp"
 #include "Timer.hpp"
+#include "UnitConverter.hpp"
+
+#include <cmath>
 
 /**
  * @brief General interface for density grids.
@@ -44,6 +48,12 @@ protected:
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
+
+  /*! @brief Ionization energy of hydrogen (in Hz). */
+  double _ionization_energy_H;
+
+  /*! @brief Ionization energy of helium (in Hz). */
+  double _ionization_energy_He;
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -60,10 +70,10 @@ protected:
   inline double get_optical_depth(const double ds, DensityValues &cell,
                                   Photon &photon) {
     return ds * cell.get_total_density() *
-           (photon.get_hydrogen_cross_section() *
-                cell.get_neutral_fraction_H() +
-            cell.get_helium_abundance() * photon.get_helium_cross_section() *
-                cell.get_neutral_fraction_He());
+           (photon.get_cross_section(ION_H_n) *
+                cell.get_ionic_fraction(ION_H_n) +
+            photon.get_cross_section_He_corr() *
+                cell.get_ionic_fraction(ION_He_n));
   }
 
   /**
@@ -77,8 +87,17 @@ protected:
   inline void update_integrals(const double ds, DensityValues &cell,
                                Photon &photon) {
     if (cell.get_total_density() > 0.) {
-      cell.increase_mean_intensity_H(ds * photon.get_hydrogen_cross_section());
-      cell.increase_mean_intensity_He(ds * photon.get_helium_cross_section());
+      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        IonName ion = static_cast< IonName >(i);
+        cell.increase_mean_intensity(ion, ds * photon.get_weight() *
+                                              photon.get_cross_section(ion));
+      }
+      cell.increase_heating_H(ds * photon.get_weight() *
+                              photon.get_cross_section(ION_H_n) *
+                              (photon.get_energy() - _ionization_energy_H));
+      cell.increase_heating_He(ds * photon.get_weight() *
+                               photon.get_cross_section(ION_He_n) *
+                               (photon.get_energy() - _ionization_energy_He));
     }
   }
 
@@ -93,18 +112,16 @@ protected:
    * @param cell DensityValues of the cell.
    */
   void set_reemission_probabilities(double T, DensityValues &cell) {
-    double alpha_1_H = 1.58e-13 * pow(T * 1.e-4, -0.53);
-    double alpha_A_agn = 4.18e-13 * pow(T * 1.e-4, -0.7);
+    double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
+    double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
     cell.set_pHion(alpha_1_H / alpha_A_agn);
 
-    double alpha_1_He = 1.54e-13 * pow(T * 1.e-4, -0.486);
-    double alpha_e_2tS = 2.1e-13 * pow(T * 1.e-4, -0.381);
-    double alpha_e_2sS = 2.06e-14 * pow(T * 1.e-4, -0.451);
-    double alpha_e_2sP = 4.17e-14 * pow(T * 1.e-4, -0.695);
-    double alphaHe = 4.27e-13 * pow(T * 1.e-4, -0.678);
-    // we overwrite the alphaHe value. This also guarantees that the sum of all
-    // probabilities is 1...
-    alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+    double alpha_1_He = 1.54e-13 * std::pow(T * 1.e-4, -0.486);
+    double alpha_e_2tS = 2.1e-13 * std::pow(T * 1.e-4, -0.381);
+    double alpha_e_2sS = 2.06e-14 * std::pow(T * 1.e-4, -0.451);
+    double alpha_e_2sP = 4.17e-14 * std::pow(T * 1.e-4, -0.695);
+    // We make sure the sum of all probabilities is 1...
+    double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
 
     cell.set_pHe_em(0, alpha_1_He / alphaHe);
     cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
@@ -123,22 +140,12 @@ public:
   DensityGrid(Box box, CoordinateVector< bool > periodic =
                            CoordinateVector< bool >(false),
               Log *log = nullptr)
-      : _box(box), _periodic(periodic), _log(log) {}
+      : _box(box), _periodic(periodic), _log(log) {
 
-  /**
-   * @brief Initialize the given cell.
-   *
-   * @param initial_temperature Initial temperature (in K).
-   * @param helium_abundance Helium abundance.
-   * @param cell Cell to initialize.
-   */
-  void initialize(double initial_temperature, double helium_abundance,
-                  DensityValues &cell) {
-    cell.set_neutral_fraction_H(1.e-6);
-    cell.set_neutral_fraction_He(1.e-6);
-    cell.set_temperature(initial_temperature);
-    cell.set_helium_abundance(helium_abundance);
-    set_reemission_probabilities(initial_temperature, cell);
+    _ionization_energy_H =
+        UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
+    _ionization_energy_He =
+        UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
   }
 
   virtual ~DensityGrid() {}
@@ -315,12 +322,9 @@ public:
    * All implementations should call this method in their constructor, after the
    * grid itself has been set up.
    *
-   * @param initial_temperature Initial temperature.
-   * @param helium_abundance Helium abundance.
    * @param function DensityFunction that sets the density.
    */
-  void initialize(double initial_temperature, double helium_abundance,
-                  DensityFunction &function) {
+  void initialize(DensityFunction &function) {
     unsigned int ntot = get_number_of_cells();
     unsigned int nguess = 0.01 * ntot;
     unsigned int ninfo = 0.1 * ntot;
@@ -328,8 +332,14 @@ public:
     Timer guesstimer;
     for (auto it = begin(); it != end(); ++it) {
       DensityValues &cell = it.get_values();
-      cell.set_total_density(function(it.get_cell_midpoint()));
-      initialize(initial_temperature, helium_abundance, cell);
+      DensityValues vals = function(it.get_cell_midpoint());
+      cell.set_total_density(vals.get_total_density());
+      cell.set_temperature(vals.get_temperature());
+      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        IonName ion = static_cast< IonName >(i);
+        cell.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
+      }
+      set_reemission_probabilities(vals.get_temperature(), cell);
       ++ndone;
       if (_log) {
         if (ndone == nguess) {
@@ -371,6 +381,25 @@ public:
       mtot += it.get_values().get_total_density() * it.get_volume();
     }
     return mtot;
+  }
+
+  /**
+   * @brief Get the average temperature throughout the grid.
+   *
+   * This method is used in the unit tests to check whether the grid contains
+   * the correct temperature field.
+   *
+   * @return Average temperature in the grid (in K).
+   */
+  inline double get_average_temperature() {
+    double temperature = 0.;
+    double mtot = 0.;
+    for (auto it = begin(); it != end(); ++it) {
+      double m = it.get_values().get_total_density() * it.get_volume();
+      temperature += m * it.get_values().get_temperature();
+      mtot += m;
+    }
+    return temperature / mtot;
   }
 };
 

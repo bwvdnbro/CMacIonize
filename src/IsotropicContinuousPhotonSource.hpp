@@ -46,30 +46,24 @@ private:
   /*! @brief Random generator. */
   RandomGenerator &_random_generator;
 
-  /*! @brief Total luminosity of the radiation (in s^-1). */
-  double _luminosity;
-
 public:
   /**
    * @brief Constructor.
    *
    * @param box Box in which the radiation enters (in m).
    * @param random_generator Random generator.
-   * @param flux Total flux of the radiation (in m^-2s^-1).
    * @param log Log to write logging info to.
    */
   IsotropicContinuousPhotonSource(Box box, RandomGenerator &random_generator,
-                                  double flux, Log *log = nullptr)
+                                  Log *log = nullptr)
       : _box(box), _random_generator(random_generator) {
-    double area = 2. * _box.get_sides().x() * _box.get_sides().y() +
-                  2. * _box.get_sides().x() * _box.get_sides().z() +
-                  2. * _box.get_sides().y() * _box.get_sides().z();
-    _luminosity = flux * area;
 
     if (log) {
       log->write_status(
-          "Constructed IsotropicContinuousPhotonSource with total luminosity ",
-          _luminosity, " s^-1.");
+          "Constructed IsotropicContinuousPhotonSource in box with anchor [",
+          _box.get_anchor().x(), " m, ", _box.get_anchor().y(), " m, ",
+          _box.get_anchor().z(), " m], and sides [", _box.get_sides().x(),
+          " m, ", _box.get_sides().y(), " m, ", _box.get_sides().z(), " m].");
     }
   }
 
@@ -88,10 +82,7 @@ public:
                     "densitygrid.box_anchor"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid.box_sides")),
-            random_generator,
-            params.get_physical_value< QUANTITY_FLUX >(
-                "continuousphotonsource.flux", "5700 cm^-2s^-1"),
-            log) {}
+            random_generator, log) {}
 
   /**
    * @brief Get the entrance position and direction of a random external photon.
@@ -191,11 +182,16 @@ public:
   }
 
   /**
-   * @brief Get the total luminosity of the source.
+   * @brief Get the total surface area through which the radiation enters the
+   * simulation box.
    *
-   * @return Total luminosity (in s^-1).
+   * @return Total surface area (in m^2).
    */
-  inline double get_total_luminosity() { return _luminosity; }
+  inline double get_total_surface_area() {
+    return 2. * _box.get_sides().x() * _box.get_sides().y() +
+           2. * _box.get_sides().x() * _box.get_sides().z() +
+           2. * _box.get_sides().y() * _box.get_sides().z();
+  }
 };
 
 #endif // ISOTROPICCONTINUOUSPHOTONSOURCE_HPP

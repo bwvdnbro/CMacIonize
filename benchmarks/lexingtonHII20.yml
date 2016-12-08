@@ -1,0 +1,15 @@
+number of blocks: 2
+
+block[0]:
+  origin: [0. pc, 0. pc, 0. pc]
+  sides: [6. pc, 6. pc, 6. pc]
+  type: cube
+  number density: 100. cm^-3
+  initial temperature: 8000. K
+
+block[1]:
+  origin: [0. pc, 0. pc, 0. pc]
+  sides: [6.e18 cm, 6.e18 cm, 6.e18 cm]
+  type: sphere
+  number density: 0. cm^-3
+  initial temperature: 0. K

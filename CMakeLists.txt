@@ -62,6 +62,18 @@ add_compiler_flag("-std=c++11" REQUIRED)
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 
+# Enable the address sanitizer in debug builds
+# (to symbolize the code, run
+#   export ASAN_SYMBOLIZER_PATH=<path to llvm-symbolizer>
+#   export ASAN_OPTIONS=symbolize=1
+#  before running the code)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_compiler_flag("-fsanitize=address -fno-omit-frame-pointer" OPTIONAL)
+endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
+# Add a Profile CMAKE_BUILD_TYPE
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
+
 # Tell CMake that headers are in one of the src folders.
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
@@ -102,6 +114,38 @@ endif(HDF5_FOUND)
 find_package(OpenMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
+# Find Boost, Boost Python, Python, and NumPy
+find_package(Boost COMPONENTS "python")
+if(Boost_FOUND)
+  find_package(PythonLibs 2.7)
+  find_package(PythonInterp 2.7)
+  if(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+                            "import numpy; print numpy.get_include()"
+                    RESULT_VARIABLE NUMPY_RESULT
+                    OUTPUT_VARIABLE NUMPY_OUTPUT
+                    ERROR_VARIABLE NUMPY_ERROR)
+    if(NUMPY_RESULT STREQUAL "0")
+      message(STATUS
+             "Python, NumPy and Boost Python found. Will build Python modules.")
+      include_directories(${Boost_INCLUDE_DIRS})
+      include_directories(${PYTHON_INCLUDE_PATH})
+      include_directories(${NUMPY_OUTPUT})
+      set(HAVE_PYTHON True)
+    else(NUMPY_RESULT STREQUAL "0")
+      message(WARNING
+              "NumPy not found: ${NUMPY_ERROR}. Not building Python modules.")
+      set(HAVE_PYTHON False)
+    endif(NUMPY_RESULT STREQUAL "0")
+  else(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
+    message(WARNING "Python not found. Not building Python modules.")
+    set(HAVE_PYTHON False)
+  endif(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
+else(Boost_FOUND)
+  message(WARNING "Boost Python not found. Not building Python modules.")
+  set(HAVE_PYTHON False)
+endif(Boost_FOUND)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 
@@ -110,6 +154,11 @@ add_subdirectory(src)
 
 # Enter the folder containing the unit tests
 add_subdirectory(test)
+
+# If we have Python, enter the folder containing the Python modules
+if(HAVE_PYTHON)
+  add_subdirectory(python)
+endif(HAVE_PYTHON)
 
 # Copy the benchmark problems
 # Every benchmark has a description file NAME.txt.

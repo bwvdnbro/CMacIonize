@@ -36,7 +36,7 @@
 int main(int argc, char **argv) {
   CoordinateVector< int > ncell(8);
   Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  AsciiFileDensityFunction densityfunction("testgrid.txt", ncell, box);
+  AsciiFileDensityFunction densityfunction("testgrid.txt", ncell, box, 2000.);
 
   assert_condition(densityfunction.get_total_hydrogen_number() == 1.);
 

@@ -34,15 +34,14 @@
 class RecombinationRates {
 public:
   /**
-   * @brief Get the recombination rate for the given element at the given
+   * @brief Get the recombination rate for the given ion at the given
    * temperature.
    *
-   * @param element ElementName for an element.
+   * @param ion IonName for a valid ion.
    * @param temperature Temperature (in K).
    * @return Recombination rate (in m^3s^-1).
    */
-  virtual double get_recombination_rate(ElementName element,
-                                        double temperature) = 0;
+  virtual double get_recombination_rate(IonName ion, double temperature) = 0;
 };
 
 #endif // RECOMBINATIONRATES_HPP

@@ -62,8 +62,8 @@ public:
     } else if (type == "Passive") {
       return new PassivePhotonNumberConvergenceChecker();
     } else {
-      error("Unknown PhotonNumberConvergenceChecker type: \"%s\".",
-            type.c_str());
+      cmac_error("Unknown PhotonNumberConvergenceChecker type: \"%s\".",
+                 type.c_str());
       return nullptr;
     }
   }

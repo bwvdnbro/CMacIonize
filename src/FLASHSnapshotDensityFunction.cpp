@@ -35,11 +35,13 @@
  * This reads in the data and stores it internally.
  *
  * @param filename Name of the snapshot file to read.
+ * @param temperature Initial temperature for the ISM (in K).
  * @param log Log to write logging info to.
  */
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
+                                                           double temperature,
                                                            Log *log)
-    : _log(log) {
+    : _temperature(temperature), _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -47,9 +49,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
   // units
-  double unit_length_in_SI = UnitConverter< QUANTITY_LENGTH >::to_SI(1., "cm");
+  double unit_length_in_SI = UnitConverter::to_SI< QUANTITY_LENGTH >(1., "cm");
   double unit_density_in_SI =
-      UnitConverter< QUANTITY_DENSITY >::to_SI(1., "g cm^-3");
+      UnitConverter::to_SI< QUANTITY_DENSITY >(1., "g cm^-3");
 
   // find out the dimensions of the box
   HDF5Tools::HDF5Dictionary< double > real_runtime_pars =
@@ -156,7 +158,10 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : FLASHSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"), log) {}
+          params.get_value< std::string >("densityfunction.filename"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction.temperature", "8000. K"),
+          log) {}
 
 /**
  * @brief Function that returns the density at the given coordinate position.
@@ -164,6 +169,13 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
  * @param position CoordinateVector<> specifying a position.
  * @return Density at that position (in m^-3).
  */
-double FLASHSnapshotDensityFunction::operator()(CoordinateVector<> position) {
-  return _grid.get_cell(position) / 1.6737236e-27;
+DensityValues FLASHSnapshotDensityFunction::
+operator()(CoordinateVector<> position) {
+  DensityValues cell;
+
+  cell.set_total_density(_grid.get_cell(position) / 1.6737236e-27);
+  cell.set_temperature(_temperature);
+  cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  cell.set_ionic_fraction(ION_He_n, 1.e-6);
+  return cell;
 }

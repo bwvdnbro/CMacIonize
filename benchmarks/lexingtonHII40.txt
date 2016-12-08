@@ -1,0 +1,22 @@
+Lexington HII 40 benchmark
+
+This benchmark consists of uniform box with density 100 cm^-3, with a small
+spherical region with radius 3.e18 cm and density 0 cut out of the centre.
+In the centre of this cavity is a luminous blackbody source at temperature
+4.e4 K. The radiation of the central source will ionize a spherical region in
+the high density part of the box, wherein different ions will have different
+ionic fraction profiles. The radius of this spherical region is about 5. pc, so
+we enclose the whole system in a box of 10. x 10. x 10. pc.
+
+The abundances of the elements inside the region are:
+ - helium: 0.1
+ - carbon: 2.2e-4
+ - nitrogen: 4.e-5
+ - oxygen: 3.3e-4
+ - neon: 5.e-5
+ - sulphur: 9.e-6
+
+List of files necessary for this benchmark test:
+input:lexingtonHII40.param
+input:lexingtonHII40.yml
+input:lexingtonHII40.py

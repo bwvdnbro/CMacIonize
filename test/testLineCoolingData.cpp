@@ -25,8 +25,11 @@
  */
 #include "Assert.hpp"
 #include "LineCoolingData.hpp"
+#include "UnitConverter.hpp"
+#include "Utilities.hpp"
 #include <fstream>
-#include <iostream>
+#include <sstream>
+#include <string>
 using namespace std;
 
 /**
@@ -72,13 +75,211 @@ int main(int argc, char **argv) {
   LineCoolingData data;
   for (unsigned int i = 0; i < 10; ++i) {
     for (unsigned int j = 0; j < 10; ++j) {
-      assert_values_equal(cs_fortran[10 * i + j], data.get_cs(i, j));
-      assert_values_equal(cse_fortran[10 * i + j], data.get_cse(i, j));
-      assert_values_equal(ea_fortran[10 * i + j], data.get_ea(i, j));
-      assert_values_equal(en_fortran[10 * i + j], data.get_en(i, j));
+      assert_condition(cs_fortran[10 * i + j] == data.get_cs(i, j));
+      assert_condition(cse_fortran[10 * i + j] == data.get_cse(i, j));
+      assert_condition(ea_fortran[10 * i + j] == data.get_ea(i, j));
+      assert_condition(en_fortran[10 * i + j] == data.get_en(i, j));
     }
     for (unsigned int j = 0; j < 5; ++j) {
-      assert_values_equal(sw_fortran[5 * i + j], data.get_sw(i, j));
+      assert_condition(sw_fortran[5 * i + j] == data.get_sw(i, j));
+    }
+  }
+
+  // test LineCoolingData::simq
+  // we generate coefficients at random and check that the equation
+  //  A x X = B is really satisfied
+  // since A and B are changed by simq, we store all initial values in Ac and Bc
+  // as well (note that B will contain X after simq exits)
+  // we then need to check if Ac x B = Bc
+  for (unsigned int loop = 0; loop < 10000; ++loop) {
+    double A[5][5], Ac[5][5], B[5], Bc[5];
+    for (unsigned int i = 0; i < 5; ++i) {
+      for (unsigned int j = 0; j < 5; ++j) {
+        double a = Utilities::random_double();
+        if (i == j) {
+          a = 1.;
+        }
+        A[i][j] = a;
+        Ac[i][j] = a;
+      }
+      double b = Utilities::random_double();
+      B[i] = b;
+      Bc[i] = b;
+    }
+
+    LineCoolingData::simq(A, B);
+
+    for (unsigned int i = 0; i < 5; ++i) {
+      double a = 0.;
+      for (unsigned int j = 0; j < 5; ++j) {
+        a += Ac[i][j] * B[j];
+      }
+      assert_values_equal_rel(a, Bc[i], 1.e-11);
+    }
+  }
+
+  // linecool
+  {
+    std::ifstream file("linecool_testdata.txt");
+    std::string line;
+    while (getline(file, line)) {
+      std::istringstream lstream(line);
+
+      double T, ne, abundances[12], coolf, cool;
+
+      lstream >> T >> ne;
+      for (unsigned int i = 0; i < 12; ++i) {
+        lstream >> abundances[i];
+      }
+      lstream >> coolf;
+
+      cool = data.get_cooling(
+          T, UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
+          abundances);
+      assert_values_equal_rel(
+          UnitConverter::to_unit< QUANTITY_ENERGY_RATE >(cool, "erg s^-1"),
+          coolf, 1.e-15);
+    }
+  }
+
+  // linestr
+  {
+    std::ifstream file("linestr_testdata.txt");
+    std::string line;
+    while (getline(file, line)) {
+      std::istringstream lstream(line);
+
+      double T, ne, abundances[12], c6300f, c9405f, c6312f, c33muf, c19muf,
+          c3729f, c3727f, c7330f, c4363f, c5007f, c52muf, c88muf, c5755f,
+          c6584f, c4072f, c6717f, c6725f, c3869f, cniii57f, cneii12f, cneiii15f,
+          cnii122f, cii2325f, ciii1908f, coii7325f, csiv10f,
+          c6300 = 0., c9405 = 0., c6312 = 0., c33mu = 0., c19mu = 0.,
+          c3729 = 0., c3727 = 0., c7330 = 0., c4363 = 0., c5007 = 0.,
+          c52mu = 0., c88mu = 0., c5755 = 0., c6584 = 0., c4072 = 0.,
+          c6717 = 0., c6725 = 0., c3869 = 0., cniii57 = 0., cneii12 = 0.,
+          cneiii15 = 0., cnii122 = 0., cii2325 = 0., ciii1908 = 0.,
+          coii7325 = 0., csiv10 = 0.;
+
+      lstream >> T >> ne;
+      for (unsigned int i = 0; i < 12; ++i) {
+        lstream >> abundances[i];
+      }
+      lstream >> c6300f >> c9405f >> c6312f >> c33muf >> c19muf >> c3729f >>
+          c3727f >> c7330f >> c4363f >> c5007f >> c52muf >> c88muf >> c5755f >>
+          c6584f >> c4072f >> c6717f >> c6725f >> c3869f >> cniii57f >>
+          cneii12f >> cneiii15f >> cnii122f >> cii2325f >> ciii1908f >>
+          coii7325f >> csiv10f;
+
+      data.linestr(T,
+                   UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
+                   abundances, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
+                   c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
+                   c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
+                   cii2325, ciii1908, coii7325, csiv10);
+      assert_values_equal_rel(
+          c6300,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6300f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c9405,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c9405f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6312,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6312f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c33mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c33muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c19mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c19muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3729,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3729f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3727,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3727f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c7330,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c7330f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c4363,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c4363f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c5007,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c5007f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c52mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c52muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c88mu,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c88muf, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c5755,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c5755f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6584,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6584f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c4072,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c4072f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6717,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6717f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c6725,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c6725f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          c3869,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(c3869f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cniii57,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cniii57f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cneii12,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cneii12f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cneiii15,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cneiii15f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cnii122,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cnii122f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          cii2325,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(cii2325f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          ciii1908,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(ciii1908f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          coii7325,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(coii7325f, "erg s^-1"),
+          1.e-15);
+      assert_values_equal_rel(
+          csiv10,
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(csiv10f, "erg s^-1"),
+          1.e-15);
     }
   }
 

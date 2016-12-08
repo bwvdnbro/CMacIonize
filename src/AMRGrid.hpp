@@ -58,10 +58,8 @@ private:
    * @param iz Variable to store the z index in.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key,
-                                                  int &ix,
-                                                  int &iy,
-                                                  int &iz) {
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key, int &ix,
+                                                  int &iy, int &iz) {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block

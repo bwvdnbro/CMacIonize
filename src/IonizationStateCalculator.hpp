@@ -27,7 +27,10 @@
 #ifndef IONIZATIONSTATECALCULATOR_HPP
 #define IONIZATIONSTATECALCULATOR_HPP
 
+class Abundances;
+class ChargeTransferRates;
 class DensityGrid;
+class DensityValues;
 class RecombinationRates;
 
 /**
@@ -39,17 +42,23 @@ private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
   double _luminosity;
 
-  /*! @brief Helium abundance. */
-  double _helium_abundance;
+  /*! @brief Abundances. */
+  Abundances &_abundances;
 
   /*! @brief Recombination rates used in ionization balance calculation. */
   RecombinationRates &_recombination_rates;
 
-public:
-  IonizationStateCalculator(double luminosity, double helium_abundance,
-                            RecombinationRates &recombination_rates);
+  /*! @brief Charge transfer recombination rates used in ionization balance
+   *  calculation for coolants. */
+  ChargeTransferRates &_charge_transfer_rates;
 
-  void calculate_ionization_state(unsigned int nphoton, DensityGrid &grid);
+public:
+  IonizationStateCalculator(double luminosity, Abundances &abundances,
+                            RecombinationRates &recombination_rates,
+                            ChargeTransferRates &charge_transfer_rates);
+
+  void calculate_ionization_state(double jfac, DensityValues &cell);
+  void calculate_ionization_state(double totweight, DensityGrid &grid);
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);

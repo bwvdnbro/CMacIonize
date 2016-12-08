@@ -30,7 +30,6 @@
  */
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumDataLocation.hpp"
-#include "UnitConverter.hpp"
 #include "Utilities.hpp"
 #include <fstream>
 #include <vector>
@@ -51,15 +50,18 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum(
   vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
 
-  double max_frequency = 1.6;
+  // 13.6 eV in Hz
+  const double min_frequency = 3.288465385e15;
+  const double max_frequency = 1.6 * min_frequency;
+  const double nu0 = 4.98e15;
   for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = 1. +
-                    i * (max_frequency - 1.) /
+    _frequency[i] = min_frequency +
+                    i * (max_frequency - min_frequency) /
                         (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
   _cumulative_distribution[0] = 0.;
   for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    double y1 = _frequency[i - 1] * 3.289e15 / 4.98e15;
+    double y1 = _frequency[i - 1] / nu0;
     double AHe2q1 = 0.;
     if (y1 < 1.) {
       unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
@@ -67,7 +69,7 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum(
       AHe2q1 = AHe2q[iHe1] + f * (AHe2q[iHe1 + 1] - AHe2q[iHe1]);
     }
     double AHe2q2 = 0.;
-    double y2 = _frequency[i] * 3.289e15 / 4.98e15;
+    double y2 = _frequency[i] / nu0;
     if (y2 < 1.) {
       unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
       double f = (y2 - yHe2q[iHe2]) / (yHe2q[iHe2 + 1] - yHe2q[iHe2]);
@@ -78,7 +80,7 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum(
   }
   for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] =
-        _cumulative_distribution[i - 1] + _cumulative_distribution[i] * 1.e25;
+        _cumulative_distribution[i - 1] + _cumulative_distribution[i];
   }
   for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
@@ -138,6 +140,23 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
   double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * _frequency[inu],
-                                                    "eV");
+  double frequency =
+      _frequency[inu] +
+      (_frequency[inu + 1] - _frequency[inu]) *
+          (x - _cumulative_distribution[inu]) /
+          (_cumulative_distribution[inu + 1] - _cumulative_distribution[inu]);
+  return frequency;
+}
+
+/**
+ * @brief Get the total ionizing flux of the spectrum.
+ *
+ * @warning This method is currently not used and therefore not implemented.
+ *
+ * @return Total ionizing flux (in m^-2 s^-1).
+ */
+double HeliumTwoPhotonContinuumSpectrum::get_total_flux() {
+  cmac_error(
+      "HeliumTwoPhotonContinuumSpectrum::get_total_flux() is not implemented!");
+  return 0.;
 }

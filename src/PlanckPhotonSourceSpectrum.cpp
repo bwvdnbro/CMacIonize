@@ -31,7 +31,8 @@
  */
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "Error.hpp"
-#include "UnitConverter.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -41,17 +42,21 @@
  * Sets up the internal arrays used for random sampling.
  *
  * @param random_generator RandomGenerator used to generate random numbers.
+ * @param temperature Temperature of the black body (in K).
+ * @param log Log to write logging info to.
  */
 PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator)
+    RandomGenerator &random_generator, double temperature, Log *log)
     : _random_generator(random_generator) {
   // some constants
-  double max_frequency = 4.;
-  double min_frequency = 3.289e15;
-  double planck_constant = 6.626e-27;
-  double boltzmann_constant = 1.38e-16;
-  // not a constant! Should be replaced by a parameter!
-  double temperature_star = 40000.;
+  // in units 13.6 eV (corresponds to 54.4 eV)
+  const double max_frequency = 4.;
+  // 13.6 eV in Hz
+  const double min_frequency = 3.289e15;
+  // Planck constant (in J s)
+  const double planck_constant = 6.626e-34;
+  // Boltzmann constant (in J s^-1)
+  const double boltzmann_constant = 1.38e-23;
   // set up the frequency bins and calculate the Planck luminosities
   for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequency[i] =
@@ -59,7 +64,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
         i * (max_frequency - 1.) / (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
     _luminosity[i] = _frequency[i] * _frequency[i] * _frequency[i] /
                      (exp(planck_constant * _frequency[i] * min_frequency /
-                          (boltzmann_constant * temperature_star)) -
+                          (boltzmann_constant * temperature)) -
                       1.);
   }
 
@@ -82,7 +87,26 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
     _log_cumulative_distribution[i] = log10(_cumulative_distribution[i]);
     _log_frequency[i] = log10(_frequency[i]);
   }
+
+  if (log) {
+    log->write_status("Set up a Planck black body spectrum with temperature ",
+                      temperature, " K.");
+  }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * @param random_generator RandomGenerator.
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
+    RandomGenerator &random_generator, ParameterFile &params, Log *log)
+    : PlanckPhotonSourceSpectrum(
+          random_generator, params.get_physical_value< QUANTITY_TEMPERATURE >(
+                                "photonsourcespectrum.temperature", "40000 K"),
+          log) {}
 
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.
@@ -101,5 +125,20 @@ double PlanckPhotonSourceSpectrum::get_random_frequency() {
           (_log_frequency[ix + 1] - _log_frequency[ix]) +
       _log_frequency[ix];
   double frequency = pow(10., log_random_frequency);
-  return UnitConverter< QUANTITY_FREQUENCY >::to_SI(13.6 * frequency, "eV");
+  // we manually convert from 13.6 eV to Hz, since the UnitConverter is too
+  // slow (and binning the actual frequencies in Hz yields a bad interpolation)
+  return frequency * 3.288465385e15;
+}
+
+/**
+ * @brief Get the total ionizing flux of the spectrum.
+ *
+ * @warning This method is currently not used and therefore not implemented.
+ *
+ * @return Total ionizing flux (in m^-2 s^-1).
+ */
+double PlanckPhotonSourceSpectrum::get_total_flux() {
+  cmac_error(
+      "PlanckPhotonSourceSpectrum::get_total_flux() is not implemented!");
+  return 0.;
 }

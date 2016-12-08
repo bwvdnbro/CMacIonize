@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "PhotonSource.hpp"
+#include "Abundances.hpp"
 #include "CrossSections.hpp"
 #include "DensityValues.hpp"
 #include "ElementNames.hpp"
@@ -46,6 +47,7 @@ using namespace std;
  * @param continuous_source IsotropicContinuousPhotonSource.
  * @param continuous_spectrum PhotonSourceSpectrum for the continuous photon
  * source.
+ * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
  * @param random_generator RandomGenerator used to generate random numbers.
  * @param log Log to write logging info to.
@@ -54,18 +56,19 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            PhotonSourceSpectrum *discrete_spectrum,
                            IsotropicContinuousPhotonSource *continuous_source,
                            PhotonSourceSpectrum *continuous_spectrum,
+                           Abundances &abundances,
                            CrossSections &cross_sections,
                            RandomGenerator &random_generator, Log *log)
     : _discrete_number_of_photons(0), _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
-      _continuous_spectrum(continuous_spectrum),
+      _continuous_spectrum(continuous_spectrum), _abundances(abundances),
       _cross_sections(cross_sections), _random_generator(random_generator),
       _HLyc_spectrum(cross_sections, random_generator),
       _HeLyc_spectrum(cross_sections, random_generator),
       _He2pc_spectrum(random_generator), _log(log) {
 
-  double luminosity_discrete = 0.;
-  double luminosity_continuous = 0.;
+  _discrete_luminosity = 0.;
+  _continuous_luminosity = 0.;
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
     _discrete_weights.resize(distribution->get_number_of_sources());
@@ -73,7 +76,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
       _discrete_positions[i] = distribution->get_position(i);
       _discrete_weights[i] = distribution->get_weight(i);
     }
-    luminosity_discrete = distribution->get_total_luminosity();
+    _discrete_luminosity = distribution->get_total_luminosity();
 
     if (_log) {
       _log->write_status("Constructed PhotonSource with ",
@@ -87,15 +90,24 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   if (continuous_source != nullptr) {
     _continuous_active_number_of_photons = 0;
-    luminosity_continuous = continuous_source->get_total_luminosity();
+    _continuous_luminosity = continuous_source->get_total_surface_area() *
+                             continuous_spectrum->get_total_flux();
   }
 
-  _total_luminosity = luminosity_discrete + luminosity_continuous;
-  _discrete_fraction = luminosity_discrete / _total_luminosity;
+  _total_luminosity = _discrete_luminosity + _continuous_luminosity;
+  double discrete_fraction = _discrete_luminosity / _total_luminosity;
+
+  _discrete_photon_weight = 1.;
+  _continuous_photon_weight = 1.;
 
   if (_log) {
-    _log->write_status(_discrete_fraction * 100.,
-                       "% of the photons is emitted by discrete sources.");
+    _log->write_status("Total luminosity of discrete sources: ",
+                       _discrete_luminosity, " s^-1.");
+    _log->write_status("Total luminosity of continuous sources: ",
+                       _continuous_luminosity, " s^-1.");
+    _log->write_status(
+        discrete_fraction * 100.,
+        "% of the ionizing radiation is emitted by discrete sources.");
   }
 }
 
@@ -111,52 +123,56 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
  */
 unsigned int
 PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
-  _discrete_number_of_photons = 0;
-  _continuous_number_of_photons = 0;
+  // this should be a parameter
+  const double discrete_fraction = 0.5;
 
-  // make sure we have at least 10 photons per discrete source
-  if (number_of_photons * _discrete_fraction < 10 * _discrete_weights.size()) {
-    number_of_photons = 10 * _discrete_weights.size() / _discrete_fraction;
-  }
-
-  // make sure we have at least 100 photons for the continuous sources
-  if (_discrete_fraction < 1. &&
-      number_of_photons * (1. - _discrete_fraction) < 100) {
-    number_of_photons = 100 / (1. - _discrete_fraction);
-  }
-
-  while (number_of_photons !=
-         _discrete_number_of_photons + _continuous_number_of_photons) {
-    _discrete_number_of_photons = 0;
+  if (_discrete_luminosity > 0. && _continuous_luminosity > 0.) {
+    _discrete_number_of_photons = discrete_fraction * number_of_photons;
+    // we need to make sure the sum of both is equal to number_of_photons
+    // if we would set the same expression as above, then we would be 1 photon
+    // short for uneven number_of_photons, since round off automatically rounds
+    // down.
     _continuous_number_of_photons =
-        std::round((1. - _discrete_fraction) * number_of_photons);
-    for (unsigned int i = 0; i < _discrete_weights.size(); ++i) {
-      _discrete_number_of_photons += std::round(
-          number_of_photons * _discrete_fraction * _discrete_weights[i]);
+        number_of_photons - _discrete_number_of_photons;
+  } else {
+    if (_discrete_luminosity > 0.) {
+      _discrete_number_of_photons = number_of_photons;
+    } else {
+      // we do not check for the case were both luminosities are zero
+      // it is assumed this will never happen (as radiative transfer is quite
+      // boring without sources)
+      _continuous_number_of_photons = number_of_photons;
     }
-    number_of_photons =
-        _discrete_number_of_photons + _continuous_number_of_photons;
   }
-
-  _discrete_number_of_photons =
-      std::round(number_of_photons * _discrete_fraction);
 
   _discrete_active_source_index = 0;
   _discrete_active_photon_index = 0;
-  if (_discrete_weights.size() > 0) {
+  if (_discrete_number_of_photons > 0) {
+    // make sure we have at least 10 photons per discrete source
+    if (_discrete_number_of_photons < 10 * _discrete_weights.size()) {
+      _discrete_number_of_photons = 10 * _discrete_weights.size();
+    }
+    // set the photon weights
+    _discrete_photon_weight =
+        _discrete_luminosity / _discrete_number_of_photons;
     _discrete_active_number_of_photons =
         std::round(_discrete_number_of_photons * _discrete_weights[0]);
+    // disable continuous source: we first emit discrete photons
+    _continuous_active_number_of_photons = _continuous_number_of_photons;
   } else {
     _discrete_active_number_of_photons = 0;
+    // no discrete sources: make sure continuous sources are enabled
+    _continuous_active_number_of_photons = 0;
   }
 
-  _continuous_number_of_photons =
-      std::round((1. - _discrete_fraction) * number_of_photons);
-  if (_discrete_number_of_photons == 0) {
-    _continuous_active_number_of_photons = 0;
-  } else {
-    // disable continuous sources and first do discrete sources
-    _continuous_active_number_of_photons = _continuous_number_of_photons;
+  if (_continuous_number_of_photons > 0) {
+    // make sure we have at least 100 photons for the continuous source
+    if (_continuous_number_of_photons < 100) {
+      _continuous_number_of_photons = 100;
+    }
+    // set the photon weights
+    _continuous_photon_weight =
+        _continuous_luminosity / _continuous_number_of_photons;
   }
 
   if (_log) {
@@ -169,6 +185,22 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
 }
 
 /**
+ * @brief Set the cross sections of the given photon with the given energy.
+ *
+ * @param photon Photon.
+ * @param energy Energy of the photon (in Hz).
+ */
+void PhotonSource::set_cross_sections(Photon &photon, double energy) {
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    photon.set_cross_section(ion,
+                             _cross_sections.get_cross_section(ion, energy));
+  }
+  photon.set_cross_section_He_corr(_abundances.get_abundance(ELEMENT_He) *
+                                   photon.get_cross_section(ION_He_n));
+}
+
+/**
  * @brief Get a photon with a random direction and energy, originating at one
  * of the discrete sources.
  *
@@ -178,6 +210,7 @@ Photon PhotonSource::get_random_photon() {
 
   CoordinateVector<> position, direction;
   double energy;
+  double weight;
   // check if we have a continuous or a discrete source photon
   if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
@@ -185,18 +218,22 @@ Photon PhotonSource::get_random_photon() {
     position = posdir.first;
     direction = posdir.second;
     energy = _continuous_spectrum->get_random_frequency();
+    weight = _continuous_photon_weight;
   } else {
     position = _discrete_positions[_discrete_active_source_index];
     direction = get_random_direction();
     energy = _discrete_spectrum->get_random_frequency();
+    weight = _discrete_photon_weight;
   }
 
-  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, energy);
-  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, energy);
+  Photon photon(position, direction, energy);
+  set_cross_sections(photon, energy);
+
+  photon.set_weight(weight);
 
   update_indices();
 
-  return Photon(position, direction, energy, xsecH, xsecHe);
+  return photon;
 }
 
 /**
@@ -220,12 +257,12 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  */
 bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   double new_frequency = 0.;
-  double helium_abundance = cell.get_helium_abundance();
+  double helium_abundance = _abundances.get_abundance(ELEMENT_He);
   double pHabs = 1. / (1. +
-                       cell.get_neutral_fraction_He() * helium_abundance *
-                           photon.get_helium_cross_section() /
-                           cell.get_neutral_fraction_H() /
-                           photon.get_hydrogen_cross_section());
+                       cell.get_ionic_fraction(ION_He_n) * helium_abundance *
+                           photon.get_cross_section(ION_He_n) /
+                           cell.get_ionic_fraction(ION_H_n) /
+                           photon.get_cross_section(ION_H_n));
 
   double x = _random_generator.get_uniform_random_double();
   if (x <= pHabs) {
@@ -250,8 +287,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       new_frequency = _HeLyc_spectrum.get_random_frequency();
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(1)) {
-      // new frequency is 19.8eV (no idea why)
-      new_frequency = 19.8 / 13.6;
+      // new frequency is 19.8eV
+      new_frequency = 4.788e15;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(2)) {
       x = _random_generator.get_uniform_random_double();
@@ -268,9 +305,9 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
       // 2-photon continuum
       double pHots = 1. / (1. +
-                           77. * cell.get_neutral_fraction_He() /
+                           77. * cell.get_ionic_fraction(ION_He_n) /
                                sqrt(cell.get_temperature()) /
-                               cell.get_neutral_fraction_H());
+                               cell.get_ionic_fraction(ION_H_n));
       x = _random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot
@@ -312,10 +349,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
   CoordinateVector<> direction = get_random_direction();
   photon.set_direction(direction);
 
-  double xsecH = _cross_sections.get_cross_section(ELEMENT_H, new_frequency);
-  double xsecHe = _cross_sections.get_cross_section(ELEMENT_He, new_frequency);
-  photon.set_hydrogen_cross_section(xsecH);
-  photon.set_helium_cross_section(xsecHe);
+  set_cross_sections(photon, new_frequency);
 
   return true;
 }

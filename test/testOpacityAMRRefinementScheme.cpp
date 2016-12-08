@@ -41,13 +41,13 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction density_function(1.);
   AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1.);
 
-  AMRDensityGrid grid(box, ncell, 0., 8000., density_function, scheme);
+  AMRDensityGrid grid(box, ncell, density_function, scheme);
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
   unsigned long index = grid.get_cell_index(CoordinateVector<>(0.5));
   grid.get_cell_values(index).set_total_density(2.e22);
-  grid.get_cell_values(index).set_neutral_fraction_H(1.);
+  grid.get_cell_values(index).set_ionic_fraction(ION_H_n, 1.);
 
   grid.reset_grid();
 

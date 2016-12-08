@@ -5,21 +5,25 @@ block[0]:
   sides: [1. m, 1. m, 1. m]
   type: cube
   number density: 0. m^-3
+  initial temperature: 0. K
 
 block[1]:
   origin: [0.5 m, 0.5 m, 0.5 m]
   sides: [0.5 m, 0.5 m, 0.5 m]
   type: sphere
   number density: 1. m^-3
+  initial temperature: 100. K
 
 block[2]:
   origin: [0.5 m, 0.5 m, 0.5 m]
   sides: [0.25 m, 0.25 m, 0.25 m]
   type: sphere
   number density: 2. m^-3
+  initial temperature: 200. K
 
 block[3]:
   origin: [0.25 m, 0.25 m, 0.25 m]
   sides: [0.25 m, 0.25 m, 0.25 m]
   type: rhombus
   number density: 1. m^-3
+  initial temperature: 100. K

@@ -1,0 +1,49 @@
+abundances:
+  helium: 0.1
+  carbon: 2.2e-4
+  nitrogen: 4.e-5
+  oxygen: 3.3e-4
+  neon: 5.e-5
+  sulphur: 9.e-6
+
+continuousphotonsource:
+  type: None
+
+densityfunction:
+  type: BlockSyntax
+  filename: lexingtonHII40.yml
+
+densitygrid:
+  type: Cartesian
+  box_anchor: [-5. pc, -5. pc, -5. pc]
+  box_sides: [10. pc, 10. pc, 10. pc]
+  ncell: [64, 64, 64]
+  periodicity: [false, false, false]
+
+densitygridwriter:
+  type: Gadget
+  folder: .
+  prefix: lexingtonHII40_
+  padding: 3
+  
+iterationconvergencechecker:
+  type: Passive
+
+max_number_iterations: 20
+
+number of photons: 1000000
+
+pahfac: 0.
+
+photonnumberconvergencechecker:
+  type: Passive
+
+photonsourcedistribution:
+  type: SingleStar
+  position: [0. pc, 0. pc, 0. pc]
+  luminosity: 4.26e49 s^-1
+
+photonsourcespectrum:
+  temperature: 40000. K
+
+random_seed: 42

@@ -28,6 +28,7 @@
 
 #include "AMRGrid.hpp"
 #include "AMRRefinementSchemeFactory.hpp"
+#include "Abundances.hpp"
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
 
@@ -95,18 +96,24 @@ private:
                           DensityFunction &density_function,
                           unsigned long next_index) {
     if (refinement_scheme->refine(level, midpoint, values)) {
+      // copy the initial values
+      DensityValues old_values = values;
       // initialize and check refinement criterion for children
       unsigned long child_index = _grid.refine_cell(index);
       while (child_index != next_index) {
         DensityValues &cell = _grid[child_index];
         CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
-        cell.set_total_density(density_function(child_midpoint));
-        // copy all other values from parent
-        cell.set_neutral_fraction_H(values.get_neutral_fraction_H());
-        cell.set_neutral_fraction_He(values.get_neutral_fraction_He());
-        cell.set_temperature(values.get_temperature());
-        cell.set_helium_abundance(values.get_helium_abundance());
-        cell.set_old_neutral_fraction_H(values.get_old_neutral_fraction_H());
+        cell.set_total_density(
+            density_function(child_midpoint).get_total_density());
+        // copy all other values from parent, since the values given by
+        // the density_function are only initial conditions
+        for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          IonName ion = static_cast< IonName >(i);
+          cell.set_ionic_fraction(ion, old_values.get_ionic_fraction(ion));
+        }
+        cell.set_temperature(old_values.get_temperature());
+        cell.set_old_neutral_fraction_H(
+            old_values.get_old_neutral_fraction_H());
         // set reemission probabilities
         set_reemission_probabilities(cell.get_temperature(), cell);
         unsigned long next_child_index = _grid.get_next_key(child_index);
@@ -123,8 +130,6 @@ public:
    *
    * @param box Box containing the grid.
    * @param ncell Number of cells in the low resolution grid.
-   * @param helium_abundance Helium abundance (relative w.r.t. hydrogen).
-   * @param initial_temperature Initial temperature of the gas (in K).
    * @param density_function DensityFunction that defines the density field.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
@@ -132,8 +137,7 @@ public:
    * @param log Log to write logging info to.
    */
   AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell, double helium_abundance,
-      double initial_temperature, DensityFunction &density_function,
+      Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
@@ -168,7 +172,7 @@ public:
                          " levels deep.");
     }
 
-    initialize(initial_temperature, helium_abundance, density_function);
+    initialize(density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -215,9 +219,6 @@ public:
                     "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid.ncell", CoordinateVector< int >(64)),
-            params.get_value< double >("helium_abundance", 0.1),
-            params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "densitygrid.initial_temperature", "8000. K"),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid.periodicity", CoordinateVector< bool >(false)),
@@ -437,7 +438,7 @@ public:
       num_0 += (next_direction.y() != 0);
       num_0 += (next_direction.z() != 0);
       if (num_0 != 2) {
-        error("Not supported yet!");
+        cmac_error("Not supported yet!");
       }
       CoordinateVector<> new_position = next_wall;
       if (next_direction.x() != 0 && _periodic.x()) {

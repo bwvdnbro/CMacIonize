@@ -67,7 +67,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     double unit_time_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
     unit_length_in_SI =
-        UnitConverter< QUANTITY_LENGTH >::to_SI(unit_length_in_cgs, "cm");
+        UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
     // seconds are seconds
     unit_time_in_SI = unit_time_in_cgs;
     HDF5Tools::close_group(units);

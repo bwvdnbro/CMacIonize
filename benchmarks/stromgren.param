@@ -10,8 +10,6 @@ densitygrid:
   periodicity: [false, false, false]
   # number of cells in each dimension
   ncell: [64, 64, 64]
-  # initial temperature of the ISM
-  initial_temperature: 8000. K
 
 # density function that sets up the density field in the box
 densityfunction:
@@ -19,9 +17,12 @@ densityfunction:
   type: Homogeneous
   # value for the constant density
   density: 100. cm^-3
+  # value for the constant initial temperature
+  temperature: 8000. K
 
-# assumed helium abundance for the ISM
-helium_abundance: 0.
+# assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
+abundances:
+  helium: 0.
 
 # distribution of photon sources in the box
 photonsourcedistribution:
@@ -31,6 +32,11 @@ photonsourcedistribution:
   position: [0. pc, 0. pc, 0. pc]
   # ionizing luminosity of the single stellar source
   luminosity: 4.26e49 s^-1
+
+# spectrum of the photon sources
+photonsourcespectrum:
+  # temperature of the black body spectrum
+  temperature: 40000. K
 
 # number of photons to use during the first iteration (number is automatically
 # adapted to the desired tolerance)
