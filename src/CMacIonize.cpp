@@ -223,13 +223,13 @@ int main(int argc, char **argv) {
         Photon photon = source.get_random_photon();
         totweight += photon.get_weight();
         ++totnumphoton;
-        double tau = -std::log(Utilities::random_double());
+        double tau = -std::log(random_generator.get_uniform_random_double());
         while (grid->interact(photon, tau)) {
           unsigned long new_index = grid->get_cell_index(photon.get_position());
           if (!source.reemit(photon, grid->get_cell_values(new_index))) {
             break;
           }
-          tau = -std::log(Utilities::random_double());
+          tau = -std::log(random_generator.get_uniform_random_double());
         }
         typecount[photon.get_type()] += photon.get_weight();
       }
