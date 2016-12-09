@@ -75,6 +75,20 @@ public:
         _typecount(typecount), _numphoton(numphoton) {}
 
   /**
+   * @brief Set the number of photons for the next execution of the job.
+   *
+   * @param numphoton New number of photons.
+   */
+  void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+
+  /**
+   * @brief Should the Job be deleted by the Worker when it is finished?
+   *
+   * @return False, since the Job is reused and managed by PhotonShootJobMarket.
+   */
+  virtual bool do_cleanup() { return true; }
+
+  /**
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
    */
   virtual void execute() {

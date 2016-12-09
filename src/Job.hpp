@@ -40,6 +40,13 @@ public:
   virtual ~Job() {}
 
   /**
+   * @brief Should the Job be deleted by the Worker when it is finished?
+   *
+   * @return True, since this is the default.
+   */
+  virtual bool do_cleanup() { return true; }
+
+  /**
    * @brief Execute the job.
    */
   virtual void execute() = 0;

@@ -59,8 +59,10 @@ public:
     Job *job;
     while ((job = jobs.get_job(_thread_id))) {
       job->execute();
-      // free memory of the job
-      delete job;
+      if (job->do_cleanup()) {
+        // free memory of the job
+        delete job;
+      }
     }
   }
 };
