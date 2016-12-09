@@ -137,7 +137,7 @@ private:
    */
   inline void update_indices() {
     if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
-      ++_continuous_number_of_photons;
+      ++_continuous_active_number_of_photons;
       if (_continuous_active_number_of_photons ==
           _continuous_number_of_photons) {
         // we did all continuous sources and completed the cycle, reset the
