@@ -26,11 +26,12 @@
 #include "Assert.hpp"
 #include "Job.hpp"
 #include "JobMarket.hpp"
+#include "Lock.hpp"
 #include "Timer.hpp"
 #include "Utilities.hpp"
+#include "WorkDistributor.hpp"
 #include "Worker.hpp"
 #include <cmath>
-#include <omp.h>
 
 /*! @brief Length of the array used to test the routines. */
 #define ARRAY_LENGTH 1000000
@@ -97,7 +98,7 @@ private:
   unsigned int _jobsize;
 
   /*! @brief Lock needed to ensure secure access to the internal variables. */
-  omp_lock_t _lock;
+  Lock _lock;
 
 public:
   /**
@@ -108,11 +109,7 @@ public:
    * @param jobsize Size to be done by each job.
    */
   TestJobMarket(double *array, unsigned int size, unsigned int jobsize = 100)
-      : _array(array), _size(size), _jobsize(jobsize) {
-    omp_init_lock(&_lock);
-  }
-
-  ~TestJobMarket() { omp_destroy_lock(&_lock); }
+      : _array(array), _size(size), _jobsize(jobsize) {}
 
   /**
    * @brief Get a job.
@@ -124,7 +121,7 @@ public:
       // no more jobs!
       return nullptr;
     }
-    omp_set_lock(&_lock);
+    _lock.lock();
     unsigned int size = std::min(_size, _jobsize);
     Job *job = new TestJob(_array, size);
     _array += size;
@@ -133,7 +130,7 @@ public:
     } else {
       _size = 0;
     }
-    omp_unset_lock(&_lock);
+    _lock.unlock();
     return job;
   }
 };
@@ -177,28 +174,15 @@ int main(int argc, char **argv) {
     assert_condition(A_serial[i] == test_function(A_parallel[i]));
   }
 
-#pragma omp parallel
-  {
-#pragma omp single
-    cmac_status("Running on %i threads.", omp_get_num_threads());
-  }
-
+  int worksize;
   double time_parallel;
   {
     Timer timer;
     TestJobMarket jobs(A_parallel, ARRAY_LENGTH, 10000);
-#pragma omp parallel shared(A_parallel)
-    {
-      const int numthreads = omp_get_num_threads();
-#pragma omp for
-      for (int i = 0; i < numthreads; ++i) {
-        {
-          Worker worker;
-          worker.do_work(jobs);
-        }
-      }
-    }
+    WorkDistributor workdistributor(4);
+    workdistributor.do_in_parallel(jobs);
     time_parallel = timer.stop();
+    worksize = workdistributor.get_worksize();
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
@@ -208,7 +192,11 @@ int main(int argc, char **argv) {
   cmac_status("Serial time: %s, parallel time: %s.",
               Utilities::human_readable_time(time_serial).c_str(),
               Utilities::human_readable_time(time_parallel).c_str());
-  assert_condition(time_serial > time_parallel);
+  cmac_status("Used %i threads.", worksize);
+  if (worksize > 1) {
+    // check that using more threads speeds things up
+    assert_condition(time_serial > time_parallel);
+  }
 
   delete[] A_serial;
   delete[] A_parallel;

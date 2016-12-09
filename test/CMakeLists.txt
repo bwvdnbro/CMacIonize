@@ -580,6 +580,8 @@ set(TESTWORKER_SOURCES
 
     ../src/Job.hpp
     ../src/JobMarket.hpp
+    ../src/Lock.hpp
+    ../src/WorkDistributor.hpp
     ../src/Worker.hpp
 )
 add_unit_test(NAME testWorker
