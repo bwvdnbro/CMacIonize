@@ -99,6 +99,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   _discrete_photon_weight = 1.;
   _continuous_photon_weight = 1.;
+  _total_weight = 0.;
+  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+    _typecount[i] = 0.;
+  }
 
   if (_log) {
     _log->write_status("Total luminosity of discrete sources: ",
@@ -175,6 +179,12 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
         _continuous_luminosity / _continuous_number_of_photons;
   }
 
+  // reset the total weight
+  _total_weight = 0.;
+  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+    _typecount[i] = 0.;
+  }
+
   if (_log) {
     _log->write_info("Number of photons for PhotonSource reset to ",
                      _discrete_number_of_photons, " discrete photons and ",
@@ -242,6 +252,36 @@ Photon PhotonSource::get_random_photon() {
  * @return Total luminosity (in s^-1).
  */
 double PhotonSource::get_total_luminosity() { return _total_luminosity; }
+
+/**
+ * @brief Update the counters when a Photon exits the system or is absorbed.
+ *
+ * @param photon Photon that exits the system or is absorbed.
+ */
+void PhotonSource::decommission_photon(Photon &photon) {
+  _lock.lock();
+  _total_weight += photon.get_weight();
+  _typecount[photon.get_type()] += photon.get_weight();
+  _lock.unlock();
+}
+
+/**
+ * @brief Update the given counters with the internal values and reset the
+ * internal values.
+ *
+ * @param totweight Total weight counter.
+ * @param typecount Weight counters per PhotonType.
+ */
+void PhotonSource::update_counters(double &totweight, double *typecount) {
+  _lock.lock();
+  totweight += _total_weight;
+  _total_weight = 0.;
+  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+    typecount[i] += _typecount[i];
+    _typecount[i] = 0.;
+  }
+  _lock.unlock();
+}
 
 /**
  * @brief Reemit the given Photon.

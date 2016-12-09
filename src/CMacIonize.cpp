@@ -42,6 +42,7 @@
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonNumberConvergenceCheckerFactory.hpp"
+#include "PhotonShootJobMarket.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
@@ -50,6 +51,7 @@
 #include "Timer.hpp"
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
+#include "WorkDistributor.hpp"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -219,24 +221,16 @@ int main(int argc, char **argv) {
     while (!convergence_checker->is_converged(totnumphoton)) {
       log->write_info("Substep ", numsubstep);
 
-      for (unsigned int i = 0; i < lnumphoton; ++i) {
-        Photon photon = source.get_random_photon();
-        totweight += photon.get_weight();
-        ++totnumphoton;
-        double tau = -std::log(random_generator.get_uniform_random_double());
-        while (grid->interact(photon, tau)) {
-          unsigned long new_index = grid->get_cell_index(photon.get_position());
-          if (!source.reemit(photon, grid->get_cell_values(new_index))) {
-            break;
-          }
-          tau = -std::log(random_generator.get_uniform_random_double());
-        }
-        typecount[photon.get_type()] += photon.get_weight();
-      }
+      PhotonShootJobMarket photonshootjobs(source, random_generator, *grid,
+                                           lnumphoton, 1000);
+      Worker worker;
+      worker.do_work(photonshootjobs);
 
+      totnumphoton += lnumphoton;
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(
           lnumphoton, totnumphoton);
 
+      source.update_counters(totweight, typecount);
       lnumphoton = source.set_number_of_photons(lnumphoton);
 
       ++numsubstep;
@@ -251,6 +245,11 @@ int main(int argc, char **argv) {
                       "% of photons were scattered.");
     double escape_fraction =
         (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
+    // since totweight is updated in chunks, while the counters are updated
+    // per photon, round off might cause totweight to be slightly smaller than
+    // the counter value. This gives (strange looking) negative escape
+    // fractions, which we reset to 0 here.
+    escape_fraction = std::max(0., escape_fraction);
     log->write_status("Escape fraction: ", escape_fraction, "%.");
     double escape_fraction_HI =
         (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;

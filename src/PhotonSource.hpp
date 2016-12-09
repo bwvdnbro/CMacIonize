@@ -30,6 +30,7 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
+#include "Lock.hpp"
 #include "Photon.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
@@ -109,6 +110,15 @@ private:
   /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
    */
   double _total_luminosity;
+
+  /*! @brief Total weight of all photons. */
+  double _total_weight;
+
+  /*! @brief Type count array. */
+  double _typecount[PHOTONTYPE_NUMBER];
+
+  /*! @brief Lock to ensure safe access to the counters. */
+  Lock _lock;
 
   /*! @brief Abundances of the elements in the ISM. */
   Abundances &_abundances;
@@ -207,6 +217,9 @@ public:
   Photon get_random_photon();
 
   double get_total_luminosity();
+
+  void decommission_photon(Photon &photon);
+  void update_counters(double &totweight, double *typecount);
 
   bool reemit(Photon &photon, DensityValues &cell);
 };

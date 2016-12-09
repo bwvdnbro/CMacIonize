@@ -163,14 +163,19 @@ set(CMACIONIZE_SOURCES
     IonizationStateCalculator.hpp
     IterationConvergenceChecker.hpp
     IterationConvergenceCheckerFactory.hpp
+    Job.hpp
+    JobMarket.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
+    Lock.hpp
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
     PassivePhotonNumberConvergenceChecker.hpp
     Photon.hpp
     PhotonNumberConvergenceChecker.hpp
     PhotonNumberConvergenceCheckerFactory.hpp
+    PhotonShootJob.hpp
+    PhotonShootJobMarket.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
@@ -187,6 +192,8 @@ set(CMACIONIZE_SOURCES
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
+    WorkDistributor.hpp
+    Worker.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
