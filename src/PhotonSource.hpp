@@ -118,7 +118,10 @@ private:
   double _typecount[PHOTONTYPE_NUMBER];
 
   /*! @brief Lock to ensure safe access to the counters. */
-  Lock _lock;
+  Lock _counter_lock;
+
+  /*! @brief Lock to ensure safe access to the active indices. */
+  Lock _index_lock;
 
   /*! @brief Abundances of the elements in the ISM. */
   Abundances &_abundances;

@@ -28,6 +28,7 @@
 
 #include "ElementNames.hpp"
 #include "EmissivityValues.hpp"
+#include "Lock.hpp"
 
 /**
  * @brief Density values associated with a single cell of the DensityGrid.
@@ -75,6 +76,9 @@ private:
 
   /*! @brief EmissivityValues for this cell. */
   EmissivityValues *_emissivities;
+
+  /*! @brief Lock to ensure safe write access to the cell. */
+  Lock _lock;
 
 public:
   /**
@@ -308,6 +312,16 @@ public:
    * @return EmissivityValues.
    */
   inline EmissivityValues *get_emissivities() { return _emissivities; }
+
+  /**
+   * @brief Lock this cell for writing.
+   */
+  inline void lock() { _lock.lock(); }
+
+  /**
+   * @brief Unlock this cell after writing is done.
+   */
+  inline void unlock() { _lock.unlock(); }
 };
 
 #endif // DENSITYVALUES_HPP

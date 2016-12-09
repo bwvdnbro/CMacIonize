@@ -34,9 +34,10 @@ public:
   /**
    * @brief Get a random frequency from the spectrum.
    *
+   * @param temperature Temperature of the gas (for reemission spectra) (in K).
    * @return Random frequency, distributed according to the spectrum (in Hz).
    */
-  virtual double get_random_frequency() = 0;
+  virtual double get_random_frequency(double temperature = 0.) = 0;
 
   /**
    * @brief Get the total ionizing flux emitted by the spectrum.

@@ -26,6 +26,10 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
+#include "Lock.hpp"
+
+#include <algorithm>
+
 /*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IM1 2147483563
 
@@ -68,8 +72,6 @@
 /*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_RNMX (1. - RANDOMGENERATOR_EPS)
 
-#include <algorithm>
-
 /**
  * @brief Kenny's custom random generator.
  */
@@ -87,6 +89,9 @@ private:
 
   /*! @brief Auxiliary value from previous calls. */
   int _iy;
+
+  /*! @brief Lock to ensure safe access to the internal variables. */
+  Lock _lock;
 
 public:
   /**
@@ -109,7 +114,8 @@ public:
    * @return Random double precision floating point value.
    */
   inline double get_uniform_random_double() {
-    int k;
+    _lock.lock();
+    int k, iy;
     if (_seed <= 0) {
       _seed = std::max(-_seed, 1);
       _idum2 = _seed;
@@ -144,7 +150,9 @@ public:
     if (_iy < 1) {
       _iy += RANDOMGENERATOR_IMM1;
     }
-    return std::min(RANDOMGENERATOR_AM * _iy, RANDOMGENERATOR_RNMX);
+    iy = _iy;
+    _lock.unlock();
+    return std::min(RANDOMGENERATOR_AM * iy, RANDOMGENERATOR_RNMX);
   }
 };
 

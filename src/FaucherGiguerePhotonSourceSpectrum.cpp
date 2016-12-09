@@ -219,9 +219,11 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
 /**
  * @brief Get a random frequency from the spectrum.
  *
+ * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double FaucherGiguerePhotonSourceSpectrum::get_random_frequency() {
+double
+FaucherGiguerePhotonSourceSpectrum::get_random_frequency(double temperature) {
   double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);

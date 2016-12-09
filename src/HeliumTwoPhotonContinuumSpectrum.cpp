@@ -134,9 +134,11 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
 /**
  * @brief Get a random frequency distributed according to the spectrum.
  *
+ * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
-double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
+double
+HeliumTwoPhotonContinuumSpectrum::get_random_frequency(double temperature) {
   double x = _random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);

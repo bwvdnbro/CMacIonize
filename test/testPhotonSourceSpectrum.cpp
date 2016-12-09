@@ -184,8 +184,7 @@ int main(int argc, char **argv) {
     std::ofstream file("hydrogenlymancontinuum.txt");
     VernerCrossSections cross_sections;
     HydrogenLymanContinuumSpectrum spectrum(cross_sections, random_generator);
-    double T = 8888.;
-    spectrum.set_temperature(T);
+    const double T = 8888.;
 
     unsigned int counts[100];
     for (unsigned int i = 0; i < 100; ++i) {
@@ -194,7 +193,7 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      double rand_freq = spectrum.get_random_frequency(T) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
@@ -221,8 +220,7 @@ int main(int argc, char **argv) {
     std::ofstream file("heliumlymancontinuum.txt");
     VernerCrossSections cross_sections;
     HeliumLymanContinuumSpectrum spectrum(cross_sections, random_generator);
-    double T = 8888.;
-    spectrum.set_temperature(T);
+    const double T = 8888.;
 
     unsigned int counts[100];
     for (unsigned int i = 0; i < 100; ++i) {
@@ -231,7 +229,7 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      double rand_freq = spectrum.get_random_frequency(T) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.81) * 100. / (4. - 1.81);
       ++counts[index];
     }

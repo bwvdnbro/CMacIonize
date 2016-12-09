@@ -54,9 +54,10 @@ public:
   /**
    * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
    *
+   * @param temperature Not used for this spectrum.
    * @return Uniform random frequency.
    */
-  virtual double get_random_frequency() {
+  virtual double get_random_frequency(double temperature = 0.) {
     return Utilities::random_double() * (54.4 - 13.6) + 13.6;
   }
 

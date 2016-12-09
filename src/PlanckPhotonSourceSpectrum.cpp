@@ -112,9 +112,10 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.
  *
+ * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double PlanckPhotonSourceSpectrum::get_random_frequency() {
+double PlanckPhotonSourceSpectrum::get_random_frequency(double temperature) {
   double x = _random_generator.get_uniform_random_double();
 
   unsigned int ix = Utilities::locate(x, _cumulative_distribution,

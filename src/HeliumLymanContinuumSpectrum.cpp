@@ -96,40 +96,26 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
                                   [HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
     }
   }
-
-  _current_T = 0.;
-  _current_iT = 0;
-}
-
-/**
- * @brief Set the current temperature for the interpolation.
- *
- * @param T New value for the temperature (in K).
- */
-void HeliumLymanContinuumSpectrum::set_temperature(double T) {
-  _current_T = T;
-  _current_iT = Utilities::locate(_current_T, _temperature,
-                                  HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
 }
 
 /**
  * @brief Sample a random frequency from the spectrum.
  *
+ * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
-double HeliumLymanContinuumSpectrum::get_random_frequency() {
+double HeliumLymanContinuumSpectrum::get_random_frequency(double temperature) {
+  unsigned int iT = Utilities::locate(temperature, _temperature,
+                                      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = _random_generator.get_uniform_random_double();
-  unsigned int inu1 =
-      Utilities::locate(x, _cumulative_distribution[_current_iT],
-                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 =
-      Utilities::locate(x, _cumulative_distribution[_current_iT + 1],
-                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency =
-      _frequency[inu1] +
-      (_current_T - _temperature[_current_iT]) *
-          (_frequency[inu2] - _frequency[inu1]) /
-          (_temperature[_current_iT + 1] - _temperature[_current_iT]);
+  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
+                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
+                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  double frequency = _frequency[inu1] +
+                     (temperature - _temperature[iT]) *
+                         (_frequency[inu2] - _frequency[inu1]) /
+                         (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 

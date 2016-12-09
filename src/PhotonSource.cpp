@@ -221,6 +221,8 @@ Photon PhotonSource::get_random_photon() {
   CoordinateVector<> position, direction;
   double energy;
   double weight;
+
+  _index_lock.lock();
   // check if we have a continuous or a discrete source photon
   if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
@@ -236,12 +238,13 @@ Photon PhotonSource::get_random_photon() {
     weight = _discrete_photon_weight;
   }
 
+  update_indices();
+  _index_lock.unlock();
+
   Photon photon(position, direction, energy);
   set_cross_sections(photon, energy);
 
   photon.set_weight(weight);
-
-  update_indices();
 
   return photon;
 }
@@ -259,10 +262,10 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  * @param photon Photon that exits the system or is absorbed.
  */
 void PhotonSource::decommission_photon(Photon &photon) {
-  _lock.lock();
+  _counter_lock.lock();
   _total_weight += photon.get_weight();
   _typecount[photon.get_type()] += photon.get_weight();
-  _lock.unlock();
+  _counter_lock.unlock();
 }
 
 /**
@@ -273,14 +276,14 @@ void PhotonSource::decommission_photon(Photon &photon) {
  * @param typecount Weight counters per PhotonType.
  */
 void PhotonSource::update_counters(double &totweight, double *typecount) {
-  _lock.lock();
+  _counter_lock.lock();
   totweight += _total_weight;
   _total_weight = 0.;
   for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
     typecount[i] += _typecount[i];
     _typecount[i] = 0.;
   }
-  _lock.unlock();
+  _counter_lock.unlock();
 }
 
 /**
@@ -310,8 +313,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
     x = _random_generator.get_uniform_random_double();
     if (x <= cell.get_pHion()) {
       // sample new frequency from H Ly c
-      _HLyc_spectrum.set_temperature(cell.get_temperature());
-      new_frequency = _HLyc_spectrum.get_random_frequency();
+      new_frequency =
+          _HLyc_spectrum.get_random_frequency(cell.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HI);
     } else {
       // photon escapes
@@ -323,8 +326,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
     x = _random_generator.get_uniform_random_double();
     if (x <= cell.get_pHe_em(0)) {
       // sample new frequency from He Ly c
-      _HeLyc_spectrum.set_temperature(cell.get_temperature());
-      new_frequency = _HeLyc_spectrum.get_random_frequency();
+      new_frequency =
+          _HeLyc_spectrum.get_random_frequency(cell.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(1)) {
       // new frequency is 19.8eV
@@ -334,7 +337,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
       x = _random_generator.get_uniform_random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
-        new_frequency = _He2pc_spectrum.get_random_frequency();
+        new_frequency =
+            _He2pc_spectrum.get_random_frequency(cell.get_temperature());
         photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
       } else {
         // photon escapes
@@ -354,8 +358,8 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
         x = _random_generator.get_uniform_random_double();
         if (x <= cell.get_pHion()) {
           // H Ly c, like above
-          _HLyc_spectrum.set_temperature(cell.get_temperature());
-          new_frequency = _HLyc_spectrum.get_random_frequency();
+          new_frequency =
+              _HLyc_spectrum.get_random_frequency(cell.get_temperature());
           photon.set_type(PHOTONTYPE_DIFFUSE_HI);
         } else {
           // photon escapes

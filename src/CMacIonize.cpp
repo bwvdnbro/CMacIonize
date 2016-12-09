@@ -195,6 +195,9 @@ int main(int argc, char **argv) {
   IterationConvergenceChecker *itconvergence_checker =
       IterationConvergenceCheckerFactory::generate(*grid, params, log);
 
+  // object used to distribute jobs in a shared memory parallel context
+  WorkDistributor workdistributor(8);
+
   writer->write(0, params);
   unsigned int loop = 0;
   while (loop < nloop && !itconvergence_checker->is_converged()) {
@@ -223,8 +226,7 @@ int main(int argc, char **argv) {
 
       PhotonShootJobMarket photonshootjobs(source, random_generator, *grid,
                                            lnumphoton, 1000);
-      Worker worker;
-      worker.do_work(photonshootjobs);
+      workdistributor.do_in_parallel(photonshootjobs);
 
       totnumphoton += lnumphoton;
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(

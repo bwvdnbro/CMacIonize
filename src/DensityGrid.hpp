@@ -87,6 +87,7 @@ protected:
   inline void update_integrals(const double ds, DensityValues &cell,
                                Photon &photon) {
     if (cell.get_total_density() > 0.) {
+      cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         cell.increase_mean_intensity(
@@ -98,6 +99,7 @@ protected:
       cell.increase_heating_He(ds * photon.get_weight() *
                                photon.get_cross_section(ION_He_n) *
                                (photon.get_energy() - _ionization_energy_He));
+      cell.unlock();
     }
   }
 

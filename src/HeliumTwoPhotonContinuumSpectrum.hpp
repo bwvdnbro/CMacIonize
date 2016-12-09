@@ -54,7 +54,7 @@ public:
   double get_integral(std::vector< double > &yHe2q,
                       std::vector< double > &AHe2q);
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(double temperature = 0.);
 
   virtual double get_total_flux();
 };

@@ -69,7 +69,7 @@ public:
 
   virtual double get_total_flux();
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(double temperature = 0.);
 };
 
 #endif // FAUCHERGIGUEREPHOTONSOURCESPECTRUM_HPP

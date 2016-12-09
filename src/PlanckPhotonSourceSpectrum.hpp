@@ -70,7 +70,7 @@ public:
   PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
                              ParameterFile &params, Log *log = nullptr);
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(double temperature = 0.);
 
   virtual double get_total_flux();
 };
