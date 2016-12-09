@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
   // PlanckPhotonSourceSpectrum
   {
     std::ofstream file("planckphotonsource.txt");
-    PlanckPhotonSourceSpectrum spectrum(random_generator, 40000);
+    PlanckPhotonSourceSpectrum spectrum(40000.);
 
     unsigned int counts[100];
     for (unsigned int i = 0; i < 100; ++i) {
@@ -154,7 +154,8 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      double rand_freq =
+          spectrum.get_random_frequency(random_generator) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
@@ -183,7 +184,7 @@ int main(int argc, char **argv) {
   {
     std::ofstream file("hydrogenlymancontinuum.txt");
     VernerCrossSections cross_sections;
-    HydrogenLymanContinuumSpectrum spectrum(cross_sections, random_generator);
+    HydrogenLymanContinuumSpectrum spectrum(cross_sections);
     const double T = 8888.;
 
     unsigned int counts[100];
@@ -193,7 +194,8 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency(T) / 3.288465385e15;
+      double rand_freq =
+          spectrum.get_random_frequency(random_generator, T) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
@@ -219,7 +221,7 @@ int main(int argc, char **argv) {
   {
     std::ofstream file("heliumlymancontinuum.txt");
     VernerCrossSections cross_sections;
-    HeliumLymanContinuumSpectrum spectrum(cross_sections, random_generator);
+    HeliumLymanContinuumSpectrum spectrum(cross_sections);
     const double T = 8888.;
 
     unsigned int counts[100];
@@ -229,7 +231,8 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency(T) / 3.288465385e15;
+      double rand_freq =
+          spectrum.get_random_frequency(random_generator, T) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.81) * 100. / (4. - 1.81);
       ++counts[index];
     }
@@ -255,7 +258,7 @@ int main(int argc, char **argv) {
   // HeliumTwoPhotonContinuumSpectrum
   {
     std::ofstream file("heliumtwophotoncontinuum.txt");
-    HeliumTwoPhotonContinuumSpectrum spectrum(random_generator);
+    HeliumTwoPhotonContinuumSpectrum spectrum;
     vector< double > yHe2q;
     vector< double > AHe2q;
     spectrum.get_spectrum(yHe2q, AHe2q);
@@ -267,7 +270,8 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      double rand_freq =
+          spectrum.get_random_frequency(random_generator) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 0.6;
       ++counts[index];
     }
@@ -321,7 +325,7 @@ int main(int argc, char **argv) {
     }
 
     std::ofstream file("fauchergiguere.txt");
-    FaucherGiguerePhotonSourceSpectrum spectrum(7., random_generator);
+    FaucherGiguerePhotonSourceSpectrum spectrum(7.);
 
     unsigned int counts[101];
     for (unsigned int i = 0; i < 101; ++i) {
@@ -330,7 +334,8 @@ int main(int argc, char **argv) {
     unsigned int numsample = 1000000;
     for (unsigned int i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
-      double rand_freq = spectrum.get_random_frequency() / 3.288465385e15;
+      double rand_freq =
+          spectrum.get_random_frequency(random_generator) / 3.288465385e15;
       unsigned int index = (rand_freq - 1.) * 100. / 3.;
       // we dump frequencies outside the range in the last bin and ignore it
       if (index > 100) {

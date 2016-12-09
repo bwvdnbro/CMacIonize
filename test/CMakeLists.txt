@@ -206,6 +206,7 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/PhotonSource.cpp
     ../src/PhotonSource.hpp
     ../src/PhotonSourceDistribution.hpp
+    ../src/PhotonSourceIndex.hpp
     ../src/PhotonSourceSpectrum.hpp
     ../src/SingleStarPhotonSourceDistribution.hpp
     ../src/Utilities.hpp

@@ -26,8 +26,6 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
-#include "Lock.hpp"
-
 #include <algorithm>
 
 /*! @brief Parameter from Kenny's code. */
@@ -90,9 +88,6 @@ private:
   /*! @brief Auxiliary value from previous calls. */
   int _iy;
 
-  /*! @brief Lock to ensure safe access to the internal variables. */
-  Lock _lock;
-
 public:
   /**
    * @brief Constructor.
@@ -108,13 +103,19 @@ public:
   }
 
   /**
+   * @brief Set a new seed for the random generator.
+   *
+   * @param seed New seed.
+   */
+  inline void set_seed(int seed) { _seed = seed; }
+
+  /**
    * @brief Get a uniform random double precision floating point value in the
    * range [0., 1.].
    *
    * @return Random double precision floating point value.
    */
   inline double get_uniform_random_double() {
-    _lock.lock();
     int k, iy;
     if (_seed <= 0) {
       _seed = std::max(-_seed, 1);
@@ -151,7 +152,6 @@ public:
       _iy += RANDOMGENERATOR_IMM1;
     }
     iy = _iy;
-    _lock.unlock();
     return std::min(RANDOMGENERATOR_AM * iy, RANDOMGENERATOR_RNMX);
   }
 };

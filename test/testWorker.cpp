@@ -114,9 +114,11 @@ public:
   /**
    * @brief Get a job.
    *
+   * @param thread_id Rank of the thread that wants to get a job (in a parallel
+   * context).
    * @return Job.
    */
-  Job *get_job() {
+  virtual Job *get_job(int thread_id = 0) {
     if (_size == 0) {
       // no more jobs!
       return nullptr;

@@ -53,14 +53,11 @@ private:
   double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
                                  [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
-
 public:
-  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections,
-                                 RandomGenerator &random_generator);
+  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
 
-  virtual double get_random_frequency(double temperature);
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature);
 
   virtual double get_total_flux();
 };

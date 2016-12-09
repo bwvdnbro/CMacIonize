@@ -30,8 +30,8 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
-#include "Lock.hpp"
 #include "Photon.hpp"
+#include "PhotonSourceIndex.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
@@ -62,12 +62,6 @@ private:
 
   /*! @brief Total number of photons emitted by all discrete sources. */
   unsigned int _discrete_number_of_photons;
-  /*! @brief Number of photons emitted by the currently active source. */
-  unsigned int _discrete_active_number_of_photons;
-  /*! @brief Currently emitted photon index. */
-  unsigned int _discrete_active_photon_index;
-  /*! @brief Currently active photon source index. */
-  unsigned int _discrete_active_source_index;
 
   /*! @brief Positions of the discrete photon sources (in m). */
   std::vector< CoordinateVector<> > _discrete_positions;
@@ -90,9 +84,6 @@ private:
   /*! @brief Total number of photons emitted by the continuous source. */
   unsigned int _continuous_number_of_photons;
 
-  /*! @brief Number of photons already emitted by the continuous source. */
-  unsigned int _continuous_active_number_of_photons;
-
   /*! @brief IsotropicContinuousPhotonSource instance used. */
   IsotropicContinuousPhotonSource *_continuous_source;
 
@@ -111,26 +102,11 @@ private:
    */
   double _total_luminosity;
 
-  /*! @brief Total weight of all photons. */
-  double _total_weight;
-
-  /*! @brief Type count array. */
-  double _typecount[PHOTONTYPE_NUMBER];
-
-  /*! @brief Lock to ensure safe access to the counters. */
-  Lock _counter_lock;
-
-  /*! @brief Lock to ensure safe access to the active indices. */
-  Lock _index_lock;
-
   /*! @brief Abundances of the elements in the ISM. */
   Abundances &_abundances;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
-
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
 
   /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
   HydrogenLymanContinuumSpectrum _HLyc_spectrum;
@@ -145,44 +121,49 @@ private:
   Log *_log;
 
   /**
-   * @brief Update the internal counters that distribute the photon sampling
-   * over the various discrete and continuous sources.
+   * @brief Update the given PhotonSourceIndex.
+   *
+   * @param index PhotonSourceIndex to update.
    */
-  inline void update_indices() {
-    if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
-      ++_continuous_number_of_photons;
-      if (_continuous_active_number_of_photons ==
+  inline void update_indices(PhotonSourceIndex &index) {
+    if (index.get_continuous_active_number_of_photons() <
+        _continuous_number_of_photons) {
+      index.increment_continuous_active_number_of_photons();
+      if (index.get_continuous_active_number_of_photons() ==
           _continuous_number_of_photons) {
         // we did all continuous sources and completed the cycle, reset the
         // counters and start again with the discrete sources
-        _discrete_active_source_index = 0;
-        _discrete_active_photon_index = 0;
-        _discrete_active_number_of_photons =
-            std::round(_discrete_number_of_photons * _discrete_weights[0]);
+        index.reset_discrete_active_source_index();
+        index.reset_discrete_active_photon_index();
+        index.set_discrete_active_number_of_photons(
+            std::round(_discrete_number_of_photons * _discrete_weights[0]));
         // in case there are no discrete sources
-        if (_discrete_active_source_index == _discrete_positions.size()) {
-          _continuous_active_number_of_photons = 0;
+        if (index.get_discrete_active_source_index() ==
+            _discrete_positions.size()) {
+          index.reset_continuous_active_number_of_photons();
         }
       }
     } else {
-      ++_discrete_active_photon_index;
-      if (_discrete_active_photon_index == _discrete_active_number_of_photons) {
-        _discrete_active_photon_index = 0;
-        ++_discrete_active_source_index;
-        if (_discrete_active_source_index < _discrete_positions.size()) {
-          _discrete_active_number_of_photons =
-              std::round(_discrete_number_of_photons *
-                         _discrete_weights[_discrete_active_source_index]);
+      index.reset_discrete_active_photon_index();
+      if (index.get_discrete_active_photon_index() ==
+          index.get_discrete_active_number_of_photons()) {
+        index.reset_discrete_active_photon_index();
+        index.increment_discrete_active_source_index();
+        if (index.get_discrete_active_source_index() <
+            _discrete_positions.size()) {
+          index.set_discrete_active_number_of_photons(std::round(
+              _discrete_number_of_photons *
+              _discrete_weights[index.get_discrete_active_source_index()]));
         } else {
           // we did all discrete sources, now do the continuous source
-          _continuous_active_number_of_photons = 0;
+          index.reset_continuous_active_number_of_photons();
           // in case there are no continuous sources
-          if (_continuous_active_number_of_photons ==
+          if (index.get_continuous_active_number_of_photons() ==
               _continuous_number_of_photons) {
-            _discrete_active_source_index = 0;
-            _discrete_active_photon_index = 0;
-            _discrete_active_number_of_photons =
-                std::round(_discrete_number_of_photons * _discrete_weights[0]);
+            index.reset_discrete_active_source_index();
+            index.reset_discrete_active_photon_index();
+            index.set_discrete_active_number_of_photons(
+                std::round(_discrete_number_of_photons * _discrete_weights[0]));
           }
         }
       }
@@ -197,34 +178,37 @@ public:
                IsotropicContinuousPhotonSource *continuous_source,
                PhotonSourceSpectrum *continuous_spectrum,
                Abundances &abundances, CrossSections &cross_sections,
-               RandomGenerator &random_generator, Log *log = nullptr);
+               Log *log = nullptr);
 
   unsigned int set_number_of_photons(unsigned int number_of_photons);
+
+  PhotonSourceIndex get_first_index();
 
   /**
    * @brief Get a random direction.
    *
+   * @param random_generator RandomGenerator to use.
    * @return CoordinateVector containing the components of a random isotropic
    * direction.
    */
-  inline CoordinateVector<> get_random_direction() {
-    double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
+  inline CoordinateVector<>
+  get_random_direction(RandomGenerator &random_generator) {
+    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
     double sint = 1. - cost * cost;
     sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
+    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
     double cosp = std::cos(phi);
     double sinp = std::sin(phi);
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 
-  Photon get_random_photon();
+  Photon get_random_photon(PhotonSourceIndex &index,
+                           RandomGenerator &random_generator);
 
   double get_total_luminosity();
 
-  void decommission_photon(Photon &photon);
-  void update_counters(double &totweight, double *typecount);
-
-  bool reemit(Photon &photon, DensityValues &cell);
+  bool reemit(Photon &photon, DensityValues &cell,
+              RandomGenerator &random_generator);
 };
 
 #endif // PHOTONSOURCE_HPP

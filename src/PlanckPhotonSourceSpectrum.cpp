@@ -41,13 +41,11 @@
  *
  * Sets up the internal arrays used for random sampling.
  *
- * @param random_generator RandomGenerator used to generate random numbers.
  * @param temperature Temperature of the black body (in K).
  * @param log Log to write logging info to.
  */
-PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator, double temperature, Log *log)
-    : _random_generator(random_generator) {
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
+                                                       Log *log) {
   // some constants
   // in units 13.6 eV (corresponds to 54.4 eV)
   const double max_frequency = 4.;
@@ -97,14 +95,12 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
 /**
  * @brief ParameterFile constructor.
  *
- * @param random_generator RandomGenerator.
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator, ParameterFile &params, Log *log)
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(ParameterFile &params,
+                                                       Log *log)
     : PlanckPhotonSourceSpectrum(
-          random_generator,
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "photonsourcespectrum.temperature", "40000 K"),
           log) {}
@@ -112,11 +108,13 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.
  *
+ * @param random_generator RandomGenerator to use.
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double PlanckPhotonSourceSpectrum::get_random_frequency(double temperature) {
-  double x = _random_generator.get_uniform_random_double();
+double PlanckPhotonSourceSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) {
+  double x = random_generator.get_uniform_random_double();
 
   unsigned int ix = Utilities::locate(x, _cumulative_distribution,
                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);

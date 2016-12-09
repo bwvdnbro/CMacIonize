@@ -45,22 +45,20 @@ public:
    * @brief Generate an IsotropicContinuousPhotonSource, or return a nullptr.
    *
    * @param params ParameterFile to read from.
-   * @param random_generator RandomGenerator.
    * @param log Log to write logging info to.
    * @return Pointer to a newly created IsotropicContinuousPhotonSource
    * instance. Memory management for the pointer needs to be handled by the
    * calling routine.
    */
-  inline static IsotropicContinuousPhotonSource *
-  generate(ParameterFile &params, RandomGenerator &random_generator,
-           Log *log = nullptr) {
+  inline static IsotropicContinuousPhotonSource *generate(ParameterFile &params,
+                                                          Log *log = nullptr) {
     std::string type =
         params.get_value< std::string >("continuousphotonsource.type", "None");
     if (log) {
       log->write_info("Requested ContinuousPhotonSource type: ", type, ".");
     }
     if (type == "Isotropic") {
-      return new IsotropicContinuousPhotonSource(params, random_generator, log);
+      return new IsotropicContinuousPhotonSource(params, log);
     } else if (type == "None") {
       return nullptr;
     } else {

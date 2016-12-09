@@ -46,6 +46,12 @@ private:
   /*! @brief DensityGrid through which photons are propagated. */
   DensityGrid &_density_grid;
 
+  /*! @brief Total weight of all photons. */
+  double &_totweight;
+
+  /*! @brief Total weights per photon type. */
+  double *_typecount;
+
   /*! @brief Number of photons to propagate through the DensityGrid. */
   unsigned int _numphoton;
 
@@ -58,29 +64,37 @@ public:
    * numbers.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Number of photons to propagate through the DensityGrid.
+   * @param totweight Total weight counter to update.
+   * @param typecount Total weight per photon type counters to update.
    */
   PhotonShootJob(PhotonSource &photon_source, RandomGenerator &random_generator,
-                 DensityGrid &density_grid, unsigned int numphoton)
+                 DensityGrid &density_grid, unsigned int numphoton,
+                 double &totweight, double *typecount)
       : _photon_source(photon_source), _random_generator(random_generator),
-        _density_grid(density_grid), _numphoton(numphoton) {}
+        _density_grid(density_grid), _totweight(totweight),
+        _typecount(typecount), _numphoton(numphoton) {}
 
   /**
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
    */
   virtual void execute() {
+    PhotonSourceIndex index = _photon_source.get_first_index();
     for (unsigned int i = 0; i < _numphoton; ++i) {
-      Photon photon = _photon_source.get_random_photon();
+      Photon photon =
+          _photon_source.get_random_photon(index, _random_generator);
       double tau = -std::log(_random_generator.get_uniform_random_double());
       while (_density_grid.interact(photon, tau)) {
         unsigned long new_index =
             _density_grid.get_cell_index(photon.get_position());
         if (!_photon_source.reemit(photon,
-                                   _density_grid.get_cell_values(new_index))) {
+                                   _density_grid.get_cell_values(new_index),
+                                   _random_generator)) {
           break;
         }
         tau = -std::log(_random_generator.get_uniform_random_double());
       }
-      _photon_source.decommission_photon(photon);
+      _totweight += photon.get_weight();
+      _typecount[photon.get_type()] += photon.get_weight();
     }
   }
 };

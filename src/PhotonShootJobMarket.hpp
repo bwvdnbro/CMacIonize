@@ -34,6 +34,9 @@ class PhotonSource;
 class RandomGenerator;
 class DensityGrid;
 
+/*! @brief Maximum number of threads allowed on the system. */
+#define PHOTONSHOOTJOBMARKET_MAXTHREADS 128
+
 /**
  * @brief JobMarket implementation that shoots photons through a DensityGrid.
  */
@@ -43,7 +46,10 @@ private:
   PhotonSource &_photon_source;
 
   /*! @brief RandomGenerator used to generate random uniform numbers. */
-  RandomGenerator &_random_generator;
+  RandomGenerator _random_generator[PHOTONSHOOTJOBMARKET_MAXTHREADS];
+
+  /*! @brief Number of threads used in the calculation. */
+  int _worksize;
 
   /*! @brief DensityGrid through which photons are propagated. */
   DensityGrid &_density_grid;
@@ -54,6 +60,12 @@ private:
   /*! @brief Number of photons to shoot during a single PhotonShootJob. */
   unsigned int _jobsize;
 
+  /*! @brief Total weight of all photons per thread. */
+  double _totweight[PHOTONSHOOTJOBMARKET_MAXTHREADS];
+
+  /*! @brief Total weights per photon type per thread. */
+  double _typecount[PHOTONSHOOTJOBMARKET_MAXTHREADS][PHOTONTYPE_NUMBER];
+
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
   Lock _lock;
@@ -63,25 +75,64 @@ public:
    * @brief Constructor.
    *
    * @param photon_source PhotonSource that emits photons.
-   * @param random_generator RandomGenerator used to generate random uniform
-   * numbers.
+   * @param random_seed Seed for the RandomGenerator.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Total number of photons to propagate through the grid.
    * @param jobsize Number of photons to shoot during a single PhotonShootJob.
+   * @param worksize Number of threads used in the calculation.
    */
-  PhotonShootJobMarket(PhotonSource &photon_source,
-                       RandomGenerator &random_generator,
-                       DensityGrid &density_grid, unsigned int numphoton,
-                       unsigned int jobsize)
-      : _photon_source(photon_source), _random_generator(random_generator),
-        _density_grid(density_grid), _numphoton(numphoton), _jobsize(jobsize) {}
+  inline PhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
+                              DensityGrid &density_grid, unsigned int numphoton,
+                              unsigned int jobsize, int worksize)
+      : _photon_source(photon_source), _worksize(worksize),
+        _density_grid(density_grid), _numphoton(numphoton), _jobsize(jobsize) {
+    // create a separate RandomGenerator for each thread.
+    for (int i = 0; i < _worksize; ++i) {
+      _random_generator[i].set_seed(random_seed + i);
+    }
+  }
+
+  /**
+   * @brief Set the number of photons.
+   *
+   * This routine can be used to reset a PhotonShootJobMarket that was used
+   * before.
+   *
+   * @param numphoton New number of photons.
+   */
+  inline void set_numphoton(unsigned int numphoton) {
+    _numphoton = numphoton;
+    for (int i = 0; i < _worksize; ++i) {
+      _totweight[i] = 0.;
+      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
+        _typecount[i][j] = 0.;
+      }
+    }
+  }
+
+  /**
+   * @brief Update the given weight counters.
+   *
+   * @param totweight Total weight of all photons.
+   * @param typecount Total weights per photon type.
+   */
+  inline void update_counters(double &totweight, double *typecount) {
+    for (int i = 0; i < _worksize; ++i) {
+      totweight += _totweight[i];
+      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
+        typecount[j] += _typecount[i][j];
+      }
+    }
+  }
 
   /**
    * @brief Get a PhotonShootJob.
    *
+   * @param thread_id Rank of the thread that wants to get a job (in a parallel
+   * context).
    * @return PhotonShootJob.
    */
-  virtual Job *get_job() {
+  virtual Job *get_job(int thread_id) {
     unsigned int jobsize = _jobsize;
     _lock.lock();
     if (jobsize >= _numphoton) {
@@ -90,8 +141,9 @@ public:
     _numphoton -= jobsize;
     _lock.unlock();
     if (jobsize > 0) {
-      return new PhotonShootJob(_photon_source, _random_generator,
-                                _density_grid, jobsize);
+      return new PhotonShootJob(_photon_source, _random_generator[thread_id],
+                                _density_grid, jobsize, _totweight[thread_id],
+                                _typecount[thread_id]);
     } else {
       return nullptr;
     }

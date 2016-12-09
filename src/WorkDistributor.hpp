@@ -94,7 +94,7 @@ public:
 #pragma omp for
         for (int i = 0; i < _worksize; ++i) {
           {
-            Worker worker;
+            Worker worker(i);
             worker.do_work(jobs);
           }
         }

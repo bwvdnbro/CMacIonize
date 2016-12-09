@@ -43,10 +43,12 @@ public:
    * This routine locks the JobMarket on entering and unlocks it again before it
    * returns, to make sure a Job is only executed once.
    *
+   * @param thread_id Rank of the thread that wants to get a job (in a parallel
+   * context).
    * @return Job to be executed. If no more jobs are available, a nullptr is
    * returned.
    */
-  virtual Job *get_job() = 0;
+  virtual Job *get_job(int thread_id = 0) = 0;
 };
 
 #endif // JOBMARKET_HPP

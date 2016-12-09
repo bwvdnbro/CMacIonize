@@ -38,12 +38,10 @@
  * @brief Constructor.
  *
  * @param redshift Redshift for which we want the spectrum.
- * @param random_generator RandomGenerator.
  * @param log Log to write logging info to.
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
-    double redshift, RandomGenerator &random_generator, Log *log)
-    : _random_generator(random_generator) {
+    double redshift, Log *log) {
   // construct the frequency bins)
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
@@ -165,15 +163,14 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
  * @brief ParameterFile constructor.
  *
  * @param params ParameterFile to read from.
- * @param random_generator RandomGenerator.
  * @param log Log to write logging info to.
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
-    ParameterFile &params, RandomGenerator &random_generator, Log *log)
+    ParameterFile &params, Log *log)
     : FaucherGiguerePhotonSourceSpectrum(
           params.get_value< double >("continuousphotonsourcespectrum.redshift",
                                      0.),
-          random_generator, log) {}
+          log) {}
 
 /**
  * @brief Get the name of the file containing the spectrum for the given
@@ -219,12 +216,13 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
 /**
  * @brief Get a random frequency from the spectrum.
  *
+ * @param random_generator RandomGenerator to use.
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double
-FaucherGiguerePhotonSourceSpectrum::get_random_frequency(double temperature) {
-  double x = _random_generator.get_uniform_random_double();
+double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) {
+  double x = random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =

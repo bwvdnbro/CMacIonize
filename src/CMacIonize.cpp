@@ -83,6 +83,8 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
   parser.add_option("dirty", 'd', "Allow running a dirty code version.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("threads", 't', "Number of parallel threads to use.",
+                    COMMANDLINEOPTION_INTARGUMENT, "1");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -139,19 +141,17 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  RandomGenerator random_generator(params.get_value< int >("random_seed", 42));
-  PlanckPhotonSourceSpectrum spectrum(random_generator, params, log);
+  int random_seed = params.get_value< int >("random_seed", 42);
+  PlanckPhotonSourceSpectrum spectrum(params, log);
 
   IsotropicContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(params, random_generator, log);
-  FaucherGiguerePhotonSourceSpectrum continuousspectrum(params,
-                                                        random_generator, log);
+      ContinuousPhotonSourceFactory::generate(params, log);
+  FaucherGiguerePhotonSourceSpectrum continuousspectrum(params, log);
 
   Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, &spectrum, continuoussource,
-                      &continuousspectrum, abundances, cross_sections,
-                      random_generator, log);
+                      &continuousspectrum, abundances, cross_sections, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -196,7 +196,15 @@ int main(int argc, char **argv) {
       IterationConvergenceCheckerFactory::generate(*grid, params, log);
 
   // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor workdistributor(8);
+  WorkDistributor workdistributor(parser.get_value< int >("threads"));
+  const int worksize = workdistributor.get_worksize();
+  Timer worktimer;
+
+  log->write_status("Program will use ", worksize,
+                    " parallel threads for photon shooting.");
+
+  PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 10000,
+                                       worksize);
 
   writer->write(0, params);
   unsigned int loop = 0;
@@ -224,15 +232,16 @@ int main(int argc, char **argv) {
     while (!convergence_checker->is_converged(totnumphoton)) {
       log->write_info("Substep ", numsubstep);
 
-      PhotonShootJobMarket photonshootjobs(source, random_generator, *grid,
-                                           lnumphoton, 1000);
+      photonshootjobs.set_numphoton(lnumphoton);
+      worktimer.start();
       workdistributor.do_in_parallel(photonshootjobs);
+      worktimer.stop();
 
       totnumphoton += lnumphoton;
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(
           lnumphoton, totnumphoton);
 
-      source.update_counters(totweight, typecount);
+      photonshootjobs.update_counters(totweight, typecount);
       lnumphoton = source.set_number_of_photons(lnumphoton);
 
       ++numsubstep;
@@ -299,6 +308,8 @@ int main(int argc, char **argv) {
   programtimer.stop();
   log->write_status("Total program time: ",
                     Utilities::human_readable_time(programtimer.value()), ".");
+  log->write_status("Total photon shooting time: ",
+                    Utilities::human_readable_time(worktimer.value()), ".");
 
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;

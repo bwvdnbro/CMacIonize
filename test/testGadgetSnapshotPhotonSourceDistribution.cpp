@@ -54,11 +54,13 @@ public:
   /**
    * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
    *
+   * @param random_generator RandomGenerator to use.
    * @param temperature Not used for this spectrum.
    * @return Uniform random frequency.
    */
-  virtual double get_random_frequency(double temperature = 0.) {
-    return Utilities::random_double() * (54.4 - 13.6) + 13.6;
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.) {
+    return random_generator.get_uniform_random_double() * (54.4 - 13.6) + 13.6;
   }
 
   /**
@@ -83,9 +85,10 @@ int main(int argc, char **argv) {
   RandomGenerator random_generator;
   Abundances abundances(0., 0., 0., 0., 0., 0.);
   PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
-                      cross_sections, random_generator);
+                      cross_sections);
+  PhotonSourceIndex index = source.get_first_index();
 
-  Photon photon = source.get_random_photon();
+  Photon photon = source.get_random_photon(index, random_generator);
   assert_condition(photon.get_position().x() == 0.5);
   assert_condition(photon.get_position().y() == 0.5);
   assert_condition(photon.get_position().z() == 0.5);

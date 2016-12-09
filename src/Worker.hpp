@@ -37,7 +37,19 @@
  * Multiple workers can be active in parallel in a shared memory environment.
  */
 class Worker {
+private:
+  /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
+  int _thread_id;
+
 public:
+  /**
+   * @brief Constructor.
+   *
+   * @param thread_id Rank of the thread that runs the Worker (in a parallel
+   * context).
+   */
+  Worker(int thread_id = 0) : _thread_id(thread_id) {}
+
   /**
    * @brief Execute all jobs on the JobMarket.
    *
@@ -45,7 +57,7 @@ public:
    */
   inline void do_work(JobMarket &jobs) {
     Job *job;
-    while ((job = jobs.get_job())) {
+    while ((job = jobs.get_job(_thread_id))) {
       job->execute();
       // free memory of the job
       delete job;

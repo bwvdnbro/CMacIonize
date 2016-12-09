@@ -49,7 +49,6 @@ using namespace std;
  * source.
  * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
- * @param random_generator RandomGenerator used to generate random numbers.
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
@@ -57,15 +56,12 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            IsotropicContinuousPhotonSource *continuous_source,
                            PhotonSourceSpectrum *continuous_spectrum,
                            Abundances &abundances,
-                           CrossSections &cross_sections,
-                           RandomGenerator &random_generator, Log *log)
+                           CrossSections &cross_sections, Log *log)
     : _discrete_number_of_photons(0), _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum), _abundances(abundances),
-      _cross_sections(cross_sections), _random_generator(random_generator),
-      _HLyc_spectrum(cross_sections, random_generator),
-      _HeLyc_spectrum(cross_sections, random_generator),
-      _He2pc_spectrum(random_generator), _log(log) {
+      _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
+      _HeLyc_spectrum(cross_sections), _log(log) {
 
   _discrete_luminosity = 0.;
   _continuous_luminosity = 0.;
@@ -82,14 +78,9 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
       _log->write_status("Constructed PhotonSource with ",
                          _discrete_positions.size(), " positions and weights.");
     }
-
-    _discrete_active_source_index = 0;
-    _discrete_active_photon_index = 0;
-    _discrete_active_number_of_photons = 0;
   }
 
   if (continuous_source != nullptr) {
-    _continuous_active_number_of_photons = 0;
     _continuous_luminosity = continuous_source->get_total_surface_area() *
                              continuous_spectrum->get_total_flux();
   }
@@ -99,10 +90,6 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   _discrete_photon_weight = 1.;
   _continuous_photon_weight = 1.;
-  _total_weight = 0.;
-  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
-    _typecount[i] = 0.;
-  }
 
   if (_log) {
     _log->write_status("Total luminosity of discrete sources: ",
@@ -149,8 +136,6 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
     }
   }
 
-  _discrete_active_source_index = 0;
-  _discrete_active_photon_index = 0;
   if (_discrete_number_of_photons > 0) {
     // make sure we have at least 10 photons per discrete source
     if (_discrete_number_of_photons < 10 * _discrete_weights.size()) {
@@ -159,14 +144,6 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
     // set the photon weights
     _discrete_photon_weight =
         _discrete_luminosity / _discrete_number_of_photons;
-    _discrete_active_number_of_photons =
-        std::round(_discrete_number_of_photons * _discrete_weights[0]);
-    // disable continuous source: we first emit discrete photons
-    _continuous_active_number_of_photons = _continuous_number_of_photons;
-  } else {
-    _discrete_active_number_of_photons = 0;
-    // no discrete sources: make sure continuous sources are enabled
-    _continuous_active_number_of_photons = 0;
   }
 
   if (_continuous_number_of_photons > 0) {
@@ -179,12 +156,6 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
         _continuous_luminosity / _continuous_number_of_photons;
   }
 
-  // reset the total weight
-  _total_weight = 0.;
-  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
-    _typecount[i] = 0.;
-  }
-
   if (_log) {
     _log->write_info("Number of photons for PhotonSource reset to ",
                      _discrete_number_of_photons, " discrete photons and ",
@@ -192,6 +163,30 @@ PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
   }
 
   return _discrete_number_of_photons + _continuous_number_of_photons;
+}
+
+/**
+ * @brief Get a PhotonSourceIndex pointing to the first photon of the first
+ * source.
+ *
+ * @return PhotonSourceIndex to the first photon of the first source.
+ */
+PhotonSourceIndex PhotonSource::get_first_index() {
+  unsigned int discrete_active_number_of_photons = 0;
+  unsigned int discrete_active_photon_index = 0;
+  unsigned int discrete_active_source_index = 0;
+  unsigned int continuous_active_number_of_photons = 0;
+
+  if (_discrete_number_of_photons > 0) {
+    discrete_active_number_of_photons =
+        std::round(_discrete_number_of_photons * _discrete_weights[0]);
+    // disable continuous source: we first emit discrete photons
+    continuous_active_number_of_photons = _continuous_number_of_photons;
+  }
+
+  return PhotonSourceIndex(
+      discrete_active_number_of_photons, discrete_active_photon_index,
+      discrete_active_source_index, continuous_active_number_of_photons);
 }
 
 /**
@@ -214,32 +209,33 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) {
  * @brief Get a photon with a random direction and energy, originating at one
  * of the discrete sources.
  *
+ * @param index PhotonSourceIndex of the currently active photon and source.
+ * @param random_generator RandomGenerator to use.
  * @return Photon.
  */
-Photon PhotonSource::get_random_photon() {
+Photon PhotonSource::get_random_photon(PhotonSourceIndex &index,
+                                       RandomGenerator &random_generator) {
 
   CoordinateVector<> position, direction;
   double energy;
   double weight;
 
-  _index_lock.lock();
-  // check if we have a continuous or a discrete source photon
-  if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
+  if (index.get_continuous_active_number_of_photons() <
+      _continuous_number_of_photons) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
-        _continuous_source->get_random_incoming_direction();
+        _continuous_source->get_random_incoming_direction(random_generator);
     position = posdir.first;
     direction = posdir.second;
-    energy = _continuous_spectrum->get_random_frequency();
+    energy = _continuous_spectrum->get_random_frequency(random_generator);
     weight = _continuous_photon_weight;
   } else {
-    position = _discrete_positions[_discrete_active_source_index];
-    direction = get_random_direction();
-    energy = _discrete_spectrum->get_random_frequency();
+    position = _discrete_positions[index.get_discrete_active_source_index()];
+    direction = get_random_direction(random_generator);
+    energy = _discrete_spectrum->get_random_frequency(random_generator);
     weight = _discrete_photon_weight;
   }
 
-  update_indices();
-  _index_lock.unlock();
+  update_indices(index);
 
   Photon photon(position, direction, energy);
   set_cross_sections(photon, energy);
@@ -257,36 +253,6 @@ Photon PhotonSource::get_random_photon() {
 double PhotonSource::get_total_luminosity() { return _total_luminosity; }
 
 /**
- * @brief Update the counters when a Photon exits the system or is absorbed.
- *
- * @param photon Photon that exits the system or is absorbed.
- */
-void PhotonSource::decommission_photon(Photon &photon) {
-  _counter_lock.lock();
-  _total_weight += photon.get_weight();
-  _typecount[photon.get_type()] += photon.get_weight();
-  _counter_lock.unlock();
-}
-
-/**
- * @brief Update the given counters with the internal values and reset the
- * internal values.
- *
- * @param totweight Total weight counter.
- * @param typecount Weight counters per PhotonType.
- */
-void PhotonSource::update_counters(double &totweight, double *typecount) {
-  _counter_lock.lock();
-  totweight += _total_weight;
-  _total_weight = 0.;
-  for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
-    typecount[i] += _typecount[i];
-    _typecount[i] = 0.;
-  }
-  _counter_lock.unlock();
-}
-
-/**
  * @brief Reemit the given Photon.
  *
  * This routine randomly chooses if the photon is absorbed by hydrogen or
@@ -295,10 +261,12 @@ void PhotonSource::update_counters(double &totweight, double *typecount) {
  *
  * @param photon Photon to reemit.
  * @param cell DensityValues of the cell in which the Photon currently resides.
+ * @param random_generator RandomGenerator to use.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
+bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
+                          RandomGenerator &random_generator) {
   double new_frequency = 0.;
   double helium_abundance = _abundances.get_abundance(ELEMENT_He);
   double pHabs = 1. / (1. +
@@ -307,14 +275,14 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
                            cell.get_ionic_fraction(ION_H_n) /
                            photon.get_cross_section(ION_H_n));
 
-  double x = _random_generator.get_uniform_random_double();
+  double x = random_generator.get_uniform_random_double();
   if (x <= pHabs) {
     // photon absorbed by hydrogen
-    x = _random_generator.get_uniform_random_double();
+    x = random_generator.get_uniform_random_double();
     if (x <= cell.get_pHion()) {
       // sample new frequency from H Ly c
-      new_frequency =
-          _HLyc_spectrum.get_random_frequency(cell.get_temperature());
+      new_frequency = _HLyc_spectrum.get_random_frequency(
+          random_generator, cell.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HI);
     } else {
       // photon escapes
@@ -323,22 +291,22 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
     }
   } else {
     // photon absorbed by helium
-    x = _random_generator.get_uniform_random_double();
+    x = random_generator.get_uniform_random_double();
     if (x <= cell.get_pHe_em(0)) {
       // sample new frequency from He Ly c
-      new_frequency =
-          _HeLyc_spectrum.get_random_frequency(cell.get_temperature());
+      new_frequency = _HeLyc_spectrum.get_random_frequency(
+          random_generator, cell.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(1)) {
       // new frequency is 19.8eV
       new_frequency = 4.788e15;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
     } else if (x <= cell.get_pHe_em(2)) {
-      x = _random_generator.get_uniform_random_double();
+      x = random_generator.get_uniform_random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
-        new_frequency =
-            _He2pc_spectrum.get_random_frequency(cell.get_temperature());
+        new_frequency = _He2pc_spectrum.get_random_frequency(
+            random_generator, cell.get_temperature());
         photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
       } else {
         // photon escapes
@@ -352,14 +320,14 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
                            77. * cell.get_ionic_fraction(ION_He_n) /
                                sqrt(cell.get_temperature()) /
                                cell.get_ionic_fraction(ION_H_n));
-      x = _random_generator.get_uniform_random_double();
+      x = random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot
-        x = _random_generator.get_uniform_random_double();
+        x = random_generator.get_uniform_random_double();
         if (x <= cell.get_pHion()) {
           // H Ly c, like above
-          new_frequency =
-              _HLyc_spectrum.get_random_frequency(cell.get_temperature());
+          new_frequency = _HLyc_spectrum.get_random_frequency(
+              random_generator, cell.get_temperature());
           photon.set_type(PHOTONTYPE_DIFFUSE_HI);
         } else {
           // photon escapes
@@ -368,10 +336,11 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
         }
       } else {
         // He 2-photon continuum
-        x = _random_generator.get_uniform_random_double();
+        x = random_generator.get_uniform_random_double();
         if (x < 0.56) {
           // sample like above
-          new_frequency = _He2pc_spectrum.get_random_frequency();
+          new_frequency =
+              _He2pc_spectrum.get_random_frequency(random_generator);
           photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
         } else {
           // photon escapes
@@ -390,7 +359,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell) {
 
   photon.set_energy(new_frequency);
 
-  CoordinateVector<> direction = get_random_direction();
+  CoordinateVector<> direction = get_random_direction(random_generator);
   photon.set_direction(direction);
 
   set_cross_sections(photon, new_frequency);

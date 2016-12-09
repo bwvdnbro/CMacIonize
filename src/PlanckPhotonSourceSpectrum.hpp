@@ -60,17 +60,13 @@ private:
   /*! @brief Base 10 logarithm of the cumulative distribution in each bin. */
   double _log_cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
-
 public:
-  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
-                             double temperature, Log *log = nullptr);
+  PlanckPhotonSourceSpectrum(double temperature, Log *log = nullptr);
 
-  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
-                             ParameterFile &params, Log *log = nullptr);
+  PlanckPhotonSourceSpectrum(ParameterFile &params, Log *log = nullptr);
 
-  virtual double get_random_frequency(double temperature = 0.);
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.);
 
   virtual double get_total_flux();
 };

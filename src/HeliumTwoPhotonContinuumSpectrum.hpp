@@ -44,17 +44,15 @@ private:
   /*! @brief Cumulative distribution function. */
   double _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
-
 public:
-  HeliumTwoPhotonContinuumSpectrum(RandomGenerator &random_generator);
+  HeliumTwoPhotonContinuumSpectrum();
 
   void get_spectrum(std::vector< double > &yHe2q, std::vector< double > &AHe2q);
   double get_integral(std::vector< double > &yHe2q,
                       std::vector< double > &AHe2q);
 
-  virtual double get_random_frequency(double temperature = 0.);
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.);
 
   virtual double get_total_flux();
 };

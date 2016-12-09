@@ -43,20 +43,14 @@ private:
   /*! @brief Box in which the radiation enters. */
   Box _box;
 
-  /*! @brief Random generator. */
-  RandomGenerator &_random_generator;
-
 public:
   /**
    * @brief Constructor.
    *
    * @param box Box in which the radiation enters (in m).
-   * @param random_generator Random generator.
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(Box box, RandomGenerator &random_generator,
-                                  Log *log = nullptr)
-      : _box(box), _random_generator(random_generator) {
+  IsotropicContinuousPhotonSource(Box box, Log *log = nullptr) : _box(box) {
 
     if (log) {
       log->write_status(
@@ -71,44 +65,42 @@ public:
    * @brief ParameterFile constructor.
    *
    * @param params ParamterFile to read from.
-   * @param random_generator RandomGenerator.
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(ParameterFile &params,
-                                  RandomGenerator &random_generator,
-                                  Log *log = nullptr)
+  IsotropicContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
       : IsotropicContinuousPhotonSource(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid.box_anchor"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid.box_sides")),
-            random_generator, log) {}
+            log) {}
 
   /**
    * @brief Get the entrance position and direction of a random external photon.
    *
+   * @param random_generator RandomGenerator to use.
    * @return std::pair of CoordinateVector instances, specifying a starting
    * position and direction for an incoming photon.
    */
   std::pair< CoordinateVector<>, CoordinateVector<> >
-  get_random_incoming_direction() {
+  get_random_incoming_direction(RandomGenerator &random_generator) {
     // we randomly sample a focus point in the box
     CoordinateVector<> focus;
     focus[0] =
         _box.get_anchor().x() +
-        _box.get_sides().x() * _random_generator.get_uniform_random_double();
+        _box.get_sides().x() * random_generator.get_uniform_random_double();
     focus[1] =
         _box.get_anchor().y() +
-        _box.get_sides().y() * _random_generator.get_uniform_random_double();
+        _box.get_sides().y() * random_generator.get_uniform_random_double();
     focus[2] =
         _box.get_anchor().z() +
-        _box.get_sides().z() * _random_generator.get_uniform_random_double();
+        _box.get_sides().z() * random_generator.get_uniform_random_double();
 
     // random incoming direction for the focus point
-    double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
+    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
     double sint = 1. - cost * cost;
     sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
+    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
     double cosp = std::cos(phi);
     double sinp = std::sin(phi);
     CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
