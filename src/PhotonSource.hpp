@@ -77,6 +77,10 @@ private:
   /*! @brief Total luminosity of the discrete sources. */
   double _discrete_luminosity;
 
+  /*! @brief Probabilities that a photon is emitted by a specific discrete
+   *  source. */
+  std::vector< double > _discrete_probabilities;
+
   ///
 
   /// continuous sources

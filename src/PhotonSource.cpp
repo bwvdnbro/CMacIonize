@@ -68,9 +68,22 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
     _discrete_weights.resize(distribution->get_number_of_sources());
+    _discrete_probabilities.resize(distribution->get_number_of_sources());
     for (unsigned int i = 0; i < _discrete_positions.size(); ++i) {
       _discrete_positions[i] = distribution->get_position(i);
       _discrete_weights[i] = distribution->get_weight(i);
+      if (i > 0) {
+        _discrete_probabilities[i] =
+            _discrete_probabilities[i - 1] + _discrete_weights[i];
+      } else {
+        _discrete_probabilities[i] = _discrete_weights[i];
+      }
+    }
+    if (std::abs(_discrete_probabilities.back() - 1.) > 1.e-9) {
+      cmac_error("Discrete source weights do not sum to 1.0 (%g)!",
+                 _discrete_probabilities.back());
+    } else {
+      _discrete_probabilities.back() = 1.;
     }
     _discrete_luminosity = distribution->get_total_luminosity();
 
@@ -220,22 +233,58 @@ Photon PhotonSource::get_random_photon(PhotonSourceIndex &index,
   double energy;
   double weight;
 
-  if (index.get_continuous_active_number_of_photons() <
-      _continuous_number_of_photons) {
+  //  if (index.get_continuous_active_number_of_photons() <
+  //      _continuous_number_of_photons) {
+  //    std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
+  //        _continuous_source->get_random_incoming_direction(random_generator);
+  //    position = posdir.first;
+  //    direction = posdir.second;
+  //    energy = _continuous_spectrum->get_random_frequency(random_generator);
+  //    weight = _continuous_photon_weight;
+  //  } else {
+  //    position =
+  //    _discrete_positions[index.get_discrete_active_source_index()];
+  //    direction = get_random_direction(random_generator);
+  //    energy = _discrete_spectrum->get_random_frequency(random_generator);
+  //    weight = _discrete_photon_weight;
+  //  }
+
+  //  update_indices(index);
+
+  bool discrete;
+  if (_discrete_number_of_photons > 0) {
+    if (_continuous_number_of_photons > 0) {
+      double x = random_generator.get_uniform_random_double();
+      if (x < 0.5) {
+        discrete = true;
+      } else {
+        discrete = false;
+      }
+    } else {
+      discrete = true;
+    }
+  } else {
+    discrete = false;
+  }
+
+  if (discrete) {
+    double x = random_generator.get_uniform_random_double();
+    unsigned int i = 0;
+    while (x > _discrete_probabilities[i]) {
+      ++i;
+    }
+    position = _discrete_positions[i];
+    direction = get_random_direction(random_generator);
+    energy = _discrete_spectrum->get_random_frequency(random_generator);
+    weight = _discrete_photon_weight;
+  } else {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         _continuous_source->get_random_incoming_direction(random_generator);
     position = posdir.first;
     direction = posdir.second;
     energy = _continuous_spectrum->get_random_frequency(random_generator);
     weight = _continuous_photon_weight;
-  } else {
-    position = _discrete_positions[index.get_discrete_active_source_index()];
-    direction = get_random_direction(random_generator);
-    energy = _discrete_spectrum->get_random_frequency(random_generator);
-    weight = _discrete_photon_weight;
   }
-
-  update_indices(index);
 
   Photon photon(position, direction, energy);
   set_cross_sections(photon, energy);

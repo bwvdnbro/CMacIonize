@@ -246,7 +246,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction.fallback_unit_temperature", "0. K"),
           params.get_value< bool >("densityfunction.use_neutral_fraction",
-                                   "false"),
+                                   false),
           log) {}
 
 /**

@@ -97,9 +97,9 @@ public:
       for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
         _typecount[i][j] = 0.;
       }
-      _jobs[i] =
-          new PhotonShootJob(photon_source, _random_generator[i], density_grid,
-                             jobsize, _totweight[i], _typecount[i]);
+      _jobs[i] = new PhotonShootJob(_photon_source, _random_generator[i],
+                                    _density_grid, _jobsize, _totweight[i],
+                                    _typecount[i]);
     }
   }
 
