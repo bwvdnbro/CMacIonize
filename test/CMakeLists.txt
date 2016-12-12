@@ -578,8 +578,6 @@ add_unit_test(NAME testUtilities
 set(TESTWORKER_SOURCES
     testWorker.cpp
 
-    ../src/Job.hpp
-    ../src/JobMarket.hpp
     ../src/Lock.hpp
     ../src/WorkDistributor.hpp
     ../src/Worker.hpp

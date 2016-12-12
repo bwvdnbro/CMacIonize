@@ -197,7 +197,8 @@ int main(int argc, char **argv) {
       IterationConvergenceCheckerFactory::generate(*grid, params, log);
 
   // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor workdistributor(parser.get_value< int >("threads"));
+  WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
+      parser.get_value< int >("threads"));
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 

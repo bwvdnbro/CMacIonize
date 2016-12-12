@@ -163,8 +163,6 @@ set(CMACIONIZE_SOURCES
     IonizationStateCalculator.hpp
     IterationConvergenceChecker.hpp
     IterationConvergenceCheckerFactory.hpp
-    Job.hpp
-    JobMarket.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     Lock.hpp

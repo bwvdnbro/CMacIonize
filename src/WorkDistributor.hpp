@@ -32,7 +32,6 @@
 
 #include "Configuration.hpp"
 #include "Error.hpp"
-#include "JobMarket.hpp"
 #include "Worker.hpp"
 
 #ifdef HAVE_OPENMP
@@ -43,7 +42,7 @@
  * @brief Class that is responsible for spawning workers. If supported, this is
  * done in parallel.
  */
-class WorkDistributor {
+template < typename _JobMarket_, typename _Job_ > class WorkDistributor {
 private:
   /*! @brief Number of workers that can be run in parallel. */
   int _worksize;
@@ -86,7 +85,7 @@ public:
    *
    * @param jobs JobMarket to execute.
    */
-  inline void do_in_parallel(JobMarket &jobs) {
+  inline void do_in_parallel(_JobMarket_ &jobs) {
     if (_worksize > 1) {
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -94,7 +93,7 @@ public:
 #pragma omp for
         for (int i = 0; i < _worksize; ++i) {
           {
-            Worker worker(i);
+            Worker< _JobMarket_, _Job_ > worker(i);
             worker.do_work(jobs);
           }
         }
@@ -103,7 +102,7 @@ public:
       cmac_error("Trying to run multiple workers without OpenMP!");
 #endif
     } else {
-      Worker worker;
+      Worker< _JobMarket_, _Job_ > worker;
       worker.do_work(jobs);
     }
   }

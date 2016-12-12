@@ -24,8 +24,6 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "Job.hpp"
-#include "JobMarket.hpp"
 #include "Lock.hpp"
 #include "Timer.hpp"
 #include "Utilities.hpp"
@@ -53,7 +51,7 @@ inline double test_function(double x) {
  * @brief Test implementation of Job that applies test_function to all elements
  * of part of an array.
  */
-class TestJob : public Job {
+class TestJob {
 private:
   /*! @brief Pointer to a part of an array to operate on. */
   double *_array;
@@ -68,12 +66,20 @@ public:
    * @param array Pointer to part of an array to operate on.
    * @param size Size of the array to work on.
    */
-  TestJob(double *array, unsigned int size) : _array(array), _size(size) {}
+  inline TestJob(double *array, unsigned int size)
+      : _array(array), _size(size) {}
+
+  /**
+   * @brief Should a completed job be deleted?
+   *
+   * @return True.
+   */
+  inline bool do_cleanup() { return true; }
 
   /**
    * @brief Perform the job: apply test_function to each value in the array.
    */
-  void execute() {
+  inline void execute() {
     while (_size) {
       *_array = test_function(*_array);
       ++_array;
@@ -86,7 +92,7 @@ public:
  * @brief Test implementation of JobMarket that applies test_function to all
  * elements in an array.
  */
-class TestJobMarket : public JobMarket {
+class TestJobMarket {
 private:
   /*! @brief Pointer to the entire array to operate on. */
   double *_array;
@@ -108,7 +114,8 @@ public:
    * @param size Size of the array.
    * @param jobsize Size to be done by each job.
    */
-  TestJobMarket(double *array, unsigned int size, unsigned int jobsize = 100)
+  inline TestJobMarket(double *array, unsigned int size,
+                       unsigned int jobsize = 100)
       : _array(array), _size(size), _jobsize(jobsize) {}
 
   /**
@@ -118,14 +125,14 @@ public:
    * context).
    * @return Job.
    */
-  virtual Job *get_job(int thread_id = 0) {
+  inline TestJob *get_job(int thread_id = 0) {
     if (_size == 0) {
       // no more jobs!
       return nullptr;
     }
     _lock.lock();
     unsigned int size = std::min(_size, _jobsize);
-    Job *job = new TestJob(_array, size);
+    TestJob *job = new TestJob(_array, size);
     _array += size;
     if (_size >= size) {
       _size -= size;
@@ -165,7 +172,7 @@ int main(int argc, char **argv) {
     Timer timer;
     timer.start();
     TestJobMarket jobs(A_serial, ARRAY_LENGTH, 10000);
-    Worker worker;
+    Worker< TestJobMarket, TestJob > worker;
 
     worker.do_work(jobs);
     time_serial = timer.stop();
@@ -181,7 +188,7 @@ int main(int argc, char **argv) {
   {
     Timer timer;
     TestJobMarket jobs(A_parallel, ARRAY_LENGTH, 10000);
-    WorkDistributor workdistributor(4);
+    WorkDistributor< TestJobMarket, TestJob > workdistributor(4);
     workdistributor.do_in_parallel(jobs);
     time_parallel = timer.stop();
     worksize = workdistributor.get_worksize();

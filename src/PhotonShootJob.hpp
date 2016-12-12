@@ -27,7 +27,6 @@
 #define PHOTONSHOOTJOB_HPP
 
 #include "DensityGrid.hpp"
-#include "Job.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
 #include "RandomGenerator.hpp"
@@ -35,7 +34,7 @@
 /**
  * @brief Job implementation that shoots photons through a DensityGrid.
  */
-class PhotonShootJob : public Job {
+class PhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
   PhotonSource &_photon_source;
@@ -67,9 +66,10 @@ public:
    * @param totweight Total weight counter to update.
    * @param typecount Total weight per photon type counters to update.
    */
-  PhotonShootJob(PhotonSource &photon_source, RandomGenerator &random_generator,
-                 DensityGrid &density_grid, unsigned int numphoton,
-                 double &totweight, double *typecount)
+  inline PhotonShootJob(PhotonSource &photon_source,
+                        RandomGenerator &random_generator,
+                        DensityGrid &density_grid, unsigned int numphoton,
+                        double &totweight, double *typecount)
       : _photon_source(photon_source), _random_generator(random_generator),
         _density_grid(density_grid), _totweight(totweight),
         _typecount(typecount), _numphoton(numphoton) {}
@@ -79,19 +79,19 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Should the Job be deleted by the Worker when it is finished?
    *
    * @return False, since the Job is reused and managed by PhotonShootJobMarket.
    */
-  virtual bool do_cleanup() { return false; }
+  inline bool do_cleanup() { return false; }
 
   /**
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
    */
-  virtual void execute() {
+  inline void execute() {
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
       double tau = -std::log(_random_generator.get_uniform_random_double());

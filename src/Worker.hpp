@@ -29,9 +29,6 @@
 
 //#define OUTPUT_CYCLES
 
-#include "Job.hpp"
-#include "JobMarket.hpp"
-
 #ifdef OUTPUT_CYCLES
 #include <fstream>
 #include <sstream>
@@ -43,7 +40,7 @@
  *
  * Multiple workers can be active in parallel in a shared memory environment.
  */
-class Worker {
+template < typename _JobMarket_, typename _Job_ > class Worker {
 private:
   /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
   int _thread_id;
@@ -77,13 +74,13 @@ public:
    *
    * @param jobs JobMarket that spawns jobs.
    */
-  inline void do_work(JobMarket &jobs) {
+  inline void do_work(_JobMarket_ &jobs) {
 #ifdef OUTPUT_CYCLES
     std::stringstream ofname;
     ofname << "jobtimes_" << _thread_id << ".txt";
     std::ofstream ofile(ofname.str());
 #endif
-    Job *job;
+    _Job_ *job;
     while ((job = jobs.get_job(_thread_id))) {
 #ifdef OUTPUT_CYCLES
       ofile << get_cycle() << "\t";

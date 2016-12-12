@@ -26,7 +26,6 @@
 #ifndef PHOTONSHOOTJOBMARKET_HPP
 #define PHOTONSHOOTJOBMARKET_HPP
 
-#include "JobMarket.hpp"
 #include "Lock.hpp"
 #include "PhotonShootJob.hpp"
 
@@ -40,11 +39,8 @@ class DensityGrid;
 /**
  * @brief JobMarket implementation that shoots photons through a DensityGrid.
  */
-class PhotonShootJobMarket : public JobMarket {
+class PhotonShootJobMarket {
 private:
-  /*! @brief PhotonSource that emits photons. */
-  PhotonSource &_photon_source;
-
   /*! @brief RandomGenerator used to generate random uniform numbers. */
   RandomGenerator _random_generator[PHOTONSHOOTJOBMARKET_MAXTHREADS];
 
@@ -53,9 +49,6 @@ private:
 
   /*! @brief Number of threads used in the calculation. */
   int _worksize;
-
-  /*! @brief DensityGrid through which photons are propagated. */
-  DensityGrid &_density_grid;
 
   /*! @brief Total number of photons to propagate through the grid. */
   unsigned int _numphoton;
@@ -87,8 +80,7 @@ public:
   inline PhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
                               DensityGrid &density_grid, unsigned int numphoton,
                               unsigned int jobsize, int worksize)
-      : _photon_source(photon_source), _worksize(worksize),
-        _density_grid(density_grid), _numphoton(numphoton), _jobsize(jobsize) {
+      : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
@@ -97,9 +89,9 @@ public:
       for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
         _typecount[i][j] = 0.;
       }
-      _jobs[i] = new PhotonShootJob(_photon_source, _random_generator[i],
-                                    _density_grid, _jobsize, _totweight[i],
-                                    _typecount[i]);
+      _jobs[i] =
+          new PhotonShootJob(photon_source, _random_generator[i], density_grid,
+                             _jobsize, _totweight[i], _typecount[i]);
     }
   }
 
@@ -149,7 +141,7 @@ public:
    * context).
    * @return PhotonShootJob.
    */
-  virtual Job *get_job(int thread_id) {
+  inline PhotonShootJob *get_job(int thread_id) {
     unsigned int jobsize = std::max(_numphoton / 10, _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
