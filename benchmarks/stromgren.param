@@ -24,6 +24,9 @@ densityfunction:
 abundances:
   helium: 0.
 
+# disable temperature calculation
+calculate_temperature: false
+
 # distribution of photon sources in the box
 photonsourcedistribution:
   # type of distribution: a single stellar source

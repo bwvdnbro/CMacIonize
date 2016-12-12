@@ -58,7 +58,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
         " x ", _ncell.z(), " inside a box with anchor [", _box.get_anchor().x(),
         " m,", _box.get_anchor().y(), " m,", _box.get_anchor().z(),
         " m] and sides [", _box.get_sides().x(), " m,", _box.get_sides().y(),
-        " m,", _box.get_sides().z(), " m]...");
+        " m, ", _box.get_sides().z(), " m]...");
     if (_periodic.x()) {
       _log->write_status("x boundary is periodic.");
     } else {

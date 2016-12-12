@@ -180,6 +180,9 @@ int main(int argc, char **argv) {
   // used to calculate emissivities at the end of the loop
   EmissivityCalculator emissivity_calculator(abundances);
 
+  bool calculate_temperature =
+      params.get_value< bool >("calculate_temperature", true);
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file
@@ -209,6 +212,8 @@ int main(int argc, char **argv) {
   writer->write(0, params);
   unsigned int loop = 0;
   while (loop < nloop && !itconvergence_checker->is_converged()) {
+
+    log->write_status("Starting loop ", loop, ".");
 
     // run the number of photons by the IterationConvergenceChecker to allow for
     // corrections
@@ -272,7 +277,7 @@ int main(int argc, char **argv) {
 
     log->write_status("Calculating ionization state after shooting ",
                       lnumphoton, " photons...");
-    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
+    if (calculate_temperature && loop > 3) {
       temperature_calculator.calculate_temperature(totweight, *grid);
     } else {
       ionization_state_calculator.calculate_ionization_state(totweight, *grid);
@@ -280,12 +285,11 @@ int main(int argc, char **argv) {
     log->write_status("Done calculating ionization state.");
 
     // calculate emissivities
-    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
-      emissivity_calculator.calculate_emissivities(*grid);
-    }
-
-    // write snapshot
-    writer->write(loop, params);
+    // we disabled this, since we now have the post-processing Python library
+    // for this
+    //    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
+    //      emissivity_calculator.calculate_emissivities(*grid);
+    //    }
 
     // use the current number of photons as a guess for the new number
     numphoton = convergence_checker->get_new_number_of_photons(lnumphoton);
@@ -304,6 +308,9 @@ int main(int argc, char **argv) {
     log->write_status("Maximum number of iterations (", nloop,
                       ") reached, stopping.");
   }
+
+  // write snapshot
+  writer->write(loop - 1, params);
 
   programtimer.stop();
   log->write_status("Total program time: ",
