@@ -86,7 +86,7 @@ public:
    *
    * @return False, since the Job is reused and managed by PhotonShootJobMarket.
    */
-  virtual bool do_cleanup() { return true; }
+  virtual bool do_cleanup() { return false; }
 
   /**
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.

@@ -48,6 +48,9 @@ private:
   /*! @brief RandomGenerator used to generate random uniform numbers. */
   RandomGenerator _random_generator[PHOTONSHOOTJOBMARKET_MAXTHREADS];
 
+  /*! @brief Per thread PhotonShootJob. */
+  PhotonShootJob *_jobs[PHOTONSHOOTJOBMARKET_MAXTHREADS];
+
   /*! @brief Number of threads used in the calculation. */
   int _worksize;
 
@@ -87,8 +90,22 @@ public:
       : _photon_source(photon_source), _worksize(worksize),
         _density_grid(density_grid), _numphoton(numphoton), _jobsize(jobsize) {
     // create a separate RandomGenerator for each thread.
+    // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
       _random_generator[i].set_seed(random_seed + i);
+      _totweight[i] = 0.;
+      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
+        _typecount[i][j] = 0.;
+      }
+      _jobs[i] =
+          new PhotonShootJob(photon_source, _random_generator[i], density_grid,
+                             jobsize, _totweight[i], _typecount[i]);
+    }
+  }
+
+  inline ~PhotonShootJobMarket() {
+    for (int i = 0; i < _worksize; ++i) {
+      delete _jobs[i];
     }
   }
 
@@ -141,9 +158,8 @@ public:
     _numphoton -= jobsize;
     _lock.unlock();
     if (jobsize > 0) {
-      return new PhotonShootJob(_photon_source, _random_generator[thread_id],
-                                _density_grid, jobsize, _totweight[thread_id],
-                                _typecount[thread_id]);
+      _jobs[thread_id]->set_numphoton(jobsize);
+      return _jobs[thread_id];
     } else {
       return nullptr;
     }
