@@ -150,7 +150,7 @@ public:
    * @return PhotonShootJob.
    */
   virtual Job *get_job(int thread_id) {
-    unsigned int jobsize = _jobsize;
+    unsigned int jobsize = std::max(_numphoton / 10, _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
       jobsize = _numphoton;

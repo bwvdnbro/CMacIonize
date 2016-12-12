@@ -177,8 +177,6 @@ int main(int argc, char **argv) {
   TemperatureCalculator temperature_calculator(
       Q, abundances, params.get_value< double >("pahfac", 1.),
       line_cooling_data, recombination_rates, charge_transfer_rates);
-  // used to calculate emissivities at the end of the loop
-  EmissivityCalculator emissivity_calculator(abundances);
 
   bool calculate_temperature =
       params.get_value< bool >("calculate_temperature", true);
@@ -206,7 +204,7 @@ int main(int argc, char **argv) {
   log->write_status("Program will use ", worksize,
                     " parallel threads for photon shooting.");
 
-  PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 10000,
+  PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
                                        worksize);
 
   writer->write(0, params);

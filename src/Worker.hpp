@@ -27,8 +27,15 @@
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
+//#define OUTPUT_CYCLES
+
 #include "Job.hpp"
 #include "JobMarket.hpp"
+
+#ifdef OUTPUT_CYCLES
+#include <fstream>
+#include <sstream>
+#endif
 
 /**
  * @brief Object that is responsible for the execution of jobs on a single
@@ -40,6 +47,21 @@ class Worker {
 private:
   /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
   int _thread_id;
+
+#ifdef OUTPUT_CYCLES
+  /**
+   * @brief Get the CPU cycle number.
+   *
+   * This value can be used to compare job time intervals.
+   *
+   * @return CPU cycle number.
+   */
+  inline static unsigned long get_cycle() {
+    unsigned int lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    return ((unsigned long)hi << 32) | lo;
+  }
+#endif
 
 public:
   /**
@@ -56,9 +78,20 @@ public:
    * @param jobs JobMarket that spawns jobs.
    */
   inline void do_work(JobMarket &jobs) {
+#ifdef OUTPUT_CYCLES
+    std::stringstream ofname;
+    ofname << "jobtimes_" << _thread_id << ".txt";
+    std::ofstream ofile(ofname.str());
+#endif
     Job *job;
     while ((job = jobs.get_job(_thread_id))) {
+#ifdef OUTPUT_CYCLES
+      ofile << get_cycle() << "\t";
+#endif
       job->execute();
+#ifdef OUTPUT_CYCLES
+      ofile << get_cycle() << "\n";
+#endif
       if (job->do_cleanup()) {
         // free memory of the job
         delete job;
