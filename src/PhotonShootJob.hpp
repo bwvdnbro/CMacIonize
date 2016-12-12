@@ -92,10 +92,8 @@ public:
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
    */
   virtual void execute() {
-    PhotonSourceIndex index = _photon_source.get_first_index();
     for (unsigned int i = 0; i < _numphoton; ++i) {
-      Photon photon =
-          _photon_source.get_random_photon(index, _random_generator);
+      Photon photon = _photon_source.get_random_photon(_random_generator);
       double tau = -std::log(_random_generator.get_uniform_random_double());
       while (_density_grid.interact(photon, tau)) {
         unsigned long new_index =

@@ -57,26 +57,24 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            PhotonSourceSpectrum *continuous_spectrum,
                            Abundances &abundances,
                            CrossSections &cross_sections, Log *log)
-    : _discrete_number_of_photons(0), _discrete_spectrum(discrete_spectrum),
+    : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum), _abundances(abundances),
       _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
       _HeLyc_spectrum(cross_sections), _log(log) {
 
-  _discrete_luminosity = 0.;
-  _continuous_luminosity = 0.;
+  double discrete_luminosity = 0.;
+  double continuous_luminosity = 0.;
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
-    _discrete_weights.resize(distribution->get_number_of_sources());
     _discrete_probabilities.resize(distribution->get_number_of_sources());
     for (unsigned int i = 0; i < _discrete_positions.size(); ++i) {
       _discrete_positions[i] = distribution->get_position(i);
-      _discrete_weights[i] = distribution->get_weight(i);
       if (i > 0) {
         _discrete_probabilities[i] =
-            _discrete_probabilities[i - 1] + _discrete_weights[i];
+            _discrete_probabilities[i - 1] + distribution->get_weight(i);
       } else {
-        _discrete_probabilities[i] = _discrete_weights[i];
+        _discrete_probabilities[i] = distribution->get_weight(i);
       }
     }
     if (std::abs(_discrete_probabilities.back() - 1.) > 1.e-9) {
@@ -85,7 +83,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     } else {
       _discrete_probabilities.back() = 1.;
     }
-    _discrete_luminosity = distribution->get_total_luminosity();
+    discrete_luminosity = distribution->get_total_luminosity();
 
     if (_log) {
       _log->write_status("Constructed PhotonSource with ",
@@ -94,112 +92,38 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   if (continuous_source != nullptr) {
-    _continuous_luminosity = continuous_source->get_total_surface_area() *
-                             continuous_spectrum->get_total_flux();
+    continuous_luminosity = continuous_source->get_total_surface_area() *
+                            continuous_spectrum->get_total_flux();
   }
 
-  _total_luminosity = _discrete_luminosity + _continuous_luminosity;
-  double discrete_fraction = _discrete_luminosity / _total_luminosity;
+  _total_luminosity = discrete_luminosity + continuous_luminosity;
+  double discrete_fraction = discrete_luminosity / _total_luminosity;
 
-  _discrete_photon_weight = 1.;
-  _continuous_photon_weight = 1.;
+  if (discrete_luminosity > 0.) {
+    if (continuous_luminosity > 0.) {
+      _continuous_probability = 0.5;
+    } else {
+      _continuous_probability = 0.;
+    }
+    _discrete_photon_weight = 1.;
+    _continuous_photon_weight = (1. - _continuous_probability) *
+                                continuous_luminosity /
+                                _continuous_probability / discrete_luminosity;
+  } else {
+    _continuous_probability = 1.;
+    _discrete_photon_weight = 0.;
+    _continuous_photon_weight = 1.;
+  }
 
   if (_log) {
     _log->write_status("Total luminosity of discrete sources: ",
-                       _discrete_luminosity, " s^-1.");
+                       discrete_luminosity, " s^-1.");
     _log->write_status("Total luminosity of continuous sources: ",
-                       _continuous_luminosity, " s^-1.");
+                       continuous_luminosity, " s^-1.");
     _log->write_status(
         discrete_fraction * 100.,
         "% of the ionizing radiation is emitted by discrete sources.");
   }
-}
-
-/**
- * @brief Set the number of photons that should be emitted from this source
- * during the next iteration.
- *
- * This also resets the internal counters.
- *
- * @param number_of_photons Number of photons during the next iteration.
- * @return Actual number of photons that was set (since the weights might not
- * sum nicely to 1).
- */
-unsigned int
-PhotonSource::set_number_of_photons(unsigned int number_of_photons) {
-  // this should be a parameter
-  const double discrete_fraction = 0.5;
-
-  if (_discrete_luminosity > 0. && _continuous_luminosity > 0.) {
-    _discrete_number_of_photons = discrete_fraction * number_of_photons;
-    // we need to make sure the sum of both is equal to number_of_photons
-    // if we would set the same expression as above, then we would be 1 photon
-    // short for uneven number_of_photons, since round off automatically rounds
-    // down.
-    _continuous_number_of_photons =
-        number_of_photons - _discrete_number_of_photons;
-  } else {
-    if (_discrete_luminosity > 0.) {
-      _discrete_number_of_photons = number_of_photons;
-    } else {
-      // we do not check for the case were both luminosities are zero
-      // it is assumed this will never happen (as radiative transfer is quite
-      // boring without sources)
-      _continuous_number_of_photons = number_of_photons;
-    }
-  }
-
-  if (_discrete_number_of_photons > 0) {
-    // make sure we have at least 10 photons per discrete source
-    if (_discrete_number_of_photons < 10 * _discrete_weights.size()) {
-      _discrete_number_of_photons = 10 * _discrete_weights.size();
-    }
-    // set the photon weights
-    _discrete_photon_weight =
-        _discrete_luminosity / _discrete_number_of_photons;
-  }
-
-  if (_continuous_number_of_photons > 0) {
-    // make sure we have at least 100 photons for the continuous source
-    if (_continuous_number_of_photons < 100) {
-      _continuous_number_of_photons = 100;
-    }
-    // set the photon weights
-    _continuous_photon_weight =
-        _continuous_luminosity / _continuous_number_of_photons;
-  }
-
-  if (_log) {
-    _log->write_info("Number of photons for PhotonSource reset to ",
-                     _discrete_number_of_photons, " discrete photons and ",
-                     _continuous_number_of_photons, " continuous photons.");
-  }
-
-  return _discrete_number_of_photons + _continuous_number_of_photons;
-}
-
-/**
- * @brief Get a PhotonSourceIndex pointing to the first photon of the first
- * source.
- *
- * @return PhotonSourceIndex to the first photon of the first source.
- */
-PhotonSourceIndex PhotonSource::get_first_index() {
-  unsigned int discrete_active_number_of_photons = 0;
-  unsigned int discrete_active_photon_index = 0;
-  unsigned int discrete_active_source_index = 0;
-  unsigned int continuous_active_number_of_photons = 0;
-
-  if (_discrete_number_of_photons > 0) {
-    discrete_active_number_of_photons =
-        std::round(_discrete_number_of_photons * _discrete_weights[0]);
-    // disable continuous source: we first emit discrete photons
-    continuous_active_number_of_photons = _continuous_number_of_photons;
-  }
-
-  return PhotonSourceIndex(
-      discrete_active_number_of_photons, discrete_active_photon_index,
-      discrete_active_source_index, continuous_active_number_of_photons);
 }
 
 /**
@@ -222,53 +146,19 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) {
  * @brief Get a photon with a random direction and energy, originating at one
  * of the discrete sources.
  *
- * @param index PhotonSourceIndex of the currently active photon and source.
  * @param random_generator RandomGenerator to use.
  * @return Photon.
  */
-Photon PhotonSource::get_random_photon(PhotonSourceIndex &index,
-                                       RandomGenerator &random_generator) {
+Photon PhotonSource::get_random_photon(RandomGenerator &random_generator) {
 
   CoordinateVector<> position, direction;
   double energy;
   double weight;
 
-  //  if (index.get_continuous_active_number_of_photons() <
-  //      _continuous_number_of_photons) {
-  //    std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
-  //        _continuous_source->get_random_incoming_direction(random_generator);
-  //    position = posdir.first;
-  //    direction = posdir.second;
-  //    energy = _continuous_spectrum->get_random_frequency(random_generator);
-  //    weight = _continuous_photon_weight;
-  //  } else {
-  //    position =
-  //    _discrete_positions[index.get_discrete_active_source_index()];
-  //    direction = get_random_direction(random_generator);
-  //    energy = _discrete_spectrum->get_random_frequency(random_generator);
-  //    weight = _discrete_photon_weight;
-  //  }
-
-  //  update_indices(index);
-
-  bool discrete;
-  if (_discrete_number_of_photons > 0) {
-    if (_continuous_number_of_photons > 0) {
-      double x = random_generator.get_uniform_random_double();
-      if (x < 0.5) {
-        discrete = true;
-      } else {
-        discrete = false;
-      }
-    } else {
-      discrete = true;
-    }
-  } else {
-    discrete = false;
-  }
-
-  if (discrete) {
-    double x = random_generator.get_uniform_random_double();
+  double x = random_generator.get_uniform_random_double();
+  if (x > _continuous_probability) {
+    // discrete photon
+    x = random_generator.get_uniform_random_double();
     unsigned int i = 0;
     while (x > _discrete_probabilities[i]) {
       ++i;
@@ -278,6 +168,7 @@ Photon PhotonSource::get_random_photon(PhotonSourceIndex &index,
     energy = _discrete_spectrum->get_random_frequency(random_generator);
     weight = _discrete_photon_weight;
   } else {
+    // continuous photon
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         _continuous_source->get_random_incoming_direction(random_generator);
     position = posdir.first;

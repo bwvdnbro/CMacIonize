@@ -223,7 +223,6 @@ int main(int argc, char **argv) {
 
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();
-    lnumphoton = source.set_number_of_photons(lnumphoton);
     log->write_status("Start shooting photons...");
     log->write_status("Initial sub step number: ", lnumphoton, ".");
 
@@ -245,7 +244,6 @@ int main(int argc, char **argv) {
           lnumphoton, totnumphoton);
 
       photonshootjobs.update_counters(totweight, typecount);
-      lnumphoton = source.set_number_of_photons(lnumphoton);
 
       ++numsubstep;
     }

@@ -93,13 +93,10 @@ int main(int argc, char **argv) {
   Abundances abundances(0., 0., 0., 0., 0., 0.);
   PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
                       cross_sections);
-  source.set_number_of_photons(1000001);
-
-  PhotonSourceIndex index = source.get_first_index();
 
   // check if the returned position is what we expect it to be
   {
-    Photon photon = source.get_random_photon(index, random_generator);
+    Photon photon = source.get_random_photon(random_generator);
     assert_condition(photon.get_position().x() == 0.5);
     assert_condition(photon.get_position().y() == 0.5);
     assert_condition(photon.get_position().z() == 0.5);
@@ -113,7 +110,7 @@ int main(int argc, char **argv) {
     double weight = 1. / numphoton;
     double meanenergy = 0.;
     for (unsigned int i = 0; i < numphoton; ++i) {
-      Photon photon = source.get_random_photon(index, random_generator);
+      Photon photon = source.get_random_photon(random_generator);
       mean_direction += weight * photon.get_direction();
       meanenergy += weight * photon.get_energy();
     }

@@ -31,7 +31,6 @@
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "Photon.hpp"
-#include "PhotonSourceIndex.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
@@ -60,13 +59,8 @@ class PhotonSource {
 private:
   /// discrete sources
 
-  /*! @brief Total number of photons emitted by all discrete sources. */
-  unsigned int _discrete_number_of_photons;
-
   /*! @brief Positions of the discrete photon sources (in m). */
   std::vector< CoordinateVector<> > _discrete_positions;
-  /*! @brief Weights of the discrete photon sources. */
-  std::vector< double > _discrete_weights;
 
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum *_discrete_spectrum;
@@ -74,19 +68,11 @@ private:
   /*! @brief Weight of discrete photons. */
   double _discrete_photon_weight;
 
-  /*! @brief Total luminosity of the discrete sources. */
-  double _discrete_luminosity;
-
   /*! @brief Probabilities that a photon is emitted by a specific discrete
    *  source. */
   std::vector< double > _discrete_probabilities;
 
-  ///
-
   /// continuous sources
-
-  /*! @brief Total number of photons emitted by the continuous source. */
-  unsigned int _continuous_number_of_photons;
 
   /*! @brief IsotropicContinuousPhotonSource instance used. */
   IsotropicContinuousPhotonSource *_continuous_source;
@@ -97,10 +83,10 @@ private:
   /*! @brief Weight of continuous photons. */
   double _continuous_photon_weight;
 
-  /*! @brief Total luminosity of the continuous source. */
-  double _continuous_luminosity;
+  /*! @brief Probability that a photon is emitted by the continuous source. */
+  double _continuous_probability;
 
-  ///
+  /// all sources
 
   /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
    */
@@ -124,56 +110,6 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  /**
-   * @brief Update the given PhotonSourceIndex.
-   *
-   * @param index PhotonSourceIndex to update.
-   */
-  inline void update_indices(PhotonSourceIndex &index) {
-    if (index.get_continuous_active_number_of_photons() <
-        _continuous_number_of_photons) {
-      index.increment_continuous_active_number_of_photons();
-      if (index.get_continuous_active_number_of_photons() ==
-          _continuous_number_of_photons) {
-        // we did all continuous sources and completed the cycle, reset the
-        // counters and start again with the discrete sources
-        index.reset_discrete_active_source_index();
-        index.reset_discrete_active_photon_index();
-        index.set_discrete_active_number_of_photons(
-            std::round(_discrete_number_of_photons * _discrete_weights[0]));
-        // in case there are no discrete sources
-        if (index.get_discrete_active_source_index() ==
-            _discrete_positions.size()) {
-          index.reset_continuous_active_number_of_photons();
-        }
-      }
-    } else {
-      index.reset_discrete_active_photon_index();
-      if (index.get_discrete_active_photon_index() ==
-          index.get_discrete_active_number_of_photons()) {
-        index.reset_discrete_active_photon_index();
-        index.increment_discrete_active_source_index();
-        if (index.get_discrete_active_source_index() <
-            _discrete_positions.size()) {
-          index.set_discrete_active_number_of_photons(std::round(
-              _discrete_number_of_photons *
-              _discrete_weights[index.get_discrete_active_source_index()]));
-        } else {
-          // we did all discrete sources, now do the continuous source
-          index.reset_continuous_active_number_of_photons();
-          // in case there are no continuous sources
-          if (index.get_continuous_active_number_of_photons() ==
-              _continuous_number_of_photons) {
-            index.reset_discrete_active_source_index();
-            index.reset_discrete_active_photon_index();
-            index.set_discrete_active_number_of_photons(
-                std::round(_discrete_number_of_photons * _discrete_weights[0]));
-          }
-        }
-      }
-    }
-  }
-
   void set_cross_sections(Photon &photon, double energy);
 
 public:
@@ -183,10 +119,6 @@ public:
                PhotonSourceSpectrum *continuous_spectrum,
                Abundances &abundances, CrossSections &cross_sections,
                Log *log = nullptr);
-
-  unsigned int set_number_of_photons(unsigned int number_of_photons);
-
-  PhotonSourceIndex get_first_index();
 
   /**
    * @brief Get a random direction.
@@ -206,8 +138,7 @@ public:
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 
-  Photon get_random_photon(PhotonSourceIndex &index,
-                           RandomGenerator &random_generator);
+  Photon get_random_photon(RandomGenerator &random_generator);
 
   double get_total_luminosity();
 
