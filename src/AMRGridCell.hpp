@@ -35,6 +35,46 @@
 #define AMRGRIDCELL_MAXKEY 0xffffffff
 
 /**
+ * @brief Possible relative positions for neighbouring cells.
+ */
+enum AMRNgbPosition {
+  /*! @brief Left neighbour (x = -1). */
+  AMRNGBPOSITION_LEFT = 0,
+  /*! @brief Right neighbour (x = +1). */
+  AMRNGBPOSITION_RIGHT,
+  /*! @brief Front neighbour (y = -1). */
+  AMRNGBPOSITION_FRONT,
+  /*! @brief Back neighbour (y = +1). */
+  AMRNGBPOSITION_BACK,
+  /*! @brief Bottom neighbour (z = -1). */
+  AMRNGBPOSITION_BOTTOM,
+  /*! @brief Top neighbour (z = +1). */
+  AMRNGBPOSITION_TOP
+};
+
+/**
+ * @brief Possible relative positions for the child nodes.
+ */
+enum AMRChildPosition {
+  /*! @brief Left front bottom child (x = 0, y = 0, z = 0). */
+  AMRCHILDPOSITION_LFB = 0,
+  /*! @brief Left front top child (x = 0, y = 0, z = 1). */
+  AMRCHILDPOSITION_LFT,
+  /*! @brief Left back bottom child (x = 0, y = 1, z = 0). */
+  AMRCHILDPOSITION_LBB,
+  /*! @brief Left back top child (x = 0, y = 1, z = 1). */
+  AMRCHILDPOSITION_LBT,
+  /*! @brief Right front bottom child (x = 1, y = 0, z = 0). */
+  AMRCHILDPOSITION_RFB,
+  /*! @brief Right front top child (x = 1, y = 0, z = 1). */
+  AMRCHILDPOSITION_RFT,
+  /*! @brief Right back bottom child (x = 1, y = 1, z = 0). */
+  AMRCHILDPOSITION_RBB,
+  /*! @brief Right back top child (x = 1, y = 1, z = 1). */
+  AMRCHILDPOSITION_RBT
+};
+
+/**
  * @brief Cell in the hierarchical AMR grid.
  *
  * The cell can either contain cells itself, or can be a single cell containing
@@ -48,11 +88,14 @@ private:
   /*! @brief Refinement levels, if this is not a single cell. */
   AMRGridCell *_children[8];
 
+  /*! @brief Neighbours on the same or higher level if this is a single cell. */
+  AMRGridCell *_ngbs[6];
+
 public:
   /**
    * @brief Empty constructor.
    */
-  inline AMRGridCell() : _values(nullptr), _children{nullptr} {}
+  inline AMRGridCell() : _values(nullptr), _children{nullptr}, _ngbs{nullptr} {}
 
   inline ~AMRGridCell() {
     if (_values != nullptr) {
@@ -75,9 +118,9 @@ public:
    * @param key Key linking to a unique cell in the hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &operator[](unsigned int &key) const {
+  inline AMRGridCell &operator[](unsigned int &key) {
     if (key == 1) {
-      return *_values;
+      return *this;
     } else {
       unsigned char cell = key & 7;
       key >>= 3;
@@ -87,6 +130,13 @@ public:
       return (*_children[cell])[key];
     }
   }
+
+  /**
+   * @brief Get the value(s) stored in the cell.
+   *
+   * @return Value(s) stored in the cell.
+   */
+  inline _CellContents_ &value() const { return *_values; }
 
   /**
    * @brief Get the volume of the cell with the given key.
@@ -553,6 +603,144 @@ public:
       // this is 1 lowest level cell
       return 1;
     }
+  }
+
+  /**
+   * @brief Check if this cell is a single cell, or if it has children.
+   *
+   * @return True if this cell has values, and hence is a single cell.
+   */
+  inline bool is_single_cell() { return _values != nullptr; }
+
+  /**
+   * @brief Get the child of the cell at the given position.
+   *
+   * @param position AMRChildPosition.
+   * @return AMRGridCell at that position.
+   */
+  inline AMRGridCell *get_child(AMRChildPosition position) {
+    return _children[position];
+  }
+
+  /**
+   * @brief Get the child of the cell at the given position.
+   *
+   * This version checks if the requested child exists, and returns a pointer to
+   * this cell if it does not.
+   *
+   * @param position AMRChildPosition.
+   * @return AMRGridCell at that position.
+   */
+  inline AMRGridCell *get_child_safe(AMRChildPosition position) {
+    if (is_single_cell()) {
+      return this;
+    } else {
+      return get_child(position);
+    }
+  }
+
+  /**
+   * @brief Set the neighbours of the cell.
+   *
+   * @param left Left neighbour.
+   * @param right Right neighbour.
+   * @param front Front neighbour.
+   * @param back Back neighbour.
+   * @param bottom Bottom neighbour.
+   * @param top Top neighbour.
+   */
+  inline void set_ngbs(AMRGridCell *left, AMRGridCell *right,
+                       AMRGridCell *front, AMRGridCell *back,
+                       AMRGridCell *bottom, AMRGridCell *top) {
+    // set the ngbs at this level
+    _ngbs[AMRNGBPOSITION_LEFT] = left;
+    _ngbs[AMRNGBPOSITION_RIGHT] = right;
+    _ngbs[AMRNGBPOSITION_FRONT] = front;
+    _ngbs[AMRNGBPOSITION_BACK] = back;
+    _ngbs[AMRNGBPOSITION_BOTTOM] = bottom;
+    _ngbs[AMRNGBPOSITION_TOP] = top;
+
+    // now recursively set the ngbs of the children
+    if (_values == nullptr) {
+      if (_children[AMRCHILDPOSITION_LFB] != nullptr) {
+        _children[AMRCHILDPOSITION_LFB]->set_ngbs(
+            left->get_child(AMRCHILDPOSITION_RFB),
+            _children[AMRCHILDPOSITION_RFB],
+            front->get_child(AMRCHILDPOSITION_LBB),
+            _children[AMRCHILDPOSITION_LBB],
+            bottom->get_child(AMRCHILDPOSITION_LFT),
+            _children[AMRCHILDPOSITION_LFT]);
+      }
+      if (_children[AMRCHILDPOSITION_LFT] != nullptr) {
+        _children[AMRCHILDPOSITION_LFT]->set_ngbs(
+            left->get_child(AMRCHILDPOSITION_RFT),
+            _children[AMRCHILDPOSITION_RFT],
+            front->get_child(AMRCHILDPOSITION_LBT),
+            _children[AMRCHILDPOSITION_LBT], _children[AMRCHILDPOSITION_LFB],
+            top->get_child(AMRCHILDPOSITION_LFB));
+      }
+      if (_children[AMRCHILDPOSITION_LBB] != nullptr) {
+        _children[AMRCHILDPOSITION_LBB]->set_ngbs(
+            left->get_child(AMRCHILDPOSITION_RBB),
+            _children[AMRCHILDPOSITION_RBB], _children[AMRCHILDPOSITION_LFB],
+            back->get_child(AMRCHILDPOSITION_LFB),
+            _children[AMRCHILDPOSITION_LBT],
+            top->get_child(AMRCHILDPOSITION_LBT));
+      }
+      if (_children[AMRCHILDPOSITION_LBT] != nullptr) {
+        _children[AMRCHILDPOSITION_LBT]->set_ngbs(
+            left->get_child(AMRCHILDPOSITION_RBT),
+            _children[AMRCHILDPOSITION_RBT], _children[AMRCHILDPOSITION_LFT],
+            back->get_child(AMRCHILDPOSITION_LFT),
+            _children[AMRCHILDPOSITION_LBB],
+            top->get_child(AMRCHILDPOSITION_LBB));
+      }
+      if (_children[AMRCHILDPOSITION_RFB] != nullptr) {
+        _children[AMRCHILDPOSITION_RFB]->set_ngbs(
+            _children[AMRCHILDPOSITION_LFB],
+            right->get_child(AMRCHILDPOSITION_LFB),
+            front->get_child(AMRCHILDPOSITION_RBB),
+            _children[AMRCHILDPOSITION_RBB],
+            bottom->get_child(AMRCHILDPOSITION_RFT),
+            _children[AMRCHILDPOSITION_RFT]);
+      }
+      if (_children[AMRCHILDPOSITION_RFT] != nullptr) {
+        _children[AMRCHILDPOSITION_RFT]->set_ngbs(
+            _children[AMRCHILDPOSITION_LFT],
+            right->get_child(AMRCHILDPOSITION_LFT),
+            front->get_child(AMRCHILDPOSITION_RBT),
+            _children[AMRCHILDPOSITION_RBT], _children[AMRCHILDPOSITION_RFB],
+            top->get_child(AMRCHILDPOSITION_RFB));
+      }
+      if (_children[AMRCHILDPOSITION_RBB] != nullptr) {
+        _children[AMRCHILDPOSITION_RBB]->set_ngbs(
+            _children[AMRCHILDPOSITION_LBB],
+            right->get_child(AMRCHILDPOSITION_LBB),
+            _children[AMRCHILDPOSITION_RFB],
+            back->get_child(AMRCHILDPOSITION_RFB),
+            _children[AMRCHILDPOSITION_RBT],
+            top->get_child(AMRCHILDPOSITION_RBT));
+      }
+      if (_children[AMRCHILDPOSITION_RBT] != nullptr) {
+        _children[AMRCHILDPOSITION_RBT]->set_ngbs(
+            _children[AMRCHILDPOSITION_LBT],
+            right->get_child(AMRCHILDPOSITION_LBT),
+            _children[AMRCHILDPOSITION_RFT],
+            back->get_child(AMRCHILDPOSITION_RFT),
+            _children[AMRCHILDPOSITION_RBB],
+            top->get_child(AMRCHILDPOSITION_RBB));
+      }
+    }
+  }
+
+  /**
+   * @brief Get the neighbour of the given cell at the given position.
+   *
+   * @param position AMRNgbPosition of the neighbour.
+   * @return Pointer to the neighbour.
+   */
+  inline AMRGridCell *get_ngb(AMRNgbPosition position) {
+    return _ngbs[position];
   }
 
   /**

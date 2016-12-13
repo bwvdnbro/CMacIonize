@@ -66,14 +66,14 @@ int main(int argc, char **argv) {
 
   // test the access on position and access on key routines, part 1
   grid.get_cell(CoordinateVector<>(0.1)) = 42.;
-  assert_condition(grid[64] == 42.);
+  assert_condition(grid[64].value() == 42.);
   grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) = 3.14;
-  assert_condition(grid[0x0010000000000040] == 3.14);
+  assert_condition(grid[0x0010000000000040].value() == 3.14);
 
   // part 2
-  grid[64] = 3.14;
+  grid[64].value() = 3.14;
   assert_condition(grid.get_cell(CoordinateVector<>(0.1)) == 3.14);
-  grid[0x0010000000000040] = 42.;
+  grid[0x0010000000000040].value() = 42.;
   assert_condition(grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) == 42.);
 
   // test volume, midpoint and geometry routines

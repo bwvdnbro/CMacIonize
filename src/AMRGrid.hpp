@@ -164,7 +164,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &operator[](unsigned long key) const {
+  inline AMRGridCell< _CellContents_ > &operator[](unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     return get_block(key)[cell];
   }
@@ -607,6 +607,45 @@ public:
     unsigned long next_key = block_key;
     next_key = (next_key << 32) + next_cell;
     return next_key;
+  }
+
+  /**
+   * @brief Set the internal neighbour relations that are used to speed up
+   * neigbour finding.
+   */
+  inline void set_ngbs() {
+    for (int ix = 0; ix < _ncell.x(); ++ix) {
+      for (int iy = 0; iy < _ncell.y(); ++iy) {
+        for (int iz = 0; iz < _ncell.z(); ++iz) {
+          AMRGridCell< _CellContents_ > *left = nullptr;
+          if (ix > 0) {
+            left = _top_level[ix - 1][iy][iz];
+          }
+          AMRGridCell< _CellContents_ > *right = nullptr;
+          if (ix < _ncell.x() - 1) {
+            right = _top_level[ix + 1][iy][iz];
+          }
+          AMRGridCell< _CellContents_ > *front = nullptr;
+          if (iy > 0) {
+            front = _top_level[ix][iy - 1][iz];
+          }
+          AMRGridCell< _CellContents_ > *back = nullptr;
+          if (iy < _ncell.y() - 1) {
+            back = _top_level[ix][iy + 1][iz];
+          }
+          AMRGridCell< _CellContents_ > *bottom = nullptr;
+          if (iz > 0) {
+            bottom = _top_level[ix][iy][iz - 1];
+          }
+          AMRGridCell< _CellContents_ > *top = nullptr;
+          if (iz < _ncell.z() - 1) {
+            top = _top_level[ix][iy][iz + 1];
+          }
+          _top_level[ix][iy][iz].set_ngbs(left, right, front, back, bottom,
+                                          top);
+        }
+      }
+    }
   }
 
   /**

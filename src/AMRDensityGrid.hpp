@@ -101,7 +101,7 @@ private:
       // initialize and check refinement criterion for children
       unsigned long child_index = _grid.refine_cell(index);
       while (child_index != next_index) {
-        DensityValues &cell = _grid[child_index];
+        DensityValues &cell = _grid[child_index].value();
         CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
         cell.set_total_density(
             density_function(child_midpoint).get_total_density());
@@ -289,7 +289,7 @@ public:
    * @return DensityValues stored in that cell.
    */
   virtual DensityValues &get_cell_values(unsigned long index) const {
-    return _grid[index];
+    return _grid[index].value();
   }
 
   /**
