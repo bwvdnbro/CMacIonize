@@ -74,7 +74,7 @@ public:
    *
    * @param jobs JobMarket that spawns jobs.
    */
-  inline void do_work(_JobMarket_ &jobs) {
+  inline void do_work(_JobMarket_ &jobs) const {
 #ifdef OUTPUT_CYCLES
     std::stringstream ofname;
     ofname << "jobtimes_" << _thread_id << ".txt";

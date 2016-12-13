@@ -78,14 +78,14 @@ public:
    *
    * @return Number of workers used.
    */
-  inline int get_worksize() { return _worksize; }
+  inline int get_worksize() const { return _worksize; }
 
   /**
    * @brief Execute the given JobMarket in parallel.
    *
    * @param jobs JobMarket to execute.
    */
-  inline void do_in_parallel(_JobMarket_ &jobs) {
+  inline void do_in_parallel(_JobMarket_ &jobs) const {
     if (_worksize > 1) {
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)

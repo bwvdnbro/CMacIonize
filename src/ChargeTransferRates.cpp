@@ -83,7 +83,7 @@ ChargeTransferRates::ChargeTransferRates() {
  * @return Charge transfer recombination rate (in m^3s^-1).
  */
 double ChargeTransferRates::get_charge_transfer_recombination_rate(
-    unsigned char stage, unsigned char atom, double temperature) {
+    unsigned char stage, unsigned char atom, double temperature) const {
   unsigned char ipIon = stage - 1;
 
   if (ipIon == 0) {
@@ -115,7 +115,7 @@ double ChargeTransferRates::get_charge_transfer_recombination_rate(
  * @return Charge transfer ionization rate (in m^3s^-1).
  */
 double ChargeTransferRates::get_charge_transfer_ionization_rate(
-    unsigned char stage, unsigned char atom, double temperature) {
+    unsigned char stage, unsigned char atom, double temperature) const {
 
   unsigned char ipIon = stage;
   if (_CTIon[0][ipIon - 1][atom - 1] == 0.) {

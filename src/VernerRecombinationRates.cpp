@@ -98,7 +98,7 @@ VernerRecombinationRates::VernerRecombinationRates() {
  */
 double VernerRecombinationRates::get_recombination_rate_verner(unsigned char iz,
                                                                unsigned char in,
-                                                               double T) {
+                                                               double T) const {
   double r = 0.;
 
   if (iz < 1 || iz > 30) {
@@ -137,8 +137,9 @@ double VernerRecombinationRates::get_recombination_rate_verner(unsigned char iz,
  * @param temperature Temperature (in K).
  * @return Recombination rate (in m^3s^-1).
  */
-double VernerRecombinationRates::get_recombination_rate(IonName ion,
-                                                        double temperature) {
+double
+VernerRecombinationRates::get_recombination_rate(IonName ion,
+                                                 double temperature) const {
   double rate = 0.;
   double T4 = temperature * 1.e-4;
   switch (ion) {

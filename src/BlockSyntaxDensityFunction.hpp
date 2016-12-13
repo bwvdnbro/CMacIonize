@@ -49,7 +49,7 @@ private:
    * @param type Type of block.
    * @return Exponent corresponding to that type.
    */
-  inline double get_exponent(std::string type) {
+  inline static double get_exponent(std::string type) {
     if (type == "rhombus") {
       return 1.;
     } else if (type == "sphere") {

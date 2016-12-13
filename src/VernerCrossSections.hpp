@@ -89,9 +89,9 @@ public:
   VernerCrossSections();
 
   double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e);
+                                  unsigned char is, double e) const;
 
-  virtual double get_cross_section(IonName ion, double energy);
+  virtual double get_cross_section(IonName ion, double energy) const;
 };
 
 #endif // CROSSSECTIONS_HPP

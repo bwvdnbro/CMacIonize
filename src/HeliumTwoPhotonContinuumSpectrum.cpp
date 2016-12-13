@@ -135,7 +135,7 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
  * @return Random frequency (in Hz).
  */
 double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
-    RandomGenerator &random_generator, double temperature) {
+    RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
@@ -154,7 +154,7 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double HeliumTwoPhotonContinuumSpectrum::get_total_flux() {
+double HeliumTwoPhotonContinuumSpectrum::get_total_flux() const {
   cmac_error(
       "HeliumTwoPhotonContinuumSpectrum::get_total_flux() is not implemented!");
   return 0.;

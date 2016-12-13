@@ -113,7 +113,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(ParameterFile &params,
  * @return Random frequency (in Hz).
  */
 double PlanckPhotonSourceSpectrum::get_random_frequency(
-    RandomGenerator &random_generator, double temperature) {
+    RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
 
   unsigned int ix = Utilities::locate(x, _cumulative_distribution,
@@ -137,7 +137,7 @@ double PlanckPhotonSourceSpectrum::get_random_frequency(
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double PlanckPhotonSourceSpectrum::get_total_flux() {
+double PlanckPhotonSourceSpectrum::get_total_flux() const {
   cmac_error(
       "PlanckPhotonSourceSpectrum::get_total_flux() is not implemented!");
   return 0.;

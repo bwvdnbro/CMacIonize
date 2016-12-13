@@ -72,7 +72,7 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineParser::print_description(std::ostream &stream) {
+void CommandLineParser::print_description(std::ostream &stream) const {
   stream << "Usage:\n\n";
   stream << "    " << _program_name;
   for (auto it = _options.begin(); it != _options.end(); ++it) {
@@ -177,7 +177,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineParser::print_contents(std::ostream &stream) {
+void CommandLineParser::print_contents(std::ostream &stream) const {
   for (auto it = _dictionary.begin(); it != _dictionary.end(); ++it) {
     stream << it->first << ": " << it->second << "\n";
   }

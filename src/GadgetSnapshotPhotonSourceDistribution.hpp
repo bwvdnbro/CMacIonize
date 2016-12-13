@@ -58,10 +58,10 @@ public:
   GadgetSnapshotPhotonSourceDistribution(ParameterFile &params,
                                          Log *log = nullptr);
 
-  virtual unsigned int get_number_of_sources();
+  virtual unsigned int get_number_of_sources() const;
   virtual CoordinateVector<> get_position(unsigned int index);
-  virtual double get_weight(unsigned int index);
-  virtual double get_total_luminosity();
+  virtual double get_weight(unsigned int index) const;
+  virtual double get_total_luminosity() const;
 };
 
 #endif // GADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_HPP

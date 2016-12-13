@@ -231,7 +231,7 @@ public:
    *
    * @return Total density (in m^-3).
    */
-  inline double get_total_density() { return _total_density; }
+  inline double get_total_density() const { return _total_density; }
 
   /**
    * @brief Get the ionic fraction of the given ion.
@@ -239,14 +239,16 @@ public:
    * @param ion IonName of a valid ion.
    * @return Ionic fraction.
    */
-  inline double get_ionic_fraction(IonName ion) { return _ionic_fraction[ion]; }
+  inline double get_ionic_fraction(IonName ion) const {
+    return _ionic_fraction[ion];
+  }
 
   /**
    * @brief Get the temperature.
    *
    * @return Temperature (in K).
    */
-  inline double get_temperature() { return _temperature; }
+  inline double get_temperature() const { return _temperature; }
 
   /**
    * @brief Get the probability of a photon being re-emitted as an ionizing
@@ -254,7 +256,7 @@ public:
    *
    * @return Probability of ionizing photon re-emission.
    */
-  inline double get_pHion() { return _pHion; }
+  inline double get_pHion() const { return _pHion; }
 
   /**
    * @brief Get the probability of a photon being re-emitted as an ionizing
@@ -263,7 +265,7 @@ public:
    * @param index Mode in which the photon is re-emitted.
    * @return Probability of ionizing photon re-emission.
    */
-  inline double get_pHe_em(unsigned char index) { return _pHe_em[index]; }
+  inline double get_pHe_em(unsigned char index) const { return _pHe_em[index]; }
 
   /**
    * @brief Get the mean intensity of hydrogen ionizing radiation during the
@@ -272,7 +274,9 @@ public:
    * @return Mean intensity of hydrogen ionizing radiation during the previous
    * sub-step (in m^3s^-1).
    */
-  inline double get_mean_intensity_H_old() { return _mean_intensity_H_old; }
+  inline double get_mean_intensity_H_old() const {
+    return _mean_intensity_H_old;
+  }
 
   /**
    * @brief Get the mean intensity integral for the given ion.
@@ -281,14 +285,18 @@ public:
    * @return Mean intensity of ionizing radiation without normalization factor
    * (in m^3).
    */
-  inline double get_mean_intensity(IonName ion) { return _mean_intensity[ion]; }
+  inline double get_mean_intensity(IonName ion) const {
+    return _mean_intensity[ion];
+  }
 
   /**
    * @brief Get the hydrogen neutral fraction during the previous iteration.
    *
    * @return Old hydrogen neutral fraction.
    */
-  inline double get_old_neutral_fraction_H() { return _old_neutral_fraction_H; }
+  inline double get_old_neutral_fraction_H() const {
+    return _old_neutral_fraction_H;
+  }
 
   /**
    * @brief Get the hydrogen ionization heating integral.
@@ -296,7 +304,7 @@ public:
    * @return Hydrogen ionization heating without normalization factor (in
    * m^3s^-1).
    */
-  inline double get_heating_H() { return _heating_H; }
+  inline double get_heating_H() const { return _heating_H; }
 
   /**
    * @brief Get the helium ionization heating integral.
@@ -304,14 +312,14 @@ public:
    * @return Helium ionization heating without normalization factor (in
    * m^3s^-1).
    */
-  inline double get_heating_He() { return _heating_He; }
+  inline double get_heating_He() const { return _heating_He; }
 
   /**
    * @brief Get the EmissivityValues of this cell.
    *
    * @return EmissivityValues.
    */
-  inline EmissivityValues *get_emissivities() { return _emissivities; }
+  inline EmissivityValues *get_emissivities() const { return _emissivities; }
 
   /**
    * @brief Lock this cell for writing.

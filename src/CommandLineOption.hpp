@@ -79,17 +79,17 @@ public:
                     int argument = COMMANDLINEOPTION_NOARGUMENT,
                     std::string default_value = "", bool required = true);
 
-  void print_usage(std::ostream &stream);
-  void print_description(std::ostream &stream);
+  void print_usage(std::ostream &stream) const;
+  void print_description(std::ostream &stream) const;
 
-  std::string get_long_name();
-  char get_short_name();
-  bool has_argument();
-  bool is_required();
+  std::string get_long_name() const;
+  char get_short_name() const;
+  bool has_argument() const;
+  bool is_required() const;
 
-  bool matches(std::string option);
-  std::string parse_argument(std::string argument);
-  std::string get_default_value();
+  bool matches(std::string option) const;
+  std::string parse_argument(std::string argument) const;
+  std::string get_default_value() const;
 };
 
 #endif // COMMANDLINEOPTION_HPP

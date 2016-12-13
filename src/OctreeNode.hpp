@@ -154,35 +154,35 @@ public:
    *
    * @return Sibling, next node to be checked if this node is not opened.
    */
-  inline OctreeNode *get_sibling() { return _sibling; }
+  inline OctreeNode *get_sibling() const { return _sibling; }
 
   /**
    * @brief Get the first existing child node.
    *
    * @return Child node, next node to be checked if this node is opened.
    */
-  inline OctreeNode *get_child() { return _child; }
+  inline OctreeNode *get_child() const { return _child; }
 
   /**
    * @brief Check if this node is a leaf.
    *
    * @return True if this is a leaf.
    */
-  inline bool is_leaf() { return _index < OCTREE_NOLEAF; }
+  inline bool is_leaf() const { return _index < OCTREE_NOLEAF; }
 
   /**
    * @brief Get the Box of this node.
    *
    * @return Box containing this node.
    */
-  inline Box &get_box() { return _box; }
+  inline const Box &get_box() const { return _box; }
 
   /**
    * @brief Get the index of the leaf.
    *
    * @return Index of the leaf.
    */
-  inline unsigned int get_index() { return _index; }
+  inline unsigned int get_index() const { return _index; }
 
   /**
    * @brief Set the auxiliary variable based on the given list of variables and
@@ -216,7 +216,7 @@ public:
    *
    * @return Auxiliary variable.
    */
-  inline double get_variable() { return _variable; }
+  inline double get_variable() const { return _variable; }
 
   /**
    * @brief Print the node for visual inspection.
@@ -225,7 +225,7 @@ public:
    * @param positions Positions underlying the tree.
    */
   inline void print(std::ostream &stream,
-                    std::vector< CoordinateVector<> > &positions) {
+                    std::vector< CoordinateVector<> > &positions) const {
     if (is_leaf()) {
       stream << positions[_index].x() << "\t" << positions[_index].y() << "\t"
              << positions[_index].z() << "\n\n";

@@ -69,14 +69,14 @@ public:
   EmissivityCalculator(Abundances &abundances);
 
   void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
-             double &emhemi);
+             double &emhemi) const;
 
   EmissivityValues calculate_emissivities(DensityValues &cell,
                                           Abundances &abundances,
-                                          LineCoolingData &lines);
+                                          const LineCoolingData &lines) const;
 
-  void calculate_emissivities(DensityGrid &grid);
-  std::vector< EmissivityValues > get_emissivities(DensityGrid &grid);
+  void calculate_emissivities(DensityGrid &grid) const;
+  std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;
 };
 
 #endif // EMISSIVITYCALCULATOR_HPP

@@ -68,7 +68,7 @@ public:
    * @return True if the density is larger than 1.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      DensityValues &cell) {
+                      DensityValues &cell) const {
     return cell.get_total_density() > 1. && level < 6;
   }
 };

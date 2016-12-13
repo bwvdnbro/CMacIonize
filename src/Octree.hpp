@@ -115,7 +115,7 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre.
    */
-  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) {
+  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) const {
     std::vector< unsigned int > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
@@ -154,7 +154,9 @@ public:
    *
    * @param stream std::ostream to write to.
    */
-  inline void print(std::ostream &stream) { _root->print(stream, _positions); }
+  inline void print(std::ostream &stream) const {
+    _root->print(stream, _positions);
+  }
 };
 
 #endif // OCTREE_HPP

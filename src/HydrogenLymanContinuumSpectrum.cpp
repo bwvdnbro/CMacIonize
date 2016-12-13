@@ -105,7 +105,7 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
  * @return Random frequency (in Hz).
  */
 double HydrogenLymanContinuumSpectrum::get_random_frequency(
-    RandomGenerator &random_generator, double temperature) {
+    RandomGenerator &random_generator, double temperature) const {
   unsigned int iT = Utilities::locate(temperature, _temperature,
                                       HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = random_generator.get_uniform_random_double();
@@ -127,7 +127,7 @@ double HydrogenLymanContinuumSpectrum::get_random_frequency(
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double HydrogenLymanContinuumSpectrum::get_total_flux() {
+double HydrogenLymanContinuumSpectrum::get_total_flux() const {
   cmac_error(
       "HydrogenLymanContinuumSpectrum::get_total_flux() is not implemented!");
   return 0.;

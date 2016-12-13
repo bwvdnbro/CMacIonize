@@ -49,12 +49,13 @@ private:
   /*! @brief Internal dictionary storing the parameters as key-value pairs. */
   std::map< std::string, std::string > _dictionary;
 
-  bool is_comment_line(std::string &line);
-  bool is_empty_line(std::string &line);
-  void strip_comments_line(std::string &line);
-  unsigned int is_indented_line(std::string &line);
-  std::pair< std::string, std::string > read_keyvaluepair(std::string &line);
-  void strip_whitespace_line(std::string &line);
+  static bool is_comment_line(std::string &line);
+  static bool is_empty_line(std::string &line);
+  static void strip_comments_line(std::string &line);
+  static unsigned int is_indented_line(std::string &line);
+  static std::pair< std::string, std::string >
+  read_keyvaluepair(std::string &line);
+  static void strip_whitespace_line(std::string &line);
 
 public:
   /**
@@ -76,7 +77,7 @@ public:
     _dictionary[key] = value;
   }
 
-  void print_contents(std::ostream &stream);
+  void print_contents(std::ostream &stream) const;
 
   /**
    * @brief Read a value of the given template type from the internal
@@ -89,7 +90,7 @@ public:
    * needs to be present in the parameter file.
    * @return Value of that key, as a variable with the given template type.
    */
-  template < typename _datatype_ > _datatype_ get_value(std::string key);
+  template < typename _datatype_ > _datatype_ get_value(std::string key) const;
 
   /**
    * @brief Read a value of the given template type from the internal
@@ -120,7 +121,8 @@ public:
    * @param key Key in the dictionary that relates to a unique parameter.
    * @return Value of that key, in SI units.
    */
-  template < Quantity _quantity_ > double get_physical_value(std::string key) {
+  template < Quantity _quantity_ >
+  double get_physical_value(std::string key) const {
     std::string svalue = get_value< std::string >(key);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
     return UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
@@ -133,7 +135,7 @@ public:
    * @return Value of that key, in SI units.
    */
   template < Quantity _quantity_ >
-  CoordinateVector<> get_physical_vector(std::string key) {
+  CoordinateVector<> get_physical_vector(std::string key) const {
     std::string svalue = get_value< std::string >(key);
     std::string parts[3];
     Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
@@ -223,7 +225,7 @@ public:
      * @param it Iterator to compare with.
      * @return True if both iterators are the same.
      */
-    inline bool operator==(iterator it) { return _it == it._it; }
+    inline bool operator==(iterator it) const { return _it == it._it; }
 
     /**
      * @brief Comparison iterator.
@@ -231,21 +233,21 @@ public:
      * @param it Iterator to compare with.
      * @return True if both iterators are not the same.
      */
-    inline bool operator!=(iterator it) { return !(*this == it); }
+    inline bool operator!=(iterator it) const { return !(*this == it); }
 
     /**
      * @brief Get the key this iterator points to.
      *
      * @return Key.
      */
-    inline std::string get_key() { return _it->first; }
+    inline std::string get_key() const { return _it->first; }
 
     /**
      * @brief Get the value this iterator points to.
      *
      * @return Value.
      */
-    inline std::string get_value() { return _it->second; }
+    inline std::string get_value() const { return _it->second; }
   };
 
   /**
@@ -275,12 +277,13 @@ public:
  * @return Value of the parameter, as a std::string.
  */
 template <>
-inline std::string ParameterFile::get_value< std::string >(std::string key) {
-  std::map< std::string, std::string >::iterator it = _dictionary.find(key);
-  if (it == _dictionary.end()) {
+inline std::string
+ParameterFile::get_value< std::string >(std::string key) const {
+  unsigned int count = _dictionary.count(key);
+  if (count == 0) {
     cmac_error("Parameter \"%s\" not found!", key.c_str());
   }
-  return it->second;
+  return _dictionary.at(key);
 }
 
 /**
@@ -289,7 +292,8 @@ inline std::string ParameterFile::get_value< std::string >(std::string key) {
  * @param key Key in the dictionary.
  * @return Floating point value of the parameter.
  */
-template <> inline double ParameterFile::get_value< double >(std::string key) {
+template <>
+inline double ParameterFile::get_value< double >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< double >(svalue);
 }
@@ -300,7 +304,7 @@ template <> inline double ParameterFile::get_value< double >(std::string key) {
  * @param key Key in the dictionary.
  * @return Integer value of the parameter.
  */
-template <> inline int ParameterFile::get_value< int >(std::string key) {
+template <> inline int ParameterFile::get_value< int >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< int >(svalue);
 }
@@ -313,7 +317,7 @@ template <> inline int ParameterFile::get_value< int >(std::string key) {
  */
 template <>
 inline unsigned char
-ParameterFile::get_value< unsigned char >(std::string key) {
+ParameterFile::get_value< unsigned char >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< unsigned char >(svalue);
 }
@@ -330,7 +334,8 @@ ParameterFile::get_value< unsigned char >(std::string key) {
  * @param key Key in the dictionary.
  * @return Bool value of the parameter.
  */
-template <> inline bool ParameterFile::get_value< bool >(std::string key) {
+template <>
+inline bool ParameterFile::get_value< bool >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< bool >(svalue);
 }
@@ -344,7 +349,7 @@ template <> inline bool ParameterFile::get_value< bool >(std::string key) {
  */
 template <>
 inline CoordinateVector<>
-ParameterFile::get_value< CoordinateVector<> >(std::string key) {
+ParameterFile::get_value< CoordinateVector<> >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< CoordinateVector<> >(svalue);
 }
@@ -358,7 +363,7 @@ ParameterFile::get_value< CoordinateVector<> >(std::string key) {
  */
 template <>
 inline CoordinateVector< int >
-ParameterFile::get_value< CoordinateVector< int > >(std::string key) {
+ParameterFile::get_value< CoordinateVector< int > >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< CoordinateVector< int > >(svalue);
 }
@@ -372,7 +377,7 @@ ParameterFile::get_value< CoordinateVector< int > >(std::string key) {
  */
 template <>
 inline CoordinateVector< bool >
-ParameterFile::get_value< CoordinateVector< bool > >(std::string key) {
+ParameterFile::get_value< CoordinateVector< bool > >(std::string key) const {
   std::string svalue = get_value< std::string >(key);
   return Utilities::convert< CoordinateVector< bool > >(svalue);
 }

@@ -180,6 +180,15 @@ public:
   inline _datatype_ &operator[](unsigned int i) { return _c[i]; }
 
   /**
+   * @brief Index operator. Get a const reference to the component at the given
+   * index.
+   *
+   * @param i Index which we want to access.
+   * @return Const reference to the requested component.
+   */
+  inline const _datatype_ &operator[](unsigned int i) const { return _c[i]; }
+
+  /**
    * @brief Compare this CoordinateVector with another CoordinateVector.
    *
    * @param v CoordinateVector to compare with.

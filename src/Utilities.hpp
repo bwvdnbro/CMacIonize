@@ -51,13 +51,34 @@ namespace Utilities {
 inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
 
 /**
+ * @brief Split a string of the form [str1, str2, str3] into its parts.
+ *
+ * @param value std::string having the form mentioned above.
+ * @param str1 Variable to store the first part in.
+ * @param str2 Variable to store the second part in.
+ * @param str3 Variable to store the third part in.
+ */
+inline void split_string(const std::string &value, std::string &str1,
+                         std::string &str2, std::string &str3) {
+  size_t pos1 = value.find('[') + 1;
+  size_t pos2 = value.find(',', pos1);
+  str1 = value.substr(pos1, pos2 - pos1);
+  pos1 = pos2 + 1;
+  pos2 = value.find(',', pos1);
+  str2 = value.substr(pos1, pos2 - pos1);
+  pos1 = pos2 + 1;
+  pos2 = value.find(']', pos1);
+  str3 = value.substr(pos1, pos2 - pos1);
+}
+
+/**
  * @brief Convert the given string to a variable of the given template type.
  *
  * @param value std::string value.
  * @return Variable of the given template type containing the parsed contents of
  * the given std::string.
  */
-template < typename _datatype_ > _datatype_ convert(std::string value);
+template < typename _datatype_ > _datatype_ convert(const std::string &value);
 
 /**
  * @brief Convert the given string to a double precision floating point value.
@@ -65,7 +86,7 @@ template < typename _datatype_ > _datatype_ convert(std::string value);
  * @param value std::string value.
  * @return Double precision floating point stored in the string.
  */
-template <> inline double convert< double >(std::string value) {
+template <> inline double convert< double >(const std::string &value) {
   char *str_end;
   double dvalue = strtod(value.c_str(), &str_end);
   if (str_end == value.c_str()) {
@@ -82,7 +103,8 @@ template <> inline double convert< double >(std::string value) {
  * @return CoordinateVector containing the components found.
  */
 template <>
-inline CoordinateVector<> convert< CoordinateVector<> >(std::string value) {
+inline CoordinateVector<>
+convert< CoordinateVector<> >(const std::string &value) {
   CoordinateVector<> vvalue;
   int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0], &vvalue[1],
                          &vvalue[2]);
@@ -94,33 +116,12 @@ inline CoordinateVector<> convert< CoordinateVector<> >(std::string value) {
 }
 
 /**
- * @brief Split a string of the form [str1, str2, str3] into its parts.
- *
- * @param value std::string having the form mentioned above.
- * @param str1 Variable to store the first part in.
- * @param str2 Variable to store the second part in.
- * @param str3 Variable to store the third part in.
- */
-inline void split_string(std::string value, std::string &str1,
-                         std::string &str2, std::string &str3) {
-  size_t pos1 = value.find('[') + 1;
-  size_t pos2 = value.find(',', pos1);
-  str1 = value.substr(pos1, pos2 - pos1);
-  pos1 = pos2 + 1;
-  pos2 = value.find(',', pos1);
-  str2 = value.substr(pos1, pos2 - pos1);
-  pos1 = pos2 + 1;
-  pos2 = value.find(']', pos1);
-  str3 = value.substr(pos1, pos2 - pos1);
-}
-
-/**
  * @brief Convert the given string to an integer value.
  *
  * @param value std::string value.
  * @return Integer stored in the string.
  */
-template <> inline int convert< int >(std::string value) {
+template <> inline int convert< int >(const std::string &value) {
   char *str_end;
   int ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
@@ -135,7 +136,8 @@ template <> inline int convert< int >(std::string value) {
  * @param value std::string value.
  * @return Unsigned integer stored in the string.
  */
-template <> inline unsigned int convert< unsigned int >(std::string value) {
+template <>
+inline unsigned int convert< unsigned int >(const std::string &value) {
   char *str_end;
   unsigned int ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
@@ -151,7 +153,8 @@ template <> inline unsigned int convert< unsigned int >(std::string value) {
  * @param value std::string value.
  * @return Unsigned char stored in the string.
  */
-template <> inline unsigned char convert< unsigned char >(std::string value) {
+template <>
+inline unsigned char convert< unsigned char >(const std::string &value) {
   char *str_end;
   unsigned char ivalue = strtol(value.c_str(), &str_end, 0);
   if (str_end == value.c_str()) {
@@ -169,7 +172,7 @@ template <> inline unsigned char convert< unsigned char >(std::string value) {
  */
 template <>
 inline CoordinateVector< int >
-convert< CoordinateVector< int > >(std::string value) {
+convert< CoordinateVector< int > >(const std::string &value) {
   CoordinateVector< int > vvalue;
   int num_found =
       sscanf(value.c_str(), "[%i,%i,%i]", &vvalue[0], &vvalue[1], &vvalue[2]);
@@ -192,27 +195,31 @@ convert< CoordinateVector< int > >(std::string value) {
  * @param value std::string value.
  * @return True or false.
  */
-template <> inline bool convert< bool >(std::string value) {
+template <> inline bool convert< bool >(const std::string &value) {
+  std::string value_copy(value);
   // convert to lowercase
-  std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+  std::transform(value_copy.begin(), value_copy.end(), value_copy.begin(),
+                 ::tolower);
   // strip trailing whitespace
   unsigned int i = 0;
-  while (value[i] == ' ') {
+  while (value_copy[i] == ' ') {
     ++i;
   }
-  value = value.substr(i);
-  i = value.size() - 1;
-  while (value[i] == ' ') {
+  value_copy = value_copy.substr(i);
+  i = value_copy.size() - 1;
+  while (value_copy[i] == ' ') {
     --i;
   }
-  value = value.substr(0, i + 1);
-  if (value == "true" || value == "yes" || value == "on" || value == "y") {
+  value_copy = value_copy.substr(0, i + 1);
+  if (value_copy == "true" || value_copy == "yes" || value_copy == "on" ||
+      value_copy == "y") {
     return true;
-  } else if (value == "false" || value == "no" || value == "off" ||
-             value == "n") {
+  } else if (value_copy == "false" || value_copy == "no" ||
+             value_copy == "off" || value_copy == "n") {
     return false;
   } else {
-    cmac_error("Error converting \"%s\" to a boolean value!", value.c_str());
+    cmac_error("Error converting \"%s\" to a boolean value!",
+               value_copy.c_str());
     return false;
   }
 }
@@ -225,7 +232,7 @@ template <> inline bool convert< bool >(std::string value) {
  */
 template <>
 inline CoordinateVector< bool >
-convert< CoordinateVector< bool > >(std::string value) {
+convert< CoordinateVector< bool > >(const std::string &value) {
   CoordinateVector< bool > vvalue;
   std::string x, y, z;
   split_string(value, x, y, z);
@@ -285,7 +292,8 @@ template <> inline std::string to_string< bool >(bool value) {
  * @return std::string containing the 3 components of the CoordinateVector.
  */
 template <>
-inline std::string to_string< CoordinateVector<> >(CoordinateVector<> value) {
+inline std::string
+to_string< CoordinateVector<> >(const CoordinateVector<> value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
@@ -299,7 +307,7 @@ inline std::string to_string< CoordinateVector<> >(CoordinateVector<> value) {
  */
 template <>
 inline std::string
-to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
+to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
@@ -313,7 +321,7 @@ to_string< CoordinateVector< int > >(CoordinateVector< int > value) {
  */
 template <>
 inline std::string
-to_string< CoordinateVector< bool > >(CoordinateVector< bool > value) {
+to_string< CoordinateVector< bool > >(const CoordinateVector< bool > value) {
   std::stringstream sstream;
   sstream << "[" << to_string< bool >(value.x()) << ", "
           << to_string< bool >(value.y()) << ", "
@@ -328,7 +336,7 @@ to_string< CoordinateVector< bool > >(CoordinateVector< bool > value) {
  * @param svalue std::string containing a value - unit pair.
  * @return std::pair containing the value and unit.
  */
-inline std::pair< double, std::string > split_value(std::string svalue) {
+inline std::pair< double, std::string > split_value(const std::string &svalue) {
   size_t idx;
   double value;
   try {
@@ -358,7 +366,7 @@ inline std::pair< double, std::string > split_value(std::string svalue) {
  * @return Index of the last element in the ordered array that is smaller than
  * the given value, i.e. value is in between xarr[index] and xarr[index+1].
  */
-inline unsigned int locate(double x, double *xarr, unsigned int length) {
+inline unsigned int locate(double x, const double *xarr, unsigned int length) {
   unsigned int jl = 0;
   unsigned int ju = length + 1;
   while (ju - jl > 1) {
@@ -387,8 +395,10 @@ inline unsigned int locate(double x, double *xarr, unsigned int length) {
  * @return std::string with format: "<prefix>XX<counter>XX.<extension>", where
  * the number of Xs is equal to padding.
  */
-inline std::string compose_filename(std::string folder, std::string prefix,
-                                    std::string extension, unsigned int counter,
+inline std::string compose_filename(const std::string &folder,
+                                    const std::string &prefix,
+                                    const std::string &extension,
+                                    unsigned int counter,
                                     unsigned int padding) {
   std::stringstream namestring;
   if (!folder.empty()) {

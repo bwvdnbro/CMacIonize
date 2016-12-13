@@ -93,7 +93,7 @@ public:
    * @param line Valid EmissionLine.
    * @return Emissivity of that line (in J m^-3s^-1).
    */
-  inline double get_emissivity(EmissionLine line) {
+  inline double get_emissivity(EmissionLine line) const {
     return _emissivities[line];
   }
 

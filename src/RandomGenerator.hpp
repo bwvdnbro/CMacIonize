@@ -113,6 +113,8 @@ public:
    * @brief Get a uniform random double precision floating point value in the
    * range [0., 1.].
    *
+   * Note that this function changes the internal state of the RandomGenerator.
+   *
    * @return Random double precision floating point value.
    */
   inline double get_uniform_random_double() {

@@ -42,11 +42,11 @@ public:
 
   double get_charge_transfer_recombination_rate(unsigned char stage,
                                                 unsigned char atom,
-                                                double temperature);
+                                                double temperature) const;
 
   double get_charge_transfer_ionization_rate(unsigned char stage,
                                              unsigned char atom,
-                                             double temperature);
+                                             double temperature) const;
 };
 
 #endif // CHARGETRANSFERRATES_HPP

@@ -95,10 +95,10 @@ public:
   void add_required_option(std::string long_name, char short_name,
                            std::string description);
 
-  void print_description(std::ostream &stream);
+  void print_description(std::ostream &stream) const;
 
   void parse_arguments(int argc, char **argv);
-  void print_contents(std::ostream &stream);
+  void print_contents(std::ostream &stream) const;
 
   /**
    * @brief Get the argument value for the given option.
@@ -107,7 +107,8 @@ public:
    * @return Argument value of that option, as a variable of the given template
    * type.
    */
-  template < typename _datatype_ > _datatype_ get_value(std::string option);
+  template < typename _datatype_ >
+  _datatype_ get_value(std::string option) const;
 
   /**
    * @brief Check if the given option was found, or the default value was used.
@@ -115,7 +116,7 @@ public:
    * @param option Command line option.
    * @return True if the command line option was present.
    */
-  inline bool was_found(std::string option) { return _found[option]; }
+  inline bool was_found(std::string option) const { return _found.at(option); }
 };
 
 /**
@@ -268,7 +269,7 @@ inline void CommandLineParser::add_required_option< std::string >(
  */
 template <>
 inline std::string
-CommandLineParser::get_value< std::string >(std::string option) {
+CommandLineParser::get_value< std::string >(std::string option) const {
   auto it = _dictionary.find(option);
   if (it == _dictionary.end()) {
     cmac_error("Command line option \"%s\" not found!", option.c_str());
@@ -284,7 +285,7 @@ CommandLineParser::get_value< std::string >(std::string option) {
  * @return Value of the command line option argument.
  */
 template <>
-inline double CommandLineParser::get_value< double >(std::string option) {
+inline double CommandLineParser::get_value< double >(std::string option) const {
   std::string svalue = get_value< std::string >(option);
   return Utilities::convert< double >(svalue);
 }
@@ -295,7 +296,8 @@ inline double CommandLineParser::get_value< double >(std::string option) {
  * @param option Command line option.
  * @return Value of the command line option argument.
  */
-template <> inline int CommandLineParser::get_value< int >(std::string option) {
+template <>
+inline int CommandLineParser::get_value< int >(std::string option) const {
   std::string svalue = get_value< std::string >(option);
   return Utilities::convert< int >(svalue);
 }
@@ -307,7 +309,7 @@ template <> inline int CommandLineParser::get_value< int >(std::string option) {
  * @return Value of the command line option argument.
  */
 template <>
-inline bool CommandLineParser::get_value< bool >(std::string option) {
+inline bool CommandLineParser::get_value< bool >(std::string option) const {
   std::string svalue = get_value< std::string >(option);
   return Utilities::convert< bool >(svalue);
 }

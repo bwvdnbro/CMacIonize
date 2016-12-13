@@ -110,7 +110,7 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  void set_cross_sections(Photon &photon, double energy);
+  void set_cross_sections(Photon &photon, double energy) const;
 
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
@@ -127,7 +127,7 @@ public:
    * @return CoordinateVector containing the components of a random isotropic
    * direction.
    */
-  inline CoordinateVector<>
+  inline static CoordinateVector<>
   get_random_direction(RandomGenerator &random_generator) {
     double cost = 2. * random_generator.get_uniform_random_double() - 1.;
     double sint = 1. - cost * cost;
@@ -138,12 +138,12 @@ public:
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 
-  Photon get_random_photon(RandomGenerator &random_generator);
+  Photon get_random_photon(RandomGenerator &random_generator) const;
 
-  double get_total_luminosity();
+  double get_total_luminosity() const;
 
   bool reemit(Photon &photon, DensityValues &cell,
-              RandomGenerator &random_generator);
+              RandomGenerator &random_generator) const;
 };
 
 #endif // PHOTONSOURCE_HPP

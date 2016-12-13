@@ -284,7 +284,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
  * @param cell DensityValues of the cell.
  */
 void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
-                                                  DensityValues &cell) {
+                                                  DensityValues &cell) const {
   const double eps = 1.e-3;
   const unsigned int max_iterations = 100;
 
@@ -404,7 +404,7 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
  * @param grid DensityGrid on which to operate.
  */
 void TemperatureCalculator::calculate_temperature(double totweight,
-                                                  DensityGrid &grid) {
+                                                  DensityGrid &grid) const {
   double jfac = _luminosity / totweight;
   // the integral calculation uses the photon frequency (in Hz)
   // we want to convert this to the photon energy (in Joule)

@@ -132,7 +132,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
  * @param photon Photon.
  * @param energy Energy of the photon (in Hz).
  */
-void PhotonSource::set_cross_sections(Photon &photon, double energy) {
+void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     IonName ion = static_cast< IonName >(i);
     photon.set_cross_section(ion,
@@ -149,7 +149,8 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) {
  * @param random_generator RandomGenerator to use.
  * @return Photon.
  */
-Photon PhotonSource::get_random_photon(RandomGenerator &random_generator) {
+Photon
+PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
 
   CoordinateVector<> position, direction;
   double energy;
@@ -190,7 +191,7 @@ Photon PhotonSource::get_random_photon(RandomGenerator &random_generator) {
  *
  * @return Total luminosity (in s^-1).
  */
-double PhotonSource::get_total_luminosity() { return _total_luminosity; }
+double PhotonSource::get_total_luminosity() const { return _total_luminosity; }
 
 /**
  * @brief Reemit the given Photon.
@@ -206,7 +207,7 @@ double PhotonSource::get_total_luminosity() { return _total_luminosity; }
  * leaves the system.
  */
 bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
-                          RandomGenerator &random_generator) {
+                          RandomGenerator &random_generator) const {
   double new_frequency = 0.;
   double helium_abundance = _abundances.get_abundance(ELEMENT_He);
   double pHabs = 1. / (1. +

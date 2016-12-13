@@ -67,8 +67,8 @@ protected:
    * @param photon Photon.
    * @return Optical depth.
    */
-  inline double get_optical_depth(const double ds, DensityValues &cell,
-                                  Photon &photon) {
+  inline static double get_optical_depth(const double ds, DensityValues &cell,
+                                         Photon &photon) {
     return ds * cell.get_total_density() *
            (photon.get_cross_section(ION_H_n) *
                 cell.get_ionic_fraction(ION_H_n) +
@@ -85,7 +85,7 @@ protected:
    * @param photon Photon.
    */
   inline void update_integrals(const double ds, DensityValues &cell,
-                               Photon &photon) {
+                               Photon &photon) const {
     if (cell.get_total_density() > 0.) {
       cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -113,7 +113,8 @@ protected:
    * @param T Temperature (in K).
    * @param cell DensityValues of the cell.
    */
-  void set_reemission_probabilities(double T, DensityValues &cell) {
+  inline static void set_reemission_probabilities(double T,
+                                                  DensityValues &cell) {
     double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
     double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
     cell.set_pHion(alpha_1_H / alpha_A_agn);
@@ -165,7 +166,7 @@ public:
    *
    * @return Box containing the grid (in m).
    */
-  inline Box get_box() { return _box; }
+  inline Box get_box() const { return _box; }
 
   /**
    * @brief Get the index of the cell containing the given position.
@@ -283,7 +284,7 @@ public:
      *
      * @return Index of the current cell.
      */
-    inline unsigned long get_index() { return _index; }
+    inline unsigned long get_index() const { return _index; }
 
     /**
      * @brief Compare iterators.
@@ -291,7 +292,7 @@ public:
      * @param it Iterator to compare with.
      * @return True if the iterators point to the same cell of the same grid.
      */
-    inline bool operator==(iterator it) {
+    inline bool operator==(iterator it) const {
       return (&_grid == &it._grid && _index == it._index);
     }
 
@@ -302,7 +303,7 @@ public:
      * @return True if the iterators do not point to the same cell of the same
      * grid.
      */
-    inline bool operator!=(iterator it) { return !(*this == it); }
+    inline bool operator!=(iterator it) const { return !(*this == it); }
   };
 
   /**

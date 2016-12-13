@@ -84,7 +84,7 @@ public:
    * position and direction for an incoming photon.
    */
   std::pair< CoordinateVector<>, CoordinateVector<> >
-  get_random_incoming_direction(RandomGenerator &random_generator) {
+  get_random_incoming_direction(RandomGenerator &random_generator) const {
     // we randomly sample a focus point in the box
     CoordinateVector<> focus;
     focus[0] =
@@ -180,7 +180,7 @@ public:
    *
    * @return Total surface area (in m^2).
    */
-  inline double get_total_surface_area() {
+  inline double get_total_surface_area() const {
     return 2. * _box.get_sides().x() * _box.get_sides().y() +
            2. * _box.get_sides().x() * _box.get_sides().z() +
            2. * _box.get_sides().y() * _box.get_sides().z();

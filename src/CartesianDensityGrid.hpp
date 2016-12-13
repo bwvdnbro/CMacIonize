@@ -73,7 +73,7 @@ private:
    * @param index Index to convert.
    * @return Single long index.
    */
-  inline unsigned long get_long_index(CoordinateVector< int > index) {
+  inline unsigned long get_long_index(CoordinateVector< int > index) const {
     unsigned long long_index = index.x();
     long_index *= _ncell.y() * _ncell.z();
     long_index += index.y() * _ncell.z();
@@ -87,7 +87,7 @@ private:
    * @param long_index Single long index.
    * @return Three component index.
    */
-  inline CoordinateVector< int > get_indices(unsigned long long_index) {
+  inline CoordinateVector< int > get_indices(unsigned long long_index) const {
     unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
     long_index -= index_x * _ncell.y() * _ncell.z();
     unsigned long index_y = long_index / _ncell.z();

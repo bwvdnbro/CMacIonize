@@ -70,8 +70,9 @@ public:
                      LineCoolingData &data, RecombinationRates &rates,
                      ChargeTransferRates &ctr);
 
-  void calculate_temperature(double jfac, double hfac, DensityValues &cell);
-  void calculate_temperature(double totweight, DensityGrid &grid);
+  void calculate_temperature(double jfac, double hfac,
+                             DensityValues &cell) const;
+  void calculate_temperature(double totweight, DensityGrid &grid) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

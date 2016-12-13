@@ -139,7 +139,7 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() { return _num_sources; }
+  virtual unsigned int get_number_of_sources() const { return _num_sources; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -172,14 +172,18 @@ public:
    * @return Reciprocal of the number of sources, as every source has the same
    * weight.
    */
-  virtual double get_weight(unsigned int index) { return 1. / _num_sources; }
+  virtual double get_weight(unsigned int index) const {
+    return 1. / _num_sources;
+  }
 
   /**
    * @brief Get the total luminosity of all sources together.
    *
    * @return Total luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() { return _num_sources * _luminosity; }
+  virtual double get_total_luminosity() const {
+    return _num_sources * _luminosity;
+  }
 };
 
 #endif // SILCCPHOTONSOURCEDISTRIBUTION_HPP

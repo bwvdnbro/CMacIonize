@@ -60,10 +60,10 @@ public:
 
   static std::string get_filename(double z);
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 
   virtual double get_random_frequency(RandomGenerator &random_generator,
-                                      double temperature = 0.);
+                                      double temperature = 0.) const;
 };
 
 #endif // FAUCHERGIGUEREPHOTONSOURCESPECTRUM_HPP

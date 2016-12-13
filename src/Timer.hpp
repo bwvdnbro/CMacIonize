@@ -97,7 +97,7 @@ public:
    * @return The current contents of the internal timeval difference in seconds
    * (with microsecond precision).
    */
-  inline double value() { return _diff.tv_sec + 1.e-6 * _diff.tv_usec; }
+  inline double value() const { return _diff.tv_sec + 1.e-6 * _diff.tv_usec; }
 
   /**
    * @brief Get the current value of the timer without affecting it.

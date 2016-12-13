@@ -74,7 +74,7 @@ EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
  * @param emhemi Helium coefficient 2 (in J m^3s^-1angstrom^-1).
  */
 void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
-                                 double &emhepl, double &emhemi) {
+                                 double &emhepl, double &emhemi) const {
   double logt = std::log(T);
 
   int i = Utilities::locate(logt, _logttab, 8);
@@ -115,7 +115,8 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
  * @return EmissivityValues in the cell.
  */
 EmissivityValues EmissivityCalculator::calculate_emissivities(
-    DensityValues &cell, Abundances &abundances, LineCoolingData &lines) {
+    DensityValues &cell, Abundances &abundances,
+    const LineCoolingData &lines) const {
   const double h0max = 0.2;
 
   EmissivityValues eval;
@@ -257,7 +258,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
  *
  * @param grid DensityGrid to operate on.
  */
-void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) {
+void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) const {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     DensityValues &cell = it.get_values();
     EmissivityValues *emissivities =
@@ -274,7 +275,7 @@ void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) {
  * grid (in the same order the grid is traversed).
  */
 std::vector< EmissivityValues >
-EmissivityCalculator::get_emissivities(DensityGrid &grid) {
+EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
   std::vector< EmissivityValues > result(grid.get_number_of_cells());
   unsigned int index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {

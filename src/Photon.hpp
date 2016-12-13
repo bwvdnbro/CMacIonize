@@ -97,21 +97,21 @@ public:
    *
    * @return Current position of the photon (in m).
    */
-  inline CoordinateVector<> get_position() { return _position; }
+  inline CoordinateVector<> get_position() const { return _position; }
 
   /**
    * @brief Get the current direction the photon is moving in.
    *
    * @return Current movement direction of the photon.
    */
-  inline CoordinateVector<> get_direction() { return _direction; }
+  inline CoordinateVector<> get_direction() const { return _direction; }
 
   /**
    * @brief Get the current energy of the photon.
    *
    * @return Current energy of the photon (in Hz).
    */
-  inline double get_energy() { return _energy; }
+  inline double get_energy() const { return _energy; }
 
   /**
    * @brief Get the ionization cross section for the given ion.
@@ -119,21 +119,25 @@ public:
    * @param ion IonName of a valid ion.
    * @return Ionization cross section (in m^2).
    */
-  inline double get_cross_section(IonName ion) { return _cross_sections[ion]; }
+  inline double get_cross_section(IonName ion) const {
+    return _cross_sections[ion];
+  }
 
   /**
    * @brief Get the abundance corrected helium cross section.
    *
    * @return Abundance corrected helium cross section (in m^2).
    */
-  inline double get_cross_section_He_corr() { return _cross_section_He_corr; }
+  inline double get_cross_section_He_corr() const {
+    return _cross_section_He_corr;
+  }
 
   /**
    * @brief Get the type of the photon.
    *
    * @return PhotonType type identifier.
    */
-  inline PhotonType get_type() { return _type; }
+  inline PhotonType get_type() const { return _type; }
 
   /**
    * @brief Set the position of the photon.
@@ -199,7 +203,7 @@ public:
    *
    * @return Weight of the Photon.
    */
-  inline double get_weight() { return _weight; }
+  inline double get_weight() const { return _weight; }
 };
 
 #endif // PHOTON_HPP

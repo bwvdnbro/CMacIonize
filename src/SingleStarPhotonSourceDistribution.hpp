@@ -83,7 +83,7 @@ public:
    *
    * @return 1, as this distribution contains a single stellar source
    */
-  virtual unsigned int get_number_of_sources() { return 1; }
+  virtual unsigned int get_number_of_sources() const { return 1; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -103,14 +103,14 @@ public:
    * get_number_of_sources().
    * @return Weight of the single photon source: 1.
    */
-  virtual double get_weight(unsigned int index) { return 1.; }
+  virtual double get_weight(unsigned int index) const { return 1.; }
 
   /**
    * @brief Get the luminosity of the single source.
    *
    * @return Luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() { return _luminosity; }
+  virtual double get_total_luminosity() const { return _luminosity; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

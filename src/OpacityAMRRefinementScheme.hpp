@@ -78,7 +78,7 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      DensityValues &cell) {
+                      DensityValues &cell) const {
     // we assume an ionizing cross section of 1.e-18 cm^2
     const double xsecH = 1.e-22;
 

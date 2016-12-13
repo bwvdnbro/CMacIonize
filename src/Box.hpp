@@ -64,6 +64,14 @@ public:
   inline CoordinateVector<> &get_anchor() { return _anchor; }
 
   /**
+   * @brief Get the bottom left front corner of the box.
+   *
+   * @return CoordinateVector containing the bottom left front corner of the
+   * box.
+   */
+  inline const CoordinateVector<> &get_anchor() const { return _anchor; }
+
+  /**
    * @brief Get the side lengths of the box.
    *
    * @return CoordinateVector containing the side lengths of the box.
@@ -71,12 +79,19 @@ public:
   inline CoordinateVector<> &get_sides() { return _sides; }
 
   /**
+   * @brief Get the side lengths of the box.
+   *
+   * @return CoordinateVector containing the side lengths of the box.
+   */
+  inline const CoordinateVector<> &get_sides() const { return _sides; }
+
+  /**
    * @brief Get the corner opposite the anchor of the box.
    *
    * @return CoordinateVector containing the coordinates of the corner of the
    * box opposite of the anchor.
    */
-  inline CoordinateVector<> get_top_anchor() { return _anchor + _sides; }
+  inline CoordinateVector<> get_top_anchor() const { return _anchor + _sides; }
 
   /**
    * @brief Get the shortest distance vector between the given two
@@ -87,7 +102,7 @@ public:
    * @return Shortest distance vector between a and b.
    */
   inline CoordinateVector<> periodic_distance(CoordinateVector<> a,
-                                              CoordinateVector<> b) {
+                                              CoordinateVector<> b) const {
     CoordinateVector<> c = a - b;
     for (unsigned int i = 0; i < 3; ++i) {
       if (c[i] < -0.5 * _sides[i]) {
@@ -108,7 +123,7 @@ public:
    * @param v CoordinateVector.
    * @return Shortest distance between b and v.
    */
-  inline double periodic_distance(Box b, CoordinateVector<> v) {
+  inline double periodic_distance(Box b, CoordinateVector<> v) const {
     CoordinateVector<> dx;
     for (unsigned int i = 0; i < 3; ++i) {
       // very basic: in 1D, a coordinate is either smaller, inside, or larger
@@ -135,7 +150,7 @@ public:
    * @return Distance between the point in the Box closest to the position, and
    * the position.
    */
-  inline double get_distance(CoordinateVector<> v) {
+  inline double get_distance(CoordinateVector<> v) const {
     CoordinateVector<> dx;
     for (unsigned int i = 0; i < 3; ++i) {
       if (v[i] >= _anchor[i]) {

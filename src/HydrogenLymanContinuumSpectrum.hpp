@@ -57,9 +57,9 @@ public:
   HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
 
   virtual double get_random_frequency(RandomGenerator &random_generator,
-                                      double temperature);
+                                      double temperature) const;
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 };
 
 #endif // HYDROGENLYMANCONTINUUMSPECTRUM_HPP

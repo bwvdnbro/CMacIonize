@@ -43,7 +43,9 @@ public:
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(IonName ion, double energy) { return 1.; }
+  virtual double get_cross_section(IonName ion, double energy) const {
+    return 1.;
+  }
 };
 
 /**
@@ -59,7 +61,7 @@ public:
    * @return Uniform random frequency.
    */
   virtual double get_random_frequency(RandomGenerator &random_generator,
-                                      double temperature = 0.) {
+                                      double temperature = 0.) const {
     return random_generator.get_uniform_random_double() * (54.4 - 13.6) + 13.6;
   }
 
@@ -68,7 +70,7 @@ public:
    *
    * @return Total ionizing flux (in m^-2 s^-1).
    */
-  virtual double get_total_flux() { return 0.; }
+  virtual double get_total_flux() const { return 0.; }
 };
 
 /**

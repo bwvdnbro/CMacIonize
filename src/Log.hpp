@@ -62,7 +62,7 @@ private:
    *
    * @return Time stamp.
    */
-  inline std::string get_timestamp() {
+  inline static std::string get_timestamp() {
     std::time_t timestamp = std::time(nullptr);
     std::tm *time = std::localtime(&timestamp);
     std::stringstream timestream;
@@ -100,7 +100,7 @@ protected:
    *
    * @param level LogLevel of the message.
    */
-  virtual std::string get_levelname(LogLevel level) {
+  virtual std::string get_levelname(LogLevel level) const {
     switch (level) {
     case LOGLEVEL_INFO:
       return "info";
@@ -154,7 +154,8 @@ public:
    * @param t Template argument.
    * @return std::string containing a representation of the argument.
    */
-  template < typename _datatype_ > std::string get_message(_datatype_ t) {
+  template < typename _datatype_ >
+  static std::string get_message(_datatype_ t) {
     std::stringstream stream;
     stream << t;
     return stream.str();
@@ -169,7 +170,7 @@ public:
    * @return std::string containing the arguments one after another.
    */
   template < typename _datatype_, typename... _arguments_ >
-  std::string get_message(_datatype_ t, _arguments_... args) {
+  static std::string get_message(_datatype_ t, _arguments_... args) {
     std::stringstream stream;
     stream << t << get_message(args...);
     return stream.str();

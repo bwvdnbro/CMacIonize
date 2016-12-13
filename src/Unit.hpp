@@ -163,7 +163,7 @@ public:
    * @param unit Unit to compare with.
    * @return True if both units have the same scale exponents.
    */
-  inline bool is_same_quantity(Unit unit) {
+  inline bool is_same_quantity(Unit unit) const {
     return _length == unit._length && _time == unit._time &&
            _mass == unit._mass && _temperature == unit._temperature &&
            _current == unit._current;
@@ -176,7 +176,7 @@ public:
    * @return True if both units have the same value and represent the same
    * quantity.
    */
-  inline bool operator==(Unit unit) {
+  inline bool operator==(Unit unit) const {
     return _value == unit._value && is_same_quantity(unit);
   }
 
@@ -185,7 +185,7 @@ public:
    *
    * @return std::string containing the contents of the Unit.
    */
-  inline std::string to_string() {
+  inline std::string to_string() const {
     std::stringstream stream;
     stream << _value;
     if (_length != 0) {

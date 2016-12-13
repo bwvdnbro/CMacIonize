@@ -147,12 +147,17 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
  *
  * @return Number of sources.
  */
-unsigned int GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() {
+unsigned int
+GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() const {
   return _positions.size();
 }
 
 /**
  * @brief Get the position of one of the sources.
+ *
+ * Note that this function can alter the internal state of the
+ * PhotonSourceDistribution, as for some implementations the positions are
+ * decided randomly based on a RandomGenerator.
  *
  * @param index Valid index of a source, must be an integer in between 0 and
  * get_number_of_sources().
@@ -172,7 +177,8 @@ GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {
  * get_number_of_sources().
  * @return Weight of the given source.
  */
-double GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) {
+double
+GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) const {
   return 1. / _positions.size();
 }
 
@@ -181,6 +187,6 @@ double GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) {
  *
  * @return Total luminosity (in s^-1).
  */
-double GadgetSnapshotPhotonSourceDistribution::get_total_luminosity() {
+double GadgetSnapshotPhotonSourceDistribution::get_total_luminosity() const {
   return _total_luminosity;
 }

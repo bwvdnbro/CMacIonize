@@ -209,7 +209,7 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
+double FaucherGiguerePhotonSourceSpectrum::get_total_flux() const {
   return _total_flux;
 }
 
@@ -221,7 +221,7 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
  * @return Random frequency (in Hz).
  */
 double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
-    RandomGenerator &random_generator, double temperature) {
+    RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);

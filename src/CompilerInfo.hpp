@@ -281,7 +281,7 @@ public:
      * @param it iterator to compare with.
      * @return True if both operators point to the same field.
      */
-    inline bool operator==(iterator it) { return _field == it._field; }
+    inline bool operator==(iterator it) const { return _field == it._field; }
 
     /**
      * @brief Comparison operator.
@@ -289,14 +289,14 @@ public:
      * @param it iterator to compare with.
      * @return True if both operators point to a different field.
      */
-    inline bool operator!=(iterator it) { return !(*this == it); }
+    inline bool operator!=(iterator it) const { return !(*this == it); }
 
     /**
      * @brief Get the key this iterator points to.
      *
      * @return Key.
      */
-    inline std::string get_key() {
+    inline std::string get_key() const {
       switch (_field) {
       case OUTPUTFIELD_GIT_VERSION:
         return std::string("Git version");
@@ -325,7 +325,7 @@ public:
      *
      * @return Value.
      */
-    inline std::string get_value() {
+    inline std::string get_value() const {
       switch (_field) {
       case OUTPUTFIELD_GIT_VERSION:
         return get_git_version();

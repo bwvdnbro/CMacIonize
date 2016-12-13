@@ -52,9 +52,9 @@ public:
                       std::vector< double > &AHe2q);
 
   virtual double get_random_frequency(RandomGenerator &random_generator,
-                                      double temperature = 0.);
+                                      double temperature = 0.) const;
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 };
 
 #endif // HELIUMTWOPHOTONCONTINUUMSPECTRUM_HPP
