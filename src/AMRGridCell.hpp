@@ -75,7 +75,7 @@ public:
    * @param key Key linking to a unique cell in the hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &operator[](unsigned int &key) {
+  inline _CellContents_ &operator[](unsigned int &key) const {
     if (key == 1) {
       return *_values;
     } else {
@@ -95,7 +95,7 @@ public:
    * @param box Box specifying the geometry of the current cell.
    * @return Volume of the cell with the given key.
    */
-  inline double get_volume(unsigned int &key, Box &box) {
+  inline double get_volume(unsigned int &key, Box &box) const {
     if (key == 1) {
       return box.get_sides().x() * box.get_sides().y() * box.get_sides().z();
     } else {
@@ -122,7 +122,7 @@ public:
    * @param box Box specifying the geometry of the current cell.
    * @return Midpoint of the cell with the given key.
    */
-  inline CoordinateVector<> get_midpoint(unsigned int &key, Box &box) {
+  inline CoordinateVector<> get_midpoint(unsigned int &key, Box &box) const {
     if (key == 1) {
       return box.get_anchor() + 0.5 * box.get_sides();
     } else {
@@ -149,7 +149,7 @@ public:
    * @param box Box specifying the geometry of the current cell.
    * @return Box specifying the geometry of the requested cell.
    */
-  inline Box get_geometry(unsigned int &key, Box &box) {
+  inline Box get_geometry(unsigned int &key, Box &box) const {
     if (key == 1) {
       return box;
     } else {
@@ -178,7 +178,7 @@ public:
    * @return Key of the lowest level cell containing the position.
    */
   inline unsigned int get_key(unsigned char level, CoordinateVector<> position,
-                              Box &box) {
+                              Box &box) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we live
       unsigned char ix =
@@ -325,7 +325,7 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains the
    * position.
    */
-  inline _CellContents_ &get_cell(CoordinateVector<> position, Box &box) {
+  inline _CellContents_ &get_cell(CoordinateVector<> position, Box &box) const {
     if (_values != nullptr) {
       return *_values;
     } else {
@@ -356,7 +356,7 @@ public:
    * @param level Level we are currently at.
    * @return First key in the cell, in Morton order.
    */
-  inline unsigned int get_first_key(unsigned char level) {
+  inline unsigned int get_first_key(unsigned char level) const {
     if (_values == nullptr) {
       if (_children[0] == nullptr) {
         cmac_error("Cell does not exist!");
@@ -374,7 +374,8 @@ public:
    * @param level Level we are currently at.
    * @return Next key in the cell, in Morton order.
    */
-  inline unsigned int get_next_key(unsigned int key, unsigned char level) {
+  inline unsigned int get_next_key(unsigned int key,
+                                   unsigned char level) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we are
       unsigned int cell = (key >> (3 * level)) & 7;
@@ -419,7 +420,8 @@ public:
    */
   inline unsigned int get_first_key(unsigned char level,
                                     CoordinateVector< char > direction,
-                                    CoordinateVector<> position, Box &box) {
+                                    CoordinateVector<> position,
+                                    Box &box) const {
     if (_values == nullptr) {
       // find the child that contains the position in the given direction
       unsigned char ix, iy, iz;
@@ -472,7 +474,8 @@ public:
    */
   inline unsigned int get_neighbour(unsigned int key, unsigned char level,
                                     CoordinateVector< char > direction,
-                                    CoordinateVector<> position, Box &box) {
+                                    CoordinateVector<> position,
+                                    Box &box) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we are
       unsigned int cell = (key >> (3 * level)) & 7;
@@ -536,7 +539,7 @@ public:
    *
    * @return Number of lowest level cells in this cell.
    */
-  inline unsigned long get_number_of_cells() {
+  inline unsigned long get_number_of_cells() const {
     if (_values == nullptr) {
       // cell has children, go deeper
       unsigned long ncell = 0;
@@ -558,7 +561,7 @@ public:
    * @param stream std::ostream to write to.
    * @param box Box specifying the geometrical extents of the cell.
    */
-  inline void print(std::ostream &stream, Box &box) {
+  inline void print(std::ostream &stream, Box &box) const {
     // print cell
     stream << box.get_anchor().x() << "\t" << box.get_anchor().y() << "\t"
            << box.get_anchor().z() << "\n";

@@ -58,7 +58,7 @@ private:
    * @param number Number to decompose.
    * @return Largest odd factor of the number.
    */
-  inline int get_largest_odd_factor(int number) {
+  inline static int get_largest_odd_factor(int number) {
     while ((number % 2) == 0) {
       number >>= 1;
     }
@@ -74,7 +74,7 @@ private:
    * @param number Number to decompose.
    * @return Largest power of two factor.
    */
-  inline int get_power_of_two(int number) {
+  inline static int get_power_of_two(int number) {
     return number / get_largest_odd_factor(number);
   }
 
@@ -136,7 +136,7 @@ public:
    * @param periodic Periodicity flags.
    * @param log Log to write logging info to.
    */
-  AMRDensityGrid(
+  inline AMRDensityGrid(
       Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
@@ -210,8 +210,8 @@ public:
    * cell.
    * @param log Log to write log messages to.
    */
-  AMRDensityGrid(ParameterFile &params, DensityFunction &density_function,
-                 Log *log)
+  inline AMRDensityGrid(ParameterFile &params,
+                        DensityFunction &density_function, Log *log)
       : AMRDensityGrid(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid.box_anchor", "[0. m, 0. m, 0. m]"),

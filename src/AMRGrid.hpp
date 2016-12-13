@@ -59,7 +59,7 @@ private:
    * @return Block containing that cell.
    */
   inline AMRGridCell< _CellContents_ > &get_block(unsigned long key, int &ix,
-                                                  int &iy, int &iz) {
+                                                  int &iy, int &iz) const {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -77,7 +77,7 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) {
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) const {
     int ix, iy, iz;
     return get_block(key, ix, iy, iz);
   }
@@ -88,7 +88,7 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Cell part of the key (without block information).
    */
-  inline unsigned int get_cell_key(unsigned long key) {
+  inline static unsigned int get_cell_key(unsigned long key) {
     // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
     // tell the compiler this is an unsigned long long (ull)
     return (key & 0xffffffffull);
@@ -164,7 +164,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &operator[](unsigned long key) {
+  inline _CellContents_ &operator[](unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     return get_block(key)[cell];
   }
@@ -293,7 +293,7 @@ public:
    * @param key Key of a cell in the AMR hierarchy.
    * @return Level of that cell.
    */
-  inline unsigned char get_level(unsigned long key) {
+  inline unsigned char get_level(unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     unsigned char level = 0;
     while (cell > 1) {
@@ -444,14 +444,14 @@ public:
    *
    * @return Maximal value of a key.
    */
-  inline unsigned long get_max_key() { return AMRGRID_MAXKEY; }
+  inline static unsigned long get_max_key() { return AMRGRID_MAXKEY; }
 
   /**
    * @brief Get the first key in the grid, assuming a Morton orering.
    *
    * @return First key in the grid, in Morton order.
    */
-  inline unsigned long get_first_key() {
+  inline unsigned long get_first_key() const {
     // no need to encode block information, since this is simply 0
     return _top_level[0][0][0].get_first_key(0);
   }
@@ -463,7 +463,7 @@ public:
    * @param key Key pointing to a cell in the AMR structure.
    * @return Key pointing to the next grid, in Morton order.
    */
-  inline unsigned long get_next_key(unsigned long key) {
+  inline unsigned long get_next_key(unsigned long key) const {
     int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     unsigned int cell = get_cell_key(key);
@@ -617,7 +617,7 @@ public:
    *
    * @return Number of lowest level cells in the grid.
    */
-  inline unsigned long get_number_of_cells() {
+  inline unsigned long get_number_of_cells() const {
     unsigned long ncell = 0;
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
