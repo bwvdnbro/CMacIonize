@@ -41,9 +41,6 @@ class DensityGrid;
  */
 class PhotonShootJobMarket {
 private:
-  /*! @brief RandomGenerator used to generate random uniform numbers. */
-  RandomGenerator _random_generator[PHOTONSHOOTJOBMARKET_MAXTHREADS];
-
   /*! @brief Per thread PhotonShootJob. */
   PhotonShootJob *_jobs[PHOTONSHOOTJOBMARKET_MAXTHREADS];
 
@@ -55,12 +52,6 @@ private:
 
   /*! @brief Number of photons to shoot during a single PhotonShootJob. */
   unsigned int _jobsize;
-
-  /*! @brief Total weight of all photons per thread. */
-  double _totweight[PHOTONSHOOTJOBMARKET_MAXTHREADS];
-
-  /*! @brief Total weights per photon type per thread. */
-  double _typecount[PHOTONSHOOTJOBMARKET_MAXTHREADS][PHOTONTYPE_NUMBER];
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
@@ -84,14 +75,8 @@ public:
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
-      _random_generator[i].set_seed(random_seed + i);
-      _totweight[i] = 0.;
-      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
-        _typecount[i][j] = 0.;
-      }
       _jobs[i] =
-          new PhotonShootJob(photon_source, _random_generator[i], density_grid,
-                             _jobsize, _totweight[i], _typecount[i]);
+          new PhotonShootJob(photon_source, random_seed + i, density_grid);
     }
   }
 
@@ -109,15 +94,7 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) {
-    _numphoton = numphoton;
-    for (int i = 0; i < _worksize; ++i) {
-      _totweight[i] = 0.;
-      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
-        _typecount[i][j] = 0.;
-      }
-    }
-  }
+  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Update the given weight counters.
@@ -127,10 +104,7 @@ public:
    */
   inline void update_counters(double &totweight, double *typecount) {
     for (int i = 0; i < _worksize; ++i) {
-      totweight += _totweight[i];
-      for (int j = 0; j < PHOTONTYPE_NUMBER; ++j) {
-        typecount[j] += _typecount[i][j];
-      }
+      _jobs[i]->update_counters(totweight, typecount);
     }
   }
 

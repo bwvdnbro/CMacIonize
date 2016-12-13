@@ -209,8 +209,9 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     HDF5Tools::write_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), ifrac[i]);
-    HDF5Tools::write_dataset< double >(group, "MeanIntensity" + get_ion_name(i),
-                                       jmean[i]);
+    //    HDF5Tools::write_dataset< double >(group, "MeanIntensity" +
+    //    get_ion_name(i),
+    //                                       jmean[i]);
   }
   if (has_emissivities) {
     for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
@@ -219,8 +220,8 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
           group, "Emissivity" + EmissivityValues::get_name(line), emission[i]);
     }
   }
-  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
-  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
+  //  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
+  //  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
   HDF5Tools::close_group(group);
 
   // close file

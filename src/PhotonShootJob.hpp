@@ -40,16 +40,16 @@ private:
   PhotonSource &_photon_source;
 
   /*! @brief RandomGenerator used to generate random uniform numbers. */
-  RandomGenerator &_random_generator;
+  RandomGenerator _random_generator;
 
   /*! @brief DensityGrid through which photons are propagated. */
   DensityGrid &_density_grid;
 
   /*! @brief Total weight of all photons. */
-  double &_totweight;
+  double _totweight;
 
   /*! @brief Total weights per photon type. */
-  double *_typecount;
+  double _typecount[PHOTONTYPE_NUMBER];
 
   /*! @brief Number of photons to propagate through the DensityGrid. */
   unsigned int _numphoton;
@@ -59,20 +59,15 @@ public:
    * @brief Constructor.
    *
    * @param photon_source PhotonSource that emits photons.
-   * @param random_generator RandomGenerator used to generate random uniform
-   * numbers.
+   * @param random_seed Seed for the RandomGenerator used by this specific
+   * thread.
    * @param density_grid DensityGrid through which photons are propagated.
-   * @param numphoton Number of photons to propagate through the DensityGrid.
-   * @param totweight Total weight counter to update.
-   * @param typecount Total weight per photon type counters to update.
    */
-  inline PhotonShootJob(PhotonSource &photon_source,
-                        RandomGenerator &random_generator,
-                        DensityGrid &density_grid, unsigned int numphoton,
-                        double &totweight, double *typecount)
-      : _photon_source(photon_source), _random_generator(random_generator),
-        _density_grid(density_grid), _totweight(totweight),
-        _typecount(typecount), _numphoton(numphoton) {}
+  inline PhotonShootJob(PhotonSource &photon_source, int random_seed,
+                        DensityGrid &density_grid)
+      : _photon_source(photon_source), _random_generator(random_seed),
+        _density_grid(density_grid), _totweight(0.), _typecount{0.},
+        _numphoton(0) {}
 
   /**
    * @brief Set the number of photons for the next execution of the job.
@@ -80,6 +75,21 @@ public:
    * @param numphoton New number of photons.
    */
   inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+
+  /**
+   * @brief Update the given weight counters and reset the internal counters.
+   *
+   * @param totweight Total weight of all photons.
+   * @param typecount Total weights per photon type.
+   */
+  inline void update_counters(double &totweight, double *typecount) {
+    totweight += _totweight;
+    _totweight = 0.;
+    for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+      typecount[i] += _typecount[i];
+      _typecount[i] = 0.;
+    }
+  }
 
   /**
    * @brief Should the Job be deleted by the Worker when it is finished?

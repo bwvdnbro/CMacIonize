@@ -34,6 +34,7 @@
 #include "RandomGenerator.hpp"
 
 #include <cfloat>
+#include <limits>
 
 /**
  * @brief Class used to generate an isotropic external radiation field.
