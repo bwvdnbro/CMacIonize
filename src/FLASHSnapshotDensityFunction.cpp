@@ -170,7 +170,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
  * @return Density at that position (in m^-3).
  */
 DensityValues FLASHSnapshotDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   cell.set_total_density(_grid.get_cell(position) / 1.6737236e-27);

@@ -38,7 +38,7 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return Density at that position.
    */
-  DensityValues operator()(CoordinateVector<> position) {
+  DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
     double density;

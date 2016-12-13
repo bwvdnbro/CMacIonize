@@ -159,7 +159,7 @@ public:
    *
    * @return Number of cells in the grid.
    */
-  virtual unsigned int get_number_of_cells() = 0;
+  virtual unsigned int get_number_of_cells() const = 0;
 
   /**
    * @brief Get the Box containing the grid.
@@ -174,7 +174,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual unsigned long get_cell_index(CoordinateVector<> position) = 0;
+  virtual unsigned long get_cell_index(CoordinateVector<> position) const = 0;
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -182,7 +182,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const = 0;
 
   /**
    * @brief Get the values stored in the cell with the given index.
@@ -190,7 +190,7 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) = 0;
+  virtual DensityValues &get_cell_values(unsigned long index) const = 0;
 
   /**
    * @brief Get the volume of the cell with the given index.
@@ -198,7 +198,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) = 0;
+  virtual double get_cell_volume(unsigned long index) const = 0;
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -248,7 +248,7 @@ public:
      *
      * @return Cell midpoint (in m).
      */
-    inline CoordinateVector<> get_cell_midpoint() {
+    inline CoordinateVector<> get_cell_midpoint() const {
       return _grid.get_cell_midpoint(_index);
     }
 
@@ -257,14 +257,16 @@ public:
      *
      * @return DensityValue the iterator is pointing to.
      */
-    inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
+    inline DensityValues &get_values() const {
+      return _grid.get_cell_values(_index);
+    }
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() { return _grid.get_cell_volume(_index); }
+    inline double get_volume() const { return _grid.get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.

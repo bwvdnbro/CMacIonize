@@ -126,7 +126,7 @@ public:
    * @param position CoordinateVector specifying a coordinate position (in m).
    * @return DensityValues at the given coordinate (in SI units).
    */
-  virtual DensityValues operator()(CoordinateVector<> position) {
+  virtual DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
     double density = -1.;

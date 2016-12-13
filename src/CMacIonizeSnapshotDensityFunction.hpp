@@ -53,7 +53,7 @@ public:
 
   virtual ~CMacIonizeSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position) const;
 };
 
 #endif // CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

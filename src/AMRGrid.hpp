@@ -175,7 +175,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Volume of that cell.
    */
-  inline double get_volume(unsigned long key) {
+  inline double get_volume(unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
@@ -198,7 +198,7 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Midpoint of that cell.
    */
-  inline CoordinateVector<> get_midpoint(unsigned long key) {
+  inline CoordinateVector<> get_midpoint(unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
@@ -310,7 +310,7 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return Key of the lowest level cell containing that position.
    */
-  inline unsigned long get_key(CoordinateVector<> position) {
+  inline unsigned long get_key(CoordinateVector<> position) const {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
@@ -415,7 +415,7 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains that
    * position.
    */
-  inline _CellContents_ &get_cell(CoordinateVector<> position) {
+  inline _CellContents_ &get_cell(CoordinateVector<> position) const {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /

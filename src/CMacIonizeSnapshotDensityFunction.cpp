@@ -144,7 +144,7 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
  * @return DensityValues at that position (in SI units).
  */
 DensityValues CMacIonizeSnapshotDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   // get the indices of the cell containing the position
   int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
            _box.get_sides().x();

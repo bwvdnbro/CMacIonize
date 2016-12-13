@@ -72,7 +72,7 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  double cubic_spline_kernel(double u, double h);
+  static double cubic_spline_kernel(double u, double h);
 
 public:
   GadgetSnapshotDensityFunction(std::string name,
@@ -87,9 +87,9 @@ public:
 
   virtual ~GadgetSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position) const;
 
-  double get_total_hydrogen_number();
+  double get_total_hydrogen_number() const;
 };
 
 #endif // GADGETSNAPSHOTDENSITYFUNCTION_HPP

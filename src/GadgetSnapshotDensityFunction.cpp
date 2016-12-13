@@ -263,7 +263,7 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
  * @return Density at the given coordinate (in m^-3).
  */
 DensityValues GadgetSnapshotDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   // brute force version: slow
@@ -325,7 +325,7 @@ operator()(CoordinateVector<> position) {
  *
  * @return Sum of the hydrogen number of all SPH particles in the snapshot.
  */
-double GadgetSnapshotDensityFunction::get_total_hydrogen_number() {
+double GadgetSnapshotDensityFunction::get_total_hydrogen_number() const {
   double mtot = 0.;
   for (unsigned int i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];

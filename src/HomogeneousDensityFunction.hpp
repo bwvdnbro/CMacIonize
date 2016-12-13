@@ -81,7 +81,7 @@ public:
    * @return Density at the given coordinate: the single value stored
    * internally (in m^-3).
    */
-  virtual DensityValues operator()(CoordinateVector<> position) {
+  virtual DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
     cell.set_total_density(_density);

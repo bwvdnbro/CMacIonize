@@ -163,7 +163,7 @@ CartesianDensityGrid::~CartesianDensityGrid() {
  *
  * @return Total number of cells.
  */
-unsigned int CartesianDensityGrid::get_number_of_cells() {
+unsigned int CartesianDensityGrid::get_number_of_cells() const {
   return _ncell.x() * _ncell.y() * _ncell.z();
 }
 
@@ -175,7 +175,7 @@ unsigned int CartesianDensityGrid::get_number_of_cells() {
  * cell.
  */
 CoordinateVector< int >
-CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) {
+CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) const {
   int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
   int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
   int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
@@ -189,7 +189,7 @@ CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) {
  * @return Box containing the bottom front left corner and the upper back right
  * corner of the cell (in m).
  */
-Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) {
+Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
   double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
   double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
   double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
@@ -203,7 +203,7 @@ Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) {
  * @return Values stored in the cell.
  */
 DensityValues &
-CartesianDensityGrid::get_cell_values(CoordinateVector< int > index) {
+CartesianDensityGrid::get_cell_values(CoordinateVector< int > index) const {
   return _density[index.x()][index.y()][index.z()];
 }
 

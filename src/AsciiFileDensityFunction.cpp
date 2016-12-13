@@ -150,7 +150,7 @@ AsciiFileDensityFunction::~AsciiFileDensityFunction() {
  * @return Density at the given coordinate (in m^-3).
  */
 DensityValues AsciiFileDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   int ix, iy, iz;
@@ -173,7 +173,7 @@ operator()(CoordinateVector<> position) {
  *
  * @return Total number of hydrogen atoms.
  */
-double AsciiFileDensityFunction::get_total_hydrogen_number() {
+double AsciiFileDensityFunction::get_total_hydrogen_number() const {
   double side_x, side_y, side_z, cellvolume;
   side_x = _box.get_sides().x() / _ncell.x();
   side_y = _box.get_sides().y() / _ncell.y();

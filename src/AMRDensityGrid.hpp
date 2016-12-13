@@ -258,7 +258,7 @@ public:
    *
    * @return Number of lowest level AMR cells.
    */
-  virtual unsigned int get_number_of_cells() {
+  virtual unsigned int get_number_of_cells() const {
     return _grid.get_number_of_cells();
   }
 
@@ -268,7 +268,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual unsigned long get_cell_index(CoordinateVector<> position) {
+  virtual unsigned long get_cell_index(CoordinateVector<> position) const {
     return _grid.get_key(position);
   }
 
@@ -278,7 +278,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) {
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const {
     return _grid.get_midpoint(index);
   }
 
@@ -288,7 +288,7 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) {
+  virtual DensityValues &get_cell_values(unsigned long index) const {
     return _grid[index];
   }
 
@@ -298,7 +298,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) {
+  virtual double get_cell_volume(unsigned long index) const {
     return _grid.get_volume(index);
   }
 
