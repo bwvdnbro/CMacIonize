@@ -214,9 +214,9 @@ public:
                  Log *log)
       : AMRDensityGrid(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densityfunction.box_anchor", "[0. m, 0. m, 0. m]"),
+                    "densitygrid.box_anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
+                    "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid.ncell", CoordinateVector< int >(64)),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
@@ -243,8 +243,10 @@ public:
       values.reset_mean_intensities();
       CoordinateVector<> midpoint = it.get_cell_midpoint();
       ++it;
-      refine_cell(_refinement_scheme, index, level, midpoint, values,
-                  _density_function, it.get_index());
+      if (_refinement_scheme) {
+        refine_cell(_refinement_scheme, index, level, midpoint, values,
+                    _density_function, it.get_index());
+      }
     }
   }
 

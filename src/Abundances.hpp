@@ -50,8 +50,8 @@ public:
    * @param AS Abundance of sulphur.
    * @param log Log to write logging info to.
    */
-  Abundances(double AHe, double AC, double AN, double AO, double ANe, double AS,
-             Log *log = nullptr) {
+  inline Abundances(double AHe, double AC, double AN, double AO, double ANe,
+                    double AS, Log *log = nullptr) {
     _abundances[ELEMENT_He] = AHe;
     _abundances[ELEMENT_C] = AC;
     _abundances[ELEMENT_N] = AN;
@@ -73,7 +73,7 @@ public:
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  Abundances(ParameterFile &params, Log *log = nullptr)
+  inline Abundances(ParameterFile &params, Log *log = nullptr)
       : Abundances(params.get_value< double >("abundances.helium", 0.1),
                    params.get_value< double >("abundances.carbon", 2.2e-4),
                    params.get_value< double >("abundances.nitrogen", 4.e-5),
@@ -87,7 +87,7 @@ public:
    *
    * @param abundances Abundances to copy into this instance.
    */
-  Abundances(Abundances &abundances) {
+  inline Abundances(Abundances &abundances) {
     for (int i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
       _abundances[i] = abundances._abundances[i];
     }
@@ -99,7 +99,9 @@ public:
    * @param name Valid ElementName.
    * @return Abundance of the atom with that name.
    */
-  double get_abundance(ElementName name) { return _abundances[name]; }
+  inline double get_abundance(ElementName name) const {
+    return _abundances[name];
+  }
 };
 
 #endif // ABUNDANCES_HPP

@@ -51,11 +51,13 @@ public:
   inline static AMRRefinementScheme *generate(ParameterFile &params,
                                               Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "densitygrid.amrrefinementscheme.type", "Spatial");
+        "densitygrid.amrrefinementscheme.type", "None");
     if (log) {
       log->write_info("Requested AMRRefinementScheme type: ", type);
     }
-    if (type == "Opacity") {
+    if (type == "None") {
+      return nullptr;
+    } else if (type == "Opacity") {
       return new OpacityAMRRefinementScheme(params, log);
     } else if (type == "Spatial") {
       return new SpatialAMRRefinementScheme(params, log);

@@ -202,8 +202,12 @@ int main(int argc, char **argv) {
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
-  log->write_status("Program will use ", worksize,
-                    " parallel threads for photon shooting.");
+  if (worksize > 1) {
+    log->write_status("Program will use ", worksize,
+                      " parallel threads for photon shooting.");
+  } else {
+    log->write_status("Program will use a single thread for photon shooting.");
+  }
 
   PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
                                        worksize);
