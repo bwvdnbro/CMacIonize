@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
            8 * (4096 + 191) + 4 * 2048 + 4 * 1024 + 4 * 512;
   assert_condition(keysum == refsum);
 
-  grid.set_ngbs();
+  grid.set_ngbs(CoordinateVector< bool >(false));
 
   // first check an easy one:
   // 512 = 1 000 000 000

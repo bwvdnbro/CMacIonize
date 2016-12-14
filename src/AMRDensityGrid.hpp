@@ -83,52 +83,6 @@ private:
   }
 
   /**
-   * @brief Refine the given cell using the given refinement scheme.
-   *
-   * @param refinement_scheme AMRRefinementScheme to apply.
-   * @param index Index of the cell.
-   * @param level Refinement level of the cell.
-   * @param midpoint CoordinateVector<> specifying the midpoint of the cell.
-   * @param values DensityValues of the cell.
-   * @param density_function DensityFunction used to initialize newly created
-   * cells.
-   * @param next_index Index of the next cell at the current level.
-   */
-  inline void refine_cell(AMRRefinementScheme *refinement_scheme,
-                          unsigned long index, unsigned char level,
-                          CoordinateVector<> midpoint, DensityValues &values,
-                          DensityFunction &density_function,
-                          unsigned long next_index) {
-    if (refinement_scheme->refine(level, midpoint, values)) {
-      // copy the initial values
-      DensityValues old_values = values;
-      // initialize and check refinement criterion for children
-      unsigned long child_index = _grid.refine_cell(index);
-      while (child_index != next_index) {
-        DensityValues &cell = _grid[child_index].value();
-        CoordinateVector<> child_midpoint = _grid.get_midpoint(child_index);
-        cell.set_total_density(
-            density_function(child_midpoint).get_total_density());
-        // copy all other values from parent, since the values given by
-        // the density_function are only initial conditions
-        for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-          IonName ion = static_cast< IonName >(i);
-          cell.set_ionic_fraction(ion, old_values.get_ionic_fraction(ion));
-        }
-        cell.set_temperature(old_values.get_temperature());
-        cell.set_old_neutral_fraction_H(
-            old_values.get_old_neutral_fraction_H());
-        // set reemission probabilities
-        set_reemission_probabilities(cell.get_temperature(), cell);
-        unsigned long next_child_index = _grid.get_next_key(child_index);
-        refine_cell(refinement_scheme, child_index, level + 1, child_midpoint,
-                    cell, density_function, next_child_index);
-        child_index = next_child_index;
-      }
-    }
-  }
-
-  /**
    * @brief Refine the given cell using the given refinement scheme to decide
    * how deep the refinement should be.
    *
@@ -250,7 +204,7 @@ public:
     }
 
     // finalize grid: set neighbour relations
-    _grid.set_ngbs();
+    _grid.set_ngbs(_periodic);
     // reconstruct the cell list, it might have changed due to refinement
     _cells.resize(_grid.get_number_of_cells());
     index = 0;
@@ -302,7 +256,7 @@ public:
       }
     }
     // reset the ngbs
-    _grid.set_ngbs();
+    _grid.set_ngbs(_periodic);
     // reset the cell list
     _cells.resize(_grid.get_number_of_cells());
     unsigned int index = 0;
@@ -503,9 +457,30 @@ public:
     ds = sqrt(ds);
 
     AMRGridCell< DensityValues > *next_cell = cell->get_ngb(ngbposition);
-    // apply periodic boundary conditions if necessary
-    // NOTE: we should encode these directly into the AMRGrid (TODO)
     if (next_cell != nullptr) {
+      // calculate periodic boundary corrections (if any)
+      CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
+      if (_periodic.x()) {
+        if (next_direction[0] > 0. && nm.x() < cell_bottom_anchor.x()) {
+          periodic_correction[0] = -_box.get_sides().x();
+        } else if (next_direction[0] < 0. && nm.x() > cell_bottom_anchor.x()) {
+          periodic_correction[0] = _box.get_sides().x();
+        }
+      }
+      if (_periodic.y()) {
+        if (next_direction[1] > 0. && nm.y() < cell_bottom_anchor.y()) {
+          periodic_correction[1] = -_box.get_sides().y();
+        } else if (next_direction[1] < 0. && nm.y() > cell_bottom_anchor.y()) {
+          periodic_correction[1] = _box.get_sides().y();
+        }
+      }
+      if (_periodic.z()) {
+        if (next_direction[2] > 0. && nm.z() < cell_bottom_anchor.z()) {
+          periodic_correction[2] = -_box.get_sides().z();
+        } else if (next_direction[2] < 0. && nm.z() > cell_bottom_anchor.z()) {
+          periodic_correction[2] = _box.get_sides().z();
+        }
+      }
       // find the child cell containing the new position
       while (!next_cell->is_single_cell()) {
         next_cell = next_cell->get_child(next_wall);
