@@ -45,9 +45,9 @@ int main(int argc, char **argv) {
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
-  unsigned long index = grid.get_cell_index(CoordinateVector<>(0.5));
-  grid.get_cell_values(index).set_total_density(2.e22);
-  grid.get_cell_values(index).set_ionic_fraction(ION_H_n, 1.);
+  // force refinement for a random cell
+  grid.get_cell_values(42).set_total_density(2.e22);
+  grid.get_cell_values(42).set_ionic_fraction(ION_H_n, 1.);
 
   grid.reset_grid();
 

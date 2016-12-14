@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
 
   // check the level
   assert_condition(grid.get_level(71) == 2);
+  assert_condition(grid[71].get_level() == 2);
 
   /// advanced functionality
 
@@ -357,17 +358,38 @@ int main(int argc, char **argv) {
     cmac_status("Testing cell %lu", tests[i][0]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][1]);
+    assert_condition(grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
+                     tests[i][0]);
+
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][2]);
+    assert_condition(grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
+                     tests[i][0]);
+
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][3]);
+    assert_condition(grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
+                     tests[i][0]);
+
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][4]);
+    assert_condition(grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
+                     tests[i][0]);
+
     assert_condition(
         grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][5]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value(),
+                tests[i][0]);
+    assert_condition(grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
+                     tests[i][0]);
+
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][6]);
+    assert_condition(
+        grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
+        tests[i][0]);
   }
 
   // now check one at the border between the two blocks
@@ -383,8 +405,6 @@ int main(int argc, char **argv) {
   // 959 = 1 110 111 111
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_BOTTOM)->value() == 959.);
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_TOP) == nullptr);
-
-  grid.set_geometry();
 
   // check a random cell
   Box testbox = grid[696].get_geometry();

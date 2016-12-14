@@ -198,7 +198,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  virtual bool interact(Photon &photon, double optical_depth);
+  virtual DensityValues *interact(Photon &photon, double optical_depth);
 
   /**
    * @brief Get an iterator to the first cell in the grid.

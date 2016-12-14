@@ -91,14 +91,22 @@ private:
   /*! @brief Neighbours on the same or higher level. */
   AMRGridCell *_ngbs[6];
 
-  /*! @brief Geometrical size of the cell. */
+  /*! @brief Geometrical dimensions of the cell. */
   Box _box;
+
+  /*! @brief Depth level of the cell. */
+  unsigned char _level;
 
 public:
   /**
-   * @brief Empty constructor.
+   * @brief Constructor.
+   *
+   * @param box Geometrical dimensions of the cell.
+   * @param level Depth level of the cell.
    */
-  inline AMRGridCell() : _values(nullptr), _children{nullptr}, _ngbs{nullptr} {}
+  inline AMRGridCell(Box box, unsigned char level)
+      : _values(nullptr), _children{nullptr}, _ngbs{nullptr}, _box(box),
+        _level(level) {}
 
   inline ~AMRGridCell() {
     if (_values != nullptr) {
@@ -169,6 +177,15 @@ public:
   }
 
   /**
+   * @brief Get the volume of the cell.
+   *
+   * @return Volume of the cell (in m^3).
+   */
+  inline double get_volume() const {
+    return _box.get_sides().x() * _box.get_sides().y() * _box.get_sides().z();
+  }
+
+  /**
    * @brief Get the midpoint of the cell with the given key.
    *
    * @param key Key linking to a unique cell in the AMR hierarchy.
@@ -223,37 +240,21 @@ public:
   }
 
   /**
-   * @brief Recursively set the geometry of the cell and all its children.
-   *
-   * @param box Box specifying the geometry of the current cell.
-   */
-  inline void set_geometry(Box box) {
-    _box = box;
-    if (_values == nullptr) {
-      box.get_sides() *= 0.5;
-      for (unsigned char ix = 0; ix < 2; ++ix) {
-        for (unsigned char iy = 0; iy < 2; ++iy) {
-          for (unsigned char iz = 0; iz < 2; ++iz) {
-            unsigned char cell = 4 * ix + 2 * iy + iz;
-            if (_children[cell] != nullptr) {
-              Box box_copy(box);
-              box_copy.get_anchor()[0] += ix * box.get_sides().x();
-              box_copy.get_anchor()[1] += iy * box.get_sides().y();
-              box_copy.get_anchor()[2] += iz * box.get_sides().z();
-              _children[cell]->set_geometry(box_copy);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
    * @brief Get the geometry of the cell.
    *
-   * @return Box specifying the geometry of the cell.
+   * @return Box specifying the geometry of the cell (in m).
    */
   inline Box get_geometry() const { return _box; }
+
+  /**
+   * @brief Get the midpoint of the cell.
+   *
+   * @return CoordinateVector<> containing the coordinates of the midpoint of
+   * the cell (in m).
+   */
+  inline CoordinateVector<> get_midpoint() const {
+    return _box.get_anchor() + 0.5 * _box.get_sides();
+  }
 
   /**
    * @brief Get the key of the lowest level cell containing the given position.
@@ -275,7 +276,8 @@ public:
           2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
       unsigned char cell = 4 * ix + 2 * iy + iz;
       if (_children[cell] == nullptr) {
-        cmac_error("Cell does not exist!");
+        cmac_error("Cell does not exist (%g m, %g m, %g m)!", position.x(),
+                   position.y(), position.z());
       }
       box.get_sides() *= 0.5;
       box.get_anchor()[0] += ix * box.get_sides().x();
@@ -311,7 +313,12 @@ public:
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
       // check if the cell exists. If not, create it.
       if (_children[4 * ix + 2 * iy + iz] == nullptr) {
-        _children[4 * ix + 2 * iy + iz] = new AMRGridCell();
+        Box box_copy(_box);
+        box_copy.get_sides() *= 0.5;
+        box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
+        box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
+        box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
+        _children[4 * ix + 2 * iy + iz] = new AMRGridCell(box_copy, _level + 1);
       }
       // go deeper
       box.get_sides() *= 0.5;
@@ -342,7 +349,15 @@ public:
       // create children
       for (unsigned int i = 0; i < 8; ++i) {
         if (_children[i] == nullptr) {
-          _children[i] = new AMRGridCell();
+          unsigned char ix = (i & 4) >> 2;
+          unsigned char iy = (i & 2) >> 1;
+          unsigned char iz = i & 1;
+          Box box_copy(_box);
+          box_copy.get_sides() *= 0.5;
+          box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
+          box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
+          box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
+          _children[i] = new AMRGridCell(box_copy, _level + 1);
         }
         _children[i]->create_all_cells(current_level + 1, level);
       }
@@ -366,7 +381,15 @@ public:
       // create children
       for (unsigned int i = 0; i < 8; ++i) {
         if (_children[i] == nullptr) {
-          _children[i] = new AMRGridCell();
+          unsigned char ix = (i & 4) >> 2;
+          unsigned char iy = (i & 2) >> 1;
+          unsigned char iz = i & 1;
+          Box box_copy(_box);
+          box_copy.get_sides() *= 0.5;
+          box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
+          box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
+          box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
+          _children[i] = new AMRGridCell(box_copy, _level + 1);
         }
         // we hack this method to initialize the cell
         _children[i]->create_all_cells(0, 0);
@@ -397,7 +420,15 @@ public:
       unsigned char cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        _children[cell] = new AMRGridCell();
+        unsigned char ix = (cell & 4) >> 2;
+        unsigned char iy = (cell & 2) >> 1;
+        unsigned char iz = cell & 1;
+        Box box_copy(_box);
+        box_copy.get_sides() *= 0.5;
+        box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
+        box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
+        box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
+        _children[cell] = new AMRGridCell(box_copy, _level + 1);
       }
       return _children[cell]->create_cell(key);
     }
@@ -432,6 +463,13 @@ public:
       return _children[4 * ix + 2 * iy + iz]->get_cell(position, box);
     }
   }
+
+  /**
+   * @brief Get the depth level of the cell.
+   *
+   * @return Depth level of the cell.
+   */
+  inline unsigned char get_level() const { return _level; }
 
   /**
    * @brief Get the first key in this cell, assuming a Morton ordering.
@@ -646,7 +684,7 @@ public:
    *
    * @return True if this cell has values, and hence is a single cell.
    */
-  inline bool is_single_cell() { return _values != nullptr; }
+  inline bool is_single_cell() const { return _values != nullptr; }
 
   /**
    * @brief Get the child of the cell at the given position.
@@ -654,8 +692,29 @@ public:
    * @param position AMRChildPosition.
    * @return AMRGridCell at that position.
    */
-  inline AMRGridCell *get_child(AMRChildPosition position) {
+  inline AMRGridCell *get_child(AMRChildPosition position) const {
     return _children[position];
+  }
+
+  /**
+   * @brief Get the child of the cell containing the given position.
+   *
+   * To allow small round off errors, the given position does not need to be in
+   * the cell, we only check what its position relative w.r.t. the cell center
+   * is.
+   *
+   * @param position Position in the cell.
+   * @return Child containing that position.
+   */
+  inline AMRGridCell *get_child(CoordinateVector<> position) const {
+    bool ix = position.x() > _box.get_anchor().x() + 0.5 * _box.get_sides().x();
+    bool iy = position.y() > _box.get_anchor().y() + 0.5 * _box.get_sides().y();
+    bool iz = position.z() > _box.get_anchor().z() + 0.5 * _box.get_sides().z();
+    unsigned char child = 4 * ix + 2 * iy + iz;
+    if (_children[child] == nullptr) {
+      cmac_error("Cell does not exist!");
+    }
+    return _children[child];
   }
 
   /**
@@ -756,8 +815,8 @@ public:
             get_child_safe(right, AMRCHILDPOSITION_LBB),
             _children[AMRCHILDPOSITION_RFB],
             get_child_safe(back, AMRCHILDPOSITION_RFB),
-            _children[AMRCHILDPOSITION_RBT],
-            get_child_safe(top, AMRCHILDPOSITION_RBT));
+            get_child_safe(bottom, AMRCHILDPOSITION_RBT),
+            _children[AMRCHILDPOSITION_RBT]);
       }
       if (_children[AMRCHILDPOSITION_RBT] != nullptr) {
         _children[AMRCHILDPOSITION_RBT]->set_ngbs(
@@ -777,7 +836,7 @@ public:
    * @param position AMRNgbPosition of the neighbour.
    * @return Pointer to the neighbour.
    */
-  inline AMRGridCell *get_ngb(AMRNgbPosition position) {
+  inline AMRGridCell *get_ngb(AMRNgbPosition position) const {
     return _ngbs[position];
   }
 

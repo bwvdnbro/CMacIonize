@@ -47,7 +47,7 @@ private:
   CoordinateVector< int > _ncell;
 
   /*! @brief Top level blocks of the grid. */
-  AMRGridCell< _CellContents_ > ***_top_level;
+  AMRGridCell< _CellContents_ > ****_top_level;
 
   /**
    * @brief Get the block that contains the given key.
@@ -68,7 +68,7 @@ private:
     ix = (block & 0x3ff00000) >> 20;
     iy = (block & 0x000ffc00) >> 10;
     iz = block & 0x000003ff;
-    return _top_level[ix][iy][iz];
+    return *_top_level[ix][iy][iz];
   }
 
   /**
@@ -119,11 +119,23 @@ public:
    */
   inline AMRGrid(Box box, CoordinateVector< int > ncell)
       : _box(box), _ncell(ncell) {
-    _top_level = new AMRGridCell< _CellContents_ > **[_ncell.x()];
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
-      _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
+      _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[_ncell.z()];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
+        for (int k = 0; k < _ncell.z(); ++k) {
+          CoordinateVector<> anchor;
+          anchor[0] = _box.get_anchor().x() + i * sides.x();
+          anchor[1] = _box.get_anchor().y() + j * sides.y();
+          anchor[2] = _box.get_anchor().z() + k * sides.z();
+          Box box(anchor, sides);
+          _top_level[i][j][k] = new AMRGridCell< _CellContents_ >(box, 0);
+        }
       }
     }
   }
@@ -139,11 +151,23 @@ public:
   inline void operator=(const AMRGrid &grid) {
     _box = grid._box;
     _ncell = grid._ncell;
-    _top_level = new AMRGridCell< _CellContents_ > **[_ncell.x()];
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
-      _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
+      _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[_ncell.z()];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
+        for (int k = 0; k < _ncell.z(); ++k) {
+          CoordinateVector<> anchor;
+          anchor[0] = _box.get_anchor().x() + i * sides.x();
+          anchor[1] = _box.get_anchor().y() + j * sides.y();
+          anchor[2] = _box.get_anchor().z() + k * sides.z();
+          Box box(anchor, sides);
+          _top_level[i][j][k] = new AMRGridCell< _CellContents_ >(box, 0);
+        }
       }
     }
   }
@@ -151,6 +175,9 @@ public:
   inline ~AMRGrid() {
     for (int i = 0; i < _ncell.x(); ++i) {
       for (int j = 0; j < _ncell.y(); ++j) {
+        for (int k = 0; k < _ncell.z(); ++k) {
+          delete _top_level[i][j][k];
+        }
         delete[] _top_level[i][j];
       }
       delete[] _top_level[i];
@@ -236,29 +263,6 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     return block.get_geometry(cell, box);
-  }
-
-  /**
-   * @brief Recursively set the geometrical dimensions of all cells in the grid.
-   */
-  inline void set_geometry() {
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
-          // get the box of the block
-          CoordinateVector<> anchor;
-          anchor[0] = _box.get_anchor().x() + ix * sides.x();
-          anchor[1] = _box.get_anchor().y() + iy * sides.y();
-          anchor[2] = _box.get_anchor().z() + iz * sides.z();
-          Box box(anchor, sides);
-          _top_level[ix][iy][iz].set_geometry(box);
-        }
-      }
-    }
   }
 
   /**
@@ -356,7 +360,7 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     // recursively get the key until we have reached the lowest level
-    unsigned int cell = _top_level[ix][iy][iz].get_key(0, position, box);
+    unsigned int cell = _top_level[ix][iy][iz]->get_key(0, position, box);
     unsigned long key = block;
     key = (key << 32) + cell;
     return key;
@@ -389,7 +393,7 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
-    _top_level[ix][iy][iz].create_cell(0, level, position, box);
+    _top_level[ix][iy][iz]->create_cell(0, level, position, box);
   }
 
   /**
@@ -401,7 +405,7 @@ public:
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          _top_level[ix][iy][iz].create_all_cells(0, level);
+          _top_level[ix][iy][iz]->create_all_cells(0, level);
         }
       }
     }
@@ -457,7 +461,7 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
-    return _top_level[ix][iy][iz].get_cell(position, box);
+    return _top_level[ix][iy][iz]->get_cell(position, box);
   }
 
   /**
@@ -476,7 +480,7 @@ public:
    */
   inline unsigned long get_first_key() const {
     // no need to encode block information, since this is simply 0
-    return _top_level[0][0][0].get_first_key(0);
+    return _top_level[0][0][0]->get_first_key(0);
   }
 
   /**
@@ -507,7 +511,7 @@ public:
           }
         }
       }
-      next_cell = _top_level[ix][iy][iz].get_first_key(0);
+      next_cell = _top_level[ix][iy][iz]->get_first_key(0);
     }
     unsigned int block_key = (ix << 20) + (iy << 10) + iz;
     unsigned long next_key = block_key;
@@ -560,7 +564,7 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     unsigned int cell_key =
-        _top_level[ix][iy][iz].get_first_key(0, direction, position, box);
+        _top_level[ix][iy][iz]->get_first_key(0, direction, position, box);
     unsigned int block_key = (ix << 20) + (iy << 10) + iz;
     unsigned long next_key = block_key;
     next_key = (next_key << 32) + cell_key;
@@ -624,7 +628,7 @@ public:
       anchor[2] = _box.get_anchor().z() + iz * sides.z();
       box = Box(anchor, sides);
       next_cell =
-          _top_level[ix][iy][iz].get_first_key(0, direction, position, box);
+          _top_level[ix][iy][iz]->get_first_key(0, direction, position, box);
     }
     unsigned int block_key = (ix << 20) + (iy << 10) + iz;
     unsigned long next_key = block_key;
@@ -642,30 +646,30 @@ public:
         for (int iz = 0; iz < _ncell.z(); ++iz) {
           AMRGridCell< _CellContents_ > *left = nullptr;
           if (ix > 0) {
-            left = &_top_level[ix - 1][iy][iz];
+            left = _top_level[ix - 1][iy][iz];
           }
           AMRGridCell< _CellContents_ > *right = nullptr;
           if (ix < _ncell.x() - 1) {
-            right = &_top_level[ix + 1][iy][iz];
+            right = _top_level[ix + 1][iy][iz];
           }
           AMRGridCell< _CellContents_ > *front = nullptr;
           if (iy > 0) {
-            front = &_top_level[ix][iy - 1][iz];
+            front = _top_level[ix][iy - 1][iz];
           }
           AMRGridCell< _CellContents_ > *back = nullptr;
           if (iy < _ncell.y() - 1) {
-            back = &_top_level[ix][iy + 1][iz];
+            back = _top_level[ix][iy + 1][iz];
           }
           AMRGridCell< _CellContents_ > *bottom = nullptr;
           if (iz > 0) {
-            bottom = &_top_level[ix][iy][iz - 1];
+            bottom = _top_level[ix][iy][iz - 1];
           }
           AMRGridCell< _CellContents_ > *top = nullptr;
           if (iz < _ncell.z() - 1) {
-            top = &_top_level[ix][iy][iz + 1];
+            top = _top_level[ix][iy][iz + 1];
           }
-          _top_level[ix][iy][iz].set_ngbs(left, right, front, back, bottom,
-                                          top);
+          _top_level[ix][iy][iz]->set_ngbs(left, right, front, back, bottom,
+                                           top);
         }
       }
     }
@@ -684,7 +688,7 @@ public:
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          ncell += _top_level[ix][iy][iz].get_number_of_cells();
+          ncell += _top_level[ix][iy][iz]->get_number_of_cells();
         }
       }
     }
@@ -709,7 +713,7 @@ public:
           anchor[1] = _box.get_anchor().y() + iy * sides.y();
           anchor[2] = _box.get_anchor().z() + iz * sides.z();
           Box box(anchor, sides);
-          _top_level[ix][iy][iz].print(stream, box);
+          _top_level[ix][iy][iz]->print(stream, box);
         }
       }
     }

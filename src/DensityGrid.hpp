@@ -207,10 +207,10 @@ public:
    * @param photon Photon.
    * @param optical_depth Optical depth the photon should travel in total
    * (dimensionless).
-   * @return True if the Photon is still in the box after the optical depth has
-   * been reached, false otherwise.
+   * @return Pointer to the values of the cell where the photon currently
+   * resides, a nullptr if the photon left the box.
    */
-  virtual bool interact(Photon &photon, double optical_depth) = 0;
+  virtual DensityValues *interact(Photon &photon, double optical_depth) = 0;
 
   /**
    * @brief Index increment used in the iterator.

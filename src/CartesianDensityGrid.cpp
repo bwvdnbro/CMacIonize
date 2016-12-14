@@ -411,10 +411,11 @@ CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
  * @param photon Photon.
  * @param optical_depth Optical depth the photon should travel in total
  * (dimensionless).
- * @return True if the Photon is still in the box after the optical depth has
- * been reached, false otherwise.
+ * @return A pointer to the values of the last cell the photon was in, a nullptr
+ * if the photon left the box.
  */
-bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
+DensityValues *CartesianDensityGrid::interact(Photon &photon,
+                                              double optical_depth) {
   double S = 0.;
 
   CoordinateVector<> photon_origin = photon.get_position();
@@ -424,6 +425,7 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
   CoordinateVector< int > index = get_cell_indices(photon_origin);
 
   unsigned int ncell = 0;
+  DensityValues *last_cell = nullptr;
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
     ++ncell;
@@ -437,6 +439,7 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
     DensityValues &density = get_cell_values(index);
+    last_cell = &density;
 
     // Helium abundance. Should be a parameter.
     double tau = get_optical_depth(ds, density, photon);
@@ -480,5 +483,9 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
 
   photon.set_position(photon_origin);
 
-  return is_inside(index, photon_origin);
+  if (!is_inside(index, photon_origin)) {
+    last_cell = nullptr;
+  }
+
+  return last_cell;
 }

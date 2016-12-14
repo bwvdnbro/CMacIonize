@@ -94,11 +94,15 @@ int main(int argc, char **argv) {
   // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
   // the 32768 bit is set to indicate its level: 5
-  assert_condition(grid.get_cell_volume(32768) ==
-                   (1. / 32) * (1. / 32) * (1. / 32));
   unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
   assert_condition(key == 32768);
-  CoordinateVector<> midpoint = grid.get_cell_midpoint(32768);
+
+  // pick the first cell to check the volume and midpoint calculation
+  // due to the order in which the cell list is constructed, this should be the
+  // cell with key 32768
+  assert_condition(grid.get_cell_volume(0) ==
+                   (1. / 32) * (1. / 32) * (1. / 32));
+  CoordinateVector<> midpoint = grid.get_cell_midpoint(0);
   assert_condition(midpoint.x() == 0.015625);
   assert_condition(midpoint.y() == 0.015625);
   assert_condition(midpoint.z() == 0.015625);

@@ -128,6 +128,47 @@ private:
     }
   }
 
+  /**
+   * @brief Refine the given cell using the given refinement scheme to decide
+   * how deep the refinement should be.
+   *
+   * @param refinement_scheme AMRRefinementScheme.
+   * @param cell AMRGridCell to refine.
+   * @param density_function DensityFunction that sets the value of the density
+   * in the cell.
+   */
+  inline void refine_cell(AMRRefinementScheme &refinement_scheme,
+                          AMRGridCell< DensityValues > &cell,
+                          DensityFunction &density_function) {
+    unsigned char level = cell.get_level();
+    CoordinateVector<> midpoint = cell.get_midpoint();
+    DensityValues values = cell.value();
+    if (refinement_scheme.refine(level, midpoint, values)) {
+      cell.create_all_cells(level, level + 1);
+      for (unsigned int ic = 0; ic < 8; ++ic) {
+        AMRChildPosition child = static_cast< AMRChildPosition >(ic);
+        AMRGridCell< DensityValues > *childcell = cell.get_child(child);
+        DensityValues &childvalues = childcell->value();
+        // we only set the density based on the density function, as all other
+        // variables are only initial conditions
+        childvalues.set_total_density(
+            density_function(childcell->get_midpoint()).get_total_density());
+        for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          IonName ion = static_cast< IonName >(i);
+          childvalues.set_ionic_fraction(ion, values.get_ionic_fraction(ion));
+        }
+        childvalues.set_temperature(values.get_temperature());
+        childvalues.set_old_neutral_fraction_H(
+            values.get_old_neutral_fraction_H());
+        // set reemission probabilities
+        set_reemission_probabilities(childvalues.get_temperature(),
+                                     childvalues);
+        // recursively refine further
+        refine_cell(refinement_scheme, *childcell, density_function);
+      }
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -169,11 +210,25 @@ public:
     }
     _grid.create_all_cells(level);
 
+    // construct the cell list
+    _cells.resize(_grid.get_number_of_cells());
+    unsigned int index = 0;
+    unsigned long key = _grid.get_first_key();
+    while (key != _grid.get_max_key()) {
+      _cells[index] = &_grid[key];
+      ++index;
+      key = _grid.get_next_key(key);
+    }
+
     if (_log) {
       int levelint = level;
       _log->write_status("Created AMRGrid with ", nblock.x(), "x", nblock.y(),
                          "x", nblock.z(), " top level blocks, going ", levelint,
-                         " levels deep.");
+                         " levels deep, in a box with origin [",
+                         _box.get_anchor().x(), " m, ", _box.get_anchor().y(),
+                         " m, ", _box.get_anchor().z(), " m], and sides [",
+                         _box.get_sides().x(), " m, ", _box.get_sides().y(),
+                         " m, ", _box.get_sides().z(), " m].");
     }
 
     initialize(density_function, _grid.get_number_of_cells());
@@ -184,19 +239,8 @@ public:
         _log->write_status("Applying refinement.");
       }
 
-      // refining a cell could affect the iterator
-      // we therefore take care to update the iterator before refining the cell
-      // this way, we already have the next cell in the iteration before we
-      // start playing around with the current one.
-      auto it = begin();
-      while (it != end()) {
-        unsigned long index = it.get_index();
-        unsigned char level = _grid.get_level(index);
-        DensityValues &values = it.get_values();
-        CoordinateVector<> midpoint = it.get_cell_midpoint();
-        ++it;
-        refine_cell(_refinement_scheme, index, level, midpoint, values,
-                    _density_function, it.get_index());
+      for (unsigned int i = 0; i < _cells.size(); ++i) {
+        refine_cell(*_refinement_scheme, *_cells[i], _density_function);
       }
 
       if (_log) {
@@ -205,11 +249,12 @@ public:
       }
     }
 
-    // finalize grid: set neighbour relations and retrieve cell list
+    // finalize grid: set neighbour relations
     _grid.set_ngbs();
+    // reconstruct the cell list, it might have changed due to refinement
     _cells.resize(_grid.get_number_of_cells());
-    unsigned int index = 0;
-    unsigned long key = _grid.get_first_key();
+    index = 0;
+    key = _grid.get_first_key();
     while (key != _grid.get_max_key()) {
       _cells[index] = &_grid[key];
       ++index;
@@ -250,20 +295,15 @@ public:
    * probabilities, and reapply the refinement scheme to all cells.
    */
   virtual void reset_grid() {
-    auto it = begin();
-    while (it != end()) {
-      unsigned long index = it.get_index();
-      unsigned char level = _grid.get_level(index);
-      DensityValues &values = it.get_values();
-      values.reset_mean_intensities();
-      CoordinateVector<> midpoint = it.get_cell_midpoint();
-      ++it;
+    for (unsigned int i = 0; i < _cells.size(); ++i) {
+      _cells[i]->value().reset_mean_intensities();
       if (_refinement_scheme) {
-        refine_cell(_refinement_scheme, index, level, midpoint, values,
-                    _density_function, it.get_index());
+        refine_cell(*_refinement_scheme, *_cells[i], _density_function);
       }
     }
+    // reset the ngbs
     _grid.set_ngbs();
+    // reset the cell list
     _cells.resize(_grid.get_number_of_cells());
     unsigned int index = 0;
     unsigned long key = _grid.get_first_key();
@@ -282,10 +322,7 @@ public:
    *
    * @return Number of lowest level AMR cells.
    */
-  virtual unsigned int get_number_of_cells() const {
-    //    return _grid.get_number_of_cells();
-    return _cells.size();
-  }
+  virtual unsigned int get_number_of_cells() const { return _cells.size(); }
 
   /**
    * @brief Get the index of the cell containing the given position.
@@ -304,7 +341,7 @@ public:
    * @return Midpoint of that cell (in m).
    */
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const {
-    return _grid.get_midpoint(index);
+    return _cells[index]->get_midpoint();
   }
 
   /**
@@ -314,7 +351,7 @@ public:
    * @return DensityValues stored in that cell.
    */
   virtual DensityValues &get_cell_values(unsigned long index) const {
-    return _grid[index].value();
+    return _cells[index]->value();
   }
 
   /**
@@ -324,7 +361,7 @@ public:
    * @return Volume of that cell (in m^3).
    */
   virtual double get_cell_volume(unsigned long index) const {
-    return _grid.get_volume(index);
+    return _cells[index]->get_volume();
   }
 
   /**
@@ -337,9 +374,9 @@ public:
    *
    * @param photon_origin Current position of the photon (in m).
    * @param photon_direction Direction the photon is travelling in.
-   * @param cell Geometry of the cell in which the photon currently resides.
-   * @param index Index of the cell that contains the photon. Is updated to the
-   * new neighbouring cell index.
+   * @param box Geometry of the cell in which the photon currently resides.
+   * @param cell Pointer to the current cell, is updated to the
+   * neighbouring cell that is next in the algorithm.
    * @param ds Distance covered from the photon position to the intersection
    * point (in m).
    * @param periodic_correction CoordinateVector used to store periodic
@@ -350,11 +387,11 @@ public:
    */
   inline CoordinateVector<>
   get_wall_intersection(CoordinateVector<> &photon_origin,
-                        CoordinateVector<> &photon_direction, Box &cell,
-                        unsigned long &index, double &ds,
+                        CoordinateVector<> &photon_direction, Box &box,
+                        AMRGridCell< DensityValues > *&cell, double &ds,
                         CoordinateVector<> &periodic_correction) {
-    CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
-    CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
+    CoordinateVector<> cell_bottom_anchor = box.get_anchor();
+    CoordinateVector<> cell_top_anchor = box.get_top_anchor();
 
     CoordinateVector< char > next_direction;
 
@@ -404,87 +441,77 @@ public:
     double dz = (next_z - photon_origin).norm2();
 
     CoordinateVector<> next_wall;
+    AMRNgbPosition ngbposition;
     if (dx < dy && dx < dz) {
       next_wall = next_x;
       ds = dx;
       next_direction[1] = 0;
       next_direction[2] = 0;
+      if (next_direction[0] < 0.) {
+        ngbposition = AMRNGBPOSITION_LEFT;
+      } else {
+        ngbposition = AMRNGBPOSITION_RIGHT;
+      }
     } else if (dy < dx && dy < dz) {
       next_wall = next_y;
       ds = dy;
       next_direction[0] = 0;
       next_direction[2] = 0;
+      if (next_direction[1] < 0.) {
+        ngbposition = AMRNGBPOSITION_FRONT;
+      } else {
+        ngbposition = AMRNGBPOSITION_BACK;
+      }
     } else if (dz < dx && dz < dy) {
       next_wall = next_z;
       ds = dz;
       next_direction[0] = 0;
       next_direction[1] = 0;
+      if (next_direction[2] < 0.) {
+        ngbposition = AMRNGBPOSITION_BOTTOM;
+      } else {
+        ngbposition = AMRNGBPOSITION_TOP;
+      }
     } else {
       // special cases: at least two of the smallest values are equal
-      if (dx == dy && dx < dz) {
-        // it does not matter which values we pick, they will be the same
-        next_wall = next_x;
-        ds = dx;
-        next_direction[2] = 0;
-      } else if (dx == dz && dx < dy) {
+      // find out which values are equal, and pick one of the two cells as next
+      // cell
+      if (dx == dy || dx == dz) {
         next_wall = next_x;
         ds = dx;
         next_direction[1] = 0;
-      } else if (dy == dz && dy < dx) {
+        next_direction[2] = 0;
+        if (next_direction[0] < 0.) {
+          ngbposition = AMRNGBPOSITION_LEFT;
+        } else {
+          ngbposition = AMRNGBPOSITION_RIGHT;
+        }
+      } else {
         next_wall = next_y;
         ds = dy;
         next_direction[0] = 0;
-      } else {
-        // all values are equal, we sit on a corner of the box
-        next_wall = next_x;
-        ds = dx;
+        next_direction[2] = 0;
+        if (next_direction[1] < 0.) {
+          ngbposition = AMRNGBPOSITION_FRONT;
+        } else {
+          ngbposition = AMRNGBPOSITION_BACK;
+        }
       }
     }
 
     // ds contains the squared norm, take the square root
     ds = sqrt(ds);
 
-    // find the next index
-    // next_direction stores the index of the cell AT THE SAME LEVEL, relative
-    // w.r.t. the current cell
-    // to find the index of the next cell, we need to
-    // - find that cell or the lowest lying parent cell
-    // - if that cell has children: find the child that contains the
-    //   intersection point
-    // If the next cell is outside the box, we set the next index to
-    // AMRGRID_MAXINDEX. However, if the box is periodic in that dimension, we
-    // need to figure out what the index of the next cell at the other side of
-    // the boundary is.
-    unsigned long new_index =
-        _grid.get_neighbour(index, next_direction, next_wall);
-    if (index == AMRGRID_MAXKEY) {
-      // we are outside the box. Check if periodic boundaries should be applied
-      // for now, we assume we move in one direction only, because moving in
-      // more directions at the same time requires extra checks...
-      unsigned int num_0 = (next_direction.x() != 0);
-      num_0 += (next_direction.y() != 0);
-      num_0 += (next_direction.z() != 0);
-      if (num_0 != 2) {
-        cmac_error("Not supported yet!");
-      }
-      CoordinateVector<> new_position = next_wall;
-      if (next_direction.x() != 0 && _periodic.x()) {
-        new_position[0] -= next_direction.x() * _box.get_sides().x();
-        periodic_correction[0] = -next_direction.x() * _box.get_sides().x();
-        new_index = _grid.get_first_key(next_direction, new_position);
-      }
-      if (next_direction.y() != 0 && _periodic.y()) {
-        new_position[1] -= next_direction.y() * _box.get_sides().y();
-        periodic_correction[1] = -next_direction.y() * _box.get_sides().y();
-        new_index = _grid.get_first_key(next_direction, new_position);
-      }
-      if (next_direction.z() != 0 && _periodic.z()) {
-        new_position[2] -= next_direction.z() * _box.get_sides().z();
-        periodic_correction[2] = -next_direction.z() * _box.get_sides().z();
-        new_index = _grid.get_first_key(next_direction, new_position);
+    AMRGridCell< DensityValues > *next_cell = cell->get_ngb(ngbposition);
+    // apply periodic boundary conditions if necessary
+    // NOTE: we should encode these directly into the AMRGrid (TODO)
+    if (next_cell != nullptr) {
+      // find the child cell containing the new position
+      while (!next_cell->is_single_cell()) {
+        next_cell = next_cell->get_child(next_wall);
       }
     }
-    index = new_index;
+    cell = next_cell;
 
     return next_wall;
   }
@@ -496,32 +523,34 @@ public:
    * @param photon Photon.
    * @param optical_depth Optical depth the photon should travel in total
    * (dimensionless).
-   * @return True if the Photon is still in the box after the optical depth has
-   * been reached, false otherwise.
+   * @return A pointer to the values of the last cell the photon was in, nullptr
+   * if the photon left the box.
    */
-  virtual bool interact(Photon &photon, double optical_depth) {
+  virtual DensityValues *interact(Photon &photon, double optical_depth) {
     CoordinateVector<> photon_origin = photon.get_position();
     CoordinateVector<> photon_direction = photon.get_direction();
 
-    // find out in which cell the photon is currently hiding
     unsigned long index = get_cell_index(photon_origin);
+    AMRGridCell< DensityValues > *current_cell = &_grid[index];
 
     // while the photon has not exceeded the optical depth and is still in the
     // box
-    while (index != AMRGRID_MAXKEY && optical_depth > 0.) {
-      Box cell = _grid.get_geometry(index);
+    DensityValues *last_cell = nullptr;
+    while (current_cell != nullptr && optical_depth > 0.) {
+      Box cell = current_cell->get_geometry();
 
       double ds = 0.;
-      unsigned long old_index = index;
+      AMRGridCell< DensityValues > *old_cell = current_cell;
       CoordinateVector<> periodic_correction;
       CoordinateVector<> next_wall =
-          get_wall_intersection(photon_origin, photon_direction, cell, index,
-                                ds, periodic_correction);
+          get_wall_intersection(photon_origin, photon_direction, cell,
+                                current_cell, ds, periodic_correction);
 
       // get the optical depth of the path from the current photon location to
       // the
       // cell wall, update S
-      DensityValues &density = get_cell_values(old_index);
+      DensityValues &density = old_cell->value();
+      last_cell = &density;
 
       // Helium abundance. Should be a parameter.
       double tau = get_optical_depth(ds, density, photon);
@@ -549,7 +578,11 @@ public:
 
     photon.set_position(photon_origin);
 
-    return index != AMRGRID_MAXKEY;
+    if (current_cell == nullptr) {
+      last_cell = nullptr;
+    }
+
+    return last_cell;
   }
 
   /**
@@ -560,27 +593,21 @@ public:
    *
    * @param index Index to increment.
    */
-  virtual void increase_index(unsigned long &index) {
-    index = _grid.get_next_key(index);
-  }
+  virtual void increase_index(unsigned long &index) { ++index; }
 
   /**
    * @brief Get an iterator to the first cell in the grid.
    *
    * @return Iterator to the first cell in the grid.
    */
-  virtual DensityGrid::iterator begin() {
-    return iterator(_grid.get_first_key(), *this);
-  }
+  virtual DensityGrid::iterator begin() { return iterator(0, *this); }
 
   /**
    * @brief Get an iterator to the last cell in the grid.
    *
    * @return Iterator to the last cell in the grid.
    */
-  virtual DensityGrid::iterator end() {
-    return iterator(_grid.get_max_key(), *this);
-  }
+  virtual DensityGrid::iterator end() { return iterator(_cells.size(), *this); }
 
   /**
    * @brief Print the grid to the given stream for visual inspection.
