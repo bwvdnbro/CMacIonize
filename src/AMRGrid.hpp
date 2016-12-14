@@ -239,6 +239,29 @@ public:
   }
 
   /**
+   * @brief Recursively set the geometrical dimensions of all cells in the grid.
+   */
+  inline void set_geometry() {
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    for (int ix = 0; ix < _ncell.x(); ++ix) {
+      for (int iy = 0; iy < _ncell.y(); ++iy) {
+        for (int iz = 0; iz < _ncell.z(); ++iz) {
+          // get the box of the block
+          CoordinateVector<> anchor;
+          anchor[0] = _box.get_anchor().x() + ix * sides.x();
+          anchor[1] = _box.get_anchor().y() + iy * sides.y();
+          anchor[2] = _box.get_anchor().z() + iz * sides.z();
+          Box box(anchor, sides);
+          _top_level[ix][iy][iz].set_geometry(box);
+        }
+      }
+    }
+  }
+
+  /**
    * @brief Convert the given position into a key that can be used to access the
    * cell containing that position on the given level.
    *

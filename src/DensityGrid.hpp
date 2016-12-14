@@ -329,9 +329,9 @@ public:
    * grid itself has been set up.
    *
    * @param function DensityFunction that sets the density.
+   * @param ntot Total number of cells to initialize.
    */
-  void initialize(DensityFunction &function) {
-    unsigned int ntot = get_number_of_cells();
+  void initialize(DensityFunction &function, unsigned int ntot) {
     unsigned int nguess = 0.01 * ntot;
     unsigned int ninfo = 0.1 * ntot;
     unsigned int ndone = 0;

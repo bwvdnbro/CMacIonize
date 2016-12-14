@@ -384,5 +384,20 @@ int main(int argc, char **argv) {
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_BOTTOM)->value() == 959.);
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_TOP) == nullptr);
 
+  grid.set_geometry();
+
+  // check a random cell
+  Box testbox = grid[696].get_geometry();
+  // 696 = 1 010 111 000
+  // anchor_x = 0. + 0.25 + 0. = 0.25
+  // anchor_y = 0. + 0.25 + 0.125 = 0.375
+  // anchor_z = 0. + 0.25 + 0. = 0.25
+  assert_condition(testbox.get_anchor().x() == 0.25);
+  assert_condition(testbox.get_anchor().y() == 0.375);
+  assert_condition(testbox.get_anchor().z() == 0.25);
+  assert_condition(testbox.get_sides().x() == 0.125);
+  assert_condition(testbox.get_sides().y() == 0.125);
+  assert_condition(testbox.get_sides().z() == 0.125);
+
   return 0;
 }

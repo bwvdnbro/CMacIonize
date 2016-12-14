@@ -34,6 +34,7 @@
 
 #include <cfloat>
 #include <ostream>
+#include <vector>
 
 /**
  * @brief AMR density grid.
@@ -42,6 +43,9 @@ class AMRDensityGrid : public DensityGrid {
 private:
   /*! @brief AMRGrid used as grid. */
   AMRGrid< DensityValues > _grid;
+
+  /*! @brief Convenient cell list used for faster cell indexing. */
+  std::vector< AMRGridCell< DensityValues > * > _cells;
 
   /*! @brief DensityFunction used to initialize densities. */
   DensityFunction &_density_function;
@@ -172,7 +176,7 @@ public:
                          " levels deep.");
     }
 
-    initialize(density_function);
+    initialize(density_function, _grid.get_number_of_cells());
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -199,6 +203,17 @@ public:
         _log->write_status("Number of cells after refinement: ",
                            _grid.get_number_of_cells());
       }
+    }
+
+    // finalize grid: set neighbour relations and retrieve cell list
+    _grid.set_ngbs();
+    _cells.resize(_grid.get_number_of_cells());
+    unsigned int index = 0;
+    unsigned long key = _grid.get_first_key();
+    while (key != _grid.get_max_key()) {
+      _cells[index] = &_grid[key];
+      ++index;
+      key = _grid.get_next_key(key);
     }
   }
 
@@ -248,6 +263,15 @@ public:
                     _density_function, it.get_index());
       }
     }
+    _grid.set_ngbs();
+    _cells.resize(_grid.get_number_of_cells());
+    unsigned int index = 0;
+    unsigned long key = _grid.get_first_key();
+    while (key != _grid.get_max_key()) {
+      _cells[index] = &_grid[key];
+      ++index;
+      key = _grid.get_next_key(key);
+    }
   }
 
   /**
@@ -259,7 +283,8 @@ public:
    * @return Number of lowest level AMR cells.
    */
   virtual unsigned int get_number_of_cells() const {
-    return _grid.get_number_of_cells();
+    //    return _grid.get_number_of_cells();
+    return _cells.size();
   }
 
   /**

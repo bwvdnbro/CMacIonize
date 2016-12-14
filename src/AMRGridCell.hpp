@@ -88,8 +88,11 @@ private:
   /*! @brief Refinement levels, if this is not a single cell. */
   AMRGridCell *_children[8];
 
-  /*! @brief Neighbours on the same or higher level if this is a single cell. */
+  /*! @brief Neighbours on the same or higher level. */
   AMRGridCell *_ngbs[6];
+
+  /*! @brief Geometrical size of the cell. */
+  Box _box;
 
 public:
   /**
@@ -218,6 +221,39 @@ public:
       return _children[cell]->get_geometry(key, box);
     }
   }
+
+  /**
+   * @brief Recursively set the geometry of the cell and all its children.
+   *
+   * @param box Box specifying the geometry of the current cell.
+   */
+  inline void set_geometry(Box box) {
+    _box = box;
+    if (_values == nullptr) {
+      box.get_sides() *= 0.5;
+      for (unsigned char ix = 0; ix < 2; ++ix) {
+        for (unsigned char iy = 0; iy < 2; ++iy) {
+          for (unsigned char iz = 0; iz < 2; ++iz) {
+            unsigned char cell = 4 * ix + 2 * iy + iz;
+            if (_children[cell] != nullptr) {
+              Box box_copy(box);
+              box_copy.get_anchor()[0] += ix * box.get_sides().x();
+              box_copy.get_anchor()[1] += iy * box.get_sides().y();
+              box_copy.get_anchor()[2] += iz * box.get_sides().z();
+              _children[cell]->set_geometry(box_copy);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Get the geometry of the cell.
+   *
+   * @return Box specifying the geometry of the cell.
+   */
+  inline Box get_geometry() const { return _box; }
 
   /**
    * @brief Get the key of the lowest level cell containing the given position.
