@@ -623,19 +623,21 @@ public:
   }
 
   /**
-   * @brief Get the child of the cell at the given position.
+   * @brief Get the child of the given cell at the given position.
    *
    * This version checks if the requested child exists, and returns a pointer to
    * this cell if it does not.
    *
+   * @param cell AMRGridCell for which we want the child cell.
    * @param position AMRChildPosition.
    * @return AMRGridCell at that position.
    */
-  inline AMRGridCell *get_child_safe(AMRChildPosition position) {
-    if (is_single_cell()) {
-      return this;
+  inline static AMRGridCell *get_child_safe(AMRGridCell *cell,
+                                            AMRChildPosition position) {
+    if (cell == nullptr || cell->is_single_cell()) {
+      return cell;
     } else {
-      return get_child(position);
+      return cell->get_child(position);
     }
   }
 
@@ -664,71 +666,71 @@ public:
     if (_values == nullptr) {
       if (_children[AMRCHILDPOSITION_LFB] != nullptr) {
         _children[AMRCHILDPOSITION_LFB]->set_ngbs(
-            left->get_child(AMRCHILDPOSITION_RFB),
+            get_child_safe(left, AMRCHILDPOSITION_RFB),
             _children[AMRCHILDPOSITION_RFB],
-            front->get_child(AMRCHILDPOSITION_LBB),
+            get_child_safe(front, AMRCHILDPOSITION_LBB),
             _children[AMRCHILDPOSITION_LBB],
-            bottom->get_child(AMRCHILDPOSITION_LFT),
+            get_child_safe(bottom, AMRCHILDPOSITION_LFT),
             _children[AMRCHILDPOSITION_LFT]);
       }
       if (_children[AMRCHILDPOSITION_LFT] != nullptr) {
         _children[AMRCHILDPOSITION_LFT]->set_ngbs(
-            left->get_child(AMRCHILDPOSITION_RFT),
+            get_child_safe(left, AMRCHILDPOSITION_RFT),
             _children[AMRCHILDPOSITION_RFT],
-            front->get_child(AMRCHILDPOSITION_LBT),
+            get_child_safe(front, AMRCHILDPOSITION_LBT),
             _children[AMRCHILDPOSITION_LBT], _children[AMRCHILDPOSITION_LFB],
-            top->get_child(AMRCHILDPOSITION_LFB));
+            get_child_safe(top, AMRCHILDPOSITION_LFB));
       }
       if (_children[AMRCHILDPOSITION_LBB] != nullptr) {
         _children[AMRCHILDPOSITION_LBB]->set_ngbs(
-            left->get_child(AMRCHILDPOSITION_RBB),
+            get_child_safe(left, AMRCHILDPOSITION_RBB),
             _children[AMRCHILDPOSITION_RBB], _children[AMRCHILDPOSITION_LFB],
-            back->get_child(AMRCHILDPOSITION_LFB),
-            _children[AMRCHILDPOSITION_LBT],
-            top->get_child(AMRCHILDPOSITION_LBT));
+            get_child_safe(back, AMRCHILDPOSITION_LFB),
+            get_child_safe(bottom, AMRCHILDPOSITION_LBT),
+            _children[AMRCHILDPOSITION_LBT]);
       }
       if (_children[AMRCHILDPOSITION_LBT] != nullptr) {
         _children[AMRCHILDPOSITION_LBT]->set_ngbs(
-            left->get_child(AMRCHILDPOSITION_RBT),
+            get_child_safe(left, AMRCHILDPOSITION_RBT),
             _children[AMRCHILDPOSITION_RBT], _children[AMRCHILDPOSITION_LFT],
-            back->get_child(AMRCHILDPOSITION_LFT),
+            get_child_safe(back, AMRCHILDPOSITION_LFT),
             _children[AMRCHILDPOSITION_LBB],
-            top->get_child(AMRCHILDPOSITION_LBB));
+            get_child_safe(top, AMRCHILDPOSITION_LBB));
       }
       if (_children[AMRCHILDPOSITION_RFB] != nullptr) {
         _children[AMRCHILDPOSITION_RFB]->set_ngbs(
             _children[AMRCHILDPOSITION_LFB],
-            right->get_child(AMRCHILDPOSITION_LFB),
-            front->get_child(AMRCHILDPOSITION_RBB),
+            get_child_safe(right, AMRCHILDPOSITION_LFB),
+            get_child_safe(front, AMRCHILDPOSITION_RBB),
             _children[AMRCHILDPOSITION_RBB],
-            bottom->get_child(AMRCHILDPOSITION_RFT),
+            get_child_safe(bottom, AMRCHILDPOSITION_RFT),
             _children[AMRCHILDPOSITION_RFT]);
       }
       if (_children[AMRCHILDPOSITION_RFT] != nullptr) {
         _children[AMRCHILDPOSITION_RFT]->set_ngbs(
             _children[AMRCHILDPOSITION_LFT],
-            right->get_child(AMRCHILDPOSITION_LFT),
-            front->get_child(AMRCHILDPOSITION_RBT),
+            get_child_safe(right, AMRCHILDPOSITION_LFT),
+            get_child_safe(front, AMRCHILDPOSITION_RBT),
             _children[AMRCHILDPOSITION_RBT], _children[AMRCHILDPOSITION_RFB],
-            top->get_child(AMRCHILDPOSITION_RFB));
+            get_child_safe(top, AMRCHILDPOSITION_RFB));
       }
       if (_children[AMRCHILDPOSITION_RBB] != nullptr) {
         _children[AMRCHILDPOSITION_RBB]->set_ngbs(
             _children[AMRCHILDPOSITION_LBB],
-            right->get_child(AMRCHILDPOSITION_LBB),
+            get_child_safe(right, AMRCHILDPOSITION_LBB),
             _children[AMRCHILDPOSITION_RFB],
-            back->get_child(AMRCHILDPOSITION_RFB),
+            get_child_safe(back, AMRCHILDPOSITION_RFB),
             _children[AMRCHILDPOSITION_RBT],
-            top->get_child(AMRCHILDPOSITION_RBT));
+            get_child_safe(top, AMRCHILDPOSITION_RBT));
       }
       if (_children[AMRCHILDPOSITION_RBT] != nullptr) {
         _children[AMRCHILDPOSITION_RBT]->set_ngbs(
             _children[AMRCHILDPOSITION_LBT],
-            right->get_child(AMRCHILDPOSITION_LBT),
+            get_child_safe(right, AMRCHILDPOSITION_LBT),
             _children[AMRCHILDPOSITION_RFT],
-            back->get_child(AMRCHILDPOSITION_RFT),
+            get_child_safe(back, AMRCHILDPOSITION_RFT),
             _children[AMRCHILDPOSITION_RBB],
-            top->get_child(AMRCHILDPOSITION_RBB));
+            get_child_safe(top, AMRCHILDPOSITION_RBB));
       }
     }
   }

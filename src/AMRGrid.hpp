@@ -619,27 +619,27 @@ public:
         for (int iz = 0; iz < _ncell.z(); ++iz) {
           AMRGridCell< _CellContents_ > *left = nullptr;
           if (ix > 0) {
-            left = _top_level[ix - 1][iy][iz];
+            left = &_top_level[ix - 1][iy][iz];
           }
           AMRGridCell< _CellContents_ > *right = nullptr;
           if (ix < _ncell.x() - 1) {
-            right = _top_level[ix + 1][iy][iz];
+            right = &_top_level[ix + 1][iy][iz];
           }
           AMRGridCell< _CellContents_ > *front = nullptr;
           if (iy > 0) {
-            front = _top_level[ix][iy - 1][iz];
+            front = &_top_level[ix][iy - 1][iz];
           }
           AMRGridCell< _CellContents_ > *back = nullptr;
           if (iy < _ncell.y() - 1) {
-            back = _top_level[ix][iy + 1][iz];
+            back = &_top_level[ix][iy + 1][iz];
           }
           AMRGridCell< _CellContents_ > *bottom = nullptr;
           if (iz > 0) {
-            bottom = _top_level[ix][iy][iz - 1];
+            bottom = &_top_level[ix][iy][iz - 1];
           }
           AMRGridCell< _CellContents_ > *top = nullptr;
           if (iz < _ncell.z() - 1) {
-            top = _top_level[ix][iy][iz + 1];
+            top = &_top_level[ix][iy][iz + 1];
           }
           _top_level[ix][iy][iz].set_ngbs(left, right, front, back, bottom,
                                           top);
