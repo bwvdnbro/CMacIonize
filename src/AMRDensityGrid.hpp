@@ -459,8 +459,8 @@ public:
     AMRGridCell< DensityValues > *next_cell = cell->get_ngb(ngbposition);
     if (next_cell != nullptr) {
       // calculate periodic boundary corrections (if any)
-      CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
       if (_periodic.x()) {
+        CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[0] > 0. && nm.x() < cell_bottom_anchor.x()) {
           periodic_correction[0] = -_box.get_sides().x();
         } else if (next_direction[0] < 0. && nm.x() > cell_bottom_anchor.x()) {
@@ -468,6 +468,7 @@ public:
         }
       }
       if (_periodic.y()) {
+        CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[1] > 0. && nm.y() < cell_bottom_anchor.y()) {
           periodic_correction[1] = -_box.get_sides().y();
         } else if (next_direction[1] < 0. && nm.y() > cell_bottom_anchor.y()) {
@@ -475,6 +476,7 @@ public:
         }
       }
       if (_periodic.z()) {
+        CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[2] > 0. && nm.z() < cell_bottom_anchor.z()) {
           periodic_correction[2] = -_box.get_sides().z();
         } else if (next_direction[2] < 0. && nm.z() > cell_bottom_anchor.z()) {
