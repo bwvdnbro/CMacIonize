@@ -128,7 +128,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
 /**
  * @brief Destructor.
  *
- * Free memory used by internal density grid.
+ * Free memory used by the internal density grid.
  */
 AsciiFileDensityFunction::~AsciiFileDensityFunction() {
   for (int i = 0; i < _ncell.x(); ++i) {

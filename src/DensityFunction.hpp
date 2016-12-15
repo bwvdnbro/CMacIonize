@@ -34,6 +34,9 @@
  */
 class DensityFunction {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~DensityFunction() {}
 
   /**

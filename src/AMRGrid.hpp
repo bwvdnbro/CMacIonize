@@ -175,6 +175,13 @@ public:
     }
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the top level cells. The top levels cells are responsible for
+   * recursively deleting their children and the values stored in the lowest
+   * level cells.
+   */
   inline ~AMRGrid() {
     for (int i = 0; i < _ncell.x(); ++i) {
       for (int j = 0; j < _ncell.y(); ++j) {

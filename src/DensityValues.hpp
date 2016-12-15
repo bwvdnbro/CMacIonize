@@ -97,6 +97,8 @@ public:
 
   /**
    * @brief Destructor.
+   *
+   * Delete the emissivities pointer (if used).
    */
   inline ~DensityValues() {
     if (_emissivities != nullptr) {

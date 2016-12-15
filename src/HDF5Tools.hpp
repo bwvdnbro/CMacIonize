@@ -949,6 +949,11 @@ public:
     }
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the internal data array.
+   */
   ~HDF5DataBlock() { delete[] _data; }
 
   /**

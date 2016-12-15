@@ -67,6 +67,9 @@ public:
     }
   }
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~DensityGridWriter() {}
 
   /**

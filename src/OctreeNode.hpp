@@ -68,6 +68,11 @@ public:
    */
   inline OctreeNode(unsigned int index) : _children{nullptr}, _index(index) {}
 
+  /**
+   * @brief Destructor.
+   *
+   * Each node deletes its own children.
+   */
   inline ~OctreeNode() {
     for (unsigned char i = 0; i < 8; ++i) {
       delete _children[i];

@@ -59,6 +59,11 @@ public:
 #endif
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Frees the OpenMP lock (if OpenMP works).
+   */
   inline ~Lock() {
 #ifdef HAVE_OPENMP
     omp_destroy_lock(&_lock);

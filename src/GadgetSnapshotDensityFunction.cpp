@@ -251,6 +251,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 
 /**
  * @brief Destructor.
+ *
+ * Deletes the internal Octree.
  */
 GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
   delete _octree;

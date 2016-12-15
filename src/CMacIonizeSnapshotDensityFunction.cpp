@@ -127,6 +127,11 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     : CMacIonizeSnapshotDensityFunction(
           params.get_value< std::string >("densityfunction.filename"), log) {}
 
+/**
+ * @brief Destructor.
+ *
+ * Delete the internal density grid.
+ */
 CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
   for (int ix = 0; ix < _ncell.x(); ++ix) {
     for (int iy = 0; iy < _ncell.y(); ++iy) {

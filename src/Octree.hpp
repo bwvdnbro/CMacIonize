@@ -73,6 +73,12 @@ public:
     _root->collapse();
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the root node of the tree. The root node is responsible for the
+   * recursive destruction of its child nodes.
+   */
   inline ~Octree() { delete _root; }
 
   /**

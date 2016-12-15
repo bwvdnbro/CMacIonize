@@ -152,7 +152,7 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
 /**
  * @brief Destructor
  *
- * Free the memory used by the internal arrays.
+ * Free the memory used by the internal grid arrays.
  */
 CartesianDensityGrid::~CartesianDensityGrid() {
   if (_log) {

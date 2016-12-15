@@ -239,6 +239,11 @@ public:
                 "densitygrid.periodicity", CoordinateVector< bool >(false)),
             log) {}
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the AMRRefinementScheme (if present).
+   */
   virtual ~AMRDensityGrid() {
     if (_refinement_scheme != nullptr) {
       delete _refinement_scheme;

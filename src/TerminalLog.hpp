@@ -74,6 +74,9 @@ public:
    */
   TerminalLog(LogLevel level) : Log(level) {}
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~TerminalLog() {}
 };
 

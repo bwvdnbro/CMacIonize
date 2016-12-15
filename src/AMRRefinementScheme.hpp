@@ -39,6 +39,9 @@ class DensityValues;
  */
 class AMRRefinementScheme {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~AMRRefinementScheme() {}
 
   /**

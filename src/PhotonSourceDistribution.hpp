@@ -33,6 +33,9 @@
  */
 class PhotonSourceDistribution {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~PhotonSourceDistribution() {}
 
   /**

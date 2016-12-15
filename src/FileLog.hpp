@@ -57,6 +57,9 @@ public:
    */
   FileLog(std::string filename, LogLevel level) : Log(level), _file(filename) {}
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~FileLog() {}
 };
 

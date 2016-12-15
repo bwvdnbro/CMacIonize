@@ -153,6 +153,9 @@ public:
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
   }
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~DensityGrid() {}
 
   /**

@@ -132,6 +132,9 @@ public:
             params.get_value< int >("photonsourcedistribution.random_seed", 42),
             log) {}
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~SILCCPhotonSourceDistribution() {}
 
   /**

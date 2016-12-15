@@ -80,6 +80,11 @@ public:
     }
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the internal job array.
+   */
   inline ~PhotonShootJobMarket() {
     for (int i = 0; i < _worksize; ++i) {
       delete _jobs[i];
