@@ -17,14 +17,15 @@
  ******************************************************************************/
 
 /**
- * @file OpacityAMRRefinementScheme.hpp
+ * @file MassAMRRefinementScheme.hpp
  *
- * @brief AMRRefinementScheme implementation that refines based on opacity.
+ * @brief AMRRefinementScheme implementation that refines cells to obtain cells
+ * with approximately equal mass (number of particles).
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef OPACITYAMRREFINEMENTSCHEME_HPP
-#define OPACITYAMRREFINEMENTSCHEME_HPP
+#ifndef MASSAMRREFINEMENTSCHEME_HPP
+#define MASSAMRREFINEMENTSCHEME_HPP
 
 #include "AMRRefinementScheme.hpp"
 #include "DensityValues.hpp"
@@ -32,28 +33,27 @@
 #include "ParameterFile.hpp"
 
 /**
- * @brief AMRRefinementScheme implementation that refines based on opacity.
+ * @brief AMRRefinementScheme implementation that refines cells to obtain cells
+ * with approximately equal mass (number of particles).
  */
-class OpacityAMRRefinementScheme : public AMRRefinementScheme {
+class MassAMRRefinementScheme : public AMRRefinementScheme {
 private:
-  /*! @brief Target opacity for every cell. Cells with higher opacities will
-   *  be refined (in m^-1). */
-  double _target_opacity;
+  /*! @brief Target number of particles. */
+  double _target_npart;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param target_opacity Target opacity; cells with higher opacities will be
-   * refined (in m^-1).
+   * @param target_npart Target number of particles.
    * @param log Log to write logging info to.
    */
-  OpacityAMRRefinementScheme(double target_opacity, Log *log = nullptr)
-      : _target_opacity(target_opacity) {
+  MassAMRRefinementScheme(double target_npart, Log *log = nullptr)
+      : _target_npart(target_npart) {
     if (log) {
-      log->write_status(
-          "Created OpacityAMRRefinementScheme with target opacity ",
-          target_opacity, ".");
+      log->write_status("Constructed MassAMRRefinementScheme with target "
+                        "number of particles ",
+                        _target_npart, ".");
     }
   }
 
@@ -63,31 +63,26 @@ public:
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  OpacityAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
-      : OpacityAMRRefinementScheme(
-            params.get_physical_value< QUANTITY_OPACITY >(
-                "densitygrid.amrrefinementscheme.target_opacity", "1. m^-1"),
+  MassAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
+      : MassAMRRefinementScheme(
+            params.get_value< double >(
+                "densitygrid.amrrefinementscheme.target_npart", 1.),
             log) {}
 
   /**
-   * @brief Decide if the given cell should be refined or not.
+   * @brief Decide whether the cell at the given level, with the given midpoint
+   * and values, should be refined.
    *
-   * @param level Current refinement level of the cell.
+   * @param level Depth level of the cell.
    * @param midpoint Midpoint of the cell (in m).
    * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of a cell.
-   * @return True if the cell should be refined.
+   * @param cell DensityValues of the cell (in SI units).
+   * @return True if the cell should be split into 8 smaller cells.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
                       double volume, DensityValues &cell) const {
-    // we assume an ionizing cross section of 1.e-18 cm^2
-    const double xsecH = 1.e-22;
-
-    double opacity =
-        cell.get_total_density() * cell.get_ionic_fraction(ION_H_n) * xsecH;
-
-    return opacity > _target_opacity;
+    return volume * cell.get_total_density() > _target_npart;
   }
 };
 
-#endif // OPACITYAMRREFINEMENTSCHEME_HPP
+#endif // MASSAMRREFINEMENTSCHEME_HPP

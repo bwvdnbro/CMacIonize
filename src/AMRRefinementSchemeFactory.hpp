@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "MassAMRRefinementScheme.hpp"
 #include "OpacityAMRRefinementScheme.hpp"
 #include "SpatialAMRRefinementScheme.hpp"
 
@@ -57,6 +58,8 @@ public:
     }
     if (type == "None") {
       return nullptr;
+    } else if (type == "Mass") {
+      return new MassAMRRefinementScheme(params, log);
     } else if (type == "Opacity") {
       return new OpacityAMRRefinementScheme(params, log);
     } else if (type == "Spatial") {

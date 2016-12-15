@@ -90,11 +90,12 @@ public:
    *
    * @param level Current refinement level of the cell.
    * @param midpoint Midpoint of the cell (in m).
+   * @param volume Volume of the cell (in m^3).
    * @param cell DensityValues of the cell.
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      DensityValues &cell) const {
+                      double volume, DensityValues &cell) const {
     for (unsigned int i = 0; i < 3; ++i) {
       if (midpoint[i] < _refinement_zone.get_anchor()[i] ||
           midpoint[i] > _refinement_zone.get_anchor()[i] +

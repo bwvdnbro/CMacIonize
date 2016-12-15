@@ -96,8 +96,9 @@ private:
                           DensityFunction &density_function) {
     unsigned char level = cell.get_level();
     CoordinateVector<> midpoint = cell.get_midpoint();
+    double volume = cell.get_volume();
     DensityValues values = cell.value();
-    if (refinement_scheme.refine(level, midpoint, values)) {
+    if (refinement_scheme.refine(level, midpoint, volume, values)) {
       cell.create_all_cells(level, level + 1);
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);

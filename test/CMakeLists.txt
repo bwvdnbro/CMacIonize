@@ -585,6 +585,16 @@ set(TESTWORKER_SOURCES
 add_unit_test(NAME testWorker
               SOURCES ${TESTWORKER_SOURCES})
 
+## Unit test for MassAMRRefinementScheme
+set(TESTMASSAMRREFINEMENTSCHEME_SOURCES
+    testMassAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/MassAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testMassAMRRefinementScheme
+              SOURCES ${TESTMASSAMRREFINEMENTSCHEME_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
