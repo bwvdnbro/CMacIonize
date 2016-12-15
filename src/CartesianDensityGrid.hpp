@@ -183,6 +183,16 @@ public:
   }
 
   /**
+   * @brief Get the values stored in the cell which contains the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return DensityValues of the cell containing that position (in SI units).
+   */
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
+    return get_cell_values(get_cell_indices(position));
+  }
+
+  /**
    * @brief Get the volume of the cell with the given long index.
    *
    * @param long_index Long index of a cell.

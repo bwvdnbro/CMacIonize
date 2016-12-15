@@ -315,6 +315,16 @@ public:
   }
 
   /**
+   * @brief Get the values stored in the cell which contains the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return DensityValues of the cell containing that position (in SI units).
+   */
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
+    return _grid.get_cell(position);
+  }
+
+  /**
    * @brief Get the volume of the cell with the given index.
    *
    * @param index Index of a cell.
