@@ -204,7 +204,12 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
   message(STATUS
           "Doxygen found! You can generate documentation using 'make doc'")
-  # Configure the Doxyfile (sets the correct output path)
+  if(DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT YES)
+  else(DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT NO)
+  endif(DOXYGEN_DOT_FOUND)
+  # Configure the Doxyfile (sets the correct output path and Dot path)
   configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in
                  ${PROJECT_BINARY_DIR}/Doxyfile @ONLY)
   # Add a command that will generate the doxygen documentation

@@ -133,6 +133,7 @@ inline bool group_exists(hid_t file, std::string name) {
  *
  * @param file HDF5File handle to an HDF5 file that is open in write mode.
  * @param name Name of the group to create.
+ * @return HDF5Group handle to the newly created group.
  */
 inline HDF5Group create_group(hid_t file, std::string name) {
 #ifdef HDF5_OLD_API

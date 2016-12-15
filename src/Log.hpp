@@ -99,6 +99,7 @@ protected:
    * implementation.
    *
    * @param level LogLevel of the message.
+   * @return std::string description of the LogLevel.
    */
   virtual std::string get_levelname(LogLevel level) const {
     switch (level) {

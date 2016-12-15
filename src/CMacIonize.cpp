@@ -342,3 +342,58 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+
+/**
+ * @mainpage
+ *
+ * @author Bert Vandenbroucke \n
+ *         School of Physics and Astronomy \n
+ *         University of St Andrews \n
+ *         North Haugh \n
+ *         St Andrews \n
+ *         Fife \n
+ *         KY16 9SS \n
+ *         Scotland \n
+ *         United Kingdom \n
+ *         bv7@st-andrews.ac.uk
+ *
+ * @section purpose Purpose of the program.
+ *
+ * CMacIonize is the C++ version of Kenny Wood's photoionization code
+ * (Wood, Mathis & Ercolano, 2004, MNRAS, 348, 1337). The name @c CMacIonize is
+ * based on the name of Kenny Wood's code (@c mcionize, which stands for Monte
+ * Carlo ionization code), but also reflects the fact that it is written in
+ * C(++) (not Fortran, like the old code), and the fact that development started
+ * during the first week of the main author's post doc in Scotland.
+ *
+ * The code can be used to perform 3D radiative transfer calculations on a
+ * number of different grid structures, using various possible sources of
+ * ionizing radiation with various possible spectra. One of the main goals
+ * during development was to provide a very general and user-friendly interface,
+ * so that the code can be used in a wide variety of possible scenarios, taking
+ * input data from a wide variety of possible data formats, with a minimal
+ * technical involvement of the end user. This automatically led to a highly
+ * modular code design, whereby most functionality is encoded into classes with
+ * a limited number of responsibilities that are covered by extensive unit
+ * tests. Adding a new functionality should in principle be as simple as adding
+ * a new class that implements an already defined general class interface.
+ *
+ * The code also offers an extensive framework of utility functions and classes
+ * that simplify various aspects of new code development, like for example
+ * high level wrappers around HDF5 read and write functions, and a very
+ * intuitive unit system.
+ *
+ * The code is currently only parallelized for use on shared memory system using
+ * OpenMP, but there are plans to also port it to larger distributed memory
+ * systems using MPI. The current OpenMP implementation shows reasonable speed
+ * ups on small systems, although no formal scaling tests have been performed
+ * yet.
+ *
+ * @section structure Structure of the program.
+ *
+ * Due to time constraints, there is no extensive code manual (yet). However,
+ * all files, functions, classes... in the source code are fully documented
+ * (the Doxygen configuration enforces this), so most of it should be easy to
+ * understand. The main program entry point can be found in the file
+ * CMacIonize.cpp.
+ */
