@@ -76,12 +76,21 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
     }
   }
 
+  if (_log) {
+    unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
+    _log->write_info(
+        "Allocating memory for ", ncell, " cells (",
+        Utilities::human_readable_bytes(ncell * sizeof(DensityValues)), ")...");
+  }
   _density = new DensityValues **[_ncell.x()];
   for (int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
     for (int j = 0; j < _ncell.y(); ++j) {
       _density[i][j] = new DensityValues[_ncell.z()];
     }
+  }
+  if (_log) {
+    _log->write_info("Done.");
   }
 
   // fill the density grid

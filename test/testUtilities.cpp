@@ -39,5 +39,10 @@ int main(int argc, char **argv) {
 
   assert_condition(timestr == "7y 134d 6h 52m 33.1233s");
 
+  unsigned long bytes = 125;
+  assert_condition(Utilities::human_readable_bytes(bytes) == "125 bytes");
+  bytes = 1253626623;
+  assert_condition(Utilities::human_readable_bytes(bytes) == "1.17 GB");
+
   return 0;
 }

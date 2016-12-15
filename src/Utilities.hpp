@@ -504,6 +504,51 @@ inline std::string human_readable_time(double time) {
   timestream << seconds << "s";
   return timestream.str();
 }
+
+/**
+ * @brief Get the unit of \f$2^{10e}\f$ bytes.
+ *
+ * @param exponent Exponent \f$e\f$.
+ * @return Name for \f$2^{10e}\f$ bytes: (\f$2^{10}\f$ bytes = KB, ...).
+ */
+inline std::string byte_unit(unsigned char exponent) {
+  switch (exponent) {
+  case 0:
+    return "bytes";
+  case 1:
+    return "KB";
+  case 2:
+    return "MB";
+  case 3:
+    return "GB";
+  case 4:
+    return "TB";
+  default:
+    cmac_error("Name for 2^(10*%u) bytes was not implemented!", exponent);
+    return "";
+  }
+}
+
+/**
+ * @brief Convert the given number of bytes to a human readable string.
+ *
+ * @param bytes Number of bytes.
+ * @return std::string containing the given number of bytes in "bytes", "KB",
+ * "MB", "GB"...
+ */
+inline std::string human_readable_bytes(unsigned long bytes) {
+  unsigned char sizecount = 0;
+  double bytefloat = bytes;
+  while ((bytes >> 10) > 0) {
+    bytes >>= 10;
+    ++sizecount;
+    bytefloat /= 1024.;
+  }
+  std::stringstream bytestream;
+  bytefloat = std::round(100. * bytefloat) * 0.01;
+  bytestream << bytefloat << " " << byte_unit(sizecount);
+  return bytestream.str();
+}
 }
 
 #endif // UTILITIES_HPP
