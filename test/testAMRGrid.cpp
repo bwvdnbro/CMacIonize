@@ -77,12 +77,12 @@ int main(int argc, char **argv) {
   assert_condition(grid.get_cell(CoordinateVector<>(1.1, 0.1, 0.1)) == 42.);
 
   // test volume, midpoint and geometry routines
-  assert_condition(grid.get_volume(64) == 0.015625);
-  CoordinateVector<> midpoint = grid.get_midpoint(64);
+  assert_condition(grid[64].get_volume() == 0.015625);
+  CoordinateVector<> midpoint = grid[64].get_midpoint();
   assert_condition(midpoint.x() == 0.125);
   assert_condition(midpoint.y() == 0.125);
   assert_condition(midpoint.z() == 0.125);
-  Box geometry = grid.get_geometry(64);
+  Box geometry = grid[64].get_geometry();
   assert_condition(geometry.get_anchor().x() == 0.);
   assert_condition(geometry.get_anchor().y() == 0.);
   assert_condition(geometry.get_anchor().z() == 0.);
@@ -97,7 +97,6 @@ int main(int argc, char **argv) {
   assert_condition(grid.get_cell(CoordinateVector<>(0.7)) == 5.5);
 
   // check the level
-  assert_condition(grid.get_level(71) == 2);
   assert_condition(grid[71].get_level() == 2);
 
   /// advanced functionality
@@ -121,117 +120,9 @@ int main(int argc, char **argv) {
   next_key = grid.get_next_key(0x00100000000003ff);
   assert_condition(next_key == grid.get_max_key());
 
-  // advanced indexing: check neighbour finding routines
-
-  // within a parent cell
-  next_key = grid.get_neighbour(512, CoordinateVector< char >(0, 1, 0),
-                                CoordinateVector<>(0.1, 0.125, 0.1));
-  // 640: 1*512 + (0*256 + 1*128 + 0*64) + (0*32 + 0*16 + 0*8) +
-  //              (0*4 + 0*2 + 0*1)
-  assert_condition(next_key == 640);
-  next_key = grid.get_neighbour(512, CoordinateVector< char >(1, 0, 0),
-                                CoordinateVector<>(0.125, 0.1, 0.1));
-  // 768: 1*512 + (1*256 + 0*128 + 0*64) + (0*32 + 0*16 + 0*8) +
-  //              (0*4 + 0*2 + 0*1)
-  assert_condition(next_key == 768);
-  next_key = grid.get_neighbour(512, CoordinateVector< char >(0, 0, 1),
-                                CoordinateVector<>(0.1, 0.1, 0.125));
-  // 576: 1*512 + (0*256 + 0*128 + 1*64) + (0*32 + 0*16 + 0*8) +
-  //              (0*4 + 0*2 + 0*1)
-  assert_condition(next_key == 576);
-  next_key = grid.get_neighbour(512, CoordinateVector< char >(0, 0, -1),
-                                CoordinateVector<>(0.1, 0.1, 0.));
-  assert_condition(next_key == AMRGRID_MAXKEY);
-  next_key = grid.get_neighbour(512, CoordinateVector< char >(0, 1, 1),
-                                CoordinateVector<>(0.1, 0.125, 0.125));
-  // 704: 1*512 + (0*256 + 1*128 + 1*64) + (0*32 + 0*16 + 0*8) +
-  //              (0*4 + 0*2 + 0*1)
-  assert_condition(next_key == 704);
-
-  // between neighbouring parent cells
-  next_key = grid.get_neighbour(704, CoordinateVector< char >(0, 0, 1),
-                                CoordinateVector<>(0.1, 0.2, 0.25));
-  // 648: 1*512 + (0*256 + 1*128 + 0*64) + (0*32 + 0*16 + 1*8) +
-  //              (0*4 + 0*2 + 0*1)
-  assert_condition(next_key == 648);
-  next_key = grid.get_neighbour(648, CoordinateVector< char >(0, 0, -1),
-                                CoordinateVector<>(0.1, 0.2, 0.25));
-  assert_condition(next_key == 704);
-
-  // between neighbouring blocks
-  next_key = grid.get_neighbour(1023, CoordinateVector< char >(1, 0, 0),
-                                CoordinateVector<>(1., 0.9, 0.9));
-  // 731: 1*512 + (0*256 + 1*128 + 1*64) + (0*32 + 1*16 + 1*8) +
-  //              (0*4 + 1*2 + 1*1) (=0x2db)
-  assert_condition(next_key == 0x00100000000002db);
-  next_key =
-      grid.get_neighbour(0x00100000000002db, CoordinateVector< char >(-1, 0, 0),
-                         CoordinateVector<>(1., 0.9, 0.9));
-  assert_condition(next_key == 1023);
-
-  // check that we can walk through the grid in a straight line
-
-  // x direction
-  key = grid.get_first_key();
-  unsigned int ncell = 0;
-  while (key != AMRGRID_MAXKEY) {
-    key = grid.get_neighbour(key, CoordinateVector< char >(1, 0, 0),
-                             CoordinateVector<>(0.1));
-    ++ncell;
-  }
-  assert_condition(ncell == 16);
-
-  // y direction
-  key = grid.get_first_key();
-  ncell = 0;
-  while (key != AMRGRID_MAXKEY) {
-    key = grid.get_neighbour(key, CoordinateVector< char >(0, 1, 0),
-                             CoordinateVector<>(0.1));
-    ++ncell;
-  }
-  assert_condition(ncell == 8);
-
-  // z direction
-  key = grid.get_first_key();
-  ncell = 0;
-  while (key != AMRGRID_MAXKEY) {
-    key = grid.get_neighbour(key, CoordinateVector< char >(0, 0, 1),
-                             CoordinateVector<>(0.1));
-    ++ncell;
-  }
-  assert_condition(ncell == 8);
-
-  // diagonal in y and z (why not?)
-  key = grid.get_first_key();
-  ncell = 0;
-  while (key != AMRGRID_MAXKEY) {
-    key = grid.get_neighbour(key, CoordinateVector< char >(0, 1, 1),
-                             CoordinateVector<>(0.1));
-    ++ncell;
-  }
-  assert_condition(ncell == 8);
-
-  // advanced indexing: first cell in a given direction
-  key = grid.get_first_key(CoordinateVector< char >(1, 0, 0),
-                           CoordinateVector<>(0.1));
-  assert_condition(key == 512);
-  key = grid.get_first_key(CoordinateVector< char >(0, 1, 0),
-                           CoordinateVector<>(0.1));
-  assert_condition(key == 512);
-  key = grid.get_first_key(CoordinateVector< char >(0, -1, 0),
-                           CoordinateVector<>(0.1, 0.9, 0.1));
-  // 658: 1*512 + (0*256 + 1*128 + 0*64) + (0*32 + 1*16 + 0*8) +
-  //              (0*4 + 1*2 + 0*1)
-  assert_condition(key == 658);
-  key = grid.get_first_key(CoordinateVector< char >(-1, -1, 0),
-                           CoordinateVector<>(1.9, 0.9, 0.1));
-  // 950: 1*512 + (1*256 + 1*128 + 0*64) + (1*32 + 1*16 + 0*8) +
-  //              (1*4 + 1*2 + 0*1) = (0x3b6)
-  assert_condition(key == 0x00100000000003b6);
-
   // check Morton iteration
   key = grid.get_first_key();
-  ncell = 0;
+  unsigned int ncell = 0;
   // we need a way to make sure all cells are traversed (exactly once)
   // to this end, we calculate the sum of all keys
   unsigned long keysum = 0;
