@@ -103,6 +103,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
@@ -154,6 +155,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
@@ -321,6 +323,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp
@@ -449,6 +452,7 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
     ../src/ChargeTransferRates.cpp
+    ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.hpp
@@ -463,6 +467,7 @@ set(TESTAMRDENSITYGRID_SOURCES
 
     ../src/AMRDensityGrid.hpp
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/Timer.hpp
 )
 add_unit_test(NAME testAMRDensityGrid
@@ -473,6 +478,7 @@ set(TESTSPATIALAMRREFINEMENTSCHEME_SOURCES
     testSpatialAMRRefinementScheme.cpp
 
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/SpatialAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testSpatialAMRRefinementScheme
@@ -483,6 +489,7 @@ set(TESTOPACITYAMRREFINEMENTSCHEME_SOURCES
     testOpacityAMRRefinementScheme.cpp
 
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/OpacityAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testOpacityAMRRefinementScheme
@@ -505,6 +512,7 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     ../src/BlockSyntaxDensityFunction.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/DensityGrid.cpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
 )
@@ -532,6 +540,7 @@ set(TESTTEMPERATURECALCULATOR_SOURCES
     testTemperatureCalculator.cpp
 
     ../src/ChargeTransferRates.cpp
+    ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/LineCoolingData.cpp
     ../src/TemperatureCalculator.cpp
@@ -590,6 +599,7 @@ set(TESTMASSAMRREFINEMENTSCHEME_SOURCES
     testMassAMRRefinementScheme.cpp
 
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/MassAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testMassAMRRefinementScheme

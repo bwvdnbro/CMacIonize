@@ -27,9 +27,11 @@
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
 #include "DensityValues.hpp"
 #include "Error.hpp"
 #include "RecombinationRates.hpp"
+#include "WorkDistributor.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -255,12 +257,14 @@ void IonizationStateCalculator::calculate_ionization_state(
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
   double jfac = _luminosity / totweight;
-  for (auto it = grid.begin(); it != grid.end(); ++it) {
-    double cellvolume = it.get_volume();
-    DensityValues &cell = it.get_values();
-    double jfaccell = jfac / cellvolume;
-    calculate_ionization_state(jfaccell, cell);
-  }
+  WorkDistributor<
+      DensityGridTraversalJobMarket< IonizationStateCalculatorFunction >,
+      DensityGridTraversalJob< IonizationStateCalculatorFunction > >
+      workers;
+  IonizationStateCalculatorFunction do_calculation(*this, jfac);
+  DensityGridTraversalJobMarket< IonizationStateCalculatorFunction > jobs(
+      grid, do_calculation);
+  workers.do_in_parallel(jobs);
 }
 
 /**

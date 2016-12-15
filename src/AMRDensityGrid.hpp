@@ -186,7 +186,7 @@ public:
                          " m, ", _box.get_sides().z(), " m].");
     }
 
-    initialize(density_function, _grid.get_number_of_cells());
+    initialize(density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -586,6 +586,22 @@ public:
    * @return Iterator to the last cell in the grid.
    */
   virtual DensityGrid::iterator end() { return iterator(_cells.size(), *this); }
+
+  /**
+   * @brief Get begin and end iterators to a chunk of the grid with given begin
+   * and end fractions.
+   *
+   * @param begin Fraction of the total grid where we want the chunk to begin.
+   * @param end Fraction of the total grid where we want the chunk to end.
+   * @return std::pair of iterators pointing to the begin and end of the chunk.
+   */
+  virtual std::pair< DensityGrid::iterator, DensityGrid::iterator >
+  get_chunk(double begin, double end) {
+    unsigned int npart = _cells.size();
+    unsigned int ibegin = begin * npart;
+    unsigned int iend = end * npart;
+    return std::make_pair(iterator(ibegin, *this), iterator(iend, *this));
+  }
 
   /**
    * @brief Print the grid to the given stream for visual inspection.

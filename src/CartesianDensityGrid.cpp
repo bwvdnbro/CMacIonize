@@ -90,7 +90,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
 
-  initialize(density_function, get_number_of_cells());
+  initialize(density_function);
 
   _cellside_max = _cellside.x();
   if (_cellside.y() > _cellside_max) {

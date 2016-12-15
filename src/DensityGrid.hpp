@@ -35,6 +35,7 @@
 #include "Photon.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
+#include "WorkDistributor.hpp"
 
 #include <cmath>
 
@@ -323,22 +324,43 @@ public:
   virtual iterator end() = 0;
 
   /**
-   * @brief Initialize the cells in the grid.
+   * @brief Get begin and end iterators to a chunk of the grid with given begin
+   * and end fractions.
    *
-   * All implementations should call this method in their constructor, after the
-   * grid itself has been set up.
-   *
-   * @param function DensityFunction that sets the density.
-   * @param ntot Total number of cells to initialize.
+   * @param begin Fraction of the total grid where we want the chunk to begin.
+   * @param end Fraction of the total grid where we want the chunk to end.
+   * @return std::pair of iterators pointing to the begin and end of the chunk.
    */
-  void initialize(DensityFunction &function, unsigned int ntot) {
-    unsigned int nguess = 0.01 * ntot;
-    unsigned int ninfo = 0.1 * ntot;
-    unsigned int ndone = 0;
-    Timer guesstimer;
-    for (auto it = begin(); it != end(); ++it) {
+  virtual std::pair< iterator, iterator > get_chunk(double begin,
+                                                    double end) = 0;
+
+  /**
+   * @brief Functor class used to initialize the DensityGrid.
+   */
+  class DensityGridInitializationFunction {
+  private:
+    /*! @brief DensityFunction that sets the density for each cell in the grid.
+     */
+    DensityFunction &_function;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param function DensityFunction that set the density for each cell in the
+     * grid.
+     */
+    DensityGridInitializationFunction(DensityFunction &function)
+        : _function(function) {}
+
+    /**
+     * @brief Routine that sets the density for a single cell in the grid.
+     *
+     * @param it DensityGrid::iterator pointing to a single cell in the grid.
+     */
+    inline void operator()(iterator it) {
       DensityValues &cell = it.get_values();
-      DensityValues vals = function(it.get_cell_midpoint());
+      DensityValues vals = _function(it.get_cell_midpoint());
       cell.set_total_density(vals.get_total_density());
       cell.set_temperature(vals.get_temperature());
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -346,20 +368,10 @@ public:
         cell.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
       }
       set_reemission_probabilities(vals.get_temperature(), cell);
-      ++ndone;
-      if (_log) {
-        if (ndone == nguess) {
-          unsigned int tguess = round(99. * guesstimer.stop());
-          _log->write_status("Filling grid will take approximately ", tguess,
-                             " seconds.");
-        }
-        if (ndone % ninfo == 0) {
-          unsigned int pdone = round(100. * ndone / ntot);
-          _log->write_info("Did ", pdone, " percent.");
-        }
-      }
     }
-  }
+  };
+
+  void initialize(DensityFunction &function, int worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission

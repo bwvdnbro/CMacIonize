@@ -27,9 +27,10 @@
 #ifndef IONIZATIONSTATECALCULATOR_HPP
 #define IONIZATIONSTATECALCULATOR_HPP
 
+#include "DensityGrid.hpp"
+
 class Abundances;
 class ChargeTransferRates;
-class DensityGrid;
 class DensityValues;
 class RecombinationRates;
 
@@ -58,13 +59,50 @@ public:
                             ChargeTransferRates &charge_transfer_rates);
 
   void calculate_ionization_state(double jfac, DensityValues &cell) const;
-  void calculate_ionization_state(double totweight, DensityGrid &grid) const;
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);
 
   static void find_H0_simple(double alphaH, double jH, double nH, double T,
                              double &h0);
+
+  /**
+   * @brief Functor used to calculate the ionization state of a single cell.
+   */
+  class IonizationStateCalculatorFunction {
+  private:
+    /*! @brief IonizationStateCalculator used to perform the calculation. */
+    const IonizationStateCalculator &_calculator;
+
+    /*! @brief Normalization factor used in the IonizationStateCalculator call.
+     */
+    double _jfac;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param calculator IonizationStateCalculator used to perform the
+     * calculation.
+     * @param jfac Normalization factor used in the IonizationStateCalculator
+     * call.
+     */
+    IonizationStateCalculatorFunction(
+        const IonizationStateCalculator &calculator, double jfac)
+        : _calculator(calculator), _jfac(jfac) {}
+
+    /**
+     * @brief Do the ionization state calculation for a single cell.
+     *
+     * @param cell DensityGrid::iterator pointing to a single cell in the grid.
+     */
+    inline void operator()(DensityGrid::iterator cell) {
+      _calculator.calculate_ionization_state(_jfac / cell.get_volume(),
+                                             cell.get_values());
+    }
+  };
+
+  void calculate_ionization_state(double totweight, DensityGrid &grid) const;
 };
 
 #endif // IONIZATIONSTATECALCULATOR_HPP

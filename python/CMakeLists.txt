@@ -52,6 +52,7 @@ if(HAVE_HDF5)
 
       ../src/CartesianDensityGrid.cpp
       ../src/CMacIonizeSnapshotDensityFunction.cpp
+      ../src/DensityGrid.cpp
   )
 
   add_library(densitygrid SHARED ${DENSITYGRIDMODULE_SOURCES})

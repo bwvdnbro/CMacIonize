@@ -114,6 +114,7 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
+    DensityGrid.cpp
     EmissivityCalculator.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
@@ -150,6 +151,8 @@ set(CMACIONIZE_SOURCES
     DensityFunctionFactory.hpp
     DensityGrid.hpp
     DensityGridFactory.hpp
+    DensityGridTraversalJob.hpp
+    DensityGridTraversalJobMarket.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
@@ -191,6 +194,7 @@ set(CMACIONIZE_SOURCES
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
     WorkDistributor.hpp
+    WorkEnvironment.hpp
     Worker.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp

@@ -52,6 +52,7 @@
 #include "VernerCrossSections.hpp"
 #include "VernerRecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+#include "WorkEnvironment.hpp"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -118,6 +119,9 @@ int main(int argc, char **argv) {
       log->write_warning("However, dirty running is enabled.");
     }
   }
+
+  // set the maximum number of openmp threads
+  WorkEnvironment::set_max_num_threads(parser.get_value< int >("threads"));
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
