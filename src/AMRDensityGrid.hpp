@@ -215,6 +215,9 @@ public:
       ++index;
       key = _grid.get_next_key(key);
     }
+
+    // make sure all values are correctly initialized (also in refined cells)
+    initialize(density_function);
   }
 
   /**

@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "CMacIonizeAMRRefinementScheme.hpp"
 #include "MassAMRRefinementScheme.hpp"
 #include "OpacityAMRRefinementScheme.hpp"
 #include "SpatialAMRRefinementScheme.hpp"
@@ -58,6 +59,8 @@ public:
     }
     if (type == "None") {
       return nullptr;
+    } else if (type == "CMacIonize") {
+      return new CMacIonizeAMRRefinementScheme(params, log);
     } else if (type == "Mass") {
       return new MassAMRRefinementScheme(params, log);
     } else if (type == "Opacity") {

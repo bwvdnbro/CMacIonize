@@ -73,6 +73,12 @@ initDensityGrid(const std::string &filename) {
 
   HDF5Tools::close_file(file);
 
+  // make sure AMR grids are processed correctly
+  if (parameters.get_value< std::string >("densitygrid.type") == "AMR") {
+    // this overrides whatever value was in that field
+    parameters.add_value("densitygrid.amrrefinementscheme.type", "CMacIonize");
+  }
+
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
   return boost::shared_ptr< DensityGrid >(
