@@ -605,6 +605,18 @@ set(TESTMASSAMRREFINEMENTSCHEME_SOURCES
 add_unit_test(NAME testMassAMRRefinementScheme
               SOURCES ${TESTMASSAMRREFINEMENTSCHEME_SOURCES})
 
+## Unit test for SPHNGSnapshotDensityFunction
+set(TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES
+    testSPHNGSnapshotDensityFunction.cpp
+
+    ../src/SPHNGSnapshotDensityFunction.cpp
+    ../src/SPHNGSnapshotDensityFunction.hpp
+)
+add_unit_test(NAME testSPHNGSnapshotDensityFunction
+              SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
+               ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest.dat COPYONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
