@@ -616,6 +616,8 @@ add_unit_test(NAME testSPHNGSnapshotDensityFunction
               SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
                ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/SPHNG_data.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/SPHNG_data.txt COPYONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

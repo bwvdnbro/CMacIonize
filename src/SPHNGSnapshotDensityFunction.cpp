@@ -25,6 +25,7 @@
  */
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "UnitConverter.hpp"
 #include <fstream>
 #include <map>
 
@@ -36,6 +37,10 @@
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::string filename) {
   std::ifstream file(filename, std::ios::binary | std::ios::in);
+
+  if (!file) {
+    cmac_error("Unable to open file \"%s\"!", filename.c_str());
+  }
 
   // read header
 
@@ -131,7 +136,6 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   } else {
     iuniquemax = totnumpart;
   }
-  cmac_status("%lu", iuniquemax);
 
   file.read(reinterpret_cast< char * >(&length), sizeof(int));
   file.read(reinterpret_cast< char * >(&number), sizeof(int));
@@ -247,6 +251,203 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
   /// continue on line '  read(10) isteps(icount+1:icount+npart)' of Will's
   /// rbin.f90 file...
+  std::vector< int > isteps(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&isteps[0]), npart * sizeof(int));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  if (nums[0] >= 2) {
+    // skip 2 blocks
+    for (unsigned int i = 0; i < 2; ++i) {
+      file.read(reinterpret_cast< char * >(&length), sizeof(int));
+      // skip length bytes
+      file.seekg(length, std::ios_base::cur);
+      file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+      if (length != length2) {
+        cmac_error("Something went wrong!");
+      }
+    }
+  }
+
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  char *c = new char[length + 1];
+  file.read(c, length);
+  c[length] = '\0';
+  unsigned int j = length - 1;
+  while (c[j] == ' ') {
+    c[j] = '\0';
+    --j;
+  }
+  std::string tag(c);
+  delete[] c;
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  if (tag != "iphase") {
+    cmac_error("Wrong tag: \"%s\" (expected \"iphase\")!", tag.c_str());
+  }
+
+  std::vector< char > iphase(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(&iphase[0], npart);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  if (nums[4] >= 1) {
+    // skip iunique block
+    file.read(reinterpret_cast< char * >(&length), sizeof(int));
+    // skip length bytes
+    file.seekg(length, std::ios_base::cur);
+    file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+    if (length != length2) {
+      cmac_error("Something went wrong!");
+    }
+    file.read(reinterpret_cast< char * >(&length), sizeof(int));
+    // skip length bytes
+    file.seekg(length, std::ios_base::cur);
+    file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+    if (length != length2) {
+      cmac_error("Something went wrong!");
+    }
+  }
+
+  std::vector< double > x(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  // skip length bytes
+  file.seekg(length, std::ios_base::cur);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&x[0]), npart * sizeof(double));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  std::vector< double > y(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  // skip length bytes
+  file.seekg(length, std::ios_base::cur);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&y[0]), npart * sizeof(double));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  std::vector< double > z(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  // skip length bytes
+  file.seekg(length, std::ios_base::cur);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&z[0]), npart * sizeof(double));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  std::vector< double > m(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  // skip length bytes
+  file.seekg(length, std::ios_base::cur);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&m[0]), npart * sizeof(double));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  std::vector< double > h(npart);
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  // skip length bytes
+  file.seekg(length, std::ios_base::cur);
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  file.read(reinterpret_cast< char * >(&h[0]), npart * sizeof(double));
+  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
+  if (length != length2) {
+    cmac_error("Something went wrong!");
+  }
+
+  double unit_length = UnitConverter::to_SI< QUANTITY_LENGTH >(units[0], "cm");
+  double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units[1], "g");
+
+  unsigned int ngaspart = 0;
+  for (unsigned int i = 0; i < iphase.size(); ++i) {
+    if (iphase[i] == 0) {
+      ++ngaspart;
+    }
+  }
+
+  _positions.resize(ngaspart);
+  _masses.resize(ngaspart);
+  _smoothing_lengths.resize(ngaspart);
+  unsigned int index = 0;
+  for (unsigned int i = 0; i < npart; ++i) {
+    if (iphase[i] == 0) {
+      _positions[index][0] = x[i] * unit_length;
+      _positions[index][1] = y[i] * unit_length;
+      _positions[index][2] = z[i] * unit_length;
+      _masses[index] = m[i] * unit_mass;
+      _smoothing_lengths[index] = h[i] * unit_length;
+      ++index;
+    }
+  }
+}
+
+/**
+ * @brief Get the position of the particle with the given index.
+ *
+ * @param index Index of a particle.
+ * @return CoordinateVector<> containing the position of that particle (in m).
+ */
+CoordinateVector<>
+SPHNGSnapshotDensityFunction::get_position(unsigned int index) {
+  return _positions[index];
+}
+
+/**
+ * @brief Get the mass of the particle with the given index.
+ *
+ * @param index Index of a particle.
+ * @return Mass of the particle (in kg).
+ */
+double SPHNGSnapshotDensityFunction::get_mass(unsigned int index) {
+  return _masses[index];
+}
+
+/**
+ * @brief Get the smoothing length of the particle with the given index.
+ *
+ * @param index Index of a particle.
+ * @return Smoothing length of the particle (in m).
+ */
+double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
+  return _smoothing_lengths[index];
 }
 
 /**

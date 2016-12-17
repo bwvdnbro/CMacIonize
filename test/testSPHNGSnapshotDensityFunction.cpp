@@ -23,7 +23,11 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
+#include "UnitConverter.hpp"
+#include <fstream>
+#include <sstream>
 
 /**
  * @brief Unit test for the SPHNGSnapshotDensityFunction class.
@@ -35,5 +39,35 @@
 int main(int argc, char **argv) {
   SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat");
 
-  return 1;
+  std::ifstream file("SPHNG_data.txt");
+  std::string line;
+  unsigned int index = 0;
+  while (getline(file, line)) {
+    std::istringstream lstream(line);
+
+    double x, y, z, m, h;
+    lstream >> x >> y >> z >> m >> h;
+
+    // convert units
+    x = UnitConverter::to_SI< QUANTITY_LENGTH >(x, "cm");
+    y = UnitConverter::to_SI< QUANTITY_LENGTH >(y, "cm");
+    z = UnitConverter::to_SI< QUANTITY_LENGTH >(z, "cm");
+    m = UnitConverter::to_SI< QUANTITY_MASS >(m, "g");
+    h = UnitConverter::to_SI< QUANTITY_LENGTH >(h, "cm");
+
+    double tolerance = 1.e-15;
+
+    CoordinateVector<> p = density_function.get_position(index);
+    assert_values_equal_rel(x, p.x(), tolerance);
+    assert_values_equal_rel(y, p.y(), tolerance);
+    assert_values_equal_rel(z, p.z(), tolerance);
+
+    assert_values_equal_rel(m, density_function.get_mass(index), tolerance);
+    assert_values_equal_rel(h, density_function.get_smoothing_length(index),
+                            tolerance);
+
+    ++index;
+  }
+
+  return 0;
 }

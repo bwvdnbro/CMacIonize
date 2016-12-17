@@ -34,8 +34,22 @@
  * SPHNG snapshot file.
  */
 class SPHNGSnapshotDensityFunction : public DensityFunction {
+private:
+  /*! @brief Positions of the SPH particles in the snapshot (in m). */
+  std::vector< CoordinateVector<> > _positions;
+
+  /*! @brief Masses of the SPH particles in the snapshot (in kg). */
+  std::vector< double > _masses;
+
+  /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
+  std::vector< double > _smoothing_lengths;
+
 public:
   SPHNGSnapshotDensityFunction(std::string filename);
+
+  CoordinateVector<> get_position(unsigned int index);
+  double get_mass(unsigned int index);
+  double get_smoothing_length(unsigned int index);
 
   DensityValues operator()(CoordinateVector<> position) const;
 };
