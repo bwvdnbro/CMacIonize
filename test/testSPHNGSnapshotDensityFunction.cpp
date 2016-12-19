@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     m = UnitConverter::to_SI< QUANTITY_MASS >(m, "g");
     h = UnitConverter::to_SI< QUANTITY_LENGTH >(h, "cm");
 
-    double tolerance = 1.e-15;
+    double tolerance = 1.e-14;
 
     CoordinateVector<> p = density_function.get_position(index);
     assert_values_equal_rel(x, p.x(), tolerance);
