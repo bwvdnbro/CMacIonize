@@ -25,9 +25,39 @@
  */
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "Octree.hpp"
 #include "UnitConverter.hpp"
+#include <cfloat>
 #include <fstream>
 #include <map>
+
+/**
+ * @brief Cubic spline kernel.
+ *
+ * As in Price, 2007, Publications of the Astronomical Society of Australia, 24,
+ * 159 (equation 5).
+ *
+ * @param q Distance between the kernel center and the evaluation point, in
+ * units of the smoothing length.
+ * @param h Smoothing length.
+ * @return Value of the kernel.
+ */
+double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
+  if (q < 1.) {
+    double q2 = q * q;
+    double h2 = h * h;
+    double h3 = h2 * h;
+    return (1. - 1.5 * q2 + 0.75 * q2 * q) / M_PI / h3;
+  } else if (q < 2.) {
+    double c = 2. - q;
+    double c2 = c * c;
+    double h2 = h * h;
+    double h3 = h * h2;
+    return 0.25 * c2 * c / M_PI / h3;
+  } else {
+    return 0.;
+  }
+}
 
 /**
  * @brief Constructor.
@@ -150,10 +180,14 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     char c[17];
     file.read(c, 16);
     c[16] = '\0';
-    unsigned int j = 15;
-    while (c[j] == ' ') {
-      c[j] = '\0';
+    unsigned int j = 16;
+    while (j > 0 && c[j - 1] == ' ') {
       --j;
+      c[j] = '\0';
+    }
+    if (j == 0) {
+      // flag tag empty
+      c[0] = '0';
     }
     std::string tag(c);
     tags.push_back(tag);
@@ -403,6 +437,14 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
   }
 
+  Box partbox;
+  partbox.get_anchor()[0] = DBL_MAX;
+  partbox.get_anchor()[1] = DBL_MAX;
+  partbox.get_anchor()[2] = DBL_MAX;
+  partbox.get_sides()[0] = -DBL_MAX;
+  partbox.get_sides()[1] = -DBL_MAX;
+  partbox.get_sides()[2] = -DBL_MAX;
+
   _positions.resize(ngaspart);
   _masses.resize(ngaspart);
   _smoothing_lengths.resize(ngaspart);
@@ -412,11 +454,32 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
       _positions[index][0] = x[i] * unit_length;
       _positions[index][1] = y[i] * unit_length;
       _positions[index][2] = z[i] * unit_length;
+      partbox.get_anchor() =
+          CoordinateVector<>::min(partbox.get_anchor(), _positions[index]);
+      partbox.get_sides() =
+          CoordinateVector<>::max(partbox.get_sides(), _positions[index]);
       _masses[index] = m[i] * unit_mass;
       _smoothing_lengths[index] = h[i] * unit_length;
       ++index;
     }
   }
+
+  partbox.get_sides() -= partbox.get_anchor();
+  // add some margin to the box
+  partbox.get_anchor() -= 0.01 * partbox.get_sides();
+  partbox.get_sides() *= 1.02;
+
+  _octree = new Octree(_positions, partbox, false);
+  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+}
+
+/**
+ * @brief Destructor.
+ *
+ * Clean up the octree.
+ */
+SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
+  delete _octree;
 }
 
 /**
@@ -427,6 +490,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
  */
 CoordinateVector<>
 SPHNGSnapshotDensityFunction::get_position(unsigned int index) {
+
   return _positions[index];
 }
 
@@ -458,5 +522,25 @@ double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
  */
 DensityValues SPHNGSnapshotDensityFunction::
 operator()(CoordinateVector<> position) const {
-  return DensityValues();
+  DensityValues cell;
+
+  double density = 0.;
+  std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
+  const unsigned int numngbs = ngbs.size();
+  for (unsigned int i = 0; i < numngbs; ++i) {
+    unsigned int index = ngbs[i];
+    double r;
+    r = (position - _positions[index]).norm();
+    double h = _smoothing_lengths[index];
+    double q = r / h;
+    double m = _masses[index];
+    double splineval = m * kernel(q, h);
+    density += splineval;
+  }
+
+  // convert density to particle density (assuming hydrogen only)
+  cell.set_total_density(density / 1.6737236e-27);
+  // TODO: other quantities
+
+  return cell;
 }

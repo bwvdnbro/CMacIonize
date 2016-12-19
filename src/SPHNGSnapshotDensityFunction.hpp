@@ -29,6 +29,8 @@
 
 #include "DensityFunction.hpp"
 
+class Octree;
+
 /**
  * @brief DensityFunction implementation that reads a density field from an
  * SPHNG snapshot file.
@@ -44,8 +46,14 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Octree used to speed up neighbour finding. */
+  Octree *_octree;
+
+  static double kernel(const double q, const double h);
+
 public:
   SPHNGSnapshotDensityFunction(std::string filename);
+  ~SPHNGSnapshotDensityFunction();
 
   CoordinateVector<> get_position(unsigned int index);
   double get_mass(unsigned int index);

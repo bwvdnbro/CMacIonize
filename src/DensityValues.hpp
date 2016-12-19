@@ -85,8 +85,8 @@ public:
    * @brief Empty constructor.
    */
   inline DensityValues()
-      : _total_density(0.), _temperature(0.), _pHion(0.),
-        _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
+      : _total_density(0.), _temperature(0.),
+        _pHion(0.), _pHe_em{0., 0., 0., 0.}, _mean_intensity_H_old(0.),
         _old_neutral_fraction_H(0.), _heating_H(0.), _heating_He(0.),
         _emissivities(nullptr) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
