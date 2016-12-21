@@ -77,105 +77,47 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
 
   // read header
 
-  // extract length of first line
-  int length;
-  // sizeof(int)+1, since get reads up to n-1 characters...
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  // skip length bytes
-  file.seekg(length, std::ios_base::cur);
-  // make sure we have arrived at the next length bit
-  int length2;
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  // skip the first block: it contains garbage
+  skip_block(file);
+  // skip the second block: it contains the file identity
+  skip_block(file);
+  // skip the third block: it contains the number of elements in the fourth
+  // block
+  skip_block(file);
 
-  // second block
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  // skip length bytes
-  file.seekg(length, std::ios_base::cur);
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
-
-  // third block
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
+  int length, length2;
   int number;
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
 
   // fourth block: tags
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  // skip length bytes
-  file.seekg(length, std::ios_base::cur);
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  skip_block(file);
 
   // fifth block
   // Will's Fortran code:
   //  read(10) nparttot,n1,n2,nreassign,naccrete,nkill,nblocks,iyr,&
   //        idum,(iv(i),i=1,NTAB),iplanetesimals,irotpot,idragscheme
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  int data[44];
-  file.read(reinterpret_cast< char * >(data), 44 * sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  std::vector< int > data(44);
+  read_block(file, data);
   unsigned int totnumpart = data[0];
 
   // skip 3 blocks
-  for (unsigned int i = 0; i < 3; ++i) {
-    file.read(reinterpret_cast< char * >(&length), sizeof(int));
-    // skip length bytes
-    file.seekg(length, std::ios_base::cur);
-    file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-    if (length != length2) {
-      cmac_error("Something went wrong!");
-    }
-  }
+  skip_block(file);
+  skip_block(file);
+  skip_block(file);
 
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  read_block(file, number);
 
   unsigned long iuniquemax;
   if (number == 1) {
     // skip block
-    file.read(reinterpret_cast< char * >(&length), sizeof(int));
-    // skip length bytes
-    file.seekg(length, std::ios_base::cur);
-    file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-    if (length != length2) {
-      cmac_error("Something went wrong!");
-    }
+    skip_block(file);
 
     // read iuniquemax
-    file.read(reinterpret_cast< char * >(&length), sizeof(int));
-    file.read(reinterpret_cast< char * >(&iuniquemax), sizeof(unsigned long));
-    file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-    if (length != length2) {
-      cmac_error("Something went wrong!");
-    }
+    read_block(file, iuniquemax);
   } else {
     iuniquemax = totnumpart;
   }
 
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  read_block(file, number);
 
   file.read(reinterpret_cast< char * >(&length), sizeof(int));
   std::vector< std::string > tags;
@@ -212,82 +154,28 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
     cmac_error("Something went wrong!");
   }
 
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  skip_block(file);
+  read_block(file, number);
+  skip_block(file);
 
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  std::vector< double > units(number);
+  read_block(file, units);
 
-  // skip block
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  // skip length bytes
-  file.seekg(length, std::ios_base::cur);
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
-
-  std::vector< double > units;
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  for (int i = 0; i < number; ++i) {
-    double unit;
-    file.read(reinterpret_cast< char * >(&unit), sizeof(double));
-    units.push_back(unit);
-  }
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
-
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&number), sizeof(int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  skip_block(file);
 
   // done reading header!
 
   // read block
   unsigned long npart;
-  unsigned int nums[8];
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&npart), sizeof(unsigned long));
-  file.read(reinterpret_cast< char * >(nums), 8 * sizeof(unsigned int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  std::vector< unsigned int > nums(8);
+  read_block(file, npart, nums);
 
   unsigned long nptmass;
-  unsigned int numsink[8];
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  file.read(reinterpret_cast< char * >(&nptmass), sizeof(unsigned long));
-  file.read(reinterpret_cast< char * >(numsink), 8 * sizeof(unsigned int));
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  std::vector< unsigned int > numsink(8);
+  read_block(file, nptmass, numsink);
 
-  // skip block
-  file.read(reinterpret_cast< char * >(&length), sizeof(int));
-  // skip length bytes
-  file.seekg(length, std::ios_base::cur);
-  file.read(reinterpret_cast< char * >(&length2), sizeof(int));
-  if (length != length2) {
-    cmac_error("Something went wrong!");
-  }
+  skip_block(file);
 
-  /// continue on line '  read(10) isteps(icount+1:icount+npart)' of Will's
-  /// rbin.f90 file...
   std::vector< int > isteps(npart);
   file.read(reinterpret_cast< char * >(&length), sizeof(int));
   file.read(reinterpret_cast< char * >(&isteps[0]), npart * sizeof(int));
