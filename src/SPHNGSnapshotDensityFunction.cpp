@@ -25,7 +25,9 @@
  */
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "Log.hpp"
 #include "Octree.hpp"
+#include "ParameterFile.hpp"
 #include "UnitConverter.hpp"
 #include <cfloat>
 #include <fstream>
@@ -63,9 +65,10 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  * @brief Constructor.
  *
  * @param filename Name of the file to read.
+ * @param log Log to write logging info to.
  */
-SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
-    std::string filename) {
+SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
+                                                           Log *log) {
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
   if (!file) {
@@ -474,6 +477,17 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 }
 
 /**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
+    ParameterFile &params, Log *log)
+    : SPHNGSnapshotDensityFunction(
+          params.get_value< std::string >("densityfunction.filename"), log) {}
+
+/**
  * @brief Destructor.
  *
  * Clean up the octree.
@@ -541,6 +555,10 @@ operator()(CoordinateVector<> position) const {
   // convert density to particle density (assuming hydrogen only)
   cell.set_total_density(density / 1.6737236e-27);
   // TODO: other quantities
+  // temporary values
+  cell.set_temperature(8000.);
+  cell.set_ionic_fraction(ION_H_n, 1.e-6);
+  cell.set_ionic_fraction(ION_He_n, 1.e-6);
 
   return cell;
 }

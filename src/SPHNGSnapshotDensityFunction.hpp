@@ -29,7 +29,9 @@
 
 #include "DensityFunction.hpp"
 
+class Log;
 class Octree;
+class ParameterFile;
 
 /**
  * @brief DensityFunction implementation that reads a density field from an
@@ -52,7 +54,10 @@ private:
   static double kernel(const double q, const double h);
 
 public:
-  SPHNGSnapshotDensityFunction(std::string filename);
+  SPHNGSnapshotDensityFunction(std::string filename, Log *log = nullptr);
+
+  SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
+
   ~SPHNGSnapshotDensityFunction();
 
   CoordinateVector<> get_position(unsigned int index);
