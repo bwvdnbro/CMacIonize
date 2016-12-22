@@ -81,6 +81,7 @@ public:
                                 double fallback_unit_mass_in_SI = 0.,
                                 double fallback_unit_temperature_in_SI = 0.,
                                 bool use_neutral_fraction = false,
+                                double fallback_temperature = 0.,
                                 Log *log = nullptr);
 
   GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
