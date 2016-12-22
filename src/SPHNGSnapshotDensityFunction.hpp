@@ -30,6 +30,8 @@
 #include "DensityFunction.hpp"
 
 #include <fstream>
+#include <map>
+#include <sstream>
 
 class Log;
 class Octree;
@@ -119,6 +121,48 @@ private:
     }
   }
 
+  /**
+   * @brief Read a dictionary containing tag-value pairs from the given Fortran
+   * unformatted binary file.
+   *
+   * This routine assumes a 3 block structure, whereby the first block contains
+   * a single integer giving the number of elements in the second and third
+   * block. The second block contains 16-byte tags, while the third block
+   * contains a value of the given template type for each tag.
+   *
+   * @param ifile Reference to an open Fortran unformatted binary file to read
+   * from.
+   * @return std::map containing the contents of the three blocks as a
+   * dictionary.
+   */
+  template < typename _datatype_ >
+  inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile) {
+    unsigned int size;
+    read_block(ifile, size);
+    std::vector< std::string > tags(size);
+    read_block(ifile, tags);
+    std::vector< _datatype_ > vals(size);
+    read_block(ifile, vals);
+    std::map< std::string, _datatype_ > dict;
+    for (unsigned int i = 0; i < size; ++i) {
+      // check for duplicates and add numbers to duplicate tag names
+      if (dict.count(tags[i]) == 1) {
+        unsigned int count = 1;
+        std::stringstream newtag;
+        newtag << tags[i] << count;
+        while (dict.count(newtag.str()) == 1) {
+          ++count;
+          newtag.str("");
+          newtag << tags[i] << count;
+        }
+        tags[i] = newtag.str();
+      }
+      dict[tags[i]] = vals[i];
+      cmac_status("%s", tags[i].c_str());
+    }
+    return dict;
+  }
+
 public:
   SPHNGSnapshotDensityFunction(std::string filename, Log *log = nullptr);
 
@@ -169,6 +213,21 @@ SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
  * @brief Fill the given referenced parameter by reading from the given
  * Fortran unformatted binary file.
  *
+ * Template specialization for a std::vector of chars.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Next (and last) value to read from the file.
+ */
+template <>
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< char > >(
+    std::ifstream &ifile, std::vector< char > &value) {
+  ifile.read(&value[0], value.size());
+}
+
+/**
+ * @brief Fill the given referenced parameter by reading from the given
+ * Fortran unformatted binary file.
+ *
  * Template specialization for a std::vector of double precision floating point
  * values.
  *
@@ -180,6 +239,93 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< double > >(
     std::ifstream &ifile, std::vector< double > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
              value.size() * sizeof(double));
+}
+
+/**
+ * @brief Read a block  from a Fortran unformatted binary file and fill the
+ * given referenced template parameters with its contents.
+ *
+ * Specialization that reads the entire block into a single string.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Reference to the std::string parameter that should be filled.
+ */
+template <>
+inline void SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
+                                                     std::string &value) {
+  unsigned int length1, length2;
+  ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+
+  char *cstr = new char[length1 + 1];
+  ifile.read(cstr, length1);
+  unsigned int i = length1;
+  // add string termination character
+  cstr[i] = '\0';
+  // strip trailing whitespace
+  while (i > 0 && cstr[i - 1] == ' ') {
+    --i;
+    cstr[i] = '\0';
+  }
+  // fill the given variable
+  value = std::string(cstr);
+  // free the temporary buffer
+  delete[] cstr;
+
+  ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+  if (length1 != length2) {
+    cmac_error("Wrong block size!");
+  }
+}
+
+/**
+ * @brief Read a block  from a Fortran unformatted binary file and fill the
+ * given referenced template parameters with its contents.
+ *
+ * Specialization that reads the entire block into a std::vector of string,
+ * assuming a 16 character tag string for each element.
+ *
+ * If the total size of the block does not match 16 times the size of the given
+ * vector, an error is thrown.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Reference to the std::string parameter that should be filled.
+ */
+template <>
+inline void
+SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
+                                         std::vector< std::string > &value) {
+  unsigned int length1, length2;
+  ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+
+  if (length1 % 16 != 0) {
+    cmac_error("Block has the wrong size to contain a list of tags!");
+  }
+  if (value.size() * 16 != length1) {
+    cmac_error("Vector of wrong size given!");
+  }
+
+  // create a temporary read buffer
+  char *cstr = new char[17];
+  // add string termination character
+  cstr[16] = '\0';
+  for (unsigned int i = 0; i < value.size(); ++i) {
+    ifile.read(cstr, 16);
+    // strip trailing whitespace
+    unsigned int j = 16;
+    while (j > 0 && cstr[j - 1] == ' ') {
+      --j;
+      cstr[j] = '\0';
+    }
+    // fill the given variable
+    value[i] = std::string(cstr);
+  }
+  // free the temporary buffer
+  delete[] cstr;
+
+  ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+  if (length1 != length2) {
+    cmac_error("Wrong block size!");
+  }
 }
 
 #endif // SPHNGSNAPSHOTDENSITYFUNCTION_HPP

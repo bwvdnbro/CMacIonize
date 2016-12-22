@@ -14,7 +14,20 @@ file = open("SPHNGtest.dat", "wb")
 write_block(file, struct.pack('c'*7, *"ignored"))
 write_block(file, struct.pack('c'*2, *"FT"))
 write_block(file, struct.pack('i', 44))
-write_block(file, struct.pack('c'*4, *"tags"))
+tags = ['nparttot        ','n1              ','n2              ',
+        'nreassigntot    ','CONTINUEHERE            ','escap           ',
+        'tkin            ','tgrav           ','tterm           ',
+        'anglostx        ','anglosty        ','anglostz        ',
+        'specang         ','ptmassin        ','tmag            ',
+        'Bextx           ','Bexty           ','Bextz           ',
+        'hzero           ','uzero_n2        ','hmass           ',
+        'gapfac          ','                ','sdprof          ',
+        'rorbit_orig     ','min_rplan       ','max_rplan       ',
+        'planetesimalmass','coremass_orig   ','coremass        ']
+tagstr = ""
+for tag in tags:
+  tagstr += struct.pack('c'*16, *tag)
+write_block(file, tagstr)
 npart = np.zeros(44, dtype = 'i')
 npart[0] = 100
 npart[6] = 1
