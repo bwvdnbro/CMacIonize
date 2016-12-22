@@ -91,42 +91,52 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
     cmac_error("Untagged SPHNG snapshot files are not supported yet!");
   }
 
-  std::map< std::string, unsigned int > numbers =
-      read_dict< unsigned int >(file);
-  for (auto it = numbers.begin(); it != numbers.end(); ++it) {
-    cmac_status("%s -> %u", it->first.c_str(), it->second);
-  }
-  unsigned int totnumpart = numbers["nparttot"];
-
-  int number;
+  // the third, fourth and fifth block contain a dictionary of particle numbers
+  // the code below reads it
+  // since we currently don't use these values, we skip these 3 blocks instead
+  //  std::map< std::string, unsigned int > numbers =
+  //      read_dict< unsigned int >(file);
+  //  unsigned int totnumpart = numbers["nparttot"];
+  skip_block(file);
+  skip_block(file);
+  skip_block(file);
 
   // skip 3 blocks
+  // in the example file I got from Will, all these blocks contain a single
+  // integer with value zero. They supposedly correspond to blocks that are
+  // absent
   skip_block(file);
   skip_block(file);
   skip_block(file);
 
+  // the next three blocks are a dictionary containing the highest unique index
+  // in the snapshot. If the first block contains 0, then the next 2 blocks are
+  // absent.
+  int number;
   read_block(file, number);
 
-  unsigned long iuniquemax;
   if (number == 1) {
-    // skip block
+    // skip blocks
     skip_block(file);
-
-    // read iuniquemax
-    read_block(file, iuniquemax);
-  } else {
-    iuniquemax = totnumpart;
+    skip_block(file);
   }
 
-  std::map< std::string, double > headerdict = read_dict< double >(file);
-
+  // the next three blocks contain a number of double precision floating point
+  // values that we don't use. They can be read in with the code below, but we
+  // just skip them.
+  //  std::map< std::string, double > headerdict = read_dict< double >(file);
   skip_block(file);
-  read_block(file, number);
+  skip_block(file);
   skip_block(file);
 
-  std::vector< double > units(number);
-  read_block(file, units);
+  // the next block again corresponds to a block that is absent from Will's
+  // example file
+  skip_block(file);
 
+  // the next three blocks contain the units
+  std::map< std::string, double > units = read_dict< double >(file);
+
+  // the last header block is again absent from Will's file
   skip_block(file);
 
   // done reading header!
@@ -189,8 +199,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
 
   // done reading file
 
-  double unit_length = UnitConverter::to_SI< QUANTITY_LENGTH >(units[0], "cm");
-  double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units[1], "g");
+  double unit_length =
+      UnitConverter::to_SI< QUANTITY_LENGTH >(units["udist"], "cm");
+  double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
 
   unsigned int ngaspart = 0;
   for (unsigned int i = 0; i < iphase.size(); ++i) {

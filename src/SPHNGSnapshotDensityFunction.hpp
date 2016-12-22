@@ -158,7 +158,6 @@ private:
         tags[i] = newtag.str();
       }
       dict[tags[i]] = vals[i];
-      cmac_status("%s", tags[i].c_str());
     }
     return dict;
   }
