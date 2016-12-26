@@ -258,11 +258,18 @@ public:
    * probabilities, and reapply the refinement scheme to all cells.
    */
   virtual void reset_grid() {
+    if (_log) {
+      _log->write_status("Resetting grid...");
+    }
     for (unsigned int i = 0; i < _cells.size(); ++i) {
       _cells[i]->value().reset_mean_intensities();
       if (_refinement_scheme) {
         refine_cell(*_refinement_scheme, *_cells[i], _density_function);
       }
+    }
+    if (_log) {
+      _log->write_status(
+          "Number of cells after reset: ", _grid.get_number_of_cells(), ".");
     }
     // reset the ngbs
     _grid.set_ngbs(_periodic);

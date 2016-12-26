@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(8);
   HomogeneousDensityFunction density_function(1.);
-  AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1.);
+  AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1., 4);
 
   AMRDensityGrid grid(box, ncell, density_function, scheme);
 
