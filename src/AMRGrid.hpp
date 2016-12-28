@@ -134,7 +134,8 @@ public:
           anchor[1] = _box.get_anchor().y() + j * sides.y();
           anchor[2] = _box.get_anchor().z() + k * sides.z();
           Box box(anchor, sides);
-          _top_level[i][j][k] = new AMRGridCell< _CellContents_ >(box, 0);
+          _top_level[i][j][k] =
+              new AMRGridCell< _CellContents_ >(box, 0, nullptr);
         }
       }
     }
@@ -169,7 +170,8 @@ public:
           anchor[1] = _box.get_anchor().y() + j * sides.y();
           anchor[2] = _box.get_anchor().z() + k * sides.z();
           Box box(anchor, sides);
-          _top_level[i][j][k] = new AMRGridCell< _CellContents_ >(box, 0);
+          _top_level[i][j][k] =
+              new AMRGridCell< _CellContents_ >(box, 0, nullptr);
         }
       }
     }

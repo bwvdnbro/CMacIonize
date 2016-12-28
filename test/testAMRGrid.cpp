@@ -98,6 +98,10 @@ int main(int argc, char **argv) {
 
   // check the level
   assert_condition(grid[71].get_level() == 2);
+  assert_condition(grid[71].get_parent()->get_level() == 1);
+  assert_condition(grid[71].get_parent()->get_parent()->get_level() == 0);
+  assert_condition(grid[71].get_parent()->get_parent()->get_parent() ==
+                   nullptr);
 
   /// advanced functionality
 

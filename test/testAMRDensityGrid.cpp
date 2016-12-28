@@ -72,6 +72,27 @@ public:
                       double volume, DensityValues &cell) const {
     return cell.get_total_density() > 1. && level < 6;
   }
+
+  /**
+   * @brief Decide if the given cells should be replaced by a single cell or
+   * not.
+   *
+   * @param level Current refinement level of the cells.
+   * @param midpoints Midpoints of the cells (in m).
+   * @param volumes  Volumes of the cells (in m^3).
+   * @param cells DensityValues of the cells.
+   * @return True if the cells can be replaced by a single cell on a coarser
+   * level.
+   */
+  virtual bool coarsen(unsigned char level, CoordinateVector<> *midpoints,
+                       double *volumes, DensityValues *cells) const {
+    double avg_density = 0.;
+    for (unsigned int i = 0; i < 8; ++i) {
+      avg_density += cells->get_total_density();
+    }
+    avg_density *= 0.125;
+    return avg_density < 1.;
+  }
 };
 
 /**

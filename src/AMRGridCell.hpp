@@ -88,6 +88,9 @@ private:
   /*! @brief Refinement levels, if this is not a single cell. */
   AMRGridCell *_children[8];
 
+  /*! @brief Parent cell. */
+  AMRGridCell *_parent;
+
   /*! @brief Neighbours on the same or higher level. */
   AMRGridCell *_ngbs[6];
 
@@ -103,10 +106,12 @@ public:
    *
    * @param box Geometrical dimensions of the cell.
    * @param level Depth level of the cell.
+   * @param parent Pointer to the parent cell (if this cell is not a top level
+   * cell).
    */
-  inline AMRGridCell(Box box, unsigned char level)
-      : _values(nullptr), _children{nullptr}, _ngbs{nullptr}, _box(box),
-        _level(level) {}
+  inline AMRGridCell(Box box, unsigned char level, AMRGridCell *parent)
+      : _values(nullptr), _children{nullptr}, _parent(parent), _ngbs{nullptr},
+        _box(box), _level(level) {}
 
   /**
    * @brief Destructor.
@@ -246,7 +251,8 @@ public:
         box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
         box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
         box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
-        _children[4 * ix + 2 * iy + iz] = new AMRGridCell(box_copy, _level + 1);
+        _children[4 * ix + 2 * iy + iz] =
+            new AMRGridCell(box_copy, _level + 1, this);
       }
       // go deeper
       box.get_sides() *= 0.5;
@@ -285,7 +291,7 @@ public:
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
           box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
           box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
-          _children[i] = new AMRGridCell(box_copy, _level + 1);
+          _children[i] = new AMRGridCell(box_copy, _level + 1, this);
         }
         _children[i]->create_all_cells(current_level + 1, level);
       }
@@ -317,7 +323,7 @@ public:
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
           box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
           box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
-          _children[i] = new AMRGridCell(box_copy, _level + 1);
+          _children[i] = new AMRGridCell(box_copy, _level + 1, this);
         }
         // we hack this method to initialize the cell
         _children[i]->create_all_cells(0, 0);
@@ -356,7 +362,7 @@ public:
         box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
         box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
         box_copy.get_anchor()[2] += iz * box_copy.get_sides().z();
-        _children[cell] = new AMRGridCell(box_copy, _level + 1);
+        _children[cell] = new AMRGridCell(box_copy, _level + 1, this);
       }
       return _children[cell]->create_cell(key);
     }
@@ -496,6 +502,13 @@ public:
   inline AMRGridCell *get_child(AMRChildPosition position) const {
     return _children[position];
   }
+
+  /**
+   * @brief Get the parent cell (if this is not a top level cell).
+   *
+   * @return Parent cell.
+   */
+  inline AMRGridCell *get_parent() const { return _parent; }
 
   /**
    * @brief Get the child of the cell containing the given position.
