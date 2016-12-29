@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< bool >("test_bool8") == false);
   assert_condition(params.get_value< string >("test_string") ==
                    "This is a test string.");
-  assert_condition(params.get_value< int >("test_group.test_group_member") ==
+  assert_condition(params.get_value< int >("test_group:test_group_member") ==
                    42);
   assert_condition(
-      params.get_value< string >("test_comments_group.test_comments_value") ==
+      params.get_value< string >("test_comments_group:test_comments_value") ==
       "test comments string");
 
   CoordinateVector<> cvtest =
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 
   assert_condition(
       params.get_value< int >(
-          "test_group2.test_group_group.test_group_group_member") == 42);
+          "test_group2:test_group_group:test_group_group_member") == 42);
 
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
   assert_condition(cvtest_unit.z() == 2.4e19);
 
   assert_condition(params.get_value< std::string >(
-                       "test_group2.test_group_group.test_group_str_member",
+                       "test_group2:test_group_group:test_group_str_member",
                        "hello!") == "hello!");
 
   params.print_contents(cout);

@@ -92,10 +92,10 @@ public:
                                         Log *log = nullptr)
       : ChiSquaredIterationConvergenceChecker(
             grid,
-            params.get_value< double >("iterationconvergencechecker.tolerance",
+            params.get_value< double >("iterationconvergencechecker:tolerance",
                                        0.01),
             params.get_value< double >(
-                "iterationconvergencechecker.photon_number_correction", 10.),
+                "iterationconvergencechecker:photon_number_correction", 10.),
             log) {}
 
   /**

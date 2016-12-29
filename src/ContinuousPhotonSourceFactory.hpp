@@ -53,7 +53,7 @@ public:
   inline static IsotropicContinuousPhotonSource *generate(ParameterFile &params,
                                                           Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("continuousphotonsource.type", "None");
+        params.get_value< std::string >("continuousphotonsource:type", "None");
     if (log) {
       log->write_info("Requested ContinuousPhotonSource type: ", type, ".");
     }

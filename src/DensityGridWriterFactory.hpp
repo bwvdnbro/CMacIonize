@@ -79,7 +79,7 @@ public:
   static DensityGridWriter *generate(ParameterFile &params, DensityGrid &grid,
                                      Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densitygridwriter.type", "Gadget");
+        params.get_value< std::string >("densitygridwriter:type", "Gadget");
     if (log) {
       log->write_info("Requested DensityGridWriter type: ", type);
     }

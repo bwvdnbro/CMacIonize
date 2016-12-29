@@ -69,11 +69,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
 GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
                                                  DensityGrid &grid, Log *log)
     : GadgetDensityGridWriter(
-          params.get_value< std::string >("densitygridwriter.prefix",
+          params.get_value< std::string >("densitygridwriter:prefix",
                                           "snapshot"),
           grid,
-          params.get_value< std::string >("densitygridwriter.folder", "."), log,
-          params.get_value< unsigned char >("densitygridwriter.padding", 3)) {}
+          params.get_value< std::string >("densitygridwriter:folder", "."), log,
+          params.get_value< unsigned char >("densitygridwriter:padding", 3)) {}
 
 /**
  * @brief Write the file.

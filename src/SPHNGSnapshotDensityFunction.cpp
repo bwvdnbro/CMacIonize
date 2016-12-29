@@ -255,7 +255,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : SPHNGSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"), log) {}
+          params.get_value< std::string >("densityfunction:filename"), log) {}
 
 /**
  * @brief Destructor.

@@ -158,9 +158,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : FLASHSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"),
+          params.get_value< std::string >("densityfunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.temperature", "8000. K"),
+              "densityfunction:temperature", "8000. K"),
           log) {}
 
 /**

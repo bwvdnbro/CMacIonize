@@ -196,7 +196,7 @@ ParameterFile::ParameterFile(std::string filename) {
           // of the various parent group names and the actual key name
           key = "";
           for (auto it = groupname.begin(); it != groupname.end(); ++it) {
-            key += *it + ".";
+            key += *it + ":";
           }
           key += keyvaluepair.first;
         }
@@ -248,11 +248,11 @@ void ParameterFile::print_contents(std::ostream &stream) const {
     std::string keyname = it->first;
     std::vector< std::string > keygroups;
     size_t spos = 0;
-    size_t ppos = keyname.find('.');
+    size_t ppos = keyname.find(':');
     while (ppos != keyname.npos) {
       keygroups.push_back(keyname.substr(spos, ppos - spos));
       spos = ppos + 1;
-      ppos = keyname.find('.', spos);
+      ppos = keyname.find(':', spos);
     }
 
     // print group info (if necessary) and get the correct indentation for the

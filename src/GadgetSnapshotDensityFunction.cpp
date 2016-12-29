@@ -253,19 +253,19 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction.filename"),
-          params.get_value< bool >("densityfunction.fallback_periodic_flag",
+          params.get_value< string >("densityfunction:filename"),
+          params.get_value< bool >("densityfunction:fallback_periodic_flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction.fallback_unit_length", "0. m"),
+              "densityfunction:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
-              "densityfunction.fallback_unit_mass", "0. kg"),
+              "densityfunction:fallback_unit_mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.fallback_unit_temperature", "0. K"),
-          params.get_value< bool >("densityfunction.use_neutral_fraction",
+              "densityfunction:fallback_unit_temperature", "0. K"),
+          params.get_value< bool >("densityfunction:use_neutral_fraction",
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.fallback_initial_temperature", "0. K"),
+              "densityfunction:fallback_initial_temperature", "0. K"),
           log) {}
 
 /**

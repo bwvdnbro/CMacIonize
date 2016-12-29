@@ -71,9 +71,9 @@ public:
   OpacityAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : OpacityAMRRefinementScheme(
             params.get_physical_value< QUANTITY_OPACITY >(
-                "densitygrid.amrrefinementscheme.target_opacity", "1. m^-1"),
+                "densitygrid:amrrefinementscheme:target_opacity", "1. m^-1"),
             params.get_value< unsigned char >(
-                "densitygrid.amrrefinementscheme.maximum_level", 6),
+                "densitygrid:amrrefinementscheme:maximum_level", 6),
             log) {}
 
   /**

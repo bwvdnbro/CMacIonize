@@ -135,11 +135,11 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("photonsourcedistribution.filename"),
+          params.get_value< std::string >("photonsourcedistribution:filename"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "photonsourcedistribution.fallback_unit_length", "0. m"),
+              "photonsourcedistribution:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution.fallback_unit_time", "0. s"),
+              "photonsourcedistribution:fallback_unit_time", "0. s"),
           log) {}
 
 /**

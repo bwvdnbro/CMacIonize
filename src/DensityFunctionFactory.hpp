@@ -85,7 +85,7 @@ public:
    */
   static DensityFunction *generate(ParameterFile &params, Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densityfunction.type", "Homogeneous");
+        params.get_value< std::string >("densityfunction:type", "Homogeneous");
     if (log) {
       log->write_info("Requested DensityFunction type: ", type);
     }

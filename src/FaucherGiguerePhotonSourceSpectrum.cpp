@@ -168,7 +168,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     ParameterFile &params, Log *log)
     : FaucherGiguerePhotonSourceSpectrum(
-          params.get_value< double >("continuousphotonsourcespectrum.redshift",
+          params.get_value< double >("continuousphotonsourcespectrum:redshift",
                                      0.),
           log) {}
 

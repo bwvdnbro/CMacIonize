@@ -71,9 +71,9 @@ public:
   IsotropicContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
       : IsotropicContinuousPhotonSource(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.box_anchor"),
+                    "densitygrid:box_anchor"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.box_sides")),
+                    "densitygrid:box_sides")),
             log) {}
 
   /**

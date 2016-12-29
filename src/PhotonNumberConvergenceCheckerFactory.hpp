@@ -52,7 +52,7 @@ public:
   inline static PhotonNumberConvergenceChecker *
   generate(DensityGrid &grid, ParameterFile &params, Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "photonnumberconvergencechecker.type", "ChiSquared");
+        "photonnumberconvergencechecker:type", "ChiSquared");
     if (log) {
       log->write_info("Requested PhotonNumberConvergenceChecker type: ", type,
                       ".");

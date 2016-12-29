@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file
   std::string folder = Utilities::get_absolute_path(
-      params.get_value< std::string >("densitygridwriter.folder", "."));
+      params.get_value< std::string >("densitygridwriter:folder", "."));
   ofstream pfile(folder + "/parameters-usedvalues.param");
   params.print_contents(pfile);
   pfile.close();

@@ -260,14 +260,14 @@ public:
                         DensityFunction &density_function, Log *log)
       : AMRDensityGrid(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.box_anchor", "[0. m, 0. m, 0. m]"),
+                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
+                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
-                "densitygrid.ncell", CoordinateVector< int >(64)),
+                "densitygrid:ncell", CoordinateVector< int >(64)),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
             params.get_value< CoordinateVector< bool > >(
-                "densitygrid.periodicity", CoordinateVector< bool >(false)),
+                "densitygrid:periodicity", CoordinateVector< bool >(false)),
             log) {}
 
   /**

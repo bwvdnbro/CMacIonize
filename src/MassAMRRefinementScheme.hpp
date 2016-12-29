@@ -66,7 +66,7 @@ public:
   MassAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : MassAMRRefinementScheme(
             params.get_value< double >(
-                "densitygrid.amrrefinementscheme.target_npart", 1.),
+                "densitygrid:amrrefinementscheme:target_npart", 1.),
             log) {}
 
   /**

@@ -52,11 +52,11 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     parameters.add_value(attname, attvalue);
   }
   _box = Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid.box_anchor"),
+                 "densitygrid:box_anchor"),
              parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid.box_sides"));
-  _ncell = parameters.get_value< CoordinateVector< int > >("densitygrid.ncell");
-  std::string type = parameters.get_value< std::string >("densitygrid.type");
+                 "densitygrid:box_sides"));
+  _ncell = parameters.get_value< CoordinateVector< int > >("densitygrid:ncell");
+  std::string type = parameters.get_value< std::string >("densitygrid:type");
   HDF5Tools::close_group(group);
 
   // read cell midpoints, densities, and temperatures
@@ -181,7 +181,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
 CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : CMacIonizeSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"), log) {}
+          params.get_value< std::string >("densityfunction:filename"), log) {}
 
 /**
  * @brief Destructor.
