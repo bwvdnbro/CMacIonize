@@ -81,7 +81,8 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5");
+  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5",
+                                                      "FormationTime");
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;

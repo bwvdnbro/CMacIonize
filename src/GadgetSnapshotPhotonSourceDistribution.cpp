@@ -35,6 +35,8 @@
  * Reads in the sources from the file and stores them in internal arrays.
  *
  * @param filename Name of the snapshot file to read.
+ * @param formation_time_name Name of the formation time data set in the
+ * snapshot file.
  * @param fallback_unit_length_in_SI Length unit to use if the units group is
  * not found in the snapshot file.
  * @param fallback_unit_time_in_SI Time unit to use if the units group is not
@@ -42,8 +44,9 @@
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    std::string filename, double fallback_unit_length_in_SI,
-    double fallback_unit_time_in_SI, Log *log)
+    std::string filename, std::string formation_time_name,
+    double fallback_unit_length_in_SI, double fallback_unit_time_in_SI,
+    Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -94,7 +97,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
                                                     "Coordinates");
   // read the formation times
   std::vector< double > formtimes =
-      HDF5Tools::read_dataset< double >(starparticles, "FormationTime");
+      HDF5Tools::read_dataset< double >(starparticles, formation_time_name);
   // close the group
   HDF5Tools::close_group(starparticles);
   // close the file
@@ -136,6 +139,8 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
           params.get_value< std::string >("photonsourcedistribution:filename"),
+          params.get_value< std::string >(
+              "photonsourcedistribution:formation_time_name", "FormationTime"),
           params.get_physical_value< QUANTITY_LENGTH >(
               "photonsourcedistribution:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(

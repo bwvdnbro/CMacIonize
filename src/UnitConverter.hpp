@@ -104,6 +104,8 @@ private:
       return Unit(1., 0, 1, 0, 0, 0);
     } else if (name == "Gyr") {
       return Unit(3.154e16, 0, 1, 0, 0, 0);
+    } else if (name == "yr") {
+      return Unit(3.154e7, 0, 1, 0, 0, 0);
       /// mass units
     } else if (name == "kg") {
       return Unit(1., 0, 0, 1, 0, 0);

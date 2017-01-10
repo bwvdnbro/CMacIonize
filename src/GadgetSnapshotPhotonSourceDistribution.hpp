@@ -52,6 +52,7 @@ private:
 
 public:
   GadgetSnapshotPhotonSourceDistribution(std::string filename,
+                                         std::string formation_time_name,
                                          double fallback_unit_length_in_SI = 0.,
                                          double fallback_unit_time_in_SI = 0.,
                                          Log *log = nullptr);

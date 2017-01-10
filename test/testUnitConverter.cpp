@@ -305,6 +305,9 @@ int main(int argc, char **argv) {
     unitnames.push_back("Gyr");
     // a Gyr takes longer than a second
     unitlogic.push_back(1);
+    unitnames.push_back("yr");
+    // a year takes longer than a second
+    unitlogic.push_back(1);
 
     check_quantity< QUANTITY_TIME >(unitnames, unitlogic);
   }

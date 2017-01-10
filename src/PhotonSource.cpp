@@ -77,11 +77,13 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
         _discrete_probabilities[i] = distribution->get_weight(i);
       }
     }
-    if (std::abs(_discrete_probabilities.back() - 1.) > 1.e-9) {
-      cmac_error("Discrete source weights do not sum to 1.0 (%g)!",
-                 _discrete_probabilities.back());
-    } else {
-      _discrete_probabilities.back() = 1.;
+    if (_discrete_probabilities.size() > 0) {
+      if (std::abs(_discrete_probabilities.back() - 1.) > 1.e-9) {
+        cmac_error("Discrete source weights do not sum to 1.0 (%g)!",
+                   _discrete_probabilities.back());
+      } else {
+        _discrete_probabilities.back() = 1.;
+      }
     }
     discrete_luminosity = distribution->get_total_luminosity();
 
@@ -97,6 +99,16 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   _total_luminosity = discrete_luminosity + continuous_luminosity;
+
+  if (_total_luminosity == 0.) {
+    if (_log) {
+      _log->write_error("Total luminosity of all sources is zero! Not doing "
+                        "radiative transfer, as there is no radiation to "
+                        "propagate.");
+      cmac_error("Total luminosity is zero!");
+    }
+  }
+
   double discrete_fraction = discrete_luminosity / _total_luminosity;
 
   if (discrete_luminosity > 0.) {
