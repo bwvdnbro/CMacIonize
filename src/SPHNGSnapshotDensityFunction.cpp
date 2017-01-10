@@ -65,10 +65,12 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  * @brief Constructor.
  *
  * @param filename Name of the file to read.
+ * @param initial_temperature Initial temperature of the gas (in K).
  * @param log Log to write logging info to.
  */
-SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
-                                                           Log *log) {
+SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
+    std::string filename, double initial_temperature, Log *log)
+    : _initial_temperature(initial_temperature) {
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
   if (!file) {
@@ -255,7 +257,10 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(std::string filename,
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : SPHNGSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"), log) {}
+          params.get_value< std::string >("densityfunction:filename"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction:initial_temperature", "8000. K"),
+          log) {}
 
 /**
  * @brief Destructor.
@@ -326,7 +331,7 @@ operator()(CoordinateVector<> position) const {
   cell.set_total_density(density / 1.6737236e-27);
   // TODO: other quantities
   // temporary values
-  cell.set_temperature(8000.);
+  cell.set_temperature(_initial_temperature);
   cell.set_ionic_fraction(ION_H_n, 1.e-6);
   cell.set_ionic_fraction(ION_He_n, 1.e-6);
 

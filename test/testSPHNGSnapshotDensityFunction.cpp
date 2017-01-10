@@ -37,7 +37,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat");
+  SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat", 8000.);
 
   std::ifstream file("SPHNG_data.txt");
   std::string line;

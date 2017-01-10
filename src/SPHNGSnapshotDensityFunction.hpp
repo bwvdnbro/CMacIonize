@@ -55,6 +55,9 @@ private:
   /*! @brief Octree used to speed up neighbour finding. */
   Octree *_octree;
 
+  /*! @brief Initial temperature of the gas (in K). */
+  double _initial_temperature;
+
   static double kernel(const double q, const double h);
 
   /**
@@ -163,7 +166,8 @@ private:
   }
 
 public:
-  SPHNGSnapshotDensityFunction(std::string filename, Log *log = nullptr);
+  SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
+                               Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
