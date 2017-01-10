@@ -54,6 +54,11 @@ public:
 class TestPhotonSourceSpectrum : public PhotonSourceSpectrum {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~TestPhotonSourceSpectrum() {}
+
+  /**
    * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
    *
    * @param random_generator RandomGenerator to use.

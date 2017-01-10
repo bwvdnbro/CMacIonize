@@ -34,6 +34,11 @@ class RandomGenerator;
 class PhotonSourceSpectrum {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~PhotonSourceSpectrum() {}
+
+  /**
    * @brief Get a random frequency from the spectrum.
    *
    * @param random_generator RandomGenerator to use.

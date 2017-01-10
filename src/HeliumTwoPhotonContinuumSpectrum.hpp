@@ -47,6 +47,11 @@ private:
 public:
   HeliumTwoPhotonContinuumSpectrum();
 
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~HeliumTwoPhotonContinuumSpectrum() {}
+
   void get_spectrum(std::vector< double > &yHe2q, std::vector< double > &AHe2q);
   double get_integral(std::vector< double > &yHe2q,
                       std::vector< double > &AHe2q);

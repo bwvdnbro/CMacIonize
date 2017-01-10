@@ -162,15 +162,15 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
 /**
  * @brief ParameterFile constructor.
  *
+ * @param role Role the spectrum will fulfil in the simulation. Parameters are
+ * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
-    ParameterFile &params, Log *log)
+    std::string role, ParameterFile &params, Log *log)
     : FaucherGiguerePhotonSourceSpectrum(
-          params.get_value< double >("continuousphotonsourcespectrum:redshift",
-                                     0.),
-          log) {}
+          params.get_value< double >(role + ":redshift", 0.), log) {}
 
 /**
  * @brief Get the name of the file containing the spectrum for the given

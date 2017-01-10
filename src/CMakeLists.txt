@@ -182,6 +182,7 @@ set(CMACIONIZE_SOURCES
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
     PhotonSourceSpectrum.hpp
+    PhotonSourceSpectrumFactory.hpp
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp

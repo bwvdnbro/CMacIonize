@@ -56,7 +56,13 @@ private:
 public:
   FaucherGiguerePhotonSourceSpectrum(double redshift, Log *log = nullptr);
 
-  FaucherGiguerePhotonSourceSpectrum(ParameterFile &params, Log *log = nullptr);
+  FaucherGiguerePhotonSourceSpectrum(std::string role, ParameterFile &params,
+                                     Log *log = nullptr);
+
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~FaucherGiguerePhotonSourceSpectrum() {}
 
   static std::string get_filename(double z);
 

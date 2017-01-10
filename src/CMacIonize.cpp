@@ -35,7 +35,6 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "EmissivityCalculator.hpp"
-#include "FaucherGiguerePhotonSourceSpectrum.hpp"
 #include "FileLog.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
@@ -45,7 +44,7 @@
 #include "PhotonShootJobMarket.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
-#include "PlanckPhotonSourceSpectrum.hpp"
+#include "PhotonSourceSpectrumFactory.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
@@ -146,16 +145,19 @@ int main(int argc, char **argv) {
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
   int random_seed = params.get_value< int >("random_seed", 42);
-  PlanckPhotonSourceSpectrum spectrum(params, log);
+  PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
+      "photonsourcespectrum", params, log);
 
   IsotropicContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, log);
-  FaucherGiguerePhotonSourceSpectrum continuousspectrum(params, log);
+  PhotonSourceSpectrum *continuousspectrum =
+      PhotonSourceSpectrumFactory::generate("continuousphotonsourcespectrum",
+                                            params, log);
 
   Abundances abundances(params, log);
 
-  PhotonSource source(sourcedistribution, &spectrum, continuoussource,
-                      &continuousspectrum, abundances, cross_sections, log);
+  PhotonSource source(sourcedistribution, spectrum, continuoussource,
+                      continuousspectrum, abundances, cross_sections, log);
 
   // set up output
   DensityGridWriter *writer =
@@ -335,6 +337,8 @@ int main(int argc, char **argv) {
   delete grid;
   delete itconvergence_checker;
   delete convergence_checker;
+  delete continuousspectrum;
+  delete spectrum;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program

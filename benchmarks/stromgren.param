@@ -38,6 +38,8 @@ photonsourcedistribution:
 
 # spectrum of the photon sources
 photonsourcespectrum:
+  # type: a Planck black body spectrum
+  type: Planck
   # temperature of the black body spectrum
   temperature: 40000. K
 

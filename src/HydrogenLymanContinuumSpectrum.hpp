@@ -56,6 +56,11 @@ private:
 public:
   HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
 
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~HydrogenLymanContinuumSpectrum() {}
+
   virtual double get_random_frequency(RandomGenerator &random_generator,
                                       double temperature) const;
 
