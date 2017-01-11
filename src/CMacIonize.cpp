@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
       "photonsourcespectrum", params, log);
 
-  IsotropicContinuousPhotonSource *continuoussource =
+  ContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, log);
   PhotonSourceSpectrum *continuousspectrum =
       PhotonSourceSpectrumFactory::generate("continuousphotonsourcespectrum",
@@ -320,9 +320,8 @@ int main(int argc, char **argv) {
   writer->write(loop - 1, params);
 
   programtimer.stop();
-  log->write_status("Total program time: ", Utilities::human_readable_time(
-                                                programtimer.value()),
-                    ".");
+  log->write_status("Total program time: ",
+                    Utilities::human_readable_time(programtimer.value()), ".");
   log->write_status("Total photon shooting time: ",
                     Utilities::human_readable_time(worktimer.value()), ".");
 

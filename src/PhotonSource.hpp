@@ -40,7 +40,7 @@
 class Abundances;
 class CrossSections;
 class DensityValues;
-class IsotropicContinuousPhotonSource;
+class ContinuousPhotonSource;
 class Log;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
@@ -74,8 +74,8 @@ private:
 
   /// continuous sources
 
-  /*! @brief IsotropicContinuousPhotonSource instance used. */
-  IsotropicContinuousPhotonSource *_continuous_source;
+  /*! @brief ContinuousPhotonSource instance used. */
+  ContinuousPhotonSource *_continuous_source;
 
   /*! @brief Spectrum of the continuous sources. */
   PhotonSourceSpectrum *_continuous_spectrum;
@@ -115,7 +115,7 @@ private:
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
                PhotonSourceSpectrum *discrete_spectrum,
-               IsotropicContinuousPhotonSource *continuous_source,
+               ContinuousPhotonSource *continuous_source,
                PhotonSourceSpectrum *continuous_spectrum,
                Abundances &abundances, CrossSections &cross_sections,
                Log *log = nullptr);

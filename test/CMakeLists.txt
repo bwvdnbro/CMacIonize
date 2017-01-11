@@ -499,6 +499,7 @@ add_unit_test(NAME testOpacityAMRRefinementScheme
 set(TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES
     testIsotropicContinuousPhotonSource.cpp
 
+    ../src/ContinuousPhotonSource.hpp
     ../src/IsotropicContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testIsotropicContinuousPhotonSource

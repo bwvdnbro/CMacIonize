@@ -27,6 +27,7 @@
 #define ISOTROPICCONTINUOUSPHOTONSOURCE_HPP
 
 #include "Box.hpp"
+#include "ContinuousPhotonSource.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 #include "Log.hpp"
@@ -39,7 +40,7 @@
 /**
  * @brief Class used to generate an isotropic external radiation field.
  */
-class IsotropicContinuousPhotonSource {
+class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
   Box _box;
@@ -75,6 +76,11 @@ public:
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_sides")),
             log) {}
+
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~IsotropicContinuousPhotonSource() {}
 
   /**
    * @brief Get the entrance position and direction of a random external photon.

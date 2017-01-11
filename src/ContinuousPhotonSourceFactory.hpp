@@ -28,6 +28,7 @@
 #ifndef CONTINUOUSPHOTONSOURCEFACTORY_HPP
 #define CONTINUOUSPHOTONSOURCEFACTORY_HPP
 
+#include "ContinuousPhotonSource.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 
@@ -42,16 +43,16 @@
 class ContinuousPhotonSourceFactory {
 public:
   /**
-   * @brief Generate an IsotropicContinuousPhotonSource, or return a nullptr.
+   * @brief Generate a ContinuousPhotonSource instance based on the parameters
+   * in the parameter file.
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
-   * @return Pointer to a newly created IsotropicContinuousPhotonSource
-   * instance. Memory management for the pointer needs to be handled by the
-   * calling routine.
+   * @return Pointer to a newly created ContinuousPhotonSource instance. Memory
+   * management for the pointer needs to be handled by the calling routine.
    */
-  inline static IsotropicContinuousPhotonSource *generate(ParameterFile &params,
-                                                          Log *log = nullptr) {
+  inline static ContinuousPhotonSource *generate(ParameterFile &params,
+                                                 Log *log = nullptr) {
     std::string type =
         params.get_value< std::string >("continuousphotonsource:type", "None");
     if (log) {

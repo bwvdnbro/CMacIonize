@@ -25,11 +25,11 @@
  */
 #include "PhotonSource.hpp"
 #include "Abundances.hpp"
+#include "ContinuousPhotonSource.hpp"
 #include "CrossSections.hpp"
 #include "DensityValues.hpp"
 #include "ElementNames.hpp"
 #include "Error.hpp"
-#include "IsotropicContinuousPhotonSource.hpp"
 #include "Log.hpp"
 #include "PhotonSourceDistribution.hpp"
 #include "PhotonSourceSpectrum.hpp"
@@ -53,7 +53,7 @@ using namespace std;
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            PhotonSourceSpectrum *discrete_spectrum,
-                           IsotropicContinuousPhotonSource *continuous_source,
+                           ContinuousPhotonSource *continuous_source,
                            PhotonSourceSpectrum *continuous_spectrum,
                            Abundances &abundances,
                            CrossSections &cross_sections, Log *log)
@@ -128,12 +128,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   if (_log) {
-    _log->write_status(
-        "Total luminosity of discrete sources: ", discrete_luminosity,
-        " s^-1.");
-    _log->write_status(
-        "Total luminosity of continuous sources: ", continuous_luminosity,
-        " s^-1.");
+    _log->write_status("Total luminosity of discrete sources: ",
+                       discrete_luminosity, " s^-1.");
+    _log->write_status("Total luminosity of continuous sources: ",
+                       continuous_luminosity, " s^-1.");
     _log->write_status(
         discrete_fraction * 100.,
         "% of the ionizing radiation is emitted by discrete sources.");
