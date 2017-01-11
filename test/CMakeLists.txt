@@ -620,6 +620,16 @@ configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNG_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/SPHNG_data.txt COPYONLY)
 
+## Unit test for DistantStarContinuousPhotonSource
+set(TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES
+    testDistantStarContinuousPhotonSource.cpp
+
+    ../src/ContinuousPhotonSource.hpp
+    ../src/DistantStarContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testDistantStarContinuousPhotonSource
+              SOURCES ${TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
