@@ -27,7 +27,6 @@
 #include "DistantStarContinuousPhotonSource.hpp"
 #include "RandomGenerator.hpp"
 #include "TerminalLog.hpp"
-#include <fstream>
 
 /*! @brief Number of randomly generated points used to test the random position
  *  and direction generation routine. */
@@ -61,13 +60,11 @@ int main(int argc, char **argv) {
   assert_condition(entrance_point.y() == 0.5);
   assert_condition(entrance_point.z() == 1.);
 
-  std::ofstream file("distantstar_hits.txt");
   CoordinateVector<> avg_position;
   for (unsigned int i = 0; i < NUMPOINTS; ++i) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         source.get_random_incoming_direction(rg);
     CoordinateVector<> &pos = posdir.first;
-    file << pos.x() << "\t" << pos.y() << "\t" << pos.z() << "\n";
     avg_position += pos;
   }
   avg_position /= NUMPOINTS;

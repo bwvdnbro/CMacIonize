@@ -33,6 +33,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "DistantStarContinuousPhotonSource.hpp"
 #include "IsotropicContinuousPhotonSource.hpp"
 
 /**
@@ -58,7 +59,9 @@ public:
     if (log) {
       log->write_info("Requested ContinuousPhotonSource type: ", type, ".");
     }
-    if (type == "Isotropic") {
+    if (type == "DistantStar") {
+      return new DistantStarContinuousPhotonSource(params, log);
+    } else if (type == "Isotropic") {
       return new IsotropicContinuousPhotonSource(params, log);
     } else if (type == "None") {
       return nullptr;

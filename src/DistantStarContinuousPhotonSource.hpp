@@ -156,7 +156,8 @@ public:
                          CoordinateVector<> &face_position) const {
     for (unsigned int i = 0; i < 3; ++i) {
       // the condition below excludes photons moving in a direction away from
-      // the box
+      // the box (which should not be tested, as we already exclude them when
+      // we generate them)
       // it also automatically excludes non-exposed faces and photons moving in
       // a plane parallel to the faces in that coordinate direction
       if (_exposed_faces[i] * direction[i] < 0.) {
@@ -200,6 +201,17 @@ public:
     CoordinateVector<> direction =
         PhotonSource::get_random_direction(random_generator);
     CoordinateVector<> position;
+
+    // we want to be a bit smarter about this to speed up things
+    // if the upper side of the box is exposed, we don't want photons that move
+    // in an upward direction, since these cannot hit the box. We can turn these
+    // photons around without affecting the istropic behaviour of the photons.
+    // The same goes for other directions.
+    for (unsigned int i = 0; i < 3; ++i) {
+      if (_exposed_faces[i] * direction[i] > 0.) {
+        direction[i] = -direction[i];
+      }
+    }
 
     // check if the direction will enter the box at some point
     while (!enters_box(direction, position)) {
