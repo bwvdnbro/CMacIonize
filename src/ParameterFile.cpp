@@ -305,8 +305,18 @@ void ParameterFile::print_contents(std::ostream &stream) const {
       }
     }
 
-    // get the actual key and print the key-value pair
+    // get the actual key
     keyname = keyname.substr(spos);
-    stream << indent << keyname << ": " << it->second << "\n";
+
+    // print the key, used value and value present in the file
+    std::string used_value;
+    if (_used_values.count(it->first)) {
+      used_value = _used_values.at(it->first);
+    } else {
+      used_value = "value not used";
+    }
+
+    stream << indent << keyname << ": " << used_value << " # (" << it->second
+           << ")\n";
   }
 }

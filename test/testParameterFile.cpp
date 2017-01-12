@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
   assert_condition(params.get_value< int >("test_integer4") == 1e6);
+  assert_condition(params.get_value< int >("test_integer5") == 1e6);
   assert_condition(params.get_value< double >("test_float") == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >("test_unit") ==
                    3.086e16);
@@ -72,7 +73,7 @@ int main(int argc, char **argv) {
       params.get_value< CoordinateVector< int > >("test_coordinatevector_int");
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
-  assert_condition(cvtest2.z() == 42);
+  assert_condition(cvtest2.z() == 40);
 
   CoordinateVector< bool > cvtest3 =
       params.get_value< CoordinateVector< bool > >(

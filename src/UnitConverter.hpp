@@ -80,7 +80,7 @@ enum Quantity {
  * another.
  */
 class UnitConverter {
-private:
+public:
   /**
    * @brief Get the Unit corresponding to a single, non composed unit string.
    *
@@ -136,45 +136,55 @@ private:
   }
 
   /**
+   * @brief Get the name of the SI unit of the given quantity.
+   *
+   * @param quantity Quantity.
+   * @return Name of the SI unit corresponding to the given quantity.
+   */
+  static inline std::string get_SI_unit_name(Quantity quantity) {
+    switch (quantity) {
+    case QUANTITY_DENSITY:
+      return "kg m^-3";
+    case QUANTITY_ENERGY:
+      return "J";
+    case QUANTITY_ENERGY_CHANGE_RATE:
+      return "J m^-3 s^-1";
+    case QUANTITY_ENERGY_RATE:
+      return "J s^-1";
+    case QUANTITY_FLUX:
+      return "m^-2 s^-1";
+    case QUANTITY_FREQUENCY:
+      return "Hz";
+    case QUANTITY_LENGTH:
+      return "m";
+    case QUANTITY_MASS:
+      return "kg";
+    case QUANTITY_NUMBER_DENSITY:
+      return "m^-3";
+    case QUANTITY_OPACITY:
+      return "m^-1";
+    case QUANTITY_REACTION_RATE:
+      return "m^3 s^-1";
+    case QUANTITY_SURFACE_AREA:
+      return "m^2";
+    case QUANTITY_TEMPERATURE:
+      return "K";
+    case QUANTITY_TIME:
+      return "s";
+    default:
+      cmac_error("Unknown quantity: %i!", quantity);
+      return "";
+    }
+  }
+
+  /**
    * @brief Get the SI unit of the given quantity.
    *
    * @param quantity Quantity.
    * @return SI Unit corresponding to the given quantity.
    */
   static inline Unit get_SI_unit(Quantity quantity) {
-    switch (quantity) {
-    case QUANTITY_DENSITY:
-      return get_unit("kg m^-3");
-    case QUANTITY_ENERGY:
-      return get_unit("J");
-    case QUANTITY_ENERGY_CHANGE_RATE:
-      return get_unit("J m^-3 s^-1");
-    case QUANTITY_ENERGY_RATE:
-      return get_unit("J s^-1");
-    case QUANTITY_FLUX:
-      return get_unit("m^-2 s^-1");
-    case QUANTITY_FREQUENCY:
-      return get_unit("Hz");
-    case QUANTITY_LENGTH:
-      return get_unit("m");
-    case QUANTITY_MASS:
-      return get_unit("kg");
-    case QUANTITY_NUMBER_DENSITY:
-      return get_unit("m^-3");
-    case QUANTITY_OPACITY:
-      return get_unit("m^-1");
-    case QUANTITY_REACTION_RATE:
-      return get_unit("m^3 s^-1");
-    case QUANTITY_SURFACE_AREA:
-      return get_unit("m^2");
-    case QUANTITY_TEMPERATURE:
-      return get_unit("K");
-    case QUANTITY_TIME:
-      return get_unit("s");
-    default:
-      cmac_error("Unknown quantity: %i!", quantity);
-      return Unit(0., 0, 0, 0, 0, 0);
-    }
+    return get_unit(get_SI_unit_name(quantity));
   }
 
   /**
@@ -275,7 +285,6 @@ private:
     return 0.;
   }
 
-public:
   /**
    * @brief Get the Unit corresponding to the given string.
    *

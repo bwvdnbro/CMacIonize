@@ -144,7 +144,6 @@ _integer_type_ string_to_integer(const std::string &value) {
     unsigned int base = 1;
     // we use a reverse iterator, since the least significant digit comes last
     for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
-      cmac_status("%i", *it);
       ivalue += base * (*it);
       base *= 10;
     }
@@ -175,8 +174,6 @@ _integer_type_ string_to_integer(const std::string &value) {
   }
 
   ivalue *= sign;
-
-  cmac_status("%s --> %u", value.c_str(), ivalue);
 
   return ivalue;
 }
@@ -270,12 +267,11 @@ template <>
 inline CoordinateVector< int >
 convert< CoordinateVector< int > >(const std::string &value) {
   CoordinateVector< int > vvalue;
-  int num_found =
-      sscanf(value.c_str(), "[%i,%i,%i]", &vvalue[0], &vvalue[1], &vvalue[2]);
-  if (num_found != 3) {
-    cmac_error("Error converting \"%s\" to an integer CoordinateVector!",
-               value.c_str());
-  }
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< int >(x);
+  vvalue[1] = convert< int >(y);
+  vvalue[2] = convert< int >(z);
   return vvalue;
 }
 
