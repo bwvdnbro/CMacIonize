@@ -27,7 +27,6 @@
 #include "CoordinateVector.hpp"
 #include "ParameterFile.hpp"
 #include <iostream>
-using namespace std;
 
 /**
  * @brief Unit test for the ParameterFile class.
@@ -55,13 +54,13 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< bool >("test_bool6") == false);
   assert_condition(params.get_value< bool >("test_bool7") == false);
   assert_condition(params.get_value< bool >("test_bool8") == false);
-  assert_condition(params.get_value< string >("test_string") ==
+  assert_condition(params.get_value< std::string >("test_string") ==
                    "This is a test string.");
   assert_condition(params.get_value< int >("test_group:test_group_member") ==
                    42);
-  assert_condition(
-      params.get_value< string >("test_comments_group:test_comments_value") ==
-      "test comments string");
+  assert_condition(params.get_value< std::string >(
+                       "test_comments_group:test_comments_value") ==
+                   "test comments string");
 
   CoordinateVector<> cvtest =
       params.get_value< CoordinateVector<> >("test_coordinatevector_double");
@@ -98,7 +97,8 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >(
                        "unit_not_in_file", "1. pc") == 3.086e16);
-  assert_condition(params.get_value< string >("not_in", "file?") == "file?");
+  assert_condition(params.get_value< std::string >("not_in", "file?") ==
+                   "file?");
   assert_condition(params.get_value< bool >("not_in_file3", true) == true);
 
   cvtest = params.get_value< CoordinateVector<> >(
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
                        "test_group2:test_group_group:test_group_str_member",
                        "hello!") == "hello!");
 
-  params.print_contents(cout);
+  params.print_contents(std::cout);
 
   return 0;
 }

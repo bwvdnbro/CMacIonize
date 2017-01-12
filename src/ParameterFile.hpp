@@ -347,7 +347,8 @@ ParameterFile::get_value< std::string >(std::string key,
                                         std::string default_value) {
   std::map< std::string, std::string >::iterator it = _dictionary.find(key);
   std::string svalue;
-  if (it == _dictionary.end()) {
+  // the second condition covers the case where we request a parameter twice
+  if (it == _dictionary.end() || it->second == "default value") {
     _dictionary[key] = "default value";
     // note that this value is overwritten by other type specializations if
     // they called this method with default_value = ""
