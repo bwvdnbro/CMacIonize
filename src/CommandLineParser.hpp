@@ -63,7 +63,7 @@ public:
   void add_option(std::string long_name, char short_name,
                   std::string description,
                   CommandLineOptionArgumentType argument_type,
-                  std::string default_value = "");
+                  std::string default_value = "", bool required = false);
 
   /**
    * @brief Template add_option method that is more user friendly.
@@ -219,7 +219,7 @@ template <>
 inline void CommandLineParser::add_required_option< double >(
     std::string long_name, char short_name, std::string description) {
   add_option(long_name, short_name, description,
-             COMMANDLINEOPTION_DOUBLEARGUMENT);
+             COMMANDLINEOPTION_DOUBLEARGUMENT, "", true);
 }
 
 /**
@@ -235,7 +235,8 @@ inline void CommandLineParser::add_required_option< double >(
 template <>
 inline void CommandLineParser::add_required_option< int >(
     std::string long_name, char short_name, std::string description) {
-  add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT);
+  add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT,
+             "", true);
 }
 
 // no bool specialization for required options, because that does not make any
@@ -255,7 +256,7 @@ template <>
 inline void CommandLineParser::add_required_option< std::string >(
     std::string long_name, char short_name, std::string description) {
   add_option(long_name, short_name, description,
-             COMMANDLINEOPTION_STRINGARGUMENT);
+             COMMANDLINEOPTION_STRINGARGUMENT, "", true);
 }
 
 /**
