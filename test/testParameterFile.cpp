@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< int >("test_integer1") == 42);
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
+  assert_condition(params.get_value< int >("test_integer4") == 1e6);
   assert_condition(params.get_value< double >("test_float") == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >("test_unit") ==
                    3.086e16);

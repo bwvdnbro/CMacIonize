@@ -72,6 +72,116 @@ inline void split_string(const std::string &value, std::string &str1,
 }
 
 /**
+ * @brief Convert the given std::string to a given template integer type.
+ *
+ * We use this version and not strtol, since our version also supports exponent
+ * notation (e.g. '1e6').
+ *
+ * @param value std::string to convert.
+ * @return Integer containing the value stored in the std::string.
+ */
+template < typename _integer_type_ >
+_integer_type_ string_to_integer(const std::string &value) {
+  if (value.size() == 0) {
+    cmac_error("Cannot extract an integer from an empty string!");
+  }
+
+  unsigned int idx = 0;
+  // strip trailing whitespace
+  while (idx < value.size() && value[idx] == ' ') {
+    ++idx;
+  }
+  if (idx == value.size()) {
+    cmac_error("String does not contain an integer: \"%s\"!", value.c_str());
+  }
+
+  // check if a minus sign is present
+  char sign = 1;
+  if (value[idx] == '-') {
+    sign = -1;
+    ++idx;
+  }
+
+  // now parse the integer
+  std::vector< char > digits;
+  _integer_type_ ivalue = 0;
+  if (value[idx] == '0' && (value[idx + 1] == 'x' || value[idx + 1] == 'X')) {
+    // hexadecimal notation
+    idx += 2;
+    while (idx < value.size() && isxdigit(value[idx])) {
+      if (isdigit(value[idx])) {
+        // we here exploit the fact that ASCII representations of numbers have
+        // successive binary codes
+        digits.push_back(value[idx] - '0');
+      } else {
+        // a-f (A-F) also have successive codes
+        char cval = tolower(value[idx]);
+        digits.push_back(10 + cval - 'a');
+      }
+      ++idx;
+    }
+    if (digits.size() == 0) {
+      cmac_error("Cannot convert string to integer: \"%s\"!", value.c_str());
+    }
+    if (digits.size() * 4 >
+        sizeof(_integer_type_) * 8 - std::is_signed< _integer_type_ >::value) {
+      cmac_error("Integer value too large: \"%s\"!", value.c_str());
+    }
+    unsigned int base = 1;
+    // we use a reverse iterator, since the least significant digit comes last
+    for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
+      ivalue += base * (*it);
+      base *= 16;
+    }
+  } else {
+    // normal notation
+    while (idx < value.size() && isdigit(value[idx])) {
+      // we here exploit the fact that ASCII representations of numbers have
+      // successive binary codes
+      digits.push_back(value[idx] - '0');
+      ++idx;
+    }
+    unsigned int base = 1;
+    // we use a reverse iterator, since the least significant digit comes last
+    for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
+      cmac_status("%i", *it);
+      ivalue += base * (*it);
+      base *= 10;
+    }
+
+    // check for an exponent
+    if (idx < value.size() && (value[idx] == 'e' || value[idx] == 'E')) {
+      ++idx;
+      digits.clear();
+      while (idx < value.size() && isdigit(value[idx])) {
+        // we here exploit the fact that ASCII representations of numbers have
+        // successive binary codes
+        digits.push_back(value[idx] - '0');
+        ++idx;
+      }
+      unsigned int exponent = 0;
+      unsigned int base = 1;
+      // we use a reverse iterator, since the least significant digit comes last
+      for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
+        exponent += base * (*it);
+        base *= 10;
+      }
+      _integer_type_ extra_part = 1;
+      for (unsigned int i = 0; i < exponent; ++i) {
+        extra_part *= 10;
+      }
+      ivalue *= extra_part;
+    }
+  }
+
+  ivalue *= sign;
+
+  cmac_status("%s --> %u", value.c_str(), ivalue);
+
+  return ivalue;
+}
+
+/**
  * @brief Convert the given string to a variable of the given template type.
  *
  * @param value std::string value.
@@ -122,11 +232,7 @@ convert< CoordinateVector<> >(const std::string &value) {
  * @return Integer stored in the string.
  */
 template <> inline int convert< int >(const std::string &value) {
-  char *str_end;
-  int ivalue = strtol(value.c_str(), &str_end, 0);
-  if (str_end == value.c_str()) {
-    cmac_error("Error converting \"%s\" to an integer value!", value.c_str());
-  }
+  int ivalue = string_to_integer< int >(value);
   return ivalue;
 }
 
@@ -138,12 +244,7 @@ template <> inline int convert< int >(const std::string &value) {
  */
 template <>
 inline unsigned int convert< unsigned int >(const std::string &value) {
-  char *str_end;
-  unsigned int ivalue = strtol(value.c_str(), &str_end, 0);
-  if (str_end == value.c_str()) {
-    cmac_error("Error converting \"%s\" to an unsigned integer value!",
-               value.c_str());
-  }
+  unsigned int ivalue = string_to_integer< unsigned int >(value);
   return ivalue;
 }
 
@@ -155,12 +256,7 @@ inline unsigned int convert< unsigned int >(const std::string &value) {
  */
 template <>
 inline unsigned char convert< unsigned char >(const std::string &value) {
-  char *str_end;
-  unsigned char ivalue = strtol(value.c_str(), &str_end, 0);
-  if (str_end == value.c_str()) {
-    cmac_error("Error converting \"%s\" to an unsigned char value!",
-               value.c_str());
-  }
+  unsigned char ivalue = string_to_integer< unsigned char >(value);
   return ivalue;
 }
 

@@ -6,6 +6,7 @@
 test_integer1: 42
 test_integer2: 0x2a
 test_integer3: 0x2A
+test_integer4: 1e6
 # Floating point values
 test_float: 3.14
 # Floating point values with units
