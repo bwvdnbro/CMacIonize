@@ -40,11 +40,9 @@
  * Fills the precalculated tables.
  *
  * @param cross_sections Photoionization cross sections.
- * @param random_generator RandomGenerator used to generate random numbers.
  */
 HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
-    CrossSections &cross_sections, RandomGenerator &random_generator)
-    : _random_generator(random_generator) {
+    CrossSections &cross_sections) {
   // 24.6 eV in Hz (1.81 x 13.6 eV)
   const double min_frequency = 1.81 * 3.288465385e15;
   // 54.4 eV in Hz
@@ -96,40 +94,28 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
                                   [HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1];
     }
   }
-
-  _current_T = 0.;
-  _current_iT = 0;
-}
-
-/**
- * @brief Set the current temperature for the interpolation.
- *
- * @param T New value for the temperature (in K).
- */
-void HeliumLymanContinuumSpectrum::set_temperature(double T) {
-  _current_T = T;
-  _current_iT = Utilities::locate(_current_T, _temperature,
-                                  HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
 }
 
 /**
  * @brief Sample a random frequency from the spectrum.
  *
+ * @param random_generator RandomGenerator to use.
+ * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
-double HeliumLymanContinuumSpectrum::get_random_frequency() {
-  double x = _random_generator.get_uniform_random_double();
-  unsigned int inu1 =
-      Utilities::locate(x, _cumulative_distribution[_current_iT],
-                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 =
-      Utilities::locate(x, _cumulative_distribution[_current_iT + 1],
-                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency =
-      _frequency[inu1] +
-      (_current_T - _temperature[_current_iT]) *
-          (_frequency[inu2] - _frequency[inu1]) /
-          (_temperature[_current_iT + 1] - _temperature[_current_iT]);
+double HeliumLymanContinuumSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) const {
+  unsigned int iT = Utilities::locate(temperature, _temperature,
+                                      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
+  double x = random_generator.get_uniform_random_double();
+  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
+                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
+                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  double frequency = _frequency[inu1] +
+                     (temperature - _temperature[iT]) *
+                         (_frequency[inu2] - _frequency[inu1]) /
+                         (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 
@@ -140,7 +126,7 @@ double HeliumLymanContinuumSpectrum::get_random_frequency() {
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double HeliumLymanContinuumSpectrum::get_total_flux() {
+double HeliumLymanContinuumSpectrum::get_total_flux() const {
   cmac_error(
       "HeliumLymanContinuumSpectrum::get_total_flux() is not implemented!");
   return 0.;

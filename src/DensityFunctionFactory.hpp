@@ -36,6 +36,7 @@
 #include "AsciiFileDensityFunction.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
+#include "SPHNGSnapshotDensityFunction.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
@@ -84,7 +85,7 @@ public:
    */
   static DensityFunction *generate(ParameterFile &params, Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densityfunction.type", "Homogeneous");
+        params.get_value< std::string >("densityfunction:type", "Homogeneous");
     if (log) {
       log->write_info("Requested DensityFunction type: ", type);
     }
@@ -100,6 +101,8 @@ public:
       return new BlockSyntaxDensityFunction(params, log);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
+    } else if (type == "SPHNGSnapshot") {
+      return new SPHNGSnapshotDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonizeSnapshot") {
       return new CMacIonizeSnapshotDensityFunction(params, log);

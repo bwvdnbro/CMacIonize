@@ -27,9 +27,10 @@
 #ifndef TEMPERATURECALCULATOR_HPP
 #define TEMPERATURECALCULATOR_HPP
 
+#include "DensityGrid.hpp"
+
 class Abundances;
 class ChargeTransferRates;
-class DensityGrid;
 class DensityValues;
 class LineCoolingData;
 class RecombinationRates;
@@ -70,8 +71,53 @@ public:
                      LineCoolingData &data, RecombinationRates &rates,
                      ChargeTransferRates &ctr);
 
-  void calculate_temperature(double jfac, double hfac, DensityValues &cell);
-  void calculate_temperature(double totweight, DensityGrid &grid);
+  void calculate_temperature(double jfac, double hfac,
+                             DensityValues &cell) const;
+
+  /**
+   * @brief Functor used to calculate the temperature of a single cell.
+   */
+  class TemperatureCalculatorFunction {
+  private:
+    /*! @brief TemperatureCalculator used to perform the calculation. */
+    const TemperatureCalculator &_calculator;
+
+    /*! @brief First normalization factor used in the TemperatureCalculator
+     * call. */
+    double _jfac;
+
+    /*! @brief Second normalization factor used in the TemperatureCalculator
+     * call. */
+    double _hfac;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param calculator TemperatureCalculator used to perform the
+     * calculation.
+     * @param jfac First normalization factor used in the TemperatureCalculator
+     * call.
+     * @param hfac Second normalization factor used in the TemperatureCalculator
+     * call.
+     */
+    TemperatureCalculatorFunction(const TemperatureCalculator &calculator,
+                                  double jfac, double hfac)
+        : _calculator(calculator), _jfac(jfac), _hfac(hfac) {}
+
+    /**
+     * @brief Do the temperature calculation for a single cell.
+     *
+     * @param cell DensityGrid::iterator pointing to a single cell in the grid.
+     */
+    inline void operator()(DensityGrid::iterator cell) {
+      _calculator.calculate_temperature(_jfac / cell.get_volume(),
+                                        _hfac / cell.get_volume(),
+                                        cell.get_values());
+    }
+  };
+
+  void calculate_temperature(double totweight, DensityGrid &grid) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

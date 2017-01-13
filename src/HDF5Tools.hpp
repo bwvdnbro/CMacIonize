@@ -133,6 +133,7 @@ inline bool group_exists(hid_t file, std::string name) {
  *
  * @param file HDF5File handle to an HDF5 file that is open in write mode.
  * @param name Name of the group to create.
+ * @return HDF5Group handle to the newly created group.
  */
 inline HDF5Group create_group(hid_t file, std::string name) {
 #ifdef HDF5_OLD_API
@@ -893,6 +894,8 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
     datavector[i][2] = data[3 * i + 2];
   }
 
+  delete[] data;
+
   return datavector;
 }
 
@@ -947,6 +950,11 @@ public:
     }
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the internal data array.
+   */
   ~HDF5DataBlock() { delete[] _data; }
 
   /**
@@ -1154,7 +1162,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
 
   // read the data
   HDF5CompoundKeyValueType< _datatype_ > *data =
-      new HDF5CompoundKeyValueType< _datatype_ >[ size[0] ];
+      new HDF5CompoundKeyValueType< _datatype_ >[size[0]];
 
   hdf5status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
   if (hdf5status < 0) {

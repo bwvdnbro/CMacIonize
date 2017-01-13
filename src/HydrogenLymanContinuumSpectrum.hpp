@@ -53,24 +53,18 @@ private:
   double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
                                  [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Current temperature (in K). */
-  double _current_T;
-
-  /*! @brief Index of the bin holding the current temperature. */
-  unsigned int _current_iT;
-
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
-
 public:
-  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections,
-                                 RandomGenerator &random_generator);
+  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
 
-  void set_temperature(double T);
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~HydrogenLymanContinuumSpectrum() {}
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature) const;
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 };
 
 #endif // HYDROGENLYMANCONTINUUMSPECTRUM_HPP

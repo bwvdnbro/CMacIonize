@@ -34,6 +34,9 @@
  */
 class DensityFunction {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~DensityFunction() {}
 
   /**
@@ -42,7 +45,7 @@ public:
    * @param position CoordinateVector specifying a coordinate position (in m).
    * @return Density at the given coordinate (in m^-3).
    */
-  virtual DensityValues operator()(CoordinateVector<> position) = 0;
+  virtual DensityValues operator()(CoordinateVector<> position) const = 0;
 };
 
 #endif // DENSITYFUNCTION_HPP

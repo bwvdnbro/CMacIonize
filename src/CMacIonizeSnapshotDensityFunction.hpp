@@ -26,6 +26,7 @@
 #ifndef CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP
 #define CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP
 
+#include "AMRGrid.hpp"
 #include "Box.hpp"
 #include "DensityFunction.hpp"
 
@@ -43,8 +44,40 @@ private:
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< int > _ncell;
 
-  /*! @brief Density grid. */
-  DensityValues ***_grid;
+  /*! @brief Cartesian density grid (if applicable). */
+  DensityValues ***_cartesian_grid;
+
+  /*! @brief AMR density grid (if applicable). */
+  AMRGrid< DensityValues > *_amr_grid;
+
+  /**
+   * @brief Get the largest odd factor of the given number.
+   *
+   * This is the number you get by iteratively dividing the number by two, until
+   * the result is no longer even.
+   *
+   * @param number Number to decompose.
+   * @return Largest odd factor of the number.
+   */
+  inline static int get_largest_odd_factor(int number) {
+    while ((number % 2) == 0) {
+      number >>= 1;
+    }
+    return number;
+  }
+
+  /**
+   * @brief Get the largest power of two factor of the given number.
+   *
+   * This is the factor you get by multiplying all factors of two contained
+   * in the number.
+   *
+   * @param number Number to decompose.
+   * @return Largest power of two factor.
+   */
+  inline static int get_power_of_two(int number) {
+    return number / get_largest_odd_factor(number);
+  }
 
 public:
   CMacIonizeSnapshotDensityFunction(std::string filename, Log *log = nullptr);
@@ -53,7 +86,7 @@ public:
 
   virtual ~CMacIonizeSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position);
+  virtual DensityValues operator()(CoordinateVector<> position) const;
 };
 
 #endif // CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

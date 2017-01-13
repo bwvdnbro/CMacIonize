@@ -151,7 +151,7 @@ VernerCrossSections::VernerCrossSections() {
 double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
-                                                     double e) {
+                                                     double e) const {
   // convert Hz to eV
   e /= (1.5091902e33 * 1.60217662e-19);
 
@@ -241,7 +241,8 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
  * @return Photoionization cross section for the given ion and for the given
  * photon energy (in m^2).
  */
-double VernerCrossSections::get_cross_section(IonName ion, double energy) {
+double VernerCrossSections::get_cross_section(IonName ion,
+                                              double energy) const {
   switch (ion) {
 
   case ION_H_n:

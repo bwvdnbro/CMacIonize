@@ -73,6 +73,12 @@ initDensityGrid(const std::string &filename) {
 
   HDF5Tools::close_file(file);
 
+  // make sure AMR grids are processed correctly
+  if (parameters.get_value< std::string >("densitygrid:type") == "AMR") {
+    // this overrides whatever value was in that field
+    parameters.add_value("densitygrid:amrrefinementscheme:type", "CMacIonize");
+  }
+
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
   return boost::shared_ptr< DensityGrid >(
@@ -192,6 +198,76 @@ static boost::python::dict get_variable(DensityGrid &grid, std::string name) {
 }
 
 /**
+ * @brief Get a numpy.ndarray containing the values of the variable with the
+ * given name for a planar cut parallel to two of the three coordinate axes.
+ *
+ * @param grid DensityGrid on which to act (acts as self).
+ * @param name std::string representation of a cell variable name supported by
+ * get_single_variable().
+ * @param coordinate Coordinate axis not parallel to the cut plane (possible
+ * values: x, y, or z).
+ * @param intercept Value of the intersection point with the axis and the cut
+ * plane.
+ * @param shape Shape of the 2D result array, with the values corresponding to
+ * the lowest parallel axis being in the rows.
+ * @return Python dict containing a numpy.ndarray with the requested values, and
+ * a string representation of the units in which the variables are expressed.
+ */
+static boost::python::dict get_variable_cut(DensityGrid &grid, std::string name,
+                                            char coordinate, double intercept,
+                                            boost::python::tuple shape) {
+  if (coordinate != 'x' && coordinate != 'y' && coordinate != 'z') {
+    cmac_error("Unknown coordinate: %c!", coordinate);
+  }
+
+  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
+                      boost::python::extract< unsigned int >(shape[1])};
+  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
+  boost::python::handle<> handle(narr);
+  boost::python::numeric::array arr(handle);
+
+  Box box = grid.get_box();
+
+  double di, dj;
+  if (coordinate == 'x') {
+    di = box.get_sides().y() / size[0];
+    dj = box.get_sides().z() / size[1];
+  } else if (coordinate == 'y') {
+    di = box.get_sides().x() / size[0];
+    dj = box.get_sides().z() / size[1];
+  } else {
+    di = box.get_sides().x() / size[0];
+    dj = box.get_sides().y() / size[1];
+  }
+  for (unsigned int i = 0; i < size[0]; ++i) {
+    for (unsigned int j = 0; j < size[1]; ++j) {
+      CoordinateVector<> position;
+      if (coordinate == 'x') {
+        position[0] = intercept;
+        position[1] = box.get_anchor().y() + (i + 0.5) * di;
+        position[2] = box.get_anchor().z() + (j + 0.5) * dj;
+      } else if (coordinate == 'y') {
+        position[0] = box.get_anchor().x() + (i + 0.5) * di;
+        position[1] = intercept;
+        position[2] = box.get_anchor().z() + (j + 0.5) * dj;
+      } else {
+        position[0] = box.get_anchor().x() + (i + 0.5) * di;
+        position[1] = box.get_anchor().y() + (j + 0.5) * dj;
+        position[2] = intercept;
+      }
+      DensityValues &cell = grid.get_cell_values(position);
+      arr[i][j] = get_single_variable(cell, name);
+    }
+  }
+
+  boost::python::dict result;
+  result["values"] = arr.copy();
+  result["units"] = get_variable_unit(name);
+
+  return result;
+}
+
+/**
  * @brief Get a numpy.ndarray containing the coordinates of all cells in the
  * grid.
  *
@@ -239,5 +315,6 @@ BOOST_PYTHON_MODULE(libdensitygrid) {
       .def("get_number_of_cells", &DensityGrid::get_number_of_cells)
       .def("get_box", &get_box)
       .def("get_variable", &get_variable)
+      .def("get_variable_cut", &get_variable_cut)
       .def("get_coordinates", &get_coordinates);
 }

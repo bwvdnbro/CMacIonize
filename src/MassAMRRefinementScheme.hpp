@@ -1,0 +1,88 @@
+/*******************************************************************************
+ * This file is part of CMacIonize
+ * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *
+ * CMacIonize is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * CMacIonize is distributed in the hope that it will be useful,
+ * but WITOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
+/**
+ * @file MassAMRRefinementScheme.hpp
+ *
+ * @brief AMRRefinementScheme implementation that refines cells to obtain cells
+ * with approximately equal mass (number of particles).
+ *
+ * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ */
+#ifndef MASSAMRREFINEMENTSCHEME_HPP
+#define MASSAMRREFINEMENTSCHEME_HPP
+
+#include "AMRRefinementScheme.hpp"
+#include "DensityValues.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
+
+/**
+ * @brief AMRRefinementScheme implementation that refines cells to obtain cells
+ * with approximately equal mass (number of particles).
+ */
+class MassAMRRefinementScheme : public AMRRefinementScheme {
+private:
+  /*! @brief Target number of particles. */
+  double _target_npart;
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param target_npart Target number of particles.
+   * @param log Log to write logging info to.
+   */
+  MassAMRRefinementScheme(double target_npart, Log *log = nullptr)
+      : _target_npart(target_npart) {
+    if (log) {
+      log->write_status("Constructed MassAMRRefinementScheme with target "
+                        "number of particles ",
+                        _target_npart, ".");
+    }
+  }
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   */
+  MassAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
+      : MassAMRRefinementScheme(
+            params.get_value< double >(
+                "densitygrid:amrrefinementscheme:target_npart", 1.),
+            log) {}
+
+  /**
+   * @brief Decide whether the cell at the given level, with the given midpoint
+   * and values, should be refined.
+   *
+   * @param level Depth level of the cell.
+   * @param midpoint Midpoint of the cell (in m).
+   * @param volume Volume of the cell (in m^3).
+   * @param cell DensityValues of the cell (in SI units).
+   * @return True if the cell should be split into 8 smaller cells.
+   */
+  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
+                      double volume, DensityValues &cell) const {
+    return volume * cell.get_total_density() > _target_npart;
+  }
+};
+
+#endif // MASSAMRREFINEMENTSCHEME_HPP

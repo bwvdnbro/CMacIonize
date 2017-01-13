@@ -44,6 +44,7 @@ photonsourcedistribution:
   luminosity: 1.e49 s^-1
 
 photonsourcespectrum:
+  type: Planck
   temperature: 20000. K
 
 random_seed: 42

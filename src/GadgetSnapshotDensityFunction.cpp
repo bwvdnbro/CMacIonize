@@ -71,12 +71,14 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * @param use_neutral_fraction Whether or not to use the neutral fraction from
  * the snapshot file as initial guess for the neutral fraction (if it is
  * present in the snapshot).
+ * @param fallback_temperature Initial temperature to use if no temperature
+ * block was found in the snapshot file.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
     double fallback_unit_mass_in_SI, double fallback_unit_temperature_in_SI,
-    bool use_neutral_fraction, Log *log)
+    bool use_neutral_fraction, double fallback_temperature, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -160,8 +162,23 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   _smoothing_lengths =
       HDF5Tools::read_dataset< double >(gasparticles, "SmoothingLength");
   _densities = HDF5Tools::read_dataset< double >(gasparticles, "Density");
-  _temperatures =
-      HDF5Tools::read_dataset< double >(gasparticles, "Temperature");
+  if (HDF5Tools::group_exists(gasparticles, "Temperature")) {
+    _temperatures =
+        HDF5Tools::read_dataset< double >(gasparticles, "Temperature");
+  } else {
+    if (_log) {
+      _log->write_warning("No temperature block found, using fallback initial "
+                          "temperature value.");
+    }
+    if (fallback_temperature == 0.) {
+      fallback_temperature = 8000.;
+      if (_log) {
+        _log->write_warning(
+            "No fallback initial temperature provided either, using 8000. K.");
+      }
+    }
+    _temperatures.resize(_densities.size(), fallback_temperature);
+  }
   // close the group
   if (use_neutral_fraction &&
       HDF5Tools::group_exists(gasparticles, "NeutralFractionH")) {
@@ -236,21 +253,25 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction.filename"),
-          params.get_value< bool >("densityfunction.fallback_periodic_flag",
+          params.get_value< string >("densityfunction:filename"),
+          params.get_value< bool >("densityfunction:fallback_periodic_flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction.fallback_unit_length", "0. m"),
+              "densityfunction:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
-              "densityfunction.fallback_unit_mass", "0. kg"),
+              "densityfunction:fallback_unit_mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.fallback_unit_temperature", "0. K"),
-          params.get_value< bool >("densityfunction.use_neutral_fraction",
-                                   "false"),
+              "densityfunction:fallback_unit_temperature", "0. K"),
+          params.get_value< bool >("densityfunction:use_neutral_fraction",
+                                   false),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction:fallback_initial_temperature", "0. K"),
           log) {}
 
 /**
  * @brief Destructor.
+ *
+ * Deletes the internal Octree.
  */
 GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
   delete _octree;
@@ -263,7 +284,7 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
  * @return Density at the given coordinate (in m^-3).
  */
 DensityValues GadgetSnapshotDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   // brute force version: slow
@@ -325,7 +346,7 @@ operator()(CoordinateVector<> position) {
  *
  * @return Sum of the hydrogen number of all SPH particles in the snapshot.
  */
-double GadgetSnapshotDensityFunction::get_total_hydrogen_number() {
+double GadgetSnapshotDensityFunction::get_total_hydrogen_number() const {
   double mtot = 0.;
   for (unsigned int i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];

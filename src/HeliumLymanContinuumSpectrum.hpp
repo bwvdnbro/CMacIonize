@@ -52,24 +52,18 @@ private:
   double _cumulative_distribution[HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP]
                                  [HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ];
 
-  /*! @brief Current temperature (in K). */
-  double _current_T;
-
-  /*! @brief Index of the current temperature bin. */
-  unsigned int _current_iT;
-
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
-
 public:
-  HeliumLymanContinuumSpectrum(CrossSections &cross_sections,
-                               RandomGenerator &random_generator);
+  HeliumLymanContinuumSpectrum(CrossSections &cross_sections);
 
-  void set_temperature(double T);
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~HeliumLymanContinuumSpectrum() {}
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature) const;
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 };
 
 #endif // HELIUMLYMANCONTINUUMSPECTRUM_HPP

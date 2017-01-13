@@ -27,9 +27,11 @@
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
 #include "DensityValues.hpp"
 #include "Error.hpp"
 #include "RecombinationRates.hpp"
+#include "WorkDistributor.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -59,7 +61,7 @@ IonizationStateCalculator::IonizationStateCalculator(
  * @param cell DensityValues of the cell.
  */
 void IonizationStateCalculator::calculate_ionization_state(
-    double jfac, DensityValues &cell) {
+    double jfac, DensityValues &cell) const {
   cell.set_old_neutral_fraction_H(cell.get_ionic_fraction(ION_H_n));
   double jH = jfac * cell.get_mean_intensity(ION_H_n);
   double jHe = jfac * cell.get_mean_intensity(ION_He_n);
@@ -250,17 +252,19 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @param totweight Total weight off all photons used.
  * @param grid DensityGrid for which the calculation is done.
  */
-void IonizationStateCalculator::calculate_ionization_state(double totweight,
-                                                           DensityGrid &grid) {
+void IonizationStateCalculator::calculate_ionization_state(
+    double totweight, DensityGrid &grid) const {
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
   double jfac = _luminosity / totweight;
-  for (auto it = grid.begin(); it != grid.end(); ++it) {
-    double cellvolume = it.get_volume();
-    DensityValues &cell = it.get_values();
-    double jfaccell = jfac / cellvolume;
-    calculate_ionization_state(jfaccell, cell);
-  }
+  WorkDistributor<
+      DensityGridTraversalJobMarket< IonizationStateCalculatorFunction >,
+      DensityGridTraversalJob< IonizationStateCalculatorFunction > >
+      workers;
+  IonizationStateCalculatorFunction do_calculation(*this, jfac);
+  DensityGridTraversalJobMarket< IonizationStateCalculatorFunction > jobs(
+      grid, do_calculation);
+  workers.do_in_parallel(jobs);
 }
 
 /**

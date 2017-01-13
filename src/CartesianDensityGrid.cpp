@@ -58,7 +58,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
         " x ", _ncell.z(), " inside a box with anchor [", _box.get_anchor().x(),
         " m,", _box.get_anchor().y(), " m,", _box.get_anchor().z(),
         " m] and sides [", _box.get_sides().x(), " m,", _box.get_sides().y(),
-        " m,", _box.get_sides().z(), " m]...");
+        " m, ", _box.get_sides().z(), " m]...");
     if (_periodic.x()) {
       _log->write_status("x boundary is periodic.");
     } else {
@@ -76,12 +76,21 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
     }
   }
 
+  if (_log) {
+    unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
+    _log->write_info(
+        "Allocating memory for ", ncell, " cells (",
+        Utilities::human_readable_bytes(ncell * sizeof(DensityValues)), ")...");
+  }
   _density = new DensityValues **[_ncell.x()];
   for (int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
     for (int j = 0; j < _ncell.y(); ++j) {
       _density[i][j] = new DensityValues[_ncell.z()];
     }
+  }
+  if (_log) {
+    _log->write_info("Done.");
   }
 
   // fill the density grid
@@ -130,20 +139,20 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
                                            Log *log)
     : CartesianDensityGrid(
           Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                  "densitygrid.box_anchor", "[0. m, 0. m, 0. m]"),
+                  "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
               parameters.get_physical_vector< QUANTITY_LENGTH >(
-                  "densitygrid.box_sides", "[1. m, 1. m, 1. m]")),
+                  "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
-              "densitygrid.ncell", CoordinateVector< int >(64)),
+              "densitygrid:ncell", CoordinateVector< int >(64)),
           density_function,
           parameters.get_value< CoordinateVector< bool > >(
-              "densitygrid.periodicity", CoordinateVector< bool >(false)),
+              "densitygrid:periodicity", CoordinateVector< bool >(false)),
           log) {}
 
 /**
  * @brief Destructor
  *
- * Free the memory used by the internal arrays.
+ * Free the memory used by the internal grid arrays.
  */
 CartesianDensityGrid::~CartesianDensityGrid() {
   if (_log) {
@@ -163,7 +172,7 @@ CartesianDensityGrid::~CartesianDensityGrid() {
  *
  * @return Total number of cells.
  */
-unsigned int CartesianDensityGrid::get_number_of_cells() {
+unsigned int CartesianDensityGrid::get_number_of_cells() const {
   return _ncell.x() * _ncell.y() * _ncell.z();
 }
 
@@ -175,7 +184,7 @@ unsigned int CartesianDensityGrid::get_number_of_cells() {
  * cell.
  */
 CoordinateVector< int >
-CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) {
+CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) const {
   int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
   int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
   int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
@@ -189,7 +198,7 @@ CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) {
  * @return Box containing the bottom front left corner and the upper back right
  * corner of the cell (in m).
  */
-Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) {
+Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
   double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
   double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
   double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
@@ -203,7 +212,7 @@ Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) {
  * @return Values stored in the cell.
  */
 DensityValues &
-CartesianDensityGrid::get_cell_values(CoordinateVector< int > index) {
+CartesianDensityGrid::get_cell_values(CoordinateVector< int > index) const {
   return _density[index.x()][index.y()][index.z()];
 }
 
@@ -411,10 +420,11 @@ CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
  * @param photon Photon.
  * @param optical_depth Optical depth the photon should travel in total
  * (dimensionless).
- * @return True if the Photon is still in the box after the optical depth has
- * been reached, false otherwise.
+ * @return A pointer to the values of the last cell the photon was in, a nullptr
+ * if the photon left the box.
  */
-bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
+DensityValues *CartesianDensityGrid::interact(Photon &photon,
+                                              double optical_depth) {
   double S = 0.;
 
   CoordinateVector<> photon_origin = photon.get_position();
@@ -424,6 +434,7 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
   CoordinateVector< int > index = get_cell_indices(photon_origin);
 
   unsigned int ncell = 0;
+  DensityValues *last_cell = nullptr;
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
     ++ncell;
@@ -437,6 +448,7 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
     DensityValues &density = get_cell_values(index);
+    last_cell = &density;
 
     // Helium abundance. Should be a parameter.
     double tau = get_optical_depth(ds, density, photon);
@@ -480,5 +492,9 @@ bool CartesianDensityGrid::interact(Photon &photon, double optical_depth) {
 
   photon.set_position(photon_origin);
 
-  return is_inside(index, photon_origin);
+  if (!is_inside(index, photon_origin)) {
+    last_cell = nullptr;
+  }
+
+  return last_cell;
 }

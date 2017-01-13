@@ -69,11 +69,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
 GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
                                                  DensityGrid &grid, Log *log)
     : GadgetDensityGridWriter(
-          params.get_value< std::string >("densitygridwriter.prefix",
+          params.get_value< std::string >("densitygridwriter:prefix",
                                           "snapshot"),
           grid,
-          params.get_value< std::string >("densitygridwriter.folder", "."), log,
-          params.get_value< unsigned char >("densitygridwriter.padding", 3)) {}
+          params.get_value< std::string >("densitygridwriter:folder", "."), log,
+          params.get_value< unsigned char >("densitygridwriter:padding", 3)) {}
 
 /**
  * @brief Write the file.
@@ -179,6 +179,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
     emission[i].resize(numpart[0]);
   }
+  bool has_emissivities = false;
   unsigned int index = 0;
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     DensityValues &cellvals = it.get_values();
@@ -194,6 +195,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     }
     EmissivityValues *emissivities = cellvals.get_emissivities();
     if (emissivities != nullptr) {
+      has_emissivities = true;
       for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
         EmissionLine line = static_cast< EmissionLine >(i);
         emission[i][index] = emissivities->get_emissivity(line);
@@ -207,18 +209,19 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     HDF5Tools::write_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), ifrac[i]);
-    HDF5Tools::write_dataset< double >(group, "MeanIntensity" + get_ion_name(i),
-                                       jmean[i]);
+    //    HDF5Tools::write_dataset< double >(group, "MeanIntensity" +
+    //    get_ion_name(i),
+    //                                       jmean[i]);
   }
-  if (emission[0].size() > 0) {
+  if (has_emissivities) {
     for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
       EmissionLine line = static_cast< EmissionLine >(i);
       HDF5Tools::write_dataset< double >(
           group, "Emissivity" + EmissivityValues::get_name(line), emission[i]);
     }
   }
-  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
-  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
+  //  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
+  //  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
   HDF5Tools::close_group(group);
 
   // close file

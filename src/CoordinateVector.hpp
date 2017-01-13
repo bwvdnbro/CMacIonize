@@ -80,21 +80,21 @@ public:
    *
    * @return x coordinate.
    */
-  inline _datatype_ x() { return _x; }
+  inline _datatype_ x() const { return _x; }
 
   /**
    * @brief Get the y coordinate.
    *
    * @return y coordinate.
    */
-  inline _datatype_ y() { return _y; }
+  inline _datatype_ y() const { return _y; }
 
   /**
    * @brief Get the z coordinate.
    *
    * @return z coordinate.
    */
-  inline _datatype_ z() { return _z; }
+  inline _datatype_ z() const { return _z; }
 
   /**
    * @brief Subtract another CoordinateVector from this one.
@@ -158,7 +158,7 @@ public:
    *
    * @return Squared norm, defined as the quadratic sum of the components.
    */
-  inline _datatype_ norm2() { return _x * _x + _y * _y + _z * _z; }
+  inline _datatype_ norm2() const { return _x * _x + _y * _y + _z * _z; }
 
   /**
    * @brief Get the norm of this CoordinateVector.
@@ -169,7 +169,7 @@ public:
    * @return Norm of the CoordinateVector, defined as the length of the
    * geometrical vector with the same components.
    */
-  inline double norm() { return sqrt(norm2()); }
+  inline double norm() const { return std::sqrt(norm2()); }
 
   /**
    * @brief Index operator. Get a reference to the component at the given index.
@@ -180,13 +180,22 @@ public:
   inline _datatype_ &operator[](unsigned int i) { return _c[i]; }
 
   /**
+   * @brief Index operator. Get a const reference to the component at the given
+   * index.
+   *
+   * @param i Index which we want to access.
+   * @return Const reference to the requested component.
+   */
+  inline const _datatype_ &operator[](unsigned int i) const { return _c[i]; }
+
+  /**
    * @brief Compare this CoordinateVector with another CoordinateVector.
    *
    * @param v CoordinateVector to compare with.
    * @return True if both CoordinateVector instances have the same member
    * component values.
    */
-  inline bool operator==(const CoordinateVector< _datatype_ > &v) {
+  inline bool operator==(const CoordinateVector< _datatype_ > &v) const {
     return (_x == v._x && _y == v._y && _z == v._z);
   }
 

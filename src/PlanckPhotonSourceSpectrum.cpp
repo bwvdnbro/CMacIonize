@@ -41,13 +41,14 @@
  *
  * Sets up the internal arrays used for random sampling.
  *
- * @param random_generator RandomGenerator used to generate random numbers.
  * @param temperature Temperature of the black body (in K).
+ * @param ionizing_flux Ionizing flux of the spectrum (in m^-2 s^-1).
  * @param log Log to write logging info to.
  */
-PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator, double temperature, Log *log)
-    : _random_generator(random_generator) {
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
+                                                       double ionizing_flux,
+                                                       Log *log)
+    : _ionizing_flux(ionizing_flux) {
   // some constants
   // in units 13.6 eV (corresponds to 54.4 eV)
   const double max_frequency = 4.;
@@ -91,30 +92,41 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
   if (log) {
     log->write_status("Set up a Planck black body spectrum with temperature ",
                       temperature, " K.");
+    if (_ionizing_flux > 1.) {
+      log->write_status("Planck spectrum has a non trivial ionizing flux of ",
+                        _ionizing_flux, " m^-2 s^-1.");
+    }
   }
 }
 
 /**
  * @brief ParameterFile constructor.
  *
- * @param random_generator RandomGenerator.
+ * @param role Role the spectrum will fulfil in the simulation. Parameters are
+ * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(
-    RandomGenerator &random_generator, ParameterFile &params, Log *log)
+PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(std::string role,
+                                                       ParameterFile &params,
+                                                       Log *log)
     : PlanckPhotonSourceSpectrum(
-          random_generator, params.get_physical_value< QUANTITY_TEMPERATURE >(
-                                "photonsourcespectrum.temperature", "40000 K"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              role + ":temperature", "40000 K"),
+          params.get_physical_value< QUANTITY_FLUX >(role + ":ionizing_flux",
+                                                     "-1. m^-2 s^-1"),
           log) {}
 
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.
  *
+ * @param random_generator RandomGenerator to use.
+ * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double PlanckPhotonSourceSpectrum::get_random_frequency() {
-  double x = _random_generator.get_uniform_random_double();
+double PlanckPhotonSourceSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) const {
+  double x = random_generator.get_uniform_random_double();
 
   unsigned int ix = Utilities::locate(x, _cumulative_distribution,
                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
@@ -133,12 +145,12 @@ double PlanckPhotonSourceSpectrum::get_random_frequency() {
 /**
  * @brief Get the total ionizing flux of the spectrum.
  *
- * @warning This method is currently not used and therefore not implemented.
- *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double PlanckPhotonSourceSpectrum::get_total_flux() {
-  cmac_error(
-      "PlanckPhotonSourceSpectrum::get_total_flux() is not implemented!");
-  return 0.;
+double PlanckPhotonSourceSpectrum::get_total_flux() const {
+  if (_ionizing_flux < 0.) {
+    cmac_error("PlanckPhotonSourceSpectrum is used as external spectrum, but "
+               "no ionizing flux was provided in the parameter file!");
+  }
+  return _ionizing_flux;
 }

@@ -113,7 +113,7 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineOption::print_usage(std::ostream &stream) {
+void CommandLineOption::print_usage(std::ostream &stream) const {
   string uppercase_name(_name);
   transform(_name.begin(), _name.end(), uppercase_name.begin(), ::toupper);
   if (get_default_value_description(_argument, _default_value).size()) {
@@ -136,7 +136,7 @@ void CommandLineOption::print_usage(std::ostream &stream) {
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineOption::print_description(std::ostream &stream) {
+void CommandLineOption::print_description(std::ostream &stream) const {
   stream << "--" << _name << " (-" << _abbreviation << ")\n";
   stream << _description << "\n";
   stream << get_argument_description(_argument);
@@ -157,21 +157,21 @@ void CommandLineOption::print_description(std::ostream &stream) {
  *
  * @return Long name of the command line option.
  */
-std::string CommandLineOption::get_long_name() { return _name; }
+std::string CommandLineOption::get_long_name() const { return _name; }
 
 /**
  * @brief Get the short name of the command line option (used with "-").
  *
  * @return Short name of the command line option.
  */
-char CommandLineOption::get_short_name() { return _abbreviation; }
+char CommandLineOption::get_short_name() const { return _abbreviation; }
 
 /**
  * @brief Check if the command line option takes an argument.
  *
  * @return True if the command line option takes an argument.
  */
-bool CommandLineOption::has_argument() {
+bool CommandLineOption::has_argument() const {
   return _argument != COMMANDLINEOPTION_NOARGUMENT;
 }
 
@@ -180,7 +180,7 @@ bool CommandLineOption::has_argument() {
  *
  * @return True if the command line option is required.
  */
-bool CommandLineOption::is_required() { return _required; }
+bool CommandLineOption::is_required() const { return _required; }
 
 /**
  * @brief Check if the given option string matches with this specific command
@@ -190,7 +190,7 @@ bool CommandLineOption::is_required() { return _required; }
  * name.
  * @return True if the given option matches this specific option.
  */
-bool CommandLineOption::matches(std::string option) {
+bool CommandLineOption::matches(std::string option) const {
   return option == _name || (option.size() == 1 && option[0] == _abbreviation);
 }
 
@@ -201,7 +201,7 @@ bool CommandLineOption::matches(std::string option) {
  * @param argument Command line option argument.
  * @return Parsed command line argument that is stored in the dictionary.
  */
-std::string CommandLineOption::parse_argument(std::string argument) {
+std::string CommandLineOption::parse_argument(std::string argument) const {
   switch (_argument) {
   case COMMANDLINEOPTION_NOARGUMENT: {
     // that we are here means the command line option is present, and hence its
@@ -242,6 +242,6 @@ std::string CommandLineOption::parse_argument(std::string argument) {
  *
  * @return Default value of the argument of this command line option.
  */
-std::string CommandLineOption::get_default_value() {
+std::string CommandLineOption::get_default_value() const {
   return get_default_value_description(_argument, _default_value);
 }

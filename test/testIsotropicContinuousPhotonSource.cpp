@@ -77,7 +77,7 @@ CoordinateVector<> get_sphere_position(CoordinateVector<> f,
 int main(int argc, char **argv) {
   Box box(CoordinateVector<>(-0.5), CoordinateVector<>(1.));
   RandomGenerator random_generator(44);
-  IsotropicContinuousPhotonSource source(box, random_generator);
+  IsotropicContinuousPhotonSource source(box);
 
   // to see the angular dependence, this number should be a factor 100 larger
   // but then the unit test takes too long to complete
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> average_direction;
   for (unsigned int i = 0; i < numphoton; ++i) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
-        source.get_random_incoming_direction();
+        source.get_random_incoming_direction(random_generator);
     average_position += posdir.first;
     average_direction += posdir.second;
 

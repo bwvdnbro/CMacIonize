@@ -73,9 +73,9 @@ public:
   SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
-                "photonsourcedistribution.position", "[0.5 m, 0.5 m, 0.5 m]"),
+                "photonsourcedistribution:position", "[0.5 m, 0.5 m, 0.5 m]"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution.luminosity", "4.26e49 s^-1"),
+                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
             log) {}
 
   /**
@@ -83,7 +83,7 @@ public:
    *
    * @return 1, as this distribution contains a single stellar source
    */
-  virtual unsigned int get_number_of_sources() { return 1; }
+  virtual unsigned int get_number_of_sources() const { return 1; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -103,14 +103,14 @@ public:
    * get_number_of_sources().
    * @return Weight of the single photon source: 1.
    */
-  virtual double get_weight(unsigned int index) { return 1.; }
+  virtual double get_weight(unsigned int index) const { return 1.; }
 
   /**
    * @brief Get the luminosity of the single source.
    *
    * @return Luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() { return _luminosity; }
+  virtual double get_total_luminosity() const { return _luminosity; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

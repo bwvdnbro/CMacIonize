@@ -38,12 +38,10 @@
  * @brief Constructor.
  *
  * @param redshift Redshift for which we want the spectrum.
- * @param random_generator RandomGenerator.
  * @param log Log to write logging info to.
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
-    double redshift, RandomGenerator &random_generator, Log *log)
-    : _random_generator(random_generator) {
+    double redshift, Log *log) {
   // construct the frequency bins)
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
@@ -164,16 +162,15 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
 /**
  * @brief ParameterFile constructor.
  *
+ * @param role Role the spectrum will fulfil in the simulation. Parameters are
+ * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
- * @param random_generator RandomGenerator.
  * @param log Log to write logging info to.
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
-    ParameterFile &params, RandomGenerator &random_generator, Log *log)
+    std::string role, ParameterFile &params, Log *log)
     : FaucherGiguerePhotonSourceSpectrum(
-          params.get_value< double >("continuousphotonsourcespectrum.redshift",
-                                     0.),
-          random_generator, log) {}
+          params.get_value< double >(role + ":redshift", 0.), log) {}
 
 /**
  * @brief Get the name of the file containing the spectrum for the given
@@ -212,17 +209,20 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double FaucherGiguerePhotonSourceSpectrum::get_total_flux() {
+double FaucherGiguerePhotonSourceSpectrum::get_total_flux() const {
   return _total_flux;
 }
 
 /**
  * @brief Get a random frequency from the spectrum.
  *
+ * @param random_generator RandomGenerator to use.
+ * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double FaucherGiguerePhotonSourceSpectrum::get_random_frequency() {
-  double x = _random_generator.get_uniform_random_double();
+double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) const {
+  double x = random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =

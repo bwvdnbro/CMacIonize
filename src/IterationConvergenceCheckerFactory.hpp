@@ -52,7 +52,7 @@ public:
   inline static IterationConvergenceChecker *
   generate(DensityGrid &grid, ParameterFile &params, Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "iterationconvergencechecker.type", "ChiSquared");
+        "iterationconvergencechecker:type", "ChiSquared");
     if (log) {
       log->write_info("Requested IterationConvergenceChecker type: ", type,
                       ".");

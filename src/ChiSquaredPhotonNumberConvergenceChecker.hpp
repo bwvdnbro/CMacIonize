@@ -167,12 +167,13 @@ public:
                                                   ParameterFile &params,
                                                   Log *log = nullptr)
       : ChiSquaredPhotonNumberConvergenceChecker(
-            grid, params.get_value< double >(
-                      "photonnumberconvergencechecker.tolerance", 0.01),
+            grid,
             params.get_value< double >(
-                "photonnumberconvergencechecker.photon_fraction", 0.1),
+                "photonnumberconvergencechecker:tolerance", 0.01),
             params.get_value< double >(
-                "photonnumberconvergencechecker.minimum_photon_ratio", 0.1),
+                "photonnumberconvergencechecker:photon_fraction", 0.1),
+            params.get_value< double >(
+                "photonnumberconvergencechecker:minimum_photon_ratio", 0.1),
             log) {}
 
   /**

@@ -6,6 +6,8 @@
 test_integer1: 42
 test_integer2: 0x2a
 test_integer3: 0x2A
+test_integer4: 1e6
+test_integer5: 1E6
 # Floating point values
 test_float: 3.14
 # Floating point values with units
@@ -23,7 +25,7 @@ test_bool8: N
 test_string: This is a test string.
 # CoordinateVector value
 test_coordinatevector_double: [0.1, 2.e-1, 0.3]
-test_coordinatevector_int: [42, 0x2a, 0x2A]
+test_coordinatevector_int: [42, 0x2a, 4e1]
 test_coordinatevector_bool: [false, true, ON ]
 # CoordinateVector with units
 test_coordinatevector_unit: [1.0 pc, 2.0 m, 2.4e19 m]

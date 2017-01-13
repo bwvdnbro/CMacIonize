@@ -73,7 +73,7 @@ private:
    * @param index Index to convert.
    * @return Single long index.
    */
-  inline unsigned long get_long_index(CoordinateVector< int > index) {
+  inline unsigned long get_long_index(CoordinateVector< int > index) const {
     unsigned long long_index = index.x();
     long_index *= _ncell.y() * _ncell.z();
     long_index += index.y() * _ncell.z();
@@ -87,7 +87,7 @@ private:
    * @param long_index Single long index.
    * @return Three component index.
    */
-  inline CoordinateVector< int > get_indices(unsigned long long_index) {
+  inline CoordinateVector< int > get_indices(unsigned long long_index) const {
     unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
     long_index -= index_x * _ncell.y() * _ncell.z();
     unsigned long index_y = long_index / _ncell.z();
@@ -95,7 +95,7 @@ private:
     return CoordinateVector< int >(index_x, index_y, long_index);
   }
 
-  Box get_cell(CoordinateVector< int > index);
+  Box get_cell(CoordinateVector< int > index) const;
 
   /**
    * @brief Get the midpoint of the given cell.
@@ -103,13 +103,14 @@ private:
    * @param index Indices of a cell.
    * @return Midpoint of that cell (in m).
    */
-  inline CoordinateVector<> get_cell_midpoint(CoordinateVector< int > index) {
+  inline CoordinateVector<>
+  get_cell_midpoint(CoordinateVector< int > index) const {
     Box box = get_cell(index);
     CoordinateVector<> midpoint = box.get_anchor() + 0.5 * box.get_sides();
     return midpoint;
   }
 
-  DensityValues &get_cell_values(CoordinateVector< int > index);
+  DensityValues &get_cell_values(CoordinateVector< int > index) const;
 
   /**
    * @brief Get the volume of the cell with the given indices.
@@ -118,11 +119,11 @@ private:
    * @return Volume of any cell in the grid, since all cells have the same
    * volume (in m^3).
    */
-  double get_cell_volume(CoordinateVector< int > index) {
+  double get_cell_volume(CoordinateVector< int > index) const {
     return _cellside.x() * _cellside.y() * _cellside.z();
   }
 
-  CoordinateVector< int > get_cell_indices(CoordinateVector<> position);
+  CoordinateVector< int > get_cell_indices(CoordinateVector<> position) const;
 
   bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
 
@@ -137,7 +138,7 @@ public:
 
   virtual ~CartesianDensityGrid();
 
-  virtual unsigned int get_number_of_cells();
+  virtual unsigned int get_number_of_cells() const;
 
   /**
    * @brief Get the long index of the cell containing the given position.
@@ -145,7 +146,8 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Long index of the cell containing that position.
    */
-  virtual inline unsigned long get_cell_index(CoordinateVector<> position) {
+  virtual inline unsigned long
+  get_cell_index(CoordinateVector<> position) const {
     return get_long_index(get_cell_indices(position));
   }
 
@@ -155,7 +157,7 @@ public:
    * @param index Long index.
    * @return Box specifying the geometry of the cell.
    */
-  inline Box get_cell(unsigned long index) {
+  inline Box get_cell(unsigned long index) const {
     return get_cell(get_indices(index));
   }
 
@@ -166,7 +168,7 @@ public:
    * @return Midpoint of that cell (in m).
    */
   virtual inline CoordinateVector<>
-  get_cell_midpoint(unsigned long long_index) {
+  get_cell_midpoint(unsigned long long_index) const {
     return get_cell_midpoint(get_indices(long_index));
   }
 
@@ -176,8 +178,18 @@ public:
    * @param index Long index.
    * @return DensityValues containing the contents of that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) {
+  virtual DensityValues &get_cell_values(unsigned long index) const {
     return get_cell_values(get_indices(index));
+  }
+
+  /**
+   * @brief Get the values stored in the cell which contains the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return DensityValues of the cell containing that position (in SI units).
+   */
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
+    return get_cell_values(get_cell_indices(position));
   }
 
   /**
@@ -186,7 +198,7 @@ public:
    * @param long_index Long index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long long_index) {
+  virtual double get_cell_volume(unsigned long long_index) const {
     return get_cell_volume(get_indices(long_index));
   }
 
@@ -196,7 +208,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  virtual bool interact(Photon &photon, double optical_depth);
+  virtual DensityValues *interact(Photon &photon, double optical_depth);
 
   /**
    * @brief Get an iterator to the first cell in the grid.
@@ -212,6 +224,22 @@ public:
    */
   virtual inline DensityGrid::iterator end() {
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
+  }
+
+  /**
+   * @brief Get begin and end iterators to a chunk of the grid with given begin
+   * and end fractions.
+   *
+   * @param begin Fraction of the total grid where we want the chunk to begin.
+   * @param end Fraction of the total grid where we want the chunk to end.
+   * @return std::pair of iterators pointing to the begin and end of the chunk.
+   */
+  virtual inline std::pair< DensityGrid::iterator, DensityGrid::iterator >
+  get_chunk(double begin, double end) {
+    unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
+    unsigned int ibegin = begin * ncell;
+    unsigned int iend = end * ncell;
+    return std::make_pair(iterator(ibegin, *this), iterator(iend, *this));
   }
 };
 

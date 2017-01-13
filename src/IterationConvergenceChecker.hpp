@@ -35,6 +35,9 @@
  */
 class IterationConvergenceChecker {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~IterationConvergenceChecker() {}
 
   /**

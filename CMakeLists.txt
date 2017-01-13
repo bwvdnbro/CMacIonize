@@ -112,7 +112,15 @@ endif(HDF5_FOUND)
 
 # Find OpenMP.
 find_package(OpenMP)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+if(OPENMP_FOUND)
+  set(HAVE_OPENMP True)
+  message(STATUS "OpenMP found. Shared memory parallelization will work.")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+else(OPENMP_FOUND)
+  set(HAVE_OPENMP False)
+  message(WARNING
+          "OpenMP not found. Shared memory parallelization will not work.")
+endif(OPENMP_FOUND)
 
 # Find Boost, Boost Python, Python, and NumPy
 find_package(Boost COMPONENTS "python")
@@ -196,7 +204,12 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
   message(STATUS
           "Doxygen found! You can generate documentation using 'make doc'")
-  # Configure the Doxyfile (sets the correct output path)
+  if(DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT YES)
+  else(DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT NO)
+  endif(DOXYGEN_DOT_FOUND)
+  # Configure the Doxyfile (sets the correct output path and Dot path)
   configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in
                  ${PROJECT_BINARY_DIR}/Doxyfile @ONLY)
   # Add a command that will generate the doxygen documentation

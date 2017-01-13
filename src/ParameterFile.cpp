@@ -196,7 +196,7 @@ ParameterFile::ParameterFile(std::string filename) {
           // of the various parent group names and the actual key name
           key = "";
           for (auto it = groupname.begin(); it != groupname.end(); ++it) {
-            key += *it + ".";
+            key += *it + ":";
           }
           key += keyvaluepair.first;
         }
@@ -235,7 +235,7 @@ ParameterFile::ParameterFile(std::string filename) {
  *
  * @param stream std::ostream to write to.
  */
-void ParameterFile::print_contents(std::ostream &stream) {
+void ParameterFile::print_contents(std::ostream &stream) const {
   stream << "# file written on " << Utilities::get_timestamp() << ".\n";
 
   // note that we do assume here that all group members are nicely grouped
@@ -248,11 +248,11 @@ void ParameterFile::print_contents(std::ostream &stream) {
     std::string keyname = it->first;
     std::vector< std::string > keygroups;
     size_t spos = 0;
-    size_t ppos = keyname.find('.');
+    size_t ppos = keyname.find(':');
     while (ppos != keyname.npos) {
       keygroups.push_back(keyname.substr(spos, ppos - spos));
       spos = ppos + 1;
-      ppos = keyname.find('.', spos);
+      ppos = keyname.find(':', spos);
     }
 
     // print group info (if necessary) and get the correct indentation for the
@@ -305,8 +305,18 @@ void ParameterFile::print_contents(std::ostream &stream) {
       }
     }
 
-    // get the actual key and print the key-value pair
+    // get the actual key
     keyname = keyname.substr(spos);
-    stream << indent << keyname << ": " << it->second << "\n";
+
+    // print the key, used value and value present in the file
+    std::string used_value;
+    if (_used_values.count(it->first)) {
+      used_value = _used_values.at(it->first);
+    } else {
+      used_value = "value not used";
+    }
+
+    stream << indent << keyname << ": " << used_value << " # (" << it->second
+           << ")\n";
   }
 }

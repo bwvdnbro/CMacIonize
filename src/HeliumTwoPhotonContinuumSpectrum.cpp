@@ -40,12 +40,8 @@ using namespace std;
  *
  * Reads in the data file containing the spectrum and pre-calculates the
  * cumulative distribution used for random sampling.
- *
- * @param random_generator RandomGenerator used to generate random numbers.
  */
-HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum(
-    RandomGenerator &random_generator)
-    : _random_generator(random_generator) {
+HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
   vector< double > yHe2q;
   vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
@@ -134,10 +130,13 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
 /**
  * @brief Get a random frequency distributed according to the spectrum.
  *
+ * @param random_generator RandomGenerator to use.
+ * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
-double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
-  double x = _random_generator.get_uniform_random_double();
+double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
+    RandomGenerator &random_generator, double temperature) const {
+  double x = random_generator.get_uniform_random_double();
   unsigned int inu = Utilities::locate(
       x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
   double frequency =
@@ -155,7 +154,7 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency() {
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double HeliumTwoPhotonContinuumSpectrum::get_total_flux() {
+double HeliumTwoPhotonContinuumSpectrum::get_total_flux() const {
   cmac_error(
       "HeliumTwoPhotonContinuumSpectrum::get_total_flux() is not implemented!");
   return 0.;

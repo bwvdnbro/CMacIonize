@@ -33,6 +33,9 @@
  */
 class PhotonNumberConvergenceChecker {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~PhotonNumberConvergenceChecker() {}
 
   /**

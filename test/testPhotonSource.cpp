@@ -48,7 +48,9 @@ public:
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(IonName ion, double energy) { return 1.; }
+  virtual double get_cross_section(IonName ion, double energy) const {
+    return 1.;
+  }
 };
 
 /**
@@ -57,12 +59,20 @@ public:
 class TestPhotonSourceSpectrum : public PhotonSourceSpectrum {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~TestPhotonSourceSpectrum() {}
+
+  /**
    * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
    *
+   * @param random_generator RandomGenerator to use.
+   * @param temperature Not used for this spectrum.
    * @return Uniform random frequency.
    */
-  virtual double get_random_frequency() {
-    return Utilities::random_double() * (54.4 - 13.6) + 13.6;
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.) const {
+    return random_generator.get_uniform_random_double() * (54.4 - 13.6) + 13.6;
   }
 
   /**
@@ -70,7 +80,7 @@ public:
    *
    * @return Total ionizing flux (in m^-2 s^-1).
    */
-  virtual double get_total_flux() { return 0.; }
+  virtual double get_total_flux() const { return 0.; }
 };
 
 /**
@@ -89,12 +99,11 @@ int main(int argc, char **argv) {
 
   Abundances abundances(0., 0., 0., 0., 0., 0.);
   PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
-                      cross_sections, random_generator);
-  source.set_number_of_photons(1000001);
+                      cross_sections);
 
   // check if the returned position is what we expect it to be
   {
-    Photon photon = source.get_random_photon();
+    Photon photon = source.get_random_photon(random_generator);
     assert_condition(photon.get_position().x() == 0.5);
     assert_condition(photon.get_position().y() == 0.5);
     assert_condition(photon.get_position().z() == 0.5);
@@ -108,7 +117,7 @@ int main(int argc, char **argv) {
     double weight = 1. / numphoton;
     double meanenergy = 0.;
     for (unsigned int i = 0; i < numphoton; ++i) {
-      Photon photon = source.get_random_photon();
+      Photon photon = source.get_random_photon(random_generator);
       mean_direction += weight * photon.get_direction();
       meanenergy += weight * photon.get_energy();
     }

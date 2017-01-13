@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   // Gadget2 snapshot file.
   TerminalLog tlog(LOGLEVEL_INFO);
   GadgetSnapshotDensityFunction density("test.hdf5", false, 0., 0., 0., false,
-                                        &tlog);
+                                        0., &tlog);
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);

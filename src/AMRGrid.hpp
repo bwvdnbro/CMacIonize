@@ -47,7 +47,7 @@ private:
   CoordinateVector< int > _ncell;
 
   /*! @brief Top level blocks of the grid. */
-  AMRGridCell< _CellContents_ > ***_top_level;
+  AMRGridCell< _CellContents_ > ****_top_level;
 
   /**
    * @brief Get the block that contains the given key.
@@ -59,7 +59,7 @@ private:
    * @return Block containing that cell.
    */
   inline AMRGridCell< _CellContents_ > &get_block(unsigned long key, int &ix,
-                                                  int &iy, int &iz) {
+                                                  int &iy, int &iz) const {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
@@ -68,7 +68,7 @@ private:
     ix = (block & 0x3ff00000) >> 20;
     iy = (block & 0x000ffc00) >> 10;
     iz = block & 0x000003ff;
-    return _top_level[ix][iy][iz];
+    return *_top_level[ix][iy][iz];
   }
 
   /**
@@ -77,7 +77,7 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) {
+  inline AMRGridCell< _CellContents_ > &get_block(unsigned long key) const {
     int ix, iy, iz;
     return get_block(key, ix, iy, iz);
   }
@@ -88,7 +88,7 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Cell part of the key (without block information).
    */
-  inline unsigned int get_cell_key(unsigned long key) {
+  inline static unsigned int get_cell_key(unsigned long key) {
     // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
     // tell the compiler this is an unsigned long long (ull)
     return (key & 0xffffffffull);
@@ -119,11 +119,24 @@ public:
    */
   inline AMRGrid(Box box, CoordinateVector< int > ncell)
       : _box(box), _ncell(ncell) {
-    _top_level = new AMRGridCell< _CellContents_ > **[_ncell.x()];
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
-      _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
+      _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[ _ncell.z() ];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
+        for (int k = 0; k < _ncell.z(); ++k) {
+          CoordinateVector<> anchor;
+          anchor[0] = _box.get_anchor().x() + i * sides.x();
+          anchor[1] = _box.get_anchor().y() + j * sides.y();
+          anchor[2] = _box.get_anchor().z() + k * sides.z();
+          Box box(anchor, sides);
+          _top_level[i][j][k] =
+              new AMRGridCell< _CellContents_ >(box, 0, nullptr);
+        }
       }
     }
   }
@@ -133,24 +146,50 @@ public:
    *
    * We have to implement this ourselves, since the default assignment operator
    * does not know how to do the memory allocations.
+   * Note that this operator should only be used to initialize a new grid into
+   * an existing variable, as all internal data from the existing variable will
+   * be erased.
    *
    * @param grid Grid that is copied into this grid.
    */
   inline void operator=(const AMRGrid &grid) {
     _box = grid._box;
     _ncell = grid._ncell;
-    _top_level = new AMRGridCell< _CellContents_ > **[_ncell.x()];
+    CoordinateVector<> sides;
+    sides[0] = _box.get_sides().x() / _ncell.x();
+    sides[1] = _box.get_sides().y() / _ncell.y();
+    sides[2] = _box.get_sides().z() / _ncell.z();
+    _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
     for (int i = 0; i < _ncell.x(); ++i) {
-      _top_level[i] = new AMRGridCell< _CellContents_ > *[_ncell.y()];
+      _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
       for (int j = 0; j < _ncell.y(); ++j) {
-        _top_level[i][j] = new AMRGridCell< _CellContents_ >[ _ncell.z() ];
+        _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
+        for (int k = 0; k < _ncell.z(); ++k) {
+          CoordinateVector<> anchor;
+          anchor[0] = _box.get_anchor().x() + i * sides.x();
+          anchor[1] = _box.get_anchor().y() + j * sides.y();
+          anchor[2] = _box.get_anchor().z() + k * sides.z();
+          Box box(anchor, sides);
+          _top_level[i][j][k] =
+              new AMRGridCell< _CellContents_ >(box, 0, nullptr);
+        }
       }
     }
   }
 
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the top level cells. The top levels cells are responsible for
+   * recursively deleting their children and the values stored in the lowest
+   * level cells.
+   */
   inline ~AMRGrid() {
     for (int i = 0; i < _ncell.x(); ++i) {
       for (int j = 0; j < _ncell.y(); ++j) {
+        for (int k = 0; k < _ncell.z(); ++k) {
+          delete _top_level[i][j][k];
+        }
         delete[] _top_level[i][j];
       }
       delete[] _top_level[i];
@@ -164,78 +203,9 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &operator[](unsigned long key) {
+  inline AMRGridCell< _CellContents_ > &operator[](unsigned long key) const {
     unsigned int cell = get_cell_key(key);
     return get_block(key)[cell];
-  }
-
-  /**
-   * @brief Get the volume of the cell with the given key.
-   *
-   * @param key Key linking to a unique cell in the AMR hierarchy.
-   * @return Volume of that cell.
-   */
-  inline double get_volume(unsigned long key) {
-    unsigned int cell = get_cell_key(key);
-    int ix, iy, iz;
-    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
-    // get the box of the block
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    CoordinateVector<> anchor;
-    anchor[0] = _box.get_anchor().x() + ix * sides.x();
-    anchor[1] = _box.get_anchor().y() + iy * sides.y();
-    anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
-    return block.get_volume(cell, box);
-  }
-
-  /**
-   * @brief Get the midpoint of the cell with the given key.
-   *
-   * @param key Key linking to a unique cell in the AMR hierarchy.
-   * @return Midpoint of that cell.
-   */
-  inline CoordinateVector<> get_midpoint(unsigned long key) {
-    unsigned int cell = get_cell_key(key);
-    int ix, iy, iz;
-    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
-    // get the box of the block
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    CoordinateVector<> anchor;
-    anchor[0] = _box.get_anchor().x() + ix * sides.x();
-    anchor[1] = _box.get_anchor().y() + iy * sides.y();
-    anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
-    return block.get_midpoint(cell, box);
-  }
-
-  /**
-   * @brief Get the geometry of the cell with the given key.
-   *
-   * @param key Key linking to a unique cell in the AMR hierarchy.
-   * @return Box specifying the geometry of that cell.
-   */
-  inline Box get_geometry(unsigned long key) {
-    unsigned int cell = get_cell_key(key);
-    int ix, iy, iz;
-    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
-    // get the box of the block
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    CoordinateVector<> anchor;
-    anchor[0] = _box.get_anchor().x() + ix * sides.x();
-    anchor[1] = _box.get_anchor().y() + iy * sides.y();
-    anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
-    return block.get_geometry(cell, box);
   }
 
   /**
@@ -288,29 +258,16 @@ public:
   }
 
   /**
-   * @brief Get the level of the cell with the given key.
-   *
-   * @param key Key of a cell in the AMR hierarchy.
-   * @return Level of that cell.
-   */
-  inline unsigned char get_level(unsigned long key) {
-    unsigned int cell = get_cell_key(key);
-    unsigned char level = 0;
-    while (cell > 1) {
-      cell >>= 3;
-      ++level;
-    }
-    return level;
-  }
-
-  /**
    * @brief Get the key of the lowest level cell that contains the given
    * position.
+   *
+   * @note This function is currently not used, but there is a unit test that
+   * covers it, and it might proof useful in the future.
    *
    * @param position CoordinateVector specifying a position.
    * @return Key of the lowest level cell containing that position.
    */
-  inline unsigned long get_key(CoordinateVector<> position) {
+  inline unsigned long get_key(CoordinateVector<> position) const {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
@@ -333,7 +290,7 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
     // recursively get the key until we have reached the lowest level
-    unsigned int cell = _top_level[ix][iy][iz].get_key(0, position, box);
+    unsigned int cell = _top_level[ix][iy][iz]->get_key(0, position, box);
     unsigned long key = block;
     key = (key << 32) + cell;
     return key;
@@ -342,6 +299,8 @@ public:
   /**
    * @brief Create a new cell at the given level, which contains the given
    * position.
+   *
+   * @note This function is primarily used for unit testing.
    *
    * @param level Level of the cell. Blocks live on level 0, and with each
    * power of 2 subdivision, the level goes up by 1.
@@ -366,7 +325,7 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
-    _top_level[ix][iy][iz].create_cell(0, level, position, box);
+    _top_level[ix][iy][iz]->create_cell(0, level, position, box);
   }
 
   /**
@@ -378,7 +337,7 @@ public:
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          _top_level[ix][iy][iz].create_all_cells(0, level);
+          _top_level[ix][iy][iz]->create_all_cells(0, level);
         }
       }
     }
@@ -387,6 +346,8 @@ public:
   /**
    * @brief Refine the cell with the given key, by splitting it up in 8 cells
    * at a deeper level.
+   *
+   * @note This function is only used for unit testing.
    *
    * @param key Key pointing to an existing cell in the grid.
    * @return Key of the first newly created child cell.
@@ -415,7 +376,7 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains that
    * position.
    */
-  inline _CellContents_ &get_cell(CoordinateVector<> position) {
+  inline _CellContents_ &get_cell(CoordinateVector<> position) const {
     // find out in which block the position lives
     unsigned int ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
@@ -434,7 +395,7 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box box(anchor, sides);
-    return _top_level[ix][iy][iz].get_cell(position, box);
+    return _top_level[ix][iy][iz]->get_cell(position, box);
   }
 
   /**
@@ -444,16 +405,16 @@ public:
    *
    * @return Maximal value of a key.
    */
-  inline unsigned long get_max_key() { return AMRGRID_MAXKEY; }
+  inline static unsigned long get_max_key() { return AMRGRID_MAXKEY; }
 
   /**
    * @brief Get the first key in the grid, assuming a Morton orering.
    *
    * @return First key in the grid, in Morton order.
    */
-  inline unsigned long get_first_key() {
+  inline unsigned long get_first_key() const {
     // no need to encode block information, since this is simply 0
-    return _top_level[0][0][0].get_first_key(0);
+    return _top_level[0][0][0]->get_first_key(0);
   }
 
   /**
@@ -463,7 +424,7 @@ public:
    * @param key Key pointing to a cell in the AMR structure.
    * @return Key pointing to the next grid, in Morton order.
    */
-  inline unsigned long get_next_key(unsigned long key) {
+  inline unsigned long get_next_key(unsigned long key) const {
     int ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
     unsigned int cell = get_cell_key(key);
@@ -484,7 +445,7 @@ public:
           }
         }
       }
-      next_cell = _top_level[ix][iy][iz].get_first_key(0);
+      next_cell = _top_level[ix][iy][iz]->get_first_key(0);
     }
     unsigned int block_key = (ix << 20) + (iy << 10) + iz;
     unsigned long next_key = block_key;
@@ -493,120 +454,69 @@ public:
   }
 
   /**
-   * @brief Get the first key in the grid in the given direction, containing
-   * the given position.
+   * @brief Set the internal neighbour relations that are used to speed up
+   * neigbour finding.
    *
-   * @param direction Direction to look in.
-   * @param position CoordinateVector specifying a position.
-   * @return First key in the grid in the given direction, containing the given
-   * position.
+   * @param periodic Flags indicating which boundaries are to be treated as
+   * periodic boundaries.
    */
-  inline unsigned long get_first_key(CoordinateVector< char > direction,
-                                     CoordinateVector<> position) {
-    // find out in which block the position lives
-    unsigned int ix, iy, iz;
-    if (direction.x() == 0) {
-      ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
-           _box.get_sides().x();
-    } else {
-      // if the direction is negative, we start from the maximum x side
-      // the expression between brackets is either 0 or 1, so ix is either
-      // 0 or _ncell.x()-1.
-      ix = (_ncell.x() - 1) * (direction.x() < 0);
+  inline void set_ngbs(CoordinateVector< bool > periodic) {
+    for (int ix = 0; ix < _ncell.x(); ++ix) {
+      for (int iy = 0; iy < _ncell.y(); ++iy) {
+        for (int iz = 0; iz < _ncell.z(); ++iz) {
+          AMRGridCell< _CellContents_ > *left = nullptr;
+          if (ix > 0) {
+            left = _top_level[ix - 1][iy][iz];
+          } else {
+            if (periodic.x()) {
+              left = _top_level[_ncell.x() - 1][iy][iz];
+            }
+          }
+          AMRGridCell< _CellContents_ > *right = nullptr;
+          if (ix < _ncell.x() - 1) {
+            right = _top_level[ix + 1][iy][iz];
+          } else {
+            if (periodic.x()) {
+              right = _top_level[0][iy][iz];
+            }
+          }
+          AMRGridCell< _CellContents_ > *front = nullptr;
+          if (iy > 0) {
+            front = _top_level[ix][iy - 1][iz];
+          } else {
+            if (periodic.y()) {
+              front = _top_level[ix][_ncell.y() - 1][iz];
+            }
+          }
+          AMRGridCell< _CellContents_ > *back = nullptr;
+          if (iy < _ncell.y() - 1) {
+            back = _top_level[ix][iy + 1][iz];
+          } else {
+            if (periodic.y()) {
+              back = _top_level[ix][0][iz];
+            }
+          }
+          AMRGridCell< _CellContents_ > *bottom = nullptr;
+          if (iz > 0) {
+            bottom = _top_level[ix][iy][iz - 1];
+          } else {
+            if (periodic.z()) {
+              bottom = _top_level[ix][iy][_ncell.z() - 1];
+            }
+          }
+          AMRGridCell< _CellContents_ > *top = nullptr;
+          if (iz < _ncell.z() - 1) {
+            top = _top_level[ix][iy][iz + 1];
+          } else {
+            if (periodic.z()) {
+              top = _top_level[ix][iy][0];
+            }
+          }
+          _top_level[ix][iy][iz]->set_ngbs(left, right, front, back, bottom,
+                                           top);
+        }
+      }
     }
-    if (direction.y() == 0) {
-      iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
-           _box.get_sides().y();
-    } else {
-      iy = (_ncell.y() - 1) * (direction.y() < 0);
-    }
-    if (direction.z() == 0) {
-      iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
-           _box.get_sides().z();
-    } else {
-      iz = (_ncell.z() - 1) * (direction.z() < 0);
-    }
-    // get the box of the block
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    CoordinateVector<> anchor;
-    anchor[0] = _box.get_anchor().x() + ix * sides.x();
-    anchor[1] = _box.get_anchor().y() + iy * sides.y();
-    anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
-    unsigned int cell_key =
-        _top_level[ix][iy][iz].get_first_key(0, direction, position, box);
-    unsigned int block_key = (ix << 20) + (iy << 10) + iz;
-    unsigned long next_key = block_key;
-    next_key = (next_key << 32) + cell_key;
-    return next_key;
-  }
-
-  /**
-   * @brief Get the key of the cell that is a neighbour of the cell with the
-   * given key in the given relative direction, containing the given position.
-   *
-   * @param key Key of an existing cell in the AMR hierarchy.
-   * @param direction Relative direction of the neighbour w.r.t. the current
-   * cell.
-   * @param position CoordinateVector specifying a position.
-   * @return Key of the deepest neighbouring cell in the given direction that
-   * contains the given position.
-   */
-  inline unsigned long get_neighbour(unsigned long key,
-                                     CoordinateVector< char > direction,
-                                     CoordinateVector<> position) {
-    int ix, iy, iz;
-    AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
-    unsigned int cell = get_cell_key(key);
-    CoordinateVector<> sides;
-    sides[0] = _box.get_sides().x() / _ncell.x();
-    sides[1] = _box.get_sides().y() / _ncell.y();
-    sides[2] = _box.get_sides().z() / _ncell.z();
-    CoordinateVector<> anchor;
-    anchor[0] = _box.get_anchor().x() + ix * sides.x();
-    anchor[1] = _box.get_anchor().y() + iy * sides.y();
-    anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
-    unsigned int next_cell =
-        block.get_neighbour(cell, 0, direction, position, box);
-    if (next_cell == AMRGRIDCELL_MAXKEY) {
-      // no valid next key in this block
-      // try the neighbouring block
-      if (ix == 0 && direction.x() < 0) {
-        return AMRGRID_MAXKEY;
-      }
-      ix += direction.x();
-      if (ix == _ncell.x()) {
-        return AMRGRID_MAXKEY;
-      }
-      if (iy == 0 && direction.y() < 0) {
-        return AMRGRID_MAXKEY;
-      }
-      iy += direction.y();
-      if (iy == _ncell.y()) {
-        return AMRGRID_MAXKEY;
-      }
-      if (iz == 0 && direction.z() < 0) {
-        return AMRGRID_MAXKEY;
-      }
-      iz += direction.z();
-      if (iz == _ncell.z()) {
-        return AMRGRID_MAXKEY;
-      }
-      anchor[0] = _box.get_anchor().x() + ix * sides.x();
-      anchor[1] = _box.get_anchor().y() + iy * sides.y();
-      anchor[2] = _box.get_anchor().z() + iz * sides.z();
-      box = Box(anchor, sides);
-      next_cell =
-          _top_level[ix][iy][iz].get_first_key(0, direction, position, box);
-    }
-    unsigned int block_key = (ix << 20) + (iy << 10) + iz;
-    unsigned long next_key = block_key;
-    next_key = (next_key << 32) + next_cell;
-    return next_key;
   }
 
   /**
@@ -617,12 +527,12 @@ public:
    *
    * @return Number of lowest level cells in the grid.
    */
-  inline unsigned long get_number_of_cells() {
+  inline unsigned long get_number_of_cells() const {
     unsigned long ncell = 0;
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          ncell += _top_level[ix][iy][iz].get_number_of_cells();
+          ncell += _top_level[ix][iy][iz]->get_number_of_cells();
         }
       }
     }
@@ -647,7 +557,7 @@ public:
           anchor[1] = _box.get_anchor().y() + iy * sides.y();
           anchor[2] = _box.get_anchor().z() + iz * sides.z();
           Box box(anchor, sides);
-          _top_level[ix][iy][iz].print(stream, box);
+          _top_level[ix][iy][iz]->print(stream, box);
         }
       }
     }

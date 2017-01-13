@@ -35,6 +35,8 @@
  * Reads in the sources from the file and stores them in internal arrays.
  *
  * @param filename Name of the snapshot file to read.
+ * @param formation_time_name Name of the formation time data set in the
+ * snapshot file.
  * @param fallback_unit_length_in_SI Length unit to use if the units group is
  * not found in the snapshot file.
  * @param fallback_unit_time_in_SI Time unit to use if the units group is not
@@ -42,8 +44,9 @@
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    std::string filename, double fallback_unit_length_in_SI,
-    double fallback_unit_time_in_SI, Log *log)
+    std::string filename, std::string formation_time_name,
+    double fallback_unit_length_in_SI, double fallback_unit_time_in_SI,
+    Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -94,7 +97,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
                                                     "Coordinates");
   // read the formation times
   std::vector< double > formtimes =
-      HDF5Tools::read_dataset< double >(starparticles, "FormationTime");
+      HDF5Tools::read_dataset< double >(starparticles, formation_time_name);
   // close the group
   HDF5Tools::close_group(starparticles);
   // close the file
@@ -135,11 +138,13 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("photonsourcedistribution.filename"),
+          params.get_value< std::string >("photonsourcedistribution:filename"),
+          params.get_value< std::string >(
+              "photonsourcedistribution:formation_time_name", "FormationTime"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "photonsourcedistribution.fallback_unit_length", "0. m"),
+              "photonsourcedistribution:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution.fallback_unit_time", "0. s"),
+              "photonsourcedistribution:fallback_unit_time", "0. s"),
           log) {}
 
 /**
@@ -147,12 +152,17 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
  *
  * @return Number of sources.
  */
-unsigned int GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() {
+unsigned int
+GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() const {
   return _positions.size();
 }
 
 /**
  * @brief Get the position of one of the sources.
+ *
+ * Note that this function can alter the internal state of the
+ * PhotonSourceDistribution, as for some implementations the positions are
+ * decided randomly based on a RandomGenerator.
  *
  * @param index Valid index of a source, must be an integer in between 0 and
  * get_number_of_sources().
@@ -172,7 +182,8 @@ GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {
  * get_number_of_sources().
  * @return Weight of the given source.
  */
-double GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) {
+double
+GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) const {
   return 1. / _positions.size();
 }
 
@@ -181,6 +192,6 @@ double GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) {
  *
  * @return Total luminosity (in s^-1).
  */
-double GadgetSnapshotPhotonSourceDistribution::get_total_luminosity() {
+double GadgetSnapshotPhotonSourceDistribution::get_total_luminosity() const {
   return _total_luminosity;
 }

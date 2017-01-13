@@ -114,6 +114,7 @@ set(CMACIONIZE_SOURCES
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
+    DensityGrid.cpp
     EmissivityCalculator.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
@@ -124,6 +125,7 @@ set(CMACIONIZE_SOURCES
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
+    SPHNGSnapshotDensityFunction.cpp
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
@@ -150,6 +152,8 @@ set(CMACIONIZE_SOURCES
     DensityFunctionFactory.hpp
     DensityGrid.hpp
     DensityGridFactory.hpp
+    DensityGridTraversalJob.hpp
+    DensityGridTraversalJobMarket.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
     DensityValues.hpp
@@ -165,21 +169,26 @@ set(CMACIONIZE_SOURCES
     IterationConvergenceCheckerFactory.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
+    Lock.hpp
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
     PassivePhotonNumberConvergenceChecker.hpp
     Photon.hpp
     PhotonNumberConvergenceChecker.hpp
     PhotonNumberConvergenceCheckerFactory.hpp
+    PhotonShootJob.hpp
+    PhotonShootJobMarket.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
     PhotonSourceSpectrum.hpp
+    PhotonSourceSpectrumFactory.hpp
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
+    SPHNGSnapshotDensityFunction.hpp
     TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp
@@ -187,6 +196,9 @@ set(CMACIONIZE_SOURCES
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
+    WorkDistributor.hpp
+    WorkEnvironment.hpp
+    Worker.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )

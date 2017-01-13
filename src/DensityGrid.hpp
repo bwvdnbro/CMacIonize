@@ -35,6 +35,7 @@
 #include "Photon.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
+#include "WorkDistributor.hpp"
 
 #include <cmath>
 
@@ -67,8 +68,8 @@ protected:
    * @param photon Photon.
    * @return Optical depth.
    */
-  inline double get_optical_depth(const double ds, DensityValues &cell,
-                                  Photon &photon) {
+  inline static double get_optical_depth(const double ds, DensityValues &cell,
+                                         Photon &photon) {
     return ds * cell.get_total_density() *
            (photon.get_cross_section(ION_H_n) *
                 cell.get_ionic_fraction(ION_H_n) +
@@ -85,12 +86,13 @@ protected:
    * @param photon Photon.
    */
   inline void update_integrals(const double ds, DensityValues &cell,
-                               Photon &photon) {
+                               Photon &photon) const {
     if (cell.get_total_density() > 0.) {
+      cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.increase_mean_intensity(ion, ds * photon.get_weight() *
-                                              photon.get_cross_section(ion));
+        cell.increase_mean_intensity(
+            ion, ds * photon.get_weight() * photon.get_cross_section(ion));
       }
       cell.increase_heating_H(ds * photon.get_weight() *
                               photon.get_cross_section(ION_H_n) *
@@ -98,6 +100,7 @@ protected:
       cell.increase_heating_He(ds * photon.get_weight() *
                                photon.get_cross_section(ION_He_n) *
                                (photon.get_energy() - _ionization_energy_He));
+      cell.unlock();
     }
   }
 
@@ -111,7 +114,8 @@ protected:
    * @param T Temperature (in K).
    * @param cell DensityValues of the cell.
    */
-  void set_reemission_probabilities(double T, DensityValues &cell) {
+  inline static void set_reemission_probabilities(double T,
+                                                  DensityValues &cell) {
     double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
     double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
     cell.set_pHion(alpha_1_H / alpha_A_agn);
@@ -137,9 +141,10 @@ public:
    * @param periodic Periodicity flags.
    * @param log Log to write log messages to.
    */
-  DensityGrid(Box box, CoordinateVector< bool > periodic =
-                           CoordinateVector< bool >(false),
-              Log *log = nullptr)
+  DensityGrid(
+      Box box,
+      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
+      Log *log = nullptr)
       : _box(box), _periodic(periodic), _log(log) {
 
     _ionization_energy_H =
@@ -148,6 +153,9 @@ public:
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
   }
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~DensityGrid() {}
 
   /**
@@ -155,14 +163,14 @@ public:
    *
    * @return Number of cells in the grid.
    */
-  virtual unsigned int get_number_of_cells() = 0;
+  virtual unsigned int get_number_of_cells() const = 0;
 
   /**
    * @brief Get the Box containing the grid.
    *
    * @return Box containing the grid (in m).
    */
-  inline Box get_box() { return _box; }
+  inline Box get_box() const { return _box; }
 
   /**
    * @brief Get the index of the cell containing the given position.
@@ -170,7 +178,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual unsigned long get_cell_index(CoordinateVector<> position) = 0;
+  virtual unsigned long get_cell_index(CoordinateVector<> position) const = 0;
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -178,7 +186,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) = 0;
+  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const = 0;
 
   /**
    * @brief Get the values stored in the cell with the given index.
@@ -186,7 +194,15 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) = 0;
+  virtual DensityValues &get_cell_values(unsigned long index) const = 0;
+
+  /**
+   * @brief Get the values stored in the cell which contains the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return DensityValues of the cell containing that position (in SI units).
+   */
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) const = 0;
 
   /**
    * @brief Get the volume of the cell with the given index.
@@ -194,7 +210,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) = 0;
+  virtual double get_cell_volume(unsigned long index) const = 0;
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -203,10 +219,10 @@ public:
    * @param photon Photon.
    * @param optical_depth Optical depth the photon should travel in total
    * (dimensionless).
-   * @return True if the Photon is still in the box after the optical depth has
-   * been reached, false otherwise.
+   * @return Pointer to the values of the cell where the photon currently
+   * resides, a nullptr if the photon left the box.
    */
-  virtual bool interact(Photon &photon, double optical_depth) = 0;
+  virtual DensityValues *interact(Photon &photon, double optical_depth) = 0;
 
   /**
    * @brief Index increment used in the iterator.
@@ -244,7 +260,7 @@ public:
      *
      * @return Cell midpoint (in m).
      */
-    inline CoordinateVector<> get_cell_midpoint() {
+    inline CoordinateVector<> get_cell_midpoint() const {
       return _grid.get_cell_midpoint(_index);
     }
 
@@ -253,14 +269,16 @@ public:
      *
      * @return DensityValue the iterator is pointing to.
      */
-    inline DensityValues &get_values() { return _grid.get_cell_values(_index); }
+    inline DensityValues &get_values() const {
+      return _grid.get_cell_values(_index);
+    }
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() { return _grid.get_cell_volume(_index); }
+    inline double get_volume() const { return _grid.get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -280,7 +298,7 @@ public:
      *
      * @return Index of the current cell.
      */
-    inline unsigned long get_index() { return _index; }
+    inline unsigned long get_index() const { return _index; }
 
     /**
      * @brief Compare iterators.
@@ -288,7 +306,7 @@ public:
      * @param it Iterator to compare with.
      * @return True if the iterators point to the same cell of the same grid.
      */
-    inline bool operator==(iterator it) {
+    inline bool operator==(iterator it) const {
       return (&_grid == &it._grid && _index == it._index);
     }
 
@@ -299,7 +317,7 @@ public:
      * @return True if the iterators do not point to the same cell of the same
      * grid.
      */
-    inline bool operator!=(iterator it) { return !(*this == it); }
+    inline bool operator!=(iterator it) const { return !(*this == it); }
   };
 
   /**
@@ -317,22 +335,43 @@ public:
   virtual iterator end() = 0;
 
   /**
-   * @brief Initialize the cells in the grid.
+   * @brief Get begin and end iterators to a chunk of the grid with given begin
+   * and end fractions.
    *
-   * All implementations should call this method in their constructor, after the
-   * grid itself has been set up.
-   *
-   * @param function DensityFunction that sets the density.
+   * @param begin Fraction of the total grid where we want the chunk to begin.
+   * @param end Fraction of the total grid where we want the chunk to end.
+   * @return std::pair of iterators pointing to the begin and end of the chunk.
    */
-  void initialize(DensityFunction &function) {
-    unsigned int ntot = get_number_of_cells();
-    unsigned int nguess = 0.01 * ntot;
-    unsigned int ninfo = 0.1 * ntot;
-    unsigned int ndone = 0;
-    Timer guesstimer;
-    for (auto it = begin(); it != end(); ++it) {
+  virtual std::pair< iterator, iterator > get_chunk(double begin,
+                                                    double end) = 0;
+
+  /**
+   * @brief Functor class used to initialize the DensityGrid.
+   */
+  class DensityGridInitializationFunction {
+  private:
+    /*! @brief DensityFunction that sets the density for each cell in the grid.
+     */
+    DensityFunction &_function;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param function DensityFunction that set the density for each cell in the
+     * grid.
+     */
+    DensityGridInitializationFunction(DensityFunction &function)
+        : _function(function) {}
+
+    /**
+     * @brief Routine that sets the density for a single cell in the grid.
+     *
+     * @param it DensityGrid::iterator pointing to a single cell in the grid.
+     */
+    inline void operator()(iterator it) {
       DensityValues &cell = it.get_values();
-      DensityValues vals = function(it.get_cell_midpoint());
+      DensityValues vals = _function(it.get_cell_midpoint());
       cell.set_total_density(vals.get_total_density());
       cell.set_temperature(vals.get_temperature());
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -340,20 +379,10 @@ public:
         cell.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
       }
       set_reemission_probabilities(vals.get_temperature(), cell);
-      ++ndone;
-      if (_log) {
-        if (ndone == nguess) {
-          unsigned int tguess = round(99. * guesstimer.stop());
-          _log->write_status("Filling grid will take approximately ", tguess,
-                             " seconds.");
-        }
-        if (ndone % ninfo == 0) {
-          unsigned int pdone = round(100. * ndone / ntot);
-          _log->write_info("Did ", pdone, " percent.");
-        }
-      }
     }
-  }
+  };
+
+  void initialize(DensityFunction &function, int worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission

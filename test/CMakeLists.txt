@@ -103,6 +103,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityGrid.hpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
@@ -154,6 +155,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
@@ -321,6 +323,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/CompilerInfo.hpp
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp
@@ -449,6 +452,7 @@ set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
     ../src/ChargeTransferRates.cpp
+    ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
     ../src/Timer.hpp
@@ -463,6 +467,7 @@ set(TESTAMRDENSITYGRID_SOURCES
 
     ../src/AMRDensityGrid.hpp
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/Timer.hpp
 )
 add_unit_test(NAME testAMRDensityGrid
@@ -473,6 +478,7 @@ set(TESTSPATIALAMRREFINEMENTSCHEME_SOURCES
     testSpatialAMRRefinementScheme.cpp
 
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/SpatialAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testSpatialAMRRefinementScheme
@@ -483,6 +489,7 @@ set(TESTOPACITYAMRREFINEMENTSCHEME_SOURCES
     testOpacityAMRRefinementScheme.cpp
 
     ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
     ../src/OpacityAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testOpacityAMRRefinementScheme
@@ -492,6 +499,7 @@ add_unit_test(NAME testOpacityAMRRefinementScheme
 set(TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES
     testIsotropicContinuousPhotonSource.cpp
 
+    ../src/ContinuousPhotonSource.hpp
     ../src/IsotropicContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testIsotropicContinuousPhotonSource
@@ -505,6 +513,7 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     ../src/BlockSyntaxDensityFunction.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/DensityGrid.cpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
 )
@@ -532,6 +541,7 @@ set(TESTTEMPERATURECALCULATOR_SOURCES
     testTemperatureCalculator.cpp
 
     ../src/ChargeTransferRates.cpp
+    ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/LineCoolingData.cpp
     ../src/TemperatureCalculator.cpp
@@ -573,6 +583,52 @@ set(TESTUTILITIES_SOURCES
 )
 add_unit_test(NAME testUtilities
               SOURCES ${TESTUTILITIES_SOURCES})
+
+## Unit test for Worker
+set(TESTWORKER_SOURCES
+    testWorker.cpp
+
+    ../src/Lock.hpp
+    ../src/WorkDistributor.hpp
+    ../src/Worker.hpp
+)
+add_unit_test(NAME testWorker
+              SOURCES ${TESTWORKER_SOURCES})
+
+## Unit test for MassAMRRefinementScheme
+set(TESTMASSAMRREFINEMENTSCHEME_SOURCES
+    testMassAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
+    ../src/MassAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testMassAMRRefinementScheme
+              SOURCES ${TESTMASSAMRREFINEMENTSCHEME_SOURCES})
+
+## Unit test for SPHNGSnapshotDensityFunction
+set(TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES
+    testSPHNGSnapshotDensityFunction.cpp
+
+    ../src/SPHNGSnapshotDensityFunction.cpp
+    ../src/SPHNGSnapshotDensityFunction.hpp
+)
+add_unit_test(NAME testSPHNGSnapshotDensityFunction
+              SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
+               ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/SPHNG_data.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/SPHNG_data.txt COPYONLY)
+
+## Unit test for DistantStarContinuousPhotonSource
+set(TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES
+    testDistantStarContinuousPhotonSource.cpp
+
+    ../src/ContinuousPhotonSource.hpp
+    ../src/DistantStarContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testDistantStarContinuousPhotonSource
+              SOURCES ${TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

@@ -158,9 +158,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : FLASHSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"),
+          params.get_value< std::string >("densityfunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.temperature", "8000. K"),
+              "densityfunction:temperature", "8000. K"),
           log) {}
 
 /**
@@ -170,7 +170,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
  * @return Density at that position (in m^-3).
  */
 DensityValues FLASHSnapshotDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   cell.set_total_density(_grid.get_cell(position) / 1.6737236e-27);

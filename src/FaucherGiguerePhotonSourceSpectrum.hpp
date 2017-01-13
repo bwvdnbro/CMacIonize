@@ -53,23 +53,23 @@ private:
   /*! @brief Total ionizing flux of the spectrum (in m^-2 s^-1). */
   double _total_flux;
 
-  /*! @brief RandomGenerator. */
-  RandomGenerator &_random_generator;
-
 public:
-  FaucherGiguerePhotonSourceSpectrum(double redshift,
-                                     RandomGenerator &random_generator,
+  FaucherGiguerePhotonSourceSpectrum(double redshift, Log *log = nullptr);
+
+  FaucherGiguerePhotonSourceSpectrum(std::string role, ParameterFile &params,
                                      Log *log = nullptr);
 
-  FaucherGiguerePhotonSourceSpectrum(ParameterFile &params,
-                                     RandomGenerator &random_generator,
-                                     Log *log = nullptr);
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~FaucherGiguerePhotonSourceSpectrum() {}
 
   static std::string get_filename(double z);
 
-  virtual double get_total_flux();
+  virtual double get_total_flux() const;
 
-  virtual double get_random_frequency();
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.) const;
 };
 
 #endif // FAUCHERGIGUEREPHOTONSOURCESPECTRUM_HPP

@@ -80,7 +80,7 @@ public:
   static PhotonSourceDistribution *generate(ParameterFile &params,
                                             Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "photonsourcedistribution.type", "SingleStar");
+        "photonsourcedistribution:type", "SingleStar");
     if (log) {
       log->write_info("Requested PhotonSourceDistribution type: ", type, ".");
     }

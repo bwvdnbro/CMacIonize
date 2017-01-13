@@ -27,10 +27,12 @@
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
 #include "DensityValues.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "RecombinationRates.hpp"
+#include "WorkDistributor.hpp"
 #include <cmath>
 
 /**
@@ -284,7 +286,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
  * @param cell DensityValues of the cell.
  */
 void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
-                                                  DensityValues &cell) {
+                                                  DensityValues &cell) const {
   const double eps = 1.e-3;
   const unsigned int max_iterations = 100;
 
@@ -404,17 +406,19 @@ void TemperatureCalculator::calculate_temperature(double jfac, double hfac,
  * @param grid DensityGrid on which to operate.
  */
 void TemperatureCalculator::calculate_temperature(double totweight,
-                                                  DensityGrid &grid) {
+                                                  DensityGrid &grid) const {
   double jfac = _luminosity / totweight;
   // the integral calculation uses the photon frequency (in Hz)
   // we want to convert this to the photon energy (in Joule)
   // we do this by multiplying with the Planck constant (in Js)
   double hfac = jfac * 6.626070040e-34;
-  for (auto it = grid.begin(); it != grid.end(); ++it) {
-    double cellvolume = it.get_volume();
-    DensityValues &cell = it.get_values();
-    double jfaccell = jfac / cellvolume;
-    double hfaccell = hfac / cellvolume;
-    calculate_temperature(jfaccell, hfaccell, cell);
-  }
+
+  WorkDistributor<
+      DensityGridTraversalJobMarket< TemperatureCalculatorFunction >,
+      DensityGridTraversalJob< TemperatureCalculatorFunction > >
+      workers;
+  TemperatureCalculatorFunction do_calculation(*this, jfac, hfac);
+  DensityGridTraversalJobMarket< TemperatureCalculatorFunction > jobs(
+      grid, do_calculation);
+  workers.do_in_parallel(jobs);
 }

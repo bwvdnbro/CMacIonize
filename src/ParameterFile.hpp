@@ -49,12 +49,16 @@ private:
   /*! @brief Internal dictionary storing the parameters as key-value pairs. */
   std::map< std::string, std::string > _dictionary;
 
-  bool is_comment_line(std::string &line);
-  bool is_empty_line(std::string &line);
-  void strip_comments_line(std::string &line);
-  unsigned int is_indented_line(std::string &line);
-  std::pair< std::string, std::string > read_keyvaluepair(std::string &line);
-  void strip_whitespace_line(std::string &line);
+  /*! @brief Dictionary storing the actually used values (for reference). */
+  std::map< std::string, std::string > _used_values;
+
+  static bool is_comment_line(std::string &line);
+  static bool is_empty_line(std::string &line);
+  static void strip_comments_line(std::string &line);
+  static unsigned int is_indented_line(std::string &line);
+  static std::pair< std::string, std::string >
+  read_keyvaluepair(std::string &line);
+  static void strip_whitespace_line(std::string &line);
 
 public:
   /**
@@ -76,31 +80,36 @@ public:
     _dictionary[key] = value;
   }
 
-  void print_contents(std::ostream &stream);
+  void print_contents(std::ostream &stream) const;
 
   /**
    * @brief Read a value of the given template type from the internal
    * dictionary and throw an error if it is not found.
    *
-   * This template function needs to be specialized for every typename that is
-   * used.
+   * This template function depends on a std::string specialization which does
+   * the actual check on the existence of the key.
    *
    * @param key Key in the dictionary that relates to a unique parameter that
    * needs to be present in the parameter file.
    * @return Value of that key, as a variable with the given template type.
    */
-  template < typename _datatype_ > _datatype_ get_value(std::string key);
+  template < typename _datatype_ > _datatype_ get_value(std::string key) {
+    std::string svalue = get_value< std::string >(key);
+    _datatype_ dvalue = Utilities::convert< _datatype_ >(svalue);
+    _used_values[key] = Utilities::to_string< _datatype_ >(dvalue);
+    return dvalue;
+  }
 
   /**
    * @brief Read a value of the given template type from the internal
    * dictionary and use the given default value if the parameter is not found.
    *
-   * This template function needs to be specialized for every typename that is
-   * used.
+   * This template function depends on a std::string specialization which does
+   * the actual check on the existence of the key.
    *
-   * Values that were not found are added to the internal dictionary, so that
-   * the internal dictionary always contains a complete list of all parameters
-   * that were used, with the actual values for these parameters.
+   * If the key is not found, the corresponding entry in the internal dictionary
+   * is set to "default value", and the value that was actually used is recorded
+   * in another dictionary.
    *
    * @param key Key in the dictionary that relates to a unique parameter.
    * @param default_value Default value for the parameter that is used if the
@@ -108,7 +117,17 @@ public:
    * @return Value of the parameter, as a variable with the given template type.
    */
   template < typename _datatype_ >
-  _datatype_ get_value(std::string key, _datatype_ default_value);
+  _datatype_ get_value(std::string key, _datatype_ default_value) {
+    std::string svalue = get_value< std::string >(key, "");
+    _datatype_ dvalue;
+    if (svalue == "") {
+      dvalue = default_value;
+    } else {
+      dvalue = Utilities::convert< _datatype_ >(svalue);
+    }
+    _used_values[key] = Utilities::to_string< _datatype_ >(dvalue);
+    return dvalue;
+  }
 
   /**
    * @brief get_value() version for physical floating point values with a unit.
@@ -123,7 +142,11 @@ public:
   template < Quantity _quantity_ > double get_physical_value(std::string key) {
     std::string svalue = get_value< std::string >(key);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
-    return UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+    double dvalue =
+        UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+    _used_values[key] = Utilities::to_string(dvalue) + " " +
+                        UnitConverter::get_SI_unit_name(_quantity_);
+    return dvalue;
   }
 
   /**
@@ -138,12 +161,20 @@ public:
     std::string parts[3];
     Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
     CoordinateVector<> vvalue;
+    std::string used_value = "[";
     for (unsigned int i = 0; i < 3; ++i) {
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
           UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+      used_value += Utilities::to_string(vvalue[i]) + " " +
+                    UnitConverter::get_SI_unit_name(_quantity_);
+      if (i < 2) {
+        used_value += ", ";
+      }
     }
+    used_value += "]";
+    _used_values[key] = used_value;
     return vvalue;
   }
 
@@ -163,7 +194,11 @@ public:
   double get_physical_value(std::string key, std::string default_value) {
     std::string svalue = get_value< std::string >(key, default_value);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
-    return UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+    double dvalue =
+        UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+    _used_values[key] = Utilities::to_string(dvalue) + " " +
+                        UnitConverter::get_SI_unit_name(_quantity_);
+    return dvalue;
   }
 
   /**
@@ -181,12 +216,20 @@ public:
     std::string parts[3];
     Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
     CoordinateVector<> vvalue;
+    std::string used_value = "[";
     for (unsigned int i = 0; i < 3; ++i) {
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
           UnitConverter::to_SI< _quantity_ >(valunit.first, valunit.second);
+      used_value += Utilities::to_string(vvalue[i]) + " " +
+                    UnitConverter::get_SI_unit_name(_quantity_);
+      if (i < 2) {
+        used_value += ", ";
+      }
     }
+    used_value += "]";
+    _used_values[key] = used_value;
     return vvalue;
   }
 
@@ -223,7 +266,7 @@ public:
      * @param it Iterator to compare with.
      * @return True if both iterators are the same.
      */
-    inline bool operator==(iterator it) { return _it == it._it; }
+    inline bool operator==(iterator it) const { return _it == it._it; }
 
     /**
      * @brief Comparison iterator.
@@ -231,21 +274,21 @@ public:
      * @param it Iterator to compare with.
      * @return True if both iterators are not the same.
      */
-    inline bool operator!=(iterator it) { return !(*this == it); }
+    inline bool operator!=(iterator it) const { return !(*this == it); }
 
     /**
      * @brief Get the key this iterator points to.
      *
      * @return Key.
      */
-    inline std::string get_key() { return _it->first; }
+    inline std::string get_key() const { return _it->first; }
 
     /**
      * @brief Get the value this iterator points to.
      *
      * @return Value.
      */
-    inline std::string get_value() { return _it->second; }
+    inline std::string get_value() const { return _it->second; }
   };
 
   /**
@@ -276,105 +319,15 @@ public:
  */
 template <>
 inline std::string ParameterFile::get_value< std::string >(std::string key) {
-  std::map< std::string, std::string >::iterator it = _dictionary.find(key);
-  if (it == _dictionary.end()) {
+  unsigned int count = _dictionary.count(key);
+  if (count == 0) {
     cmac_error("Parameter \"%s\" not found!", key.c_str());
   }
-  return it->second;
-}
-
-/**
- * @brief ParameterFile::get_value specialization for a floating point value.
- *
- * @param key Key in the dictionary.
- * @return Floating point value of the parameter.
- */
-template <> inline double ParameterFile::get_value< double >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< double >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for an integer value.
- *
- * @param key Key in the dictionary.
- * @return Integer value of the parameter.
- */
-template <> inline int ParameterFile::get_value< int >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< int >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for an unsigned char value.
- *
- * @param key Key in the dictionary.
- * @return Unsigned char value of the parameter.
- */
-template <>
-inline unsigned char
-ParameterFile::get_value< unsigned char >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< unsigned char >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for a boolean value.
- *
- * The following strings are evaluated as true: "true", "yes", "on", "y".
- * The following strings are evaluated as false: "false", "no", "off", "n".
- * All values are converted to lower case before evaluating them, so variants
- * like "True", "fAlse", "NO", "Y" are also accepted.
- * All other values of the parameter will result in an error.
- *
- * @param key Key in the dictionary.
- * @return Bool value of the parameter.
- */
-template <> inline bool ParameterFile::get_value< bool >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< bool >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for a floating point
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @return Floating point CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector<>
-ParameterFile::get_value< CoordinateVector<> >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< CoordinateVector<> >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for an integer
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @return Integer CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector< int >
-ParameterFile::get_value< CoordinateVector< int > >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< CoordinateVector< int > >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for a boolean
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @return Boolean CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector< bool >
-ParameterFile::get_value< CoordinateVector< bool > >(std::string key) {
-  std::string svalue = get_value< std::string >(key);
-  return Utilities::convert< CoordinateVector< bool > >(svalue);
+  std::string svalue = _dictionary.at(key);
+  // this value is overwritten by template specializations, there is no harm in
+  // setting it here
+  _used_values[key] = svalue;
+  return svalue;
 }
 
 /**
@@ -393,180 +346,18 @@ inline std::string
 ParameterFile::get_value< std::string >(std::string key,
                                         std::string default_value) {
   std::map< std::string, std::string >::iterator it = _dictionary.find(key);
-  if (it == _dictionary.end()) {
+  std::string svalue;
+  // the second condition covers the case where we request a parameter twice
+  if (it == _dictionary.end() || it->second == "default value") {
+    _dictionary[key] = "default value";
     // note that this value is overwritten by other type specializations if
     // they called this method with default_value = ""
-    _dictionary[key] = default_value;
-    return default_value;
+    svalue = default_value;
+  } else {
+    svalue = it->second;
   }
-  return it->second;
-}
-
-/**
- * @brief ParameterFile::get_value specialization for a floating point value.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Floating point value of the parameter.
- */
-template <>
-inline double ParameterFile::get_value< double >(std::string key,
-                                                 double default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] = Utilities::to_string< double >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< double >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for an integer value.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Integer value of the parameter.
- */
-template <>
-inline int ParameterFile::get_value< int >(std::string key, int default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] = Utilities::to_string< int >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< int >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for an unsigned integer value.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Unsigned integer value of the parameter.
- */
-template <>
-inline unsigned int
-ParameterFile::get_value< unsigned int >(std::string key,
-                                         unsigned int default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] = Utilities::to_string< unsigned int >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< unsigned int >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for an unsigned char value.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Unsigned char value of the parameter.
- */
-template <>
-inline unsigned char
-ParameterFile::get_value< unsigned char >(std::string key,
-                                          unsigned char default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] = Utilities::to_string< unsigned char >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< unsigned char >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value specialization for a boolean value.
- *
- * The following strings are evaluated as true: "true", "yes", "on", "y".
- * The following strings are evaluated as false: "false", "no", "off", "n".
- * All values are converted to lower case before evaluating them, so variants
- * like "True", "fAlse", "NO", "Y" are also accepted.
- * All other values of the parameter will result in an error.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Bool value of the parameter.
- */
-template <>
-inline bool ParameterFile::get_value< bool >(std::string key,
-                                             bool default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] = Utilities::to_string< bool >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< bool >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for a floating point
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Floating point CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector<> ParameterFile::get_value< CoordinateVector<> >(
-    std::string key, CoordinateVector<> default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] =
-        Utilities::to_string< CoordinateVector<> >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< CoordinateVector<> >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for an integer
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Integer CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector< int >
-ParameterFile::get_value< CoordinateVector< int > >(
-    std::string key, CoordinateVector< int > default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] =
-        Utilities::to_string< CoordinateVector< int > >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< CoordinateVector< int > >(svalue);
-}
-
-/**
- * @brief ParameterFile::get_value() specialization for a boolean
- * CoordinateVector.
- *
- * @param key Key in the dictionary.
- * @param default_value Default value for the parameter, to be used if the
- * parameter is not in the parameter file.
- * @return Boolean CoordinateVector value of the parameter.
- */
-template <>
-inline CoordinateVector< bool >
-ParameterFile::get_value< CoordinateVector< bool > >(
-    std::string key, CoordinateVector< bool > default_value) {
-  std::string svalue = get_value< std::string >(key, "");
-  if (svalue == "") {
-    _dictionary[key] =
-        Utilities::to_string< CoordinateVector< bool > >(default_value);
-    return default_value;
-  }
-  return Utilities::convert< CoordinateVector< bool > >(svalue);
+  _used_values[key] = svalue;
+  return svalue;
 }
 
 #endif // PARAMETERFILE_HPP

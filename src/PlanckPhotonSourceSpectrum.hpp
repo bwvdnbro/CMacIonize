@@ -60,19 +60,25 @@ private:
   /*! @brief Base 10 logarithm of the cumulative distribution in each bin. */
   double _log_cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
 
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
+  /*! @brief Ionizing flux of the spectrum (in m^-2 s^-1). */
+  double _ionizing_flux;
 
 public:
-  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
-                             double temperature, Log *log = nullptr);
+  PlanckPhotonSourceSpectrum(double temperature, double ionizing_flux = -1.,
+                             Log *log = nullptr);
 
-  PlanckPhotonSourceSpectrum(RandomGenerator &random_generator,
-                             ParameterFile &params, Log *log = nullptr);
+  PlanckPhotonSourceSpectrum(std::string role, ParameterFile &params,
+                             Log *log = nullptr);
 
-  virtual double get_random_frequency();
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~PlanckPhotonSourceSpectrum() {}
 
-  virtual double get_total_flux();
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.) const;
+
+  virtual double get_total_flux() const;
 };
 
 #endif // PLANCKPHOTONSOURCESPECTRUM_HPP

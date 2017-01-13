@@ -43,7 +43,9 @@ public:
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(IonName ion, double energy) { return 1.; }
+  virtual double get_cross_section(IonName ion, double energy) const {
+    return 1.;
+  }
 };
 
 /**
@@ -52,12 +54,20 @@ public:
 class TestPhotonSourceSpectrum : public PhotonSourceSpectrum {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~TestPhotonSourceSpectrum() {}
+
+  /**
    * @brief Get a random uniform frequency in the range 13.6eV to 54.4eV.
    *
+   * @param random_generator RandomGenerator to use.
+   * @param temperature Not used for this spectrum.
    * @return Uniform random frequency.
    */
-  virtual double get_random_frequency() {
-    return Utilities::random_double() * (54.4 - 13.6) + 13.6;
+  virtual double get_random_frequency(RandomGenerator &random_generator,
+                                      double temperature = 0.) const {
+    return random_generator.get_uniform_random_double() * (54.4 - 13.6) + 13.6;
   }
 
   /**
@@ -65,7 +75,7 @@ public:
    *
    * @return Total ionizing flux (in m^-2 s^-1).
    */
-  virtual double get_total_flux() { return 0.; }
+  virtual double get_total_flux() const { return 0.; }
 };
 
 /**
@@ -76,15 +86,16 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5");
+  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5",
+                                                      "FormationTime");
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;
   Abundances abundances(0., 0., 0., 0., 0., 0.);
   PhotonSource source(&distribution, &spectrum, nullptr, nullptr, abundances,
-                      cross_sections, random_generator);
+                      cross_sections);
 
-  Photon photon = source.get_random_photon();
+  Photon photon = source.get_random_photon(random_generator);
   assert_condition(photon.get_position().x() == 0.5);
   assert_condition(photon.get_position().y() == 0.5);
   assert_condition(photon.get_position().z() == 0.5);

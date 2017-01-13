@@ -77,24 +77,25 @@ public:
   SpatialAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : SpatialAMRRefinementScheme(
             Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.amrrefinementscheme.zone_anchor",
+                    "densitygrid:amrrefinementscheme:zone_anchor",
                     "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid.amrrefinementscheme.zone_sides",
+                    "densitygrid:amrrefinementscheme:zone_sides",
                     "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >(
-                "densitygrid.amrrefinementscheme.max_level", 4)) {}
+                "densitygrid:amrrefinementscheme:max_level", 4)) {}
 
   /**
    * @brief Check if the given cell should be refined.
    *
    * @param level Current refinement level of the cell.
    * @param midpoint Midpoint of the cell (in m).
+   * @param volume Volume of the cell (in m^3).
    * @param cell DensityValues of the cell.
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      DensityValues &cell) {
+                      double volume, DensityValues &cell) const {
     for (unsigned int i = 0; i < 3; ++i) {
       if (midpoint[i] < _refinement_zone.get_anchor()[i] ||
           midpoint[i] > _refinement_zone.get_anchor()[i] +

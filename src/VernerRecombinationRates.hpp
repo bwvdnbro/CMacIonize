@@ -47,9 +47,9 @@ public:
   VernerRecombinationRates();
 
   double get_recombination_rate_verner(unsigned char iz, unsigned char in,
-                                       double T);
+                                       double T) const;
 
-  virtual double get_recombination_rate(IonName ion, double temperature);
+  virtual double get_recombination_rate(IonName ion, double temperature) const;
 };
 
 #endif // VERNERRECOMBINATIONRATES_HPP

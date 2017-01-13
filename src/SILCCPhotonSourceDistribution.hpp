@@ -114,24 +114,27 @@ public:
   SILCCPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SILCCPhotonSourceDistribution(
             params.get_value< unsigned int >(
-                "photonsourcedistribution.num_sources", 24),
+                "photonsourcedistribution:num_sources", 24),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.anchor_x", "0. m"),
+                "photonsourcedistribution:anchor_x", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.sides_x", "1. m"),
+                "photonsourcedistribution:sides_x", "1. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.anchor_y", "0. m"),
+                "photonsourcedistribution:anchor_y", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.sides_y", "1. m"),
+                "photonsourcedistribution:sides_y", "1. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.origin_z", "0. m"),
+                "photonsourcedistribution:origin_z", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution.scaleheight_z", "0.2 m"),
+                "photonsourcedistribution:scaleheight_z", "0.2 m"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution.luminosity", "4.26e49 s^-1"),
-            params.get_value< int >("photonsourcedistribution.random_seed", 42),
+                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
+            params.get_value< int >("photonsourcedistribution:random_seed", 42),
             log) {}
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~SILCCPhotonSourceDistribution() {}
 
   /**
@@ -139,7 +142,7 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() { return _num_sources; }
+  virtual unsigned int get_number_of_sources() const { return _num_sources; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -172,14 +175,18 @@ public:
    * @return Reciprocal of the number of sources, as every source has the same
    * weight.
    */
-  virtual double get_weight(unsigned int index) { return 1. / _num_sources; }
+  virtual double get_weight(unsigned int index) const {
+    return 1. / _num_sources;
+  }
 
   /**
    * @brief Get the total luminosity of all sources together.
    *
    * @return Total luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() { return _num_sources * _luminosity; }
+  virtual double get_total_luminosity() const {
+    return _num_sources * _luminosity;
+  }
 };
 
 #endif // SILCCPHOTONSOURCEDISTRIBUTION_HPP

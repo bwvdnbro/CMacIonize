@@ -54,7 +54,7 @@ protected:
    * @param level LogLevel.
    * @return Description of the LogLevel.
    */
-  virtual std::string get_levelname(LogLevel level) {
+  virtual std::string get_levelname(LogLevel level) const {
     std::string levelname;
     if (level == LOGLEVEL_WARNING) {
       levelname = "\033[1;31m" + Log::get_levelname(level) + "\033[0m";
@@ -74,6 +74,9 @@ public:
    */
   TerminalLog(LogLevel level) : Log(level) {}
 
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~TerminalLog() {}
 };
 

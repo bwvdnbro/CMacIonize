@@ -38,7 +38,7 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return Density at that position.
    */
-  DensityValues operator()(CoordinateVector<> position) {
+  DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
     double density;
@@ -64,12 +64,34 @@ public:
    *
    * @param level Current refinement level of the cell.
    * @param midpoint Midpoint of the cell (in m).
+   * @param volume Volume of the cell (in m^3).
    * @param cell DensityValues of a cell.
    * @return True if the density is larger than 1.
    */
   virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      DensityValues &cell) {
+                      double volume, DensityValues &cell) const {
     return cell.get_total_density() > 1. && level < 6;
+  }
+
+  /**
+   * @brief Decide if the given cells should be replaced by a single cell or
+   * not.
+   *
+   * @param level Current refinement level of the cells.
+   * @param midpoints Midpoints of the cells (in m).
+   * @param volumes  Volumes of the cells (in m^3).
+   * @param cells DensityValues of the cells.
+   * @return True if the cells can be replaced by a single cell on a coarser
+   * level.
+   */
+  virtual bool coarsen(unsigned char level, CoordinateVector<> *midpoints,
+                       double *volumes, DensityValues *cells) const {
+    double avg_density = 0.;
+    for (unsigned int i = 0; i < 8; ++i) {
+      avg_density += cells->get_total_density();
+    }
+    avg_density *= 0.125;
+    return avg_density < 1.;
   }
 };
 
@@ -94,11 +116,15 @@ int main(int argc, char **argv) {
   // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
   // the 32768 bit is set to indicate its level: 5
-  assert_condition(grid.get_cell_volume(32768) ==
-                   (1. / 32) * (1. / 32) * (1. / 32));
   unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
   assert_condition(key == 32768);
-  CoordinateVector<> midpoint = grid.get_cell_midpoint(32768);
+
+  // pick the first cell to check the volume and midpoint calculation
+  // due to the order in which the cell list is constructed, this should be the
+  // cell with key 32768
+  assert_condition(grid.get_cell_volume(0) ==
+                   (1. / 32) * (1. / 32) * (1. / 32));
+  CoordinateVector<> midpoint = grid.get_cell_midpoint(0);
   assert_condition(midpoint.x() == 0.015625);
   assert_condition(midpoint.y() == 0.015625);
   assert_condition(midpoint.z() == 0.015625);

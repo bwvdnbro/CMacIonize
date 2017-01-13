@@ -26,6 +26,8 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
+#include <algorithm>
+
 /*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_IM1 2147483563
 
@@ -68,8 +70,6 @@
 /*! @brief Parameter from Kenny's code. */
 #define RANDOMGENERATOR_RNMX (1. - RANDOMGENERATOR_EPS)
 
-#include <algorithm>
-
 /**
  * @brief Kenny's custom random generator.
  */
@@ -103,13 +103,22 @@ public:
   }
 
   /**
+   * @brief Set a new seed for the random generator.
+   *
+   * @param seed New seed.
+   */
+  inline void set_seed(int seed) { _seed = seed; }
+
+  /**
    * @brief Get a uniform random double precision floating point value in the
    * range [0., 1.].
+   *
+   * Note that this function changes the internal state of the RandomGenerator.
    *
    * @return Random double precision floating point value.
    */
   inline double get_uniform_random_double() {
-    int k;
+    int k, iy;
     if (_seed <= 0) {
       _seed = std::max(-_seed, 1);
       _idum2 = _seed;
@@ -144,7 +153,8 @@ public:
     if (_iy < 1) {
       _iy += RANDOMGENERATOR_IMM1;
     }
-    return std::min(RANDOMGENERATOR_AM * _iy, RANDOMGENERATOR_RNMX);
+    iy = _iy;
+    return std::min(RANDOMGENERATOR_AM * iy, RANDOMGENERATOR_RNMX);
   }
 };
 

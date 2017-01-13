@@ -31,6 +31,8 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "CMacIonizeAMRRefinementScheme.hpp"
+#include "MassAMRRefinementScheme.hpp"
 #include "OpacityAMRRefinementScheme.hpp"
 #include "SpatialAMRRefinementScheme.hpp"
 
@@ -51,11 +53,17 @@ public:
   inline static AMRRefinementScheme *generate(ParameterFile &params,
                                               Log *log = nullptr) {
     std::string type = params.get_value< std::string >(
-        "densitygrid.amrrefinementscheme.type", "Spatial");
+        "densitygrid:amrrefinementscheme:type", "None");
     if (log) {
       log->write_info("Requested AMRRefinementScheme type: ", type);
     }
-    if (type == "Opacity") {
+    if (type == "None") {
+      return nullptr;
+    } else if (type == "CMacIonize") {
+      return new CMacIonizeAMRRefinementScheme(params, log);
+    } else if (type == "Mass") {
+      return new MassAMRRefinementScheme(params, log);
+    } else if (type == "Opacity") {
       return new OpacityAMRRefinementScheme(params, log);
     } else if (type == "Spatial") {
       return new SpatialAMRRefinementScheme(params, log);

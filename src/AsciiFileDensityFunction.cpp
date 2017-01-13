@@ -110,25 +110,25 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
                                                    Log *log)
     : AsciiFileDensityFunction(
-          params.get_value< std::string >("densityfunction.filename"),
+          params.get_value< std::string >("densityfunction:filename"),
           params.get_value< CoordinateVector< int > >(
-              "densityfunction.ncell", CoordinateVector< int >(64)),
+              "densityfunction:ncell", CoordinateVector< int >(64)),
           Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction.box_anchor", "[0. m, 0. m, 0. m]"),
+                  "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
               params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction.box_sides", "[1. m, 1. m, 1. m]")),
+                  "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction.temperature", "8000. K"),
+              "densityfunction:temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction.length_unit", "1. m"),
+              "densityfunction:length_unit", "1. m"),
           params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-              "densityfunction.density_unit", "1. m^-3"),
+              "densityfunction:density_unit", "1. m^-3"),
           log) {}
 
 /**
  * @brief Destructor.
  *
- * Free memory used by internal density grid.
+ * Free memory used by the internal density grid.
  */
 AsciiFileDensityFunction::~AsciiFileDensityFunction() {
   for (int i = 0; i < _ncell.x(); ++i) {
@@ -150,7 +150,7 @@ AsciiFileDensityFunction::~AsciiFileDensityFunction() {
  * @return Density at the given coordinate (in m^-3).
  */
 DensityValues AsciiFileDensityFunction::
-operator()(CoordinateVector<> position) {
+operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
   int ix, iy, iz;
@@ -173,7 +173,7 @@ operator()(CoordinateVector<> position) {
  *
  * @return Total number of hydrogen atoms.
  */
-double AsciiFileDensityFunction::get_total_hydrogen_number() {
+double AsciiFileDensityFunction::get_total_hydrogen_number() const {
   double side_x, side_y, side_z, cellvolume;
   side_x = _box.get_sides().x() / _ncell.x();
   side_y = _box.get_sides().y() / _ncell.y();

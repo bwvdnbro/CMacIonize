@@ -113,6 +113,9 @@ def main():
         a = data["units"], b = units[variable])
       sys.exit(1)
 
+  surface = densitygrid.get_variable_cut("NeutralFractionH", 'x', 0., (64, 64))
+  # find a way to test if these values are what they should be...
+
   sys.exit(0)
 
 # make sure the main function is executed

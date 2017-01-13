@@ -41,7 +41,8 @@ public:
    * @param temperature Temperature (in K).
    * @return Recombination rate (in m^3s^-1).
    */
-  virtual double get_recombination_rate(IonName ion, double temperature) = 0;
+  virtual double get_recombination_rate(IonName ion,
+                                        double temperature) const = 0;
 };
 
 #endif // RECOMBINATIONRATES_HPP

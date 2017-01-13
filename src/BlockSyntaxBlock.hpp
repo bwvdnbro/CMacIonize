@@ -75,7 +75,7 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return True if the position lies inside this block.
    */
-  inline bool is_inside(CoordinateVector<> position) {
+  inline bool is_inside(CoordinateVector<> position) const {
     double r = 0.;
     for (unsigned int i = 0; i < 3; ++i) {
       double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
@@ -96,14 +96,14 @@ public:
    *
    * @return Number density inside this block (in m^-3).
    */
-  inline double get_density() { return _density; }
+  inline double get_density() const { return _density; }
 
   /**
    * @brief Get the temperature inside this block.
    *
    * @return Temperature inside this block (in K).
    */
-  inline double get_temperature() { return _temperature; }
+  inline double get_temperature() const { return _temperature; }
 };
 
 #endif // BLOCKSYNTAXBLOCK_HPP

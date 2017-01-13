@@ -27,7 +27,6 @@
 #include "CoordinateVector.hpp"
 #include "ParameterFile.hpp"
 #include <iostream>
-using namespace std;
 
 /**
  * @brief Unit test for the ParameterFile class.
@@ -42,6 +41,8 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< int >("test_integer1") == 42);
   assert_condition(params.get_value< int >("test_integer2") == 42);
   assert_condition(params.get_value< int >("test_integer3") == 42);
+  assert_condition(params.get_value< int >("test_integer4") == 1e6);
+  assert_condition(params.get_value< int >("test_integer5") == 1e6);
   assert_condition(params.get_value< double >("test_float") == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >("test_unit") ==
                    3.086e16);
@@ -53,13 +54,13 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< bool >("test_bool6") == false);
   assert_condition(params.get_value< bool >("test_bool7") == false);
   assert_condition(params.get_value< bool >("test_bool8") == false);
-  assert_condition(params.get_value< string >("test_string") ==
+  assert_condition(params.get_value< std::string >("test_string") ==
                    "This is a test string.");
-  assert_condition(params.get_value< int >("test_group.test_group_member") ==
+  assert_condition(params.get_value< int >("test_group:test_group_member") ==
                    42);
-  assert_condition(
-      params.get_value< string >("test_comments_group.test_comments_value") ==
-      "test comments string");
+  assert_condition(params.get_value< std::string >(
+                       "test_comments_group:test_comments_value") ==
+                   "test comments string");
 
   CoordinateVector<> cvtest =
       params.get_value< CoordinateVector<> >("test_coordinatevector_double");
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
       params.get_value< CoordinateVector< int > >("test_coordinatevector_int");
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
-  assert_condition(cvtest2.z() == 42);
+  assert_condition(cvtest2.z() == 40);
 
   CoordinateVector< bool > cvtest3 =
       params.get_value< CoordinateVector< bool > >(
@@ -89,14 +90,15 @@ int main(int argc, char **argv) {
 
   assert_condition(
       params.get_value< int >(
-          "test_group2.test_group_group.test_group_group_member") == 42);
+          "test_group2:test_group_group:test_group_group_member") == 42);
 
   // default values
   assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >(
                        "unit_not_in_file", "1. pc") == 3.086e16);
-  assert_condition(params.get_value< string >("not_in", "file?") == "file?");
+  assert_condition(params.get_value< std::string >("not_in", "file?") ==
+                   "file?");
   assert_condition(params.get_value< bool >("not_in_file3", true) == true);
 
   cvtest = params.get_value< CoordinateVector<> >(
@@ -124,10 +126,10 @@ int main(int argc, char **argv) {
   assert_condition(cvtest_unit.z() == 2.4e19);
 
   assert_condition(params.get_value< std::string >(
-                       "test_group2.test_group_group.test_group_str_member",
+                       "test_group2:test_group_group:test_group_str_member",
                        "hello!") == "hello!");
 
-  params.print_contents(cout);
+  params.print_contents(std::cout);
 
   return 0;
 }

@@ -33,6 +33,9 @@
  */
 class PhotonSourceDistribution {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
   virtual ~PhotonSourceDistribution() {}
 
   /**
@@ -43,7 +46,7 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() = 0;
+  virtual unsigned int get_number_of_sources() const = 0;
 
   /**
    * @brief Get a valid position from the distribution.
@@ -62,14 +65,14 @@ public:
    * @return Weight of the photon source, used to determine how many photons are
    * emitted from this particular source.
    */
-  virtual double get_weight(unsigned int index) = 0;
+  virtual double get_weight(unsigned int index) const = 0;
 
   /**
    * @brief Get the total luminosity of all sources together.
    *
    * @return Total luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() = 0;
+  virtual double get_total_luminosity() const = 0;
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

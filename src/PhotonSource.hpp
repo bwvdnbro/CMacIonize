@@ -40,7 +40,7 @@
 class Abundances;
 class CrossSections;
 class DensityValues;
-class IsotropicContinuousPhotonSource;
+class ContinuousPhotonSource;
 class Log;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
@@ -59,19 +59,8 @@ class PhotonSource {
 private:
   /// discrete sources
 
-  /*! @brief Total number of photons emitted by all discrete sources. */
-  unsigned int _discrete_number_of_photons;
-  /*! @brief Number of photons emitted by the currently active source. */
-  unsigned int _discrete_active_number_of_photons;
-  /*! @brief Currently emitted photon index. */
-  unsigned int _discrete_active_photon_index;
-  /*! @brief Currently active photon source index. */
-  unsigned int _discrete_active_source_index;
-
   /*! @brief Positions of the discrete photon sources (in m). */
   std::vector< CoordinateVector<> > _discrete_positions;
-  /*! @brief Weights of the discrete photon sources. */
-  std::vector< double > _discrete_weights;
 
   /*! @brief Spectrum of the discrete photon sources. */
   PhotonSourceSpectrum *_discrete_spectrum;
@@ -79,21 +68,14 @@ private:
   /*! @brief Weight of discrete photons. */
   double _discrete_photon_weight;
 
-  /*! @brief Total luminosity of the discrete sources. */
-  double _discrete_luminosity;
-
-  ///
+  /*! @brief Probabilities that a photon is emitted by a specific discrete
+   *  source. */
+  std::vector< double > _discrete_probabilities;
 
   /// continuous sources
 
-  /*! @brief Total number of photons emitted by the continuous source. */
-  unsigned int _continuous_number_of_photons;
-
-  /*! @brief Number of photons already emitted by the continuous source. */
-  unsigned int _continuous_active_number_of_photons;
-
-  /*! @brief IsotropicContinuousPhotonSource instance used. */
-  IsotropicContinuousPhotonSource *_continuous_source;
+  /*! @brief ContinuousPhotonSource instance used. */
+  ContinuousPhotonSource *_continuous_source;
 
   /*! @brief Spectrum of the continuous sources. */
   PhotonSourceSpectrum *_continuous_spectrum;
@@ -101,10 +83,10 @@ private:
   /*! @brief Weight of continuous photons. */
   double _continuous_photon_weight;
 
-  /*! @brief Total luminosity of the continuous source. */
-  double _continuous_luminosity;
+  /*! @brief Probability that a photon is emitted by the continuous source. */
+  double _continuous_probability;
 
-  ///
+  /// all sources
 
   /*! @brief Total luminosity of all sources (discrete + continuous) (in s^-1).
    */
@@ -115,9 +97,6 @@ private:
 
   /*! @brief Cross sections for photoionization. */
   CrossSections &_cross_sections;
-
-  /*! @brief RandomGenerator used to generate random numbers. */
-  RandomGenerator &_random_generator;
 
   /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
   HydrogenLymanContinuumSpectrum _HLyc_spectrum;
@@ -131,84 +110,40 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  /**
-   * @brief Update the internal counters that distribute the photon sampling
-   * over the various discrete and continuous sources.
-   */
-  inline void update_indices() {
-    if (_continuous_active_number_of_photons < _continuous_number_of_photons) {
-      ++_continuous_active_number_of_photons;
-      if (_continuous_active_number_of_photons ==
-          _continuous_number_of_photons) {
-        // we did all continuous sources and completed the cycle, reset the
-        // counters and start again with the discrete sources
-        _discrete_active_source_index = 0;
-        _discrete_active_photon_index = 0;
-        _discrete_active_number_of_photons =
-            std::round(_discrete_number_of_photons * _discrete_weights[0]);
-        // in case there are no discrete sources
-        if (_discrete_active_source_index == _discrete_positions.size()) {
-          _continuous_active_number_of_photons = 0;
-        }
-      }
-    } else {
-      ++_discrete_active_photon_index;
-      if (_discrete_active_photon_index == _discrete_active_number_of_photons) {
-        _discrete_active_photon_index = 0;
-        ++_discrete_active_source_index;
-        if (_discrete_active_source_index < _discrete_positions.size()) {
-          _discrete_active_number_of_photons =
-              std::round(_discrete_number_of_photons *
-                         _discrete_weights[_discrete_active_source_index]);
-        } else {
-          // we did all discrete sources, now do the continuous source
-          _continuous_active_number_of_photons = 0;
-          // in case there are no continuous sources
-          if (_continuous_active_number_of_photons ==
-              _continuous_number_of_photons) {
-            _discrete_active_source_index = 0;
-            _discrete_active_photon_index = 0;
-            _discrete_active_number_of_photons =
-                std::round(_discrete_number_of_photons * _discrete_weights[0]);
-          }
-        }
-      }
-    }
-  }
-
-  void set_cross_sections(Photon &photon, double energy);
+  void set_cross_sections(Photon &photon, double energy) const;
 
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
                PhotonSourceSpectrum *discrete_spectrum,
-               IsotropicContinuousPhotonSource *continuous_source,
+               ContinuousPhotonSource *continuous_source,
                PhotonSourceSpectrum *continuous_spectrum,
                Abundances &abundances, CrossSections &cross_sections,
-               RandomGenerator &random_generator, Log *log = nullptr);
-
-  unsigned int set_number_of_photons(unsigned int number_of_photons);
+               Log *log = nullptr);
 
   /**
    * @brief Get a random direction.
    *
+   * @param random_generator RandomGenerator to use.
    * @return CoordinateVector containing the components of a random isotropic
    * direction.
    */
-  inline CoordinateVector<> get_random_direction() {
-    double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
+  inline static CoordinateVector<>
+  get_random_direction(RandomGenerator &random_generator) {
+    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
     double sint = 1. - cost * cost;
     sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
+    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
     double cosp = std::cos(phi);
     double sinp = std::sin(phi);
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 
-  Photon get_random_photon();
+  Photon get_random_photon(RandomGenerator &random_generator) const;
 
-  double get_total_luminosity();
+  double get_total_luminosity() const;
 
-  bool reemit(Photon &photon, DensityValues &cell);
+  bool reemit(Photon &photon, DensityValues &cell,
+              RandomGenerator &random_generator) const;
 };
 
 #endif // PHOTONSOURCE_HPP

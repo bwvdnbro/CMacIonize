@@ -113,7 +113,7 @@ LineCoolingData::LineCoolingData() {
  * @param level Energy level index
  * @return cs value
  */
-double LineCoolingData::get_cs(unsigned int element, unsigned int level) {
+double LineCoolingData::get_cs(unsigned int element, unsigned int level) const {
   return _cs[element][level];
 }
 
@@ -124,7 +124,8 @@ double LineCoolingData::get_cs(unsigned int element, unsigned int level) {
  * @param level Energy level index
  * @return cse value
  */
-double LineCoolingData::get_cse(unsigned int element, unsigned int level) {
+double LineCoolingData::get_cse(unsigned int element,
+                                unsigned int level) const {
   return _cse[element][level];
 }
 
@@ -135,7 +136,7 @@ double LineCoolingData::get_cse(unsigned int element, unsigned int level) {
  * @param level Energy level index
  * @return ea value
  */
-double LineCoolingData::get_ea(unsigned int element, unsigned int level) {
+double LineCoolingData::get_ea(unsigned int element, unsigned int level) const {
   return _ea[element][level];
 }
 
@@ -146,7 +147,7 @@ double LineCoolingData::get_ea(unsigned int element, unsigned int level) {
  * @param level Energy level index
  * @return en value
  */
-double LineCoolingData::get_en(unsigned int element, unsigned int level) {
+double LineCoolingData::get_en(unsigned int element, unsigned int level) const {
   return _en[element][level];
 }
 
@@ -157,7 +158,7 @@ double LineCoolingData::get_en(unsigned int element, unsigned int level) {
  * @param level Energy level index
  * @return sw value
  */
-double LineCoolingData::get_sw(unsigned int element, unsigned int level) {
+double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
   return _sw[element][level];
 }
 
@@ -289,7 +290,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  * @return Radiative cooling per hydrogen atom (in kg m^2s^-3).
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
-                                    double *abundances) {
+                                    const double *abundances) const {
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;
@@ -493,13 +494,13 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * strength in (in J s^-1).
  */
 void LineCoolingData::linestr(
-    double temperature, double electron_density, double *abundances,
+    double temperature, double electron_density, const double *abundances,
     double &c6300_6363, double &c9405, double &c6312, double &c33mu,
     double &c19mu, double &c3729, double &c3727, double &c7330, double &c4363,
     double &c5007, double &c52mu, double &c88mu, double &c5755, double &c6584,
     double &c4072, double &c6717, double &c6725, double &c3869, double &cniii57,
     double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
-    double &ciii1908, double &coii7325, double &csiv10) {
+    double &ciii1908, double &coii7325, double &csiv10) const {
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;

@@ -24,6 +24,9 @@ densityfunction:
 abundances:
   helium: 0.
 
+# disable temperature calculation
+calculate_temperature: false
+
 # distribution of photon sources in the box
 photonsourcedistribution:
   # type of distribution: a single stellar source
@@ -35,6 +38,8 @@ photonsourcedistribution:
 
 # spectrum of the photon sources
 photonsourcespectrum:
+  # type: a Planck black body spectrum
+  type: Planck
   # temperature of the black body spectrum
   temperature: 40000. K
 

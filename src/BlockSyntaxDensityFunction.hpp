@@ -49,7 +49,7 @@ private:
    * @param type Type of block.
    * @return Exponent corresponding to that type.
    */
-  inline double get_exponent(std::string type) {
+  inline static double get_exponent(std::string type) {
     if (type == "rhombus") {
       return 1.;
     } else if (type == "sphere") {
@@ -75,20 +75,20 @@ public:
     const int numblock = blockfile.get_value< int >("number of blocks");
     for (int i = 0; i < numblock; ++i) {
       std::stringstream blockname;
-      blockname << "block[" << i << "]";
+      blockname << "block[" << i << "]:";
       CoordinateVector<> origin =
           blockfile.get_physical_vector< QUANTITY_LENGTH >(blockname.str() +
-                                                           ".origin");
+                                                           "origin");
       CoordinateVector<> sides =
           blockfile.get_physical_vector< QUANTITY_LENGTH >(blockname.str() +
-                                                           ".sides");
+                                                           "sides");
       std::string type =
-          blockfile.get_value< std::string >(blockname.str() + ".type");
+          blockfile.get_value< std::string >(blockname.str() + "type");
       double exponent = get_exponent(type);
       double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-          blockname.str() + ".number density");
+          blockname.str() + "number density");
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
-          blockname.str() + ".initial temperature");
+          blockname.str() + "initial temperature");
       if (density < 0.) {
         cmac_error("Negative density (%g) given for block %i!", density, i);
       }
@@ -114,7 +114,7 @@ public:
    */
   BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
       : BlockSyntaxDensityFunction(
-            params.get_value< std::string >("densityfunction.filename"), log) {}
+            params.get_value< std::string >("densityfunction:filename"), log) {}
 
   /**
    * @brief Function that gives the DensityValues for a given coordinate.
@@ -126,7 +126,7 @@ public:
    * @param position CoordinateVector specifying a coordinate position (in m).
    * @return DensityValues at the given coordinate (in SI units).
    */
-  virtual DensityValues operator()(CoordinateVector<> position) {
+  virtual DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
     double density = -1.;

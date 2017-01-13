@@ -54,7 +54,7 @@ public:
                                       DensityFunction &function,
                                       Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densitygrid.type", "Cartesian");
+        params.get_value< std::string >("densitygrid:type", "Cartesian");
     if (log) {
       log->write_info("Requested DensityGrid type: ", type);
     }

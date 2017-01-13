@@ -53,17 +53,19 @@ CommandLineParser::CommandLineParser(std::string program_name)
  * @param argument_type CommandLineOptionArgumentType that gives more
  * information about the type of argument the command line option accepts.
  * @param default_value Default value for the command line option.
+ * @param required Flag indicating whether the command line option is required
+ * or not.
  */
 void CommandLineParser::add_option(std::string long_name, char short_name,
                                    std::string description,
                                    CommandLineOptionArgumentType argument_type,
-                                   std::string default_value) {
+                                   std::string default_value, bool required) {
   if (long_name == "help" || short_name == 'h') {
     cmac_error(
         "\"help\" and 'h' are reserved for the help command line option!");
   }
   _options.push_back(CommandLineOption(long_name, short_name, description,
-                                       argument_type, default_value, false));
+                                       argument_type, default_value, required));
 }
 
 /**
@@ -72,7 +74,7 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineParser::print_description(std::ostream &stream) {
+void CommandLineParser::print_description(std::ostream &stream) const {
   stream << "Usage:\n\n";
   stream << "    " << _program_name;
   for (auto it = _options.begin(); it != _options.end(); ++it) {
@@ -177,7 +179,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
  *
  * @param stream std::ostream to write to.
  */
-void CommandLineParser::print_contents(std::ostream &stream) {
+void CommandLineParser::print_contents(std::ostream &stream) const {
   for (auto it = _dictionary.begin(); it != _dictionary.end(); ++it) {
     stream << it->first << ": " << it->second << "\n";
   }
