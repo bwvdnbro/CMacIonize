@@ -641,6 +641,23 @@ inline std::string human_readable_bytes(unsigned long bytes) {
   bytestream << bytefloat << " " << byte_unit(sizecount);
   return bytestream.str();
 }
+
+/**
+ * @brief Check if the given std::string ends with the given std::string.
+ *
+ * @param haystack std::string to search in.
+ * @param needle std::string to search.
+ * @return True if haystack contains needle at the end.
+ */
+inline bool string_ends_with(const std::string &haystack,
+                             const std::string &needle) {
+  if (needle.size() > haystack.size()) {
+    return false;
+  }
+  size_t check = haystack.rfind(needle);
+  // make sure we only flag needle at the end of the string
+  return (check == haystack.size() - needle.size());
+}
 }
 
 #endif // UTILITIES_HPP
