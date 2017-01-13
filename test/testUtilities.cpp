@@ -44,5 +44,20 @@ int main(int argc, char **argv) {
   bytes = 1253626623;
   assert_condition(Utilities::human_readable_bytes(bytes) == "1.17 GB");
 
+  std::string haystack;
+  std::string needle = "dirty";
+  haystack = "v0.1-dirty";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == true);
+  haystack = "v0.1-eldkef";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == false);
+  haystack = "v0.6";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == false);
+  haystack = "v0.6.";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == false);
+  haystack = "dirty";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == true);
+  haystack = "dirty-adef22f";
+  assert_condition(Utilities::string_ends_with(haystack, needle) == false);
+
   return 0;
 }

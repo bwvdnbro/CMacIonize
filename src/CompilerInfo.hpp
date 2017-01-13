@@ -27,6 +27,7 @@
 #define COMPILERINFO_HPP
 
 #include "Error.hpp"
+#include "Utilities.hpp"
 
 #include <sstream>
 #include <string>
@@ -110,8 +111,7 @@ public:
    */
   static inline bool is_dirty() {
     std::string git_version = get_git_version();
-    size_t check = git_version.rfind("dirty");
-    return check == (git_version.size() - 5);
+    return Utilities::string_ends_with(git_version, "dirty");
   }
 
   /**
