@@ -37,6 +37,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 /**
  * @brief Utility functions that are not really related to a single class.

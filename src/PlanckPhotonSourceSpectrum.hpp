@@ -30,6 +30,8 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "RandomGenerator.hpp"
 
+#include <string>
+
 class Log;
 class ParameterFile;
 

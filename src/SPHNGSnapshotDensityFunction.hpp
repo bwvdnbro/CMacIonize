@@ -32,6 +32,7 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <vector>
 
 class Log;
 class Octree;
