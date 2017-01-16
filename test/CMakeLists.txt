@@ -24,6 +24,7 @@
 # same name is created. The new test is also added to the global list of test
 # contained in the check target
 macro(add_unit_test)
+    set(options PARALLEL)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES LIBS)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
@@ -34,9 +35,17 @@ macro(add_unit_test)
                           ${PROJECT_BINARY_DIR}/rundir/test)
     target_link_libraries(${TEST_NAME} ${TEST_LIBS})
 
+    if(TEST_PARALLEL AND HAVE_MPI)
+      set(TESTCOMMAND ${MPIEXEC})
+      set(TESTARGS ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
+                   "./${TEST_NAME}" ${MPIEXEC_POSTFLAGS})
+      set(TESTCOMMAND ${TESTCOMMAND} ${TESTARGS})
+    else(TEST_PARALLEL AND HAVE_MPI)
+      set(TESTCOMMAND ${TEST_NAME})
+    endif(TEST_PARALLEL AND HAVE_MPI)
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
-             COMMAND ${TEST_NAME})
+             COMMAND ${TESTCOMMAND})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
 endmacro(add_unit_test)
@@ -629,6 +638,19 @@ set(TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES
 )
 add_unit_test(NAME testDistantStarContinuousPhotonSource
               SOURCES ${TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES})
+
+## Unit test for MPICommunicator
+if(HAVE_MPI)
+set(TESTMPICOMMUNICATOR_SOURCES
+    testMPICommunicator.cpp
+
+    ../src/MPICommunicator.hpp
+)
+add_unit_test(NAME testMPICommunicator
+              SOURCES ${TESTMPICOMMUNICATOR_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
+              PARALLEL)
+endif(HAVE_MPI)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

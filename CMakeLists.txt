@@ -122,6 +122,17 @@ else(OPENMP_FOUND)
           "OpenMP not found. Shared memory parallelization will not work.")
 endif(OPENMP_FOUND)
 
+# Find MPI
+find_package(MPI)
+if(MPI_CXX_FOUND)
+  set(HAVE_MPI True)
+  message(STATUS "MPI found. Distributed memory parallelization will work.")
+  message(STATUS "MPI exec: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS"
+                 "${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+  include_directories(${MPI_C_INCLUDE_PATH})
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+endif(MPI_CXX_FOUND)
+
 # Find Boost, Boost Python, Python, and NumPy
 find_package(Boost COMPONENTS "python")
 if(Boost_FOUND)
