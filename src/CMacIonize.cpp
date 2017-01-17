@@ -148,11 +148,29 @@ int main(int argc, char **argv) {
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
       "photonsourcespectrum", params, log);
 
+  if (sourcedistribution != nullptr && spectrum == nullptr) {
+    cmac_error("No spectrum provided for the discrete photon sources!");
+  }
+  if (sourcedistribution == nullptr && spectrum != nullptr) {
+    cmac_warning("Discrete photon source spectrum provided, but no discrete "
+                 "photon source distributions. The given spectrum will be "
+                 "ignored.");
+  }
+
   ContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, log);
   PhotonSourceSpectrum *continuousspectrum =
       PhotonSourceSpectrumFactory::generate("continuousphotonsourcespectrum",
                                             params, log);
+
+  if (continuoussource != nullptr && continuousspectrum == nullptr) {
+    cmac_error("No spectrum provided for the continuous photon sources!");
+  }
+  if (continuoussource == nullptr && continuousspectrum != nullptr) {
+    cmac_warning("Continuous photon source spectrum provided, but no "
+                 "continuous photon source. The given spectrum will be "
+                 "ignored.");
+  }
 
   Abundances abundances(params, log);
 
