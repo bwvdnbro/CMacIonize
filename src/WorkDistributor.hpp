@@ -33,6 +33,8 @@
 #include "Configuration.hpp"
 #include "Error.hpp"
 #include "Worker.hpp"
+#include <sstream>
+#include <string>
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
@@ -79,6 +81,20 @@ public:
    * @return Number of workers used.
    */
   inline int get_worksize() const { return _worksize; }
+
+  /**
+   * @brief Get a std::string with the number of threads used.
+   *
+   * @return std::string containing the number of threads used.
+   */
+  inline std::string get_worksize_string() const {
+    std::stringstream sstream;
+    sstream << _worksize << " thread";
+    if (_worksize != 1) {
+      sstream << "s";
+    }
+    return sstream.str();
+  }
 
   /**
    * @brief Execute the given JobMarket in parallel.

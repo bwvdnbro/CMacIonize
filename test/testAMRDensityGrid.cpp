@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
                       density_function, scheme, false, &log);
+  grid.initialize();
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
   assert_values_equal(4000., grid.get_average_temperature());

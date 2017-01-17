@@ -219,6 +219,11 @@ int main(int argc, char **argv) {
   ofstream pfile(folder + "/parameters-usedvalues.param");
   params.print_contents(pfile);
   pfile.close();
+  log->write_status("Wrote used parameters to ", folder,
+                    "/parameters-usedvalues.param.");
+
+  // done writing file, now initialize grid
+  grid->initialize();
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
@@ -226,13 +231,8 @@ int main(int argc, char **argv) {
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
-  if (worksize > 1) {
-    log->write_status("Program will use ", worksize,
-                      " parallel threads for photon shooting.");
-  } else {
-    log->write_status("Program will use a single thread for photon shooting.");
-  }
-
+  log->write_status("Program will use ", workdistributor.get_worksize_string(),
+                    " for photon shooting.");
   PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
                                        worksize);
 

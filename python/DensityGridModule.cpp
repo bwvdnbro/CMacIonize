@@ -81,8 +81,11 @@ initDensityGrid(const std::string &filename) {
 
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
-  return boost::shared_ptr< DensityGrid >(
+  boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
       DensityGridFactory::generate(parameters, density_function));
+  ptr.get()->initialize();
+
+  return ptr;
 }
 
 /**

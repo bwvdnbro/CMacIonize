@@ -138,6 +138,8 @@ public:
 
   virtual ~CartesianDensityGrid();
 
+  virtual void initialize();
+
   virtual unsigned int get_number_of_cells() const;
 
   /**

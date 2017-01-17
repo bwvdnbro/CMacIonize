@@ -49,8 +49,8 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
                                            DensityFunction &density_function,
                                            CoordinateVector< bool > periodic,
                                            Log *log)
-    : DensityGrid(box, periodic, log), _box(box), _periodic(periodic),
-      _ncell(ncell), _log(log) {
+    : DensityGrid(density_function, box, periodic, log), _box(box),
+      _periodic(periodic), _ncell(ncell), _log(log) {
 
   if (_log) {
     _log->write_status(
@@ -78,10 +78,12 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
 
   if (_log) {
     unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
-    _log->write_info(
+    _log->write_status(
         "Allocating memory for ", ncell, " cells (",
         Utilities::human_readable_bytes(ncell * sizeof(DensityValues)), ")...");
   }
+  // we allocate memory for the cells, so that --dry-run can already check the
+  // available memory
   _density = new DensityValues **[_ncell.x()];
   for (int i = 0; i < _ncell.x(); ++i) {
     _density[i] = new DensityValues *[_ncell.y()];
@@ -90,16 +92,13 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
     }
   }
   if (_log) {
-    _log->write_info("Done.");
+    _log->write_status("Done allocating memory.");
   }
 
-  // fill the density grid
   double cellside_x = _box.get_sides().x() / _ncell.x();
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-
-  initialize(density_function);
 
   _cellside_max = _cellside.x();
   if (_cellside.y() > _cellside_max) {
@@ -165,6 +164,13 @@ CartesianDensityGrid::~CartesianDensityGrid() {
     delete[] _density[i];
   }
   delete[] _density;
+}
+
+/**
+ * @brief Initialize the cells in the grid.
+ */
+void CartesianDensityGrid::initialize() {
+  DensityGrid::initialize(_density_function);
 }
 
 /**

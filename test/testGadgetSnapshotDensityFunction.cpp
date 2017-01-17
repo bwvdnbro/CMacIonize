@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   CartesianDensityGrid grid(box, 32, density);
+  grid.initialize();
   assert_values_equal(grid.get_total_hydrogen_number(),
                       density.get_total_hydrogen_number());
   assert_values_equal(grid.get_average_temperature(), 0.);

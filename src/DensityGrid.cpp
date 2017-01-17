@@ -29,8 +29,8 @@
 /**
  * @brief Initialize the cells in the grid.
  *
- * All implementations should call this method in their constructor, after the
- * grid itself has been set up.
+ * All implementations should call this method in their initialization()
+ * routine.
  *
  * @param function DensityFunction that sets the density.
  * @param worksize Number of parallel threads to use. If a negative number is
@@ -42,11 +42,17 @@ void DensityGrid::initialize(DensityFunction &function, int worksize) {
       DensityGridTraversalJobMarket< DensityGridInitializationFunction >,
       DensityGridTraversalJob< DensityGridInitializationFunction > >
       workers(worksize);
+
   if (_log) {
-    _log->write_status("Initializing grid using ", workers.get_worksize(),
-                       " threads.");
+    _log->write_status("Initializing grid using ",
+                       workers.get_worksize_string(), ".");
   }
+
   DensityGridTraversalJobMarket< DensityGridInitializationFunction > jobs(*this,
                                                                           init);
   workers.do_in_parallel(jobs);
+
+  if (_log) {
+    _log->write_status("Done initializing grid.");
+  }
 }

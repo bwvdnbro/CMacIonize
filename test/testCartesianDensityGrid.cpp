@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
   CartesianDensityGrid grid(box, 64, testfunction);
+  grid.initialize();
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
   assert_values_equal(2000., grid.get_average_temperature());

@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
       Box(CoordinateVector<>(0.3125), CoordinateVector<>(0.375)), 5);
 
   AMRDensityGrid grid(box, ncell, density_function, scheme);
+  grid.initialize();
 
   assert_condition(grid.get_number_of_cells() ==
                    8 * 8 * 8 - 4 * 4 * 4 + 8 * 8 * 8 - 6 * 6 * 6 +

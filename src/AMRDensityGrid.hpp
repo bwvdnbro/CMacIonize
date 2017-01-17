@@ -47,9 +47,6 @@ private:
   /*! @brief Convenient cell list used for faster cell indexing. */
   std::vector< AMRGridCell< DensityValues > * > _cells;
 
-  /*! @brief DensityFunction used to initialize densities. */
-  DensityFunction &_density_function;
-
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
 
@@ -141,7 +138,7 @@ public:
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
-      : DensityGrid(box, periodic, log), _density_function(density_function),
+      : DensityGrid(density_function, box, periodic, log),
         _refinement_scheme(refinement_scheme) {
     // find the smallest number of blocks that fits the requested top level grid
     // for one dimension, this is the largest odd factor in that dimension
@@ -185,8 +182,46 @@ public:
                          _box.get_sides().x(), " m, ", _box.get_sides().y(),
                          " m, ", _box.get_sides().z(), " m].");
     }
+  }
 
-    initialize(density_function);
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read.
+   * @param density_function DensityFunction used to set the densities in each
+   * cell.
+   * @param log Log to write log messages to.
+   */
+  inline AMRDensityGrid(ParameterFile &params,
+                        DensityFunction &density_function, Log *log)
+      : AMRDensityGrid(
+            Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            params.get_value< CoordinateVector< int > >(
+                "densitygrid:ncell", CoordinateVector< int >(64)),
+            density_function, AMRRefinementSchemeFactory::generate(params, log),
+            params.get_value< CoordinateVector< bool > >(
+                "densitygrid:periodicity", CoordinateVector< bool >(false)),
+            log) {}
+
+  /**
+   * @brief Destructor.
+   *
+   * Deletes the AMRRefinementScheme (if present).
+   */
+  virtual ~AMRDensityGrid() {
+    if (_refinement_scheme != nullptr) {
+      delete _refinement_scheme;
+    }
+  }
+
+  /**
+   * @brief Initialize the cells of the grid.
+   */
+  virtual void initialize() {
+    DensityGrid::initialize(_density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -236,8 +271,8 @@ public:
     _grid.set_ngbs(_periodic);
     // reconstruct the cell list, it might have changed due to refinement
     _cells.resize(_grid.get_number_of_cells());
-    index = 0;
-    key = _grid.get_first_key();
+    unsigned int index = 0;
+    unsigned long key = _grid.get_first_key();
     while (key != _grid.get_max_key()) {
       _cells[index] = &_grid[key];
       ++index;
@@ -245,40 +280,7 @@ public:
     }
 
     // make sure all values are correctly initialized (also in refined cells)
-    initialize(density_function);
-  }
-
-  /**
-   * @brief ParameterFile constructor.
-   *
-   * @param params ParameterFile to read.
-   * @param density_function DensityFunction used to set the densities in each
-   * cell.
-   * @param log Log to write log messages to.
-   */
-  inline AMRDensityGrid(ParameterFile &params,
-                        DensityFunction &density_function, Log *log)
-      : AMRDensityGrid(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
-            params.get_value< CoordinateVector< int > >(
-                "densitygrid:ncell", CoordinateVector< int >(64)),
-            density_function, AMRRefinementSchemeFactory::generate(params, log),
-            params.get_value< CoordinateVector< bool > >(
-                "densitygrid:periodicity", CoordinateVector< bool >(false)),
-            log) {}
-
-  /**
-   * @brief Destructor.
-   *
-   * Deletes the AMRRefinementScheme (if present).
-   */
-  virtual ~AMRDensityGrid() {
-    if (_refinement_scheme != nullptr) {
-      delete _refinement_scheme;
-    }
+    DensityGrid::initialize(_density_function);
   }
 
   /**

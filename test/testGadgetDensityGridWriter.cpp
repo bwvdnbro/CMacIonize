@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
     CartesianDensityGrid grid(box, ncell, density_function);
+    grid.initialize();
 
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);

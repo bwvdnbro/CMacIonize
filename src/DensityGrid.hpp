@@ -44,6 +44,9 @@
  */
 class DensityGrid {
 protected:
+  /*! @brief DensityFunction defining the density field. */
+  DensityFunction &_density_function;
+
   /*! @brief Box containing the grid. */
   Box _box;
 
@@ -137,15 +140,23 @@ public:
   /**
    * @brief Constructor.
    *
+   * The constructor of a DensityGrid implementation should not initialize the
+   * entire grid, but should only initialize the internal variables that are
+   * necessary to perform the initialization at a later stage. We postpone the
+   * computationally expensive part of the initialization to the initialize()
+   * routine.
+   *
+   * @param density_function DensityFunction that defines the density field.
    * @param box Box containing the grid.
    * @param periodic Periodicity flags.
    * @param log Log to write log messages to.
    */
   DensityGrid(
-      Box box,
+      DensityFunction &density_function, Box box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       Log *log = nullptr)
-      : _box(box), _periodic(periodic), _log(log) {
+      : _density_function(density_function), _box(box), _periodic(periodic),
+        _log(log) {
 
     _ionization_energy_H =
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
@@ -157,6 +168,15 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~DensityGrid() {}
+
+  /**
+   * @brief Routine that does the actual initialization of the grid.
+   *
+   * This routine should do all the computationally intensive work that needs to
+   * be done to initialize the grid. This work should not be done in the
+   * constructor.
+   */
+  virtual void initialize() = 0;
 
   /**
    * @brief Get the total number of cells in the grid.
