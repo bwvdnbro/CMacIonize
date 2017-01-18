@@ -94,6 +94,12 @@ public:
       _box = box;
       // find out in which of the 8 subboxes the old index lives
       CoordinateVector<> &p = positions[_index];
+      // check if the old and new position are the same
+      CoordinateVector<> &np = positions[index];
+      if (p.x() == np.x() && p.y() == np.y() && p.z() == np.z()) {
+        cmac_error("Particles have exactly the same position (%u %u)!", _index,
+                   index);
+      }
       ix = 2 * (p.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (p.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (p.z() - box.get_anchor().z()) / box.get_sides().z();

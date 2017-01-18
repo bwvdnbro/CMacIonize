@@ -64,13 +64,16 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
 /**
  * @brief Constructor.
  *
+ * Reads the file and stores the particle variables in internal arrays. Does not
+ * construct the Octree, this is done in initialize().
+ *
  * @param filename Name of the file to read.
  * @param initial_temperature Initial temperature of the gas (in K).
  * @param log Log to write logging info to.
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::string filename, double initial_temperature, Log *log)
-    : _initial_temperature(initial_temperature) {
+    : _octree(nullptr), _initial_temperature(initial_temperature) {
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
   if (!file) {
@@ -97,23 +100,31 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // the third, fourth and fifth block contain a dictionary of particle numbers
   // the code below reads it
   // since we currently don't use these values, we skip these 3 blocks instead
-  //  std::map< std::string, unsigned int > numbers =
-  //      read_dict< unsigned int >(file);
-  //  unsigned int totnumpart = numbers["nparttot"];
-  skip_block(file);
-  if (tagged) {
-    skip_block(file);
+  std::map< std::string, unsigned int > numbers =
+      read_dict< unsigned int >(file, tagged);
+  if (!tagged) {
+    unsigned int numnumbers = numbers.size();
+    numbers["nparttot"] = numbers["tag"];
+    if (numnumbers == 6) {
+      numbers["nblocks"] = 1;
+    } else {
+      numbers["nblocks"] = numbers["tag6"];
+    }
   }
-  skip_block(file);
+  unsigned int numpart = numbers["nparttot"];
+  unsigned int numblock = numbers["nblocks"];
+  //  skip_block(file);
+  //  if (tagged) {
+  //    skip_block(file);
+  //  }
+  //  skip_block(file);
 
   // skip 3 blocks
   // in the example file I got from Will, all these blocks contain a single
   // integer with value zero. They supposedly correspond to blocks that are
   // absent
   skip_block(file);
-  if (tagged) {
-    skip_block(file);
-  }
+  skip_block(file);
   skip_block(file);
 
   // the next three blocks are a dictionary containing the highest unique index
@@ -156,129 +167,164 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
   // done reading header!
 
-  // read block
-  unsigned long npart;
-  std::vector< unsigned int > nums(8);
-  read_block(file, npart, nums);
-
-  unsigned long nptmass;
-  std::vector< unsigned int > numsink(8);
-  read_block(file, nptmass, numsink);
-
-  if (tagged) {
-    skip_block(file);
-  }
-
-  std::vector< int > isteps(npart);
-  read_block(file, isteps);
-
-  if (nums[0] >= 2) {
-    // skip 2 blocks
-    if (tagged) {
-      skip_block(file);
-    }
-    skip_block(file);
-  }
-
-  std::string tag;
-  if (tagged) {
-    read_block(file, tag);
-  } else {
-    tag = "iphase";
-  }
-
-  if (tag != "iphase") {
-    cmac_error("Wrong tag: \"%s\" (expected \"iphase\")!", tag.c_str());
-  }
-
-  std::vector< char > iphase(npart);
-  read_block(file, iphase);
-
-  if (nums[4] >= 1) {
-    // skip iunique block
-    if (tagged) {
-      skip_block(file);
-    }
-    skip_block(file);
-  }
-
-  std::vector< double > x(npart);
-  if (tagged) {
-    skip_block(file);
-  }
-  read_block(file, x);
-
-  std::vector< double > y(npart);
-  if (tagged) {
-    skip_block(file);
-  }
-  read_block(file, y);
-
-  std::vector< double > z(npart);
-  if (tagged) {
-    skip_block(file);
-  }
-  read_block(file, z);
-
-  std::vector< double > m(npart);
-  if (tagged) {
-    skip_block(file);
-  }
-  read_block(file, m);
-
-  std::vector< double > h(npart);
-  if (tagged) {
-    skip_block(file);
-  }
-  read_block(file, h);
-
-  // done reading file
+  _partbox.get_anchor()[0] = DBL_MAX;
+  _partbox.get_anchor()[1] = DBL_MAX;
+  _partbox.get_anchor()[2] = DBL_MAX;
+  _partbox.get_sides()[0] = -DBL_MAX;
+  _partbox.get_sides()[1] = -DBL_MAX;
+  _partbox.get_sides()[2] = -DBL_MAX;
 
   double unit_length =
       UnitConverter::to_SI< QUANTITY_LENGTH >(units["udist"], "cm");
   double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
 
-  unsigned int ngaspart = 0;
-  for (unsigned int i = 0; i < iphase.size(); ++i) {
-    if (iphase[i] == 0) {
-      ++ngaspart;
+  _positions.reserve(numpart);
+  _masses.reserve(numpart);
+  _smoothing_lengths.reserve(numpart);
+  //  std::vector<unsigned long> all_iunique;
+  //  all_iunique.reserve(numpart);
+
+  // read blocks
+  for (unsigned int iblock = 0; iblock < numblock; ++iblock) {
+    unsigned long npart;
+    std::vector< unsigned int > nums(8);
+    read_block(file, npart, nums);
+
+    unsigned long nptmass;
+    std::vector< unsigned int > numssink(8);
+    read_block(file, nptmass, numssink);
+
+    if (tagged) {
+      skip_block(file);
+    }
+
+    std::vector< int > isteps(npart);
+    read_block(file, isteps);
+
+    if (nums[0] >= 2) {
+      // skip 2 blocks
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    std::string tag;
+    if (tagged) {
+      read_block(file, tag);
+    } else {
+      tag = "iphase";
+    }
+
+    if (tag != "iphase") {
+      cmac_error("Wrong tag: \"%s\" (expected \"iphase\")!", tag.c_str());
+    }
+
+    std::vector< char > iphase(npart);
+    read_block(file, iphase);
+
+    //    std::vector<unsigned long> iunique(npart);
+    if (nums[4] >= 1) {
+      // skip iunique block
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+      //      if(tagged){
+      //        skip_block(file);
+      //      }
+      //      read_block(file, iunique);
+    }
+
+    std::vector< double > x(npart);
+    if (tagged) {
+      skip_block(file);
+    }
+    read_block(file, x);
+
+    std::vector< double > y(npart);
+    if (tagged) {
+      skip_block(file);
+    }
+    read_block(file, y);
+
+    std::vector< double > z(npart);
+    if (tagged) {
+      skip_block(file);
+    }
+    read_block(file, z);
+
+    std::vector< double > m(npart);
+    if (tagged) {
+      skip_block(file);
+    }
+    read_block(file, m);
+
+    std::vector< double > h(npart);
+    if (tagged) {
+      skip_block(file);
+    }
+    read_block(file, h);
+
+    // skip velocity, thermal energy and density blocks
+    for (unsigned int i = 0; i < 5; ++i) {
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    // skip igrad related blocks
+    for (unsigned int i = 0; i < nums[6] - 1; ++i) {
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    // skip sink particle data
+    for (unsigned int i = 0; i < 10; ++i) {
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    for (unsigned int i = 0; i < npart; ++i) {
+      if (iphase[i] == 0) {
+        CoordinateVector<> position(x[i] * unit_length, y[i] * unit_length,
+                                    z[i] * unit_length);
+        _positions.push_back(position);
+        _partbox.get_anchor() =
+            CoordinateVector<>::min(_partbox.get_anchor(), position);
+        _partbox.get_sides() =
+            CoordinateVector<>::max(_partbox.get_sides(), position);
+        _masses.push_back(m[i] * unit_mass);
+        _smoothing_lengths.push_back(h[i] * unit_length);
+        //        all_iunique.push_back(iunique[i]);
+      }
     }
   }
 
-  Box partbox;
-  partbox.get_anchor()[0] = DBL_MAX;
-  partbox.get_anchor()[1] = DBL_MAX;
-  partbox.get_anchor()[2] = DBL_MAX;
-  partbox.get_sides()[0] = -DBL_MAX;
-  partbox.get_sides()[1] = -DBL_MAX;
-  partbox.get_sides()[2] = -DBL_MAX;
+  // done reading file
+  _positions.shrink_to_fit();
+  _masses.shrink_to_fit();
+  _smoothing_lengths.shrink_to_fit();
 
-  _positions.resize(ngaspart);
-  _masses.resize(ngaspart);
-  _smoothing_lengths.resize(ngaspart);
-  unsigned int index = 0;
-  for (unsigned int i = 0; i < npart; ++i) {
-    if (iphase[i] == 0) {
-      _positions[index][0] = x[i] * unit_length;
-      _positions[index][1] = y[i] * unit_length;
-      _positions[index][2] = z[i] * unit_length;
-      partbox.get_anchor() =
-          CoordinateVector<>::min(partbox.get_anchor(), _positions[index]);
-      partbox.get_sides() =
-          CoordinateVector<>::max(partbox.get_sides(), _positions[index]);
-      _masses[index] = m[i] * unit_mass;
-      _smoothing_lengths[index] = h[i] * unit_length;
-      ++index;
-    }
-  }
-
-  partbox.get_sides() -= partbox.get_anchor();
+  _partbox.get_sides() -= _partbox.get_anchor();
   // add some margin to the box
-  partbox.get_anchor() -= 0.01 * partbox.get_sides();
-  partbox.get_sides() *= 1.02;
+  _partbox.get_anchor() -= 0.01 * _partbox.get_sides();
+  _partbox.get_sides() *= 1.02;
 
-  _octree = new Octree(_positions, partbox, false);
-  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+  if (log) {
+    log->write_status("Snapshot contains ", _positions.size(),
+                      " gas particles.");
+    log->write_status(
+        "Will create octree in box with anchor [", _partbox.get_anchor().x(),
+        " m, ", _partbox.get_anchor().y(), " m, ", _partbox.get_anchor().z(),
+        " m] and sides [", _partbox.get_sides().x(), " m, ",
+        _partbox.get_sides().y(), " m, ", _partbox.get_sides().z(), " m]...");
+  }
 }
 
 /**
@@ -305,6 +351,15 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
 }
 
 /**
+ * @brief This routine constructs the internal Octree that is used for neighbour
+ * finding.
+ */
+void SPHNGSnapshotDensityFunction::initialize() {
+  _octree = new Octree(_positions, _partbox, false);
+  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+}
+
+/**
  * @brief Get the position of the particle with the given index.
  *
  * @param index Index of a particle.
@@ -312,7 +367,6 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
  */
 CoordinateVector<>
 SPHNGSnapshotDensityFunction::get_position(unsigned int index) {
-
   return _positions[index];
 }
 

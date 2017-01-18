@@ -27,6 +27,7 @@
 #ifndef SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 #define SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 
+#include "Box.hpp"
 #include "DensityFunction.hpp"
 
 #include <fstream>
@@ -52,6 +53,9 @@ private:
 
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
+
+  /*! @brief Box containing all particles (in m). */
+  Box _partbox;
 
   /*! @brief Octree used to speed up neighbour finding. */
   Octree *_octree;
@@ -215,11 +219,13 @@ public:
 
   ~SPHNGSnapshotDensityFunction();
 
+  virtual void initialize();
+
   CoordinateVector<> get_position(unsigned int index);
   double get_mass(unsigned int index);
   double get_smoothing_length(unsigned int index);
 
-  DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(CoordinateVector<> position) const;
 };
 
 /**
@@ -252,6 +258,23 @@ SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
     std::ifstream &ifile, std::vector< unsigned int > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
              value.size() * sizeof(unsigned int));
+}
+
+/**
+ * @brief Fill the given referenced parameter by reading from the given
+ * Fortran unformatted binary file.
+ *
+ * Template specialization for a std::vector of unsigned long integers.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Next (and last) value to read from the file.
+ */
+template <>
+inline void
+SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned long > >(
+    std::ifstream &ifile, std::vector< unsigned long > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]),
+             value.size() * sizeof(unsigned long));
 }
 
 /**
@@ -314,6 +337,21 @@ inline unsigned int
 SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
     std::vector< unsigned int > &value) {
   return value.size() * sizeof(unsigned int);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing unsigned long integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned long > >(
+    std::vector< unsigned long > &value) {
+  return value.size() * sizeof(unsigned long);
 }
 
 /**

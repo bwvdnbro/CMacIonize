@@ -13,6 +13,11 @@ y = np.random.rand(100)
 z = np.random.rand(100)
 m = np.random.rand(100)
 h = np.random.rand(100)
+vx = np.random.rand(100)
+vy = np.random.rand(100)
+vz = np.random.rand(100)
+u = np.random.rand(100)
+rho = np.random.rand(100)
 
 file = open("SPHNGtest.dat", "wb")
 
@@ -107,6 +112,28 @@ write_block(file, struct.pack('c'*16, *"m               "))
 write_block(file, struct.pack('d'*100, *m))
 write_block(file, struct.pack('c'*16, *"h               "))
 write_block(file, struct.pack('d'*100, *h))
+write_block(file, struct.pack('c'*16, *"vx              "))
+write_block(file, struct.pack('d'*100, *vx))
+write_block(file, struct.pack('c'*16, *"vy              "))
+write_block(file, struct.pack('d'*100, *vy))
+write_block(file, struct.pack('c'*16, *"vz              "))
+write_block(file, struct.pack('d'*100, *vz))
+write_block(file, struct.pack('c'*16, *"u               "))
+write_block(file, struct.pack('d'*100, *u))
+write_block(file, struct.pack('c'*16, *"rho             "))
+write_block(file, struct.pack('d'*100, *rho))
+# igrad related blocks (number depends on the value of the last entry in
+# numbers)
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+# sink particle data
+for i in range(10):
+  write_block(file, struct.pack('c'*4, *"tags"))
+  write_block(file, struct.pack('c'*7, *"ignored"))
 
 # we don't write data after this point, since we don't need to read it...
 
@@ -122,6 +149,7 @@ npart = np.zeros(44, dtype = 'i')
 npart[0] = 100
 npart[6] = 1
 write_block(file, struct.pack('i'*44, *npart))
+write_block(file, struct.pack('c'*7, *"ignored"))
 write_block(file, struct.pack('c'*7, *"ignored"))
 write_block(file, struct.pack('c'*7, *"ignored"))
 write_block(file, struct.pack('i', 1))
@@ -154,6 +182,18 @@ write_block(file, struct.pack('d'*100, *y))
 write_block(file, struct.pack('d'*100, *z))
 write_block(file, struct.pack('d'*100, *m))
 write_block(file, struct.pack('d'*100, *h))
+write_block(file, struct.pack('d'*100, *vx))
+write_block(file, struct.pack('d'*100, *vy))
+write_block(file, struct.pack('d'*100, *vz))
+write_block(file, struct.pack('d'*100, *u))
+write_block(file, struct.pack('d'*100, *rho))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+write_block(file, struct.pack('c'*7, *"ignored"))
+# sink particle data
+for i in range(10):
+  write_block(file, struct.pack('c'*7, *"ignored"))
 
 # we don't write data after this point, since we don't need to read it...
 

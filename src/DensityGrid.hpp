@@ -176,7 +176,15 @@ public:
    * be done to initialize the grid. This work should not be done in the
    * constructor.
    */
-  virtual void initialize() = 0;
+  virtual void initialize() {
+    if (_log) {
+      _log->write_status("Initializing DensityFunction...");
+    }
+    _density_function.initialize();
+    if (_log) {
+      _log->write_status("Done.");
+    }
+  }
 
   /**
    * @brief Get the total number of cells in the grid.

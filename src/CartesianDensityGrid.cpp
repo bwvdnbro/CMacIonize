@@ -170,6 +170,7 @@ CartesianDensityGrid::~CartesianDensityGrid() {
  * @brief Initialize the cells in the grid.
  */
 void CartesianDensityGrid::initialize() {
+  DensityGrid::initialize();
   DensityGrid::initialize(_density_function);
 }
 

@@ -221,6 +221,7 @@ public:
    * @brief Initialize the cells of the grid.
    */
   virtual void initialize() {
+    DensityGrid::initialize();
     DensityGrid::initialize(_density_function);
 
     // apply mesh refinement
