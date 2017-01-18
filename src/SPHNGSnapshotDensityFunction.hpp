@@ -77,6 +77,30 @@ private:
   }
 
   /**
+   * @brief Get the size of the given template datatype.
+   *
+   * @param value Reference to a value of the template datatype.
+   * @return Size of the template datatype.
+   */
+  template < typename _datatype_ >
+  inline static unsigned int get_size(_datatype_ &value) {
+    return sizeof(_datatype_);
+  }
+
+  /**
+   * @brief Get the size of the given template datatypes (recursively).
+   *
+   * @param value Next value in the list.
+   * @param args Other values in the list.
+   * @return Total size of all values in the list.
+   */
+  template < typename _datatype_, typename... _arguments_ >
+  inline static unsigned int get_size(_datatype_ &value,
+                                      _arguments_ &... args) {
+    return sizeof(_datatype_) + get_size(args...);
+  }
+
+  /**
    * @brief Fill the given referenced parameter by reading from the given
    * Fortran unformatted binary file.
    *
@@ -118,6 +142,12 @@ private:
   inline static void read_block(std::ifstream &ifile, _arguments_ &... args) {
     unsigned int length1, length2;
     ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+    unsigned int blocksize = get_size(args...);
+    if (length1 != blocksize) {
+      cmac_error("Wrong number of variables passed on to read_block()! Block "
+                 "size is %u, but size of variables is %u.",
+                 length1, blocksize);
+    }
     read_value(ifile, args...);
     ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
     if (length1 != length2) {
@@ -133,18 +163,29 @@ private:
    * a single integer giving the number of elements in the second and third
    * block. The second block contains 16-byte tags, while the third block
    * contains a value of the given template type for each tag.
+   * If the file is not tagged, the second block is absent. In this case, the
+   * tagged flag should be set to false, and the tags will simply be "tag",
+   * "tag1"...
    *
    * @param ifile Reference to an open Fortran unformatted binary file to read
    * from.
+   * @param tagged Flag indicating whether the file is tagged or not.
    * @return std::map containing the contents of the three blocks as a
    * dictionary.
    */
   template < typename _datatype_ >
-  inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile) {
+  inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile,
+                                                       bool tagged = true) {
     unsigned int size;
     read_block(ifile, size);
     std::vector< std::string > tags(size);
-    read_block(ifile, tags);
+    if (tagged) {
+      read_block(ifile, tags);
+    } else {
+      for (unsigned int i = 0; i < size; ++i) {
+        tags[i] = "tag";
+      }
+    }
     std::vector< _datatype_ > vals(size);
     read_block(ifile, vals);
     std::map< std::string, _datatype_ > dict;
@@ -243,6 +284,67 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< double > >(
     std::ifstream &ifile, std::vector< double > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
              value.size() * sizeof(double));
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing signed integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< int > >(
+    std::vector< int > &value) {
+  return value.size() * sizeof(int);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing unsigned integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
+    std::vector< unsigned int > &value) {
+  return value.size() * sizeof(unsigned int);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing signed chars.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< char > >(
+    std::vector< char > &value) {
+  return value.size() * sizeof(char);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing double precision
+ * floating point values.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< double > >(
+    std::vector< double > &value) {
+  return value.size() * sizeof(double);
 }
 
 /**

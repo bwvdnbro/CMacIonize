@@ -89,8 +89,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   if (fileident[0] != 'F') {
     cmac_error("Unsupported SPHNG snapshot format: %s!", fileident.c_str());
   }
+  bool tagged = true;
   if (fileident[1] != 'T') {
-    cmac_error("Untagged SPHNG snapshot files are not supported yet!");
+    tagged = false;
   }
 
   // the third, fourth and fifth block contain a dictionary of particle numbers
@@ -100,7 +101,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   //      read_dict< unsigned int >(file);
   //  unsigned int totnumpart = numbers["nparttot"];
   skip_block(file);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   skip_block(file);
 
   // skip 3 blocks
@@ -108,7 +111,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // integer with value zero. They supposedly correspond to blocks that are
   // absent
   skip_block(file);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   skip_block(file);
 
   // the next three blocks are a dictionary containing the highest unique index
@@ -119,7 +124,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
   if (number == 1) {
     // skip blocks
-    skip_block(file);
+    if (tagged) {
+      skip_block(file);
+    }
     skip_block(file);
   }
 
@@ -128,7 +135,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // just skip them.
   //  std::map< std::string, double > headerdict = read_dict< double >(file);
   skip_block(file);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   skip_block(file);
 
   // the next block again corresponds to a block that is absent from Will's
@@ -136,7 +145,11 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   skip_block(file);
 
   // the next three blocks contain the units
-  std::map< std::string, double > units = read_dict< double >(file);
+  std::map< std::string, double > units = read_dict< double >(file, tagged);
+  if (!tagged) {
+    units["udist"] = units["tag"];
+    units["umass"] = units["tag1"];
+  }
 
   // the last header block is again absent from Will's file
   skip_block(file);
@@ -152,19 +165,27 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   std::vector< unsigned int > numsink(8);
   read_block(file, nptmass, numsink);
 
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
 
   std::vector< int > isteps(npart);
   read_block(file, isteps);
 
   if (nums[0] >= 2) {
     // skip 2 blocks
-    skip_block(file);
+    if (tagged) {
+      skip_block(file);
+    }
     skip_block(file);
   }
 
   std::string tag;
-  read_block(file, tag);
+  if (tagged) {
+    read_block(file, tag);
+  } else {
+    tag = "iphase";
+  }
 
   if (tag != "iphase") {
     cmac_error("Wrong tag: \"%s\" (expected \"iphase\")!", tag.c_str());
@@ -175,28 +196,40 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
   if (nums[4] >= 1) {
     // skip iunique block
-    skip_block(file);
+    if (tagged) {
+      skip_block(file);
+    }
     skip_block(file);
   }
 
   std::vector< double > x(npart);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   read_block(file, x);
 
   std::vector< double > y(npart);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   read_block(file, y);
 
   std::vector< double > z(npart);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   read_block(file, z);
 
   std::vector< double > m(npart);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   read_block(file, m);
 
   std::vector< double > h(npart);
-  skip_block(file);
+  if (tagged) {
+    skip_block(file);
+  }
   read_block(file, h);
 
   // done reading file
