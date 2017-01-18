@@ -29,6 +29,15 @@
 #include "Error.hpp"
 
 #include <mpi.h>
+#include <vector>
+
+/**
+ * @brief Aliases for MPI_Op types.
+ */
+enum MPIOperatorType {
+  /*! @brief Take the sum of a variable across all processes. */
+  MPI_SUM_OF_ALL_PROCESSES = 0
+};
 
 /**
  * @brief C++ wrapper around basic MPI functions.
@@ -96,6 +105,78 @@ public:
    * @return Total number of MPI processes.
    */
   int get_size() { return _size; }
+
+  /**
+   * @brief Template function that returns the MPI_Datatype corresponding to the
+   * given template data type.
+   *
+   * This function needs to be specialized for every data type.
+   *
+   * @return MPI_Datatype corresponding to the given template data type.
+   */
+  template < typename _datatype_ > static MPI_Datatype get_datatype();
+
+  /**
+   * @brief Function that returns the MPI_Op corresponding to the given
+   * MPIOperatorType.
+   *
+   * @param type MPIOperatorType.
+   * @return MPI_Op corresponding to the given MPIOperatorType.
+   */
+  inline static MPI_Op get_operator(MPIOperatorType type) {
+    switch (type) {
+    case MPI_SUM_OF_ALL_PROCESSES:
+      return MPI_SUM;
+    default:
+      cmac_error("Unknown MPIOperatorType: %i!", type);
+      return 0;
+    }
+  }
+
+  /**
+   * @brief Reduce the elements of the given std::vector of objects, using the
+   * given getter member function to obtain an object data member to reduce, and
+   * the given setter member function to set the result of the reduction.
+   *
+   * @param v std::vector containing objects of a given template class type.
+   * @param getter Member function of the given template class type that returns
+   * a value of the given template data type that will be reduced across all
+   * processes.
+   * @param setter Member function of the given template class type that takes
+   * a value of the given template data type and stores it in the class type
+   * object after the reduction.
+   */
+  template < MPIOperatorType _operatortype_, typename _datatype_,
+             typename _classtype_ >
+  void reduce(std::vector< _classtype_ * > &v,
+              _datatype_ (_classtype_::*getter)(),
+              void (_classtype_::*setter)(_datatype_)) {
+    // in place reduction does not work
+    std::vector< _datatype_ > sendbuffer(v.size());
+    std::vector< _datatype_ > recvbuffer(v.size());
+    for (unsigned int i = 0; i < v.size(); ++i) {
+      sendbuffer[i] = (v[i]->*(getter))();
+    }
+    MPI_Datatype dtype = get_datatype< _datatype_ >();
+    MPI_Op otype = get_operator(_operatortype_);
+    MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], sendbuffer.size(), dtype,
+                  otype, MPI_COMM_WORLD);
+    for (unsigned int i = 0; i < v.size(); ++i) {
+      (v[i]->*(setter))(recvbuffer[i]);
+    }
+  }
 };
+
+/**
+ * @brief Template function that returns the MPI_Datatype corresponding to the
+ * given template data type.
+ *
+ * Specialization for a double precision floating point value.
+ *
+ * @return MPI_DOUBLE.
+ */
+template <> MPI_Datatype MPICommunicator::get_datatype< double >() {
+  return MPI_DOUBLE;
+}
 
 #endif // MPICOMMUNICATOR_HPP
