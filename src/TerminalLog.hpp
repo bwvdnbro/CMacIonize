@@ -71,8 +71,11 @@ public:
    * @brief Constructor.
    *
    * @param level Lowest LogLevel that is written out by this logger.
+   * @param header Optional header printed at the start of the terminal output.
    */
-  TerminalLog(LogLevel level) : Log(level) {}
+  TerminalLog(LogLevel level, std::string header = "") : Log(level) {
+    write_message(header);
+  }
 
   /**
    * @brief Virtual destructor.

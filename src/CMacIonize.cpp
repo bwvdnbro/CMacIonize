@@ -107,7 +107,17 @@ int main(int argc, char **argv) {
   if (parser.was_found("logfile")) {
     log = new FileLog(parser.get_value< std::string >("logfile"), loglevel);
   } else {
-    log = new TerminalLog(loglevel);
+    // ASCII art generated using
+    // http://patorjk.com/software/taag/#p=display&h=2&f=Big&t=CMacIonize
+    // all '\' have been manualy escaped, so the actual result looks a bit nicer
+    std::string header =
+        "  _____ __  __            _____            _\n"
+        " / ____|  \\/  |          |_   _|          (_)\n"
+        "| |    | \\  / | __ _  ___  | |  ___  _ __  _ _______\n"
+        "| |    | |\\/| |/ _` |/ __| | | / _ \\| '_ \\| |_  / _ \\\n"
+        "| |____| |  | | (_| | (__ _| || (_) | | | | |/ /  __/\n"
+        " \\_____|_|  |_|\\__,_|\\___|_____\\___/|_| |_|_/___\\___|\n";
+    log = new TerminalLog(loglevel, header);
   }
 
   log->write_status("This is CMacIonize, version ",
