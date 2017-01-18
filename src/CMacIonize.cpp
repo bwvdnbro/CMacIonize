@@ -85,6 +85,13 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("threads", 't', "Number of parallel threads to use.",
                     COMMANDLINEOPTION_INTARGUMENT, "1");
+  parser.add_option("dry-run", 'n',
+                    "Perform a dry run of the program: this reads the "
+                    "parameter file and sets up all the components, but aborts "
+                    "before initializing the density grid. This option is "
+                    "ideal for checking if a parameter file will work, and to "
+                    "check if all input files can be read.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -221,6 +228,11 @@ int main(int argc, char **argv) {
   pfile.close();
   log->write_status("Wrote used parameters to ", folder,
                     "/parameters-usedvalues.param.");
+
+  if (parser.get_value< bool >("dry-run")) {
+    log->write_warning("Dry run requested. Program will now halt.");
+    return 0.;
+  }
 
   // done writing file, now initialize grid
   grid->initialize();
