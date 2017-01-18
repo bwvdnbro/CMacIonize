@@ -81,7 +81,12 @@ int main(int argc, char **argv) {
                                     "given name, instead of to the standard "
                                     "output.",
                     COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
-  parser.add_option("dirty", 'd', "Allow running a dirty code version.",
+  parser.add_option("dirty", 'd',
+                    "Allow running a dirty code version. This is disabled by "
+                    "default, since a dirty code version does not correspond "
+                    "to a unique revision number in the code repository, and "
+                    "it is therefore impossible to rerun a dirty version with "
+                    "exactly the same code afterwards.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("threads", 't', "Number of parallel threads to use.",
                     COMMANDLINEOPTION_INTARGUMENT, "1");
@@ -115,7 +120,9 @@ int main(int argc, char **argv) {
                     CompilerInfo::get_host_name(), ").");
 
   if (CompilerInfo::is_dirty()) {
-    log->write_warning("This is a dirty code version.");
+    log->write_warning("This is a dirty code version (meaning some of the "
+                       "source files have changed since the code was obtained "
+                       "from the repository).");
     if (!parser.get_value< bool >("dirty")) {
       log->write_error("Running a dirty code version is disabled by default. "
                        "If you still want to run this version, add the "
