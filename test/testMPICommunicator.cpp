@@ -70,20 +70,45 @@ int main(int argc, char **argv) {
 
   cmac_status("This is process %i of %i.", comm.get_rank(), comm.get_size());
 
-  std::vector< TestClass * > objects(100, nullptr);
-  for (unsigned int i = 0; i < 100; ++i) {
-    objects[i] = new TestClass(1.);
-  }
+  // a vector with objects all containing the value 1
+  std::vector< TestClass > objects(100, 1.);
 
+  // first reduction: the vector version
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(objects, &TestClass::get_variable,
                                           &TestClass::set_variable);
 
+  // after the reduction, every element should contain the sum of 1's accross
+  // all processes: the total number of processes.
+  double ref = comm.get_size();
   for (unsigned int i = 0; i < 100; ++i) {
-    assert_condition(objects[i]->get_variable() == comm.get_size());
+    assert_condition(objects[i].get_variable() == ref);
   }
 
+  // second reduction: the iterator version. We start testing with a buffer that
+  // is too small (9 elements, while 100 need to be sent). We took an odd number
+  // (9) to make sure the last block is not entirely filled.
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(objects.begin(), objects.end(),
+                                          &TestClass::get_variable,
+                                          &TestClass::set_variable, 9);
+
+  // since every element already contained the number of processes, and this
+  // number is again added number of processes times, the elements now should
+  // contain the square of the number of processes
+  ref *= comm.get_size();
   for (unsigned int i = 0; i < 100; ++i) {
-    delete objects[i];
+    assert_condition(objects[i].get_variable() == ref);
+  }
+
+  // third reduction: iterator version with default buffer size. This time, the
+  // buffer should be way too large.
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(objects.begin(), objects.end(),
+                                          &TestClass::get_variable,
+                                          &TestClass::set_variable);
+
+  // every element now should contain the third power of the number of processes
+  ref *= comm.get_size();
+  for (unsigned int i = 0; i < 100; ++i) {
+    assert_condition(objects[i].get_variable() == ref);
   }
 
   return 0;

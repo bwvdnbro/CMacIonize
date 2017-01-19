@@ -295,9 +295,18 @@ public:
     /**
      * @brief Get the DensityValues of the cell the iterator is pointing to.
      *
-     * @return DensityValue the iterator is pointing to.
+     * @return DensityValues the iterator is pointing to.
      */
     inline DensityValues &get_values() const {
+      return _grid.get_cell_values(_index);
+    }
+
+    /**
+     * @brief Dereference operator.
+     *
+     * @return DensityValues the iterator is pointing to.
+     */
+    inline DensityValues &operator*() const {
       return _grid.get_cell_values(_index);
     }
 

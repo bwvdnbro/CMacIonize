@@ -31,6 +31,9 @@
 #include <mpi.h>
 #include <vector>
 
+/*! @brief Default size of the reduction buffer, if no size is provided. */
+#define MPICOMMUNICATOR_DEFAULT_BUFFERSIZE 1000000
+
 /**
  * @brief Aliases for MPI_Op types.
  */
@@ -97,14 +100,14 @@ public:
    *
    * @return Rank of the local MPI process.
    */
-  int get_rank() { return _rank; }
+  int get_rank() const { return _rank; }
 
   /**
    * @brief Get the total number of MPI processes.
    *
    * @return Total number of MPI processes.
    */
-  int get_size() { return _size; }
+  int get_size() const { return _size; }
 
   /**
    * @brief Template function that returns the MPI_Datatype corresponding to the
@@ -148,21 +151,84 @@ public:
    */
   template < MPIOperatorType _operatortype_, typename _datatype_,
              typename _classtype_ >
-  void reduce(std::vector< _classtype_ * > &v,
+  void reduce(std::vector< _classtype_ > &v,
               _datatype_ (_classtype_::*getter)(),
               void (_classtype_::*setter)(_datatype_)) {
     // in place reduction does not work
     std::vector< _datatype_ > sendbuffer(v.size());
     std::vector< _datatype_ > recvbuffer(v.size());
     for (unsigned int i = 0; i < v.size(); ++i) {
-      sendbuffer[i] = (v[i]->*(getter))();
+      sendbuffer[i] = (v[i].*(getter))();
     }
     MPI_Datatype dtype = get_datatype< _datatype_ >();
     MPI_Op otype = get_operator(_operatortype_);
     MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], sendbuffer.size(), dtype,
                   otype, MPI_COMM_WORLD);
     for (unsigned int i = 0; i < v.size(); ++i) {
-      (v[i]->*(setter))(recvbuffer[i]);
+      (v[i].*(setter))(recvbuffer[i]);
+    }
+  }
+
+  /**
+   * @brief Reduce the elements pointed to by the given begin and end iterator,
+   * using the given getter member function to obtain an object data member to
+   * reduce, and the given setter member function to set the result of the
+   * reduction.
+   *
+   * @param begin Iterator to the first element that should be reduced.
+   * @param end Iterator to the first element that should not be reduced, or the
+   * end of the list.
+   * @param getter Member function of the given template class type that returns
+   * a value of the given template data type that will be reduced across all
+   * processes.
+   * @param setter Member function of the given template class type that takes
+   * a value of the given template data type and stores it in the class type
+   * object after the reduction.
+   * @param size Number of elements to reduce in a single MPI communication.
+   * This value sets the memory size of the buffer that is used internally.
+   */
+  template < MPIOperatorType _operatortype_, typename _datatype_,
+             typename _classtype_, typename _iteratortype_ >
+  void reduce(_iteratortype_ begin, _iteratortype_ end,
+              _datatype_ (_classtype_::*getter)(),
+              void (_classtype_::*setter)(_datatype_),
+              unsigned int size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE) {
+    // in place reduction does not work, so we have to provide a separate send
+    // and receive buffer
+    std::vector< _datatype_ > sendbuffer(size);
+    std::vector< _datatype_ > recvbuffer(size);
+    // we loop over all elements of the iterator
+    _iteratortype_ it = begin;
+    while (it != end) {
+      // depending on the given buffer size, the reduction might be split in a
+      // number of blocks
+      _iteratortype_ blockit = it;
+      unsigned int i = 0;
+      // this loop ends if there are no more elements to reduce, or if the
+      // communication buffer size is reached
+      while (blockit != end && i < size) {
+        sendbuffer[i] = ((*blockit).*(getter))();
+        ++i;
+        ++blockit;
+      }
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Op otype = get_operator(_operatortype_);
+      // we reduce i elements, since that is the number of elements we added to
+      // the send buffer above
+      MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], i, dtype, otype,
+                    MPI_COMM_WORLD);
+      // we reset the counters to the same values used in the first loop
+      i = 0;
+      blockit = it;
+      // the condition here is exactly the same as the first loop, so the same
+      // elements will be traversed in the same order
+      while (blockit != end && i < size) {
+        ((*blockit).*(setter))(recvbuffer[i]);
+        ++i;
+        ++blockit;
+      }
+      // make sure the next block starts where the current one ended
+      it = blockit;
     }
   }
 };
