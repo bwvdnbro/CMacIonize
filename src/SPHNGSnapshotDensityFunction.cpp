@@ -174,6 +174,14 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   _partbox.get_sides()[1] = -DBL_MAX;
   _partbox.get_sides()[2] = -DBL_MAX;
 
+  Box rawunitsbox;
+  rawunitsbox.get_anchor()[0] = DBL_MAX;
+  rawunitsbox.get_anchor()[1] = DBL_MAX;
+  rawunitsbox.get_anchor()[2] = DBL_MAX;
+  rawunitsbox.get_sides()[0] = -DBL_MAX;
+  rawunitsbox.get_sides()[1] = -DBL_MAX;
+  rawunitsbox.get_sides()[2] = -DBL_MAX;
+
   double unit_length =
       UnitConverter::to_SI< QUANTITY_LENGTH >(units["udist"], "cm");
   double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
@@ -292,6 +300,11 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
     for (unsigned int i = 0; i < npart; ++i) {
       if (iphase[i] == 0) {
+        CoordinateVector<> rawunitsposition(x[i], y[i], z[i]);
+        rawunitsbox.get_anchor() =
+            CoordinateVector<>::min(rawunitsbox.get_anchor(), rawunitsposition);
+        rawunitsbox.get_sides() =
+            CoordinateVector<>::max(rawunitsbox.get_sides(), rawunitsposition);
         CoordinateVector<> position(x[i] * unit_length, y[i] * unit_length,
                                     z[i] * unit_length);
         _positions.push_back(position);
@@ -324,6 +337,12 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
         " m, ", _partbox.get_anchor().y(), " m, ", _partbox.get_anchor().z(),
         " m] and sides [", _partbox.get_sides().x(), " m, ",
         _partbox.get_sides().y(), " m, ", _partbox.get_sides().z(), " m]...");
+    log->write_info(
+        "In raw units, this corresponds to a box with anchor [",
+        rawunitsbox.get_anchor().x(), ", ", rawunitsbox.get_anchor().y(), ", ",
+        rawunitsbox.get_anchor().z(), "], and sides [",
+        rawunitsbox.get_sides().x(), ", ", rawunitsbox.get_sides().y(), ", ",
+        rawunitsbox.get_sides().z(), "].");
   }
 }
 
