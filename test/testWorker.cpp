@@ -161,10 +161,12 @@ int main(int argc, char **argv) {
   // things up
   double *A_serial = new double[ARRAY_LENGTH];
   double *A_parallel = new double[ARRAY_LENGTH];
+  double *A_ref = new double[ARRAY_LENGTH];
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
     double aval = Utilities::random_double();
     A_serial[i] = aval;
     A_parallel[i] = aval;
+    A_ref[i] = test_function(aval);
   }
 
   double time_serial;
@@ -179,8 +181,7 @@ int main(int argc, char **argv) {
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    // note that A_parallel at this time still contains the initial values
-    assert_condition(A_serial[i] == test_function(A_parallel[i]));
+    assert_condition(A_serial[i] == A_ref[i]);
   }
 
   int worksize;
@@ -195,7 +196,7 @@ int main(int argc, char **argv) {
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A_parallel[i] == A_serial[i]);
+    assert_condition(A_parallel[i] == A_ref[i]);
   }
 
   cmac_status("Serial time: %s, parallel time: %s.",
@@ -209,6 +210,7 @@ int main(int argc, char **argv) {
 
   delete[] A_serial;
   delete[] A_parallel;
+  delete[] A_ref;
 
   return 0;
 }
