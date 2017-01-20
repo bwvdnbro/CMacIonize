@@ -29,6 +29,7 @@
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
+#include "Configuration.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
@@ -54,6 +55,11 @@
 #include "WorkEnvironment.hpp"
 #include <iostream>
 #include <string>
+
+#ifdef HAVE_MPI
+#include "MPICommunicator.hpp"
+#endif
+
 using namespace std;
 
 /**
@@ -64,6 +70,14 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+#ifdef HAVE_MPI
+  MPICommunicator comm(argc, argv);
+
+  if (comm.get_size() > 1) {
+    cmac_error("Running on multiple MPI processes is not yet supported!");
+  }
+#endif
+
   Timer programtimer;
 
   // first thing we should do: parse the command line arguments

@@ -218,9 +218,20 @@ list(APPEND CMACIONIZE_SOURCES
     HDF5Tools.hpp)
 endif(HAVE_HDF5)
 
+# add MPI dependent sources, if we have found MPI
+if(HAVE_MPI)
+list(APPEND CMACIONIZE_SOURCES
+    MPICommunicator.hpp)
+endif(HAVE_MPI)
+
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 
 # link to HDF5, if we have found it
 if(HAVE_HDF5)
-target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
+    target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
+
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(CMacIonize ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)

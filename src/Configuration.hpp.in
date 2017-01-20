@@ -30,5 +30,6 @@
 
 #cmakedefine HAVE_HDF5
 #cmakedefine HAVE_OPENMP
+#cmakedefine HAVE_MPI
 
 #endif // CONFIGURATION_HPP
