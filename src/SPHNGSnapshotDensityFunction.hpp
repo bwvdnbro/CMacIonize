@@ -63,6 +63,21 @@ private:
   /*! @brief Initial temperature of the gas (in K). */
   double _initial_temperature;
 
+  /*! @brief Number of bins to use when writing particle statistics. */
+  unsigned int _stats_numbin;
+
+  /*! @brief Minimum distance to use for particle statistics. */
+  double _stats_mindist;
+
+  /*! @brief Maximum distance to use for particle statistics. */
+  double _stats_maxdist;
+
+  /*! @brief Name of the file with particle statistics. */
+  std::string _stats_filename;
+
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
   static double kernel(const double q, const double h);
 
   /**
@@ -213,7 +228,9 @@ private:
 
 public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               Log *log = nullptr);
+                               bool write_stats, unsigned int stats_numbin,
+                               double stats_mindist, double stats_maxdist,
+                               std::string stats_filename, Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 

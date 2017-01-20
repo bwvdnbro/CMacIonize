@@ -69,11 +69,25 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  *
  * @param filename Name of the file to read.
  * @param initial_temperature Initial temperature of the gas (in K).
+ * @param write_stats Flag indicating whether or not to write a file with
+ * neighbour statistics.
+ * @param stats_numbin Number of logarithmic bins used to keep track of
+ * interneighbour distances.
+ * @param stats_mindist Minimum interneighbour distance bin (in m; needs to be
+ * non-zero, as we use logarithmic binning).
+ * @param stats_maxdist Maximum interneighbour distance bin (in m).
+ * @param stats_filename Name of the file with neighbour statistics that will be
+ * written out.
  * @param log Log to write logging info to.
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
-    std::string filename, double initial_temperature, Log *log)
-    : _octree(nullptr), _initial_temperature(initial_temperature) {
+    std::string filename, double initial_temperature, bool write_stats,
+    unsigned int stats_numbin, double stats_mindist, double stats_maxdist,
+    std::string stats_filename, Log *log)
+    : _octree(nullptr), _initial_temperature(initial_temperature),
+      _stats_numbin(stats_numbin), _stats_mindist(stats_mindist),
+      _stats_maxdist(stats_maxdist), _stats_filename(stats_filename),
+      _log(log) {
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
   if (!file) {
@@ -329,20 +343,24 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   _partbox.get_anchor() -= 0.01 * _partbox.get_sides();
   _partbox.get_sides() *= 1.02;
 
-  if (log) {
-    log->write_status("Snapshot contains ", _positions.size(),
-                      " gas particles.");
-    log->write_status(
+  if (_log) {
+    _log->write_status("Snapshot contains ", _positions.size(),
+                       " gas particles.");
+    _log->write_status(
         "Will create octree in box with anchor [", _partbox.get_anchor().x(),
         " m, ", _partbox.get_anchor().y(), " m, ", _partbox.get_anchor().z(),
         " m] and sides [", _partbox.get_sides().x(), " m, ",
         _partbox.get_sides().y(), " m, ", _partbox.get_sides().z(), " m]...");
-    log->write_info(
+    _log->write_info(
         "In raw units, this corresponds to a box with anchor [",
         rawunitsbox.get_anchor().x(), ", ", rawunitsbox.get_anchor().y(), ", ",
         rawunitsbox.get_anchor().z(), "], and sides [",
         rawunitsbox.get_sides().x(), ", ", rawunitsbox.get_sides().y(), ", ",
         rawunitsbox.get_sides().z(), "].");
+  }
+
+  if (!write_stats) {
+    _stats_numbin = 0;
   }
 }
 
@@ -358,6 +376,15 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
           params.get_value< std::string >("densityfunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction:initial_temperature", "8000. K"),
+          params.get_value< bool >("densityfunction:write_statistics", false),
+          params.get_value< unsigned int >(
+              "densityfunction:statistics_number_of_bins", 200),
+          params.get_physical_value< QUANTITY_LENGTH >(
+              "densityfunction:statistics_minimum_distance", "1.e-5 m"),
+          params.get_physical_value< QUANTITY_LENGTH >(
+              "densityfunction:statistics_maximum_distance", "1. kpc"),
+          params.get_value< std::string >("densityfunction:statistics_filename",
+                                          "ngb_statistics.txt"),
           log) {}
 
 /**
@@ -376,6 +403,64 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
 void SPHNGSnapshotDensityFunction::initialize() {
   _octree = new Octree(_positions, _partbox, false);
   _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+
+  if (_stats_numbin > 0) {
+    if (_log) {
+      _log->write_status("Obtaining particle neighbour statistics...");
+    }
+    const unsigned int numbin = _stats_numbin;
+    const double mindist = _stats_mindist;
+    const double maxdist = _stats_maxdist;
+    const double logmindist = std::log10(mindist);
+    const double logmaxdist = std::log10(maxdist);
+    const double logddist = logmaxdist - logmindist;
+    std::vector< double > ngbstats(numbin);
+    double totnumngb = 0.;
+    double numsmall = 0.;
+    double numlarge = 0.;
+    for (unsigned int i = 0; i < _positions.size(); ++i) {
+      if (_log && i % (_positions.size() / 10) == 0) {
+        _log->write_info("Got statistics for ", i, " of ", _positions.size(),
+                         " particles.");
+      }
+      std::vector< unsigned int > ngbs = _octree->get_ngbs(_positions[i]);
+      const unsigned int numngbs = ngbs.size();
+      totnumngb += numngbs;
+      for (unsigned int j = 0; j < numngbs; ++j) {
+        unsigned int index = ngbs[j];
+        if (index != i) {
+          double r = (_positions[i] - _positions[index]).norm();
+          if (r >= mindist) {
+            unsigned int ibin =
+                (std::log10(r) - logmindist) / logddist * numbin;
+            if (ibin < numbin) {
+              ngbstats[ibin] += 1.;
+            } else {
+              numlarge += 1.;
+            }
+          } else {
+            numsmall += 1.;
+          }
+        }
+      }
+    }
+
+    std::ofstream statfile(_stats_filename);
+    double numinside = totnumngb - numsmall - numlarge;
+    statfile << "# statistics account for " << (numinside / totnumngb) * 100.
+             << "% of the particles.\n";
+    statfile << "# " << (numsmall / totnumngb) * 100.
+             << "% of the particles was closer together, "
+             << (numlarge / totnumngb) * 100. << "% was further apart.\n";
+    statfile << "#\n# r\tfraction\n";
+    for (unsigned int i = 0; i < numbin; ++i) {
+      double r = std::pow(10., i * logddist / numbin + logmindist);
+      statfile << r << "\t" << ngbstats[i] / totnumngb << "\n";
+    }
+    if (_log) {
+      _log->write_status("Wrote statistics file \"", _stats_filename, "\".");
+    }
+  }
 }
 
 /**

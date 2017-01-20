@@ -40,7 +40,8 @@ int main(int argc, char **argv) {
   /// tagged file
   {
     cmac_status("Start reading tagged file...");
-    SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat", 8000.);
+    SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat", 8000., false,
+                                                  0, 0., 0., "");
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
@@ -77,8 +78,8 @@ int main(int argc, char **argv) {
   /// untagged file
   {
     cmac_status("Start reading untagged file...");
-    SPHNGSnapshotDensityFunction density_function("SPHNGtest_notags.dat",
-                                                  8000.);
+    SPHNGSnapshotDensityFunction density_function("SPHNGtest_notags.dat", 8000.,
+                                                  false, 0, 0., 0., "");
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
