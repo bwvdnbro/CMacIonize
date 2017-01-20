@@ -152,13 +152,10 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  // we create 2 identical arrays:
-  //  - 1 for serial running
-  //  - 1 for parallel running
-  // after the first (serial) run, we check the results by using the second
-  // array as reference. After the second (parallel) run, we use the first
-  // array (that already contains the correct value) as reference, to speed
-  // things up
+  // we create 3 identical arrays:
+  //  - 1 for serial running without Worker (for reference)
+  //  - 1 for serial running with Worker
+  //  - 1 for parallel running (with Workers)
   double *A_serial = new double[ARRAY_LENGTH];
   double *A_parallel = new double[ARRAY_LENGTH];
   double *A_ref = new double[ARRAY_LENGTH];
@@ -166,7 +163,14 @@ int main(int argc, char **argv) {
     double aval = Utilities::random_double();
     A_serial[i] = aval;
     A_parallel[i] = aval;
-    A_ref[i] = test_function(aval);
+    A_ref[i] = aval;
+  }
+
+  // we have to initialize the reference array after having filled it with
+  // random values, since the Intel compiler otherwise does stupid optimizations
+  // that make it impossible to compare values afterwards.
+  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+    A_ref[i] = test_function(A_ref[i]);
   }
 
   double time_serial;
