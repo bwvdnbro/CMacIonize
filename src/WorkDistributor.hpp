@@ -104,15 +104,10 @@ public:
   inline void do_in_parallel(_JobMarket_ &jobs) const {
     if (_worksize > 1) {
 #ifdef HAVE_OPENMP
-#pragma omp parallel default(shared)
-      {
-#pragma omp for
-        for (int i = 0; i < _worksize; ++i) {
-          {
-            Worker< _JobMarket_, _Job_ > worker(i);
-            worker.do_work(jobs);
-          }
-        }
+#pragma omp parallel for default(shared)
+      for (int i = 0; i < _worksize; ++i) {
+        Worker< _JobMarket_, _Job_ > worker(i);
+        worker.do_work(jobs);
       }
 #else
       cmac_error("Trying to run multiple workers without OpenMP!");
