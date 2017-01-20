@@ -270,8 +270,9 @@ public:
     /*! @brief Index of the cell the iterator is currently pointing to. */
     unsigned long _index;
 
-    /*! @brief Reference to the DensityGrid over which we iterate. */
-    DensityGrid &_grid;
+    /*! @brief Pointer to the DensityGrid over which we iterate (we cannot use a
+     *  reference, since then things like it = it would not work). */
+    DensityGrid *_grid;
 
   public:
     /**
@@ -281,7 +282,7 @@ public:
      * @param grid DensityGrid over which we iterate.
      */
     inline iterator(unsigned long index, DensityGrid &grid)
-        : _index(index), _grid(grid) {}
+        : _index(index), _grid(&grid) {}
 
     /**
      * @brief Get the midpoint of the cell the iterator is pointing to.
@@ -289,7 +290,7 @@ public:
      * @return Cell midpoint (in m).
      */
     inline CoordinateVector<> get_cell_midpoint() const {
-      return _grid.get_cell_midpoint(_index);
+      return _grid->get_cell_midpoint(_index);
     }
 
     /**
@@ -298,7 +299,7 @@ public:
      * @return DensityValues the iterator is pointing to.
      */
     inline DensityValues &get_values() const {
-      return _grid.get_cell_values(_index);
+      return _grid->get_cell_values(_index);
     }
 
     /**
@@ -307,7 +308,7 @@ public:
      * @return DensityValues the iterator is pointing to.
      */
     inline DensityValues &operator*() const {
-      return _grid.get_cell_values(_index);
+      return _grid->get_cell_values(_index);
     }
 
     /**
@@ -315,7 +316,7 @@ public:
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() const { return _grid.get_cell_volume(_index); }
+    inline double get_volume() const { return _grid->get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -326,7 +327,7 @@ public:
      * @return Reference to the incremented iterator.
      */
     inline iterator &operator++() {
-      _grid.increase_index(_index);
+      _grid->increase_index(_index);
       return *this;
     }
 
@@ -344,7 +345,7 @@ public:
      * @return True if the iterators point to the same cell of the same grid.
      */
     inline bool operator==(iterator it) const {
-      return (&_grid == &it._grid && _index == it._index);
+      return (_grid == it._grid && _index == it._index);
     }
 
     /**

@@ -646,6 +646,8 @@ if(HAVE_MPI)
 set(TESTMPICOMMUNICATOR_SOURCES
     testMPICommunicator.cpp
 
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
     ../src/MPICommunicator.hpp
 )
 add_unit_test(NAME testMPICommunicator

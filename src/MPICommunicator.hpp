@@ -152,7 +152,7 @@ public:
   template < MPIOperatorType _operatortype_, typename _datatype_,
              typename _classtype_ >
   void reduce(std::vector< _classtype_ > &v,
-              _datatype_ (_classtype_::*getter)(),
+              _datatype_ (_classtype_::*getter)() const,
               void (_classtype_::*setter)(_datatype_)) {
     // in place reduction does not work
     std::vector< _datatype_ > sendbuffer(v.size());
@@ -190,7 +190,7 @@ public:
   template < MPIOperatorType _operatortype_, typename _datatype_,
              typename _classtype_, typename _iteratortype_ >
   void reduce(_iteratortype_ begin, _iteratortype_ end,
-              _datatype_ (_classtype_::*getter)(),
+              _datatype_ (_classtype_::*getter)() const,
               void (_classtype_::*setter)(_datatype_),
               unsigned int size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE) {
     // in place reduction does not work, so we have to provide a separate send

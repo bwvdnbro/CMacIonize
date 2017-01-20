@@ -24,6 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "MPICommunicator.hpp"
 #include <vector>
 
@@ -48,7 +50,7 @@ public:
    *
    * @return Value of the variable.
    */
-  double get_variable() { return _variable; }
+  double get_variable() const { return _variable; }
 
   /**
    * @brief Setter for the variable.
@@ -109,6 +111,21 @@ int main(int argc, char **argv) {
   ref *= comm.get_size();
   for (unsigned int i = 0; i < 100; ++i) {
     assert_condition(objects[i].get_variable() == ref);
+  }
+
+  HomogeneousDensityFunction testfunction(1., 2000.);
+  CoordinateVector<> anchor;
+  CoordinateVector<> sides(1., 1., 1.);
+  Box box(anchor, sides);
+  CartesianDensityGrid grid(box, 8, testfunction);
+  grid.initialize();
+
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+      grid.begin(), grid.end(), &DensityValues::get_total_density,
+      &DensityValues::set_total_density, grid.get_number_of_cells());
+
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    assert_condition(it.get_values().get_total_density() == comm.get_size());
   }
 
   return 0;
