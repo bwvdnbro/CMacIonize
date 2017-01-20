@@ -296,7 +296,7 @@ public:
    *
    * @return iterator to the first element.
    */
-  inline iterator begin() { return iterator(_dictionary.begin()); }
+  inline iterator begin() { return iterator(_used_values.begin()); }
 
   /**
    * @brief Get an iterator to the beyond last element in the internal
@@ -304,7 +304,7 @@ public:
    *
    * @return iterator to the beyond last element.
    */
-  inline iterator end() { return iterator(_dictionary.end()); }
+  inline iterator end() { return iterator(_used_values.end()); }
 };
 
 /**
