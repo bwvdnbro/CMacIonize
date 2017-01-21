@@ -334,9 +334,18 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   }
 
   // done reading file
-  _positions.shrink_to_fit();
-  _masses.shrink_to_fit();
-  _smoothing_lengths.shrink_to_fit();
+  // we would like to reduce memory usage at this point by shrinking the
+  // internal vectors, using shrink_to_fit. However, the Intel compiler for some
+  // reason complains about not finding this function (while still supporting
+  // all other C++11 features), so we disable it here.
+  // Note that enabling the code below might reduce the memory imprint,
+  // especially if large snapshots are read in (if you use a suitable compiler,
+  // that is).
+  // BEGIN OF CODE
+  // _positions.shrink_to_fit();
+  // _masses.shrink_to_fit();
+  // _smoothing_lengths.shrink_to_fit();
+  // END OF CODE
 
   _partbox.get_sides() -= _partbox.get_anchor();
   // add some margin to the box
