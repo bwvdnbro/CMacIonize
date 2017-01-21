@@ -31,6 +31,7 @@
 #define LOCK_HPP
 
 #include "Configuration.hpp"
+#include "Error.hpp"
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
@@ -54,6 +55,20 @@ public:
    * @brief Constructor.
    */
   inline Lock() {
+#ifdef HAVE_OPENMP
+    omp_init_lock(&_lock);
+#endif
+  }
+
+  /**
+   * @brief Copy constructor.
+   *
+   * Locks should not be copied. Whenever a Lock needs to be copied, we simply
+   * initialize a new OpenMP lock.
+   *
+   * @param lock Lock that is being copied.
+   */
+  inline Lock(const Lock &lock) {
 #ifdef HAVE_OPENMP
     omp_init_lock(&_lock);
 #endif
