@@ -234,33 +234,33 @@ public:
         refine_cell(*_refinement_scheme, *_cells[i], _density_function);
       }
 
-      for (unsigned int i = 0; i < _cells.size(); ++i) {
-        AMRGridCell< DensityValues > *parent = _cells[i]->get_parent();
-        if (parent && parent->get_child(AMRCHILDPOSITION_LFB) == _cells[i]) {
-          // we only check the first child, since all other children have the
-          // same parent
-          CoordinateVector<> midpoints[8];
-          double volumes[8];
-          DensityValues cells[8];
-          bool lowest_level = true;
-          for (int ichild = 0; ichild < 8; ++ichild) {
-            AMRGridCell< DensityValues > *child =
-                parent->get_child(static_cast< AMRChildPosition >(ichild));
-            if (child->is_single_cell()) {
-              midpoints[ichild] = child->get_midpoint();
-              volumes[ichild] = child->get_volume();
-              cells[ichild] = child->value();
-            } else {
-              lowest_level = false;
-            }
-          }
-          if (lowest_level &&
-              _refinement_scheme->coarsen(parent->get_level() + 1, midpoints,
-                                          volumes, cells)) {
-            cmac_status("Coarsening needed");
-          }
-        }
-      }
+//      for (unsigned int i = 0; i < _cells.size(); ++i) {
+//        AMRGridCell< DensityValues > *parent = _cells[i]->get_parent();
+//        if (parent && parent->get_child(AMRCHILDPOSITION_LFB) == _cells[i]) {
+//          // we only check the first child, since all other children have the
+//          // same parent
+//          CoordinateVector<> midpoints[8];
+//          double volumes[8];
+//          DensityValues cells[8];
+//          bool lowest_level = true;
+//          for (int ichild = 0; ichild < 8; ++ichild) {
+//            AMRGridCell< DensityValues > *child =
+//                parent->get_child(static_cast< AMRChildPosition >(ichild));
+//            if (child->is_single_cell()) {
+//              midpoints[ichild] = child->get_midpoint();
+//              volumes[ichild] = child->get_volume();
+//              cells[ichild] = child->value();
+//            } else {
+//              lowest_level = false;
+//            }
+//          }
+//          if (lowest_level &&
+//              _refinement_scheme->coarsen(parent->get_level() + 1, midpoints,
+//                                          volumes, cells)) {
+//            cmac_status("Coarsening needed");
+//          }
+//        }
+//      }
 
       if (_log) {
         _log->write_status("Number of cells after refinement: ",

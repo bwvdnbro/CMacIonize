@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
       new MassAMRRefinementScheme(0.125 * 0.125 * 0.125);
 
   AMRDensityGrid grid(box, ncell, density_function, scheme);
+  grid.initialize();
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
