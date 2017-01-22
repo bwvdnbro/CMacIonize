@@ -86,6 +86,21 @@ public:
   }
 
   /**
+   * @brief Copy assignment operator.
+   *
+   * We have to implement this version, to make sure our original OpenMP lock is
+   * not overwritten with the value of the Lock being copied in.
+   * This routine does nothing, while the default copy assignment operator would
+   * overwrite the value of _lock.
+   *
+   * @param lock Lock that is being copied in.
+   * @return Reference to the
+   */
+  inline Lock &operator=(const Lock &lock){
+    return *this;
+  }
+
+  /**
    * @brief Obtain exclusive access of the Lock.
    *
    * This routine tries to get exclusive access of the lock. If the lock is
