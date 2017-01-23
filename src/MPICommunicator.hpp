@@ -31,6 +31,27 @@
 #include <mpi.h>
 #include <vector>
 
+#if defined(__clang__)
+// header containing functions to temporarily disable the address sanitizer
+#include <sanitizer/lsan_interface.h>
+#endif
+
+/*! @brief Temporarily disable instrumentation for memory allocations done
+ *  between the call to this macro, and the call to NO_LEAK_CHECK_END. */
+#if defined(__clang__)
+#define NO_LEAK_CHECK_BEGIN __lsan_disable();
+#else
+#define NO_LEAK_CHECK_BEGIN
+#endif
+
+/*! @brief Re-enable instrumentation after it was disabled by
+ *  NO_LEAK_CHECK_BEGIN. */
+#if defined(__clang__)
+#define NO_LEAK_CHECK_END __lsan_enable();
+#else
+#define NO_LEAK_CHECK_END
+#endif
+
 /*! @brief Default size of the reduction buffer, if no size is provided. */
 #define MPICOMMUNICATOR_DEFAULT_BUFFERSIZE 1000000
 
@@ -64,7 +85,11 @@ public:
    * @param argv Command line arguments passed on to the main program.
    */
   inline MPICommunicator(int &argc, char **argv) {
+    // MPI_Init is known to cause memory leak detections, so we disable the
+    // address sanitizer for all allocations made by it
+    NO_LEAK_CHECK_BEGIN
     int status = MPI_Init(&argc, &argv);
+    NO_LEAK_CHECK_END
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to initialize MPI!");
     }
