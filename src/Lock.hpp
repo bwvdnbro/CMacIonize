@@ -96,9 +96,7 @@ public:
    * @param lock Lock that is being copied in.
    * @return Reference to the
    */
-  inline Lock &operator=(const Lock &lock){
-    return *this;
-  }
+  inline Lock &operator=(const Lock &lock) { return *this; }
 
   /**
    * @brief Obtain exclusive access of the Lock.
