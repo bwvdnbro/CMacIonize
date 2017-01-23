@@ -154,6 +154,16 @@ public:
   }
 
   /**
+   * @brief Set the mean intensity of ionizing radiation for the given ion.
+   *
+   * @param ion IonName.
+   * @param mean_intensity Mean intensity of ionizing radiation (in m^3s^-1).
+   */
+  inline void set_mean_intensity(double mean_intensity, IonName ion) {
+    _mean_intensity[ion] = mean_intensity;
+  }
+
+  /**
    * @brief Set the mean intensity of hydrogen ionizing radiation during the
    * previous sub-step.
    *
@@ -173,6 +183,20 @@ public:
   inline void set_old_neutral_fraction_H(double old_neutral_fraction_H) {
     _old_neutral_fraction_H = old_neutral_fraction_H;
   }
+
+  /**
+   * @brief Set the hydrogen heating term.
+   *
+   * @param heating_H Hydrogen heating term (in m^3s^-1).
+   */
+  inline void set_heating_H(double heating_H) { _heating_H = heating_H; }
+
+  /**
+   * @brief Set the helium heating term.
+   *
+   * @param heating_He Helium heating term (in m^3s^-1).
+   */
+  inline void set_heating_He(double heating_He) { _heating_He = heating_He; }
 
   /**
    * @brief Increase the value for the mean intensity integral of the given

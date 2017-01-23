@@ -63,7 +63,7 @@ public:
    * @param argc Number of command line arguments passed on to the main program.
    * @param argv Command line arguments passed on to the main program.
    */
-  MPICommunicator(int &argc, char **argv) {
+  inline MPICommunicator(int &argc, char **argv) {
     int status = MPI_Init(&argc, &argv);
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to initialize MPI!");
@@ -88,7 +88,7 @@ public:
    *
    * Calls MPI_Finalize().
    */
-  ~MPICommunicator() {
+  inline ~MPICommunicator() {
     int status = MPI_Finalize();
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to clean up MPI!");
@@ -100,14 +100,29 @@ public:
    *
    * @return Rank of the local MPI process.
    */
-  int get_rank() const { return _rank; }
+  inline int get_rank() const { return _rank; }
 
   /**
    * @brief Get the total number of MPI processes.
    *
    * @return Total number of MPI processes.
    */
-  int get_size() const { return _size; }
+  inline int get_size() const { return _size; }
+
+  /**
+   * @brief Distribute the given number across all processes, so that the sum of
+   * the returned values across all processes is the given number.
+   *
+   * @param number Number to distribute.
+   * @return Part of the number that is assigned to this process.
+   */
+  inline unsigned int distribute(const unsigned int number) const {
+    unsigned int quotient = number / _size;
+    int remainder = number % _size;
+    // all processes with a rank smaller than the remainder get one element
+    // extra (since _rank < remainder evaluates to either 0 or 1)
+    return quotient + (_rank < remainder);
+  }
 
   /**
    * @brief Template function that returns the MPI_Datatype corresponding to the
@@ -115,9 +130,9 @@ public:
    *
    * This function needs to be specialized for every data type.
    *
-   * @return MPI_Datatype corresponding to the given template data type.
+   * @return MPI_Datatype for the given template data type.
    */
-  template < typename _datatype_ > static MPI_Datatype get_datatype();
+  template < typename _datatype_ > static inline MPI_Datatype get_datatype();
 
   /**
    * @brief Function that returns the MPI_Op corresponding to the given
@@ -153,19 +168,26 @@ public:
              typename _classtype_ >
   void reduce(std::vector< _classtype_ > &v,
               _datatype_ (_classtype_::*getter)() const,
-              void (_classtype_::*setter)(_datatype_)) {
-    // in place reduction does not work
-    std::vector< _datatype_ > sendbuffer(v.size());
-    std::vector< _datatype_ > recvbuffer(v.size());
-    for (unsigned int i = 0; i < v.size(); ++i) {
-      sendbuffer[i] = (v[i].*(getter))();
-    }
-    MPI_Datatype dtype = get_datatype< _datatype_ >();
-    MPI_Op otype = get_operator(_operatortype_);
-    MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], sendbuffer.size(), dtype,
-                  otype, MPI_COMM_WORLD);
-    for (unsigned int i = 0; i < v.size(); ++i) {
-      (v[i].*(setter))(recvbuffer[i]);
+              void (_classtype_::*setter)(_datatype_)) const {
+    // we only communicate if there are multiple processes
+    if (_size > 1) {
+      // in place reduction does not work
+      std::vector< _datatype_ > sendbuffer(v.size());
+      std::vector< _datatype_ > recvbuffer(v.size());
+      for (unsigned int i = 0; i < v.size(); ++i) {
+        sendbuffer[i] = (v[i].*(getter))();
+      }
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Op otype = get_operator(_operatortype_);
+      int status =
+          MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], sendbuffer.size(),
+                        dtype, otype, MPI_COMM_WORLD);
+      if (status != MPI_SUCCESS) {
+        cmac_error("Error in MPI_Allreduce!");
+      }
+      for (unsigned int i = 0; i < v.size(); ++i) {
+        (v[i].*(setter))(recvbuffer[i]);
+      }
     }
   }
 
@@ -174,6 +196,13 @@ public:
    * using the given getter member function to obtain an object data member to
    * reduce, and the given setter member function to set the result of the
    * reduction.
+   *
+   * This routine also accepts extra arguments that will be passed on to the
+   * getter and setter. The setter function call should accept these arguments
+   * after the value of the reduced variable, like this:
+   * \code{.cpp}
+   *   setter(reduced_value, args)
+   * \endcode
    *
    * @param begin Iterator to the first element that should be reduced.
    * @param end Iterator to the first element that should not be reduced, or the
@@ -186,49 +215,108 @@ public:
    * object after the reduction.
    * @param size Number of elements to reduce in a single MPI communication.
    * This value sets the memory size of the buffer that is used internally.
+   * @param args Extra arguments passed on to the getter and setter.
    */
   template < MPIOperatorType _operatortype_, typename _datatype_,
-             typename _classtype_, typename _iteratortype_ >
+             typename _classtype_, typename _iteratortype_,
+             typename... _arguments_ >
   void reduce(_iteratortype_ begin, _iteratortype_ end,
-              _datatype_ (_classtype_::*getter)() const,
-              void (_classtype_::*setter)(_datatype_),
-              unsigned int size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE) {
-    // in place reduction does not work, so we have to provide a separate send
-    // and receive buffer
-    std::vector< _datatype_ > sendbuffer(size);
-    std::vector< _datatype_ > recvbuffer(size);
-    // we loop over all elements of the iterator
-    _iteratortype_ it = begin;
-    while (it != end) {
-      // depending on the given buffer size, the reduction might be split in a
-      // number of blocks
-      _iteratortype_ blockit = it;
-      unsigned int i = 0;
-      // this loop ends if there are no more elements to reduce, or if the
-      // communication buffer size is reached
-      while (blockit != end && i < size) {
-        sendbuffer[i] = ((*blockit).*(getter))();
-        ++i;
-        ++blockit;
+              _datatype_ (_classtype_::*getter)(_arguments_...) const,
+              void (_classtype_::*setter)(_datatype_, _arguments_...),
+              unsigned int size, _arguments_... args) const {
+    if (_size > 1) {
+      if (size == 0) {
+        size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
       }
+      // in place reduction does not work, so we have to provide a separate send
+      // and receive buffer
+      std::vector< _datatype_ > sendbuffer(size);
+      std::vector< _datatype_ > recvbuffer(size);
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
-      // we reduce i elements, since that is the number of elements we added to
-      // the send buffer above
-      MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], i, dtype, otype,
-                    MPI_COMM_WORLD);
-      // we reset the counters to the same values used in the first loop
-      i = 0;
-      blockit = it;
-      // the condition here is exactly the same as the first loop, so the same
-      // elements will be traversed in the same order
-      while (blockit != end && i < size) {
-        ((*blockit).*(setter))(recvbuffer[i]);
-        ++i;
-        ++blockit;
+      // we loop over all elements of the iterator
+      _iteratortype_ it = begin;
+      while (it != end) {
+        // depending on the given buffer size, the reduction might be split in a
+        // number of blocks
+        _iteratortype_ blockit = it;
+        unsigned int i = 0;
+        // this loop ends if there are no more elements to reduce, or if the
+        // communication buffer size is reached
+        while (blockit != end && i < size) {
+          sendbuffer[i] = ((*blockit).*(getter))(args...);
+          ++i;
+          ++blockit;
+        }
+        // we reduce i elements, since that is the number of elements we added
+        // to the send buffer above
+        int status = MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], i, dtype,
+                                   otype, MPI_COMM_WORLD);
+        if (status != MPI_SUCCESS) {
+          cmac_error("Error in MPI_Allreduce!");
+        }
+        // we reset the counters to the same values used in the first loop
+        i = 0;
+        blockit = it;
+        // the condition here is exactly the same as the first loop, so the same
+        // elements will be traversed in the same order
+        while (blockit != end && i < size) {
+          ((*blockit).*(setter))(recvbuffer[i], args...);
+          ++i;
+          ++blockit;
+        }
+        // make sure the next block starts where the current one ended
+        it = blockit;
       }
-      // make sure the next block starts where the current one ended
-      it = blockit;
+    }
+  }
+
+  /**
+   * @brief Reduce the given variable across all processes.
+   *
+   * @param value Variable to reduce.
+   * @return Reduced variable.
+   */
+  template < MPIOperatorType _operatortype_, typename _datatype_ >
+  _datatype_ reduce(_datatype_ value) const {
+    if (_size > 1) {
+      _datatype_ recvvalue;
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Op otype = get_operator(_operatortype_);
+      int status =
+          MPI_Allreduce(&value, &recvvalue, 1, dtype, otype, MPI_COMM_WORLD);
+      if (status != MPI_SUCCESS) {
+        cmac_error("Error in MPI_Allreduce!");
+      }
+      return recvvalue;
+    } else {
+      return value;
+    }
+  }
+
+  /**
+   * @brief Reduce the given array of the given template size across all
+   * processes.
+   *
+   * The given array is replaced with the resulting reduced array.
+   *
+   * @param array Array to reduce.
+   */
+  template < MPIOperatorType _operatortype_, unsigned int _size_,
+             typename _datatype_ >
+  void reduce(_datatype_ *array) const {
+    if (_size > 1) {
+      _datatype_ recvarray[_size_];
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Op otype = get_operator(_operatortype_);
+      int status =
+          MPI_Allreduce(array, recvarray, _size_, dtype, otype, MPI_COMM_WORLD);
+      if (status != MPI_SUCCESS) {
+        cmac_error("Error in MPI_Allreduce!");
+      }
+      for (unsigned int i = 0; i < _size_; ++i) {
+        array[i] = recvarray[i];
+      }
     }
   }
 };
@@ -241,8 +329,21 @@ public:
  *
  * @return MPI_DOUBLE.
  */
-template <> MPI_Datatype MPICommunicator::get_datatype< double >() {
+template <> inline MPI_Datatype MPICommunicator::get_datatype< double >() {
   return MPI_DOUBLE;
+}
+
+/**
+ * @brief Template function that returns the MPI_Datatype corresponding to the
+ * given template data type.
+ *
+ * Specialization for an unsigned integer value.
+ *
+ * @return MPI_UNSIGNED.
+ */
+template <>
+inline MPI_Datatype MPICommunicator::get_datatype< unsigned int >() {
+  return MPI_UNSIGNED;
 }
 
 #endif // MPICOMMUNICATOR_HPP

@@ -70,12 +70,14 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  bool write_log = true;
+  bool write_output = true;
 #ifdef HAVE_MPI
+  // initialize the MPI communicator and make sure only process 0 writes to the
+  // log and output files
   MPICommunicator comm(argc, argv);
-
-  if (comm.get_size() > 1) {
-    cmac_error("Running on multiple MPI processes is not yet supported!");
-  }
+  write_log = (comm.get_rank() == 0);
+  write_output = (comm.get_rank() == 0);
 #endif
 
   Timer programtimer;
@@ -117,43 +119,55 @@ int main(int argc, char **argv) {
   if (parser.get_value< bool >("verbose")) {
     loglevel = LOGLEVEL_INFO;
   }
-  Log *log;
-  if (parser.was_found("logfile")) {
-    log = new FileLog(parser.get_value< std::string >("logfile"), loglevel);
-  } else {
-    // ASCII art generated using
-    // http://patorjk.com/software/taag/#p=display&h=2&f=Big&t=CMacIonize
-    // all '\' have been manualy escaped, so the actual result looks a bit nicer
-    std::string header =
-        "  _____ __  __            _____            _\n"
-        " / ____|  \\/  |          |_   _|          (_)\n"
-        "| |    | \\  / | __ _  ___  | |  ___  _ __  _ _______\n"
-        "| |    | |\\/| |/ _` |/ __| | | / _ \\| '_ \\| |_  / _ \\\n"
-        "| |____| |  | | (_| | (__ _| || (_) | | | | |/ /  __/\n"
-        " \\_____|_|  |_|\\__,_|\\___|_____\\___/|_| |_|_/___\\___|\n";
-    log = new TerminalLog(loglevel, header);
+  Log *log = nullptr;
+  if (write_log) {
+    if (parser.was_found("logfile")) {
+      log = new FileLog(parser.get_value< std::string >("logfile"), loglevel);
+    } else {
+      // ASCII art generated using
+      // http://patorjk.com/software/taag/#p=display&h=2&f=Big&t=CMacIonize
+      // all '\' have been manualy escaped, so the actual result looks a bit
+      // nicer
+      std::string header =
+          "  _____ __  __            _____            _\n"
+          " / ____|  \\/  |          |_   _|          (_)\n"
+          "| |    | \\  / | __ _  ___  | |  ___  _ __  _ _______\n"
+          "| |    | |\\/| |/ _` |/ __| | | / _ \\| '_ \\| |_  / _ \\\n"
+          "| |____| |  | | (_| | (__ _| || (_) | | | | |/ /  __/\n"
+          " \\_____|_|  |_|\\__,_|\\___|_____\\___/|_| |_|_/___\\___|\n";
+      log = new TerminalLog(loglevel, header);
+    }
   }
 
-  log->write_status("This is CMacIonize, version ",
-                    CompilerInfo::get_git_version(), ".");
-  log->write_status("Code was compiled on ", CompilerInfo::get_full_date(),
-                    " using ", CompilerInfo::get_full_compiler_name(), ".");
-  log->write_status("Code was compiled for ", CompilerInfo::get_os_name(), ", ",
-                    CompilerInfo::get_kernel_name(), " on ",
-                    CompilerInfo::get_hardware_name(), " (",
-                    CompilerInfo::get_host_name(), ").");
+  if (log) {
+    log->write_status("This is CMacIonize, version ",
+                      CompilerInfo::get_git_version(), ".");
+    log->write_status("Code was compiled on ", CompilerInfo::get_full_date(),
+                      " using ", CompilerInfo::get_full_compiler_name(), ".");
+    log->write_status("Code was compiled for ", CompilerInfo::get_os_name(),
+                      ", ", CompilerInfo::get_kernel_name(), " on ",
+                      CompilerInfo::get_hardware_name(), " (",
+                      CompilerInfo::get_host_name(), ").");
+  }
 
   if (CompilerInfo::is_dirty()) {
-    log->write_warning("This is a dirty code version (meaning some of the "
-                       "source files have changed since the code was obtained "
-                       "from the repository).");
+    if (log) {
+      log->write_warning(
+          "This is a dirty code version (meaning some of the "
+          "source files have changed since the code was obtained "
+          "from the repository).");
+    }
     if (!parser.get_value< bool >("dirty")) {
-      log->write_error("Running a dirty code version is disabled by default. "
-                       "If you still want to run this version, add the "
-                       "\"--dirty\" flag to the run command.");
+      if (log) {
+        log->write_error("Running a dirty code version is disabled by default. "
+                         "If you still want to run this version, add the "
+                         "\"--dirty\" flag to the run command.");
+      }
       cmac_error("Running a dirty code version is disabled by default.");
     } else {
-      log->write_warning("However, dirty running is enabled.");
+      if (log) {
+        log->write_warning("However, dirty running is enabled.");
+      }
     }
   }
 
@@ -252,16 +266,22 @@ int main(int argc, char **argv) {
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file
-  std::string folder = Utilities::get_absolute_path(
-      params.get_value< std::string >("densitygridwriter:folder", "."));
-  ofstream pfile(folder + "/parameters-usedvalues.param");
-  params.print_contents(pfile);
-  pfile.close();
-  log->write_status("Wrote used parameters to ", folder,
-                    "/parameters-usedvalues.param.");
+  if (write_output) {
+    std::string folder = Utilities::get_absolute_path(
+        params.get_value< std::string >("densitygridwriter:folder", "."));
+    ofstream pfile(folder + "/parameters-usedvalues.param");
+    params.print_contents(pfile);
+    pfile.close();
+    if (log) {
+      log->write_status("Wrote used parameters to ", folder,
+                        "/parameters-usedvalues.param.");
+    }
+  }
 
   if (parser.get_value< bool >("dry-run")) {
-    log->write_warning("Dry run requested. Program will now halt.");
+    if (log) {
+      log->write_warning("Dry run requested. Program will now halt.");
+    }
     return 0.;
   }
 
@@ -274,16 +294,28 @@ int main(int argc, char **argv) {
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
-  log->write_status("Program will use ", workdistributor.get_worksize_string(),
-                    " for photon shooting.");
+#ifdef HAVE_MPI
+  // make sure every thread on every process has another random seed
+  random_seed += comm.get_rank() * worksize;
+#endif
+
+  if (log) {
+    log->write_status("Program will use ",
+                      workdistributor.get_worksize_string(),
+                      " for photon shooting.");
+  }
   PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
                                        worksize);
 
-  writer->write(0, params);
+  if (write_output) {
+    writer->write(0, params);
+  }
   unsigned int loop = 0;
   while (loop < nloop && !itconvergence_checker->is_converged()) {
 
-    log->write_status("Starting loop ", loop, ".");
+    if (log) {
+      log->write_status("Starting loop ", loop, ".");
+    }
 
     // run the number of photons by the IterationConvergenceChecker to allow for
     // corrections
@@ -295,8 +327,10 @@ int main(int argc, char **argv) {
 
     unsigned int lnumphoton = numphoton;
     grid->reset_grid();
-    log->write_status("Start shooting photons...");
-    log->write_status("Initial sub step number: ", lnumphoton, ".");
+    if (log) {
+      log->write_status("Start shooting photons...");
+      log->write_status("Initial sub step number: ", lnumphoton, ".");
+    }
 
     double typecount[PHOTONTYPE_NUMBER] = {0};
 
@@ -304,53 +338,86 @@ int main(int argc, char **argv) {
     unsigned int totnumphoton = 0;
     double totweight = 0.;
     while (!convergence_checker->is_converged(totnumphoton)) {
-      log->write_info("Substep ", numsubstep);
+      if (log) {
+        log->write_info("Substep ", numsubstep);
+      }
 
-      photonshootjobs.set_numphoton(lnumphoton);
+      unsigned int local_numphoton = lnumphoton;
+#ifdef HAVE_MPI
+      local_numphoton = comm.distribute(local_numphoton);
+#endif
+      photonshootjobs.set_numphoton(local_numphoton);
       worktimer.start();
       workdistributor.do_in_parallel(photonshootjobs);
       worktimer.stop();
 
       totnumphoton += lnumphoton;
+      photonshootjobs.update_counters(totweight, typecount);
       lnumphoton = convergence_checker->get_number_of_photons_next_substep(
           lnumphoton, totnumphoton);
-
-      photonshootjobs.update_counters(totweight, typecount);
 
       ++numsubstep;
     }
     lnumphoton = totnumphoton;
-    log->write_status("Done shooting photons.");
-    log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
-                      "% of photons were reemitted as non-ionizing photons.");
-    log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                              typecount[PHOTONTYPE_DIFFUSE_HeI]) /
-                          totweight,
-                      "% of photons were scattered.");
-    double escape_fraction =
-        (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
-    // since totweight is updated in chunks, while the counters are updated
-    // per photon, round off might cause totweight to be slightly smaller than
-    // the counter value. This gives (strange looking) negative escape
-    // fractions, which we reset to 0 here.
-    escape_fraction = std::max(0., escape_fraction);
-    log->write_status("Escape fraction: ", escape_fraction, "%.");
-    double escape_fraction_HI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
-    log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI, "%.");
-    double escape_fraction_HeI =
-        (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
-    log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
-                      "%.");
+#ifdef HAVE_MPI
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(typecount);
+#endif
+    if (log) {
+      log->write_status("Done shooting photons.");
+      log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
+                        "% of photons were reemitted as non-ionizing photons.");
+      log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                                typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+                            totweight,
+                        "% of photons were scattered.");
+      double escape_fraction =
+          (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
+      // since totweight is updated in chunks, while the counters are updated
+      // per photon, round off might cause totweight to be slightly smaller than
+      // the counter value. This gives (strange looking) negative escape
+      // fractions, which we reset to 0 here.
+      escape_fraction = std::max(0., escape_fraction);
+      log->write_status("Escape fraction: ", escape_fraction, "%.");
+      double escape_fraction_HI =
+          (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
+      log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
+                        "%.");
+      double escape_fraction_HeI =
+          (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
+      log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
+                        "%.");
+    }
 
-    log->write_status("Calculating ionization state after shooting ",
-                      lnumphoton, " photons...");
+    if (log) {
+      log->write_status("Calculating ionization state after shooting ",
+                        lnumphoton, " photons...");
+    }
+#ifdef HAVE_MPI
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      IonName ion = static_cast< IonName >(i);
+      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+          grid->begin(), grid->end(), &DensityValues::get_mean_intensity,
+          &DensityValues::set_mean_intensity, grid->get_number_of_cells(), ion);
+    }
+    // we only communicate heating terms if they are going to be used
+    if (calculate_temperature && loop > 3) {
+      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+          grid->begin(), grid->end(), &DensityValues::get_heating_H,
+          &DensityValues::set_heating_H, grid->get_number_of_cells());
+      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+          grid->begin(), grid->end(), &DensityValues::get_heating_He,
+          &DensityValues::set_heating_He, grid->get_number_of_cells());
+    }
+#endif
     if (calculate_temperature && loop > 3) {
       temperature_calculator.calculate_temperature(totweight, *grid);
     } else {
       ionization_state_calculator.calculate_ionization_state(totweight, *grid);
     }
-    log->write_status("Done calculating ionization state.");
+    if (log) {
+      log->write_status("Done calculating ionization state.");
+    }
 
     // calculate emissivities
     // we disabled this, since we now have the post-processing Python library
@@ -372,19 +439,24 @@ int main(int argc, char **argv) {
     ++loop;
   }
 
-  if (loop == nloop) {
+  if (log && loop == nloop) {
     log->write_status("Maximum number of iterations (", nloop,
                       ") reached, stopping.");
   }
 
   // write snapshot
-  writer->write(loop - 1, params);
+  if (write_output) {
+    writer->write(loop - 1, params);
+  }
 
   programtimer.stop();
-  log->write_status("Total program time: ",
-                    Utilities::human_readable_time(programtimer.value()), ".");
-  log->write_status("Total photon shooting time: ",
-                    Utilities::human_readable_time(worktimer.value()), ".");
+  if (log) {
+    log->write_status("Total program time: ",
+                      Utilities::human_readable_time(programtimer.value()),
+                      ".");
+    log->write_status("Total photon shooting time: ",
+                      Utilities::human_readable_time(worktimer.value()), ".");
+  }
 
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;

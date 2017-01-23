@@ -72,6 +72,25 @@ int main(int argc, char **argv) {
 
   cmac_status("This is process %i of %i.", comm.get_rank(), comm.get_size());
 
+  double dvalue = 42.;
+  dvalue = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(dvalue);
+  assert_condition(dvalue == 42. * comm.get_size());
+  unsigned int uvalue = 42;
+  uvalue = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(uvalue);
+  assert_condition(uvalue == 42 * static_cast< unsigned int >(comm.get_size()));
+
+  double array[2] = {41, 42};
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, 2 >(array);
+  assert_condition(array[0] == 41 * comm.get_size());
+  assert_condition(array[1] == 42 * comm.get_size());
+
+  // we need a prime number, so that we are almost guaranteed to test the extra
+  // part code (unless we use 19 processes, which is highly unlikely)
+  unsigned int number = 19;
+  unsigned int loc_number = comm.distribute(number);
+  loc_number = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(loc_number);
+  assert_condition(loc_number == number);
+
   // a vector with objects all containing the value 1
   std::vector< TestClass > objects(100, 1.);
 
@@ -105,7 +124,7 @@ int main(int argc, char **argv) {
   // buffer should be way too large.
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(objects.begin(), objects.end(),
                                           &TestClass::get_variable,
-                                          &TestClass::set_variable);
+                                          &TestClass::set_variable, 0);
 
   // every element now should contain the third power of the number of processes
   ref *= comm.get_size();
@@ -120,12 +139,17 @@ int main(int argc, char **argv) {
   CartesianDensityGrid grid(box, 8, testfunction);
   grid.initialize();
 
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    (*it).increase_mean_intensity(ION_H_n, 1.);
+  }
+
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-      grid.begin(), grid.end(), &DensityValues::get_total_density,
-      &DensityValues::set_total_density, grid.get_number_of_cells());
+      grid.begin(), grid.end(), &DensityValues::get_mean_intensity,
+      &DensityValues::set_mean_intensity, grid.get_number_of_cells(), ION_H_n);
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    assert_condition(it.get_values().get_total_density() == comm.get_size());
+    assert_condition(it.get_values().get_mean_intensity(ION_H_n) ==
+                     comm.get_size());
   }
 
   return 0;
