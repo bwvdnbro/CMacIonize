@@ -196,22 +196,20 @@ public:
               void (_classtype_::*setter)(_datatype_)) const {
     // we only communicate if there are multiple processes
     if (_size > 1) {
-      // in place reduction does not work
       std::vector< _datatype_ > sendbuffer(v.size());
-      std::vector< _datatype_ > recvbuffer(v.size());
       for (unsigned int i = 0; i < v.size(); ++i) {
         sendbuffer[i] = (v[i].*(getter))();
       }
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status =
-          MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], sendbuffer.size(),
-                        dtype, otype, MPI_COMM_WORLD);
+          MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], sendbuffer.size(), dtype,
+                        otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
       }
       for (unsigned int i = 0; i < v.size(); ++i) {
-        (v[i].*(setter))(recvbuffer[i]);
+        (v[i].*(setter))(sendbuffer[i]);
       }
     }
   }
@@ -253,10 +251,7 @@ public:
       if (size == 0) {
         size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
       }
-      // in place reduction does not work, so we have to provide a separate send
-      // and receive buffer
       std::vector< _datatype_ > sendbuffer(size);
-      std::vector< _datatype_ > recvbuffer(size);
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       // we loop over all elements of the iterator
@@ -275,7 +270,10 @@ public:
         }
         // we reduce i elements, since that is the number of elements we added
         // to the send buffer above
-        int status = MPI_Allreduce(&sendbuffer[0], &recvbuffer[0], i, dtype,
+        // by providing MPI_IN_PLACE as sendbuffer argument, we tell MPI to the
+        // an in place reduction, reading and storing from the recvbuffer (which
+        // is our sendbuffer).
+        int status = MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], i, dtype,
                                    otype, MPI_COMM_WORLD);
         if (status != MPI_SUCCESS) {
           cmac_error("Error in MPI_Allreduce!");
@@ -286,7 +284,7 @@ public:
         // the condition here is exactly the same as the first loop, so the same
         // elements will be traversed in the same order
         while (blockit != end && i < size) {
-          ((*blockit).*(setter))(recvbuffer[i], args...);
+          ((*blockit).*(setter))(sendbuffer[i], args...);
           ++i;
           ++blockit;
         }
@@ -305,25 +303,23 @@ public:
   template < MPIOperatorType _operatortype_, typename _datatype_ >
   _datatype_ reduce(_datatype_ value) const {
     if (_size > 1) {
-      _datatype_ recvvalue;
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status =
-          MPI_Allreduce(&value, &recvvalue, 1, dtype, otype, MPI_COMM_WORLD);
+          MPI_Allreduce(MPI_IN_PLACE, &value, 1, dtype, otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
       }
-      return recvvalue;
-    } else {
-      return value;
     }
+    return value;
   }
 
   /**
    * @brief Reduce the given array of the given template size across all
    * processes.
    *
-   * The given array is replaced with the resulting reduced array.
+   * The given array is replaced with the resulting reduced array (the reduction
+   * is actually done in place).
    *
    * @param array Array to reduce.
    */
@@ -331,16 +327,12 @@ public:
              typename _datatype_ >
   void reduce(_datatype_ *array) const {
     if (_size > 1) {
-      _datatype_ recvarray[_size_];
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
-      int status =
-          MPI_Allreduce(array, recvarray, _size_, dtype, otype, MPI_COMM_WORLD);
+      int status = MPI_Allreduce(MPI_IN_PLACE, array, _size_, dtype, otype,
+                                 MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
-      }
-      for (unsigned int i = 0; i < _size_; ++i) {
-        array[i] = recvarray[i];
       }
     }
   }
