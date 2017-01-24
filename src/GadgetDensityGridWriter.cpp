@@ -182,8 +182,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     std::vector< double > ntot(numpart[0]);
     unsigned int index = 0;
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      DensityValues &cellvals = it.get_values();
-      ntot[index] = cellvals.get_total_density();
+      ntot[index] = it.get_number_density();
       ++index;
     }
     HDF5Tools::write_dataset< double >(group, "NumberDensity", ntot);
@@ -193,8 +192,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     std::vector< double > temperature(numpart[0]);
     unsigned int index = 0;
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      DensityValues &cellvals = it.get_values();
-      temperature[index] = cellvals.get_temperature();
+      temperature[index] = it.get_temperature();
       ++index;
     }
     HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
@@ -205,22 +203,20 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     IonName ion = static_cast< IonName >(i);
     unsigned int index = 0;
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      DensityValues &cellvals = it.get_values();
-      ifrac[index] = cellvals.get_ionic_fraction(ion);
+      ifrac[index] = it.get_ionic_fraction(ion);
       ++index;
     }
     HDF5Tools::write_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), ifrac);
   }
   // emissivities
-  if (_grid.begin().get_values().get_emissivities() != nullptr) {
+  if (_grid.begin().get_emissivities() != nullptr) {
     for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
       std::vector< double > emission(numpart[0]);
       EmissionLine line = static_cast< EmissionLine >(i);
       unsigned int index = 0;
       for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-        DensityValues &cellvals = it.get_values();
-        EmissivityValues *emissivities = cellvals.get_emissivities();
+        EmissivityValues *emissivities = it.get_emissivities();
         emission[index] = emissivities->get_emissivity(line);
         ++index;
       }

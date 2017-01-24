@@ -254,16 +254,162 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
 }
 
 /**
+ * @brief Calculate the emissivity values for a single cell.
+ *
+ * @param cell DensityGrid::iterator pointing to a cell.
+ * @param abundances Abundances.
+ * @param lines LineCoolingData used to calculate emission line strengths.
+ * @return EmissivityValues in the cell.
+ */
+EmissivityValues EmissivityCalculator::calculate_emissivities(
+    DensityGrid::iterator &cell, Abundances &abundances,
+    const LineCoolingData &lines) const {
+  const double h0max = 0.2;
+
+  EmissivityValues eval;
+
+  if (cell.get_ionic_fraction(ION_H_n) < h0max &&
+      cell.get_temperature() > 3000.) {
+    double ntot = cell.get_number_density();
+    double nhp = ntot * (1. - cell.get_ionic_fraction(ION_H_n));
+    double nhep = ntot * (1. - cell.get_ionic_fraction(ION_He_n)) *
+                  abundances.get_abundance(ELEMENT_He);
+    double ne = nhp + nhep;
+
+    double abund[12];
+    abund[0] =
+        abundances.get_abundance(ELEMENT_N) *
+        (1. - cell.get_ionic_fraction(ION_N_n) -
+         cell.get_ionic_fraction(ION_N_p1) - cell.get_ionic_fraction(ION_N_p2));
+    abund[1] =
+        abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_n);
+    abund[2] = abundances.get_abundance(ELEMENT_O) *
+               (1. - cell.get_ionic_fraction(ION_O_n) -
+                cell.get_ionic_fraction(ION_O_p1));
+    abund[3] =
+        abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_n);
+    abund[4] =
+        abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_p1);
+    abund[5] = abundances.get_abundance(ELEMENT_Ne) *
+               cell.get_ionic_fraction(ION_Ne_p1);
+    abund[6] =
+        abundances.get_abundance(ELEMENT_S) *
+        (1. - cell.get_ionic_fraction(ION_S_p1) -
+         cell.get_ionic_fraction(ION_S_p2) - cell.get_ionic_fraction(ION_S_p3));
+    abund[7] =
+        abundances.get_abundance(ELEMENT_S) * cell.get_ionic_fraction(ION_S_p1);
+    abund[8] = abundances.get_abundance(ELEMENT_C) *
+               (1. - cell.get_ionic_fraction(ION_C_p1) -
+                cell.get_ionic_fraction(ION_C_p2));
+    abund[9] =
+        abundances.get_abundance(ELEMENT_C) * cell.get_ionic_fraction(ION_C_p1);
+    abund[10] =
+        abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_p1);
+    abund[11] = abundances.get_abundance(ELEMENT_Ne) *
+                cell.get_ionic_fraction(ION_Ne_n);
+
+    double c6300 = 0.;
+    double c9405 = 0.;
+    double c6312 = 0.;
+    double c33mu = 0.;
+    double c19mu = 0.;
+    double c3729 = 0.;
+    double c3727 = 0.;
+    double c7330 = 0.;
+    double c4363 = 0.;
+    double c5007 = 0.;
+    double c52mu = 0.;
+    double c5755 = 0.;
+    double c6584 = 0.;
+    double c4072 = 0.;
+    double c6717 = 0.;
+    double c6725 = 0.;
+    double c3869 = 0.;
+    double cniii57 = 0.;
+    double cneii12 = 0.;
+    double cneiii15 = 0.;
+    double cnii122 = 0.;
+    double cii2325 = 0.;
+    double ciii1908 = 0.;
+    double coii7325 = 0.;
+    double csiv10 = 0.;
+    double c88mu = 0.;
+    lines.linestr(cell.get_temperature(), ne, abund, c6300, c9405, c6312, c33mu,
+                  c19mu, c3729, c3727, c7330, c4363, c5007, c52mu, c88mu, c5755,
+                  c6584, c4072, c6717, c6725, c3869, cniii57, cneii12, cneiii15,
+                  cnii122, cii2325, ciii1908, coii7325, csiv10);
+
+    double t4 = cell.get_temperature() * 1.e-4;
+    // we added correction factors 1.e-12 to convert densities to cm^-3
+    // and an extra factor 1.e-1 to convert to J m^-3s^-1
+    eval.set_emissivity(EMISSIONLINE_HAlpha,
+                        ne * nhp * 2.87 * 1.24e-38 * std::pow(t4, -0.938));
+    eval.set_emissivity(EMISSIONLINE_HBeta,
+                        ne * nhp * 1.24e-38 * std::pow(t4, -0.878));
+    eval.set_emissivity(EMISSIONLINE_HII,
+                        nhp * ne * 4.9e-40 * std::pow(t4, -0.848));
+
+    double emhpl = 0.;
+    double emhmi = 0.;
+    double emhepl = 0.;
+    double emhemi = 0.;
+    bjump(cell.get_temperature(), emhpl, emhmi, emhepl, emhemi);
+    eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_LOW,
+                        ne * (nhp * emhmi + nhep * emhemi));
+    eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,
+                        ne * (nhp * emhpl + nhep * emhepl));
+
+    eval.set_emissivity(EMISSIONLINE_OI_6300, ntot * c6300);
+    eval.set_emissivity(EMISSIONLINE_OII_3727, ntot * c3727);
+    eval.set_emissivity(EMISSIONLINE_OIII_5007, ntot * c5007);
+    eval.set_emissivity(EMISSIONLINE_OIII_4363, ntot * c4363);
+    eval.set_emissivity(EMISSIONLINE_OIII_88mu, ntot * c88mu);
+    eval.set_emissivity(EMISSIONLINE_NII_5755, ntot * c5755);
+    eval.set_emissivity(EMISSIONLINE_NII_6584, ntot * c6584);
+    eval.set_emissivity(EMISSIONLINE_NeIII_3869, ntot * c3869);
+    eval.set_emissivity(EMISSIONLINE_SII_6725, ntot * c6725);
+    eval.set_emissivity(EMISSIONLINE_SII_4072, ntot * c4072);
+    eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
+    eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
+    eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
+    double T = cell.get_temperature();
+    eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
+    eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
+    eval.set_emissivity(EMISSIONLINE_avg_nH_nHe,
+                        (1. - cell.get_ionic_fraction(ION_H_n)) *
+                            (1. - cell.get_ionic_fraction(ION_He_n)));
+    eval.set_emissivity(EMISSIONLINE_avg_nH_nHe_count, 1.);
+    eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * cneii12);
+    eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * cniii57);
+    eval.set_emissivity(EMISSIONLINE_NeIII_15mu, ntot * cneiii15);
+    eval.set_emissivity(EMISSIONLINE_NII_122mu, ntot * cnii122);
+    eval.set_emissivity(EMISSIONLINE_CII_2325, ntot * cii2325);
+    eval.set_emissivity(EMISSIONLINE_CIII_1908, ntot * ciii1908);
+    eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
+    eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
+    // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
+    eval.set_emissivity(EMISSIONLINE_HeI_5876,
+                        ne * nhep * 1.69e-38 * std::pow(t4, -1.065));
+    eval.set_emissivity(EMISSIONLINE_Hrec_s,
+                        ne * nhp * 7.982e-23 /
+                            (std::sqrt(T / 3.148) *
+                             std::pow(1. + std::sqrt(T / 3.148), 0.252) *
+                             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
+  }
+
+  return eval;
+}
+
+/**
  * @brief Calculate the emissivities for all cells in the given DensityGrid.
  *
  * @param grid DensityGrid to operate on.
  */
 void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) const {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    DensityValues &cell = it.get_values();
     EmissivityValues *emissivities =
-        new EmissivityValues(calculate_emissivities(cell, _abundances, _lines));
-    cell.set_emissivities(emissivities);
+        new EmissivityValues(calculate_emissivities(it, _abundances, _lines));
+    it.set_emissivities(emissivities);
   }
 }
 
@@ -279,8 +425,7 @@ EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
   std::vector< EmissivityValues > result(grid.get_number_of_cells());
   unsigned int index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    DensityValues &cell = it.get_values();
-    result[index] = calculate_emissivities(cell, _abundances, _lines);
+    result[index] = calculate_emissivities(it, _abundances, _lines);
     ++index;
   }
   return result;

@@ -148,8 +148,7 @@ int main(int argc, char **argv) {
       &DensityValues::set_mean_intensity, grid.get_number_of_cells(), ION_H_n);
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    assert_condition(it.get_values().get_mean_intensity(ION_H_n) ==
-                     comm.get_size());
+    assert_condition(it.get_mean_intensity(ION_H_n) == comm.get_size());
   }
 
   return 0;

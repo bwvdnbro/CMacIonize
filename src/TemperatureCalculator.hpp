@@ -70,9 +70,16 @@ public:
                      Abundances &abundances, double hfac, double pahfac,
                      LineCoolingData &data, RecombinationRates &rates,
                      ChargeTransferRates &ctr);
+  static void ioneng(double &h0, double &he0, double &gain, double &loss,
+                     double T, DensityGrid::iterator &cell, double jfac,
+                     Abundances &abundances, double hfac, double pahfac,
+                     LineCoolingData &data, RecombinationRates &rates,
+                     ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,
                              DensityValues &cell) const;
+  void calculate_temperature(double jfac, double hfac,
+                             DensityGrid::iterator &cell) const;
 
   /**
    * @brief Functor used to calculate the temperature of a single cell.
@@ -112,8 +119,7 @@ public:
      */
     inline void operator()(DensityGrid::iterator cell) {
       _calculator.calculate_temperature(_jfac / cell.get_volume(),
-                                        _hfac / cell.get_volume(),
-                                        cell.get_values());
+                                        _hfac / cell.get_volume(), cell);
     }
   };
 

@@ -59,6 +59,8 @@ public:
                             ChargeTransferRates &charge_transfer_rates);
 
   void calculate_ionization_state(double jfac, DensityValues &cell) const;
+  void calculate_ionization_state(double jfac,
+                                  DensityGrid::iterator &cell) const;
 
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);
@@ -96,9 +98,8 @@ public:
      *
      * @param cell DensityGrid::iterator pointing to a single cell in the grid.
      */
-    inline void operator()(DensityGrid::iterator cell) {
-      _calculator.calculate_ionization_state(_jfac / cell.get_volume(),
-                                             cell.get_values());
+    inline void operator()(DensityGrid::iterator &cell) {
+      _calculator.calculate_ionization_state(_jfac / cell.get_volume(), cell);
     }
   };
 

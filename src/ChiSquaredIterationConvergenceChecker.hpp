@@ -115,11 +115,10 @@ public:
     _old_chi2 = _chi2;
     _chi2 = 0.;
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      DensityValues &cell = it.get_values();
       double sum =
-          cell.get_ionic_fraction(ION_H_n) + cell.get_old_neutral_fraction_H();
+          it.get_ionic_fraction(ION_H_n) + it.get_neutral_fraction_H_old();
       double diff =
-          cell.get_ionic_fraction(ION_H_n) - cell.get_old_neutral_fraction_H();
+          it.get_ionic_fraction(ION_H_n) - it.get_neutral_fraction_H_old();
       if (sum) {
         diff /= sum;
       }

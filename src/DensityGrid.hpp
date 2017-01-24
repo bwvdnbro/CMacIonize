@@ -43,6 +43,9 @@
  * @brief General interface for density grids.
  */
 class DensityGrid {
+public:
+  class iterator;
+
 protected:
   /*! @brief DensityFunction defining the density field. */
   DensityFunction &_density_function;
@@ -108,6 +111,37 @@ protected:
   }
 
 protected:
+  /**
+   * @brief Set the re-emission probabilities for the given cell for the given
+   * temperature.
+   *
+   * These quantities are all dimensionless.
+   *
+   * @param T Temperature (in K).
+   * @param it DensityGrid::iterator pointing to a cell.
+   */
+  inline static void set_reemission_probabilities(double T,
+                                                  DensityGrid::iterator &it) {
+    // reemission probabilities
+    double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
+    double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
+    it.set_hydrogen_reemission_probability(alpha_1_H / alpha_A_agn);
+    double alpha_1_He = 1.54e-13 * std::pow(T * 1.e-4, -0.486);
+    double alpha_e_2tS = 2.1e-13 * std::pow(T * 1.e-4, -0.381);
+    double alpha_e_2sS = 2.06e-14 * std::pow(T * 1.e-4, -0.451);
+    double alpha_e_2sP = 4.17e-14 * std::pow(T * 1.e-4, -0.695);
+    // We make sure the sum of all probabilities is 1...
+    double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+
+    it.set_helium_reemission_probability(0, alpha_1_He / alphaHe);
+    it.set_helium_reemission_probability(
+        1, it.get_helium_reemission_probability(0) + alpha_e_2tS / alphaHe);
+    it.set_helium_reemission_probability(
+        2, it.get_helium_reemission_probability(1) + alpha_e_2sS / alphaHe);
+    it.set_helium_reemission_probability(
+        3, it.get_helium_reemission_probability(2) + alpha_e_2sP / alphaHe);
+  }
+
   /**
    * @brief Set the re-emission probabilities for the given cell for the given
    * temperature.
@@ -303,6 +337,222 @@ public:
     }
 
     /**
+     * @brief Get the number density of hydrogen for the cell the iterator is
+     * currently pointing to.
+     *
+     * @return Number density of hydrogen (in m^-3).
+     */
+    inline double get_number_density() const {
+      return _grid->get_cell_values(_index).get_total_density();
+    }
+
+    /**
+     * @brief set the number density of hydrogen for the cell the iterator is
+     * currently pointing to.
+     *
+     * @param number_density Number density of hydrogen (in m^-3).
+     */
+    inline void set_number_density(double number_density) {
+      _grid->get_cell_values(_index).set_total_density(number_density);
+    }
+
+    /**
+     * @brief Get the temperature of the cell the iterator is currently pointing
+     * to.
+     *
+     * @return Temperature (in K).
+     */
+    inline double get_temperature() const {
+      return _grid->get_cell_values(_index).get_temperature();
+    }
+
+    /**
+     * @brief set the temperature of the cell the iterator is currently pointing
+     * to.
+     *
+     * @param temperature Temperature (in K).
+     */
+    inline void set_temperature(double temperature) {
+      _grid->get_cell_values(_index).set_temperature(temperature);
+    }
+
+    /**
+     * @brief Get the ionic fraction for the given IonName for the cell the
+     * iterator is currently pointing to.
+     *
+     * @param ion IonName.
+     * @return Ionic fraction for that ion.
+     */
+    inline double get_ionic_fraction(IonName ion) const {
+      return _grid->get_cell_values(_index).get_ionic_fraction(ion);
+    }
+
+    /**
+     * @brief Set the ionic fraction for the given IonName for the cell the
+     * iterator is currently pointing to.
+     *
+     * @param ion IonName.
+     * @param ionic_fraction Ionic fraction for that ion.
+     */
+    inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
+      _grid->get_cell_values(_index).set_ionic_fraction(ion, ionic_fraction);
+    }
+
+    /**
+     * @brief Get the neutral fraction of hydrogen during the previous iteration
+     * for the cell the iterator is currently pointing to.
+     *
+     * @return Neutral fraction of hydrogen during the previous iteration.
+     */
+    inline double get_neutral_fraction_H_old() const {
+      return _grid->get_cell_values(_index).get_old_neutral_fraction_H();
+    }
+
+    /**
+     * @brief Set the neutral fraction of hydrogen during the previous iteration
+     * for the cell the iterator is currently pointing to.
+     *
+     * @param neutral_fraction_H_old Neutral fraction of hydrogen during the
+     * previous iteration.
+     */
+    inline void set_neutral_fraction_H_old(double neutral_fraction_H_old) {
+      _grid->get_cell_values(_index).set_old_neutral_fraction_H(
+          neutral_fraction_H_old);
+    }
+
+    /**
+     * @brief Get the mean intensity of ionizing radiation for the given IonName
+     * for the cell the iterator is currently pointing to.
+     *
+     * @param ion IonName.
+     * @return Mean intensity of ionizing radiation for that ion (without
+     * normalization factor, in m^3).
+     */
+    inline double get_mean_intensity(IonName ion) const {
+      return _grid->get_cell_values(_index).get_mean_intensity(ion);
+    }
+
+    /**
+     * @brief Get the heating by ionization of hydrogen for the cell the
+     * iterator is currently pointing to.
+     *
+     * @return Heating by ionization of hydrogen (in m^3 s^-1).
+     */
+    inline double get_heating_H() const {
+      return _grid->get_cell_values(_index).get_heating_H();
+    }
+
+    /**
+     * @brief Get the heating by ionization of helium for the cell the iterator
+     * is currently pointing to.
+     *
+     * @return Heating by ionization of helium (in m^3 s^-1).
+     */
+    inline double get_heating_He() const {
+      return _grid->get_cell_values(_index).get_heating_He();
+    }
+
+    /**
+     * @brief Get the mean intensity of hydrogen ionizing radiation during the
+     * previous iteration for the cell the iterator is currently pointing to.
+     *
+     * @return Mean intensity of hydrogen ionizing radiation during the previous
+     * iteration (without normalization factor, in m^3).
+     */
+    inline double get_mean_intensity_H_old() const {
+      return _grid->get_cell_values(_index).get_mean_intensity_H_old();
+    }
+
+    /**
+     * @brief set the mean intensity of hydrogen ionizing radiation during the
+     * previous iteration for the cell the iterator is currently pointing to.
+     *
+     * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
+     * during the previous iteration (without normalization factor, in m^3).
+     */
+    inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
+      _grid->get_cell_values(_index).set_mean_intensity_H_old(
+          mean_intensity_H_old);
+    }
+
+    /**
+     * @brief Get the probability for hydrogen of reemitting an ionizing photon
+     * for the cell the iterator is currently pointing to.
+     *
+     * @return Hydrogen ionizing reemission probability.
+     */
+    inline double get_hydrogen_reemission_probability() const {
+      return _grid->get_cell_values(_index).get_pHion();
+    }
+
+    /**
+     * @brief Set the probability for hydrogen of reemitting an ionizing photon
+     * for the cell the iterator is currently pointing to.
+     *
+     * @param hydrogen_reemission_probability Hydrogen ionizing reemission
+     * probability.
+     */
+    inline void set_hydrogen_reemission_probability(
+        double hydrogen_reemission_probability) {
+      _grid->get_cell_values(_index).set_pHion(hydrogen_reemission_probability);
+    }
+
+    /**
+     * @brief Get the helium reemission probability in the given channel for the
+     * cell the iterator is currently pointing to.
+     *
+     * @param channel Channel in which the radiation is emitted.
+     * @return Helium reemission probability in that channel.
+     */
+    inline double
+    get_helium_reemission_probability(unsigned char channel) const {
+      return _grid->get_cell_values(_index).get_pHe_em(channel);
+    }
+
+    /**
+     * @brief Set the helium reemission probability in the given channel for the
+     * cell the iterator is currently pointing to.
+     *
+     * @param channel Channel in which the radiation is emitted.
+     * @param helium_reemission_probability Helium reemission probability in
+     * that channel.
+     */
+    inline void
+    set_helium_reemission_probability(unsigned char channel,
+                                      double helium_reemission_probability) {
+      _grid->get_cell_values(_index).set_pHe_em(channel,
+                                                helium_reemission_probability);
+    }
+
+    /**
+     * @brief Reset the mean intensity counters for the cell the iterator is
+     * currently pointing to.
+     */
+    inline void reset_mean_intensities() {
+      _grid->get_cell_values(_index).reset_mean_intensities();
+    }
+
+    /**
+     * @brief Get the EmissivityValues for the cell the iterator is currently
+     * pointing to.
+     *
+     * @return EmissivityValues.
+     */
+    inline EmissivityValues *get_emissivities() const {
+      return _grid->get_cell_values(_index).get_emissivities();
+    }
+
+    /**
+     * @brief Set the EmissivityValues for the cell the iterator is currently
+     * pointing to.
+     *
+     * @param emissivities EmissivityValues.
+     */
+    inline void set_emissivities(EmissivityValues *emissivities) {
+      _grid->get_cell_values(_index).set_emissivities(emissivities);
+    }
+
+    /**
      * @brief Dereference operator.
      *
      * @return DensityValues the iterator is pointing to.
@@ -408,15 +658,14 @@ public:
      * @param it DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(iterator it) {
-      DensityValues &cell = it.get_values();
       DensityValues vals = _function(it.get_cell_midpoint());
-      cell.set_total_density(vals.get_total_density());
-      cell.set_temperature(vals.get_temperature());
+      it.set_number_density(vals.get_total_density());
+      it.set_temperature(vals.get_temperature());
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
+        it.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
       }
-      set_reemission_probabilities(vals.get_temperature(), cell);
+      set_reemission_probabilities(it.get_temperature(), it);
     }
   };
 
@@ -428,9 +677,8 @@ public:
    */
   virtual void reset_grid() {
     for (auto it = begin(); it != end(); ++it) {
-      DensityValues &cell = it.get_values();
-      set_reemission_probabilities(cell.get_temperature(), cell);
-      cell.reset_mean_intensities();
+      set_reemission_probabilities(it.get_temperature(), it);
+      it.reset_mean_intensities();
     }
   }
 
@@ -443,11 +691,11 @@ public:
    * @return Total number of hydrogen atoms contained in the grid.
    */
   inline double get_total_hydrogen_number() {
-    double mtot = 0.;
+    double ntot = 0.;
     for (auto it = begin(); it != end(); ++it) {
-      mtot += it.get_values().get_total_density() * it.get_volume();
+      ntot += it.get_number_density() * it.get_volume();
     }
-    return mtot;
+    return ntot;
   }
 
   /**
@@ -460,13 +708,13 @@ public:
    */
   inline double get_average_temperature() {
     double temperature = 0.;
-    double mtot = 0.;
+    double ntot = 0.;
     for (auto it = begin(); it != end(); ++it) {
-      double m = it.get_values().get_total_density() * it.get_volume();
-      temperature += m * it.get_values().get_temperature();
-      mtot += m;
+      double n = it.get_number_density() * it.get_volume();
+      temperature += n * it.get_temperature();
+      ntot += n;
     }
-    return temperature / mtot;
+    return temperature / ntot;
   }
 };
 
