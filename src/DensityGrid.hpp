@@ -256,7 +256,7 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) const = 0;
+  virtual DensityValues &get_cell_values(unsigned long index) = 0;
 
   /**
    * @brief Get the values stored in the cell which contains the given position.
@@ -264,7 +264,18 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return DensityValues of the cell containing that position (in SI units).
    */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) const = 0;
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) = 0;
+
+  /**
+   * @brief Get an iterator to the cell containing the given position.
+   *
+   * @param position CoordinateVector<> specifying a position (in m).
+   * @return DensityGrid::iterator pointing to the cell containing that
+   * position.
+   */
+  inline iterator get_cell(CoordinateVector<> position) {
+    return iterator(get_cell_index(position), *this);
+  }
 
   /**
    * @brief Get the volume of the cell with the given index.
@@ -325,15 +336,6 @@ public:
      */
     inline CoordinateVector<> get_cell_midpoint() const {
       return _grid->get_cell_midpoint(_index);
-    }
-
-    /**
-     * @brief Get the DensityValues of the cell the iterator is pointing to.
-     *
-     * @return DensityValues the iterator is pointing to.
-     */
-    inline DensityValues &get_values() const {
-      return _grid->get_cell_values(_index);
     }
 
     /**

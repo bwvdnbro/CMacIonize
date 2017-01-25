@@ -42,10 +42,13 @@
 class AMRDensityGrid : public DensityGrid {
 private:
   /*! @brief AMRGrid used as grid. */
-  AMRGrid< DensityValues > _grid;
+  AMRGrid< unsigned long > _grid;
 
   /*! @brief Convenient cell list used for faster cell indexing. */
-  std::vector< AMRGridCell< DensityValues > * > _cells;
+  std::vector< AMRGridCell< unsigned long > * > _cells;
+
+  /*! @brief DensityValues stored in the grid. */
+  std::vector< DensityValues > _values;
 
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
@@ -80,43 +83,44 @@ private:
   }
 
   /**
-   * @brief Refine the given cell using the given refinement scheme to decide
-   * how deep the refinement should be.
+   * @brief Check if the cell with the given index should be refined, using the
+   * given AMRRefinementScheme. Apply the refinement if necessary, using the
+   * given DensityFunction to recalculate the densities in the refined cells.
    *
    * @param refinement_scheme AMRRefinementScheme.
-   * @param cell AMRGridCell to refine.
-   * @param density_function DensityFunction that sets the value of the density
-   * in the cell.
+   * @param index Index of the cell that should be checked.
+   * @param density_function DensityFunction used to recalculate densities for
+   * refined cells.
    */
   inline void refine_cell(AMRRefinementScheme &refinement_scheme,
-                          AMRGridCell< DensityValues > &cell,
+                          unsigned long index,
                           DensityFunction &density_function) {
+    AMRGridCell< unsigned long > &cell = *_cells[index];
     unsigned char level = cell.get_level();
     CoordinateVector<> midpoint = cell.get_midpoint();
     double volume = cell.get_volume();
-    DensityValues values = cell.value();
+    DensityValues values = _values[index];
     if (refinement_scheme.refine(level, midpoint, volume, values)) {
       cell.create_all_cells(level, level + 1);
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
-        AMRGridCell< DensityValues > *childcell = cell.get_child(child);
-        DensityValues &childvalues = childcell->value();
-        // we only set the density based on the density function, as all other
-        // variables are only initial conditions
+        AMRGridCell< unsigned long > *childcell = cell.get_child(child);
+        DensityValues childvalues(values);
         childvalues.set_total_density(
             density_function(childcell->get_midpoint()).get_total_density());
-        for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-          IonName ion = static_cast< IonName >(i);
-          childvalues.set_ionic_fraction(ion, values.get_ionic_fraction(ion));
+        // the first child replaces the old cell
+        // the other children are added to the end of the internal lists
+        if (ic == 0) {
+          _values[index] = childvalues;
+          _cells[index] = childcell;
+          childcell->value() = index;
+        } else {
+          _values.push_back(childvalues);
+          _cells.push_back(childcell);
+          childcell->value() = _values.size() - 1;
         }
-        childvalues.set_temperature(values.get_temperature());
-        childvalues.set_old_neutral_fraction_H(
-            values.get_old_neutral_fraction_H());
-        // set reemission probabilities
-        set_reemission_probabilities(childvalues.get_temperature(),
-                                     childvalues);
         // recursively refine further
-        refine_cell(refinement_scheme, *childcell, density_function);
+        refine_cell(refinement_scheme, childcell->value(), density_function);
       }
     }
   }
@@ -140,6 +144,7 @@ public:
       Log *log = nullptr)
       : DensityGrid(density_function, box, periodic, log),
         _refinement_scheme(refinement_scheme) {
+
     // find the smallest number of blocks that fits the requested top level grid
     // for one dimension, this is the largest odd factor in that dimension
     // for all three dimensions, this is the factor you get when you divide the
@@ -151,7 +156,7 @@ public:
     int power_of_2 = std::min(power_of_2_x, power_of_2_y);
     power_of_2 = std::min(power_of_2, power_of_2_z);
     CoordinateVector< int > nblock = ncell / power_of_2;
-    _grid = AMRGrid< DensityValues >(box, nblock);
+    _grid = AMRGrid< unsigned long >(box, nblock);
 
     // find out how many cells each block should have at the lowest level
     // this is just the power in power_of_2
@@ -162,15 +167,19 @@ public:
     }
     _grid.create_all_cells(level);
 
-    // construct the cell list
+    // construct the cell list and set the contents of the cells to the correct
+    // index values
     _cells.resize(_grid.get_number_of_cells());
     unsigned int index = 0;
     unsigned long key = _grid.get_first_key();
     while (key != _grid.get_max_key()) {
       _cells[index] = &_grid[key];
+      _cells[index]->value() = index;
       ++index;
       key = _grid.get_next_key(key);
     }
+
+    _values.resize(_grid.get_number_of_cells());
 
     if (_log) {
       int levelint = level;
@@ -230,36 +239,12 @@ public:
         _log->write_status("Applying refinement.");
       }
 
-      for (unsigned int i = 0; i < _cells.size(); ++i) {
-        refine_cell(*_refinement_scheme, *_cells[i], _density_function);
-      }
-
-      for (unsigned int i = 0; i < _cells.size(); ++i) {
-        AMRGridCell< DensityValues > *parent = _cells[i]->get_parent();
-        if (parent && parent->get_child(AMRCHILDPOSITION_LFB) == _cells[i]) {
-          // we only check the first child, since all other children have the
-          // same parent
-          CoordinateVector<> midpoints[8];
-          double volumes[8];
-          DensityValues cells[8];
-          bool lowest_level = true;
-          for (int ichild = 0; ichild < 8; ++ichild) {
-            AMRGridCell< DensityValues > *child =
-                parent->get_child(static_cast< AMRChildPosition >(ichild));
-            if (child->is_single_cell()) {
-              midpoints[ichild] = child->get_midpoint();
-              volumes[ichild] = child->get_volume();
-              cells[ichild] = child->value();
-            } else {
-              lowest_level = false;
-            }
-          }
-          if (lowest_level &&
-              _refinement_scheme->coarsen(parent->get_level() + 1, midpoints,
-                                          volumes, cells)) {
-            cmac_status("Coarsening needed");
-          }
-        }
+      // we only refine the cells that were already in the grid
+      // the new cells that are added during refinement are recursively refined
+      // within the refinement routine
+      const unsigned int cell2size = _cells.size();
+      for (unsigned int i = 0; i < cell2size; ++i) {
+        refine_cell(*_refinement_scheme, i, _density_function);
       }
 
       if (_log) {
@@ -270,17 +255,12 @@ public:
 
     // finalize grid: set neighbour relations
     _grid.set_ngbs(_periodic);
-    // reconstruct the cell list, it might have changed due to refinement
-    _cells.resize(_grid.get_number_of_cells());
-    unsigned int index = 0;
-    unsigned long key = _grid.get_first_key();
-    while (key != _grid.get_max_key()) {
-      _cells[index] = &_grid[key];
-      ++index;
-      key = _grid.get_next_key(key);
-    }
 
     // make sure all values are correctly initialized (also in refined cells)
+    // the refinement procedure itself only reads the density from the density
+    // function, as it is also used in reset_grid()
+    // at this point, we want to read all values from the density function,
+    // since it also contains the initial temperature etc.
     DensityGrid::initialize(_density_function);
   }
 
@@ -292,27 +272,25 @@ public:
     if (_log) {
       _log->write_status("Resetting grid...");
     }
-    for (unsigned int i = 0; i < _cells.size(); ++i) {
-      _cells[i]->value().reset_mean_intensities();
+
+    // we only refine the cells that are already present
+    // newly added refined cells are recursively refined within the refinement
+    // routine
+    const unsigned int cells2size = _cells.size();
+    for (unsigned int i = 0; i < cells2size; ++i) {
+      _values[i].reset_mean_intensities();
       if (_refinement_scheme) {
-        refine_cell(*_refinement_scheme, *_cells[i], _density_function);
+        refine_cell(*_refinement_scheme, i, _density_function);
       }
     }
+
     if (_log) {
       _log->write_status(
           "Number of cells after reset: ", _grid.get_number_of_cells(), ".");
     }
+
     // reset the ngbs
     _grid.set_ngbs(_periodic);
-    // reset the cell list
-    _cells.resize(_grid.get_number_of_cells());
-    unsigned int index = 0;
-    unsigned long key = _grid.get_first_key();
-    while (key != _grid.get_max_key()) {
-      _cells[index] = &_grid[key];
-      ++index;
-      key = _grid.get_next_key(key);
-    }
   }
 
   /**
@@ -351,8 +329,8 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) const {
-    return _cells[index]->value();
+  virtual DensityValues &get_cell_values(unsigned long index) {
+    return _values[index];
   }
 
   /**
@@ -361,8 +339,8 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return DensityValues of the cell containing that position (in SI units).
    */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
-    return _grid.get_cell(position);
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) {
+    return _values[_grid.get_cell(position)];
   }
 
   /**
@@ -399,7 +377,7 @@ public:
   inline CoordinateVector<>
   get_wall_intersection(CoordinateVector<> &photon_origin,
                         CoordinateVector<> &photon_direction, Box &box,
-                        AMRGridCell< DensityValues > *&cell, double &ds,
+                        AMRGridCell< unsigned long > *&cell, double &ds,
                         CoordinateVector<> &periodic_correction) {
     CoordinateVector<> cell_bottom_anchor = box.get_anchor();
     CoordinateVector<> cell_top_anchor = box.get_top_anchor();
@@ -513,7 +491,7 @@ public:
     // ds contains the squared norm, take the square root
     ds = sqrt(ds);
 
-    AMRGridCell< DensityValues > *next_cell = cell->get_ngb(ngbposition);
+    AMRGridCell< unsigned long > *next_cell = cell->get_ngb(ngbposition);
     if (next_cell != nullptr) {
       // calculate periodic boundary corrections (if any)
       if (_periodic.x()) {
@@ -565,7 +543,7 @@ public:
     CoordinateVector<> photon_direction = photon.get_direction();
 
     unsigned long index = get_cell_index(photon_origin);
-    AMRGridCell< DensityValues > *current_cell = &_grid[index];
+    AMRGridCell< unsigned long > *current_cell = &_grid[index];
 
     // while the photon has not exceeded the optical depth and is still in the
     // box
@@ -574,7 +552,7 @@ public:
       Box cell = current_cell->get_geometry();
 
       double ds = 0.;
-      AMRGridCell< DensityValues > *old_cell = current_cell;
+      AMRGridCell< unsigned long > *old_cell = current_cell;
       CoordinateVector<> periodic_correction;
       CoordinateVector<> next_wall =
           get_wall_intersection(photon_origin, photon_direction, cell,
@@ -583,7 +561,7 @@ public:
       // get the optical depth of the path from the current photon location to
       // the
       // cell wall, update S
-      DensityValues &density = old_cell->value();
+      DensityValues &density = _values[old_cell->value()];
       last_cell = &density;
 
       // Helium abundance. Should be a parameter.

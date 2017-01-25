@@ -180,7 +180,7 @@ public:
    * @param index Long index.
    * @return DensityValues containing the contents of that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) const {
+  virtual DensityValues &get_cell_values(unsigned long index) {
     return get_cell_values(get_indices(index));
   }
 
@@ -190,7 +190,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return DensityValues of the cell containing that position (in SI units).
    */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
+  virtual DensityValues &get_cell_values(CoordinateVector<> position) {
     return get_cell_values(get_cell_indices(position));
   }
 
