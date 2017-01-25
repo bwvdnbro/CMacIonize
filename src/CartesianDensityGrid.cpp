@@ -84,13 +84,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
   }
   // we allocate memory for the cells, so that --dry-run can already check the
   // available memory
-  _density = new DensityValues **[_ncell.x()];
-  for (int i = 0; i < _ncell.x(); ++i) {
-    _density[i] = new DensityValues *[_ncell.y()];
-    for (int j = 0; j < _ncell.y(); ++j) {
-      _density[i][j] = new DensityValues[_ncell.z()];
-    }
-  }
+  _values.resize(_ncell.x() * _ncell.y() * _ncell.z());
   if (_log) {
     _log->write_status("Done allocating memory.");
   }
@@ -149,24 +143,6 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
           log) {}
 
 /**
- * @brief Destructor
- *
- * Free the memory used by the internal grid arrays.
- */
-CartesianDensityGrid::~CartesianDensityGrid() {
-  if (_log) {
-    _log->write_status("Cleaning up grid.");
-  }
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      delete[] _density[i][j];
-    }
-    delete[] _density[i];
-  }
-  delete[] _density;
-}
-
-/**
  * @brief Initialize the cells in the grid.
  */
 void CartesianDensityGrid::initialize() {
@@ -210,17 +186,6 @@ Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
   double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
   double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
   return Box(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin), _cellside);
-}
-
-/**
- * @brief Get the values stored in the cell with the given index.
- *
- * @param index Index of a cell.
- * @return Values stored in the cell.
- */
-DensityValues &
-CartesianDensityGrid::get_cell_values(CoordinateVector< int > index) const {
-  return _density[index.x()][index.y()][index.z()];
 }
 
 /**
@@ -454,7 +419,7 @@ DensityValues *CartesianDensityGrid::interact(Photon &photon,
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
-    DensityValues &density = get_cell_values(index);
+    DensityValues &density = get_cell_values(get_long_index(index));
     last_cell = &density;
 
     // Helium abundance. Should be a parameter.

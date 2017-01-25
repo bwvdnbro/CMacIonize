@@ -61,8 +61,8 @@ private:
   /*! @brief Number of cells per dimension. */
   CoordinateVector< int > _ncell;
 
-  /*! @brief Density grid. */
-  DensityValues ***_density;
+  /*! @brief DensityValues. */
+  std::vector< DensityValues > _values;
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -110,8 +110,6 @@ private:
     return midpoint;
   }
 
-  DensityValues &get_cell_values(CoordinateVector< int > index) const;
-
   /**
    * @brief Get the volume of the cell with the given indices.
    *
@@ -136,7 +134,10 @@ public:
   CartesianDensityGrid(ParameterFile &parameters,
                        DensityFunction &density_function, Log *log = nullptr);
 
-  virtual ~CartesianDensityGrid();
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~CartesianDensityGrid() {}
 
   virtual void initialize();
 
@@ -181,7 +182,8 @@ public:
    * @return DensityValues containing the contents of that cell.
    */
   virtual DensityValues &get_cell_values(unsigned long index) {
-    return get_cell_values(get_indices(index));
+    //    return get_cell_values(get_indices(index));
+    return _values[index];
   }
 
   /**
@@ -191,7 +193,8 @@ public:
    * @return DensityValues of the cell containing that position (in SI units).
    */
   virtual DensityValues &get_cell_values(CoordinateVector<> position) {
-    return get_cell_values(get_cell_indices(position));
+    //    return get_cell_values(get_cell_indices(position));
+    return _values[get_cell_index(position)];
   }
 
   /**
