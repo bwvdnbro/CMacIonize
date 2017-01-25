@@ -451,8 +451,8 @@ int main(int argc, char **argv) {
 
   programtimer.stop();
   if (log) {
-    log->write_status("Total program time: ",
-                      Utilities::human_readable_time(programtimer.value()),
+    log->write_status("Total program time: ", Utilities::human_readable_time(
+                                                  programtimer.value()),
                       ".");
     log->write_status("Total photon shooting time: ",
                       Utilities::human_readable_time(worktimer.value()), ".");

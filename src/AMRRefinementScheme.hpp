@@ -27,8 +27,7 @@
 #define AMRREFINEMENTSCHEME_HPP
 
 #include "CoordinateVector.hpp"
-
-class DensityValues;
+#include "DensityGrid.hpp"
 
 /**
  * @brief General interface for schemes used to refine an AMRDensityGrid.
@@ -45,16 +44,13 @@ public:
   virtual ~AMRRefinementScheme() {}
 
   /**
-   * @brief Decide if the given cell should be refined or not.
+   * @brief Decide if the given cell should be refine or not.
    *
    * @param level Current refinement level of the cell.
-   * @param midpoint Midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of a cell.
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      double volume, DensityValues &cell) const {
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
     return false;
   }
 

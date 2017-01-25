@@ -59,14 +59,11 @@ public:
    * density value for cells that are not at the right level.
    *
    * @param level Current depth level of the cell.
-   * @param midpoint Coordinates of the midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues stored in the cell (in SI units).
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be split in 8 smaller cells.
    */
-  bool refine(unsigned char level, CoordinateVector<> midpoint, double volume,
-              DensityValues &cell) const {
-    return cell.get_total_density() < 0.;
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+    return cell.get_number_density() < 0.;
   }
 };
 

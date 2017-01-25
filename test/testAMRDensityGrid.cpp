@@ -63,14 +63,11 @@ public:
    * @brief Decide if the given cell should be refine or not.
    *
    * @param level Current refinement level of the cell.
-   * @param midpoint Midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of a cell.
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the density is larger than 1.
    */
-  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      double volume, DensityValues &cell) const {
-    return cell.get_total_density() > 1. && level < 6;
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+    return cell.get_number_density() > 1. && level < 6;
   }
 
   /**

@@ -93,11 +93,10 @@ private:
                           unsigned long index,
                           DensityFunction &density_function) {
     AMRGridCell< unsigned long > &cell = *_cells[index];
+    DensityGrid::iterator it(index, *this);
     unsigned char level = cell.get_level();
-    CoordinateVector<> midpoint = cell.get_midpoint();
-    double volume = cell.get_volume();
     DensityValues values = _values[index];
-    if (refinement_scheme.refine(level, midpoint, volume, values)) {
+    if (refinement_scheme.refine(level, it)) {
       cell.create_all_cells(level, level + 1);
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
@@ -245,8 +244,8 @@ public:
       }
 
       if (_log) {
-        _log->write_status("Number of cells after refinement: ",
-                           _grid.get_number_of_cells());
+        _log->write_status(
+            "Number of cells after refinement: ", _grid.get_number_of_cells());
       }
     }
 

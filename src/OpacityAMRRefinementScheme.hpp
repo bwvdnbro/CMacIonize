@@ -80,18 +80,15 @@ public:
    * @brief Decide if the given cell should be refined or not.
    *
    * @param level Current refinement level of the cell.
-   * @param midpoint Midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of a cell.
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      double volume, DensityValues &cell) const {
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
     // we assume an ionizing cross section of 1.e-18 cm^2
     const double xsecH = 1.e-22;
 
     double opacity =
-        cell.get_total_density() * cell.get_ionic_fraction(ION_H_n) * xsecH;
+        cell.get_number_density() * cell.get_ionic_fraction(ION_H_n) * xsecH;
 
     return opacity > _target_opacity && level < _max_level;
   }
