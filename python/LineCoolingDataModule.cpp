@@ -23,8 +23,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "Error.hpp"
 #include "LineCoolingData.hpp"
+#include "Error.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/dict.hpp>

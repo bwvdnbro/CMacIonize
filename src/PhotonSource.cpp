@@ -128,12 +128,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   if (_log) {
-    _log->write_status(
-        "Total luminosity of discrete sources: ", discrete_luminosity,
-        " s^-1.");
-    _log->write_status(
-        "Total luminosity of continuous sources: ", continuous_luminosity,
-        " s^-1.");
+    _log->write_status("Total luminosity of discrete sources: ",
+                       discrete_luminosity, " s^-1.");
+    _log->write_status("Total luminosity of continuous sources: ",
+                       continuous_luminosity, " s^-1.");
     _log->write_status(
         discrete_fraction * 100.,
         "% of the ionizing radiation is emitted by discrete sources.");

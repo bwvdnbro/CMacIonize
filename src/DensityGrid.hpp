@@ -100,8 +100,8 @@ protected:
       cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.increase_mean_intensity(
-            ion, ds * photon.get_weight() * photon.get_cross_section(ion));
+        cell.increase_mean_intensity(ion, ds * photon.get_weight() *
+                                              photon.get_cross_section(ion));
       }
       cell.increase_heating_H(ds * photon.get_weight() *
                               photon.get_cross_section(ION_H_n) *
