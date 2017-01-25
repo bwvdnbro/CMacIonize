@@ -61,9 +61,6 @@ private:
   /*! @brief Number of cells per dimension. */
   CoordinateVector< int > _ncell;
 
-  /*! @brief DensityValues. */
-  std::vector< DensityValues > _values;
-
   /*! @brief Log to write log messages to. */
   Log *_log;
 
@@ -173,28 +170,6 @@ public:
   virtual inline CoordinateVector<>
   get_cell_midpoint(unsigned long long_index) const {
     return get_cell_midpoint(get_indices(long_index));
-  }
-
-  /**
-   * @brief Get the cell contents corresponding to the given long index.
-   *
-   * @param index Long index.
-   * @return DensityValues containing the contents of that cell.
-   */
-  virtual DensityValues &get_cell_values(unsigned long index) {
-    //    return get_cell_values(get_indices(index));
-    return _values[index];
-  }
-
-  /**
-   * @brief Get the values stored in the cell which contains the given position.
-   *
-   * @param position CoordinateVector<> specifying a position (in m).
-   * @return DensityValues of the cell containing that position (in SI units).
-   */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) {
-    //    return get_cell_values(get_cell_indices(position));
-    return _values[get_cell_index(position)];
   }
 
   /**

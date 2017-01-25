@@ -47,9 +47,6 @@ private:
   /*! @brief Convenient cell list used for faster cell indexing. */
   std::vector< AMRGridCell< unsigned long > * > _cells;
 
-  /*! @brief DensityValues stored in the grid. */
-  std::vector< DensityValues > _values;
-
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
 
@@ -321,26 +318,6 @@ public:
    */
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const {
     return _cells[index]->get_midpoint();
-  }
-
-  /**
-   * @brief Get the values stored in the cell with the given index.
-   *
-   * @param index Index of a cell.
-   * @return DensityValues stored in that cell.
-   */
-  virtual DensityValues &get_cell_values(unsigned long index) {
-    return _values[index];
-  }
-
-  /**
-   * @brief Get the values stored in the cell which contains the given position.
-   *
-   * @param position CoordinateVector<> specifying a position (in m).
-   * @return DensityValues of the cell containing that position (in SI units).
-   */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) {
-    return _values[_grid.get_cell(position)];
   }
 
   /**

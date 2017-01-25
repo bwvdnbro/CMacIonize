@@ -62,6 +62,9 @@ protected:
   /*! @brief Ionization energy of helium (in Hz). */
   double _ionization_energy_He;
 
+  /*! @brief DensityValues stored in the grid. */
+  std::vector< DensityValues > _values;
+
   /*! @brief Log to write log messages to. */
   Log *_log;
 
@@ -256,7 +259,9 @@ public:
    * @param index Index of a cell.
    * @return DensityValues stored in that cell.
    */
-  virtual DensityValues &get_cell_values(unsigned long index) = 0;
+  inline DensityValues &get_cell_values(unsigned long index) {
+    return _values[index];
+  }
 
   /**
    * @brief Get the values stored in the cell which contains the given position.
@@ -264,7 +269,9 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return DensityValues of the cell containing that position (in SI units).
    */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) = 0;
+  inline DensityValues &get_cell_values(CoordinateVector<> position) {
+    return _values[get_cell_index(position)];
+  }
 
   /**
    * @brief Get an iterator to the cell containing the given position.
