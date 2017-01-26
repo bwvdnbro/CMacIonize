@@ -188,7 +188,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  virtual DensityValues *interact(Photon &photon, double optical_depth);
+  virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
 
   /**
    * @brief Get an iterator to the first cell in the grid.

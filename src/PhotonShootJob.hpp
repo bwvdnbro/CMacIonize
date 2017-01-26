@@ -105,12 +105,11 @@ public:
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
       double tau = -std::log(_random_generator.get_uniform_random_double());
-      DensityValues *values;
-      while ((values = _density_grid.interact(photon, tau))) {
-        if (!_photon_source.reemit(photon, *values, _random_generator)) {
-          break;
-        }
+      DensityGrid::iterator it = _density_grid.interact(photon, tau);
+      while (it != _density_grid.end() &&
+             _photon_source.reemit(photon, it, _random_generator)) {
         tau = -std::log(_random_generator.get_uniform_random_double());
+        it = _density_grid.interact(photon, tau);
       }
       _totweight += photon.get_weight();
       _typecount[photon.get_type()] += photon.get_weight();

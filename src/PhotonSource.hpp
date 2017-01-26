@@ -27,6 +27,7 @@
 #define PHOTONSOURCE_HPP
 
 #include "CoordinateVector.hpp"
+#include "DensityGrid.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -39,7 +40,6 @@
 
 class Abundances;
 class CrossSections;
-class DensityValues;
 class ContinuousPhotonSource;
 class Log;
 class PhotonSourceDistribution;
@@ -142,7 +142,7 @@ public:
 
   double get_total_luminosity() const;
 
-  bool reemit(Photon &photon, DensityValues &cell,
+  bool reemit(Photon &photon, const DensityGrid::iterator &cell,
               RandomGenerator &random_generator) const;
 };
 

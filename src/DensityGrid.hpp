@@ -73,13 +73,15 @@ protected:
    * given cell.
    *
    * @param ds Path length the photon traverses (in m).
-   * @param cell DensityValues of the cell the photon travels in.
+   * @param cell DensityGrid::iterator pointing to the cell the photon travels
+   * in.
    * @param photon Photon.
    * @return Optical depth.
    */
-  inline static double get_optical_depth(const double ds, DensityValues &cell,
-                                         Photon &photon) {
-    return ds * cell.get_total_density() *
+  inline static double get_optical_depth(double ds,
+                                         const DensityGrid::iterator &cell,
+                                         const Photon &photon) {
+    return ds * cell.get_number_density() *
            (photon.get_cross_section(ION_H_n) *
                 cell.get_ionic_fraction(ION_H_n) +
             photon.get_cross_section_He_corr() *
@@ -94,9 +96,9 @@ protected:
    * @param cell DensityValues of the cell the photon travels in.
    * @param photon Photon.
    */
-  inline void update_integrals(const double ds, DensityValues &cell,
-                               Photon &photon) const {
-    if (cell.get_total_density() > 0.) {
+  inline void update_integrals(double ds, DensityGrid::iterator &cell,
+                               const Photon &photon) const {
+    if (cell.get_number_density() > 0.) {
       cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
@@ -299,10 +301,11 @@ public:
    * @param photon Photon.
    * @param optical_depth Optical depth the photon should travel in total
    * (dimensionless).
-   * @return Pointer to the values of the cell where the photon currently
-   * resides, a nullptr if the photon left the box.
+   * @return DensityGrid::iterator pointing to the cell the photon was last in,
+   * or DensityGrid::end() if the photon left the box.
    */
-  virtual DensityValues *interact(Photon &photon, double optical_depth) = 0;
+  virtual DensityGrid::iterator interact(Photon &photon,
+                                         double optical_depth) = 0;
 
   /**
    * @brief Index increment used in the iterator.
@@ -442,6 +445,19 @@ public:
     }
 
     /**
+     * @brief Increase the mean ionizing intensity for the given ion.
+     *
+     * @param ion IonName.
+     * @param mean_intensity_increment Mean ionizing intensity increment
+     * (without normalization factor, in m^3).
+     */
+    inline void increase_mean_intensity(IonName ion,
+                                        double mean_intensity_increment) {
+      _grid->get_cell_values(_index).increase_mean_intensity(
+          ion, mean_intensity_increment);
+    }
+
+    /**
      * @brief Get the heating by ionization of hydrogen for the cell the
      * iterator is currently pointing to.
      *
@@ -452,6 +468,16 @@ public:
     }
 
     /**
+     * @brief Increase the ionizing heating for hydrogen.
+     *
+     * @param heating_H_increment Heating by ionization of hydrogen (in m^3
+     * s^-1).
+     */
+    inline void increase_heating_H(double heating_H_increment) {
+      _grid->get_cell_values(_index).increase_heating_H(heating_H_increment);
+    }
+
+    /**
      * @brief Get the heating by ionization of helium for the cell the iterator
      * is currently pointing to.
      *
@@ -459,6 +485,16 @@ public:
      */
     inline double get_heating_He() const {
       return _grid->get_cell_values(_index).get_heating_He();
+    }
+
+    /**
+     * @brief Increase the ionizing heating for helium.
+     *
+     * @param heating_He_increment Heating by ionization of helium (in m^3
+     * s^-1).
+     */
+    inline void increase_heating_He(double heating_He_increment) {
+      _grid->get_cell_values(_index).increase_heating_He(heating_He_increment);
     }
 
     /**
@@ -560,6 +596,16 @@ public:
     inline void set_emissivities(EmissivityValues *emissivities) {
       _grid->get_cell_values(_index).set_emissivities(emissivities);
     }
+
+    /**
+     * @brief Lock the cell the iterator is pointing to.
+     */
+    inline void lock() { _grid->get_cell_values(_index).lock(); }
+
+    /**
+     * @brief Unlock the cell the iterator is pointing to.
+     */
+    inline void unlock() { _grid->get_cell_values(_index).unlock(); }
 
     /**
      * @brief Dereference operator.

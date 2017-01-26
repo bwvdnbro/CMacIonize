@@ -511,10 +511,10 @@ public:
    * @param photon Photon.
    * @param optical_depth Optical depth the photon should travel in total
    * (dimensionless).
-   * @return A pointer to the values of the last cell the photon was in, nullptr
-   * if the photon left the box.
+   * @return DensityGrid::iterator pointing to the cell the photon was last in,
+   * or DensityGrid::end() if the photon left the box.
    */
-  virtual DensityValues *interact(Photon &photon, double optical_depth) {
+  virtual DensityGrid::iterator interact(Photon &photon, double optical_depth) {
     CoordinateVector<> photon_origin = photon.get_position();
     CoordinateVector<> photon_direction = photon.get_direction();
 
@@ -523,7 +523,7 @@ public:
 
     // while the photon has not exceeded the optical depth and is still in the
     // box
-    DensityValues *last_cell = nullptr;
+    DensityGrid::iterator last_cell = end();
     while (current_cell != nullptr && optical_depth > 0.) {
       Box cell = current_cell->get_geometry();
 
@@ -537,11 +537,11 @@ public:
       // get the optical depth of the path from the current photon location to
       // the
       // cell wall, update S
-      DensityValues &density = _values[old_cell->value()];
-      last_cell = &density;
+      DensityGrid::iterator it(old_cell->value(), *this);
+      last_cell = it;
 
       // Helium abundance. Should be a parameter.
-      double tau = get_optical_depth(ds, density, photon);
+      double tau = get_optical_depth(ds, it, photon);
       optical_depth -= tau;
 
       // if the optical depth exceeds or equals the wanted value: exit the loop
@@ -561,13 +561,13 @@ public:
 
       // ds is now the actual distance travelled in the cell
       // update contributions to mean intensity integrals
-      update_integrals(ds, density, photon);
+      update_integrals(ds, it, photon);
     }
 
     photon.set_position(photon_origin);
 
     if (current_cell == nullptr) {
-      last_cell = nullptr;
+      last_cell = end();
     }
 
     return last_cell;
