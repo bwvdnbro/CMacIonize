@@ -95,25 +95,82 @@ private:
     AMRGridCell< unsigned long > &cell = *_cells[index];
     DensityGrid::iterator it(index, *this);
     unsigned char level = cell.get_level();
-    DensityValues values = _values[index];
+
     if (refinement_scheme.refine(level, it)) {
+
+      // make a local copy of the contents of the cell
+      // the contents of the new cells is initialized to these values
+      double old_ionic_fractions[NUMBER_OF_IONNAMES];
+      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        old_ionic_fractions[i] = _ionic_fraction[i][index];
+      }
+      double old_temperature = _temperature[index];
+      double old_hydrogen_reemission_probability =
+          _hydrogen_reemission_probability[index];
+      double old_helium_reemission_probability[4];
+      for (int i = 0; i < 4; ++i) {
+        old_helium_reemission_probability[i] =
+            _helium_reemission_probability[i][index];
+      }
+      // we do not copy the mean intensity integrals from the old cell, as these
+      // will be reset before the refined cells are used
+      double old_neutral_fraction_H_old = _neutral_fraction_H_old[index];
+      // we will not copy the heating terms for the same reasons
+      // nor the EmissivityValues
+      // nor the Lock, since that has to be unique
+
       cell.create_all_cells(level, level + 1);
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
         AMRGridCell< unsigned long > *childcell = cell.get_child(child);
-        DensityValues childvalues(values);
-        childvalues.set_total_density(
-            density_function(childcell->get_midpoint()).get_total_density());
+        DensityValues funcvalue = density_function(childcell->get_midpoint());
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
-          _values[index] = childvalues;
+          _number_density[index] = funcvalue.get_total_density();
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            _ionic_fraction[i][index] = old_ionic_fractions[i];
+          }
+          _temperature[index] = old_temperature;
+          _hydrogen_reemission_probability[index] =
+              old_hydrogen_reemission_probability;
+          for (int i = 0; i < 4; ++i) {
+            _helium_reemission_probability[i][index] =
+                old_helium_reemission_probability[i];
+          }
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            _mean_intensity[i][index] = 0.;
+          }
+          _mean_intensity_H_old[index] = 0.;
+          _neutral_fraction_H_old[index] = old_neutral_fraction_H_old;
+          _heating_H[index] = 0.;
+          _heating_He[index] = 0.;
+          _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
         } else {
-          _values.push_back(childvalues);
+          _number_density.push_back(funcvalue.get_total_density());
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            _ionic_fraction[i].push_back(old_ionic_fractions[i]);
+          }
+          _temperature.push_back(old_temperature);
+          _hydrogen_reemission_probability.push_back(
+              old_hydrogen_reemission_probability);
+          for (int i = 0; i < 4; ++i) {
+            _helium_reemission_probability[i].push_back(
+                old_helium_reemission_probability[i]);
+          }
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            _mean_intensity[i].push_back(0.);
+          }
+          _mean_intensity_H_old.push_back(0.);
+          _neutral_fraction_H_old.push_back(old_neutral_fraction_H_old);
+          _heating_H.push_back(0.);
+          _heating_He.push_back(0.);
+          _emissivities.push_back(nullptr);
+          _lock.push_back(Lock());
           _cells.push_back(childcell);
-          childcell->value() = _values.size() - 1;
+          childcell->value() = _cells.size() - 1;
         }
         // recursively refine further
         refine_cell(refinement_scheme, childcell->value(), density_function);
@@ -175,7 +232,24 @@ public:
       key = _grid.get_next_key(key);
     }
 
-    _values.resize(_grid.get_number_of_cells());
+    _number_density.resize(_grid.get_number_of_cells());
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fraction[i].resize(_grid.get_number_of_cells());
+    }
+    _temperature.resize(_grid.get_number_of_cells());
+    _hydrogen_reemission_probability.resize(_grid.get_number_of_cells());
+    for (int i = 0; i < 4; ++i) {
+      _helium_reemission_probability[i].resize(_grid.get_number_of_cells());
+    }
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _mean_intensity[i].resize(_grid.get_number_of_cells());
+    }
+    _mean_intensity_H_old.resize(_grid.get_number_of_cells());
+    _neutral_fraction_H_old.resize(_grid.get_number_of_cells());
+    _heating_H.resize(_grid.get_number_of_cells());
+    _heating_He.resize(_grid.get_number_of_cells());
+    _emissivities.resize(_grid.get_number_of_cells(), nullptr);
+    _lock.resize(_grid.get_number_of_cells());
 
     if (_log) {
       int levelint = level;
@@ -274,7 +348,7 @@ public:
     // routine
     const unsigned int cells2size = _cells.size();
     for (unsigned int i = 0; i < cells2size; ++i) {
-      _values[i].reset_mean_intensities();
+      reset_mean_intensities(i);
       if (_refinement_scheme) {
         refine_cell(*_refinement_scheme, i, _density_function);
       }

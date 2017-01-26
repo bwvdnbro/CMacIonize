@@ -336,6 +336,24 @@ public:
       }
     }
   }
+
+  /**
+   * @brief Reduce the given std::vector across all processes.
+   *
+   * @param vector std::vector to reduce.
+   */
+  template < MPIOperatorType _operatortype_, typename _datatype_ >
+  void reduce(std::vector< _datatype_ > &vector) {
+    if (_size > 1) {
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Op otype = get_operator(_operatortype_);
+      int status = MPI_Allreduce(MPI_IN_PLACE, vector.data(), vector.size(),
+                                 dtype, otype, MPI_COMM_WORLD);
+      if (status != MPI_SUCCESS) {
+        cmac_error("Error in MPI_Allreduce!");
+      }
+    }
+  }
 };
 
 /**

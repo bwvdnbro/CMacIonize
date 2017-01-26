@@ -91,6 +91,12 @@ int main(int argc, char **argv) {
   loc_number = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(loc_number);
   assert_condition(loc_number == number);
 
+  std::vector< double > vector(100, 1.);
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(vector);
+  for (unsigned int i = 0; i < vector.size(); ++i) {
+    assert_condition(vector[i] == comm.get_size());
+  }
+
   // a vector with objects all containing the value 1
   std::vector< TestClass > objects(100, 1.);
 
@@ -140,12 +146,11 @@ int main(int argc, char **argv) {
   grid.initialize();
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    (*it).increase_mean_intensity(ION_H_n, 1.);
+    it.increase_mean_intensity(ION_H_n, 1.);
   }
 
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-      grid.begin(), grid.end(), &DensityValues::get_mean_intensity,
-      &DensityValues::set_mean_intensity, grid.get_number_of_cells(), ION_H_n);
+      grid.get_mean_intensity_handle(ION_H_n));
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     assert_condition(it.get_mean_intensity(ION_H_n) == comm.get_size());

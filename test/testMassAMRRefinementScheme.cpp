@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
   // force refinement for a random cell
-  grid.get_cell_values(42).set_total_density(8.);
+  grid.set_number_density(42, 8.);
 
   grid.reset_grid();
 

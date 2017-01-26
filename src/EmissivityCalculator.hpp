@@ -33,7 +33,6 @@
 #include <vector>
 
 class Abundances;
-class DensityValues;
 
 /**
  * @brief Class that calculates emissivities for all cells in a DensityGrid.

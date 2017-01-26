@@ -397,17 +397,11 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       IonName ion = static_cast< IonName >(i);
       comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-          grid->begin(), grid->end(), &DensityValues::get_mean_intensity,
-          &DensityValues::set_mean_intensity, grid->get_number_of_cells(), ion);
+          grid->get_mean_intensity_handle(ion));
     }
-    // we only communicate heating terms if they are going to be used
     if (calculate_temperature && loop > 3) {
-      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-          grid->begin(), grid->end(), &DensityValues::get_heating_H,
-          &DensityValues::set_heating_H, grid->get_number_of_cells());
-      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-          grid->begin(), grid->end(), &DensityValues::get_heating_He,
-          &DensityValues::set_heating_He, grid->get_number_of_cells());
+      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_H_handle());
+      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_He_handle());
     }
 #endif
     if (calculate_temperature && loop > 3) {
