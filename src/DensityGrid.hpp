@@ -398,6 +398,152 @@ public:
   }
 
   /**
+   * @brief Get the heating by ionization of helium for the cell with the given
+   * index.
+   *
+   * @param index Index of a cell.
+   * @return Heating by ionization of helium (in m^3 s^-1).
+   */
+  inline double get_heating_He(unsigned long index) const {
+    return _values[index].get_heating_He();
+  }
+
+  /**
+   * @brief Increase the ionizing heating for helium for the cell with the given
+   * index.
+   *
+   * @param index Index of a cell.
+   * @param heating_He_increment Heating by ionization of helium (in m^3
+   * s^-1).
+   */
+  inline void increase_heating_He(unsigned long index,
+                                  double heating_He_increment) {
+    _values[index].increase_heating_He(heating_He_increment);
+  }
+
+  /**
+   * @brief Get the mean intensity of hydrogen ionizing radiation during the
+   * previous iteration for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Mean intensity of hydrogen ionizing radiation during the previous
+   * iteration (without normalization factor, in m^3).
+   */
+  inline double get_mean_intensity_H_old(unsigned long index) const {
+    return _values[index].get_mean_intensity_H_old();
+  }
+
+  /**
+   * @brief Set the mean intensity of hydrogen ionizing radiation during the
+   * previous iteration for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
+   * during the previous iteration (without normalization factor, in m^3).
+   */
+  inline void set_mean_intensity_H_old(unsigned long index,
+                                       double mean_intensity_H_old) {
+    _values[index].set_mean_intensity_H_old(mean_intensity_H_old);
+  }
+
+  /**
+   * @brief Get the probability for hydrogen of reemitting an ionizing photon
+   * for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Hydrogen ionizing reemission probability.
+   */
+  inline double get_hydrogen_reemission_probability(unsigned long index) const {
+    return _values[index].get_pHion();
+  }
+
+  /**
+   * @brief Set the probability for hydrogen of reemitting an ionizing photon
+   * for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param hydrogen_reemission_probability Hydrogen ionizing reemission
+   * probability.
+   */
+  inline void
+  set_hydrogen_reemission_probability(unsigned long index,
+                                      double hydrogen_reemission_probability) {
+    _values[index].set_pHion(hydrogen_reemission_probability);
+  }
+
+  /**
+   * @brief Get the helium reemission probability in the given channel for the
+   * cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param channel Channel in which the radiation is emitted.
+   * @return Helium reemission probability in that channel.
+   */
+  inline double get_helium_reemission_probability(unsigned long index,
+                                                  unsigned char channel) const {
+    return _values[index].get_pHe_em(channel);
+  }
+
+  /**
+   * @brief Set the helium reemission probability in the given channel for the
+   * cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param channel Channel in which the radiation is emitted.
+   * @param helium_reemission_probability Helium reemission probability in
+   * that channel.
+   */
+  inline void
+  set_helium_reemission_probability(unsigned long index, unsigned char channel,
+                                    double helium_reemission_probability) {
+    _values[index].set_pHe_em(channel, helium_reemission_probability);
+  }
+
+  /**
+   * @brief Reset the mean intensity counters for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   */
+  inline void reset_mean_intensities(unsigned long index) {
+    _values[index].reset_mean_intensities();
+  }
+
+  /**
+   * @brief Get the EmissivityValues for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return EmissivityValues.
+   */
+  inline EmissivityValues *get_emissivities(unsigned long index) const {
+    return _values[index].get_emissivities();
+  }
+
+  /**
+   * @brief Set the EmissivityValues for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param emissivities EmissivityValues.
+   */
+  inline void set_emissivities(unsigned long index,
+                               EmissivityValues *emissivities) {
+    _values[index].set_emissivities(emissivities);
+  }
+
+  /**
+   * @brief Lock the cell with the given index.
+   *
+   * @param index Index of a cell.
+   */
+  inline void lock(unsigned long index) { _values[index].lock(); }
+
+  /**
+   * @brief Unlock the cell with the given index.
+   *
+   * @param index Index of a cell.
+   */
+  inline void unlock(unsigned long index) { _values[index].unlock(); }
+
+  /**
    * @brief Get the values stored in the cell with the given index.
    *
    * @param index Index of a cell.
@@ -624,17 +770,18 @@ public:
      * @return Heating by ionization of helium (in m^3 s^-1).
      */
     inline double get_heating_He() const {
-      return _grid->get_cell_values(_index).get_heating_He();
+      return _grid->get_heating_He(_index);
     }
 
     /**
-     * @brief Increase the ionizing heating for helium.
+     * @brief Increase the ionizing heating for helium for the cell the iterator
+     * is currently pointing to.
      *
      * @param heating_He_increment Heating by ionization of helium (in m^3
      * s^-1).
      */
     inline void increase_heating_He(double heating_He_increment) {
-      _grid->get_cell_values(_index).increase_heating_He(heating_He_increment);
+      _grid->increase_heating_He(_index, heating_He_increment);
     }
 
     /**
@@ -645,19 +792,18 @@ public:
      * iteration (without normalization factor, in m^3).
      */
     inline double get_mean_intensity_H_old() const {
-      return _grid->get_cell_values(_index).get_mean_intensity_H_old();
+      return _grid->get_mean_intensity_H_old(_index);
     }
 
     /**
-     * @brief set the mean intensity of hydrogen ionizing radiation during the
+     * @brief Set the mean intensity of hydrogen ionizing radiation during the
      * previous iteration for the cell the iterator is currently pointing to.
      *
      * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
      * during the previous iteration (without normalization factor, in m^3).
      */
     inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
-      _grid->get_cell_values(_index).set_mean_intensity_H_old(
-          mean_intensity_H_old);
+      _grid->set_mean_intensity_H_old(_index, mean_intensity_H_old);
     }
 
     /**
@@ -667,7 +813,7 @@ public:
      * @return Hydrogen ionizing reemission probability.
      */
     inline double get_hydrogen_reemission_probability() const {
-      return _grid->get_cell_values(_index).get_pHion();
+      return _grid->get_hydrogen_reemission_probability(_index);
     }
 
     /**
@@ -679,7 +825,8 @@ public:
      */
     inline void set_hydrogen_reemission_probability(
         double hydrogen_reemission_probability) {
-      _grid->get_cell_values(_index).set_pHion(hydrogen_reemission_probability);
+      _grid->set_hydrogen_reemission_probability(
+          _index, hydrogen_reemission_probability);
     }
 
     /**
@@ -691,7 +838,7 @@ public:
      */
     inline double
     get_helium_reemission_probability(unsigned char channel) const {
-      return _grid->get_cell_values(_index).get_pHe_em(channel);
+      return _grid->get_helium_reemission_probability(_index, channel);
     }
 
     /**
@@ -705,8 +852,8 @@ public:
     inline void
     set_helium_reemission_probability(unsigned char channel,
                                       double helium_reemission_probability) {
-      _grid->get_cell_values(_index).set_pHe_em(channel,
-                                                helium_reemission_probability);
+      _grid->set_helium_reemission_probability(_index, channel,
+                                               helium_reemission_probability);
     }
 
     /**
@@ -714,7 +861,7 @@ public:
      * currently pointing to.
      */
     inline void reset_mean_intensities() {
-      _grid->get_cell_values(_index).reset_mean_intensities();
+      _grid->reset_mean_intensities(_index);
     }
 
     /**
@@ -724,7 +871,7 @@ public:
      * @return EmissivityValues.
      */
     inline EmissivityValues *get_emissivities() const {
-      return _grid->get_cell_values(_index).get_emissivities();
+      return _grid->get_emissivities(_index);
     }
 
     /**
@@ -734,18 +881,18 @@ public:
      * @param emissivities EmissivityValues.
      */
     inline void set_emissivities(EmissivityValues *emissivities) {
-      _grid->get_cell_values(_index).set_emissivities(emissivities);
+      _grid->set_emissivities(_index, emissivities);
     }
 
     /**
      * @brief Lock the cell the iterator is pointing to.
      */
-    inline void lock() { _grid->get_cell_values(_index).lock(); }
+    inline void lock() { _grid->lock(_index); }
 
     /**
      * @brief Unlock the cell the iterator is pointing to.
      */
-    inline void unlock() { _grid->get_cell_values(_index).unlock(); }
+    inline void unlock() { _grid->unlock(_index); }
 
     /**
      * @brief Dereference operator.
