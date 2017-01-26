@@ -25,8 +25,10 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "LineCoolingData.hpp"
 #include "TemperatureCalculator.hpp"
 #include "UnitConverter.hpp"
@@ -49,9 +51,14 @@ int main(int argc, char **argv) {
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   TemperatureCalculator calculator(1., abundances, 1., data, rates, ctr);
 
+  HomogeneousDensityFunction function(1.);
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CartesianDensityGrid grid(box, 1, function);
+  grid.initialize();
+  DensityGrid::iterator cell = grid.begin();
+
   // test ioneng
   {
-    DensityValues cell;
     std::ifstream file("ioneng_testdata.txt");
     std::string line;
     while (getline(file, line)) {
@@ -90,7 +97,7 @@ int main(int argc, char **argv) {
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"));
       cell.increase_heating_He(
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
-      cell.set_total_density(
+      cell.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(n, "cm^-3"));
       cell.set_temperature(T);
 
@@ -139,7 +146,6 @@ int main(int argc, char **argv) {
 
   // test calculate_temperature
   {
-    DensityValues cell;
     std::ifstream file("tbal_testdata.txt");
     std::string line;
     while (getline(file, line)) {
@@ -198,7 +204,7 @@ int main(int argc, char **argv) {
       cell.increase_heating_He(
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
 
-      cell.set_total_density(
+      cell.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
       cell.set_temperature(T);
 

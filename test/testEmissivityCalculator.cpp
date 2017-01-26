@@ -25,8 +25,10 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "EmissivityCalculator.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "LineCoolingData.hpp"
 #include <fstream>
 #include <sstream>
@@ -44,7 +46,11 @@ int main(int argc, char **argv) {
   LineCoolingData lines;
   EmissivityCalculator calculator(abundances);
 
-  DensityValues cell;
+  HomogeneousDensityFunction function(1.);
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CartesianDensityGrid grid(box, 1, function);
+  grid.initialize();
+  DensityGrid::iterator cell = grid.begin();
 
   // bjump
   {
@@ -101,7 +107,7 @@ int main(int argc, char **argv) {
         lstream >> em[i];
       }
 
-      cell.set_total_density(
+      cell.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
       cell.set_temperature(temp);
       cell.set_ionic_fraction(ION_H_n, nfracH);

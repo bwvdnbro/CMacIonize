@@ -31,7 +31,6 @@
 
 class Abundances;
 class ChargeTransferRates;
-class DensityValues;
 class RecombinationRates;
 
 /**
@@ -58,7 +57,6 @@ public:
                             RecombinationRates &recombination_rates,
                             ChargeTransferRates &charge_transfer_rates);
 
-  void calculate_ionization_state(double jfac, DensityValues &cell) const;
   void calculate_ionization_state(double jfac,
                                   DensityGrid::iterator &cell) const;
 

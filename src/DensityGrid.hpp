@@ -256,6 +256,148 @@ public:
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const = 0;
 
   /**
+   * @brief Get the number density of hydrogen for the cell with the given
+   * index.
+   *
+   * @param index Index of a cell.
+   * @return Number density of hydrogen in that cell (in m^-3).
+   */
+  inline double get_number_density(unsigned long index) {
+    return _values[index].get_total_density();
+  }
+
+  /**
+   * @brief Set the number density of hydrogen for the cell with the given
+   * index.
+   *
+   * @param index Index of a cell.
+   * @param number_density Number density of hydrogen in that cell (in m^-3).
+   */
+  inline void set_number_density(unsigned long index, double number_density) {
+    _values[index].set_total_density(number_density);
+  }
+
+  /**
+   * @brief Get the temperature of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Temperature of that cell (in K).
+   */
+  inline double get_temperature(unsigned long index) const {
+    return _values[index].get_temperature();
+  }
+
+  /**
+   * @brief Set the temperature of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param temperature Temperature (in K).
+   */
+  inline void set_temperature(unsigned long index, double temperature) {
+    _values[index].set_temperature(temperature);
+  }
+
+  /**
+   * @brief Get the ionic fraction for the given IonName for the cell with the
+   * given index.
+   *
+   * @param index Index of a cell.
+   * @param ion IonName.
+   * @return Ionic fraction for that ion.
+   */
+  inline double get_ionic_fraction(unsigned long index, IonName ion) const {
+    return _values[index].get_ionic_fraction(ion);
+  }
+
+  /**
+   * @brief Set the ionic fraction for the given IonName for the cell with the
+   * given index.
+   *
+   * @param index Index of a cell.
+   * @param ion IonName.
+   * @param ionic_fraction Ionic fraction for that ion.
+   */
+  inline void set_ionic_fraction(unsigned long index, IonName ion,
+                                 double ionic_fraction) {
+    _values[index].set_ionic_fraction(ion, ionic_fraction);
+  }
+
+  /**
+   * @brief Get the neutral fraction of hydrogen during the previous iteration
+   * for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Neutral fraction of hydrogen during the previous iteration.
+   */
+  inline double get_neutral_fraction_H_old(unsigned long index) const {
+    return _values[index].get_old_neutral_fraction_H();
+  }
+
+  /**
+   * @brief Set the neutral fraction of hydrogen during the previous iteration
+   * for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param neutral_fraction_H_old Neutral fraction of hydrogen during the
+   * previous iteration.
+   */
+  inline void set_neutral_fraction_H_old(unsigned long index,
+                                         double neutral_fraction_H_old) {
+    _values[index].set_old_neutral_fraction_H(neutral_fraction_H_old);
+  }
+
+  /**
+   * @brief Get the mean intensity of ionizing radiation for the given IonName
+   * for the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @param ion IonName.
+   * @return Mean intensity of ionizing radiation for that ion (without
+   * normalization factor, in m^3).
+   */
+  inline double get_mean_intensity(unsigned long index, IonName ion) const {
+    return _values[index].get_mean_intensity(ion);
+  }
+
+  /**
+   * @brief Increase the mean ionizing intensity for the given ion for the cell
+   * with the given index.
+   *
+   * @param index Index of a cell.
+   * @param ion IonName.
+   * @param mean_intensity_increment Mean ionizing intensity increment
+   * (without normalization factor, in m^3).
+   */
+  inline void increase_mean_intensity(unsigned long index, IonName ion,
+                                      double mean_intensity_increment) {
+    _values[index].increase_mean_intensity(ion, mean_intensity_increment);
+  }
+
+  /**
+   * @brief Get the heating by ionization of hydrogen for the cell with the
+   * given index.
+   *
+   * @param index Index of a cell.
+   * @return Heating by ionization of hydrogen (in m^3 s^-1).
+   */
+  inline double get_heating_H(unsigned long index) const {
+    return _values[index].get_heating_H();
+  }
+
+  /**
+   * @brief Increase the ionizing heating for hydrogen for the cell with the
+   * given index.
+   *
+   * @param index Index of a cell.
+   * @param heating_H_increment Heating by ionization of hydrogen (in m^3
+   * s^-1).
+   */
+  inline void increase_heating_H(unsigned long index,
+                                 double heating_H_increment) {
+    _values[index].increase_heating_H(heating_H_increment);
+  }
+
+  /**
    * @brief Get the values stored in the cell with the given index.
    *
    * @param index Index of a cell.
@@ -355,7 +497,7 @@ public:
      * @return Number density of hydrogen (in m^-3).
      */
     inline double get_number_density() const {
-      return _grid->get_cell_values(_index).get_total_density();
+      return _grid->get_number_density(_index);
     }
 
     /**
@@ -365,7 +507,7 @@ public:
      * @param number_density Number density of hydrogen (in m^-3).
      */
     inline void set_number_density(double number_density) {
-      _grid->get_cell_values(_index).set_total_density(number_density);
+      _grid->set_number_density(_index, number_density);
     }
 
     /**
@@ -375,17 +517,17 @@ public:
      * @return Temperature (in K).
      */
     inline double get_temperature() const {
-      return _grid->get_cell_values(_index).get_temperature();
+      return _grid->get_temperature(_index);
     }
 
     /**
-     * @brief set the temperature of the cell the iterator is currently pointing
+     * @brief Set the temperature of the cell the iterator is currently pointing
      * to.
      *
      * @param temperature Temperature (in K).
      */
     inline void set_temperature(double temperature) {
-      _grid->get_cell_values(_index).set_temperature(temperature);
+      _grid->set_temperature(_index, temperature);
     }
 
     /**
@@ -396,7 +538,7 @@ public:
      * @return Ionic fraction for that ion.
      */
     inline double get_ionic_fraction(IonName ion) const {
-      return _grid->get_cell_values(_index).get_ionic_fraction(ion);
+      return _grid->get_ionic_fraction(_index, ion);
     }
 
     /**
@@ -407,7 +549,7 @@ public:
      * @param ionic_fraction Ionic fraction for that ion.
      */
     inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
-      _grid->get_cell_values(_index).set_ionic_fraction(ion, ionic_fraction);
+      _grid->set_ionic_fraction(_index, ion, ionic_fraction);
     }
 
     /**
@@ -417,7 +559,7 @@ public:
      * @return Neutral fraction of hydrogen during the previous iteration.
      */
     inline double get_neutral_fraction_H_old() const {
-      return _grid->get_cell_values(_index).get_old_neutral_fraction_H();
+      return _grid->get_neutral_fraction_H_old(_index);
     }
 
     /**
@@ -428,8 +570,7 @@ public:
      * previous iteration.
      */
     inline void set_neutral_fraction_H_old(double neutral_fraction_H_old) {
-      _grid->get_cell_values(_index).set_old_neutral_fraction_H(
-          neutral_fraction_H_old);
+      _grid->set_neutral_fraction_H_old(_index, neutral_fraction_H_old);
     }
 
     /**
@@ -441,11 +582,12 @@ public:
      * normalization factor, in m^3).
      */
     inline double get_mean_intensity(IonName ion) const {
-      return _grid->get_cell_values(_index).get_mean_intensity(ion);
+      return _grid->get_mean_intensity(_index, ion);
     }
 
     /**
-     * @brief Increase the mean ionizing intensity for the given ion.
+     * @brief Increase the mean ionizing intensity for the given ion for the
+     * cell the iterator is currently pointing to.
      *
      * @param ion IonName.
      * @param mean_intensity_increment Mean ionizing intensity increment
@@ -453,8 +595,7 @@ public:
      */
     inline void increase_mean_intensity(IonName ion,
                                         double mean_intensity_increment) {
-      _grid->get_cell_values(_index).increase_mean_intensity(
-          ion, mean_intensity_increment);
+      _grid->increase_mean_intensity(_index, ion, mean_intensity_increment);
     }
 
     /**
@@ -463,18 +604,17 @@ public:
      *
      * @return Heating by ionization of hydrogen (in m^3 s^-1).
      */
-    inline double get_heating_H() const {
-      return _grid->get_cell_values(_index).get_heating_H();
-    }
+    inline double get_heating_H() const { return _grid->get_heating_H(_index); }
 
     /**
-     * @brief Increase the ionizing heating for hydrogen.
+     * @brief Increase the ionizing heating for hydrogen for the cell the
+     * iterator is currently pointing to.
      *
      * @param heating_H_increment Heating by ionization of hydrogen (in m^3
      * s^-1).
      */
     inline void increase_heating_H(double heating_H_increment) {
-      _grid->get_cell_values(_index).increase_heating_H(heating_H_increment);
+      _grid->increase_heating_H(_index, heating_H_increment);
     }
 
     /**

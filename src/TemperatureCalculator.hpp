@@ -31,7 +31,6 @@
 
 class Abundances;
 class ChargeTransferRates;
-class DensityValues;
 class LineCoolingData;
 class RecombinationRates;
 
@@ -66,18 +65,11 @@ public:
                         ChargeTransferRates &charge_transfer_rates);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     double T, DensityValues &cell, double jfac,
-                     Abundances &abundances, double hfac, double pahfac,
-                     LineCoolingData &data, RecombinationRates &rates,
-                     ChargeTransferRates &ctr);
-  static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell, double jfac,
                      Abundances &abundances, double hfac, double pahfac,
                      LineCoolingData &data, RecombinationRates &rates,
                      ChargeTransferRates &ctr);
 
-  void calculate_temperature(double jfac, double hfac,
-                             DensityValues &cell) const;
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;
 

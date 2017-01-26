@@ -32,7 +32,6 @@
 #include <cstdlib>
 
 class DensityFunction;
-class DensityValues;
 class Log;
 class ParameterFile;
 class Photon;

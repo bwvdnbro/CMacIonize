@@ -59,14 +59,12 @@ public:
    * not.
    *
    * @param level Current refinement level of the cells.
-   * @param midpoints Midpoints of the cells (in m).
-   * @param volumes  Volumes of the cells (in m^3).
-   * @param cells DensityValues of the cells.
+   * @param cells DensityGrid::iterators pointing to the cells.
    * @return True if the cells can be replaced by a single cell on a coarser
    * level.
    */
-  virtual bool coarsen(unsigned char level, CoordinateVector<> *midpoints,
-                       double *volumes, DensityValues *cells) const {
+  virtual bool coarsen(unsigned char level,
+                       const DensityGrid::iterator *cells) const {
     return false;
   }
 };

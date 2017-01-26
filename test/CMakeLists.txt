@@ -549,6 +549,7 @@ configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
 set(TESTTEMPERATURECALCULATOR_SOURCES
     testTemperatureCalculator.cpp
 
+    ../src/CartesianDensityGrid.cpp
     ../src/ChargeTransferRates.cpp
     ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
@@ -570,6 +571,8 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
 
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
     ../src/EmissivityCalculator.cpp
     ../src/EmissivityCalculator.hpp
     ../src/EmissivityValues.hpp

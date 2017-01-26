@@ -74,9 +74,6 @@ public:
   EmissivityValues calculate_emissivities(DensityGrid::iterator &cell,
                                           Abundances &abundances,
                                           const LineCoolingData &lines) const;
-  EmissivityValues calculate_emissivities(DensityValues &cell,
-                                          Abundances &abundances,
-                                          const LineCoolingData &lines) const;
 
   void calculate_emissivities(DensityGrid &grid) const;
   std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;
