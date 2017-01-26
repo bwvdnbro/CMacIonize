@@ -27,6 +27,7 @@
 #define DENSITYGRID_HPP
 
 #include "Abundances.hpp"
+#include "Atomic.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
@@ -104,9 +105,6 @@ protected:
   /*! @brief EmissivityValues for the cells. */
   std::vector< EmissivityValues * > _emissivities;
 
-  /*! @brief Locks to ensure safe write access to the cell data. */
-  std::vector< Lock > _lock;
-
   /*! @brief Log to write log messages to. */
   Log *_log;
 
@@ -141,7 +139,6 @@ protected:
   inline void update_integrals(double ds, DensityGrid::iterator &cell,
                                const Photon &photon) const {
     if (cell.get_number_density() > 0.) {
-      cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         cell.increase_mean_intensity(ion, ds * photon.get_weight() *
@@ -153,7 +150,6 @@ protected:
       cell.increase_heating_He(ds * photon.get_weight() *
                                photon.get_cross_section(ION_He_n) *
                                (photon.get_energy() - _ionization_energy_He));
-      cell.unlock();
     }
   }
 
@@ -412,7 +408,7 @@ public:
    */
   inline void increase_mean_intensity(unsigned long index, IonName ion,
                                       double mean_intensity_increment) {
-    _mean_intensity[ion][index] += mean_intensity_increment;
+    Atomic::add(_mean_intensity[ion][index], mean_intensity_increment);
   }
 
   /**
@@ -447,7 +443,7 @@ public:
    */
   inline void increase_heating_H(unsigned long index,
                                  double heating_H_increment) {
-    _heating_H[index] += heating_H_increment;
+    Atomic::add(_heating_H[index], heating_H_increment);
   }
 
   /**
@@ -479,7 +475,7 @@ public:
    */
   inline void increase_heating_He(unsigned long index,
                                   double heating_He_increment) {
-    _heating_He[index] += heating_He_increment;
+    Atomic::add(_heating_He[index], heating_He_increment);
   }
 
   /**
@@ -603,20 +599,6 @@ public:
                                EmissivityValues *emissivities) {
     _emissivities[index] = emissivities;
   }
-
-  /**
-   * @brief Lock the cell with the given index.
-   *
-   * @param index Index of a cell.
-   */
-  inline void lock(unsigned long index) { _lock[index].lock(); }
-
-  /**
-   * @brief Unlock the cell with the given index.
-   *
-   * @param index Index of a cell.
-   */
-  inline void unlock(unsigned long index) { _lock[index].unlock(); }
 
   /**
    * @brief Get an iterator to the cell containing the given position.
@@ -938,16 +920,6 @@ public:
     inline void set_emissivities(EmissivityValues *emissivities) {
       _grid->set_emissivities(_index, emissivities);
     }
-
-    /**
-     * @brief Lock the cell the iterator is pointing to.
-     */
-    inline void lock() { _grid->lock(_index); }
-
-    /**
-     * @brief Unlock the cell the iterator is pointing to.
-     */
-    inline void unlock() { _grid->unlock(_index); }
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.

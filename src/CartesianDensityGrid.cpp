@@ -102,7 +102,6 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
   _heating_H.resize(totnumcell);
   _heating_He.resize(totnumcell);
   _emissivities.resize(totnumcell, nullptr);
-  _lock.resize(totnumcell);
 
   if (_log) {
     _log->write_status("Done allocating memory.");

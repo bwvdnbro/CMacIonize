@@ -659,6 +659,17 @@ add_unit_test(NAME testMPICommunicator
               PARALLEL)
 endif(HAVE_MPI)
 
+## Unit test for Atomic
+if(HAVE_OPENMP)
+set(TESTATOMIC_SOURCES
+    testAtomic.cpp
+
+    ../src/Atomic.hpp
+)
+add_unit_test(NAME testAtomic
+              SOURCES ${TESTATOMIC_SOURCES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
