@@ -360,7 +360,7 @@ int main(int argc, char **argv) {
     }
     lnumphoton = totnumphoton;
 #ifdef HAVE_MPI
-    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
+    totweight = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
     comm.reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(typecount);
 #endif
     if (log) {

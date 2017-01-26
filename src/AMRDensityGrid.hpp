@@ -348,7 +348,6 @@ public:
     // routine
     const unsigned int cells2size = _cells.size();
     for (unsigned int i = 0; i < cells2size; ++i) {
-      reset_mean_intensities(i);
       if (_refinement_scheme) {
         refine_cell(*_refinement_scheme, i, _density_function);
       }
@@ -361,6 +360,9 @@ public:
 
     // reset the ngbs
     _grid.set_ngbs(_periodic);
+
+    // make sure all cells are correctly reset (also the new ones, if any)
+    DensityGrid::reset_grid();
   }
 
   /**
