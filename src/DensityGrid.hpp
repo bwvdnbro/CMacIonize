@@ -310,6 +310,16 @@ public:
   }
 
   /**
+   * @brief Get a handle to the number density vector that can be used in MPI
+   * communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_number_density_handle() {
+    return _number_density;
+  }
+
+  /**
    * @brief Get the temperature of the cell with the given index.
    *
    * @param index Index of a cell.
@@ -327,6 +337,16 @@ public:
    */
   inline void set_temperature(unsigned long index, double temperature) {
     _temperature[index] = temperature;
+  }
+
+  /**
+   * @brief Get a handle to the temperature vector that can be used in MPI
+   * communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_temperature_handle() {
+    return _temperature;
   }
 
   /**
@@ -352,6 +372,17 @@ public:
   inline void set_ionic_fraction(unsigned long index, IonName ion,
                                  double ionic_fraction) {
     _ionic_fraction[ion][index] = ionic_fraction;
+  }
+
+  /**
+   * @brief Get a handle to the ionic fraction vector for the given ion that can
+   * be used in MPI communications.
+   *
+   * @param ion IonName.
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_ionic_fraction_handle(IonName ion) {
+    return _ionic_fraction[ion];
   }
 
   /**

@@ -50,7 +50,7 @@ private:
   DensityGrid &_grid;
 
   /*! @brief Block that is traversed by the local MPI process. */
-  std::pair< unsigned long, unsigned long > &_block;
+  std::pair< unsigned long, unsigned long > _block;
 
   /*! @brief Lock used to ensure safe access to the internal counters. */
   Lock _lock;
@@ -86,6 +86,11 @@ public:
       return nullptr;
     }
     _lock.lock();
+    // _fraction_done could be 1. now, as another thread might have changed it
+    if (_fraction_done == 1.) {
+      _lock.unlock();
+      return nullptr;
+    }
     double begin_fraction = _fraction_done;
     double end_fraction =
         _fraction_done + std::max(0.1 * (1. - _fraction_done), 0.01);

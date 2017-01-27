@@ -150,6 +150,16 @@ int main(int argc, char **argv) {
                       CompilerInfo::get_host_name(), ").");
   }
 
+#ifdef HAVE_MPI
+  if (log) {
+    if (comm.get_size() > 1) {
+      log->write_status("Code is running on ", comm.get_size(), " processes.");
+    } else {
+      log->write_status("Code is running on a single process.");
+    }
+  }
+#endif
+
   if (CompilerInfo::is_dirty()) {
     if (log) {
       log->write_warning(
@@ -285,10 +295,28 @@ int main(int argc, char **argv) {
     return 0.;
   }
 
-  // done writing file, now initialize grid
+// done writing file, now initialize grid
+#ifdef HAVE_MPI
+  std::pair< unsigned long, unsigned long > block =
+      comm.distribute_block(0, grid->get_number_of_cells());
+#else
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid->get_number_of_cells());
+#endif
   grid->initialize(block);
+#ifdef HAVE_MPI
+  // grid->initialize initialized:
+  // - densities
+  // - temperatures
+  // - ionic fractions
+  // we have to gather these across all processes
+  comm.gather(grid->get_number_density_handle());
+  comm.gather(grid->get_temperature_handle());
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    comm.gather(grid->get_ionic_fraction_handle(ion));
+  }
+#endif
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
@@ -412,6 +440,18 @@ int main(int argc, char **argv) {
       ionization_state_calculator.calculate_ionization_state(totweight, *grid,
                                                              block);
     }
+#ifdef HAVE_MPI
+    // the calculation above will have changed the ionic fractions, and might
+    // have changed the temperatures
+    // we have to gather these across all processes
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      IonName ion = static_cast< IonName >(i);
+      comm.gather(grid->get_ionic_fraction_handle(ion));
+    }
+    if (calculate_temperature && loop > 3) {
+      comm.gather(grid->get_temperature_handle());
+    }
+#endif
     if (log) {
       log->write_status("Done calculating ionization state.");
     }
