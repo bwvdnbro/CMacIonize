@@ -102,6 +102,14 @@ int main(int argc, char **argv) {
     assert_condition(numbers[i] == 1.);
   }
 
+  for (unsigned int i = block.first; i < block.second; ++i) {
+    numbers[i] = 42.;
+  }
+  comm.gather(numbers);
+  for (unsigned int i = 0; i < 19; ++i) {
+    assert_condition(numbers[i] == 42.);
+  }
+
   std::vector< double > vector(100, 1.);
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(vector);
   for (unsigned int i = 0; i < vector.size(); ++i) {

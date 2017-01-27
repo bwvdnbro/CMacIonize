@@ -151,6 +151,36 @@ public:
 
   /**
    * @brief Distribute the continuous block of indices with given begin and end
+   * index across a given number of processes, and get the part for the process
+   * with the given rank.
+   *
+   * @param rank Rank for which we want the part.
+   * @param size Total number of processes.
+   * @param begin Start of the block.
+   * @param end End of the block.
+   * @return std::pair containing the begin and end index for the part of the
+   * block that is assigned to process rank.
+   */
+  static inline std::pair< unsigned long, unsigned long >
+  distribute_block(int rank, int size, unsigned long begin, unsigned long end) {
+    unsigned long block_size = end - begin;
+    unsigned long block_begin;
+    unsigned long block_end;
+    unsigned long quotient = block_size / size;
+    int remainder = block_size % size;
+    // here is the logic: the start of the local block should be the sum of
+    // all blocks on processes with ranks lower than this block
+    // these have size quotient + (_rank < remainder), which means they have
+    // total size _rank*quotient + the number of blocks with 1 element more
+    // the end of the block is the beginning of the next block, which means we
+    // have the same logic for _rank+1
+    block_begin = rank * quotient + std::min(rank, remainder);
+    block_end = (rank + 1) * quotient + std::min(rank + 1, remainder);
+    return std::make_pair(block_begin, block_end);
+  }
+
+  /**
+   * @brief Distribute the continuous block of indices with given begin and end
    * index across all processes.
    *
    * @param begin First index of the block.
@@ -160,20 +190,7 @@ public:
   inline std::pair< unsigned long, unsigned long >
   distribute_block(unsigned long begin, unsigned long end) {
     if (_size > 1) {
-      unsigned long size = end - begin;
-      unsigned long block_begin;
-      unsigned long block_end;
-      unsigned long quotient = size / _size;
-      int remainder = size % _size;
-      // here is the logic: the start of the local block should be the sum of
-      // all blocks on processes with ranks lower than this block
-      // these have size quotient + (_rank < remainder), which means they have
-      // total size _rank*quotient + the number of blocks with 1 element more
-      // the end of the block is the beginning of the next block, which means we
-      // have the same logic for _rank+1
-      block_begin = _rank * quotient + std::min(_rank, remainder);
-      block_end = (_rank + 1) * quotient + std::min(_rank + 1, remainder);
-      return std::make_pair(block_begin, block_end);
+      return distribute_block(_rank, _size, begin, end);
     } else {
       return std::make_pair(begin, end);
     }
@@ -381,6 +398,51 @@ public:
                                  dtype, otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
+      }
+    }
+  }
+
+  /**
+   * @brief Ensure the given std::vector is up to date on all processes,
+   * assuming that MPI process i holds the block returned by
+   * distribute_block(i, 0, vector.size()).
+   *
+   * @param vector std::vector to gather.
+   */
+  template < typename _datatype_ >
+  void gather(std::vector< _datatype_ > &vector) {
+    if (_size > 1) {
+      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      std::pair< unsigned long, unsigned long > local_block =
+          distribute_block(0, vector.size());
+      // do a complicated communication ring:
+      // we do a loop with _size steps; each process sends to process
+      // _rank+step, and receives from process _rank-step
+      // since we do not require _size to be even, there is no way of knowing
+      // up front in which order to send and receive, which means we have to do
+      // at least a non-blocking send
+      // we cannot do a sendrecv, since the number of elements sent and received
+      // can differ by one
+      // for the same reason, we cannot use allgather, which essentially does
+      // what we do here, but for equal sizes on each process
+      for (int step = 0; step < _size; ++step) {
+        // the %_size is necessary to wrap our ranks in the range [0, _size[
+        // the +_size in recv_block is not really necessary, but it makes sure
+        // the rank is always positive (and would be necessary if _rank was an
+        // unsigned integer)
+        int sendrank = (_rank + step) % _size;
+        int recvrank = (_rank + _size - step) % _size;
+        std::pair< unsigned long, unsigned long > recv_block =
+            distribute_block(recvrank, _size, 0, vector.size());
+        MPI_Request request;
+        MPI_Isend(&vector[local_block.first],
+                  local_block.second - local_block.first, dtype, sendrank, 0,
+                  MPI_COMM_WORLD, &request);
+        MPI_Status status;
+        MPI_Recv(&vector[recv_block.first],
+                 recv_block.second - recv_block.first, dtype, recvrank, 0,
+                 MPI_COMM_WORLD, &status);
+        MPI_Wait(&request, &status);
       }
     }
   }
