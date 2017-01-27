@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
   cmac_status("This is process %i of %i.", comm.get_rank(), comm.get_size());
 
   double dvalue = 42.;
-  dvalue = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(dvalue);
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(dvalue);
   assert_condition(dvalue == 42. * comm.get_size());
   unsigned int uvalue = 42;
-  uvalue = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(uvalue);
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(uvalue);
   assert_condition(uvalue == 42 * static_cast< unsigned int >(comm.get_size()));
 
   double array[2] = {41, 42};
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   // part code (unless we use 19 processes, which is highly unlikely)
   unsigned int number = 19;
   unsigned int loc_number = comm.distribute(number);
-  loc_number = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(loc_number);
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(loc_number);
   assert_condition(loc_number == number);
 
   std::pair< unsigned long, unsigned long > block =

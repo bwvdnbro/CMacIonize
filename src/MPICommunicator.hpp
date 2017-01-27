@@ -21,14 +21,19 @@
  *
  * @brief C++ wrapper around basic MPI functions.
  *
+ * This is the only file that is aware of the existence of MPI.
+ *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #ifndef MPICOMMUNICATOR_HPP
 #define MPICOMMUNICATOR_HPP
 
+#include "Configuration.hpp"
 #include "Error.hpp"
 
+#ifdef HAVE_MPI
 #include <mpi.h>
+#endif
 #include <vector>
 
 #if defined(__clang__)
@@ -85,6 +90,7 @@ public:
    * @param argv Command line arguments passed on to the main program.
    */
   inline MPICommunicator(int &argc, char **argv) {
+#ifdef HAVE_MPI
     // MPI_Init is known to cause memory leak detections, so we disable the
     // address sanitizer for all allocations made by it
     NO_LEAK_CHECK_BEGIN
@@ -106,6 +112,14 @@ public:
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to obtain number of MPI processes!");
     }
+#else
+    for (int i = 0; i < argc; ++i) {
+      cmac_status("argv[%i]: %s", i, argv[i]);
+    }
+    // no MPI: we assume a single process with rank 0
+    _rank = 0;
+    _size = 1;
+#endif
   }
 
   /**
@@ -114,10 +128,12 @@ public:
    * Calls MPI_Finalize().
    */
   inline ~MPICommunicator() {
+#ifdef HAVE_MPI
     int status = MPI_Finalize();
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to clean up MPI!");
     }
+#endif
   }
 
   /**
@@ -142,11 +158,20 @@ public:
    * @return Part of the number that is assigned to this process.
    */
   inline unsigned int distribute(unsigned int number) const {
-    unsigned int quotient = number / _size;
-    int remainder = number % _size;
-    // all processes with a rank smaller than the remainder get one element
-    // extra (since _rank < remainder evaluates to either 0 or 1)
-    return quotient + (_rank < remainder);
+#ifdef HAVE_MPI
+    if (_size > 1) {
+      unsigned int quotient = number / _size;
+      int remainder = number % _size;
+      // all processes with a rank smaller than the remainder get one element
+      // extra (since _rank < remainder evaluates to either 0 or 1)
+      return quotient + (_rank < remainder);
+    } else {
+      return number;
+    }
+#else
+    // why bother doing a calculation if you already know the result?
+    return number;
+#endif
   }
 
   /**
@@ -189,13 +214,18 @@ public:
    */
   inline std::pair< unsigned long, unsigned long >
   distribute_block(unsigned long begin, unsigned long end) {
+#ifdef HAVE_MPI
     if (_size > 1) {
       return distribute_block(_rank, _size, begin, end);
     } else {
       return std::make_pair(begin, end);
     }
+#else
+    return std::make_pair(begin, end);
+#endif
   }
 
+#ifdef HAVE_MPI
   /**
    * @brief Template function that returns the MPI_Datatype corresponding to the
    * given template data type.
@@ -222,6 +252,7 @@ public:
       return 0;
     }
   }
+#endif
 
   /**
    * @brief Reduce the elements of the given std::vector of objects, using the
@@ -241,6 +272,7 @@ public:
   void reduce(std::vector< _classtype_ > &v,
               _datatype_ (_classtype_::*getter)() const,
               void (_classtype_::*setter)(_datatype_)) const {
+#ifdef HAVE_MPI
     // we only communicate if there are multiple processes
     if (_size > 1) {
       std::vector< _datatype_ > sendbuffer(v.size());
@@ -259,6 +291,7 @@ public:
         (v[i].*(setter))(sendbuffer[i]);
       }
     }
+#endif
   }
 
   /**
@@ -294,6 +327,7 @@ public:
               _datatype_ (_classtype_::*getter)(_arguments_...) const,
               void (_classtype_::*setter)(_datatype_, _arguments_...),
               unsigned int size, _arguments_... args) const {
+#ifdef HAVE_MPI
     if (_size > 1) {
       if (size == 0) {
         size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
@@ -339,6 +373,7 @@ public:
         it = blockit;
       }
     }
+#endif
   }
 
   /**
@@ -348,7 +383,8 @@ public:
    * @return Reduced variable.
    */
   template < MPIOperatorType _operatortype_, typename _datatype_ >
-  _datatype_ reduce(_datatype_ value) const {
+  void reduce(_datatype_ &value) const {
+#ifdef HAVE_MPI
     if (_size > 1) {
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
@@ -358,7 +394,7 @@ public:
         cmac_error("Error in MPI_Allreduce!");
       }
     }
-    return value;
+#endif
   }
 
   /**
@@ -373,6 +409,7 @@ public:
   template < MPIOperatorType _operatortype_, unsigned int _size_,
              typename _datatype_ >
   void reduce(_datatype_ *array) const {
+#ifdef HAVE_MPI
     if (_size > 1) {
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
@@ -382,6 +419,7 @@ public:
         cmac_error("Error in MPI_Allreduce!");
       }
     }
+#endif
   }
 
   /**
@@ -391,6 +429,7 @@ public:
    */
   template < MPIOperatorType _operatortype_, typename _datatype_ >
   void reduce(std::vector< _datatype_ > &vector) {
+#ifdef HAVE_MPI
     if (_size > 1) {
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
@@ -400,6 +439,7 @@ public:
         cmac_error("Error in MPI_Allreduce!");
       }
     }
+#endif
   }
 
   /**
@@ -411,6 +451,7 @@ public:
    */
   template < typename _datatype_ >
   void gather(std::vector< _datatype_ > &vector) {
+#ifdef HAVE_MPI
     if (_size > 1) {
       MPI_Datatype dtype = get_datatype< _datatype_ >();
       std::pair< unsigned long, unsigned long > local_block =
@@ -445,9 +486,11 @@ public:
         MPI_Wait(&request, &status);
       }
     }
+#endif
   }
 };
 
+#ifdef HAVE_MPI
 /**
  * @brief Template function that returns the MPI_Datatype corresponding to the
  * given template data type.
@@ -472,5 +515,6 @@ template <>
 inline MPI_Datatype MPICommunicator::get_datatype< unsigned int >() {
   return MPI_UNSIGNED;
 }
+#endif
 
 #endif // MPICOMMUNICATOR_HPP

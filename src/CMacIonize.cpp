@@ -40,6 +40,7 @@
 #include "IonizationStateCalculator.hpp"
 #include "IterationConvergenceCheckerFactory.hpp"
 #include "LineCoolingData.hpp"
+#include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonNumberConvergenceCheckerFactory.hpp"
 #include "PhotonShootJobMarket.hpp"
@@ -53,12 +54,9 @@
 #include "VernerRecombinationRates.hpp"
 #include "WorkDistributor.hpp"
 #include "WorkEnvironment.hpp"
+
 #include <iostream>
 #include <string>
-
-#ifdef HAVE_MPI
-#include "MPICommunicator.hpp"
-#endif
 
 using namespace std;
 
@@ -70,15 +68,11 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  bool write_log = true;
-  bool write_output = true;
-#ifdef HAVE_MPI
   // initialize the MPI communicator and make sure only process 0 writes to the
   // log and output files
   MPICommunicator comm(argc, argv);
-  write_log = (comm.get_rank() == 0);
-  write_output = (comm.get_rank() == 0);
-#endif
+  bool write_log = (comm.get_rank() == 0);
+  bool write_output = (comm.get_rank() == 0);
 
   Timer programtimer;
 
@@ -150,7 +144,6 @@ int main(int argc, char **argv) {
                       CompilerInfo::get_host_name(), ").");
   }
 
-#ifdef HAVE_MPI
   if (log) {
     if (comm.get_size() > 1) {
       log->write_status("Code is running on ", comm.get_size(), " processes.");
@@ -158,7 +151,6 @@ int main(int argc, char **argv) {
       log->write_status("Code is running on a single process.");
     }
   }
-#endif
 
   if (CompilerInfo::is_dirty()) {
     if (log) {
@@ -295,16 +287,11 @@ int main(int argc, char **argv) {
     return 0.;
   }
 
-// done writing file, now initialize grid
-#ifdef HAVE_MPI
+  // done writing file, now initialize grid
   std::pair< unsigned long, unsigned long > block =
       comm.distribute_block(0, grid->get_number_of_cells());
-#else
-  std::pair< unsigned long, unsigned long > block =
-      std::make_pair(0, grid->get_number_of_cells());
-#endif
   grid->initialize(block);
-#ifdef HAVE_MPI
+
   // grid->initialize initialized:
   // - densities
   // - temperatures
@@ -316,7 +303,6 @@ int main(int argc, char **argv) {
     IonName ion = static_cast< IonName >(i);
     comm.gather(grid->get_ionic_fraction_handle(ion));
   }
-#endif
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
@@ -324,10 +310,8 @@ int main(int argc, char **argv) {
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
-#ifdef HAVE_MPI
   // make sure every thread on every process has another random seed
   random_seed += comm.get_rank() * worksize;
-#endif
 
   if (log) {
     log->write_status("Program will use ",
@@ -373,9 +357,10 @@ int main(int argc, char **argv) {
       }
 
       unsigned int local_numphoton = lnumphoton;
-#ifdef HAVE_MPI
+
+      // make sure this process does only part of the total number of photons
       local_numphoton = comm.distribute(local_numphoton);
-#endif
+
       photonshootjobs.set_numphoton(local_numphoton);
       worktimer.start();
       workdistributor.do_in_parallel(photonshootjobs);
@@ -389,10 +374,11 @@ int main(int argc, char **argv) {
       ++numsubstep;
     }
     lnumphoton = totnumphoton;
-#ifdef HAVE_MPI
-    totweight = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
+
+    // make sure the total weight and typecount is reduced across all processes
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
     comm.reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(typecount);
-#endif
+
     if (log) {
       log->write_status("Done shooting photons.");
       log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
@@ -423,7 +409,9 @@ int main(int argc, char **argv) {
       log->write_status("Calculating ionization state after shooting ",
                         lnumphoton, " photons...");
     }
-#ifdef HAVE_MPI
+
+    // reduce the mean intensity integrals and heating terms across all
+    // processes
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       IonName ion = static_cast< IonName >(i);
       comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
@@ -433,14 +421,14 @@ int main(int argc, char **argv) {
       comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_H_handle());
       comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_He_handle());
     }
-#endif
+
     if (calculate_temperature && loop > 3) {
       temperature_calculator.calculate_temperature(totweight, *grid, block);
     } else {
       ionization_state_calculator.calculate_ionization_state(totweight, *grid,
                                                              block);
     }
-#ifdef HAVE_MPI
+
     // the calculation above will have changed the ionic fractions, and might
     // have changed the temperatures
     // we have to gather these across all processes
@@ -451,7 +439,7 @@ int main(int argc, char **argv) {
     if (calculate_temperature && loop > 3) {
       comm.gather(grid->get_temperature_handle());
     }
-#endif
+
     if (log) {
       log->write_status("Done calculating ionization state.");
     }

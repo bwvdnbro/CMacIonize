@@ -170,6 +170,7 @@ set(CMACIONIZE_SOURCES
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     Lock.hpp
+    MPICommunicator.hpp
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
     PassivePhotonNumberConvergenceChecker.hpp
@@ -217,12 +218,6 @@ list(APPEND CMACIONIZE_SOURCES
     GadgetSnapshotPhotonSourceDistribution.hpp
     HDF5Tools.hpp)
 endif(HAVE_HDF5)
-
-# add MPI dependent sources, if we have found MPI
-if(HAVE_MPI)
-list(APPEND CMACIONIZE_SOURCES
-    MPICommunicator.hpp)
-endif(HAVE_MPI)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 

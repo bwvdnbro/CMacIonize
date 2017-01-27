@@ -131,6 +131,9 @@ if(MPI_CXX_FOUND)
                  "${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
   include_directories(${MPI_C_INCLUDE_PATH})
   include_directories(${MPI_CXX_INCLUDE_PATH})
+else(MPI_CXX_FOUND)
+  message(WARNING
+          "MPI not found. Distributed memory parallelization will not work.")
 endif(MPI_CXX_FOUND)
 
 # Find Boost, Boost Python, Python, and NumPy
