@@ -127,7 +127,7 @@ private:
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
-          _number_density[index] = funcvalue.get_total_density();
+          _number_density[index] = funcvalue.get_number_density();
           for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             _ionic_fraction[i][index] = old_ionic_fractions[i];
           }
@@ -149,7 +149,7 @@ private:
           _cells[index] = childcell;
           childcell->value() = index;
         } else {
-          _number_density.push_back(funcvalue.get_total_density());
+          _number_density.push_back(funcvalue.get_number_density());
           for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             _ionic_fraction[i].push_back(old_ionic_fractions[i]);
           }

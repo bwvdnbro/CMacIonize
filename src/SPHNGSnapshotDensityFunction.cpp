@@ -528,7 +528,7 @@ operator()(CoordinateVector<> position) const {
   }
 
   // convert density to particle density (assuming hydrogen only)
-  cell.set_total_density(density / 1.6737236e-27);
+  cell.set_number_density(density / 1.6737236e-27);
   // TODO: other quantities
   // temporary values
   cell.set_temperature(_initial_temperature);

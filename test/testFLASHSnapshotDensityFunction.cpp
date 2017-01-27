@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   for (unsigned int i = 0; i < np; ++i) {
     CoordinateVector<> p((i + 0.5) * 0.02 / np, (i + 0.5) * 0.01 / np,
                          (i + 0.5) * 0.01 / np);
-    double rho = density(p).get_total_density();
+    double rho = density(p).get_number_density();
     double rho_ex = expected_density(p);
     double diff = (rho - rho_ex) / (rho + rho_ex);
     xi2 += diff * diff;

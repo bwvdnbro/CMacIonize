@@ -173,7 +173,7 @@ DensityValues FLASHSnapshotDensityFunction::
 operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
-  cell.set_total_density(_grid.get_cell(position) / 1.6737236e-27);
+  cell.set_number_density(_grid.get_cell(position) / 1.6737236e-27);
   cell.set_temperature(_temperature);
   cell.set_ionic_fraction(ION_H_n, 1.e-6);
   cell.set_ionic_fraction(ION_He_n, 1.e-6);

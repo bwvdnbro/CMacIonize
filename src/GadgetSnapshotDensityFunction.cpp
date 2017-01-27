@@ -330,7 +330,7 @@ operator()(CoordinateVector<> position) const {
     }
   }
 
-  cell.set_total_density(density / 1.6737236e-27);
+  cell.set_number_density(density / 1.6737236e-27);
   cell.set_temperature(temperature);
   if (neutral_fraction >= 0.) {
     cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);

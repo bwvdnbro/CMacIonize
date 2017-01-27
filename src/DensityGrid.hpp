@@ -31,6 +31,8 @@
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "EmissivityValues.hpp"
+#include "Lock.hpp"
 #include "Log.hpp"
 #include "Photon.hpp"
 #include "Timer.hpp"
@@ -201,34 +203,6 @@ protected:
         2, it.get_helium_reemission_probability(1) + alpha_e_2sS / alphaHe);
     it.set_helium_reemission_probability(
         3, it.get_helium_reemission_probability(2) + alpha_e_2sP / alphaHe);
-  }
-
-  /**
-   * @brief Set the re-emission probabilities for the given cell for the given
-   * temperature.
-   *
-   * These quantities are all dimensionless.
-   *
-   * @param T Temperature (in K).
-   * @param cell DensityValues of the cell.
-   */
-  inline static void set_reemission_probabilities(double T,
-                                                  DensityValues &cell) {
-    double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
-    double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
-    cell.set_pHion(alpha_1_H / alpha_A_agn);
-
-    double alpha_1_He = 1.54e-13 * std::pow(T * 1.e-4, -0.486);
-    double alpha_e_2tS = 2.1e-13 * std::pow(T * 1.e-4, -0.381);
-    double alpha_e_2sS = 2.06e-14 * std::pow(T * 1.e-4, -0.451);
-    double alpha_e_2sP = 4.17e-14 * std::pow(T * 1.e-4, -0.695);
-    // We make sure the sum of all probabilities is 1...
-    double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
-
-    cell.set_pHe_em(0, alpha_1_He / alphaHe);
-    cell.set_pHe_em(1, cell.get_pHe_em(0) + alpha_e_2tS / alphaHe);
-    cell.set_pHe_em(2, cell.get_pHe_em(1) + alpha_e_2sS / alphaHe);
-    cell.set_pHe_em(3, cell.get_pHe_em(2) + alpha_e_2sP / alphaHe);
   }
 
 public:
@@ -1061,7 +1035,7 @@ public:
      */
     inline void operator()(iterator it) {
       DensityValues vals = _function(it.get_cell_midpoint());
-      it.set_number_density(vals.get_total_density());
+      it.set_number_density(vals.get_number_density());
       it.set_temperature(vals.get_temperature());
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);

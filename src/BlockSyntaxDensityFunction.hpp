@@ -146,7 +146,7 @@ public:
                  position.x(), position.y(), position.z());
     }
 
-    cell.set_total_density(density);
+    cell.set_number_density(density);
     cell.set_temperature(temperature);
     cell.set_ionic_fraction(ION_H_n, 1.e-6);
     cell.set_ionic_fraction(ION_He_n, 1.e-6);

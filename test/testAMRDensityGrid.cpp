@@ -48,7 +48,7 @@ public:
       density = 2.;
     }
 
-    cell.set_total_density(density);
+    cell.set_number_density(density);
     cell.set_temperature(4000.);
     return cell;
   }
