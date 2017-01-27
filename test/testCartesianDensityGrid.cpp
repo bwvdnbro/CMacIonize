@@ -53,7 +53,9 @@ int main(int argc, char **argv) {
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
   CartesianDensityGrid grid(box, 64, testfunction);
-  grid.initialize();
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
   assert_values_equal(2000., grid.get_average_temperature());

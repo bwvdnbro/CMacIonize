@@ -135,7 +135,7 @@ public:
    */
   virtual ~CartesianDensityGrid() {}
 
-  virtual void initialize();
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
 
   virtual unsigned int get_number_of_cells() const;
 
@@ -203,22 +203,6 @@ public:
    */
   virtual inline DensityGrid::iterator end() {
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
-  }
-
-  /**
-   * @brief Get begin and end iterators to a chunk of the grid with given begin
-   * and end fractions.
-   *
-   * @param begin Fraction of the total grid where we want the chunk to begin.
-   * @param end Fraction of the total grid where we want the chunk to end.
-   * @return std::pair of iterators pointing to the begin and end of the chunk.
-   */
-  virtual inline std::pair< DensityGrid::iterator, DensityGrid::iterator >
-  get_chunk(double begin, double end) {
-    unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
-    unsigned int ibegin = begin * ncell;
-    unsigned int iend = end * ncell;
-    return std::make_pair(iterator(ibegin, *this), iterator(iend, *this));
   }
 };
 

@@ -44,7 +44,9 @@ int main(int argc, char **argv) {
       Box(CoordinateVector<>(0.3125), CoordinateVector<>(0.375)), 5);
 
   AMRDensityGrid grid(box, ncell, density_function, scheme);
-  grid.initialize();
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
 
   assert_condition(grid.get_number_of_cells() ==
                    8 * 8 * 8 - 4 * 4 * 4 + 8 * 8 * 8 - 6 * 6 * 6 +

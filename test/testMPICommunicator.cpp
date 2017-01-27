@@ -154,7 +154,8 @@ int main(int argc, char **argv) {
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   CartesianDensityGrid grid(box, 8, testfunction);
-  grid.initialize();
+  block = std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     it.increase_mean_intensity(ION_H_n, 1.);

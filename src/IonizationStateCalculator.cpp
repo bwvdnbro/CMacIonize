@@ -251,9 +251,11 @@ void IonizationStateCalculator::calculate_ionization_state(
  *
  * @param totweight Total weight off all photons used.
  * @param grid DensityGrid for which the calculation is done.
+ * @param block Block that should be traversed by the local MPI process.
  */
 void IonizationStateCalculator::calculate_ionization_state(
-    double totweight, DensityGrid &grid) const {
+    double totweight, DensityGrid &grid,
+    std::pair< unsigned long, unsigned long > &block) const {
   // Kenny's jfac contains a lot of unit conversion factors. These drop out
   // since we work in SI units.
   double jfac = _luminosity / totweight;
@@ -263,7 +265,7 @@ void IonizationStateCalculator::calculate_ionization_state(
       workers;
   IonizationStateCalculatorFunction do_calculation(*this, jfac);
   DensityGridTraversalJobMarket< IonizationStateCalculatorFunction > jobs(
-      grid, do_calculation);
+      grid, do_calculation, block);
   workers.do_in_parallel(jobs);
 }
 

@@ -52,7 +52,9 @@ int main(int argc, char **argv) {
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
     CartesianDensityGrid grid(box, ncell, density_function);
-    grid.initialize();
+    std::pair< unsigned long, unsigned long > block =
+        std::make_pair(0, grid.get_number_of_cells());
+    grid.initialize(block);
 
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);

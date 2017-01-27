@@ -32,11 +32,13 @@
  * All implementations should call this method in their initialization()
  * routine.
  *
+ * @param block Continuous block of indices to initialize.
  * @param function DensityFunction that sets the density.
  * @param worksize Number of parallel threads to use. If a negative number is
  * given, all available threads will be used.
  */
-void DensityGrid::initialize(DensityFunction &function, int worksize) {
+void DensityGrid::initialize(std::pair< unsigned long, unsigned long > &block,
+                             DensityFunction &function, int worksize) {
   DensityGridInitializationFunction init(function);
   WorkDistributor<
       DensityGridTraversalJobMarket< DensityGridInitializationFunction >,
@@ -48,8 +50,8 @@ void DensityGrid::initialize(DensityFunction &function, int worksize) {
                        workers.get_worksize_string(), ".");
   }
 
-  DensityGridTraversalJobMarket< DensityGridInitializationFunction > jobs(*this,
-                                                                          init);
+  DensityGridTraversalJobMarket< DensityGridInitializationFunction > jobs(
+      *this, init, block);
   workers.do_in_parallel(jobs);
 
   if (_log) {

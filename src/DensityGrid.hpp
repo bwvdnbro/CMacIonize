@@ -244,8 +244,10 @@ public:
    * This routine should do all the computationally intensive work that needs to
    * be done to initialize the grid. This work should not be done in the
    * constructor.
+   *
+   * @param block Block that should be initialized by this MPI process.
    */
-  virtual void initialize() {
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block) {
     if (_log) {
       _log->write_status("Initializing DensityFunction...");
     }
@@ -1000,14 +1002,16 @@ public:
 
   /**
    * @brief Get begin and end iterators to a chunk of the grid with given begin
-   * and end fractions.
+   * and end index.
    *
-   * @param begin Fraction of the total grid where we want the chunk to begin.
-   * @param end Fraction of the total grid where we want the chunk to end.
+   * @param begin Start index.
+   * @param end End index.
    * @return std::pair of iterators pointing to the begin and end of the chunk.
    */
-  virtual std::pair< iterator, iterator > get_chunk(double begin,
-                                                    double end) = 0;
+  inline std::pair< iterator, iterator > get_chunk(unsigned long begin,
+                                                   unsigned long end) {
+    return std::make_pair(iterator(begin, *this), iterator(end, *this));
+  }
 
   /**
    * @brief Functor class used to initialize the DensityGrid.
@@ -1045,7 +1049,8 @@ public:
     }
   };
 
-  void initialize(DensityFunction &function, int worksize = -1);
+  void initialize(std::pair< unsigned long, unsigned long > &block,
+                  DensityFunction &function, int worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission

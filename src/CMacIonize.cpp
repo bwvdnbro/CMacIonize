@@ -286,7 +286,9 @@ int main(int argc, char **argv) {
   }
 
   // done writing file, now initialize grid
-  grid->initialize();
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid->get_number_of_cells());
+  grid->initialize(block);
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
@@ -405,9 +407,10 @@ int main(int argc, char **argv) {
     }
 #endif
     if (calculate_temperature && loop > 3) {
-      temperature_calculator.calculate_temperature(totweight, *grid);
+      temperature_calculator.calculate_temperature(totweight, *grid, block);
     } else {
-      ionization_state_calculator.calculate_ionization_state(totweight, *grid);
+      ionization_state_calculator.calculate_ionization_state(totweight, *grid,
+                                                             block);
     }
     if (log) {
       log->write_status("Done calculating ionization state.");

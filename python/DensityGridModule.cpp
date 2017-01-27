@@ -83,7 +83,9 @@ initDensityGrid(const std::string &filename) {
 
   boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
       DensityGridFactory::generate(parameters, density_function));
-  ptr.get()->initialize();
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, ptr.get()->get_number_of_cells());
+  ptr.get()->initialize(block);
 
   return ptr;
 }

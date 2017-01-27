@@ -404,9 +404,11 @@ void TemperatureCalculator::calculate_temperature(
  *
  * @param totweight Total weight of all photons that were used.
  * @param grid DensityGrid on which to operate.
+ * @param block Block that should be traversed by the local MPI process.
  */
-void TemperatureCalculator::calculate_temperature(double totweight,
-                                                  DensityGrid &grid) const {
+void TemperatureCalculator::calculate_temperature(
+    double totweight, DensityGrid &grid,
+    std::pair< unsigned long, unsigned long > &block) const {
   double jfac = _luminosity / totweight;
   // the integral calculation uses the photon frequency (in Hz)
   // we want to convert this to the photon energy (in Joule)
@@ -419,6 +421,6 @@ void TemperatureCalculator::calculate_temperature(double totweight,
       workers;
   TemperatureCalculatorFunction do_calculation(*this, jfac, hfac);
   DensityGridTraversalJobMarket< TemperatureCalculatorFunction > jobs(
-      grid, do_calculation);
+      grid, do_calculation, block);
   workers.do_in_parallel(jobs);
 }

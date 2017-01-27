@@ -115,7 +115,9 @@ public:
     }
   };
 
-  void calculate_temperature(double totweight, DensityGrid &grid) const;
+  void
+  calculate_temperature(double totweight, DensityGrid &grid,
+                        std::pair< unsigned long, unsigned long > &block) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

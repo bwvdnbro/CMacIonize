@@ -163,10 +163,13 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
 
 /**
  * @brief Initialize the cells in the grid.
+ *
+ * @param block Block that should be initialized by this MPI process.
  */
-void CartesianDensityGrid::initialize() {
-  DensityGrid::initialize();
-  DensityGrid::initialize(_density_function);
+void CartesianDensityGrid::initialize(
+    std::pair< unsigned long, unsigned long > &block) {
+  DensityGrid::initialize(block);
+  DensityGrid::initialize(block, _density_function);
 }
 
 /**

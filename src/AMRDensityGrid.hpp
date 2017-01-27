@@ -298,10 +298,12 @@ public:
 
   /**
    * @brief Initialize the cells of the grid.
+   *
+   * @param block Block that should be initialized by this MPI process.
    */
-  virtual void initialize() {
-    DensityGrid::initialize();
-    DensityGrid::initialize(_density_function);
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block) {
+    DensityGrid::initialize(block);
+    DensityGrid::initialize(block, _density_function);
 
     // apply mesh refinement
     if (_refinement_scheme) {
@@ -309,6 +311,7 @@ public:
         _log->write_status("Applying refinement.");
       }
 
+      /// WE HAVE TO DO SPECIAL THINGS FOR MPI HERE!
       // we only refine the cells that were already in the grid
       // the new cells that are added during refinement are recursively refined
       // within the refinement routine
@@ -331,7 +334,7 @@ public:
     // function, as it is also used in reset_grid()
     // at this point, we want to read all values from the density function,
     // since it also contains the initial temperature etc.
-    DensityGrid::initialize(_density_function);
+    DensityGrid::initialize(block, _density_function);
   }
 
   /**
@@ -672,22 +675,6 @@ public:
    * @return Iterator to the last cell in the grid.
    */
   virtual DensityGrid::iterator end() { return iterator(_cells.size(), *this); }
-
-  /**
-   * @brief Get begin and end iterators to a chunk of the grid with given begin
-   * and end fractions.
-   *
-   * @param begin Fraction of the total grid where we want the chunk to begin.
-   * @param end Fraction of the total grid where we want the chunk to end.
-   * @return std::pair of iterators pointing to the begin and end of the chunk.
-   */
-  virtual std::pair< DensityGrid::iterator, DensityGrid::iterator >
-  get_chunk(double begin, double end) {
-    unsigned int npart = _cells.size();
-    unsigned int ibegin = begin * npart;
-    unsigned int iend = end * npart;
-    return std::make_pair(iterator(ibegin, *this), iterator(iend, *this));
-  }
 
   /**
    * @brief Print the grid to the given stream for visual inspection.
