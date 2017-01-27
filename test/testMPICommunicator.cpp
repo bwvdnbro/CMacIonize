@@ -91,6 +91,17 @@ int main(int argc, char **argv) {
   loc_number = comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(loc_number);
   assert_condition(loc_number == number);
 
+  std::pair< unsigned long, unsigned long > block =
+      comm.distribute_block(0, 19);
+  std::vector< double > numbers(19, 0.);
+  for (unsigned int i = block.first; i < block.second; ++i) {
+    numbers[i] = 1.;
+  }
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(numbers);
+  for (unsigned int i = 0; i < 19; ++i) {
+    assert_condition(numbers[i] == 1.);
+  }
+
   std::vector< double > vector(100, 1.);
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(vector);
   for (unsigned int i = 0; i < vector.size(); ++i) {

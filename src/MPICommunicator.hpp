@@ -141,12 +141,42 @@ public:
    * @param number Number to distribute.
    * @return Part of the number that is assigned to this process.
    */
-  inline unsigned int distribute(const unsigned int number) const {
+  inline unsigned int distribute(unsigned int number) const {
     unsigned int quotient = number / _size;
     int remainder = number % _size;
     // all processes with a rank smaller than the remainder get one element
     // extra (since _rank < remainder evaluates to either 0 or 1)
     return quotient + (_rank < remainder);
+  }
+
+  /**
+   * @brief Distribute the continuous block of indices with given begin and end
+   * index across all processes.
+   *
+   * @param begin First index of the block.
+   * @param end First index not part of the block.
+   * @return std::pair containing the begin and end index for this MPI process.
+   */
+  inline std::pair< unsigned long, unsigned long >
+  distribute_block(unsigned long begin, unsigned long end) {
+    if (_size > 1) {
+      unsigned long size = end - begin;
+      unsigned long block_begin;
+      unsigned long block_end;
+      unsigned long quotient = size / _size;
+      int remainder = size % _size;
+      // here is the logic: the start of the local block should be the sum of
+      // all blocks on processes with ranks lower than this block
+      // these have size quotient + (_rank < remainder), which means they have
+      // total size _rank*quotient + the number of blocks with 1 element more
+      // the end of the block is the beginning of the next block, which means we
+      // have the same logic for _rank+1
+      block_begin = _rank * quotient + std::min(_rank, remainder);
+      block_end = (_rank + 1) * quotient + std::min(_rank + 1, remainder);
+      return std::make_pair(block_begin, block_end);
+    } else {
+      return std::make_pair(begin, end);
+    }
   }
 
   /**
