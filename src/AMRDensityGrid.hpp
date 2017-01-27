@@ -168,6 +168,7 @@ private:
           _heating_H.push_back(0.);
           _heating_He.push_back(0.);
           _emissivities.push_back(nullptr);
+          _lock.push_back(Lock());
           _cells.push_back(childcell);
           childcell->value() = _cells.size() - 1;
         }
@@ -248,6 +249,7 @@ public:
     _heating_H.resize(_grid.get_number_of_cells());
     _heating_He.resize(_grid.get_number_of_cells());
     _emissivities.resize(_grid.get_number_of_cells(), nullptr);
+    _lock.resize(_grid.get_number_of_cells());
 
     if (_log) {
       int levelint = level;
