@@ -163,11 +163,11 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   HDF5Tools::close_group(group);
 
   // write particles
-  // we do this one dataset at a time, since otherwise we would need to allocate
-  // an insane amount of memory
   group = HDF5Tools::create_group(file, "PartType0");
   // coordinates
   {
+    // we need to allocate a temporary array (that could be quite large), since
+    // the coordinates are not stored in a continuous way in the DensityGrid
     std::vector< CoordinateVector<> > coords(numpart[0]);
     unsigned int index = 0;
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
@@ -179,50 +179,20 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   }
   // number densities
   {
-    std::vector< double > ntot(numpart[0]);
-    unsigned int index = 0;
-    for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      ntot[index] = it.get_number_density();
-      ++index;
-    }
-    HDF5Tools::write_dataset< double >(group, "NumberDensity", ntot);
+    HDF5Tools::write_dataset< double >(group, "NumberDensity",
+                                       _grid.get_number_density_handle());
   }
   // temperature
   {
-    std::vector< double > temperature(numpart[0]);
-    unsigned int index = 0;
-    for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      temperature[index] = it.get_temperature();
-      ++index;
-    }
-    HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
+    HDF5Tools::write_dataset< double >(group, "Temperature",
+                                       _grid.get_temperature_handle());
   }
   // neutral fractions
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    std::vector< double > ifrac(numpart[0]);
     IonName ion = static_cast< IonName >(i);
-    unsigned int index = 0;
-    for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      ifrac[index] = it.get_ionic_fraction(ion);
-      ++index;
-    }
-    HDF5Tools::write_dataset< double >(
-        group, "NeutralFraction" + get_ion_name(i), ifrac);
-  }
-  // emissivities
-  if (_grid.begin().get_emissivities() != nullptr) {
-    for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-      std::vector< double > emission(numpart[0]);
-      EmissionLine line = static_cast< EmissionLine >(i);
-      unsigned int index = 0;
-      for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-        EmissivityValues *emissivities = it.get_emissivities();
-        emission[index] = emissivities->get_emissivity(line);
-        ++index;
-      }
-      HDF5Tools::write_dataset< double >(
-          group, "Emissivity" + EmissivityValues::get_name(line), emission);
-    }
+    HDF5Tools::write_dataset< double >(group,
+                                       "NeutralFraction" + get_ion_name(i),
+                                       _grid.get_ionic_fraction_handle(ion));
   }
   HDF5Tools::close_group(group);
 
