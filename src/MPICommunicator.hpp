@@ -31,10 +31,13 @@
 #include "Configuration.hpp"
 #include "Error.hpp"
 
+#include <sstream>
+#include <unistd.h>
+#include <vector>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-#include <vector>
 
 #if defined(__clang__)
 // header containing functions to temporarily disable the address sanitizer
@@ -113,8 +116,37 @@ public:
       cmac_error("Failed to obtain number of MPI processes!");
     }
 #else
-    for (int i = 0; i < argc; ++i) {
-      cmac_status("argv[%i]: %s", i, argv[i]);
+    // check that we do not accidentally run the program in parallel
+    // we first try an OpenMP specific check
+    char *env = getenv("OMPI_COMM_WORLD_SIZE");
+    if (env != nullptr) {
+      int size = atoi(env);
+      if (size > 1) {
+        cmac_error("Program is being run in parallel using MPI, but MPI was "
+                   "disabled at compile time! Please compile again with MPI "
+                   "support!");
+      }
+    } else {
+      // the OMPI environment variable was not found
+      // this means that either we are not running in MPI mode (which is fine)
+      // OR we are not using OpenMPI, or an old version that does not set the
+      // environment variable
+      // we try to see if the program has a parent process that might indicate
+      // we are running in MPI mode
+      // the method below will only work for POSIX systems, but since we only
+      // allow compilation on POSIX systems, this should work
+      pid_t ppid = getppid();
+      std::stringstream procfilename;
+      procfilename << "/proc/" << ppid << "/cmdline";
+      std::ifstream procfile(procfilename.str());
+      std::string procname;
+      procfile >> procname;
+      if (procname.find("mpirun") != std::string::npos ||
+          procname.find("mpiexec") != std::string::npos) {
+        cmac_error("Program is being run in parallel using MPI, but MPI was "
+                   "disabled at compile time! Please compile again with MPI "
+                   "support!");
+      }
     }
     // no MPI: we assume a single process with rank 0
     _rank = 0;

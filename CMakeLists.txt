@@ -34,6 +34,17 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+# Check if we are on a POSIX system. If not, some functionality will not work
+# and we abort the configuration
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "#include <unistd.h>\nint main(int, char**){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/posixtest.cpp)
+try_compile(HAVE_POSIX ${PROJECT_BINARY_DIR}
+                       ${PROJECT_BINARY_DIR}/posixtest.cpp)
+if(NOT HAVE_POSIX)
+  message(FATAL_ERROR "This is not a POSIX system! Compilation will not work!")
+endif(NOT HAVE_POSIX)
+
 # Find Git
 find_package(Git)
 
@@ -53,7 +64,8 @@ set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 enable_testing()
 
 # Add minimal cpp file for flag testing
-execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
                 OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
