@@ -82,6 +82,8 @@ public:
                                 double fallback_unit_temperature_in_SI = 0.,
                                 bool use_neutral_fraction = false,
                                 double fallback_temperature = 0.,
+                                bool comoving_integration = false,
+                                double hubble_parameter = 0.7,
                                 Log *log = nullptr);
 
   GadgetSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);

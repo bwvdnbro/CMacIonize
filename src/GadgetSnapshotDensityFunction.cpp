@@ -73,12 +73,18 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * present in the snapshot).
  * @param fallback_temperature Initial temperature to use if no temperature
  * block was found in the snapshot file.
+ * @param comoving_integration Comoving integration flag indicating whether
+ * comoving integration was used in the snapshot.
+ * @param hubble_parameter Hubble parameter used to convert from comoving to
+ * physical coordinates. This is a dimensionless parameter, defined as the
+ * actual assumed Hubble constant divided by 100 km/s/Mpc.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
     double fallback_unit_mass_in_SI, double fallback_unit_temperature_in_SI,
-    bool use_neutral_fraction, double fallback_temperature, Log *log)
+    bool use_neutral_fraction, double fallback_temperature,
+    bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -149,6 +155,13 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
       _log->write_warning("Using fallback units.");
     }
   }
+
+  if (comoving_integration) {
+    // code values are in comoving units
+    unit_length_in_SI /= hubble_parameter;
+    unit_mass_in_SI /= hubble_parameter;
+  }
+
   double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
   double unit_density_in_SI =
       unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
@@ -266,6 +279,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction:fallback_initial_temperature", "0. K"),
+          params.get_value< bool >("densityfunction:comoving_integration_flag",
+                                   false),
+          params.get_value< double >("densityfunction:hubble_parameter", 0.7),
           log) {}
 
 /**
