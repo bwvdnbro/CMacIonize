@@ -508,14 +508,23 @@ public:
         std::pair< unsigned long, unsigned long > recv_block =
             distribute_block(recvrank, _size, 0, vector.size());
         MPI_Request request;
-        MPI_Isend(&vector[local_block.first],
-                  local_block.second - local_block.first, dtype, sendrank, 0,
-                  MPI_COMM_WORLD, &request);
-        MPI_Status status;
-        MPI_Recv(&vector[recv_block.first],
-                 recv_block.second - recv_block.first, dtype, recvrank, 0,
-                 MPI_COMM_WORLD, &status);
-        MPI_Wait(&request, &status);
+        int status = MPI_Isend(&vector[local_block.first],
+                               local_block.second - local_block.first, dtype,
+                               sendrank, 0, MPI_COMM_WORLD, &request);
+        if (status != MPI_SUCCESS) {
+          cmac_error("Failed to issue a non-blocking send!");
+        }
+        MPI_Status recvstatus;
+        status = MPI_Recv(&vector[recv_block.first],
+                          recv_block.second - recv_block.first, dtype, recvrank,
+                          0, MPI_COMM_WORLD, &recvstatus);
+        if (status != MPI_SUCCESS) {
+          cmac_error("Failed to receive vector block!");
+        }
+        status = MPI_Wait(&request, &recvstatus);
+        if (status != MPI_SUCCESS) {
+          cmac_error("Failed to send non-blocking vector block!");
+        }
       }
     }
 #endif
