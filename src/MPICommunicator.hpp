@@ -30,6 +30,8 @@
 
 #include "Configuration.hpp"
 #include "Error.hpp"
+#include "MPIMessage.hpp"
+#include "MPIUtilities.hpp"
 
 #include <sstream>
 #include <unistd.h>
@@ -259,16 +261,6 @@ public:
 
 #ifdef HAVE_MPI
   /**
-   * @brief Template function that returns the MPI_Datatype corresponding to the
-   * given template data type.
-   *
-   * This function needs to be specialized for every data type.
-   *
-   * @return MPI_Datatype for the given template data type.
-   */
-  template < typename _datatype_ > static inline MPI_Datatype get_datatype();
-
-  /**
    * @brief Function that returns the MPI_Op corresponding to the given
    * MPIOperatorType.
    *
@@ -311,7 +303,7 @@ public:
       for (unsigned int i = 0; i < v.size(); ++i) {
         sendbuffer[i] = (v[i].*(getter))();
       }
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status =
           MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], sendbuffer.size(), dtype,
@@ -365,7 +357,7 @@ public:
         size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
       }
       std::vector< _datatype_ > sendbuffer(size);
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       // we loop over all elements of the iterator
       _iteratortype_ it = begin;
@@ -418,7 +410,7 @@ public:
   void reduce(_datatype_ &value) const {
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status =
           MPI_Allreduce(MPI_IN_PLACE, &value, 1, dtype, otype, MPI_COMM_WORLD);
@@ -443,7 +435,7 @@ public:
   void reduce(_datatype_ *array) const {
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status = MPI_Allreduce(MPI_IN_PLACE, array, _size_, dtype, otype,
                                  MPI_COMM_WORLD);
@@ -463,7 +455,7 @@ public:
   void reduce(std::vector< _datatype_ > &vector) {
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       MPI_Op otype = get_operator(_operatortype_);
       int status = MPI_Allreduce(MPI_IN_PLACE, vector.data(), vector.size(),
                                  dtype, otype, MPI_COMM_WORLD);
@@ -485,7 +477,7 @@ public:
   void gather(std::vector< _datatype_ > &vector) {
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = get_datatype< _datatype_ >();
+      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
       std::pair< unsigned long, unsigned long > local_block =
           distribute_block(0, vector.size());
       // do a complicated communication ring:
@@ -529,33 +521,50 @@ public:
     }
 #endif
   }
-};
 
+  /**
+   * @brief Send the given MPIMessage.
+   *
+   * The send will be done non-blocking.
+   *
+   * @param message MPIMessage to send.
+   */
+  inline void send(MPIMessage &message) {
 #ifdef HAVE_MPI
-/**
- * @brief Template function that returns the MPI_Datatype corresponding to the
- * given template data type.
- *
- * Specialization for a double precision floating point value.
- *
- * @return MPI_DOUBLE.
- */
-template <> inline MPI_Datatype MPICommunicator::get_datatype< double >() {
-  return MPI_DOUBLE;
-}
-
-/**
- * @brief Template function that returns the MPI_Datatype corresponding to the
- * given template data type.
- *
- * Specialization for an unsigned integer value.
- *
- * @return MPI_UNSIGNED.
- */
-template <>
-inline MPI_Datatype MPICommunicator::get_datatype< unsigned int >() {
-  return MPI_UNSIGNED;
-}
+    int status = MPI_Isend(message.get_buffer_handle(),
+                           message.get_buffer_size(), message.get_datatype(),
+                           message.get_other_process(), message.get_tag(),
+                           MPI_COMM_WORLD, message.get_request_handle());
+    if (status != MPI_SUCCESS) {
+      cmac_error("Failed to send MPIMessage!");
+    }
+#else
+    cmac_error("This method should never be called, since MPI was disabled at "
+               "compile time!");
 #endif
+  }
+
+  /**
+   * @brief Receive the given MPIMessage.
+   *
+   * The receive will be done non-blocking.
+   *
+   * @param message MPIMessage to receive.
+   */
+  inline void recv(MPIMessage &message) {
+#ifdef HAVE_MPI
+    int status = MPI_Irecv(message.get_buffer_handle(),
+                           message.get_buffer_size(), message.get_datatype(),
+                           message.get_other_process(), message.get_tag(),
+                           MPI_COMM_WORLD, message.get_request_handle());
+    if (status != MPI_SUCCESS) {
+      cmac_error("Failed to receive MPIMessage!");
+    }
+#else
+    cmac_error("This method should never be called, since MPI was disabled at "
+               "compile time!");
+#endif
+  }
+};
 
 #endif // MPICOMMUNICATOR_HPP
