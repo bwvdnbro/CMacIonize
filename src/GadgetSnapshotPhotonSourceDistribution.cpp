@@ -41,12 +41,28 @@
  * not found in the snapshot file.
  * @param fallback_unit_time_in_SI Time unit to use if the units group is not
  * found in the snapshot file.
+ * @param fallback_unit_mass_in_SI Mass unit to use if the units group is not
+ * found in the snapshot file.
+ * @param cutoff_age Upper age limit for stellar populations that emit UV
+ * radiation (in s).
+ * @param rate_per_mass_unit Ionization rate per mass unit for a stellar
+ * population younger than the cut off age (in s^-1 kg^-1).
+ * @param use_gas Do the gas particles contain stars?
+ * @param SFR_unit Unit used for star formation rate values in the snapshot (if
+ * set to 0., mass_unit/time_unit is assumed).
+ * @param comoving_integration Comoving integration flag indicating whether
+ * comoving integration was used in the snapshot.
+ * @param hubble_parameter  Hubble parameter used to convert from comoving to
+ * physical coordinates. This is a dimensionless parameter, defined as the
+ * actual assumed Hubble constant divided by 100 km/s/Mpc.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     std::string filename, std::string formation_time_name,
     double fallback_unit_length_in_SI, double fallback_unit_time_in_SI,
-    Log *log)
+    double fallback_unit_mass_in_SI, double cutoff_age,
+    double rate_per_mass_unit, bool use_gas, double SFR_unit,
+    bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -63,62 +79,127 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   // units
   double unit_length_in_SI = fallback_unit_length_in_SI;
   double unit_time_in_SI = fallback_unit_time_in_SI;
+  double unit_mass_in_SI = fallback_unit_mass_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
     double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
     double unit_time_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
+    double unit_mass_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_length_in_SI =
         UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
     // seconds are seconds
     unit_time_in_SI = unit_time_in_cgs;
+    unit_mass_in_SI =
+        UnitConverter::to_SI< QUANTITY_MASS >(unit_mass_in_cgs, "g");
     HDF5Tools::close_group(units);
   } else {
     if (_log) {
       _log->write_warning("No Units group found!");
-    }
-    if (fallback_unit_length_in_SI == 0. || fallback_unit_time_in_SI == 0.) {
-      _log->write_warning(
-          "No fallback units found in parameter file either, using SI units.");
-      unit_length_in_SI = 1.;
-      unit_time_in_SI = 1.;
-    } else {
       _log->write_warning("Using fallback units.");
     }
-  }
 
-  // open the group containing the star particle data
-  HDF5Tools::HDF5Group starparticles =
-      HDF5Tools::open_group(file, "/PartType4");
-  // read the positions
-  std::vector< CoordinateVector<> > positions =
-      HDF5Tools::read_dataset< CoordinateVector<> >(starparticles,
-                                                    "Coordinates");
-  // read the formation times
-  std::vector< double > formtimes =
-      HDF5Tools::read_dataset< double >(starparticles, formation_time_name);
-  // close the group
-  HDF5Tools::close_group(starparticles);
-  // close the file
-  HDF5Tools::close_file(file);
+    if (fallback_unit_length_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback length unit found in parameter file, using m!");
+      }
+      unit_length_in_SI = 1.;
+    }
 
-  // filter out all stars older than 5 Myr
-  for (unsigned int i = 0; i < formtimes.size(); ++i) {
-    double age = (snaptime - formtimes[i]) * unit_time_in_SI;
-    if (age <= 1.577e14) {
-      _positions.push_back(positions[i]);
+    if (fallback_unit_time_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback time unit found in parameter file, using s!");
+      }
+      unit_time_in_SI = 1.;
+    }
+
+    if (fallback_unit_mass_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback mass unit found in parameter file, using kg!");
+      }
+      unit_mass_in_SI = 1.;
     }
   }
 
-  // unit conversion
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
-    _positions[i][0] *= unit_length_in_SI;
-    _positions[i][1] *= unit_length_in_SI;
-    _positions[i][2] *= unit_length_in_SI;
+  if (comoving_integration) {
+    // code values are in comoving units
+    unit_length_in_SI /= hubble_parameter;
+    unit_mass_in_SI /= hubble_parameter;
+    unit_time_in_SI /= hubble_parameter;
   }
 
-  _total_luminosity = _positions.size() * 4.72e50;
+  _total_luminosity = 0.;
+  if (use_gas) {
+    // open the gas particle group
+    HDF5Tools::HDF5Group gasparticles =
+        HDF5Tools::open_group(file, "/PartType0");
+
+    // read the positions
+    std::vector< CoordinateVector<> > positions =
+        HDF5Tools::read_dataset< CoordinateVector<> >(gasparticles,
+                                                      "Coordinates");
+
+    // read the star formation rates
+    std::vector< double > sfrs =
+        HDF5Tools::read_dataset< double >(gasparticles, "StarFormationRate");
+
+    double unit_SFR_in_SI = SFR_unit;
+    if (SFR_unit == 0.) {
+      unit_SFR_in_SI = unit_mass_in_SI / unit_time_in_SI;
+    }
+
+    // filter out all particles with zero star formation rate
+    for (unsigned int i = 0; i < positions.size(); ++i) {
+      if (sfrs[i] > 0.) {
+        _positions.push_back(positions[i]);
+        // by multiplying the star formation rate with the cutoff age, we get
+        // the total mass in stars that is young enough to contain O stars
+        // we multiply by the rate per mass to get the ionization rate of the
+        // star forming population
+        _total_luminosity =
+            sfrs[i] * unit_SFR_in_SI * cutoff_age * rate_per_mass_unit;
+      }
+    }
+  } else {
+    // open the group containing the star particle data
+    HDF5Tools::HDF5Group starparticles =
+        HDF5Tools::open_group(file, "/PartType4");
+    // read the positions
+    std::vector< CoordinateVector<> > positions =
+        HDF5Tools::read_dataset< CoordinateVector<> >(starparticles,
+                                                      "Coordinates");
+    // read the formation times
+    std::vector< double > formtimes =
+        HDF5Tools::read_dataset< double >(starparticles, formation_time_name);
+    // read the masses
+    std::vector< double > masses =
+        HDF5Tools::read_dataset< double >(starparticles, "Masses");
+    // close the group
+    HDF5Tools::close_group(starparticles);
+    // close the file
+    HDF5Tools::close_file(file);
+
+    // filter out all stars older than the cutoff age
+    for (unsigned int i = 0; i < formtimes.size(); ++i) {
+      double age = (snaptime - formtimes[i]) * unit_time_in_SI;
+      if (age <= cutoff_age) {
+        _positions.push_back(positions[i]);
+        _total_luminosity += masses[i] * unit_mass_in_SI * rate_per_mass_unit;
+      }
+    }
+
+    // unit conversion
+    for (unsigned int i = 0; i < _positions.size(); ++i) {
+      _positions[i][0] *= unit_length_in_SI;
+      _positions[i][1] *= unit_length_in_SI;
+      _positions[i][2] *= unit_length_in_SI;
+    }
+  }
 
   if (_log) {
     _log->write_status("Succesfully read in photon sources from \"", filename,
@@ -126,6 +207,9 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     _log->write_status("Found ", _positions.size(),
                        " active sources, with a total luminosity of ",
                        _total_luminosity, " s^-1.");
+    if (_total_luminosity == 0.) {
+      _log->write_warning("Total luminosity of sources in snapshot is zero!");
+    }
   }
 }
 
@@ -145,6 +229,20 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
               "photonsourcedistribution:fallback_unit_length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
               "photonsourcedistribution:fallback_unit_time", "0. s"),
+          params.get_physical_value< QUANTITY_MASS >(
+              "photonsourcedistribution:fallback_unit_mass", "0. kg"),
+          params.get_physical_value< QUANTITY_TIME >(
+              "photonsourcedistribution:cutoff_age", "5. Myr"),
+          params.get_physical_value< QUANTITY_FREQUENCY_PER_MASS >(
+              "photonsourcedistribution:flux_per_mass_unit",
+              "4.96e46 s^-1 Msol^-1"),
+          params.get_value< bool >("photonsourcedistribution:use_gas", false),
+          params.get_physical_value< QUANTITY_MASS_RATE >(
+              "photonsourcedistribution:SFR_unit", "0. kg s^-1"),
+          params.get_value< bool >(
+              "photonsourcedistribution:comoving_integration_flag", false),
+          params.get_value< double >(
+              "photonsourcedistribution:hubble_parameter", 0.7),
           log) {}
 
 /**

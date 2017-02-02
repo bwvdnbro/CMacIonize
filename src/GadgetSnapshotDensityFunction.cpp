@@ -143,16 +143,31 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   } else {
     if (_log) {
       _log->write_warning("No Units group found!");
-    }
-    if (fallback_unit_length_in_SI == 0. || fallback_unit_mass_in_SI == 0. ||
-        fallback_unit_temperature_in_SI == 0.) {
-      _log->write_warning(
-          "No fallback units found in parameter file either, using SI units.");
-      unit_length_in_SI = 1.;
-      unit_mass_in_SI = 1.;
-      unit_temperature_in_SI = 1.;
-    } else {
       _log->write_warning("Using fallback units.");
+    }
+
+    if (fallback_unit_length_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback length unit found in parameter file, using m!");
+      }
+      unit_length_in_SI = 1.;
+    }
+
+    if (fallback_unit_mass_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback mass unit found in parameter file, using kg!");
+      }
+      unit_mass_in_SI = 1.;
+    }
+
+    if (fallback_unit_temperature_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback temperature unit found in parameter file, using K!");
+      }
+      unit_temperature_in_SI = 1.;
     }
   }
 

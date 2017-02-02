@@ -51,11 +51,14 @@ private:
   Log *_log;
 
 public:
-  GadgetSnapshotPhotonSourceDistribution(std::string filename,
-                                         std::string formation_time_name,
-                                         double fallback_unit_length_in_SI = 0.,
-                                         double fallback_unit_time_in_SI = 0.,
-                                         Log *log = nullptr);
+  GadgetSnapshotPhotonSourceDistribution(
+      std::string filename, std::string formation_time_name,
+      double fallback_unit_length_in_SI = 0.,
+      double fallback_unit_time_in_SI = 0.,
+      double fallback_unit_mass_in_SI = 0., double cutoff_age = 1.577e14,
+      double rate_per_mass_unit = 2.5e16, bool use_gas = false,
+      double SFR_unit = 0., bool comoving_integration = false,
+      double hubble_parameter = 0.7, Log *log = nullptr);
   GadgetSnapshotPhotonSourceDistribution(ParameterFile &params,
                                          Log *log = nullptr);
 
