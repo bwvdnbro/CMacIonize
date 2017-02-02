@@ -35,22 +35,59 @@
 #endif
 
 /**
- * @brief Wrapper around a general MPI message.
+ * @brief Outline of an MPI message.
+ *
+ * The draft contains all information necessary to receive a message, but does
+ * not contain memory to store the message itself, or an MPI_Request for
+ * non-blocking communication.
  */
-class MPIMessage {
-private:
+class MPIMessageDraft {
+protected:
   /*! @brief Rank of the other MPI process involved in the communication. */
   int _other_process;
 
   /*! @brief Tag identifying this message. */
   int _tag;
 
+  /*! @brief Size of the message. */
+  int _size;
+
+#ifdef HAVE_MPI
+  /*! @brief MPI_Datatype of the data to send. */
+  MPI_Datatype _dtype;
+#endif
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param other_process Rank of the other MPI process involved in the
+   * communication.
+   * @param tag Tag identifying this message.
+   * @param size Size of the message.
+   * @param dummy Dummy pointer to a data variable, necessary to force the
+   * compiler to call the correct constructor.
+   */
+  template < typename _datatype_ >
+  MPIMessageDraft(int other_process, int tag, int size, _datatype_ *dummy)
+      : _other_process(other_process), _tag(tag), _size(size) {
+#ifdef HAVE_MPI
+    _dtype = MPIUtilities::get_datatype< _datatype_ >();
+#endif
+  }
+};
+
+/**
+ * @brief Wrapper around a general MPI message.
+ *
+ * This class extends MPIMessageDraft with an MPI_Request. Implementations
+ * should provide the MPIMessage with allocated memory to store the message.
+ */
+class MPIMessage : public MPIMessageDraft {
+private:
 #ifdef HAVE_MPI
   /*! @brief MPI_Request associated with the (non-blocking) message. */
   MPI_Request _request;
-
-  /*! @brief MPI_Datatype of the data to send. */
-  MPI_Datatype _dtype;
 #endif
 
 public:
@@ -83,10 +120,9 @@ public:
    */
   template < typename _datatype_ >
   MPIMessage(int other_process, int tag, _datatype_ *dummy)
-      : _other_process(other_process), _tag(tag) {
+      : MPIMessageDraft(other_process, tag, 0, dummy) {
 #ifdef HAVE_MPI
     _request = MPI_REQUEST_NULL;
-    _dtype = MPIUtilities::get_datatype< _datatype_ >();
 #endif
   }
 
