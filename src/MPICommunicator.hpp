@@ -247,7 +247,7 @@ public:
    * @return std::pair containing the begin and end index for this MPI process.
    */
   inline std::pair< unsigned long, unsigned long >
-  distribute_block(unsigned long begin, unsigned long end) {
+  distribute_block(unsigned long begin, unsigned long end) const {
 #ifdef HAVE_MPI
     if (_size > 1) {
       return distribute_block(_rank, _size, begin, end);
@@ -474,7 +474,7 @@ public:
    * @param vector std::vector to gather.
    */
   template < typename _datatype_ >
-  void gather(std::vector< _datatype_ > &vector) {
+  void gather(std::vector< _datatype_ > &vector) const {
 #ifdef HAVE_MPI
     if (_size > 1) {
       MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
@@ -529,7 +529,7 @@ public:
    *
    * @param message MPIMessage to send.
    */
-  inline void send(MPIMessage &message) {
+  inline void send(MPIMessage &message) const {
 #ifdef HAVE_MPI
     int status = MPI_Isend(message.get_buffer_handle(),
                            message.get_buffer_size(), message.get_datatype(),
@@ -551,7 +551,7 @@ public:
    *
    * @param message MPIMessage to receive.
    */
-  inline void recv(MPIMessage &message) {
+  inline void recv(MPIMessage &message) const {
 #ifdef HAVE_MPI
     int status = MPI_Irecv(message.get_buffer_handle(),
                            message.get_buffer_size(), message.get_datatype(),
