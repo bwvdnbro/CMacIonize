@@ -31,6 +31,7 @@
 #include "Configuration.hpp"
 #include "Error.hpp"
 #include "MPIMessage.hpp"
+#include "MPIMessageBox.hpp"
 #include "MPIUtilities.hpp"
 
 #include <sstream>
@@ -563,6 +564,39 @@ public:
 #else
     cmac_error("This method should never be called, since MPI was disabled at "
                "compile time!");
+#endif
+  }
+
+  /**
+   * @brief Check if there is a pending message that can be received.
+   *
+   * @param message_box MPIMessageBox that generates a draft message for a given
+   * message tag.
+   * @return Pointer to a newly created MPIMessage instance. Memory management
+   * for the pointer should be done by the calling routine.
+   */
+  inline MPIMessage *check_for_message(MPIMessageBox &message_box) const {
+#ifdef HAVE_MPI
+    MPI_Status probestatus;
+    int flag;
+    int status = MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
+                            &probestatus);
+    if (status != MPI_SUCCESS) {
+      cmac_error("Failed to probe for incoming message!");
+    }
+    if (flag > 0) {
+      MPIMessage *message =
+          message_box.generate(probestatus.MPI_TAG, probestatus.MPI_SOURCE);
+      int size;
+      MPI_Get_count(&probestatus, message->get_datatype(), &size);
+      message->set_buffer_size(size);
+      return message;
+    } else {
+      // no message
+      return nullptr;
+    }
+#else
+    return nullptr;
 #endif
   }
 };

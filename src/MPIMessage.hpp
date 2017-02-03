@@ -35,14 +35,13 @@
 #endif
 
 /**
- * @brief Outline of an MPI message.
+ * @brief Wrapper around a general MPI message.
  *
- * The draft contains all information necessary to receive a message, but does
- * not contain memory to store the message itself, or an MPI_Request for
- * non-blocking communication.
+ * This class extends MPIMessageDraft with an MPI_Request. Implementations
+ * should provide the MPIMessage with allocated memory to store the message.
  */
-class MPIMessageDraft {
-protected:
+class MPIMessage {
+private:
   /*! @brief Rank of the other MPI process involved in the communication. */
   int _other_process;
 
@@ -55,37 +54,7 @@ protected:
 #ifdef HAVE_MPI
   /*! @brief MPI_Datatype of the data to send. */
   MPI_Datatype _dtype;
-#endif
 
-public:
-  /**
-   * @brief Constructor.
-   *
-   * @param other_process Rank of the other MPI process involved in the
-   * communication.
-   * @param tag Tag identifying this message.
-   * @param size Size of the message.
-   * @param dummy Dummy pointer to a data variable, necessary to force the
-   * compiler to call the correct constructor.
-   */
-  template < typename _datatype_ >
-  MPIMessageDraft(int other_process, int tag, int size, _datatype_ *dummy)
-      : _other_process(other_process), _tag(tag), _size(size) {
-#ifdef HAVE_MPI
-    _dtype = MPIUtilities::get_datatype< _datatype_ >();
-#endif
-  }
-};
-
-/**
- * @brief Wrapper around a general MPI message.
- *
- * This class extends MPIMessageDraft with an MPI_Request. Implementations
- * should provide the MPIMessage with allocated memory to store the message.
- */
-class MPIMessage : public MPIMessageDraft {
-private:
-#ifdef HAVE_MPI
   /*! @brief MPI_Request associated with the (non-blocking) message. */
   MPI_Request _request;
 #endif
@@ -115,14 +84,29 @@ public:
    * @param other_process Rank of the other MPI process involved in the
    * communication.
    * @param tag Tag identifying this message.
-   * @param dummy Dummy pointer to a data variable, necessary to force the
-   * compiler to call the correct constructor.
+   * @param size Size of the message.
    */
-  template < typename _datatype_ >
-  MPIMessage(int other_process, int tag, _datatype_ *dummy)
-      : MPIMessageDraft(other_process, tag, 0, dummy) {
+  MPIMessage(int other_process, int tag, int size = 0)
+      : _other_process(other_process), _tag(tag), _size(size) {
 #ifdef HAVE_MPI
     _request = MPI_REQUEST_NULL;
+#endif
+  }
+
+  /**
+   * @brief Set the data type of the message by providing a dummy data type.
+   *
+   * The only reason we need this routine is because it is impossible to
+   * declare a template constructor that will correctly initialize the data type
+   * without passing on a dummy variable, which is not always possible in an
+   * initializer list.
+   * Every derived class should call this routine in its constructor.
+   *
+   * @param dummy Dummy variable that has the correct C++ data type.
+   */
+  template < typename _datatype_ > void set_datatype(_datatype_ &dummy) {
+#ifdef HAVE_MPI
+    _dtype = MPIUtilities::get_datatype< _datatype_ >();
 #endif
   }
 
@@ -189,7 +173,24 @@ public:
    *
    * @return Size of the data buffer.
    */
-  virtual int get_buffer_size() const = 0;
+  int get_buffer_size() const { return _size; }
+
+  /**
+   * @brief Resize the data buffer.
+   *
+   * @param size Size for the data buffer.
+   */
+  virtual void set_buffer_size(int size) {}
+
+  /**
+   * @brief Set the size of the data buffer.
+   *
+   * @param size Size of the data buffer.
+   */
+  virtual void set_size(int size) {
+    _size = size;
+    set_buffer_size(size);
+  }
 };
 
 #endif // MPIMESSAGE_HPP

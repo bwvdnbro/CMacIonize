@@ -44,7 +44,10 @@ public:
    * @param tag Tag identifying this message.
    */
   TestMPIMessage(double value, int rank, int tag)
-      : MPIMessage(rank, tag, &value), _value(value) {}
+      : MPIMessage(rank, tag, 1), _value(value) {
+    double dummy;
+    set_datatype(dummy);
+  }
 
   /**
    * @brief Virtual destructor.

@@ -34,25 +34,16 @@
  * @brief Class to handle uncoordinated communication between processes.
  */
 class MPIMessageBox {
-private:
-  /*! @brief Prototype messages used for receiving. */
-  std::vector< MPIMessage< double > > _drafts;
-
-  /*! @brief Messages that have been sent to other processes. */
-  std::vector< MPIMessage< double > > _outbox;
-
 public:
   /**
-   * @brief Add a draft message to the list.
+   * @brief Generate a message from the given tag.
    *
-   * Only messages in the draft list can be received by the MPIMessageBox.
-   *
-   * @param message MPIMessage.
+   * @param tag Tag corresponding to a particular message.
+   * @param other_process Rank of the other MPI process involved in the message.
+   * @return Pointer to a newly created instance of that message. Memory
+   * management of the pointer should be done by the calling routine.
    */
-  inline void add_draft(MPIMessage &message) {
-    _drafts.push_back(message);
-    _drafts.set_tag(_drafts.size() - 1);
-  }
+  virtual MPIMessage *generate(int tag, int other_process) = 0;
 };
 
 #endif // MPIMESSAGEBOX_HPP
