@@ -41,7 +41,7 @@
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
                                                            double temperature,
                                                            Log *log)
-    : _temperature(temperature), _log(log) {
+    : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -52,6 +52,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   double unit_length_in_SI = UnitConverter::to_SI< QUANTITY_LENGTH >(1., "cm");
   double unit_density_in_SI =
       UnitConverter::to_SI< QUANTITY_DENSITY >(1., "g cm^-3");
+  // temperatures are already in K
+  double unit_temperature_in_SI = 1.;
 
   // find out the dimensions of the box
   HDF5Tools::HDF5Dictionary< double > real_runtime_pars =
@@ -76,7 +78,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   nblock[2] = integer_runtime_pars["nblockz"];
 
   // make the grid
-  _grid = AMRGrid< double >(box, nblock);
+  _grid = AMRGrid< DensityValues >(box, nblock);
 
   // fill the grid with values
 
@@ -86,6 +88,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   // read the densities
   HDF5Tools::HDF5DataBlock< double, 4 > densities =
       HDF5Tools::read_dataset< double, 4 >(file, "dens");
+  // read the temperatures
+  HDF5Tools::HDF5DataBlock< double, 4 > temperatures =
+      HDF5Tools::read_dataset< double, 4 >(file, "temp");
   // read the refinement levels
   std::vector< int > levels =
       HDF5Tools::read_dataset< int >(file, "refine level");
@@ -134,7 +139,14 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)
             unsigned long key = _grid.get_key(levels[i] + level - 1, centre);
-            _grid.create_cell(key) = rho * unit_density_in_SI;
+            DensityValues &vals = _grid.create_cell(key);
+            vals.set_number_density(rho * unit_density_in_SI);
+            if (temperature <= 0.) {
+              double temp = temperatures[irho];
+              vals.set_temperature(temp * unit_temperature_in_SI);
+            } else {
+              vals.set_temperature(temperature);
+            }
           }
         }
       }
@@ -160,7 +172,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     : FLASHSnapshotDensityFunction(
           params.get_value< std::string >("densityfunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:temperature", "8000. K"),
+              "densityfunction:temperature", "-1. K"),
           log) {}
 
 /**
@@ -173,8 +185,9 @@ DensityValues FLASHSnapshotDensityFunction::
 operator()(CoordinateVector<> position) const {
   DensityValues cell;
 
-  cell.set_number_density(_grid.get_cell(position) / 1.6737236e-27);
-  cell.set_temperature(_temperature);
+  DensityValues &vals = _grid.get_cell(position);
+  cell.set_number_density(vals.get_number_density() / 1.6737236e-27);
+  cell.set_temperature(vals.get_temperature());
   cell.set_ionic_fraction(ION_H_n, 1.e-6);
   cell.set_ionic_fraction(ION_He_n, 1.e-6);
   return cell;

@@ -2,7 +2,7 @@
 
 ################################################################################
 # This file is part of CMacIonize
-# Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+# Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
 #
 # CMacIonize is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,19 +19,34 @@
 ################################################################################
 
 ##
-# @file __init__.py
+# @file test_flashsnapshotdensityfunction.py
 #
-# @brief Initialization script for the Python modules.
-#
-# This script loads all relevant module files.
+# @brief Unit test for the Python FLASHSnapshotDensityFunction module.
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
 
-import emissivitycalculator
+# Load the module.
+import load_module as pycmi
+# alias the libflashsnapshotdensityfunction for more readable code
+flashlib = pycmi.libflashsnapshotdensityfunction
+# Load the sys module (for sys.exit())
+import sys
 
-import libdensitygrid
+##
+# @brief Unit test for the Python FLASHSnapshotDensityFunction module.
+##
+def main():
+  flashfunc = flashlib.FLASHSnapshotDensityFunction("FLASHtest.hdf5")
 
-import libemissivitycalculator
+  temp = flashfunc.get_temperature(0., 0., 0.)
+  if temp != 4000.:
+    print "Error: temperature incorrect ({val}, expected {expval})!".format(
+      val = temp, expval = 4000.)
+    sys.exit(1)
 
-import libflashsnapshotdensityfunction
+  sys.exit(0)
+
+# make sure the main function is executed
+if __name__ == "__main__":
+  main()
