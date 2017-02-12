@@ -686,6 +686,15 @@ add_unit_test(NAME testMPIMessage
               PARALLEL)
 endif(HAVE_MPI)
 
+## RiemannSolver test
+set(TESTRIEMANNSOLVER_SOURCES
+    testRiemannSolver.cpp
+
+    ../src/RiemannSolver.hpp
+)
+add_unit_test(NAME testRiemannSolver
+              SOURCES ${TESTRIEMANNSOLVER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
