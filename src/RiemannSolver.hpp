@@ -364,8 +364,8 @@ private:
    */
   inline void sample_right_rarefaction_wave(double rhoR, double uR, double PR,
                                             double aR, double ustar,
-                                            double Pstar, double rhosol,
-                                            double usol, double Psol) {
+                                            double Pstar, double &rhosol,
+                                            double &usol, double &Psol) {
     // get the velocity of the head of the rarefaction wave
     double SHR = uR + aR;
     if (SHR > 0.) {
@@ -409,8 +409,8 @@ private:
    * @param Psol Pressure solution.
    */
   inline void sample_right_state(double rhoR, double uR, double PR, double aR,
-                                 double ustar, double Pstar, double rhosol,
-                                 double usol, double Psol) {
+                                 double ustar, double Pstar, double &rhosol,
+                                 double &usol, double &Psol) {
     if (Pstar > PR) {
       /// shock wave
       sample_right_shock_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol,
@@ -438,7 +438,8 @@ private:
    */
   inline void sample_left_shock_wave(double rhoL, double uL, double PL,
                                      double aL, double ustar, double Pstar,
-                                     double rhosol, double usol, double Psol) {
+                                     double &rhosol, double &usol,
+                                     double &Psol) {
     // variable used twice below
     double PdPL = Pstar / PL;
     // get the shock speed
@@ -472,8 +473,8 @@ private:
    */
   inline void sample_left_rarefaction_wave(double rhoL, double uL, double PL,
                                            double aL, double ustar,
-                                           double Pstar, double rhosol,
-                                           double usol, double Psol) {
+                                           double Pstar, double &rhosol,
+                                           double &usol, double &Psol) {
     // get the velocity of the head of the rarefaction wave
     double SHL = uL - aL;
     if (SHL < 0.) {
@@ -517,8 +518,8 @@ private:
    * @param Psol Pressure solution.
    */
   inline void sample_left_state(double rhoL, double uL, double PL, double aL,
-                                double ustar, double Pstar, double rhosol,
-                                double usol, double Psol) {
+                                double ustar, double Pstar, double &rhosol,
+                                double &usol, double &Psol) {
     if (Pstar > PL) {
       /// shock wave
       sample_left_shock_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
