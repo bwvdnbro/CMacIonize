@@ -313,13 +313,222 @@ private:
     return b;
   }
 
-  //  inline void sample_left_state(){
-  //    if(Pstar > PL){
-  //      // shock wave
-  //    } else {
-  //      // rarefaction wave
-  //    }
-  //  }
+  /**
+   * @brief Sample the Riemann problem solution for a position in the right
+   * shock wave regime.
+   *
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_right_shock_wave(double rhoR, double uR, double PR,
+                                      double aR, double ustar, double Pstar,
+                                      double &rhosol, double &usol,
+                                      double &Psol) {
+    // variable used twice below
+    double PdPR = Pstar / PR;
+    // get the shock speed
+    double SR = uR + aR * std::sqrt(_gp1d2g * PdPR + _gm1d2g);
+    if (SR > 0.) {
+      /// middle state (shock) regime
+      rhosol = rhoR * (PdPR + _gm1dgp1) / (_gm1dgp1 * PdPR + 1.);
+      usol = ustar;
+      Psol = Pstar;
+    } else {
+      /// right state regime
+      rhosol = rhoR;
+      usol = uR;
+      Psol = PR;
+    }
+  }
+
+  /**
+   * @brief Sample the Riemann problem solution for a position in the right
+   * rarefaction wave regime.
+   *
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_right_rarefaction_wave(double rhoR, double uR, double PR,
+                                            double aR, double ustar,
+                                            double Pstar, double rhosol,
+                                            double usol, double Psol) {
+    // get the velocity of the head of the rarefaction wave
+    double SHR = uR + aR;
+    if (SHR > 0.) {
+      /// rarefaction wave regime
+      // variable used twice below
+      double PdPR = Pstar / PR;
+      // get the velocity of the tail of the rarefaction wave
+      double STR = ustar + aR * std::pow(PdPR, _gm1d2g);
+      if (STR > 0.) {
+        /// middle state regime
+        rhosol = rhoR * std::pow(PdPR, _ginv);
+        usol = ustar;
+        Psol = Pstar;
+      } else {
+        /// rarefaction fan regime
+        // variable used twice below
+        double base = _tdgp1 - _gm1dgp1 * uR / aR;
+        rhosol = rhoR * std::pow(base, _tdgm1);
+        usol = _tdgp1 * (-aR + _gm1d2 * uR);
+        Psol = PR * std::pow(base, _tgdgm1);
+      }
+    } else {
+      /// right state regime
+      rhosol = rhoR;
+      usol = uR;
+      Psol = PR;
+    }
+  }
+
+  /**
+   * @brief Sample the Riemann problem solution in the right state regime.
+   *
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_right_state(double rhoR, double uR, double PR, double aR,
+                                 double ustar, double Pstar, double rhosol,
+                                 double usol, double Psol) {
+    if (Pstar > PR) {
+      /// shock wave
+      sample_right_shock_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol,
+                              Psol);
+    } else {
+      /// rarefaction wave
+      sample_right_rarefaction_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol,
+                                    usol, Psol);
+    }
+  }
+
+  /**
+   * @brief Sample the Riemann problem solution for a position in the left shock
+   *  wave regime.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_left_shock_wave(double rhoL, double uL, double PL,
+                                     double aL, double ustar, double Pstar,
+                                     double rhosol, double usol, double Psol) {
+    // variable used twice below
+    double PdPL = Pstar / PL;
+    // get the shock speed
+    double SL = uL - aL * std::sqrt(_gp1d2g * PdPL + _gm1d2g);
+    if (SL < 0.) {
+      /// middle state (shock) regime
+      rhosol = rhoL * (PdPL + _gm1dgp1) / (_gm1dgp1 * PdPL + 1.);
+      usol = ustar;
+      Psol = Pstar;
+    } else {
+      /// left state regime
+      rhosol = rhoL;
+      usol = uL;
+      Psol = PL;
+    }
+  }
+
+  /**
+   * @brief Sample the Riemann problem solution for a position in the left
+   * rarefaction wave regime.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_left_rarefaction_wave(double rhoL, double uL, double PL,
+                                           double aL, double ustar,
+                                           double Pstar, double rhosol,
+                                           double usol, double Psol) {
+    // get the velocity of the head of the rarefaction wave
+    double SHL = uL - aL;
+    if (SHL < 0.) {
+      /// rarefaction wave regime
+      // variable used twice below
+      double PdPL = Pstar / PL;
+      // get the velocity of the tail of the rarefaction wave
+      double STL = ustar - aL * std::pow(PdPL, _gm1d2g);
+      if (STL > 0.) {
+        /// rarefaction fan regime
+        // variable used twice below
+        double base = _tdgp1 + _gm1dgp1 * uL / aL;
+        rhosol = rhoL * std::pow(base, _tdgm1);
+        usol = _tdgp1 * (aL + _gm1d2 * uL);
+        Psol = PL * std::pow(base, _tgdgm1);
+      } else {
+        /// middle state regime
+        rhosol = rhoL * std::pow(PdPL, _ginv);
+        usol = ustar;
+        Psol = Pstar;
+      }
+    } else {
+      /// left state regime
+      rhosol = rhoL;
+      usol = uL;
+      Psol = PL;
+    }
+  }
+
+  /**
+   * @brief Sample the Riemann problem solution in the left state regime.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param ustar Velocity of the middle state.
+   * @param Pstar Pressure of the middle state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_left_state(double rhoL, double uL, double PL, double aL,
+                                double ustar, double Pstar, double rhosol,
+                                double usol, double Psol) {
+    if (Pstar > PL) {
+      /// shock wave
+      sample_left_shock_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
+                             Psol);
+    } else {
+      /// rarefaction wave
+      sample_left_rarefaction_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
+                                   Psol);
+    }
+  }
 
 public:
   /**
@@ -356,137 +565,73 @@ public:
    */
   inline void solve(double rhoL, double uL, double PL, double rhoR, double uR,
                     double PR, double &rhosol, double &usol, double &Psol) {
+
+    // get the soundspeeds
     double aL = get_soundspeed(rhoL, PL);
     double aR = get_soundspeed(rhoR, PR);
 
+    // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
       cmac_error("Vacuum Riemann solver is not implemented yet!");
     }
 
+    // handle vacuum generation
     if (2. * aL / (_gamma - 1.) + 2. * aR / (_gamma - 1.) <= uR - uL) {
       cmac_error("Vacuum Riemann solver is not implemented yet!");
-    } else {
-      double Pstar = 0.;
-      double Pguess = guess_P(rhoL, uL, PL, aL, rhoR, uR, PR, aR);
-      double fPstar = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar);
-      double fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
-      if (fPstar * fPguess >= 0.) {
-        // Newton-Raphson until convergence or until usable interval is
-        // found to use Brent's method
-        while (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) &&
-               fPguess < 0.) {
-          Pstar = Pguess;
-          Pguess =
-              Pguess - fPguess / fprime(rhoL, PL, aL, rhoR, PR, aR, Pguess);
-          fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
-        }
-      }
+    }
 
-      // As soon as there is a suitable interval: use Brent's method
-      if (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) && fPguess > 0.) {
-        Pstar = solve_brent(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar, Pguess);
-      } else {
+    // find the pressure and velocity in the middle state
+    // since this is an exact Riemann solver, this is an iterative process,
+    // whereby we basically find the root of a function (the Riemann f function
+    // defined above)
+    // we start by using a Newton-Raphson method, since we do not have an
+    // interval in which the function changes sign
+    // however, as soon as we have such an interval, we switch to a much more
+    // robust root finding method (Brent's method). We do this because the
+    // Newton-Raphson method in some cases can overshoot and return a negative
+    // pressure, for which the Riemann f function is not defined. Brent's method
+    // will never stroll outside of the initial interval in which the function
+    // changes sign.
+    double Pstar = 0.;
+    double Pguess = guess_P(rhoL, uL, PL, aL, rhoR, uR, PR, aR);
+    // we only store this variable to store the sign of the function for
+    // pressure zero
+    // we need to find a larger pressure for which this sign changes to have an
+    // interval where we can use Brent's method
+    double fPstar = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar);
+    double fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
+    if (fPstar * fPguess >= 0.) {
+      // Newton-Raphson until convergence or until usable interval is
+      // found to use Brent's method
+      while (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) &&
+             fPguess < 0.) {
         Pstar = Pguess;
+        Pguess = Pguess - fPguess / fprime(rhoL, PL, aL, rhoR, PR, aR, Pguess);
+        fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
       }
+    }
 
-      double ustar = 0.5 * (uL + uR) +
-                     0.5 * (fb(rhoR, PR, aR, Pstar) - fb(rhoL, PL, aL, Pstar));
-      (void)ustar;
+    // As soon as there is a suitable interval: use Brent's method
+    if (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) && fPguess > 0.) {
+      Pstar = solve_brent(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar, Pguess);
+    } else {
+      Pstar = Pguess;
+    }
 
-      // sample the solution
-      //      if(ustar < 0.){
-      //        // left state
-      //        sample_left_state();
-      //      } else {
-      //        // right state
-      //        sample_right_state();
-      //      }
-      //        double vhalf;
-      //        if(u < 0) {
-      //            solution = WR;
-      //            double pdpR = p / WR.p();
-      //            if(p > WR.p()) {
-      //                // shockwave
-      //                double SR = vR + aR * sqrt(_gp1d2g * pdpR + _gm1d2g);
-      //                if(SR > 0) {
-      //                    solution.set_rho(WR.rho() * (pdpR + _gm1dgp1) /
-      //                                     (_gm1dgp1 * pdpR + 1.));
-      //                    solution.set_p(p);
-      //                    vhalf = u - vR;
-      //                } else {
-      //                    // solution = WR
-      //                    vhalf = 0.;
-      //                }
-      //            } else {
-      //                // rarefaction wave
-      //                double SHR = vR + aR;
-      //                if(SHR > 0) {
-      //                    double STR = u + aR * pow(pdpR, _gm1d2g);
-      //                    if(STR <= 0) {
-      //                        solution.set_rho(
-      //                                WR.rho() *
-      //                                pow(_tdgp1 - _gm1dgp1 / aR * vR,
-      //                                _tdgm1));
-      //                        vhalf = _tdgp1 * (-aR + _gm1d2 * vR) - vR;
-      //                        solution.set_p(WR.p() * pow(_tdgp1 - _gm1dgp1 /
-      //                        aR * vR,
-      //                                                    _tgdgm1));
-      //                    } else {
-      //                        solution.set_rho(WR.rho() * pow(pdpR, _ginv));
-      //                        solution.set_p(p);
-      //                        vhalf = u - vR;
-      //                    }
-      //                } else {
-      //                    // solution = WR
-      //                    vhalf = 0.;
-      //                }
-      //            }
-      //        } else {
-      //            solution = WL;
-      //            double pdpL = p / WL.p();
-      //            if(p > WL.p()) {
-      //                // shockwave
-      //                double SL = vL - aL * sqrt(_gp1d2g * pdpL + _gm1d2g);
-      //                if(SL < 0) {
-      //                    solution.set_rho(WL.rho() * (pdpL + _gm1dgp1) /
-      //                                     (_gm1dgp1 * pdpL + 1.));
-      //                    solution.set_p(p);
-      //                    vhalf = u - vL;
-      //                } else {
-      //                    // solution = WL
-      //                    vhalf = 0.;
-      //                }
-      //            } else {
-      //                // rarefaction wave
-      //                double SHL = vL - aL;
-      //                if(SHL < 0) {
-      //                    double STL = u - aL * pow(pdpL, _gm1d2g);
-      //                    if(STL > 0) {
-      //                        solution.set_rho(
-      //                                WL.rho() *
-      //                                pow(_tdgp1 + _gm1dgp1 / aL * vL,
-      //                                _tdgm1));
-      //                        vhalf = _tdgp1 * (aL + _gm1d2 * vL) - vL;
-      //                        solution.set_p(WL.p() * pow(_tdgp1 + _gm1dgp1 /
-      //                        aL * vL,
-      //                                                    _tgdgm1));
-      //                    } else {
-      //                        solution.set_rho(WL.rho() * pow(pdpL, _ginv));
-      //                        vhalf = u - vL;
-      //                        solution.set_p(p);
-      //                    }
-      //                } else {
-      //                    // solution = WL
-      //                    vhalf = 0.;
-      //                }
-      //            }
-      //        }
+    // the middle state velocity is fixed once the middle state pressure is
+    // known
+    double ustar = 0.5 * (uL + uR) +
+                   0.5 * (fb(rhoR, PR, aR, Pstar) - fb(rhoL, PL, aL, Pstar));
 
-      //        solution[1] += vhalf * n[0];
-      //        solution[2] += vhalf * n[1];
-      //#if ndim_ == 3
-      //        solution[3] += vhalf * n[2];
-      //#endif
+    // we now have solved the Riemann problem: we have the left, middle and
+    // right state, and this completely fixes the solution
+    // we just need to sample the solution for x/t = 0.
+    if (ustar < 0.) {
+      // right state
+      sample_right_state(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol, Psol);
+    } else {
+      // left state
+      sample_left_state(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol, Psol);
     }
   }
 };
