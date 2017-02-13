@@ -99,20 +99,6 @@ private:
   }
 
   /**
-   * @brief Riemann gL or gR function.
-   *
-   * @param rho Density of the left or right state.
-   * @param P Pressure of the left or right state.
-   * @param Pstar (Temporary) pressure in the middle state.
-   * @return Value of the gL or gR function.
-   */
-  inline double gb(double rho, double P, double Pstar) {
-    double A = _tdgp1 / rho;
-    double B = _gm1dgp1 * P;
-    return std::sqrt(A / (Pstar + B));
-  }
-
-  /**
    * @brief Riemann f function.
    *
    * @param rhoL Density of the left state.
@@ -132,6 +118,59 @@ private:
   }
 
   /**
+   * @brief Derivative of the Riemann fL or fR function.
+   *
+   * @param rho Density of the left or right state.
+   * @param P Pressure of the left or right state.
+   * @param a Soundspeed of the left or right state.
+   * @param Pstar (Temporary) pressure of the middle state.
+   * @return Value of the derivative of the Riemann fL or fR function.
+   */
+  inline double fprimeb(double rho, double P, double a, double Pstar) {
+    double fval = 0.;
+    if (Pstar > P) {
+      double A = _tdgp1 / rho;
+      double B = _gm1dgp1 * P;
+      fval =
+          (1. - 0.5 * (Pstar - P) / (B + Pstar)) * std::sqrt(A / (Pstar + B));
+    } else {
+      fval = 1. / (rho * a) * std::pow(Pstar / P, -_gp1d2g);
+    }
+    return fval;
+  }
+
+  /**
+   * @brief Derivative of the Riemann f function.
+   *
+   * @param rhoL Density of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param rhoR Density of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param Pstar (Temporary) pressure of the middle state.
+   * @return Value of the derivative of the Riemann f function.
+   */
+  inline double fprime(double rhoL, double PL, double aL, double rhoR,
+                       double PR, double aR, double Pstar) {
+    return fprimeb(rhoL, PL, aL, Pstar) + fprimeb(rhoR, PR, aR, Pstar);
+  }
+
+  /**
+   * @brief Riemann gL or gR function.
+   *
+   * @param rho Density of the left or right state.
+   * @param P Pressure of the left or right state.
+   * @param Pstar (Temporary) pressure in the middle state.
+   * @return Value of the gL or gR function.
+   */
+  inline double gb(double rho, double P, double Pstar) {
+    double A = _tdgp1 / rho;
+    double B = _gm1dgp1 * P;
+    return std::sqrt(A / (Pstar + B));
+  }
+
+  /**
    * @brief Get an initial guess for the pressure in the middle state.
    *
    * @param rhoL Left state density.
@@ -144,37 +183,143 @@ private:
    * @param aR Right state soundspeed.
    * @return Initial guess for the pressure in the middle state.
    */
-  inline double guess_p(double rhoL, double uL, double PL, double aL,
+  inline double guess_P(double rhoL, double uL, double PL, double aL,
                         double rhoR, double uR, double PR, double aR) {
-    double pguess;
-    double pmin = std::min(PL, PR);
-    double pmax = std::max(PL, PR);
-    double qmax = pmax / pmin;
-    double ppv = 0.5 * (PL + PR) - 0.125 * (uR - uL) * (PL + PR) * (aL + aR);
-    ppv = std::max(5.e-9 * (PL + PR), ppv);
-    if (qmax <= 2. && pmin <= ppv && ppv <= pmax) {
-      pguess = ppv;
+    double Pguess;
+    double Pmin = std::min(PL, PR);
+    double Pmax = std::max(PL, PR);
+    double qmax = Pmax / Pmin;
+    double Ppv = 0.5 * (PL + PR) - 0.125 * (uR - uL) * (PL + PR) * (aL + aR);
+    Ppv = std::max(5.e-9 * (PL + PR), Ppv);
+    if (qmax <= 2. && Pmin <= Ppv && Ppv <= Pmax) {
+      Pguess = Ppv;
     } else {
-      if (ppv < pmin) {
+      if (Ppv < Pmin) {
         // two rarefactions
-        pguess = std::pow(
+        Pguess = std::pow(
             (aL + aR - _gm1d2 * (uR - uL)) /
                 (aL / std::pow(PL, _gm1d2g) + aR / std::pow(PR, _gm1d2g)),
             _tgdgm1);
       } else {
         // two shocks
-        double gL = gb(rhoL, PL, ppv);
-        double gR = gb(rhoR, PR, ppv);
-        pguess = (gL * PL + gR * PR - uR + uL) / (gL + gR);
+        double gL = gb(rhoL, PL, Ppv);
+        double gR = gb(rhoR, PR, Ppv);
+        Pguess = (gL * PL + gR * PR - uR + uL) / (gL + gR);
       }
     }
     // Toro: "Not that approximate solutions may predict, incorrectly, a
     // negative value for pressure (...). Thus in order to avoid negative guess
     // values we introduce the small positive constant _tolerance"
     // (tolerance is 1.e-8 in this case)
-    pguess = std::max(5.e-9 * (PL + PR), pguess);
-    return pguess;
+    Pguess = std::max(5.e-9 * (PL + PR), Pguess);
+    return Pguess;
   }
+
+  /**
+   * @brief Find the pressure of the middle state by using Brent's method.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param Plow Lower bound guess for the pressure of the middle state.
+   * @param Phigh Higher bound guess for the pressure of the middle state.
+   * @return Pressure of the middle state, with a 1.e-8 relative error
+   * precision.
+   */
+  inline double solve_brent(double rhoL, double uL, double PL, double aL,
+                            double rhoR, double uR, double PR, double aR,
+                            double Plow, double Phigh) {
+    double a = Plow;
+    double b = Phigh;
+    double c = 0.;
+    double d = 1e230;
+
+    double fa = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, a);
+    double fb = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, b);
+    double fc = 0.;
+
+    double s = 0.;
+    double fs = 0.;
+
+    if (fa * fb > 0.) {
+      cmac_error("Equal sign function values provided to solve_brent!");
+    }
+
+    // if |f(a)| < |f(b)| then swap (a,b) end if
+    if (std::abs(fa) < std::abs(fb)) {
+      double tmp = a;
+      a = b;
+      b = tmp;
+      tmp = fa;
+      fa = fb;
+      fb = tmp;
+    }
+
+    c = a;
+    fc = fa;
+    bool mflag = true;
+    int i = 0;
+
+    while (!(fb == 0.) && (std::abs(a - b) > 5.e-9 * (a + b))) {
+      if ((fa != fc) && (fb != fc)) {
+        // Inverse quadratic interpolation
+        s = a * fb * fc / (fa - fb) / (fa - fc) +
+            b * fa * fc / (fb - fa) / (fb - fc) +
+            c * fa * fb / (fc - fa) / (fc - fb);
+      } else {
+        // Secant Rule
+        s = b - fb * (b - a) / (fb - fa);
+      }
+
+      double tmp2 = 0.25 * (3. * a + b);
+      if (!(((s > tmp2) && (s < b)) || ((s < tmp2) && (s > b))) ||
+          (mflag && (std::abs(s - b) >= 0.5 * std::abs(b - c))) ||
+          (!mflag && (std::abs(s - b) >= 0.5 * std::abs(c - d))) ||
+          (mflag && (std::abs(b - c) < 5.e-9 * (b + c))) ||
+          (!mflag && (std::abs(c - d) < 5.e-9 * (c + d)))) {
+        s = 0.5 * (a + b);
+        mflag = true;
+      } else {
+        mflag = false;
+      }
+      fs = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, s);
+      d = c;
+      c = b;
+      fc = fb;
+      if (fa * fs < 0.) {
+        b = s;
+        fb = fs;
+      } else {
+        a = s;
+        fa = fs;
+      }
+
+      // if |f(a)| < |f(b)| then swap (a,b) end if
+      if (std::abs(fa) < std::abs(fb)) {
+        double tmp = a;
+        a = b;
+        b = tmp;
+        tmp = fa;
+        fa = fb;
+        fb = tmp;
+      }
+      i++;
+    }
+    return b;
+  }
+
+  //  inline void sample_left_state(){
+  //    if(Pstar > PL){
+  //      // shock wave
+  //    } else {
+  //      // rarefaction wave
+  //    }
+  //  }
 
 public:
   /**
@@ -205,12 +350,12 @@ public:
    * @param rhoR Right state density.
    * @param uR Right state velocity.
    * @param PR Right state pressure.
-   * @param rhostar Density solution.
-   * @param ustar Velocity solution.
-   * @param Pstar Pressure solution.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
    */
   inline void solve(double rhoL, double uL, double PL, double rhoR, double uR,
-                    double PR, double &rhostar, double &ustar, double &Pstar) {
+                    double PR, double &rhosol, double &usol, double &Psol) {
     double aL = get_soundspeed(rhoL, PL);
     double aR = get_soundspeed(rhoR, PR);
 
@@ -221,63 +366,41 @@ public:
     if (2. * aL / (_gamma - 1.) + 2. * aR / (_gamma - 1.) <= uR - uL) {
       cmac_error("Vacuum Riemann solver is not implemented yet!");
     } else {
-      double p = 0.;
-      double pguess = guess_p(rhoL, uL, PL, aL, rhoR, uR, PR, aR);
-      double fp = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, p);
-      double fpguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, pguess);
-      (void)fp;
-      (void)fpguess;
-      //        if(fp < _cutoff) {
-      //            while(fabs(p - pguess) > _tolerance * 0.5 * (p + pguess)) {
-      //                p = pguess;
-      //                pguess = pguess - fpguess / fprime(pguess, WL, WR, aL,
-      //                aR);
-      //                if(pguess < 0.) {
-      //                    pguess = 0.;
-      //                }
-      //                fpguess = f(pguess, WL, WR, vL, vR, aL, aR);
-      //            }
-      //            p = pguess;
-      //        } else {
-      //            if(fp * fpguess >= 0.) {
-      //                // Newton-Raphson until convergence or until usable
-      //                interval is
-      //                // found to use Brent's method
-      //                while(fabs(p - pguess) > _tolerance * 0.5 * (p + pguess)
-      //                &&
-      //                      fpguess < 0.) {
-      //                    p = pguess;
-      //                    pguess = pguess - fpguess / fprime(pguess, WL, WR,
-      //                    aL, aR);
-      //                    fpguess = f(pguess, WL, WR, vL, vR, aL, aR);
-      //                }
-      //            }
-      //            // As soon as there is a usable interval: use Brent's method
-      //            if(fabs(p - pguess) > _tolerance * 0.5 * (p + pguess) &&
-      //               fpguess > 0.) {
-      //                p = 0.;
-      //                _counterBrent++;
-      //                p = BrentsMethodSolve(p, pguess, _tolerance, WL, WR, vL,
-      //                vR, aL,
-      //                                      aR);
-      //            } else {
-      //                p = pguess;
-      //            }
-      //        }
+      double Pstar = 0.;
+      double Pguess = guess_P(rhoL, uL, PL, aL, rhoR, uR, PR, aR);
+      double fPstar = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar);
+      double fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
+      if (fPstar * fPguess >= 0.) {
+        // Newton-Raphson until convergence or until usable interval is
+        // found to use Brent's method
+        while (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) &&
+               fPguess < 0.) {
+          Pstar = Pguess;
+          Pguess =
+              Pguess - fPguess / fprime(rhoL, PL, aL, rhoR, PR, aR, Pguess);
+          fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
+        }
+      }
 
-      //        double u = 0.5 * (vL + vR) + 0.5 * (fb(p, WR, aR) - fb(p, WL,
-      //        aL));
+      // As soon as there is a suitable interval: use Brent's method
+      if (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) && fPguess > 0.) {
+        Pstar = solve_brent(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar, Pguess);
+      } else {
+        Pstar = Pguess;
+      }
 
-      //        // set mach number
-      //        if(p > WL.p()) {
-      //            // left shock
-      //            mach = std::max(mach, sqrt(_gp1d2g * p / WL.p() + _gm1d2g));
-      //        }
-      //        if(p > WR.p()) {
-      //            // right shock
-      //            mach = std::max(mach, sqrt(_gp1d2g * p / WR.p() + _gm1d2g));
-      //        }
+      double ustar = 0.5 * (uL + uR) +
+                     0.5 * (fb(rhoR, PR, aR, Pstar) - fb(rhoL, PL, aL, Pstar));
+      (void)ustar;
 
+      // sample the solution
+      //      if(ustar < 0.){
+      //        // left state
+      //        sample_left_state();
+      //      } else {
+      //        // right state
+      //        sample_right_state();
+      //      }
       //        double vhalf;
       //        if(u < 0) {
       //            solution = WR;
