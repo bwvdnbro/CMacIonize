@@ -73,7 +73,7 @@ private:
    * @param P Pressure value.
    * @return Soundspeed.
    */
-  inline double get_soundspeed(double rho, double P) {
+  inline double get_soundspeed(double rho, double P) const {
     return std::sqrt(_gamma * P / rho);
   }
 
@@ -86,7 +86,7 @@ private:
    * @param Pstar (Temporary) pressure of the middle state.
    * @return Value of the fL or fR function.
    */
-  inline double fb(double rho, double P, double a, double Pstar) {
+  inline double fb(double rho, double P, double a, double Pstar) const {
     double fval = 0.;
     if (Pstar > P) {
       double A = _tdgp1 / rho;
@@ -113,7 +113,7 @@ private:
    * @return Value of the Riemann f function.
    */
   inline double f(double rhoL, double uL, double PL, double aL, double rhoR,
-                  double uR, double PR, double aR, double Pstar) {
+                  double uR, double PR, double aR, double Pstar) const {
     return fb(rhoL, PL, aL, Pstar) + fb(rhoR, PR, aR, Pstar) + (uR - uL);
   }
 
@@ -126,7 +126,7 @@ private:
    * @param Pstar (Temporary) pressure of the middle state.
    * @return Value of the derivative of the Riemann fL or fR function.
    */
-  inline double fprimeb(double rho, double P, double a, double Pstar) {
+  inline double fprimeb(double rho, double P, double a, double Pstar) const {
     double fval = 0.;
     if (Pstar > P) {
       double A = _tdgp1 / rho;
@@ -152,7 +152,7 @@ private:
    * @return Value of the derivative of the Riemann f function.
    */
   inline double fprime(double rhoL, double PL, double aL, double rhoR,
-                       double PR, double aR, double Pstar) {
+                       double PR, double aR, double Pstar) const {
     return fprimeb(rhoL, PL, aL, Pstar) + fprimeb(rhoR, PR, aR, Pstar);
   }
 
@@ -164,7 +164,7 @@ private:
    * @param Pstar (Temporary) pressure in the middle state.
    * @return Value of the gL or gR function.
    */
-  inline double gb(double rho, double P, double Pstar) {
+  inline double gb(double rho, double P, double Pstar) const {
     double A = _tdgp1 / rho;
     double B = _gm1dgp1 * P;
     return std::sqrt(A / (Pstar + B));
@@ -184,7 +184,7 @@ private:
    * @return Initial guess for the pressure in the middle state.
    */
   inline double guess_P(double rhoL, double uL, double PL, double aL,
-                        double rhoR, double uR, double PR, double aR) {
+                        double rhoR, double uR, double PR, double aR) const {
     double Pguess;
     double Pmin = std::min(PL, PR);
     double Pmax = std::max(PL, PR);
@@ -233,7 +233,7 @@ private:
    */
   inline double solve_brent(double rhoL, double uL, double PL, double aL,
                             double rhoR, double uR, double PR, double aR,
-                            double Plow, double Phigh) {
+                            double Plow, double Phigh) const {
     double a = Plow;
     double b = Phigh;
     double c = 0.;
@@ -330,7 +330,7 @@ private:
   inline void sample_right_shock_wave(double rhoR, double uR, double PR,
                                       double aR, double ustar, double Pstar,
                                       double &rhosol, double &usol,
-                                      double &Psol) {
+                                      double &Psol) const {
     // variable used twice below
     double PdPR = Pstar / PR;
     // get the shock speed
@@ -365,7 +365,7 @@ private:
   inline void sample_right_rarefaction_wave(double rhoR, double uR, double PR,
                                             double aR, double ustar,
                                             double Pstar, double &rhosol,
-                                            double &usol, double &Psol) {
+                                            double &usol, double &Psol) const {
     // get the velocity of the head of the rarefaction wave
     double SHR = uR + aR;
     if (SHR > 0.) {
@@ -410,7 +410,7 @@ private:
    */
   inline void sample_right_state(double rhoR, double uR, double PR, double aR,
                                  double ustar, double Pstar, double &rhosol,
-                                 double &usol, double &Psol) {
+                                 double &usol, double &Psol) const {
     if (Pstar > PR) {
       /// shock wave
       sample_right_shock_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol,
@@ -439,7 +439,7 @@ private:
   inline void sample_left_shock_wave(double rhoL, double uL, double PL,
                                      double aL, double ustar, double Pstar,
                                      double &rhosol, double &usol,
-                                     double &Psol) {
+                                     double &Psol) const {
     // variable used twice below
     double PdPL = Pstar / PL;
     // get the shock speed
@@ -474,7 +474,7 @@ private:
   inline void sample_left_rarefaction_wave(double rhoL, double uL, double PL,
                                            double aL, double ustar,
                                            double Pstar, double &rhosol,
-                                           double &usol, double &Psol) {
+                                           double &usol, double &Psol) const {
     // get the velocity of the head of the rarefaction wave
     double SHL = uL - aL;
     if (SHL < 0.) {
@@ -519,7 +519,7 @@ private:
    */
   inline void sample_left_state(double rhoL, double uL, double PL, double aL,
                                 double ustar, double Pstar, double &rhosol,
-                                double &usol, double &Psol) {
+                                double &usol, double &Psol) const {
     if (Pstar > PL) {
       /// shock wave
       sample_left_shock_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
@@ -543,7 +543,8 @@ private:
    * @param Psol Pressure solution.
    */
   inline void sample_right_vacuum(double rhoL, double uL, double PL, double aL,
-                                  double &rhosol, double &usol, double &Psol) {
+                                  double &rhosol, double &usol,
+                                  double &Psol) const {
     if (uL < aL) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -581,7 +582,8 @@ private:
    * @param Psol Pressure solution.
    */
   inline void sample_left_vacuum(double rhoR, double uR, double PR, double aR,
-                                 double &rhosol, double &usol, double &Psol) {
+                                 double &rhosol, double &usol,
+                                 double &Psol) const {
     if (-aR < uR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -626,7 +628,7 @@ private:
   inline void sample_vacuum_generation(double rhoL, double uL, double PL,
                                        double aL, double rhoR, double uR,
                                        double PR, double aR, double &rhosol,
-                                       double &usol, double &Psol) {
+                                       double &usol, double &Psol) const {
     // get the speeds of the left and right rarefaction waves
     double SR = uR - _tdgm1 * aR;
     double SL = uL + _tdgm1 * aL;
@@ -692,7 +694,7 @@ private:
    */
   inline void solve_vacuum(double rhoL, double uL, double PL, double aL,
                            double rhoR, double uR, double PR, double aR,
-                           double &rhosol, double &usol, double &Psol) {
+                           double &rhosol, double &usol, double &Psol) const {
     // if both states are vacuum, the solution is also vacuum
     if (rhoL == 0. && rhoR == 0.) {
       rhosol = 0.;
@@ -751,7 +753,8 @@ public:
    * @param Psol Pressure solution.
    */
   inline void solve(double rhoL, double uL, double PL, double rhoR, double uR,
-                    double PR, double &rhosol, double &usol, double &Psol) {
+                    double PR, double &rhosol, double &usol,
+                    double &Psol) const {
 
     // get the soundspeeds
     double aL = get_soundspeed(rhoL, PL);

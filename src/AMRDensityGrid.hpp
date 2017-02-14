@@ -683,9 +683,12 @@ public:
    * @param index Index of a cell.
    * @return std::vector containing the neighbours of the cell.
    */
-  virtual std::vector< DensityGrid::iterator >
+  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
+                                   CoordinateVector<>, double > >
   get_neighbours(unsigned long index) {
-    std::vector< DensityGrid::iterator > ngbs;
+    std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
+                             CoordinateVector<>, double > >
+        ngbs;
 
     return ngbs;
   }

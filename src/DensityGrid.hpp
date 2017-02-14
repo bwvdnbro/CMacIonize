@@ -40,6 +40,7 @@
 #include "WorkDistributor.hpp"
 
 #include <cmath>
+#include <tuple>
 
 /**
  * @brief General interface for density grids.
@@ -700,9 +701,13 @@ public:
    * @brief Get the neighbours of the cell with the given index.
    *
    * @param index Index of a cell.
-   * @return std::vector containing iterators to the neighbours of the cell.
+   * @return std::vector containing iterators to the neighbours, together with
+   * the midpoint, surface normal and surface area of the boundary face between
+   * the cell and this neighbour.
    */
-  virtual std::vector< iterator > get_neighbours(unsigned long index) = 0;
+  virtual std::vector<
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
+  get_neighbours(unsigned long index) = 0;
 
   /**
    * @brief Get the EmissivityValues for the cell with the given index.
@@ -1385,7 +1390,9 @@ public:
      *
      * @return std::vector containing iterators to the neighbours of the cell.
      */
-    inline std::vector< iterator > get_neighbours() const {
+    inline std::vector<
+        std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
+    get_neighbours() const {
       return _grid->get_neighbours(_index);
     }
 

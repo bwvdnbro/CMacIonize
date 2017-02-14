@@ -24,8 +24,33 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CartesianDensityGrid.hpp"
-#include "HomogeneousDensityFunction.hpp"
+#include "DensityFunction.hpp"
 #include "HydroIntegrator.hpp"
+#include <fstream>
+
+/**
+ * @brief DensityFunction implementation that sets up a basic Sod shock problem.
+ */
+class SodShockDensityFunction : public DensityFunction {
+public:
+  /**
+   * @brief Get the density field at the given position.
+   *
+   * @param position Position.
+   * @return DensityValues at that position.
+   */
+  virtual DensityValues operator()(CoordinateVector<> position) const {
+    DensityValues values;
+    if (position.x() < 0.5) {
+      values.set_number_density(1.);
+      values.set_temperature(1.);
+    } else {
+      values.set_number_density(0.125);
+      values.set_temperature(0.1);
+    }
+    return values;
+  }
+};
 
 /**
  * @brief Unit test for the HydroIntegrator class.
@@ -39,14 +64,40 @@ int main(int argc, char **argv) {
 
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(100, 1, 1);
-  HomogeneousDensityFunction density_function(1.);
+  SodShockDensityFunction density_function;
   CoordinateVector< bool > periodic(true);
   CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block);
 
-  integrator.do_hydro_step(grid, 0.1);
+  integrator.initialize_hydro_variables(grid);
+
+  // write initial snapshot
+  {
+    std::ofstream snapfile("hydro_snap_0.txt");
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      snapfile << it.get_cell_midpoint().x() << "\t"
+               << it.get_hydro_primitive_density() << "\t"
+               << it.get_hydro_primitive_velocity_x() << "\t"
+               << it.get_hydro_primitive_pressure() << "\n";
+    }
+  }
+
+  for (unsigned int i = 0; i < 1000; ++i) {
+    integrator.do_hydro_step(grid, 0.0001);
+  }
+
+  // write final snapshot
+  {
+    std::ofstream snapfile("hydro_snap_1.txt");
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      snapfile << it.get_cell_midpoint().x() << "\t"
+               << it.get_hydro_primitive_density() << "\t"
+               << it.get_hydro_primitive_velocity_x() << "\t"
+               << it.get_hydro_primitive_pressure() << "\n";
+    }
+  }
 
   return 0;
 }

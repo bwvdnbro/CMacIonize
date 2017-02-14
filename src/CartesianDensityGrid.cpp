@@ -500,33 +500,73 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
  * @param index Index of a cell.
  * @return std::vector containing the neighbours of the cell.
  */
-std::vector< DensityGrid::iterator >
+std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
+                         CoordinateVector<>, double > >
 CartesianDensityGrid::get_neighbours(unsigned long index) {
-  std::vector< DensityGrid::iterator > ngbs;
+  std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
+                           CoordinateVector<>, double > >
+      ngbs;
 
+  double sidelength[3];
+  sidelength[0] = _box.get_sides().x() / _ncell.x();
+  sidelength[1] = _box.get_sides().y() / _ncell.y();
+  sidelength[2] = _box.get_sides().z() / _ncell.z();
+  double surface_area[3];
+  surface_area[0] = sidelength[1] * sidelength[2];
+  surface_area[1] = sidelength[0] * sidelength[2];
+  surface_area[2] = sidelength[0] * sidelength[1];
   CoordinateVector< int > cellindices = get_indices(index);
+  CoordinateVector<> cell_midpoint = get_cell_midpoint(cellindices);
   for (unsigned int i = 0; i < 3; ++i) {
     if (cellindices[i] > 0) {
       CoordinateVector< int > ngb_low(cellindices);
       cellindices[i] -= 1;
-      ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_low), *this));
+      CoordinateVector<> correction;
+      correction[i] -= 0.5 * sidelength[i];
+      CoordinateVector<> midpoint = cell_midpoint + correction;
+      CoordinateVector<> normal;
+      normal[i] = -1.;
+      ngbs.push_back(
+          std::make_tuple(DensityGrid::iterator(get_long_index(ngb_low), *this),
+                          midpoint, normal, surface_area[i]));
     } else {
       if (_periodic[i]) {
         CoordinateVector< int > ngb_low(cellindices);
         cellindices[i] = _ncell[i] - 1;
-        ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_low), *this));
+        CoordinateVector<> correction;
+        correction[i] -= 0.5 * sidelength[i];
+        CoordinateVector<> midpoint = cell_midpoint + correction;
+        CoordinateVector<> normal;
+        normal[i] = -1.;
+        ngbs.push_back(std::make_tuple(
+            DensityGrid::iterator(get_long_index(ngb_low), *this), midpoint,
+            normal, surface_area[i]));
       }
     }
 
     if (cellindices[i] < _ncell[i] - 1) {
       CoordinateVector< int > ngb_high(cellindices);
       cellindices[i] += 1;
-      ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_high), *this));
+      CoordinateVector<> correction;
+      correction[i] += 0.5 * sidelength[i];
+      CoordinateVector<> midpoint = cell_midpoint + correction;
+      CoordinateVector<> normal;
+      normal[i] = 1.;
+      ngbs.push_back(std::make_tuple(
+          DensityGrid::iterator(get_long_index(ngb_high), *this), midpoint,
+          normal, surface_area[i]));
     } else {
       if (_periodic[i]) {
         CoordinateVector< int > ngb_high(cellindices);
         cellindices[i] = 0;
-        ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_high), *this));
+        CoordinateVector<> correction;
+        correction[i] += 0.5 * sidelength[i];
+        CoordinateVector<> midpoint = cell_midpoint + correction;
+        CoordinateVector<> normal;
+        normal[i] = 1.;
+        ngbs.push_back(std::make_tuple(
+            DensityGrid::iterator(get_long_index(ngb_high), *this), midpoint,
+            normal, surface_area[i]));
       }
     }
   }
