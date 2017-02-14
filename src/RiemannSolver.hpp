@@ -541,10 +541,12 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @return Flag indicating wether the left state (-1), the right state (1), or
+   * a vacuum state (0) was sampled.
    */
-  inline void sample_right_vacuum(double rhoL, double uL, double PL, double aL,
-                                  double &rhosol, double &usol,
-                                  double &Psol) const {
+  inline int sample_right_vacuum(double rhoL, double uL, double PL, double aL,
+                                 double &rhosol, double &usol,
+                                 double &Psol) const {
     if (uL < aL) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -556,17 +558,20 @@ private:
         rhosol = rhoL * std::pow(base, _tdgm1);
         usol = _tdgp1 * (aL + _gm1d2 * uL);
         Psol = PL * std::pow(base, _tgdgm1);
+        return -1;
       } else {
         /// vacuum
         rhosol = 0.;
         usol = 0.;
         Psol = 0.;
+        return 0;
       }
     } else {
       /// left state regime
       rhosol = rhoL;
       usol = uL;
       Psol = PL;
+      return -1;
     }
   }
 
@@ -580,10 +585,12 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @return Flag indicating wether the left state (-1), the right state (1), or
+   * a vacuum state (0) was sampled.
    */
-  inline void sample_left_vacuum(double rhoR, double uR, double PR, double aR,
-                                 double &rhosol, double &usol,
-                                 double &Psol) const {
+  inline int sample_left_vacuum(double rhoR, double uR, double PR, double aR,
+                                double &rhosol, double &usol,
+                                double &Psol) const {
     if (-aR < uR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -595,17 +602,20 @@ private:
         rhosol = rhoR * std::pow(base, _tdgm1);
         usol = _tdgp1 * (-aR + _tdgm1 * uR);
         Psol = PR * std::pow(base, _tgdgm1);
+        return 1;
       } else {
         /// vacuum
         rhosol = 0.;
         usol = 0.;
         Psol = 0.;
+        return 0;
       }
     } else {
       /// right state regime
       rhosol = rhoR;
       usol = uR;
       Psol = PR;
+      return 1;
     }
   }
 
@@ -624,11 +634,13 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @return Flag indicating wether the left state (-1), the right state (1), or
+   * a vacuum state (0) was sampled.
    */
-  inline void sample_vacuum_generation(double rhoL, double uL, double PL,
-                                       double aL, double rhoR, double uR,
-                                       double PR, double aR, double &rhosol,
-                                       double &usol, double &Psol) const {
+  inline int sample_vacuum_generation(double rhoL, double uL, double PL,
+                                      double aL, double rhoR, double uR,
+                                      double PR, double aR, double &rhosol,
+                                      double &usol, double &Psol) const {
     // get the speeds of the left and right rarefaction waves
     double SR = uR - _tdgm1 * aR;
     double SL = uL + _tdgm1 * aL;
@@ -637,6 +649,7 @@ private:
       rhosol = 0.;
       usol = 0.;
       Psol = 0.;
+      return 0;
     } else {
       if (SL < 0.) {
         /// right state
@@ -646,13 +659,14 @@ private:
           double base = _tdgp1 - _gm1dgp1 * uR / aR;
           rhosol = rhoR * std::pow(base, _tdgm1);
           usol = _tdgp1 * (-aR + _tdgm1 * uR);
-          Psol = PL * std::pow(base, _tgdgm1);
+          Psol = PR * std::pow(base, _tgdgm1);
         } else {
           /// right state regime
           rhosol = rhoR;
           usol = uR;
           Psol = PR;
         }
+        return 1;
       } else {
         /// left state
         if (aL > uL) {
@@ -668,6 +682,7 @@ private:
           usol = uL;
           Psol = PL;
         }
+        return -1;
       }
     }
   }
@@ -691,27 +706,30 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @return Flag indicating wether the left state (-1), the right state (1), or
+   * a vacuum state (0) was sampled.
    */
-  inline void solve_vacuum(double rhoL, double uL, double PL, double aL,
-                           double rhoR, double uR, double PR, double aR,
-                           double &rhosol, double &usol, double &Psol) const {
+  inline int solve_vacuum(double rhoL, double uL, double PL, double aL,
+                          double rhoR, double uR, double PR, double aR,
+                          double &rhosol, double &usol, double &Psol) const {
     // if both states are vacuum, the solution is also vacuum
     if (rhoL == 0. && rhoR == 0.) {
       rhosol = 0.;
       usol = 0.;
       Psol = 0.;
+      return 0;
     }
 
     if (rhoR == 0.) {
       /// vacuum right state
-      sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol);
+      return sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol);
     } else if (rhoL == 0.) {
       /// vacuum left state
-      sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol);
+      return sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol);
     } else {
       /// vacuum "middle" state
-      sample_vacuum_generation(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
-                               Psol);
+      return sample_vacuum_generation(rhoL, uL, PL, aL, rhoR, uR, PR, aR,
+                                      rhosol, usol, Psol);
     }
   }
 
@@ -751,10 +769,12 @@ public:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @return Flag signaling whether the left state (-1), the right state (1), or
+   * a vacuum state (0) was sampled.
    */
-  inline void solve(double rhoL, double uL, double PL, double rhoR, double uR,
-                    double PR, double &rhosol, double &usol,
-                    double &Psol) const {
+  inline int solve(double rhoL, double uL, double PL, double rhoR, double uR,
+                   double PR, double &rhosol, double &usol,
+                   double &Psol) const {
 
     // get the soundspeeds
     double aL = get_soundspeed(rhoL, PL);
@@ -762,14 +782,14 @@ public:
 
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
-      solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol, Psol);
-      return;
+      return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
+                          Psol);
     }
 
     // handle vacuum generation
     if (2. * aL / (_gamma - 1.) + 2. * aR / (_gamma - 1.) <= uR - uL) {
-      solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol, Psol);
-      return;
+      return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
+                          Psol);
     }
 
     // find the pressure and velocity in the middle state
@@ -821,9 +841,11 @@ public:
     if (ustar < 0.) {
       // right state
       sample_right_state(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol, Psol);
+      return 1;
     } else {
       // left state
       sample_left_state(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol, Psol);
+      return -1;
     }
   }
 };
