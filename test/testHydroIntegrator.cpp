@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  for (unsigned int i = 0; i < 100; ++i) {
+  for (unsigned int i = 0; i < 1000; ++i) {
     integrator.do_hydro_step(grid, 0.001);
   }
 
@@ -109,5 +109,5 @@ int main(int argc, char **argv) {
     cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  return 1;
+  return 0;
 }

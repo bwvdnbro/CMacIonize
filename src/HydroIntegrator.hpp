@@ -71,7 +71,7 @@ public:
 
       double mass = density * volume;
       // there is no kinetic energy (for now!)
-      // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
+      // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
       // P = (E/V - 0.5*m*v^2)*(gamma-1)
       double total_energy = volume * pressure / _gm1;
 
@@ -140,8 +140,7 @@ public:
       double PL = it.get_hydro_primitive_pressure();
       auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        // do stuff
-        DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
+        DensityGrid::iterator &ngb = std::get< 0 >(*ngbit);
         // the midpoint is only used if we use a second order scheme
         // CoordinateVector<> midpoint = std::get<1>(*ngbit);
         CoordinateVector<> normal = std::get< 2 >(*ngbit);
@@ -165,7 +164,7 @@ public:
             _solver.solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
 
         // if the solution was vacuum, there is no flux
-        if (flag) {
+        if (flag != 0) {
           // deproject the velocity
           CoordinateVector<> usol;
           if (flag == -1) {
@@ -179,7 +178,7 @@ public:
             usol[1] = uR[1] + vsol * normal[1];
             usol[2] = uR[2] + vsol * normal[2];
           }
-          // e = u + 0.5*v^2
+          // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
           double esol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
           vsol =
               usol[0] * normal[0] + usol[1] * normal[1] + usol[2] * normal[2];
@@ -188,7 +187,10 @@ public:
           double mflux = rhosol * vsol * surface_area * timestep;
           CoordinateVector<> pflux =
               rhosol * vsol * usol * surface_area * timestep;
-          double eflux = (vsol * esol + Psol * vsol) * surface_area * timestep;
+          pflux[0] += Psol * normal[0];
+          pflux[1] += Psol * normal[1];
+          pflux[2] += Psol * normal[2];
+          double eflux = (esol + Psol) * vsol * surface_area * timestep;
 
           // add the fluxes to the right time differences
           it.set_hydro_conserved_delta_mass(

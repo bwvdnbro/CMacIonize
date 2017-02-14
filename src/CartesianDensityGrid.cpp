@@ -520,7 +520,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
   for (unsigned int i = 0; i < 3; ++i) {
     if (cellindices[i] > 0) {
       CoordinateVector< int > ngb_low(cellindices);
-      cellindices[i] -= 1;
+      ngb_low[i] -= 1;
       CoordinateVector<> correction;
       correction[i] -= 0.5 * sidelength[i];
       CoordinateVector<> midpoint = cell_midpoint + correction;
@@ -532,7 +532,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
     } else {
       if (_periodic[i]) {
         CoordinateVector< int > ngb_low(cellindices);
-        cellindices[i] = _ncell[i] - 1;
+        ngb_low[i] = _ncell[i] - 1;
         CoordinateVector<> correction;
         correction[i] -= 0.5 * sidelength[i];
         CoordinateVector<> midpoint = cell_midpoint + correction;
@@ -546,7 +546,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
 
     if (cellindices[i] < _ncell[i] - 1) {
       CoordinateVector< int > ngb_high(cellindices);
-      cellindices[i] += 1;
+      ngb_high[i] += 1;
       CoordinateVector<> correction;
       correction[i] += 0.5 * sidelength[i];
       CoordinateVector<> midpoint = cell_midpoint + correction;
@@ -558,7 +558,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
     } else {
       if (_periodic[i]) {
         CoordinateVector< int > ngb_high(cellindices);
-        cellindices[i] = 0;
+        ngb_high[i] = 0;
         CoordinateVector<> correction;
         correction[i] += 0.5 * sidelength[i];
         CoordinateVector<> midpoint = cell_midpoint + correction;

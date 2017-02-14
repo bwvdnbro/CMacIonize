@@ -80,6 +80,110 @@ int main(int argc, char **argv) {
   assert_condition(cell_top_anchor.y() == 0.515625);
   assert_condition(cell_top_anchor.z() == 0.515625);
 
+  auto ngbs = grid.get_neighbours(index);
+  assert_condition(ngbs.size() == 6);
+  unsigned long ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.49, 0.51, 0.51)), grid)
+          .get_index();
+  unsigned long ngbindex = std::get< 0 >(ngbs[0]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  CoordinateVector<> midpoint = std::get< 1 >(ngbs[0]);
+  assert_condition(midpoint.x() == 0.5);
+  assert_condition(midpoint.y() == 0.5078125);
+  assert_condition(midpoint.z() == 0.5078125);
+  CoordinateVector<> normal = std::get< 2 >(ngbs[0]);
+  assert_condition(normal.x() == -1.);
+  assert_condition(normal.y() == 0.);
+  assert_condition(normal.z() == 0.);
+  double surface_area = std::get< 3 >(ngbs[0]);
+  assert_condition(surface_area == 0.000244140625);
+
+  ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.52, 0.51, 0.51)), grid)
+          .get_index();
+  ngbindex = std::get< 0 >(ngbs[1]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  midpoint = std::get< 1 >(ngbs[1]);
+  assert_condition(midpoint.x() == 0.515625);
+  assert_condition(midpoint.y() == 0.5078125);
+  assert_condition(midpoint.z() == 0.5078125);
+  normal = std::get< 2 >(ngbs[1]);
+  assert_condition(normal.x() == 1.);
+  assert_condition(normal.y() == 0.);
+  assert_condition(normal.z() == 0.);
+  surface_area = std::get< 3 >(ngbs[1]);
+  assert_condition(surface_area == 0.000244140625);
+
+  ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.51, 0.49, 0.51)), grid)
+          .get_index();
+  ngbindex = std::get< 0 >(ngbs[2]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  midpoint = std::get< 1 >(ngbs[2]);
+  assert_condition(midpoint.x() == 0.5078125);
+  assert_condition(midpoint.y() == 0.5);
+  assert_condition(midpoint.z() == 0.5078125);
+  normal = std::get< 2 >(ngbs[2]);
+  assert_condition(normal.x() == 0.);
+  assert_condition(normal.y() == -1.);
+  assert_condition(normal.z() == 0.);
+  surface_area = std::get< 3 >(ngbs[2]);
+  assert_condition(surface_area == 0.000244140625);
+
+  ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.51, 0.52, 0.51)), grid)
+          .get_index();
+  ngbindex = std::get< 0 >(ngbs[3]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  midpoint = std::get< 1 >(ngbs[3]);
+  assert_condition(midpoint.x() == 0.5078125);
+  assert_condition(midpoint.y() == 0.515625);
+  assert_condition(midpoint.z() == 0.5078125);
+  normal = std::get< 2 >(ngbs[3]);
+  assert_condition(normal.x() == 0.);
+  assert_condition(normal.y() == 1.);
+  assert_condition(normal.z() == 0.);
+  surface_area = std::get< 3 >(ngbs[3]);
+  assert_condition(surface_area == 0.000244140625);
+
+  ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.51, 0.51, 0.49)), grid)
+          .get_index();
+  ngbindex = std::get< 0 >(ngbs[4]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  midpoint = std::get< 1 >(ngbs[4]);
+  assert_condition(midpoint.x() == 0.5078125);
+  assert_condition(midpoint.y() == 0.5078125);
+  assert_condition(midpoint.z() == 0.5);
+  normal = std::get< 2 >(ngbs[4]);
+  assert_condition(normal.x() == 0.);
+  assert_condition(normal.y() == 0.);
+  assert_condition(normal.z() == -1.);
+  surface_area = std::get< 3 >(ngbs[4]);
+  assert_condition(surface_area == 0.000244140625);
+
+  ngbindexexp =
+      DensityGrid::iterator(
+          grid.get_cell_index(CoordinateVector<>(0.51, 0.51, 0.52)), grid)
+          .get_index();
+  ngbindex = std::get< 0 >(ngbs[5]).get_index();
+  assert_condition(ngbindex == ngbindexexp);
+  midpoint = std::get< 1 >(ngbs[5]);
+  assert_condition(midpoint.x() == 0.5078125);
+  assert_condition(midpoint.y() == 0.5078125);
+  assert_condition(midpoint.z() == 0.515625);
+  normal = std::get< 2 >(ngbs[5]);
+  assert_condition(normal.x() == 0.);
+  assert_condition(normal.y() == 0.);
+  assert_condition(normal.z() == 1.);
+  surface_area = std::get< 3 >(ngbs[5]);
+  assert_condition(surface_area == 0.000244140625);
+
   // check different scenarios for the wall intersection algorithm
   CoordinateVector< char > next_index;
   double ds;
