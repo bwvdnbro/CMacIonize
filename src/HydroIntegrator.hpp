@@ -71,7 +71,9 @@ public:
 
       double mass = density * volume;
       // there is no kinetic energy (for now!)
-      double total_energy = pressure / _gm1;
+      // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
+      // P = (E/V - 0.5*m*v^2)*(gamma-1)
+      double total_energy = volume * pressure / _gm1;
 
       // set conserved variables (we actually use these for the hydro)
       it.set_hydro_conserved_mass(mass);
@@ -111,9 +113,12 @@ public:
         velocity[0] = momentum[0] / mass;
         velocity[1] = momentum[1] / mass;
         velocity[2] = momentum[2] / mass;
-        pressure = _gm1 * density *
-                   (total_energy - momentum[0] * velocity[0] -
-                    momentum[1] * velocity[1] - momentum[2] * velocity[2]);
+        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
+        // P = (E/V - 0.5*m*v^2)*(gamma-1)
+        pressure = _gm1 * (total_energy / volume -
+                           0.5 * (momentum[0] * velocity[0] +
+                                  momentum[1] * velocity[1] +
+                                  momentum[2] * velocity[2]));
       }
       it.set_hydro_primitive_density(density);
       it.set_hydro_primitive_velocity_x(velocity[0]);
@@ -156,33 +161,47 @@ public:
 
         // solve the Riemann problem
         double rhosol, vsol, Psol;
-        _solver.solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+        int flag =
+            _solver.solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
 
-        // deproject the velocity
-        vsol -= vL;
-        CoordinateVector<> usol;
-        usol[0] = uL[0] + vsol * normal[0];
-        usol[1] = uL[1] + vsol * normal[1];
-        usol[2] = uL[2] + vsol * normal[2];
-        double esol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
+        // if the solution was vacuum, there is no flux
+        if (flag) {
+          // deproject the velocity
+          CoordinateVector<> usol;
+          if (flag == -1) {
+            vsol -= vL;
+            usol[0] = uL[0] + vsol * normal[0];
+            usol[1] = uL[1] + vsol * normal[1];
+            usol[2] = uL[2] + vsol * normal[2];
+          } else {
+            vsol -= vR;
+            usol[0] = uR[0] + vsol * normal[0];
+            usol[1] = uR[1] + vsol * normal[1];
+            usol[2] = uR[2] + vsol * normal[2];
+          }
+          // e = u + 0.5*v^2
+          double esol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
+          vsol =
+              usol[0] * normal[0] + usol[1] * normal[1] + usol[2] * normal[2];
 
-        // get the fluxes (probably wrong, but let's go with them for now)
-        double mflux = rhosol * vsol * surface_area * timestep;
-        CoordinateVector<> pflux =
-            rhosol * vsol * usol * surface_area * timestep;
-        double eflux = (vsol * esol + Psol * vsol) * surface_area * timestep;
+          // get the fluxes (probably wrong, but let's go with them for now)
+          double mflux = rhosol * vsol * surface_area * timestep;
+          CoordinateVector<> pflux =
+              rhosol * vsol * usol * surface_area * timestep;
+          double eflux = (vsol * esol + Psol * vsol) * surface_area * timestep;
 
-        // add the fluxes to the right time differences
-        it.set_hydro_conserved_delta_mass(it.get_hydro_conserved_delta_mass() +
-                                          mflux);
-        it.set_hydro_conserved_delta_momentum_x(
-            it.get_hydro_conserved_delta_momentum_x() + pflux.x());
-        it.set_hydro_conserved_delta_momentum_y(
-            it.get_hydro_conserved_delta_momentum_y() + pflux.y());
-        it.set_hydro_conserved_delta_momentum_z(
-            it.get_hydro_conserved_delta_momentum_z() + pflux.z());
-        it.set_hydro_conserved_delta_total_energy(
-            it.get_hydro_conserved_delta_total_energy() + eflux);
+          // add the fluxes to the right time differences
+          it.set_hydro_conserved_delta_mass(
+              it.get_hydro_conserved_delta_mass() + mflux);
+          it.set_hydro_conserved_delta_momentum_x(
+              it.get_hydro_conserved_delta_momentum_x() + pflux.x());
+          it.set_hydro_conserved_delta_momentum_y(
+              it.get_hydro_conserved_delta_momentum_y() + pflux.y());
+          it.set_hydro_conserved_delta_momentum_z(
+              it.get_hydro_conserved_delta_momentum_z() + pflux.z());
+          it.set_hydro_conserved_delta_total_energy(
+              it.get_hydro_conserved_delta_total_energy() + eflux);
+        }
       }
     }
 

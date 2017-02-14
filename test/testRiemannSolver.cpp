@@ -48,6 +48,12 @@ void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
   assert_values_equal_rel(rhosol, rhoexp, 1.e-4);
   assert_values_equal_rel(usol, uexp, 1.e-4);
   assert_values_equal_rel(Psol, Pexp, 1.e-4);
+
+  // symmetry test: also test the problem with left and right states reversed
+  solver.solve(rhoR, -uR, PR, rhoL, -uL, PL, rhosol, usol, Psol);
+  assert_values_equal_rel(rhosol, rhoexp, 1.e-4);
+  assert_values_equal_rel(usol, -uexp, 1.e-4);
+  assert_values_equal_rel(Psol, Pexp, 1.e-4);
 }
 
 /**

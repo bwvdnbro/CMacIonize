@@ -76,28 +76,38 @@ int main(int argc, char **argv) {
   // write initial snapshot
   {
     std::ofstream snapfile("hydro_snap_0.txt");
+    double mtot = 0.;
+    double etot = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       snapfile << it.get_cell_midpoint().x() << "\t"
                << it.get_hydro_primitive_density() << "\t"
                << it.get_hydro_primitive_velocity_x() << "\t"
                << it.get_hydro_primitive_pressure() << "\n";
+      mtot += it.get_hydro_conserved_mass();
+      etot += it.get_hydro_conserved_total_energy();
     }
+    cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  for (unsigned int i = 0; i < 1000; ++i) {
-    integrator.do_hydro_step(grid, 0.0001);
+  for (unsigned int i = 0; i < 100; ++i) {
+    integrator.do_hydro_step(grid, 0.001);
   }
 
   // write final snapshot
   {
     std::ofstream snapfile("hydro_snap_1.txt");
+    double mtot = 0.;
+    double etot = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       snapfile << it.get_cell_midpoint().x() << "\t"
                << it.get_hydro_primitive_density() << "\t"
                << it.get_hydro_primitive_velocity_x() << "\t"
                << it.get_hydro_primitive_pressure() << "\n";
+      mtot += it.get_hydro_conserved_mass();
+      etot += it.get_hydro_conserved_total_energy();
     }
+    cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  return 0;
+  return 1;
 }
