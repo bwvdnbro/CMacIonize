@@ -125,7 +125,7 @@ public:
   CartesianDensityGrid(
       Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr);
+      bool hydro = false, Log *log = nullptr);
 
   CartesianDensityGrid(ParameterFile &parameters,
                        DensityFunction &density_function, Log *log = nullptr);

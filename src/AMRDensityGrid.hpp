@@ -188,14 +188,15 @@ public:
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
    * @param periodic Periodicity flags.
+   * @param hydro Hydro flag.
    * @param log Log to write logging info to.
    */
   inline AMRDensityGrid(
       Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr)
-      : DensityGrid(density_function, box, periodic, log),
+      bool hydro = false, Log *log = nullptr)
+      : DensityGrid(density_function, box, periodic, hydro, log),
         _refinement_scheme(refinement_scheme) {
 
     // find the smallest number of blocks that fits the requested top level grid
@@ -283,7 +284,7 @@ public:
             density_function, AMRRefinementSchemeFactory::generate(params, log),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid:periodicity", CoordinateVector< bool >(false)),
-            log) {}
+            false, log) {}
 
   /**
    * @brief Destructor.

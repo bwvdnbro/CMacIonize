@@ -103,6 +103,70 @@ protected:
    *  factor, in m^3 s^-1). */
   std::vector< double > _heating_He;
 
+  /// hydro
+
+  /*! @brief Flag indicating whether hydro is active or not. */
+  bool _hydro;
+
+  /*! @brief Mass of the hydrodynamical fluid in each cell (in kg). */
+  std::vector< double > _hydro_conserved_mass;
+
+  /*! @brief X-component of the momentum of the hydrodynamical fluid in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_momentum_x;
+
+  /*! @brief Y-component of the momentum of the hydrodynamical fluid in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_momentum_y;
+
+  /*! @brief Z-component of the momentum of the hydrodynamical fluid in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_momentum_z;
+
+  /*! @brief Total energy of the hydrodynamical fluid in each cell (in kg m^2
+   *  s^-2). */
+  std::vector< double > _hydro_conserved_total_energy;
+
+  /*! @brief Density of the hydrodynamical fluid in each cell (in kg m^-3). */
+  std::vector< double > _hydro_primitive_density;
+
+  /*! @brief X-component of the velocity of the hydrodynamical fluid in each
+   *  cell (in m s^-1). */
+  std::vector< double > _hydro_primitive_velocity_x;
+
+  /*! @brief Y-component of the velocity of the hydrodynamical fluid in each
+   *  cell (in m s^-1). */
+  std::vector< double > _hydro_primitive_velocity_y;
+
+  /*! @brief Z-component of the velocity of the hydrodynamical fluid in each
+   *  cell (in m s^-1). */
+  std::vector< double > _hydro_primitive_velocity_z;
+
+  /*! @brief Pressure of the hydrodynamical fluid in each cell (in kg m^-1
+   *  s^-2). */
+  std::vector< double > _hydro_primitive_pressure;
+
+  /*! @brief Time step difference of the mass in each cell (in kg). */
+  std::vector< double > _hydro_conserved_delta_mass;
+
+  /*! @brief Time step difference of the X-component of the momentum in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_delta_momentum_x;
+
+  /*! @brief Time step difference of the Y-component of the momentum in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_delta_momentum_y;
+
+  /*! @brief Time step difference of the Z-component of the momentum in each
+   *  cell (in kg m s^-1). */
+  std::vector< double > _hydro_conserved_delta_momentum_z;
+
+  /*! @brief Time step difference of the total energy in each cell (in kg m^2
+   *  s^-2). */
+  std::vector< double > _hydro_conserved_delta_total_energy;
+
+  /// end hydro
+
   /*! @brief EmissivityValues for the cells. */
   std::vector< EmissivityValues * > _emissivities;
 
@@ -218,14 +282,15 @@ public:
    * @param density_function DensityFunction that defines the density field.
    * @param box Box containing the grid.
    * @param periodic Periodicity flags.
+   * @param hydro Hydro flag.
    * @param log Log to write log messages to.
    */
   DensityGrid(
       DensityFunction &density_function, Box box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr)
+      bool hydro = false, Log *log = nullptr)
       : _density_function(density_function), _box(box), _periodic(periodic),
-        _log(log) {
+        _hydro(hydro), _log(log) {
 
     _ionization_energy_H =
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
@@ -254,6 +319,33 @@ public:
     _density_function.initialize();
     if (_log) {
       _log->write_status("Done.");
+    }
+    if (_hydro) {
+      if (_log) {
+        _log->write_status("Initializing hydro arrays...");
+      }
+      unsigned int numcell = get_number_of_cells();
+      // conserved variables
+      _hydro_conserved_mass.resize(numcell, 0.);
+      _hydro_conserved_momentum_x.resize(numcell, 0.);
+      _hydro_conserved_momentum_y.resize(numcell, 0.);
+      _hydro_conserved_momentum_z.resize(numcell, 0.);
+      _hydro_conserved_total_energy.resize(numcell, 0.);
+      // primitive variables
+      _hydro_primitive_density.resize(numcell, 0.);
+      _hydro_primitive_velocity_x.resize(numcell, 0.);
+      _hydro_primitive_velocity_y.resize(numcell, 0.);
+      _hydro_primitive_velocity_z.resize(numcell, 0.);
+      _hydro_primitive_pressure.resize(numcell, 0.);
+      // time differences of conserved variables
+      _hydro_conserved_delta_mass.resize(numcell, 0.);
+      _hydro_conserved_delta_momentum_x.resize(numcell, 0.);
+      _hydro_conserved_delta_momentum_y.resize(numcell, 0.);
+      _hydro_conserved_delta_momentum_z.resize(numcell, 0.);
+      _hydro_conserved_delta_total_energy.resize(numcell, 0.);
+      if (_log) {
+        _log->write_status("Done.");
+      }
     }
   }
 
@@ -939,6 +1031,99 @@ public:
     inline void reset_mean_intensities() {
       _grid->reset_mean_intensities(_index);
     }
+
+    /// hydro
+
+    /**
+     * @brief Get the mass of the hydrodynamical fluid in the cell the iterator
+     * is currently pointing to.
+     *
+     * @return Mass of the fluid in the cell (in kg).
+     */
+    inline double get_hydro_conserved_mass() const {
+      return _grid->_hydro_conserved_mass[_index];
+    }
+
+    /**
+     * @brief Set the mass of the hydrodynamical fluid in the cell the iterator
+     * is currently pointing to.
+     *
+     * @param hydro_conserved_mass Mass of the fluid in the cell (in kg).
+     */
+    inline void set_hydro_conserved_mass(double hydro_conserved_mass) {
+      _grid->_hydro_conserved_mass[_index] = hydro_conserved_mass;
+    }
+
+    /**
+     * @brief Get the X-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @return X-component of the momentum of the fluid in the cell (in kg m
+     * s^-1).
+     */
+    inline double get_hydro_conserved_momentum_x() const {
+      return _grid->_hydro_conserved_momentum_x[_index];
+    }
+
+    /**
+     * @brief Set the X-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @param hydro_conserved_momentum_x X-component of the momentum of the
+     * fluid in the cell (in kg m s^-1).
+     */
+    inline void
+    set_hydro_conserved_momentum_x(double hydro_conserved_momentum_x) {
+      _grid->_hydro_conserved_momentum_x[_index] = hydro_conserved_momentum_x;
+    }
+
+    /**
+     * @brief Get the Y-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @return Y-component of the momentum of the fluid in the cell (in kg m
+     * s^-1).
+     */
+    inline double get_hydro_conserved_momentum_y() const {
+      return _grid->_hydro_conserved_momentum_y[_index];
+    }
+
+    /**
+     * @brief Set the Y-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @param hydro_conserved_momentum_y Y-component of the momentum of the
+     * fluid in the cell (in kg m s^-1).
+     */
+    inline void
+    set_hydro_conserved_momentum_y(double hydro_conserved_momentum_y) {
+      _grid->_hydro_conserved_momentum_y[_index] = hydro_conserved_momentum_y;
+    }
+
+    /**
+     * @brief Get the Z-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @return Z-component of the momentum of the fluid in the cell (in kg m
+     * s^-1).
+     */
+    inline double get_hydro_conserved_momentum_z() const {
+      return _grid->_hydro_conserved_momentum_z[_index];
+    }
+
+    /**
+     * @brief Set the Z-component of the momentum of the hydrodynamical fluid in
+     * the cell the iterator is currently pointing to.
+     *
+     * @param hydro_conserved_momentum_z Z-component of the momentum of the
+     * fluid in the cell (in kg m s^-1).
+     */
+    inline void
+    set_hydro_conserved_momentum_z(double hydro_conserved_momentum_z) {
+      _grid->_hydro_conserved_momentum_z[_index] = hydro_conserved_momentum_z;
+    }
+
+    /// end hydro
 
     /**
      * @brief Get the EmissivityValues for the cell the iterator is currently

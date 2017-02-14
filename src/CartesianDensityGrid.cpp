@@ -42,14 +42,15 @@ using namespace std;
  * @param ncell Number of cells for each dimension.
  * @param density_function DensityFunction that defines the density field.
  * @param periodic Periodicity flags.
+ * @param hydro Hydro flag.
  * @param log Log to write log messages to.
  */
 CartesianDensityGrid::CartesianDensityGrid(Box box,
                                            CoordinateVector< int > ncell,
                                            DensityFunction &density_function,
                                            CoordinateVector< bool > periodic,
-                                           Log *log)
-    : DensityGrid(density_function, box, periodic, log), _box(box),
+                                           bool hydro, Log *log)
+    : DensityGrid(density_function, box, periodic, hydro, log), _box(box),
       _periodic(periodic), _ncell(ncell), _log(log) {
 
   if (_log) {
@@ -159,7 +160,7 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
           density_function,
           parameters.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),
-          log) {}
+          false, log) {}
 
 /**
  * @brief Initialize the cells in the grid.
