@@ -695,6 +695,17 @@ set(TESTRIEMANNSOLVER_SOURCES
 add_unit_test(NAME testRiemannSolver
               SOURCES ${TESTRIEMANNSOLVER_SOURCES})
 
+## HydroIntegrator test
+set(TESTHYDROINTEGRATOR_SOURCES
+    testHydroIntegrator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/HydroIntegrator.hpp
+)
+add_unit_test(NAME testHydroIntegrator
+              SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

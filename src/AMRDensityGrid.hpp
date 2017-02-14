@@ -678,6 +678,19 @@ public:
   virtual DensityGrid::iterator end() { return iterator(_cells.size(), *this); }
 
   /**
+   * @brief Get the neighbours of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return std::vector containing the neighbours of the cell.
+   */
+  virtual std::vector< DensityGrid::iterator >
+  get_neighbours(unsigned long index) {
+    std::vector< DensityGrid::iterator > ngbs;
+
+    return ngbs;
+  }
+
+  /**
    * @brief Print the grid to the given stream for visual inspection.
    *
    * @param stream std::ostream to write to.

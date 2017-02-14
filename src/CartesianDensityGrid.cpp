@@ -493,3 +493,43 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
 
   return last_cell;
 }
+
+/**
+ * @brief Get the neighbours of the cell with the given index.
+ *
+ * @param index Index of a cell.
+ * @return std::vector containing the neighbours of the cell.
+ */
+std::vector< DensityGrid::iterator >
+CartesianDensityGrid::get_neighbours(unsigned long index) {
+  std::vector< DensityGrid::iterator > ngbs;
+
+  CoordinateVector< int > cellindices = get_indices(index);
+  for (unsigned int i = 0; i < 3; ++i) {
+    if (cellindices[i] > 0) {
+      CoordinateVector< int > ngb_low(cellindices);
+      cellindices[i] -= 1;
+      ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_low), *this));
+    } else {
+      if (_periodic[i]) {
+        CoordinateVector< int > ngb_low(cellindices);
+        cellindices[i] = _ncell[i] - 1;
+        ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_low), *this));
+      }
+    }
+
+    if (cellindices[i] < _ncell[i] - 1) {
+      CoordinateVector< int > ngb_high(cellindices);
+      cellindices[i] += 1;
+      ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_high), *this));
+    } else {
+      if (_periodic[i]) {
+        CoordinateVector< int > ngb_high(cellindices);
+        cellindices[i] = 0;
+        ngbs.push_back(DensityGrid::iterator(get_long_index(ngb_high), *this));
+      }
+    }
+  }
+
+  return ngbs;
+}

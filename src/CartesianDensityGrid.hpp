@@ -204,6 +204,9 @@ public:
   virtual inline DensityGrid::iterator end() {
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
   }
+
+  virtual std::vector< DensityGrid::iterator >
+  get_neighbours(unsigned long index);
 };
 
 #endif // CARTESIANDENSITYGRID_HPP

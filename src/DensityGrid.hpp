@@ -697,6 +697,14 @@ public:
   }
 
   /**
+   * @brief Get the neighbours of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return std::vector containing iterators to the neighbours of the cell.
+   */
+  virtual std::vector< iterator > get_neighbours(unsigned long index) = 0;
+
+  /**
    * @brief Get the EmissivityValues for the cell with the given index.
    *
    * @param index Index of a cell.
@@ -1370,6 +1378,16 @@ public:
     }
 
     /// end hydro
+
+    /**
+     * @brief Get the neighbours of the cell the iterator is currently pointing
+     * to.
+     *
+     * @return std::vector containing iterators to the neighbours of the cell.
+     */
+    inline std::vector< iterator > get_neighbours() const {
+      return _grid->get_neighbours(_index);
+    }
 
     /**
      * @brief Get the EmissivityValues for the cell the iterator is currently
