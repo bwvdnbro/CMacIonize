@@ -60,14 +60,15 @@ void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
 int main(int argc, char **argv) {
   RiemannSolver solver(5. / 3.);
 
+  // Toro tests
   run_test(solver, 1., 0., 1., 0.125, 0., 0.1, 0.47969, 0.841194, 0.293945);
   run_test(solver, 1., -2., 0.4, 1., 2., 0.4, 0.00617903, 0., 8.32249e-05);
   run_test(solver, 1., 0., 1000., 1., 0., 0.01, 0.615719, 18.2812, 445.626);
   run_test(solver, 1., 0., 0.01, 1., 0., 100., 0.61577, -5.78011, 44.5687);
   run_test(solver, 5.99924, 19.5975, 460.894, 5.99242, -6.19633, 46.0950,
            12.743, 8.56045, 1841.82);
-  // vacuum (uncomment once implemented)
-  // run_test(solver,1., -1., 1.e-6, 1., 1., 1.0005e-6, 0., 0., 0.);
+  // vacuum generation
+  run_test(solver, 1., -1., 1.e-6, 1., 1., 1.0005e-6, 0., 0., 0.);
 
   return 0;
 }

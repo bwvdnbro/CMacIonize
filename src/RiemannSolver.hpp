@@ -531,6 +531,188 @@ private:
     }
   }
 
+  /**
+   * @brief Sample the vacuum Riemann problem if the right state is a vacuum.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_right_vacuum(double rhoL, double uL, double PL, double aL,
+                                  double &rhosol, double &usol, double &Psol) {
+    if (uL < aL) {
+      /// vacuum regime
+      // get the vacuum rarefaction wave speed
+      double SL = uL + _tdgm1 * aL;
+      if (SL > 0.) {
+        /// rarefaction wave regime
+        // variable used twice below
+        double base = _tdgp1 + _gm1dgp1 * uL / aL;
+        rhosol = rhoL * std::pow(base, _tdgm1);
+        usol = _tdgp1 * (aL + _gm1d2 * uL);
+        Psol = PL * std::pow(base, _tgdgm1);
+      } else {
+        /// vacuum
+        rhosol = 0.;
+        usol = 0.;
+        Psol = 0.;
+      }
+    } else {
+      /// left state regime
+      rhosol = rhoL;
+      usol = uL;
+      Psol = PL;
+    }
+  }
+
+  /**
+   * @brief Sample the vacuum Riemann problem if the left state is a vacuum.
+   *
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_left_vacuum(double rhoR, double uR, double PR, double aR,
+                                 double &rhosol, double &usol, double &Psol) {
+    if (-aR < uR) {
+      /// vacuum regime
+      // get the vacuum rarefaction wave speed
+      double SR = uR - _tdgm1 * aR;
+      if (SR < 0.) {
+        /// rarefaction wave regime
+        // variable used twice below
+        double base = _tdgp1 - _gm1dgp1 * uR / aR;
+        rhosol = rhoR * std::pow(base, _tdgm1);
+        usol = _tdgp1 * (-aR + _tdgm1 * uR);
+        Psol = PR * std::pow(base, _tgdgm1);
+      } else {
+        /// vacuum
+        rhosol = 0.;
+        usol = 0.;
+        Psol = 0.;
+      }
+    } else {
+      /// right state regime
+      rhosol = rhoR;
+      usol = uR;
+      Psol = PR;
+    }
+  }
+
+  /**
+   * @brief Sample the vacuum Riemann problem in the case vacuum is generated in
+   * between the left and right state.
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void sample_vacuum_generation(double rhoL, double uL, double PL,
+                                       double aL, double rhoR, double uR,
+                                       double PR, double aR, double &rhosol,
+                                       double &usol, double &Psol) {
+    // get the speeds of the left and right rarefaction waves
+    double SR = uR - _tdgm1 * aR;
+    double SL = uL + _tdgm1 * aL;
+    if (SR > 0. && SL < 0.) {
+      /// vacuum
+      rhosol = 0.;
+      usol = 0.;
+      Psol = 0.;
+    } else {
+      if (SL < 0.) {
+        /// right state
+        if (-aR < uR) {
+          /// right rarefaction wave regime
+          // variable used twice below
+          double base = _tdgp1 - _gm1dgp1 * uR / aR;
+          rhosol = rhoR * std::pow(base, _tdgm1);
+          usol = _tdgp1 * (-aR + _tdgm1 * uR);
+          Psol = PL * std::pow(base, _tgdgm1);
+        } else {
+          /// right state regime
+          rhosol = rhoR;
+          usol = uR;
+          Psol = PR;
+        }
+      } else {
+        /// left state
+        if (aL > uL) {
+          /// left rarefaction wave regime
+          // variable used twice below
+          double base = _tdgp1 + _gm1dgp1 * uL / aL;
+          rhosol = rhoL * std::pow(base, _tdgm1);
+          usol = _tdgp1 * (aL + _tdgm1 * uL);
+          Psol = PL * std::pow(base, _tgdgm1);
+        } else {
+          /// left state regime
+          rhosol = rhoL;
+          usol = uL;
+          Psol = PL;
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Vacuum Riemann solver.
+   *
+   * This solver is called when one or both states have a zero density, or when
+   * the vacuum generation condition is satisfied (meaning vacuum is generated
+   * in the middle state, although strictly speaking there is no "middle"
+   * state if vacuum is involved).
+   *
+   * @param rhoL Density of the left state.
+   * @param uL Velocity of the left state.
+   * @param PL Pressure of the left state.
+   * @param aL Soundspeed of the left state.
+   * @param rhoR Density of the right state.
+   * @param uR Velocity of the right state.
+   * @param PR Pressure of the right state.
+   * @param aR Soundspeed of the right state.
+   * @param rhosol Density solution.
+   * @param usol Velocity solution.
+   * @param Psol Pressure solution.
+   */
+  inline void solve_vacuum(double rhoL, double uL, double PL, double aL,
+                           double rhoR, double uR, double PR, double aR,
+                           double &rhosol, double &usol, double &Psol) {
+    // if both states are vacuum, the solution is also vacuum
+    if (rhoL == 0. && rhoR == 0.) {
+      rhosol = 0.;
+      usol = 0.;
+      Psol = 0.;
+    }
+
+    if (rhoR == 0.) {
+      /// vacuum right state
+      sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol);
+    } else if (rhoL == 0.) {
+      /// vacuum left state
+      sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol);
+    } else {
+      /// vacuum "middle" state
+      sample_vacuum_generation(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
+                               Psol);
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -538,6 +720,10 @@ public:
    * @param gamma Adiabatic index \f$\gamma{}\f$.
    */
   RiemannSolver(double gamma) : _gamma(gamma) {
+    if (_gamma <= 1.) {
+      cmac_error("The adiabatic index needs to be larger than 1!")
+    }
+
     // related quantities:
     _gp1d2g = 0.5 * (_gamma + 1.) / _gamma; // gamma plus 1 divided by 2 gamma
     _gm1d2g = 0.5 * (_gamma - 1.) / _gamma; // gamma minus 1 divided by 2 gamma
@@ -573,12 +759,14 @@ public:
 
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
-      cmac_error("Vacuum Riemann solver is not implemented yet!");
+      solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol, Psol);
+      return;
     }
 
     // handle vacuum generation
     if (2. * aL / (_gamma - 1.) + 2. * aR / (_gamma - 1.) <= uR - uL) {
-      cmac_error("Vacuum Riemann solver is not implemented yet!");
+      solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol, Psol);
+      return;
     }
 
     // find the pressure and velocity in the middle state
