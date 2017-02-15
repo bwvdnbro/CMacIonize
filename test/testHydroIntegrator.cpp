@@ -41,7 +41,8 @@ public:
    */
   virtual DensityValues operator()(CoordinateVector<> position) const {
     DensityValues values;
-    if (position.x() < 0.5) {
+    double r = (position - CoordinateVector<>(0.5)).norm();
+    if (r < 0.25) {
       values.set_number_density(1.);
       values.set_temperature(1.);
     } else {
@@ -63,9 +64,9 @@ int main(int argc, char **argv) {
   HydroIntegrator integrator(5. / 3.);
 
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-  CoordinateVector< int > ncell(100, 1, 1);
+  CoordinateVector< int > ncell(32);
   SodShockDensityFunction density_function;
-  CoordinateVector< bool > periodic(true, false, false);
+  CoordinateVector< bool > periodic(true);
   CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
@@ -79,8 +80,8 @@ int main(int argc, char **argv) {
     double mtot = 0.;
     double etot = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      snapfile << it.get_cell_midpoint().x() << "\t"
-               << it.get_hydro_primitive_density() << "\t"
+      double r = (it.get_cell_midpoint() - CoordinateVector<>(0.5)).norm();
+      snapfile << r << "\t" << it.get_hydro_primitive_density() << "\t"
                << it.get_hydro_primitive_velocity_x() << "\t"
                << it.get_hydro_primitive_pressure() << "\n";
       mtot += it.get_hydro_conserved_mass();
@@ -89,8 +90,8 @@ int main(int argc, char **argv) {
     cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  for (unsigned int i = 0; i < 2; ++i) {
-    integrator.do_hydro_step(grid, 0.0025);
+  for (unsigned int i = 0; i < 100; ++i) {
+    integrator.do_hydro_step(grid, 0.001);
   }
 
   // write final snapshot
@@ -99,8 +100,8 @@ int main(int argc, char **argv) {
     double mtot = 0.;
     double etot = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      snapfile << it.get_cell_midpoint().x() << "\t"
-               << it.get_hydro_primitive_density() << "\t"
+      double r = (it.get_cell_midpoint() - CoordinateVector<>(0.5)).norm();
+      snapfile << r << "\t" << it.get_hydro_primitive_density() << "\t"
                << it.get_hydro_primitive_velocity_x() << "\t"
                << it.get_hydro_primitive_pressure() << "\n";
       mtot += it.get_hydro_conserved_mass();

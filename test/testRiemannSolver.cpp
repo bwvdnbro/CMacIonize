@@ -80,7 +80,14 @@ void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
     double x = (i + 0.5) * 0.001 - 0.5;
     double dxdt = x / t;
     double rhosol, usol, Psol;
-    solver.solve(rhoL, uL, PL, rhoR, uR, PR, rhosol, usol, Psol, dxdt);
+    int flag =
+        solver.solve(rhoL, uL, PL, rhoR, uR, PR, rhosol, usol, Psol, dxdt);
+    if (i == 0) {
+      assert_condition(flag == -1);
+    }
+    if (i == 999) {
+      assert_condition(flag == 1);
+    }
     ofile << x << "\t" << rhosol << "\t" << usol << "\t" << Psol << "\n";
   }
 }

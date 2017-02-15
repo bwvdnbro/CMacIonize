@@ -185,11 +185,11 @@ public:
 
           // get the fluxes (probably wrong, but let's go with them for now)
           double mflux = rhosol * vsol * surface_area * timestep;
-          CoordinateVector<> pflux =
-              rhosol * vsol * usol * surface_area * timestep;
+          CoordinateVector<> pflux = rhosol * vsol * usol;
           pflux[0] += Psol * normal[0];
           pflux[1] += Psol * normal[1];
           pflux[2] += Psol * normal[2];
+          pflux *= surface_area * timestep;
           double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
 
           // add the fluxes to the right time differences
