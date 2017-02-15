@@ -326,16 +326,17 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_right_shock_wave(double rhoR, double uR, double PR,
                                       double aR, double ustar, double Pstar,
                                       double &rhosol, double &usol,
-                                      double &Psol) const {
+                                      double &Psol, double dxdt = 0.) const {
     // variable used twice below
     double PdPR = Pstar / PR;
     // get the shock speed
     double SR = uR + aR * std::sqrt(_gp1d2g * PdPR + _gm1d2g);
-    if (SR > 0.) {
+    if (SR > dxdt) {
       /// middle state (shock) regime
       rhosol = rhoR * (PdPR + _gm1dgp1) / (_gm1dgp1 * PdPR + 1.);
       usol = ustar;
@@ -361,20 +362,22 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_right_rarefaction_wave(double rhoR, double uR, double PR,
                                             double aR, double ustar,
                                             double Pstar, double &rhosol,
-                                            double &usol, double &Psol) const {
+                                            double &usol, double &Psol,
+                                            double dxdt = 0.) const {
     // get the velocity of the head of the rarefaction wave
     double SHR = uR + aR;
-    if (SHR > 0.) {
+    if (SHR > dxdt) {
       /// rarefaction wave regime
       // variable used twice below
       double PdPR = Pstar / PR;
       // get the velocity of the tail of the rarefaction wave
       double STR = ustar + aR * std::pow(PdPR, _gm1d2g);
-      if (STR > 0.) {
+      if (STR > dxdt) {
         /// middle state regime
         rhosol = rhoR * std::pow(PdPR, _ginv);
         usol = ustar;
@@ -382,9 +385,9 @@ private:
       } else {
         /// rarefaction fan regime
         // variable used twice below
-        double base = _tdgp1 - _gm1dgp1 * uR / aR;
+        double base = _tdgp1 - _gm1dgp1 * (uR - dxdt) / aR;
         rhosol = rhoR * std::pow(base, _tdgm1);
-        usol = _tdgp1 * (-aR + _gm1d2 * uR);
+        usol = _tdgp1 * (-aR + _gm1d2 * uR + dxdt);
         Psol = PR * std::pow(base, _tgdgm1);
       }
     } else {
@@ -407,18 +410,20 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_right_state(double rhoR, double uR, double PR, double aR,
                                  double ustar, double Pstar, double &rhosol,
-                                 double &usol, double &Psol) const {
+                                 double &usol, double &Psol,
+                                 double dxdt = 0.) const {
     if (Pstar > PR) {
       /// shock wave
       sample_right_shock_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol,
-                              Psol);
+                              Psol, dxdt);
     } else {
       /// rarefaction wave
       sample_right_rarefaction_wave(rhoR, uR, PR, aR, ustar, Pstar, rhosol,
-                                    usol, Psol);
+                                    usol, Psol, dxdt);
     }
   }
 
@@ -435,16 +440,17 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_left_shock_wave(double rhoL, double uL, double PL,
                                      double aL, double ustar, double Pstar,
-                                     double &rhosol, double &usol,
-                                     double &Psol) const {
+                                     double &rhosol, double &usol, double &Psol,
+                                     double dxdt = 0.) const {
     // variable used twice below
     double PdPL = Pstar / PL;
     // get the shock speed
     double SL = uL - aL * std::sqrt(_gp1d2g * PdPL + _gm1d2g);
-    if (SL < 0.) {
+    if (SL < dxdt) {
       /// middle state (shock) regime
       rhosol = rhoL * (PdPL + _gm1dgp1) / (_gm1dgp1 * PdPL + 1.);
       usol = ustar;
@@ -470,25 +476,27 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_left_rarefaction_wave(double rhoL, double uL, double PL,
                                            double aL, double ustar,
                                            double Pstar, double &rhosol,
-                                           double &usol, double &Psol) const {
+                                           double &usol, double &Psol,
+                                           double dxdt = 0.) const {
     // get the velocity of the head of the rarefaction wave
     double SHL = uL - aL;
-    if (SHL < 0.) {
+    if (SHL < dxdt) {
       /// rarefaction wave regime
       // variable used twice below
       double PdPL = Pstar / PL;
       // get the velocity of the tail of the rarefaction wave
       double STL = ustar - aL * std::pow(PdPL, _gm1d2g);
-      if (STL > 0.) {
+      if (STL > dxdt) {
         /// rarefaction fan regime
         // variable used twice below
-        double base = _tdgp1 + _gm1dgp1 * uL / aL;
+        double base = _tdgp1 + _gm1dgp1 * (uL - dxdt) / aL;
         rhosol = rhoL * std::pow(base, _tdgm1);
-        usol = _tdgp1 * (aL + _gm1d2 * uL);
+        usol = _tdgp1 * (aL + _gm1d2 * uL + dxdt);
         Psol = PL * std::pow(base, _tgdgm1);
       } else {
         /// middle state regime
@@ -516,18 +524,20 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    */
   inline void sample_left_state(double rhoL, double uL, double PL, double aL,
                                 double ustar, double Pstar, double &rhosol,
-                                double &usol, double &Psol) const {
+                                double &usol, double &Psol,
+                                double dxdt = 0.) const {
     if (Pstar > PL) {
       /// shock wave
-      sample_left_shock_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
-                             Psol);
+      sample_left_shock_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol, Psol,
+                             dxdt);
     } else {
       /// rarefaction wave
       sample_left_rarefaction_wave(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol,
-                                   Psol);
+                                   Psol, dxdt);
     }
   }
 
@@ -541,22 +551,23 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
   inline int sample_right_vacuum(double rhoL, double uL, double PL, double aL,
-                                 double &rhosol, double &usol,
-                                 double &Psol) const {
-    if (uL < aL) {
+                                 double &rhosol, double &usol, double &Psol,
+                                 double dxdt = 0.) const {
+    if (uL - aL < dxdt) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
       double SL = uL + _tdgm1 * aL;
-      if (SL > 0.) {
+      if (SL > dxdt) {
         /// rarefaction wave regime
         // variable used twice below
-        double base = _tdgp1 + _gm1dgp1 * uL / aL;
+        double base = _tdgp1 + _gm1dgp1 * (uL - dxdt) / aL;
         rhosol = rhoL * std::pow(base, _tdgm1);
-        usol = _tdgp1 * (aL + _gm1d2 * uL);
+        usol = _tdgp1 * (aL + _gm1d2 * uL + dxdt);
         Psol = PL * std::pow(base, _tgdgm1);
         return -1;
       } else {
@@ -585,22 +596,23 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
   inline int sample_left_vacuum(double rhoR, double uR, double PR, double aR,
-                                double &rhosol, double &usol,
-                                double &Psol) const {
-    if (-aR < uR) {
+                                double &rhosol, double &usol, double &Psol,
+                                double dxdt = 0.) const {
+    if (dxdt < uR + aR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
       double SR = uR - _tdgm1 * aR;
-      if (SR < 0.) {
+      if (SR < dxdt) {
         /// rarefaction wave regime
         // variable used twice below
-        double base = _tdgp1 - _gm1dgp1 * uR / aR;
+        double base = _tdgp1 - _gm1dgp1 * (uR - dxdt) / aR;
         rhosol = rhoR * std::pow(base, _tdgm1);
-        usol = _tdgp1 * (-aR + _tdgm1 * uR);
+        usol = _tdgp1 * (-aR + _tdgm1 * uR + dxdt);
         Psol = PR * std::pow(base, _tgdgm1);
         return 1;
       } else {
@@ -634,31 +646,33 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
   inline int sample_vacuum_generation(double rhoL, double uL, double PL,
                                       double aL, double rhoR, double uR,
                                       double PR, double aR, double &rhosol,
-                                      double &usol, double &Psol) const {
+                                      double &usol, double &Psol,
+                                      double dxdt) const {
     // get the speeds of the left and right rarefaction waves
     double SR = uR - _tdgm1 * aR;
     double SL = uL + _tdgm1 * aL;
-    if (SR > 0. && SL < 0.) {
+    if (SR > dxdt && SL < dxdt) {
       /// vacuum
       rhosol = 0.;
       usol = 0.;
       Psol = 0.;
       return 0;
     } else {
-      if (SL < 0.) {
+      if (SL < dxdt) {
         /// right state
-        if (-aR < uR) {
+        if (dxdt < uR + aR) {
           /// right rarefaction wave regime
           // variable used twice below
-          double base = _tdgp1 - _gm1dgp1 * uR / aR;
+          double base = _tdgp1 - _gm1dgp1 * (uR - dxdt) / aR;
           rhosol = rhoR * std::pow(base, _tdgm1);
-          usol = _tdgp1 * (-aR + _tdgm1 * uR);
+          usol = _tdgp1 * (-aR + _tdgm1 * uR + dxdt);
           Psol = PR * std::pow(base, _tgdgm1);
         } else {
           /// right state regime
@@ -669,12 +683,12 @@ private:
         return 1;
       } else {
         /// left state
-        if (aL > uL) {
+        if (dxdt > uL - aL) {
           /// left rarefaction wave regime
           // variable used twice below
-          double base = _tdgp1 + _gm1dgp1 * uL / aL;
+          double base = _tdgp1 + _gm1dgp1 * (uL - dxdt) / aL;
           rhosol = rhoL * std::pow(base, _tdgm1);
-          usol = _tdgp1 * (aL + _tdgm1 * uL);
+          usol = _tdgp1 * (aL + _tdgm1 * uL + dxdt);
           Psol = PL * std::pow(base, _tgdgm1);
         } else {
           /// left state regime
@@ -706,12 +720,14 @@ private:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
   inline int solve_vacuum(double rhoL, double uL, double PL, double aL,
                           double rhoR, double uR, double PR, double aR,
-                          double &rhosol, double &usol, double &Psol) const {
+                          double &rhosol, double &usol, double &Psol,
+                          double dxdt = 0.) const {
     // if both states are vacuum, the solution is also vacuum
     if (rhoL == 0. && rhoR == 0.) {
       rhosol = 0.;
@@ -722,14 +738,14 @@ private:
 
     if (rhoR == 0.) {
       /// vacuum right state
-      return sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol);
+      return sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol, dxdt);
     } else if (rhoL == 0.) {
       /// vacuum left state
-      return sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol);
+      return sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol, dxdt);
     } else {
       /// vacuum "middle" state
       return sample_vacuum_generation(rhoL, uL, PL, aL, rhoR, uR, PR, aR,
-                                      rhosol, usol, Psol);
+                                      rhosol, usol, Psol, dxdt);
     }
   }
 
@@ -769,12 +785,13 @@ public:
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
+   * @param dxdt Point in velocity space where we want to sample the solution.
    * @return Flag signaling whether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
   inline int solve(double rhoL, double uL, double PL, double rhoR, double uR,
-                   double PR, double &rhosol, double &usol,
-                   double &Psol) const {
+                   double PR, double &rhosol, double &usol, double &Psol,
+                   double dxdt = 0.) const {
 
     // get the soundspeeds
     double aL = get_soundspeed(rhoL, PL);
@@ -783,13 +800,13 @@ public:
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
       return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
-                          Psol);
+                          Psol, dxdt);
     }
 
     // handle vacuum generation
     if (2. * aL / (_gamma - 1.) + 2. * aR / (_gamma - 1.) <= uR - uL) {
       return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
-                          Psol);
+                          Psol, dxdt);
     }
 
     // find the pressure and velocity in the middle state
@@ -838,13 +855,15 @@ public:
     // we now have solved the Riemann problem: we have the left, middle and
     // right state, and this completely fixes the solution
     // we just need to sample the solution for x/t = 0.
-    if (ustar < 0.) {
+    if (ustar < dxdt) {
       // right state
-      sample_right_state(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol, Psol);
+      sample_right_state(rhoR, uR, PR, aR, ustar, Pstar, rhosol, usol, Psol,
+                         dxdt);
       return 1;
     } else {
       // left state
-      sample_left_state(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol, Psol);
+      sample_left_state(rhoL, uL, PL, aL, ustar, Pstar, rhosol, usol, Psol,
+                        dxdt);
       return -1;
     }
   }

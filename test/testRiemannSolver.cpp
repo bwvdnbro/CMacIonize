@@ -25,6 +25,8 @@
  */
 #include "Assert.hpp"
 #include "RiemannSolver.hpp"
+#include <fstream>
+#include <string>
 
 /**
  * @brief Run a Rieman solver test.
@@ -57,6 +59,33 @@ void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
 }
 
 /**
+ * @brief Plot the solution for the Riemann problem with the given left and
+ * right states at the given time.
+ *
+ * @param solver RiemannSolver to use.
+ * @param rhoL Density of the left state.
+ * @param uL Velocity of the left state.
+ * @param PL Pressure of the left state.
+ * @param rhoR Density of the right state.
+ * @param uR Velocity of the right state.
+ * @param PR Pressure of the right state.
+ * @param t Time at which to evaluate the solution.
+ * @param filename Name of the file to write out.
+ */
+void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
+                   double rhoR, double uR, double PR, double t,
+                   std::string filename) {
+  std::ofstream ofile(filename);
+  for (unsigned int i = 0; i < 1000; ++i) {
+    double x = (i + 0.5) * 0.001 - 0.5;
+    double dxdt = x / t;
+    double rhosol, usol, Psol;
+    solver.solve(rhoL, uL, PL, rhoR, uR, PR, rhosol, usol, Psol, dxdt);
+    ofile << x << "\t" << rhosol << "\t" << usol << "\t" << Psol << "\n";
+  }
+}
+
+/**
  * @brief Unit test for the RiemannSolver class.
  *
  * @param argc Number of command line arguments.
@@ -75,6 +104,17 @@ int main(int argc, char **argv) {
            12.743, 8.56045, 1841.82);
   // vacuum generation
   run_test(solver, 1., -1., 1.e-6, 1., 1., 1.0005e-6, 0., 0., 0.);
+
+  plot_solution(solver, 1., 0., 1., 0.125, 0., 0.1, 0.25,
+                "test_riemann_test1.txt");
+  plot_solution(solver, 1., -2., 0.4, 1., 2., 0.4, 0.15,
+                "test_riemann_test2.txt");
+  plot_solution(solver, 1., 0., 1000., 1., 0., 0.01, 0.012,
+                "test_riemann_test3.txt");
+  plot_solution(solver, 1., 0., 0.01, 1., 0., 100., 0.035,
+                "test_riemann_test4.txt");
+  plot_solution(solver, 5.99924, 19.5975, 460.894, 5.99242, -6.19633, 46.0950,
+                0.035, "test_riemann_test5.txt");
 
   return 0;
 }
