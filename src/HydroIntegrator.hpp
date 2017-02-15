@@ -140,7 +140,7 @@ public:
       double PL = it.get_hydro_primitive_pressure();
       auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        DensityGrid::iterator &ngb = std::get< 0 >(*ngbit);
+        DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
         // the midpoint is only used if we use a second order scheme
         // CoordinateVector<> midpoint = std::get<1>(*ngbit);
         CoordinateVector<> normal = std::get< 2 >(*ngbit);
@@ -179,7 +179,7 @@ public:
             usol[2] = uR[2] + vsol * normal[2];
           }
           // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double esol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
+          double rhoesol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
           vsol =
               usol[0] * normal[0] + usol[1] * normal[1] + usol[2] * normal[2];
 
@@ -190,7 +190,7 @@ public:
           pflux[0] += Psol * normal[0];
           pflux[1] += Psol * normal[1];
           pflux[2] += Psol * normal[2];
-          double eflux = (esol + Psol) * vsol * surface_area * timestep;
+          double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
 
           // add the fluxes to the right time differences
           it.set_hydro_conserved_delta_mass(
@@ -212,13 +212,13 @@ public:
       it.set_hydro_conserved_mass(it.get_hydro_conserved_mass() -
                                   it.get_hydro_conserved_delta_mass());
       it.set_hydro_conserved_momentum_x(
-          it.get_hydro_conserved_delta_momentum_x() -
+          it.get_hydro_conserved_momentum_x() -
           it.get_hydro_conserved_delta_momentum_x());
       it.set_hydro_conserved_momentum_y(
-          it.get_hydro_conserved_delta_momentum_y() -
+          it.get_hydro_conserved_momentum_y() -
           it.get_hydro_conserved_delta_momentum_y());
       it.set_hydro_conserved_momentum_z(
-          it.get_hydro_conserved_delta_momentum_z() -
+          it.get_hydro_conserved_momentum_z() -
           it.get_hydro_conserved_delta_momentum_z());
       it.set_hydro_conserved_total_energy(
           it.get_hydro_conserved_total_energy() -

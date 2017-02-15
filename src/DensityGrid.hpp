@@ -1379,7 +1379,8 @@ public:
      */
     inline void set_hydro_conserved_delta_total_energy(
         double hydro_conserved_delta_total_energy) {
-      _grid->_hydro_conserved_delta_total_energy[_index];
+      _grid->_hydro_conserved_delta_total_energy[_index] =
+          hydro_conserved_delta_total_energy;
     }
 
     /// end hydro

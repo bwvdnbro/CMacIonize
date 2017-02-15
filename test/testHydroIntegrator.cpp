@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(100, 1, 1);
   SodShockDensityFunction density_function;
-  CoordinateVector< bool > periodic(true);
+  CoordinateVector< bool > periodic(true, false, false);
   CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
@@ -89,8 +89,8 @@ int main(int argc, char **argv) {
     cmac_status("Total mass: %g, total energy: %g", mtot, etot);
   }
 
-  for (unsigned int i = 0; i < 1000; ++i) {
-    integrator.do_hydro_step(grid, 0.001);
+  for (unsigned int i = 0; i < 2; ++i) {
+    integrator.do_hydro_step(grid, 0.0025);
   }
 
   // write final snapshot
