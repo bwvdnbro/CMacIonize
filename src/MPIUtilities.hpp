@@ -66,6 +66,16 @@ template <> inline MPI_Datatype get_datatype< double >() { return MPI_DOUBLE; }
 template <> inline MPI_Datatype get_datatype< unsigned int >() {
   return MPI_UNSIGNED;
 }
+
+/**
+ * @brief Template function that returns the MPI_Datatype corresponding to the
+ * given template data type.
+ *
+ * Specialization for a signed integer value.
+ *
+ * @return MPI_INT.
+ */
+template <> inline MPI_Datatype get_datatype< int >() { return MPI_INT; }
 }
 
 #endif // HAVE_MPI

@@ -94,17 +94,15 @@ public:
   }
 
   /**
-   * @brief Set the data type of the message by providing a dummy data type.
+   * @brief Set the data type of the message.
    *
    * The only reason we need this routine is because it is impossible to
    * declare a template constructor that will correctly initialize the data type
    * without passing on a dummy variable, which is not always possible in an
    * initializer list.
    * Every derived class should call this routine in its constructor.
-   *
-   * @param dummy Dummy variable that has the correct C++ data type.
    */
-  template < typename _datatype_ > void set_datatype(_datatype_ &dummy) {
+  template < typename _datatype_ > void set_datatype() {
 #ifdef HAVE_MPI
     _dtype = MPIUtilities::get_datatype< _datatype_ >();
 #endif

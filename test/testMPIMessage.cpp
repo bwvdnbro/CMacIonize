@@ -45,8 +45,7 @@ public:
    */
   TestMPIMessage(double value, int rank, int tag)
       : MPIMessage(rank, tag, 1), _value(value) {
-    double dummy;
-    set_datatype(dummy);
+    set_datatype< double >();
   }
 
   /**
@@ -76,6 +75,25 @@ public:
    * @return Value.
    */
   double get_value() const { return _value; }
+};
+
+/**
+ * @brief Message signaling the end of messages on a process.
+ */
+class FinalTestMPIMessage : public MPIMessage {
+private:
+  /*! @brief End of messages flag. */
+  int _flag;
+
+public:
+  /**
+   * @brief FinalTestMPIMessage
+   * @param other_process
+   */
+  FinalTestMPIMessage(int other_process)
+      : MPIMessage(other_process, 1, 1), _flag(0) {
+    set_datatype< int >();
+  }
 };
 
 /**

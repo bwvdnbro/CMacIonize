@@ -92,7 +92,7 @@ public:
    *
    * @param velocity Fluid velocity (in m s^-1).
    */
-  inline void set_velocity(CoordinateVector<> velocity){
+  inline void set_velocity(CoordinateVector<> velocity) {
     _velocity = velocity;
   }
 
@@ -125,9 +125,7 @@ public:
    *
    * @return Fluid velocity (in m s^-1).
    */
-  inline CoordinateVector<> get_velocity() const {
-    return _velocity;
-  }
+  inline CoordinateVector<> get_velocity() const { return _velocity; }
 };
 
 #endif // DENSITYVALUES_HPP

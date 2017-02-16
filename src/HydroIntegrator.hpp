@@ -75,7 +75,7 @@ public:
 
       double density = number_density * hydrogen_mass;
       // we assume a completely neutral gas
-      double pressure = density*boltzmann_k*temperature/hydrogen_mass;
+      double pressure = density * boltzmann_k * temperature / hydrogen_mass;
 
       // set the primitive variables (for snapshot output only, they are not
       // actually recomputed before they are used)

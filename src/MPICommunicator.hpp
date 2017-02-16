@@ -588,7 +588,10 @@ public:
       MPIMessage *message =
           message_box.generate(probestatus.MPI_TAG, probestatus.MPI_SOURCE);
       int size;
-      MPI_Get_count(&probestatus, message->get_datatype(), &size);
+      status = MPI_Get_count(&probestatus, message->get_datatype(), &size);
+      if (status != MPI_SUCCESS) {
+        cmac_error("Failed to get size of incoming message!");
+      }
       message->set_buffer_size(size);
       return message;
     } else {
