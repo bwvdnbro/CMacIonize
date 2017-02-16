@@ -27,6 +27,7 @@
 #define HYDROINTEGRATOR_HPP
 
 #include "DensityGrid.hpp"
+#include "ParameterFile.hpp"
 #include "RiemannSolver.hpp"
 
 /**
@@ -61,6 +62,16 @@ public:
   }
 
   /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   */
+  inline HydroIntegrator(ParameterFile &params)
+      : HydroIntegrator(
+            params.get_value< double >("hydro:polytropic_index", 5. / 3.),
+            params.get_value< bool >("hydro:radiative_heating", true)) {}
+
+  /**
    * @brief Initialize the hydro variables for the given DensityGrid.
    *
    * @param grid DensityGrid to operate on.
@@ -77,8 +88,7 @@ public:
       // we assume a completely neutral gas
       double pressure = density * boltzmann_k * temperature / hydrogen_mass;
 
-      // set the primitive variables (for snapshot output only, they are not
-      // actually recomputed before they are used)
+      // set the primitive variables
       it.set_hydro_primitive_density(density);
       it.set_hydro_primitive_pressure(pressure);
 
@@ -101,45 +111,6 @@ public:
    * @param timestep Time step over which to evolve the system.
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
-    // convert conserved variables to primitive variables
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      double volume = it.get_volume();
-      double mass = it.get_hydro_conserved_mass();
-      double momentum[3] = {it.get_hydro_conserved_momentum_x(),
-                            it.get_hydro_conserved_momentum_y(),
-                            it.get_hydro_conserved_momentum_z()};
-      double total_energy = it.get_hydro_conserved_total_energy();
-
-      double density, velocity[3], pressure;
-      if (mass <= 0.) {
-        if (mass < 0.) {
-          cmac_error("Negative mass for cell!");
-        }
-        // vacuum
-        density = 0.;
-        velocity[0] = 0.;
-        velocity[1] = 0.;
-        velocity[2] = 0.;
-        pressure = 0.;
-      } else {
-        density = mass / volume;
-        velocity[0] = momentum[0] / mass;
-        velocity[1] = momentum[1] / mass;
-        velocity[2] = momentum[2] / mass;
-        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
-        // P = (E/V - 0.5*m*v^2)*(gamma-1)
-        pressure = _gm1 * (total_energy / volume -
-                           0.5 * (momentum[0] * velocity[0] +
-                                  momentum[1] * velocity[1] +
-                                  momentum[2] * velocity[2]));
-      }
-      it.set_hydro_primitive_density(density);
-      it.set_hydro_primitive_velocity_x(velocity[0]);
-      it.set_hydro_primitive_velocity_y(velocity[1]);
-      it.set_hydro_primitive_velocity_z(velocity[2]);
-      it.set_hydro_primitive_pressure(pressure);
-    }
-
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
 
@@ -265,6 +236,51 @@ public:
       it.set_hydro_conserved_delta_momentum_y(0.);
       it.set_hydro_conserved_delta_momentum_z(0.);
       it.set_hydro_conserved_delta_total_energy(0.);
+    }
+
+    const double hydrogen_mass = 1.6737236e-27;
+    const double boltzmann_k = 1.38064852e-23;
+    // convert conserved variables to primitive variables
+    // also set the number density and temperature to the correct value
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      double volume = it.get_volume();
+      double mass = it.get_hydro_conserved_mass();
+      double momentum[3] = {it.get_hydro_conserved_momentum_x(),
+                            it.get_hydro_conserved_momentum_y(),
+                            it.get_hydro_conserved_momentum_z()};
+      double total_energy = it.get_hydro_conserved_total_energy();
+
+      double density, velocity[3], pressure;
+      if (mass <= 0.) {
+        if (mass < 0.) {
+          cmac_error("Negative mass for cell!");
+        }
+        // vacuum
+        density = 0.;
+        velocity[0] = 0.;
+        velocity[1] = 0.;
+        velocity[2] = 0.;
+        pressure = 0.;
+      } else {
+        density = mass / volume;
+        velocity[0] = momentum[0] / mass;
+        velocity[1] = momentum[1] / mass;
+        velocity[2] = momentum[2] / mass;
+        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
+        // P = (E/V - 0.5*m*v^2)*(gamma-1)
+        pressure = _gm1 * (total_energy / volume -
+                           0.5 * (momentum[0] * velocity[0] +
+                                  momentum[1] * velocity[1] +
+                                  momentum[2] * velocity[2]));
+      }
+      it.set_hydro_primitive_density(density);
+      it.set_hydro_primitive_velocity_x(velocity[0]);
+      it.set_hydro_primitive_velocity_y(velocity[1]);
+      it.set_hydro_primitive_velocity_z(velocity[2]);
+      it.set_hydro_primitive_pressure(pressure);
+
+      it.set_number_density(density / hydrogen_mass);
+      it.set_temperature(hydrogen_mass * pressure / boltzmann_k / density);
     }
   }
 };

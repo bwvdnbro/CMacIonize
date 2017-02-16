@@ -284,7 +284,7 @@ public:
             density_function, AMRRefinementSchemeFactory::generate(params, log),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid:periodicity", CoordinateVector< bool >(false)),
-            false, log) {}
+            params.get_value< bool >("hydro:active", false), log) {}
 
   /**
    * @brief Destructor.

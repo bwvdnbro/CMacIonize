@@ -170,6 +170,7 @@ set(CMACIONIZE_SOURCES
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     Lock.hpp
+    MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp

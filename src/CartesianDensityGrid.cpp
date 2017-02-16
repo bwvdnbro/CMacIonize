@@ -160,7 +160,7 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
           density_function,
           parameters.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),
-          false, log) {}
+          parameters.get_value< bool >("hydro:active", false), log) {}
 
 /**
  * @brief Initialize the cells in the grid.
