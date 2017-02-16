@@ -61,7 +61,7 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  HydroIntegrator integrator(5. / 3.);
+  HydroIntegrator integrator(5. / 3., true);
 
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(32);

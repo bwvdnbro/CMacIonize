@@ -40,6 +40,9 @@ private:
   /*! @brief Adiabatic index minus one. */
   double _gm1;
 
+  /*! @brief Flag indicating whether we use radiative heating or not. */
+  bool _do_radiative_heating;
+
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   RiemannSolver _solver;
 
@@ -48,8 +51,12 @@ public:
    * @brief Constructor.
    *
    * @param gamma Adiabatic index of the gas.
+   * @param do_radiative_heating Flag indicating whether to use radiative
+   * heating or not.
    */
-  inline HydroIntegrator(double gamma) : _gamma(gamma), _solver(gamma) {
+  inline HydroIntegrator(double gamma, bool do_radiative_heating)
+      : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
+        _solver(gamma) {
     _gm1 = _gamma - 1.;
   }
 
@@ -203,6 +210,28 @@ public:
               it.get_hydro_conserved_delta_momentum_z() + pflux.z());
           it.set_hydro_conserved_delta_total_energy(
               it.get_hydro_conserved_delta_total_energy() + eflux);
+        }
+      }
+    }
+
+    // do radiation (if enabled)
+    if (_do_radiative_heating) {
+      const double boltzmann_k = 1.38064852e-23;
+      // half since we consider the average mass of protons and electrons
+      const double mpart = 0.5 * 1.6737236e-27;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        double xH = it.get_ionic_fraction(ION_H_n);
+        if (xH < 0.25) {
+          // assume the gas is ionized; add a heating term equal to the energy
+          // difference
+          double Tgas = 1.e4;
+          double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          double uold = it.get_hydro_primitive_pressure() / _gm1 /
+                        it.get_hydro_primitive_density();
+          double du = ugas - uold;
+          double dE = it.get_hydro_conserved_delta_mass() * du;
+          it.set_hydro_conserved_delta_total_energy(
+              it.get_hydro_conserved_delta_total_energy() + dE);
         }
       }
     }
