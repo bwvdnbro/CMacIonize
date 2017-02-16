@@ -26,6 +26,7 @@
 #ifndef DENSITYVALUES_HPP
 #define DENSITYVALUES_HPP
 
+#include "CoordinateVector.hpp"
 #include "ElementNames.hpp"
 
 /**
@@ -44,6 +45,9 @@ private:
 
   /*! @brief Temperature (in K). */
   double _temperature;
+
+  /*! @brief Fluid velocity (in m s^-1). */
+  CoordinateVector<> _velocity;
 
 public:
   /**
@@ -84,6 +88,15 @@ public:
   }
 
   /**
+   * @brief Set the fluid velocity.
+   *
+   * @param velocity Fluid velocity (in m s^-1).
+   */
+  inline void set_velocity(CoordinateVector<> velocity){
+    _velocity = velocity;
+  }
+
+  /**
    * @brief Get the number density of hydrogen.
    *
    * @return Number density (in m^-3).
@@ -106,6 +119,15 @@ public:
    * @return Temperature (in K).
    */
   inline double get_temperature() const { return _temperature; }
+
+  /**
+   * @brief Get the fluid velocity.
+   *
+   * @return Fluid velocity (in m s^-1).
+   */
+  inline CoordinateVector<> get_velocity() const {
+    return _velocity;
+  }
 };
 
 #endif // DENSITYVALUES_HPP

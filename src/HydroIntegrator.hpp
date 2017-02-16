@@ -66,13 +66,19 @@ public:
    * @param grid DensityGrid to operate on.
    */
   inline void initialize_hydro_variables(DensityGrid &grid) const {
+    const double hydrogen_mass = 1.6737236e-27;
+    const double boltzmann_k = 1.38064852e-23;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       double volume = it.get_volume();
-      // temporary solution; please change!
-      double density = it.get_number_density();
-      double pressure = it.get_temperature();
+      double number_density = it.get_number_density();
+      double temperature = it.get_temperature();
 
-      // set the primitive variables (for snapshot output)
+      double density = number_density * hydrogen_mass;
+      // we assume a completely neutral gas
+      double pressure = density*boltzmann_k*temperature/hydrogen_mass;
+
+      // set the primitive variables (for snapshot output only, they are not
+      // actually recomputed before they are used)
       it.set_hydro_primitive_density(density);
       it.set_hydro_primitive_pressure(pressure);
 
