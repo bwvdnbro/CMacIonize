@@ -90,6 +90,9 @@ public:
 
       // set the primitive variables
       it.set_hydro_primitive_density(density);
+      it.set_hydro_primitive_velocity_x(0.);
+      it.set_hydro_primitive_velocity_y(0.);
+      it.set_hydro_primitive_velocity_z(0.);
       it.set_hydro_primitive_pressure(pressure);
 
       double mass = density * volume;
@@ -98,8 +101,11 @@ public:
       // P = (E/V - 0.5*m*v^2)*(gamma-1)
       double total_energy = volume * pressure / _gm1;
 
-      // set conserved variables (we actually use these for the hydro)
+      // set conserved variables
       it.set_hydro_conserved_mass(mass);
+      it.set_hydro_conserved_momentum_x(0.);
+      it.set_hydro_conserved_momentum_y(0.);
+      it.set_hydro_conserved_momentum_z(0.);
       it.set_hydro_conserved_total_energy(total_energy);
     }
   }
@@ -206,9 +212,11 @@ public:
           double uold = it.get_hydro_primitive_pressure() / _gm1 /
                         it.get_hydro_primitive_density();
           double du = ugas - uold;
-          double dE = it.get_hydro_conserved_delta_mass() * du;
+          double dE = it.get_hydro_conserved_mass() * du;
+          // minus sign, as delta_total_energy represents a sum of fluxes, which
+          // are defined as an outflux
           it.set_hydro_conserved_delta_total_energy(
-              it.get_hydro_conserved_delta_total_energy() + dE);
+              it.get_hydro_conserved_delta_total_energy() - dE);
         }
       }
     }
@@ -281,6 +289,12 @@ public:
 
       it.set_number_density(density / hydrogen_mass);
       it.set_temperature(hydrogen_mass * pressure / boltzmann_k / density);
+
+      if (it.get_temperature() < 0.) {
+        cmac_error("Negative temperature (%g, %g, %g %g %g)!",
+                   it.get_temperature(), pressure, momentum[0], momentum[1],
+                   momentum[2]);
+      }
     }
   }
 };

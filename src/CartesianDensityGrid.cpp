@@ -541,6 +541,15 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
         ngbs.push_back(std::make_tuple(
             DensityGrid::iterator(get_long_index(ngb_low), *this), midpoint,
             normal, surface_area[i]));
+      } else {
+        // mirror the cell: reflective boundaries
+        CoordinateVector<> correction;
+        correction[i] -= 0.5 * sidelength[i];
+        CoordinateVector<> midpoint = cell_midpoint + correction;
+        CoordinateVector<> normal;
+        normal[i] = -1.;
+        ngbs.push_back(std::make_tuple(DensityGrid::iterator(index, *this),
+                                       midpoint, normal, surface_area[i]));
       }
     }
 
@@ -567,6 +576,15 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
         ngbs.push_back(std::make_tuple(
             DensityGrid::iterator(get_long_index(ngb_high), *this), midpoint,
             normal, surface_area[i]));
+      } else {
+        // mirror the cell: reflective boundaries
+        CoordinateVector<> correction;
+        correction[i] += 0.5 * sidelength[i];
+        CoordinateVector<> midpoint = cell_midpoint + correction;
+        CoordinateVector<> normal;
+        normal[i] = 1.;
+        ngbs.push_back(std::make_tuple(DensityGrid::iterator(index, *this),
+                                       midpoint, normal, surface_area[i]));
       }
     }
   }

@@ -630,6 +630,26 @@ public:
   }
 
   /**
+   * @brief Get a handle to the hydrodynamical density vector that can be used
+   * in MPI communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_hydro_primitive_density_handle() {
+    return _hydro_primitive_density;
+  }
+
+  /**
+   * @brief Get a handle to the hydrodynamical pressure vector that can be used
+   * in MPI communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_hydro_primitive_pressure_handle() {
+    return _hydro_primitive_pressure;
+  }
+
+  /**
    * @brief Get the probability for hydrogen of reemitting an ionizing photon
    * for the cell with the given index.
    *

@@ -187,6 +187,16 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     HDF5Tools::write_dataset< double >(group, "Temperature",
                                        _grid.get_temperature_handle());
   }
+  // density
+  {
+    HDF5Tools::write_dataset< double >(
+        group, "Density", _grid.get_hydro_primitive_density_handle());
+  }
+  // pressure
+  {
+    HDF5Tools::write_dataset< double >(
+        group, "Pressure", _grid.get_hydro_primitive_pressure_handle());
+  }
   // neutral fractions
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     IonName ion = static_cast< IonName >(i);
