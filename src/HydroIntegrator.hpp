@@ -85,8 +85,12 @@ public:
       double temperature = it.get_temperature();
 
       double density = number_density * hydrogen_mass;
-      // we assume a completely neutral gas
+      // we assume a completely neutral or completely ionized gas
       double pressure = density * boltzmann_k * temperature / hydrogen_mass;
+      if (temperature >= 1.e4) {
+        // ionized gas has a lower mean molecular mass
+        pressure *= 2.;
+      }
 
       // set the primitive variables
       it.set_hydro_primitive_density(density);
@@ -98,7 +102,6 @@ public:
       double mass = density * volume;
       // there is no kinetic energy (for now!)
       // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-      // P = (E/V - 0.5*m*v^2)*(gamma-1)
       double total_energy = volume * pressure / _gm1;
 
       // set conserved variables
@@ -274,12 +277,14 @@ public:
         velocity[0] = momentum[0] / mass;
         velocity[1] = momentum[1] / mass;
         velocity[2] = momentum[2] / mass;
-        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*m*v^2)
-        // P = (E/V - 0.5*m*v^2)*(gamma-1)
-        pressure = _gm1 * (total_energy / volume -
-                           0.5 * (momentum[0] * velocity[0] +
-                                  momentum[1] * velocity[1] +
-                                  momentum[2] * velocity[2]));
+        // E = V*(rho*u + 0.5*rho*v^2) = (V*P/(gamma-1) + 0.5*m*v^2)
+        // P = (E - 0.5*m*v^2)*(gamma-1)/V
+        pressure =
+            _gm1 *
+            (total_energy -
+             0.5 * (momentum[0] * velocity[0] + momentum[1] * velocity[1] +
+                    momentum[2] * velocity[2])) /
+            volume;
       }
       it.set_hydro_primitive_density(density);
       it.set_hydro_primitive_velocity_x(velocity[0]);

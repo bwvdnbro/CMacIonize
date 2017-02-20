@@ -492,7 +492,7 @@ int main(int argc, char **argv) {
     }
 
     if (hydro_integrator != nullptr) {
-      hydro_integrator->do_hydro_step(*grid, 0.001);
+      hydro_integrator->do_hydro_step(*grid, 1.e4);
 
       // write snapshot
       if (write_output) {

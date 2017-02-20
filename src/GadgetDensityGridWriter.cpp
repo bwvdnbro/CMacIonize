@@ -187,15 +187,28 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     HDF5Tools::write_dataset< double >(group, "Temperature",
                                        _grid.get_temperature_handle());
   }
-  // density
-  {
-    HDF5Tools::write_dataset< double >(
-        group, "Density", _grid.get_hydro_primitive_density_handle());
-  }
-  // pressure
-  {
-    HDF5Tools::write_dataset< double >(
-        group, "Pressure", _grid.get_hydro_primitive_pressure_handle());
+  if (_grid.has_hydro()) {
+    // density
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "Density", _grid.get_hydro_primitive_density_handle());
+    }
+    // pressure
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "Pressure", _grid.get_hydro_primitive_pressure_handle());
+    }
+    // mass
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "Mass", _grid.get_hydro_conserved_mass_handle());
+    }
+    // total energy
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "TotalEnergy",
+          _grid.get_hydro_conserved_total_energy_handle());
+    }
   }
   // neutral fractions
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {

@@ -630,6 +630,13 @@ public:
   }
 
   /**
+   * @brief Check if hydro is active.
+   *
+   * @return True if hydro is active.
+   */
+  inline bool has_hydro() const { return _hydro; }
+
+  /**
    * @brief Get a handle to the hydrodynamical density vector that can be used
    * in MPI communications.
    *
@@ -647,6 +654,26 @@ public:
    */
   inline std::vector< double > &get_hydro_primitive_pressure_handle() {
     return _hydro_primitive_pressure;
+  }
+
+  /**
+   * @brief Get a handle to the hydrodynamical mass vector that can be used in
+   * MPI communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_hydro_conserved_mass_handle() {
+    return _hydro_conserved_mass;
+  }
+
+  /**
+   * @brief Get a handle to the hydrodynamical total energy vector that can be
+   * used in MPI communications.
+   *
+   * @return Reference to the internal std::vector.
+   */
+  inline std::vector< double > &get_hydro_conserved_total_energy_handle() {
+    return _hydro_conserved_total_energy;
   }
 
   /**
