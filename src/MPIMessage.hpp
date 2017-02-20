@@ -35,6 +35,118 @@
 #endif
 
 /**
+ * @brief Special message that announces the arrival of another message.
+ *
+ * This message should always be sent and received with the same tag, and
+ * contains all necessary information to set up a non-blocking receive of the
+ * message it announces.
+ *
+ * This is an example of a non-blocking receive loop:
+ *  - first, call MPI_Iprobe on the tag reserved for MPITagSizeMessage messages
+ *    (e.g. 0).
+ *  - if MPI_Iprobe returns 0, continue doing work, and repeat step 1
+ *  - if MPI_Iprobe returns 1, receive the incoming MPITagSizeMessage.
+ *  - note that the MPI standard guarantees that messages from the same process
+ *    with the same tag are received in the same order as they were sent. The
+ *    probed message and the received message will hence always be the same.
+ *  - now initialize an empty MPIMessage based on the contents of the received
+ *    MPITagSizeMessage and set up an MPI_Irecv for this message.
+ *  - regularly check if the MPIMessage has been received by calling MPI_Test.
+ *  - continue doing work, and repeat step 1
+ *  - if the MPITagSizeMessage contains a ready message, flag the sending
+ *    process as complete
+ *  - if all processes have been flagged as complete, stop the loop
+ */
+class MPITagSizeMessage {
+private:
+  union {
+    /*! @brief Array containing the actual data of the message. We use this
+     *  in an anonymous union with an anonymous struct to be able to assign
+     *  meaningful names to the array elements. */
+    int _array[3];
+
+    struct {
+      /*! @brief Type of the message announced by this message. */
+      int _type;
+
+      /*! @brief Tag of the message announced by this message. */
+      int _tag;
+
+      /*! @brief Size of the message announced by this message. */
+      int _size;
+    };
+  };
+
+#ifdef HAVE_MPI
+  /*! @brief MPI_Request used for non-blocking sends. */
+  MPI_Request _request;
+#endif
+
+public:
+  /**
+   * @brief Empty constructor.
+   */
+  inline MPITagSizeMessage() : _type(0), _tag(0), _size(0) {
+#ifdef HAVE_MPI
+    _request = MPI_REQUEST_NULL;
+#endif
+  }
+
+  /**
+   * @brief Constructor.
+   *
+   * @param type Type of the message announced by this message.
+   * @param tag Tag of the message announced by this message.
+   * @param size Size of the message announced by this message.
+   */
+  inline MPITagSizeMessage(int type, int tag, int size)
+      : _type(type), _tag(tag), _size(size) {
+#ifdef HAVE_MPI
+    _request = MPI_REQUEST_NULL;
+#endif
+  }
+
+  /**
+   * @brief Get the type of the message announced by this message.
+   *
+   * @return Type of the announced message.
+   */
+  inline int get_type() const { return _type; }
+
+  /**
+   * @brief Get the tag of the message announced by this message.
+   *
+   * @return Tag of the announced message.
+   */
+  inline int get_tag() const { return _tag; }
+
+  /**
+   * @brief Get the size of the message announced by this message.
+   *
+   * @return Size of the announced message.
+   */
+  inline int get_size() const { return _size; }
+
+  /**
+   * @brief Get a pointer to the internal data array (used for MPI
+   * communications).
+   *
+   * @return Pointer to the internal data array.
+   */
+  inline int *get_array_handle() { return _array; }
+
+#ifdef HAVE_MPI
+  /**
+   * @brief Get a pointer to the MPI_Request attached to this message.
+   *
+   * @return Pointer to the MPI_Request.
+   */
+  inline MPI_Request *get_request_handle() { return &_request; }
+
+#endif
+};
+
+/**
  * @brief Wrapper around a general MPI message.
  *
  * This class extends MPIMessageDraft with an MPI_Request. Implementations
@@ -42,12 +154,6 @@
  */
 class MPIMessage {
 private:
-  /*! @brief Rank of the other MPI process involved in the communication. */
-  int _other_process;
-
-  /*! @brief Tag identifying this message. */
-  int _tag;
-
   /*! @brief Size of the message. */
   int _size;
 
@@ -81,13 +187,9 @@ public:
    * Initialize the request to an empty request, to make sure we don't wait for
    * it later on.
    *
-   * @param other_process Rank of the other MPI process involved in the
-   * communication.
-   * @param tag Tag identifying this message.
    * @param size Size of the message.
    */
-  MPIMessage(int other_process, int tag, int size = 0)
-      : _other_process(other_process), _tag(tag), _size(size) {
+  MPIMessage(int size = 0) : _size(size) {
 #ifdef HAVE_MPI
     _request = MPI_REQUEST_NULL;
 #endif
@@ -124,7 +226,7 @@ public:
 
 #ifdef HAVE_MPI
   /**
-   * @brief Get a reference to the internal MPI_Request.
+   * @brief Get a pointer to the internal MPI_Request.
    *
    * @return Internal MPI_Request.
    */
@@ -137,27 +239,6 @@ public:
    */
   inline MPI_Datatype get_datatype() const { return _dtype; }
 #endif
-
-  /**
-   * @brief Get the rank of the other process involved in the communication.
-   *
-   * @return Rank of the other process.
-   */
-  inline int get_other_process() const { return _other_process; }
-
-  /**
-   * @brief Get the tag identifying this message.
-   *
-   * @return Tag identifying this message.
-   */
-  inline int get_tag() const { return _tag; }
-
-  /**
-   * @brief Set the tag identifying this message.
-   *
-   * @param tag Tag that identifies this message.
-   */
-  inline void set_tag(int tag) { _tag = tag; }
 
   /**
    * @brief Get a handle to the buffer that contains the data.
@@ -189,6 +270,15 @@ public:
     _size = size;
     set_buffer_size(size);
   }
+
+  /**
+   * @brief Get an unique integer representing the type of this message.
+   *
+   * This can be any integer larger than 1.
+   *
+   * @return A unique integer larger than 1 that identifies this message.
+   */
+  virtual int get_type() const = 0;
 };
 
 #endif // MPIMESSAGE_HPP

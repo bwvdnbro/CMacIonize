@@ -26,6 +26,7 @@
 #include "Assert.hpp"
 #include "MPICommunicator.hpp"
 #include "MPIMessage.hpp"
+#include "MPIMessageBox.hpp"
 
 /**
  * @brief Test implementation of MPIMessage.
@@ -40,11 +41,8 @@ public:
    * @brief Communicator.
    *
    * @param value Value to communicate.
-   * @param rank Rank to communicate with.
-   * @param tag Tag identifying this message.
    */
-  TestMPIMessage(double value, int rank, int tag)
-      : MPIMessage(rank, tag, 1), _value(value) {
+  TestMPIMessage(double value) : MPIMessage(1), _value(value) {
     set_datatype< double >();
   }
 
@@ -75,24 +73,58 @@ public:
    * @return Value.
    */
   double get_value() const { return _value; }
+
+  /**
+   * @brief Get the type of this message.
+   *
+   * @return 2.
+   */
+  virtual int get_type() const { return 2; }
 };
 
 /**
- * @brief Message signaling the end of messages on a process.
+ * @brief Test implementation of MPIMessageBox.
  */
-class FinalTestMPIMessage : public MPIMessage {
+class TestMPIMessageBox : public MPIMessageBox {
 private:
-  /*! @brief End of messages flag. */
-  int _flag;
+  /*! @brief Rank of the local MPI process. */
+  int _rank;
 
 public:
   /**
-   * @brief FinalTestMPIMessage
-   * @param other_process
+   * @brief Constructor.
+   *
+   * @param rank Rank of the local MPI process.
+   * @param world_size Total number of MPI processes.
    */
-  FinalTestMPIMessage(int other_process)
-      : MPIMessage(other_process, 1, 1), _flag(0) {
-    set_datatype< int >();
+  TestMPIMessageBox(int rank, int world_size)
+      : MPIMessageBox(world_size), _rank(rank) {}
+
+  /**
+   * @brief Generate an MPIMessage of the given type.
+   *
+   * @param type Type of message to generate.
+   * @return Pointer to a newly generated MPIMessage.
+   */
+  virtual MPIMessage *generate(int type) const {
+    if (type != 2) {
+      cmac_error("Unknown message type: %i!", type);
+    }
+    return new TestMPIMessage(0.);
+  }
+
+  /**
+   * @brief Display the contents of the message.
+   *
+   * @param message MPIMessage to display.
+   */
+  virtual void use_message(MPIMessage *message) {
+    if (message->get_type() == 2) {
+      TestMPIMessage *testmessage =
+          reinterpret_cast< TestMPIMessage * >(message);
+      cmac_status("%i: Received message, value: %g", _rank,
+                  testmessage->get_value());
+    }
   }
 };
 
@@ -106,17 +138,37 @@ public:
 int main(int argc, char **argv) {
   MPICommunicator comm(argc, argv);
 
-  if (comm.get_rank() == 0) {
-    TestMPIMessage message(42., 1, 0);
-    comm.send(message);
+  TestMPIMessageBox message_box(comm.get_rank(), comm.get_size());
+
+  for (int i = 0; i < comm.get_size(); ++i) {
+    if (i != comm.get_rank()) {
+      TestMPIMessage *message = new TestMPIMessage(42. + comm.get_rank());
+      comm.send_message(i, message, message_box);
+    }
   }
 
-  if (comm.get_rank() == 1) {
-    TestMPIMessage message(0., 0, 0);
-    comm.recv(message);
+  for (int i = 0; i < comm.get_size(); ++i) {
+    if (i != comm.get_rank()) {
+      comm.send_semi_ready(i, message_box);
+    }
+  }
 
-    message.wait_until_finished();
-    assert_condition(message.get_value() == 42.);
+  while (!message_box.is_ready()) {
+    comm.check_for_message(message_box);
+    message_box.check_statuses();
+    // check if we need to inform the other processes that we are semi ready
+    // this happens if
+    //  (a) this is the first time all processes have told this process they are
+    //      semi ready
+    //  (b) this process was reactivated, and now it is again semi ready
+    if (message_box.is_semi_ready() && !message_box.has_notified_ready()) {
+      for (int i = 0; i < comm.get_size(); ++i) {
+        if (i != comm.get_rank()) {
+          comm.send_ready(i, message_box);
+        }
+      }
+      message_box.set_notified_ready();
+    }
   }
 
   return 0;
