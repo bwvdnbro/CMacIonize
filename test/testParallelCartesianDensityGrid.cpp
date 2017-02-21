@@ -40,8 +40,9 @@ int main(int argc, char **argv) {
   Box box(0., 1.);
   CoordinateVector< int > numcell(32, 32, 32);
   unsigned int numdomain = 64;
+  std::pair< int, int > domain = std::make_pair(0, 64);
 
-  ParallelCartesianDensityGrid grid(box, numcell, numdomain);
+  ParallelCartesianDensityGrid grid(box, numcell, numdomain, domain);
 
   return 0;
 }

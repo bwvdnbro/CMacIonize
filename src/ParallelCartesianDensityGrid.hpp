@@ -42,7 +42,7 @@ class ParallelCartesianDensityGrid {
 private:
   /*! @brief ParallelCartesianDensitySubGrids that make up the actual underlying
    *  grid. */
-  std::vector< ParallelCartesianDensitySubGrid * > _subgrids;
+  std::vector< DensitySubGrid * > _subgrids;
 
 public:
   /**
@@ -51,16 +51,99 @@ public:
    * @param box Box containing the entire grid.
    * @param numcell Number of cells in each dimension.
    * @param numdomain Total number of subgrids.
+   * @param domain Part of the domain stored on the local process.
    */
   ParallelCartesianDensityGrid(Box box, CoordinateVector< int > numcell,
-                               unsigned int numdomain) {
+                               unsigned int numdomain,
+                               std::pair< int, int > domain) {
     CoordinateVector< int > blockresolution =
         Utilities::subdivide(numcell, numdomain);
-    CoordinateVector<> blockside = box.get_sides();
-    blockside[0] /= blockresolution[0];
-    blockside[1] /= blockresolution[1];
-    blockside[2] /= blockresolution[2];
-    (void)blockside;
+    CoordinateVector<> blocksides = box.get_sides();
+    blocksides[0] /= blockresolution[0];
+    blocksides[1] /= blockresolution[1];
+    blocksides[2] /= blockresolution[2];
+
+    _subgrids.reserve(blockresolution.x() * blockresolution.y() *
+                      blockresolution.z());
+    for (int ix = 0; ix < blockresolution.x(); ++ix) {
+      for (int iy = 0; iy < blockresolution.y(); ++iy) {
+        for (int iz = 0; iz < blockresolution.z(); ++iz) {
+          int index = ix * blockresolution.y() * blockresolution.z() +
+                      iy * blockresolution.z() + iz;
+          if (index >= domain.first && index < domain.second) {
+            CoordinateVector<> blockanchor = box.get_anchor();
+            blockanchor[0] += ix * blocksides[0];
+            blockanchor[1] += iy * blocksides[1];
+            blockanchor[2] += iz * blocksides[2];
+            Box blockbox(blockanchor, blocksides);
+            _subgrids.push_back(
+                new ParallelCartesianDensitySubGrid(blockbox, blockresolution));
+          } else {
+            _subgrids.push_back(new GhostDensitySubGrid());
+          }
+        }
+      }
+    }
+
+    // set neighbour relations
+    for (int ix = 0; ix < blockresolution.x(); ++ix) {
+      for (int iy = 0; iy < blockresolution.y(); ++iy) {
+        for (int iz = 0; iz < blockresolution.z(); ++iz) {
+          int index = ix * blockresolution.y() * blockresolution.z() +
+                      iy * blockresolution.z() + iz;
+          if (index >= domain.first && index < domain.second) {
+            ParallelCartesianDensitySubGrid *block =
+                reinterpret_cast< ParallelCartesianDensitySubGrid * >(
+                    _subgrids[index]);
+            if (ix > 0) {
+              int ngbindex =
+                  (ix - 1) * blockresolution.y() * blockresolution.z() +
+                  iy * blockresolution.z() + iz;
+              block->set_neighbour(0, ngbindex);
+            }
+            if (ix < blockresolution.x() - 1) {
+              int ngbindex =
+                  (ix + 1) * blockresolution.y() * blockresolution.z() +
+                  iy * blockresolution.z() + iz;
+              block->set_neighbour(1, ngbindex);
+            }
+
+            if (iy > 0) {
+              int ngbindex = ix * blockresolution.y() * blockresolution.z() +
+                             (iy - 1) * blockresolution.z() + iz;
+              block->set_neighbour(2, ngbindex);
+            }
+            if (iy < blockresolution.y() - 1) {
+              int ngbindex = ix * blockresolution.y() * blockresolution.z() +
+                             (iy + 1) * blockresolution.z() + iz;
+              block->set_neighbour(3, ngbindex);
+            }
+
+            if (iz > 0) {
+              int ngbindex = ix * blockresolution.y() * blockresolution.z() +
+                             iy * blockresolution.z() + iz - 1;
+              block->set_neighbour(4, ngbindex);
+            }
+            if (iz < blockresolution.z() - 1) {
+              int ngbindex = ix * blockresolution.y() * blockresolution.z() +
+                             iy * blockresolution.z() + iz + 1;
+              block->set_neighbour(5, ngbindex);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Destructor.
+   *
+   * Free memory occupied by the blocks.
+   */
+  ~ParallelCartesianDensityGrid() {
+    for (unsigned int i = 0; i < _subgrids.size(); ++i) {
+      delete _subgrids[i];
+    }
   }
 };
 
