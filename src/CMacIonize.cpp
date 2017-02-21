@@ -194,8 +194,15 @@ int main(int argc, char **argv) {
   VernerRecombinationRates recombination_rates;
 
   HydroIntegrator *hydro_integrator = nullptr;
+  double hydro_timestep = 0.;
+  unsigned int numstep = 1;
   if (params.get_value< bool >("hydro:active", false)) {
     hydro_integrator = new HydroIntegrator(params);
+    hydro_timestep =
+        params.get_physical_value< QUANTITY_TIME >("hydro:timestep", "0.01 s");
+    double hydro_total_time =
+        params.get_physical_value< QUANTITY_TIME >("hydro:total_time", "1. s");
+    numstep = hydro_total_time / hydro_timestep;
   }
 
   DensityGrid *grid =
@@ -325,10 +332,7 @@ int main(int argc, char **argv) {
   PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
                                        worksize);
 
-  unsigned int numstep = 1;
   if (hydro_integrator != nullptr) {
-    numstep = 10;
-
     // initialize the hydro variables (before we write the initial snapshot)
     hydro_integrator->initialize_hydro_variables(*grid);
   }
@@ -492,7 +496,7 @@ int main(int argc, char **argv) {
     }
 
     if (hydro_integrator != nullptr) {
-      hydro_integrator->do_hydro_step(*grid, 1.e4);
+      hydro_integrator->do_hydro_step(*grid, 1.e10);
 
       // write snapshot
       if (write_output) {
@@ -502,7 +506,7 @@ int main(int argc, char **argv) {
   }
 
   // write snapshot
-  if (write_output) {
+  if (write_output && hydro_integrator == nullptr) {
     writer->write(nloop, params);
   }
 
