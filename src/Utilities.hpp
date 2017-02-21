@@ -659,6 +659,65 @@ inline bool string_ends_with(const std::string &haystack,
   // make sure we only flag needle at the end of the string
   return (check == haystack.size() - needle.size());
 }
+
+/**
+ * @brief Decompose the given number into integer prime factors.
+ *
+ * @param number Number to decompose.
+ * @return std::vector containing the prime integer components.
+ */
+inline std::vector< int > decompose(int number) {
+  std::vector< int > components;
+  int divisor = 2;
+  while (divisor <= number && number > 1) {
+    if (number % divisor == 0) {
+      number /= divisor;
+      components.push_back(divisor);
+    } else {
+      ++divisor;
+    }
+  }
+  return components;
+}
+
+/**
+ * @brief Subdivide the grid with the given resolution in approximately the
+ * given number of equal size blocks.
+ *
+ * If such a decomposition is not possible, a larger number of blocks is used.
+ *
+ * @param ncell Grid resolution.
+ * @param numblock Number of blocks to subdivide in.
+ * @return Resolution of a single block.
+ */
+inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
+                                         int numblock) {
+  std::vector< std::vector< int > > d_ncell(3);
+  d_ncell[0] = decompose(ncell.x());
+  d_ncell[1] = decompose(ncell.y());
+  d_ncell[2] = decompose(ncell.z());
+
+  // remove large factors until we reach at least the requested number of blocks
+  int factor = 1;
+  unsigned int idim = 0;
+  while (factor < numblock) {
+    factor *= d_ncell[idim].back();
+    d_ncell[idim].pop_back();
+    ++idim;
+    if (idim == 3) {
+      idim = 0;
+    }
+  }
+
+  // collapse the remaining factors to get the block size
+  CoordinateVector< int > block(1);
+  for (unsigned int i = 0; i < 3; ++i) {
+    for (unsigned int j = 0; j < d_ncell[i].size(); ++j) {
+      block[i] *= d_ncell[i][j];
+    }
+  }
+  return block;
+}
 }
 
 #endif // UTILITIES_HPP

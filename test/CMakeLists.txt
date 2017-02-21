@@ -706,6 +706,16 @@ set(TESTHYDROINTEGRATOR_SOURCES
 add_unit_test(NAME testHydroIntegrator
               SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
 
+## ParallelCartesianDensityGrid test
+set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
+    testParallelCartesianDensityGrid.cpp
+
+    ../src/ParallelCartesianDensityGrid.hpp
+    ../src/ParallelCartesianDensitySubGrid.hpp
+)
+add_unit_test(NAME testParallelCartesianDensityGrid
+              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

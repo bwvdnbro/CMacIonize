@@ -59,5 +59,43 @@ int main(int argc, char **argv) {
   haystack = "dirty-adef22f";
   assert_condition(Utilities::string_ends_with(haystack, needle) == false);
 
+  int number = 32768;
+  std::vector< int > components = Utilities::decompose(number);
+  int check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  number = 32769;
+  components = Utilities::decompose(number);
+  check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  number = 37;
+  components = Utilities::decompose(number);
+  check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  CoordinateVector< int > ncell(32);
+  unsigned int numblock = 64;
+  CoordinateVector< int > block = Utilities::subdivide(ncell, numblock);
+  assert_condition(block.x() == 8);
+  assert_condition(block.y() == 8);
+  assert_condition(block.z() == 8);
+
+  ncell = CoordinateVector< int >(33, 50, 100);
+  numblock = 100;
+  block = Utilities::subdivide(ncell, numblock);
+  assert_condition(block.x() == 3);
+  assert_condition(block.y() == 10);
+  assert_condition(block.z() == 20);
+
   return 0;
 }
