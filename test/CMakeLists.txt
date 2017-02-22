@@ -712,6 +712,7 @@ set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
 
     ../src/ParallelCartesianDensityGrid.hpp
     ../src/ParallelCartesianDensitySubGrid.hpp
+    ../src/ParameterFile.cpp
 )
 add_unit_test(NAME testParallelCartesianDensityGrid
               SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES})

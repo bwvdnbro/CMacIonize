@@ -28,6 +28,7 @@
 #define PARALLELCARTESIANDENSITYSUBGRID_HPP
 
 #include "Box.hpp"
+#include "DensityFunction.hpp"
 #include "Photon.hpp"
 
 #include <cfloat>
@@ -38,13 +39,77 @@
  */
 class DensitySubGrid {
 private:
-  // photon pool
+  /*! @brief Photon pool for this sub region. */
+  std::vector< Photon * > _photon_pool;
 
 public:
   /**
    * @brief Virtual destructor.
+   *
+   * Check if all photons were used.
    */
-  virtual ~DensitySubGrid() {}
+  virtual ~DensitySubGrid() {
+    if (_photon_pool.size() != 0) {
+      cmac_error("Not all photons were used!");
+    }
+  }
+
+  /**
+   * @brief Add a Photon to the photon pool.
+   *
+   * @param photon Photon to add.
+   */
+  inline void add_photon(Photon *photon) { _photon_pool.push_back(photon); }
+
+  /**
+   * @brief Get the last Photon in the photon pool.
+   *
+   * This method also removes the photon from the pool.
+   *
+   * @return Photon.
+   */
+  inline Photon *get_photon() {
+    Photon *photon = _photon_pool.back();
+    _photon_pool.pop_back();
+    return photon;
+  }
+
+  /**
+   * @brief Get the number of photons in the photon pool for this sub region.
+   *
+   * @return Number of photons in the photon pool.
+   */
+  inline unsigned int photon_size() const { return _photon_pool.size(); }
+
+  /**
+   * @brief Let the given Photon travel through the density grid until the given
+   * optical depth is reached.
+   *
+   * @param photon Photon.
+   * @param optical_depth Optical depth the photon should travel in total
+   * (dimensionless).
+   * @return Index of the sub region that contains the photon on exit. This can
+   * be either a negative number (which means the photon leaves the box), an
+   * index refering to a local sub region (including this one), or an index
+   * refering to a GhostDensitySubGrid.
+   */
+  virtual int interact(Photon &photon, double optical_depth) = 0;
+
+  /**
+   * @brief Initialize all cells in the sub region.
+   *
+   * The default implementation does nothing.
+   *
+   * @param function DensityFunction to use.
+   */
+  virtual void initialize(DensityFunction &function) {}
+
+  /**
+   * @brief Check if this sub region corresponds to a ghost region.
+   *
+   * @return False for default implementations.
+   */
+  virtual bool is_ghost() { return false; }
 };
 
 /**
@@ -112,6 +177,31 @@ public:
       _mean_intensity_H[index] += dmean_intensity_H;
     }
   }
+
+  /**
+   * @brief Initialize the values for the cell with the given index with the
+   * given DensityValues.
+   *
+   * @param index Index of a cell.
+   * @param values DensityValues for that cell.
+   */
+  inline void initialize(int index, DensityValues values) {
+    _number_density[index] = values.get_number_density();
+    _neutral_fraction_H[index] = values.get_ionic_fraction(ION_H_n);
+    double T = values.get_temperature();
+    double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
+    double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
+    _reemission_probability_H[index] = alpha_1_H / alpha_A_agn;
+  }
+
+  /**
+   * @brief Get a reference to the internal number density array.
+   *
+   * @return Reference to the internal number density array.
+   */
+  inline std::vector< double > &get_number_density_handle() {
+    return _number_density;
+  }
 };
 
 /**
@@ -147,11 +237,37 @@ public:
    * @return Rank of the process that holds the data for this sub region.
    */
   int get_home_process() const { return _home_process; }
+
+  /**
+   * @brief Let the given Photon travel through the density grid until the given
+   * optical depth is reached.
+   *
+   * Calling this particular implementation will always cause an error, as
+   * photons should not be propagated through a ghost region.
+   *
+   * @param photon Photon.
+   * @param optical_depth Optical depth the photon should travel in total
+   * (dimensionless).
+   * @return Index of the sub region that contains the photon on exit. This can
+   * be either a negative number (which means the photon leaves the box), an
+   * index refering to a local sub region (including this one), or an index
+   * refering to a GhostDensitySubGrid.
+   */
+  virtual int interact(Photon &photon, double optical_depth) {
+    cmac_error("A photon should never be propagated through a ghost region!");
+  }
+
+  /**
+   * @brief Check if this sub region corresponds to a ghost region.
+   *
+   * @return True in this specific case.
+   */
+  virtual bool is_ghost() { return true; }
 };
 
 /**
  * @brief Small portion of a ParallelCartesianDensityGrid for which the photon
- * traversal can be done by a single thread on a single process.
+ * propagation can be done by a single thread on a single process.
  */
 class ParallelCartesianDensitySubGrid : public DensitySubGrid,
                                         public DensitySubGridVariables {
@@ -446,7 +562,7 @@ public:
    * ParallelCartesianDensitySubGrid (including this one), or an index refering
    * to a GhostDensitySubGrid.
    */
-  int interact(Photon &photon, double optical_depth) {
+  virtual int interact(Photon &photon, double optical_depth) {
     double S = 0.;
 
     CoordinateVector<> photon_origin = photon.get_position();
@@ -530,6 +646,48 @@ public:
     }
 
     return next_index;
+  }
+
+  /**
+   * @brief Initialize all cells in the sub region.
+   *
+   * @param function DensityFunction to use.
+   */
+  virtual void initialize(DensityFunction &function) {
+    for (int ix = 0; ix < _numcell.x(); ++ix) {
+      for (int iy = 0; iy < _numcell.y(); ++iy) {
+        for (int iz = 0; iz < _numcell.z(); ++iz) {
+          int index = get_long_index(CoordinateVector< int >(ix, iy, iz));
+          CoordinateVector<> position;
+          position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
+          position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();
+          position[2] = _box.get_anchor().z() + (iz + 0.5) * _cellsides.z();
+          DensitySubGridVariables::initialize(index, function(position));
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Get the positions of all cells in the sub region.
+   *
+   * @return std::vector containing the positions of the midpoints of all cells
+   * in the sub region.
+   */
+  std::vector< CoordinateVector<> > get_positions() const {
+    std::vector< CoordinateVector<> > positions;
+    for (int ix = 0; ix < _numcell.x(); ++ix) {
+      for (int iy = 0; iy < _numcell.y(); ++iy) {
+        for (int iz = 0; iz < _numcell.z(); ++iz) {
+          CoordinateVector<> position;
+          position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
+          position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();
+          position[2] = _box.get_anchor().z() + (iz + 0.5) * _cellsides.z();
+          positions.push_back(position);
+        }
+      }
+    }
+    return positions;
   }
 };
 

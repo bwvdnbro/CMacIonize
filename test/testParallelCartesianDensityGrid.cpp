@@ -23,7 +23,9 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "BlockSyntaxDensityFunction.hpp"
 #include "Box.hpp"
+#include "HDF5Tools.hpp"
 #include "ParallelCartesianDensityGrid.hpp"
 
 /**
@@ -43,6 +45,21 @@ int main(int argc, char **argv) {
   std::pair< int, int > domain = std::make_pair(0, 64);
 
   ParallelCartesianDensityGrid grid(box, numcell, numdomain, domain);
+
+  BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
+
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    (*it).initialize(density_function);
+  }
+
+  //  HDF5Tools::HDF5File file = HDF5Tools::open_file("paralleltest.hdf5",
+  //  HDF5Tools::HDF5FILEMODE_WRITE);
+
+  //  HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "/PartType0");
+
+  //  HDF5Tools::close_group(group);
+
+  //  HDF5Tools::close_file(file);
 
   return 0;
 }
