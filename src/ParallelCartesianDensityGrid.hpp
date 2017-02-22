@@ -52,6 +52,9 @@ private:
   /*! @brief Range of sub regions local to this process. */
   std::pair< int, int > _domain;
 
+  /*! @brief Total number of cells in the grid. */
+  unsigned int _numcell;
+
   /*! @brief ParallelCartesianDensitySubGrids that make up the actual underlying
    *  grid. */
   std::vector< DensitySubGrid * > _subgrids;
@@ -68,7 +71,8 @@ public:
   ParallelCartesianDensityGrid(Box box, CoordinateVector< int > numcell,
                                unsigned int numdomain,
                                std::pair< int, int > domain)
-      : _box_anchor(box.get_anchor()), _domain(domain) {
+      : _box_anchor(box.get_anchor()), _domain(domain),
+        _numcell(numcell.x() * numcell.y() * numcell.z()) {
     CoordinateVector< int > block_resolution =
         Utilities::subdivide(numcell, numdomain);
     _block_sides = box.get_sides();
@@ -94,7 +98,9 @@ public:
             _subgrids.push_back(new ParallelCartesianDensitySubGrid(
                 blockbox, block_resolution));
           } else {
-            _subgrids.push_back(new GhostDensitySubGrid());
+            _subgrids.push_back(new GhostDensitySubGrid(block_resolution.x() *
+                                                        block_resolution.y() *
+                                                        block_resolution.z()));
           }
         }
       }
@@ -161,6 +167,13 @@ public:
   }
 
   /**
+   * @brief Get the total number of cells in the grid.
+   *
+   * @return Total number of cells in the grid.
+   */
+  unsigned int get_number_of_cells() const { return _numcell; }
+
+  /**
    * @brief Add a Photon to the photon pool of the sub region that contains it.
    *
    * @param photon Photon to add.
@@ -219,6 +232,16 @@ public:
      * to.
      */
     DensitySubGrid &operator*() { return *_grid._subgrids[_index]; }
+
+    /**
+     * @brief Get the offset of the block the iterator is currently pointing to
+     * in the total range of all cells.
+     *
+     * @return Offset.
+     */
+    inline unsigned int offset() const {
+      return _index * _grid._subgrids[_index]->get_number_of_cells();
+    }
 
     /**
      * @brief Increment operator.

@@ -42,7 +42,17 @@ private:
   /*! @brief Photon pool for this sub region. */
   std::vector< Photon * > _photon_pool;
 
+  /*! @brief Number of cells in this sub region. */
+  unsigned int _numcell;
+
 public:
+  /**
+   * @brief Constructor.
+   *
+   * @param numcell Number of cells in this sub region.
+   */
+  DensitySubGrid(unsigned int numcell) : _numcell(numcell) {}
+
   /**
    * @brief Virtual destructor.
    *
@@ -80,6 +90,13 @@ public:
    * @return Number of photons in the photon pool.
    */
   inline unsigned int photon_size() const { return _photon_pool.size(); }
+
+  /**
+   * @brief Get the number of cells in this sub region of the grid.
+   *
+   * @return Number of cells in this sub region.
+   */
+  inline unsigned int get_number_of_cells() const { return _numcell; }
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -214,9 +231,12 @@ private:
 
 public:
   /**
-   * @brief Empty constructor.
+   * @brief Constructor.
+   *
+   * @param numcell Number of cells in this sub region.
    */
-  GhostDensitySubGrid() : _home_process(-1) {}
+  GhostDensitySubGrid(unsigned int numcell)
+      : DensitySubGrid(numcell), _home_process(-1) {}
 
   /**
    * @brief Virtual destructor.
@@ -366,7 +386,8 @@ public:
    * @param numcell Resolution of the sub region.
    */
   ParallelCartesianDensitySubGrid(Box box, CoordinateVector< int > numcell)
-      : DensitySubGridVariables(numcell.x() * numcell.y() * numcell.z()),
+      : DensitySubGrid(numcell.x() * numcell.y() * numcell.z()),
+        DensitySubGridVariables(numcell.x() * numcell.y() * numcell.z()),
         _box(box), _numcell(numcell), _index(-1),
         _neighbours{-1, -1, -1, -1, -1, -1} {
     _cellsides[0] = box.get_sides().x() / numcell.x();

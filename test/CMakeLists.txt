@@ -707,6 +707,7 @@ add_unit_test(NAME testHydroIntegrator
               SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
 
 ## ParallelCartesianDensityGrid test
+if(HAVE_HDF5)
 set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
     testParallelCartesianDensityGrid.cpp
 
@@ -715,7 +716,9 @@ set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
     ../src/ParameterFile.cpp
 )
 add_unit_test(NAME testParallelCartesianDensityGrid
-              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES})
+              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
