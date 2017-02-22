@@ -1326,6 +1326,259 @@ inline void write_dataset(hid_t group, std::string name,
 
   delete[] data;
 }
+
+/**
+ * @brief Create a new dataset with the given name and size in the given group.
+ *
+ * Once created, the dataset can be filled using HDF5Tools::append_dataset.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to create.
+ * @param size Size of the dataset.
+ */
+template < typename _datatype_ >
+inline void create_dataset(hid_t group, std::string name, unsigned int size) {
+  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  hsize_t dims[1] = {size};
+  // create dataspace
+  hid_t filespace = H5Screate_simple(1, dims, nullptr);
+  if (filespace < 0) {
+    cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
+  }
+
+// create dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset =
+      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+#else
+  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to create dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  herr_t hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+}
+
+/**
+ * @brief Create a new dataset with the given name and size in the given group.
+ *
+ * Template specialization for a dataset containing CoordinateVector<>s.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to create.
+ * @param size Size of the dataset.
+ */
+template <>
+inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
+                                                 unsigned int size) {
+  hid_t datatype = get_datatype_name< double >();
+
+  hsize_t dims[2] = {size, 3};
+  // create dataspace
+  hid_t filespace = H5Screate_simple(2, dims, nullptr);
+  if (filespace < 0) {
+    cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
+  }
+
+// create dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset =
+      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+#else
+  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to create dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  herr_t hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+}
+
+/**
+ * @brief Append the given data to the dataset with the given name.
+ *
+ * @param group HDF5Group handle to an open group that contains the given
+ * dataset.
+ * @param name Name of the dataset to append to.
+ * @param offset Offset of the new data within the dataset.
+ * @param values std::vector containing the data to append.
+ */
+template < typename _datatype_ >
+inline void append_dataset(hid_t group, std::string name, unsigned int offset,
+                           std::vector< _datatype_ > &values) {
+  hid_t datatype = get_datatype_name< _datatype_ >();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    cmac_error("Failed to obtain file space of dataset \"%s\"!", name.c_str());
+  }
+
+  // select the hyperslab in filespace we want to write to
+  hsize_t dims[1] = {values.size()};
+  hsize_t offs[1] = {offset};
+  herr_t hdf5status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offs,
+                                          nullptr, dims, nullptr);
+  if (hdf5status < 0) {
+    cmac_error("Failed to select hyperslab in file space of dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // create memory space
+  hid_t memspace = H5Screate_simple(1, dims, nullptr);
+  if (memspace < 0) {
+    cmac_error("Failed to create memory space to write dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // write dataset
+  _datatype_ *data = new _datatype_[values.size()];
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    data[i] = values[i];
+  }
+  hdf5status =
+      H5Dwrite(dataset, datatype, memspace, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
+    cmac_error("Failed to write dataset \"%s\"", name.c_str());
+  }
+
+  // close memory space
+  hdf5status = H5Sclose(memspace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close memory space for dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // close file space
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close file space for dataset \"%s\"!", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  delete[] data;
+}
+
+/**
+ * @brief Append the given data to the dataset with the given name.
+ *
+ * Template specialization for a CoordinateVector<> dataset.
+ *
+ * @param group HDF5Group handle to an open group that contains the given
+ * dataset.
+ * @param name Name of the dataset to append to.
+ * @param offset Offset of the new data within the dataset.
+ * @param values std::vector containing the data to append.
+ */
+template <>
+inline void append_dataset(hid_t group, std::string name, unsigned int offset,
+                           std::vector< CoordinateVector<> > &values) {
+  hid_t datatype = get_datatype_name< double >();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    cmac_error("Failed to obtain file space of dataset \"%s\"!", name.c_str());
+  }
+
+  // select the hyperslab in filespace we want to write to
+  hsize_t dims[2] = {values.size(), 3};
+  hsize_t offs[2] = {offset, 0};
+  herr_t hdf5status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offs,
+                                          nullptr, dims, nullptr);
+  if (hdf5status < 0) {
+    cmac_error("Failed to select hyperslab in file space of dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // create memory space
+  hid_t memspace = H5Screate_simple(2, dims, nullptr);
+  if (memspace < 0) {
+    cmac_error("Failed to create memory space to write dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // write dataset
+  double *data = new double[3 * values.size()];
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    data[3 * i] = values[i].x();
+    data[3 * i + 1] = values[i].y();
+    data[3 * i + 2] = values[i].z();
+  }
+  hdf5status =
+      H5Dwrite(dataset, datatype, memspace, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
+    cmac_error("Failed to write dataset \"%s\"", name.c_str());
+  }
+
+  // close memory space
+  hdf5status = H5Sclose(memspace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close memory space for dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // close file space
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close file space for dataset \"%s\"!", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  delete[] data;
+}
 }
 
 #endif // HDF5TOOLS_HPP
