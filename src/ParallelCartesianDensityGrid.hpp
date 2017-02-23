@@ -73,22 +73,31 @@ public:
                                std::pair< int, int > domain)
       : _box_anchor(box.get_anchor()), _domain(domain),
         _numcell(numcell.x() * numcell.y() * numcell.z()) {
+
+    // get the number of cells in a single block
     CoordinateVector< int > block_resolution =
         Utilities::subdivide(numcell, numdomain);
-    _block_sides = box.get_sides();
-    _block_sides[0] /= block_resolution[0];
-    _block_sides[1] /= block_resolution[1];
-    _block_sides[2] /= block_resolution[2];
+
+    // get the number of blocks in each dimension
     _num_blocks[0] = numcell[0] / block_resolution[0];
     _num_blocks[1] = numcell[1] / block_resolution[1];
     _num_blocks[2] = numcell[2] / block_resolution[2];
 
+    // get the size of a single block
+    _block_sides = box.get_sides();
+    _block_sides[0] /= _num_blocks[0];
+    _block_sides[1] /= _num_blocks[1];
+    _block_sides[2] /= _num_blocks[2];
+
+    // create the blocks
+    // allocate memory
     _subgrids.reserve(_num_blocks.x() * _num_blocks.y() * _num_blocks.z());
     for (int ix = 0; ix < _num_blocks.x(); ++ix) {
       for (int iy = 0; iy < _num_blocks.y(); ++iy) {
         for (int iz = 0; iz < _num_blocks.z(); ++iz) {
           int index = ix * _num_blocks.y() * _num_blocks.z() +
                       iy * _num_blocks.z() + iz;
+          // only allocate a real sub region for blocks in the local domain
           if (index >= _domain.first && index < _domain.second) {
             CoordinateVector<> blockanchor = box.get_anchor();
             blockanchor[0] += ix * _block_sides[0];
