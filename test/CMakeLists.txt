@@ -720,6 +720,16 @@ add_unit_test(NAME testParallelCartesianDensityGrid
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
+## PhotonPool test
+set(TESTPHOTONPOOL_SOURCES
+    testPhotonPool.cpp
+
+    ../src/PhotonBatch.hpp
+    ../src/PhotonBucket.hpp
+)
+add_unit_test(NAME testPhotonPool
+              SOURCES ${TESTPHOTONPOOL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
