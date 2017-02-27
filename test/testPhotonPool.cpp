@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "PhotonBatch.hpp"
+#include "PhotonBucket.hpp"
 
 /**
  * @brief Unit test for the PhotonPool classes.
@@ -59,6 +60,33 @@ int main(int argc, char **argv) {
       assert_condition(numphoton == it.get_new_index());
       ++numphoton;
     }
+  }
+
+  /// test PhotonBucket
+  {
+    PhotonBucket bucket(100);
+
+    Photon photon(CoordinateVector<>(), CoordinateVector<>(), 0.);
+    for (unsigned int i = 0; i < 150; ++i) {
+      bucket.add_photon(photon);
+    }
+
+    // check if the bucket contains exactly two batches, with respectively
+    // 100 and 50 photons
+    unsigned int numbucket = 0;
+    std::vector< unsigned int > numphoton;
+    PhotonBatch *batch = bucket.get_batch();
+    while (batch != nullptr) {
+      numphoton.push_back(0);
+      for (auto it = batch->begin(); it != batch->end(); ++it) {
+        ++numphoton[numbucket];
+      }
+      ++numbucket;
+      batch = bucket.get_batch();
+    }
+    assert_condition(numbucket == 2);
+    assert_condition(numphoton[0] == 100);
+    assert_condition(numphoton[1] == 50);
   }
 
   return 0;
