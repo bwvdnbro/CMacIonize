@@ -706,6 +706,15 @@ set(TESTHYDROINTEGRATOR_SOURCES
 add_unit_test(NAME testHydroIntegrator
               SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
 
+## PhotonPool test
+set(TESTPHOTONPOOL_SOURCES
+    testPhotonPool.cpp
+
+    ../src/PhotonBatch.hpp
+)
+add_unit_test(NAME testPhotonPool
+              SOURCES ${TESTPHOTONPOOL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
