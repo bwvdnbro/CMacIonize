@@ -365,6 +365,19 @@ public:
   inline Box get_box() const { return _box; }
 
   /**
+   * @brief Get the number of periodic boundaries of this grid.
+   *
+   * @return Number of periodic boundaries of this grid (between 0 and 3).
+   */
+  inline unsigned int get_number_of_periodic_boundaries() const {
+    unsigned int numperiodic = 0;
+    for (unsigned int i = 0; i < 3; ++i) {
+      numperiodic += _periodic[i];
+    }
+    return numperiodic;
+  }
+
+  /**
    * @brief Get the index of the cell containing the given position.
    *
    * @param position CoordinateVector<> specifying a position (in m).

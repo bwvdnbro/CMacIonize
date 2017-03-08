@@ -362,6 +362,11 @@ int main(int argc, char **argv) {
       //    if (loop == 3 || loop == 9) {
       //      numphoton *= 10;
       //    }
+      if (loop == 0 && grid->get_number_of_periodic_boundaries() > 1) {
+        // decrease the number of photons during the first step if more than 1
+        // boundary is periodic
+        numphoton = std::max(numphoton / 100, 1000u);
+      }
 
       unsigned int lnumphoton = numphoton;
       grid->reset_grid();
