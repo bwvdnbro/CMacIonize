@@ -216,8 +216,10 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
  * @param A Elements of the matrix \f$A\f$.
  * @param B Elements of the matrix \f$B\f$, and elements of the solution on
  * exit.
+ * @return Exit code: 0 on success. If a non zero value is returned, the values
+ * stored in B on exit are meaningless and should not be used.
  */
-void LineCoolingData::simq(double A[5][5], double B[5]) {
+int LineCoolingData::simq(double A[5][5], double B[5]) {
 
   for (unsigned int j = 0; j < 5; ++j) {
     // find the next row with the largest coefficient
@@ -231,7 +233,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
     }
     // check that the matrix is non-singular
     if (Amax == 0.) {
-      cmac_error("Singular matrix given to simq!");
+      return 1;
     }
     // imax now contains the index of the row with the largest coefficient
     // interchange rows if necessary to make sure that the row with the largest
@@ -277,7 +279,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
       B[3 - i] -= B[4 - j] * A[3 - i][4 - j];
     }
   }
-  return;
+  return 0;
 }
 
 /**
@@ -402,7 +404,14 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
           (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
-    simq(alev, lev);
+    int status = simq(alev, lev);
+    if (status != 0) {
+      // something went wrong
+      cmac_warning("Singular matrix given to simq!");
+      cmac_warning("Temperature: %g", temperature);
+      cmac_warning("Electron density: %g", electron_density);
+      cmac_error("We better stop!");
+    }
 
     double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
     double cl3 = abundances[j] * kb * lev[2] *
@@ -610,7 +619,14 @@ void LineCoolingData::linestr(
           (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
-    simq(alev, lev);
+    int status = simq(alev, lev);
+    if (status != 0) {
+      // something went wrong
+      cmac_warning("Singular matrix given to simq!");
+      cmac_warning("Temperature: %g", temperature);
+      cmac_warning("Electron density: %g", electron_density);
+      cmac_error("We better stop!");
+    }
 
     double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
     double cl3 = abundances[j] * kb * lev[2] *

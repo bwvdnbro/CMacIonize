@@ -89,7 +89,7 @@ public:
   double get_en(unsigned int element, unsigned int level) const;
   double get_sw(unsigned int element, unsigned int level) const;
 
-  static void simq(double A[5][5], double B[5]);
+  static int simq(double A[5][5], double B[5]);
 
   double get_cooling(double temperature, double electron_density,
                      const double *abundances) const;
