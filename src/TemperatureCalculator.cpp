@@ -41,6 +41,7 @@
  * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
  * @param abundances Abundances.
  * @param pahfac PAH heating factor.
+ * @param crfac Cosmic ray heating factor.
  * @param line_cooling_data LineCoolingData use to calculate cooling due to line
  * emission.
  * @param recombination_rates RecombinationRates used to calculate ionic
@@ -49,11 +50,11 @@
  * fractions.
  */
 TemperatureCalculator::TemperatureCalculator(
-    double luminosity, Abundances &abundances, double pahfac,
+    double luminosity, Abundances &abundances, double pahfac, double crfac,
     LineCoolingData &line_cooling_data, RecombinationRates &recombination_rates,
     ChargeTransferRates &charge_transfer_rates)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
-      _line_cooling_data(line_cooling_data),
+      _crfac(crfac), _line_cooling_data(line_cooling_data),
       _recombination_rates(recombination_rates),
       _charge_transfer_rates(charge_transfer_rates) {}
 
@@ -71,17 +72,16 @@ TemperatureCalculator::TemperatureCalculator(
  * @param abundances Abundances.
  * @param hfac Normalization factor for the heating integrals.
  * @param pahfac Normalization factor for PAH heating.
+ * @param crfac Normalization factor for cosmic ray heating.
  * @param data LineCoolingData used to calculate line cooling.
  * @param rates RecombinationRates used to calculate ionic fractions.
  * @param ctr ChargeTransferRates used to calculate ionic fractions.
  */
-void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
-                                   double &loss, double T,
-                                   DensityGrid::iterator &cell, double jfac,
-                                   Abundances &abundances, double hfac,
-                                   double pahfac, LineCoolingData &data,
-                                   RecombinationRates &rates,
-                                   ChargeTransferRates &ctr) {
+void TemperatureCalculator::ioneng(
+    double &h0, double &he0, double &gain, double &loss, double T,
+    DensityGrid::iterator &cell, double jfac, Abundances &abundances,
+    double hfac, double pahfac, double crfac, LineCoolingData &data,
+    RecombinationRates &rates, ChargeTransferRates &ctr) {
   double alphaH = rates.get_recombination_rate(ION_H_n, T);
   double alphaHe = rates.get_recombination_rate(ION_He_n, T);
   double alphaC[2];
@@ -126,8 +126,14 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
   double heatpah = 3.e-38 * 5. * n * ne * pahfac;
+
+  // cosmic rays
+  // erg/cm^9/2/s --> J/m^9/3/s ==> 1.2e-27 --> 1.2e-43
+  double heatcr = crfac * 1.2e-43 / std::sqrt(ne);
+
   gain += heatpah;
   gain += heatHeLa;
+  gain += heatcr;
 
   // coolants
 
@@ -336,17 +342,20 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     ioneng(h01, he01, gain1, loss1, T1, cell, jfac, _abundances, hfac, _pahfac,
-           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
+           _crfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
 
     double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     ioneng(h02, he02, gain2, loss2, T2, cell, jfac, _abundances, hfac, _pahfac,
-           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
+           _crfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     ioneng(h0, he0, gain0, loss0, T0, cell, jfac, _abundances, hfac, _pahfac,
-           _line_cooling_data, _recombination_rates, _charge_transfer_rates);
+           _crfac, _line_cooling_data, _recombination_rates,
+           _charge_transfer_rates);
 
     double logtt = std::log(T1 / T2);
     double expgain = std::log(gain1 / gain2) / logtt;
@@ -354,9 +363,22 @@ void TemperatureCalculator::calculate_temperature(
     T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
 
     if (T0 < 4000.) {
+      // gas is neutral, temperature is 500 K
       T0 = 500.;
       h0 = 1.;
       he0 = 1.;
+      // force exit out of loop
+      gain0 = 1.;
+      loss0 = 1.;
+    }
+
+    if (T0 > 1.e10) {
+      // gas is ionized, temperature is 10^10 K (should probably be a lower
+      // value)
+      T0 = 1.e10;
+      h0 = 0.;
+      he0 = 0.;
+      // force exit out of loop
       gain0 = 1.;
       loss0 = 1.;
     }

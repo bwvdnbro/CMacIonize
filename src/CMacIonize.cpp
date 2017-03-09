@@ -268,7 +268,8 @@ int main(int argc, char **argv) {
   // used to calculate both the ionization state and the temperature
   TemperatureCalculator temperature_calculator(
       Q, abundances, params.get_value< double >("pahfac", 1.),
-      line_cooling_data, recombination_rates, charge_transfer_rates);
+      params.get_value< double >("crfac", 0.), line_cooling_data,
+      recombination_rates, charge_transfer_rates);
 
   bool calculate_temperature =
       params.get_value< bool >("calculate_temperature", true);

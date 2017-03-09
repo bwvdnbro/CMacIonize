@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
-  TemperatureCalculator calculator(1., abundances, 1., data, rates, ctr);
+  TemperatureCalculator calculator(1., abundances, 1., 0., data, rates, ctr);
 
   HomogeneousDensityFunction function(1.);
   Box box(CoordinateVector<>(), CoordinateVector<>(1.));
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 
       double gain, loss, h0, he0;
       TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1.,
-                                    abundances, 1., 1., data, rates, ctr);
+                                    abundances, 1., 1., 0., data, rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 

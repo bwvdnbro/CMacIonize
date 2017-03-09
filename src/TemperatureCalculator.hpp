@@ -49,6 +49,9 @@ private:
   /*! @brief PAH heating factor. */
   double _pahfac;
 
+  /*! @brief Cosmic ray heating factor. */
+  double _crfac;
+
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
   LineCoolingData &_line_cooling_data;
 
@@ -60,15 +63,16 @@ private:
 
 public:
   TemperatureCalculator(double luminosity, Abundances &abundances,
-                        double pahfac, LineCoolingData &line_cooling_data,
+                        double pahfac, double crfac,
+                        LineCoolingData &line_cooling_data,
                         RecombinationRates &recombination_rates,
                         ChargeTransferRates &charge_transfer_rates);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell, double jfac,
                      Abundances &abundances, double hfac, double pahfac,
-                     LineCoolingData &data, RecombinationRates &rates,
-                     ChargeTransferRates &ctr);
+                     double crfac, LineCoolingData &data,
+                     RecombinationRates &rates, ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;
