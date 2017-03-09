@@ -489,7 +489,7 @@ int main(int argc, char **argv) {
       //    }
 
       // use the current number of photons as a guess for the new number
-      numphoton = convergence_checker->get_new_number_of_photons(lnumphoton);
+      numphoton = convergence_checker->get_new_number_of_photons(numphoton);
 
 // print out a curve that shows the evolution of chi2
 #ifdef CHISQUAREDPHOTONNUMBERCONVERGENCECHECKER_CHI2_CURVE
