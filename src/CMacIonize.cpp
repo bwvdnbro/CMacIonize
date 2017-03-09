@@ -363,13 +363,18 @@ int main(int argc, char **argv) {
       //    if (loop == 3 || loop == 9) {
       //      numphoton *= 10;
       //    }
-      if (loop == 0 && grid->get_number_of_periodic_boundaries() > 1) {
-        // decrease the number of photons during the first step if more than 1
-        // boundary is periodic
-        numphoton = std::max(numphoton / 100, 1000u);
-      }
 
       unsigned int lnumphoton = numphoton;
+
+      if (loop == 0 && grid->get_number_of_periodic_boundaries() > 1) {
+        // decrease the number of photons during the first step if more than 1
+        // boundary is periodic (with a minimum of 1000 photons)
+        // 1000u instead of just 1000 to tell the compiler we want 1000 to be an
+        // unsigned integer (if not, the compiler will complain about the
+        // arguments of std::max not being of the same type)
+        lnumphoton = std::max(lnumphoton / 1000, 1000u);
+      }
+
       grid->reset_grid();
       if (log) {
         log->write_status("Start shooting photons...");
