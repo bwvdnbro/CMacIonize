@@ -726,6 +726,7 @@ set(TESTPHOTONPOOL_SOURCES
 
     ../src/PhotonBatch.hpp
     ../src/PhotonBucket.hpp
+    ../src/PhotonPool.hpp
 )
 add_unit_test(NAME testPhotonPool
               SOURCES ${TESTPHOTONPOOL_SOURCES})
