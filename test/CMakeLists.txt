@@ -731,6 +731,19 @@ set(TESTPHOTONPOOL_SOURCES
 add_unit_test(NAME testPhotonPool
               SOURCES ${TESTPHOTONPOOL_SOURCES})
 
+## AsciiFileDensityGridWriter test
+set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
+    testAsciiFileDensityGridWriter.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/AsciiFileDensityGridWriter.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/ParameterFile.cpp
+)
+add_unit_test(NAME testAsciiFileDensityGridWriter
+              SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

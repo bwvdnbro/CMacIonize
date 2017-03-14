@@ -107,6 +107,7 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
+    AsciiFileDensityGridWriter.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     CMacIonize.cpp
@@ -134,6 +135,7 @@ set(CMACIONIZE_SOURCES
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
+    AsciiFileDensityGridWriter.hpp
     Box.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
