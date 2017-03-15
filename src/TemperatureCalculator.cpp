@@ -128,8 +128,9 @@ void TemperatureCalculator::ioneng(
   double heatpah = 3.e-38 * 5. * n * ne * pahfac;
 
   // cosmic rays
-  // erg/cm^9/2/s --> J/m^9/3/s ==> 1.2e-27 --> 1.2e-43
-  double heatcr = crfac * 1.2e-43 / std::sqrt(ne);
+  // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
+  // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
+  double heatcr = crfac * 1.2e-25 / std::sqrt(ne);
 
   gain += heatpah;
   gain += heatHeLa;
