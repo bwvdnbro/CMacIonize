@@ -113,6 +113,10 @@ void TemperatureCalculator::ioneng(
                                      he0);
 
   double ne = n * (1. - h0 + AHe * (1. - he0));
+  if (ne != ne) {
+    cmac_warning("ne NaN! (n: %g, h0: %g, AHe: %g, he0: %g)", n, h0, AHe, he0);
+    cmac_error("We better stop.");
+  }
   double nhp = n * (1. - h0);
   double nhep = (1. - he0) * n * AHe;
   double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);

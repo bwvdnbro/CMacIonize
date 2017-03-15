@@ -341,7 +341,7 @@ void IonizationStateCalculator::calculate_ionization_state(
  * which (conveniently) has the same form as the equation for helium. But know
  * we have
  * \f[
- *   C_{\rm{}H} = C_{{\rm{}H},1} + C_{{\rm{}H},2} P({\rm{}H}_{\rm{}OTS})
+ *   C_{\rm{}H} = C_{{\rm{}H},1} - C_{{\rm{}H},2} P({\rm{}H}_{\rm{}OTS})
  *   \frac{1-n({\rm{}He}^0)}{1-n({\rm{}H}^0)},
  * \f]
  * with \f$C_{{\rm{}H},1} = \frac{\alpha{}({\rm{}H}^0, T_e) n_{\rm{}tot} }
@@ -371,22 +371,44 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
                                         double jH, double jHe, double nH,
                                         double AHe, double T, double &h0,
                                         double &he0) {
+
+  // make sure the input to this function is physical
+  cmac_assert(alphaH >= 0.);
+  cmac_assert(alphaHe >= 0.);
+  cmac_assert(jH >= 0.);
+  cmac_assert(jHe >= 0.);
+  cmac_assert(nH >= 0.);
+  cmac_assert(AHe >= 0.);
+  cmac_assert(T >= 0.);
+
+  // shortcut: if jH == 0., then the gas is neutral
+  if (jH == 0.) {
+    h0 = 1.;
+    he0 = 1.;
+    return;
+  }
+
   // we multiplied Kenny's value with 1.e-6 to convert from cm^3s^-1 to m^3s^-1
   double alpha_e_2sP = 4.27e-20 * std::pow(T * 1.e-4, -0.695);
   double ch1 = alphaH * nH / jH;
   double ch2 = AHe * alpha_e_2sP * nH / jH;
   double che = 0.;
-  if (jHe) {
+  if (jHe > 0.) {
     che = alphaHe * nH / jHe;
   }
+  // che should always be positive
+  cmac_assert(che >= 0.);
+
   // initial guesses for the neutral fractions
   double h0old = 0.99 * (1. - std::exp(-0.5 / ch1));
+  cmac_assert(h0old >= 0. && h0old <= 1.);
+
   // by enforcing a relative difference of 10%, we make sure we have at least
   // one iteration
   h0 = 0.9 * h0old;
   double he0old = 1.;
   // we make sure che is 0 if the helium intensity integral is 0
-  if (che) {
+  if (che > 0.) {
     he0old = 0.5 / che;
     // make sure the neutral fraction is at most 100%
     he0old = std::min(he0old, 1.);
@@ -405,6 +427,8 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
     }
     // calculate a new guess for C_H
     double pHots = 1. / (1. + 77. * he0old / std::sqrt(T) / h0old);
+    // make sure pHots is not NaN
+    cmac_assert(pHots == pHots);
     double ch = ch1 - ch2 * AHe * (1. - he0old) * pHots / (1. - h0old);
 
     // find the helium neutral fraction
@@ -429,6 +453,8 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
     if (t1 < 1.e-3) {
       h0 = ch * (1. + AHe - he0 * AHe) / b;
     } else {
+      cmac_assert_message(b * b > 4. * ch * ch * (1. + AHe - he0 * AHe),
+                          "T: %g, he0: %g, h0old: %g", T, he0, h0old);
       h0 = (b - std::sqrt(b * b - 4. * ch * ch * (1. + AHe - he0 * AHe))) /
            (2. * ch);
     }

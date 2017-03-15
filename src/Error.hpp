@@ -26,6 +26,8 @@
 #ifndef ERROR_HPP
 #define ERROR_HPP
 
+#include "Configuration.hpp"
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -122,5 +124,37 @@
     fprintf(stdout, "%s:%s():%i:\n", __FILE__, __FUNCTION__, __LINE__);        \
     print_indent(stdout, s, ##__VA_ARGS__);                                    \
   }
+
+/**
+ * @brief Assertion macro. Checks that the given condition is true, and throws
+ * an error if it is not. Only works if ACTIVATE_ASSERTIONS=True was given to
+ * cmake during configuration.
+ */
+#ifdef HAVE_ASSERTIONS
+#define cmac_assert(condition)                                                 \
+  {                                                                            \
+    if (!(condition)) {                                                        \
+      cmac_error("Assertion failed: \"" #condition "\"!");                     \
+    }                                                                          \
+  }
+#else
+#define cmac_assert(condition)
+#endif
+
+/**
+ * @brief Assertion macro. This version does the same as the one above, but
+ * appends the given message to the generate error message.
+ */
+#ifdef HAVE_ASSERTIONS
+#define cmac_assert_message(condition, s, ...)                                 \
+  {                                                                            \
+    if (!(condition)) {                                                        \
+      cmac_error("Assertion failed: \"" #condition "\" (" s ")!",              \
+                 ##__VA_ARGS__);                                               \
+    }                                                                          \
+  }
+#else
+#define cmac_assert_message(condition, s, ...)
+#endif
 
 #endif // ERROR_HPP

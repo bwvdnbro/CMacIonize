@@ -180,6 +180,15 @@ else(Boost_FOUND)
   set(HAVE_PYTHON False)
 endif(Boost_FOUND)
 
+# Check if we need to activate assertions
+if(ACTIVATE_ASSERTIONS)
+  set(HAVE_ASSERTIONS True)
+  message(STATUS "Assertions are activated.")
+else(ACTIVATE_ASSERTIONS)
+  set(HAVE_ASSERTIONS False)
+  message(STATUS "Assertions not activated.")
+endif(ACTIVATE_ASSERTIONS)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 

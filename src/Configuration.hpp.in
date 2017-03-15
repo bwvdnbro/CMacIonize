@@ -28,6 +28,7 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+#cmakedefine HAVE_ASSERTIONS
 #cmakedefine HAVE_HDF5
 #cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_MPI
