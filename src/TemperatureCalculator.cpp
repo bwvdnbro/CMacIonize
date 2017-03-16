@@ -113,10 +113,7 @@ void TemperatureCalculator::ioneng(
                                      he0);
 
   double ne = n * (1. - h0 + AHe * (1. - he0));
-  if (ne != ne) {
-    cmac_warning("ne NaN! (n: %g, h0: %g, AHe: %g, he0: %g)", n, h0, AHe, he0);
-    cmac_error("We better stop.");
-  }
+  cmac_assert(ne == ne);
   double nhp = n * (1. - h0);
   double nhep = (1. - he0) * n * AHe;
   double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
@@ -134,7 +131,7 @@ void TemperatureCalculator::ioneng(
   // cosmic rays
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
-  double heatcr = crfac * 1.2e-25 / std::sqrt(ne);
+  double heatcr = crfac * (1. - h0) * 1.2e-25 / std::sqrt(ne);
 
   gain += heatpah;
   gain += heatHeLa;

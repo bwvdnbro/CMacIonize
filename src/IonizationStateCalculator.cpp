@@ -454,7 +454,7 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
       h0 = ch * (1. + AHe - he0 * AHe) / b;
     } else {
       cmac_assert_message(b * b > 4. * ch * ch * (1. + AHe - he0 * AHe),
-                          "T: %g, he0: %g, h0old: %g", T, he0, h0old);
+                          "T: %g, jH: %g, jHe: %g, nH: %g", T, jH, jHe, nH);
       h0 = (b - std::sqrt(b * b - 4. * ch * ch * (1. + AHe - he0 * AHe))) /
            (2. * ch);
     }
