@@ -52,6 +52,10 @@ private:
   /*! @brief Cosmic ray heating factor. */
   double _crfac;
 
+  /*! @brief Upper limit on the neutral fraction below which cosmic ray heating
+   *  is applied to a cell. */
+  double _crlim;
+
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
   LineCoolingData &_line_cooling_data;
 
@@ -63,7 +67,7 @@ private:
 
 public:
   TemperatureCalculator(double luminosity, Abundances &abundances,
-                        double pahfac, double crfac,
+                        double pahfac, double crfac, double crlim,
                         LineCoolingData &line_cooling_data,
                         RecombinationRates &recombination_rates,
                         ChargeTransferRates &charge_transfer_rates);
@@ -71,7 +75,7 @@ public:
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell, double jfac,
                      Abundances &abundances, double hfac, double pahfac,
-                     double crfac, LineCoolingData &data,
+                     double crfac, double crlim, LineCoolingData &data,
                      RecombinationRates &rates, ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,

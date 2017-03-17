@@ -42,6 +42,8 @@
  * @param abundances Abundances.
  * @param pahfac PAH heating factor.
  * @param crfac Cosmic ray heating factor.
+ * @param crlim Upper limit on the neutral fraction below which cosmic ray
+ * heating is applied to a cell.
  * @param line_cooling_data LineCoolingData use to calculate cooling due to line
  * emission.
  * @param recombination_rates RecombinationRates used to calculate ionic
@@ -51,10 +53,11 @@
  */
 TemperatureCalculator::TemperatureCalculator(
     double luminosity, Abundances &abundances, double pahfac, double crfac,
-    LineCoolingData &line_cooling_data, RecombinationRates &recombination_rates,
+    double crlim, LineCoolingData &line_cooling_data,
+    RecombinationRates &recombination_rates,
     ChargeTransferRates &charge_transfer_rates)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
-      _crfac(crfac), _line_cooling_data(line_cooling_data),
+      _crfac(crfac), _crlim(crlim), _line_cooling_data(line_cooling_data),
       _recombination_rates(recombination_rates),
       _charge_transfer_rates(charge_transfer_rates) {}
 
@@ -73,15 +76,20 @@ TemperatureCalculator::TemperatureCalculator(
  * @param hfac Normalization factor for the heating integrals.
  * @param pahfac Normalization factor for PAH heating.
  * @param crfac Normalization factor for cosmic ray heating.
+ * @param crlim Upper limit on the neutral fraction below which cosmic ray
+ * heating is applied to a cell.
  * @param data LineCoolingData used to calculate line cooling.
  * @param rates RecombinationRates used to calculate ionic fractions.
  * @param ctr ChargeTransferRates used to calculate ionic fractions.
  */
-void TemperatureCalculator::ioneng(
-    double &h0, double &he0, double &gain, double &loss, double T,
-    DensityGrid::iterator &cell, double jfac, Abundances &abundances,
-    double hfac, double pahfac, double crfac, LineCoolingData &data,
-    RecombinationRates &rates, ChargeTransferRates &ctr) {
+void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
+                                   double &loss, double T,
+                                   DensityGrid::iterator &cell, double jfac,
+                                   Abundances &abundances, double hfac,
+                                   double pahfac, double crfac, double crlim,
+                                   LineCoolingData &data,
+                                   RecombinationRates &rates,
+                                   ChargeTransferRates &ctr) {
   double alphaH = rates.get_recombination_rate(ION_H_n, T);
   double alphaHe = rates.get_recombination_rate(ION_He_n, T);
   double alphaC[2];
@@ -131,7 +139,11 @@ void TemperatureCalculator::ioneng(
   // cosmic rays
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
-  double heatcr = crfac * (1. - h0) * 1.2e-25 / std::sqrt(ne);
+  double heatcr = 0.;
+  if (h0 < crlim) {
+    // suppress cosmic ray heating in cells that are predominantly neutral
+    heatcr = crfac * 1.2e-25 / std::sqrt(ne);
+  }
 
   gain += heatpah;
   gain += heatHeLa;
@@ -344,19 +356,19 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     ioneng(h01, he01, gain1, loss1, T1, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _line_cooling_data, _recombination_rates,
+           _crfac, _crlim, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     ioneng(h02, he02, gain2, loss2, T2, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _line_cooling_data, _recombination_rates,
+           _crfac, _crlim, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     ioneng(h0, he0, gain0, loss0, T0, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _line_cooling_data, _recombination_rates,
+           _crfac, _crlim, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     double logtt = std::log(T1 / T2);
