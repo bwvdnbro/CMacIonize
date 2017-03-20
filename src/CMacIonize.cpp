@@ -108,6 +108,10 @@ int main(int argc, char **argv) {
                     "ideal for checking if a parameter file will work, and to "
                     "check if all input files can be read.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("every-iteration-output", 'e',
+                    "Output a snapshot for every iteration of the photon "
+                    "traversal algorithm.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -173,6 +177,9 @@ int main(int argc, char **argv) {
       }
     }
   }
+
+  bool every_iteration_output =
+      parser.get_value< bool >("every-iteration-output");
 
   // set the maximum number of openmp threads
   WorkEnvironment::set_max_num_threads(parser.get_value< int >("threads"));
@@ -500,6 +507,10 @@ int main(int argc, char **argv) {
 #endif
 
       ++loop;
+
+      if (write_output && every_iteration_output && loop < nloop) {
+        writer->write(loop, params);
+      }
     }
 
     if (log && loop == nloop) {

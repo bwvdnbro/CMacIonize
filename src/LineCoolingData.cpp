@@ -293,6 +293,13 @@ int LineCoolingData::simq(double A[5][5], double B[5]) {
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     const double *abundances) const {
+
+  if (electron_density == 0.) {
+    // we cannot return a 0 cooling rate, because that crashes our iterative
+    // temperature finding scheme
+    return 1.e-99;
+  }
+
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;

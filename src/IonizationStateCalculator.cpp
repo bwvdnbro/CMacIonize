@@ -381,8 +381,8 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
   cmac_assert(AHe >= 0.);
   cmac_assert(T >= 0.);
 
-  // shortcut: if jH == 0., then the gas is neutral
-  if (jH == 0.) {
+  // shortcut: if jH is very small, then the gas is neutral
+  if (jH < 1.e-20) {
     h0 = 1.;
     he0 = 1.;
     return;

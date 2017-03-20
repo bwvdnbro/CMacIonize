@@ -140,10 +140,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
   double heatcr = 0.;
-  if (h0 < crlim) {
-    // suppress cosmic ray heating in cells that are predominantly neutral
-    heatcr = crfac * 1.2e-25 / std::sqrt(ne);
-  }
+  heatcr = crfac * 1.2e-25 / std::sqrt(ne);
 
   gain += heatpah;
   gain += heatHeLa;
@@ -338,6 +335,23 @@ void TemperatureCalculator::calculate_temperature(
     return;
   }
 
+  double h0, he0;
+  double alphaH = _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
+  double alphaHe = _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
+  double jH = jfac * cell.get_mean_intensity(ION_H_n);
+  double jHe = jfac * cell.get_mean_intensity(ION_He_n);
+  double nH = cell.get_number_density();
+  double AHe = _abundances.get_abundance(ELEMENT_He);
+  IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
+                                     h0, he0);
+  if (h0 > _crlim) {
+    // assume fully neutral
+    cell.set_temperature(500.);
+    cell.set_ionic_fraction(ION_H_n, 1.);
+    cell.set_ionic_fraction(ION_He_n, 1.);
+    return;
+  }
+
   double T0;
   if (cell.get_temperature() > 4000.) {
     T0 = cell.get_temperature();
@@ -348,8 +362,8 @@ void TemperatureCalculator::calculate_temperature(
   unsigned int niter = 0;
   double gain0 = 1.;
   double loss0 = 0.;
-  double h0 = 0.;
-  double he0 = 0.;
+  h0 = 0.;
+  he0 = 0.;
   while (std::abs(gain0 - loss0) > eps * gain0 && niter < max_iterations) {
     ++niter;
     double T1 = 1.1 * T0;
@@ -386,10 +400,10 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
 
-    if (T0 > 1.e10) {
+    if (T0 > 25000.) {
       // gas is ionized, temperature is 10^10 K (should probably be a lower
       // value)
-      T0 = 1.e10;
+      T0 = 25000.;
       h0 = 0.;
       he0 = 0.;
       // force exit out of loop
