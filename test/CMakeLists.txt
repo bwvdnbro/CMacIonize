@@ -744,6 +744,18 @@ set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
 add_unit_test(NAME testAsciiFileDensityGridWriter
               SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
 
+## VoronoiGrid test
+set(TESTVORONOIGRID_SOURCES
+    testVoronoiGrid.cpp
+
+    ../src/VoronoiCell.cpp
+    ../src/VoronoiCell.hpp
+    ../src/VoronoiGrid.cpp
+    ../src/VoronoiGrid.hpp
+)
+add_unit_test(NAME testVoronoiGrid
+              SOURCES ${TESTVORONOIGRID_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
