@@ -333,14 +333,14 @@ void TemperatureCalculator::calculate_temperature(
     cell.set_ionic_fraction(ION_C_p1, 0.);
     cell.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 0.);
+    cell.set_ionic_fraction(ION_N_n, 1.);
     cell.set_ionic_fraction(ION_N_p1, 0.);
     cell.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 0.);
+    cell.set_ionic_fraction(ION_O_n, 1.);
     cell.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 0.);
+    cell.set_ionic_fraction(ION_Ne_n, 1.);
     cell.set_ionic_fraction(ION_Ne_p1, 0.);
 
     cell.set_ionic_fraction(ION_S_p1, 0.);
@@ -368,14 +368,14 @@ void TemperatureCalculator::calculate_temperature(
     cell.set_ionic_fraction(ION_C_p1, 0.);
     cell.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 0.);
+    cell.set_ionic_fraction(ION_N_n, 1.);
     cell.set_ionic_fraction(ION_N_p1, 0.);
     cell.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 0.);
+    cell.set_ionic_fraction(ION_O_n, 1.);
     cell.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 0.);
+    cell.set_ionic_fraction(ION_Ne_n, 1.);
     cell.set_ionic_fraction(ION_Ne_p1, 0.);
 
     cell.set_ionic_fraction(ION_S_p1, 0.);
@@ -464,14 +464,14 @@ void TemperatureCalculator::calculate_temperature(
     cell.set_ionic_fraction(ION_C_p1, 0.);
     cell.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 0.);
+    cell.set_ionic_fraction(ION_N_n, 1.);
     cell.set_ionic_fraction(ION_N_p1, 0.);
     cell.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 0.);
+    cell.set_ionic_fraction(ION_O_n, 1.);
     cell.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 0.);
+    cell.set_ionic_fraction(ION_Ne_n, 1.);
     cell.set_ionic_fraction(ION_Ne_p1, 0.);
 
     cell.set_ionic_fraction(ION_S_p1, 0.);

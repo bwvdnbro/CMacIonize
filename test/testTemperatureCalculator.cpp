@@ -196,6 +196,13 @@ int main(int argc, char **argv) {
       // we have introduced a maximum
       h0f = std::min(1., h0f);
 
+      // if the gas is neutral, the neutral fractions of ground state ions are 1
+      if (h0f == 1.) {
+        nf = 1.;
+        of = 1.;
+        nef = 1.;
+      }
+
       // set the cell values
       cell.reset_mean_intensities();
 
