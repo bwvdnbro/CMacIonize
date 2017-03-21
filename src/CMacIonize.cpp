@@ -276,8 +276,9 @@ int main(int argc, char **argv) {
   TemperatureCalculator temperature_calculator(
       Q, abundances, params.get_value< double >("pahfac", 1.),
       params.get_value< double >("crfac", 0.),
-      params.get_value< double >("crlim", 0.75), line_cooling_data,
-      recombination_rates, charge_transfer_rates);
+      params.get_value< double >("crlim", 0.75),
+      params.get_physical_value< QUANTITY_LENGTH >("crscale", "1.33333 kpc"),
+      line_cooling_data, recombination_rates, charge_transfer_rates, log);
 
   bool calculate_temperature =
       params.get_value< bool >("calculate_temperature", true);

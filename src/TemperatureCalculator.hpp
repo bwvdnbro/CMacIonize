@@ -32,6 +32,7 @@
 class Abundances;
 class ChargeTransferRates;
 class LineCoolingData;
+class Log;
 class RecombinationRates;
 
 /**
@@ -56,6 +57,10 @@ private:
    *  is applied to a cell. */
   double _crlim;
 
+  /*! @brief Scale height of the cosmic ray heating term (0 for a constant
+   *  heating term; in m). */
+  double _crscale;
+
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
   LineCoolingData &_line_cooling_data;
 
@@ -68,14 +73,15 @@ private:
 public:
   TemperatureCalculator(double luminosity, Abundances &abundances,
                         double pahfac, double crfac, double crlim,
-                        LineCoolingData &line_cooling_data,
+                        double crscale, LineCoolingData &line_cooling_data,
                         RecombinationRates &recombination_rates,
-                        ChargeTransferRates &charge_transfer_rates);
+                        ChargeTransferRates &charge_transfer_rates,
+                        Log *log = nullptr);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell, double jfac,
                      Abundances &abundances, double hfac, double pahfac,
-                     double crfac, double crlim, LineCoolingData &data,
+                     double crfac, double crscale, LineCoolingData &data,
                      RecombinationRates &rates, ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,

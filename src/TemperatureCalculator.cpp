@@ -44,22 +44,34 @@
  * @param crfac Cosmic ray heating factor.
  * @param crlim Upper limit on the neutral fraction below which cosmic ray
  * heating is applied to a cell.
+ * @param crscale Scale height of the cosmic ray heating term (0 for a constant
+ * heating term; in m).
  * @param line_cooling_data LineCoolingData use to calculate cooling due to line
  * emission.
  * @param recombination_rates RecombinationRates used to calculate ionic
  * fractions.
  * @param charge_transfer_rates ChargeTransferRates used to calculate ionic
  * fractions.
+ * @param log Log to write logging info to.
  */
 TemperatureCalculator::TemperatureCalculator(
     double luminosity, Abundances &abundances, double pahfac, double crfac,
-    double crlim, LineCoolingData &line_cooling_data,
+    double crlim, double crscale, LineCoolingData &line_cooling_data,
     RecombinationRates &recombination_rates,
-    ChargeTransferRates &charge_transfer_rates)
+    ChargeTransferRates &charge_transfer_rates, Log *log)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
-      _crfac(crfac), _crlim(crlim), _line_cooling_data(line_cooling_data),
+      _crfac(crfac), _crlim(crlim), _crscale(crscale),
+      _line_cooling_data(line_cooling_data),
       _recombination_rates(recombination_rates),
-      _charge_transfer_rates(charge_transfer_rates) {}
+      _charge_transfer_rates(charge_transfer_rates) {
+
+  if (log) {
+    log->write_status("Set up TemperatureCalculator with total luminosity ",
+                      _luminosity, " s^-1, PAH factor ", _pahfac,
+                      ", and cosmic ray factor ", _crfac, " (limit: ", _crlim,
+                      ", scale height: ", _crscale, " m).");
+  }
+}
 
 /**
  * @brief Function that calculates the cooling and heating rate for a given
@@ -76,8 +88,8 @@ TemperatureCalculator::TemperatureCalculator(
  * @param hfac Normalization factor for the heating integrals.
  * @param pahfac Normalization factor for PAH heating.
  * @param crfac Normalization factor for cosmic ray heating.
- * @param crlim Upper limit on the neutral fraction below which cosmic ray
- * heating is applied to a cell.
+ * @param crscale Scale height of the cosmic ray heating term (0 for a constant
+ * heating term; in m).
  * @param data LineCoolingData used to calculate line cooling.
  * @param rates RecombinationRates used to calculate ionic fractions.
  * @param ctr ChargeTransferRates used to calculate ionic fractions.
@@ -86,7 +98,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
                                    double &loss, double T,
                                    DensityGrid::iterator &cell, double jfac,
                                    Abundances &abundances, double hfac,
-                                   double pahfac, double crfac, double crlim,
+                                   double pahfac, double crfac, double crscale,
                                    LineCoolingData &data,
                                    RecombinationRates &rates,
                                    ChargeTransferRates &ctr) {
@@ -141,6 +153,9 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
   double heatcr = 0.;
   heatcr = crfac * 1.2e-25 / std::sqrt(ne);
+  if (crscale > 0.) {
+    heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+  }
 
   gain += heatpah;
   gain += heatHeLa;
@@ -349,6 +364,23 @@ void TemperatureCalculator::calculate_temperature(
     cell.set_temperature(500.);
     cell.set_ionic_fraction(ION_H_n, 1.);
     cell.set_ionic_fraction(ION_He_n, 1.);
+
+    cell.set_ionic_fraction(ION_C_p1, 0.);
+    cell.set_ionic_fraction(ION_C_p2, 0.);
+
+    cell.set_ionic_fraction(ION_N_n, 0.);
+    cell.set_ionic_fraction(ION_N_p1, 0.);
+    cell.set_ionic_fraction(ION_N_p2, 0.);
+
+    cell.set_ionic_fraction(ION_O_n, 0.);
+    cell.set_ionic_fraction(ION_O_p1, 0.);
+
+    cell.set_ionic_fraction(ION_Ne_n, 0.);
+    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+
+    cell.set_ionic_fraction(ION_S_p1, 0.);
+    cell.set_ionic_fraction(ION_S_p2, 0.);
+    cell.set_ionic_fraction(ION_S_p3, 0.);
     return;
   }
 
@@ -370,19 +402,19 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     ioneng(h01, he01, gain1, loss1, T1, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _crlim, _line_cooling_data, _recombination_rates,
+           _crfac, _crscale, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     ioneng(h02, he02, gain2, loss2, T2, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _crlim, _line_cooling_data, _recombination_rates,
+           _crfac, _crscale, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     ioneng(h0, he0, gain0, loss0, T0, cell, jfac, _abundances, hfac, _pahfac,
-           _crfac, _crlim, _line_cooling_data, _recombination_rates,
+           _crfac, _crscale, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
     double logtt = std::log(T1 / T2);
@@ -429,6 +461,25 @@ void TemperatureCalculator::calculate_temperature(
   }
 
   if (h0 == 1.) {
+    cell.set_ionic_fraction(ION_C_p1, 0.);
+    cell.set_ionic_fraction(ION_C_p2, 0.);
+
+    cell.set_ionic_fraction(ION_N_n, 0.);
+    cell.set_ionic_fraction(ION_N_p1, 0.);
+    cell.set_ionic_fraction(ION_N_p2, 0.);
+
+    cell.set_ionic_fraction(ION_O_n, 0.);
+    cell.set_ionic_fraction(ION_O_p1, 0.);
+
+    cell.set_ionic_fraction(ION_Ne_n, 0.);
+    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+
+    cell.set_ionic_fraction(ION_S_p1, 0.);
+    cell.set_ionic_fraction(ION_S_p2, 0.);
+    cell.set_ionic_fraction(ION_S_p3, 0.);
+  }
+
+  if (h0 == 0.) {
     cell.set_ionic_fraction(ION_C_p1, 0.);
     cell.set_ionic_fraction(ION_C_p2, 0.);
 

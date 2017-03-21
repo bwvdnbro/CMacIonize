@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
-  TemperatureCalculator calculator(1., abundances, 1., 0., 0.75, data, rates,
+  TemperatureCalculator calculator(1., abundances, 1., 0., 1., 0., data, rates,
                                    ctr);
 
   HomogeneousDensityFunction function(1.);
@@ -164,6 +164,37 @@ int main(int argc, char **argv) {
           jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
           ntot >> h0f >> he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >>
           op1f >> nef >> nep1f >> sp1f >> sp2f >> sp3f >> Tnewf;
+
+      // corrections:
+
+      // if the initial temperature is more than 25,000 K, don't test this line
+      if (T > 25000.) {
+        continue;
+      }
+
+      // if the final temperature is more than 25,000 K, we just set it to
+      // 25,000 K and assume the gas is completely ionized
+      if (Tnewf > 25000.) {
+        h0f = 0.;
+        he0f = 0.;
+        cp1f = 0.;
+        cp2f = 0.;
+        nf = 0.;
+        np1f = 0.;
+        np2f = 0.;
+        of = 0.;
+        op1f = 0.;
+        nef = 0.;
+        nep1f = 0.;
+        sp1f = 0.;
+        sp2f = 0.;
+        sp3f = 0.;
+        Tnewf = 25000.;
+      }
+
+      // in Kenny's code, neutral fractions could sometimes be larger than 1
+      // we have introduced a maximum
+      h0f = std::min(1., h0f);
 
       // set the cell values
       cell.reset_mean_intensities();
