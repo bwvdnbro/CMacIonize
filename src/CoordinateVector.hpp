@@ -200,6 +200,17 @@ public:
   }
 
   /**
+   * @brief Compare this CoordinateVector with another CoordinateVector.
+   *
+   * @param v CoordinateVector to compare with.
+   * @return False if both CoordinateVector instances have the same member
+   * component values.
+   */
+  inline bool operator!=(const CoordinateVector< _datatype_ > &v) const {
+    return !(*this == v);
+  }
+
+  /**
    * @brief Get the minimum of two CoordinateVector instances.
    *
    * We declare this function as static member function to distinguish it from
@@ -239,6 +250,24 @@ public:
     maxvec._y = std::max(a._y, b._y);
     maxvec._z = std::max(a._z, b._z);
     return maxvec;
+  }
+
+  /**
+   * @brief Get the cross product of two CoordinateVector instances.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return CoordinateVector with components that correspond to the cross
+   * product of a and b.
+   */
+  static inline CoordinateVector< _datatype_ >
+  cross_product(const CoordinateVector< _datatype_ > &a,
+                const CoordinateVector< _datatype_ > &b) {
+    CoordinateVector< _datatype_ > crossvec;
+    crossvec._x = a._y * b._z - a._z * b._y;
+    crossvec._y = a._z * b._x - a._x * b._z;
+    crossvec._z = a._x * b._y - a._y * b._x;
+    return crossvec;
   }
 };
 

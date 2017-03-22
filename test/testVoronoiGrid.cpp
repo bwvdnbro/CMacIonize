@@ -47,11 +47,65 @@ int main(int argc, char **argv) {
           CoordinateVector<>(0., 1., 0.), CoordinateVector<>(1., 0., 0.)) ==
       CoordinateVector<>(0.25, 0.25, 0.25));
 
+  assert_condition(VoronoiCell::surface_area_triangle(
+                       CoordinateVector<>(0., 0., 0.),
+                       CoordinateVector<>(1., 0., 0.),
+                       CoordinateVector<>(0., 1., 0.)) == 0.5);
+
+  assert_condition(
+      VoronoiCell::midpoint_triangle(CoordinateVector<>(0., 0., 0.),
+                                     CoordinateVector<>(1., 0., 0.),
+                                     CoordinateVector<>(0., 1., 0.)) ==
+      CoordinateVector<>(1. / 3., 1. / 3., 0.));
+
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   VoronoiCell cell(CoordinateVector<>(0.5), box);
   cell.finalize();
   assert_values_equal_rel(cell.get_volume(), 1., 1.e-16);
   assert_condition(cell.get_centroid() == CoordinateVector<>(0.5));
+
+  auto faces = cell.get_faces();
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[0]) ==
+                   VORONOI_BOX_FRONT);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[0]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[0]) ==
+                   CoordinateVector<>(0.5, 0., 0.5));
+
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[1]) ==
+                   VORONOI_BOX_LEFT);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[1]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[1]) ==
+                   CoordinateVector<>(0., 0.5, 0.5));
+
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[2]) ==
+                   VORONOI_BOX_BOTTOM);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[2]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[2]) ==
+                   CoordinateVector<>(0.5, 0.5, 0.));
+
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[3]) ==
+                   VORONOI_BOX_TOP);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[3]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[3]) ==
+                   CoordinateVector<>(0.5, 0.5, 1.));
+
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[4]) ==
+                   VORONOI_BOX_BACK);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[4]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[4]) ==
+                   CoordinateVector<>(0.5, 1., 0.5));
+
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(faces[5]) ==
+                   VORONOI_BOX_RIGHT);
+  assert_condition(
+      std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[5]) == 1.);
+  assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[5]) ==
+                   CoordinateVector<>(1., 0.5, 0.5));
 
   return 0;
 }

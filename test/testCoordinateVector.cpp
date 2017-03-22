@@ -127,5 +127,13 @@ int main(int argc, char **argv) {
     assert_condition(a.norm() == sqrt(3.));
   }
 
+  // test cross product
+  {
+    CoordinateVector< int > a(1, 2, 3);
+    CoordinateVector< int > b(3, 2, 1);
+    CoordinateVector< int > c = CoordinateVector< int >::cross_product(a, b);
+    assert_condition(c == CoordinateVector< int >(-4, 8, -4));
+  }
+
   return 0;
 }
