@@ -57,6 +57,10 @@
  *  coordinate). */
 #define VORONOI_BOX_TOP 0xffffffff
 
+/*! @brief Tolerance used when deciding if a vertex is close enough to a plane
+ *  to consider it to lie inside the plane. */
+#define VORONOI_TOLERANCE 1.e-6
+
 /**
  * @brief Single cell of the Voronoi grid.
  */
@@ -137,13 +141,17 @@ private:
 public:
   VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
 
+  /// const element getters
   double get_volume() const;
   const CoordinateVector<> &get_centroid() const;
   const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
   get_faces() const;
 
+  /// cell specific geometric functions
+  void intersect(CoordinateVector<> relative_position, unsigned int ngb_index);
   void finalize();
 
+  /// static geometric functions
   static double volume_tetrahedron(CoordinateVector<> v1, CoordinateVector<> v2,
                                    CoordinateVector<> v3,
                                    CoordinateVector<> v4);
@@ -159,6 +167,10 @@ public:
   static CoordinateVector<> midpoint_triangle(CoordinateVector<> v1,
                                               CoordinateVector<> v2,
                                               CoordinateVector<> v3);
+
+  static std::pair< int, double > test_vertex(CoordinateVector<> vertex,
+                                              CoordinateVector<> plane_vector,
+                                              double plane_distance_squared);
 
   /**
    * @brief Anonymous enum used for labelling cell face tuple members.

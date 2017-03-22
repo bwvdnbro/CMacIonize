@@ -253,6 +253,19 @@ public:
   }
 
   /**
+   * @brief Get the dot product of two CoordinateVector instances.
+   *
+   * @param a First CoordinateVector.
+   * @param b Second CoordinateVector.
+   * @return Dot product of a and b.
+   */
+  static inline _datatype_
+  dot_product(const CoordinateVector< _datatype_ > &a,
+              const CoordinateVector< _datatype_ > &b) {
+    return a._x * b._x + a._y * b._y + a._z * b._z;
+  }
+
+  /**
    * @brief Get the cross product of two CoordinateVector instances.
    *
    * @param a First CoordinateVector.

@@ -127,6 +127,13 @@ int main(int argc, char **argv) {
     assert_condition(a.norm() == sqrt(3.));
   }
 
+  // test dot product
+  {
+    CoordinateVector< int > a(1, 2, 3);
+    CoordinateVector< int > b(3, 2, 1);
+    assert_condition(CoordinateVector< int >::dot_product(a, b) == 10);
+  }
+
   // test cross product
   {
     CoordinateVector< int > a(1, 2, 3);

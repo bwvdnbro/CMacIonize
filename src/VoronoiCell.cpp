@@ -173,6 +173,8 @@ VoronoiCell::VoronoiCell(CoordinateVector<> generator_position,
   std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][2]) = VORONOI_BOX_RIGHT;
 }
 
+/// const element getters
+
 /**
  * @brief Get the volume of the cell.
  *
@@ -203,6 +205,80 @@ const CoordinateVector<> &VoronoiCell::get_centroid() const {
 const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
 VoronoiCell::get_faces() const {
   return _faces;
+}
+
+/// cell specific geometric functions
+
+/**
+ * @brief Intersect the Voronoi cell with the midplane of the segment between
+ * the cell generator and the point at the given relative position w.r.t. the
+ * cell generator, with the given index.
+ *
+ * @param relative_position Relative position of the intersecting point w.r.t.
+ * the cell generator, i.e. point position - generator position (in m).
+ * @param ngb_index Index of the intersecting point.
+ */
+void VoronoiCell::intersect(CoordinateVector<> relative_position,
+                            unsigned int ngb_index) {
+  // make sure the intersecting point has a different position than the cell
+  // generator
+  cmac_assert(relative_position.norm2() != 0.);
+
+  const CoordinateVector<> plane_vector = 0.5 * relative_position;
+  const double plane_distance_squared = plane_vector.norm2();
+
+  int up, lp;
+  unsigned char us, ls;
+  up = 0;
+  std::pair< int, double > u =
+      test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+  std::pair< int, double > l;
+  bool complicated_setup = (u.first == 0);
+  if (!complicated_setup) {
+    if (u.first == 1) {
+      // vertex above the plane
+      // loop over its edges until we find one below the plane, or closer to the
+      // plane
+      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][0]);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      us = 0;
+      while (l.second >= u.second) {
+        ++us;
+        cmac_assert_message(us < _edges[up].size(),
+                            "Cell completely gone! This should not happen.");
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      }
+      // lp now contains the index of a vertex closer or below the plane
+      ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+
+      while (l.first == 1) {
+        u.second = l.second;
+        up = lp;
+        us = 0;
+        while (us < ls && l.second >= u.second) {
+          lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+          l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+          ++us;
+        }
+        while (l.second >= u.second) {
+          ++us;
+          cmac_assert_message(us < _edges[up].size(),
+                              "Cell completely gone! This should not happen.");
+          lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+          l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        }
+        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+      }
+      if (l.first == 0) {
+        up = lp;
+        complicated_setup = true;
+      }
+    } else {
+      cmac_assert(u.first == -1);
+      // vertex below the plane
+    }
+  }
 }
 
 /**
@@ -355,6 +431,8 @@ void VoronoiCell::finalize() {
   _edges.clear();
 }
 
+/// const geometric functions
+
 /**
  * @brief Get the volume of the tetrahedron formed by the given four vertices.
  *
@@ -468,4 +546,41 @@ CoordinateVector<> VoronoiCell::midpoint_triangle(CoordinateVector<> v1,
   cmac_assert(v2 != v3);
 
   return (v1 + v2 + v3) / 3.;
+}
+
+/**
+ * @brief Test if the given vertex is above, below or on the plane with the
+ * given relative position and squared distance to the cell generator.
+ *
+ * @param vertex Relative position of a vertex w.r.t. the cell generator.
+ * @param plane_vector Relative position of the closest point on the plane
+ * w.r.t. the cell generator.
+ * @param plane_distance_squared Squared distance between the closest point on
+ * the plane and the cell generator.
+ * @return std::pair containing (a) the result of the test (-1: vertex below
+ * plane, 1: vertex above plane, 0: vertex on or very close to plane), and (b)
+ * the relative distance between the vertex and the plane, in units of the
+ * squared distance between the closest point on the plane and the cell
+ * generator.
+ */
+std::pair< int, double >
+VoronoiCell::test_vertex(CoordinateVector<> vertex,
+                         CoordinateVector<> plane_vector,
+                         double plane_distance_squared) {
+  // let's make sure we have passed on correct arguments
+  cmac_assert(plane_vector.norm2() == plane_distance_squared);
+  // strictly speaking okay, but we don't want this for our intersection
+  // algorithm (this will probably be caught earlier on)
+  cmac_assert(plane_distance_squared > 0.);
+  cmac_assert(vertex.norm2() > 0.);
+
+  double test_result = CoordinateVector<>::dot_product(vertex, plane_vector) -
+                       plane_distance_squared;
+  if (test_result < -VORONOI_TOLERANCE) {
+    return std::make_pair(-1, test_result);
+  } else if (test_result > VORONOI_TOLERANCE) {
+    return std::make_pair(1, test_result);
+  } else {
+    return std::make_pair(0, test_result);
+  }
 }
