@@ -224,15 +224,28 @@ void VoronoiCell::intersect(CoordinateVector<> relative_position,
   // generator
   cmac_assert(relative_position.norm2() != 0.);
 
+  // set up plane variables that will be used in the geometric tests throughout
+  // this method
   const CoordinateVector<> plane_vector = 0.5 * relative_position;
   const double plane_distance_squared = plane_vector.norm2();
 
+  // we need to find a first vertex of the new face, which will be the
+  // intersection point of an edge of the cell with the intersecting plane
+  // below we start looking for an intersected edge, starting from an
+  // arbitrary vertex (the first one)
+  // if in the course of our search we find a vertex on (or very close to) the
+  // plane, we need to use a different algorithm. This event is recorded in a
+  // dedicated flag variable.
+
   int up, lp;
   unsigned char us, ls;
+  // test the first vertex
   up = 0;
   std::pair< int, double > u =
       test_vertex(_vertices[up], plane_vector, plane_distance_squared);
   std::pair< int, double > l;
+  // if we find a vertex on (or very close to) the plane, we set a flag that
+  // tells us we need to use a more complicated algorithm
   bool complicated_setup = (u.first == 0);
   if (!complicated_setup) {
     if (u.first == 1) {
@@ -249,12 +262,20 @@ void VoronoiCell::intersect(CoordinateVector<> relative_position,
         lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       }
-      // lp now contains the index of a vertex closer or below the plane
+      // 'lp' now contains the index of a vertex closer or below the plane
+      // set 'ls' to the index of the edge of that vertex that brought us to it
       ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
 
+      // now continue doing this until we find a vertex that is below or on the
+      // plane
+      // using a closer vertex as next vertex to start from makes sense, since
+      // the Voronoi cell is guaranteed to be convex (by definition)
       while (l.first == 1) {
         u.second = l.second;
         up = lp;
+        // always start with the first edge, but skip the edge that brought us
+        // to this vertex (that is the reason for the two loops; we simply skip
+        // the case 'us == ls', since we already tested that vertex)
         us = 0;
         while (us < ls && l.second >= u.second) {
           lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
@@ -271,12 +292,52 @@ void VoronoiCell::intersect(CoordinateVector<> relative_position,
         ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
       }
       if (l.first == 0) {
+        // on the plane: set the flag for the complicated setup, and make sure
+        // we set 'up' to the index of the vertex on the plane.
         up = lp;
         complicated_setup = true;
       }
+      // if we did not enter the if condition above:
+      //  'up' now contains the index of a vertex above the plane
+      //  'us' contains the index of an edge of that vertex that intersects the
+      //       plane, and links 'up' to
+      //  'lp', a vertex below the plane
+      //  'ls' is the index of that same edge, but that from the point of view
+      //       of 'lp'
     } else {
+      // all logic dictates that 'u.first == -1' is the only option left, but we
+      // better make sure
       cmac_assert(u.first == -1);
-      // vertex below the plane
+
+      // vertex below the plane: set the corresponding variables
+      lp = up;
+      l.second = u.second;
+      // loop over its edges until we find one above the plane, or closer to the
+      // plane
+
+      ls = 0;
+      up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+      u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+      while (l.second >= u.second) {
+        ++ls;
+        if (ls == _edges[lp].size()) {
+          // we checked all edges of this vertex, and did not find a vertex that
+          // is closer to the plane. Since the cell is convex (it is a Voronoi
+          // cell), this means the entire cell lies below the plane. This means
+          // the cell does not have an intersection face with the plane, and the
+          // given neighbour is not actually a neighbour of this cell.
+          // We can safely abort this method.
+          return;
+        }
+        up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+        u = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      }
+
+      // now repeat until we find a vertex above or on the plane
+      while (u.first == -1) {
+        /// continue here
+        /// remember: you swapped up and lp w.r.t. the swiftsim code!!
+      }
     }
   }
 }
