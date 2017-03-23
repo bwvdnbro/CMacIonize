@@ -450,6 +450,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // 'complicated_setup' flag is set and we have the index of a vertex on or
   // very close to the plane, in 'up'
 
+  int qp;
+  unsigned char qs, cs;
+  std::pair< int, double > q;
+
   // now create the first new vertex
   // note that we need to check the 'complicated_setup' flag again (even if we
   // already did above), as it might have been set during the normal edge
@@ -459,7 +463,78 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     cmac_error("Complicated setup has not yet been implemented!");
   } else {
     // do the normal setup
+
+    // this should always be the case, but we better make sure
+    cmac_assert(u.second > VORONOI_TOLERANCE);
+    cmac_assert(l.second < -VORONOI_TOLERANCE);
+
+    // if the assertions above hold, the division below can never go wrong
+    double upper_fraction = u.second / (u.second - l.second);
+    double lower_fraction = 1. - upper_fraction;
+
+    // assert that 'upper_fraction' and 'lower_fraction' lie in the range [0,1]
+    cmac_assert(upper_fraction >= 0. && upper_fraction <= 1.);
+    cmac_assert(lower_fraction >= 0. && lower_fraction <= 1.);
+
+    // create a new order 3 vertex
+    unsigned int new_index = _vertices.size();
+    _vertices.push_back(upper_fraction * _vertices[lp] +
+                        lower_fraction * _vertices[up]);
+    _edges.resize(_edges.size() + 1);
+
+    // we assume that '_edges' and '_vertices' have the same size; let's make
+    // sure!
+    cmac_assert(_edges.size() == _vertices.size());
+
+    _edges[new_index].resize(3);
+
+    // make new edge connections:
+    //  - the first edge of the new vertex will be connected to the last new
+    //    vertex that will be created below
+    //  - the second edge is connected to the vertex below the plane, and
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][1]) = lp;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][1]) = ls;
+    //    we also update this connection in the vertex below the plane
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = new_index;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = 1;
+    //  - the third (and last) vertex will be connected to the next new vertex
+    //    that will be created below
+
+    // remove the edge connection between 'up' and 'lp' in the edge list of 'up'
+    // (it was already removed in 'lp', since we have overwritten this edge)
+    // this will also make sure 'up' is deleted from the cell when we exit this
+    // routine
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]) = -1;
+
+    // set neighbour relations for the new vertex:
+    //  - edge 0 will have the new neighbour as neighbour
+    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+    //  - edge 1 is a smaller copy of the intersected edge, and hence has the
+    //    same neighbour that edge had in the version stored in 'up'
+    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][1]) =
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][us]);
+    //  - edge 2 has the same neighbour as the intersected edge from the point
+    //    of view of 'lp'
+    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][2]) =
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[lp][ls]);
+
+    // set up the variables that will be used in the remainder of the algorithm
+    qs = us + 1;
+    if (qs == _edges[up].size()) {
+      qs = 0;
+    }
+    qp = up;
+    q = u;
+
+    cs = 2;
   }
+
+  /// stopped here for the day
+  /// remember: you didn't introduce a delete stack, but will try to use flagged
+  /// edges to find vertices that should be deleted
+  /// also: you skipped over the complicated setup for now
+  (void)qp;
+  (void)cs;
 
   return 1;
 }
