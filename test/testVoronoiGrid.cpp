@@ -35,6 +35,10 @@
  * Vandenbroucke.
  * The SWIFT code contains some comments that explain the origin of the PATH
  * naming convention.
+ *
+ * If you ever wonder why someone would go through all the trouble of
+ * implementing all these tests: VORONOITEST_PATH_2_1 actually helped finding a
+ * very stupid but nonetheless extremely hard to find bug.
  */
 enum {
   /**
@@ -151,7 +155,127 @@ enum {
    * We only test the first part of the algorithm, and check if the intersection
    * routine correctly detects a complicated setup in this case.
    */
-  VORONOITEST_PATH_1_5
+  VORONOITEST_PATH_1_5,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and its first edge intersects the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects a complicated setup in this case.
+   */
+  VORONOITEST_PATH_2_0,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and its second edge intersects the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_1,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and its second (and last) edge intersects the
+   * plane.
+   *
+   * The only difference between this test and VORONOITEST_PATH_2_1 is that in
+   * this case the second edge is also the last edge.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_2,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and is the closest vertex to the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly returns a zero status. Although in this case this would
+   * be the entire algorithm.
+   */
+  VORONOITEST_PATH_2_3,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its first
+   * edge intersects the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_0,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its second
+   * (but not last) edge intersects the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_1,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its second
+   * (and last) edge intersects the plane.
+   *
+   * The only difference between this test and VORONOITEST_PATH_2_4_1 is that in
+   * this case the second edge is also the last edge.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_2,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its second
+   * edge intersects the plane.
+   *
+   * The difference between this case and cases VORONOITEST_PATH_2_4_1 and
+   * VORONOITEST_PATH_2_4_2 is that the first edge of the second vertex in this
+   * case links to the first vertex, which means we end up in a different part
+   * of the algorithm.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_3,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its third
+   * (but not last) edge intersects the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_4,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, the second vertex is closer, and its third
+   * (and last) edge intersects the plane.
+   *
+   * The only difference between this test and VORONOITEST_PATH_2_4_4 is that in
+   * this case the third edge is also the last edge.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects an intersected edge in this case.
+   */
+  VORONOITEST_PATH_2_4_5,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and the second vertex is closer and is the
+   * closest vertex to the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly returns a zero status. Although in this case this would
+   * be the entire algorithm.
+   */
+  VORONOITEST_PATH_2_4_6,
+  /**
+   * @brief Test the intersection algorithm when the first vertex of the cell is
+   * below the intersecting plane, and the second vertex is on the plane.
+   *
+   * We only test the first part of the algorithm, and check if the intersection
+   * routine correctly detects a complicated setup in this case.
+   */
+  VORONOITEST_PATH_2_5
 };
 
 /**
@@ -163,6 +287,7 @@ enum {
  */
 void VoronoiCell::setup_variables_for_test(int testcase) {
   switch (testcase) {
+
   case VORONOITEST_PATH_1_0: {
     _vertices.resize(2);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -176,6 +301,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
     break;
   }
+
   case VORONOITEST_PATH_1_1: {
     _vertices.resize(3);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -192,6 +318,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
     break;
   }
+
   case VORONOITEST_PATH_1_2: {
     _vertices.resize(3);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -208,6 +335,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
     break;
   }
+
   case VORONOITEST_PATH_1_3: {
     _vertices.resize(4);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -221,6 +349,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = 3;
     break;
   }
+
   case VORONOITEST_PATH_1_4_0: {
     _vertices.resize(3);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -238,6 +367,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
     break;
   }
+
   case VORONOITEST_PATH_1_4_1: {
     _vertices.resize(4);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -247,20 +377,21 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _edges.resize(4);
     _edges[0].resize(3);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 2;
-    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    _edges[1].resize(4);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][3]) = 0;
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][3]) = 0;
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
     _edges[3].resize(3);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
     break;
   }
+
   case VORONOITEST_PATH_1_4_2: {
     _vertices.resize(4);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -270,22 +401,23 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _edges.resize(4);
     _edges[0].resize(3);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    // the line below is the only difference between this test and
+    // VORONOITEST_PATH_1_4_2 (+ the indices of the third edge)
     _edges[1].resize(3);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
-    // note: the line below is the only difference between this test and
-    // VORONOITEST_PATH_1_4_1
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
     _edges[3].resize(3);
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
     break;
   }
+
   case VORONOITEST_PATH_1_4_3: {
     _vertices.resize(3);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -306,6 +438,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
     break;
   }
+
   case VORONOITEST_PATH_1_4_4: {
     _vertices.resize(4);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -329,6 +462,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
     break;
   }
+
   case VORONOITEST_PATH_1_4_5: {
     _vertices.resize(4);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -354,6 +488,7 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
     break;
   }
+
   case VORONOITEST_PATH_1_4_6: {
     _vertices.resize(3);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
@@ -370,9 +505,247 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _edges[2].resize(3);
     break;
   }
+
   case VORONOITEST_PATH_1_5: {
     _vertices.resize(2);
     _vertices[0] = CoordinateVector<>(1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(0.5, 0., 0.);
+    _edges.resize(2);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_0: {
+    _vertices.resize(2);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(2);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_1: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[2] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    _edges[1].resize(3);
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_2: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[2] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(3);
+    // the line below is the only difference between this test and
+    // VORONOITEST_PATH_2_1
+    _edges[0].resize(2);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    _edges[1].resize(3);
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_3: {
+    _vertices.resize(4);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[3] = CoordinateVector<>(-2., 0., 0.);
+    _edges.resize(4);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = 3;
+    _edges[1].resize(3);
+    _edges[2].resize(3);
+    _edges[3].resize(3);
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_0: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 2;
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_1: {
+    _vertices.resize(4);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[3] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(4);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    _edges[1].resize(4);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][3]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][3]) = 0;
+    _edges[2].resize(3);
+    _edges[3].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_2: {
+    _vertices.resize(4);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[3] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(4);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    // the line below is the only difference between this test and
+    // VORONOITEST_PATH_2_4_2 (+ the indices of the third edge)
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    _edges[2].resize(3);
+    _edges[3].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_3: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_4: {
+    _vertices.resize(4);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[3] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(4);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(4);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    _edges[2].resize(3);
+    _edges[3].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 2;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_5: {
+    _vertices.resize(4);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _vertices[3] = CoordinateVector<>(1., 0., 0.);
+    _edges.resize(4);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    // the line below is the only difference between this test and
+    // VORONOITEST_PATH_2_4_4
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    _edges[2].resize(3);
+    _edges[3].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 2;
+    break;
+  }
+
+  case VORONOITEST_PATH_2_4_6: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-0.5, 0., 0.);
+    _vertices[2] = CoordinateVector<>(-2., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(2);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    _edges[2].resize(3);
+    break;
+  }
+
+  case VORONOITEST_PATH_2_5: {
+    _vertices.resize(2);
+    _vertices[0] = CoordinateVector<>(-1., 0., 0.);
     _vertices[1] = CoordinateVector<>(0.5, 0., 0.);
     _edges.resize(2);
     _edges[0].resize(3);
@@ -493,6 +866,9 @@ int main(int argc, char **argv) {
 
   /// test Voronoi cell intersection algorithm
   {
+    /// First part of the intersection algorithm: see anonymous enum above for
+    /// a detailed description of each test.
+
     /// VORONOITEST_PATH_1_0
     {
       VoronoiCell cell;
@@ -666,8 +1042,185 @@ int main(int argc, char **argv) {
       CoordinateVector<> dx(1., 0., 0.);
       int varcheck[4];
       int status = cell.intersect(dx, 0, varcheck);
-      cmac_warning("Path 1.5: %i (%i %i %i %i)", status, varcheck[0],
+      cmac_warning("Path 1.5: %i (%i)", status, varcheck[0]);
+      assert_condition(status == 2);
+      assert_condition(varcheck[0] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_0
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_0);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.0: %i (%i %i %i %i)", status, varcheck[0],
                    varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 1);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 0);
+      assert_condition(varcheck[3] == 0);
+    }
+
+    /// VORONOITEST_PATH_2_1
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_1);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.1: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 2);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 0);
+      assert_condition(varcheck[3] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_2
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_2);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.2: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 2);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 0);
+      assert_condition(varcheck[3] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_3
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_3);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.3: %i", status);
+      assert_condition(status == 0);
+    }
+
+    /// VORONOITEST_PATH_2_4_0
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_0);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.0: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 2);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 0);
+    }
+
+    /// VORONOITEST_PATH_2_4_1
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_1);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.1: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 3);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_4_2
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_2);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.2: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 3);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_4_3
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_3);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.3: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 2);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 1);
+    }
+
+    /// VORONOITEST_PATH_2_4_4
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_4);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.4: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 3);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 2);
+    }
+
+    /// VORONOITEST_PATH_2_4_5
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_5);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.5: %i (%i %i %i %i)", status, varcheck[0],
+                   varcheck[1], varcheck[2], varcheck[3]);
+      assert_condition(status == 1);
+      assert_condition(varcheck[0] == 3);
+      assert_condition(varcheck[1] == 0);
+      assert_condition(varcheck[2] == 1);
+      assert_condition(varcheck[3] == 2);
+    }
+
+    /// VORONOITEST_PATH_2_4_6
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_4_6);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.4.6: %i", status);
+      assert_condition(status == 0);
+    }
+
+    /// VORONOITEST_PATH_2_5
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_2_5);
+      CoordinateVector<> dx(1., 0., 0.);
+      int varcheck[4];
+      int status = cell.intersect(dx, 0, varcheck);
+      cmac_warning("Path 2.5: %i (%i)", status, varcheck[0]);
       assert_condition(status == 2);
       assert_condition(varcheck[0] == 1);
     }

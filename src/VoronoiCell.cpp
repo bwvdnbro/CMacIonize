@@ -371,7 +371,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           return 0;
         }
         up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
-        u = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
       }
       // 'up' now contains the index of a vertex closer or above the plane
       // set 'us' to the index of the edge of that vertex that brought us to it
