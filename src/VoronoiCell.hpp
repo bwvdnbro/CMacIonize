@@ -139,6 +139,7 @@ private:
   CoordinateVector<> _centroid;
 
 public:
+  VoronoiCell();
   VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
 
   /// const element getters
@@ -148,7 +149,8 @@ public:
   get_faces() const;
 
   /// cell specific geometric functions
-  void intersect(CoordinateVector<> relative_position, unsigned int ngb_index);
+  int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
+                bool find_edge_and_exit = false);
   void finalize();
 
   /// static geometric functions
@@ -172,6 +174,8 @@ public:
                                               CoordinateVector<> plane_vector,
                                               double plane_distance_squared);
 
+  /// public variables
+
   /**
    * @brief Anonymous enum used for labelling cell face tuple members.
    */
@@ -180,6 +184,9 @@ public:
     VORONOI_FACE_MIDPOINT,
     VORONOI_FACE_NEIGHBOUR
   };
+
+  /// functions for unit testing
+  void setup_variables_for_test(int testcase);
 };
 
 #endif // VORONOICELL_HPP

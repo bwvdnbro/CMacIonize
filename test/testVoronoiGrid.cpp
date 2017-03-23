@@ -28,6 +28,68 @@
 #include "VoronoiGrid.hpp"
 
 /**
+ * @brief Aliases for testcase setups.
+ */
+enum { VORONOITEST_PATH_1_0 = 0, VORONOITEST_PATH_1_1, VORONOITEST_PATH_1_2 };
+
+/**
+ * @brief Overwrites the default Voronoi cell initialization and sets the cell
+ * variables to values that trigger a certain behaviour that is needed for a
+ * unit test.
+ *
+ * @param testcase ID of a testcase.
+ */
+void VoronoiCell::setup_variables_for_test(int testcase) {
+  switch (testcase) {
+  case VORONOITEST_PATH_1_0: {
+    _vertices.resize(2);
+    _vertices[0] = CoordinateVector<>(1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(-1., 0., 0.);
+    _edges.resize(2);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    _edges[1].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    break;
+  }
+  case VORONOITEST_PATH_1_1: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(2., 0., 0.);
+    _vertices[2] = CoordinateVector<>(-1., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    _edges[1].resize(3);
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    break;
+  }
+  case VORONOITEST_PATH_1_2: {
+    _vertices.resize(3);
+    _vertices[0] = CoordinateVector<>(1., 0., 0.);
+    _vertices[1] = CoordinateVector<>(2., 0., 0.);
+    _vertices[2] = CoordinateVector<>(-1., 0., 0.);
+    _edges.resize(3);
+    _edges[0].resize(2);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    _edges[1].resize(3);
+    _edges[2].resize(3);
+    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) = 0;
+    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    break;
+  }
+  }
+}
+
+/**
  * @brief Unit test for the VoronoiGrid class.
  *
  * @param argc Number of command line arguments.
@@ -133,7 +195,37 @@ int main(int argc, char **argv) {
   }
 
   /// test Voronoi cell intersection algorithm
-  {}
+  {
+    /// VORONOITEST_PATH_1_0
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_1_0);
+      CoordinateVector<> dx(1., 0., 0.);
+      int status = cell.intersect(dx, 0, true);
+      cmac_warning("Path 1.0: %i", status);
+      assert_condition(status == 1);
+    }
+
+    /// VORONOITEST_PATH_1_1
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_1_1);
+      CoordinateVector<> dx(1., 0., 0.);
+      int status = cell.intersect(dx, 0, true);
+      cmac_warning("Path 1.1: %i", status);
+      assert_condition(status == 1);
+    }
+
+    /// VORONOITEST_PATH_1_2
+    {
+      VoronoiCell cell;
+      cell.setup_variables_for_test(VORONOITEST_PATH_1_2);
+      CoordinateVector<> dx(1., 0., 0.);
+      int status = cell.intersect(dx, 0, true);
+      cmac_warning("Path 1.2: %i", status);
+      assert_condition(status == 1);
+    }
+  }
 
   return 0;
 }
