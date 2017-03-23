@@ -224,17 +224,21 @@ VoronoiCell::get_faces() const {
  * @param relative_position Relative position of the intersecting point w.r.t.
  * the cell generator, i.e. point position - generator position (in m).
  * @param ngb_index Index of the intersecting point.
- * @param find_edge_and_exit Flag used for unit testing the first part of the
- * algorithm. If set to true, only the first part of the method is executed, and
- * the method returns with a status code: cell unaltered (0), intersected edge
- * found (1), vertex on intersection plane found (2), or cell completely gone
- * (-1). If set to false, the code will crash in the latter case.
+ * @param find_edge_and_exit Array used for unit testing the first part of the
+ * algorithm. If set to a valid pointer to a 4 element array, only the first
+ * part of the method is executed, and the method returns with a status code:
+ * cell unaltered (0), intersected edge found (1), vertex on intersection plane
+ * found (2), or cell completely gone (-1). If set to a nullptr, the code will
+ * crash in the latter case. If the code returns status code 1, the array
+ * elements will be set to the edge indices of the vertex above and below the
+ * plane (in that order). If the code returns status code 2, the first element
+ * of the array will be set to the index of the vertex on the plane.
  * @return Status code: 0 if the cell was unaltered by the intersection with the
  * given neighbour, 1 otherwise. If find_edge_and_exit is set to true, other
  * status codes are possible.
  */
 int VoronoiCell::intersect(CoordinateVector<> relative_position,
-                           unsigned int ngb_index, bool find_edge_and_exit) {
+                           unsigned int ngb_index, int *find_edge_and_exit) {
   // make sure the intersecting point has a different position than the cell
   // generator
   cmac_assert(relative_position.norm2() != 0.);
@@ -431,9 +435,13 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   }
 
   if (find_edge_and_exit) {
+    find_edge_and_exit[0] = up;
     if (complicated_setup) {
       return 2;
     } else {
+      find_edge_and_exit[1] = us;
+      find_edge_and_exit[2] = lp;
+      find_edge_and_exit[3] = ls;
       return 1;
     }
   }

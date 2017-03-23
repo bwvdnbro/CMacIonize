@@ -150,7 +150,7 @@ public:
 
   /// cell specific geometric functions
   int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
-                bool find_edge_and_exit = false);
+                int *find_edge_and_exit = nullptr);
   void finalize();
 
   /// static geometric functions
