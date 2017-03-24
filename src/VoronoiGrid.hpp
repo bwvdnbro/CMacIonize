@@ -28,6 +28,7 @@
 
 #include "Box.hpp"
 
+#include <ostream>
 #include <vector>
 
 class VoronoiCell;
@@ -54,6 +55,12 @@ public:
   ~VoronoiGrid();
 
   unsigned int add_cell(CoordinateVector<> generator_position);
+  void compute_grid();
+  void finalize();
+
+  double get_volume(unsigned int index);
+
+  void print_grid(std::ostream &stream);
 };
 
 #endif // VORONOIGRID_HPP

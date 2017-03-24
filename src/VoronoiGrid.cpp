@@ -75,3 +75,41 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
   _cells.push_back(new VoronoiCell(generator_position, _box));
   return _cells.size() - 1;
 }
+
+/**
+ * @brief Compute the Voronoi cells of the grid.
+ */
+void VoronoiGrid::compute_grid() {
+  // this is an incredibly inefficient and expensive way of doing this, only
+  // useful for very small grids, as a first test
+  for (unsigned int i = 0; i < _cells.size(); ++i) {
+    for (unsigned int j = i + 1; j < _cells.size(); ++j) {
+      _cells[i]->intersect(
+          _cells[j]->get_generator() - _cells[i]->get_generator(), j);
+      _cells[j]->intersect(
+          _cells[i]->get_generator() - _cells[j]->get_generator(), i);
+    }
+  }
+}
+
+/**
+ * @brief Finalize the cells of the grid.
+ *
+ * After this routine has been called, the actual grid information is lost, but
+ * every cell has a volume, centroid and faces based on the grid.
+ */
+void VoronoiGrid::finalize() {
+  for (unsigned int i = 0; i < _cells.size(); ++i) {
+    _cells[i]->finalize();
+  }
+}
+
+/**
+ * @brief Get the volume of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Volume of that cell (in m^3).
+ */
+double VoronoiGrid::get_volume(unsigned int index) {
+  return _cells[index]->get_volume();
+}

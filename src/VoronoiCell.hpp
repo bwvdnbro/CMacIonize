@@ -29,6 +29,7 @@
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 
+#include <ostream>
 #include <vector>
 
 /*! @brief Some neighbour indices are reserved for special neighbours: the
@@ -143,6 +144,8 @@ public:
   VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
 
   /// const element getters
+  const CoordinateVector<> &get_generator() const;
+
   double get_volume() const;
   const CoordinateVector<> &get_centroid() const;
   const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
@@ -152,6 +155,11 @@ public:
   int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
                 int *find_edge_and_exit = nullptr);
   void finalize();
+
+  /// cell specific utility functions
+  void delete_connections(unsigned int vertex_index,
+                          std::vector< bool > &delete_stack);
+  void delete_vertices(std::vector< bool > &delete_stack);
 
   /// static geometric functions
   static double volume_tetrahedron(CoordinateVector<> v1, CoordinateVector<> v2,
@@ -187,6 +195,8 @@ public:
 
   /// functions for unit testing
   void setup_variables_for_test(int testcase);
+  void check_variables_after_test(int testcase);
+  void print_cell(std::ostream &stream);
 };
 
 #endif // VORONOICELL_HPP

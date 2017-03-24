@@ -183,6 +183,15 @@ VoronoiCell::VoronoiCell(CoordinateVector<> generator_position,
 /// const element getters
 
 /**
+ * @brief Get the position of the generator of the cell.
+ *
+ * @return Position of the generator of the cell (in m).
+ */
+const CoordinateVector<> &VoronoiCell::get_generator() const {
+  return _generator_position;
+}
+
+/**
  * @brief Get the volume of the cell.
  *
  * This function only works if VoronoiCell::finalize() has been called.
@@ -221,6 +230,19 @@ VoronoiCell::get_faces() const {
  * the cell generator and the point at the given relative position w.r.t. the
  * cell generator, with the given index.
  *
+ * This routine will find the intersection points of the midplane and the edges
+ * of the current cell, will link them up to the existing vertices that are
+ * below this plane (on the same side as the cell generator), and will remove
+ * the vertices that are above the plane (on the smae side as the neighbouring
+ * cell).
+ *
+ * The routine returns an exit code that is either 0 (no changes were made to
+ * the cell), or 1 (cell was changed). An exit code of 0 is an indication that
+ * no more neighbours of the cell will be found in the direction of the vector
+ * joining the cell generator and the neighbour, in the direction of the
+ * neighbour. Grid building algorithms should use this status to decide when to
+ * stop looking for neighbours.
+ *
  * @param relative_position Relative position of the intersecting point w.r.t.
  * the cell generator, i.e. point position - generator position (in m).
  * @param ngb_index Index of the intersecting point.
@@ -258,6 +280,12 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
   int up, lp;
   unsigned char us, ls;
+
+  // initialize these to please the compiler
+  ls = 0;
+  us = 0;
+  lp = -1;
+
   // test the first vertex
   up = 0;
   std::pair< int, double > u =
@@ -450,9 +478,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // 'complicated_setup' flag is set and we have the index of a vertex on or
   // very close to the plane, in 'up'
 
-  int qp;
+  int qp, cp, rp;
   unsigned char qs, cs;
   std::pair< int, double > q;
+  std::vector< bool > delete_stack(_vertices.size(), false);
 
   // now create the first new vertex
   // note that we need to check the 'complicated_setup' flag again (even if we
@@ -486,6 +515,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     // sure!
     cmac_assert(_edges.size() == _vertices.size());
 
+    delete_stack.push_back(false);
+    cmac_assert(delete_stack.size() == _vertices.size());
+
     _edges[new_index].resize(3);
 
     // make new edge connections:
@@ -502,9 +534,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
     // remove the edge connection between 'up' and 'lp' in the edge list of 'up'
     // (it was already removed in 'lp', since we have overwritten this edge)
-    // this will also make sure 'up' is deleted from the cell when we exit this
-    // routine
     std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]) = -1;
+
+    // add vertex 'up' to the delete stack
+    delete_stack[up] = true;
 
     // set neighbour relations for the new vertex:
     //  - edge 0 will have the new neighbour as neighbour
@@ -518,7 +551,11 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][2]) =
         std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[lp][ls]);
 
-    // set up the variables that will be used in the remainder of the algorithm
+    // set up the variables that will be used in the remainder of the algorithm:
+    //  'qp' is the next vertex that will be checked
+    //  'qs' is the next edge of 'qp' that will be checked
+    //  'q' is the result of the last test involving vertex 'qp', we might need
+    //      this value to compute new vertex positions
     qs = us + 1;
     if (qs == _edges[up].size()) {
       qs = 0;
@@ -526,15 +563,166 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     qp = up;
     q = u;
 
+    //  'cp' is the index of the last new vertex that was added, which we need
+    //       to connect the next new vertex to it
+    //  'rp' is the index of the first new vertex that was added (and is equal
+    //       to 'cp' for the moment), which we need to connect the last new
+    //       vertex that will be added to it
+    //  'cs' is the index of the edge of 'cp' that needs to be connected to the
+    //       next vertex
+    //  'rs' would be the index of the edge of 'rp' that needs to be connected
+    //       to the first vertex, but since we decided to choose 'rs = 0' in all
+    //       cases, we don't store the variable and just remember to use 0
+    cp = new_index;
+    rp = new_index;
     cs = 2;
   }
 
-  /// stopped here for the day
-  /// remember: you didn't introduce a delete stack, but will try to use flagged
-  /// edges to find vertices that should be deleted
-  /// also: you skipped over the complicated setup for now
-  (void)qp;
-  (void)cs;
+  // we start walking around the face that contained the first intersected edge
+  // until we find another intersected edge, and add all other vertices we
+  // encounter on the way to the delete stack
+  // once we have found a new intersected edge, we insert a new vertex, connect
+  // it to the previous new vertex, and start walking around the face that
+  // contains the new intersected edge (but not the old intersected edge)
+  // we continue doing this until we end up in the first vertex that was
+  // deleted, which means we have reached the other face that contains the first
+  // intersected edge
+  while (qp != up || qs != us) {
+    // test the next vertex
+    lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+    // make sure we have a valid vertex
+    cmac_assert(lp >= 0 && lp < static_cast< int >(_vertices.size()));
+    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+
+    if (l.first == 0) {
+      // degenerate case: vertex is on or very close to plane
+
+      cmac_error("Degenerate case not implemented yet!");
+    } else {
+      // normal case: vertex lies below or above the plane
+
+      if (l.first == 1) {
+        // vertex above the plane: delete it and continue walking around the
+        // face (so continue with the next edge of 'lp')
+        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) + 1;
+        if (qs == _edges[lp].size()) {
+          qs = 0;
+        }
+        qp = lp;
+        q = l;
+        // add this vertex to the delete stack
+        delete_stack[qp] = true;
+      } else {
+        // 'l.first == -1' is the only option left, but we better make sure
+        cmac_assert(l.first == -1);
+
+        // vertex lies below the plane: we have found a new intersected edge
+        // create a new vertex
+
+        // this should always be the case, but we better make sure
+        cmac_assert(q.second > VORONOI_TOLERANCE);
+        cmac_assert(l.second < -VORONOI_TOLERANCE);
+
+        // if the assertions above hold, the division below can never go wrong
+        double upper_fraction = q.second / (q.second - l.second);
+        double lower_fraction = 1. - upper_fraction;
+
+        // assert that 'upper_fraction' and 'lower_fraction' lie in the range
+        // [0,1]
+        cmac_assert(upper_fraction >= 0. && upper_fraction <= 1.);
+        cmac_assert(lower_fraction >= 0. && lower_fraction <= 1.);
+
+        // create a new order 3 vertex
+        unsigned int new_index = _vertices.size();
+        _vertices.push_back(upper_fraction * _vertices[lp] +
+                            lower_fraction * _vertices[qp]);
+        _edges.resize(_edges.size() + 1);
+
+        // we assume that '_edges' and '_vertices' have the same size; let's
+        // make
+        // sure!
+        cmac_assert(_edges.size() == _vertices.size());
+
+        delete_stack.push_back(false);
+        cmac_assert(delete_stack.size() == _vertices.size());
+
+        // we want an order 3 vertex
+        _edges[new_index].resize(3);
+
+        // get the index of the intersected edge in the edge list of 'lp' for
+        // convenience
+        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
+
+        // now make the new edge connections:
+        //  - the first edge of the new vertex is connected to the last edge of
+        //    the previous new vertex
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][0]) = cp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][0]) = cs;
+        //  - the last edge of the previous new vertex is hence also connected
+        //    to the first edge of this new vertex
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = new_index;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = 0;
+        //  - the second edge of the new vertex is connected to the vertex below
+        //    the plane
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][1]) = lp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][1]) = ls;
+        //  - while the original intersected edge in the vertex below the plane
+        //    is replaced by an edge that connects to this new vertex
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = new_index;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = 1;
+        //  - the last edge of the new vertex will be connected to the next
+        //    new vertex that will be added, or to the first new vertex that was
+        //    added if this is the last new vertex
+
+        // deactivate the old edge connection between 'qp' and 'lp' in the edge
+        // list of 'qp'
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = -1;
+
+        // add 'qp' to the delete stack
+        delete_stack[qp] = true;
+
+        // set the neighbours for the new edges:
+        //  - edge 0 will have the new neighbour as neighbour
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+        //  - edge 1 links to 'lp' and hence has the same neighbour as the edge
+        //    that connected 'qp' and 'lp'
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][1]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+        //  - edge 2 shares a face with the edge from 'lp' to 'qp' (now the new
+        //    vertex), and hence has the same neighbour as that edge
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][2]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[lp][ls]);
+
+        // 'qp' is still a vertex above the plane, so the next edge to check is
+        // the next edge of 'qp'
+        ++qs;
+        if (qs == _edges[qp].size()) {
+          qs = 0;
+        }
+        // update 'cp' and 'cs' (remember: they contain the information
+        // necessary to link the last new vertex that was created to the next
+        // new vertex that will be created, or the first new vertex that was
+        // created if this is the last new vertex)
+        cp = new_index;
+        cs = 2;
+      }
+    }
+  }
+
+  // connect the last new vertex to the first new vertex
+  // remember: we chose 'rs == 0', and therefore did not declare 'rs' at all
+  std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = rp;
+  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = 0;
+  std::get< VORONOI_EDGE_ENDPOINT >(_edges[rp][0]) = cp;
+  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[rp][0]) = cs;
+
+  // we are done adding new vertices, but we still have a lot of vertices and
+  // edges that are no longer active
+  // delete these
+  // note that not only the vertices that are flagged in the delete stack will
+  // be removed, but also all other vertices that still have active edge
+  // connections with these vertices
+  delete_vertices(delete_stack);
 
   return 1;
 }
@@ -689,7 +877,129 @@ void VoronoiCell::finalize() {
   _edges.clear();
 }
 
-/// const geometric functions
+/// cell specific utility functions
+
+/**
+ * @brief Make sure all vertices connected to the given vertex are added to the
+ * delete stack, and recursively apply this method to these vertices as well.
+ *
+ * @param vertex_index Index of a vertex in the internal vertex list.
+ * @param delete_stack std::vector containing a deletion flag for each vertex in
+ * the internal vertex list. If the flag is true, the vertex will be deleted.
+ */
+void VoronoiCell::delete_connections(unsigned int vertex_index,
+                                     std::vector< bool > &delete_stack) {
+  for (unsigned int edge_index = 0; edge_index < _edges[vertex_index].size();
+       ++edge_index) {
+    int edge =
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex_index][edge_index]);
+    if (edge >= 0) {
+      delete_stack[edge] = true;
+      // disconnect the vertex
+      std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex_index][edge_index]) = -1;
+      unsigned char other_edge_index = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(
+          _edges[vertex_index][edge_index]);
+      std::get< VORONOI_EDGE_ENDPOINT >(_edges[edge][other_edge_index]) = -1;
+      // now delete all connections of the endpoint
+      delete_connections(edge, delete_stack);
+    }
+  }
+}
+
+/**
+ * @brief Delete all vertices that have been flagged in the given delete stack.
+ *
+ * @param delete_stack std::vector containing a deletion flag for each vertex in
+ * the internal vertex list. If the flag is true, the vertex will be deleted.
+ */
+void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
+  cmac_assert(delete_stack.size() == _vertices.size());
+  cmac_assert(delete_stack.size() == _edges.size());
+
+  // add all vertices still connected to vertices that will be deleted to the
+  // delete stack
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    if (delete_stack[i]) {
+      delete_connections(i, delete_stack);
+    }
+  }
+
+  // count the new number of vertices
+  int new_num_vert = 0;
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    // '!delete_stack[i]' is 1 if 'delete_stack[i] == false'
+    new_num_vert += !delete_stack[i];
+  }
+
+  // now actually delete all vertices and edges that need to be deleted
+  // we cannot do this in-place, and instead create new vertex and edge vectors
+  std::vector< CoordinateVector<> > new_vertices(new_num_vert);
+  std::vector< std::vector< std::tuple< int, unsigned char, unsigned int > > >
+      new_edges(new_num_vert);
+
+  // 'next_vertex' contains the next vertex to be copied
+  // 'new_vertex_index' is the index for the next new vertex to create in the
+  // new lists
+  unsigned int next_vertex = 0;
+  int new_vertex_index = 0;
+  // find the first vertex that is not deleted
+  while (next_vertex < _vertices.size() && delete_stack[next_vertex]) {
+    ++next_vertex;
+  }
+  // now continue until we have done all existing vertices
+  while (next_vertex < _vertices.size()) {
+    // add the vertex to the new vectors
+    // first make sure we do not exceed the boundaries of the new vectors
+    cmac_assert(new_vertex_index < new_num_vert);
+    // just copy the vertex and edges
+    new_vertices[new_vertex_index] = _vertices[next_vertex];
+    new_edges[new_vertex_index] = _edges[next_vertex];
+
+    // update the vertices that are connected to this vertex
+    for (unsigned char i = 0; i < _edges[next_vertex].size(); ++i) {
+      int m = std::get< VORONOI_EDGE_ENDPOINT >(_edges[next_vertex][i]);
+      // we should never encounter edges that have been deleted, as their
+      // vertices should be flagged in the delete stack
+      cmac_assert(m >= 0);
+      unsigned char n =
+          std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[next_vertex][i]);
+      // we need to distinguish between vertices that were already copied
+      // ('m < new_vertex_index'), and vertex that still need copying
+      // ('m > new_vertex_index')
+      if (m < new_vertex_index) {
+        std::get< VORONOI_EDGE_ENDPOINT >(new_edges[m][n]) = new_vertex_index;
+      } else {
+        // we temporarily store the information for this vertex in the old edge
+        // the information will be copied into the new edge automatically
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[m][n]) = new_vertex_index;
+      }
+    }
+    // done adding the new vertex, increase the index for the next one
+    ++new_vertex_index;
+
+    // this situation should really never happen
+    cmac_assert(new_vertex_index <= new_num_vert);
+
+    // find the next vertex that is not deleted
+    // don't forget to start searching from the next one, as the current one
+    // also satisfies the loop condition
+    ++next_vertex;
+    while (next_vertex < _vertices.size() && delete_stack[next_vertex]) {
+      ++next_vertex;
+    }
+  }
+
+  // at this point, we should have added exactly 'new_num_vert' vertices to the
+  // new vectors, and 'new_vertex_index' should hence be equal to 'new_num_vert'
+  cmac_assert(new_vertex_index == new_num_vert);
+
+  // now swap the vectors
+  // this will delete the original vertices and edges
+  _vertices = new_vertices;
+  _edges = new_edges;
+}
+
+/// static geometric functions
 
 /**
  * @brief Get the volume of the tetrahedron formed by the given four vertices.
@@ -830,7 +1140,8 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
   // strictly speaking okay, but we don't want this for our intersection
   // algorithm (this will probably be caught earlier on)
   cmac_assert(plane_distance_squared > 0.);
-  cmac_assert(vertex.norm2() > 0.);
+  cmac_assert_message(vertex.norm2() > 0., "vertex: %g %g %g", vertex.x(),
+                      vertex.y(), vertex.z());
 
   double test_result = CoordinateVector<>::dot_product(vertex, plane_vector) -
                        plane_distance_squared;
