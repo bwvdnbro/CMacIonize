@@ -1617,9 +1617,7 @@ int main(int argc, char **argv) {
   VoronoiGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), false,
                    numcell);
   for (unsigned int i = 0; i < numcell; ++i) {
-    unsigned int new_index = grid.add_cell(CoordinateVector<>(
-        Utilities::random_double(), Utilities::random_double(),
-        Utilities::random_double()));
+    unsigned int new_index = grid.add_cell(Utilities::random_position());
     assert_condition(new_index == i);
   }
   grid.compute_grid();

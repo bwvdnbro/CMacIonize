@@ -97,5 +97,24 @@ int main(int argc, char **argv) {
   assert_condition(block.y() == 10);
   assert_condition(block.z() == 20);
 
+  unsigned long test_value = 0xf300;
+  assert_condition(Utilities::as_binary_sequence(test_value) ==
+                   "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 "
+                   "0000 1111 0011 0000 0000")
+
+      std::vector< unsigned int >
+          test_vector(5);
+  test_vector[0] = 3;
+  test_vector[1] = 2;
+  test_vector[2] = 4;
+  test_vector[3] = 0;
+  test_vector[4] = 1;
+  std::vector< unsigned int > idx_test_vector = Utilities::argsort(test_vector);
+  assert_condition(idx_test_vector[0] == 3);
+  assert_condition(idx_test_vector[1] == 4);
+  assert_condition(idx_test_vector[2] == 1);
+  assert_condition(idx_test_vector[3] == 0);
+  assert_condition(idx_test_vector[4] == 2);
+
   return 0;
 }

@@ -756,6 +756,15 @@ set(TESTVORONOIGRID_SOURCES
 add_unit_test(NAME testVoronoiGrid
               SOURCES ${TESTVORONOIGRID_SOURCES})
 
+## PointLocations test
+set(TESTPOINTLOCATIONS_SOURCES
+    testPointLocations.cpp
+
+    ../src/PointLocations.hpp
+)
+add_unit_test(NAME testPointLocations
+              SOURCES ${TESTPOINTLOCATIONS_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

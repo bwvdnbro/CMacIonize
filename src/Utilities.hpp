@@ -52,6 +52,16 @@ namespace Utilities {
 inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
 
 /**
+ * @brief Get a random double precision position in a box with origin (0, 0, 0)
+ * and a unit side length.
+ *
+ * @return Random uniform double precision position.
+ */
+inline CoordinateVector<> random_position() {
+  return CoordinateVector<>(random_double(), random_double(), random_double());
+}
+
+/**
  * @brief Split a string of the form [str1, str2, str3] into its parts.
  *
  * @param value std::string having the form mentioned above.
@@ -717,6 +727,46 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
     }
   }
   return block;
+}
+
+/**
+ * @brief Convert the given long value to a binary sequence that can be written
+ * out to a terminal or file.
+ *
+ * @param long_value Long value to convert.
+ * @return std::string containing a binary representation of the long value.
+ */
+inline std::string as_binary_sequence(unsigned long long_value) {
+  std::stringstream binary_stream;
+  unsigned long mask = 0x8000000000000000;
+  for (unsigned int i = 0; i < 64; ++i) {
+    if (i > 0 && i % 4 == 0) {
+      binary_stream << " ";
+    }
+    binary_stream << ((long_value & mask) >> (63 - i));
+    mask >>= 1;
+  }
+  return binary_stream.str();
+}
+
+/**
+ * @brief Return a std::vector that contains the indices that would sort the
+ * given vector.
+ *
+ * @param values std::vector to sort.
+ * @return std::vector containing the indices of the elements in the given
+ * std::vector in an order that would sort the std::vector.
+ */
+template < typename _datatype_ >
+std::vector< unsigned int > argsort(const std::vector< _datatype_ > &values) {
+  std::vector< unsigned int > idx(values.size());
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    idx[i] = i;
+  }
+  std::sort(idx.begin(), idx.end(), [&values](size_t i1, size_t i2) {
+    return values[i1] < values[i2];
+  });
+  return idx;
 }
 }
 
