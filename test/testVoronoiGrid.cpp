@@ -1182,6 +1182,7 @@ int main(int argc, char **argv) {
   {
     Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     VoronoiCell cell(CoordinateVector<>(0.5), box);
+    assert_condition(cell.get_max_radius_squared() == 0.75);
     cell.finalize();
     assert_values_equal_rel(cell.get_volume(), 1., 1.e-16);
     assert_condition(cell.get_centroid() == CoordinateVector<>(0.5));

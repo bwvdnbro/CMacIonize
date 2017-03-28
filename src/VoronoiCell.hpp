@@ -154,6 +154,7 @@ public:
   /// cell specific geometric functions
   int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
                 int *find_edge_and_exit = nullptr);
+  double get_max_radius_squared() const;
   void finalize();
 
   /// cell specific utility functions

@@ -728,6 +728,24 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 }
 
 /**
+ * @brief Get the squared maximum distance between the cell generator and any of
+ * its vertices.
+ *
+ * The cell structure can only change through an interaction with a point whose
+ * squared distance to the cell generator is less than four times this value.
+ *
+ * @return Squared maximum distance between the cell generator and any of its
+ * vertices (in m^2).
+ */
+double VoronoiCell::get_max_radius_squared() const {
+  double r2 = 0.;
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    r2 = std::max(r2, _vertices[i].norm2());
+  }
+  return r2;
+}
+
+/**
  * @brief Tell the cell we are done adding extra vertices.
  *
  * This will compute the cell volume, centroid, and faces, but will also remove
