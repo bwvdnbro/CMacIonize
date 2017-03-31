@@ -263,7 +263,6 @@ private:
     c = a;
     fc = fa;
     bool mflag = true;
-    int i = 0;
 
     while (!(fb == 0.) && (std::abs(a - b) > 5.e-9 * (a + b))) {
       if ((fa != fc) && (fb != fc)) {
@@ -308,7 +307,6 @@ private:
         fa = fb;
         fb = tmp;
       }
-      i++;
     }
     return b;
   }
