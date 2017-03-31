@@ -116,9 +116,9 @@ public:
       relpos[0] /= maxpos[0];
       relpos[1] /= maxpos[1];
       relpos[2] /= maxpos[2];
-      unsigned long ix = relpos.x() * 0x100000;
-      unsigned long iy = relpos.y() * 0x100000;
-      unsigned long iz = relpos.z() * 0x100000;
+      unsigned long ix = relpos.x() * 0x1fffff;
+      unsigned long iy = relpos.y() * 0x1fffff;
+      unsigned long iz = relpos.z() * 0x1fffff;
       for (unsigned int j = 0; j < 21; ++j) {
         keys[i] += (((ix >> j) & 1) << (3 * j + 2));
         keys[i] += (((iy >> j) & 1) << (3 * j + 1));
@@ -129,23 +129,18 @@ public:
     // sort the points on key
     std::vector< unsigned int > idx = Utilities::argsort(keys);
 
-    // now construct buckets
-    _buckets.reserve(8);
+    // now construct buckets, 3 levels deep
+    _buckets.reserve(512);
     unsigned int num1 = 0;
-    for (unsigned int i = 0; i < 8; ++i) {
+    for (unsigned int i = 0; i < 512; ++i) {
       // count the number of points in the lowest key range
       unsigned int num2 = num1;
-      while (num2 < idx.size() && ((keys[idx[num2]] >> 60) & 7) == i) {
+      while (num2 < idx.size() && ((keys[idx[num2]] >> 54) & 511) == i) {
         ++num2;
       }
       _buckets.push_back(PointLocationBucket(num2 - num1));
-      cmac_status("Bucket %u:", i) for (unsigned int j = num1; j < num2; ++j) {
-        cmac_status("key: %s",
-                    Utilities::as_binary_sequence(keys[idx[j]]).c_str());
-        cmac_status("keypart: %lu", ((keys[idx[j]] >> 60) & 7));
+      for (unsigned int j = num1; j < num2; ++j) {
         _buckets[i].add_point(idx[j]);
-        CoordinateVector<> p = _locations[idx[j]];
-        cmac_status("%g %g %g", p.x(), p.y(), p.z());
       }
       num1 = num2;
     }

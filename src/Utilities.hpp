@@ -62,6 +62,17 @@ inline CoordinateVector<> random_position() {
 }
 
 /**
+ * @brief Get a random integer value within the given range.
+ *
+ * @param min_value Minimum value (inclusive).
+ * @param max_value Maximum value (exclusive).
+ * @return Uniform random value in the range [min_value, max_value[.
+ */
+inline unsigned int random_int(int min_value, int max_value) {
+  return min_value + random_double() * (max_value - min_value);
+}
+
+/**
  * @brief Split a string of the form [str1, str2, str3] into its parts.
  *
  * @param value std::string having the form mentioned above.

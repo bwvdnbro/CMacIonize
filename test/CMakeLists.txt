@@ -765,6 +765,15 @@ set(TESTPOINTLOCATIONS_SOURCES
 add_unit_test(NAME testPointLocations
               SOURCES ${TESTPOINTLOCATIONS_SOURCES})
 
+## BinarySearchTree test
+set(TESTBINARYSEARCHTREE_SOURCES
+    testBinarySearchTree.cpp
+
+    ../src/BinarySearchTree.hpp
+)
+add_unit_test(NAME testBinarySearchTree
+              SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
