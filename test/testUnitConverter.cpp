@@ -108,6 +108,16 @@ int main(int argc, char **argv) {
                             1.499e18, 1.e-4);
   }
 
+  /// ACCELERATION
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m s^-2");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_ACCELERATION >(unitnames, unitlogic);
+  }
+
   /// DENSITY
   {
     std::vector< std::string > unitnames;

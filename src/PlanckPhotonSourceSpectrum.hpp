@@ -28,12 +28,12 @@
 #define PLANCKPHOTONSOURCESPECTRUM_HPP
 
 #include "PhotonSourceSpectrum.hpp"
-#include "RandomGenerator.hpp"
 
 #include <string>
 
 class Log;
 class ParameterFile;
+class RandomGenerator;
 
 /**
  * @brief Number of frequency bins used in the internal table.

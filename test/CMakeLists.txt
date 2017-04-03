@@ -774,6 +774,17 @@ set(TESTBINARYSEARCHTREE_SOURCES
 add_unit_test(NAME testBinarySearchTree
               SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
 
+## WMBasicPhotonSourceSpectrum test
+set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
+    testWMBasicPhotonSourceSpectrum.cpp
+
+    ../src/WMBasicDataLocation.hpp.in
+    ../src/WMBasicPhotonSourceSpectrum.cpp
+    ../src/WMBasicPhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testWMBasicPhotonSourceSpectrum
+              SOURCES ${TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

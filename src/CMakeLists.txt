@@ -88,6 +88,17 @@ message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
 
+# WMBasicDataLocation.hpp
+set(WMBASIC_DATA ${PROJECT_BINARY_DIR}/data/wmbasic.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/wmbasic.tar.gz
+               ${WMBASIC_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${WMBASIC_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(WMBASICDATALOCATION ${PROJECT_BINARY_DIR}/data/wmbasic/)
+message(STATUS "WMBasicDataLocation.hpp: ${WMBASICDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/WMBasicDataLocation.hpp @ONLY)
+
 # Configuration file
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -130,6 +141,7 @@ set(CMACIONIZE_SOURCES
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
+    WMBasicPhotonSourceSpectrum.cpp
 
     Abundances.hpp
     AMRRefinementScheme.hpp
@@ -200,6 +212,8 @@ set(CMACIONIZE_SOURCES
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
+    WMBasicDataLocation.hpp.in
+    WMBasicPhotonSourceSpectrum.hpp
     WorkDistributor.hpp
     WorkEnvironment.hpp
     Worker.hpp

@@ -59,6 +59,7 @@
  * For convenience, they are ordered alphabetically.
  */
 enum Quantity {
+  QUANTITY_ACCELERATION,
   QUANTITY_DENSITY,
   QUANTITY_ENERGY,
   QUANTITY_ENERGY_CHANGE_RATE,
@@ -147,6 +148,8 @@ public:
    */
   static inline std::string get_SI_unit_name(Quantity quantity) {
     switch (quantity) {
+    case QUANTITY_ACCELERATION:
+      return "m s^-2";
     case QUANTITY_DENSITY:
       return "kg m^-3";
     case QUANTITY_ENERGY:

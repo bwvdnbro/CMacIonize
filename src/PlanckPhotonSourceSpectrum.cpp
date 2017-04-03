@@ -33,6 +33,7 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -112,7 +113,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(std::string role,
                                                        Log *log)
     : PlanckPhotonSourceSpectrum(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              role + ":temperature", "40000 K"),
+              role + ":temperature", "40000. K"),
           params.get_physical_value< QUANTITY_FLUX >(role + ":ionizing_flux",
                                                      "-1. m^-2 s^-1"),
           log) {}

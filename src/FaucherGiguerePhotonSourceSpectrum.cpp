@@ -42,7 +42,7 @@
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     double redshift, Log *log) {
-  // construct the frequency bins)
+  // construct the frequency bins
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   const double max_frequency = 4. * min_frequency;
@@ -135,7 +135,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     // we integrate out over all solid angles
     _total_flux *= 4. * M_PI;
     // and convert from cm^-2 to m^-2
-    _total_flux *= 1e4;
+    _total_flux *= 1.e4;
     // normalize the spectrum
     for (unsigned int i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
