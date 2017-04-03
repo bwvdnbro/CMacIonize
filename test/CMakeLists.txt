@@ -282,6 +282,7 @@ set(TESTPARAMETERFILE_SOURCES
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Utilities.hpp
+    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testParameterFile
               SOURCES ${TESTPARAMETERFILE_SOURCES})
@@ -784,6 +785,19 @@ set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
 )
 add_unit_test(NAME testWMBasicPhotonSourceSpectrum
               SOURCES ${TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES})
+
+## InterpolatedDensityFunction test
+set(TESTINTERPOLATEDDENSITYFUNCTION_SOURCES
+    testInterpolatedDensityFunction.cpp
+
+    ../src/InterpolatedDensityFunction.cpp
+    ../src/InterpolatedDensityFunction.cpp
+)
+add_unit_test(NAME testInterpolatedDensityFunction
+              SOURCES ${TESTINTERPOLATEDDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_interpolated_density.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/test_interpolated_density.txt
+               COPYONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
