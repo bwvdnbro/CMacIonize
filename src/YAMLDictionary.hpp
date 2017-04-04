@@ -163,6 +163,11 @@ private:
 
 public:
   /**
+   * @brief Empty constructor.
+   */
+  inline YAMLDictionary() {}
+
+  /**
    * @brief Constructor.
    *
    * @param stream std::istream to read from.
@@ -360,6 +365,27 @@ public:
    */
   inline void add_value(std::string key, std::string value) {
     _dictionary[key] = value;
+  }
+
+  /**
+   * @brief Get an iterator to the first element in the internal dictionary with
+   * used values.
+   *
+   * @return iterator to the first element of the used values.
+   */
+  inline std::map< std::string, std::string >::iterator
+  get_begin_used_values() {
+    return _used_values.begin();
+  }
+
+  /**
+   * @brief Get an iterator to the beyond last element in the internal
+   * dictionary with used values.
+   *
+   * @return iterator to the beyond last element of the used values.
+   */
+  inline std::map< std::string, std::string >::iterator get_end_used_values() {
+    return _used_values.end();
   }
 
   /**
