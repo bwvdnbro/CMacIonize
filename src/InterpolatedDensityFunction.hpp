@@ -117,8 +117,12 @@ private:
   /*! @brief Number density values to interpolate on (in m^-3). */
   std::vector< std::vector< std::vector< double > > > _number_densities;
 
+  /*! @brief Initial temperature (in K). */
+  double _temperature;
+
 public:
-  InterpolatedDensityFunction(std::string filename, Log *log = nullptr);
+  InterpolatedDensityFunction(std::string filename, double temperature,
+                              Log *log = nullptr);
 
   InterpolatedDensityFunction(ParameterFile &params, Log *log = nullptr);
 

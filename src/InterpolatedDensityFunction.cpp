@@ -47,10 +47,13 @@
  * provided range. We do not add extra points to the range to achieve this.
  *
  * @param filename Name of the file containing the data.
+ * @param temperature Initial temperature (in K).
  * @param log Log to write logging info to.
  */
 InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
-                                                         Log *log) {
+                                                         double temperature,
+                                                         Log *log)
+    : _temperature(temperature) {
 
   std::ifstream file(filename);
   if (!file) {
@@ -292,7 +295,10 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
 InterpolatedDensityFunction::InterpolatedDensityFunction(ParameterFile &params,
                                                          Log *log)
     : InterpolatedDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"), log) {}
+          params.get_value< std::string >("densityfunction:filename"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "densityfunction:temperature", "8000. K"),
+          log) {}
 
 /**
  * @brief Function that gives the density for a given coordinate.
@@ -344,5 +350,8 @@ operator()(CoordinateVector<> position) const {
 
   DensityValues values;
   values.set_number_density(number_density);
+  values.set_temperature(_temperature);
+  values.set_ionic_fraction(ION_H_n, 1.e-6);
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
   return values;
 }
