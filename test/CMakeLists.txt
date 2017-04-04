@@ -526,6 +526,7 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     ../src/DensityGrid.cpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
+    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testBlockSyntaxDensityFunction
               SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
