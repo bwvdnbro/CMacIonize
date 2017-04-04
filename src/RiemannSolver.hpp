@@ -39,31 +39,31 @@
  */
 class RiemannSolver {
 private:
-  /*! @brief Adiabatic index \f$\gamma{}\f$. */
+  /*! @brief Adiabatic index @f$\gamma{}@f$. */
   double _gamma;
 
-  /*! @brief \f$\frac{\gamma+1}{2\gamma}\f$ */
+  /*! @brief @f$\frac{\gamma+1}{2\gamma}@f$ */
   double _gp1d2g;
 
-  /*! @brief \f$\frac{\gamma-1}{2\gamma}\f$ */
+  /*! @brief @f$\frac{\gamma-1}{2\gamma}@f$ */
   double _gm1d2g;
 
-  /*! @brief \f$\frac{\gamma-1}{\gamma+1}\f$ */
+  /*! @brief @f$\frac{\gamma-1}{\gamma+1}@f$ */
   double _gm1dgp1;
 
-  /*! @brief \f$\frac{2}{\gamma+1}\f$ */
+  /*! @brief @f$\frac{2}{\gamma+1}@f$ */
   double _tdgp1;
 
-  /*! @brief \f$\frac{2}{\gamma-1}\f$ */
+  /*! @brief @f$\frac{2}{\gamma-1}@f$ */
   double _tdgm1;
 
-  /*! @brief \f$\frac{\gamma-1}{2}\f$ */
+  /*! @brief @f$\frac{\gamma-1}{2}@f$ */
   double _gm1d2;
 
-  /*! @brief \f$\frac{2\gamma}{\gamma-1}\f$ */
+  /*! @brief @f$\frac{2\gamma}{\gamma-1}@f$ */
   double _tgdgm1;
 
-  /*! @brief \f$\frac{1}{\gamma}\f$ */
+  /*! @brief @f$\frac{1}{\gamma}@f$ */
   double _ginv;
 
   /**
@@ -751,7 +751,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param gamma Adiabatic index \f$\gamma{}\f$.
+   * @param gamma Adiabatic index @f$\gamma{}@f$.
    */
   RiemannSolver(double gamma) : _gamma(gamma) {
     if (_gamma <= 1.) {

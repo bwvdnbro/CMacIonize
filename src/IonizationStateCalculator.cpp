@@ -275,82 +275,82 @@ void IonizationStateCalculator::calculate_ionization_state(
  * recombination rate.
  *
  * The equation for the ionization balance of hydrogen is
- * \f[
+ * @f[
  *   n({\rm{}H}^0)\int_{\nu{}_i}^\infty{} \frac{4\pi{}J_\nu{}}{h\nu{}}
  *   a_\nu{}({\rm{}H}^0) {\rm{}d}\nu{} = n_e n({\rm{}H}^+)
  *   \alpha{}({\rm{}H}^0, T_e) - n_e P({\rm{}H}_{\rm{}OTS})n({\rm{}He}^+)
  *   \alpha{}_{2^1{\rm{}P}}^{\rm{}eff},
- * \f]
+ * @f]
  * and that of helium
- * \f[
+ * @f[
  *   n({\rm{}He}^0) \int_{\nu{}_i}^\infty{} \frac{4\pi{}J_\nu{}}{h\nu{}}
  *   a_\nu{}({\rm{}He}^0) {\rm{}d}\nu{} = n({\rm{}He}^0) n_e
  *   \alpha{}({\rm{}He}^0, T_e),
- * \f]
+ * @f]
  * where the value of the integral on the left hand side of the equations, the
- * temperature \f$T_e\f$, the recombination rates \f$\alpha{}\f$, and the
- * current values of \f$n({\rm{}H}^0)\f$ and \f$n({\rm{}He}^0)\f$ (and hence all
+ * temperature @f$T_e@f$, the recombination rates @f$\alpha{}@f$, and the
+ * current values of @f$n({\rm{}H}^0)@f$ and @f$n({\rm{}He}^0)@f$ (and hence all
  * other densities) are given. We want to determine the new values for the
  * densities.
  *
  * We start with helium. First, we derive the following expression for the
- * electron density \f$n_e\f$:
- * \f[
+ * electron density @f$n_e@f$:
+ * @f[
  *   n_e = (1-n({\rm{}H}^0)) n_{\rm{}H} + (1-n({\rm{}He}^0)) n_{\rm{}He},
- * \f]
+ * @f]
  * which follows from charge conservation (assuming other elements do not
  * contribute free electrons due to their low abundances). Since the total
  * density we store in every cell is the hydrogen density, and abundances are
  * expressed relative to the hydrogen density, we can rewrite this as
- * \f[
+ * @f[
  *   n_e = [(1-n({\rm{}H}^0)) + (1-n({\rm{}He}^0)) A_{\rm{}He}] n_{\rm{}tot}.
- * \f]
+ * @f]
  * Using this, we can rewrite the helium ionization balance as
- * \f[
+ * @f[
  *   n({\rm{}He}^0) = C_{\rm{}He} (1-n({\rm{}He}^0)) \frac{n_e}{n_{\rm{}tot}},
- * \f]
- * with \f$C_{\rm{}He} = \frac{\alpha{}({\rm{}He}^0, T_e) n_{\rm{}tot} }
- * {J_{\rm{}He}}\f$, a constant for a given temperature. Due to the \f$n_e\f$
+ * @f]
+ * with @f$C_{\rm{}He} = \frac{\alpha{}({\rm{}He}^0, T_e) n_{\rm{}tot} }
+ * {J_{\rm{}He}}@f$, a constant for a given temperature. Due to the @f$n_e@f$
  * factor, this equation is coupled to the ionization balance of hydrogen.
  * However, if we assume the hydrogen neutral fraction to be known, we can find
  * a closed expression for the helium neutral fraction:
- * \f[
+ * @f[
  *   n({\rm{}He}^0) = \frac{-D - \sqrt{D^2 - 4A_{\rm{}He}C_{\rm{}He}B}}
  *   {2A_{\rm{}He}C_{\rm{}He}},
- * \f]
+ * @f]
  * where
- * \f[
+ * @f[
  *   D = -1 - 2A_{\rm{}He}C_{\rm{}He} - C_{\rm{}He} + C_{\rm{}He}n({\rm{}H}^0),
- * \f]
+ * @f]
  * and
- * \f[
+ * @f[
  *   B = C_{\rm{}He} + C_{\rm{}He}n({\rm{}H}^0) - A_{\rm{}He} C_{\rm{}He}.
- * \f]
+ * @f]
  * This expression can be found by solving the quadratic equation in
- * \f$n({\rm{}He}^0)\f$. We choose the minus sign based on the fact that
- * \f$D < 0\f$ and the requirement that the helium neutral fraction be positive.
+ * @f$n({\rm{}He}^0)@f$. We choose the minus sign based on the fact that
+ * @f$D < 0@f$ and the requirement that the helium neutral fraction be positive.
  *
  * To find the hydrogen neutral fraction, we have to address the fact that the
- * probability of a  Ly\f$\alpha{}\f$
- * photon being absorbed on the spot (\f$P({\rm{}H}_{\rm{}OTS})\f$) also depends
+ * probability of a  Ly@f$\alpha{}@f$
+ * photon being absorbed on the spot (@f$P({\rm{}H}_{\rm{}OTS})@f$) also depends
  * on the neutral fractions. We therefore use an iterative scheme to find the
  * hydrogen neutral fraction. The equation we want to solve is
- * \f[
+ * @f[
  *   n({\rm{}H}^0) = C_{\rm{}H} (1-n({\rm{}H}^0)) \frac{n_e}{n_{\rm{}tot}},
- * \f]
+ * @f]
  * which (conveniently) has the same form as the equation for helium. But know
  * we have
- * \f[
+ * @f[
  *   C_{\rm{}H} = C_{{\rm{}H},1} - C_{{\rm{}H},2} P({\rm{}H}_{\rm{}OTS})
  *   \frac{1-n({\rm{}He}^0)}{1-n({\rm{}H}^0)},
- * \f]
- * with \f$C_{{\rm{}H},1} = \frac{\alpha{}({\rm{}H}^0, T_e) n_{\rm{}tot} }
- * {J_{\rm{}H}}\f$ and \f$C_{{\rm{}H},2} = \frac{A_{\rm{}He}
+ * @f]
+ * with @f$C_{{\rm{}H},1} = \frac{\alpha{}({\rm{}H}^0, T_e) n_{\rm{}tot} }
+ * {J_{\rm{}H}}@f$ and @f$C_{{\rm{}H},2} = \frac{A_{\rm{}He}
  * \alpha{}_{2^1{\rm{}P}}^{\rm{}eff} n_{\rm{}tot} }
- * {J_{\rm{}H}}\f$ two constants.
+ * {J_{\rm{}H}}@f$ two constants.
  *
  * For every iteration of the scheme, we calculate an approximate value for
- * \f$C_{\rm{}H}\f$, based on the neutral fractions obtained during the previous
+ * @f$C_{\rm{}H}@f$, based on the neutral fractions obtained during the previous
  * iteration. We also calculate the helium neutral fraction, based on the
  * hydrogen neutral fraction from the previous iteration. Using these values,
  * we can then solve for the hydrogen neutral fraction. We repeat the process
@@ -362,7 +362,7 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @param jH Hydrogen intensity integral (in s^-1).
  * @param jHe Helium intensity integral (in s^-1).
  * @param nH Hydrogen number density (in m^-3).
- * @param AHe Helium abundance \f$A_{\rm{}He}\f$ (relative w.r.t. hydrogen).
+ * @param AHe Helium abundance @f$A_{\rm{}He}@f$ (relative w.r.t. hydrogen).
  * @param T Temperature (in K).
  * @param h0 Variable to store resulting hydrogen neutral fraction in.
  * @param he0 Variable to store resulting helium neutral fraction in.

@@ -132,6 +132,7 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
@@ -178,6 +179,7 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    InterpolatedDensityFunction.hpp
     IonizationStateCalculator.hpp
     IterationConvergenceChecker.hpp
     IterationConvergenceCheckerFactory.hpp

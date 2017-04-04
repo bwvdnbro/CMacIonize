@@ -620,10 +620,10 @@ inline std::string human_readable_time(double time) {
 }
 
 /**
- * @brief Get the unit of \f$2^{10e}\f$ bytes.
+ * @brief Get the unit of @f$2^{10e}@f$ bytes.
  *
- * @param exponent Exponent \f$e\f$.
- * @return Name for \f$2^{10e}\f$ bytes: (\f$2^{10}\f$ bytes = KB, ...).
+ * @param exponent Exponent @f$e@f$.
+ * @return Name for @f$2^{10e}@f$ bytes: (@f$2^{10}@f$ bytes = KB, ...).
  */
 inline std::string byte_unit(unsigned char exponent) {
   switch (exponent) {
