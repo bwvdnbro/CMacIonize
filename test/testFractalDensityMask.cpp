@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
   grid.initialize(block);
 
   FractalDensityMask fractal_mask(box, 20, 1e6, 42, 2.6, 4, 0.5);
+  fractal_mask.initialize();
 
   double Ntot_old = grid.get_total_hydrogen_number();
   fractal_mask.apply(grid);

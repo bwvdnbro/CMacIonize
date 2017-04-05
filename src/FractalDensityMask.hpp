@@ -27,12 +27,14 @@
 #ifndef FRACTALDENSITYMASK_HPP
 #define FRACTALDENSITYMASK_HPP
 
+#include "Atomic.hpp"
 #include "Box.hpp"
 #include "DensityGrid.hpp"
 #include "DensityMask.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
+#include "WorkDistributor.hpp"
 
 #include <iostream>
 #include <vector>
@@ -52,6 +54,18 @@ private:
   /*! @brief Resolution of the grid containing the distribution. */
   CoordinateVector< int > _resolution;
 
+  /*! @brief Number of particles per level. */
+  unsigned int _N;
+
+  /*! @brief Fractal length scale. */
+  double _L;
+
+  /*! @brief Total number of levels. */
+  unsigned int _num_level;
+
+  /*! @brief Seed for the random number generator. */
+  int _random_seed;
+
   /*! @brief Grid containing the distribution. */
   std::vector< std::vector< std::vector< double > > > _distribution;
 
@@ -63,82 +77,181 @@ private:
    * @brief (Recursively) construct a fractal grid with the given number of
    * levels, and given number of points per level and fractal length scale.
    *
-   * @param fractal_distribution std::vector containing the fractal distribution
-   * (is updated).
    * @param random_generator RandomGenerator used to generate random positions.
-   * @param N Number of points per level.
-   * @param L Fractal length scale.
-   * @param num_level Number of levels we want to create.
    * @param current_position Offset position for points on the current level
    * (in internal fractal units).
    * @param current_level Current level.
    */
-  static void make_fractal_grid(
-      std::vector< std::vector< std::vector< double > > > &fractal_distribution,
-      RandomGenerator &random_generator, unsigned int N, double L,
-      unsigned int num_level,
+  void make_fractal_grid(
+      RandomGenerator &random_generator,
       CoordinateVector<> current_position = CoordinateVector<>(0.),
-      unsigned int current_level = 0) {
-    if (current_level < num_level) {
-      for (unsigned int i = 0; i < N; ++i) {
-        CoordinateVector<> x_level = current_position;
-        x_level[0] += 2. *
-                      (random_generator.get_uniform_random_double() - 0.5) /
-                      std::pow(L, current_level + 1);
-        x_level[1] += 2. *
-                      (random_generator.get_uniform_random_double() - 0.5) /
-                      std::pow(L, current_level + 1);
-        x_level[2] += 2. *
-                      (random_generator.get_uniform_random_double() - 0.5) /
-                      std::pow(L, current_level + 1);
-        make_fractal_grid(fractal_distribution, random_generator, N, L,
-                          num_level, x_level, current_level + 1);
+      unsigned int current_level = 1) {
+
+    CoordinateVector<> x_level = current_position;
+    x_level[0] += 2. * (random_generator.get_uniform_random_double() - 0.5) /
+                  std::pow(_L, current_level);
+    x_level[1] += 2. * (random_generator.get_uniform_random_double() - 0.5) /
+                  std::pow(_L, current_level);
+    x_level[2] += 2. * (random_generator.get_uniform_random_double() - 0.5) /
+                  std::pow(_L, current_level);
+    if (current_level == 1) {
+      cmac_status("%g %g %g", x_level[0], x_level[1], x_level[2]);
+    }
+
+    if (current_level < _num_level) {
+      for (unsigned int i = 0; i < _N; ++i) {
+        make_fractal_grid(random_generator, x_level, current_level + 1);
       }
     } else {
       // current_position now contains coordinates in the range [-1/L, 1/L]
       // map them to the range [0., 1.]
-      current_position[0] *= 0.5 * L;
-      current_position[1] *= 0.5 * L;
-      current_position[2] *= 0.5 * L;
-      current_position[0] += 0.5;
-      current_position[1] += 0.5;
-      current_position[2] += 0.5;
+      x_level[0] *= 0.5 * _L;
+      x_level[1] *= 0.5 * _L;
+      x_level[2] *= 0.5 * _L;
+      x_level[0] += 0.5;
+      x_level[1] += 0.5;
+      x_level[2] += 0.5;
       // some coordinates may have fallen outside the range, periodically map
       // them to coordinates inside
-      if (current_position.x() < 0.) {
-        current_position[0] += 1.;
+      if (x_level.x() < 0.) {
+        x_level[0] += 1.;
       }
-      if (current_position.x() >= 1.) {
-        current_position[0] -= 1.;
+      if (x_level.x() >= 1.) {
+        x_level[0] -= 1.;
       }
-      if (current_position.y() < 0.) {
-        current_position[1] += 1.;
+      if (x_level.y() < 0.) {
+        x_level[1] += 1.;
       }
-      if (current_position.y() >= 1.) {
-        current_position[1] -= 1.;
+      if (x_level.y() >= 1.) {
+        x_level[1] -= 1.;
       }
-      if (current_position.z() < 0.) {
-        current_position[2] += 1.;
+      if (x_level.z() < 0.) {
+        x_level[2] += 1.;
       }
-      if (current_position.z() >= 1.) {
-        current_position[2] -= 1.;
+      if (x_level.z() >= 1.) {
+        x_level[2] -= 1.;
       }
 
       // make sure the coordinates are inside the range
-      cmac_assert(current_position.x() >= 0. && current_position.x() < 1.);
-      cmac_assert(current_position.y() >= 0. && current_position.y() < 1.);
-      cmac_assert(current_position.z() >= 0. && current_position.z() < 1.);
+      cmac_assert(x_level.x() >= 0. && x_level.x() < 1.);
+      cmac_assert(x_level.y() >= 0. && x_level.y() < 1.);
+      cmac_assert(x_level.z() >= 0. && x_level.z() < 1.);
 
       // map the coordinates to grid indices and add a point to the
       // corresponding cell
-      unsigned int ix = current_position.x() * fractal_distribution.size();
-      unsigned int iy = current_position.y() * fractal_distribution[ix].size();
-      unsigned int iz =
-          current_position.z() * fractal_distribution[ix][iy].size();
+      unsigned int ix = x_level.x() * _distribution.size();
+      unsigned int iy = x_level.y() * _distribution[ix].size();
+      unsigned int iz = x_level.z() * _distribution[ix][iy].size();
 
-      fractal_distribution[ix][iy][iz] += 1.;
+      // use an atomic operation to add the point, to make this method thread
+      // safe
+      Atomic::add(_distribution[ix][iy][iz], 1.);
     }
   }
+
+  /**
+   * @brief Job that constructs part of the fractal density grid.
+   */
+  class FractalDensityMaskConstructionJob {
+  private:
+    /*! @brief Reference to the FractalDensityMask on which we act. */
+    FractalDensityMask &_mask;
+
+    /*! @brief RandomGenerator used by this job. */
+    RandomGenerator _random_generator;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param mask Reference to the FractalDensityMask on which we act.
+     * @param random_seed Seed for the RandomGenerator.
+     */
+    inline FractalDensityMaskConstructionJob(FractalDensityMask &mask,
+                                             int random_seed)
+        : _mask(mask), _random_generator(random_seed) {}
+
+    /**
+     * @brief Should the Job be deleted by the Worker when it is finished?
+     *
+     * @return False, since we want to keep using the same RandomGenerator.
+     */
+    inline bool do_cleanup() const { return false; }
+
+    /**
+     * @brief Construct the entire fractal hierarchy for _index on the first
+     * level.
+     */
+    inline void execute() { _mask.make_fractal_grid(_random_generator); }
+  };
+
+  /**
+   * @brief JobMarket for FractalDensityMaskConstructionJobs.
+   */
+  class FractalDensityMaskConstructionJobMarket {
+  private:
+    /*! @brief Per thread FractalDensityMaskConstructionJob. */
+    std::vector< FractalDensityMaskConstructionJob > _jobs;
+
+    /*! @brief Current index on the first level. */
+    unsigned int _current_index;
+
+    /*! @brief Total number of particles on the first level. */
+    unsigned int _num_part;
+
+    /*! @brief Lock used to ensure safe access to the internal index counter. */
+    Lock _lock;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param mask FractalDensityMask to operate on.
+     * @param worksize Number of threads to use.
+     * @param random_seed Seed for the RandomGenerator.
+     */
+    inline FractalDensityMaskConstructionJobMarket(FractalDensityMask &mask,
+                                                   int worksize,
+                                                   int random_seed) {
+      _num_part = mask._N;
+      _current_index = 0;
+      _jobs.reserve(worksize);
+      for (int i = 0; i < worksize; ++i) {
+        _jobs.push_back(
+            FractalDensityMaskConstructionJob(mask, random_seed + i));
+      }
+    }
+
+    /**
+     * @brief Get a FractalDensityMaskConstructionJob.
+     *
+     * @param thread_id Rank of the thread that wants to get a job (in a
+     * parallel context).
+     * @return Pointer to a FractalDensityMaskConstructionJob, or a null pointer
+     * if no more jobs are available.
+     */
+    inline FractalDensityMaskConstructionJob *get_job(int thread_id) {
+      if (_current_index == _num_part) {
+        return nullptr;
+      }
+      bool has_job = false;
+      // we can only change _current_index if the lock is locked
+      // similarly, we can only take decision based on the value of
+      // _current_index while the lock is locked (because otherwise another
+      // thread might invalidate the decision we take, while we take it)
+      _lock.lock();
+      ++_current_index;
+      if (_current_index < _num_part) {
+        has_job = true;
+      }
+      _lock.unlock();
+      if (has_job) {
+        return &_jobs[thread_id];
+      } else {
+        return nullptr;
+      }
+    }
+  };
 
 public:
   /**
@@ -162,10 +275,8 @@ public:
                      unsigned int numpart, int seed, double fractal_dimension,
                      unsigned int num_level, double fractal_fraction,
                      Log *log = nullptr)
-      : _box(box), _resolution(resolution),
-        _fractal_fraction(fractal_fraction) {
-    RandomGenerator random_generator(seed);
-
+      : _box(box), _resolution(resolution), _num_level(num_level),
+        _random_seed(seed), _fractal_fraction(fractal_fraction) {
     // allocate the grid
     _distribution.resize(resolution.x());
     for (int ix = 0; ix < _resolution.x(); ++ix) {
@@ -176,18 +287,15 @@ public:
     }
 
     // we will use equal values for the number of points (N) per level
-    unsigned int N = std::ceil(std::pow(numpart, 1. / num_level));
+    _N = std::ceil(std::pow(numpart, 1. / _num_level));
     // the fractal length scale (L) is linked to the fractal dimension (D) and
     // the number of points per level by the formula D = log10(N)/log10(L)
-    double L = std::pow(10., std::log10(N) / fractal_dimension);
-
-    // recursively construct the fractal grid
-    make_fractal_grid(_distribution, random_generator, N, L, num_level);
+    _L = std::pow(10., std::log10(_N) / fractal_dimension);
 
     if (log) {
       log->write_status(
-          "Created FractalDensityMask with ", num_level, " levels, ", N,
-          " points per level, and a fractal length scale of ", L, ".");
+          "Created FractalDensityMask with ", _num_level, " levels, ", _N,
+          " points per level, and a fractal length scale of ", _L, ".");
     }
   }
 
@@ -216,6 +324,20 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~FractalDensityMask() {}
+
+  /**
+   * @brief Initialize the mask (in parallel) using the given number of threads.
+   *
+   * @param worksize Number of threads to use.
+   */
+  virtual void initialize(int worksize = -1) {
+    WorkDistributor< FractalDensityMaskConstructionJobMarket,
+                     FractalDensityMaskConstructionJob >
+        workers(worksize);
+    worksize = workers.get_worksize();
+    FractalDensityMaskConstructionJobMarket jobs(*this, worksize, _random_seed);
+    workers.do_in_parallel(jobs);
+  }
 
   /**
    * @brief Apply the mask to the given DensityGrid, using the given fractal
@@ -251,6 +373,8 @@ public:
         Nfractal += _fractal_fraction * Ncell * _distribution[ix][iy][iz];
       }
     }
+
+    cmac_assert(Nfractal > 0.);
 
     double fractal_norm = (Ntot - Nsmooth) / Nfractal;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
