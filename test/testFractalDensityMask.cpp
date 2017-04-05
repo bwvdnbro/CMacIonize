@@ -17,18 +17,19 @@
  ******************************************************************************/
 
 /**
- * @file testFractalDensityFunction.cpp
+ * @file testFractalDensityMask.cpp
  *
- * @brief Unit test for the FractalDensityFunction class.
+ * @brief Unit test for the FractalDensityMask class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "AsciiFileDensityGridWriter.hpp"
 #include "CartesianDensityGrid.hpp"
-#include "FractalDensityFunction.hpp"
+#include "FractalDensityMask.hpp"
+#include "HomogeneousDensityFunction.hpp"
 
 /**
- * @brief Unit test for the FractalDensityFunction class.
+ * @brief Unit test for the FractalDensityMask class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -36,13 +37,16 @@
  */
 int main(int argc, char **argv) {
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  HomogeneousDensityFunction density_function(1.);
 
-  FractalDensityFunction fractal_distribution(box, 20, 1e6, 42, 2.6, 4);
-
-  CartesianDensityGrid grid(box, 100, fractal_distribution);
+  CartesianDensityGrid grid(box, 100, density_function);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block);
+
+  FractalDensityMask fractal_mask(box, 20, 1e6, 42, 2.6, 4);
+
+  fractal_mask.apply(grid, 1.);
 
   AsciiFileDensityGridWriter writer("test_fractal_distribution", grid, ".");
 

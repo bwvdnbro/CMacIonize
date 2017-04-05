@@ -17,33 +17,31 @@
  ******************************************************************************/
 
 /**
- * @file FractalDensityFunction.hpp
+ * @file FractalDensityMask.hpp
  *
- * @brief DensityFunction that generates a fractal density distribution.
+ * @brief Fractal density mask that redistributes the density in the given grid
+ * according to a fractal distribution.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef FRACTALDENSITYFUNCTION_HPP
-#define FRACTALDENSITYFUNCTION_HPP
-
-/*! @brief Minimum number of points we require on average per cell to obtain a
- *  proper density contrast in the fractal distribution. */
-#define FRACTALDENSITYFUNCTION_HPP_NUMPOINT_PER_CELL 1000
+#ifndef FRACTALDENSITYMASK_HPP
+#define FRACTALDENSITYMASK_HPP
 
 #include "Box.hpp"
-#include "DensityFunction.hpp"
+#include "DensityGrid.hpp"
 #include "RandomGenerator.hpp"
 
 #include <iostream>
 #include <vector>
 
 /**
- * @brief  DensityFunction that generates a fractal density distribution.
+ * @brief Fractal density mask that redistributes the density in the given grid
+ * according to a fractal distribution.
  *
  * The algorithm used to generate the fractal density field is based on the
  * algorithm described in Elmegreen, B., 1997, ApJ, 477, 196.
  */
-class FractalDensityFunction : public DensityFunction {
+class FractalDensityMask {
 private:
   /*! @brief Box containing the fractal distribution (in m). */
   Box _box;
@@ -147,9 +145,9 @@ public:
    * @param num_level Number of levels of the fractal structure. According to
    * Elemegreen (1997), this should be a number in the range 3-6 for the ISM.
    */
-  FractalDensityFunction(Box box, CoordinateVector< unsigned int > resolution,
-                         unsigned int numpart, int seed,
-                         double fractal_dimension, unsigned int num_level)
+  FractalDensityMask(Box box, CoordinateVector< unsigned int > resolution,
+                     unsigned int numpart, int seed, double fractal_dimension,
+                     unsigned int num_level)
       : _box(box), _resolution(resolution) {
     RandomGenerator random_generator(seed);
 
@@ -173,23 +171,49 @@ public:
   }
 
   /**
-   * @brief Function that gives the density for a given coordinate.
+   * @brief Apply the mask to the given DensityGrid, using the given fractal
+   * fraction.
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return DensityValues at the given coordinate (in SI units).
+   * @param grid DensityGrid to apply the mask to.
+   * @param fractal_fraction Fraction of the cell density that is set by the
+   * fractal distribution.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    unsigned int ix = (position.x() - _box.get_anchor().x()) /
-                      _box.get_sides().x() * _resolution.x();
-    unsigned int iy = (position.y() - _box.get_anchor().y()) /
-                      _box.get_sides().y() * _resolution.y();
-    unsigned int iz = (position.z() - _box.get_anchor().z()) /
-                      _box.get_sides().z() * _resolution.z();
+  void apply(DensityGrid &grid, double fractal_fraction) const {
+    double smooth_fraction = 1. - fractal_fraction;
+    double Ntot = 0.;
+    double Nsmooth = 0.;
+    double Nfractal = 0.;
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      double ncell = it.get_number_density();
+      double Ncell = ncell * it.get_volume();
+      Ntot += Ncell;
+      CoordinateVector<> midpoint = it.get_cell_midpoint();
+      unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
+                        _box.get_sides().x() * _resolution.x();
+      unsigned int iy = (midpoint.y() - _box.get_anchor().y()) /
+                        _box.get_sides().y() * _resolution.y();
+      unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
+                        _box.get_sides().z() * _resolution.z();
+      Nsmooth += smooth_fraction * Ncell;
+      Nfractal += fractal_fraction * Ncell * _distribution[ix][iy][iz];
+    }
 
-    DensityValues values;
-    values.set_number_density(_distribution[ix][iy][iz]);
-    return values;
+    double fractal_norm = (Ntot - Nsmooth) / Nfractal;
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      double ncell = it.get_number_density();
+      CoordinateVector<> midpoint = it.get_cell_midpoint();
+      unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
+                        _box.get_sides().x() * _resolution.x();
+      unsigned int iy = (midpoint.y() - _box.get_anchor().y()) /
+                        _box.get_sides().y() * _resolution.y();
+      unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
+                        _box.get_sides().z() * _resolution.z();
+      double nsmooth = smooth_fraction * ncell;
+      double nfractal =
+          fractal_fraction * fractal_norm * ncell * _distribution[ix][iy][iz];
+      it.set_number_density(nsmooth + nfractal);
+    }
   }
 };
 
-#endif // FRACTALDENSITYFUNCTION_HPP
+#endif // FRACTALDENSITYMASK_HPP

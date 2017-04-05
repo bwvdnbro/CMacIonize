@@ -801,16 +801,16 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_interpolated_density.txt
                COPYONLY)
 
 ## FractalDistributionGenerator test
-set(TESTFRACTALDENSITYFUNCTION_SOURCES
-    testFractalDensityFunction.cpp
+set(TESTFRACTALDENSITYMASK_SOURCES
+    testFractalDensityMask.cpp
 
     ../src/AsciiFileDensityGridWriter.cpp
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
-    ../src/FractalDensityFunction.hpp
+    ../src/FractalDensityMask.hpp
 )
 add_unit_test(NAME testFractalDensityFunction
-              SOURCES ${TESTFRACTALDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTFRACTALDENSITYMASK_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
