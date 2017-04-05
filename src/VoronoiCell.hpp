@@ -30,6 +30,7 @@
 #include "CoordinateVector.hpp"
 
 #include <ostream>
+#include <tuple>
 #include <vector>
 
 /*! @brief Some neighbour indices are reserved for special neighbours: the
