@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "AsciiFileDensityGridWriter.hpp"
+#include "Assert.hpp"
 #include "CartesianDensityGrid.hpp"
 #include "FractalDensityMask.hpp"
 #include "HomogeneousDensityFunction.hpp"
@@ -39,14 +40,19 @@ int main(int argc, char **argv) {
   Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   HomogeneousDensityFunction density_function(1.);
 
-  CartesianDensityGrid grid(box, 100, density_function);
+  CartesianDensityGrid grid(box, 50, density_function);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block);
 
-  FractalDensityMask fractal_mask(box, 20, 1e6, 42, 2.6, 4);
+  FractalDensityMask fractal_mask(box, 20, 1e6, 42, 2.6, 4, 0.5);
 
-  fractal_mask.apply(grid, 1.);
+  double Ntot_old = grid.get_total_hydrogen_number();
+  fractal_mask.apply(grid);
+
+  // the mask is not supposed to alter the total number of hydrogen atoms, it
+  // just moves them around in the box to create a fractal structure
+  assert_values_equal_rel(Ntot_old, grid.get_total_hydrogen_number(), 1.e-13);
 
   AsciiFileDensityGridWriter writer("test_fractal_distribution", grid, ".");
 

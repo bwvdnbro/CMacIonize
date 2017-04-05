@@ -807,6 +807,7 @@ set(TESTFRACTALDENSITYMASK_SOURCES
     ../src/AsciiFileDensityGridWriter.cpp
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
+    ../src/DensityMask.hpp
     ../src/FractalDensityMask.hpp
 )
 add_unit_test(NAME testFractalDensityFunction

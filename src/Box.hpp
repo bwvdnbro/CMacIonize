@@ -163,6 +163,22 @@ public:
     }
     return dx.norm();
   }
+
+  /**
+   * @brief Check if the given position is inside the box.
+   *
+   * Note that the lower box limit is inclusive, while the upper limit is
+   * exclusive. We use this to make it possible to map the box to an integer
+   * box by multiplying with a (non inclusive) integer range size.
+   *
+   * @param v CoordinateVector<> specifying a position (in m).
+   * @return True if the given position is inside the box.
+   */
+  inline bool inside(const CoordinateVector<> &v) const {
+    return v.x() >= _anchor.x() && v.x() < _anchor.x() + _sides.x() &&
+           v.y() >= _anchor.y() && v.y() < _anchor.y() + _sides.y() &&
+           v.z() >= _anchor.z() && v.z() < _anchor.z() + _sides.z();
+  }
 };
 
 #endif // BOX_HPP

@@ -171,6 +171,7 @@ set(CMACIONIZE_SOURCES
     DensityGridTraversalJobMarket.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
+    DensityMaskFactory.hpp
     DensityValues.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp

@@ -35,6 +35,7 @@
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
+#include "DensityMaskFactory.hpp"
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
@@ -197,6 +198,7 @@ int main(int argc, char **argv) {
   // DensityGrid object with geometrical and physical properties
   DensityFunction *density_function =
       DensityFunctionFactory::generate(params, log);
+  DensityMask *density_mask = DensityMaskFactory::generate(params, log);
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
 
@@ -323,6 +325,10 @@ int main(int argc, char **argv) {
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     IonName ion = static_cast< IonName >(i);
     comm.gather(grid->get_ionic_fraction_handle(ion));
+  }
+
+  if (density_mask != nullptr) {
+    density_mask->apply(*grid);
   }
 
   // object used to distribute jobs in a shared memory parallel context
@@ -550,6 +556,9 @@ int main(int argc, char **argv) {
     delete continuoussource;
   }
   delete density_function;
+  if (density_mask != nullptr) {
+    delete density_mask;
+  }
   delete writer;
   delete grid;
   if (hydro_integrator != nullptr) {
