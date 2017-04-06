@@ -60,5 +60,23 @@ int main(int argc, char **argv) {
   ParameterFile params;
   writer.write(0, params);
 
+  // now check that the parallel version creates the exact same mask as the
+  // serial version for the same seed
+  CartesianDensityGrid grid_serial(box, 50, density_function);
+  grid_serial.initialize(block);
+  FractalDensityMask fractal_mask_serial(box, 20, 1e6, 42, 2.6, 4, 0.5);
+  fractal_mask_serial.initialize(1);
+  fractal_mask_serial.apply(grid_serial);
+
+  auto it_parallel = grid.begin();
+  auto it_serial = grid_serial.begin();
+  while (it_parallel != grid.end() && it_serial != grid_serial.end()) {
+    assert_condition(it_parallel.get_number_density() ==
+                     it_serial.get_number_density());
+    ++it_parallel;
+    ++it_serial;
+  }
+  assert_condition(it_parallel == grid.end() && it_serial == grid_serial.end());
+
   return 0;
 }

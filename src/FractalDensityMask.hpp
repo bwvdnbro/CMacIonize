@@ -63,8 +63,10 @@ private:
   /*! @brief Total number of levels. */
   unsigned int _num_level;
 
-  /*! @brief Seed for the random number generator. */
-  int _random_seed;
+  /*! @brief First level random number seeds (to guarantee the same fractal
+   *  structure for a given seed, independent of the number of threads used to
+   *  construct it). */
+  std::vector< int > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
   std::vector< std::vector< std::vector< double > > > _distribution;
@@ -94,9 +96,6 @@ private:
                   std::pow(_L, current_level);
     x_level[2] += 2. * (random_generator.get_uniform_random_double() - 0.5) /
                   std::pow(_L, current_level);
-    if (current_level == 1) {
-      cmac_status("%g %g %g", x_level[0], x_level[1], x_level[2]);
-    }
 
     if (current_level < _num_level) {
       for (unsigned int i = 0; i < _N; ++i) {
@@ -165,11 +164,23 @@ private:
      * @brief Constructor.
      *
      * @param mask Reference to the FractalDensityMask on which we act.
-     * @param random_seed Seed for the RandomGenerator.
      */
-    inline FractalDensityMaskConstructionJob(FractalDensityMask &mask,
-                                             int random_seed)
-        : _mask(mask), _random_generator(random_seed) {}
+    inline FractalDensityMaskConstructionJob(FractalDensityMask &mask)
+        : _mask(mask) {}
+
+    /**
+     * @brief Set the index for the next first level block that will be
+     * constructed by this job.
+     *
+     * This sets the seed of the random generator to the appropriate value for
+     * this first level block.
+     *
+     * @param index Index of the next first level block that will be constructed
+     * by this job.
+     */
+    inline void set_index(unsigned int index) {
+      _random_generator.set_seed(_mask._first_level_seeds[index]);
+    }
 
     /**
      * @brief Should the Job be deleted by the Worker when it is finished?
@@ -208,17 +219,14 @@ private:
      *
      * @param mask FractalDensityMask to operate on.
      * @param worksize Number of threads to use.
-     * @param random_seed Seed for the RandomGenerator.
      */
     inline FractalDensityMaskConstructionJobMarket(FractalDensityMask &mask,
-                                                   int worksize,
-                                                   int random_seed) {
+                                                   int worksize) {
       _num_part = mask._N;
       _current_index = 0;
       _jobs.reserve(worksize);
       for (int i = 0; i < worksize; ++i) {
-        _jobs.push_back(
-            FractalDensityMaskConstructionJob(mask, random_seed + i));
+        _jobs.push_back(FractalDensityMaskConstructionJob(mask));
       }
     }
 
@@ -235,6 +243,7 @@ private:
         return nullptr;
       }
       bool has_job = false;
+      unsigned int current_index = 0;
       // we can only change _current_index if the lock is locked
       // similarly, we can only take decision based on the value of
       // _current_index while the lock is locked (because otherwise another
@@ -243,9 +252,11 @@ private:
       ++_current_index;
       if (_current_index < _num_part) {
         has_job = true;
+        current_index = _current_index;
       }
       _lock.unlock();
       if (has_job) {
+        _jobs[thread_id].set_index(current_index);
         return &_jobs[thread_id];
       } else {
         return nullptr;
@@ -276,7 +287,7 @@ public:
                      unsigned int num_level, double fractal_fraction,
                      Log *log = nullptr)
       : _box(box), _resolution(resolution), _num_level(num_level),
-        _random_seed(seed), _fractal_fraction(fractal_fraction) {
+        _fractal_fraction(fractal_fraction) {
     // allocate the grid
     _distribution.resize(resolution.x());
     for (int ix = 0; ix < _resolution.x(); ++ix) {
@@ -291,6 +302,15 @@ public:
     // the fractal length scale (L) is linked to the fractal dimension (D) and
     // the number of points per level by the formula D = log10(N)/log10(L)
     _L = std::pow(10., std::log10(_N) / fractal_dimension);
+
+    // set the seeds for the random generator on the first level
+    // we do this to guarantee the same fractal structure, independent of which
+    // thread is used to construct which block, and in which order
+    _first_level_seeds.resize(_N, 0);
+    RandomGenerator random_generator(seed);
+    for (unsigned int i = 0; i < _N; ++i) {
+      _first_level_seeds[i] = random_generator.get_random_integer();
+    }
 
     if (log) {
       log->write_status(
@@ -335,7 +355,7 @@ public:
                      FractalDensityMaskConstructionJob >
         workers(worksize);
     worksize = workers.get_worksize();
-    FractalDensityMaskConstructionJobMarket jobs(*this, worksize, _random_seed);
+    FractalDensityMaskConstructionJobMarket jobs(*this, worksize);
     workers.do_in_parallel(jobs);
   }
 

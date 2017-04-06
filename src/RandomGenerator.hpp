@@ -250,6 +250,15 @@ public:
 
     return _xflt[_is];
   }
+
+  /**
+   * @brief Get a random integer value.
+   *
+   * @return Random integer value in the range [0, 2^24].
+   */
+  inline int get_random_integer() {
+    return get_uniform_random_double() * 16777216.0;
+  }
 };
 
 #endif // RANDOMGENERATOR_HPP
