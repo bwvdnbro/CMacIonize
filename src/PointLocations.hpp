@@ -78,13 +78,13 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param parent Pointer to the parent bucket (if any).
    * @param size Number of points that will be added to this bucket (or 0 if
    * unknown).
    * @param key Morton key of this bucket.
+   * @param parent Pointer to the parent bucket (if any).
    */
-  PointLocationBucket(PointLocationBucket *parent = nullptr,
-                      unsigned int size = 0, unsigned long key = 0)
+  PointLocationBucket(unsigned int size = 0, unsigned long key = 0,
+                      PointLocationBucket *parent = nullptr)
       : _parent(parent), _child(0), _key(key) {
     for (int i = 0; i < POINTLOCATIONBUCKET_NGB_NUMBER; ++i) {
       _ngbs[i] = 0;
@@ -131,6 +131,13 @@ public:
    * the first root bucket).
    */
   inline unsigned int get_child() const { return _child; }
+
+  /**
+   * @brief Set the Morton key of this bucket.
+   *
+   * @param key Morton key for this bucket.
+   */
+  inline void set_key(unsigned long key) { _key = key; }
 
   /**
    * @brief Get the Morton key of this bucket.
@@ -245,8 +252,7 @@ public:
       unsigned long key = i;
       key <<= basic_shift;
       if (num_this_bucket > num_limit) {
-        _buckets[i] = PointLocationBucket(nullptr, 0, key);
-        PointLocationBucket *parent = &(_buckets[i]);
+        _buckets[i].set_key(key);
         unsigned int num3 = num1;
         const unsigned char next_shift = basic_shift - 3;
         for (unsigned int j = 0; j < 8; ++j) {
@@ -256,18 +262,18 @@ public:
             ++num3;
           }
           _buckets.push_back(
-              PointLocationBucket(parent, num3 - num1, key + next_key));
+              PointLocationBucket(num3 - num1, key + next_key, &_buckets[i]));
           for (unsigned int k = num1; k < num3; ++k) {
             _buckets.back().add_point(idx[k]);
             _bucket_indices[idx[k]] = _buckets.size() - 1;
           }
           num1 = num3;
           if (j == 0) {
-            parent->set_child(_buckets.size() - 1);
+            _buckets[i].set_child(_buckets.size() - 1);
           }
         }
       } else {
-        _buckets[i] = PointLocationBucket(nullptr, num_this_bucket, key);
+        _buckets[i] = PointLocationBucket(num_this_bucket, key, nullptr);
         for (unsigned int k = num1; k < num2; ++k) {
           _buckets[i].add_point(idx[k]);
           _bucket_indices[idx[k]] = i;
