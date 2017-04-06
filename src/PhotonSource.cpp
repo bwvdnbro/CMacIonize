@@ -169,18 +169,22 @@ PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
   double weight;
 
   double x = random_generator.get_uniform_random_double();
-  if (x > _continuous_probability) {
+  if (x >= _continuous_probability) {
+    cmac_assert(_discrete_probabilities.size() > 0);
+    cmac_assert(_discrete_probabilities.back() == 1.);
     // discrete photon
     x = random_generator.get_uniform_random_double();
     unsigned int i = 0;
     while (x > _discrete_probabilities[i]) {
       ++i;
+      cmac_assert(i < _discrete_probabilities.size());
     }
     position = _discrete_positions[i];
     direction = get_random_direction(random_generator);
     energy = _discrete_spectrum->get_random_frequency(random_generator);
     weight = _discrete_photon_weight;
   } else {
+    cmac_assert(_continuous_source != nullptr);
     // continuous photon
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         _continuous_source->get_random_incoming_direction(random_generator);
