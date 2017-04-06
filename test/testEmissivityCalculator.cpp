@@ -130,21 +130,23 @@ int main(int argc, char **argv) {
       EmissivityValues values =
           calculator.calculate_emissivities(cell, abundances, lines);
 
+      double tolerance = 1.e-14;
+
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HAlpha),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[0] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HBeta),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[1] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HII),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[2] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_BALMER_JUMP_LOW),
           UnitConverter::convert(1.e-20 * em[3], "erg cm^-3 s^-1 angstrom^-1",
@@ -159,119 +161,119 @@ int main(int argc, char **argv) {
           values.get_emissivity(EMISSIONLINE_OI_6300),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[5] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OII_3727),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[6] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OIII_5007),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[7] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OIII_4363),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[8] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OIII_88mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[9] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NII_5755),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[10] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NII_6584),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[11] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NeIII_3869),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[12] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SII_6725),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[13] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SII_4072),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[14] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SIII_9405),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[15] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SIII_6312),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[16] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SIII_19mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[17] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NeII_12mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[19] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NIII_57mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[20] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NeII_12mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[21] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NeIII_15mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[22] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_NII_122mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[23] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_CII_2325),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[24] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_CIII_1908),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[25] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OII_7325),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[26] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_SIV_10mu),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[27] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HeI_5876),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[28] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
-          1.e-15);
+          tolerance);
       assert_values_equal_rel(values.get_emissivity(EMISSIONLINE_Hrec_s),
-                              em[29], 1.e-15);
+                              em[29], tolerance);
     }
   }
 

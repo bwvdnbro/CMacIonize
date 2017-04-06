@@ -228,26 +228,30 @@ private:
    * @param aR Soundspeed of the right state.
    * @param Plow Lower bound guess for the pressure of the middle state.
    * @param Phigh Higher bound guess for the pressure of the middle state.
+   * @param fPlow Value of the pressure function for the lower bound guess.
+   * @param fPhigh Value of the pressure function for the upper bound guess.
    * @return Pressure of the middle state, with a 1.e-8 relative error
    * precision.
    */
   inline double solve_brent(double rhoL, double uL, double PL, double aL,
                             double rhoR, double uR, double PR, double aR,
-                            double Plow, double Phigh) const {
+                            double Plow, double Phigh, double fPlow,
+                            double fPhigh) const {
     double a = Plow;
     double b = Phigh;
     double c = 0.;
     double d = 1e230;
 
-    double fa = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, a);
-    double fb = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, b);
+    double fa = fPlow;
+    double fb = fPhigh;
     double fc = 0.;
 
     double s = 0.;
     double fs = 0.;
 
     if (fa * fb > 0.) {
-      cmac_error("Equal sign function values provided to solve_brent!");
+      cmac_error("Equal sign function values provided to solve_brent (%g %g)!",
+                 fa, fb);
     }
 
     // if |f(a)| < |f(b)| then swap (a,b) end if
@@ -833,14 +837,16 @@ public:
       while (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) &&
              fPguess < 0.) {
         Pstar = Pguess;
-        Pguess = Pguess - fPguess / fprime(rhoL, PL, aL, rhoR, PR, aR, Pguess);
+        fPstar = fPguess;
+        Pguess -= fPguess / fprime(rhoL, PL, aL, rhoR, PR, aR, Pguess);
         fPguess = f(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pguess);
       }
     }
 
     // As soon as there is a suitable interval: use Brent's method
     if (std::abs(Pstar - Pguess) > 5.e-9 * (Pstar + Pguess) && fPguess > 0.) {
-      Pstar = solve_brent(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar, Pguess);
+      Pstar = solve_brent(rhoL, uL, PL, aL, rhoR, uR, PR, aR, Pstar, Pguess,
+                          fPstar, fPguess);
     } else {
       Pstar = Pguess;
     }

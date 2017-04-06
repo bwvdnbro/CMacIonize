@@ -180,6 +180,12 @@ else(Boost_FOUND)
   set(HAVE_PYTHON False)
 endif(Boost_FOUND)
 
+# Check if we need to activate fast math
+if(ACTIVATE_FAST_MATH)
+  message(STATUS "Activating Fast Math...")
+  add_compiler_flag("-ffast-math" OPTIONAL)
+endif(ACTIVATE_FAST_MATH)
+
 # Check if we need to activate assertions
 if(ACTIVATE_ASSERTIONS)
   set(HAVE_ASSERTIONS True)
