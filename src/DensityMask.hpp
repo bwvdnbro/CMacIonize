@@ -41,6 +41,13 @@ public:
   virtual ~DensityMask() {}
 
   /**
+   * @brief Initialize the mask (in parallel) using the given number of threads.
+   *
+   * @param worksize Number of threads to use.
+   */
+  virtual void initialize(int worksize = -1) = 0;
+
+  /**
    * @brief Apply the mask to the given DensityGrid.
    *
    * Note that this operation should not alter the total number of hydrogen

@@ -327,15 +327,19 @@ int main(int argc, char **argv) {
     comm.gather(grid->get_ionic_fraction_handle(ion));
   }
 
-  if (density_mask != nullptr) {
-    density_mask->apply(*grid);
-  }
-
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
       parser.get_value< int >("threads"));
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
+
+  if (density_mask != nullptr) {
+    log->write_status("Initializing DensityMask...");
+    density_mask->initialize(worksize);
+    log->write_status("Done initializing mask. Applying mask...");
+    density_mask->apply(*grid);
+    log->write_status("Done applying mask.");
+  }
 
   // make sure every thread on every process has another random seed
   random_seed += comm.get_rank() * worksize;

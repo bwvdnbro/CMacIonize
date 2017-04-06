@@ -26,6 +26,178 @@
 #ifndef POINTLOCATIONS_HPP
 #define POINTLOCATIONS_HPP
 
+#include "CoordinateVector.hpp"
+
+#include <tuple>
+#include <vector>
+
+/**
+ * @brief Structure used to speed up neighbour finding for points in a 3D space.
+ */
+class PointLocations {
+private:
+  /*! @brief Grid containing indices. */
+  std::vector< std::vector< std::vector< std::vector< unsigned int > > > >
+      _grid;
+
+  /*! @brief Map that maps indices to grid cells. */
+  std::vector< std::tuple< unsigned int, unsigned int, unsigned int > >
+      _cell_map;
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param positions Underlying positions in 3D space.
+   * @param num_per_cell Desired number of positions per grid cell.
+   */
+  inline PointLocations(const std::vector< CoordinateVector<> > &positions,
+                        unsigned int num_per_cell = 100) {
+    const unsigned int positions_size = positions.size();
+
+    CoordinateVector<> minpos = positions[0];
+    CoordinateVector<> maxpos = positions[0];
+    for (unsigned int i = 1; i < positions_size; ++i) {
+      minpos = CoordinateVector<>::min(minpos, positions[i]);
+      maxpos = CoordinateVector<>::max(maxpos, positions[i]);
+    }
+
+    // set maxpos to the range of positions
+    maxpos -= minpos;
+
+    // make the range slightly larger to make sure every position is inside it
+    minpos -= 0.01 * maxpos;
+    maxpos *= 1.02;
+
+    // now find the right size for the grid: we want an average of num_per_cell
+    // positions per grid cell
+    const double desired_num_cell = positions_size / num_per_cell;
+    const unsigned int ncell_1D = std::round(std::cbrt(desired_num_cell));
+
+    // set up the positions grid
+    _grid.resize(ncell_1D);
+    for (unsigned int ix = 0; ix < ncell_1D; ++ix) {
+      _grid[ix].resize(ncell_1D);
+      for (unsigned int iy = 0; iy < ncell_1D; ++iy) {
+        _grid[ix][iy].resize(ncell_1D);
+      }
+    }
+
+    // add the positions to the positions grid
+    _cell_map.resize(positions_size);
+    for (unsigned int i = 0; i < positions_size; ++i) {
+      unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
+      unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
+      unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
+      _grid[ix][iy][iz].push_back(i);
+      _cell_map[i] =
+          std::tuple< unsigned int, unsigned int, unsigned int >(ix, iy, iz);
+    }
+  }
+
+  /**
+   * @brief Iterator that loops over the neighbours of a position in the grid.
+   */
+  class ngbiterator {
+  private:
+    /*! @brief Reference to the underlying PointLocations object. */
+    const PointLocations &_locations;
+
+    /*! @brief Anchor of the current subgrid selection. */
+    std::tuple< unsigned int, unsigned int, unsigned int > _anchor;
+
+    /*! @brief Range of the current subgrid selection. */
+    std::tuple< int, int, int > _range;
+
+    /*! @brief Current level of the subgrid selection. */
+    unsigned int _level;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param locations Reference to the underlying PointLocations object.
+     * @param index Index of the point for which we want neighbours.
+     */
+    inline ngbiterator(const PointLocations &locations, unsigned int index)
+        : _locations(locations), _anchor(_locations._cell_map[index]),
+          _range(0, 0, 0), _level(0) {}
+
+    /**
+     * @brief Get a list of neighbours currently within the range of the
+     * iterator.
+     *
+     * @return std::vector containing the indices of neighbouring points.
+     */
+    inline const std::vector< unsigned int > &get_neighbours() const {
+      unsigned int ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
+      unsigned int iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
+      unsigned int iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
+      return _locations._grid[ix][iy][iz];
+    }
+
+    /**
+     * @brief Increase the given indices.
+     *
+     * @param rx X range index.
+     * @param ry Y range index.
+     * @param rz Z range index.
+     * @param level Level index.
+     */
+    static void increase_indices(int &rx, int &ry, int &rz,
+                                 unsigned int &level) {
+      if (rz == static_cast< int >(level)) {
+        rz = -level;
+        if (ry == static_cast< int >(level)) {
+          ry = -level;
+          if (rx == static_cast< int >(level)) {
+            ++level;
+            rx = -level;
+            ry = -level;
+            rz = -level;
+          } else {
+            ++rx;
+          }
+        } else {
+          ++ry;
+        }
+      } else {
+        ++rz;
+        if (rz == 0 && rx == 0 && ry == 0) {
+          ++rz;
+        }
+      }
+    }
+
+    /**
+     * @brief Increase the neighbour search range for this iterator.
+     *
+     * @return True if the range was successfully increased, indicating there
+     * are still more potential neighbours to be found.
+     */
+    inline bool increase_range() {
+      int &rx = std::get< 0 >(_range);
+      int &ry = std::get< 1 >(_range);
+      int &rz = std::get< 2 >(_range);
+      unsigned int &level = _level;
+      increase_indices(rx, ry, rz, level);
+      return true;
+    }
+  };
+
+  /**
+   * @brief Get ngbiterator for the position with the given index.
+   *
+   * @param index Index of a position in the grid.
+   * @return ngbiterator that can be used to get neighbours for this index.
+   */
+  inline ngbiterator get_neighbours(unsigned int index) const {
+    return ngbiterator(*this, index);
+  }
+};
+
+#ifdef OLD_CODE
+
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
@@ -733,5 +905,7 @@ public:
     }
   }
 };
+
+#endif
 
 #endif //  POINTLOCATIONS_HPP
