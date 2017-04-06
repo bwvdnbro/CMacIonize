@@ -482,7 +482,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
  */
 inline unsigned int locate(double x, const double *xarr, unsigned int length) {
   unsigned int jl = 0;
-  unsigned int ju = length + 1;
+  unsigned int ju = length;
   while (ju - jl > 1) {
     unsigned int jm = (ju + jl) / 2;
     if (x > xarr[jm]) {

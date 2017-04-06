@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
         ++numphoton[numbucket];
       }
       ++numbucket;
+      delete batch;
       batch = bucket.get_batch();
     }
     assert_condition(numbucket == 2);
@@ -110,6 +111,7 @@ int main(int argc, char **argv) {
         ++numphoton[numbucket];
       }
       ++numbucket;
+      delete batch;
       batch = pool.get_batch(0);
     }
     assert_condition(numbucket == 2);
