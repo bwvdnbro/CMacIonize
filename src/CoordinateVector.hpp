@@ -211,6 +211,20 @@ public:
   }
 
   /**
+   * @brief Get the smallest component of the CoordinateVector.
+   *
+   * @return Get the smallest component of the CoordinateVector.
+   */
+  inline double min() const { return std::min(std::min(_x, _y), _z); }
+
+  /**
+   * @brief Get the largest component of the CoordinateVector.
+   *
+   * @return Get the largest component of the CoordinateVector.
+   */
+  inline double max() const { return std::max(std::max(_x, _y), _z); }
+
+  /**
    * @brief Get the minimum of two CoordinateVector instances.
    *
    * We declare this function as static member function to distinguish it from

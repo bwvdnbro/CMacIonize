@@ -27,6 +27,7 @@
 #define POINTLOCATIONS_HPP
 
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
 
 #include <tuple>
 #include <vector>
@@ -44,6 +45,15 @@ private:
   std::vector< std::tuple< unsigned int, unsigned int, unsigned int > >
       _cell_map;
 
+  /*! @brief Anchor of the grid in physical space (in m). */
+  CoordinateVector<> _grid_anchor;
+
+  /*! @brief Side lengths of a single cell of the grid (in m). */
+  CoordinateVector<> _grid_cell_sides;
+
+  /*! @brief Reference to the underlying positions. */
+  const std::vector< CoordinateVector<> > &_positions;
+
 public:
   /**
    * @brief Constructor.
@@ -52,7 +62,8 @@ public:
    * @param num_per_cell Desired number of positions per grid cell.
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
-                        unsigned int num_per_cell = 100) {
+                        unsigned int num_per_cell = 100)
+      : _positions(positions) {
     const unsigned int positions_size = positions.size();
 
     CoordinateVector<> minpos = positions[0];
@@ -73,6 +84,10 @@ public:
     // positions per grid cell
     const double desired_num_cell = positions_size / num_per_cell;
     const unsigned int ncell_1D = std::round(std::cbrt(desired_num_cell));
+
+    // set up the geometrical quantities
+    _grid_anchor = minpos;
+    _grid_cell_sides = maxpos / ncell_1D;
 
     // set up the positions grid
     _grid.resize(ncell_1D);
@@ -110,7 +125,19 @@ public:
     std::tuple< int, int, int > _range;
 
     /*! @brief Current level of the subgrid selection. */
-    unsigned int _level;
+    int _level;
+
+    /*! @brief Maximum range within the simulation grid. */
+    std::tuple< int, int, int > _maxrange;
+
+    /*! @brief Maximum level of the subgrid selection. */
+    int _maxlevel;
+
+    /*! @brief Lower coverage limits of the search (in m). */
+    CoordinateVector<> _lower_bound;
+
+    /*! @brief Upper coverage limits of the search (in m). */
+    CoordinateVector<> _upper_bound;
 
   public:
     /**
@@ -121,7 +148,35 @@ public:
      */
     inline ngbiterator(const PointLocations &locations, unsigned int index)
         : _locations(locations), _anchor(_locations._cell_map[index]),
-          _range(0, 0, 0), _level(0) {}
+          _range(0, 0, 0), _level(0) {
+      const unsigned int ax = std::get< 0 >(_anchor);
+      const unsigned int ay = std::get< 1 >(_anchor);
+      const unsigned int az = std::get< 2 >(_anchor);
+      const int maxrx = _locations._grid.size() - ax - 1;
+      const int maxry = _locations._grid[0].size() - ay - 1;
+      const int maxrz = _locations._grid[0][0].size() - az - 1;
+      std::get< 0 >(_maxrange) = maxrx;
+      std::get< 1 >(_maxrange) = maxry;
+      std::get< 2 >(_maxrange) = maxrz;
+      _maxlevel = std::max(maxrx, maxry);
+      _maxlevel = std::max(_maxlevel, maxrz);
+
+      _lower_bound[0] = _locations._grid_anchor.x() +
+                        (ax + 1) * _locations._grid_cell_sides.x();
+      _lower_bound[1] = _locations._grid_anchor.y() +
+                        (ay + 1) * _locations._grid_cell_sides.y();
+      _lower_bound[2] = _locations._grid_anchor.z() +
+                        (az + 1) * _locations._grid_cell_sides.z();
+      _upper_bound[0] =
+          _locations._grid_anchor.x() + (ax)*_locations._grid_cell_sides.x();
+      _upper_bound[1] =
+          _locations._grid_anchor.y() + (ay)*_locations._grid_cell_sides.y();
+      _upper_bound[2] =
+          _locations._grid_anchor.z() + (az)*_locations._grid_cell_sides.z();
+
+      _lower_bound -= _locations._positions[index];
+      _upper_bound -= _locations._positions[index];
+    }
 
     /**
      * @brief Get a list of neighbours currently within the range of the
@@ -144,13 +199,12 @@ public:
      * @param rz Z range index.
      * @param level Level index.
      */
-    static void increase_indices(int &rx, int &ry, int &rz,
-                                 unsigned int &level) {
-      if (rz == static_cast< int >(level)) {
+    static void increase_indices(int &rx, int &ry, int &rz, int &level) {
+      if (rz == level) {
         rz = -level;
-        if (ry == static_cast< int >(level)) {
+        if (ry == level) {
           ry = -level;
-          if (rx == static_cast< int >(level)) {
+          if (rx == level) {
             ++level;
             rx = -level;
             ry = -level;
@@ -162,11 +216,32 @@ public:
           ++ry;
         }
       } else {
-        ++rz;
-        if (rz == 0 && rx == 0 && ry == 0) {
+        // skip the combinations we already did on the previous level(s)
+        if (std::abs(rx) < level && std::abs(ry) < level) {
+          rz = level;
+        } else {
           ++rz;
         }
       }
+    }
+
+    /**
+     * @brief Check if the given range is still inside the grid.
+     *
+     * @param rx X range index.
+     * @param ry Y range index.
+     * @param rz Z range index.
+     * @return True if the given range is inside the grid, false otherwise.
+     */
+    inline bool is_inside(int rx, int ry, int rz) const {
+      const int ax = std::get< 0 >(_anchor);
+      const int ay = std::get< 1 >(_anchor);
+      const int az = std::get< 2 >(_anchor);
+      const int sx = _locations._grid.size();
+      const int sy = _locations._grid[0].size();
+      const int sz = _locations._grid[0][0].size();
+      return ax + rx >= 0 && ax + rx < sx && ay + ry >= 0 && ay + ry < sy &&
+             az + rz >= 0 && az + rz < sz;
     }
 
     /**
@@ -176,12 +251,65 @@ public:
      * are still more potential neighbours to be found.
      */
     inline bool increase_range() {
+      if (_range == _maxrange) {
+        return false;
+      }
       int &rx = std::get< 0 >(_range);
       int &ry = std::get< 1 >(_range);
       int &rz = std::get< 2 >(_range);
-      unsigned int &level = _level;
+      int &level = _level;
+      const int oldlevel = level;
       increase_indices(rx, ry, rz, level);
+      while (!is_inside(rx, ry, rz)) {
+        increase_indices(rx, ry, rz, level);
+        cmac_assert(level <= _maxlevel);
+      }
+      if (level > oldlevel) {
+        // increase exclusion range
+        const int ax = std::get< 0 >(_anchor);
+        const int ay = std::get< 1 >(_anchor);
+        const int az = std::get< 2 >(_anchor);
+        const int sx = _locations._grid.size();
+        const int sy = _locations._grid[0].size();
+        const int sz = _locations._grid[0][0].size();
+        if (oldlevel < ax) {
+          _lower_bound[0] -= _locations._grid_cell_sides.x();
+        }
+        if (oldlevel < ay) {
+          _lower_bound[1] -= _locations._grid_cell_sides.y();
+        }
+        if (oldlevel < az) {
+          _lower_bound[2] -= _locations._grid_cell_sides.z();
+        }
+        if (oldlevel + ax + 1 < sx) {
+          _upper_bound[0] += _locations._grid_cell_sides.x();
+        }
+        if (oldlevel + ay + 1 < sy) {
+          _upper_bound[1] += _locations._grid_cell_sides.y();
+        }
+        if (oldlevel + az + 1 < sz) {
+          _upper_bound[2] += _locations._grid_cell_sides.z();
+        }
+      }
       return true;
+    }
+
+    /**
+     * @brief Get the maximal squared distance from the central point for which
+     * we have found all neighbours with the current internal state of the
+     * iterator.
+     *
+     * In other words, this function returns the minimal distance any neighbour
+     * found after a call to increase_range() will have. All closer neighbours
+     * (if any) would already have been returned by previous states of the
+     * iterator.
+     *
+     * @return Maximal exclusion radius squared (in m^2).
+     */
+    inline double get_max_radius2() const {
+      const double rmin =
+          std::min(std::abs(_lower_bound.max()), _upper_bound.min());
+      return rmin * rmin;
     }
   };
 
