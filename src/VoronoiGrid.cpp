@@ -81,18 +81,6 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
  * @brief Compute the Voronoi cells of the grid.
  */
 void VoronoiGrid::compute_grid() {
-#ifdef OLD_CODE
-  // this is an incredibly inefficient and expensive way of doing this, only
-  // useful for very small grids, as a first test
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
-    for (unsigned int j = i + 1; j < _cells.size(); ++j) {
-      _cells[i]->intersect(
-          _cells[j]->get_generator() - _cells[i]->get_generator(), j);
-      _cells[j]->intersect(
-          _cells[i]->get_generator() - _cells[j]->get_generator(), i);
-    }
-  }
-#endif
   // better way
   std::vector< CoordinateVector<> > positions(_cells.size());
   for (unsigned int i = 0; i < _cells.size(); ++i) {
@@ -109,7 +97,8 @@ void VoronoiGrid::compute_grid() {
             _cells[j]->get_generator() - _cells[i]->get_generator(), j);
       }
     }
-    while (it.increase_range()) {
+    while (it.get_max_radius2() < 4. * _cells[i]->get_max_radius_squared() &&
+           it.increase_range()) {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const unsigned int j = *ngbit;
