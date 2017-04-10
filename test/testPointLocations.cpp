@@ -106,34 +106,26 @@ int main(int argc, char **argv) {
     assert_condition(rx == -2 && ry == -2 && rz == -2 && level == 2);
   }
 
-  const unsigned int numpoint = 10000;
-  const unsigned int center = 2;
-  const double radius = 0.1;
-  const double radius2 = radius * radius;
-  std::vector< CoordinateVector<> > positions(numpoint);
-  for (unsigned int i = 0; i < numpoint; ++i) {
-    positions[i] = Utilities::random_position();
-  }
-
-  PointLocations locations(positions, 10);
-
-  const CoordinateVector<> &cpos = positions[center];
-
-  Timer smart_timer;
-  smart_timer.start();
-  unsigned int smart_ngb_count = 0;
-  auto it = locations.get_neighbours(center);
-  auto ngbs = it.get_neighbours();
-  for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-    if (*ngbit != center) {
-      const CoordinateVector<> &ngbpos = positions[*ngbit];
-      if ((ngbpos - cpos).norm2() < radius2) {
-        ++smart_ngb_count;
-      }
+  /// Test a normal search (where the search sphere is smaller than the box)
+  {
+    const unsigned int numpoint = 10000;
+    const unsigned int center = 2;
+    const double radius = 0.1;
+    const double radius2 = radius * radius;
+    std::vector< CoordinateVector<> > positions(numpoint);
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      positions[i] = Utilities::random_position();
     }
-  }
-  while (it.get_max_radius2() < radius2 && it.increase_range()) {
-    ngbs = it.get_neighbours();
+
+    PointLocations locations(positions, 10);
+
+    const CoordinateVector<> &cpos = positions[center];
+
+    Timer smart_timer;
+    smart_timer.start();
+    unsigned int smart_ngb_count = 0;
+    auto it = locations.get_neighbours(center);
+    auto ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       if (*ngbit != center) {
         const CoordinateVector<> &ngbpos = positions[*ngbit];
@@ -142,26 +134,88 @@ int main(int argc, char **argv) {
         }
       }
     }
-  }
-  smart_timer.stop();
-  cmac_status("Grid search time: %g s", smart_timer.value());
-
-  Timer bf_timer;
-  bf_timer.start();
-  unsigned int bf_ngb_count = 0;
-  for (unsigned int i = 0; i < numpoint; ++i) {
-    if (i != center) {
-      const CoordinateVector<> &ngbpos = positions[i];
-      if ((ngbpos - cpos).norm2() < radius2) {
-        ++bf_ngb_count;
+    while (it.get_max_radius2() < radius2 && it.increase_range()) {
+      ngbs = it.get_neighbours();
+      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+        if (*ngbit != center) {
+          const CoordinateVector<> &ngbpos = positions[*ngbit];
+          if ((ngbpos - cpos).norm2() < radius2) {
+            ++smart_ngb_count;
+          }
+        }
       }
     }
-  }
-  bf_timer.stop();
-  cmac_status("Brute force search time: %g s", bf_timer.value());
+    smart_timer.stop();
+    cmac_status("Grid search time: %g s", smart_timer.value());
 
-  assert_condition(smart_ngb_count == bf_ngb_count);
-  assert_condition(smart_timer.value() < bf_timer.value());
+    Timer bf_timer;
+    bf_timer.start();
+    unsigned int bf_ngb_count = 0;
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      if (i != center) {
+        const CoordinateVector<> &ngbpos = positions[i];
+        if ((ngbpos - cpos).norm2() < radius2) {
+          ++bf_ngb_count;
+        }
+      }
+    }
+    bf_timer.stop();
+    cmac_status("Brute force search time: %g s", bf_timer.value());
+
+    assert_condition(smart_ngb_count == bf_ngb_count);
+    assert_condition(smart_timer.value() < bf_timer.value());
+  }
+
+  /// Test a limit search whereby the search radius is so large all positions
+  /// should be covered
+  {
+    const unsigned int numpoint = 10000;
+    const unsigned int center = 2;
+    const double radius = 2.;
+    const double radius2 = radius * radius;
+    std::vector< CoordinateVector<> > positions(numpoint);
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      positions[i] = Utilities::random_position();
+    }
+
+    PointLocations locations(positions, 10);
+
+    const CoordinateVector<> &cpos = positions[center];
+
+    unsigned int ngb_count = 0;
+    unsigned int num_block = 1;
+    auto it = locations.get_neighbours(center);
+    auto ngbs = it.get_neighbours();
+    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+      if (*ngbit != center) {
+        const CoordinateVector<> &ngbpos = positions[*ngbit];
+        if ((ngbpos - cpos).norm2() < radius2) {
+          ++ngb_count;
+        }
+      }
+    }
+    while (it.get_max_radius2() < radius2 && it.increase_range()) {
+      ++num_block;
+      ngbs = it.get_neighbours();
+      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+        if (*ngbit != center) {
+          const CoordinateVector<> &ngbpos = positions[*ngbit];
+          if ((ngbpos - cpos).norm2() < radius2) {
+            ++ngb_count;
+          }
+        }
+      }
+    }
+    // make sure we finished the search because there were no more valid blocks,
+    // not because the covered radius was large enough
+    assert_condition(it.get_max_radius2() < radius2);
+
+    // make sure we covered all 1000 blocks of the grid
+    assert_condition(num_block == 1000);
+    // make sure we found all positions (except the center position) as
+    // neighbours
+    assert_condition(ngb_count == numpoint - 1);
+  }
 
   return 0;
 }
