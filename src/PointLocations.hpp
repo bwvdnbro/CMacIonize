@@ -141,6 +141,67 @@ public:
 
   public:
     /**
+     * @brief Set the maximal valid range value that is generated in the block
+     * traversal of this iterator.
+     *
+     * @param mx Reference to the maximum X range variable (is set).
+     * @param my Reference to the maximum Y range variable (is set).
+     * @param mz Reference to the maximum Z range variable (is set).
+     * @param mlevel Reference to the maximum level variable (is set).
+     * @param ax X anchor of the search.
+     * @param ay Y anchor of the search.
+     * @param az Z anchor of the search.
+     * @param sx X range size.
+     * @param sy Y range size.
+     * @param sz Z range size.
+     */
+    inline static void
+    set_max_range(int &mx, int &my, int &mz, int &mlevel, const unsigned int ax,
+                  const unsigned int ay, const unsigned int az,
+                  const unsigned int sx, const unsigned int sy,
+                  const unsigned int sz) {
+      cmac_assert(ax < sx);
+      cmac_assert(ay < sy);
+      cmac_assert(az < sz);
+
+      // the last block in the range is the last block in our specific block
+      // traversal order (see increase_indices) that still lies inside the grid
+      // box (see is_inside).
+      // this block has at least two positive index values, and at most one
+      // negative. The code below figures out what its indices are.
+      const int minrx = -ax;
+      const int minry = -ay;
+      const int minrz = -az;
+      const int maxrx = sx - ax - 1;
+      const int maxry = sy - ay - 1;
+      const int maxrz = sz - az - 1;
+      const int maxlevx = std::max(-minrx, maxrx);
+      const int maxlevy = std::max(-minry, maxry);
+      const int maxlevz = std::max(-minrz, maxrz);
+      // the max level is only used to assert we never step outside of the
+      // maximally allowed range
+      mlevel = std::max(maxlevx, maxlevy);
+      mlevel = std::max(mlevel, maxlevz);
+      mx = maxrx;
+      my = maxry;
+      mz = maxrz;
+      if (-minrz > maxrz &&
+          (maxlevz > maxlevx || (maxlevz == maxlevx && minrx == minrz)) &&
+          (maxlevz > maxlevy || (maxlevz == maxlevy && minry == minrz))) {
+        mz = minrz;
+      } else {
+        if (-minry > maxry && maxlevy > maxlevz &&
+            (maxlevy > maxlevx || (maxlevy == maxlevx && minrx == minry))) {
+          my = minry;
+        } else {
+          if (-minrx > maxrx && maxlevx > maxlevy && maxlevx > maxlevz) {
+            mx = minrx;
+          }
+        }
+      }
+    }
+
+    /**
      * @brief Constructor.
      *
      * @param locations Reference to the underlying PointLocations object.
@@ -152,38 +213,13 @@ public:
       const unsigned int ax = std::get< 0 >(_anchor);
       const unsigned int ay = std::get< 1 >(_anchor);
       const unsigned int az = std::get< 2 >(_anchor);
-      // the last block in the range is the last block in our specific block
-      // traversal order (see increase_indices) that still lies inside the grid
-      // box (see is_inside).
-      // this block has at least two positive index values, and at most one
-      // negative. The code below figures out what its indices are.
-      const int minrx = -ax;
-      const int minry = -ay;
-      const int minrz = -az;
-      const int maxrx = _locations._grid.size() - ax - 1;
-      const int maxry = _locations._grid[0].size() - ay - 1;
-      const int maxrz = _locations._grid[0][0].size() - az - 1;
-      const int maxlevx = std::max(-minrx, maxrx);
-      const int maxlevy = std::max(-minry, maxry);
-      const int maxlevz = std::max(-minrz, maxrz);
-      std::get< 0 >(_maxrange) = maxrx;
-      std::get< 1 >(_maxrange) = maxry;
-      std::get< 2 >(_maxrange) = maxrz;
-      if (-minrz > maxrz && maxlevz >= maxlevx && maxlevz >= maxlevy) {
-        std::get< 2 >(_maxrange) = minrz;
-      } else {
-        if (-minry > maxry && maxlevy >= maxlevx) {
-          std::get< 1 >(_maxrange) = minry;
-        } else {
-          if (-minrx > maxrx) {
-            std::get< 0 >(_maxrange) = minrx;
-          }
-        }
-      }
-      // the max level is only used to assert we never step outside of the
-      // maximally allowed range
-      _maxlevel = std::max(maxlevx, maxlevy);
-      _maxlevel = std::max(_maxlevel, maxlevz);
+      const unsigned int sx = _locations._grid.size();
+      const unsigned int sy = _locations._grid[0].size();
+      const unsigned int sz = _locations._grid[0][0].size();
+      int &mx = std::get< 0 >(_maxrange);
+      int &my = std::get< 1 >(_maxrange);
+      int &mz = std::get< 2 >(_maxrange);
+      set_max_range(mx, my, mz, _maxlevel, ax, ay, az, sx, sy, sz);
 
       // lower bound and upper bound values are used to get the geometric box
       // of the covered search region

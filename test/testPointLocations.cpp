@@ -106,6 +106,35 @@ int main(int argc, char **argv) {
     assert_condition(rx == -2 && ry == -2 && rz == -2 && level == 2);
   }
 
+  /// Test PointLocations::ngbiterator::set_max_range
+  {
+    int mx, my, mz, mlevel;
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 6, 9, 9, 10,
+                                               10, 10);
+    assert_condition(mx == 3 && my == 0 && mz == -9 && mlevel == 9);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 0, 9, 3, 10,
+                                               10, 10);
+    assert_condition(mx == 9 && my == 0 && mz == 6 && mlevel == 9);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 9, 9, 4, 10,
+                                               10, 10);
+    assert_condition(mx == 0 && my == -9 && mz == 5 && mlevel == 9);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 5, 6, 2, 10,
+                                               10, 10);
+    assert_condition(mx == 4 && my == 3 && mz == 7 && mlevel == 7);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 9, 0, 5, 10,
+                                               10, 10);
+    assert_condition(mx == 0 && my == 9 && mz == 4 && mlevel == 9);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 7, 5, 6, 10,
+                                               10, 10);
+    assert_condition(mx == -7 && my == 4 && mz == 3 && mlevel == 7);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 2, 6, 7, 10,
+                                               10, 10);
+    assert_condition(mx == 7 && my == 3 && mz == 2 && mlevel == 7);
+    PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 8, 1, 8, 10,
+                                               10, 10);
+    assert_condition(mx == 1 && my == 8 && mz == 1 && mlevel == 8);
+  }
+
   /// Test a normal search (where the search sphere is smaller than the box)
   {
     const unsigned int numpoint = 10000;
@@ -170,7 +199,6 @@ int main(int argc, char **argv) {
   /// should be covered
   {
     const unsigned int numpoint = 10000;
-    const unsigned int center = 2;
     const double radius = 2.;
     const double radius2 = radius * radius;
     std::vector< CoordinateVector<> > positions(numpoint);
@@ -180,23 +208,13 @@ int main(int argc, char **argv) {
 
     PointLocations locations(positions, 10);
 
-    const CoordinateVector<> &cpos = positions[center];
+    for (unsigned int center = 0; center < numpoint; ++center) {
+      const CoordinateVector<> &cpos = positions[center];
 
-    unsigned int ngb_count = 0;
-    unsigned int num_block = 1;
-    auto it = locations.get_neighbours(center);
-    auto ngbs = it.get_neighbours();
-    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      if (*ngbit != center) {
-        const CoordinateVector<> &ngbpos = positions[*ngbit];
-        if ((ngbpos - cpos).norm2() < radius2) {
-          ++ngb_count;
-        }
-      }
-    }
-    while (it.get_max_radius2() < radius2 && it.increase_range()) {
-      ++num_block;
-      ngbs = it.get_neighbours();
+      unsigned int ngb_count = 0;
+      unsigned int num_block = 1;
+      auto it = locations.get_neighbours(center);
+      auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         if (*ngbit != center) {
           const CoordinateVector<> &ngbpos = positions[*ngbit];
@@ -205,16 +223,29 @@ int main(int argc, char **argv) {
           }
         }
       }
-    }
-    // make sure we finished the search because there were no more valid blocks,
-    // not because the covered radius was large enough
-    assert_condition(it.get_max_radius2() < radius2);
+      while (it.get_max_radius2() < radius2 && it.increase_range()) {
+        ++num_block;
+        ngbs = it.get_neighbours();
+        for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+          if (*ngbit != center) {
+            const CoordinateVector<> &ngbpos = positions[*ngbit];
+            if ((ngbpos - cpos).norm2() < radius2) {
+              ++ngb_count;
+            }
+          }
+        }
+      }
+      // make sure we finished the search because there were no more valid
+      // blocks, not because the covered radius was large enough
+      assert_condition(it.get_max_radius2() < radius2);
 
-    // make sure we covered all 1000 blocks of the grid
-    assert_condition(num_block == 1000);
-    // make sure we found all positions (except the center position) as
-    // neighbours
-    assert_condition(ngb_count == numpoint - 1);
+      // make sure we covered all 1000 blocks of the grid
+      cmac_status("num_block: %u", num_block);
+      assert_condition(num_block == 1000);
+      // make sure we found all positions (except the center position) as
+      // neighbours
+      assert_condition(ngb_count == numpoint - 1);
+    }
   }
 
   return 0;
