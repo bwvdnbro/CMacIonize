@@ -29,16 +29,23 @@
 #include "DensityGrid.hpp"
 #include "VoronoiGrid.hpp"
 
+class VoronoiDensityGridPositions;
+
 /**
  * @brief DensityGrid implementation that uses an unstructured Voronoi grid.
  */
 class VoronoiDensityGrid : public DensityGrid {
 private:
+  /*! @brief VoronoiDensityGridPositions object used to generate generator
+   *  positions. */
+  VoronoiDensityGridPositions &_position_generator;
+
   /*! @brief Underlying Voronoi grid. */
   VoronoiGrid _voronoi_grid;
 
 public:
   VoronoiDensityGrid(
+      VoronoiDensityGridPositions &position_generator,
       DensityFunction &density_function, Box box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
@@ -47,6 +54,8 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~VoronoiDensityGrid() {}
+
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
 
   virtual unsigned int get_number_of_cells() const;
   virtual unsigned long get_cell_index(CoordinateVector<> position) const;

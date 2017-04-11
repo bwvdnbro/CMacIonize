@@ -58,7 +58,9 @@ public:
   void compute_grid();
   void finalize();
 
-  double get_volume(unsigned int index);
+  double get_volume(unsigned int index) const;
+  const CoordinateVector<> &get_centroid(unsigned int index) const;
+  const CoordinateVector<> &get_generator(unsigned int index) const;
   const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
   get_faces(unsigned int index) const;
 

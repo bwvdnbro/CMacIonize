@@ -127,8 +127,28 @@ void VoronoiGrid::finalize() {
  * @param index Index of a cell in the grid.
  * @return Volume of that cell (in m^3).
  */
-double VoronoiGrid::get_volume(unsigned int index) {
+double VoronoiGrid::get_volume(unsigned int index) const {
   return _cells[index]->get_volume();
+}
+
+/**
+ * @brief Get the centroid of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Centroid of that cell (in m).
+ */
+const CoordinateVector<> &VoronoiGrid::get_centroid(unsigned int index) const {
+  return _cells[index]->get_centroid();
+}
+
+/**
+ * @brief Get the position of the generator of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Position of the generator of that cell (in m).
+ */
+const CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) const {
+  return _cells[index]->get_generator();
 }
 
 /**
