@@ -230,11 +230,11 @@ public:
       _lower_bound[2] = _locations._grid_anchor.z() +
                         (az + 1) * _locations._grid_cell_sides.z();
       _upper_bound[0] =
-          _locations._grid_anchor.x() + (ax)*_locations._grid_cell_sides.x();
+          _locations._grid_anchor.x() + ax * _locations._grid_cell_sides.x();
       _upper_bound[1] =
-          _locations._grid_anchor.y() + (ay)*_locations._grid_cell_sides.y();
+          _locations._grid_anchor.y() + ay * _locations._grid_cell_sides.y();
       _upper_bound[2] =
-          _locations._grid_anchor.z() + (az)*_locations._grid_cell_sides.z();
+          _locations._grid_anchor.z() + az * _locations._grid_cell_sides.z();
 
       // these positions are relative to the search center position
       _lower_bound -= _locations._positions[index];
@@ -335,22 +335,22 @@ public:
         const int sx = _locations._grid.size();
         const int sy = _locations._grid[0].size();
         const int sz = _locations._grid[0][0].size();
-        if (oldlevel < ax) {
+        if (oldlevel <= ax) {
           _lower_bound[0] -= _locations._grid_cell_sides.x();
         }
-        if (oldlevel < ay) {
+        if (oldlevel <= ay) {
           _lower_bound[1] -= _locations._grid_cell_sides.y();
         }
-        if (oldlevel < az) {
+        if (oldlevel <= az) {
           _lower_bound[2] -= _locations._grid_cell_sides.z();
         }
-        if (oldlevel + ax + 1 < sx) {
+        if (oldlevel + ax < sx) {
           _upper_bound[0] += _locations._grid_cell_sides.x();
         }
-        if (oldlevel + ay + 1 < sy) {
+        if (oldlevel + ay < sy) {
           _upper_bound[1] += _locations._grid_cell_sides.y();
         }
-        if (oldlevel + az + 1 < sz) {
+        if (oldlevel + az < sz) {
           _upper_bound[2] += _locations._grid_cell_sides.z();
         }
       }

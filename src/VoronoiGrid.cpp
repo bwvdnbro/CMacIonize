@@ -97,8 +97,8 @@ void VoronoiGrid::compute_grid() {
             _cells[j]->get_generator() - _cells[i]->get_generator(), j);
       }
     }
-    while (it.get_max_radius2() < 4. * _cells[i]->get_max_radius_squared() &&
-           it.increase_range()) {
+    while (it.increase_range() &&
+           it.get_max_radius2() < 4. * _cells[i]->get_max_radius_squared()) {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const unsigned int j = *ngbit;
@@ -129,4 +129,17 @@ void VoronoiGrid::finalize() {
  */
 double VoronoiGrid::get_volume(unsigned int index) {
   return _cells[index]->get_volume();
+}
+
+/**
+ * @brief Get the faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return std::vector containing, for each face, its surface area (in m^2), its
+ * midpoint (in m), and the index of the neighbouring cell that generated the
+ * face.
+ */
+const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
+VoronoiGrid::get_faces(unsigned int index) const {
+  return _cells[index]->get_faces();
 }

@@ -1613,7 +1613,7 @@ int main(int argc, char **argv) {
 
 /// test Voronoi grid
 {
-  unsigned int numcell = 100;
+  unsigned int numcell = 1000;
   VoronoiGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), false,
                    numcell);
   for (unsigned int i = 0; i < numcell; ++i) {
@@ -1628,12 +1628,43 @@ int main(int argc, char **argv) {
   file.close();
 
   grid.finalize();
+  const double tolerance = 1.e-11;
   double total_volume = 0.;
   for (unsigned int i = 0; i < numcell; ++i) {
     double cell_volume = grid.get_volume(i);
     // no single cell should fill the entire volume
     assert_condition(cell_volume < 1.);
     total_volume += cell_volume;
+
+    // check that all neighbours of this cell have this cell as neighbour as
+    // well
+    const auto faces = grid.get_faces(i);
+    for (auto it = faces.begin(); it != faces.end(); ++it) {
+      const unsigned int ngb =
+          std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
+      // some faces have the walls of the box as neighbour, we ignore these
+      if (ngb < VORONOI_MAX_INDEX) {
+        const double area =
+            std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
+        const CoordinateVector<> midpoint =
+            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+        const auto ngbfaces = grid.get_faces(ngb);
+        auto ngbit = ngbfaces.begin();
+        while (ngbit != ngbfaces.end() &&
+               std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*ngbit) != i) {
+          ++ngbit;
+        }
+        assert_condition(ngbit != ngbfaces.end());
+        const double ngbarea =
+            std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*ngbit);
+        const CoordinateVector<> ngbmidpoint =
+            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*ngbit);
+        assert_values_equal_rel(ngbarea, area, tolerance);
+        assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
+        assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);
+        assert_values_equal_rel(ngbmidpoint.z(), midpoint.z(), tolerance);
+      }
+    }
   }
   assert_values_equal_rel(total_volume, 1., 1.e-15);
 }

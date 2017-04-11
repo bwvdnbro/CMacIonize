@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
         }
       }
     }
-    while (it.get_max_radius2() < radius2 && it.increase_range()) {
+    while (it.increase_range() && it.get_max_radius2() < radius2) {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         if (*ngbit != center) {
@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
           }
         }
       }
-      while (it.get_max_radius2() < radius2 && it.increase_range()) {
+      while (it.increase_range() && it.get_max_radius2() < radius2) {
         ++num_block;
         ngbs = it.get_neighbours();
         for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {

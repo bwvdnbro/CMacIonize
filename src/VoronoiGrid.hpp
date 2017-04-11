@@ -59,6 +59,8 @@ public:
   void finalize();
 
   double get_volume(unsigned int index);
+  const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
+  get_faces(unsigned int index) const;
 
   void print_grid(std::ostream &stream);
 };
