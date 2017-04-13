@@ -27,6 +27,7 @@
 #include "Error.hpp"
 #include "PointLocations.hpp"
 #include "VoronoiCell.hpp"
+#include "WorkDistributor.hpp"
 
 /**
  * @brief Constructor.
@@ -79,34 +80,48 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
 }
 
 /**
- * @brief Compute the Voronoi cells of the grid.
+ * @brief Compute the cell for the generator with the given index.
+ *
+ * @param index Index of the cell that should be constructed.
  */
-void VoronoiGrid::compute_grid() {
+void VoronoiGrid::compute_cell(unsigned int index) {
+  auto it = _pointlocations->get_neighbours(index);
+  auto ngbs = it.get_neighbours();
+  for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+    const unsigned int j = *ngbit;
+    if (j != index) {
+      _cells[index]->intersect(
+          _generator_positions[j] - _generator_positions[index], j);
+    }
+  }
+  while (it.increase_range() &&
+         it.get_max_radius2() < 4. * _cells[index]->get_max_radius_squared()) {
+    ngbs = it.get_neighbours();
+    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+      const unsigned int j = *ngbit;
+      _cells[index]->intersect(
+          _generator_positions[j] - _generator_positions[index], j);
+    }
+  }
+}
+
+/**
+ * @brief Compute the Voronoi cells of the grid.
+ *
+ * @param worksize Number of parallel threads to use.
+ */
+void VoronoiGrid::compute_grid(int worksize) {
   _generator_positions.resize(_cells.size());
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     _generator_positions[i] = _cells[i]->get_generator();
   }
   _pointlocations = new PointLocations(_generator_positions, 10);
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
-    auto it = _pointlocations->get_neighbours(i);
-    auto ngbs = it.get_neighbours();
-    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      const unsigned int j = *ngbit;
-      if (j != i) {
-        _cells[i]->intersect(_generator_positions[j] - _generator_positions[i],
-                             j);
-      }
-    }
-    while (it.increase_range() &&
-           it.get_max_radius2() < 4. * _cells[i]->get_max_radius_squared()) {
-      ngbs = it.get_neighbours();
-      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        const unsigned int j = *ngbit;
-        _cells[i]->intersect(_generator_positions[j] - _generator_positions[i],
-                             j);
-      }
-    }
-  }
+
+  WorkDistributor< VoronoiGridConstructionJobMarket,
+                   VoronoiGridConstructionJob >
+      workers(worksize);
+  VoronoiGridConstructionJobMarket jobs(*this, 100);
+  workers.do_in_parallel(jobs);
 }
 
 /**

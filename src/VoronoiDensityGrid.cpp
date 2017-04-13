@@ -108,6 +108,9 @@ VoronoiDensityGrid::~VoronoiDensityGrid() { delete _position_generator; }
 void VoronoiDensityGrid::initialize(
     std::pair< unsigned long, unsigned long > &block) {
   // set up the cells
+  if (_log) {
+    _log->write_status("Initializing Voronoi grid...");
+  }
   const unsigned int numcell = _position_generator->get_number_of_positions();
   for (unsigned int i = 0; i < numcell; ++i) {
     _voronoi_grid.add_cell(_position_generator->get_position());
@@ -116,6 +119,9 @@ void VoronoiDensityGrid::initialize(
   _voronoi_grid.compute_grid();
   // compute volumes and neighbour relations
   _voronoi_grid.finalize();
+  if (_log) {
+    _log->write_status("Done initializing Voronoi grid.");
+  }
 
   DensityGrid::initialize(block);
   DensityGrid::initialize(block, _density_function);
