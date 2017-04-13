@@ -240,12 +240,49 @@ int main(int argc, char **argv) {
       assert_condition(it.get_max_radius2() < radius2);
 
       // make sure we covered all 1000 blocks of the grid
-      cmac_status("num_block: %u", num_block);
       assert_condition(num_block == 1000);
       // make sure we found all positions (except the center position) as
       // neighbours
       assert_condition(ngb_count == numpoint - 1);
     }
+  }
+
+  /// Test a closest neighbour search, for an arbitrary point that is not in the
+  /// positions list
+  {
+    const unsigned int numpoint = 10000;
+    std::vector< CoordinateVector<> > positions(numpoint);
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      positions[i] = Utilities::random_position();
+    }
+
+    PointLocations locations(positions, 10);
+
+    const CoordinateVector<> cpos(0.5, 0.5, 0.5);
+
+    Timer smart_timer;
+    smart_timer.start();
+    unsigned int smart_index = locations.get_closest_neighbour(cpos);
+    smart_timer.stop();
+    cmac_status("Grid search time: %g s", smart_timer.value());
+
+    Timer bf_timer;
+    bf_timer.start();
+    double minr2 = 2.;
+    unsigned int bf_index = 0;
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      const CoordinateVector<> &ipos = positions[i];
+      const double ir2 = (cpos - ipos).norm2();
+      if (ir2 < minr2) {
+        minr2 = ir2;
+        bf_index = i;
+      }
+    }
+    bf_timer.stop();
+    cmac_status("Brute force search time: %g s", bf_timer.value());
+
+    assert_condition(smart_index == bf_index);
+    assert_condition(smart_timer.value() < bf_timer.value());
   }
 
   return 0;

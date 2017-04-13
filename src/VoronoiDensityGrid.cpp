@@ -176,6 +176,14 @@ double VoronoiDensityGrid::get_cell_volume(unsigned long index) const {
  */
 DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
                                                    double optical_depth) {
+
+  //  double S = 0.;
+
+  //  CoordinateVector<> photon_origin = photon.get_position();
+  //  const CoordinateVector<> photon_direction = photon.get_direction();
+
+  //  unsigned int index = _voronoi_grid.get_index(photon_origin);
+
   return DensityGrid::iterator(0, *this);
 }
 
