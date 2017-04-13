@@ -668,15 +668,23 @@ public:
    */
   inline unsigned int
   get_closest_neighbour(const CoordinateVector<> cpos) const {
-    cmac_assert(cpos.x() >= _grid_anchor.x() &&
-                cpos.x() <
-                    _grid_anchor.x() + _grid.size() * _grid_cell_sides.x());
-    cmac_assert(cpos.y() >= _grid_anchor.x() &&
-                cpos.y() <
-                    _grid_anchor.y() + _grid[0].size() * _grid_cell_sides.y());
-    cmac_assert(cpos.z() >= _grid_anchor.x() &&
-                cpos.z() < _grid_anchor.z() +
-                               _grid[0][0].size() * _grid_cell_sides.z());
+    cmac_assert_message(cpos.x() >= _grid_anchor.x() &&
+                            cpos.x() < _grid_anchor.x() +
+                                           _grid.size() * _grid_cell_sides.x(),
+                        "%g [%g %g]", cpos.x(), _grid_anchor.x(),
+                        _grid_anchor.x() + _grid.size() * _grid_cell_sides.x());
+    cmac_assert_message(
+        cpos.y() >= _grid_anchor.x() &&
+            cpos.y() <
+                _grid_anchor.y() + _grid[0].size() * _grid_cell_sides.y(),
+        "%g [%g %g]", cpos.y(), _grid_anchor.y(),
+        _grid_anchor.y() + _grid[0].size() * _grid_cell_sides.y());
+    cmac_assert_message(
+        cpos.z() >= _grid_anchor.x() &&
+            cpos.z() <
+                _grid_anchor.z() + _grid[0][0].size() * _grid_cell_sides.z(),
+        "%g [%g %g]", cpos.z(), _grid_anchor.z(),
+        _grid_anchor.z() + _grid[0][0].size() * _grid_cell_sides.z());
 
     generalngbiterator it(*this, cpos);
 

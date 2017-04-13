@@ -261,6 +261,10 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
     }
     photon_origin += mins * photon_direction;
 
+    cmac_assert_message(
+        index >= VORONOI_MAX_INDEX || _voronoi_grid.is_inside(photon_origin),
+        "index: %u (max: %u), mins: %g", index, VORONOI_MAX_INDEX, mins);
+
     update_integrals(mins, it, photon);
 
     S += mins;

@@ -131,9 +131,17 @@ void VoronoiGrid::compute_grid(int worksize) {
  * every cell has a volume, centroid and faces based on the grid.
  */
 void VoronoiGrid::finalize() {
+  double totvol = 0.;
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     _cells[i]->finalize();
+    totvol += _cells[i]->get_volume();
   }
+
+  cmac_assert_message(std::abs(totvol - _box.get_volume()) <
+                          1.e-13 * (totvol + _box.get_volume()),
+                      "%g =/= %g  -- relative difference: %g", totvol,
+                      _box.get_volume(), std::abs(totvol - _box.get_volume()) /
+                                             (totvol + _box.get_volume()));
 }
 
 /**
@@ -215,4 +223,14 @@ VoronoiGrid::get_faces(unsigned int index) const {
  */
 unsigned int VoronoiGrid::get_index(const CoordinateVector<> &position) const {
   return _pointlocations->get_closest_neighbour(position);
+}
+
+/**
+ * @brief Check if the given position is inside the box that contains the grid.
+ *
+ * @param position Position (in m).
+ * @return True if the position is inside the grid box.
+ */
+bool VoronoiGrid::is_inside(CoordinateVector<> position) const {
+  return _box.inside(position);
 }

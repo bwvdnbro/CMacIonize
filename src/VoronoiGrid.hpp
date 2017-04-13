@@ -177,6 +177,8 @@ public:
   get_faces(unsigned int index) const;
   unsigned int get_index(const CoordinateVector<> &position) const;
 
+  bool is_inside(CoordinateVector<> position) const;
+
   void print_grid(std::ostream &stream);
 };
 

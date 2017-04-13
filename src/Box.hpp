@@ -179,6 +179,15 @@ public:
            v.y() >= _anchor.y() && v.y() < _anchor.y() + _sides.y() &&
            v.z() >= _anchor.z() && v.z() < _anchor.z() + _sides.z();
   }
+
+  /**
+   * @brief Get the volume of the box.
+   *
+   * @return Volume of the box (in m^3).
+   */
+  inline double get_volume() const {
+    return _sides.x() * _sides.y() * _sides.z();
+  }
 };
 
 #endif // BOX_HPP
