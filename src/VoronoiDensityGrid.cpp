@@ -177,14 +177,66 @@ double VoronoiDensityGrid::get_cell_volume(unsigned long index) const {
 DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
                                                    double optical_depth) {
 
-  //  double S = 0.;
+  double S = 0.;
 
-  //  CoordinateVector<> photon_origin = photon.get_position();
-  //  const CoordinateVector<> photon_direction = photon.get_direction();
+  CoordinateVector<> photon_origin = photon.get_position();
+  const CoordinateVector<> photon_direction = photon.get_direction();
 
-  //  unsigned int index = _voronoi_grid.get_index(photon_origin);
+  unsigned int index = _voronoi_grid.get_index(photon_origin);
+  while (index < VORONOI_MAX_INDEX && optical_depth > 0.) {
+    const CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
+    double mins = -1.;
+    unsigned int next_index = 0;
+    auto faces = _voronoi_grid.get_faces(index);
+    for (auto it = faces.begin(); it != faces.end(); ++it) {
+      const unsigned int ngb =
+          std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
+      CoordinateVector<> normal;
+      if (ngb < VORONOI_MAX_INDEX) {
+        normal = _voronoi_grid.get_generator(ngb) - ipos;
+      } else {
+        normal = _voronoi_grid.get_wall_normal(ngb);
+      }
+      const double nk =
+          CoordinateVector<>::dot_product(normal, photon_direction);
+      if (nk > 0) {
+        const CoordinateVector<> point =
+            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+        const double sngb =
+            CoordinateVector<>::dot_product(normal, (point - photon_origin)) /
+            nk;
+        if (mins < 0. || (sngb > 0. && sngb < mins)) {
+          mins = sngb;
+          next_index = ngb;
+        }
+      }
+    }
+    cmac_assert(mins > 0.);
 
-  return DensityGrid::iterator(0, *this);
+    DensityGrid::iterator it(index, *this);
+
+    const double tau = get_optical_depth(mins, it, photon);
+    optical_depth -= tau;
+
+    if (optical_depth < 0.) {
+      double Scorr = mins * optical_depth / tau;
+      mins += Scorr;
+    } else {
+      index = next_index;
+    }
+    photon_origin += mins * photon_direction;
+
+    update_integrals(mins, it, photon);
+
+    S += mins;
+  }
+
+  photon.set_position(photon_origin);
+  if (index >= VORONOI_MAX_INDEX) {
+    return end();
+  } else {
+    return DensityGrid::iterator(index, *this);
+  }
 }
 
 /**

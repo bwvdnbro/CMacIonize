@@ -38,7 +38,7 @@
  */
 VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
                          unsigned int numcell)
-    : _box(box), _periodic(periodic) {
+    : _box(box), _periodic(periodic), _pointlocations(nullptr) {
 
   _cells.reserve(numcell);
 
@@ -59,6 +59,7 @@ VoronoiGrid::~VoronoiGrid() {
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     delete _cells[i];
   }
+  delete _pointlocations;
 }
 
 /**
@@ -86,9 +87,9 @@ void VoronoiGrid::compute_grid() {
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     positions[i] = _cells[i]->get_generator();
   }
-  PointLocations point_locations(positions, 10);
+  _pointlocations = new PointLocations(positions, 10);
   for (unsigned int i = 0; i < _cells.size(); ++i) {
-    auto it = point_locations.get_neighbours(i);
+    auto it = _pointlocations->get_neighbours(i);
     auto ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
@@ -152,6 +153,34 @@ const CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) const {
 }
 
 /**
+ * @brief Get the normal of the wall with the given index.
+ *
+ * @param wallindex Index of a wall of the box.
+ * @return Normal vector to the given wall.
+ */
+CoordinateVector<> VoronoiGrid::get_wall_normal(unsigned int wallindex) const {
+  cmac_assert(wallindex >= VORONOI_MAX_INDEX);
+
+  switch (wallindex) {
+  case VORONOI_BOX_LEFT:
+    return CoordinateVector<>(-1., 0., 0.);
+  case VORONOI_BOX_RIGHT:
+    return CoordinateVector<>(1., 0., 0.);
+  case VORONOI_BOX_FRONT:
+    return CoordinateVector<>(0., -1., 0.);
+  case VORONOI_BOX_BACK:
+    return CoordinateVector<>(0., 1., 0.);
+  case VORONOI_BOX_BOTTOM:
+    return CoordinateVector<>(0., 0., -1.);
+  case VORONOI_BOX_TOP:
+    return CoordinateVector<>(0., 0., 1.);
+  }
+
+  cmac_error("Not a valid wall index: %u!", wallindex);
+  return CoordinateVector<>();
+}
+
+/**
  * @brief Get the faces of the cell with the given index.
  *
  * @param index Index of a cell in the grid.
@@ -162,4 +191,14 @@ const CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) const {
 const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
 VoronoiGrid::get_faces(unsigned int index) const {
   return _cells[index]->get_faces();
+}
+
+/**
+ * @brief Get the index of the cell containing the given position.
+ *
+ * @param position Position (in m).
+ * @return Index of the cell containing that position.
+ */
+unsigned int VoronoiGrid::get_index(const CoordinateVector<> &position) const {
+  return _pointlocations->get_closest_neighbour(position);
 }

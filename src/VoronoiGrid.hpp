@@ -31,6 +31,7 @@
 #include <ostream>
 #include <vector>
 
+class PointLocations;
 class VoronoiCell;
 
 /**
@@ -47,6 +48,9 @@ private:
   /*! @brief Cells of the grid. */
   std::vector< VoronoiCell * > _cells;
 
+  /*! @brief PointLocations object used for fast neighbour searching. */
+  PointLocations *_pointlocations;
+
 public:
   VoronoiGrid(Box box, CoordinateVector< bool > periodic =
                            CoordinateVector< bool >(false),
@@ -61,8 +65,10 @@ public:
   double get_volume(unsigned int index) const;
   const CoordinateVector<> &get_centroid(unsigned int index) const;
   const CoordinateVector<> &get_generator(unsigned int index) const;
+  CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
   const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
   get_faces(unsigned int index) const;
+  unsigned int get_index(const CoordinateVector<> &position) const;
 
   void print_grid(std::ostream &stream);
 };
