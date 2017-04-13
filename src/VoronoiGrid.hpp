@@ -48,6 +48,9 @@ private:
   /*! @brief Cells of the grid. */
   std::vector< VoronoiCell * > _cells;
 
+  /*! @brief Positions of the cell generators (in m). */
+  std::vector< CoordinateVector<> > _generator_positions;
+
   /*! @brief PointLocations object used for fast neighbour searching. */
   PointLocations *_pointlocations;
 

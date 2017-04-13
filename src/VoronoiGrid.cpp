@@ -82,20 +82,19 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
  * @brief Compute the Voronoi cells of the grid.
  */
 void VoronoiGrid::compute_grid() {
-  // better way
-  std::vector< CoordinateVector<> > positions(_cells.size());
+  _generator_positions.resize(_cells.size());
   for (unsigned int i = 0; i < _cells.size(); ++i) {
-    positions[i] = _cells[i]->get_generator();
+    _generator_positions[i] = _cells[i]->get_generator();
   }
-  _pointlocations = new PointLocations(positions, 10);
+  _pointlocations = new PointLocations(_generator_positions, 10);
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     auto it = _pointlocations->get_neighbours(i);
     auto ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       if (j != i) {
-        _cells[i]->intersect(
-            _cells[j]->get_generator() - _cells[i]->get_generator(), j);
+        _cells[i]->intersect(_generator_positions[j] - _generator_positions[i],
+                             j);
       }
     }
     while (it.increase_range() &&
@@ -103,8 +102,8 @@ void VoronoiGrid::compute_grid() {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const unsigned int j = *ngbit;
-        _cells[i]->intersect(
-            _cells[j]->get_generator() - _cells[i]->get_generator(), j);
+        _cells[i]->intersect(_generator_positions[j] - _generator_positions[i],
+                             j);
       }
     }
   }

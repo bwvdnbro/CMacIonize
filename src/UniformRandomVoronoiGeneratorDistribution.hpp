@@ -108,6 +108,8 @@ public:
    * @return Uniform random generator position (in m).
    */
   virtual CoordinateVector<> get_position() {
+    ++_current_number;
+    cmac_assert(_current_number <= _number_of_positions);
     CoordinateVector<> pos;
     pos[0] =
         _box.get_anchor().x() +
