@@ -25,12 +25,13 @@
  */
 #include "VoronoiDensityGrid.hpp"
 #include "VoronoiCell.hpp"
-#include "VoronoiDensityGridPositions.hpp"
+#include "VoronoiGeneratorDistribution.hpp"
+#include "VoronoiGeneratorDistributionFactory.hpp"
 
 /**
  * @brief Constructor.
  *
- * @param position_generator VoronoiDensityGridPositions object used to generate
+ * @param position_generator VoronoiGeneratorDistribution used to generate
  * generator positions.
  * @param density_function DensityFunction to use to initialize the cell
  * variables.
@@ -40,16 +41,16 @@
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
-    VoronoiDensityGridPositions &position_generator,
+    VoronoiGeneratorDistribution *position_generator,
     DensityFunction &density_function, Box box,
     CoordinateVector< bool > periodic, bool hydro, Log *log)
     : DensityGrid(density_function, box, periodic, hydro, log),
       _position_generator(position_generator),
       _voronoi_grid(box, periodic,
-                    position_generator.get_number_of_positions()) {
+                    position_generator->get_number_of_positions()) {
 
   const unsigned long totnumcell =
-      _position_generator.get_number_of_positions();
+      _position_generator->get_number_of_positions();
 
   _number_density.resize(totnumcell);
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -72,6 +73,34 @@ VoronoiDensityGrid::VoronoiDensityGrid(
 }
 
 /**
+ * @brief ParameterFile constructor.
+ *
+ * @param params ParameterFile to read from.
+ * @param density_function DensityFunction used to initialize the cell values.
+ * @param log Log to write logging info to.
+ */
+VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params,
+                                       DensityFunction &density_function,
+                                       Log *log)
+    : VoronoiDensityGrid(
+          VoronoiGeneratorDistributionFactory::generate(params, log),
+          density_function,
+          Box(params.get_physical_vector< QUANTITY_LENGTH >(
+                  "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+              params.get_physical_vector< QUANTITY_LENGTH >(
+                  "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+          params.get_value< CoordinateVector< bool > >(
+              "densitygrid:periodicity", CoordinateVector< bool >(false)),
+          params.get_value< bool >("hydro:active", false), log) {}
+
+/**
+ * @brief Destructor.
+ *
+ * Free memory occupied by the VoronoiGeneratorDistribution.
+ */
+VoronoiDensityGrid::~VoronoiDensityGrid() { delete _position_generator; }
+
+/**
  * @brief Initialize the cells in the grid.
  *
  * @param block Block that should be initialized by this MPI process.
@@ -79,9 +108,9 @@ VoronoiDensityGrid::VoronoiDensityGrid(
 void VoronoiDensityGrid::initialize(
     std::pair< unsigned long, unsigned long > &block) {
   // set up the cells
-  const unsigned int numcell = _position_generator.get_number_of_positions();
+  const unsigned int numcell = _position_generator->get_number_of_positions();
   for (unsigned int i = 0; i < numcell; ++i) {
-    _voronoi_grid.add_cell(_position_generator.get_position());
+    _voronoi_grid.add_cell(_position_generator->get_position());
   }
   // compute the grid
   _voronoi_grid.compute_grid();
@@ -98,7 +127,7 @@ void VoronoiDensityGrid::initialize(
  * @return Number of cells in the grid.
  */
 unsigned int VoronoiDensityGrid::get_number_of_cells() const {
-  return _position_generator.get_number_of_positions();
+  return _position_generator->get_number_of_positions();
 }
 
 /**
@@ -254,6 +283,6 @@ DensityGrid::iterator VoronoiDensityGrid::begin() {
  * @return DensityGrid::iterator to the beyond last cell in the grid.
  */
 DensityGrid::iterator VoronoiDensityGrid::end() {
-  return DensityGrid::iterator(_position_generator.get_number_of_positions(),
+  return DensityGrid::iterator(_position_generator->get_number_of_positions(),
                                *this);
 }

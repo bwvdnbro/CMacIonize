@@ -17,24 +17,29 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiDensityGridPositions.hpp
+ * @file VoronoiGeneratorDistribution.hpp
  *
- * @brief General interface for objects that spawn generator positions used to
- * create a Voronoi grid.
+ * @brief General interface for distributions that return generator positions
+ * used to create a Voronoi grid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOIDENSITYGRIDPOSITIONS_HPP
-#define VORONOIDENSITYGRIDPOSITIONS_HPP
+#ifndef VORONOIGENERATORDISTRIBUTION_HPP
+#define VORONOIGENERATORDISTRIBUTION_HPP
 
 #include "CoordinateVector.hpp"
 
 /**
- * @brief General interface for objects that spawn generator positions used to
- * create a Voronoi grid.
+ * @brief General interface for distributions that return generator positions
+ * used to create a Voronoi grid.
  */
-class VoronoiDensityGridPositions {
+class VoronoiGeneratorDistribution {
 public:
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~VoronoiGeneratorDistribution() {}
+
   /**
    * @brief Get the number of positions returned by this object.
    *
@@ -47,7 +52,7 @@ public:
    *
    * @return Next position (in m).
    */
-  virtual CoordinateVector<> get_position() const = 0;
+  virtual CoordinateVector<> get_position() = 0;
 };
 
-#endif // VORONOIDENSITYGRIDPOSITIONS_HPP
+#endif // VORONOIGENERATORDISTRIBUTION_HPP

@@ -54,6 +54,9 @@ if(HAVE_HDF5)
       ../src/CMacIonizeAMRRefinementScheme.hpp
       ../src/CMacIonizeSnapshotDensityFunction.cpp
       ../src/DensityGrid.cpp
+      ../src/VoronoiCell.cpp
+      ../src/VoronoiDensityGrid.cpp
+      ../src/VoronoiGrid.cpp
   )
 
   add_library(densitygrid SHARED ${DENSITYGRIDMODULE_SOURCES})

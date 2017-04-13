@@ -142,6 +142,9 @@ set(CMACIONIZE_SOURCES
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
+    VoronoiCell.cpp
+    VoronoiDensityGrid.cpp
+    VoronoiGrid.cpp
     WMBasicPhotonSourceSpectrum.cpp
 
     Abundances.hpp
@@ -215,6 +218,7 @@ set(CMACIONIZE_SOURCES
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
+    VoronoiGeneratorDistributionFactory.hpp
     WMBasicDataLocation.hpp.in
     WMBasicPhotonSourceSpectrum.hpp
     WorkDistributor.hpp
