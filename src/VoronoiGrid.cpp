@@ -234,3 +234,26 @@ unsigned int VoronoiGrid::get_index(const CoordinateVector<> &position) const {
 bool VoronoiGrid::is_inside(CoordinateVector<> position) const {
   return _box.inside(position);
 }
+
+/**
+ * @brief Print the cell with the given index to the given stream in a format
+ * that can be easily plotted using gnuplot.
+ *
+ * @param index Index of a cell.
+ * @param stream std::ostream to write to.
+ */
+void VoronoiGrid::print_cell(unsigned int index, std::ostream &stream) {
+  _cells[index]->print_cell(stream);
+}
+
+/**
+ * @brief Print the grid to the given stream in a format that can be easily
+ * plotted using gnuplot.
+ *
+ * @param stream std::ostream to write to.
+ */
+void VoronoiGrid::print_grid(std::ostream &stream) {
+  for (unsigned int i = 0; i < _cells.size(); ++i) {
+    _cells[i]->print_cell(stream);
+  }
+}

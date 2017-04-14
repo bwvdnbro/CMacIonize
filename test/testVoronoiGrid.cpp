@@ -1094,38 +1094,6 @@ void VoronoiCell::check_variables_after_test(int testcase) {
 }
 
 /**
- * @brief Print the cell to the given stream in a format that can be easily
- * plotted using gnuplot.
- *
- * @param stream std::ostream to write to.
- */
-void VoronoiCell::print_cell(std::ostream &stream) {
-  stream << _generator_position.x() << "\t" << _generator_position.y() << "\t"
-         << _generator_position.z() << "\n\n";
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    for (unsigned int j = 0; j < _edges[i].size(); ++j) {
-      int edge = std::get< VORONOI_EDGE_ENDPOINT >(_edges[i][j]);
-      CoordinateVector<> a = _vertices[i] + _generator_position;
-      CoordinateVector<> b = _vertices[edge] + _generator_position;
-      stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
-      stream << b.x() << "\t" << b.y() << "\t" << b.z() << "\n\n";
-    }
-  }
-}
-
-/**
- * @brief Print the grid to the given stream in a format that can be easily
- * plotted using gnuplot.
- *
- * @param stream std::ostream to write to.
- */
-void VoronoiGrid::print_grid(std::ostream &stream) {
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
-    _cells[i]->print_cell(stream);
-  }
-}
-
-/**
  * @brief Unit test for the VoronoiGrid class.
  *
  * @param argc Number of command line arguments.

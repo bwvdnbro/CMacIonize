@@ -285,5 +285,36 @@ int main(int argc, char **argv) {
     assert_condition(smart_timer.value() < bf_timer.value());
   }
 
+  /// Test a number of closest neighbour searches for arbitrary positions
+  /// (without timing)
+  {
+    const unsigned int numpoint = 10000;
+    std::vector< CoordinateVector<> > positions(numpoint);
+    for (unsigned int i = 0; i < numpoint; ++i) {
+      positions[i] = Utilities::random_position();
+    }
+
+    PointLocations locations(positions, 10);
+
+    for (unsigned int i = 0; i < 100; ++i) {
+      const CoordinateVector<> cpos = Utilities::random_position();
+
+      unsigned int smart_index = locations.get_closest_neighbour(cpos);
+
+      double minr2 = 2.;
+      unsigned int bf_index = 0;
+      for (unsigned int i = 0; i < numpoint; ++i) {
+        const CoordinateVector<> &ipos = positions[i];
+        const double ir2 = (cpos - ipos).norm2();
+        if (ir2 < minr2) {
+          minr2 = ir2;
+          bf_index = i;
+        }
+      }
+
+      assert_condition(smart_index == bf_index);
+    }
+  }
+
   return 0;
 }

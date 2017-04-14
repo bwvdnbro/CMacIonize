@@ -179,6 +179,7 @@ public:
 
   bool is_inside(CoordinateVector<> position) const;
 
+  void print_cell(unsigned int index, std::ostream &stream);
   void print_grid(std::ostream &stream);
 };
 

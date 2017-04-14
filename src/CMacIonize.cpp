@@ -274,16 +274,20 @@ int main(int argc, char **argv) {
   // used to calculate the ionization state at fixed temperature
   IonizationStateCalculator ionization_state_calculator(
       Q, abundances, recombination_rates, charge_transfer_rates);
-  // used to calculate both the ionization state and the temperature
-  TemperatureCalculator temperature_calculator(
-      Q, abundances, params.get_value< double >("pahfac", 1.),
-      params.get_value< double >("crfac", 0.),
-      params.get_value< double >("crlim", 0.75),
-      params.get_physical_value< QUANTITY_LENGTH >("crscale", "1.33333 kpc"),
-      line_cooling_data, recombination_rates, charge_transfer_rates, log);
 
   bool calculate_temperature =
       params.get_value< bool >("calculate_temperature", true);
+
+  TemperatureCalculator *temperature_calculator = nullptr;
+  if (calculate_temperature) {
+    // used to calculate both the ionization state and the temperature
+    temperature_calculator = new TemperatureCalculator(
+        Q, abundances, params.get_value< double >("pahfac", 1.),
+        params.get_value< double >("crfac", 0.),
+        params.get_value< double >("crlim", 0.75),
+        params.get_physical_value< QUANTITY_LENGTH >("crscale", "1.33333 kpc"),
+        line_cooling_data, recombination_rates, charge_transfer_rates, log);
+  }
 
   IterationConvergenceChecker *itconvergence_checker =
       IterationConvergenceCheckerFactory::generate(*grid, params, log);
@@ -479,7 +483,7 @@ int main(int argc, char **argv) {
       }
 
       if (calculate_temperature && loop > 3) {
-        temperature_calculator.calculate_temperature(totweight, *grid, block);
+        temperature_calculator->calculate_temperature(totweight, *grid, block);
       } else {
         ionization_state_calculator.calculate_ionization_state(totweight, *grid,
                                                                block);
@@ -568,6 +572,7 @@ int main(int argc, char **argv) {
   if (hydro_integrator != nullptr) {
     delete hydro_integrator;
   }
+  delete temperature_calculator;
   delete itconvergence_checker;
   delete convergence_checker;
   delete continuousspectrum;

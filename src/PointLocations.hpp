@@ -699,7 +699,8 @@ public:
         minindex = *ngbit;
       }
     }
-    while (it.increase_range() && minr2 >= it.get_max_radius2()) {
+    while (it.increase_range() &&
+           (minr2 < 0 || minr2 >= it.get_max_radius2())) {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const CoordinateVector<> &ngbpos = _positions[*ngbit];
@@ -710,6 +711,8 @@ public:
         }
       }
     }
+
+    cmac_assert(minr2 >= 0.);
 
     return minindex;
   }
