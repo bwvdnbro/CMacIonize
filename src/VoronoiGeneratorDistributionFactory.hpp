@@ -31,6 +31,7 @@
 #include "VoronoiGeneratorDistribution.hpp"
 
 // implementations
+#include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
 
 /**
@@ -51,13 +52,15 @@ public:
                                                        Log *log = nullptr) {
 
     std::string type = params.get_value< std::string >(
-        "densitygrid:voronoi_generator_distribution.type", "UniformRandom");
+        "densitygrid:voronoi_generator_distribution:type", "UniformRandom");
 
     if (log) {
       log->write_info("Requested VoronoiGeneratorDistribution type: ", type);
     }
 
-    if (type == "UniformRandom") {
+    if (type == "PerturbedCartesian") {
+      return new PerturbedCartesianVoronoiGeneratorDistribution(params, log);
+    } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
     } else {
       cmac_error("Unknown VoronoiGeneratorDistribution type: \"%s\".",

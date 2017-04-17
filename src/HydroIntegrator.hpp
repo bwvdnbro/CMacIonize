@@ -156,7 +156,7 @@ public:
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
         // the midpoint is only used if we use a second order scheme
-        // CoordinateVector<> midpoint = std::get<1>(*ngbit);
+        const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
         CoordinateVector<> normal = std::get< 2 >(*ngbit);
         double surface_area = std::get< 3 >(*ngbit);
 
@@ -185,6 +185,16 @@ public:
           PR = PL;
         }
 
+        const CoordinateVector<> vframe =
+            grid.get_interface_velocity(it, ngb, midpoint);
+        // de-boost the velocities
+        uL[0] -= vframe.x();
+        uL[1] -= vframe.y();
+        uL[2] -= vframe.z();
+        uR[0] -= vframe.x();
+        uR[1] -= vframe.y();
+        uR[2] -= vframe.z();
+
         // project the velocities onto the surface normal
         double vL = uL[0] * normal[0] + uL[1] * normal[1] + uL[2] * normal[2];
         double vR = uR[0] * normal[0] + uR[1] * normal[1] + uR[2] * normal[2];
@@ -209,19 +219,22 @@ public:
             usol[1] = uR[1] + vsol * normal[1];
             usol[2] = uR[2] + vsol * normal[2];
           }
+
           // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
-          vsol =
-              usol[0] * normal[0] + usol[1] * normal[1] + usol[2] * normal[2];
+          double rhoesol = 0.5 * rhosol * (usol + vframe).norm2() + Psol / _gm1;
+          vsol = CoordinateVector<>::dot_product(usol, normal);
 
           // get the fluxes
           double mflux = rhosol * vsol * surface_area * timestep;
-          CoordinateVector<> pflux = rhosol * vsol * usol;
+          CoordinateVector<> pflux = rhosol * vsol * (usol + vframe);
           pflux[0] += Psol * normal[0];
           pflux[1] += Psol * normal[1];
           pflux[2] += Psol * normal[2];
           pflux *= surface_area * timestep;
-          double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
+          double eflux =
+              (rhoesol * vsol +
+               Psol * CoordinateVector<>::dot_product(usol + vframe, normal)) *
+              surface_area * timestep;
 
           // add the fluxes to the right time differences
           it.set_hydro_conserved_delta_mass(

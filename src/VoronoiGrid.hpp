@@ -165,6 +165,8 @@ public:
 
   ~VoronoiGrid();
 
+  void reset(int worksize = -1);
+
   unsigned int add_cell(CoordinateVector<> generator_position);
   void compute_grid(int worksize = -1);
   void finalize();
@@ -172,6 +174,7 @@ public:
   double get_volume(unsigned int index) const;
   const CoordinateVector<> &get_centroid(unsigned int index) const;
   const CoordinateVector<> &get_generator(unsigned int index) const;
+  CoordinateVector<> &get_generator(unsigned int index);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
   const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
   get_faces(unsigned int index) const;

@@ -64,6 +64,21 @@ VoronoiGrid::~VoronoiGrid() {
 }
 
 /**
+ * @brief Reset the Voronoi grid, based on the actual generator positions.
+ *
+ * @param worksize Number of parallel threads to use during the grid
+ * reconstruction.
+ */
+void VoronoiGrid::reset(int worksize) {
+  for (unsigned int i = 0; i < _cells.size(); ++i) {
+    delete _cells[i];
+    _cells[i] = new VoronoiCell(_generator_positions[i], _box);
+  }
+  delete _pointlocations;
+  compute_grid(worksize);
+}
+
+/**
  * @brief Add a new cell to the VoronoiGrid, using the given coordinate position
  * as generator of the cell.
  *
@@ -75,6 +90,7 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
   if (_cells.size() + 1 == VORONOI_MAX_INDEX) {
     cmac_error("Too many Voronoi cells!");
   }
+  _generator_positions.push_back(generator_position);
   _cells.push_back(new VoronoiCell(generator_position, _box));
   return _cells.size() - 1;
 }
@@ -111,10 +127,6 @@ void VoronoiGrid::compute_cell(unsigned int index) {
  * @param worksize Number of parallel threads to use.
  */
 void VoronoiGrid::compute_grid(int worksize) {
-  _generator_positions.resize(_cells.size());
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
-    _generator_positions[i] = _cells[i]->get_generator();
-  }
   _pointlocations = new PointLocations(_generator_positions, 10);
 
   WorkDistributor< VoronoiGridConstructionJobMarket,
@@ -171,7 +183,17 @@ const CoordinateVector<> &VoronoiGrid::get_centroid(unsigned int index) const {
  * @return Position of the generator of that cell (in m).
  */
 const CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) const {
-  return _cells[index]->get_generator();
+  return _generator_positions[index];
+}
+
+/**
+ * @brief Get the position of the generator of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Position of the generator of that cell (in m).
+ */
+CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) {
+  return _generator_positions[index];
 }
 
 /**

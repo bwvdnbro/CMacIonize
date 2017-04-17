@@ -43,12 +43,22 @@ private:
   /*! @brief Underlying Voronoi grid. */
   VoronoiGrid _voronoi_grid;
 
+  /*! @brief Velocity of the grid generators (in m s^-1). */
+  std::vector< double > _hydro_generator_velocity[3];
+
+  /*! @brief Time step used in the hydro scheme (in s). */
+  double _hydro_timestep;
+
+  /*! @brief Polytropic index for the ideal gas equation of state. */
+  double _hydro_gamma;
+
 public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
       DensityFunction &density_function, Box box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, Log *log = nullptr);
+      bool hydro = false, double hydro_timestep = 0.,
+      double hydro_gamma = 5. / 3., Log *log = nullptr);
 
   VoronoiDensityGrid(ParameterFile &params, DensityFunction &density_function,
                      Log *log = nullptr);
@@ -56,6 +66,11 @@ public:
   virtual ~VoronoiDensityGrid();
 
   virtual void initialize(std::pair< unsigned long, unsigned long > &block);
+  virtual void reset_grid();
+
+  virtual CoordinateVector<>
+  get_interface_velocity(const iterator left, const iterator right,
+                         const CoordinateVector<> interface_midpoint) const;
 
   virtual unsigned int get_number_of_cells() const;
   virtual unsigned long get_cell_index(CoordinateVector<> position) const;

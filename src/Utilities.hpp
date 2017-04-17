@@ -298,6 +298,24 @@ convert< CoordinateVector< int > >(const std::string &value) {
 }
 
 /**
+ * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< unsigned int >
+convert< CoordinateVector< unsigned int > >(const std::string &value) {
+  CoordinateVector< unsigned int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< unsigned int >(x);
+  vvalue[1] = convert< unsigned int >(y);
+  vvalue[2] = convert< unsigned int >(z);
+  return vvalue;
+}
+
+/**
  * @brief Convert the given string to a boolean value.
  *
  * The following string literals map to true: "true", "yes", "on", "y".
@@ -422,6 +440,20 @@ to_string< CoordinateVector<> >(const CoordinateVector<> value) {
 template <>
 inline std::string
 to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for an unsigned integer CoordinateVector.
+ *
+ * @param value Unsigned integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string to_string< CoordinateVector< unsigned int > >(
+    const CoordinateVector< unsigned int > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();

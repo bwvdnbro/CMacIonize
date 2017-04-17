@@ -195,6 +195,7 @@ set(CMACIONIZE_SOURCES
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
     PassivePhotonNumberConvergenceChecker.hpp
+    PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
     PhotonNumberConvergenceChecker.hpp
     PhotonNumberConvergenceCheckerFactory.hpp

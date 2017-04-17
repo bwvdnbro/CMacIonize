@@ -38,16 +38,20 @@
  * @param box Box containing the entire grid (in m).
  * @param periodic Periodicity flags.
  * @param hydro Flag signaling if hydro is active or not.
+ * @param hydro_timestep Time step used in the hydro scheme (in s).
+ * @param hydro_gamma Polytropic index for the ideal gas equation of state.
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
     DensityFunction &density_function, Box box,
-    CoordinateVector< bool > periodic, bool hydro, Log *log)
+    CoordinateVector< bool > periodic, bool hydro, double hydro_timestep,
+    double hydro_gamma, Log *log)
     : DensityGrid(density_function, box, periodic, hydro, log),
       _position_generator(position_generator),
       _voronoi_grid(box, periodic,
-                    position_generator->get_number_of_positions()) {
+                    position_generator->get_number_of_positions()),
+      _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma) {
 
   const unsigned long totnumcell =
       _position_generator->get_number_of_positions();
@@ -70,6 +74,10 @@ VoronoiDensityGrid::VoronoiDensityGrid(
   _heating_He.resize(totnumcell);
   _emissivities.resize(totnumcell, nullptr);
   _lock.resize(totnumcell);
+
+  _hydro_generator_velocity[0].resize(totnumcell, 0.);
+  _hydro_generator_velocity[1].resize(totnumcell, 0.);
+  _hydro_generator_velocity[2].resize(totnumcell, 0.);
 }
 
 /**
@@ -91,7 +99,10 @@ VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params,
                   "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
           params.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),
-          params.get_value< bool >("hydro:active", false), log) {}
+          params.get_value< bool >("hydro:active", false),
+          params.get_physical_value< QUANTITY_TIME >("hydro:timestep",
+                                                     "0.01 s"),
+          params.get_value< double >("hydro:polytropic_index", 5. / 3.), log) {}
 
 /**
  * @brief Destructor.
@@ -125,6 +136,102 @@ void VoronoiDensityGrid::initialize(
 
   DensityGrid::initialize(block);
   DensityGrid::initialize(block, _density_function);
+}
+
+void VoronoiDensityGrid::reset_grid() {
+  if (_hydro) {
+    // move the cell generators and update the velocities to the new fluid
+    // velocities
+    if (_log) {
+      _log->write_status("Resetting Voronoi grid...");
+    }
+
+    for (auto it = begin(); it != end(); ++it) {
+      const unsigned int index = it.get_index();
+
+      const CoordinateVector<> dcell = _voronoi_grid.get_centroid(index) -
+                                       _voronoi_grid.get_generator(index);
+
+      _voronoi_grid.get_generator(index)[0] +=
+          _hydro_timestep * _hydro_generator_velocity[0][index];
+      _voronoi_grid.get_generator(index)[1] +=
+          _hydro_timestep * _hydro_generator_velocity[1][index];
+      _voronoi_grid.get_generator(index)[2] +=
+          _hydro_timestep * _hydro_generator_velocity[2][index];
+
+      _hydro_generator_velocity[0][index] = _hydro_primitive_velocity_x[index];
+      _hydro_generator_velocity[1][index] = _hydro_primitive_velocity_y[index];
+      _hydro_generator_velocity[2][index] = _hydro_primitive_velocity_z[index];
+
+      const double R = std::cbrt(0.75 * it.get_volume() / M_PI);
+      const double dcellnorm = dcell.norm();
+      const double eta = 0.25;
+      CoordinateVector<> vcorr;
+      if (dcellnorm > 0.9 * eta * R) {
+        const double cs =
+            std::sqrt(_hydro_gamma * _hydro_primitive_pressure[index] /
+                      _hydro_primitive_density[index]);
+        vcorr = cs * dcell / dcellnorm;
+        if (dcellnorm < 1.1 * eta * R) {
+          vcorr *= (dcellnorm - 0.9 * eta * R) / (0.2 * eta * R);
+        }
+      }
+      _hydro_generator_velocity[0][index] += vcorr.x();
+      _hydro_generator_velocity[1][index] += vcorr.y();
+      _hydro_generator_velocity[2][index] += vcorr.z();
+    }
+    _voronoi_grid.reset();
+    _voronoi_grid.finalize();
+
+    if (_log) {
+      _log->write_status("Done resetting Voronoi grid.");
+    }
+  }
+
+  DensityGrid::reset_grid();
+}
+
+/**
+ * @brief Get the velocity of the interface between the two given cells.
+ *
+ * @param left Left cell.
+ * @param right Right cell.
+ * @param interface_midpoint Coordinates of the midpoint of the interface
+ * (in m).
+ * @return Velocity of the interface between the cells (in m s^-1).
+ */
+CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
+    const iterator left, const iterator right,
+    const CoordinateVector<> interface_midpoint) const {
+  const unsigned int ileft = left.get_index();
+  const unsigned int iright = right.get_index();
+  CoordinateVector<> vframe(0.);
+  if (iright < VORONOI_MAX_INDEX) {
+    const CoordinateVector<> rRL =
+        right.get_cell_midpoint() - left.get_cell_midpoint();
+    const double rRLnorm2 = rRL.norm2();
+    CoordinateVector<> vrel;
+    vrel[0] = _hydro_generator_velocity[0][ileft] -
+              _hydro_generator_velocity[0][iright];
+    vrel[1] = _hydro_generator_velocity[1][ileft] -
+              _hydro_generator_velocity[1][iright];
+    vrel[2] = _hydro_generator_velocity[2][ileft] -
+              _hydro_generator_velocity[2][iright];
+    const CoordinateVector<> rmid =
+        0.5 * (right.get_cell_midpoint() + left.get_cell_midpoint());
+    const double fac =
+        CoordinateVector<>::dot_product(vrel, interface_midpoint - rmid) /
+        rRLnorm2;
+    CoordinateVector<> vmid;
+    vmid[0] = 0.5 * (_hydro_generator_velocity[0][ileft] +
+                     _hydro_generator_velocity[0][iright]);
+    vmid[1] = 0.5 * (_hydro_generator_velocity[1][ileft] +
+                     _hydro_generator_velocity[1][iright]);
+    vmid[2] = 0.5 * (_hydro_generator_velocity[2][ileft] +
+                     _hydro_generator_velocity[2][iright]);
+    vframe = vmid + fac * rRL;
+  }
+  return vframe;
 }
 
 /**
