@@ -78,8 +78,10 @@ public:
    * @param iteration Iteration number to use in the snapshot file name(s).
    * @param params ParameterFile containing the run parameters that should be
    * written to the file.
+   * @param time Simulation time (in s).
    */
-  virtual void write(unsigned int iteration, ParameterFile &params) = 0;
+  virtual void write(unsigned int iteration, ParameterFile &params,
+                     double time = 0.) = 0;
 };
 
 #endif // DENSITYGRIDWRITER_HPP

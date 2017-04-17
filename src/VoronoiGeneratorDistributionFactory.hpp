@@ -51,7 +51,7 @@ public:
                                                        Log *log = nullptr) {
 
     std::string type = params.get_value< std::string >(
-        "densitygrid:voronoi_generator_distribution", "UniformRandom");
+        "densitygrid:voronoi_generator_distribution.type", "UniformRandom");
 
     if (log) {
       log->write_info("Requested VoronoiGeneratorDistribution type: ", type);

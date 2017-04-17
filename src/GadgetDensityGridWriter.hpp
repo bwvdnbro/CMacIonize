@@ -50,7 +50,8 @@ public:
   GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
                           Log *log = nullptr);
 
-  virtual void write(unsigned int iteration, ParameterFile &params);
+  virtual void write(unsigned int iteration, ParameterFile &params,
+                     double time = 0.);
 };
 
 #endif // GADGETDENSITYGRIDWRITER_HPP

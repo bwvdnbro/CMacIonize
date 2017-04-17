@@ -175,15 +175,23 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
 
   auto faces = _voronoi_grid.get_faces(index);
   for (auto it = faces.begin(); it != faces.end(); ++it) {
+    unsigned int ngb = std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
     double area = std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
     CoordinateVector<> midpoint =
         std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
-    unsigned int ngb = std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
-    CoordinateVector<> normal =
-        _voronoi_grid.get_generator(ngb) - _voronoi_grid.get_generator(index);
-    normal /= normal.norm();
-    ngbs.push_back(std::make_tuple(DensityGrid::iterator(ngb, *this), midpoint,
-                                   normal, area));
+    CoordinateVector<> normal;
+    if (ngb < VORONOI_MAX_INDEX) {
+      // normal neighbour
+      normal =
+          _voronoi_grid.get_generator(ngb) - _voronoi_grid.get_generator(index);
+      normal /= normal.norm();
+      ngbs.push_back(std::make_tuple(DensityGrid::iterator(ngb, *this),
+                                     midpoint, normal, area));
+    } else {
+      // wall neighbour
+      normal = _voronoi_grid.get_wall_normal(ngb);
+      ngbs.push_back(std::make_tuple(end(), midpoint, normal, area));
+    }
   }
 
   return ngbs;

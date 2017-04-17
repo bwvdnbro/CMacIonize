@@ -30,6 +30,8 @@
 #include "ParameterFile.hpp"
 #include "RiemannSolver.hpp"
 
+#include <cfloat>
+
 /**
  * @brief Class that performs the hydrodynamical integration.
  */
@@ -120,6 +122,25 @@ public:
    * @param timestep Time step over which to evolve the system.
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
+#define PRINT_TIMESTEP_CRITERION
+#ifdef PRINT_TIMESTEP_CRITERION
+    double dtmin = DBL_MAX;
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      const double rho = it.get_hydro_primitive_density();
+      const double P = it.get_hydro_primitive_pressure();
+      const double cs = std::sqrt(_gamma * P / rho);
+      const double vx = it.get_hydro_primitive_velocity_x();
+      const double vy = it.get_hydro_primitive_velocity_y();
+      const double vz = it.get_hydro_primitive_velocity_z();
+      const double v = std::sqrt(vx * vx + vy * vy + vz * vz);
+      const double V = it.get_volume();
+      const double R = std::cbrt(0.75 * V / M_PI);
+      const double dt = 0.2 * R / (cs + v);
+      dtmin = std::min(dt, dtmin);
+    }
+    cmac_status("Minimal time step using criterion: %g (%g)", dtmin, timestep);
+#endif
+
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
 
@@ -140,12 +161,29 @@ public:
         double surface_area = std::get< 3 >(*ngbit);
 
         // get the right state
-        double rhoR = ngb.get_hydro_primitive_density();
+        double rhoR;
         CoordinateVector<> uR;
-        uR[0] = ngb.get_hydro_primitive_velocity_x();
-        uR[1] = ngb.get_hydro_primitive_velocity_y();
-        uR[2] = ngb.get_hydro_primitive_velocity_z();
-        double PR = ngb.get_hydro_primitive_pressure();
+        double PR;
+        if (ngb != grid.end()) {
+          rhoR = ngb.get_hydro_primitive_density();
+          uR[0] = ngb.get_hydro_primitive_velocity_x();
+          uR[1] = ngb.get_hydro_primitive_velocity_y();
+          uR[2] = ngb.get_hydro_primitive_velocity_z();
+          PR = ngb.get_hydro_primitive_pressure();
+        } else {
+          rhoR = rhoL;
+          uR = uL;
+          if (normal[0] != 0.) {
+            uR[0] = -uR[0];
+          }
+          if (normal[1] != 0.) {
+            uR[1] = -uR[1];
+          }
+          if (normal[2] != 0.) {
+            uR[2] = -uR[2];
+          }
+          PR = PL;
+        }
 
         // project the velocities onto the surface normal
         double vL = uL[0] * normal[0] + uL[1] * normal[1] + uL[2] * normal[2];
@@ -176,7 +214,7 @@ public:
           vsol =
               usol[0] * normal[0] + usol[1] * normal[1] + usol[2] * normal[2];
 
-          // get the fluxes (probably wrong, but let's go with them for now)
+          // get the fluxes
           double mflux = rhosol * vsol * surface_area * timestep;
           CoordinateVector<> pflux = rhosol * vsol * usol;
           pflux[0] += Psol * normal[0];

@@ -63,9 +63,10 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(ParameterFile &params,
  * @param iteration Iteration number to use in the snapshot file name(s).
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
+ * @param time Simulation time (in s).
  */
 void AsciiFileDensityGridWriter::write(unsigned int iteration,
-                                       ParameterFile &params) {
+                                       ParameterFile &params, double time) {
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
   std::ofstream file(filename);

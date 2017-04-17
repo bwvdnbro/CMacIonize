@@ -81,9 +81,10 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
  * @param iteration Value of the counter to append to the filename.
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
+ * @param time Simulation time (in s).
  */
 void GadgetDensityGridWriter::write(unsigned int iteration,
-                                    ParameterFile &params) {
+                                    ParameterFile &params, double time) {
   std::string filename = Utilities::compose_filename(
       _output_folder, _prefix, "hdf5", iteration, _padding);
 
@@ -118,7 +119,6 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
       group, "NumPart_Total", numpart);
   HDF5Tools::write_attribute< std::vector< unsigned int > >(
       group, "NumPart_Total_HighWord", numpart_high);
-  double time = 0.;
   HDF5Tools::write_attribute< double >(group, "Time", time);
   HDF5Tools::close_group(group);
 

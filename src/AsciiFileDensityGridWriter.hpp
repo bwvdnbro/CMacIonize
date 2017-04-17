@@ -43,7 +43,8 @@ public:
   AsciiFileDensityGridWriter(ParameterFile &params, DensityGrid &grid,
                              Log *log = nullptr);
 
-  virtual void write(unsigned int iteration, ParameterFile &params);
+  virtual void write(unsigned int iteration, ParameterFile &params,
+                     double time = 0.);
 };
 
 #endif // ASCIIFILEDENSITYGRIDWRITER_HPP

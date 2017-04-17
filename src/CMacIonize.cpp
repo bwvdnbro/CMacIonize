@@ -205,6 +205,8 @@ int main(int argc, char **argv) {
   HydroIntegrator *hydro_integrator = nullptr;
   double hydro_timestep = 0.;
   unsigned int numstep = 1;
+  double hydro_snaptime = 0.;
+  unsigned int hydro_lastsnap = 1;
   if (params.get_value< bool >("hydro:active", false)) {
     hydro_integrator = new HydroIntegrator(params);
     hydro_timestep =
@@ -212,6 +214,11 @@ int main(int argc, char **argv) {
     double hydro_total_time =
         params.get_physical_value< QUANTITY_TIME >("hydro:total_time", "1. s");
     numstep = hydro_total_time / hydro_timestep;
+    hydro_snaptime =
+        params.get_physical_value< QUANTITY_TIME >("hydro:snaptime", "-1. s");
+    if (hydro_snaptime < 0.) {
+      hydro_snaptime = 0.1 * hydro_total_time;
+    }
   }
 
   DensityGrid *grid =
@@ -294,7 +301,7 @@ int main(int argc, char **argv) {
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
-  // to a reference parameter file
+  // to a reference parameter file (only rank 0 does this)
   if (write_output) {
     std::string folder = Utilities::get_absolute_path(
         params.get_value< std::string >("densitygridwriter:folder", "."));
@@ -534,18 +541,24 @@ int main(int argc, char **argv) {
     }
 
     if (hydro_integrator != nullptr) {
-      hydro_integrator->do_hydro_step(*grid, 1.e10);
+      hydro_integrator->do_hydro_step(*grid, hydro_timestep);
 
       // write snapshot
-      if (write_output) {
-        writer->write(istep, params);
+      if (write_output &&
+          hydro_lastsnap * hydro_snaptime < (istep + 1) * hydro_timestep) {
+        writer->write(hydro_lastsnap, params, hydro_lastsnap * hydro_snaptime);
+        ++hydro_lastsnap;
       }
     }
   }
 
   // write snapshot
-  if (write_output && hydro_integrator == nullptr) {
-    writer->write(nloop, params);
+  if (write_output) {
+    if (hydro_integrator == nullptr) {
+      writer->write(nloop, params);
+    } else {
+      writer->write(hydro_lastsnap, params, hydro_lastsnap * hydro_snaptime);
+    }
   }
 
   programtimer.stop();
