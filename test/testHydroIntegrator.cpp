@@ -26,6 +26,7 @@
 #include "CartesianDensityGrid.hpp"
 #include "DensityFunction.hpp"
 #include "HydroIntegrator.hpp"
+#include "RiemannSolver.hpp"
 #include <fstream>
 
 /**
@@ -111,6 +112,20 @@ int main(int argc, char **argv) {
       etot += it.get_hydro_conserved_total_energy();
     }
     cmac_status("Total mass: %g, total energy: %g", mtot, etot);
+  }
+
+  // output reference solution
+  {
+    std::ofstream snapfile("hydro_ref_1.txt");
+    const RiemannSolver solver(5. / 3.);
+    const double t = 0.1;
+    for (unsigned int i = 0; i < 1000; ++i) {
+      const double x = (i + 0.5) * 0.001;
+      double rhosol, usol, Psol;
+      solver.solve(1., 0., 1., 0.125, 0., 0.1, rhosol, usol, Psol,
+                   (x - 0.5) / t);
+      snapfile << x << "\t" << rhosol << "\t" << usol << "\t" << Psol << "\n";
+    }
   }
 
   return 0;
