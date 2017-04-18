@@ -127,7 +127,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
  * @param worksize Number of parallel threads to use.
  */
 void VoronoiGrid::compute_grid(int worksize) {
-  _pointlocations = new PointLocations(_generator_positions, 10);
+  _pointlocations = new PointLocations(_generator_positions, 10, _box);
 
   WorkDistributor< VoronoiGridConstructionJobMarket,
                    VoronoiGridConstructionJob >

@@ -704,6 +704,9 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
+    ../src/VoronoiCell.cpp
+    ../src/VoronoiDensityGrid.cpp
+    ../src/VoronoiGrid.cpp
 )
 add_unit_test(NAME testHydroIntegrator
               SOURCES ${TESTHYDROINTEGRATOR_SOURCES})

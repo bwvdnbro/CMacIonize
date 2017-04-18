@@ -1339,6 +1339,22 @@ public:
   }
 
   /**
+   * @brief Evolve the grid in time with the given timestep.
+   *
+   * This method should only be implemented for moving grids.
+   *
+   * @param timestep Timestep with which to move the grid (in s).
+   */
+  virtual void evolve(double timestep) {}
+
+  /**
+   * @brief Set the velocity for the grid movement.
+   *
+   * This method should only be implemented for moving grids.
+   */
+  virtual void set_grid_velocity() {}
+
+  /**
    * @brief Get the total number of hydrogen atoms contained in the grid.
    *
    * This method is used in the unit tests to check whether the grid contains

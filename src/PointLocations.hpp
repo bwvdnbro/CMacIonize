@@ -26,6 +26,7 @@
 #ifndef POINTLOCATIONS_HPP
 #define POINTLOCATIONS_HPP
 
+#include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 
@@ -60,25 +61,35 @@ public:
    *
    * @param positions Underlying positions in 3D space.
    * @param num_per_cell Desired number of positions per grid cell.
+   * @param box Box containing the positions (in m).
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
-                        unsigned int num_per_cell = 100)
+                        unsigned int num_per_cell = 100,
+                        const Box box = Box(CoordinateVector<>(0.),
+                                            CoordinateVector<>(-1.)))
       : _positions(positions) {
     const unsigned int positions_size = positions.size();
 
-    CoordinateVector<> minpos = positions[0];
-    CoordinateVector<> maxpos = positions[0];
-    for (unsigned int i = 1; i < positions_size; ++i) {
-      minpos = CoordinateVector<>::min(minpos, positions[i]);
-      maxpos = CoordinateVector<>::max(maxpos, positions[i]);
+    CoordinateVector<> minpos;
+    CoordinateVector<> maxpos;
+    if (box.get_sides().x() < 0.) {
+      minpos = positions[0];
+      maxpos = positions[0];
+      for (unsigned int i = 1; i < positions_size; ++i) {
+        minpos = CoordinateVector<>::min(minpos, positions[i]);
+        maxpos = CoordinateVector<>::max(maxpos, positions[i]);
+      }
+
+      // set maxpos to the range of positions
+      maxpos -= minpos;
+
+      // make the range slightly larger to make sure every position is inside it
+      minpos -= 0.01 * maxpos;
+      maxpos *= 1.02;
+    } else {
+      minpos = box.get_anchor();
+      maxpos = box.get_sides();
     }
-
-    // set maxpos to the range of positions
-    maxpos -= minpos;
-
-    // make the range slightly larger to make sure every position is inside it
-    minpos -= 0.01 * maxpos;
-    maxpos *= 1.02;
 
     // now find the right size for the grid: we want an average of num_per_cell
     // positions per grid cell
@@ -674,13 +685,13 @@ public:
                         "%g [%g %g]", cpos.x(), _grid_anchor.x(),
                         _grid_anchor.x() + _grid.size() * _grid_cell_sides.x());
     cmac_assert_message(
-        cpos.y() >= _grid_anchor.x() &&
+        cpos.y() >= _grid_anchor.y() &&
             cpos.y() <
                 _grid_anchor.y() + _grid[0].size() * _grid_cell_sides.y(),
         "%g [%g %g]", cpos.y(), _grid_anchor.y(),
         _grid_anchor.y() + _grid[0].size() * _grid_cell_sides.y());
     cmac_assert_message(
-        cpos.z() >= _grid_anchor.x() &&
+        cpos.z() >= _grid_anchor.z() &&
             cpos.z() <
                 _grid_anchor.z() + _grid[0][0].size() * _grid_cell_sides.z(),
         "%g [%g %g]", cpos.z(), _grid_anchor.z(),

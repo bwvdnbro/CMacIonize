@@ -113,6 +113,8 @@ public:
       it.set_hydro_conserved_momentum_z(0.);
       it.set_hydro_conserved_total_energy(total_energy);
     }
+
+    grid.set_grid_velocity();
   }
 
   /**
@@ -122,7 +124,7 @@ public:
    * @param timestep Time step over which to evolve the system.
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
-#define PRINT_TIMESTEP_CRITERION
+//#define PRINT_TIMESTEP_CRITERION
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -164,13 +166,16 @@ public:
         double rhoR;
         CoordinateVector<> uR;
         double PR;
+        CoordinateVector<> vframe;
         if (ngb != grid.end()) {
           rhoR = ngb.get_hydro_primitive_density();
           uR[0] = ngb.get_hydro_primitive_velocity_x();
           uR[1] = ngb.get_hydro_primitive_velocity_y();
           uR[2] = ngb.get_hydro_primitive_velocity_z();
           PR = ngb.get_hydro_primitive_pressure();
+          vframe = grid.get_interface_velocity(it, ngb, midpoint);
         } else {
+          // apply reflective boundaries
           rhoR = rhoL;
           uR = uL;
           if (normal[0] != 0.) {
@@ -185,19 +190,16 @@ public:
           PR = PL;
         }
 
-        const CoordinateVector<> vframe =
-            grid.get_interface_velocity(it, ngb, midpoint);
-        // de-boost the velocities
-        uL[0] -= vframe.x();
-        uL[1] -= vframe.y();
-        uL[2] -= vframe.z();
-        uR[0] -= vframe.x();
-        uR[1] -= vframe.y();
-        uR[2] -= vframe.z();
+        // boost the velocities to the interface frame (and use new variables,
+        // as we still want to use the old value of uL for other neighbours)
+        const CoordinateVector<> uLframe = uL - vframe;
+        const CoordinateVector<> uRframe = uR - vframe;
 
         // project the velocities onto the surface normal
-        double vL = uL[0] * normal[0] + uL[1] * normal[1] + uL[2] * normal[2];
-        double vR = uR[0] * normal[0] + uR[1] * normal[1] + uR[2] * normal[2];
+        double vL = uLframe[0] * normal[0] + uLframe[1] * normal[1] +
+                    uLframe[2] * normal[2];
+        double vR = uRframe[0] * normal[0] + uRframe[1] * normal[1] +
+                    uRframe[2] * normal[2];
 
         // solve the Riemann problem
         double rhosol, vsol, Psol;
@@ -210,31 +212,34 @@ public:
           CoordinateVector<> usol;
           if (flag == -1) {
             vsol -= vL;
-            usol[0] = uL[0] + vsol * normal[0];
-            usol[1] = uL[1] + vsol * normal[1];
-            usol[2] = uL[2] + vsol * normal[2];
+            usol[0] = uLframe[0] + vsol * normal[0];
+            usol[1] = uLframe[1] + vsol * normal[1];
+            usol[2] = uLframe[2] + vsol * normal[2];
           } else {
             vsol -= vR;
-            usol[0] = uR[0] + vsol * normal[0];
-            usol[1] = uR[1] + vsol * normal[1];
-            usol[2] = uR[2] + vsol * normal[2];
+            usol[0] = uRframe[0] + vsol * normal[0];
+            usol[1] = uRframe[1] + vsol * normal[1];
+            usol[2] = uRframe[2] + vsol * normal[2];
           }
 
           // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol = 0.5 * rhosol * (usol + vframe).norm2() + Psol / _gm1;
+          double rhoesol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
           vsol = CoordinateVector<>::dot_product(usol, normal);
 
           // get the fluxes
           double mflux = rhosol * vsol * surface_area * timestep;
-          CoordinateVector<> pflux = rhosol * vsol * (usol + vframe);
+          CoordinateVector<> pflux = rhosol * vsol * usol;
           pflux[0] += Psol * normal[0];
           pflux[1] += Psol * normal[1];
           pflux[2] += Psol * normal[2];
           pflux *= surface_area * timestep;
-          double eflux =
-              (rhoesol * vsol +
-               Psol * CoordinateVector<>::dot_product(usol + vframe, normal)) *
-              surface_area * timestep;
+          double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
+
+          // de-boost fluxes to fixed reference frame
+          const double vframe2 = vframe.norm2();
+          eflux += CoordinateVector<>::dot_product(vframe, pflux) +
+                   0.5 * vframe2 * mflux;
+          pflux += mflux * vframe;
 
           // add the fluxes to the right time differences
           it.set_hydro_conserved_delta_mass(
@@ -300,6 +305,8 @@ public:
       it.set_hydro_conserved_delta_total_energy(0.);
     }
 
+    grid.evolve(timestep);
+
     const double hydrogen_mass = 1.6737236e-27;
     const double boltzmann_k = 1.38064852e-23;
     // convert conserved variables to primitive variables
@@ -337,6 +344,10 @@ public:
                     momentum[2] * velocity[2])) /
             volume;
       }
+
+      cmac_assert(density >= 0.);
+      cmac_assert(pressure >= 0.);
+
       it.set_hydro_primitive_density(density);
       it.set_hydro_primitive_velocity_x(velocity[0]);
       it.set_hydro_primitive_velocity_y(velocity[1]);
@@ -346,12 +357,11 @@ public:
       it.set_number_density(density / hydrogen_mass);
       it.set_temperature(hydrogen_mass * pressure / boltzmann_k / density);
 
-      if (it.get_temperature() < 0.) {
-        cmac_error("Negative temperature (%g, %g, %g %g %g)!",
-                   it.get_temperature(), pressure, momentum[0], momentum[1],
-                   momentum[2]);
-      }
+      cmac_assert(it.get_number_density() >= 0.);
+      cmac_assert(it.get_temperature() >= 0.);
     }
+
+    grid.set_grid_velocity();
   }
 };
 

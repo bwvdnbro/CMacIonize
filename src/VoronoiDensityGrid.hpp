@@ -66,7 +66,8 @@ public:
   virtual ~VoronoiDensityGrid();
 
   virtual void initialize(std::pair< unsigned long, unsigned long > &block);
-  virtual void reset_grid();
+  virtual void evolve(double timestep);
+  virtual void set_grid_velocity();
 
   virtual CoordinateVector<>
   get_interface_velocity(const iterator left, const iterator right,

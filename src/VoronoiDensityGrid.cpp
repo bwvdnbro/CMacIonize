@@ -138,19 +138,21 @@ void VoronoiDensityGrid::initialize(
   DensityGrid::initialize(block, _density_function);
 }
 
-void VoronoiDensityGrid::reset_grid() {
+/**
+ * @brief Evolve the grid by moving the grid generators.
+ *
+ * @param timestep Timestep with which to move the generators (in s).
+ */
+void VoronoiDensityGrid::evolve(double timestep) {
   if (_hydro) {
     // move the cell generators and update the velocities to the new fluid
     // velocities
     if (_log) {
-      _log->write_status("Resetting Voronoi grid...");
+      _log->write_status("Evolving Voronoi grid...");
     }
 
     for (auto it = begin(); it != end(); ++it) {
       const unsigned int index = it.get_index();
-
-      const CoordinateVector<> dcell = _voronoi_grid.get_centroid(index) -
-                                       _voronoi_grid.get_generator(index);
 
       _voronoi_grid.get_generator(index)[0] +=
           _hydro_timestep * _hydro_generator_velocity[0][index];
@@ -158,11 +160,30 @@ void VoronoiDensityGrid::reset_grid() {
           _hydro_timestep * _hydro_generator_velocity[1][index];
       _voronoi_grid.get_generator(index)[2] +=
           _hydro_timestep * _hydro_generator_velocity[2][index];
+    }
+    _voronoi_grid.reset();
+    _voronoi_grid.finalize();
+
+    if (_log) {
+      _log->write_status("Done evolving Voronoi grid.");
+    }
+  }
+}
+
+/**
+ * @brief Set the velocities of the grid generators.
+ */
+void VoronoiDensityGrid::set_grid_velocity() {
+  if (_hydro) {
+    for (auto it = begin(); it != end(); ++it) {
+      const unsigned int index = it.get_index();
 
       _hydro_generator_velocity[0][index] = _hydro_primitive_velocity_x[index];
       _hydro_generator_velocity[1][index] = _hydro_primitive_velocity_y[index];
       _hydro_generator_velocity[2][index] = _hydro_primitive_velocity_z[index];
 
+      const CoordinateVector<> dcell = _voronoi_grid.get_centroid(index) -
+                                       _voronoi_grid.get_generator(index);
       const double R = std::cbrt(0.75 * it.get_volume() / M_PI);
       const double dcellnorm = dcell.norm();
       const double eta = 0.25;
@@ -180,15 +201,7 @@ void VoronoiDensityGrid::reset_grid() {
       _hydro_generator_velocity[1][index] += vcorr.y();
       _hydro_generator_velocity[2][index] += vcorr.z();
     }
-    _voronoi_grid.reset();
-    _voronoi_grid.finalize();
-
-    if (_log) {
-      _log->write_status("Done resetting Voronoi grid.");
-    }
   }
-
-  DensityGrid::reset_grid();
 }
 
 /**
@@ -207,8 +220,8 @@ CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
   const unsigned int iright = right.get_index();
   CoordinateVector<> vframe(0.);
   if (iright < VORONOI_MAX_INDEX) {
-    const CoordinateVector<> rRL =
-        right.get_cell_midpoint() - left.get_cell_midpoint();
+    const CoordinateVector<> rRL = _voronoi_grid.get_generator(iright) -
+                                   _voronoi_grid.get_generator(ileft);
     const double rRLnorm2 = rRL.norm2();
     CoordinateVector<> vrel;
     vrel[0] = _hydro_generator_velocity[0][ileft] -
@@ -217,8 +230,8 @@ CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
               _hydro_generator_velocity[1][iright];
     vrel[2] = _hydro_generator_velocity[2][ileft] -
               _hydro_generator_velocity[2][iright];
-    const CoordinateVector<> rmid =
-        0.5 * (right.get_cell_midpoint() + left.get_cell_midpoint());
+    const CoordinateVector<> rmid = 0.5 * (_voronoi_grid.get_generator(ileft) +
+                                           _voronoi_grid.get_generator(iright));
     const double fac =
         CoordinateVector<>::dot_product(vrel, interface_midpoint - rmid) /
         rRLnorm2;

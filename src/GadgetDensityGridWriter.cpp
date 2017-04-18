@@ -193,6 +193,19 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
       HDF5Tools::write_dataset< double >(
           group, "Density", _grid.get_hydro_primitive_density_handle());
     }
+    // velocity
+    {
+      std::vector< CoordinateVector<> > velocities(numpart[0]);
+      unsigned int index = 0;
+      for (auto it = _grid.begin(); it != _grid.end(); ++it) {
+        velocities[index][0] = it.get_hydro_primitive_velocity_x();
+        velocities[index][1] = it.get_hydro_primitive_velocity_y();
+        velocities[index][2] = it.get_hydro_primitive_velocity_z();
+        ++index;
+      }
+      HDF5Tools::write_dataset< CoordinateVector<> >(group, "Velocities",
+                                                     velocities);
+    }
     // pressure
     {
       HDF5Tools::write_dataset< double >(

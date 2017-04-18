@@ -27,6 +27,8 @@
 #include "DensityFunction.hpp"
 #include "HydroIntegrator.hpp"
 #include "RiemannSolver.hpp"
+#include "VoronoiDensityGrid.hpp"
+#include "VoronoiGeneratorDistribution.hpp"
 #include <fstream>
 
 /**
@@ -58,6 +60,35 @@ public:
 };
 
 /**
+ * @brief 1D Voronoi grid generator distribution.
+ */
+class OneDVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
+private:
+  /*! @brief Index of the last returned generator position. */
+  unsigned int _last_index;
+
+public:
+  /**
+   * @brief Get the number of positions returned by this distribution.
+   *
+   * @return 100.
+   */
+  virtual unsigned int get_number_of_positions() const { return 100; }
+
+  /**
+   * @brief Get a generator position.
+   *
+   * @return Generator position (in m).
+   */
+  virtual CoordinateVector<> get_position() {
+    CoordinateVector<> pos((_last_index + 0.5) * 0.01, 0.5, 0.5);
+    ++_last_index;
+    cmac_assert(_last_index <= 100);
+    return pos;
+  }
+};
+
+/**
  * @brief Unit test for the HydroIntegrator class.
  *
  * @param argc Number of command line arguments.
@@ -65,66 +96,123 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  HydroIntegrator integrator(5. / 3., false);
-
-  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-  CoordinateVector< int > ncell(100, 1, 1);
-  SodShockDensityFunction density_function;
-  CoordinateVector< bool > periodic(true, true, true);
-  CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
-  std::pair< unsigned long, unsigned long > block =
-      std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
-
-  integrator.initialize_hydro_variables(grid);
-
-  // write initial snapshot
+  /// Cartesian grid
   {
-    std::ofstream snapfile("hydro_snap_0.txt");
-    double mtot = 0.;
-    double etot = 0.;
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      snapfile << it.get_cell_midpoint().x() << "\t"
-               << it.get_hydro_primitive_density() << "\t"
-               << it.get_hydro_primitive_velocity_x() << "\t"
-               << it.get_hydro_primitive_pressure() << "\n";
-      mtot += it.get_hydro_conserved_mass();
-      etot += it.get_hydro_conserved_total_energy();
+    HydroIntegrator integrator(5. / 3., false);
+
+    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    CoordinateVector< int > ncell(100, 1, 1);
+    SodShockDensityFunction density_function;
+    CoordinateVector< bool > periodic(false, true, true);
+    CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
+    std::pair< unsigned long, unsigned long > block =
+        std::make_pair(0, grid.get_number_of_cells());
+    grid.initialize(block);
+
+    integrator.initialize_hydro_variables(grid);
+
+    // write initial snapshot
+    {
+      std::ofstream snapfile("hydro_snap_0.txt");
+      double mtot = 0.;
+      double etot = 0.;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        snapfile << it.get_cell_midpoint().x() << "\t"
+                 << it.get_hydro_primitive_density() << "\t"
+                 << it.get_hydro_primitive_velocity_x() << "\t"
+                 << it.get_hydro_primitive_pressure() << "\n";
+        mtot += it.get_hydro_conserved_mass();
+        etot += it.get_hydro_conserved_total_energy();
+      }
+      cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
-    cmac_status("Total mass: %g, total energy: %g", mtot, etot);
-  }
 
-  for (unsigned int i = 0; i < 100; ++i) {
-    integrator.do_hydro_step(grid, 0.001);
-  }
-
-  // write final snapshot
-  {
-    std::ofstream snapfile("hydro_snap_1.txt");
-    double mtot = 0.;
-    double etot = 0.;
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      snapfile << it.get_cell_midpoint().x() << "\t"
-               << it.get_hydro_primitive_density() << "\t"
-               << it.get_hydro_primitive_velocity_x() << "\t"
-               << it.get_hydro_primitive_pressure() << "\n";
-      mtot += it.get_hydro_conserved_mass();
-      etot += it.get_hydro_conserved_total_energy();
+    for (unsigned int i = 0; i < 100; ++i) {
+      integrator.do_hydro_step(grid, 0.001);
     }
-    cmac_status("Total mass: %g, total energy: %g", mtot, etot);
+
+    // write final snapshot
+    {
+      std::ofstream snapfile("hydro_snap_1.txt");
+      double mtot = 0.;
+      double etot = 0.;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        snapfile << it.get_cell_midpoint().x() << "\t"
+                 << it.get_hydro_primitive_density() << "\t"
+                 << it.get_hydro_primitive_velocity_x() << "\t"
+                 << it.get_hydro_primitive_pressure() << "\n";
+        mtot += it.get_hydro_conserved_mass();
+        etot += it.get_hydro_conserved_total_energy();
+      }
+      cmac_status("Total mass: %g, total energy: %g", mtot, etot);
+    }
+
+    // output reference solution
+    {
+      std::ofstream snapfile("hydro_ref_1.txt");
+      const RiemannSolver solver(5. / 3.);
+      const double t = 0.1;
+      for (unsigned int i = 0; i < 1000; ++i) {
+        const double x = (i + 0.5) * 0.001;
+        double rhosol, usol, Psol;
+        solver.solve(1., 0., 1., 0.125, 0., 0.1, rhosol, usol, Psol,
+                     (x - 0.5) / t);
+        snapfile << x << "\t" << rhosol << "\t" << usol << "\t" << Psol << "\n";
+      }
+    }
   }
 
-  // output reference solution
+  /// Voronoi grid
   {
-    std::ofstream snapfile("hydro_ref_1.txt");
-    const RiemannSolver solver(5. / 3.);
-    const double t = 0.1;
-    for (unsigned int i = 0; i < 1000; ++i) {
-      const double x = (i + 0.5) * 0.001;
-      double rhosol, usol, Psol;
-      solver.solve(1., 0., 1., 0.125, 0., 0.1, rhosol, usol, Psol,
-                   (x - 0.5) / t);
-      snapfile << x << "\t" << rhosol << "\t" << usol << "\t" << Psol << "\n";
+    HydroIntegrator integrator(5. / 3., false);
+
+    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    SodShockDensityFunction density_function;
+    CoordinateVector< bool > periodic(false, false, false);
+    OneDVoronoiGeneratorDistribution *generators =
+        new OneDVoronoiGeneratorDistribution();
+    VoronoiDensityGrid grid(generators, density_function, box, periodic, true,
+                            0.001, 5. / 3.);
+    std::pair< unsigned long, unsigned long > block =
+        std::make_pair(0, grid.get_number_of_cells());
+    grid.initialize(block);
+
+    integrator.initialize_hydro_variables(grid);
+
+    // write initial snapshot
+    {
+      std::ofstream snapfile("hydro_voronoi_snap_0.txt");
+      double mtot = 0.;
+      double etot = 0.;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        snapfile << it.get_cell_midpoint().x() << "\t"
+                 << it.get_hydro_primitive_density() << "\t"
+                 << it.get_hydro_primitive_velocity_x() << "\t"
+                 << it.get_hydro_primitive_pressure() << "\n";
+        mtot += it.get_hydro_conserved_mass();
+        etot += it.get_hydro_conserved_total_energy();
+      }
+      cmac_status("Total mass: %g, total energy: %g", mtot, etot);
+    }
+
+    for (unsigned int i = 0; i < 100; ++i) {
+      integrator.do_hydro_step(grid, 0.001);
+    }
+
+    // write final snapshot
+    {
+      std::ofstream snapfile("hydro_voronoi_snap_1.txt");
+      double mtot = 0.;
+      double etot = 0.;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        snapfile << it.get_cell_midpoint().x() << "\t"
+                 << it.get_hydro_primitive_density() << "\t"
+                 << it.get_hydro_primitive_velocity_x() << "\t"
+                 << it.get_hydro_primitive_pressure() << "\n";
+        mtot += it.get_hydro_conserved_mass();
+        etot += it.get_hydro_conserved_total_energy();
+      }
+      cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
   }
 
