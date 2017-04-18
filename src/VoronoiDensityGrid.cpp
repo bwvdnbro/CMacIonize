@@ -346,7 +346,6 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
   const CoordinateVector<> photon_direction = photon.get_direction();
 
   unsigned int index = _voronoi_grid.get_index(photon_origin);
-  unsigned int old_index = index;
   while (index < VORONOI_MAX_INDEX && optical_depth > 0.) {
     const CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
     double mins = -1.;
@@ -386,18 +385,17 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
       double Scorr = mins * optical_depth / tau;
       mins += Scorr;
     } else {
-      old_index = index;
       index = next_index;
     }
     photon_origin += mins * photon_direction;
 
-    cmac_assert_message(
-        index >= VORONOI_MAX_INDEX || _voronoi_grid.is_inside(photon_origin),
-        "index: %u (max: %u, old index: %u), mins: %g, position: %g %g %g, "
-        "photon direction: %g %g %g",
-        index, VORONOI_MAX_INDEX, old_index, mins, photon_origin[0],
-        photon_origin[1], photon_origin[2], photon_direction[0],
-        photon_direction[1], photon_direction[2]);
+    cmac_assert_message(index >= VORONOI_MAX_INDEX ||
+                            _voronoi_grid.is_inside(photon_origin),
+                        "index: %u (max: %u), mins: %g, position: %g %g %g, "
+                        "photon direction: %g %g %g",
+                        index, VORONOI_MAX_INDEX, mins, photon_origin[0],
+                        photon_origin[1], photon_origin[2], photon_direction[0],
+                        photon_direction[1], photon_direction[2]);
 
     update_integrals(mins, it, photon);
 
