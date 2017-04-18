@@ -148,19 +148,18 @@ public:
 
     // exchange fluxes across cell boundaries
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      double rhoL = it.get_hydro_primitive_density();
-      CoordinateVector<> uL;
-      uL[0] = it.get_hydro_primitive_velocity_x();
-      uL[1] = it.get_hydro_primitive_velocity_y();
-      uL[2] = it.get_hydro_primitive_velocity_z();
-      double PL = it.get_hydro_primitive_pressure();
+      const double rhoL = it.get_hydro_primitive_density();
+      const CoordinateVector<> uL(it.get_hydro_primitive_velocity_x(),
+                                  it.get_hydro_primitive_velocity_y(),
+                                  it.get_hydro_primitive_velocity_z());
+      const double PL = it.get_hydro_primitive_pressure();
       auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
         // the midpoint is only used if we use a second order scheme
         const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
-        CoordinateVector<> normal = std::get< 2 >(*ngbit);
-        double surface_area = std::get< 3 >(*ngbit);
+        const CoordinateVector<> normal = std::get< 2 >(*ngbit);
+        const double surface_area = std::get< 3 >(*ngbit);
 
         // get the right state
         double rhoR;
@@ -196,14 +195,14 @@ public:
         const CoordinateVector<> uRframe = uR - vframe;
 
         // project the velocities onto the surface normal
-        double vL = uLframe[0] * normal[0] + uLframe[1] * normal[1] +
-                    uLframe[2] * normal[2];
-        double vR = uRframe[0] * normal[0] + uRframe[1] * normal[1] +
-                    uRframe[2] * normal[2];
+        const double vL = uLframe[0] * normal[0] + uLframe[1] * normal[1] +
+                          uLframe[2] * normal[2];
+        const double vR = uRframe[0] * normal[0] + uRframe[1] * normal[1] +
+                          uRframe[2] * normal[2];
 
         // solve the Riemann problem
         double rhosol, vsol, Psol;
-        int flag =
+        const int flag =
             _solver.solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
 
         // if the solution was vacuum, there is no flux
@@ -227,7 +226,7 @@ public:
           vsol = CoordinateVector<>::dot_product(usol, normal);
 
           // get the fluxes
-          double mflux = rhosol * vsol * surface_area * timestep;
+          const double mflux = rhosol * vsol * surface_area * timestep;
           CoordinateVector<> pflux = rhosol * vsol * usol;
           pflux[0] += Psol * normal[0];
           pflux[1] += Psol * normal[1];
