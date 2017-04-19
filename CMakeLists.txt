@@ -186,6 +186,12 @@ if(ACTIVATE_FAST_MATH)
   add_compiler_flag("-ffast-math" OPTIONAL)
 endif(ACTIVATE_FAST_MATH)
 
+# Check if we need to activate vectorization
+if(ACTIVATE_VECTORIZATION)
+  message(STATUS "Activating vectorization...")
+  add_compiler_flag("-ftree-vectorize" OPTIONAL)
+endif(ACTIVATE_VECTORIZATION)
+
 # Check if we need to activate assertions
 if(ACTIVATE_ASSERTIONS)
   set(HAVE_ASSERTIONS True)

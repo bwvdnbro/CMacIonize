@@ -943,35 +943,32 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   }
 
   // count the new number of vertices
-  int new_num_vert = 0;
+  unsigned int new_num_vert = 0;
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     // '!delete_stack[i]' is 1 if 'delete_stack[i] == false'
     new_num_vert += !delete_stack[i];
   }
 
-  // now actually delete all vertices and edges that need to be deleted
-  // we cannot do this in-place, and instead create new vertex and edge vectors
-  std::vector< CoordinateVector<> > new_vertices(new_num_vert);
-  std::vector< std::vector< std::tuple< int, unsigned char, unsigned int > > >
-      new_edges(new_num_vert);
-
   // 'next_vertex' contains the next vertex to be copied
   // 'new_vertex_index' is the index for the next new vertex to create in the
   // new lists
+  // since next_vertex >= new_vertex_index, we can copy the vertices in place
   unsigned int next_vertex = 0;
-  int new_vertex_index = 0;
+  unsigned int new_vertex_index = 0;
   // find the first vertex that is not deleted
   while (next_vertex < _vertices.size() && delete_stack[next_vertex]) {
     ++next_vertex;
   }
   // now continue until we have done all existing vertices
   while (next_vertex < _vertices.size()) {
-    // add the vertex to the new vectors
-    // first make sure we do not exceed the boundaries of the new vectors
+    // overwrite the next element of the vertices with the first next element
+    // that is not deleted
+    // make sure we do not exceed the boundaries of the vectors
     cmac_assert(new_vertex_index < new_num_vert);
+
     // just copy the vertex and edges
-    new_vertices[new_vertex_index] = _vertices[next_vertex];
-    new_edges[new_vertex_index] = _edges[next_vertex];
+    _vertices[new_vertex_index] = _vertices[next_vertex];
+    _edges[new_vertex_index] = _edges[next_vertex];
 
     // update the vertices that are connected to this vertex
     for (unsigned char i = 0; i < _edges[next_vertex].size(); ++i) {
@@ -981,16 +978,12 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
       cmac_assert(m >= 0);
       unsigned char n =
           std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[next_vertex][i]);
-      // we need to distinguish between vertices that were already copied
-      // ('m < new_vertex_index'), and vertex that still need copying
-      // ('m > new_vertex_index')
-      if (m < new_vertex_index) {
-        std::get< VORONOI_EDGE_ENDPOINT >(new_edges[m][n]) = new_vertex_index;
-      } else {
-        // we temporarily store the information for this vertex in the old edge
-        // the information will be copied into the new edge automatically
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[m][n]) = new_vertex_index;
-      }
+      // m can either be a new vertex that was already copied, or an old vertex
+      // that still needs to be copied
+      // it doesn't matter if we update old vertices, as the new values will
+      // automatically be copied into the correct new vertex when that vertex is
+      // copied
+      std::get< VORONOI_EDGE_ENDPOINT >(_edges[m][n]) = new_vertex_index;
     }
     // done adding the new vertex, increase the index for the next one
     ++new_vertex_index;
@@ -1011,10 +1004,12 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   // new vectors, and 'new_vertex_index' should hence be equal to 'new_num_vert'
   cmac_assert(new_vertex_index == new_num_vert);
 
-  // now swap the vectors
-  // this will delete the original vertices and edges
-  _vertices = new_vertices;
-  _edges = new_edges;
+  // now make sure the vectors have the correct length by shrinking them to the
+  // desired size
+  if (_vertices.size() > new_num_vert) {
+    _vertices.resize(new_num_vert);
+    _edges.resize(new_num_vert);
+  }
 }
 
 /// static geometric functions
