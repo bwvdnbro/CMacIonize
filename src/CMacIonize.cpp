@@ -113,6 +113,12 @@ int main(int argc, char **argv) {
                     "Output a snapshot for every iteration of the photon "
                     "traversal algorithm.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("use-version", 'u',
+                    "Make sure the code version string matches the given "
+                    "string. This is useful when running simulations remotely "
+                    "using a workflow system, to ensure that every remote node "
+                    "is running the same code version.",
+                    COMMANDLINEOPTION_STRINGARGUMENT);
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -136,6 +142,20 @@ int main(int argc, char **argv) {
           "| |____| |  | | (_| | (__ _| || (_) | | | | |/ /  __/\n"
           " \\_____|_|  |_|\\__,_|\\___|_____\\___/|_| |_|_/___\\___|\n";
       log = new TerminalLog(loglevel, header);
+    }
+  }
+
+  if (parser.get_value< std::string >("use-version") != "") {
+    if (CompilerInfo::get_git_version() !=
+        parser.get_value< std::string >("use-version")) {
+      if (log) {
+        log->write_error("Wrong code version (requested ",
+                         parser.get_value< std::string >("use-version"),
+                         ", got ", CompilerInfo::get_git_version(), ")!");
+      }
+      cmac_error("Wrong code version (%s != %s)!",
+                 parser.get_value< std::string >("use-version").c_str(),
+                 CompilerInfo::get_git_version().c_str());
     }
   }
 
