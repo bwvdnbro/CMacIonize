@@ -497,22 +497,34 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     // we now need to find a vertex with at least one edge that extends below
     // the plane, as the remainder of our algorithm depends on this
     // the only way to do this is by testing all edges of 'up', until we find a
-    // vertex below or on the plane. If the vertex is on the plane, we are done.
-    // If it is on the plane (or very close to it), we need to check the edges
-    // of that vertex as well.
+    // vertex below or on the plane. If the vertex is below the plane, we are
+    // done. If it is on the plane (or very close to it), we need to check the
+    // edges of that vertex as well.
+    // we hence need to use a stack for this test.
     std::vector< int > stack;
+    // and this stack initially only contains 'up'
     stack.push_back(up);
     l.first = 0;
+    // we now test every vertex in the stack (note that the stack grows during
+    // the loop)
     unsigned int j = 0;
     while (j < stack.size() && l.first != -1) {
+      // pick the current element of the stack
       up = stack[j];
+      // test all its edges
       for (unsigned int i = 0; i < _edges[up].size(); ++i) {
         lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
-        l = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
         if (l.first == -1) {
+          // edge is below the plane: stop the for loop (and automatically exit
+          // the while loop as well)
+          // store the index of the edge below the plane for later use
+          rp = i;
           break;
         }
         if (l.first == 0) {
+          // edge is in the plane: add the other endpoint to the stack (if it is
+          // not already on the stack)
           unsigned int k = 0;
           while (k < stack.size() && stack[k] != lp) {
             ++k;
@@ -522,10 +534,25 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           }
         }
       }
+      // increase the index
+      // note that this always happens, irrespective of whether or not the last
+      // edge that was tested extends below the plane
       ++j;
     }
 
+    // since we tested all vertices that were connected to our initial vertex,
+    // and a vertex of a Voronoi cell cannot (by definition) have vertices with
+    // all edges above the midplane, we should now have the index of a vertex
+    // that has an edge that extends below the plane
+    // the index of that vertex is stored in 'up'
     cmac_assert(l.first == -1);
+
+    // we will now replace the vertex on the plane with a new vertex which has
+    // two edges in the plane and as many edges below the plane as the original
+    // vertex
+    // we already found the index of and edge of 'up' below the plane, it is
+    // stored in 'rp'
+    /// CONTINUE HERE
 
     cmac_error("Complicated setup is only partially implemented!");
   } else {
