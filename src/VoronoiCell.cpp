@@ -489,7 +489,45 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // finding routine.
   if (complicated_setup) {
     // do the complicated setup
-    cmac_error("Complicated setup has not yet been implemented!");
+
+    // somewhere along the way above, we found a vertex very close or on the
+    // midplane. The index of that vertex is stored in 'up'. All other variables
+    // are completely meaningless at this point.
+
+    // we now need to find a vertex with at least one edge that extends below
+    // the plane, as the remainder of our algorithm depends on this
+    // the only way to do this is by testing all edges of 'up', until we find a
+    // vertex below or on the plane. If the vertex is on the plane, we are done.
+    // If it is on the plane (or very close to it), we need to check the edges
+    // of that vertex as well.
+    std::vector< int > stack;
+    stack.push_back(up);
+    l.first = 0;
+    unsigned int j = 0;
+    while (j < stack.size() && l.first != -1) {
+      up = stack[j];
+      for (unsigned int i = 0; i < _edges[up].size(); ++i) {
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        l = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+        if (l.first == -1) {
+          break;
+        }
+        if (l.first == 0) {
+          unsigned int k = 0;
+          while (k < stack.size() && stack[k] != lp) {
+            ++k;
+          }
+          if (k == stack.size()) {
+            stack.push_back(lp);
+          }
+        }
+      }
+      ++j;
+    }
+
+    cmac_assert(l.first == -1);
+
+    cmac_error("Complicated setup is only partially implemented!");
   } else {
     // do the normal setup
 
