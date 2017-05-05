@@ -45,17 +45,20 @@ double expected_density(CoordinateVector<> x) {
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  FLASHSnapshotDensityFunction density("FLASHtest.hdf5", 8000.);
+  FLASHSnapshotDensityFunction density("FLASHtest.hdf5");
 
   unsigned int np = 128;
   double xi2 = 0.;
   for (unsigned int i = 0; i < np; ++i) {
     CoordinateVector<> p((i + 0.5) * 0.02 / np, (i + 0.5) * 0.01 / np,
                          (i + 0.5) * 0.01 / np);
-    double rho = density(p).get_total_density();
+    DensityValues vals = density(p);
+    double rho = vals.get_number_density();
     double rho_ex = expected_density(p);
     double diff = (rho - rho_ex) / (rho + rho_ex);
     xi2 += diff * diff;
+
+    assert_condition(vals.get_temperature() == 4000.);
   }
   assert_values_equal(xi2, 0.0106294);
 

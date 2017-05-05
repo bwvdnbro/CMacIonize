@@ -32,7 +32,9 @@
 
 // implementations
 #include "FaucherGiguerePhotonSourceSpectrum.hpp"
+#include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "WMBasicPhotonSourceSpectrum.hpp"
 
 /**
  * @brief Factory for PhotonSourceSpectrum instances.
@@ -58,8 +60,12 @@ public:
     }
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
+    } else if (type == "Monochromatic") {
+      return new MonochromaticPhotonSourceSpectrum(role, params, log);
     } else if (type == "Planck") {
       return new PlanckPhotonSourceSpectrum(role, params, log);
+    } else if (type == "WMBasic") {
+      return new WMBasicPhotonSourceSpectrum(role, params, log);
     } else if (type == "None") {
       return nullptr;
     } else {

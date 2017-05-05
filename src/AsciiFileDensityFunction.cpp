@@ -161,7 +161,7 @@ operator()(CoordinateVector<> position) const {
   iz = (position.z() - _box.get_anchor().z()) / _box.get_sides().z() *
        _ncell.z();
 
-  cell.set_total_density(_grid[ix][iy][iz]);
+  cell.set_number_density(_grid[ix][iy][iz]);
   cell.set_temperature(_temperature);
   cell.set_ionic_fraction(ION_H_n, 1.e-6);
   cell.set_ionic_fraction(ION_He_n, 1.e-6);

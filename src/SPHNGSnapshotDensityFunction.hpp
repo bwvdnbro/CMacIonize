@@ -27,11 +27,13 @@
 #ifndef SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 #define SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 
+#include "Box.hpp"
 #include "DensityFunction.hpp"
 
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <vector>
 
 class Log;
 class Octree;
@@ -52,11 +54,29 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Box containing all particles (in m). */
+  Box _partbox;
+
   /*! @brief Octree used to speed up neighbour finding. */
   Octree *_octree;
 
   /*! @brief Initial temperature of the gas (in K). */
   double _initial_temperature;
+
+  /*! @brief Number of bins to use when writing particle statistics. */
+  unsigned int _stats_numbin;
+
+  /*! @brief Minimum distance to use for particle statistics. */
+  double _stats_mindist;
+
+  /*! @brief Maximum distance to use for particle statistics. */
+  double _stats_maxdist;
+
+  /*! @brief Name of the file with particle statistics. */
+  std::string _stats_filename;
+
+  /*! @brief Log to write logging info to. */
+  Log *_log;
 
   static double kernel(const double q, const double h);
 
@@ -73,6 +93,30 @@ private:
     if (length1 != length2) {
       cmac_error("Wrong block size!");
     }
+  }
+
+  /**
+   * @brief Get the size of the given template datatype.
+   *
+   * @param value Reference to a value of the template datatype.
+   * @return Size of the template datatype.
+   */
+  template < typename _datatype_ >
+  inline static unsigned int get_size(_datatype_ &value) {
+    return sizeof(_datatype_);
+  }
+
+  /**
+   * @brief Get the size of the given template datatypes (recursively).
+   *
+   * @param value Next value in the list.
+   * @param args Other values in the list.
+   * @return Total size of all values in the list.
+   */
+  template < typename _datatype_, typename... _arguments_ >
+  inline static unsigned int get_size(_datatype_ &value,
+                                      _arguments_ &... args) {
+    return sizeof(_datatype_) + get_size(args...);
   }
 
   /**
@@ -117,6 +161,12 @@ private:
   inline static void read_block(std::ifstream &ifile, _arguments_ &... args) {
     unsigned int length1, length2;
     ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+    unsigned int blocksize = get_size(args...);
+    if (length1 != blocksize) {
+      cmac_error("Wrong number of variables passed on to read_block()! Block "
+                 "size is %u, but size of variables is %u.",
+                 length1, blocksize);
+    }
     read_value(ifile, args...);
     ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
     if (length1 != length2) {
@@ -132,18 +182,29 @@ private:
    * a single integer giving the number of elements in the second and third
    * block. The second block contains 16-byte tags, while the third block
    * contains a value of the given template type for each tag.
+   * If the file is not tagged, the second block is absent. In this case, the
+   * tagged flag should be set to false, and the tags will simply be "tag",
+   * "tag1"...
    *
    * @param ifile Reference to an open Fortran unformatted binary file to read
    * from.
+   * @param tagged Flag indicating whether the file is tagged or not.
    * @return std::map containing the contents of the three blocks as a
    * dictionary.
    */
   template < typename _datatype_ >
-  inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile) {
+  inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile,
+                                                       bool tagged = true) {
     unsigned int size;
     read_block(ifile, size);
     std::vector< std::string > tags(size);
-    read_block(ifile, tags);
+    if (tagged) {
+      read_block(ifile, tags);
+    } else {
+      for (unsigned int i = 0; i < size; ++i) {
+        tags[i] = "tag";
+      }
+    }
     std::vector< _datatype_ > vals(size);
     read_block(ifile, vals);
     std::map< std::string, _datatype_ > dict;
@@ -167,17 +228,21 @@ private:
 
 public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               Log *log = nullptr);
+                               bool write_stats, unsigned int stats_numbin,
+                               double stats_mindist, double stats_maxdist,
+                               std::string stats_filename, Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   ~SPHNGSnapshotDensityFunction();
 
+  virtual void initialize();
+
   CoordinateVector<> get_position(unsigned int index);
   double get_mass(unsigned int index);
   double get_smoothing_length(unsigned int index);
 
-  DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(CoordinateVector<> position) const;
 };
 
 /**
@@ -216,6 +281,23 @@ SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
  * @brief Fill the given referenced parameter by reading from the given
  * Fortran unformatted binary file.
  *
+ * Template specialization for a std::vector of unsigned long integers.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Next (and last) value to read from the file.
+ */
+template <>
+inline void
+SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned long > >(
+    std::ifstream &ifile, std::vector< unsigned long > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]),
+             value.size() * sizeof(unsigned long));
+}
+
+/**
+ * @brief Fill the given referenced parameter by reading from the given
+ * Fortran unformatted binary file.
+ *
  * Template specialization for a std::vector of chars.
  *
  * @param ifile Reference to an open Fortran unformatted binary file.
@@ -242,6 +324,82 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< double > >(
     std::ifstream &ifile, std::vector< double > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
              value.size() * sizeof(double));
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing signed integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< int > >(
+    std::vector< int > &value) {
+  return value.size() * sizeof(int);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing unsigned integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
+    std::vector< unsigned int > &value) {
+  return value.size() * sizeof(unsigned int);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing unsigned long integers.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned long > >(
+    std::vector< unsigned long > &value) {
+  return value.size() * sizeof(unsigned long);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing signed chars.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< char > >(
+    std::vector< char > &value) {
+  return value.size() * sizeof(char);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing double precision
+ * floating point values.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline unsigned int
+SPHNGSnapshotDensityFunction::get_size< std::vector< double > >(
+    std::vector< double > &value) {
+  return value.size() * sizeof(double);
 }
 
 /**

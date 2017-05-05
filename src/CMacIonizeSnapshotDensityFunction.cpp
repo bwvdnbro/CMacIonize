@@ -89,7 +89,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         _cartesian_grid[ix][iy] = new DensityValues[_ncell.z()];
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          _cartesian_grid[ix][iy][iz].set_total_density(-1.);
+          _cartesian_grid[ix][iy][iz].set_number_density(-1.);
         }
       }
     }
@@ -100,7 +100,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       int ix = _ncell.x() * p.x() / _box.get_sides().x();
       int iy = _ncell.y() * p.y() / _box.get_sides().y();
       int iz = _ncell.z() * p.z() / _box.get_sides().z();
-      _cartesian_grid[ix][iy][iz].set_total_density(cell_densities[i]);
+      _cartesian_grid[ix][iy][iz].set_number_density(cell_densities[i]);
       _cartesian_grid[ix][iy][iz].set_temperature(cell_temperatures[i]);
       for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
         IonName ion = static_cast< IonName >(j);
@@ -112,7 +112,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     for (int ix = 0; ix < _ncell.x(); ++ix) {
       for (int iy = 0; iy < _ncell.y(); ++iy) {
         for (int iz = 0; iz < _ncell.z(); ++iz) {
-          if (_cartesian_grid[ix][iy][iz].get_total_density() < 0.) {
+          if (_cartesian_grid[ix][iy][iz].get_number_density() < 0.) {
             cmac_error("No values found for cell (%i, %i, %i)!", ix, iy, iz);
           }
         }
@@ -158,7 +158,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       // cell now is the actual cell corresponding to the midpoint
       // set its contents
       DensityValues &values = cell->value();
-      values.set_total_density(cell_densities[i]);
+      values.set_number_density(cell_densities[i]);
       values.set_temperature(cell_temperatures[i]);
       for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
         IonName ion = static_cast< IonName >(j);
@@ -232,7 +232,7 @@ operator()(CoordinateVector<> position) const {
             1.e-9 * std::abs(cell_midpoint.y() + position.y()) &&
         std::abs(cell_midpoint.z() - position.z()) >
             1.e-9 * std::abs(cell_midpoint.z() + position.z())) {
-      values.set_total_density(-1.);
+      values.set_number_density(-1.);
     }
     return values;
   } else {

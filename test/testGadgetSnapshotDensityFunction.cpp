@@ -43,12 +43,15 @@ int main(int argc, char **argv) {
   // Gadget2 snapshot file.
   TerminalLog tlog(LOGLEVEL_INFO);
   GadgetSnapshotDensityFunction density("test.hdf5", false, 0., 0., 0., false,
-                                        0., &tlog);
+                                        0., false, 0., &tlog);
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box box(anchor, sides);
   CartesianDensityGrid grid(box, 32, density);
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
   assert_values_equal(grid.get_total_hydrogen_number(),
                       density.get_total_hydrogen_number());
   assert_values_equal(grid.get_average_temperature(), 0.);

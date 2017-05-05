@@ -74,14 +74,11 @@ public:
    * and values, should be refined.
    *
    * @param level Depth level of the cell.
-   * @param midpoint Midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of the cell (in SI units).
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be split into 8 smaller cells.
    */
-  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      double volume, DensityValues &cell) const {
-    return volume * cell.get_total_density() > _target_npart;
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+    return cell.get_volume() * cell.get_number_density() > _target_npart;
   }
 };
 

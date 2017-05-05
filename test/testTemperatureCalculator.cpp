@@ -25,8 +25,10 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "LineCoolingData.hpp"
 #include "TemperatureCalculator.hpp"
 #include "UnitConverter.hpp"
@@ -47,11 +49,19 @@ int main(int argc, char **argv) {
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
-  TemperatureCalculator calculator(1., abundances, 1., data, rates, ctr);
+  TemperatureCalculator calculator(1., abundances, 1., 0., 1., 0., data, rates,
+                                   ctr);
+
+  HomogeneousDensityFunction function(1.);
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CartesianDensityGrid grid(box, 1, function);
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
+  DensityGrid::iterator cell = grid.begin();
 
   // test ioneng
   {
-    DensityValues cell;
     std::ifstream file("ioneng_testdata.txt");
     std::string line;
     while (getline(file, line)) {
@@ -90,13 +100,14 @@ int main(int argc, char **argv) {
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"));
       cell.increase_heating_He(
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
-      cell.set_total_density(
+      cell.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(n, "cm^-3"));
       cell.set_temperature(T);
 
       double gain, loss, h0, he0;
       TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1.,
-                                    abundances, 1., 1., data, rates, ctr);
+                                    abundances, 1., 1., 0., 0.75, data, rates,
+                                    ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 
@@ -139,7 +150,6 @@ int main(int argc, char **argv) {
 
   // test calculate_temperature
   {
-    DensityValues cell;
     std::ifstream file("tbal_testdata.txt");
     std::string line;
     while (getline(file, line)) {
@@ -154,6 +164,44 @@ int main(int argc, char **argv) {
           jOp1 >> jNe >> jNep1 >> jSp1 >> jSp2 >> jSp3 >> hH >> hHe >> T >>
           ntot >> h0f >> he0f >> cp1f >> cp2f >> nf >> np1f >> np2f >> of >>
           op1f >> nef >> nep1f >> sp1f >> sp2f >> sp3f >> Tnewf;
+
+      // corrections:
+
+      // if the initial temperature is more than 25,000 K, don't test this line
+      if (T > 25000.) {
+        continue;
+      }
+
+      // if the final temperature is more than 25,000 K, we just set it to
+      // 25,000 K and assume the gas is completely ionized
+      if (Tnewf > 25000.) {
+        h0f = 0.;
+        he0f = 0.;
+        cp1f = 0.;
+        cp2f = 0.;
+        nf = 0.;
+        np1f = 0.;
+        np2f = 0.;
+        of = 0.;
+        op1f = 0.;
+        nef = 0.;
+        nep1f = 0.;
+        sp1f = 0.;
+        sp2f = 0.;
+        sp3f = 0.;
+        Tnewf = 25000.;
+      }
+
+      // in Kenny's code, neutral fractions could sometimes be larger than 1
+      // we have introduced a maximum
+      h0f = std::min(1., h0f);
+
+      // if the gas is neutral, the neutral fractions of ground state ions are 1
+      if (h0f == 1.) {
+        nf = 1.;
+        of = 1.;
+        nef = 1.;
+      }
 
       // set the cell values
       cell.reset_mean_intensities();
@@ -198,7 +246,7 @@ int main(int argc, char **argv) {
       cell.increase_heating_He(
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
 
-      cell.set_total_density(
+      cell.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
       cell.set_temperature(T);
 

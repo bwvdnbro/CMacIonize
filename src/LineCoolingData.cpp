@@ -166,11 +166,11 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
  * @brief Solve a system of 5 coupled linear equations.
  *
  * We assume a system of equations of the form
- * \f[
+ * @f[
  *   A.X = B,
- * \f]
+ * @f]
  * with
- * \f[
+ * @f[
  * A = \begin{pmatrix}
  * A00 & A01 & A02 & A03 & A04 \\
  * A10 & A11 & A12 & A13 & A14 \\
@@ -178,9 +178,9 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
  * A30 & A31 & A32 & A33 & A34 \\
  * A40 & A41 & A42 & A43 & A44
  * \end{pmatrix},
- * \f]
+ * @f]
  * and
- * \f[
+ * @f[
  * B = \begin{pmatrix}
  * B0 \\
  * B1 \\
@@ -188,13 +188,13 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
  * B3 \\
  * B4
  * \end{pmatrix}.
- * \f]
- * We want to solve for the elements of the column matrix \f$X\f$.
+ * @f]
+ * We want to solve for the elements of the column matrix @f$X@f$.
  *
- * To do this, we first reduce the combined matrix \f$AB\f$ (the matrix \f$A\f$
- * with the matrix \f$B\f$ added as an extra column) to an upper triangular
+ * To do this, we first reduce the combined matrix @f$AB@f$ (the matrix @f$A@f$
+ * with the matrix @f$B@f$ added as an extra column) to an upper triangular
  * matrix using Gaussian elimination. This automatically gives us the solution
- * for the last element of \f$X\f$. We then use this element to recursively
+ * for the last element of @f$X@f$. We then use this element to recursively
  * solve for the others by substitution.
  *
  * To avoid division by zero, we always use the next row with the largest
@@ -210,14 +210,16 @@ double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
  * calculation for column 2 and smaller, since we know the result is zero
  * (column 1 was already zero after the elimination of row 1).
  *
- * Note that both matrix \f$A\f$ and matrix \f$B\f$ are modified in place. When
- * the method returns, \f$B\f$ contains the elements of the matrix \f$X\f$.
+ * Note that both matrix @f$A@f$ and matrix @f$B@f$ are modified in place. When
+ * the method returns, @f$B@f$ contains the elements of the matrix @f$X@f$.
  *
- * @param A Elements of the matrix \f$A\f$.
- * @param B Elements of the matrix \f$B\f$, and elements of the solution on
+ * @param A Elements of the matrix @f$A@f$.
+ * @param B Elements of the matrix @f$B@f$, and elements of the solution on
  * exit.
+ * @return Exit code: 0 on success. If a non zero value is returned, the values
+ * stored in B on exit are meaningless and should not be used.
  */
-void LineCoolingData::simq(double A[5][5], double B[5]) {
+int LineCoolingData::simq(double A[5][5], double B[5]) {
 
   for (unsigned int j = 0; j < 5; ++j) {
     // find the next row with the largest coefficient
@@ -231,7 +233,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
     }
     // check that the matrix is non-singular
     if (Amax == 0.) {
-      cmac_error("Singular matrix given to simq!");
+      return 1;
     }
     // imax now contains the index of the row with the largest coefficient
     // interchange rows if necessary to make sure that the row with the largest
@@ -277,7 +279,7 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
       B[3 - i] -= B[4 - j] * A[3 - i][4 - j];
     }
   }
-  return;
+  return 0;
 }
 
 /**
@@ -291,6 +293,13 @@ void LineCoolingData::simq(double A[5][5], double B[5]) {
  */
 double LineCoolingData::get_cooling(double temperature, double electron_density,
                                     const double *abundances) const {
+
+  if (electron_density == 0.) {
+    // we cannot return a 0 cooling rate, because that crashes our iterative
+    // temperature finding scheme
+    return 1.e-99;
+  }
+
   double EnNIII = 251.;
   double EaNIII = 4.77e-5;
   double OmNIII = 1.45;
@@ -402,7 +411,14 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
           (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
-    simq(alev, lev);
+    int status = simq(alev, lev);
+    if (status != 0) {
+      // something went wrong
+      cmac_warning("Singular matrix given to simq!");
+      cmac_warning("Temperature: %g", temperature);
+      cmac_warning("Electron density: %g", electron_density);
+      cmac_error("We better stop!");
+    }
 
     double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
     double cl3 = abundances[j] * kb * lev[2] *
@@ -610,7 +626,14 @@ void LineCoolingData::linestr(
           (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
-    simq(alev, lev);
+    int status = simq(alev, lev);
+    if (status != 0) {
+      // something went wrong
+      cmac_warning("Singular matrix given to simq!");
+      cmac_warning("Temperature: %g", temperature);
+      cmac_warning("Electron density: %g", electron_density);
+      cmac_error("We better stop!");
+    }
 
     double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
     double cl3 = abundances[j] * kb * lev[2] *

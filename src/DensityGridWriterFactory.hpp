@@ -33,6 +33,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "AsciiFileDensityGridWriter.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
@@ -86,14 +87,16 @@ public:
 #ifndef HAVE_HDF5
     check_hdf5(type, log);
 #endif
+    if (type == "AsciiFile") {
+      return new AsciiFileDensityGridWriter(params, grid, log);
 #ifdef HAVE_HDF5
-    if (type == "Gadget") {
+    } else if (type == "Gadget") {
       return new GadgetDensityGridWriter(params, grid, log);
+#endif
     } else {
       cmac_error("Unknown DensityGridWriter type: \"%s\".", type.c_str());
       return nullptr;
     }
-#endif
     return nullptr;
   }
 };

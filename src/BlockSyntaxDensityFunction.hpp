@@ -31,7 +31,9 @@
 #include "DensityFunction.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "YAMLDictionary.hpp"
 
+#include <fstream>
 #include <sstream>
 
 /**
@@ -70,7 +72,13 @@ public:
    * @param log Log to write logging info to.
    */
   BlockSyntaxDensityFunction(std::string filename, Log *log = nullptr) {
-    ParameterFile blockfile(filename);
+    std::ifstream file(filename);
+
+    if (!file) {
+      cmac_error("Error while opening file \"%s\"!", filename.c_str());
+    }
+
+    YAMLDictionary blockfile(file);
 
     const int numblock = blockfile.get_value< int >("number of blocks");
     for (int i = 0; i < numblock; ++i) {
@@ -146,7 +154,7 @@ public:
                  position.x(), position.y(), position.z());
     }
 
-    cell.set_total_density(density);
+    cell.set_number_density(density);
     cell.set_temperature(temperature);
     cell.set_ionic_fraction(ION_H_n, 1.e-6);
     cell.set_ionic_fraction(ION_He_n, 1.e-6);

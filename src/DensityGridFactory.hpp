@@ -33,6 +33,7 @@
 // implementations
 #include "AMRDensityGrid.hpp"
 #include "CartesianDensityGrid.hpp"
+#include "VoronoiDensityGrid.hpp"
 
 /**
  * @brief Factory for DensityGrid implementations.
@@ -62,6 +63,8 @@ public:
       return new AMRDensityGrid(params, function, log);
     } else if (type == "Cartesian") {
       return new CartesianDensityGrid(params, function, log);
+    } else if (type == "Voronoi") {
+      return new VoronoiDensityGrid(params, function, log);
     } else {
       cmac_error("Unknown DensityGrid type: \"%s\".", type.c_str());
       return nullptr;

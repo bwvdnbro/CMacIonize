@@ -26,14 +26,13 @@
 #ifndef EMISSIVITYCALCULATOR_HPP
 #define EMISSIVITYCALCULATOR_HPP
 
+#include "DensityGrid.hpp"
 #include "EmissivityValues.hpp"
 #include "LineCoolingData.hpp"
 
 #include <vector>
 
 class Abundances;
-class DensityGrid;
-class DensityValues;
 
 /**
  * @brief Class that calculates emissivities for all cells in a DensityGrid.
@@ -71,7 +70,7 @@ public:
   void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
              double &emhemi) const;
 
-  EmissivityValues calculate_emissivities(DensityValues &cell,
+  EmissivityValues calculate_emissivities(DensityGrid::iterator &cell,
                                           Abundances &abundances,
                                           const LineCoolingData &lines) const;
 

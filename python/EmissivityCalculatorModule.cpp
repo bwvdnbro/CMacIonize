@@ -23,8 +23,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "DensityGrid.hpp"
 #include "EmissivityCalculator.hpp"
+#include "DensityGrid.hpp"
 #include "LineCoolingData.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/dict.hpp>

@@ -59,5 +59,62 @@ int main(int argc, char **argv) {
   haystack = "dirty-adef22f";
   assert_condition(Utilities::string_ends_with(haystack, needle) == false);
 
+  int number = 32768;
+  std::vector< int > components = Utilities::decompose(number);
+  int check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  number = 32769;
+  components = Utilities::decompose(number);
+  check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  number = 37;
+  components = Utilities::decompose(number);
+  check = 1;
+  for (unsigned int i = 0; i < components.size(); ++i) {
+    check *= components[i];
+  }
+  assert_condition(check == number);
+
+  CoordinateVector< int > ncell(32);
+  unsigned int numblock = 64;
+  CoordinateVector< int > block = Utilities::subdivide(ncell, numblock);
+  assert_condition(block.x() == 8);
+  assert_condition(block.y() == 8);
+  assert_condition(block.z() == 8);
+
+  ncell = CoordinateVector< int >(33, 50, 100);
+  numblock = 100;
+  block = Utilities::subdivide(ncell, numblock);
+  assert_condition(block.x() == 3);
+  assert_condition(block.y() == 10);
+  assert_condition(block.z() == 20);
+
+  unsigned long test_value = 0xf300;
+  assert_condition(Utilities::as_binary_sequence(test_value) ==
+                   "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 "
+                   "0000 1111 0011 0000 0000")
+
+      std::vector< unsigned int >
+          test_vector(5);
+  test_vector[0] = 3;
+  test_vector[1] = 2;
+  test_vector[2] = 4;
+  test_vector[3] = 0;
+  test_vector[4] = 1;
+  std::vector< unsigned int > idx_test_vector = Utilities::argsort(test_vector);
+  assert_condition(idx_test_vector[0] == 3);
+  assert_condition(idx_test_vector[1] == 4);
+  assert_condition(idx_test_vector[2] == 1);
+  assert_condition(idx_test_vector[3] == 0);
+  assert_condition(idx_test_vector[4] == 2);
+
   return 0;
 }

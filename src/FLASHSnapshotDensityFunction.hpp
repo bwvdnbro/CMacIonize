@@ -40,16 +40,13 @@ class ParameterFile;
 class FLASHSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief AMRGrid containing the snapshot file contents. */
-  AMRGrid< double > _grid;
-
-  /*! @brief Initial temperature for the ISM (in K). */
-  double _temperature;
+  AMRGrid< DensityValues > _grid;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
 
 public:
-  FLASHSnapshotDensityFunction(std::string filename, double temperature,
+  FLASHSnapshotDensityFunction(std::string filename, double temperature = -1.,
                                Log *log = nullptr);
   FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 

@@ -85,9 +85,12 @@ public:
    * @param positions Reference to the list of positions.
    * @param index Index of the specific position to add.
    * @param box Box corresponding to this OctreeNode.
+   * @param level Depth level in the tree. Only used to activate the duplicate
+   * particle check.
    */
   inline void add_position(std::vector< CoordinateVector<> > &positions,
-                           unsigned int index, Box &box) {
+                           unsigned int index, Box &box,
+                           unsigned int level = 0) {
     unsigned char ix, iy, iz;
     if (_index < OCTREE_NOLEAF) {
       // this OctreeNode becomes a node: set its box
@@ -97,6 +100,22 @@ public:
       ix = 2 * (p.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (p.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (p.z() - box.get_anchor().z()) / box.get_sides().z();
+      if (level > 15) {
+        // check if the old and new position are the same
+        CoordinateVector<> &np = positions[index];
+        if (p.x() == np.x() && p.y() == np.y() && p.z() == np.z()) {
+          static unsigned int numpairs = 0;
+          ++numpairs;
+          cmac_warning("Particles have exactly the same position (indices: %u "
+                       "%u, %u occurences)!",
+                       _index, index, numpairs);
+          // move the particle in the direction of the centre of the node over
+          // a small distance
+          np[0] += (ix - 0.5) * 1.e-5 * box.get_sides().x();
+          np[1] += (iy - 0.5) * 1.e-5 * box.get_sides().y();
+          np[2] += (iz - 0.5) * 1.e-5 * box.get_sides().z();
+        }
+      }
       // create a new child at that location
       _children[4 * ix + 2 * iy + iz] = new OctreeNode(_index);
       _index = OCTREE_NOLEAF;
@@ -113,7 +132,8 @@ public:
       box.get_anchor()[0] += ix * box.get_sides().x();
       box.get_anchor()[1] += iy * box.get_sides().y();
       box.get_anchor()[2] += iz * box.get_sides().z();
-      _children[4 * ix + 2 * iy + iz]->add_position(positions, index, box);
+      _children[4 * ix + 2 * iy + iz]->add_position(positions, index, box,
+                                                    level + 1);
     } else {
       _children[4 * ix + 2 * iy + iz] = new OctreeNode(index);
     }

@@ -73,12 +73,18 @@ double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
  * present in the snapshot).
  * @param fallback_temperature Initial temperature to use if no temperature
  * block was found in the snapshot file.
+ * @param comoving_integration Comoving integration flag indicating whether
+ * comoving integration was used in the snapshot.
+ * @param hubble_parameter Hubble parameter used to convert from comoving to
+ * physical coordinates. This is a dimensionless parameter, defined as the
+ * actual assumed Hubble constant divided by 100 km/s/Mpc.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     std::string name, bool fallback_periodic, double fallback_unit_length_in_SI,
     double fallback_unit_mass_in_SI, double fallback_unit_temperature_in_SI,
-    bool use_neutral_fraction, double fallback_temperature, Log *log)
+    bool use_neutral_fraction, double fallback_temperature,
+    bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -137,18 +143,40 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   } else {
     if (_log) {
       _log->write_warning("No Units group found!");
-    }
-    if (fallback_unit_length_in_SI == 0. || fallback_unit_mass_in_SI == 0. ||
-        fallback_unit_temperature_in_SI == 0.) {
-      _log->write_warning(
-          "No fallback units found in parameter file either, using SI units.");
-      unit_length_in_SI = 1.;
-      unit_mass_in_SI = 1.;
-      unit_temperature_in_SI = 1.;
-    } else {
       _log->write_warning("Using fallback units.");
     }
+
+    if (fallback_unit_length_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback length unit found in parameter file, using m!");
+      }
+      unit_length_in_SI = 1.;
+    }
+
+    if (fallback_unit_mass_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback mass unit found in parameter file, using kg!");
+      }
+      unit_mass_in_SI = 1.;
+    }
+
+    if (fallback_unit_temperature_in_SI == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No fallback temperature unit found in parameter file, using K!");
+      }
+      unit_temperature_in_SI = 1.;
+    }
   }
+
+  if (comoving_integration) {
+    // code values are in comoving units
+    unit_length_in_SI /= hubble_parameter;
+    unit_mass_in_SI /= hubble_parameter;
+  }
+
   double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
   double unit_density_in_SI =
       unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
@@ -266,6 +294,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction:fallback_initial_temperature", "0. K"),
+          params.get_value< bool >("densityfunction:comoving_integration_flag",
+                                   false),
+          params.get_value< double >("densityfunction:hubble_parameter", 0.7),
           log) {}
 
 /**
@@ -330,7 +361,7 @@ operator()(CoordinateVector<> position) const {
     }
   }
 
-  cell.set_total_density(density / 1.6737236e-27);
+  cell.set_number_density(density / 1.6737236e-27);
   cell.set_temperature(temperature);
   if (neutral_fraction >= 0.) {
     cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);

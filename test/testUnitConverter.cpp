@@ -108,6 +108,16 @@ int main(int argc, char **argv) {
                             1.499e18, 1.e-4);
   }
 
+  /// ACCELERATION
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m s^-2");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_ACCELERATION >(unitnames, unitlogic);
+  }
+
   /// DENSITY
   {
     std::vector< std::string > unitnames;
@@ -198,6 +208,20 @@ int main(int argc, char **argv) {
     check_quantity< QUANTITY_FREQUENCY >(unitnames, unitlogic);
   }
 
+  /// FREQUENCY PER MASS
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("s^-1 kg^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("s^-1 Msol^-1");
+    // 1 photon per second per solar mass is a lot less than 1 photon per second
+    // per kg
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_FREQUENCY_PER_MASS >(unitnames, unitlogic);
+  }
+
   /// LENGTH
   {
     std::vector< std::string > unitnames;
@@ -234,6 +258,20 @@ int main(int argc, char **argv) {
     unitlogic.push_back(1);
 
     check_quantity< QUANTITY_MASS >(unitnames, unitlogic);
+  }
+
+  /// MASS RATE
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("kg s^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("Msol yr^-1");
+    // a solar mass per year is more than a kilogram per second, as the sun is
+    // really massive and there are not that many seconds in a year.
+    unitlogic.push_back(1);
+
+    check_quantity< QUANTITY_MASS_RATE >(unitnames, unitlogic);
   }
 
   /// NUMBER DENSITY

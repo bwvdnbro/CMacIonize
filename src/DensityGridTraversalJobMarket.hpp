@@ -49,6 +49,9 @@ private:
   /*! @brief DensityGrid on which we operate. */
   DensityGrid &_grid;
 
+  /*! @brief Block that is traversed by the local MPI process. */
+  std::pair< unsigned long, unsigned long > _block;
+
   /*! @brief Lock used to ensure safe access to the internal counters. */
   Lock _lock;
 
@@ -60,9 +63,16 @@ public:
    * @param function Template function or functor that should be executed for
    * every cell of the grid. This function/functor should take a
    * DensityGrid::iterator as a single parameter.
+   * @param block Block that is traversed by the local MPI process.
    */
-  inline DensityGridTraversalJobMarket(DensityGrid &grid, _function_ &function)
-      : _fraction_done(0.), _function(function), _grid(grid) {}
+  inline DensityGridTraversalJobMarket(
+      DensityGrid &grid, _function_ &function,
+      std::pair< unsigned long, unsigned long > &block)
+      : _fraction_done(0.), _function(function), _grid(grid), _block(block) {
+    // make sure the second element of _block contains the size and not the end
+    // index
+    _block.second -= _block.first;
+  }
 
   /**
    * @brief Get a DensityGridTraversalJob.
@@ -76,11 +86,19 @@ public:
       return nullptr;
     }
     _lock.lock();
-    double begin = _fraction_done;
-    double end = _fraction_done + std::max(0.1 * (1. - _fraction_done), 0.01);
-    end = std::min(end, 1.);
-    _fraction_done = end;
+    // _fraction_done could be 1. now, as another thread might have changed it
+    if (_fraction_done == 1.) {
+      _lock.unlock();
+      return nullptr;
+    }
+    double begin_fraction = _fraction_done;
+    double end_fraction =
+        _fraction_done + std::max(0.1 * (1. - _fraction_done), 0.01);
+    end_fraction = std::min(end_fraction, 1.);
+    _fraction_done = end_fraction;
     _lock.unlock();
+    unsigned long begin = _block.first + begin_fraction * _block.second;
+    unsigned long end = _block.first + end_fraction * _block.second;
     std::pair< DensityGrid::iterator, DensityGrid::iterator > chunk =
         _grid.get_chunk(begin, end);
     DensityGridTraversalJob< _function_ > *job =

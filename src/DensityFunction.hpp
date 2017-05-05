@@ -40,6 +40,16 @@ public:
   virtual ~DensityFunction() {}
 
   /**
+   * @brief Perform all computationally expensive initialization that needs to
+   * be done before operator() will work.
+   *
+   * This routine does not need to be implemented by all implementations. It is
+   * particularly useful for implementations that read SPH snapshots, since
+   * building the Octree used for SPH density sampling can be demanding.
+   */
+  virtual void initialize() {}
+
+  /**
    * @brief Function that gives the density for a given coordinate.
    *
    * @param position CoordinateVector specifying a coordinate position (in m).

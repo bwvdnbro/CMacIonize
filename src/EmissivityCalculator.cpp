@@ -109,13 +109,13 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
 /**
  * @brief Calculate the emissivity values for a single cell.
  *
- * @param cell DensityValues of the cell.
+ * @param cell DensityGrid::iterator pointing to a cell.
  * @param abundances Abundances.
  * @param lines LineCoolingData used to calculate emission line strengths.
  * @return EmissivityValues in the cell.
  */
 EmissivityValues EmissivityCalculator::calculate_emissivities(
-    DensityValues &cell, Abundances &abundances,
+    DensityGrid::iterator &cell, Abundances &abundances,
     const LineCoolingData &lines) const {
   const double h0max = 0.2;
 
@@ -123,7 +123,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
 
   if (cell.get_ionic_fraction(ION_H_n) < h0max &&
       cell.get_temperature() > 3000.) {
-    double ntot = cell.get_total_density();
+    double ntot = cell.get_number_density();
     double nhp = ntot * (1. - cell.get_ionic_fraction(ION_H_n));
     double nhep = ntot * (1. - cell.get_ionic_fraction(ION_He_n)) *
                   abundances.get_abundance(ELEMENT_He);
@@ -260,10 +260,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
  */
 void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) const {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    DensityValues &cell = it.get_values();
     EmissivityValues *emissivities =
-        new EmissivityValues(calculate_emissivities(cell, _abundances, _lines));
-    cell.set_emissivities(emissivities);
+        new EmissivityValues(calculate_emissivities(it, _abundances, _lines));
+    it.set_emissivities(emissivities);
   }
 }
 
@@ -279,8 +278,7 @@ EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
   std::vector< EmissivityValues > result(grid.get_number_of_cells());
   unsigned int index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    DensityValues &cell = it.get_values();
-    result[index] = calculate_emissivities(cell, _abundances, _lines);
+    result[index] = calculate_emissivities(it, _abundances, _lines);
     ++index;
   }
   return result;

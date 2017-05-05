@@ -84,7 +84,7 @@ public:
   virtual DensityValues operator()(CoordinateVector<> position) const {
     DensityValues cell;
 
-    cell.set_total_density(_density);
+    cell.set_number_density(_density);
     cell.set_temperature(_temperature);
     cell.set_ionic_fraction(ION_H_n, 1.e-6);
     cell.set_ionic_fraction(ION_He_n, 1.e-6);

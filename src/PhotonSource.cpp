@@ -169,18 +169,22 @@ PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
   double weight;
 
   double x = random_generator.get_uniform_random_double();
-  if (x > _continuous_probability) {
+  if (x >= _continuous_probability) {
+    cmac_assert(_discrete_probabilities.size() > 0);
+    cmac_assert(_discrete_probabilities.back() == 1.);
     // discrete photon
     x = random_generator.get_uniform_random_double();
     unsigned int i = 0;
     while (x > _discrete_probabilities[i]) {
       ++i;
+      cmac_assert(i < _discrete_probabilities.size());
     }
     position = _discrete_positions[i];
     direction = get_random_direction(random_generator);
     energy = _discrete_spectrum->get_random_frequency(random_generator);
     weight = _discrete_photon_weight;
   } else {
+    cmac_assert(_continuous_source != nullptr);
     // continuous photon
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         _continuous_source->get_random_incoming_direction(random_generator);
@@ -213,12 +217,13 @@ double PhotonSource::get_total_luminosity() const { return _total_luminosity; }
  * direction.
  *
  * @param photon Photon to reemit.
- * @param cell DensityValues of the cell in which the Photon currently resides.
+ * @param cell DensityGrid::iterator pointing to the cell in which the Photon
+ * currently resides.
  * @param random_generator RandomGenerator to use.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
+bool PhotonSource::reemit(Photon &photon, const DensityGrid::iterator &cell,
                           RandomGenerator &random_generator) const {
   double new_frequency = 0.;
   double helium_abundance = _abundances.get_abundance(ELEMENT_He);
@@ -232,7 +237,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
   if (x <= pHabs) {
     // photon absorbed by hydrogen
     x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_pHion()) {
+    if (x <= cell.get_hydrogen_reemission_probability()) {
       // sample new frequency from H Ly c
       new_frequency = _HLyc_spectrum.get_random_frequency(
           random_generator, cell.get_temperature());
@@ -245,16 +250,16 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
   } else {
     // photon absorbed by helium
     x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_pHe_em(0)) {
+    if (x <= cell.get_helium_reemission_probability(0)) {
       // sample new frequency from He Ly c
       new_frequency = _HeLyc_spectrum.get_random_frequency(
           random_generator, cell.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_pHe_em(1)) {
+    } else if (x <= cell.get_helium_reemission_probability(1)) {
       // new frequency is 19.8eV
       new_frequency = 4.788e15;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_pHe_em(2)) {
+    } else if (x <= cell.get_helium_reemission_probability(2)) {
       x = random_generator.get_uniform_random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
@@ -266,7 +271,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
         photon.set_type(PHOTONTYPE_ABSORBED);
         return false;
       }
-    } else if (x <= cell.get_pHe_em(3)) {
+    } else if (x <= cell.get_helium_reemission_probability(3)) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
       // 2-photon continuum
       double pHots = 1. / (1. +
@@ -277,7 +282,7 @@ bool PhotonSource::reemit(Photon &photon, DensityValues &cell,
       if (x < pHots) {
         // absorbed on the spot
         x = random_generator.get_uniform_random_double();
-        if (x <= cell.get_pHion()) {
+        if (x <= cell.get_hydrogen_reemission_probability()) {
           // H Ly c, like above
           new_frequency = _HLyc_spectrum.get_random_frequency(
               random_generator, cell.get_temperature());

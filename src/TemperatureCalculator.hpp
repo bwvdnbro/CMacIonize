@@ -31,8 +31,8 @@
 
 class Abundances;
 class ChargeTransferRates;
-class DensityValues;
 class LineCoolingData;
+class Log;
 class RecombinationRates;
 
 /**
@@ -50,6 +50,17 @@ private:
   /*! @brief PAH heating factor. */
   double _pahfac;
 
+  /*! @brief Cosmic ray heating factor. */
+  double _crfac;
+
+  /*! @brief Upper limit on the neutral fraction below which cosmic ray heating
+   *  is applied to a cell. */
+  double _crlim;
+
+  /*! @brief Scale height of the cosmic ray heating term (0 for a constant
+   *  heating term; in m). */
+  double _crscale;
+
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
   LineCoolingData &_line_cooling_data;
 
@@ -61,18 +72,20 @@ private:
 
 public:
   TemperatureCalculator(double luminosity, Abundances &abundances,
-                        double pahfac, LineCoolingData &line_cooling_data,
+                        double pahfac, double crfac, double crlim,
+                        double crscale, LineCoolingData &line_cooling_data,
                         RecombinationRates &recombination_rates,
-                        ChargeTransferRates &charge_transfer_rates);
+                        ChargeTransferRates &charge_transfer_rates,
+                        Log *log = nullptr);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     double T, DensityValues &cell, double jfac,
+                     double T, DensityGrid::iterator &cell, double jfac,
                      Abundances &abundances, double hfac, double pahfac,
-                     LineCoolingData &data, RecombinationRates &rates,
-                     ChargeTransferRates &ctr);
+                     double crfac, double crscale, LineCoolingData &data,
+                     RecombinationRates &rates, ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,
-                             DensityValues &cell) const;
+                             DensityGrid::iterator &cell) const;
 
   /**
    * @brief Functor used to calculate the temperature of a single cell.
@@ -112,12 +125,13 @@ public:
      */
     inline void operator()(DensityGrid::iterator cell) {
       _calculator.calculate_temperature(_jfac / cell.get_volume(),
-                                        _hfac / cell.get_volume(),
-                                        cell.get_values());
+                                        _hfac / cell.get_volume(), cell);
     }
   };
 
-  void calculate_temperature(double totweight, DensityGrid &grid) const;
+  void
+  calculate_temperature(double totweight, DensityGrid &grid,
+                        std::pair< unsigned long, unsigned long > &block) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

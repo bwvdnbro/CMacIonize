@@ -31,6 +31,7 @@
 #define LOCK_HPP
 
 #include "Configuration.hpp"
+#include "Error.hpp"
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
@@ -60,6 +61,20 @@ public:
   }
 
   /**
+   * @brief Copy constructor.
+   *
+   * Locks should not be copied. Whenever a Lock needs to be copied, we simply
+   * initialize a new OpenMP lock.
+   *
+   * @param lock Lock that is being copied.
+   */
+  inline Lock(const Lock &lock) {
+#ifdef HAVE_OPENMP
+    omp_init_lock(&_lock);
+#endif
+  }
+
+  /**
    * @brief Destructor.
    *
    * Frees the OpenMP lock (if OpenMP works).
@@ -69,6 +84,19 @@ public:
     omp_destroy_lock(&_lock);
 #endif
   }
+
+  /**
+   * @brief Copy assignment operator.
+   *
+   * We have to implement this version, to make sure our original OpenMP lock is
+   * not overwritten with the value of the Lock being copied in.
+   * This routine does nothing, while the default copy assignment operator would
+   * overwrite the value of _lock.
+   *
+   * @param lock Lock that is being copied in.
+   * @return Reference to the
+   */
+  inline Lock &operator=(const Lock &lock) { return *this; }
 
   /**
    * @brief Obtain exclusive access of the Lock.

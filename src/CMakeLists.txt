@@ -88,6 +88,17 @@ message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
 
+# WMBasicDataLocation.hpp
+set(WMBASIC_DATA ${PROJECT_BINARY_DIR}/data/wmbasic.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/wmbasic.tar.gz
+               ${WMBASIC_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${WMBASIC_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(WMBASICDATALOCATION ${PROJECT_BINARY_DIR}/data/wmbasic/)
+message(STATUS "WMBasicDataLocation.hpp: ${WMBASICDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/WMBasicDataLocation.hpp @ONLY)
+
 # Configuration file
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -107,6 +118,7 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
+    AsciiFileDensityGridWriter.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     CMacIonize.cpp
@@ -120,6 +132,7 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     ParameterFile.cpp
@@ -129,11 +142,16 @@ set(CMACIONIZE_SOURCES
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
+    VoronoiCell.cpp
+    VoronoiDensityGrid.cpp
+    VoronoiGrid.cpp
+    WMBasicPhotonSourceSpectrum.cpp
 
     Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
+    AsciiFileDensityGridWriter.hpp
     Box.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
@@ -156,6 +174,7 @@ set(CMACIONIZE_SOURCES
     DensityGridTraversalJobMarket.hpp
     DensityGridWriter.hpp
     DensityGridWriterFactory.hpp
+    DensityMaskFactory.hpp
     DensityValues.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp
@@ -164,15 +183,19 @@ set(CMACIONIZE_SOURCES
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    InterpolatedDensityFunction.hpp
     IonizationStateCalculator.hpp
     IterationConvergenceChecker.hpp
     IterationConvergenceCheckerFactory.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     Lock.hpp
+    MonochromaticPhotonSourceSpectrum.hpp
+    MPICommunicator.hpp
     ParameterFile.hpp
     PassiveIterationConvergenceChecker.hpp
     PassivePhotonNumberConvergenceChecker.hpp
+    PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
     PhotonNumberConvergenceChecker.hpp
     PhotonNumberConvergenceCheckerFactory.hpp
@@ -196,6 +219,9 @@ set(CMACIONIZE_SOURCES
     VernerCrossSectionsDataLocation.hpp.in
     VernerRecombinationRates.hpp
     VernerRecombinationRatesDataLocation.hpp.in
+    VoronoiGeneratorDistributionFactory.hpp
+    WMBasicDataLocation.hpp.in
+    WMBasicPhotonSourceSpectrum.hpp
     WorkDistributor.hpp
     WorkEnvironment.hpp
     Worker.hpp
@@ -222,5 +248,10 @@ add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 
 # link to HDF5, if we have found it
 if(HAVE_HDF5)
-target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
+    target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
+
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(CMacIonize ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)

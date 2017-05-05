@@ -59,14 +59,17 @@
  * For convenience, they are ordered alphabetically.
  */
 enum Quantity {
+  QUANTITY_ACCELERATION,
   QUANTITY_DENSITY,
   QUANTITY_ENERGY,
   QUANTITY_ENERGY_CHANGE_RATE,
   QUANTITY_ENERGY_RATE,
   QUANTITY_FLUX,
   QUANTITY_FREQUENCY,
+  QUANTITY_FREQUENCY_PER_MASS,
   QUANTITY_LENGTH,
   QUANTITY_MASS,
+  QUANTITY_MASS_RATE,
   QUANTITY_NUMBER_DENSITY,
   QUANTITY_OPACITY,
   QUANTITY_REACTION_RATE,
@@ -104,6 +107,8 @@ public:
       return Unit(1., 0, 1, 0, 0, 0);
     } else if (name == "Gyr") {
       return Unit(3.154e16, 0, 1, 0, 0, 0);
+    } else if (name == "Myr") {
+      return Unit(3.154e13, 0, 1, 0, 0, 0);
     } else if (name == "yr") {
       return Unit(3.154e7, 0, 1, 0, 0, 0);
       /// mass units
@@ -143,6 +148,8 @@ public:
    */
   static inline std::string get_SI_unit_name(Quantity quantity) {
     switch (quantity) {
+    case QUANTITY_ACCELERATION:
+      return "m s^-2";
     case QUANTITY_DENSITY:
       return "kg m^-3";
     case QUANTITY_ENERGY:
@@ -155,10 +162,14 @@ public:
       return "m^-2 s^-1";
     case QUANTITY_FREQUENCY:
       return "Hz";
+    case QUANTITY_FREQUENCY_PER_MASS:
+      return "Hz kg^-1";
     case QUANTITY_LENGTH:
       return "m";
     case QUANTITY_MASS:
       return "kg";
+    case QUANTITY_MASS_RATE:
+      return "kg s^-1";
     case QUANTITY_NUMBER_DENSITY:
       return "m^-3";
     case QUANTITY_OPACITY:

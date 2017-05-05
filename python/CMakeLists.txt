@@ -54,6 +54,9 @@ if(HAVE_HDF5)
       ../src/CMacIonizeAMRRefinementScheme.hpp
       ../src/CMacIonizeSnapshotDensityFunction.cpp
       ../src/DensityGrid.cpp
+      ../src/VoronoiCell.cpp
+      ../src/VoronoiDensityGrid.cpp
+      ../src/VoronoiGrid.cpp
   )
 
   add_library(densitygrid SHARED ${DENSITYGRIDMODULE_SOURCES})
@@ -84,3 +87,28 @@ set_target_properties(emissivitycalculator PROPERTIES
 set_target_properties(emissivitycalculator PROPERTIES
                       LINK_FLAGS "-fno-sanitize=address")
 target_link_libraries(emissivitycalculator ${Boost_LIBRARIES})
+
+# FLASHSnapshotDensityFunctionModule
+if(HAVE_HDF5)
+
+  set(FLASHSNAPSHOTDENSITYFUNCTIONMODULE_SOURCES
+      FLASHSnapshotDensityFunctionModule.cpp
+
+      ../src/FLASHSnapshotDensityFunction.cpp
+      ../src/FLASHSnapshotDensityFunction.hpp
+      ../src/HDF5Tools.hpp
+  )
+
+  add_library(flashsnapshotdensityfunction SHARED
+              ${FLASHSNAPSHOTDENSITYFUNCTIONMODULE_SOURCES})
+  set_target_properties(flashsnapshotdensityfunction PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY
+                        ${PROJECT_BINARY_DIR}/python_modules)
+  set_target_properties(flashsnapshotdensityfunction PROPERTIES
+                        COMPILE_FLAGS "-fno-sanitize=address")
+  set_target_properties(flashsnapshotdensityfunction PROPERTIES
+                        LINK_FLAGS "-fno-sanitize=address")
+  target_link_libraries(flashsnapshotdensityfunction ${Boost_LIBRARIES})
+  target_link_libraries(flashsnapshotdensityfunction ${HDF5_LIBRARIES})
+
+endif(HAVE_HDF5)

@@ -33,3 +33,5 @@ import emissivitycalculator
 import libdensitygrid
 
 import libemissivitycalculator
+
+import libflashsnapshotdensityfunction

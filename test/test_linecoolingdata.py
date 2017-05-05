@@ -65,7 +65,7 @@ def main():
       a = results[names[i]][0]
       # convert from erg s^-1 to J s^-1
       b = fresults[i]*1.e-7
-      if abs(a-b) > 1.e-15*abs(a+b):
+      if abs(a-b) > 1.e-14*abs(a+b):
         print "Error: {a} != {b} ({rel})!".format(a = a, b = b,
                                                   rel = abs(a-b)/abs(a+b))
         sys.exit(1)

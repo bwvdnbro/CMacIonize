@@ -36,6 +36,7 @@
 #include "AsciiFileDensityFunction.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
+#include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
 
 // HDF5 dependent implementations
@@ -101,6 +102,8 @@ public:
       return new BlockSyntaxDensityFunction(params, log);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
+    } else if (type == "Interpolated") {
+      return new InterpolatedDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
 #ifdef HAVE_HDF5

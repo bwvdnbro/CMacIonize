@@ -25,8 +25,10 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "ChargeTransferRates.hpp"
 #include "DensityValues.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "UnitConverter.hpp"
 #include "VernerRecombinationRates.hpp"
@@ -47,7 +49,14 @@ int main(int argc, char **argv) {
   Abundances abundances(0.1, 0., 0., 0., 0., 0.);
   IonizationStateCalculator calculator(1., abundances, rr, ctr);
 
-  DensityValues cell;
+  HomogeneousDensityFunction function(1.);
+  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CartesianDensityGrid grid(box, 1, function);
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
+  DensityGrid::iterator cell = grid.begin();
+
   // test find_H0
   std::ifstream file("h0_testdata.txt");
   std::string line;
@@ -102,7 +111,7 @@ int main(int argc, char **argv) {
     cell.increase_mean_intensity(
         ION_S_p3, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp3, "s^-1"));
 
-    cell.set_total_density(
+    cell.set_number_density(
         UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
     cell.set_temperature(T);
 

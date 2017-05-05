@@ -81,8 +81,13 @@ initDensityGrid(const std::string &filename) {
 
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
-  return boost::shared_ptr< DensityGrid >(
+  boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
       DensityGridFactory::generate(parameters, density_function));
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, ptr.get()->get_number_of_cells());
+  ptr.get()->initialize(block);
+
+  return ptr;
 }
 
 /**
@@ -124,7 +129,8 @@ static boost::python::dict get_box(DensityGrid &grid) {
  * @param name std::string representation of a cell variable name.
  * @return Value of that variable (in SI units).
  */
-static double get_single_variable(DensityValues &cell, std::string name) {
+static double get_single_variable(DensityGrid::iterator &cell,
+                                  std::string name) {
   // names are ordered alphabetically
   if (name.find("NeutralFraction") == 0) {
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -136,7 +142,7 @@ static double get_single_variable(DensityValues &cell, std::string name) {
     cmac_error("Unknown variable: %s!", name.c_str());
     return 0.;
   } else if (name == "NumberDensity") {
-    return cell.get_total_density();
+    return cell.get_number_density();
   } else if (name == "Temperature") {
     return cell.get_temperature();
   } else {
@@ -186,7 +192,7 @@ static boost::python::dict get_variable(DensityGrid &grid, std::string name) {
 
   unsigned int index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
-    arr[index] = get_single_variable(it.get_values(), name);
+    arr[index] = get_single_variable(it, name);
     ++index;
   }
 
@@ -255,7 +261,7 @@ static boost::python::dict get_variable_cut(DensityGrid &grid, std::string name,
         position[1] = box.get_anchor().y() + (j + 0.5) * dj;
         position[2] = intercept;
       }
-      DensityValues &cell = grid.get_cell_values(position);
+      DensityGrid::iterator cell = grid.get_cell(position);
       arr[i][j] = get_single_variable(cell, name);
     }
   }

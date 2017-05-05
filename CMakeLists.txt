@@ -34,6 +34,17 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+# Check if we are on a POSIX system. If not, some functionality will not work
+# and we abort the configuration
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "#include <unistd.h>\nint main(int, char**){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/posixtest.cpp)
+try_compile(HAVE_POSIX ${PROJECT_BINARY_DIR}
+                       ${PROJECT_BINARY_DIR}/posixtest.cpp)
+if(NOT HAVE_POSIX)
+  message(FATAL_ERROR "This is not a POSIX system! Compilation will not work!")
+endif(NOT HAVE_POSIX)
+
 # Find Git
 find_package(Git)
 
@@ -53,7 +64,8 @@ set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 enable_testing()
 
 # Add minimal cpp file for flag testing
-execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
                 OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
@@ -122,6 +134,20 @@ else(OPENMP_FOUND)
           "OpenMP not found. Shared memory parallelization will not work.")
 endif(OPENMP_FOUND)
 
+# Find MPI
+find_package(MPI)
+if(MPI_CXX_FOUND)
+  set(HAVE_MPI True)
+  message(STATUS "MPI found. Distributed memory parallelization will work.")
+  message(STATUS "MPI exec: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS"
+                 "${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+  include_directories(${MPI_C_INCLUDE_PATH})
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+else(MPI_CXX_FOUND)
+  message(WARNING
+          "MPI not found. Distributed memory parallelization will not work.")
+endif(MPI_CXX_FOUND)
+
 # Find Boost, Boost Python, Python, and NumPy
 find_package(Boost COMPONENTS "python")
 if(Boost_FOUND)
@@ -153,6 +179,27 @@ else(Boost_FOUND)
   message(WARNING "Boost Python not found. Not building Python modules.")
   set(HAVE_PYTHON False)
 endif(Boost_FOUND)
+
+# Check if we need to activate fast math
+if(ACTIVATE_FAST_MATH)
+  message(STATUS "Activating Fast Math...")
+  add_compiler_flag("-ffast-math" OPTIONAL)
+endif(ACTIVATE_FAST_MATH)
+
+# Check if we need to activate vectorization
+if(ACTIVATE_VECTORIZATION)
+  message(STATUS "Activating vectorization...")
+  add_compiler_flag("-ftree-vectorize" OPTIONAL)
+endif(ACTIVATE_VECTORIZATION)
+
+# Check if we need to activate assertions
+if(ACTIVATE_ASSERTIONS)
+  set(HAVE_ASSERTIONS True)
+  message(STATUS "Assertions are activated.")
+else(ACTIVATE_ASSERTIONS)
+  set(HAVE_ASSERTIONS False)
+  message(STATUS "Assertions not activated.")
+endif(ACTIVATE_ASSERTIONS)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)

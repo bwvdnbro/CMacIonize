@@ -24,6 +24,7 @@
 # same name is created. The new test is also added to the global list of test
 # contained in the check target
 macro(add_unit_test)
+    set(options PARALLEL)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES LIBS)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
@@ -34,9 +35,17 @@ macro(add_unit_test)
                           ${PROJECT_BINARY_DIR}/rundir/test)
     target_link_libraries(${TEST_NAME} ${TEST_LIBS})
 
+    if(TEST_PARALLEL AND HAVE_MPI)
+      set(TESTCOMMAND ${MPIEXEC})
+      set(TESTARGS ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
+                   "./${TEST_NAME}" ${MPIEXEC_POSTFLAGS})
+      set(TESTCOMMAND ${TESTCOMMAND} ${TESTARGS})
+    else(TEST_PARALLEL AND HAVE_MPI)
+      set(TESTCOMMAND ${TEST_NAME})
+    endif(TEST_PARALLEL AND HAVE_MPI)
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
-             COMMAND ${TEST_NAME})
+             COMMAND ${TESTCOMMAND})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
 endmacro(add_unit_test)
@@ -273,6 +282,7 @@ set(TESTPARAMETERFILE_SOURCES
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
     ../src/Utilities.hpp
+    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testParameterFile
               SOURCES ${TESTPARAMETERFILE_SOURCES})
@@ -516,6 +526,7 @@ set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     ../src/DensityGrid.cpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
+    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testBlockSyntaxDensityFunction
               SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
@@ -540,6 +551,7 @@ configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
 set(TESTTEMPERATURECALCULATOR_SOURCES
     testTemperatureCalculator.cpp
 
+    ../src/CartesianDensityGrid.cpp
     ../src/ChargeTransferRates.cpp
     ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
@@ -561,6 +573,8 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
 
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
     ../src/EmissivityCalculator.cpp
     ../src/EmissivityCalculator.hpp
     ../src/EmissivityValues.hpp
@@ -617,6 +631,8 @@ add_unit_test(NAME testSPHNGSnapshotDensityFunction
               SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
                ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest.dat COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest_notags.dat
+               ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest_notags.dat COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNG_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/SPHNG_data.txt COPYONLY)
 
@@ -629,6 +645,193 @@ set(TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES
 )
 add_unit_test(NAME testDistantStarContinuousPhotonSource
               SOURCES ${TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES})
+
+## Unit test for MPICommunicator
+if(HAVE_MPI)
+set(TESTMPICOMMUNICATOR_SOURCES
+    testMPICommunicator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/MPICommunicator.hpp
+)
+add_unit_test(NAME testMPICommunicator
+              SOURCES ${TESTMPICOMMUNICATOR_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
+              PARALLEL)
+endif(HAVE_MPI)
+
+## Unit test for Atomic
+if(HAVE_OPENMP)
+set(TESTATOMIC_SOURCES
+    testAtomic.cpp
+
+    ../src/Atomic.hpp
+)
+add_unit_test(NAME testAtomic
+              SOURCES ${TESTATOMIC_SOURCES})
+endif(HAVE_OPENMP)
+
+## Unit test for MPIMessage
+if(HAVE_MPI)
+set(TESTMPIMESSAGE_SOURCES
+    testMPIMessage.cpp
+
+    ../src/MPICommunicator.hpp
+    ../src/MPIMessage.hpp
+    ../src/MPIMessageBox.hpp
+    ../src/MPIUtilities.hpp
+)
+add_unit_test(NAME testMPIMessage
+              SOURCES ${TESTMPIMESSAGE_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
+              PARALLEL)
+endif(HAVE_MPI)
+
+## RiemannSolver test
+set(TESTRIEMANNSOLVER_SOURCES
+    testRiemannSolver.cpp
+
+    ../src/RiemannSolver.hpp
+)
+add_unit_test(NAME testRiemannSolver
+              SOURCES ${TESTRIEMANNSOLVER_SOURCES})
+
+## HydroIntegrator test
+set(TESTHYDROINTEGRATOR_SOURCES
+    testHydroIntegrator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/HydroIntegrator.hpp
+    ../src/VoronoiCell.cpp
+    ../src/VoronoiDensityGrid.cpp
+    ../src/VoronoiGrid.cpp
+)
+add_unit_test(NAME testHydroIntegrator
+              SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+
+## ParallelCartesianDensityGrid test
+if(HAVE_HDF5)
+set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
+    testParallelCartesianDensityGrid.cpp
+
+    ../src/ParallelCartesianDensityGrid.hpp
+    ../src/ParallelCartesianDensitySubGrid.hpp
+    ../src/ParameterFile.cpp
+)
+add_unit_test(NAME testParallelCartesianDensityGrid
+              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+## PhotonPool test
+set(TESTPHOTONPOOL_SOURCES
+    testPhotonPool.cpp
+
+    ../src/PhotonBatch.hpp
+    ../src/PhotonBucket.hpp
+    ../src/PhotonPool.hpp
+)
+add_unit_test(NAME testPhotonPool
+              SOURCES ${TESTPHOTONPOOL_SOURCES})
+
+## AsciiFileDensityGridWriter test
+set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
+    testAsciiFileDensityGridWriter.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/AsciiFileDensityGridWriter.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/ParameterFile.cpp
+)
+add_unit_test(NAME testAsciiFileDensityGridWriter
+              SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
+
+## VoronoiGrid test
+set(TESTVORONOIGRID_SOURCES
+    testVoronoiGrid.cpp
+
+    ../src/VoronoiCell.cpp
+    ../src/VoronoiCell.hpp
+    ../src/VoronoiGrid.cpp
+    ../src/VoronoiGrid.hpp
+)
+add_unit_test(NAME testVoronoiGrid
+              SOURCES ${TESTVORONOIGRID_SOURCES})
+
+## PointLocations test
+set(TESTPOINTLOCATIONS_SOURCES
+    testPointLocations.cpp
+
+    ../src/PointLocations.hpp
+)
+add_unit_test(NAME testPointLocations
+              SOURCES ${TESTPOINTLOCATIONS_SOURCES})
+
+## BinarySearchTree test
+set(TESTBINARYSEARCHTREE_SOURCES
+    testBinarySearchTree.cpp
+
+    ../src/BinarySearchTree.hpp
+)
+add_unit_test(NAME testBinarySearchTree
+              SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
+
+## WMBasicPhotonSourceSpectrum test
+set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
+    testWMBasicPhotonSourceSpectrum.cpp
+
+    ../src/WMBasicDataLocation.hpp.in
+    ../src/WMBasicPhotonSourceSpectrum.cpp
+    ../src/WMBasicPhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testWMBasicPhotonSourceSpectrum
+              SOURCES ${TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES})
+
+## InterpolatedDensityFunction test
+set(TESTINTERPOLATEDDENSITYFUNCTION_SOURCES
+    testInterpolatedDensityFunction.cpp
+
+    ../src/InterpolatedDensityFunction.cpp
+    ../src/InterpolatedDensityFunction.cpp
+)
+add_unit_test(NAME testInterpolatedDensityFunction
+              SOURCES ${TESTINTERPOLATEDDENSITYFUNCTION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_interpolated_density.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/test_interpolated_density.txt
+               COPYONLY)
+
+## FractalDistributionGenerator test
+set(TESTFRACTALDENSITYMASK_SOURCES
+    testFractalDensityMask.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/DensityMask.hpp
+    ../src/FractalDensityMask.hpp
+)
+add_unit_test(NAME testFractalDensityFunction
+              SOURCES ${TESTFRACTALDENSITYMASK_SOURCES})
+
+## VoronoiDensityGrid test
+set(TESTVORONOIDENSITYGRID_SOURCES
+    testVoronoiDensityGrid.cpp
+
+    ../src/DensityGrid.cpp
+    ../src/UniformRandomVoronoiGeneratorDistribution.hpp
+    ../src/VoronoiDensityGrid.cpp
+    ../src/VoronoiDensityGrid.hpp
+    ../src/VoronoiGeneratorDistribution.hpp
+    ../src/VoronoiCell.cpp
+    ../src/VoronoiCell.hpp
+    ../src/VoronoiGrid.cpp
+    ../src/VoronoiGrid.hpp
+)
+add_unit_test(NAME testVoronoiDensityGrid
+              SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
@@ -667,6 +870,11 @@ endif(HAVE_HDF5)
 
 ## EmissivityCalculatorModule test
 add_python_unit_test(NAME test_emissivitycalculator.py)
+
+## FLASHSnapshotDensityFunction test
+if(HAVE_HDF5)
+  add_python_unit_test(NAME test_flashsnapshotdensityfunction.py)
+endif(HAVE_HDF5)
 
 endif(HAVE_PYTHON)
 

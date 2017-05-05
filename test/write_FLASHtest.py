@@ -47,10 +47,11 @@ class AMRGridCell:
   # @param level Refinement level of the cell.
   # @param density Density in the cell.
   ##
-  def __init__(self, box, level, density):
+  def __init__(self, box, level, density, temperature):
     self._box = box
     self._level = level
     self._density = density
+    self._temperature = temperature
     self._node_type = 1
     self._children = np.array([None, None, None, None, None, None, None, None])
     self._next = None
@@ -174,9 +175,9 @@ dataset[...] = data
 
 # make grid
 grid = np.array([AMRGridCell(np.array([[0., 0., 0.], [1., 1., 1.]]),
-                             1, density(0.5, 0.5, 0.5)),
+                             1, density(0.5, 0.5, 0.5), 4000.),
                  AMRGridCell(np.array([[1., 0., 0.], [1., 1., 1.]]),
-                             1, density(1.5, 0.5, 0.5))])
+                             1, density(1.5, 0.5, 0.5), 4000.)])
 
 for iblock in range(2):
   block = grid[iblock]
@@ -191,7 +192,8 @@ for iblock in range(2):
         x = box[0][0] + 0.5*box[1][0]
         y = box[0][1] + 0.5*box[1][1]
         z = box[0][2] + 0.5*box[1][2]
-        block.add_child(AMRGridCell(box, 2, density(x, y, z)), 4*ix+2*iy+iz)
+        block.add_child(AMRGridCell(box, 2, density(x, y, z), 4000.),
+                        4*ix+2*iy+iz)
         # we make a refined region near the centre of the box
         if ix != iblock:
           child = block.get_child(4*ix+2*iy+iz)
@@ -206,7 +208,7 @@ for iblock in range(2):
                 x = box[0][0] + 0.5*box[1][0]
                 y = box[0][1] + 0.5*box[1][1]
                 z = box[0][2] + 0.5*box[1][2]
-                child.add_child(AMRGridCell(box, 3, density(x, y, z)),
+                child.add_child(AMRGridCell(box, 3, density(x, y, z), 4000.),
                                 4*iix+2*iiy+iiz)
 # set up the chain for easy grid traversal
 grid[0].set_order(None)
@@ -216,6 +218,7 @@ grid[1].set_order(None)
 numblocks = grid[0].get_num_cells() + grid[1].get_num_cells()
 bbox = np.zeros((numblocks, 3, 2), dtype='f')
 rho = np.zeros((numblocks, 8, 8, 8), dtype='f')
+temp = np.zeros((numblocks, 8, 8, 8), dtype='f')
 levels = np.zeros((numblocks,), dtype='i')
 ntypes = np.zeros((numblocks,), dtype='i')
 index = 0
@@ -235,6 +238,7 @@ for iblock in range(2):
           y = child._box[0][1] + 0.125*(iy+0.5)*child._box[1][1]
           z = child._box[0][2] + 0.125*(iz+0.5)*child._box[1][2]
           rho[index][iz][iy][ix] = density(x, y, z)
+          temp[index][iz][iy][ix] = 4000.
     levels[index] = child._level
     ntypes[index] = child.get_node_type()
     child = child._next
@@ -243,5 +247,6 @@ for iblock in range(2):
 # write datasets to file
 file.create_dataset("bounding box", data = bbox, dtype = 'f')
 file.create_dataset("dens", data = rho, dtype = 'f')
+file.create_dataset("temp", data = temp, dtype = 'f')
 file.create_dataset("refine level", data = levels, dtype = 'i')
 file.create_dataset("node type", data = ntypes, dtype = 'i')

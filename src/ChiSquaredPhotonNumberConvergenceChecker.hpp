@@ -167,9 +167,8 @@ public:
                                                   ParameterFile &params,
                                                   Log *log = nullptr)
       : ChiSquaredPhotonNumberConvergenceChecker(
-            grid,
-            params.get_value< double >(
-                "photonnumberconvergencechecker:tolerance", 0.01),
+            grid, params.get_value< double >(
+                      "photonnumberconvergencechecker:tolerance", 0.01),
             params.get_value< double >(
                 "photonnumberconvergencechecker:photon_fraction", 0.1),
             params.get_value< double >(
@@ -198,15 +197,15 @@ public:
 #endif
 
     for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-      double jH = it.get_values().get_mean_intensity(ION_H_n) * norm;
-      double jHold = it.get_values().get_mean_intensity_H_old();
+      double jH = it.get_mean_intensity(ION_H_n) * norm;
+      double jHold = it.get_mean_intensity_H_old();
       double sum = jH + jHold;
-      double diff = jH - it.get_values().get_mean_intensity_H_old();
+      double diff = jH - it.get_mean_intensity_H_old();
       if (sum) {
         ++numcell;
         diff /= sum;
       } // else: both sum and diff will be zero, since jH cannot be negative
-      it.get_values().set_mean_intensity_H_old(jH);
+      it.set_mean_intensity_H_old(jH);
       chi2 += diff * diff * std::abs(diff);
 
 #ifdef CHISQUAREDPHOTONNUMBERCONVERGENCECHECKER_REFERENCE_VALUES

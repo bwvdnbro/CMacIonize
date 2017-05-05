@@ -26,6 +26,7 @@
 #include "Assert.hpp"
 #include "CoordinateVector.hpp"
 #include "ParameterFile.hpp"
+#include "YAMLDictionary.hpp"
 #include <iostream>
 
 /**
@@ -36,6 +37,16 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+  /// YAMLDictionary test
+  {
+    std::string test_string = "test_value_1: 42.\n"
+                              "test_value_2: 1. m";
+    std::istringstream test_stream(test_string);
+    YAMLDictionary dictionary(test_stream);
+
+    dictionary.print_contents(std::cout);
+  }
+
   ParameterFile params("test.param");
 
   assert_condition(params.get_value< int >("test_integer1") == 42);

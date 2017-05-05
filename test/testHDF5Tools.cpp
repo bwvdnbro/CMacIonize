@@ -202,6 +202,30 @@ int main(int argc, char **argv) {
     HDF5Tools::write_dataset< CoordinateVector<> >(
         group, "Test CoordinateVectors", vvtest);
 
+    // block test
+    std::vector< double > part1(50), part2(50);
+    for (unsigned int i = 0; i < 50; ++i) {
+      part1[i] = i * 0.1;
+      part2[i] = i * 0.1;
+    }
+    HDF5Tools::create_dataset< double >(group, "BlockTest", 100);
+    HDF5Tools::append_dataset(group, "BlockTest", 0, part1);
+    HDF5Tools::append_dataset(group, "BlockTest", 50, part2);
+
+    std::vector< CoordinateVector<> > vpart1(50), vpart2(50);
+    for (unsigned int i = 0; i < 50; ++i) {
+      vpart1[i][0] = i * 0.1;
+      vpart1[i][1] = i * 0.2;
+      vpart1[i][2] = i * 0.3;
+      vpart2[i][0] = i * 0.1;
+      vpart2[i][1] = i * 0.2;
+      vpart2[i][2] = i * 0.3;
+    }
+    HDF5Tools::create_dataset< CoordinateVector<> >(group, "VectorBlockTest",
+                                                    100);
+    HDF5Tools::append_dataset(group, "VectorBlockTest", 0, vpart1);
+    HDF5Tools::append_dataset(group, "VectorBlockTest", 50, vpart2);
+
     HDF5Tools::close_group(group);
 
     HDF5Tools::close_file(file);
@@ -249,6 +273,28 @@ int main(int argc, char **argv) {
       assert_condition(vvtest2[i].x() == vvtest[i].x());
       assert_condition(vvtest2[i].y() == vvtest[i].y());
       assert_condition(vvtest2[i].z() == vvtest[i].z());
+    }
+
+    std::vector< double > blocktest =
+        HDF5Tools::read_dataset< double >(group, "BlockTest");
+    for (unsigned int i = 0; i < 100; ++i) {
+      unsigned int icorr = i;
+      if (i >= 50) {
+        icorr -= 50;
+      }
+      assert_condition(blocktest[i] == 0.1 * icorr);
+    }
+
+    std::vector< CoordinateVector<> > vblocktest =
+        HDF5Tools::read_dataset< CoordinateVector<> >(group, "VectorBlockTest");
+    for (unsigned int i = 0; i < 100; ++i) {
+      unsigned int icorr = i;
+      if (i >= 50) {
+        icorr -= 50;
+      }
+      assert_condition(vblocktest[i].x() == 0.1 * icorr);
+      assert_condition(vblocktest[i].y() == 0.2 * icorr);
+      assert_condition(vblocktest[i].z() == 0.3 * icorr);
     }
 
     HDF5Tools::close_group(group);

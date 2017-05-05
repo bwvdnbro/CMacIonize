@@ -48,7 +48,7 @@ public:
       density = 2.;
     }
 
-    cell.set_total_density(density);
+    cell.set_number_density(density);
     cell.set_temperature(4000.);
     return cell;
   }
@@ -63,14 +63,11 @@ public:
    * @brief Decide if the given cell should be refine or not.
    *
    * @param level Current refinement level of the cell.
-   * @param midpoint Midpoint of the cell (in m).
-   * @param volume Volume of the cell (in m^3).
-   * @param cell DensityValues of a cell.
+   * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the density is larger than 1.
    */
-  virtual bool refine(unsigned char level, CoordinateVector<> midpoint,
-                      double volume, DensityValues &cell) const {
-    return cell.get_total_density() > 1. && level < 6;
+  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+    return cell.get_number_density() > 1. && level < 6;
   }
 
   /**
@@ -78,17 +75,15 @@ public:
    * not.
    *
    * @param level Current refinement level of the cells.
-   * @param midpoints Midpoints of the cells (in m).
-   * @param volumes  Volumes of the cells (in m^3).
-   * @param cells DensityValues of the cells.
+   * @param cells DensityGrid::iterators pointing to the cells.
    * @return True if the cells can be replaced by a single cell on a coarser
    * level.
    */
-  virtual bool coarsen(unsigned char level, CoordinateVector<> *midpoints,
-                       double *volumes, DensityValues *cells) const {
+  virtual bool coarsen(unsigned char level,
+                       const DensityGrid::iterator *cells) const {
     double avg_density = 0.;
     for (unsigned int i = 0; i < 8; ++i) {
-      avg_density += cells->get_total_density();
+      avg_density += cells->get_number_density();
     }
     avg_density *= 0.125;
     return avg_density < 1.;
@@ -107,7 +102,10 @@ int main(int argc, char **argv) {
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      density_function, scheme, false, &log);
+                      density_function, scheme, false, false, &log);
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
   assert_values_equal(4000., grid.get_average_temperature());

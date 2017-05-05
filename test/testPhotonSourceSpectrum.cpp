@@ -117,9 +117,9 @@ double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
  * @brief Interpolate on the given Faucher-Giguere reference spectrum.
  *
  * @param nuarr Frequencies (in Ryd).
- * @param earr Energies (in 10^-21 s^-1 cm^-2 Hz^-1 sr^-1).
+ * @param earr Energies (in 10^-21 erg s^-1 cm^-2 Hz^-1 sr^-1).
  * @param nu Frequency for which we want the value (in Ryd).
- * @return Energy at that frequency (in 10^-21 s^-1 cm^-2 Hz^-1 sr^-1).
+ * @return Energy at that frequency (in 10^-21 erg s^-1 cm^-2 Hz^-1 sr^-1).
  */
 double FGspectrum(double *nuarr, double *earr, double nu) {
   unsigned int inu = 0;
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
       double bval = counts[i] * enorm;
       double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
       // we fitted a line in x-log10(y) space to the actual relative difference
-      double tolerance = std::pow(10., -2.12 + 0.121377 * (i - 4.));
+      double tolerance = std::pow(10., -1.6 + 0.12 * (i - 8.));
       file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
            << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);
@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
       double bval = counts[i] * enorm;
       double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
       // we fitted a line in x-log10(y) space to the actual relative difference
-      double tolerance = std::pow(10., -2.1 + 0.0191911 * (i - 17.));
+      double tolerance = std::pow(10., -1.9 + 0.0191911 * (i - 17.));
       file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
            << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);
@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
       double bval = counts[i] * enorm;
       double reldiff = std::abs(tval - bval) / std::abs(tval + bval);
       // we fitted a line in x-log10(y) space to the actual relative difference
-      double tolerance = std::pow(10., -1.96 + 0.00731539 * (i - 4.));
+      double tolerance = std::pow(10., -1.96 + 0.00831539 * (i - 4.));
       file << nu << "\t" << tval << "\t" << bval << "\t" << reldiff << "\t"
            << tolerance << "\n";
       assert_values_equal_rel(tval, bval, tolerance);

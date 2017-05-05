@@ -32,7 +32,6 @@
 #include <cstdlib>
 
 class DensityFunction;
-class DensityValues;
 class Log;
 class ParameterFile;
 class Photon;
@@ -60,9 +59,6 @@ private:
 
   /*! @brief Number of cells per dimension. */
   CoordinateVector< int > _ncell;
-
-  /*! @brief Density grid. */
-  DensityValues ***_density;
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -110,8 +106,6 @@ private:
     return midpoint;
   }
 
-  DensityValues &get_cell_values(CoordinateVector< int > index) const;
-
   /**
    * @brief Get the volume of the cell with the given indices.
    *
@@ -131,12 +125,17 @@ public:
   CartesianDensityGrid(
       Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      Log *log = nullptr);
+      bool hydro = false, Log *log = nullptr);
 
   CartesianDensityGrid(ParameterFile &parameters,
                        DensityFunction &density_function, Log *log = nullptr);
 
-  virtual ~CartesianDensityGrid();
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~CartesianDensityGrid() {}
+
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
 
   virtual unsigned int get_number_of_cells() const;
 
@@ -173,26 +172,6 @@ public:
   }
 
   /**
-   * @brief Get the cell contents corresponding to the given long index.
-   *
-   * @param index Long index.
-   * @return DensityValues containing the contents of that cell.
-   */
-  virtual DensityValues &get_cell_values(unsigned long index) const {
-    return get_cell_values(get_indices(index));
-  }
-
-  /**
-   * @brief Get the values stored in the cell which contains the given position.
-   *
-   * @param position CoordinateVector<> specifying a position (in m).
-   * @return DensityValues of the cell containing that position (in SI units).
-   */
-  virtual DensityValues &get_cell_values(CoordinateVector<> position) const {
-    return get_cell_values(get_cell_indices(position));
-  }
-
-  /**
    * @brief Get the volume of the cell with the given long index.
    *
    * @param long_index Long index of a cell.
@@ -208,7 +187,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds);
 
-  virtual DensityValues *interact(Photon &photon, double optical_depth);
+  virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
 
   /**
    * @brief Get an iterator to the first cell in the grid.
@@ -226,21 +205,9 @@ public:
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
   }
 
-  /**
-   * @brief Get begin and end iterators to a chunk of the grid with given begin
-   * and end fractions.
-   *
-   * @param begin Fraction of the total grid where we want the chunk to begin.
-   * @param end Fraction of the total grid where we want the chunk to end.
-   * @return std::pair of iterators pointing to the begin and end of the chunk.
-   */
-  virtual inline std::pair< DensityGrid::iterator, DensityGrid::iterator >
-  get_chunk(double begin, double end) {
-    unsigned int ncell = _ncell.x() * _ncell.y() * _ncell.z();
-    unsigned int ibegin = begin * ncell;
-    unsigned int iend = end * ncell;
-    return std::make_pair(iterator(ibegin, *this), iterator(iend, *this));
-  }
+  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
+                                   CoordinateVector<>, double > >
+  get_neighbours(unsigned long index);
 };
 
 #endif // CARTESIANDENSITYGRID_HPP

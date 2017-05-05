@@ -37,6 +37,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 /**
  * @brief Utility functions that are not really related to a single class.
@@ -49,6 +50,27 @@ namespace Utilities {
  * @return Random uniform double precision floating point value.
  */
 inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
+
+/**
+ * @brief Get a random double precision position in a box with origin (0, 0, 0)
+ * and a unit side length.
+ *
+ * @return Random uniform double precision position.
+ */
+inline CoordinateVector<> random_position() {
+  return CoordinateVector<>(random_double(), random_double(), random_double());
+}
+
+/**
+ * @brief Get a random integer value within the given range.
+ *
+ * @param min_value Minimum value (inclusive).
+ * @param max_value Maximum value (exclusive).
+ * @return Uniform random value in the range [min_value, max_value[.
+ */
+inline unsigned int random_int(int min_value, int max_value) {
+  return min_value + random_double() * (max_value - min_value);
+}
 
 /**
  * @brief Split a string of the form [str1, str2, str3] into its parts.
@@ -276,6 +298,24 @@ convert< CoordinateVector< int > >(const std::string &value) {
 }
 
 /**
+ * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< unsigned int >
+convert< CoordinateVector< unsigned int > >(const std::string &value) {
+  CoordinateVector< unsigned int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< unsigned int >(x);
+  vvalue[1] = convert< unsigned int >(y);
+  vvalue[2] = convert< unsigned int >(z);
+  return vvalue;
+}
+
+/**
  * @brief Convert the given string to a boolean value.
  *
  * The following string literals map to true: "true", "yes", "on", "y".
@@ -406,6 +446,20 @@ to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
 }
 
 /**
+ * @brief to_string specialization for an unsigned integer CoordinateVector.
+ *
+ * @param value Unsigned integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string to_string< CoordinateVector< unsigned int > >(
+    const CoordinateVector< unsigned int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
  * @brief to_string specialization for a boolean CoordinateVector.
  *
  * @param value Boolean CoordinateVector.
@@ -460,7 +514,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
  */
 inline unsigned int locate(double x, const double *xarr, unsigned int length) {
   unsigned int jl = 0;
-  unsigned int ju = length + 1;
+  unsigned int ju = length;
   while (ju - jl > 1) {
     unsigned int jm = (ju + jl) / 2;
     if (x > xarr[jm]) {
@@ -598,10 +652,10 @@ inline std::string human_readable_time(double time) {
 }
 
 /**
- * @brief Get the unit of \f$2^{10e}\f$ bytes.
+ * @brief Get the unit of @f$2^{10e}@f$ bytes.
  *
- * @param exponent Exponent \f$e\f$.
- * @return Name for \f$2^{10e}\f$ bytes: (\f$2^{10}\f$ bytes = KB, ...).
+ * @param exponent Exponent @f$e@f$.
+ * @return Name for @f$2^{10e}@f$ bytes: (@f$2^{10}@f$ bytes = KB, ...).
  */
 inline std::string byte_unit(unsigned char exponent) {
   switch (exponent) {
@@ -657,6 +711,105 @@ inline bool string_ends_with(const std::string &haystack,
   size_t check = haystack.rfind(needle);
   // make sure we only flag needle at the end of the string
   return (check == haystack.size() - needle.size());
+}
+
+/**
+ * @brief Decompose the given number into integer prime factors.
+ *
+ * @param number Number to decompose.
+ * @return std::vector containing the prime integer components.
+ */
+inline std::vector< int > decompose(int number) {
+  std::vector< int > components;
+  int divisor = 2;
+  while (divisor <= number && number > 1) {
+    if (number % divisor == 0) {
+      number /= divisor;
+      components.push_back(divisor);
+    } else {
+      ++divisor;
+    }
+  }
+  return components;
+}
+
+/**
+ * @brief Subdivide the grid with the given resolution in approximately the
+ * given number of equal size blocks.
+ *
+ * If such a decomposition is not possible, a larger number of blocks is used.
+ *
+ * @param ncell Grid resolution.
+ * @param numblock Number of blocks to subdivide in.
+ * @return Resolution of a single block.
+ */
+inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
+                                         int numblock) {
+  std::vector< std::vector< int > > d_ncell(3);
+  d_ncell[0] = decompose(ncell.x());
+  d_ncell[1] = decompose(ncell.y());
+  d_ncell[2] = decompose(ncell.z());
+
+  // remove large factors until we reach at least the requested number of blocks
+  int factor = 1;
+  unsigned int idim = 0;
+  while (factor < numblock) {
+    factor *= d_ncell[idim].back();
+    d_ncell[idim].pop_back();
+    ++idim;
+    if (idim == 3) {
+      idim = 0;
+    }
+  }
+
+  // collapse the remaining factors to get the block size
+  CoordinateVector< int > block(1);
+  for (unsigned int i = 0; i < 3; ++i) {
+    for (unsigned int j = 0; j < d_ncell[i].size(); ++j) {
+      block[i] *= d_ncell[i][j];
+    }
+  }
+  return block;
+}
+
+/**
+ * @brief Convert the given long value to a binary sequence that can be written
+ * out to a terminal or file.
+ *
+ * @param long_value Long value to convert.
+ * @return std::string containing a binary representation of the long value.
+ */
+inline std::string as_binary_sequence(unsigned long long_value) {
+  std::stringstream binary_stream;
+  unsigned long mask = 0x8000000000000000;
+  for (unsigned int i = 0; i < 64; ++i) {
+    if (i > 0 && i % 4 == 0) {
+      binary_stream << " ";
+    }
+    binary_stream << ((long_value & mask) >> (63 - i));
+    mask >>= 1;
+  }
+  return binary_stream.str();
+}
+
+/**
+ * @brief Return a std::vector that contains the indices that would sort the
+ * given vector.
+ *
+ * @param values std::vector to sort.
+ * @return std::vector containing the indices of the elements in the given
+ * std::vector in an order that would sort the std::vector.
+ */
+template < typename _datatype_ >
+std::vector< unsigned int > argsort(const std::vector< _datatype_ > &values) {
+  std::vector< unsigned int > idx(values.size());
+  for (unsigned int i = 0; i < values.size(); ++i) {
+    idx[i] = i;
+  }
+  std::sort(idx.begin(), idx.end(), [&values](size_t i1, size_t i2) {
+    return values[i1] < values[i2];
+  });
+  return idx;
 }
 }
 

@@ -34,15 +34,28 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  RandomGenerator generator(42);
+  /// Basic test
+  {
+    RandomGenerator generator(42);
 
-  double mean_random = 0.;
-  unsigned int num = 1000000;
-  double weight = 1. / num;
-  for (unsigned int i = 0; i < num; ++i) {
-    mean_random += weight * generator.get_uniform_random_double();
+    double mean_random = 0.;
+    unsigned int num = 1000000;
+    double weight = 1. / num;
+    for (unsigned int i = 0; i < num; ++i) {
+      mean_random += weight * generator.get_uniform_random_double();
+    }
+    assert_values_equal_tol(mean_random, 0.5, 1.e-3);
   }
-  assert_values_equal_tol(mean_random, 0.5, 1.e-3);
+
+  /// Seed test: check that different seeds effectively lead to different
+  /// results
+  {
+    RandomGenerator generator_A(42);
+    RandomGenerator generator_B(512);
+
+    assert_condition(generator_A.get_uniform_random_double() !=
+                     generator_B.get_uniform_random_double());
+  }
 
   return 0;
 }

@@ -112,9 +112,7 @@ int main(int argc, char **argv) {
   std::vector< CoordinateVector<> > positions(numpos);
   std::vector< double > hs(numpos);
   for (unsigned int i = 0; i < numpos; ++i) {
-    positions[i][0] = Utilities::random_double();
-    positions[i][1] = Utilities::random_double();
-    positions[i][2] = Utilities::random_double();
+    positions[i] = Utilities::random_position();
     hs[i] = 0.5 * Utilities::random_double();
   }
 

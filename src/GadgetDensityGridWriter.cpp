@@ -81,9 +81,10 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
  * @param iteration Value of the counter to append to the filename.
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
+ * @param time Simulation time (in s).
  */
 void GadgetDensityGridWriter::write(unsigned int iteration,
-                                    ParameterFile &params) {
+                                    ParameterFile &params, double time) {
   std::string filename = Utilities::compose_filename(
       _output_folder, _prefix, "hdf5", iteration, _padding);
 
@@ -118,7 +119,6 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
       group, "NumPart_Total", numpart);
   HDF5Tools::write_attribute< std::vector< unsigned int > >(
       group, "NumPart_Total_HighWord", numpart_high);
-  double time = 0.;
   HDF5Tools::write_attribute< double >(group, "Time", time);
   HDF5Tools::close_group(group);
 
@@ -164,64 +164,72 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write particles
   group = HDF5Tools::create_group(file, "PartType0");
-  std::vector< CoordinateVector<> > coords(numpart[0]);
-  std::vector< double > ntot(numpart[0]);
-  std::vector< double > temperature(numpart[0]);
-  std::vector< double > hH(numpart[0]);
-  std::vector< double > hHe(numpart[0]);
-  std::vector< std::vector< double > > ifrac(NUMBER_OF_IONNAMES);
-  std::vector< std::vector< double > > jmean(NUMBER_OF_IONNAMES);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    ifrac[i].resize(numpart[0]);
-    jmean[i].resize(numpart[0]);
-  }
-  std::vector< std::vector< double > > emission(NUMBER_OF_EMISSIONLINES);
-  for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-    emission[i].resize(numpart[0]);
-  }
-  bool has_emissivities = false;
-  unsigned int index = 0;
-  for (auto it = _grid.begin(); it != _grid.end(); ++it) {
-    DensityValues &cellvals = it.get_values();
-    coords[index] = it.get_cell_midpoint() - box.get_anchor();
-    ntot[index] = cellvals.get_total_density();
-    temperature[index] = cellvals.get_temperature();
-    hH[index] = cellvals.get_heating_H();
-    hHe[index] = cellvals.get_heating_He();
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      IonName ion = static_cast< IonName >(i);
-      ifrac[i][index] = cellvals.get_ionic_fraction(ion);
-      jmean[i][index] = cellvals.get_mean_intensity(ion);
+  // coordinates
+  {
+    // we need to allocate a temporary array (that could be quite large), since
+    // the coordinates are not stored in a continuous way in the DensityGrid
+    std::vector< CoordinateVector<> > coords(numpart[0]);
+    unsigned int index = 0;
+    for (auto it = _grid.begin(); it != _grid.end(); ++it) {
+      coords[index] = it.get_cell_midpoint() - box.get_anchor();
+      ++index;
     }
-    EmissivityValues *emissivities = cellvals.get_emissivities();
-    if (emissivities != nullptr) {
-      has_emissivities = true;
-      for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-        EmissionLine line = static_cast< EmissionLine >(i);
-        emission[i][index] = emissivities->get_emissivity(line);
-      }
-    }
-    ++index;
+    HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates",
+                                                   coords);
   }
-  HDF5Tools::write_dataset< CoordinateVector<> >(group, "Coordinates", coords);
-  HDF5Tools::write_dataset< double >(group, "NumberDensity", ntot);
-  HDF5Tools::write_dataset< double >(group, "Temperature", temperature);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    HDF5Tools::write_dataset< double >(
-        group, "NeutralFraction" + get_ion_name(i), ifrac[i]);
-    //    HDF5Tools::write_dataset< double >(group, "MeanIntensity" +
-    //    get_ion_name(i),
-    //                                       jmean[i]);
+  // number densities
+  {
+    HDF5Tools::write_dataset< double >(group, "NumberDensity",
+                                       _grid.get_number_density_handle());
   }
-  if (has_emissivities) {
-    for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-      EmissionLine line = static_cast< EmissionLine >(i);
+  // temperature
+  {
+    HDF5Tools::write_dataset< double >(group, "Temperature",
+                                       _grid.get_temperature_handle());
+  }
+  if (_grid.has_hydro()) {
+    // density
+    {
       HDF5Tools::write_dataset< double >(
-          group, "Emissivity" + EmissivityValues::get_name(line), emission[i]);
+          group, "Density", _grid.get_hydro_primitive_density_handle());
+    }
+    // velocity
+    {
+      std::vector< CoordinateVector<> > velocities(numpart[0]);
+      unsigned int index = 0;
+      for (auto it = _grid.begin(); it != _grid.end(); ++it) {
+        velocities[index][0] = it.get_hydro_primitive_velocity_x();
+        velocities[index][1] = it.get_hydro_primitive_velocity_y();
+        velocities[index][2] = it.get_hydro_primitive_velocity_z();
+        ++index;
+      }
+      HDF5Tools::write_dataset< CoordinateVector<> >(group, "Velocities",
+                                                     velocities);
+    }
+    // pressure
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "Pressure", _grid.get_hydro_primitive_pressure_handle());
+    }
+    // mass
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "Mass", _grid.get_hydro_conserved_mass_handle());
+    }
+    // total energy
+    {
+      HDF5Tools::write_dataset< double >(
+          group, "TotalEnergy",
+          _grid.get_hydro_conserved_total_energy_handle());
     }
   }
-  //  HDF5Tools::write_dataset< double >(group, "HeatingH", hH);
-  //  HDF5Tools::write_dataset< double >(group, "HeatingHe", hHe);
+  // neutral fractions
+  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    HDF5Tools::write_dataset< double >(group,
+                                       "NeutralFraction" + get_ion_name(i),
+                                       _grid.get_ionic_fraction_handle(ion));
+  }
   HDF5Tools::close_group(group);
 
   // close file
