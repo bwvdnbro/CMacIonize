@@ -489,6 +489,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // finding routine.
   if (complicated_setup) {
     // do the complicated setup
+    unsigned int k, new_index;
+    bool double_edge = false;
 
     // somewhere along the way above, we found a vertex very close or on the
     // midplane. The index of that vertex is stored in 'up'. All other variables
@@ -539,6 +541,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // edge that was tested extends below the plane
       ++j;
     }
+    stack.clear();
 
     // since we tested all vertices that were connected to our initial vertex,
     // and a vertex of a Voronoi cell cannot (by definition) have vertices with
@@ -550,11 +553,298 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     // we will now replace the vertex on the plane with a new vertex which has
     // two edges in the plane and as many edges below the plane as the original
     // vertex
+    // so, if NB denotes an edge of 'up' that extends above, on, or very close
+    // to the plane, and B denotes an edge that extends below the plane, then
+    // the edge list for 'up' could look like (non-exhaustive list of examples):
+    //   (case 1) NB NB B B NB
+    //   (case 1) NB NB B B
+    //   (case 2) B B B NB NB B
+    //   (case 2) B B NB NB
+    // we will try to find the indices of the first and last occurences of NB
+    // and/or B in this list
     // we already found the index of and edge of 'up' below the plane, it is
-    // stored in 'rp'
-    /// CONTINUE HERE
+    // stored in 'rp' (we might use this information in the future; for now, we
+    // just ignore it)
 
-    cmac_error("Complicated setup is only partially implemented!");
+    // we now try to find the first edge below the plane
+    lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][0]);
+    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+
+    if (l.first != -1) {
+      // (case 1): NB ...
+      // the first edge is not below the plane (it could be on or very close to
+      // the plane), continue the search
+      // we store the result of the first test in 'rp' for reference, as we will
+      // need this later on to detect a vertex with an edge on the plane
+      rp = l.first;
+      unsigned int i = 1;
+      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      // continue searching for an edge below the plane
+      while (l.first != -1) {
+        ++i;
+        // we guaranteed above that 'up' has at least one edge below the plane,
+        // so we should always find an edge, and 'i' should always be smaller
+        // than the number of edges of 'up'
+        cmac_assert(i < _edges[up].size());
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      }
+
+      // we found an edge below the plane, and have stored its index in 'i'
+      // now start with edge 'i+1' and try to find the first edge above, on, or
+      // very close to the plane, and store its index in 'j'
+      unsigned int j = i + 1;
+      while (j < _edges[up].size() && l.first == -1) {
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        ++j;
+      }
+
+      // if the iteration ended because of the second condition, then we
+      // increased 'j' by one too many and we need to correct for this
+      if (l.first != -1) {
+        --j;
+      }
+
+      // 'j-i' now gives us the number of edges below the plane
+      // vertex 'up' will be replaced by a new vertex (at the same position)
+      // that has the same number of edges below the plane plus two new edges
+      // in the plane
+      // there is one exception: if there is exactly one edge of 'up' that is
+      // NOT BELOW the plane, and that edge is IN the plane (in this specific
+      // case this means 'j' is equal to the number of edges of 'up', 'i' is
+      // equal to 1, since the only edge not below is 0, and that edge was on or
+      // very close to the plane as signalled by 'rp == 0')
+      // in this case, we only have 1 edge in the plane (and this edge already
+      // exists) and we can keep 'up' as it is
+      // this case is signalled in the 'double_edge' flag
+
+      if (j == _edges[up].size() && i == 1 && rp == 0) {
+        k = _edges[up].size();
+        double_edge = true;
+      } else {
+        k = j - i + 2;
+      }
+
+      // create a new vertex at the position of 'up'
+      new_index = _vertices.size();
+      _vertices.push_back(_vertices[up]);
+      _edges.resize(_edges.size() + 1);
+
+      // we assume that '_edges' and '_vertices' have the same size; let's make
+      // sure!
+      cmac_assert(_edges.size() == _vertices.size());
+
+      delete_stack.push_back(false);
+      cmac_assert(delete_stack.size() == _vertices.size());
+
+      // the new vertex has order 'k'
+      _edges[new_index].resize(k);
+
+      // 'us' contains the index of the last edge NOT BELOW the plane
+      // as 'i' is at least 1, this expression is always valid
+      us = i - 1;
+      cmac_assert(us >= 0);
+
+      // the new vertex will have all edges of 'up' that are below the plane,
+      // plus two new edges
+      // we choose the new edges to be the first and last edge, and copy the
+      // edge information for the other edges of 'up' into the new vertex
+      k = 1;
+      while (i < j) {
+        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        // disconnect 'up' from 'qp', as 'up' will be removed
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        ++i;
+        ++k;
+      }
+
+      // store the index of the first edge NOT BELOW the plane that comes after
+      // the edges below the plane in the edge list for 'up' in 'qs'
+      // (so if the edge list looks like NB1 NB2 B1 B2 B3 NB3, 'qs' contains the
+      //  index of NB3. However, if the edge list looks like NB1 NB2 B1 B2, then
+      //  'qs' contains 0)
+      if (i == _edges[up].size()) {
+        qs = 0;
+      } else {
+        qs = i;
+      }
+    } else {
+      // (case 2) B ...
+      // the first edge is below the plane
+      // in this case, it is possible that the edges below the plane are not a
+      // compact set of consecutive edges in the edge list for 'up', which means
+      // we will need to wrap the list while counting and copying them
+
+      // we first do a backwards search to try and find the last edge NOT BELOW
+      // the plane
+      unsigned int i = _edges[up].size() - 1;
+      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      while (l.first == -1) {
+        --i;
+        // it is possible that we cannot find a single edge NOT BELOW the plane
+        // this means that the vertex just happens to be on or very close to the
+        // plane, but that the intersection of the cell with the plane does not
+        // actually change the cell. In this case, nothing happens, and we can
+        // safely return from this method
+        if (i == 0) {
+          return 0;
+        }
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      }
+
+      // now we do a forward search and try to find the first edge NOT BELOW the
+      // plane (there is really no good reason to store it in 'qp' rather than
+      // 'lp', so this code could probably be cleaned up a bit)
+      unsigned int j = 1;
+      qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+      q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
+      while (q.first == -1) {
+        ++j;
+        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+        q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
+      }
+
+      // at this point, 'j' contains the index of the first edge NOT BELOW the
+      // plane, and 'i' contains the index of the last edge NOT BELOW the plane
+      // there are 'i-j+1' edges NOT BELOW the plane
+      // the newly created vertex will have all edges of 'up' BELOW the plane,
+      // plus 2 new edges
+      // the exception is the case where there is only 1 edge NOT BELOW the
+      // plane, and this edge is on or very close to the plane ('q.first == 0')
+      // in this case, 'up' is copied as it is
+
+      if (i == j && q.first == 0) {
+        double_edge = true;
+        k = _edges[up].size();
+      } else {
+        // there are 'i-j+1' edges NOT BELOW the plane, so if the total number
+        // of edges is S, the number of edges BELOW the plane is S-('i-j+1')
+        // we add 2 to this (the 2 new edges) to get the expression below
+        k = _edges[up].size() - i + j + 1;
+      }
+
+      // create a new vertex on the same location as 'up'
+      new_index = _vertices.size();
+      _vertices.push_back(_vertices[up]);
+      _edges.resize(_edges.size() + 1);
+
+      // we assume that '_edges' and '_vertices' have the same size; let's make
+      // sure!
+      cmac_assert(_edges.size() == _vertices.size());
+
+      delete_stack.push_back(false);
+      cmac_assert(delete_stack.size() == _vertices.size());
+
+      // the new vertex has order 'k'
+      _edges[new_index].resize(k);
+
+      // 'us' stores, as above, the index of the last edge NOT BELOW the plane
+      us = i;
+
+      // now copy the edges of 'up' below the plane into the new vertex
+      // we need to do this in two loops because of the possible wrapping
+      // the first and last edge of the new vertex are reserved for the new
+      // edges in the plane (in case of a double edge, the last edge does not
+      // exist)
+      k = 1;
+      ++i;
+      while (i < _edges[up].size()) {
+        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        // disconnect 'up' and 'qp', as 'up' will be deleted
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        ++i;
+        ++k;
+      }
+      i = 0;
+      while (i < j) {
+        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        // disconnect 'up' and 'qp', as 'up' will be deleted
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        ++i;
+        ++k;
+      }
+      // set 'qs' to the index of the first edge NOT BELOW the plane
+      qs = j;
+    }
+
+    // now set the neighbour information for the first and last edge of the new
+    // vertex
+    // if the vertex has a double edge, the last and first edge are one (and are
+    // just called the first edge)
+    if (!double_edge) {
+      // the last edge has the same neighbour as the first edge not below the
+      // plane
+      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
+          std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][qs]);
+      // the first edge has the new neighbour as neighbour
+      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+    } else {
+      // in this case the first edge is actually the last edge
+      // this also corresponds to just copying over the last neighbour of 'up'
+      // as is
+      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) =
+          std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][qs]);
+    }
+
+    // mark the old vertex 'up' for deletion
+    delete_stack[up] = true;
+
+    // now make sure the variables used below are set to the same values they
+    // would have if this was a normal setup:
+    //  'cp' is the index of the last new vertex that was added, which we need
+    //       to connect the next new vertex to it
+    //  'rp' is the index of the first new vertex that was added (and is equal
+    //       to 'cp' for the moment), which we need to connect the last new
+    //       vertex that will be added to it
+    //  'cs' is the index of the edge of 'cp' that needs to be connected to the
+    //       next vertex
+    //  'rs' would be the index of the edge of 'rp' that needs to be connected
+    //       to the first vertex, but since we decided to choose 'rs = 0' in all
+    //       cases, we don't store the variable and just remember to use 0
+    //  'qp' is the next vertex that will be checked
+    //  'qs' is the next edge of 'qp' that will be checked
+    //  'q' is the result of the last test involving vertex 'qp', we might need
+    //      this value to compute new vertex positions
+    //  'up' is the last vertex not below the plane, i.e. the vertex that will
+    //       be the last one we encounter in the loop below and that signals the
+    //       end of the loop
+    //  'us' is the edge of 'up' that is the last one to be processed
+    cp = new_index;
+    rp = new_index;
+    cs = k;
+    qp = up;
+    q = u;
+    // 'i' is just a temporary variable, as we cannot set 'up' before we have
+    // used it to set 'us'
+    int i = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+    us = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+    up = i;
+
   } else {
     // do the normal setup
 
