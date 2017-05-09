@@ -88,99 +88,99 @@ VoronoiCell::VoronoiCell(CoordinateVector<> generator_position,
 
   // (0, 0, 0) corner
   _edges[0].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][0]) = VORONOI_BOX_FRONT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][1]) = VORONOI_BOX_LEFT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = 4;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][2]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][2]) = VORONOI_BOX_BOTTOM;
+  set_edge_endpoint(0, 0, 1);
+  set_edge_endpoint_index(0, 0, 0);
+  set_edge_neighbour(0, 0, VORONOI_BOX_FRONT);
+  set_edge_endpoint(0, 1, 2);
+  set_edge_endpoint_index(0, 1, 2);
+  set_edge_neighbour(0, 1, VORONOI_BOX_LEFT);
+  set_edge_endpoint(0, 2, 4);
+  set_edge_endpoint_index(0, 2, 0);
+  set_edge_neighbour(0, 2, VORONOI_BOX_BOTTOM);
 
   // (0, 0, 1) corner
   _edges[1].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][0]) = VORONOI_BOX_LEFT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 5;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][1]) = VORONOI_BOX_FRONT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][2]) = VORONOI_BOX_TOP;
+  set_edge_endpoint(1, 0, 0);
+  set_edge_endpoint_index(1, 0, 0);
+  set_edge_neighbour(1, 0, VORONOI_BOX_LEFT);
+  set_edge_endpoint(1, 1, 5);
+  set_edge_endpoint_index(1, 1, 2);
+  set_edge_neighbour(1, 1, VORONOI_BOX_FRONT);
+  set_edge_endpoint(1, 2, 3);
+  set_edge_endpoint_index(1, 2, 1);
+  set_edge_neighbour(1, 2, VORONOI_BOX_TOP);
 
   // (0, 1, 0) corner
   _edges[2].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 3;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][0]) = VORONOI_BOX_LEFT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) = 6;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][1]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][1]) = VORONOI_BOX_BACK;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][2]) = 0;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][2]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][2]) = VORONOI_BOX_BOTTOM;
+  set_edge_endpoint(2, 0, 3);
+  set_edge_endpoint_index(2, 0, 0);
+  set_edge_neighbour(2, 0, VORONOI_BOX_LEFT);
+  set_edge_endpoint(2, 1, 6);
+  set_edge_endpoint_index(2, 1, 0);
+  set_edge_neighbour(2, 1, VORONOI_BOX_BACK);
+  set_edge_endpoint(2, 2, 0);
+  set_edge_endpoint_index(2, 2, 1);
+  set_edge_neighbour(2, 2, VORONOI_BOX_BOTTOM);
 
   // (0, 1, 1) corner
   _edges[3].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 2;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][0]) = VORONOI_BOX_BACK;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][1]) = 1;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][1]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][1]) = VORONOI_BOX_LEFT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][2]) = 7;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][2]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][2]) = VORONOI_BOX_TOP;
+  set_edge_endpoint(3, 0, 2);
+  set_edge_endpoint_index(3, 0, 0);
+  set_edge_neighbour(3, 0, VORONOI_BOX_BACK);
+  set_edge_endpoint(3, 1, 1);
+  set_edge_endpoint_index(3, 1, 2);
+  set_edge_neighbour(3, 1, VORONOI_BOX_LEFT);
+  set_edge_endpoint(3, 2, 7);
+  set_edge_endpoint_index(3, 2, 0);
+  set_edge_neighbour(3, 2, VORONOI_BOX_TOP);
 
   // (1, 0, 0) corner
   _edges[4].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][0]) = 0;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][0]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][0]) = VORONOI_BOX_FRONT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][1]) = 6;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][1]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][1]) = VORONOI_BOX_BOTTOM;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][2]) = 5;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][2]) = 0;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][2]) = VORONOI_BOX_RIGHT;
+  set_edge_endpoint(4, 0, 0);
+  set_edge_endpoint_index(4, 0, 2);
+  set_edge_neighbour(4, 0, VORONOI_BOX_FRONT);
+  set_edge_endpoint(4, 1, 6);
+  set_edge_endpoint_index(4, 1, 2);
+  set_edge_neighbour(4, 1, VORONOI_BOX_BOTTOM);
+  set_edge_endpoint(4, 2, 5);
+  set_edge_endpoint_index(4, 2, 0);
+  set_edge_neighbour(4, 2, VORONOI_BOX_RIGHT);
 
   // (1, 0, 1) corner
   _edges[5].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][0]) = 4;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][0]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][0]) = VORONOI_BOX_FRONT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][1]) = 7;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][1]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][1]) = VORONOI_BOX_RIGHT;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][2]) = 1;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][2]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][2]) = VORONOI_BOX_TOP;
+  set_edge_endpoint(5, 0, 4);
+  set_edge_endpoint_index(5, 0, 2);
+  set_edge_neighbour(5, 0, VORONOI_BOX_FRONT);
+  set_edge_endpoint(5, 1, 7);
+  set_edge_endpoint_index(5, 1, 1);
+  set_edge_neighbour(5, 1, VORONOI_BOX_RIGHT);
+  set_edge_endpoint(5, 2, 1);
+  set_edge_endpoint_index(5, 2, 1);
+  set_edge_neighbour(5, 2, VORONOI_BOX_TOP);
 
   // (1, 1, 0) corner
   _edges[6].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][0]) = 2;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][0]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][0]) = VORONOI_BOX_BOTTOM;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][1]) = 7;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][1]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][1]) = VORONOI_BOX_BACK;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][2]) = 4;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][2]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][2]) = VORONOI_BOX_RIGHT;
+  set_edge_endpoint(6, 0, 2);
+  set_edge_endpoint_index(6, 0, 1);
+  set_edge_neighbour(6, 0, VORONOI_BOX_BOTTOM);
+  set_edge_endpoint(6, 1, 7);
+  set_edge_endpoint_index(6, 1, 2);
+  set_edge_neighbour(6, 1, VORONOI_BOX_BACK);
+  set_edge_endpoint(6, 2, 4);
+  set_edge_endpoint_index(6, 2, 1);
+  set_edge_neighbour(6, 2, VORONOI_BOX_RIGHT);
 
   // (1, 1, 1) corner
   _edges[7].resize(3);
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][0]) = 3;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][0]) = 2;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][0]) = VORONOI_BOX_BACK;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][1]) = 5;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][1]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][1]) = VORONOI_BOX_TOP;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][2]) = 6;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][2]) = 1;
-  std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][2]) = VORONOI_BOX_RIGHT;
+  set_edge_endpoint(7, 0, 3);
+  set_edge_endpoint_index(7, 0, 2);
+  set_edge_neighbour(7, 0, VORONOI_BOX_BACK);
+  set_edge_endpoint(7, 1, 5);
+  set_edge_endpoint_index(7, 1, 1);
+  set_edge_neighbour(7, 1, VORONOI_BOX_TOP);
+  set_edge_endpoint(7, 2, 6);
+  set_edge_endpoint_index(7, 2, 1);
+  set_edge_neighbour(7, 2, VORONOI_BOX_RIGHT);
 }
 
 /// const element getters
@@ -303,7 +303,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // loop over its edges until we find one below the plane, or closer to the
       // plane
       us = 0;
-      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+      lp = get_edge_endpoint(up, us);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       while (l.second >= u.second) {
         ++us;
@@ -315,12 +315,12 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           cmac_assert_message(us < _edges[up].size(),
                               "Cell completely gone! This should not happen.");
         }
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+        lp = get_edge_endpoint(up, us);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       }
       // 'lp' now contains the index of a vertex closer or below the plane
       // set 'ls' to the index of the edge of that vertex that brought us to it
-      ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+      ls = get_edge_endpoint_index(up, us);
 
       // now continue doing this until we find a vertex that is below or on the
       // plane (if this is already the case, we automatically skip the entire
@@ -336,7 +336,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // the case 'us == ls', since we already tested that vertex)
         us = 0;
         while (us < ls && l.second >= u.second) {
-          lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+          lp = get_edge_endpoint(up, us);
           l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
           ++us;
         }
@@ -352,7 +352,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
                   us < _edges[up].size(),
                   "Cell completely gone! This should not happen.");
             }
-            lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
+            lp = get_edge_endpoint(up, us);
             l = test_vertex(_vertices[lp], plane_vector,
                             plane_distance_squared);
           }
@@ -361,7 +361,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           // this
           --us;
         }
-        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+        ls = get_edge_endpoint_index(up, us);
       }
       if (l.first == 0) {
         // on the plane: set the flag for the complicated setup, and make sure
@@ -388,7 +388,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // plane
 
       ls = 0;
-      up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+      up = get_edge_endpoint(lp, ls);
       u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
       while (l.second >= u.second) {
         ++ls;
@@ -401,12 +401,12 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           // We can safely abort this method.
           return 0;
         }
-        up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+        up = get_edge_endpoint(lp, ls);
         u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
       }
       // 'up' now contains the index of a vertex closer or above the plane
       // set 'us' to the index of the edge of that vertex that brought us to it
-      us = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]);
+      us = get_edge_endpoint_index(lp, ls);
 
       // now continue doing this until we find a vertex that is above or on the
       // plane (if this is already the case, we automatically skip the entire
@@ -422,7 +422,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // the case 'ls == us', since we already tested that vertex)
         ls = 0;
         while (ls < us && l.second >= u.second) {
-          up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+          up = get_edge_endpoint(lp, ls);
           u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
           ++ls;
         }
@@ -439,7 +439,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
               // We can safely abort this method.
               return 0;
             }
-            up = std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]);
+            up = get_edge_endpoint(lp, ls);
             u = test_vertex(_vertices[up], plane_vector,
                             plane_distance_squared);
           }
@@ -448,7 +448,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           // this
           --ls;
         }
-        us = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]);
+        us = get_edge_endpoint_index(lp, ls);
       }
       if (u.first == 0) {
         // 'up' already contains the index of the vertex on or close to the
@@ -524,7 +524,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       up = stack[j];
       // test all its edges
       for (unsigned int i = 0; i < _edges[up].size(); ++i) {
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        lp = get_edge_endpoint(up, i);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
         if (l.first == -1) {
           // edge is below the plane: stop the for loop (and automatically exit
@@ -576,7 +576,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     // just ignore it)
 
     // we now try to find the first edge below the plane
-    lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][0]);
+    lp = get_edge_endpoint(up, 0);
     l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
 
     if (l.first != -1) {
@@ -587,7 +587,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // need this later on to detect a vertex with an edge on the plane
       rp = l.first;
       unsigned int i = 1;
-      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+      lp = get_edge_endpoint(up, i);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       // continue searching for an edge below the plane
       while (l.first != -1) {
@@ -596,7 +596,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // so we should always find an edge, and 'i' should always be smaller
         // than the number of edges of 'up'
         cmac_assert(i < _edges[up].size());
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        lp = get_edge_endpoint(up, i);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       }
 
@@ -605,7 +605,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // very close to the plane, and store its index in 'j'
       unsigned int j = i + 1;
       while (j < _edges[up].size() && l.first == -1) {
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+        lp = get_edge_endpoint(up, j);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
         ++j;
       }
@@ -665,16 +665,15 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // edge information for the other edges of 'up' into the new vertex
       k = 1;
       while (i < j) {
-        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
-        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        qp = get_edge_endpoint(up, i);
+        qs = get_edge_endpoint_index(up, i);
+        set_edge_neighbour(new_index, k, get_edge_neighbour(up, i));
+        set_edge_endpoint(new_index, k, qp);
+        set_edge_endpoint_index(new_index, k, qs);
+        set_edge_endpoint(qp, qs, new_index);
+        set_edge_endpoint_index(qp, qs, k);
         // disconnect 'up' from 'qp', as 'up' will be removed
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        set_edge_endpoint(up, i, -1);
         ++i;
         ++k;
       }
@@ -699,7 +698,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // we first do a backwards search to try and find the last edge NOT BELOW
       // the plane
       unsigned int i = _edges[up].size() - 1;
-      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+      lp = get_edge_endpoint(up, i);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       while (l.first == -1) {
         --i;
@@ -711,7 +710,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         if (i == 0) {
           return 0;
         }
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
+        lp = get_edge_endpoint(up, i);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       }
 
@@ -719,11 +718,11 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // plane (there is really no good reason to store it in 'qp' rather than
       // 'lp', so this code could probably be cleaned up a bit)
       unsigned int j = 1;
-      qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+      qp = get_edge_endpoint(up, j);
       q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
       while (q.first == -1) {
         ++j;
-        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][j]);
+        qp = get_edge_endpoint(up, j);
         q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
       }
 
@@ -775,31 +774,29 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       k = 1;
       ++i;
       while (i < _edges[up].size()) {
-        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
-        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        qp = get_edge_endpoint(up, i);
+        qs = get_edge_endpoint_index(up, i);
+        set_edge_neighbour(new_index, k, get_edge_neighbour(up, i));
+        set_edge_endpoint(new_index, k, qp);
+        set_edge_endpoint_index(new_index, k, qs);
+        set_edge_endpoint(qp, qs, new_index);
+        set_edge_endpoint_index(qp, qs, k);
         // disconnect 'up' and 'qp', as 'up' will be deleted
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        set_edge_endpoint(up, i, -1);
         ++i;
         ++k;
       }
       i = 0;
       while (i < j) {
-        qp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]);
-        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][i]);
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][i]);
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][k]) = qp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][k]) = qs;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = new_index;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) = k;
+        qp = get_edge_endpoint(up, i);
+        qs = get_edge_endpoint_index(up, i);
+        set_edge_neighbour(new_index, k, get_edge_neighbour(up, i));
+        set_edge_endpoint(new_index, k, qp);
+        set_edge_endpoint_index(new_index, k, qs);
+        set_edge_endpoint(qp, qs, new_index);
+        set_edge_endpoint_index(qp, qs, k);
         // disconnect 'up' and 'qp', as 'up' will be deleted
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][i]) = -1;
+        set_edge_endpoint(up, i, -1);
         ++i;
         ++k;
       }
@@ -814,16 +811,14 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     if (!double_edge) {
       // the last edge has the same neighbour as the first edge not below the
       // plane
-      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][k]) =
-          std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][qs]);
+      set_edge_neighbour(new_index, k, get_edge_neighbour(up, qs));
       // the first edge has the new neighbour as neighbour
-      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+      set_edge_neighbour(new_index, 0, ngb_index);
     } else {
       // in this case the first edge is actually the last edge
       // this also corresponds to just copying over the last neighbour of 'up'
       // as is
-      std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) =
-          std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][qs]);
+      set_edge_neighbour(new_index, 0, get_edge_neighbour(up, qs));
     }
 
     // mark the old vertex 'up' for deletion
@@ -856,8 +851,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     q = u;
     // 'i' is just a temporary variable, as we cannot set 'up' before we have
     // used it to set 'us'
-    int i = std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]);
-    us = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
+    int i = get_edge_endpoint(up, us);
+    us = get_edge_endpoint_index(up, us);
     up = i;
 
     // store a pointer to the newly created vertex in the 'visitflags' for the
@@ -903,32 +898,30 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     //  - the first edge of the new vertex will be connected to the last new
     //    vertex that will be created below
     //  - the second edge is connected to the vertex below the plane, and
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][1]) = lp;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][1]) = ls;
+    set_edge_endpoint(new_index, 1, lp);
+    set_edge_endpoint_index(new_index, 1, ls);
     //    we also update this connection in the vertex below the plane
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = new_index;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = 1;
+    set_edge_endpoint(lp, ls, new_index);
+    set_edge_endpoint_index(lp, ls, 1);
     //  - the third (and last) vertex will be connected to the next new vertex
     //    that will be created below
 
     // remove the edge connection between 'up' and 'lp' in the edge list of 'up'
     // (it was already removed in 'lp', since we have overwritten this edge)
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[up][us]) = -1;
+    set_edge_endpoint(up, us, -1);
 
     // add vertex 'up' to the delete stack
     delete_stack[up] = true;
 
     // set neighbour relations for the new vertex:
     //  - edge 0 will have the new neighbour as neighbour
-    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+    set_edge_neighbour(new_index, 0, ngb_index);
     //  - edge 1 is a smaller copy of the intersected edge, and hence has the
     //    same neighbour that edge had in the version stored in 'up'
-    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][1]) =
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[up][us]);
+    set_edge_neighbour(new_index, 1, get_edge_neighbour(up, us));
     //  - edge 2 has the same neighbour as the intersected edge from the point
     //    of view of 'lp'
-    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][2]) =
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[lp][ls]);
+    set_edge_neighbour(new_index, 2, get_edge_neighbour(lp, ls));
 
     // set up the variables that will be used in the remainder of the algorithm:
     //  'qp' is the next vertex that will be checked
@@ -968,7 +961,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // intersected edge
   while (qp != up || qs != us) {
     // test the next vertex
-    lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+    lp = get_edge_endpoint(qp, qs);
     // make sure we have a valid vertex
     cmac_assert(lp >= 0 && lp < static_cast< int >(_vertices.size()));
     l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
@@ -995,7 +988,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
       // store the edge of 'lp' that is connected to the previous vertex in 'qs'
       // store 'lp' in 'qp'
-      qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
+      qs = get_edge_endpoint_index(qp, qs);
       qp = lp;
 
       // keep track of the first value of 'qs': the edge that brought us to this
@@ -1008,7 +1001,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       if (qs == _edges[qp].size()) {
         qs = 0;
       }
-      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+      lp = get_edge_endpoint(qp, qs);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       while (l.first == -1) {
         // every edge below the plane is added to the order 'k' of the new
@@ -1018,7 +1011,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         if (qs == _edges[qp].size()) {
           qs = 0;
         }
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+        lp = get_edge_endpoint(qp, qs);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
       }
 
@@ -1103,11 +1096,11 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       j = new_index;
       unsigned int i = 0;
       if (!double_edge) {
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][i]) = ngb_index;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[j][i]) = cp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[j][i]) = cs;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = j;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = i;
+        set_edge_neighbour(j, i, ngb_index);
+        set_edge_endpoint(j, i, cp);
+        set_edge_endpoint_index(j, i, cs);
+        set_edge_endpoint(cp, cs, j);
+        set_edge_endpoint_index(cp, cs, i);
         ++i;
       }
 
@@ -1123,16 +1116,15 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         if (qs == _edges[qp].size()) {
           qs = 0;
         }
-        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
-        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][i]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[j][i]) = lp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[j][i]) = ls;
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = j;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = i;
+        lp = get_edge_endpoint(qp, qs);
+        ls = get_edge_endpoint_index(qp, qs);
+        set_edge_neighbour(j, i, get_edge_neighbour(qp, qs));
+        set_edge_endpoint(j, i, lp);
+        set_edge_endpoint_index(j, i, ls);
+        set_edge_endpoint(lp, ls, j);
+        set_edge_endpoint_index(lp, ls, i);
         // disconnect 'qp' from 'j', as 'qp' will be deleted
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = -1;
+        set_edge_endpoint(qp, qs, -1);
         ++i;
       }
       ++qs;
@@ -1145,13 +1137,11 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       cp = j;
 
       if (new_double_edge) {
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][0]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+        set_edge_neighbour(j, 0, get_edge_neighbour(qp, qs));
       } else {
         // set the neighbour of the last edge to the corresponding neighbour of
         // the old vertex
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][cs]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+        set_edge_neighbour(j, cs, get_edge_neighbour(qp, qs));
       }
 
       // update the 'double_edge' flag. We currently assume a next degenerate
@@ -1164,7 +1154,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       if (l.first == 1) {
         // vertex above the plane: delete it and continue walking around the
         // face (so continue with the next edge of 'lp')
-        qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]) + 1;
+        qs = get_edge_endpoint_index(qp, qs) + 1;
         if (qs == _edges[lp].size()) {
           qs = 0;
         }
@@ -1214,47 +1204,45 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
         // get the index of the intersected edge in the edge list of 'lp' for
         // convenience
-        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
+        ls = get_edge_endpoint_index(qp, qs);
 
         // now make the new edge connections:
         //  - the first edge of the new vertex is connected to the last edge of
         //    the previous new vertex
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][0]) = cp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][0]) = cs;
+        set_edge_endpoint(new_index, 0, cp);
+        set_edge_endpoint_index(new_index, 0, cs);
         //  - the last edge of the previous new vertex is hence also connected
         //    to the first edge of this new vertex
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = new_index;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = 0;
+        set_edge_endpoint(cp, cs, new_index);
+        set_edge_endpoint_index(cp, cs, 0);
         //  - the second edge of the new vertex is connected to the vertex below
         //    the plane
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[new_index][1]) = lp;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[new_index][1]) = ls;
+        set_edge_endpoint(new_index, 1, lp);
+        set_edge_endpoint_index(new_index, 1, ls);
         //  - while the original intersected edge in the vertex below the plane
         //    is replaced by an edge that connects to this new vertex
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = new_index;
-        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = 1;
+        set_edge_endpoint(lp, ls, new_index);
+        set_edge_endpoint_index(lp, ls, 1);
         //  - the last edge of the new vertex will be connected to the next
         //    new vertex that will be added, or to the first new vertex that was
         //    added if this is the last new vertex
 
         // deactivate the old edge connection between 'qp' and 'lp' in the edge
         // list of 'qp'
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = -1;
+        set_edge_endpoint(qp, qs, -1);
 
         // add 'qp' to the delete stack
         delete_stack[qp] = true;
 
         // set the neighbours for the new edges:
         //  - edge 0 will have the new neighbour as neighbour
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][0]) = ngb_index;
+        set_edge_neighbour(new_index, 0, ngb_index);
         //  - edge 1 links to 'lp' and hence has the same neighbour as the edge
         //    that connected 'qp' and 'lp'
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][1]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+        set_edge_neighbour(new_index, 1, get_edge_neighbour(qp, qs));
         //  - edge 2 shares a face with the edge from 'lp' to 'qp' (now the new
         //    vertex), and hence has the same neighbour as that edge
-        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[new_index][2]) =
-            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[lp][ls]);
+        set_edge_neighbour(new_index, 2, get_edge_neighbour(lp, ls));
 
         // 'qp' is still a vertex above the plane, so the next edge to check is
         // the next edge of 'qp'
@@ -1274,10 +1262,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
   // connect the last new vertex to the first new vertex
   // remember: we chose 'rs == 0', and therefore did not declare 'rs' at all
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = rp;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = 0;
-  std::get< VORONOI_EDGE_ENDPOINT >(_edges[rp][0]) = cp;
-  std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[rp][0]) = cs;
+  set_edge_endpoint(cp, cs, rp);
+  set_edge_endpoint_index(cp, cs, 0);
+  set_edge_endpoint(rp, 0, cp);
+  set_edge_endpoint_index(rp, 0, cs);
 
   // check for order 1 and 2 vertices that need to be collapsed
   // as we have never encountered a case where this actually happens, removing
@@ -1385,18 +1373,17 @@ void VoronoiCell::finalize() {
     v2 = _vertices[i];
     // loop over the edges of vertex 2
     for (unsigned int j = 0; j < _edges[i].size(); ++j) {
-      k = std::get< VORONOI_EDGE_ENDPOINT >(_edges[i][j]);
+      k = get_edge_endpoint(i, j);
 
       // we only want to continue if this edge has not yet been processed
       if (k >= 0) {
         // flag this edge (and hence this face) as processed
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[i][j]) = -k - 1;
+        set_edge_endpoint(i, j, -k - 1);
 
         // create a new face at this position and set its neighbour to the edge
         // neighbour of _edges[i][j]
-        _faces.push_back(
-            std::make_tuple(0., CoordinateVector<>(0.),
-                            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[i][j])));
+        _faces.push_back(std::make_tuple(0., CoordinateVector<>(0.),
+                                         get_edge_neighbour(i, j)));
 
         // this is vertex 3
         v3 = _vertices[k];
@@ -1405,7 +1392,7 @@ void VoronoiCell::finalize() {
         // 2 and vertex 3 in the edge list for vertex 3
         // get the next edge of vertex 3, which is the next edge of the current
         // face of the cell
-        l = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[i][j]) + 1;
+        l = get_edge_endpoint_index(i, j) + 1;
         // since _edges[i][j].second is not necessarily the first edge of vertex
         // 3, we might need to wrap to get the next edge
         if (l == _edges[k].size()) {
@@ -1413,15 +1400,15 @@ void VoronoiCell::finalize() {
         }
         // now get the vertex on the other side of the next edge, and mark it as
         // having been processed
-        m = std::get< VORONOI_EDGE_ENDPOINT >(_edges[k][l]);
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[k][l]) = -m - 1;
+        m = get_edge_endpoint(k, l);
+        set_edge_endpoint(k, l, -m - 1);
         // this edge should never have been processed before
         cmac_assert(m >= 0);
 
         // loop over all edges of this face until we are back at vertex 2
         while (m != static_cast< int >(i)) {
           // get the next edge of the face
-          n = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[k][l]) + 1;
+          n = get_edge_endpoint_index(k, l) + 1;
           // wrap if necessary
           if (n == _edges[m].size()) {
             n = 0;
@@ -1439,26 +1426,27 @@ void VoronoiCell::finalize() {
           }
           // surface area and surface midpoint contribution:
           tarea = surface_area_triangle(v2, v3, v4);
-          std::get< VORONOI_FACE_SURFACE_AREA >(_faces.back()) += tarea;
+          increase_face_surface_area(_faces.size() - 1, tarea);
           tmidpoint = midpoint_triangle(v2, v3, v4);
-          std::get< VORONOI_FACE_MIDPOINT >(_faces.back()) += tarea * tmidpoint;
+          increase_face_midpoint(_faces.size() - 1, tarea * tmidpoint);
           // move on to the next triangle of this face
           k = m;
           l = n;
           v3 = v4;
-          m = std::get< VORONOI_EDGE_ENDPOINT >(_edges[k][l]);
+          m = get_edge_endpoint(k, l);
           cmac_assert(m >= 0);
-          std::get< VORONOI_EDGE_ENDPOINT >(_edges[k][l]) = -m - 1;
+          set_edge_endpoint(k, l, -m - 1);
         }
 
         // apply the total surface area normalization to the face midpoint
         // average
-        std::get< VORONOI_FACE_MIDPOINT >(_faces.back()) /=
-            std::get< VORONOI_FACE_SURFACE_AREA >(_faces.back());
+        set_face_midpoint(_faces.size() - 1,
+                          get_face_midpoint(_faces.size() - 1) /
+                              get_face_surface_area(_faces.size() - 1));
         // the vertex positions were stored relative w.r.t. to the generator
         // position, so the face midpoint position will also be relative
         // here we convert it to an absolute position
-        std::get< VORONOI_FACE_MIDPOINT >(_faces.back()) += _generator_position;
+        increase_face_midpoint(_faces.size() - 1, _generator_position);
       }
     }
   }
@@ -1490,15 +1478,14 @@ void VoronoiCell::delete_connections(unsigned int vertex_index,
                                      std::vector< bool > &delete_stack) {
   for (unsigned int edge_index = 0; edge_index < _edges[vertex_index].size();
        ++edge_index) {
-    int edge =
-        std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex_index][edge_index]);
+    int edge = get_edge_endpoint(vertex_index, edge_index);
     if (edge >= 0) {
       delete_stack[edge] = true;
       // disconnect the vertex
-      std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex_index][edge_index]) = -1;
-      unsigned char other_edge_index = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(
-          _edges[vertex_index][edge_index]);
-      std::get< VORONOI_EDGE_ENDPOINT >(_edges[edge][other_edge_index]) = -1;
+      set_edge_endpoint(vertex_index, edge_index, -1);
+      unsigned char other_edge_index =
+          get_edge_endpoint_index(vertex_index, edge_index);
+      set_edge_endpoint(edge, other_edge_index, -1);
       // now delete all connections of the endpoint
       delete_connections(edge, delete_stack);
     }
@@ -1553,18 +1540,17 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
 
     // update the vertices that are connected to this vertex
     for (unsigned char i = 0; i < _edges[next_vertex].size(); ++i) {
-      int m = std::get< VORONOI_EDGE_ENDPOINT >(_edges[next_vertex][i]);
+      int m = get_edge_endpoint(next_vertex, i);
       // we should never encounter edges that have been deleted, as their
       // vertices should be flagged in the delete stack
       cmac_assert(m >= 0);
-      unsigned char n =
-          std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[next_vertex][i]);
+      unsigned char n = get_edge_endpoint_index(next_vertex, i);
       // m can either be a new vertex that was already copied, or an old vertex
       // that still needs to be copied
       // it doesn't matter if we update old vertices, as the new values will
       // automatically be copied into the correct new vertex when that vertex is
       // copied
-      std::get< VORONOI_EDGE_ENDPOINT >(_edges[m][n]) = new_vertex_index;
+      set_edge_endpoint(m, n, new_vertex_index);
     }
     // done adding the new vertex, increase the index for the next one
     ++new_vertex_index;
@@ -1759,7 +1745,7 @@ void VoronoiCell::print_cell(std::ostream &stream) {
          << _generator_position.z() << "\n\n";
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     for (unsigned int j = 0; j < _edges[i].size(); ++j) {
-      int edge = std::get< VORONOI_EDGE_ENDPOINT >(_edges[i][j]);
+      int edge = get_edge_endpoint(i, j);
       CoordinateVector<> a = _vertices[i] + _generator_position;
       CoordinateVector<> b = _vertices[edge] + _generator_position;
       stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
