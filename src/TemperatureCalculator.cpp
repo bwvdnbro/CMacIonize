@@ -436,8 +436,8 @@ void TemperatureCalculator::calculate_temperature(
       // gas is ionized, temperature is 10^10 K (should probably be a lower
       // value)
       T0 = 25000.;
-      h0 = 0.;
-      he0 = 0.;
+      h0 = 1.e-10;
+      he0 = 1.e-10;
       // force exit out of loop
       gain0 = 1.;
       loss0 = 1.;
@@ -479,7 +479,7 @@ void TemperatureCalculator::calculate_temperature(
     cell.set_ionic_fraction(ION_S_p3, 0.);
   }
 
-  if (h0 == 0.) {
+  if (h0 <= 1.e-10) {
     cell.set_ionic_fraction(ION_C_p1, 0.);
     cell.set_ionic_fraction(ION_C_p2, 0.);
 

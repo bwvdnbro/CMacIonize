@@ -175,8 +175,11 @@ int main(int argc, char **argv) {
       // if the final temperature is more than 25,000 K, we just set it to
       // 25,000 K and assume the gas is completely ionized
       if (Tnewf > 25000.) {
-        h0f = 0.;
-        he0f = 0.;
+        // we set the neutral fractions to very low (non zero) values, as
+        // setting them to zero might deadlock the photon traversal algorithm if
+        // periodic boundaries are used
+        h0f = 1.e-10;
+        he0f = 1.e-10;
         cp1f = 0.;
         cp2f = 0.;
         nf = 0.;
