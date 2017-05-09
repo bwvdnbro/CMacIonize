@@ -26,6 +26,9 @@
 #include "VoronoiCell.hpp"
 #include "Error.hpp"
 
+#include <iostream>
+#include <sstream>
+
 /**
  * @brief Empty constructor.
  *
@@ -474,6 +477,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     }
   }
 
+  std::stringstream original_cell;
+  print_cell(original_cell);
+
   // at this point, we have either the indices of an intersected edge, or the
   // 'complicated_setup' flag is set and we have the index of a vertex on or
   // very close to the plane, in 'up'
@@ -482,6 +488,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   unsigned char qs, cs;
   std::pair< int, double > q;
   std::vector< bool > delete_stack(_vertices.size(), false);
+  // flag only used by complicated setup
+  bool double_edge = false;
+  // flags only used by complicated setup
+  std::vector< int > visitflags(_vertices.size(), 0);
 
   // now create the first new vertex
   // note that we need to check the 'complicated_setup' flag again (even if we
@@ -490,7 +500,6 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   if (complicated_setup) {
     // do the complicated setup
     unsigned int k, new_index;
-    bool double_edge = false;
 
     // somewhere along the way above, we found a vertex very close or on the
     // midplane. The index of that vertex is stored in 'up'. All other variables
@@ -639,6 +648,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       delete_stack.push_back(false);
       cmac_assert(delete_stack.size() == _vertices.size());
 
+      visitflags.push_back(-new_index);
+      cmac_assert(visitflags.size() == _vertices.size());
+
       // the new vertex has order 'k'
       _edges[new_index].resize(k);
 
@@ -746,6 +758,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       delete_stack.push_back(false);
       cmac_assert(delete_stack.size() == _vertices.size());
 
+      visitflags.push_back(-new_index);
+      cmac_assert(visitflags.size() == _vertices.size());
+
       // the new vertex has order 'k'
       _edges[new_index].resize(k);
 
@@ -845,6 +860,12 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     us = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[up][us]);
     up = i;
 
+    // store a pointer to the newly created vertex in the 'visitflags' for the
+    // deleted vertex
+    // this way, we know where to find the new vertex if we encounter the old
+    // vertex later on in the algorithm (because the old vertex is still linked
+    // to the vertices above the plane)
+    visitflags[qp] = new_index;
   } else {
     // do the normal setup
 
@@ -872,6 +893,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
     delete_stack.push_back(false);
     cmac_assert(delete_stack.size() == _vertices.size());
+
+    visitflags.push_back(-new_index);
+    cmac_assert(visitflags.size() == _vertices.size());
 
     _edges[new_index].resize(3);
 
@@ -952,7 +976,188 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     if (l.first == 0) {
       // degenerate case: vertex is on or very close to plane
 
-      cmac_error("Degenerate case not implemented yet!");
+      // just as in the complicated setup, we will replace the vertex by a new
+      // vertex at the same position that has all edges of the vertex below the
+      // plane, plus 2 new edges in the plane (except for the special case where
+      // we have a single edge in the plane, a so called double edge)
+      // the double edge can be the result of this vertex being connected to a
+      // previous degenerate vertex which had a double edge, but it can also be
+      // a newly generated double edge
+
+      // to find the order 'k' of the new vertex, we need to count the number of
+      // edges below the plane
+      // the offset of 'k' is determined by whether or not the previous vertex
+      // had a double edge
+      unsigned int k = 2;
+      if (double_edge) {
+        k = 1;
+      }
+
+      // store the edge of 'lp' that is connected to the previous vertex in 'qs'
+      // store 'lp' in 'qp'
+      qs = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
+      qp = lp;
+
+      // keep track of the first value of 'qs': the edge that brought us to this
+      // vertex
+      unsigned int iqs = qs;
+      // now move on to the next edge and try to find an edge NOT BELOW the
+      // plane (we know from our edge ordering convention that if 'qp' has edges
+      // below the plane, then the next edge has to be one of them)
+      ++qs;
+      if (qs == _edges[qp].size()) {
+        qs = 0;
+      }
+      lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      while (l.first == -1) {
+        // every edge below the plane is added to the order 'k' of the new
+        // vertex
+        ++k;
+        ++qs;
+        if (qs == _edges[qp].size()) {
+          qs = 0;
+        }
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      }
+
+      // 'qs' now contains the index of the next edge NOT BELOW the plane
+      // 'k' contains the order of the new vertex
+
+      // check if 'qp' was already replaced before (in which case 'j' will
+      // contain a positive value, i.e. the index of the new vertex that
+      // replaces it)
+      // we currently assume this specific case does never happen, as it is very
+      // hard to imagine a case where it would happen
+      // however, we make sure the code crashes (with useful output) if it would
+      // ever happen
+      int j = visitflags[qp];
+      if (j > 0) {
+        CoordinateVector<> p = _generator_position + relative_position;
+        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
+                  << std::endl;
+        std::cerr << original_cell.str() << std::endl;
+        cmac_error("j > 0!");
+      }
+
+      // find out if we have a new double edge
+      // we cannot currently handle this (because I frankly can't imagine a case
+      // where it would and therefore don't understand the algorithm)
+      // however, we make sure the code crashes (with useful output) if it would
+      // ever happen
+      bool new_double_edge;
+      // these conditions could be written more concise
+      if (qp == up && qs == us) {
+        // the next edge NOT BELOW the plane is the edge that ends the whole
+        // loop; we do not care about having a new double edge
+        new_double_edge = false;
+      } else {
+        if (l.first == 0) {
+          int i = -visitflags[lp];
+          if (i == cp) {
+            new_double_edge = true;
+            --k;
+          } else {
+            new_double_edge = false;
+          }
+        } else {
+          new_double_edge = false;
+        }
+      }
+      if (new_double_edge) {
+        CoordinateVector<> p = _generator_position + relative_position;
+        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
+                  << std::endl;
+        std::cerr << original_cell.str() << std::endl;
+        cmac_error("new_double_edge!");
+      }
+
+      // create a new order 'k' vertex
+      unsigned int new_index = _vertices.size();
+      _vertices.push_back(_vertices[qp]);
+      _edges.resize(_edges.size() + 1);
+
+      // we assume that '_edges' and '_vertices' have the same size; let's make
+      // sure!
+      cmac_assert(_edges.size() == _vertices.size());
+
+      delete_stack.push_back(false);
+      cmac_assert(delete_stack.size() == _vertices.size());
+
+      visitflags.push_back(-new_index);
+      cmac_assert(visitflags.size() == _vertices.size());
+
+      _edges[new_index].resize(k);
+
+      // set the 'visitflags' index for 'qp' to the index of the new vertex that
+      // replaces it and flag 'qp' for deletion
+      visitflags[qp] = new_index;
+      delete_stack[qp] = true;
+
+      // now set the edges of the new vertex
+      // the first edge will be connected to the previous new vertex (unless we
+      // have a double edge and both this vertex and the previous new vertex are
+      // just a copy of their original vertices; in this case nothing changes
+      // and this connection is made at the end of the loop)
+      j = new_index;
+      unsigned int i = 0;
+      if (!double_edge) {
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][i]) = ngb_index;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[j][i]) = cp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[j][i]) = cs;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[cp][cs]) = j;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = i;
+        ++i;
+      }
+
+      // now copy the edges of 'qp' below the plane into the new vertex,
+      // starting from 'iqs+1' and wrapping
+      qs = iqs;
+      iqs = k - 1;
+      if (new_double_edge) {
+        iqs = k;
+      }
+      while (i < iqs) {
+        ++qs;
+        if (qs == _edges[qp].size()) {
+          qs = 0;
+        }
+        lp = std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]);
+        ls = std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[qp][qs]);
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][i]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[j][i]) = lp;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[j][i]) = ls;
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[lp][ls]) = j;
+        std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[lp][ls]) = i;
+        // disconnect 'qp' from 'j', as 'qp' will be deleted
+        std::get< VORONOI_EDGE_ENDPOINT >(_edges[qp][qs]) = -1;
+        ++i;
+      }
+      ++qs;
+      if (qs == _edges[qp].size()) {
+        qs = 0;
+      }
+      // store the indices of the new vertex to connect it to the next new
+      // vertex later on
+      cs = i;
+      cp = j;
+
+      if (new_double_edge) {
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][0]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+      } else {
+        // set the neighbour of the last edge to the corresponding neighbour of
+        // the old vertex
+        std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[j][cs]) =
+            std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[qp][qs]);
+      }
+
+      // update the 'double_edge' flag. We currently assume a next degenerate
+      // vertex will not be found
+      double_edge = new_double_edge;
+
     } else {
       // normal case: vertex lies below or above the plane
 
@@ -1000,6 +1205,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
         delete_stack.push_back(false);
         cmac_assert(delete_stack.size() == _vertices.size());
+
+        visitflags.push_back(-new_index);
+        cmac_assert(visitflags.size() == _vertices.size());
 
         // we want an order 3 vertex
         _edges[new_index].resize(3);
@@ -1070,6 +1278,24 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[cp][cs]) = 0;
   std::get< VORONOI_EDGE_ENDPOINT >(_edges[rp][0]) = cp;
   std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[rp][0]) = cs;
+
+  // check for order 1 and 2 vertices that need to be collapsed
+  // as we have never encountered a case where this actually happens, removing
+  // low order vertices is currently not supported
+  // however, we make sure the code crashes (with useful output) if it would
+  // ever happen
+  unsigned int num_low_order = 0;
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    if (_edges[i].size() < 3) {
+      ++num_low_order;
+    }
+  }
+  if (num_low_order > 0) {
+    CoordinateVector<> p = _generator_position + relative_position;
+    std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n" << std::endl;
+    std::cerr << original_cell.str() << std::endl;
+    cmac_error("Low order vertices present!");
+  }
 
   // we are done adding new vertices, but we still have a lot of vertices and
   // edges that are no longer active
