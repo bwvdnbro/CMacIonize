@@ -1297,15 +1297,19 @@ public:
      */
     DensityFunction &_function;
 
+    /*! @brief Do we need to initialize hydro variables? */
+    bool _hydro;
+
   public:
     /**
      * @brief Constructor.
      *
      * @param function DensityFunction that set the density for each cell in the
      * grid.
+     * @param hydro Do we need to initialize hydro variables?
      */
-    DensityGridInitializationFunction(DensityFunction &function)
-        : _function(function) {}
+    DensityGridInitializationFunction(DensityFunction &function, bool hydro)
+        : _function(function), _hydro(hydro) {}
 
     /**
      * @brief Routine that sets the density for a single cell in the grid.
@@ -1319,6 +1323,12 @@ public:
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         it.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
+      }
+      if (_hydro) {
+        const CoordinateVector<> v = vals.get_velocity();
+        it.set_hydro_primitive_velocity_x(v.x());
+        it.set_hydro_primitive_velocity_y(v.y());
+        it.set_hydro_primitive_velocity_z(v.z());
       }
       set_reemission_probabilities(it.get_temperature(), it);
     }

@@ -33,6 +33,23 @@
 #include <cfloat>
 
 /**
+ * @brief Types of boundary conditions implemented for the boundaries of the
+ * box.
+ */
+enum HydroBoundaryConditionType {
+  /*! @brief A periodic boundary (only works if the grid is also periodic). */
+  HYDRO_BOUNDARY_PERIODIC = 0,
+  /*! @brief Reflective boundaries (elastic collisions are assumed at the
+   *  boundaries). */
+  HYDRO_BOUNDARY_REFLECTIVE,
+  /*! @brief Inflow boundaries (material is assumed to flow in or out of the box
+   *  at the same rate it flows near the boundary). */
+  HYDRO_BOUNDARY_INFLOW,
+  /*! @brief Invalid boundaries selected. */
+  HYDRO_BOUNDARY_INVALID
+};
+
+/**
  * @brief Class that performs the hydrodynamical integration.
  */
 class HydroIntegrator {
@@ -49,6 +66,29 @@ private:
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   RiemannSolver _solver;
 
+  /*! @brief Boundary conditions to apply to each boundary. */
+  HydroBoundaryConditionType _boundaries[6];
+
+  /**
+   * @brief Get the HydroBoundaryConditionType corresponding to the given type
+   * string.
+   *
+   * @param type std::string representation of a boundary condition type.
+   * @return Corresponding HydroBoundaryConditionType.
+   */
+  static HydroBoundaryConditionType get_boundary_type(std::string type) {
+    if (type == "periodic") {
+      return HYDRO_BOUNDARY_PERIODIC;
+    } else if (type == "reflective") {
+      return HYDRO_BOUNDARY_REFLECTIVE;
+    } else if (type == "inflow") {
+      return HYDRO_BOUNDARY_INFLOW;
+    } else {
+      cmac_error("Unknown boundary condition type: %s!", type.c_str());
+      return HYDRO_BOUNDARY_INVALID;
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -56,11 +96,66 @@ public:
    * @param gamma Adiabatic index of the gas.
    * @param do_radiative_heating Flag indicating whether to use radiative
    * heating or not.
+   * @param boundary_xlow Type of boundary for the lower x boundary.
+   * @param boundary_xhigh Type of boundary for the upper x boundary.
+   * @param boundary_ylow Type of boundary for the lower y boundary.
+   * @param boundary_yhigh Type of boundary for the upper y boundary.
+   * @param boundary_zlow Type of boundary for the lower z boundary.
+   * @param boundary_zhigh Type of boundary for the upper z boundary.
+   * @param box_periodicity Periodicity flags for the grid box (used to check
+   * the validity of the boundary condition types).
    */
-  inline HydroIntegrator(double gamma, bool do_radiative_heating)
+  inline HydroIntegrator(double gamma, bool do_radiative_heating,
+                         std::string boundary_xlow = "reflective",
+                         std::string boundary_xhigh = "reflective",
+                         std::string boundary_ylow = "reflective",
+                         std::string boundary_yhigh = "reflective",
+                         std::string boundary_zlow = "reflective",
+                         std::string boundary_zhigh = "reflective",
+                         CoordinateVector< bool > box_periodicity =
+                             CoordinateVector< bool >(false))
       : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
         _solver(gamma) {
+
     _gm1 = _gamma - 1.;
+
+    _boundaries[0] = get_boundary_type(boundary_xlow);
+    _boundaries[1] = get_boundary_type(boundary_xhigh);
+    _boundaries[2] = get_boundary_type(boundary_ylow);
+    _boundaries[3] = get_boundary_type(boundary_yhigh);
+    _boundaries[4] = get_boundary_type(boundary_zlow);
+    _boundaries[5] = get_boundary_type(boundary_zhigh);
+
+    if (_boundaries[0] == HYDRO_BOUNDARY_PERIODIC) {
+      if (_boundaries[1] != HYDRO_BOUNDARY_PERIODIC) {
+        cmac_error("Periodic boundaries in x only work if both x boundaries "
+                   "are periodic!");
+      }
+      if (!box_periodicity[0]) {
+        cmac_error("Periodic boundaries in x only work if the grid box is also "
+                   "periodic in x!");
+      }
+    }
+    if (_boundaries[2] == HYDRO_BOUNDARY_PERIODIC) {
+      if (_boundaries[3] != HYDRO_BOUNDARY_PERIODIC) {
+        cmac_error("Periodic boundaries in y only work if both y boundaries "
+                   "are periodic!");
+      }
+      if (!box_periodicity[1]) {
+        cmac_error("Periodic boundaries in y only work if the grid box is also "
+                   "periodic in y!");
+      }
+    }
+    if (_boundaries[4] == HYDRO_BOUNDARY_PERIODIC) {
+      if (_boundaries[5] != HYDRO_BOUNDARY_PERIODIC) {
+        cmac_error("Periodic boundaries in z only work if both z boundaries "
+                   "are periodic!");
+      }
+      if (!box_periodicity[2]) {
+        cmac_error("Periodic boundaries in z only work if the grid box is also "
+                   "periodic in z!");
+      }
+    }
   }
 
   /**
@@ -71,7 +166,21 @@ public:
   inline HydroIntegrator(ParameterFile &params)
       : HydroIntegrator(
             params.get_value< double >("hydro:polytropic_index", 5. / 3.),
-            params.get_value< bool >("hydro:radiative_heating", true)) {}
+            params.get_value< bool >("hydro:radiative_heating", true),
+            params.get_value< std::string >("hydro:boundary_xlow",
+                                            "reflective"),
+            params.get_value< std::string >("hydro:boundary_xhigh",
+                                            "reflective"),
+            params.get_value< std::string >("hydro:boundary_ylow",
+                                            "reflective"),
+            params.get_value< std::string >("hydro:boundary_yhigh",
+                                            "reflective"),
+            params.get_value< std::string >("hydro:boundary_zlow",
+                                            "reflective"),
+            params.get_value< std::string >("hydro:boundary_zhigh",
+                                            "reflective"),
+            params.get_value< CoordinateVector< bool > >(
+                "densitygrid:periodicity", CoordinateVector< bool >(false))) {}
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.
@@ -87,6 +196,10 @@ public:
       double temperature = it.get_temperature();
 
       double density = number_density * hydrogen_mass;
+      double velocity[3];
+      velocity[0] = it.get_hydro_primitive_velocity_x();
+      velocity[1] = it.get_hydro_primitive_velocity_y();
+      velocity[2] = it.get_hydro_primitive_velocity_z();
       // we assume a completely neutral or completely ionized gas
       double pressure = density * boltzmann_k * temperature / hydrogen_mass;
       if (temperature >= 1.e4) {
@@ -94,23 +207,26 @@ public:
         pressure *= 2.;
       }
 
-      // set the primitive variables
+      // set the density and pressure (the velocity has been set by
+      // DensityGrid::initialize)
       it.set_hydro_primitive_density(density);
-      it.set_hydro_primitive_velocity_x(0.);
-      it.set_hydro_primitive_velocity_y(0.);
-      it.set_hydro_primitive_velocity_z(0.);
       it.set_hydro_primitive_pressure(pressure);
 
       double mass = density * volume;
-      // there is no kinetic energy (for now!)
+      double momentum[3];
+      momentum[0] = mass * velocity[0];
+      momentum[1] = mass * velocity[1];
+      momentum[2] = mass * velocity[2];
+      double ekin = velocity[0] * momentum[0] + velocity[1] * momentum[1] +
+                    velocity[2] * momentum[2];
       // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-      double total_energy = volume * pressure / _gm1;
+      double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
 
       // set conserved variables
       it.set_hydro_conserved_mass(mass);
-      it.set_hydro_conserved_momentum_x(0.);
-      it.set_hydro_conserved_momentum_y(0.);
-      it.set_hydro_conserved_momentum_z(0.);
+      it.set_hydro_conserved_momentum_x(momentum[0]);
+      it.set_hydro_conserved_momentum_y(momentum[1]);
+      it.set_hydro_conserved_momentum_z(momentum[2]);
       it.set_hydro_conserved_total_energy(total_energy);
     }
 
@@ -174,16 +290,25 @@ public:
           PR = ngb.get_hydro_primitive_pressure();
           vframe = grid.get_interface_velocity(it, ngb, midpoint);
         } else {
-          // apply reflective boundaries
+          // apply boundary conditions
           rhoR = rhoL;
           uR = uL;
-          if (normal[0] != 0.) {
+          if (normal[0] < 0. && _boundaries[0] == HYDRO_BOUNDARY_REFLECTIVE) {
             uR[0] = -uR[0];
           }
-          if (normal[1] != 0.) {
+          if (normal[0] > 0. && _boundaries[1] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[0] = -uR[0];
+          }
+          if (normal[1] < 0. && _boundaries[2] == HYDRO_BOUNDARY_REFLECTIVE) {
             uR[1] = -uR[1];
           }
-          if (normal[2] != 0.) {
+          if (normal[1] > 0. && _boundaries[3] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[1] = -uR[1];
+          }
+          if (normal[2] < 0. && _boundaries[4] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[2] = -uR[2];
+          }
+          if (normal[2] > 0. && _boundaries[5] == HYDRO_BOUNDARY_REFLECTIVE) {
             uR[2] = -uR[2];
           }
           PR = PL;

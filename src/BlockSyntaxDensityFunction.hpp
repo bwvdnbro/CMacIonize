@@ -97,6 +97,10 @@ public:
           blockname.str() + "number density");
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
+      CoordinateVector<> velocity =
+          blockfile.get_physical_vector< QUANTITY_VELOCITY >(
+              blockname.str() + "initial velocity",
+              "[0. m s^-1, 0. m s^-1, 0. m s^-1]");
       if (density < 0.) {
         cmac_error("Negative density (%g) given for block %i!", density, i);
       }
@@ -104,8 +108,8 @@ public:
         cmac_error("Negative temperature (%g) given for block %i!", temperature,
                    i);
       }
-      _blocks.push_back(
-          BlockSyntaxBlock(origin, sides, exponent, density, temperature));
+      _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
+                                         temperature, velocity));
     }
 
     if (log) {
@@ -139,10 +143,12 @@ public:
 
     double density = -1.;
     double temperature = -1.;
+    CoordinateVector<> velocity;
     for (unsigned int i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
-        density = _blocks[i].get_density();
+        density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();
+        velocity = _blocks[i].get_velocity();
       }
     }
     if (density < 0.) {
@@ -158,6 +164,7 @@ public:
     cell.set_temperature(temperature);
     cell.set_ionic_fraction(ION_H_n, 1.e-6);
     cell.set_ionic_fraction(ION_He_n, 1.e-6);
+    cell.set_velocity(velocity);
     return cell;
   }
 };

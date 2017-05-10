@@ -294,6 +294,8 @@ int main(int argc, char **argv) {
 
   unsigned int numphoton =
       params.get_value< unsigned int >("number of photons", 100);
+  unsigned int numphoton1 =
+      params.get_value< unsigned int >("number of photons init", numphoton);
   double Q = source.get_total_luminosity();
 
   ChargeTransferRates charge_transfer_rates;
@@ -415,6 +417,13 @@ int main(int argc, char **argv) {
       //    }
 
       unsigned int lnumphoton = numphoton;
+
+      if (loop == 0) {
+        // overwrite the number of photons for the first loop (might be useful
+        // if more than 1 boundary is periodic, since the initial neutral
+        // fractions are very low)
+        lnumphoton = numphoton1;
+      }
 
       grid->reset_grid();
       if (log) {
