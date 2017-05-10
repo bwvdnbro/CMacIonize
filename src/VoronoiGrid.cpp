@@ -232,7 +232,7 @@ CoordinateVector<> VoronoiGrid::get_wall_normal(unsigned int wallindex) const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
+const std::vector< VoronoiFace > &
 VoronoiGrid::get_faces(unsigned int index) const {
   return _cells[index]->get_faces();
 }

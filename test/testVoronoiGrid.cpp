@@ -1088,46 +1088,40 @@ int main(int argc, char **argv) {
     assert_condition(cell.get_centroid() == CoordinateVector<>(0.5));
 
     auto faces = cell.get_faces();
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[0]) == VORONOI_BOX_FRONT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[0]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[0]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[0]) ==
+                     VORONOI_BOX_FRONT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[0]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[0]) ==
                      CoordinateVector<>(0.5, 0., 0.5));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[1]) == VORONOI_BOX_LEFT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[1]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[1]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[1]) ==
+                     VORONOI_BOX_LEFT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[1]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[1]) ==
                      CoordinateVector<>(0., 0.5, 0.5));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[2]) == VORONOI_BOX_BOTTOM);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[2]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[2]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[2]) ==
+                     VORONOI_BOX_BOTTOM);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[2]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[2]) ==
                      CoordinateVector<>(0.5, 0.5, 0.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[3]) == VORONOI_BOX_TOP);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[3]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[3]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[3]) ==
+                     VORONOI_BOX_TOP);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[3]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[3]) ==
                      CoordinateVector<>(0.5, 0.5, 1.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[4]) == VORONOI_BOX_BACK);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[4]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[4]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[4]) ==
+                     VORONOI_BOX_BACK);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[4]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[4]) ==
                      CoordinateVector<>(0.5, 1., 0.5));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[5]) == VORONOI_BOX_RIGHT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[5]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[5]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[5]) ==
+                     VORONOI_BOX_RIGHT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[5]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[5]) ==
                      CoordinateVector<>(1., 0.5, 0.5));
   }
 
@@ -1541,25 +1535,22 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb =
-            std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < VORONOI_MAX_INDEX) {
-          const double area =
-              std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
+          const double area = VoronoiCell::get_face_surface_area(*it);
           const CoordinateVector<> midpoint =
-              std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+              VoronoiCell::get_face_midpoint(*it);
           const auto ngbfaces = grid.get_faces(ngb);
           auto ngbit = ngbfaces.begin();
           while (ngbit != ngbfaces.end() &&
-                 std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*ngbit) != i) {
+                 VoronoiCell::get_face_neighbour(*ngbit) != i) {
             ++ngbit;
           }
           assert_condition(ngbit != ngbfaces.end());
-          const double ngbarea =
-              std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*ngbit);
+          const double ngbarea = VoronoiCell::get_face_surface_area(*ngbit);
           const CoordinateVector<> ngbmidpoint =
-              std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*ngbit);
+              VoronoiCell::get_face_midpoint(*ngbit);
           assert_values_equal_rel(ngbarea, area, tolerance);
           assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
           assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);
@@ -1605,25 +1596,22 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb =
-            std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < VORONOI_MAX_INDEX) {
-          const double area =
-              std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
+          const double area = VoronoiCell::get_face_surface_area(*it);
           const CoordinateVector<> midpoint =
-              std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+              VoronoiCell::get_face_midpoint(*it);
           const auto ngbfaces = grid.get_faces(ngb);
           auto ngbit = ngbfaces.begin();
           while (ngbit != ngbfaces.end() &&
-                 std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*ngbit) != i) {
+                 VoronoiCell::get_face_neighbour(*ngbit) != i) {
             ++ngbit;
           }
           assert_condition(ngbit != ngbfaces.end());
-          const double ngbarea =
-              std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*ngbit);
+          const double ngbarea = VoronoiCell::get_face_surface_area(*ngbit);
           const CoordinateVector<> ngbmidpoint =
-              std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*ngbit);
+              VoronoiCell::get_face_midpoint(*ngbit);
           assert_values_equal_rel(ngbarea, area, tolerance);
           assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
           assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);

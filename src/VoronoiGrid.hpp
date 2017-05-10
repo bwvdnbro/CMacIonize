@@ -28,6 +28,7 @@
 
 #include "Box.hpp"
 #include "Lock.hpp"
+#include "VoronoiFace.hpp"
 
 #include <ostream>
 #include <vector>
@@ -176,8 +177,7 @@ public:
   const CoordinateVector<> &get_generator(unsigned int index) const;
   CoordinateVector<> &get_generator(unsigned int index);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
-  get_faces(unsigned int index) const;
+  const std::vector< VoronoiFace > &get_faces(unsigned int index) const;
   unsigned int get_index(const CoordinateVector<> &position) const;
 
   bool is_inside(CoordinateVector<> position) const;

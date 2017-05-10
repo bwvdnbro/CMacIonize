@@ -295,10 +295,9 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
 
   auto faces = _voronoi_grid.get_faces(index);
   for (auto it = faces.begin(); it != faces.end(); ++it) {
-    unsigned int ngb = std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
-    double area = std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
-    CoordinateVector<> midpoint =
-        std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+    unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+    double area = VoronoiCell::get_face_surface_area(*it);
+    CoordinateVector<> midpoint = VoronoiCell::get_face_midpoint(*it);
     CoordinateVector<> normal;
     if (ngb < VORONOI_MAX_INDEX) {
       // normal neighbour
@@ -352,8 +351,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
     unsigned int next_index = 0;
     auto faces = _voronoi_grid.get_faces(index);
     for (auto it = faces.begin(); it != faces.end(); ++it) {
-      const unsigned int ngb =
-          std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
+      const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
       CoordinateVector<> normal;
       if (ngb < VORONOI_MAX_INDEX) {
         normal = _voronoi_grid.get_generator(ngb) - ipos;
@@ -363,8 +361,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
       const double nk =
           CoordinateVector<>::dot_product(normal, photon_direction);
       if (nk > 0) {
-        const CoordinateVector<> point =
-            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
+        const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
         const double sngb =
             CoordinateVector<>::dot_product(normal, (point - photon_origin)) /
             nk;

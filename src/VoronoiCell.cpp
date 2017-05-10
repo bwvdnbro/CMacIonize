@@ -221,8 +221,7 @@ const CoordinateVector<> &VoronoiCell::get_centroid() const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
-VoronoiCell::get_faces() const {
+const std::vector< VoronoiFace > &VoronoiCell::get_faces() const {
   return _faces;
 }
 
@@ -1382,8 +1381,8 @@ void VoronoiCell::finalize() {
 
         // create a new face at this position and set its neighbour to the edge
         // neighbour of _edges[i][j]
-        _faces.push_back(std::make_tuple(0., CoordinateVector<>(0.),
-                                         get_edge_neighbour(i, j)));
+        _faces.push_back(VoronoiFace());
+        _faces.back().set_neighbour(get_edge_neighbour(i, j));
 
         // this is vertex 3
         v3 = _vertices[k];

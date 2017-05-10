@@ -28,6 +28,8 @@
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include "VoronoiEdge.hpp"
+#include "VoronoiFace.hpp"
 
 #include <ostream>
 #include <tuple>
@@ -118,21 +120,11 @@ private:
    * (next meaning it is the next edge in the edge list for that vertex), that
    * edge is guaranteed to have the same neighbour.
    */
-  std::vector< std::vector< std::tuple< int, unsigned char, unsigned int > > >
-      _edges;
-
-  /**
-   * @brief Anonymous enum used for labelling edge tuple members.
-   */
-  enum {
-    VORONOI_EDGE_ENDPOINT = 0,
-    VORONOI_EDGE_ENDPOINT_INDEX,
-    VORONOI_EDGE_NEIGHBOUR
-  };
+  std::vector< std::vector< VoronoiEdge > > _edges;
 
   /*! @brief Cell faces. Each face has a surface area (in m^2), a midpoint
    *  position (in m), and an associated index of the cell that generated it. */
-  std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > _faces;
+  std::vector< VoronoiFace > _faces;
 
   /*! @brief Cell volume (in m^3). */
   double _volume;
@@ -140,11 +132,7 @@ private:
   /*! @brief Coordinates of the cell centroid (in m). */
   CoordinateVector<> _centroid;
 
-public:
-  VoronoiCell();
-  VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
-
-  /// getters and setters for edges
+  /// (private) getters and setters for edges
 
   /**
    * @brief Get the endpoint of the given edge of the given vertex.
@@ -154,7 +142,7 @@ public:
    * @return Endpoint of the edge.
    */
   inline int get_edge_endpoint(int vertex, unsigned char edge) const {
-    return std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex][edge]);
+    return _edges[vertex][edge].get_endpoint();
   }
 
   /**
@@ -166,7 +154,7 @@ public:
    * @param endpoint New endpoint for the edge.
    */
   inline void set_edge_endpoint(int vertex, unsigned char edge, int endpoint) {
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[vertex][edge]) = endpoint;
+    _edges[vertex][edge].set_endpoint(endpoint);
   }
 
   /**
@@ -179,7 +167,7 @@ public:
    */
   inline unsigned char get_edge_endpoint_index(int vertex,
                                                unsigned char edge) const {
-    return std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[vertex][edge]);
+    return _edges[vertex][edge].get_endpoint_index();
   }
 
   /**
@@ -192,8 +180,7 @@ public:
    */
   inline void set_edge_endpoint_index(int vertex, unsigned char edge,
                                       unsigned char endpoint_index) {
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[vertex][edge]) =
-        endpoint_index;
+    _edges[vertex][edge].set_endpoint_index(endpoint_index);
   }
 
   /**
@@ -204,7 +191,7 @@ public:
    * @return Neighbour of the edge.
    */
   inline unsigned int get_edge_neighbour(int vertex, unsigned char edge) const {
-    return std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[vertex][edge]);
+    return _edges[vertex][edge].get_neighbour();
   }
 
   /**
@@ -217,10 +204,10 @@ public:
    */
   inline void set_edge_neighbour(int vertex, unsigned char edge,
                                  unsigned int neighbour) {
-    std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[vertex][edge]) = neighbour;
+    _edges[vertex][edge].set_neighbour(neighbour);
   }
 
-  /// getters and setters for faces
+  /// (private) getters and setters for faces
 
   /**
    * @brief Get the surface area of the given face.
@@ -229,17 +216,7 @@ public:
    * @return Surface area of that face (in m^2).
    */
   inline double get_face_surface_area(unsigned int face) const {
-    return std::get< VORONOI_FACE_SURFACE_AREA >(_faces[face]);
-  }
-
-  /**
-   * @brief Set a new value for the surface area of the given face.
-   *
-   * @param face Index of a face.
-   * @param surface_area New value for the surface area of that face (in m^2).
-   */
-  inline void set_face_surface_area(unsigned int face, double surface_area) {
-    std::get< VORONOI_FACE_SURFACE_AREA >(_faces[face]) = surface_area;
+    return _faces[face].get_surface_area();
   }
 
   /**
@@ -249,7 +226,7 @@ public:
    * @param increment Increment for the surface area of that face (in m^2).
    */
   inline void increase_face_surface_area(unsigned int face, double increment) {
-    std::get< VORONOI_FACE_SURFACE_AREA >(_faces[face]) += increment;
+    _faces[face].set_surface_area(_faces[face].get_surface_area() + increment);
   }
 
   /**
@@ -259,7 +236,7 @@ public:
    * @return Midpoint of that face (in m).
    */
   inline CoordinateVector<> get_face_midpoint(unsigned int face) const {
-    return std::get< VORONOI_FACE_MIDPOINT >(_faces[face]);
+    return _faces[face].get_midpoint();
   }
 
   /**
@@ -270,7 +247,7 @@ public:
    */
   inline void set_face_midpoint(unsigned int face,
                                 CoordinateVector<> midpoint) {
-    std::get< VORONOI_FACE_MIDPOINT >(_faces[face]) = midpoint;
+    _faces[face].set_midpoint(midpoint);
   }
 
   /**
@@ -281,36 +258,19 @@ public:
    */
   inline void increase_face_midpoint(unsigned int face,
                                      CoordinateVector<> increment) {
-    std::get< VORONOI_FACE_MIDPOINT >(_faces[face]) += increment;
+    _faces[face].set_midpoint(_faces[face].get_midpoint() + increment);
   }
 
-  /**
-   * @brief Get the neighbour of the given face.
-   *
-   * @param face Index of a face.
-   * @return Neighbour of that face.
-   */
-  inline unsigned int get_face_neighbour(unsigned int face) const {
-    return std::get< VORONOI_FACE_NEIGHBOUR >(_faces[face]);
-  }
-
-  /**
-   * @brief Set a new value for the neighbour of the given face.
-   *
-   * @param face Index of a face.
-   * @param neighbour New value for the neighbour of that face.
-   */
-  inline void set_face_surface_area(unsigned int face, unsigned int neighbour) {
-    std::get< VORONOI_FACE_NEIGHBOUR >(_faces[face]) = neighbour;
-  }
+public:
+  VoronoiCell();
+  VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
 
   /// const element getters
   const CoordinateVector<> &get_generator() const;
 
   double get_volume() const;
   const CoordinateVector<> &get_centroid() const;
-  const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
-  get_faces() const;
+  const std::vector< VoronoiFace > &get_faces() const;
 
   /// cell specific geometric functions
   int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
@@ -344,16 +304,37 @@ public:
                                               CoordinateVector<> plane_vector,
                                               double plane_distance_squared);
 
-  /// public variables
+  /// static face getters
 
   /**
-   * @brief Anonymous enum used for labelling cell face tuple members.
+   * @brief Get the surface area component of the given face.
+   *
+   * @param face Face.
+   * @return Surface area (in m^2).
    */
-  enum {
-    VORONOI_FACE_SURFACE_AREA = 0,
-    VORONOI_FACE_MIDPOINT,
-    VORONOI_FACE_NEIGHBOUR
-  };
+  inline static double get_face_surface_area(const VoronoiFace &face) {
+    return face.get_surface_area();
+  }
+
+  /**
+   * @brief Get the midpoint component of the given face.
+   *
+   * @param face Face.
+   * @return Midpoint (in m).
+   */
+  inline static CoordinateVector<> get_face_midpoint(const VoronoiFace &face) {
+    return face.get_midpoint();
+  }
+
+  /**
+   * @brief Get the neighbour component of the given face.
+   *
+   * @param face Face.
+   * @return Neighbour.
+   */
+  inline static unsigned int get_face_neighbour(const VoronoiFace &face) {
+    return face.get_neighbour();
+  }
 
   /// functions for unit testing
   void setup_variables_for_test(int testcase);
