@@ -824,6 +824,7 @@ set(TESTVORONOIDENSITYGRID_SOURCES
 
     ../src/DensityGrid.cpp
     ../src/UniformRandomVoronoiGeneratorDistribution.hpp
+    ../src/UniformRegularVoronoiGeneratorDistribution.hpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiDensityGrid.hpp
     ../src/VoronoiGeneratorDistribution.hpp

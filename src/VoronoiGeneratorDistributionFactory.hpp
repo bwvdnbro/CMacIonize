@@ -33,6 +33,7 @@
 // implementations
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
+#include "UniformRegularVoronoiGeneratorDistribution.hpp"
 
 /**
  * @brief Factory for VoronoiGeneratorDistribution instances.
@@ -62,6 +63,8 @@ public:
       return new PerturbedCartesianVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
+    } else if (type == "UniformRegular") {
+      return new UniformRegularVoronoiGeneratorDistribution(params, log);
     } else {
       cmac_error("Unknown VoronoiGeneratorDistribution type: \"%s\".",
                  type.c_str());
