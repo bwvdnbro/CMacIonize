@@ -69,11 +69,13 @@ public:
     _sidelength[2] = _box.get_sides().z() / _resolution.z();
 
     if (log) {
-      log->write_status("Constructed "
-                        "UniformRegularVoronoiGeneratorDistribution with a "
-                        "resolution of ",
-                        _resolution.x(), "x", _resolution.y(), "x",
-                        _resolution.z(), " generators.");
+      log->write_status(
+          "Constructed "
+          "UniformRegularVoronoiGeneratorDistribution with a "
+          "resolution of ",
+          _resolution.x(), "x", _resolution.y(), "x", _resolution.z(),
+          " generators, and a regular grid cell size of ", _sidelength.x(),
+          " m x ", _sidelength.y(), " m x ", _sidelength.z(), " m.");
     }
   }
 

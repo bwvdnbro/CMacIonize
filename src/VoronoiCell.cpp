@@ -1761,9 +1761,9 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
 
   double test_result = CoordinateVector<>::dot_product(vertex, plane_vector) -
                        plane_distance_squared;
-  if (test_result < -VORONOI_TOLERANCE) {
+  if (test_result < -VORONOI_TOLERANCE * plane_distance_squared) {
     return std::make_pair(-1, test_result);
-  } else if (test_result > VORONOI_TOLERANCE) {
+  } else if (test_result > VORONOI_TOLERANCE * plane_distance_squared) {
     return std::make_pair(1, test_result);
   } else {
     return std::make_pair(0, test_result);

@@ -150,7 +150,7 @@ void VoronoiGrid::finalize() {
   }
 
   cmac_assert_message(std::abs(totvol - _box.get_volume()) <
-                          1.e-13 * (totvol + _box.get_volume()),
+                          1.e-12 * (totvol + _box.get_volume()),
                       "%g =/= %g  -- relative difference: %g", totvol,
                       _box.get_volume(), std::abs(totvol - _box.get_volume()) /
                                              (totvol + _box.get_volume()));

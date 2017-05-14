@@ -384,13 +384,27 @@ public:
     if (_do_radiative_heating) {
       const double boltzmann_k = 1.38064852e-23;
       // half since we consider the average mass of protons and electrons
-      const double mpart = 0.5 * 1.6737236e-27;
+      const double mH = 1.6737236e-27;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         double xH = it.get_ionic_fraction(ION_H_n);
+        const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
         if (xH < 0.25) {
           // assume the gas is ionized; add a heating term equal to the energy
           // difference
           double Tgas = 1.e4;
+          double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          double uold = it.get_hydro_primitive_pressure() / _gm1 /
+                        it.get_hydro_primitive_density();
+          double du = ugas - uold;
+          double dE = it.get_hydro_conserved_mass() * du;
+          // minus sign, as delta_total_energy represents a sum of fluxes, which
+          // are defined as an outflux
+          it.set_hydro_conserved_delta_total_energy(
+              it.get_hydro_conserved_delta_total_energy() - dE);
+        } else {
+          // assume the gas is neutral; subtract a cooling term equal to the
+          // energy difference
+          double Tgas = 1.e2;
           double ugas = boltzmann_k * Tgas / _gm1 / mpart;
           double uold = it.get_hydro_primitive_pressure() / _gm1 /
                         it.get_hydro_primitive_density();
@@ -479,7 +493,11 @@ public:
       it.set_hydro_primitive_pressure(pressure);
 
       it.set_number_density(density / hydrogen_mass);
-      it.set_temperature(hydrogen_mass * pressure / boltzmann_k / density);
+      double mean_molecular_mass =
+          it.get_ionic_fraction(ION_H_n) * hydrogen_mass +
+          0.5 * (1. - it.get_ionic_fraction(ION_H_n)) * hydrogen_mass;
+      it.set_temperature(mean_molecular_mass * pressure / boltzmann_k /
+                         density);
 
       cmac_assert(it.get_number_density() >= 0.);
       cmac_assert(it.get_temperature() >= 0.);
