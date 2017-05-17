@@ -17,6 +17,12 @@
 ################################################################################
 
 cmake_minimum_required(VERSION 2.6)
+
+# Set the default CMAKE_BUILD_TYPE
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "blabla" FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 project(CMacIonize)
 
 macro(add_compiler_flag FLAG FATAL)
