@@ -168,32 +168,13 @@ int main(int argc, char **argv) {
       // corrections:
 
       // if the initial temperature is more than 25,000 K, don't test this line
-      if (T > 25000.) {
+      if (T > 30000.) {
         continue;
       }
 
-      // if the final temperature is more than 25,000 K, we just set it to
-      // 25,000 K and assume the gas is completely ionized
-      if (Tnewf > 25000.) {
-        // we set the neutral fractions to very low (non zero) values, as
-        // setting them to zero might deadlock the photon traversal algorithm if
-        // periodic boundaries are used
-        h0f = 1.e-10;
-        he0f = 1.e-10;
-        cp1f = 0.;
-        cp2f = 0.;
-        nf = 0.;
-        np1f = 0.;
-        np2f = 0.;
-        of = 0.;
-        op1f = 0.;
-        nef = 0.;
-        nep1f = 0.;
-        sp1f = 0.;
-        sp2f = 0.;
-        sp3f = 0.;
-        Tnewf = 25000.;
-      }
+      // if the final temperature is more than 30,000 K, we just set it to
+      // 30,000 K
+      Tnewf = std::min(30000., Tnewf);
 
       // in Kenny's code, neutral fractions could sometimes be larger than 1
       // we have introduced a maximum
@@ -284,6 +265,8 @@ int main(int argc, char **argv) {
       // scheme to find the temperature, small round off tends to accumulate and
       // cause quite large relative differences
       double tolerance = 1.e-4;
+
+      cmac_status("h0: %g (%g), T: %g (%g)", h0, h0f, Tnew, Tnewf);
 
       assert_values_equal_rel(h0, h0f, tolerance);
 

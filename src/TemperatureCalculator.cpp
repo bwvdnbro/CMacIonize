@@ -432,10 +432,10 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
 
-    if (T0 > 25000.) {
+    if (T0 > 1.e10) {
       // gas is ionized, temperature is 10^10 K (should probably be a lower
       // value)
-      T0 = 25000.;
+      T0 = 1.e10;
       h0 = 1.e-10;
       he0 = 1.e-10;
       // force exit out of loop
@@ -448,6 +448,9 @@ void TemperatureCalculator::calculate_temperature(
                  "relative difference cooling/heating: %g, aim: %g)!",
                  T0, std::abs(loss0 - gain0) / gain0, eps);
   }
+
+  // cap the temperature at 30,000 K
+  T0 = std::min(30000., T0);
 
   cell.set_temperature(T0);
   cell.set_ionic_fraction(ION_H_n, h0);
