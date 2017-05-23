@@ -346,32 +346,41 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
 
   unsigned int index = _voronoi_grid.get_index(photon_origin);
   while (index < VORONOI_MAX_INDEX && optical_depth > 0.) {
-    const CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
     double mins = -1.;
+    CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
     unsigned int next_index = 0;
-    auto faces = _voronoi_grid.get_faces(index);
-    for (auto it = faces.begin(); it != faces.end(); ++it) {
-      const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
-      CoordinateVector<> normal;
-      if (ngb < VORONOI_MAX_INDEX) {
-        normal = _voronoi_grid.get_generator(ngb) - ipos;
-      } else {
-        normal = _voronoi_grid.get_wall_normal(ngb);
-      }
-      const double nk =
-          CoordinateVector<>::dot_product(normal, photon_direction);
-      if (nk > 0) {
-        const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
-        const double sngb =
-            CoordinateVector<>::dot_product(normal, (point - photon_origin)) /
-            nk;
-        if (mins < 0. || (sngb > 0. && sngb < mins)) {
-          mins = sngb;
-          next_index = ngb;
+    unsigned int loopcount = 0;
+    while (mins <= 0.) {
+      ++loopcount;
+      cmac_assert(loopcount < 100);
+      auto faces = _voronoi_grid.get_faces(index);
+      for (auto it = faces.begin(); it != faces.end(); ++it) {
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        CoordinateVector<> normal;
+        if (ngb < VORONOI_MAX_INDEX) {
+          normal = _voronoi_grid.get_generator(ngb) - ipos;
+        } else {
+          normal = _voronoi_grid.get_wall_normal(ngb);
+        }
+        const double nk =
+            CoordinateVector<>::dot_product(normal, photon_direction);
+        if (nk > 0) {
+          const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
+          const double sngb =
+              CoordinateVector<>::dot_product(normal, (point - photon_origin)) /
+              nk;
+          if (mins < 0. || (sngb > 0. && sngb < mins)) {
+            mins = sngb;
+            next_index = ngb;
+          }
         }
       }
+      if (mins <= 0.) {
+        photon_origin += 1.e-5 * photon_direction;
+        index = _voronoi_grid.get_index(photon_origin);
+        ipos = _voronoi_grid.get_generator(index);
+      }
     }
-    cmac_assert(mins > 0.);
 
     DensityGrid::iterator it(index, *this);
 

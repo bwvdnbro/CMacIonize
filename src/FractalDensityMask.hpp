@@ -202,7 +202,7 @@ private:
   class FractalDensityMaskConstructionJobMarket {
   private:
     /*! @brief Per thread FractalDensityMaskConstructionJob. */
-    std::vector< FractalDensityMaskConstructionJob > _jobs;
+    std::vector< FractalDensityMaskConstructionJob * > _jobs;
 
     /*! @brief Current index on the first level. */
     unsigned int _current_index;
@@ -226,7 +226,18 @@ private:
       _current_index = 0;
       _jobs.reserve(worksize);
       for (int i = 0; i < worksize; ++i) {
-        _jobs.push_back(FractalDensityMaskConstructionJob(mask));
+        _jobs.push_back(new FractalDensityMaskConstructionJob(mask));
+      }
+    }
+
+    /**
+     * @brief Destructor.
+     *
+     * Clean up memory used by jobs.
+     */
+    inline ~FractalDensityMaskConstructionJobMarket() {
+      for (unsigned int i = 0; i < _jobs.size(); ++i) {
+        delete _jobs[i];
       }
     }
 
@@ -256,8 +267,8 @@ private:
       }
       _lock.unlock();
       if (has_job) {
-        _jobs[thread_id].set_index(current_index);
-        return &_jobs[thread_id];
+        _jobs[thread_id]->set_index(current_index);
+        return _jobs[thread_id];
       } else {
         return nullptr;
       }
