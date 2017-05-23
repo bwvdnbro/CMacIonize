@@ -31,7 +31,6 @@
 #include "Box.hpp"
 #include "DensityGrid.hpp"
 #include "DensityMask.hpp"
-#include "Lock.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
@@ -70,17 +69,11 @@ private:
   std::vector< int > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
-  std::vector< std::vector< std::vector< double > > > _distribution;
+  std::vector< std::vector< std::vector< unsigned long > > > _distribution;
 
   /*! @brief Fractal fraction: maximal fraction of the number density in a cell
    *  that is affected by the mask. */
   double _fractal_fraction;
-
-#ifndef HAVE_ATOMIC
-  /*! @brief Lock used for thread-safe data access if atomic operations are not
-   *  supported on this system. */
-  Lock _lock;
-#endif
 
   /**
    * @brief (Recursively) construct a fractal grid with the given number of
@@ -149,17 +142,10 @@ private:
       unsigned int iy = x_level.y() * _distribution[ix].size();
       unsigned int iz = x_level.z() * _distribution[ix][iy].size();
 
-#ifdef HAVE_ATOMIC
       // use an atomic operation to add the point, to make this method thread
       // safe
-      Atomic::add(_distribution[ix][iy][iz], 1.);
-#else
-      // if we can't do atomic addition, we have to lock the entire grid for
-      // every write (as a per cell lock would be to expensive in memory)
-      _lock.lock();
-      _distribution[ix][iy][iz] += 1.;
-      _lock.unlock();
-#endif
+      Atomic::add(_distribution[ix][iy][iz], 1ul);
+      cmac_assert(_distribution[ix][iy][iz] < 0xffffffffffffffff);
     }
   }
 
@@ -319,7 +305,7 @@ public:
     for (int ix = 0; ix < _resolution.x(); ++ix) {
       _distribution[ix].resize(resolution.y());
       for (int iy = 0; iy < _resolution.y(); ++iy) {
-        _distribution[ix][iy].resize(_resolution.z(), 0.);
+        _distribution[ix][iy].resize(_resolution.z(), 0);
       }
     }
 

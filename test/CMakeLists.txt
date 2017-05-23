@@ -662,7 +662,7 @@ add_unit_test(NAME testMPICommunicator
 endif(HAVE_MPI)
 
 ## Unit test for Atomic
-if(HAVE_OPENMP AND HAVE_ATOMIC)
+if(HAVE_OPENMP)
 set(TESTATOMIC_SOURCES
     testAtomic.cpp
 
@@ -670,7 +670,7 @@ set(TESTATOMIC_SOURCES
 )
 add_unit_test(NAME testAtomic
               SOURCES ${TESTATOMIC_SOURCES})
-endif(HAVE_OPENMP AND HAVE_ATOMIC)
+endif(HAVE_OPENMP)
 
 ## Unit test for MPIMessage
 if(HAVE_MPI)

@@ -62,5 +62,30 @@ int main(int argc, char **argv) {
     }
   }
 
+#ifdef HAVE_ATOMIC
+  for (unsigned int i = 0; i < 100; ++i) {
+    double sum = 0.;
+    int nthread = 0.;
+#pragma omp parallel shared(sum, nthread)
+    {
+      double this_thread = omp_get_thread_num();
+      Atomic::add(sum, this_thread);
+#pragma omp single
+      { nthread = omp_get_num_threads(); }
+    }
+
+    if (nthread > 1) {
+      double reference = 0.;
+      for (int i = 0; i < nthread; ++i) {
+        reference += i;
+      }
+
+      assert_condition(sum == reference);
+    } else {
+      cmac_status("This test only works if OMP_NUM_THREADS > 1.");
+    }
+  }
+#endif
+
   return 0;
 }
