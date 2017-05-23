@@ -29,8 +29,9 @@
 #define CONFIGURATION_HPP
 
 #cmakedefine HAVE_ASSERTIONS
+#cmakedefine HAVE_ATOMIC
 #cmakedefine HAVE_HDF5
-#cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_MPI
+#cmakedefine HAVE_OPENMP
 
 #endif // CONFIGURATION_HPP

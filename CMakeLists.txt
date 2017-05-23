@@ -77,6 +77,25 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E echo
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)
 
+# Check if the compiler supports atomic floating point operations (it should if
+# it truly supports C++11, but e.g. the Intel compiler does actually not)
+set(ATOMIC_COMPILER_TEST_SOURCE
+    "#include \"${PROJECT_SOURCE_DIR}/src/Atomic.hpp\"\n"
+    "#include <new>\n"
+    "int main(int, char**){\n"
+    "double a = 1.\;\n"
+    "Atomic::add(a, 1.)\;\n"
+    "return 0\;}")
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${ATOMIC_COMPILER_TEST_SOURCE}
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/atomictest.cpp)
+try_compile(HAVE_ATOMIC ${PROJECT_BINARY_DIR}
+                        ${PROJECT_BINARY_DIR}/atomictest.cpp)
+if(NOT HAVE_ATOMIC)
+  message(WARNING
+          "This system does not support atomic floating point operations! "
+          "Lock-free data access will not work.")
+endif(NOT HAVE_ATOMIC)
+
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 
