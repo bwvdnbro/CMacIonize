@@ -51,7 +51,8 @@ VoronoiDensityGrid::VoronoiDensityGrid(
       _position_generator(position_generator),
       _voronoi_grid(box, periodic,
                     position_generator->get_number_of_positions()),
-      _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma) {
+      _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma),
+      _epsilon(1.e-12 * box.get_sides().norm()) {
 
   const unsigned long totnumcell =
       _position_generator->get_number_of_positions();
@@ -128,6 +129,7 @@ void VoronoiDensityGrid::initialize(
   }
   // compute the grid
   _voronoi_grid.compute_grid();
+
   // compute volumes and neighbour relations
   _voronoi_grid.finalize();
   if (_log) {
@@ -343,16 +345,17 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
 
   CoordinateVector<> photon_origin = photon.get_position();
   const CoordinateVector<> photon_direction = photon.get_direction();
+  // move the photon a tiny bit to make sure it is inside the cell
+  photon_origin += _epsilon * photon_direction;
 
   unsigned int index = _voronoi_grid.get_index(photon_origin);
   while (index < VORONOI_MAX_INDEX && optical_depth > 0.) {
-    double mins = -1.;
     CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
     unsigned int next_index = 0;
     unsigned int loopcount = 0;
+    double mins = -1.;
     while (mins <= 0.) {
-      ++loopcount;
-      cmac_assert(loopcount < 100);
+      mins = -1;
       auto faces = _voronoi_grid.get_faces(index);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
         const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
@@ -375,11 +378,16 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
           }
         }
       }
+      ++loopcount;
+      cmac_assert_message(loopcount < 100, "mins: %g", mins);
       if (mins <= 0.) {
-        photon_origin += 1.e-5 * photon_direction;
+        photon_origin += _epsilon * photon_direction;
         index = _voronoi_grid.get_index(photon_origin);
         ipos = _voronoi_grid.get_generator(index);
       }
+    }
+    if (index >= VORONOI_MAX_INDEX) {
+      break;
     }
 
     DensityGrid::iterator it(index, *this);

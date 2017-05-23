@@ -52,6 +52,10 @@ private:
   /*! @brief Polytropic index for the ideal gas equation of state. */
   double _hydro_gamma;
 
+  /*! @brief Epsilon displacement factor used to guarantee a point lies inside
+   *  a cell. */
+  double _epsilon;
+
 public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
