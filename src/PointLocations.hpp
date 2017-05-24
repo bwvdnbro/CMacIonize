@@ -112,6 +112,12 @@ public:
     // add the positions to the positions grid
     _cell_map.resize(positions_size);
     for (unsigned int i = 0; i < positions_size; ++i) {
+      cmac_assert(positions[i].x() >= minpos.x() &&
+                  positions[i].x() <= maxpos.x());
+      cmac_assert(positions[i].y() >= minpos.y() &&
+                  positions[i].y() <= maxpos.y());
+      cmac_assert(positions[i].z() >= minpos.z() &&
+                  positions[i].z() <= maxpos.z());
       unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
       unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
       unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
