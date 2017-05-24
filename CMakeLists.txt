@@ -226,6 +226,15 @@ else(ACTIVATE_ASSERTIONS)
   message(STATUS "Assertions not activated.")
 endif(ACTIVATE_ASSERTIONS)
 
+# Check if we need to output information about the jobs being executed on
+# different threads
+if(ACTIVATE_OUTPUT_CYCLES)
+  set(HAVE_OUTPUT_CYCLES True)
+  message(STATUS "Each thread will output a job statistics file (slow!).")
+else(ACTIVATE_OUTPUT_CYCLES)
+  set(HAVE_OUTPUT_CYCLES False)
+endif(ACTIVATE_OUTPUT_CYCLES)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 

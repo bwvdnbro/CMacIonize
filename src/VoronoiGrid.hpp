@@ -106,6 +106,13 @@ private:
         _grid.compute_cell(i);
       }
     }
+
+    /**
+     * @brief Get a name tag for this job.
+     *
+     * @return "voronoigrid_construction".
+     */
+    inline std::string get_tag() const { return "voronoigrid_construction"; }
   };
 
   /**

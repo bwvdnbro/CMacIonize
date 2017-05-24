@@ -115,6 +115,13 @@ public:
       _typecount[photon.get_type()] += photon.get_weight();
     }
   }
+
+  /**
+   * @brief Get a name tag for this job.
+   *
+   * @return "photonshootjob".
+   */
+  inline std::string get_tag() const { return "photonshootjob"; }
 };
 
 #endif // PHOTONSHOOTJOB_HPP

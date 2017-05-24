@@ -28,6 +28,8 @@
 
 #include "DensityGrid.hpp"
 
+#include <sstream>
+
 /**
  * @brief Job that should be performed on every cell of the DensityGrid.
  */
@@ -74,6 +76,17 @@ public:
     for (auto it = _begin; it != _end; ++it) {
       _function(it);
     }
+  }
+
+  /**
+   * @brief Get a name tag for this job.
+   *
+   * @return "densitygrid_traversal".
+   */
+  inline std::string get_tag() const {
+    std::stringstream tag;
+    tag << "densitygrid_traversal<" << typeid(_function_).name() << ">";
+    return tag.str();
   }
 };
 

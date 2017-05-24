@@ -86,6 +86,13 @@ public:
       --_size;
     }
   }
+
+  /**
+   * @brief Get a name tag for this job.
+   *
+   * @return "testjob".
+   */
+  inline std::string get_tag() const { return "testjob"; }
 };
 
 /**

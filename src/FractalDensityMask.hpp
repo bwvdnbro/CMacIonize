@@ -195,6 +195,13 @@ private:
      * level.
      */
     inline void execute() { _mask.make_fractal_grid(_random_generator); }
+
+    /**
+     * @brief Get a name tag for this job.
+     *
+     * @return "fractaldensitymask_construction".
+     */
+    inline std::string get_tag() { return "fractaldensitymask_construction"; }
   };
 
   /**
