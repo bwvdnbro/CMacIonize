@@ -274,7 +274,7 @@ public:
 
   /// cell specific geometric functions
   int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
-                int *find_edge_and_exit = nullptr);
+                double epsilon, int *find_edge_and_exit = nullptr);
   double get_max_radius_squared() const;
   void finalize();
 
@@ -302,7 +302,8 @@ public:
 
   static std::pair< int, double > test_vertex(CoordinateVector<> vertex,
                                               CoordinateVector<> plane_vector,
-                                              double plane_distance_squared);
+                                              double plane_distance_squared,
+                                              double epsilon);
 
   /// static face getters
 

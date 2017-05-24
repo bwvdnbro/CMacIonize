@@ -39,7 +39,8 @@
  */
 VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
                          unsigned int numcell)
-    : _box(box), _periodic(periodic), _pointlocations(nullptr) {
+    : _box(box), _periodic(periodic), _pointlocations(nullptr),
+      _epsilon(VORONOI_TOLERANCE * _box.get_sides().norm2()) {
 
   _cells.reserve(numcell);
 
@@ -107,7 +108,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
     const unsigned int j = *ngbit;
     if (j != index) {
       _cells[index]->intersect(
-          _generator_positions[j] - _generator_positions[index], j);
+          _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
   }
   while (it.increase_range() &&
@@ -116,7 +117,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       _cells[index]->intersect(
-          _generator_positions[j] - _generator_positions[index], j);
+          _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
   }
 }

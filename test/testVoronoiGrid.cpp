@@ -1060,20 +1060,23 @@ int main(int argc, char **argv) {
         CoordinateVector<>(1. / 3., 1. / 3., 0.));
 
     // vertex below plane
-    auto vertex_test = VoronoiCell::test_vertex(
-        CoordinateVector<>(0.5, 1., 0.), CoordinateVector<>(1., 0., 0.), 1.);
+    auto vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(0.5, 1., 0.),
+                                                CoordinateVector<>(1., 0., 0.),
+                                                1., VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == -1);
     assert_condition(vertex_test.second == -0.5);
 
     // vertex above plane
     vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(1.5, 1., 0.),
-                                           CoordinateVector<>(1., 0., 0.), 1.);
+                                           CoordinateVector<>(1., 0., 0.), 1.,
+                                           VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == 1);
     assert_condition(vertex_test.second == 0.5);
 
     // vertex on plane
     vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(1., 1., 0.),
-                                           CoordinateVector<>(1., 0., 0.), 1.);
+                                           CoordinateVector<>(1., 0., 0.), 1.,
+                                           VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == 0);
     assert_condition(vertex_test.second == 0.);
   }
@@ -1136,7 +1139,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_0);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1152,7 +1155,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_1);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1168,7 +1171,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_2);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1184,7 +1187,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_3);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.3: %i", status);
     assert_condition(status == -1);
   }
@@ -1195,7 +1198,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_0);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.0: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1211,7 +1214,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_1);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.1: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1227,7 +1230,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_2);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.2: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1243,7 +1246,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_3);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.3: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1259,7 +1262,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_4);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.4: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1275,7 +1278,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_5);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.5: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1291,7 +1294,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_6);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.4.6: %i", status);
     assert_condition(status == -1);
   }
@@ -1302,7 +1305,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_1_5);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 1.5: %i (%i)", status, varcheck[0]);
     assert_condition(status == 2);
     assert_condition(varcheck[0] == 1);
@@ -1314,7 +1317,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_0);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1330,7 +1333,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_1);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1346,7 +1349,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_2);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
                  varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1362,7 +1365,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_3);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.3: %i", status);
     assert_condition(status == 0);
   }
@@ -1373,7 +1376,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_0);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.0: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1389,7 +1392,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_1);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.1: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1405,7 +1408,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_2);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.2: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1421,7 +1424,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_3);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.3: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1437,7 +1440,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_4);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.4: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1453,7 +1456,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_5);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.5: %i (%i %i %i %i)", status, varcheck[0],
                  varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
@@ -1469,7 +1472,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_6);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.4.6: %i", status);
     assert_condition(status == 0);
   }
@@ -1480,7 +1483,7 @@ int main(int argc, char **argv) {
     cell.setup_variables_for_test(VORONOITEST_PATH_2_5);
     CoordinateVector<> dx(1., 0., 0.);
     int varcheck[4];
-    int status = cell.intersect(dx, 0, varcheck);
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
     cmac_warning("Path 2.5: %i (%i)", status, varcheck[0]);
     assert_condition(status == 2);
     assert_condition(varcheck[0] == 1);
@@ -1494,6 +1497,7 @@ int main(int argc, char **argv) {
     delete_stack[0] = true;
     cell.delete_vertices(delete_stack);
     cell.check_variables_after_test(VORONOITEST_VERTEX_DELETION);
+    cmac_warning("Deletion test succeeded!");
   }
 
   /// VORONOITEST_INTERSECTION
@@ -1501,9 +1505,11 @@ int main(int argc, char **argv) {
     VoronoiCell cell(CoordinateVector<>(0.5, 0.5, 0.5),
                      Box(CoordinateVector<>(0.), CoordinateVector<>(1.)));
     cell.check_variables_after_test(VORONOITEST_CONSTRUCTOR);
-    int status = cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0);
+    int status =
+        cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0, VORONOI_TOLERANCE);
     assert_condition(status == 1);
     cell.check_variables_after_test(VORONOITEST_INTERSECTION);
+    cmac_warning("Intersection test succeeded!");
   }
 
   /// test Voronoi grid
@@ -1559,22 +1565,35 @@ int main(int argc, char **argv) {
       }
     }
     assert_values_equal_rel(total_volume, 1., 1.e-15);
+    cmac_warning("Random grid test succeeded!");
   }
 
   /// test regular (degenerate) Voronoi grid
   {
+    const double box_anchor = 0.;
+    const double box_side = 2.e15;
+    const double box_volume = box_side * box_side * box_side;
     unsigned int numcell = 0;
-    VoronoiGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), false,
-                     1000);
+    VoronoiGrid grid(
+        Box(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
+        false, 1000);
+    std::vector< CoordinateVector<> > positions(1000);
     for (unsigned int ix = 0; ix < 10; ++ix) {
       for (unsigned int iy = 0; iy < 10; ++iy) {
         for (unsigned int iz = 0; iz < 10; ++iz) {
-          unsigned int new_index = grid.add_cell(CoordinateVector<>(
-              (ix + 0.5) * 0.1, (iy + 0.5) * 0.1, (iz + 0.5) * 0.1));
-          assert_condition(new_index == numcell);
-          ++numcell;
+          positions[ix * 100 + iy * 10 + iz] =
+              CoordinateVector<>((ix + 0.5) * box_side * 0.1 + box_anchor,
+                                 (iy + 0.5) * box_side * 0.1 + box_anchor,
+                                 (iz + 0.5) * box_side * 0.1 + box_anchor);
         }
       }
+    }
+    // add a random (small) displacement to one of the generators
+    positions[42] += 1.e-5 * box_side * Utilities::random_position();
+    for (unsigned int i = 0; i < positions.size(); ++i) {
+      unsigned int new_index = grid.add_cell(positions[i]);
+      assert_condition(new_index == numcell);
+      ++numcell;
     }
     grid.compute_grid();
 
@@ -1584,12 +1603,12 @@ int main(int argc, char **argv) {
     file.close();
 
     grid.finalize();
-    const double tolerance = 1.e-11;
+    const double tolerance = 1.e-10;
     double total_volume = 0.;
     for (unsigned int i = 0; i < numcell; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
-      assert_condition(cell_volume < 1.);
+      assert_condition(cell_volume < box_volume);
       total_volume += cell_volume;
 
       // check that all neighbours of this cell have this cell as neighbour as
@@ -1619,7 +1638,8 @@ int main(int argc, char **argv) {
         }
       }
     }
-    assert_values_equal_rel(total_volume, 1., 1.e-15);
+    assert_values_equal_rel(total_volume, box_volume, 1.e-14);
+    cmac_warning("Regular grid test succeeded!");
   }
 
   return 0;

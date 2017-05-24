@@ -250,6 +250,8 @@ const std::vector< VoronoiFace > &VoronoiCell::get_faces() const {
  * @param relative_position Relative position of the intersecting point w.r.t.
  * the cell generator, i.e. point position - generator position (in m).
  * @param ngb_index Index of the intersecting point.
+ * @param epsilon Tolerance used when deciding if a vertex is above, below, or
+ * on a plane.
  * @param find_edge_and_exit Array used for unit testing the first part of the
  * algorithm. If set to a valid pointer to a 4 element array, only the first
  * part of the method is executed, and the method returns with a status code:
@@ -264,7 +266,8 @@ const std::vector< VoronoiFace > &VoronoiCell::get_faces() const {
  * status codes are possible.
  */
 int VoronoiCell::intersect(CoordinateVector<> relative_position,
-                           unsigned int ngb_index, int *find_edge_and_exit) {
+                           unsigned int ngb_index, double epsilon,
+                           int *find_edge_and_exit) {
   // make sure the intersecting point has a different position than the cell
   // generator
   cmac_assert(relative_position.norm2() != 0.);
@@ -293,7 +296,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   // test the first vertex
   up = 0;
   std::pair< int, double > u =
-      test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+      test_vertex(_vertices[up], plane_vector, plane_distance_squared, epsilon);
   std::pair< int, double > l;
   // if we find a vertex on (or very close to) the plane, we set the flag that
   // tells us we need to use a more complicated algorithm
@@ -305,7 +308,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // plane
       us = 0;
       lp = get_edge_endpoint(up, us);
-      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                      epsilon);
       while (l.second >= u.second) {
         ++us;
         if (find_edge_and_exit) {
@@ -317,7 +321,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
                               "Cell completely gone! This should not happen.");
         }
         lp = get_edge_endpoint(up, us);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
       }
       // 'lp' now contains the index of a vertex closer or below the plane
       // set 'ls' to the index of the edge of that vertex that brought us to it
@@ -338,7 +343,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         us = 0;
         while (us < ls && l.second >= u.second) {
           lp = get_edge_endpoint(up, us);
-          l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+          l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                          epsilon);
           ++us;
         }
         if (l.second >= u.second) {
@@ -354,8 +360,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
                   "Cell completely gone! This should not happen.");
             }
             lp = get_edge_endpoint(up, us);
-            l = test_vertex(_vertices[lp], plane_vector,
-                            plane_distance_squared);
+            l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                            epsilon);
           }
         } else {
           // the last '++us' in the first while pushed us too far, correct for
@@ -390,7 +396,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
       ls = 0;
       up = get_edge_endpoint(lp, ls);
-      u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+      u = test_vertex(_vertices[up], plane_vector, plane_distance_squared,
+                      epsilon);
       while (l.second >= u.second) {
         ++ls;
         if (ls == _edges[lp].size()) {
@@ -403,7 +410,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           return 0;
         }
         up = get_edge_endpoint(lp, ls);
-        u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+        u = test_vertex(_vertices[up], plane_vector, plane_distance_squared,
+                        epsilon);
       }
       // 'up' now contains the index of a vertex closer or above the plane
       // set 'us' to the index of the edge of that vertex that brought us to it
@@ -424,7 +432,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         ls = 0;
         while (ls < us && l.second >= u.second) {
           up = get_edge_endpoint(lp, ls);
-          u = test_vertex(_vertices[up], plane_vector, plane_distance_squared);
+          u = test_vertex(_vertices[up], plane_vector, plane_distance_squared,
+                          epsilon);
           ++ls;
         }
         if (l.second >= u.second) {
@@ -441,8 +450,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
               return 0;
             }
             up = get_edge_endpoint(lp, ls);
-            u = test_vertex(_vertices[up], plane_vector,
-                            plane_distance_squared);
+            u = test_vertex(_vertices[up], plane_vector, plane_distance_squared,
+                            epsilon);
           }
         } else {
           // the last '++ls' in the first while pushed us too far, correct for
@@ -530,7 +539,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // test all its edges
       for (unsigned int i = 0; i < _edges[up].size(); ++i) {
         lp = get_edge_endpoint(up, i);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
         if (l.first == -1) {
           // edge is below the plane: stop the for loop (and automatically exit
           // the while loop as well)
@@ -582,7 +592,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
     // we now try to find the first edge below the plane
     lp = get_edge_endpoint(up, 0);
-    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                    epsilon);
 
     if (l.first != -1) {
       // (case 1): NB ...
@@ -593,7 +604,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       rp = l.first;
       unsigned int i = 1;
       lp = get_edge_endpoint(up, i);
-      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                      epsilon);
       // continue searching for an edge below the plane
       while (l.first != -1) {
         ++i;
@@ -602,7 +614,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // than the number of edges of 'up'
         cmac_assert(i < _edges[up].size());
         lp = get_edge_endpoint(up, i);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
       }
 
       // we found an edge below the plane, and have stored its index in 'i'
@@ -611,7 +624,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       unsigned int j = i + 1;
       while (j < _edges[up].size() && l.first == -1) {
         lp = get_edge_endpoint(up, j);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
         ++j;
       }
 
@@ -706,7 +720,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // the plane
       unsigned int i = _edges[up].size() - 1;
       lp = get_edge_endpoint(up, i);
-      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                      epsilon);
       while (l.first == -1) {
         --i;
         // it is possible that we cannot find a single edge NOT BELOW the plane
@@ -718,7 +733,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           return 0;
         }
         lp = get_edge_endpoint(up, i);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
       }
 
       // now we do a forward search and try to find the first edge NOT BELOW the
@@ -726,11 +742,13 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // 'lp', so this code could probably be cleaned up a bit)
       unsigned int j = 1;
       qp = get_edge_endpoint(up, j);
-      q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
+      q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared,
+                      epsilon);
       while (q.first == -1) {
         ++j;
         qp = get_edge_endpoint(up, j);
-        q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared);
+        q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared,
+                        epsilon);
       }
 
       // at this point, 'j' contains the index of the first edge NOT BELOW the
@@ -977,7 +995,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     lp = get_edge_endpoint(qp, qs);
     // make sure we have a valid vertex
     cmac_assert(lp >= 0 && lp < static_cast< int >(_vertices.size()));
-    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+    l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                    epsilon);
 
     if (l.first == 0) {
       // degenerate case: vertex is on or very close to plane
@@ -1015,7 +1034,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         qs = 0;
       }
       lp = get_edge_endpoint(qp, qs);
-      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+      l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                      epsilon);
       while (l.first == -1) {
         // every edge below the plane is added to the order 'k' of the new
         // vertex
@@ -1025,7 +1045,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           qs = 0;
         }
         lp = get_edge_endpoint(qp, qs);
-        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared);
+        l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
+                        epsilon);
       }
 
       // 'qs' now contains the index of the next edge NOT BELOW the plane
@@ -1741,6 +1762,8 @@ CoordinateVector<> VoronoiCell::midpoint_triangle(CoordinateVector<> v1,
  * w.r.t. the cell generator.
  * @param plane_distance_squared Squared distance between the closest point on
  * the plane and the cell generator.
+ * @param epsilon Tolerance used to determine when a vertex is considered to be
+ * too close to call.
  * @return std::pair containing (a) the result of the test (-1: vertex below
  * plane, 1: vertex above plane, 0: vertex on or very close to plane), and (b)
  * the relative distance between the vertex and the plane, in units of the
@@ -1750,7 +1773,7 @@ CoordinateVector<> VoronoiCell::midpoint_triangle(CoordinateVector<> v1,
 std::pair< int, double >
 VoronoiCell::test_vertex(CoordinateVector<> vertex,
                          CoordinateVector<> plane_vector,
-                         double plane_distance_squared) {
+                         double plane_distance_squared, double epsilon) {
   // let's make sure we have passed on correct arguments
   cmac_assert(plane_vector.norm2() == plane_distance_squared);
   // strictly speaking okay, but we don't want this for our intersection
@@ -1761,9 +1784,9 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
 
   double test_result = CoordinateVector<>::dot_product(vertex, plane_vector) -
                        plane_distance_squared;
-  if (test_result < -VORONOI_TOLERANCE * plane_distance_squared) {
+  if (test_result < -epsilon) {
     return std::make_pair(-1, test_result);
-  } else if (test_result > VORONOI_TOLERANCE * plane_distance_squared) {
+  } else if (test_result > epsilon) {
     return std::make_pair(1, test_result);
   } else {
     return std::make_pair(0, test_result);

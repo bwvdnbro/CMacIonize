@@ -56,6 +56,10 @@ private:
   /*! @brief PointLocations object used for fast neighbour searching. */
   PointLocations *_pointlocations;
 
+  /*! @brief Tolerance used when deciding if a vertex is below, above, or on a
+   *  plane. */
+  double _epsilon;
+
   void compute_cell(unsigned int index);
 
   /**
