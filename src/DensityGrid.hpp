@@ -27,6 +27,7 @@
 #define DENSITYGRID_HPP
 
 #include "Abundances.hpp"
+#include "Atomic.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
@@ -227,14 +228,14 @@ protected:
       double dheating_He = ds * photon.get_weight() *
                            photon.get_cross_section(ION_He_n) *
                            (photon.get_energy() - _ionization_energy_He);
-      cell.lock();
+      //      cell.lock();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         cell.increase_mean_intensity(ion, dmean_intensity[i]);
       }
       cell.increase_heating_H(dheating_H);
       cell.increase_heating_He(dheating_He);
-      cell.unlock();
+      //      cell.unlock();
     }
   }
 
@@ -688,7 +689,9 @@ public:
      */
     inline void increase_mean_intensity(IonName ion,
                                         double mean_intensity_increment) {
-      _grid->_mean_intensity[ion][_index] += mean_intensity_increment;
+      //      _grid->_mean_intensity[ion][_index] += mean_intensity_increment;
+      Atomic::add(_grid->_mean_intensity[ion][_index],
+                  mean_intensity_increment);
     }
 
     /**
@@ -707,7 +710,8 @@ public:
      * s^-1).
      */
     inline void increase_heating_H(double heating_H_increment) {
-      _grid->_heating_H[_index] += heating_H_increment;
+      //      _grid->_heating_H[_index] += heating_H_increment;
+      Atomic::add(_grid->_heating_H[_index], heating_H_increment);
     }
 
     /**
@@ -726,7 +730,8 @@ public:
      * s^-1).
      */
     inline void increase_heating_He(double heating_He_increment) {
-      _grid->_heating_He[_index] += heating_He_increment;
+      //      _grid->_heating_He[_index] += heating_He_increment;
+      Atomic::add(_grid->_heating_He[_index], heating_He_increment);
     }
 
     /**
