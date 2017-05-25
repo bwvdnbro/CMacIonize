@@ -78,36 +78,7 @@ CartesianDensityGrid::CartesianDensityGrid(Box box,
   }
 
   const unsigned long totnumcell = _ncell.x() * _ncell.y() * _ncell.z();
-  if (_log) {
-    _log->write_status(
-        "Allocating memory for ", totnumcell, " cells (",
-        Utilities::human_readable_bytes(totnumcell * sizeof(DensityValues)),
-        ")...");
-  }
-  // we allocate memory for the cells, so that --dry-run can already check the
-  // available memory
-  _number_density.resize(totnumcell);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    _ionic_fraction[i].resize(totnumcell);
-  }
-  _temperature.resize(totnumcell);
-  _hydrogen_reemission_probability.resize(totnumcell);
-  for (int i = 0; i < 4; ++i) {
-    _helium_reemission_probability[i].resize(totnumcell);
-  }
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    _mean_intensity[i].resize(totnumcell);
-  }
-  _mean_intensity_H_old.resize(totnumcell);
-  _neutral_fraction_H_old.resize(totnumcell);
-  _heating_H.resize(totnumcell);
-  _heating_He.resize(totnumcell);
-  _emissivities.resize(totnumcell, nullptr);
-  _lock.resize(totnumcell);
-
-  if (_log) {
-    _log->write_status("Done allocating memory.");
-  }
+  allocate_memory(totnumcell);
 
   double cellside_x = _box.get_sides().x() / _ncell.x();
   double cellside_y = _box.get_sides().y() / _ncell.y();

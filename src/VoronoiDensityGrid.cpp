@@ -57,24 +57,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
   const unsigned long totnumcell =
       _position_generator->get_number_of_positions();
 
-  _number_density.resize(totnumcell);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    _ionic_fraction[i].resize(totnumcell);
-  }
-  _temperature.resize(totnumcell);
-  _hydrogen_reemission_probability.resize(totnumcell);
-  for (int i = 0; i < 4; ++i) {
-    _helium_reemission_probability[i].resize(totnumcell);
-  }
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    _mean_intensity[i].resize(totnumcell);
-  }
-  _mean_intensity_H_old.resize(totnumcell);
-  _neutral_fraction_H_old.resize(totnumcell);
-  _heating_H.resize(totnumcell);
-  _heating_He.resize(totnumcell);
-  _emissivities.resize(totnumcell, nullptr);
-  _lock.resize(totnumcell);
+  allocate_memory(totnumcell);
 
   _hydro_generator_velocity[0].resize(totnumcell, 0.);
   _hydro_generator_velocity[1].resize(totnumcell, 0.);

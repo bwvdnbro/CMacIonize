@@ -27,8 +27,8 @@
 #define DENSITYGRID_HPP
 
 #include "Abundances.hpp"
-#include "Atomic.hpp"
 #include "Box.hpp"
+#include "Configuration.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
@@ -39,6 +39,10 @@
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include "WorkDistributor.hpp"
+
+#ifdef USE_LOCKFREE
+#include "Atomic.hpp"
+#endif
 
 #include <cmath>
 #include <tuple>
@@ -172,8 +176,10 @@ protected:
   /*! @brief EmissivityValues for the cells. */
   std::vector< EmissivityValues * > _emissivities;
 
+#ifndef USE_LOCKFREE
   /*! @brief Locks to ensure safe write access to the cell data. */
   std::vector< Lock > _lock;
+#endif
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -228,14 +234,18 @@ protected:
       double dheating_He = ds * photon.get_weight() *
                            photon.get_cross_section(ION_He_n) *
                            (photon.get_energy() - _ionization_energy_He);
-      //      cell.lock();
+#ifndef USE_LOCKFREE
+      cell.lock();
+#endif
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         cell.increase_mean_intensity(ion, dmean_intensity[i]);
       }
       cell.increase_heating_H(dheating_H);
       cell.increase_heating_He(dheating_He);
-      //      cell.unlock();
+#ifndef USE_LOCKFREE
+      cell.unlock();
+#endif
     }
   }
 
@@ -304,6 +314,46 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~DensityGrid() {}
+
+  /**
+   * @brief Allocate memory for the given number of cells.
+   *
+   * @param numcell Number of cells that will be stored in the grid.
+   */
+  inline void allocate_memory(unsigned long numcell) {
+    if (_log) {
+      _log->write_status(
+          "Allocating memory for ", numcell, " cells (",
+          Utilities::human_readable_bytes(numcell * sizeof(DensityValues)),
+          ")...");
+    }
+    // we allocate memory for the cells, so that --dry-run can already check the
+    // available memory
+    _number_density.resize(numcell);
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fraction[i].resize(numcell);
+    }
+    _temperature.resize(numcell);
+    _hydrogen_reemission_probability.resize(numcell);
+    for (int i = 0; i < 4; ++i) {
+      _helium_reemission_probability[i].resize(numcell);
+    }
+    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _mean_intensity[i].resize(numcell);
+    }
+    _mean_intensity_H_old.resize(numcell);
+    _neutral_fraction_H_old.resize(numcell);
+    _heating_H.resize(numcell);
+    _heating_He.resize(numcell);
+    _emissivities.resize(numcell, nullptr);
+#ifndef USE_LOCKFREE
+    _lock.resize(numcell);
+#endif
+
+    if (_log) {
+      _log->write_status("Done allocating memory.");
+    }
+  }
 
   /**
    * @brief Routine that does the actual initialization of the grid.
@@ -689,9 +739,12 @@ public:
      */
     inline void increase_mean_intensity(IonName ion,
                                         double mean_intensity_increment) {
-      //      _grid->_mean_intensity[ion][_index] += mean_intensity_increment;
+#ifdef USE_LOCKFREE
       Atomic::add(_grid->_mean_intensity[ion][_index],
                   mean_intensity_increment);
+#else
+      _grid->_mean_intensity[ion][_index] += mean_intensity_increment;
+#endif
     }
 
     /**
@@ -710,8 +763,11 @@ public:
      * s^-1).
      */
     inline void increase_heating_H(double heating_H_increment) {
-      //      _grid->_heating_H[_index] += heating_H_increment;
+#ifdef USE_LOCKFREE
       Atomic::add(_grid->_heating_H[_index], heating_H_increment);
+#else
+      _grid->_heating_H[_index] += heating_H_increment;
+#endif
     }
 
     /**
@@ -730,8 +786,11 @@ public:
      * s^-1).
      */
     inline void increase_heating_He(double heating_He_increment) {
-      //      _grid->_heating_He[_index] += heating_He_increment;
+#ifdef USE_LOCKFREE
       Atomic::add(_grid->_heating_He[_index], heating_He_increment);
+#else
+      _grid->_heating_He[_index] += heating_He_increment;
+#endif
     }
 
     /**
@@ -1191,6 +1250,7 @@ public:
       _grid->_emissivities[_index] = emissivities;
     }
 
+#ifndef USE_LOCKFREE
     /**
      * @brief Lock the cell the iterator is pointing to.
      */
@@ -1200,6 +1260,7 @@ public:
      * @brief Unlock the cell the iterator is pointing to.
      */
     inline void unlock() { _grid->_lock[_index].unlock(); }
+#endif
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.

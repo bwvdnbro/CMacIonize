@@ -98,6 +98,17 @@ if(NOT HAVE_ATOMIC)
           "Lock-free data access will not work.")
 endif(NOT HAVE_ATOMIC)
 
+# Check if we want to use atomic operations to get lock free cell access
+# Our current tests show that this is in fact slower than just locking the cell,
+# so this is disabled by default
+if(LOCKFREE)
+  message(STATUS "Enabling lock free cell operations.")
+  set(USE_LOCKFREE True)
+else(LOCKFREE)
+  message(STATUS "Lock free cell operations disabled.")
+  set(USE_LOCKFREE False)
+endif(LOCKFREE)
+
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 

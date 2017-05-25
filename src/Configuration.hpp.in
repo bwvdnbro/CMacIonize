@@ -35,4 +35,6 @@
 #cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_OUTPUT_CYCLES
 
+#cmakedefine USE_LOCKFREE
+
 #endif // CONFIGURATION_HPP

@@ -168,7 +168,9 @@ private:
           _heating_H.push_back(0.);
           _heating_He.push_back(0.);
           _emissivities.push_back(nullptr);
+#ifndef USE_LOCKFREE
           _lock.push_back(Lock());
+#endif
           _cells.push_back(childcell);
           childcell->value() = _cells.size() - 1;
         }
@@ -233,24 +235,7 @@ public:
       key = _grid.get_next_key(key);
     }
 
-    _number_density.resize(_grid.get_number_of_cells());
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      _ionic_fraction[i].resize(_grid.get_number_of_cells());
-    }
-    _temperature.resize(_grid.get_number_of_cells());
-    _hydrogen_reemission_probability.resize(_grid.get_number_of_cells());
-    for (int i = 0; i < 4; ++i) {
-      _helium_reemission_probability[i].resize(_grid.get_number_of_cells());
-    }
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      _mean_intensity[i].resize(_grid.get_number_of_cells());
-    }
-    _mean_intensity_H_old.resize(_grid.get_number_of_cells());
-    _neutral_fraction_H_old.resize(_grid.get_number_of_cells());
-    _heating_H.resize(_grid.get_number_of_cells());
-    _heating_He.resize(_grid.get_number_of_cells());
-    _emissivities.resize(_grid.get_number_of_cells(), nullptr);
-    _lock.resize(_grid.get_number_of_cells());
+    allocate_memory(_grid.get_number_of_cells());
 
     if (_log) {
       int levelint = level;
