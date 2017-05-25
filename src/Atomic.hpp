@@ -26,6 +26,8 @@
 #ifndef ATOMIC_HPP
 #define ATOMIC_HPP
 
+#include "Configuration.hpp"
+
 #include <atomic>
 
 /**
@@ -49,5 +51,41 @@ public:
     }
   }
 };
+
+#ifndef HAVE_ATOMIC
+/**
+ * @brief Add the second value to the first value, assuming the first value is
+ * a binary cast of a double precision floating point value.
+ *
+ * @param a Binary cast of double precision floating point value.
+ * @param b Double precision floating point value to add.
+ * @return Double precision floating point sum of a and b, binary cast back to
+ * an unsigned long integer type.
+ */
+static unsigned long add_floating_point(unsigned long a, double b) {
+  union {
+    unsigned long l;
+    double d;
+  } vala, valb;
+  vala.l = a;
+  valb.d = vala.d + b;
+  return valb.l;
+}
+
+/**
+ * @brief Atomic::add specialization for double precision floating point values
+ * for systems that do not support atomic floating point operations.
+ *
+ * @param a Reference to the double precision floating point value that should
+ * be atomically incremented.
+ * @param b Double precision floating point value that should be added to a.
+ */
+template <> inline void Atomic::add< double >(double &a, double b) {
+  std::atomic< unsigned long > *atom = new (&a) std::atomic< unsigned long >;
+  unsigned long old = *atom;
+  while (!atom->compare_exchange_weak(old, add_floating_point(old, b))) {
+  }
+}
+#endif
 
 #endif // ATOMIC_HPP

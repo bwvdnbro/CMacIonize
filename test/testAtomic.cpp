@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     }
   }
 
-#ifdef HAVE_ATOMIC
+  // double precision atomic addition test
   for (unsigned int i = 0; i < 100; ++i) {
     double sum = 0.;
     int nthread = 0.;
@@ -85,7 +85,6 @@ int main(int argc, char **argv) {
       cmac_status("This test only works if OMP_NUM_THREADS > 1.");
     }
   }
-#endif
 
   return 0;
 }
