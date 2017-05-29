@@ -371,7 +371,7 @@ public:
    * @return Index of the cell containing that position.
    */
   virtual unsigned long get_cell_index(CoordinateVector<> position) const {
-    return _grid.get_key(position);
+    return _grid.get_cell(position);
   }
 
   /**
@@ -584,7 +584,7 @@ public:
     CoordinateVector<> photon_direction = photon.get_direction();
 
     unsigned long index = get_cell_index(photon_origin);
-    AMRGridCell< unsigned long > *current_cell = &_grid[index];
+    AMRGridCell< unsigned long > *current_cell = _cells[index];
 
     // while the photon has not exceeded the optical depth and is still in the
     // box

@@ -143,6 +143,8 @@ static double get_single_variable(DensityGrid::iterator &cell,
     return 0.;
   } else if (name == "NumberDensity") {
     return cell.get_number_density();
+  } else if (name == "OI_6300") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_OI_6300);
   } else if (name == "Temperature") {
     return cell.get_temperature();
   } else {
@@ -165,6 +167,8 @@ static std::string get_variable_unit(std::string name) {
     return "";
   } else if (name == "NumberDensity") {
     return "m^-3";
+  } else if (name == "OI_6300") {
+    return "no idea";
   } else if (name == "Temperature") {
     return "K";
   } else {
@@ -274,6 +278,77 @@ static boost::python::dict get_variable_cut(DensityGrid &grid, std::string name,
 }
 
 /**
+ * @brief Collapse the DensityGrid along the given coordinate direction on to a
+ * 2D map, using a given number of samplings in the collapse direction.
+ *
+ * @param grid DensityGrid on which to act (acts as self).
+ * @param name Variable to collapse.
+ * @param coordinate Coordinate direction along which to collapse.
+ * @param n Number of samplings in the collapse direction.
+ * @param shape Shape of the resulting map.
+ * @return Python dict containing a numpy.ndarray with the requested values, and
+ * a string representation of the units in which the variables are expressed.
+ */
+static boost::python::dict collapse(DensityGrid &grid, std::string name,
+                                    char coordinate, unsigned int n,
+                                    boost::python::tuple shape) {
+  if (coordinate != 'x' && coordinate != 'y' && coordinate != 'z') {
+    cmac_error("Unknown coordinate: %c!", coordinate);
+  }
+
+  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
+                      boost::python::extract< unsigned int >(shape[1])};
+  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
+  boost::python::handle<> handle(narr);
+  boost::python::numeric::array arr(handle);
+
+  Box box = grid.get_box();
+
+  double di, dj, dk;
+  if (coordinate == 'x') {
+    di = box.get_sides().y() / size[0];
+    dj = box.get_sides().z() / size[1];
+    dk = box.get_sides().x() / n;
+  } else if (coordinate == 'y') {
+    di = box.get_sides().x() / size[0];
+    dj = box.get_sides().z() / size[1];
+    dk = box.get_sides().y() / n;
+  } else {
+    di = box.get_sides().x() / size[0];
+    dj = box.get_sides().y() / size[1];
+    dk = box.get_sides().z() / n;
+  }
+  for (unsigned int i = 0; i < size[0]; ++i) {
+    for (unsigned int j = 0; j < size[1]; ++j) {
+      for (unsigned int k = 0; k < n; ++k) {
+        CoordinateVector<> position;
+        if (coordinate == 'x') {
+          position[0] = box.get_anchor().x() + (k + 0.5) * dk;
+          position[1] = box.get_anchor().y() + (i + 0.5) * di;
+          position[2] = box.get_anchor().z() + (j + 0.5) * dj;
+        } else if (coordinate == 'y') {
+          position[0] = box.get_anchor().x() + (i + 0.5) * di;
+          position[1] = box.get_anchor().y() + (k + 0.5) * dk;
+          position[2] = box.get_anchor().z() + (j + 0.5) * dj;
+        } else {
+          position[0] = box.get_anchor().x() + (i + 0.5) * di;
+          position[1] = box.get_anchor().y() + (j + 0.5) * dj;
+          position[2] = box.get_anchor().z() + (k + 0.5) * dk;
+        }
+        DensityGrid::iterator cell = grid.get_cell(position);
+        arr[i][j] = get_single_variable(cell, name);
+      }
+    }
+  }
+
+  boost::python::dict result;
+  result["values"] = arr.copy();
+  result["units"] = get_variable_unit(name);
+
+  return result;
+}
+
+/**
  * @brief Get a numpy.ndarray containing the coordinates of all cells in the
  * grid.
  *
@@ -322,5 +397,6 @@ BOOST_PYTHON_MODULE(libdensitygrid) {
       .def("get_box", &get_box)
       .def("get_variable", &get_variable)
       .def("get_variable_cut", &get_variable_cut)
+      .def("collapse", &collapse)
       .def("get_coordinates", &get_coordinates);
 }

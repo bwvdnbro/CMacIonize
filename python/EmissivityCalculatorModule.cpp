@@ -84,6 +84,18 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
 }
 
 /**
+ * @brief Compute the emissivities for the given DensityGrid and store them in
+ * the grid itself.
+ *
+ * @param calculator EmissivityCalculator on which to act (acts as self).
+ * @param grid DensityGrid on which to act.
+ */
+static void compute_emissivities(EmissivityCalculator &calculator,
+                                 DensityGrid &grid) {
+  calculator.calculate_emissivities(grid);
+}
+
+/**
  * @brief Python constructor for Abundances.
  *
  * @param abundances Python dict containing abundances for all elements other
@@ -118,7 +130,8 @@ BOOST_PYTHON_MODULE(libemissivitycalculator) {
       "EmissivityCalculator", boost::python::no_init)
       .def("__init__",
            boost::python::make_constructor(&initEmissivityCalculator))
-      .def("get_emissivities", &get_emissivities);
+      .def("get_emissivities", &get_emissivities)
+      .def("compute_emissivities", &compute_emissivities);
 
   boost::python::class_< Abundances, boost::shared_ptr< Abundances >,
                          boost::noncopyable >("Abundances",

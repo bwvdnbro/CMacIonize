@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
   // all levels
   // the 32768 bit is set to indicate its level: 5
   unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
-  assert_condition(key == 32768);
+  assert_condition(key == 0);
 
   // pick the first cell to check the volume and midpoint calculation
   // due to the order in which the cell list is constructed, this should be the
