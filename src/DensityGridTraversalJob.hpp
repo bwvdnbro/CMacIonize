@@ -29,6 +29,7 @@
 #include "DensityGrid.hpp"
 
 #include <sstream>
+#include <typeinfo>
 
 /**
  * @brief Job that should be performed on every cell of the DensityGrid.
