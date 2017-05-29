@@ -600,8 +600,7 @@ public:
                                 current_cell, ds, periodic_correction);
 
       // get the optical depth of the path from the current photon location to
-      // the
-      // cell wall, update S
+      // the cell wall, update S
       DensityGrid::iterator it(old_cell->value(), *this);
       last_cell = it;
 

@@ -320,6 +320,7 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
   }
   for (unsigned int i = 0; i < size[0]; ++i) {
     for (unsigned int j = 0; j < size[1]; ++j) {
+      arr[i][j] = 0.;
       for (unsigned int k = 0; k < n; ++k) {
         CoordinateVector<> position;
         if (coordinate == 'x') {
@@ -336,7 +337,7 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
           position[2] = box.get_anchor().z() + (k + 0.5) * dk;
         }
         DensityGrid::iterator cell = grid.get_cell(position);
-        arr[i][j] = get_single_variable(cell, name);
+        arr[i][j] += get_single_variable(cell, name);
       }
     }
   }
