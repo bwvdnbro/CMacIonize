@@ -836,6 +836,17 @@ set(TESTVORONOIDENSITYGRID_SOURCES
 add_unit_test(NAME testVoronoiDensityGrid
               SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
 
+## Unit test for OIAMRRefinementScheme
+set(TESTOIAMRREFINEMENTSCHEME_SOURCES
+    testOIAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
+    ../src/OIAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testOIAMRRefinementScheme
+              SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
