@@ -708,8 +708,17 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiGrid.cpp
 )
-add_unit_test(NAME testHydroIntegrator
-              SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTHYDROINTEGRATOR_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+endif(HAVE_HDF5)
 
 ## ParallelCartesianDensityGrid test
 if(HAVE_HDF5)
@@ -833,8 +842,17 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     ../src/VoronoiGrid.cpp
     ../src/VoronoiGrid.hpp
 )
-add_unit_test(NAME testVoronoiDensityGrid
-              SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTVORONOIDENSITYGRID_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+endif(HAVE_HDF5)
 
 ## Unit test for OIAMRRefinementScheme
 set(TESTOIAMRREFINEMENTSCHEME_SOURCES

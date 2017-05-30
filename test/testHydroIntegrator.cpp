@@ -171,8 +171,8 @@ int main(int argc, char **argv) {
     CoordinateVector< bool > periodic(false, false, false);
     OneDVoronoiGeneratorDistribution *generators =
         new OneDVoronoiGeneratorDistribution();
-    VoronoiDensityGrid grid(generators, density_function, box, periodic, true,
-                            0.001, 5. / 3.);
+    VoronoiDensityGrid grid(generators, density_function, box, 0, periodic,
+                            true, 0.001, 5. / 3.);
     std::pair< unsigned long, unsigned long > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block);

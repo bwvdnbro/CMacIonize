@@ -123,6 +123,7 @@ set(CMACIONIZE_SOURCES
     ChargeTransferRates.cpp
     CMacIonize.cpp
     CMacIonizeSnapshotDensityFunction.cpp
+    CMacIonizeVoronoiGeneratorDistribution.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
@@ -159,6 +160,7 @@ set(CMACIONIZE_SOURCES
     ChiSquaredIterationConvergenceChecker.hpp
     ChiSquaredPhotonNumberConvergenceChecker.hpp
     CMacIonizeSnapshotDensityFunction.hpp
+    CMacIonizeVoronoiGeneratorDistribution.hpp
     Configuration.hpp.in
     ContinuousPhotonSourceFactory.hpp
     CoordinateVector.hpp

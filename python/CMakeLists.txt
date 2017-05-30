@@ -53,6 +53,8 @@ if(HAVE_HDF5)
       ../src/CartesianDensityGrid.cpp
       ../src/CMacIonizeAMRRefinementScheme.hpp
       ../src/CMacIonizeSnapshotDensityFunction.cpp
+      ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+      ../src/CMacIonizeVoronoiGeneratorDistribution.hpp
       ../src/DensityGrid.cpp
       ../src/VoronoiCell.cpp
       ../src/VoronoiDensityGrid.cpp

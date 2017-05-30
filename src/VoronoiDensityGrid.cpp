@@ -36,6 +36,8 @@
  * @param density_function DensityFunction to use to initialize the cell
  * variables.
  * @param box Box containing the entire grid (in m).
+ * @param num_lloyd Number of Lloyd iterations to apply to the grid after it has
+ * been constructed for the first time.
  * @param periodic Periodicity flags.
  * @param hydro Flag signaling if hydro is active or not.
  * @param hydro_timestep Time step used in the hydro scheme (in s).
@@ -44,15 +46,15 @@
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
-    DensityFunction &density_function, Box box,
+    DensityFunction &density_function, Box box, unsigned char num_lloyd,
     CoordinateVector< bool > periodic, bool hydro, double hydro_timestep,
     double hydro_gamma, Log *log)
     : DensityGrid(density_function, box, periodic, hydro, log),
       _position_generator(position_generator),
       _voronoi_grid(box, periodic,
                     position_generator->get_number_of_positions()),
-      _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma),
-      _epsilon(1.e-12 * box.get_sides().norm()) {
+      _num_lloyd(num_lloyd), _hydro_timestep(hydro_timestep),
+      _hydro_gamma(hydro_gamma), _epsilon(1.e-12 * box.get_sides().norm()) {
 
   const unsigned long totnumcell =
       _position_generator->get_number_of_positions();
@@ -81,6 +83,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params,
                   "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
               params.get_physical_vector< QUANTITY_LENGTH >(
                   "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+          params.get_value< unsigned char >("densitygrid:num_lloyd", 0),
           params.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),
           params.get_value< bool >("hydro:active", false),
@@ -117,6 +120,24 @@ void VoronoiDensityGrid::initialize(
   _voronoi_grid.finalize();
   if (_log) {
     _log->write_status("Done initializing Voronoi grid.");
+  }
+
+  if (_num_lloyd > 0) {
+    if (_log) {
+      _log->write_status("Applying ", _num_lloyd, " Lloyd iterations...");
+    }
+
+    for (unsigned char illoyd = 0; illoyd < _num_lloyd; ++illoyd) {
+      for (unsigned int i = 0; i < numcell; ++i) {
+        _voronoi_grid.get_generator(i) = _voronoi_grid.get_centroid(i);
+      }
+      _voronoi_grid.reset();
+      _voronoi_grid.finalize();
+    }
+
+    if (_log) {
+      _log->write_status("Done.");
+    }
   }
 
   DensityGrid::initialize(block);
