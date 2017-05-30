@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction density_function(1.);
   AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1., 4);
 
-  AMRDensityGrid grid(box, ncell, density_function, scheme);
+  AMRDensityGrid grid(box, ncell, density_function, scheme, 1);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block);

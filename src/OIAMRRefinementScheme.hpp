@@ -79,9 +79,10 @@ public:
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
     const double volume = cell.get_volume();
-    const double OI_frac = cell.get_ionic_fraction(ION_O_n);
+    const double On_frac = cell.get_ionic_fraction(ION_O_n);
+    const double Op1_frac = cell.get_ionic_fraction(ION_O_p1);
     const double nH = cell.get_number_density();
-    return volume * OI_frac * nH > _target_N && level < _max_level;
+    return volume * On_frac * Op1_frac * nH > _target_N && level < _max_level;
   }
 };
 

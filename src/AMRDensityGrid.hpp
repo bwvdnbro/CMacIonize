@@ -50,6 +50,13 @@ private:
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
 
+  /*! @brief Refinement interval: number of grid resets before the grid is
+      refined for the first time. */
+  unsigned char _refinement_interval;
+
+  /*! @brief Number of times the reset() method was called. */
+  unsigned char _reset_count;
+
   /**
    * @brief Get the largest odd factor of the given number.
    *
@@ -189,6 +196,8 @@ public:
    * @param density_function DensityFunction that defines the density field.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
+   * @param refinement_interval Number of grid resets before the grid is
+   * refined for the first time.
    * @param periodic Periodicity flags.
    * @param hydro Hydro flag.
    * @param log Log to write logging info to.
@@ -196,10 +205,12 @@ public:
   inline AMRDensityGrid(
       Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
+      unsigned char refinement_interval = 5,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
       : DensityGrid(density_function, box, periodic, hydro, log),
-        _refinement_scheme(refinement_scheme) {
+        _refinement_scheme(refinement_scheme),
+        _refinement_interval(refinement_interval), _reset_count(0) {
 
     // find the smallest number of blocks that fits the requested top level grid
     // for one dimension, this is the largest odd factor in that dimension
@@ -267,6 +278,8 @@ public:
             params.get_value< CoordinateVector< int > >(
                 "densitygrid:ncell", CoordinateVector< int >(64)),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
+            params.get_value< unsigned char >("densitygrid:refinement_interval",
+                                              5),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid:periodicity", CoordinateVector< bool >(false)),
             params.get_value< bool >("hydro:active", false), log) {}
@@ -332,23 +345,24 @@ public:
       _log->write_status("Resetting grid...");
     }
 
+    ++_reset_count;
     // we only refine the cells that are already present
     // newly added refined cells are recursively refined within the refinement
     // routine
-    const unsigned int cells2size = _cells.size();
-    for (unsigned int i = 0; i < cells2size; ++i) {
-      if (_refinement_scheme) {
+    if (_refinement_scheme != nullptr && _reset_count >= _refinement_interval) {
+      const unsigned int cells2size = _cells.size();
+      for (unsigned int i = 0; i < cells2size; ++i) {
         refine_cell(*_refinement_scheme, i, _density_function);
       }
-    }
 
-    if (_log) {
-      _log->write_status("Number of cells after reset: ",
-                         _grid.get_number_of_cells(), ".");
-    }
+      if (_log) {
+        _log->write_status("Number of cells after reset: ",
+                           _grid.get_number_of_cells(), ".");
+      }
 
-    // reset the ngbs
-    _grid.set_ngbs(_periodic);
+      // reset the ngbs
+      _grid.set_ngbs(_periodic);
+    }
 
     // make sure all cells are correctly reset (also the new ones, if any)
     DensityGrid::reset_grid();
