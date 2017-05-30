@@ -192,7 +192,7 @@ Box CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
  * @return True if the indices are valid, false otherwise.
  */
 bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
-                                     CoordinateVector<> &position) {
+                                     CoordinateVector<> &position) const {
   bool inside = true;
   if (!_periodic.x()) {
     inside &= (index.x() >= 0 && index.x() < _ncell.x());
@@ -234,6 +234,24 @@ bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
 }
 
 /**
+ * @brief Check whether the given index points to a valid cell.
+ *
+ * This version ignores the boundary flags and always assumes open boundaries.
+ *
+ * @param index Indices of the cell.
+ * @param position Current position of the photon.
+ * @return True if the indices are valid, false otherwise.
+ */
+bool CartesianDensityGrid::is_inside_non_periodic(
+    CoordinateVector< int > &index, CoordinateVector<> &position) const {
+  bool inside = true;
+  inside &= (index.x() >= 0 && index.x() < _ncell.x());
+  inside &= (index.y() >= 0 && index.y() < _ncell.y());
+  inside &= (index.z() >= 0 && index.z() < _ncell.z());
+  return inside;
+}
+
+/**
  * @brief Get the intersection point of a photon with one of the walls of a
  * cell.
  *
@@ -266,7 +284,7 @@ bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
  */
 CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
     CoordinateVector<> &photon_origin, CoordinateVector<> &photon_direction,
-    Box &cell, CoordinateVector< char > &next_index, double &ds) {
+    Box &cell, CoordinateVector< char > &next_index, double &ds) const {
   CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
   CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
@@ -463,6 +481,47 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
   }
 
   return last_cell;
+}
+
+/**
+ * @brief Get the total line emission along a ray with the given origin and
+ * direction.
+ *
+ * @param origin Origin of the ray (in m).
+ * @param direction Direction of the ray.
+ * @param line EmissionLine name of the line to trace.
+ * @return Accumulated emission along the ray (in J m^-2 s^-1).
+ */
+double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
+                                                CoordinateVector<> direction,
+                                                EmissionLine line) {
+  double S = 0.;
+
+  // find out in which cell the origin lies
+  CoordinateVector< int > index = get_cell_indices(origin);
+
+  unsigned int ncell = 0;
+  // while the photon has not exceeded the optical depth and is still in the box
+  while (is_inside_non_periodic(index, origin)) {
+    ++ncell;
+    Box cell = get_cell(index);
+
+    double ds;
+    CoordinateVector< char > next_index;
+    CoordinateVector<> next_wall =
+        get_wall_intersection(origin, direction, cell, next_index, ds);
+
+    // get the optical depth of the path from the current photon location to the
+    // cell wall, update S
+    DensityGrid::iterator it(get_long_index(index), *this);
+
+    S += ds * it.get_emissivities()->get_emissivity(line);
+
+    origin = next_wall;
+    index += next_index;
+  }
+
+  return S;
 }
 
 /**

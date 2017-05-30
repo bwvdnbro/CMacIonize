@@ -96,6 +96,110 @@ static void compute_emissivities(EmissivityCalculator &calculator,
 }
 
 /**
+ * @brief Get the units in which the given variable name is expressed.
+ *
+ * @param name std::string representation of a cell variable name.
+ * @return std::string representation of the units in which that variable is
+ * expressed.
+ */
+static std::string get_variable_unit(std::string name) {
+  // names are ordered alphabetically
+  if (name.find("NeutralFraction") == 0) {
+    // all neutral fractions are dimensionless
+    return "";
+  } else if (name == "NumberDensity") {
+    return "m^-3";
+  } else if (name == "OI_6300") {
+    return "no idea";
+  } else if (name == "Temperature") {
+    return "K";
+  } else {
+    cmac_error("Unknown variable: %s!", name.c_str());
+    return "";
+  }
+}
+
+/**
+ * @brief Get the EmissionLine corresponding to the given std::string.
+ *
+ * @param name Name of an EmissionLine.
+ * @return Corresponding EmissionLine.
+ */
+static EmissionLine get_line(std::string name) {
+  if (name == "OI_6300") {
+    return EMISSIONLINE_OI_6300;
+  } else {
+    cmac_error("Unknown emission line name: %s!", name.c_str());
+    return NUMBER_OF_EMISSIONLINES;
+  }
+}
+
+/**
+ * @brief Make an emission map for the given emission line in the given
+ * direction.
+ *
+ * @param calculator EmissivityCalculator on which to act (acts as self).
+ * @param grid DensityGrid on which to act.
+ * @param direction Coordinate direction along which the projection is made.
+ * @param line EmissionLine to make a map of.
+ * @param shape Size of the resulting map.
+ * @return Python dict containing a numpy.ndarray with the requested map, and a
+ * string representation of the units in which the variables are expressed.
+ */
+static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
+                                             DensityGrid &grid, char direction,
+                                             std::string line,
+                                             boost::python::tuple shape) {
+  // make sure the grid has emissivity values
+  calculator.calculate_emissivities(grid);
+
+  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
+                      boost::python::extract< unsigned int >(shape[1])};
+  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
+  boost::python::handle<> handle(narr);
+  boost::python::numeric::array arr(handle);
+
+  Box box = grid.get_box();
+
+  for (unsigned int i = 0; i < size[0]; ++i) {
+    for (unsigned int j = 0; j < size[1]; ++j) {
+      CoordinateVector<> start;
+      CoordinateVector<> dir;
+      if (direction == 'x') {
+        dir[0] = 1.;
+        start[0] = box.get_anchor().x();
+        start[1] =
+            box.get_anchor().y() + (i + 0.5) * box.get_sides().y() / size[0];
+        start[2] =
+            box.get_anchor().z() + (j + 0.5) * box.get_sides().z() / size[1];
+      } else if (direction == 'y') {
+        dir[1] = 1.;
+        start[0] =
+            box.get_anchor().x() + (i + 0.5) * box.get_sides().x() / size[0];
+        start[1] = box.get_anchor().y();
+        start[2] =
+            box.get_anchor().z() + (j + 0.5) * box.get_sides().z() / size[1];
+      } else if (direction == 'z') {
+        dir[2] = 1.;
+        start[0] =
+            box.get_anchor().x() + (i + 0.5) * box.get_sides().x() / size[0];
+        start[1] =
+            box.get_anchor().y() + (j + 0.5) * box.get_sides().y() / size[1];
+        start[2] = box.get_anchor().z();
+      } else {
+        cmac_error("Unknown coordinate direction: %c!", direction);
+      }
+      arr[i][j] = grid.get_total_emission(start, dir, get_line(line));
+    }
+  }
+
+  boost::python::dict result;
+  result["values"] = arr.copy();
+  result["units"] = get_variable_unit(line);
+  return result;
+}
+
+/**
  * @brief Python constructor for Abundances.
  *
  * @param abundances Python dict containing abundances for all elements other
@@ -131,7 +235,8 @@ BOOST_PYTHON_MODULE(libemissivitycalculator) {
       .def("__init__",
            boost::python::make_constructor(&initEmissivityCalculator))
       .def("get_emissivities", &get_emissivities)
-      .def("compute_emissivities", &compute_emissivities);
+      .def("compute_emissivities", &compute_emissivities)
+      .def("make_emission_map", &make_emission_map);
 
   boost::python::class_< Abundances, boost::shared_ptr< Abundances >,
                          boost::noncopyable >("Abundances",

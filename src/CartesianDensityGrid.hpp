@@ -119,7 +119,10 @@ private:
 
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position) const;
 
-  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
+  bool is_inside(CoordinateVector< int > &index,
+                 CoordinateVector<> &position) const;
+  bool is_inside_non_periodic(CoordinateVector< int > &index,
+                              CoordinateVector<> &position) const;
 
 public:
   CartesianDensityGrid(
@@ -185,9 +188,13 @@ public:
                                            CoordinateVector<> &photon_direction,
                                            Box &cell,
                                            CoordinateVector< char > &next_index,
-                                           double &ds);
+                                           double &ds) const;
 
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
+
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line);
 
   /**
    * @brief Get an iterator to the first cell in the grid.

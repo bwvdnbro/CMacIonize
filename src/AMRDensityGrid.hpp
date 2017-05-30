@@ -652,6 +652,22 @@ public:
   }
 
   /**
+   * @brief Get the total line emission along a ray with the given origin and
+   * direction.
+   *
+   * @param origin Origin of the ray (in m).
+   * @param direction Direction of the ray.
+   * @param line EmissionLine name of the line to trace.
+   * @return Accumulated emission along the ray (in J m^-2 s^-1).
+   */
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line) {
+    cmac_error("This function has not been implemented yet!");
+    return 0.;
+  }
+
+  /**
    * @brief Increment the iterator index.
    *
    * In this case, the index encodes a lot of extra information and we cannot

@@ -594,6 +594,19 @@ public:
                                          double optical_depth) = 0;
 
   /**
+   * @brief Get the total line emission along a ray with the given origin and
+   * direction.
+   *
+   * @param origin Origin of the ray (in m).
+   * @param direction Direction of the ray.
+   * @param line EmissionLine name of the line to trace.
+   * @return Accumulated emission along the ray (in J m^-2 s^-1).
+   */
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line) = 0;
+
+  /**
    * @brief Index increment used in the iterator.
    *
    * More sofisticated grids (like the AMR grid) might implement their own
