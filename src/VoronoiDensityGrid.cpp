@@ -28,6 +28,12 @@
 #include "VoronoiGeneratorDistribution.hpp"
 #include "VoronoiGeneratorDistributionFactory.hpp"
 
+//#define VORONOIDENSITYGRID_PRINT_GRID
+
+#ifdef VORONOIDENSITYGRID_PRINT_GRID
+#include <fstream>
+#endif
+
 /**
  * @brief Constructor.
  *
@@ -115,6 +121,12 @@ void VoronoiDensityGrid::initialize(
   }
   // compute the grid
   _voronoi_grid.compute_grid();
+
+#ifdef VORONOIDENSITYGRID_PRINT_GRID
+  std::ofstream ofile("voronoi_grid.txt");
+  _voronoi_grid.print_grid(ofile);
+  ofile.close();
+#endif
 
   // compute volumes and neighbour relations
   _voronoi_grid.finalize();
@@ -270,8 +282,7 @@ unsigned int VoronoiDensityGrid::get_number_of_cells() const {
  */
 unsigned long
 VoronoiDensityGrid::get_cell_index(CoordinateVector<> position) const {
-  cmac_error("This function is not implemented and should not be used!");
-  return 0ull;
+  return _voronoi_grid.get_index(position);
 }
 
 /**

@@ -149,17 +149,21 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write units, we use SI units everywhere
   group = HDF5Tools::create_group(file, "Units");
-  double unit_value = 1;
+  double unit_current_in_cgs = 1.;
+  double unit_length_in_cgs = 100.;
+  double unit_mass_in_cgs = 1000.;
+  double unit_temperature_in_cgs = 1.;
+  double unit_time_in_cgs = 1.;
   HDF5Tools::write_attribute< double >(group, "Unit current in cgs (U_I)",
-                                       unit_value);
+                                       unit_current_in_cgs);
   HDF5Tools::write_attribute< double >(group, "Unit length in cgs (U_L)",
-                                       unit_value);
+                                       unit_length_in_cgs);
   HDF5Tools::write_attribute< double >(group, "Unit mass in cgs (U_M)",
-                                       unit_value);
+                                       unit_mass_in_cgs);
   HDF5Tools::write_attribute< double >(group, "Unit temperature in cgs (U_T)",
-                                       unit_value);
+                                       unit_temperature_in_cgs);
   HDF5Tools::write_attribute< double >(group, "Unit time in cgs (U_t)",
-                                       unit_value);
+                                       unit_time_in_cgs);
   HDF5Tools::close_group(group);
 
   // write particles

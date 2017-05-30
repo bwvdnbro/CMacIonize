@@ -79,13 +79,14 @@ initDensityGrid(const std::string &filename) {
     parameters.add_value("densitygrid:amrrefinementscheme:type", "CMacIonize");
   }
 
-  // make sure Voronoi grid are processed correctly
+  // make sure Voronoi grids are processed correctly
   if (parameters.get_value< std::string >("densitygrid:type") == "Voronoi") {
     // this overrides whatever value was in that field
     parameters.add_value("densitygrid:voronoi_generator_distribution:type",
                          "CMacIonize");
     parameters.add_value("densitygrid:voronoi_generator_distribution:filename",
                          filename);
+    parameters.add_value("densitygrid:num_lloyd", "0");
   }
 
   CMacIonizeSnapshotDensityFunction density_function(filename);

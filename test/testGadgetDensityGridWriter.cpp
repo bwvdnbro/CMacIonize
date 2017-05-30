@@ -139,10 +139,10 @@ int main(int argc, char **argv) {
     assert_condition(unit_value == 1.);
     unit_value =
         HDF5Tools::read_attribute< double >(group, "Unit length in cgs (U_L)");
-    assert_condition(unit_value == 1.);
+    assert_condition(unit_value == 100.);
     unit_value =
         HDF5Tools::read_attribute< double >(group, "Unit mass in cgs (U_M)");
-    assert_condition(unit_value == 1.);
+    assert_condition(unit_value == 1000.);
     unit_value = HDF5Tools::read_attribute< double >(
         group, "Unit temperature in cgs (U_T)");
     assert_condition(unit_value == 1.);

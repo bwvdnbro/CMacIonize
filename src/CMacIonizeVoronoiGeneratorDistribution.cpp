@@ -44,6 +44,10 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
+  // get the simulation box anchor
+  CoordinateVector<> box_anchor =
+      params.get_physical_vector< QUANTITY_LENGTH >("densitygrid:box_anchor");
+
   // units
   double unit_length_in_SI = 1.;
   if (HDF5Tools::group_exists(file, "/Units")) {
@@ -71,6 +75,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
+    _positions[i] += box_anchor;
   }
 }
 

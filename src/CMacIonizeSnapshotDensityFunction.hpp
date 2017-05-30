@@ -29,6 +29,7 @@
 #include "AMRGrid.hpp"
 #include "Box.hpp"
 #include "DensityFunction.hpp"
+#include "PointLocations.hpp"
 
 class Log;
 class ParameterFile;
@@ -49,6 +50,16 @@ private:
 
   /*! @brief AMR density grid (if applicable). */
   AMRGrid< DensityValues > *_amr_grid;
+
+  /*! @brief Locations of the Voronoi grid generators (if applicable). */
+  std::vector< CoordinateVector<> > _voronoi_generators;
+
+  /*! @brief PointLocations object used to query the Voronoi grid generator
+   *  locations (if applicable). */
+  PointLocations *_voronoi_pointlocations;
+
+  /*! @brief DensityValues stored in the Voronoi grid (if applicable). */
+  std::vector< DensityValues > _voronoi_densityvalues;
 
   /**
    * @brief Get the largest odd factor of the given number.
