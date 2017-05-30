@@ -451,8 +451,61 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
 double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
                                               CoordinateVector<> direction,
                                               EmissionLine line) {
-  cmac_error("This function has not been implemented yet!");
-  return 0.;
+
+  double S = 0.;
+
+  // move the ray a tiny bit to make sure it is inside the cell
+  origin += _epsilon * direction;
+
+  unsigned int index = _voronoi_grid.get_index(origin);
+  while (index < VORONOI_MAX_INDEX) {
+    CoordinateVector<> ipos = _voronoi_grid.get_generator(index);
+    unsigned int next_index = 0;
+    unsigned int loopcount = 0;
+    double mins = -1.;
+    while (mins <= 0.) {
+      mins = -1;
+      auto faces = _voronoi_grid.get_faces(index);
+      for (auto it = faces.begin(); it != faces.end(); ++it) {
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        CoordinateVector<> normal;
+        if (ngb < VORONOI_MAX_INDEX) {
+          normal = _voronoi_grid.get_generator(ngb) - ipos;
+        } else {
+          normal = _voronoi_grid.get_wall_normal(ngb);
+        }
+        const double nk = CoordinateVector<>::dot_product(normal, direction);
+        if (nk > 0) {
+          const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
+          const double sngb =
+              CoordinateVector<>::dot_product(normal, (point - origin)) / nk;
+          if (mins < 0. || (sngb > 0. && sngb < mins)) {
+            mins = sngb;
+            next_index = ngb;
+          }
+        }
+      }
+      ++loopcount;
+      cmac_assert_message(loopcount < 100, "mins: %g", mins);
+      if (mins <= 0.) {
+        origin += _epsilon * direction;
+        index = _voronoi_grid.get_index(origin);
+        ipos = _voronoi_grid.get_generator(index);
+      }
+    }
+    if (index >= VORONOI_MAX_INDEX) {
+      break;
+    }
+
+    DensityGrid::iterator it(index, *this);
+
+    index = next_index;
+    origin += mins * direction;
+
+    S += mins * it.get_emissivities()->get_emissivity(line);
+  }
+
+  return S;
 }
 
 /**

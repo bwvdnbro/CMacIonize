@@ -663,8 +663,32 @@ public:
   virtual double get_total_emission(CoordinateVector<> origin,
                                     CoordinateVector<> direction,
                                     EmissionLine line) {
-    cmac_error("This function has not been implemented yet!");
-    return 0.;
+    double S = 0.;
+
+    unsigned long index = get_cell_index(origin);
+    AMRGridCell< unsigned long > *current_cell = _cells[index];
+
+    while (current_cell != nullptr) {
+      Box cell = current_cell->get_geometry();
+
+      double ds = 0.;
+      AMRGridCell< unsigned long > *old_cell = current_cell;
+      CoordinateVector<> periodic_correction;
+      CoordinateVector<> next_wall = get_wall_intersection(
+          origin, direction, cell, current_cell, ds, periodic_correction);
+
+      DensityGrid::iterator it(old_cell->value(), *this);
+
+      origin = next_wall;
+
+      S += it.get_emissivities()->get_emissivity(line);
+
+      if (periodic_correction.norm2() > 0.) {
+        break;
+      }
+    }
+
+    return S;
   }
 
   /**
