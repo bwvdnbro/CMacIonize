@@ -26,7 +26,7 @@
 #include "VoronoiCell.hpp"
 #include "Error.hpp"
 
-//#define VORONOICELL_CHECK_DEGENERATE_CASES
+#define VORONOICELL_CHECK_DEGENERATE_CASES
 
 #include <iostream>
 #include <sstream>
@@ -487,10 +487,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     }
   }
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
-  std::stringstream original_cell;
-  print_cell(original_cell);
-#endif
+  //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+  //  std::stringstream original_cell;
+  //  print_cell(original_cell);
+  //#endif
 
   // at this point, we have either the indices of an intersected edge, or the
   // 'complicated_setup' flag is set and we have the index of a vertex on or
@@ -502,10 +502,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   std::vector< bool > delete_stack(_vertices.size(), false);
   // flag only used by complicated setup
   bool double_edge = false;
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
   // flags only used by complicated setup
   std::vector< int > visitflags(_vertices.size(), 0);
-#endif
 
   // now create the first new vertex
   // note that we need to check the 'complicated_setup' flag again (even if we
@@ -667,10 +665,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       delete_stack.push_back(false);
       cmac_assert(delete_stack.size() == _vertices.size());
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       visitflags.push_back(-new_index);
       cmac_assert(visitflags.size() == _vertices.size());
-#endif
 
       // the new vertex has order 'k'
       _edges[new_index].resize(k);
@@ -782,10 +778,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       delete_stack.push_back(false);
       cmac_assert(delete_stack.size() == _vertices.size());
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       visitflags.push_back(-new_index);
       cmac_assert(visitflags.size() == _vertices.size());
-#endif
 
       // the new vertex has order 'k'
       _edges[new_index].resize(k);
@@ -882,14 +876,12 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     us = get_edge_endpoint_index(up, us);
     up = i;
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
     // store a pointer to the newly created vertex in the 'visitflags' for the
     // deleted vertex
     // this way, we know where to find the new vertex if we encounter the old
     // vertex later on in the algorithm (because the old vertex is still linked
     // to the vertices above the plane)
     visitflags[qp] = new_index;
-#endif
   } else {
     // do the normal setup
 
@@ -918,10 +910,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     delete_stack.push_back(false);
     cmac_assert(delete_stack.size() == _vertices.size());
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
     visitflags.push_back(-new_index);
     cmac_assert(visitflags.size() == _vertices.size());
-#endif
 
     _edges[new_index].resize(3);
 
@@ -1052,92 +1042,117 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // 'qs' now contains the index of the next edge NOT BELOW the plane
       // 'k' contains the order of the new vertex
 
-      int j;
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
-      // check if 'qp' was already replaced before (in which case 'j' will
-      // contain a positive value, i.e. the index of the new vertex that
-      // replaces it)
-      // we currently assume this specific case does never happen, as it is very
-      // hard to imagine a case where it would happen
-      // however, we make sure the code crashes (with useful output) if it would
-      // ever happen
-      j = visitflags[qp];
-      if (j > 0) {
-        CoordinateVector<> p = _generator_position + relative_position;
-        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
-                  << std::endl;
-        std::cerr << original_cell.str() << std::endl;
-        cmac_error("j > 0!");
-      }
+      int j = visitflags[qp];
+      //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+      //      if (j > 0) {
+      //        CoordinateVector<> p = _generator_position + relative_position;
+      //        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
+      //                  << std::endl;
+      //        std::cerr << original_cell.str() << std::endl;
+      //        cmac_error("j > 0!");
+      //      }
+      //#endif
 
       // find out if we have a new double edge
-      // we cannot currently handle this (because I frankly can't imagine a case
-      // where it would and therefore don't understand the algorithm)
-      // however, we make sure the code crashes (with useful output) if it would
-      // ever happen
       bool new_double_edge;
       // these conditions could be written more concise
       if (qp == up && qs == us) {
         // the next edge NOT BELOW the plane is the edge that ends the whole
         // loop; we do not care about having a new double edge
         new_double_edge = false;
+        if (j > 0) {
+          k += _edges[j].size();
+        }
       } else {
-        if (l.first == 0) {
-          int i = -visitflags[lp];
-          if (i == cp) {
-            new_double_edge = true;
-            --k;
+        if (j > 0) {
+          k += _edges[j].size();
+          if (l.first == 0) {
+            int i = visitflags[lp];
+            if (i > 0) {
+              if (get_edge_endpoint(i, _edges[i].size() - 1) == j) {
+                new_double_edge = true;
+                --k;
+              } else {
+                new_double_edge = false;
+              }
+            } else {
+              if (j == rp && lp == up &&
+                  get_edge_endpoint_index(qp, qs) == us) {
+                new_double_edge = true;
+                --k;
+              } else {
+                new_double_edge = false;
+              }
+            }
           } else {
             new_double_edge = false;
           }
         } else {
-          new_double_edge = false;
+          if (l.first == 0) {
+            int i = visitflags[lp];
+            if (i == cp) {
+              new_double_edge = true;
+              --k;
+            } else {
+              new_double_edge = false;
+            }
+          } else {
+            new_double_edge = false;
+          }
         }
       }
-      if (new_double_edge) {
-        CoordinateVector<> p = _generator_position + relative_position;
-        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
-                  << std::endl;
-        std::cerr << original_cell.str() << std::endl;
-        cmac_error("new_double_edge!");
+      //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+      //      if (new_double_edge) {
+      //        CoordinateVector<> p = _generator_position + relative_position;
+      //        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
+      //                  << std::endl;
+      //        std::cerr << original_cell.str() << std::endl;
+      //        cmac_error("new_double_edge!");
+      //      }
+      //#endif
+
+      unsigned int i;
+      if (j > 0) {
+        i = _edges[j].size();
+        if (k != _edges[j].size()) {
+          _edges[j].resize(k);
+        }
+        visitflags[j] = -j;
+      } else {
+
+        // create a new order 'k' vertex
+        unsigned int new_index = _vertices.size();
+        _vertices.push_back(_vertices[qp]);
+        _edges.resize(_edges.size() + 1);
+
+        // we assume that '_edges' and '_vertices' have the same size; let's
+        // make sure!
+        cmac_assert(_edges.size() == _vertices.size());
+
+        delete_stack.push_back(false);
+        cmac_assert(delete_stack.size() == _vertices.size());
+
+        visitflags.push_back(-new_index);
+        cmac_assert(visitflags.size() == _vertices.size());
+
+        _edges[new_index].resize(k);
+
+        // set the 'visitflags' index for 'qp' to the index of the new vertex
+        // that replaces it
+        visitflags[qp] = new_index;
+
+        // flag 'qp' for deletion
+        delete_stack[qp] = true;
+
+        // now set the edges of the new vertex
+        // the first edge will be connected to the previous new vertex (unless
+        // we have a double edge and both this vertex and the previous new
+        // vertex are just a copy of their original vertices; in this case
+        // nothing changes and this connection is made at the end of the loop)
+        j = new_index;
+        i = 0;
       }
-#endif
 
-      // create a new order 'k' vertex
-      unsigned int new_index = _vertices.size();
-      _vertices.push_back(_vertices[qp]);
-      _edges.resize(_edges.size() + 1);
-
-      // we assume that '_edges' and '_vertices' have the same size; let's make
-      // sure!
-      cmac_assert(_edges.size() == _vertices.size());
-
-      delete_stack.push_back(false);
-      cmac_assert(delete_stack.size() == _vertices.size());
-
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
-      visitflags.push_back(-new_index);
-      cmac_assert(visitflags.size() == _vertices.size());
-#endif
-
-      _edges[new_index].resize(k);
-
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
-      // set the 'visitflags' index for 'qp' to the index of the new vertex that
-      // replaces it
-      visitflags[qp] = new_index;
-#endif
-
-      // flag 'qp' for deletion
-      delete_stack[qp] = true;
-
-      // now set the edges of the new vertex
-      // the first edge will be connected to the previous new vertex (unless we
-      // have a double edge and both this vertex and the previous new vertex are
-      // just a copy of their original vertices; in this case nothing changes
-      // and this connection is made at the end of the loop)
-      j = new_index;
-      unsigned int i = 0;
       if (!double_edge) {
         set_edge_neighbour(j, i, ngb_index);
         set_edge_endpoint(j, i, cp);
@@ -1151,11 +1166,9 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // starting from 'iqs+1' and wrapping
       qs = iqs;
       iqs = k - 1;
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       if (new_double_edge) {
         iqs = k;
       }
-#endif
       while (i < iqs) {
         ++qs;
         if (qs == _edges[qp].size()) {
@@ -1181,7 +1194,6 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       cs = i;
       cp = j;
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       if (new_double_edge) {
         set_edge_neighbour(j, 0, get_edge_neighbour(qp, qs));
       } else {
@@ -1189,17 +1201,10 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // the old vertex
         set_edge_neighbour(j, cs, get_edge_neighbour(qp, qs));
       }
-#else
-      // set the neighbour of the last edge to the corresponding neighbour of
-      // the old vertex
-      set_edge_neighbour(j, cs, get_edge_neighbour(qp, qs));
-#endif
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       // update the 'double_edge' flag. We currently assume a next degenerate
       // vertex will not be found
       double_edge = new_double_edge;
-#endif
 
     } else {
       // normal case: vertex lies below or above the plane
@@ -1249,10 +1254,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         delete_stack.push_back(false);
         cmac_assert(delete_stack.size() == _vertices.size());
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
         visitflags.push_back(-new_index);
         cmac_assert(visitflags.size() == _vertices.size());
-#endif
 
         // we want an order 3 vertex
         _edges[new_index].resize(3);
@@ -1321,26 +1324,6 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
   set_edge_endpoint_index(cp, cs, 0);
   set_edge_endpoint(rp, 0, cp);
   set_edge_endpoint_index(rp, 0, cs);
-
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
-  // check for order 1 and 2 vertices that need to be collapsed
-  // as we have never encountered a case where this actually happens, removing
-  // low order vertices is currently not supported
-  // however, we make sure the code crashes (with useful output) if it would
-  // ever happen
-  unsigned int num_low_order = 0;
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    if (_edges[i].size() < 3) {
-      ++num_low_order;
-    }
-  }
-  if (num_low_order > 0) {
-    CoordinateVector<> p = _generator_position + relative_position;
-    std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n" << std::endl;
-    std::cerr << original_cell.str() << std::endl;
-    cmac_error("Low order vertices present!");
-  }
-#endif
 
   // we are done adding new vertices, but we still have a lot of vertices and
   // edges that are no longer active
@@ -1567,11 +1550,36 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
     }
   }
 
+  // now check for low order vertices, and collapse them
+  std::vector< int > low_order_stack;
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    if (get_edge_endpoint(i, 0) >= 0 && _edges[i].size() < 3) {
+      low_order_stack.push_back(i);
+    }
+  }
+
+  while (low_order_stack.size() > 0) {
+    int v = low_order_stack.back();
+    low_order_stack.pop_back();
+    if (get_edge_endpoint(v, 0) >= 0) {
+      if (_edges[v].size() == 2) {
+        delete_order_2_vertex(v, low_order_stack);
+      } else if (_edges[v].size() == 1) {
+        delete_order_1_vertex(v, low_order_stack);
+      } else {
+        cmac_error("Order %lu vertex! This should not happen!",
+                   _edges[v].size());
+      }
+    }
+    delete_stack[v] = true;
+  }
+
   // count the new number of vertices
   unsigned int new_num_vert = 0;
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     // '!delete_stack[i]' is 1 if 'delete_stack[i] == false'
     new_num_vert += !delete_stack[i];
+    cmac_assert(delete_stack[i] || _edges[i].size() > 2);
   }
 
   // 'next_vertex' contains the next vertex to be copied
@@ -1633,6 +1641,89 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   if (_vertices.size() > new_num_vert) {
     _vertices.resize(new_num_vert);
     _edges.resize(new_num_vert);
+  }
+}
+
+/**
+ * @brief Delete a vertex that only has two edges from the cell structure.
+ *
+ * This involves reorganizing some edges.
+ *
+ * @param vertex Vertex to delete.
+ * @param stack Stack to add new low order vertices to.
+ */
+void VoronoiCell::delete_order_2_vertex(int vertex, std::vector< int > &stack) {
+  int j = get_edge_endpoint(vertex, 0);
+  int k = get_edge_endpoint(vertex, 1);
+  unsigned char a = get_edge_endpoint_index(vertex, 0);
+  unsigned char b = get_edge_endpoint_index(vertex, 1);
+  // see if we can find 'k' in the edge list of 'j'
+  unsigned char l = 0;
+  while (l < _edges[j].size() && get_edge_endpoint(j, l) != k) {
+    ++l;
+  }
+  if (l == _edges[j].size()) {
+    // 'j' and 'k' are not joined together (yet)
+    // we replace the edges from 'j' to 'v' and from 'k' to 'v' with a single
+    // edge from 'j' to 'k'
+    set_edge_endpoint(j, a, k);
+    set_edge_endpoint_index(j, a, b);
+    set_edge_endpoint(k, b, j);
+    set_edge_endpoint_index(k, b, a);
+  } else {
+    // there is already an edge from 'j' to 'k'
+    // remove the edges from 'j' to 'v' and from 'k' to 'v'
+    for (unsigned char i = a; i < _edges[j].size() - 1; ++i) {
+      int c = get_edge_endpoint(j, i + 1);
+      unsigned char d = get_edge_endpoint_index(j, i + 1);
+      set_edge_endpoint(j, i, c);
+      set_edge_endpoint_index(j, i, d);
+      set_edge_endpoint_index(c, d, i);
+      set_edge_neighbour(j, i, get_edge_neighbour(j, i + 1));
+    }
+    _edges[j].pop_back();
+    // check if 'j' has become an order 2 vertex (order 1 vertices should
+    // already be on the stack -- we only removed 1 edge)
+    if (_edges[j].size() == 2) {
+      stack.push_back(j);
+    }
+    for (unsigned char i = b; i < _edges[k].size() - 1; ++i) {
+      int c = get_edge_endpoint(k, i + 1);
+      unsigned char d = get_edge_endpoint_index(k, i + 1);
+      set_edge_endpoint(k, i, c);
+      set_edge_endpoint_index(k, i, d);
+      set_edge_endpoint_index(c, d, i);
+      set_edge_neighbour(k, i, get_edge_neighbour(k, i + 1));
+    }
+    _edges[k].pop_back();
+    if (_edges[k].size() == 2) {
+      stack.push_back(k);
+    }
+  }
+}
+
+/**
+ * @brief Delete a vertex that only has one edge from the cell structure.
+ *
+ * This involves reorganizing some edges.
+ *
+ * @param vertex Vertex to delete.
+ * @param stack Stack to add new low order vertices to.
+ */
+void VoronoiCell::delete_order_1_vertex(int vertex, std::vector< int > &stack) {
+  int j = get_edge_endpoint(vertex, 0);
+  unsigned char a = get_edge_endpoint_index(vertex, 0);
+  for (unsigned char i = a; i < _edges[j].size() - 1; ++i) {
+    int c = get_edge_endpoint(j, i + 1);
+    unsigned char d = get_edge_endpoint_index(j, i + 1);
+    set_edge_endpoint(j, i, c);
+    set_edge_endpoint_index(j, i, d);
+    set_edge_endpoint_index(c, d, i);
+    set_edge_neighbour(j, i, get_edge_neighbour(j, i + 1));
+  }
+  _edges[j].pop_back();
+  if (_edges[j].size() == 2) {
+    stack.push_back(j);
   }
 }
 

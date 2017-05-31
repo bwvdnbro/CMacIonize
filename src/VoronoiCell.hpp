@@ -282,6 +282,8 @@ public:
   void delete_connections(unsigned int vertex_index,
                           std::vector< bool > &delete_stack);
   void delete_vertices(std::vector< bool > &delete_stack);
+  void delete_order_2_vertex(int vertex, std::vector< int > &stack);
+  void delete_order_1_vertex(int vertex, std::vector< int > &stack);
 
   /// static geometric functions
   static double volume_tetrahedron(CoordinateVector<> v1, CoordinateVector<> v2,
