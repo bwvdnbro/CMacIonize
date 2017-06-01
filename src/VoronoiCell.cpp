@@ -26,7 +26,7 @@
 #include "VoronoiCell.hpp"
 #include "Error.hpp"
 
-#define VORONOICELL_CHECK_DEGENERATE_CASES
+//#define VORONOICELL_CHECK_DEGENERATE_CASES
 
 #include <iostream>
 #include <sstream>

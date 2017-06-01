@@ -29,8 +29,10 @@
 #include "VoronoiGeneratorDistributionFactory.hpp"
 
 //#define VORONOIDENSITYGRID_PRINT_GRID
+//#define VORONOIDENSITYGRID_PRINT_GENERATORS
 
-#ifdef VORONOIDENSITYGRID_PRINT_GRID
+#if defined(VORONOIDENSITYGRID_PRINT_GRID) ||                                  \
+    defined(VORONOIDENSITYGRID_PRINT_GENERATORS)
 #include <fstream>
 #endif
 
@@ -141,7 +143,7 @@ void VoronoiDensityGrid::initialize(
 
     for (unsigned char illoyd = 0; illoyd < _num_lloyd; ++illoyd) {
       for (unsigned int i = 0; i < numcell; ++i) {
-        _voronoi_grid.get_generator(i) = _voronoi_grid.get_centroid(i);
+        _voronoi_grid.set_generator(i, _voronoi_grid.get_centroid(i));
       }
       _voronoi_grid.reset();
       _voronoi_grid.finalize();
@@ -169,16 +171,33 @@ void VoronoiDensityGrid::evolve(double timestep) {
       _log->write_status("Evolving Voronoi grid...");
     }
 
+#ifdef VORONOIDENSITYGRID_PRINT_GENERATORS
+    std::ofstream ofile("voronoigrid_generators.txt");
+    ofile << "# " << Utilities::get_timestamp() << "\n";
+#endif
+
     for (auto it = begin(); it != end(); ++it) {
       const unsigned int index = it.get_index();
 
-      _voronoi_grid.get_generator(index)[0] +=
-          _hydro_timestep * _hydro_generator_velocity[0][index];
-      _voronoi_grid.get_generator(index)[1] +=
-          _hydro_timestep * _hydro_generator_velocity[1][index];
-      _voronoi_grid.get_generator(index)[2] +=
-          _hydro_timestep * _hydro_generator_velocity[2][index];
+      const CoordinateVector<> vgrid(_hydro_generator_velocity[0][index],
+                                     _hydro_generator_velocity[1][index],
+                                     _hydro_generator_velocity[2][index]);
+      _voronoi_grid.move_generator(index, _hydro_timestep * vgrid);
+
+#ifdef VORONOIDENSITYGRID_PRINT_GENERATORS
+      CoordinateVector<> p = _voronoi_grid.get_generator(index);
+      ofile << it.get_index() << "\t" << p.x() << "\t" << p.y() << "\t" << p.z()
+            << "\t" << _hydro_timestep * _hydro_generator_velocity[0][index]
+            << "\t" << _hydro_timestep * _hydro_generator_velocity[1][index]
+            << "\t" << _hydro_timestep * _hydro_generator_velocity[2][index]
+            << "\n";
+#endif
     }
+
+#ifdef VORONOIDENSITYGRID_PRINT_GENERATORS
+    ofile.close();
+#endif
+
     _voronoi_grid.reset();
     _voronoi_grid.finalize();
 

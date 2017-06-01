@@ -41,8 +41,22 @@ class VoronoiCell;
  */
 class VoronoiGrid {
 private:
-  /*! @brief Bounding box containing the grid. */
+  /*! @brief Bounding box containing the grid (in m). */
   Box _box;
+
+  /*! @brief Internally used bounding box (internal units). */
+  Box _internal_box;
+
+  /*! @brief Factor used to convert from internal length units to actual
+   *  units. */
+  double _length_factor;
+
+  /*! @brief Factor used to convert from internal area units to actual units. */
+  double _area_factor;
+
+  /*! @brief Factor used to convert from internal volume units to actual
+   *  units. */
+  double _volume_factor;
 
   /*! @brief Periodicity flags for the bounding box. */
   CoordinateVector< bool > _periodic;
@@ -184,11 +198,12 @@ public:
   void finalize();
 
   double get_volume(unsigned int index) const;
-  const CoordinateVector<> &get_centroid(unsigned int index) const;
-  const CoordinateVector<> &get_generator(unsigned int index) const;
-  CoordinateVector<> &get_generator(unsigned int index);
+  CoordinateVector<> get_centroid(unsigned int index) const;
+  CoordinateVector<> get_generator(unsigned int index) const;
+  void set_generator(unsigned int index, const CoordinateVector<> &pos);
+  void move_generator(unsigned int index, const CoordinateVector<> &dx);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  const std::vector< VoronoiFace > &get_faces(unsigned int index) const;
+  std::vector< VoronoiFace > get_faces(unsigned int index) const;
   unsigned int get_index(const CoordinateVector<> &position) const;
 
   bool is_inside(CoordinateVector<> position) const;
