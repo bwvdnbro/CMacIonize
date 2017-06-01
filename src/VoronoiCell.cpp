@@ -584,7 +584,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     //   (case 2) B B NB NB
     // we will try to find the indices of the first and last occurences of NB
     // and/or B in this list
-    // we already found the index of and edge of 'up' below the plane, it is
+    // we already found the index of an edge of 'up' below the plane, it is
     // stored in 'rp' (we might use this information in the future; for now, we
     // just ignore it)
 
@@ -1010,12 +1010,15 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
 
       // store the edge of 'lp' that is connected to the previous vertex in 'qs'
       // store 'lp' in 'qp'
+      // in other words: 'qp' now contains the vertex on the plane, 'qs' is the
+      // edge of that vertex that connects it to the previous vertex above or in
+      // the plane
       qs = get_edge_endpoint_index(qp, qs);
       qp = lp;
 
       // keep track of the first value of 'qs': the edge that brought us to this
       // vertex
-      unsigned int iqs = qs;
+      unsigned char iqs = qs;
       // now move on to the next edge and try to find an edge NOT BELOW the
       // plane (we know from our edge ordering convention that if 'qp' has edges
       // below the plane, then the next edge has to be one of them)
@@ -1024,6 +1027,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         qs = 0;
       }
       lp = get_edge_endpoint(qp, qs);
+      cmac_assert(lp >= 0);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
                       epsilon);
       while (l.first == -1) {
@@ -1035,6 +1039,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           qs = 0;
         }
         lp = get_edge_endpoint(qp, qs);
+        cmac_assert(lp >= 0);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
                         epsilon);
       }
@@ -1042,7 +1047,17 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // 'qs' now contains the index of the next edge NOT BELOW the plane
       // 'k' contains the order of the new vertex
 
+      // find out if 'qp' was already visited before (and hence replaced with a
+      // new vertex)
       int j = visitflags[qp];
+#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+      if (j > 0) {
+        cmac_error(
+            "You are entering a buggy part of the original voro++ algorithm!");
+      }
+#endif
+
+      // activate this to see an example of such a case
       //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
       //      if (j > 0) {
       //        CoordinateVector<> p = _generator_position + relative_position;
@@ -1889,8 +1904,11 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
  * plotted using gnuplot.
  *
  * @param stream std::ostream to write to.
+ * @param show_structure If set to true, the output will also contain a print of
+ * the vertices and edges, allowing a detailed reconstruction of the internal
+ * structure of the cell.
  */
-void VoronoiCell::print_cell(std::ostream &stream) {
+void VoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
   stream << _generator_position.x() << "\t" << _generator_position.y() << "\t"
          << _generator_position.z() << "\n\n";
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
@@ -1900,6 +1918,23 @@ void VoronoiCell::print_cell(std::ostream &stream) {
       CoordinateVector<> b = _vertices[edge] + _generator_position;
       stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
       stream << b.x() << "\t" << b.y() << "\t" << b.z() << "\n\n";
+    }
+  }
+
+  if (show_structure) {
+    stream << "vertices:\n";
+    for (unsigned int i = 0; i < _vertices.size(); ++i) {
+      CoordinateVector<> p = _vertices[i] + _generator_position;
+      stream << i << ": " << p.x() << "\t" << p.y() << "\t" << p.z() << "\n";
+    }
+    stream << "\nedges:\n";
+    for (unsigned int i = 0; i < _edges.size(); ++i) {
+      stream << i << " (" << _edges[i].size() << "):\n";
+      for (unsigned int j = 0; j < _edges[i].size(); ++j) {
+        stream << _edges[i][j].get_endpoint() << " ("
+               << +_edges[i][j].get_endpoint_index() << ")\t";
+      }
+      stream << "\n";
     }
   }
 }

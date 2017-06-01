@@ -342,7 +342,7 @@ public:
   /// functions for unit testing
   void setup_variables_for_test(int testcase);
   void check_variables_after_test(int testcase);
-  void print_cell(std::ostream &stream);
+  void print_cell(std::ostream &stream, bool show_structure = false);
 };
 
 #endif // VORONOICELL_HPP
