@@ -47,10 +47,6 @@ private:
   /*! @brief Internally used bounding box (internal units). */
   Box _internal_box;
 
-  /*! @brief Factor used to convert from internal length units to actual
-   *  units. */
-  double _length_factor;
-
   /*! @brief Factor used to convert from internal area units to actual units. */
   double _area_factor;
 

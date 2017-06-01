@@ -31,6 +31,8 @@
 
 //#define VORONOIGRID_OUTPUT_GENERATORS
 
+#define VORONOIGRID_REMAP
+
 #ifdef VORONOIGRID_OUTPUT_GENERATORS
 #include <fstream>
 #include <iomanip>
@@ -51,21 +53,28 @@ VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
 
   _cells.reserve(numcell);
 
-  _length_factor = 0.;
+  double length_factor = 0.;
   for (unsigned int i = 0; i < 3; ++i) {
     if (_periodic[i]) {
       _box.get_anchor()[i] -= 0.5 * _box.get_sides()[i];
       _box.get_sides()[i] *= 2.;
     }
-    _length_factor = std::max(_length_factor, _box.get_sides()[i]);
+    length_factor = std::max(length_factor, _box.get_sides()[i]);
   }
 
+#ifndef VORONOIGRID_REMAP
+  _epsilon *= _box.get_sides().norm2();
+  _internal_box = _box;
+  _area_factor = 1.;
+  _volume_factor = 1.;
+#else
   // internally, we always use a box of 0. --> 1. (or smaller)
   _internal_box = Box(CoordinateVector<>(0.), _box.get_sides());
-  _internal_box.get_sides() /= _length_factor;
+  _internal_box.get_sides() /= length_factor;
 
-  _area_factor = _length_factor * _length_factor;
-  _volume_factor = _length_factor * _area_factor;
+  _area_factor = length_factor * length_factor;
+  _volume_factor = length_factor * _area_factor;
+#endif
 }
 
 /**
