@@ -49,6 +49,18 @@ public:
   inline VoronoiFace() : _surface_area(0.), _midpoint(0.), _neighbour(0) {}
 
   /**
+   * @brief Constructor.
+   *
+   * @param surface_area Surface area of the face (in m^2).
+   * @param midpoint Midpoint of the face (in m).
+   * @param neighbour Neighbour of the face.
+   */
+  inline VoronoiFace(double surface_area, CoordinateVector<> midpoint,
+                     unsigned int neighbour)
+      : _surface_area(surface_area), _midpoint(midpoint),
+        _neighbour(neighbour) {}
+
+  /**
    * @brief Get the surface area of the face.
    *
    * @return Surface area of the face (in m^2).

@@ -865,6 +865,16 @@ set(TESTOIAMRREFINEMENTSCHEME_SOURCES
 add_unit_test(NAME testOIAMRRefinementScheme
               SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
 
+## Unit test for NewVoronoiCell
+set(TESTNEWVORONOICELL_SOURCES
+    testNewVoronoiCell.cpp
+
+    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCell.hpp
+)
+add_unit_test(NAME testNewVoronoiCell
+              SOURCES ${TESTNEWVORONOICELL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
