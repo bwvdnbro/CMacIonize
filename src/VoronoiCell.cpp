@@ -1657,6 +1657,18 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
     _vertices.resize(new_num_vert);
     _edges.resize(new_num_vert);
   }
+
+#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+  // check that no two vertices are exactly the same
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    for (unsigned int j = i + 1; j < _vertices.size(); ++j) {
+      cmac_assert_message(_vertices[i] != _vertices[j],
+                          "%u (%g %g %g) - %u (%g %g %g)", i, _vertices[i].x(),
+                          _vertices[i].y(), _vertices[i].z(), j,
+                          _vertices[j].x(), _vertices[j].y(), _vertices[j].z());
+    }
+  }
+#endif
 }
 
 /**

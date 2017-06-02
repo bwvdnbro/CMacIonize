@@ -33,6 +33,8 @@
 
 #define VORONOIGRID_REMAP
 
+//#define VORONOIGRID_CHECK_TOTAL_VOLUME
+
 #ifdef VORONOIGRID_OUTPUT_GENERATORS
 #include <fstream>
 #include <iomanip>
@@ -194,12 +196,14 @@ void VoronoiGrid::finalize() {
     totvol += _cells[i]->get_volume();
   }
 
+#ifdef VORONOIGRID_CHECK_TOTAL_VOLUME
   cmac_assert_message(std::abs(totvol - _internal_box.get_volume()) <
-                          1.e-10 * (totvol + _internal_box.get_volume()),
+                          1.e-9 * (totvol + _internal_box.get_volume()),
                       "%g =/= %g  -- relative difference: %g", totvol,
                       _internal_box.get_volume(),
                       std::abs(totvol - _internal_box.get_volume()) /
                           (totvol + _internal_box.get_volume()));
+#endif
 }
 
 /**

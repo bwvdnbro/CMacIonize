@@ -72,6 +72,14 @@ VoronoiDensityGrid::VoronoiDensityGrid(
   _hydro_generator_velocity[0].resize(totnumcell, 0.);
   _hydro_generator_velocity[1].resize(totnumcell, 0.);
   _hydro_generator_velocity[2].resize(totnumcell, 0.);
+
+  if (log) {
+    log->write_status("Created VoronoiDensityGrid in a box with anchor [",
+                      box.get_anchor().x(), " m, ", box.get_anchor().y(),
+                      " m, ", box.get_anchor().z(), " m], and sides [",
+                      box.get_sides().x(), " m, ", box.get_sides().y(), " m, ",
+                      box.get_sides().z(), "m].");
+  }
 }
 
 /**
@@ -403,9 +411,16 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
             CoordinateVector<>::dot_product(normal, photon_direction);
         if (nk > 0) {
           const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
-          const double sngb =
-              CoordinateVector<>::dot_product(normal, (point - photon_origin)) /
-              nk;
+          // in principle, the dot product should always be positive (as
+          // 'photon_origin' is supposed to lie inside the cell)
+          // however, due to roundoff, it could happen that 'photon_origin'
+          // actually is marginally outside the cell, making the dot product
+          // negative. To resolve this issue, we take the absolute value of the
+          // dot product; this guarantees that the sign of 'sngb' is set by the
+          // sign of 'nk', as is the case in a perfect world without roundoff
+          const double sngb = std::abs(CoordinateVector<>::dot_product(
+                                  normal, (point - photon_origin))) /
+                              nk;
           if (mins < 0. || (sngb > 0. && sngb < mins)) {
             mins = sngb;
             next_index = ngb;
@@ -496,8 +511,9 @@ double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
         const double nk = CoordinateVector<>::dot_product(normal, direction);
         if (nk > 0) {
           const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
-          const double sngb =
-              CoordinateVector<>::dot_product(normal, (point - origin)) / nk;
+          const double sngb = std::abs(CoordinateVector<>::dot_product(
+                                  normal, (point - origin))) /
+                              nk;
           if (mins < 0. || (sngb > 0. && sngb < mins)) {
             mins = sngb;
             next_index = ngb;

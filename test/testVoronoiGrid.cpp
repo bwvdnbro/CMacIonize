@@ -784,7 +784,12 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
   case VORONOITEST_VERTEX_DELETION: {
     _vertices.resize(6);
     // the actual positions of the vertices are completely irrelevant for this
-    // test, so we don't set them
+    // test, but we do set them to different values to please some assertions
+    _vertices[1][0] = 1.;
+    _vertices[2][0] = 2.;
+    _vertices[3][0] = 3.;
+    _vertices[4][0] = 4.;
+    _vertices[5][0] = 5.;
     _edges.resize(6);
     // the first vertex needs to be deleted, and is connected to the fourth
     // vertex

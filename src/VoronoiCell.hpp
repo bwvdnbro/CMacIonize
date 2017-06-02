@@ -63,7 +63,7 @@
 
 /*! @brief Tolerance used when deciding if a vertex is close enough to a plane
  *  to consider it to lie inside the plane. */
-#define VORONOI_TOLERANCE 2.e-11
+#define VORONOI_TOLERANCE 2.e-10
 
 /**
  * @brief Single cell of the Voronoi grid.
