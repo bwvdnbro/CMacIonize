@@ -145,21 +145,37 @@ const std::vector< VoronoiFace > &NewVoronoiCell::get_faces() const {
 void NewVoronoiCell::intersect(
     unsigned int ngb, const VoronoiBox< unsigned long > &box,
     const std::vector< CoordinateVector< unsigned long > > &positions) {
+
+  // find the tetrahedron/a that contains the new point
   unsigned int tetrahedra[UCHAR_MAX];
   unsigned char number_of_tetrahedra =
       find_tetrahedron(ngb, box, positions, tetrahedra);
 
+  // add the new vertex
+  const unsigned int vertex_index = _ngbs.size();
+  _ngbs.push_back(ngb);
+
+  std::vector< bool > queue(_tetrahedra.size(), false);
   if (number_of_tetrahedra == 1) {
     // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
-    one_to_four_flip(ngb, tetrahedra[0]);
+    one_to_four_flip(vertex_index, tetrahedra[0], queue);
   } else if (number_of_tetrahedra == 2) {
     // point on face: replace the 2 tetrahedra with 6 new ones
-    two_to_six_flip(ngb, tetrahedra);
+    two_to_six_flip(vertex_index, tetrahedra, queue);
   } else if (number_of_tetrahedra > 2) {
     // point on edge: replace the N tetrahedra with 2N new ones
-    n_to_2n_flip(ngb, tetrahedra, number_of_tetrahedra);
+    n_to_2n_flip(vertex_index, tetrahedra, number_of_tetrahedra, queue);
   } else {
     cmac_error("Unknown case!");
+  }
+
+  // recursively check if the newly created tetrahedra satisfy the empty
+  // circumsphere criterion that marks them as Delaunay tetrahedra
+  unsigned int i = 0;
+  while (i < queue.size()) {
+    if (queue[i]) {
+      i = check_tetrahedron(i, vertex_index, box, positions, queue);
+    }
   }
 }
 
@@ -402,13 +418,11 @@ unsigned char NewVoronoiCell::find_tetrahedron(
  *
  * @param new_vertex New vertex to insert.
  * @param tetrahedron Tetrahedron to replace.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
  */
 void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
-                                      unsigned int tetrahedron) {
-  // add the new vertex
-  const unsigned int vertex_index = _ngbs.size();
-  _ngbs.push_back(new_vertex);
-
+                                      unsigned int tetrahedron,
+                                      std::vector< bool > &queue) {
   // gather the relevant information from the tetrahedron
   unsigned int vertices[4];
   unsigned int ngbs[4];
@@ -424,17 +438,21 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
   const unsigned int old_size = _tetrahedra.size();
   _tetrahedra.resize(old_size + 3);
   _tetrahedra[tetrahedron] = VoronoiTetrahedron(
-      vertices[0], vertices[1], vertices[2], vertex_index, old_size + 2,
+      vertices[0], vertices[1], vertices[2], new_vertex, old_size + 2,
       old_size + 1, old_size, ngbs[3], 3, 3, 3, ngb_indices[3]);
   _tetrahedra[old_size] = VoronoiTetrahedron(
-      vertices[0], vertices[1], vertex_index, vertices[3], old_size + 2,
+      vertices[0], vertices[1], new_vertex, vertices[3], old_size + 2,
       old_size + 1, ngbs[2], tetrahedron, 2, 2, ngb_indices[2], 2);
   _tetrahedra[old_size + 1] = VoronoiTetrahedron(
-      vertices[0], vertex_index, vertices[2], vertices[3], old_size + 2,
-      ngbs[1], old_size, tetrahedron, 1, ngb_indices[1], 1, 1);
+      vertices[0], new_vertex, vertices[2], vertices[3], old_size + 2, ngbs[1],
+      old_size, tetrahedron, 1, ngb_indices[1], 1, 1);
   _tetrahedra[old_size + 2] = VoronoiTetrahedron(
-      vertex_index, vertices[1], vertices[2], vertices[3], ngbs[0],
-      old_size + 1, old_size, tetrahedron, ngb_indices[0], 0, 0, 0);
+      new_vertex, vertices[1], vertices[2], vertices[3], ngbs[0], old_size + 1,
+      old_size, tetrahedron, ngb_indices[0], 0, 0, 0);
+
+  // add the new tetrahedra to the control stack
+  queue[tetrahedron] = true;
+  queue.resize(old_size + 3, true);
 
   // update neighbouring tetrahedra
   if (ngbs[0] < NEWVORONOICELL_MAX_INDEX) {
@@ -470,11 +488,11 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
   _connections[vertices[3]].push_back(old_size);
   _connections[vertices[3]].push_back(old_size + 1);
   _connections[vertices[3]].push_back(old_size + 2);
-  _connections.resize(vertex_index + 1);
-  _connections[vertex_index].push_back(tetrahedron);
-  _connections[vertex_index].push_back(old_size);
-  _connections[vertex_index].push_back(old_size + 1);
-  _connections[vertex_index].push_back(old_size + 2);
+  _connections.resize(new_vertex + 1);
+  _connections[new_vertex].push_back(tetrahedron);
+  _connections[new_vertex].push_back(old_size);
+  _connections[new_vertex].push_back(old_size + 1);
+  _connections[new_vertex].push_back(old_size + 2);
 }
 
 /**
@@ -483,9 +501,11 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
  *
  * @param new_vertex New vertex.
  * @param tethahedra Tetrahedra to replace.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
  */
 void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
-                                     unsigned int tethahedra[]) {
+                                     unsigned int tethahedra[],
+                                     std::vector< bool > &queue) {
   cmac_error("Two to six flip not implemented yet!");
 }
 
@@ -496,8 +516,76 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
  * @param new_vertex New vertex.
  * @param tetrahedra Tetrahedra to replace.
  * @param n N: number of tetrahedra in the given array.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
  */
 void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
-                                  unsigned int *tetrahedra, unsigned char n) {
+                                  unsigned int *tetrahedra, unsigned char n,
+                                  std::vector< bool > &queue) {
   cmac_error("N to 2N flip not implemented yet!");
+}
+
+/**
+ * @brief Check if the given tetrahedron satisfies the empty circumsphere
+ * criterion that marks it as a Delaunay tetrahedron.
+ *
+ * @param tetrahedron Tetrahedron to check.
+ * @param new_vertex New vertex that was added and that might cause the
+ * invalidation of the tetrahedron.
+ * @param box VoronoiBox containing the box generating positions.
+ * @param positions Positions of all the points.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @return Lowest index tetrahedron that needs to be checked for validity after
+ * this function returns.
+ */
+unsigned int NewVoronoiCell::check_tetrahedron(
+    unsigned int tetrahedron, unsigned int new_vertex,
+    const VoronoiBox< unsigned long > &box,
+    const std::vector< CoordinateVector< unsigned long > > &positions,
+    std::vector< bool > &queue) {
+  unsigned int next_check = tetrahedron + 1;
+
+  const unsigned int v0 = _tetrahedra[tetrahedron].get_vertex(0);
+  const unsigned int v1 = _tetrahedra[tetrahedron].get_vertex(1);
+  const unsigned int v2 = _tetrahedra[tetrahedron].get_vertex(2);
+  const unsigned int v3 = _tetrahedra[tetrahedron].get_vertex(3);
+
+  unsigned int top;
+  if (new_vertex == v0) {
+    top = 0;
+  } else if (new_vertex == v1) {
+    top = 1;
+  } else if (new_vertex == v2) {
+    top = 2;
+  } else {
+    cmac_assert(new_vertex == v3);
+    top = 3;
+  }
+
+  const unsigned int ngb = _tetrahedra[tetrahedron].get_neighbour(top);
+  if (ngb < NEWVORONOICELL_MAX_INDEX) {
+    const unsigned char ngb_index = _tetrahedra[tetrahedron].get_ngb_index(top);
+    const unsigned int v4 = _tetrahedra[ngb].get_vertex(ngb_index);
+
+    const CoordinateVector< unsigned long > p0 =
+        get_position(_ngbs[v0], box, positions);
+    const CoordinateVector< unsigned long > p1 =
+        get_position(_ngbs[v1], box, positions);
+    const CoordinateVector< unsigned long > p2 =
+        get_position(_ngbs[v2], box, positions);
+    const CoordinateVector< unsigned long > p3 =
+        get_position(_ngbs[v3], box, positions);
+    const CoordinateVector< unsigned long > p4 =
+        get_position(_ngbs[v4], box, positions);
+
+    cmac_assert(ExactGeometricTests::orient3d(p0, p1, p2, p3) < 0);
+
+    char test = ExactGeometricTests::insphere(p0, p1, p2, p3, p4);
+    if (test < 0) {
+      // the tetrahedron (and its neighbour) are invalid!
+      // we need to figure out which flip can restore them
+      /// TO BE CONTINUED...
+    }
+  }
+
+  return next_check;
 }

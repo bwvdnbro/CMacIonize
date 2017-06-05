@@ -413,10 +413,18 @@ public:
       const std::vector< CoordinateVector< unsigned long > > &positions,
       unsigned int *indices) const;
 
-  void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron);
-  void two_to_six_flip(unsigned int new_vertex, unsigned int tethahedra[2]);
+  void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
+                        std::vector< bool > &queue);
+  void two_to_six_flip(unsigned int new_vertex, unsigned int tethahedra[2],
+                       std::vector< bool > &queue);
   void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
-                    unsigned char n);
+                    unsigned char n, std::vector< bool > &queue);
+
+  unsigned int check_tetrahedron(
+      unsigned int tetrahedron, unsigned int new_vertex,
+      const VoronoiBox< unsigned long > &box,
+      const std::vector< CoordinateVector< unsigned long > > &positions,
+      std::vector< bool > &queue);
 
   /// static routines
 
