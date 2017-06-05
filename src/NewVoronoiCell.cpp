@@ -139,12 +139,28 @@ const std::vector< VoronoiFace > &NewVoronoiCell::get_faces() const {
  * the given index.
  *
  * @param ngb Index of the neighbouring generator.
+ * @param box VoronoiBox containing the box generating positions.
  * @param positions Generator positions (integer representation).
  */
 void NewVoronoiCell::intersect(
-    unsigned int ngb,
+    unsigned int ngb, const VoronoiBox< unsigned long > &box,
     const std::vector< CoordinateVector< unsigned long > > &positions) {
-  cmac_error("If you *just* implement this method, the algorithm will work!");
+  unsigned int tetrahedra[UCHAR_MAX];
+  unsigned char number_of_tetrahedra =
+      find_tetrahedron(ngb, box, positions, tetrahedra);
+
+  if (number_of_tetrahedra == 1) {
+    // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
+    one_to_four_flip(ngb, tetrahedra[0]);
+  } else if (number_of_tetrahedra == 2) {
+    // point on face: replace the 2 tetrahedra with 6 new ones
+    two_to_six_flip(ngb, tetrahedra);
+  } else if (number_of_tetrahedra > 2) {
+    // point on edge: replace the N tetrahedra with 2N new ones
+    n_to_2n_flip(ngb, tetrahedra, number_of_tetrahedra);
+  } else {
+    cmac_error("Unknown case!");
+  }
 }
 
 /**
@@ -358,6 +374,7 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     while (next != indices[1]) {
       indices[test] = next;
       ++test;
+      cmac_assert(test <= UCHAR_MAX);
       next_vertex = (next_vertex + 1) % 4;
       if (_tetrahedra[next].get_vertex(next_vertex) == a0 ||
           _tetrahedra[next].get_vertex(next_vertex) == a1) {
@@ -377,4 +394,110 @@ unsigned char NewVoronoiCell::find_tetrahedron(
   }
 
   return test;
+}
+
+/**
+ * @brief Replace the given tetrahedron with four new ones by inserting the
+ * given new vertex.
+ *
+ * @param new_vertex New vertex to insert.
+ * @param tetrahedron Tetrahedron to replace.
+ */
+void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
+                                      unsigned int tetrahedron) {
+  // add the new vertex
+  const unsigned int vertex_index = _ngbs.size();
+  _ngbs.push_back(new_vertex);
+
+  // gather the relevant information from the tetrahedron
+  unsigned int vertices[4];
+  unsigned int ngbs[4];
+  unsigned char ngb_indices[4];
+  for (unsigned int i = 0; i < 4; ++i) {
+    vertices[i] = _tetrahedra[tetrahedron].get_vertex(i);
+    ngbs[i] = _tetrahedra[tetrahedron].get_neighbour(i);
+    ngb_indices[i] = _tetrahedra[tetrahedron].get_ngb_index(i);
+  }
+
+  // create new tetrahedra: we overwrite the one we replace, and create 3 new
+  // ones
+  const unsigned int old_size = _tetrahedra.size();
+  _tetrahedra.resize(old_size + 3);
+  _tetrahedra[tetrahedron] = VoronoiTetrahedron(
+      vertices[0], vertices[1], vertices[2], vertex_index, old_size + 2,
+      old_size + 1, old_size, ngbs[3], 3, 3, 3, ngb_indices[3]);
+  _tetrahedra[old_size] = VoronoiTetrahedron(
+      vertices[0], vertices[1], vertex_index, vertices[3], old_size + 2,
+      old_size + 1, ngbs[2], tetrahedron, 2, 2, ngb_indices[2], 2);
+  _tetrahedra[old_size + 1] = VoronoiTetrahedron(
+      vertices[0], vertex_index, vertices[2], vertices[3], old_size + 2,
+      ngbs[1], old_size, tetrahedron, 1, ngb_indices[1], 1, 1);
+  _tetrahedra[old_size + 2] = VoronoiTetrahedron(
+      vertex_index, vertices[1], vertices[2], vertices[3], ngbs[0],
+      old_size + 1, old_size, tetrahedron, ngb_indices[0], 0, 0, 0);
+
+  // update neighbouring tetrahedra
+  if (ngbs[0] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[0]].swap_neighbour(ngb_indices[0], old_size + 2, 0);
+  }
+  if (ngbs[1] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[1]].swap_neighbour(ngb_indices[1], old_size + 1, 1);
+  }
+  if (ngbs[2] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[2]].swap_neighbour(ngb_indices[2], old_size, 2);
+  }
+  if (ngbs[3] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[3]].swap_neighbour(ngb_indices[3], tetrahedron, 0);
+  }
+
+  // CONNECTIONS: review needed!
+
+  // remove 'tetrahedron' from the connection list of 'vertices[3]'
+  auto it = _connections[vertices[3]].begin();
+  while (it != _connections[vertices[3]].end() && *it != tetrahedron) {
+    ++it;
+  }
+  cmac_assert(it != _connections[vertices[3]].end());
+  _connections[vertices[3]].erase(it);
+
+  // add the new tetrahedra connections
+  _connections[vertices[0]].push_back(old_size);
+  _connections[vertices[0]].push_back(old_size + 1);
+  _connections[vertices[1]].push_back(old_size);
+  _connections[vertices[1]].push_back(old_size + 2);
+  _connections[vertices[2]].push_back(old_size + 1);
+  _connections[vertices[2]].push_back(old_size + 2);
+  _connections[vertices[3]].push_back(old_size);
+  _connections[vertices[3]].push_back(old_size + 1);
+  _connections[vertices[3]].push_back(old_size + 2);
+  _connections.resize(vertex_index + 1);
+  _connections[vertex_index].push_back(tetrahedron);
+  _connections[vertex_index].push_back(old_size);
+  _connections[vertex_index].push_back(old_size + 1);
+  _connections[vertex_index].push_back(old_size + 2);
+}
+
+/**
+ * @brief Replace the given two tetrahedra with six new ones by inserting the
+ * given new vertex.
+ *
+ * @param new_vertex New vertex.
+ * @param tethahedra Tetrahedra to replace.
+ */
+void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
+                                     unsigned int tethahedra[]) {
+  cmac_error("Two to six flip not implemented yet!");
+}
+
+/**
+ * @brief Replace the given n tetrahedra with two times n new ones by inserting
+ * the given new vertex.
+ *
+ * @param new_vertex New vertex.
+ * @param tetrahedra Tetrahedra to replace.
+ * @param n N: number of tetrahedra in the given array.
+ */
+void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
+                                  unsigned int *tetrahedra, unsigned char n) {
+  cmac_error("N to 2N flip not implemented yet!");
 }

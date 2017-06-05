@@ -298,6 +298,19 @@ public:
     cmac_assert(i < 4);
     return i;
   }
+
+  /**
+   * @brief Swap the neighbour values at the given index position in the lists.
+   *
+   * @param index Index position.
+   * @param neighbour New neighbour value.
+   * @param ngb_index New neighbour index value.
+   */
+  void swap_neighbour(unsigned char index, unsigned int neighbour,
+                      unsigned char ngb_index) {
+    _neighbours[index] = neighbour;
+    _ngb_index[index] = ngb_index;
+  }
 };
 
 /**
@@ -387,7 +400,7 @@ public:
 
   /// cell specific geometric functions
   void
-  intersect(unsigned int ngb,
+  intersect(unsigned int ngb, const VoronoiBox< unsigned long > &box,
             const std::vector< CoordinateVector< unsigned long > > &positions);
   double get_max_radius_squared() const;
   void finalize(const Box &box,
@@ -399,6 +412,11 @@ public:
       unsigned int point_index, const VoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
       unsigned int *indices) const;
+
+  void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron);
+  void two_to_six_flip(unsigned int new_vertex, unsigned int tethahedra[2]);
+  void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
+                    unsigned char n);
 
   /// static routines
 
