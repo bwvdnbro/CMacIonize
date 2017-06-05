@@ -126,5 +126,37 @@ int main(int argc, char **argv) {
     cmac_status("Cell face computation works!");
   }
 
+  /// test for NewVoronoiCell::find_tetrahedron
+  {
+    NewVoronoiCell cell(0);
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(4);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    // general point
+    positions[1] = CoordinateVector< unsigned long >(1250);
+    // point on face
+    positions[2] = CoordinateVector< unsigned long >(1500, 1250, 1250);
+    // point on axis
+    positions[3] = CoordinateVector< unsigned long >(1500, 1500, 1250);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    unsigned int tetrahedra[4];
+    assert_condition(cell.find_tetrahedron(1, box, positions, tetrahedra) == 1);
+    assert_condition(tetrahedra[0] == 7);
+
+    assert_condition(cell.find_tetrahedron(2, box, positions, tetrahedra) == 2);
+    assert_condition(tetrahedra[0] == 7);
+    assert_condition(tetrahedra[1] == 6);
+
+    assert_condition(cell.find_tetrahedron(3, box, positions, tetrahedra) == 4);
+    assert_condition(tetrahedra[0] == 7);
+    assert_condition(tetrahedra[1] == 4);
+    assert_condition(tetrahedra[2] == 6);
+    assert_condition(tetrahedra[3] == 5);
+
+    cmac_status("Find tetrahedron works!");
+  }
+
   return 0;
 }
