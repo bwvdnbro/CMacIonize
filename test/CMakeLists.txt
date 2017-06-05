@@ -875,6 +875,17 @@ set(TESTNEWVORONOICELL_SOURCES
 add_unit_test(NAME testNewVoronoiCell
               SOURCES ${TESTNEWVORONOICELL_SOURCES})
 
+## Unit test for ExactGeometricTests
+if(HAVE_MULTIPRECISION)
+  set(TESTEXACTGEOMETRICTESTS_SOURCES
+      testExactGeometricTests.cpp
+
+      ../src/ExactGeometricTests.hpp
+  )
+  add_unit_test(NAME testExactGeometricTests
+                SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
+endif(HAVE_MULTIPRECISION)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

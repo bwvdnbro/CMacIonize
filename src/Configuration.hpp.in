@@ -32,6 +32,7 @@
 #cmakedefine HAVE_ATOMIC
 #cmakedefine HAVE_HDF5
 #cmakedefine HAVE_MPI
+#cmakedefine HAVE_MULTIPRECISION
 #cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_OUTPUT_CYCLES
 

@@ -203,6 +203,7 @@ if(Boost_FOUND)
       include_directories(${Boost_INCLUDE_DIRS})
       include_directories(${PYTHON_INCLUDE_PATH})
       include_directories(${NUMPY_OUTPUT})
+      set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
       set(HAVE_PYTHON True)
     else(NUMPY_RESULT STREQUAL "0")
       message(WARNING
@@ -216,6 +217,18 @@ if(Boost_FOUND)
 else(Boost_FOUND)
   message(WARNING "Boost Python not found. Not building Python modules.")
   set(HAVE_PYTHON False)
+endif(Boost_FOUND)
+
+# Find Boost multiprecision (available since Boost 1.53.0)
+find_package(Boost 1.53.0)
+if(Boost_FOUND)
+  message(STATUS "Found Boost multiprecision.")
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(HAVE_MULTIPRECISION True)
+else(Boost_FOUND)
+  message(WARNING
+          "Boost multiprecision not found. Exact arithmetics will not work!")
+  set(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
 
 # Check if we need to activate fast math
