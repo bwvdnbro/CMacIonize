@@ -32,81 +32,130 @@
  * @param generator Index of the generator of the cell.
  */
 NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
-  _ngbs.resize(7);
+
+  _ngbs.resize(5);
   _ngbs[0] = generator;
-  _ngbs[1] = NEWVORONOICELL_BOX_LEFT;
-  _ngbs[2] = NEWVORONOICELL_BOX_RIGHT;
-  _ngbs[3] = NEWVORONOICELL_BOX_FRONT;
-  _ngbs[4] = NEWVORONOICELL_BOX_BACK;
-  _ngbs[5] = NEWVORONOICELL_BOX_BOTTOM;
-  _ngbs[6] = NEWVORONOICELL_BOX_TOP;
+  _ngbs[1] = NEWVORONOICELL_BOX_CORNER0;
+  _ngbs[2] = NEWVORONOICELL_BOX_CORNER1;
+  _ngbs[3] = NEWVORONOICELL_BOX_CORNER2;
+  _ngbs[4] = NEWVORONOICELL_BOX_CORNER3;
 
-  _tetrahedra.resize(8);
-  _tetrahedra[0] = VoronoiTetrahedron(0, 1, 3, 6, NEWVORONOICELL_MAX_INDEX, 3,
-                                      1, 7, 4, 2, 1, 3);
-  _tetrahedra[1] = VoronoiTetrahedron(0, 4, 1, 6, NEWVORONOICELL_MAX_INDEX, 0,
-                                      2, 4, 4, 2, 1, 3);
-  _tetrahedra[2] = VoronoiTetrahedron(0, 2, 4, 6, NEWVORONOICELL_MAX_INDEX, 1,
-                                      3, 5, 4, 2, 1, 3);
-  _tetrahedra[3] = VoronoiTetrahedron(0, 3, 2, 6, NEWVORONOICELL_MAX_INDEX, 2,
-                                      0, 6, 4, 2, 1, 3);
-  _tetrahedra[4] = VoronoiTetrahedron(0, 1, 4, 5, NEWVORONOICELL_MAX_INDEX, 5,
-                                      7, 1, 4, 2, 1, 3);
-  _tetrahedra[5] = VoronoiTetrahedron(0, 4, 2, 5, NEWVORONOICELL_MAX_INDEX, 6,
-                                      4, 2, 4, 2, 1, 3);
-  _tetrahedra[6] = VoronoiTetrahedron(0, 2, 3, 5, NEWVORONOICELL_MAX_INDEX, 7,
-                                      5, 3, 4, 2, 1, 3);
-  _tetrahedra[7] = VoronoiTetrahedron(0, 3, 1, 5, NEWVORONOICELL_MAX_INDEX, 4,
-                                      6, 0, 4, 2, 1, 3);
-
-  _connections.resize(7);
-  _connections[0].resize(8);
-  _connections[0][0] = 0;
-  _connections[0][1] = 1;
-  _connections[0][2] = 2;
-  _connections[0][3] = 3;
-  _connections[0][4] = 4;
-  _connections[0][5] = 5;
-  _connections[0][6] = 6;
-  _connections[0][7] = 7;
+  _tetrahedra.resize(4);
+  _tetrahedra[0] = VoronoiTetrahedron(0, 2, 3, 4, NEWVORONOICELL_MAX_INDEX, 1,
+                                      2, 3, 4, 0, 0, 0);
+  _tetrahedra[1] = VoronoiTetrahedron(1, 0, 3, 4, 0, NEWVORONOICELL_MAX_INDEX,
+                                      2, 3, 1, 4, 1, 1);
+  _tetrahedra[2] = VoronoiTetrahedron(1, 2, 0, 4, 0, 1,
+                                      NEWVORONOICELL_MAX_INDEX, 3, 2, 2, 4, 2);
+  _tetrahedra[3] = VoronoiTetrahedron(1, 2, 3, 0, 0, 1, 2,
+                                      NEWVORONOICELL_MAX_INDEX, 3, 3, 3, 4);
 
   // we order the tetrahedra counterclockwise around the axis, when looking
   // along the axis from outside the cell towards the cell generator
-  _connections[1].resize(4);
+  _connections.resize(4);
+  _connections[0].resize(3);
+  _connections[0][0] = 1;
+  _connections[0][1] = 2;
+  _connections[0][2] = 3;
+
+  _connections[1].resize(3);
   _connections[1][0] = 0;
-  _connections[1][1] = 7;
-  _connections[1][2] = 4;
-  _connections[1][3] = 1;
+  _connections[1][1] = 3;
+  _connections[1][2] = 2;
 
-  _connections[2].resize(4);
-  _connections[2][0] = 2;
-  _connections[2][1] = 5;
-  _connections[2][2] = 6;
-  _connections[2][3] = 3;
+  _connections[2].resize(3);
+  _connections[2][0] = 0;
+  _connections[2][1] = 1;
+  _connections[2][2] = 3;
 
-  _connections[3].resize(4);
+  _connections[3].resize(3);
   _connections[3][0] = 0;
-  _connections[3][1] = 3;
-  _connections[3][2] = 6;
-  _connections[3][3] = 7;
+  _connections[3][1] = 2;
+  _connections[3][2] = 1;
 
-  _connections[4].resize(4);
-  _connections[4][0] = 1;
-  _connections[4][1] = 4;
-  _connections[4][2] = 5;
-  _connections[4][3] = 2;
+  //  _ngbs.resize(7);
+  //  _ngbs[0] = generator;
+  //  _ngbs[1] = NEWVORONOICELL_BOX_LEFT;
+  //  _ngbs[2] = NEWVORONOICELL_BOX_RIGHT;
+  //  _ngbs[3] = NEWVORONOICELL_BOX_FRONT;
+  //  _ngbs[4] = NEWVORONOICELL_BOX_BACK;
+  //  _ngbs[5] = NEWVORONOICELL_BOX_BOTTOM;
+  //  _ngbs[6] = NEWVORONOICELL_BOX_TOP;
 
-  _connections[5].resize(4);
-  _connections[5][0] = 4;
-  _connections[5][1] = 7;
-  _connections[5][2] = 6;
-  _connections[5][3] = 5;
+  //  _tetrahedra.resize(8);
+  //  _tetrahedra[0] = VoronoiTetrahedron(0, 1, 3, 6, NEWVORONOICELL_MAX_INDEX,
+  //  3,
+  //                                      1, 7, 4, 2, 1, 3);
+  //  _tetrahedra[1] = VoronoiTetrahedron(0, 4, 1, 6, NEWVORONOICELL_MAX_INDEX,
+  //  0,
+  //                                      2, 4, 4, 2, 1, 3);
+  //  _tetrahedra[2] = VoronoiTetrahedron(0, 2, 4, 6, NEWVORONOICELL_MAX_INDEX,
+  //  1,
+  //                                      3, 5, 4, 2, 1, 3);
+  //  _tetrahedra[3] = VoronoiTetrahedron(0, 3, 2, 6, NEWVORONOICELL_MAX_INDEX,
+  //  2,
+  //                                      0, 6, 4, 2, 1, 3);
+  //  _tetrahedra[4] = VoronoiTetrahedron(0, 1, 4, 5, NEWVORONOICELL_MAX_INDEX,
+  //  5,
+  //                                      7, 1, 4, 2, 1, 3);
+  //  _tetrahedra[5] = VoronoiTetrahedron(0, 4, 2, 5, NEWVORONOICELL_MAX_INDEX,
+  //  6,
+  //                                      4, 2, 4, 2, 1, 3);
+  //  _tetrahedra[6] = VoronoiTetrahedron(0, 2, 3, 5, NEWVORONOICELL_MAX_INDEX,
+  //  7,
+  //                                      5, 3, 4, 2, 1, 3);
+  //  _tetrahedra[7] = VoronoiTetrahedron(0, 3, 1, 5, NEWVORONOICELL_MAX_INDEX,
+  //  4,
+  //                                      6, 0, 4, 2, 1, 3);
 
-  _connections[6].resize(4);
-  _connections[6][0] = 0;
-  _connections[6][1] = 1;
-  _connections[6][2] = 2;
-  _connections[6][3] = 3;
+  //  _connections.resize(7);
+  //  _connections[0].resize(8);
+  //  _connections[0][0] = 0;
+  //  _connections[0][1] = 1;
+  //  _connections[0][2] = 2;
+  //  _connections[0][3] = 3;
+  //  _connections[0][4] = 4;
+  //  _connections[0][5] = 5;
+  //  _connections[0][6] = 6;
+  //  _connections[0][7] = 7;
+
+  //  // we order the tetrahedra counterclockwise around the axis, when looking
+  //  // along the axis from outside the cell towards the cell generator
+  //  _connections[1].resize(4);
+  //  _connections[1][0] = 0;
+  //  _connections[1][1] = 7;
+  //  _connections[1][2] = 4;
+  //  _connections[1][3] = 1;
+
+  //  _connections[2].resize(4);
+  //  _connections[2][0] = 2;
+  //  _connections[2][1] = 5;
+  //  _connections[2][2] = 6;
+  //  _connections[2][3] = 3;
+
+  //  _connections[3].resize(4);
+  //  _connections[3][0] = 0;
+  //  _connections[3][1] = 3;
+  //  _connections[3][2] = 6;
+  //  _connections[3][3] = 7;
+
+  //  _connections[4].resize(4);
+  //  _connections[4][0] = 1;
+  //  _connections[4][1] = 4;
+  //  _connections[4][2] = 5;
+  //  _connections[4][3] = 2;
+
+  //  _connections[5].resize(4);
+  //  _connections[5][0] = 4;
+  //  _connections[5][1] = 7;
+  //  _connections[5][2] = 6;
+  //  _connections[5][3] = 5;
+
+  //  _connections[6].resize(4);
+  //  _connections[6][0] = 0;
+  //  _connections[6][1] = 1;
+  //  _connections[6][2] = 2;
+  //  _connections[6][3] = 3;
 }
 
 /**

@@ -36,7 +36,8 @@
 #include "ExactGeometricTests.hpp"
 #else
 #error                                                                         \
-    "Boost multiprecision was not found on this system, which means the new Voronoi construction algorithm will not work!"
+    "Boost multiprecision was not found on this system, which means the new "  \
+    "Voronoi construction algorithm will not work!"
 #endif
 
 #include <ostream>
@@ -47,7 +48,16 @@
  *  indices correspond to the 6 highest possible 32-bit unsigned integers. No
  *  cells should be added to the VoronoiGrid if the total number of cells has
  *  reached the lowest of these values, which is given in the define below. */
-#define NEWVORONOICELL_MAX_INDEX 0xfffffff9
+#define NEWVORONOICELL_MAX_INDEX 0xfffffff5
+
+/*! @brief First neighbour used for the large, all containing tetrahedron. */
+#define NEWVORONOICELL_BOX_CORNER0 0xfffffff6
+/*! @brief Second neighbour used for the large, all containing tetrahedron. */
+#define NEWVORONOICELL_BOX_CORNER1 0xfffffff7
+/*! @brief Third neighbour used for the large, all containing tetrahedron. */
+#define NEWVORONOICELL_BOX_CORNER2 0xfffffff8
+/*! @brief Fourth neighbour used for the large, all containing tetrahedron. */
+#define NEWVORONOICELL_BOX_CORNER3 0xfffffff9
 
 /*! @brief Neigbour index used for the left of the box (constant low x
  *  coordinate). */
@@ -337,6 +347,9 @@ public:
  */
 template < typename _datatype_ > class VoronoiBox {
 private:
+  /*! @brief Positions of the large, all-encompassing initial tetrahedron. */
+  CoordinateVector< _datatype_ > _tetrahedron[4];
+
   /*! @brief Positions of the generators of the cubic box around a generator. */
   CoordinateVector< _datatype_ > _positions[6];
 
@@ -351,6 +364,28 @@ public:
   VoronoiBox(const CoordinateVector< _datatype_ > &generator,
              const CoordinateVector< _datatype_ > &box_anchor,
              const CoordinateVector< _datatype_ > &box_sides) {
+
+    // the large all-encompassing tetrahedron has one vertex in the anchor of
+    // the (extended) box (with side length 3*'max_side')
+    // the other vertices are at a distance of sqrt{6}*'max_side'
+    // however, since we need to account for integer coordinates, we round this
+    // up to 3
+    _datatype_ max_side = std::max(box_sides.x(), box_sides.y());
+    max_side = std::max(max_side, box_sides.z());
+
+    _tetrahedron[0][0] = 2 * box_anchor.x() - box_sides.x();
+    _tetrahedron[0][1] = 2 * box_anchor.y() - box_sides.y();
+    _tetrahedron[0][2] = 2 * box_anchor.z() - box_sides.z();
+    _tetrahedron[1][0] = 2 * box_anchor.x() - box_sides.x() + 9 * max_side;
+    _tetrahedron[1][1] = 2 * box_anchor.y() - box_sides.y();
+    _tetrahedron[1][2] = 2 * box_anchor.z() - box_sides.z();
+    _tetrahedron[2][0] = 2 * box_anchor.x() - box_sides.x();
+    _tetrahedron[2][1] = 2 * box_anchor.y() - box_sides.y() + 9 * max_side;
+    _tetrahedron[2][2] = 2 * box_anchor.z() - box_sides.z();
+    _tetrahedron[3][0] = 2 * box_anchor.x() - box_sides.x();
+    _tetrahedron[3][1] = 2 * box_anchor.y() - box_sides.y();
+    _tetrahedron[3][2] = 2 * box_anchor.z() - box_sides.z() + 9 * max_side;
+
     _positions[0][0] = 2 * box_anchor.x() - generator.x();
     _positions[0][1] = generator.y();
     _positions[0][2] = generator.z();
@@ -380,8 +415,12 @@ public:
    * @return Value for that component.
    */
   const CoordinateVector< _datatype_ > &operator[](unsigned int index) const {
-    cmac_assert(index >= NEWVORONOICELL_BOX_LEFT);
-    return _positions[index - NEWVORONOICELL_BOX_LEFT];
+    if (index >= NEWVORONOICELL_BOX_LEFT) {
+      return _positions[index - NEWVORONOICELL_BOX_LEFT];
+    } else {
+      cmac_assert(index >= NEWVORONOICELL_BOX_CORNER0);
+      return _tetrahedron[index - NEWVORONOICELL_BOX_CORNER0];
+    }
   }
 };
 
