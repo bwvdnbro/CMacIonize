@@ -138,7 +138,7 @@ public:
    * tetrahedron formed by the other four given points.
    *
    * It is assumed that the first four points are the vertices of a positively
-   * oriented tetrahedron, as defined by a positive return value of orient3d().
+   * oriented tetrahedron, as defined by a negative return value of orient3d().
    *
    * If the fifth point is exactly on the circumsphere of the tetrahedron, this
    * functions returns 0.

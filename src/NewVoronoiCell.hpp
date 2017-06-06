@@ -39,6 +39,7 @@
     "Boost multiprecision was not found on this system, which means the new Voronoi construction algorithm will not work!"
 #endif
 
+#include <ostream>
 #include <vector>
 
 /*! @brief Some neighbour indices are reserved for special neighbours: the
@@ -300,6 +301,24 @@ public:
   }
 
   /**
+   * @brief Check if the given neighbour is in fact a neighbour of this
+   * tetrahedron, and get its index if it is.
+   *
+   * This is basically the same as get_index(), but without an assertion on the
+   * index.
+   *
+   * @param neighbour Neighbour index.
+   * @return Index of the neighbour if it is found, 4 otherwise.
+   */
+  unsigned char is_neighbour(unsigned int neighbour) const {
+    unsigned char i = 0;
+    while (i < 4 && _neighbours[i] != neighbour) {
+      ++i;
+    }
+    return i;
+  }
+
+  /**
    * @brief Swap the neighbour values at the given index position in the lists.
    *
    * @param index Index position.
@@ -420,11 +439,29 @@ public:
   void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
                     unsigned char n, std::vector< bool > &queue);
 
+  unsigned int two_to_three_flip(unsigned int tetrahedron0,
+                                 unsigned int tetrahedron1, unsigned char top0,
+                                 unsigned char top1, std::vector< bool > &queue,
+                                 unsigned int next_check);
+  unsigned int
+  four_to_four_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
+                    unsigned int tetrahedron2, unsigned int tetrahedron3,
+                    std::vector< bool > &queue, unsigned int next_check);
+  unsigned int three_to_two_flip(unsigned int tetrahedron0,
+                                 unsigned int tetrahedron1,
+                                 unsigned int tetrahedron2,
+                                 std::vector< bool > &queue,
+                                 unsigned int next_check);
+
   unsigned int check_tetrahedron(
       unsigned int tetrahedron, unsigned int new_vertex,
       const VoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
       std::vector< bool > &queue);
+
+  void check_empty_circumsphere(
+      const VoronoiBox< unsigned long > &box,
+      const std::vector< CoordinateVector< unsigned long > > &positions) const;
 
   /// static routines
 
@@ -448,6 +485,33 @@ public:
       cmac_error("Invalid position index!");
       // we need to return something...
       return positions[0];
+    }
+  }
+
+  /**
+   * @brief Print the tetrahedra currently stored in this cell.
+   *
+   * @param stream std::ostream to write to.
+   * @param box VoronoiBox containing the box generating positions.
+   * @param positions std::vector containing the other positions.
+   */
+  template < typename _datatype_ >
+  inline void print_tetrahedra(
+      std::ostream &stream, const VoronoiBox< _datatype_ > &box,
+      const std::vector< CoordinateVector< _datatype_ > > &positions) {
+    for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
+      for (unsigned char j = 0; j < 4; ++j) {
+        const unsigned int v0 = _tetrahedra[i].get_vertex(j);
+        for (unsigned char k = j + 1; k < 4; ++k) {
+          const unsigned int v1 = _tetrahedra[i].get_vertex(k);
+          const CoordinateVector< _datatype_ > p0 =
+              get_position(_ngbs[v0], box, positions);
+          const CoordinateVector< _datatype_ > p1 =
+              get_position(_ngbs[v1], box, positions);
+          stream << p0.x() << "\t" << p0.y() << "\t" << p0.z() << "\n";
+          stream << p1.x() << "\t" << p1.y() << "\t" << p1.z() << "\n\n";
+        }
+      }
     }
   }
 };

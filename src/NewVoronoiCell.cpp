@@ -174,7 +174,10 @@ void NewVoronoiCell::intersect(
   unsigned int i = 0;
   while (i < queue.size()) {
     if (queue[i]) {
+      queue[i] = false;
       i = check_tetrahedron(i, vertex_index, box, positions, queue);
+    } else {
+      ++i;
     }
   }
 }
@@ -525,6 +528,250 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
 }
 
 /**
+ * @brief Replace the given two tetrahedra with three new tetrahedra.
+ *
+ * @param tetrahedron0 First tetrahedron.
+ * @param tetrahedron1 Second tetrahedron.
+ * @param top0 Index of the vertex of the first tetrahedron opposite the second
+ * tetrahedron.
+ * @param top1 Index of the vertex of the second tetrahedron opposite the first
+ * tetrahedron.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param next_check First tetrahedron in the stack that will be tested.
+ * @return First tetrahedron in the stack that needs to be tested after the
+ * flip.
+ */
+unsigned int NewVoronoiCell::two_to_three_flip(
+    unsigned int tetrahedron0, unsigned int tetrahedron1, unsigned char top0,
+    unsigned char top1, std::vector< bool > &queue, unsigned int next_check) {
+
+  // gather tetrahedron info
+  unsigned int v[2][4], ngbs[2][4];
+  unsigned char ngbi[2][4];
+  for (unsigned char i = 0; i < 4; ++i) {
+    v[0][i] = _tetrahedra[tetrahedron0].get_vertex(i);
+    ngbs[0][i] = _tetrahedra[tetrahedron0].get_neighbour(i);
+    ngbi[0][i] = _tetrahedra[tetrahedron0].get_ngb_index(i);
+    v[1][i] = _tetrahedra[tetrahedron1].get_vertex(i);
+    ngbs[1][i] = _tetrahedra[tetrahedron1].get_neighbour(i);
+    ngbi[1][i] = _tetrahedra[tetrahedron1].get_ngb_index(i);
+  }
+
+  // create a map that maps non toppoint indices in 'tetrahedron0' to the
+  // indices of the corresponding non vertices in 'tetrahedron1'
+  unsigned char imap[4];
+  for (unsigned char i = 0; i < 3; ++i) {
+    unsigned int refv = v[0][(top0 + i + 1) % 4];
+    unsigned char iref = 0;
+    while (v[1][iref] != refv) {
+      ++iref;
+      cmac_assert(iref < 4);
+    }
+    imap[(top0 + i + 1) % 4] = iref;
+  }
+
+  // create new tetrahedra and update neighbour relations in neighbouring
+  // tetrahedra
+  const unsigned int new_tetrahedron = _tetrahedra.size();
+  _tetrahedra.resize(new_tetrahedron + 1);
+  if (top0 == 0) {
+    _tetrahedra[tetrahedron0] =
+        VoronoiTetrahedron(v[0][0], v[0][1], v[0][2], v[1][top1],
+                           ngbs[1][imap[3]], new_tetrahedron, tetrahedron1,
+                           ngbs[0][3], ngbi[1][imap[3]], 3, 3, ngbi[0][3]);
+    _tetrahedra[tetrahedron1] =
+        VoronoiTetrahedron(v[0][0], v[0][1], v[1][top1], v[0][3],
+                           ngbs[1][imap[2]], new_tetrahedron, ngbs[0][2],
+                           tetrahedron0, ngbi[1][imap[2]], 2, ngbi[0][2], 2);
+    _tetrahedra[new_tetrahedron] = VoronoiTetrahedron(
+        v[0][0], v[1][top1], v[0][2], v[0][3], ngbs[1][imap[1]], ngbs[0][1],
+        tetrahedron1, tetrahedron0, ngbi[1][imap[1]], ngbi[0][1], 1, 1);
+
+    if (ngbs[0][1] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][1]].swap_neighbour(ngbi[0][1], new_tetrahedron, 1);
+    }
+    if (ngbs[0][2] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][2]].swap_neighbour(ngbi[0][2], tetrahedron1, 2);
+    }
+    if (ngbs[0][3] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][3]].swap_neighbour(ngbi[0][3], tetrahedron0, 3);
+    }
+
+    if (ngbs[1][imap[1]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[1]]].swap_neighbour(ngbi[1][imap[1]],
+                                                   new_tetrahedron, 0);
+    }
+    if (ngbs[1][imap[2]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[2]]].swap_neighbour(ngbi[1][imap[2]],
+                                                   tetrahedron1, 0);
+    }
+    if (ngbs[1][imap[3]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[3]]].swap_neighbour(ngbi[1][imap[3]],
+                                                   tetrahedron0, 0);
+    }
+  } else if (top0 == 1) {
+    _tetrahedra[tetrahedron0] =
+        VoronoiTetrahedron(v[0][0], v[0][1], v[0][2], v[1][top1],
+                           new_tetrahedron, ngbs[1][imap[3]], tetrahedron1,
+                           ngbs[0][3], 3, ngbi[1][imap[3]], 3, ngbi[0][3]);
+    _tetrahedra[tetrahedron1] =
+        VoronoiTetrahedron(v[0][0], v[0][1], v[1][top1], v[0][3],
+                           new_tetrahedron, ngbs[1][imap[2]], ngbs[0][2],
+                           tetrahedron0, 2, ngbi[1][imap[2]], ngbi[0][2], 2);
+    _tetrahedra[new_tetrahedron] = VoronoiTetrahedron(
+        v[1][top1], v[0][1], v[0][2], v[0][3], ngbs[0][0], ngbs[1][imap[0]],
+        tetrahedron1, tetrahedron0, ngbi[0][0], ngbi[1][imap[0]], 0, 0);
+
+    if (ngbs[0][0] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][0]].swap_neighbour(ngbi[0][0], new_tetrahedron, 0);
+    }
+    if (ngbs[0][2] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][2]].swap_neighbour(ngbi[0][2], tetrahedron1, 2);
+    }
+    if (ngbs[0][3] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][3]].swap_neighbour(ngbi[0][3], tetrahedron0, 3);
+    }
+
+    if (ngbs[1][imap[0]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[0]]].swap_neighbour(ngbi[1][imap[0]],
+                                                   new_tetrahedron, 1);
+    }
+    if (ngbs[1][imap[2]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[2]]].swap_neighbour(ngbi[1][imap[2]],
+                                                   tetrahedron1, 1);
+    }
+    if (ngbs[1][imap[3]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[3]]].swap_neighbour(ngbi[1][imap[3]],
+                                                   tetrahedron0, 1);
+    }
+  } else if (top0 == 2) {
+    _tetrahedra[tetrahedron0] = VoronoiTetrahedron(
+        v[0][0], v[0][1], v[0][2], v[1][top1], new_tetrahedron, tetrahedron1,
+        ngbs[1][imap[3]], ngbs[0][3], 3, 3, ngbi[1][imap[3]], ngbi[0][3]);
+    _tetrahedra[tetrahedron1] = VoronoiTetrahedron(
+        v[0][0], v[1][top1], v[0][2], v[0][3], new_tetrahedron, ngbs[0][1],
+        ngbs[1][imap[1]], tetrahedron0, 1, ngbi[0][1], ngbi[1][imap[1]], 1);
+    _tetrahedra[new_tetrahedron] = VoronoiTetrahedron(
+        v[1][top1], v[0][1], v[0][2], v[0][3], ngbs[0][0], tetrahedron1,
+        ngbs[1][imap[0]], tetrahedron0, ngbi[0][0], 0, ngbi[0][imap[0]], 0);
+
+    if (ngbs[0][0] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][0]].swap_neighbour(ngbi[0][0], new_tetrahedron, 0);
+    }
+    if (ngbs[0][1] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][1]].swap_neighbour(ngbi[0][1], tetrahedron1, 1);
+    }
+    if (ngbs[0][3] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][3]].swap_neighbour(ngbi[0][3], tetrahedron0, 3);
+    }
+
+    if (ngbs[1][imap[0]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[0]]].swap_neighbour(ngbi[1][imap[0]],
+                                                   new_tetrahedron, 2);
+    }
+    if (ngbs[1][imap[1]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[1]]].swap_neighbour(ngbi[1][imap[1]],
+                                                   tetrahedron1, 2);
+    }
+    if (ngbs[1][imap[3]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[3]]].swap_neighbour(ngbi[1][imap[3]],
+                                                   tetrahedron0, 2);
+    }
+  } else {
+    cmac_assert(top0 == 3);
+    _tetrahedra[tetrahedron0] = VoronoiTetrahedron(
+        v[0][0], v[0][1], v[1][top1], v[0][3], new_tetrahedron, tetrahedron1,
+        ngbs[0][2], ngbs[1][imap[2]], 2, 2, ngbi[0][2], ngbi[1][imap[2]]);
+    _tetrahedra[tetrahedron1] = VoronoiTetrahedron(
+        v[0][0], v[1][top1], v[0][2], v[0][3], new_tetrahedron, ngbs[0][1],
+        tetrahedron0, ngbs[1][imap[1]], 1, ngbi[0][1], 1, ngbi[1][imap[1]]);
+    _tetrahedra[new_tetrahedron] = VoronoiTetrahedron(
+        v[1][top1], v[0][1], v[0][2], v[0][3], ngbs[0][0], tetrahedron1,
+        tetrahedron0, ngbs[1][imap[0]], ngbi[0][0], 0, 0, ngbi[1][imap[0]]);
+
+    if (ngbs[0][0] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][0]].swap_neighbour(ngbi[0][0], new_tetrahedron, 0);
+    }
+    if (ngbs[0][1] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][1]].swap_neighbour(ngbi[0][1], tetrahedron1, 1);
+    }
+    if (ngbs[0][2] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[0][2]].swap_neighbour(ngbi[0][2], tetrahedron0, 2);
+    }
+
+    if (ngbs[1][imap[0]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[0]]].swap_neighbour(ngbi[1][imap[0]],
+                                                   new_tetrahedron, 3);
+    }
+    if (ngbs[1][imap[1]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[1]]].swap_neighbour(ngbi[1][imap[1]],
+                                                   tetrahedron1, 3);
+    }
+    if (ngbs[1][imap[2]] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[1][imap[2]]].swap_neighbour(ngbi[1][imap[2]],
+                                                   tetrahedron0, 3);
+    }
+  }
+
+  queue[tetrahedron0] = true;
+  queue[tetrahedron1] = true;
+  queue.push_back(true);
+
+  if (next_check > tetrahedron0) {
+    next_check = tetrahedron0;
+  }
+  if (next_check > tetrahedron1) {
+    next_check = tetrahedron1;
+  }
+  // we don't need to check new_tetrahedron, as we know it is the last element
+  // in the stack and certainly larger than next_check
+
+  return next_check;
+}
+
+/**
+ * @brief Replace the given four tetrahedra with four new tetrahedra.
+ *
+ * @param tetrahedron0 First tetrahedron.
+ * @param tetrahedron1 Second tetrahedron.
+ * @param tetrahedron2 Third tetrahedron.
+ * @param tetrahedron3 Fourth tetrahedron.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param next_check First tetrahedron in the stack that will be tested.
+ * @return First tetrahedron in the stack that needs to be tested after the
+ * flip.
+ */
+unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
+                                               unsigned int tetrahedron1,
+                                               unsigned int tetrahedron2,
+                                               unsigned int tetrahedron3,
+                                               std::vector< bool > &queue,
+                                               unsigned int next_check) {
+  cmac_error("4 to 4 flip not implemented yet!");
+  return next_check;
+}
+
+/**
+ * @brief Replace the given three tetrahedra with two new tetrahedra.
+ *
+ * @param tetrahedron0 First tetrahedron.
+ * @param tetrahedron1 Second tetrahedron.
+ * @param tetrahedron2 Third tetrahedron.
+ * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param next_check First tetrahedron in the stack that will be tested.
+ * @return First tetrahedron in the stack that needs to be tested after the
+ * flip.
+ */
+unsigned int NewVoronoiCell::three_to_two_flip(unsigned int tetrahedron0,
+                                               unsigned int tetrahedron1,
+                                               unsigned int tetrahedron2,
+                                               std::vector< bool > &queue,
+                                               unsigned int next_check) {
+  cmac_error("3 to 2 flip not implemented yet!");
+  return next_check;
+}
+
+/**
  * @brief Check if the given tetrahedron satisfies the empty circumsphere
  * criterion that marks it as a Delaunay tetrahedron.
  *
@@ -542,6 +789,7 @@ unsigned int NewVoronoiCell::check_tetrahedron(
     const VoronoiBox< unsigned long > &box,
     const std::vector< CoordinateVector< unsigned long > > &positions,
     std::vector< bool > &queue) {
+
   unsigned int next_check = tetrahedron + 1;
 
   const unsigned int v0 = _tetrahedra[tetrahedron].get_vertex(0);
@@ -583,9 +831,135 @@ unsigned int NewVoronoiCell::check_tetrahedron(
     if (test < 0) {
       // the tetrahedron (and its neighbour) are invalid!
       // we need to figure out which flip can restore them
-      /// TO BE CONTINUED...
+      // this will depend on whether the line that joins 'new_vertex' and 'v4'
+      // is inside the two tetrahedra or not
+      // which test we need to use depends on the index of 'new_vertex' in
+      // 'tetrahedron'
+      char tests[4] = {-1, -1, -1, -1};
+      if (top != 3) {
+        tests[0] = ExactGeometricTests::orient3d(p0, p1, p2, p4);
+      }
+      if (top != 2) {
+        tests[1] = ExactGeometricTests::orient3d(p0, p1, p4, p3);
+      }
+      if (top != 1) {
+        tests[2] = ExactGeometricTests::orient3d(p0, p4, p2, p3);
+      }
+      if (top != 0) {
+        tests[3] = ExactGeometricTests::orient3d(p4, p1, p2, p3);
+      }
+      unsigned char i = 0;
+      while (i < 4 && tests[i] < 0) {
+        ++i;
+      }
+      if (i == 4) {
+        // inside: need to do a 2 to 3 flip
+        next_check = two_to_three_flip(tetrahedron, ngb, top, ngb_index, queue,
+                                       next_check);
+      } else if (tests[i] == 0) {
+        // degenerate case: possible 4 to 4 flip
+        // the line that connects 'new_vertex' and 'v4' intersects an edge of
+        // the triangle formed by the other 3 vertices of 'tetrahedron'
+        // we need to check if that edge is shared by exactly 4 tetrahedra, i.e.
+        // we need to check if the neighbour of the neighbour of 'tetrahedron'
+        // is a neighbour of 'ngb'
+        // if it is, the 2 neighbours are the 2 extra tetrahedra involved in the
+        // 4 to 4 flip
+        // if it is not, we cannot solve this faulty situation now, but it will
+        // be solved by another flip later on
+
+        // the non_axis point is simply the vertex not present in the relevant
+        // orientation test
+        const unsigned char non_axis = 3 - i;
+        // get the neighbour
+        const unsigned int other_ngb =
+            _tetrahedra[tetrahedron].get_neighbour(non_axis);
+
+        // get the index of 'new_vertex' in 'other_ngb', as the neighbour
+        // opposite that vertex is the other neighbour we need to check
+        unsigned char ingb = 0;
+        while (ingb < 4 &&
+               _tetrahedra[other_ngb].get_vertex(ingb) != new_vertex) {
+          ++ingb;
+        }
+        cmac_assert(ingb < 4);
+
+        const unsigned int second_ngb =
+            _tetrahedra[other_ngb].get_neighbour(ingb);
+        const unsigned char second_ngb_index =
+            _tetrahedra[ngb].is_neighbour(second_ngb);
+        if (second_ngb_index < 4) {
+          // 4 to 4 flip possible!
+          next_check = four_to_four_flip(tetrahedron, ngb, other_ngb,
+                                         second_ngb, queue, next_check);
+        }
+      } else {
+        // check that this is indeed the only case left
+        cmac_assert(tests[i] > 0);
+
+        // outside: possible 3 to 2 flip
+        // the line that connects 'new_vertex' and 'v4' lies outside an edge of
+        // the triangle formed by the other 3 vertices of 'tetrahedron'
+        // we need to check if the neighbouring tetrahedron opposite the non
+        // edge point of that triangle is the same for 'tetrahedron' and 'ngb'
+        // if it is, that is the third tetrahedron for the 3 to 2 flip
+        // if it is not, we cannot solve this faulty situation now, but it will
+        // be solved by another flip later on
+
+        // the non_axis point is simply the vertex not present in the relevant
+        // orientation test
+        const unsigned char non_axis = 3 - i;
+        // get the neighbour
+        const unsigned int other_ngb =
+            _tetrahedra[tetrahedron].get_neighbour(non_axis);
+
+        // now try to find that neighbour in 'ngb'
+        const unsigned char other_ngb_index =
+            _tetrahedra[ngb].is_neighbour(other_ngb);
+        if (other_ngb_index < 4) {
+          // 3 to 2 flip possible!
+          next_check =
+              three_to_two_flip(tetrahedron, ngb, other_ngb, queue, next_check);
+        }
+      }
     }
   }
 
   return next_check;
+}
+
+/**
+ * @brief Checks the empty circumsphere criterion for each tetrahedron, using a
+ * brute force loop over all vertices.
+ *
+ * @param box VoronoiBox containing the box generating positions.
+ * @param positions std::vector containing all other positions.
+ */
+void NewVoronoiCell::check_empty_circumsphere(
+    const VoronoiBox< unsigned long > &box,
+    const std::vector< CoordinateVector< unsigned long > > &positions) const {
+  for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
+    const unsigned int v0 = _tetrahedra[i].get_vertex(0);
+    const unsigned int v1 = _tetrahedra[i].get_vertex(1);
+    const unsigned int v2 = _tetrahedra[i].get_vertex(2);
+    const unsigned int v3 = _tetrahedra[i].get_vertex(3);
+    const CoordinateVector< unsigned long > p0 =
+        get_position(_ngbs[v0], box, positions);
+    const CoordinateVector< unsigned long > p1 =
+        get_position(_ngbs[v1], box, positions);
+    const CoordinateVector< unsigned long > p2 =
+        get_position(_ngbs[v2], box, positions);
+    const CoordinateVector< unsigned long > p3 =
+        get_position(_ngbs[v3], box, positions);
+    for (unsigned int j = 0; j < _ngbs.size(); ++j) {
+      if (j != v0 && j != v1 && j != v2 && j != v3) {
+        const CoordinateVector< unsigned long > p4 =
+            get_position(_ngbs[j], box, positions);
+        const char abcde = ExactGeometricTests::insphere(p0, p1, p2, p3, p4);
+        if (abcde < 0) {
+          cmac_error("Wrong tetrahedron!");
+        }
+      }
+    }
+  }
 }

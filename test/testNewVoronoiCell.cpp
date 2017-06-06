@@ -26,6 +26,8 @@
 #include "Assert.hpp"
 #include "NewVoronoiCell.hpp"
 
+#include <fstream>
+
 /**
  * @brief Unit test for the NewVoronoiCell class.
  *
@@ -157,6 +159,49 @@ int main(int argc, char **argv) {
 
     cmac_status("Find tetrahedron works!");
   }
+
+  /// tests for NewVoronoiCell::intersect
+  {
+    NewVoronoiCell cell(0);
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(2);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    // general point
+    positions[1] = CoordinateVector< unsigned long >(1250);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    cell.intersect(1, box, positions);
+
+    cell.check_empty_circumsphere(box, positions);
+
+    std::ofstream ofile("new_voronoi_cell.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+
+    cmac_status("First intersection worked!");
+  }
+  //  {
+  //    NewVoronoiCell cell(0);
+  //    CoordinateVector< unsigned long > box_anchor(1000);
+  //    CoordinateVector< unsigned long > box_sides(1000);
+  //    std::vector< CoordinateVector< unsigned long > > positions(2);
+  //    positions[0] = CoordinateVector< unsigned long >(1500);
+  //    // general point
+  //    positions[1] = CoordinateVector< unsigned long >(1005);
+  //    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+  //    std::ofstream ofile("new_voronoi_cell.txt");
+  //    cell.print_tetrahedra(ofile, box, positions);
+  //    ofile << positions[1].x() << "\t" << positions[1].y() << "\t" <<
+  //    positions[1].z() << "\n";
+  //    ofile.close();
+
+  //    cell.intersect(1, box, positions);
+
+  //    cell.check_empty_circumsphere(box, positions);
+
+  //    cmac_status("Second intersection worked!");
+  //  }
 
   return 0;
 }
