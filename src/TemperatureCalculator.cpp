@@ -359,7 +359,7 @@ void TemperatureCalculator::calculate_temperature(
   double AHe = _abundances.get_abundance(ELEMENT_He);
   IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
                                      h0, he0);
-  if (h0 > _crlim) {
+  if (_crfac > 0. && h0 > _crlim) {
     // assume fully neutral
     cell.set_temperature(500.);
     cell.set_ionic_fraction(ION_H_n, 1.);
