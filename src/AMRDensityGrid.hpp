@@ -156,6 +156,7 @@ private:
           _cells[index] = childcell;
           childcell->value() = index;
         } else {
+          _ionization_variables.push_back(IonizationVariables());
           _number_density.push_back(funcvalue.get_number_density());
           for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             _ionic_fraction[i].push_back(old_ionic_fractions[i]);

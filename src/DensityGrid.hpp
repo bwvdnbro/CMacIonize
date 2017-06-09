@@ -34,6 +34,7 @@
 #include "DensityValues.hpp"
 #include "EmissivityValues.hpp"
 #include "HydroVariables.hpp"
+#include "IonizationVariables.hpp"
 #include "Lock.hpp"
 #include "Log.hpp"
 #include "Photon.hpp"
@@ -70,6 +71,9 @@ protected:
 
   /*! @brief Ionization energy of helium (in Hz). */
   double _ionization_energy_He;
+
+  /*! @brief Ionization calculation variables. */
+  std::vector< IonizationVariables > _ionization_variables;
 
   /*! @brief Number densities stored in the grid (in m^-3). */
   std::vector< double > _number_density;
@@ -276,6 +280,7 @@ public:
     }
     // we allocate memory for the cells, so that --dry-run can already check the
     // available memory
+    _ionization_variables.resize(numcell);
     _number_density.resize(numcell);
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fraction[i].resize(numcell);
