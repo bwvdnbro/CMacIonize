@@ -152,9 +152,11 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
   double heatcr = 0.;
-  heatcr = crfac * 1.2e-25 / std::sqrt(ne);
-  if (crscale > 0.) {
-    heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+  if (crfac > 0.) {
+    heatcr = crfac * 1.2e-25 / std::sqrt(ne);
+    if (crscale > 0.) {
+      heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+    }
   }
 
   gain += heatpah;
@@ -322,7 +324,8 @@ void TemperatureCalculator::calculate_temperature(
   const double eps = 1.e-3;
   const unsigned int max_iterations = 100;
 
-  if ((cell.get_heating_H() == 0. && cell.get_mean_intensity(ION_He_n) == 0.) ||
+  if ((cell.get_mean_intensity(ION_H_n) == 0. &&
+       cell.get_mean_intensity(ION_He_n) == 0.) ||
       cell.get_number_density() == 0.) {
     cell.set_temperature(500.);
 
@@ -351,37 +354,40 @@ void TemperatureCalculator::calculate_temperature(
   }
 
   double h0, he0;
-  double alphaH = _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
-  double alphaHe = _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
-  double jH = jfac * cell.get_mean_intensity(ION_H_n);
-  double jHe = jfac * cell.get_mean_intensity(ION_He_n);
-  double nH = cell.get_number_density();
-  double AHe = _abundances.get_abundance(ELEMENT_He);
-  IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
-                                     h0, he0);
-  if (_crfac > 0. && h0 > _crlim) {
-    // assume fully neutral
-    cell.set_temperature(500.);
-    cell.set_ionic_fraction(ION_H_n, 1.);
-    cell.set_ionic_fraction(ION_He_n, 1.);
+  if (_crfac > 0.) {
+    double alphaH = _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
+    double alphaHe =
+        _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
+    double jH = jfac * cell.get_mean_intensity(ION_H_n);
+    double jHe = jfac * cell.get_mean_intensity(ION_He_n);
+    double nH = cell.get_number_density();
+    double AHe = _abundances.get_abundance(ELEMENT_He);
+    IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
+                                       h0, he0);
+    if (_crfac > 0. && h0 > _crlim) {
+      // assume fully neutral
+      cell.set_temperature(500.);
+      cell.set_ionic_fraction(ION_H_n, 1.);
+      cell.set_ionic_fraction(ION_He_n, 1.);
 
-    cell.set_ionic_fraction(ION_C_p1, 0.);
-    cell.set_ionic_fraction(ION_C_p2, 0.);
+      cell.set_ionic_fraction(ION_C_p1, 0.);
+      cell.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 1.);
-    cell.set_ionic_fraction(ION_N_p1, 0.);
-    cell.set_ionic_fraction(ION_N_p2, 0.);
+      cell.set_ionic_fraction(ION_N_n, 1.);
+      cell.set_ionic_fraction(ION_N_p1, 0.);
+      cell.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 1.);
-    cell.set_ionic_fraction(ION_O_p1, 0.);
+      cell.set_ionic_fraction(ION_O_n, 1.);
+      cell.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 1.);
-    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+      cell.set_ionic_fraction(ION_Ne_n, 1.);
+      cell.set_ionic_fraction(ION_Ne_p1, 0.);
 
-    cell.set_ionic_fraction(ION_S_p1, 0.);
-    cell.set_ionic_fraction(ION_S_p2, 0.);
-    cell.set_ionic_fraction(ION_S_p3, 0.);
-    return;
+      cell.set_ionic_fraction(ION_S_p1, 0.);
+      cell.set_ionic_fraction(ION_S_p2, 0.);
+      cell.set_ionic_fraction(ION_S_p3, 0.);
+      return;
+    }
   }
 
   double T0;

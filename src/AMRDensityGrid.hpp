@@ -695,11 +695,15 @@ public:
    * @brief Increment the iterator index.
    *
    * In this case, the index encodes a lot of extra information and we cannot
-   * simply increment it by 1.
+   * simply increment it by 1 (we do now however).
    *
    * @param index Index to increment.
+   * @param increment Increment (default = 1).
    */
-  virtual void increase_index(unsigned long &index) { ++index; }
+  virtual void increase_index(unsigned long &index,
+                              unsigned long increment = 1) {
+    index += increment;
+  }
 
   /**
    * @brief Get an iterator to the first cell in the grid.

@@ -191,15 +191,13 @@ public:
     const double hydrogen_mass = 1.6737236e-27;
     const double boltzmann_k = 1.38064852e-23;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      double volume = it.get_volume();
-      double number_density = it.get_number_density();
-      double temperature = it.get_temperature();
+      const double volume = it.get_volume();
+      const double number_density = it.get_number_density();
+      const double temperature = it.get_temperature();
 
-      double density = number_density * hydrogen_mass;
-      double velocity[3];
-      velocity[0] = it.get_hydro_primitive_velocity_x();
-      velocity[1] = it.get_hydro_primitive_velocity_y();
-      velocity[2] = it.get_hydro_primitive_velocity_z();
+      const double density = number_density * hydrogen_mass;
+      const CoordinateVector<> velocity =
+          it.get_hydro_variables().get_primitives_velocity();
       // we assume a completely neutral or completely ionized gas
       double pressure = density * boltzmann_k * temperature / hydrogen_mass;
       if (temperature >= 1.e4) {
@@ -209,25 +207,19 @@ public:
 
       // set the density and pressure (the velocity has been set by
       // DensityGrid::initialize)
-      it.set_hydro_primitive_density(density);
-      it.set_hydro_primitive_pressure(pressure);
+      it.get_hydro_variables().set_primitives_density(density);
+      it.get_hydro_variables().set_primitives_pressure(pressure);
 
-      double mass = density * volume;
-      double momentum[3];
-      momentum[0] = mass * velocity[0];
-      momentum[1] = mass * velocity[1];
-      momentum[2] = mass * velocity[2];
-      double ekin = velocity[0] * momentum[0] + velocity[1] * momentum[1] +
-                    velocity[2] * momentum[2];
+      const double mass = density * volume;
+      const CoordinateVector<> momentum = mass * velocity;
+      const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
       // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-      double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
+      const double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
 
       // set conserved variables
-      it.set_hydro_conserved_mass(mass);
-      it.set_hydro_conserved_momentum_x(momentum[0]);
-      it.set_hydro_conserved_momentum_y(momentum[1]);
-      it.set_hydro_conserved_momentum_z(momentum[2]);
-      it.set_hydro_conserved_total_energy(total_energy);
+      it.get_hydro_variables().set_conserved_mass(mass);
+      it.get_hydro_variables().set_conserved_momentum(momentum);
+      it.get_hydro_variables().set_conserved_total_energy(total_energy);
     }
 
     grid.set_grid_velocity();
@@ -244,13 +236,11 @@ public:
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double rho = it.get_hydro_primitive_density();
-      const double P = it.get_hydro_primitive_pressure();
+      const double rho = it.get_hydro_variables().get_primitives_density();
+      const double P = it.get_hydro_variables().get_primitives_pressure();
       const double cs = std::sqrt(_gamma * P / rho);
-      const double vx = it.get_hydro_primitive_velocity_x();
-      const double vy = it.get_hydro_primitive_velocity_y();
-      const double vz = it.get_hydro_primitive_velocity_z();
-      const double v = std::sqrt(vx * vx + vy * vy + vz * vz);
+      const double v =
+          it.get_hydro_variables().get_primitives_velocity().norm();
       const double V = it.get_volume();
       const double R = std::cbrt(0.75 * V / M_PI);
       const double dt = 0.2 * R / (cs + v);
@@ -264,11 +254,10 @@ public:
 
     // exchange fluxes across cell boundaries
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double rhoL = it.get_hydro_primitive_density();
-      const CoordinateVector<> uL(it.get_hydro_primitive_velocity_x(),
-                                  it.get_hydro_primitive_velocity_y(),
-                                  it.get_hydro_primitive_velocity_z());
-      const double PL = it.get_hydro_primitive_pressure();
+      const double rhoL = it.get_hydro_variables().get_primitives_density();
+      const CoordinateVector<> uL =
+          it.get_hydro_variables().get_primitives_velocity();
+      const double PL = it.get_hydro_variables().get_primitives_pressure();
       auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
@@ -283,11 +272,9 @@ public:
         double PR;
         CoordinateVector<> vframe;
         if (ngb != grid.end()) {
-          rhoR = ngb.get_hydro_primitive_density();
-          uR[0] = ngb.get_hydro_primitive_velocity_x();
-          uR[1] = ngb.get_hydro_primitive_velocity_y();
-          uR[2] = ngb.get_hydro_primitive_velocity_z();
-          PR = ngb.get_hydro_primitive_pressure();
+          rhoR = ngb.get_hydro_variables().get_primitives_density();
+          uR = ngb.get_hydro_variables().get_primitives_velocity();
+          PR = ngb.get_hydro_variables().get_primitives_pressure();
           vframe = grid.get_interface_velocity(it, ngb, midpoint);
         } else {
           // apply boundary conditions
@@ -320,10 +307,8 @@ public:
         const CoordinateVector<> uRframe = uR - vframe;
 
         // project the velocities onto the surface normal
-        const double vL = uLframe[0] * normal[0] + uLframe[1] * normal[1] +
-                          uLframe[2] * normal[2];
-        const double vR = uRframe[0] * normal[0] + uRframe[1] * normal[1] +
-                          uRframe[2] * normal[2];
+        const double vL = CoordinateVector<>::dot_product(uLframe, normal);
+        const double vR = CoordinateVector<>::dot_product(uRframe, normal);
 
         // solve the Riemann problem
         double rhosol, vsol, Psol;
@@ -336,14 +321,10 @@ public:
           CoordinateVector<> usol;
           if (flag == -1) {
             vsol -= vL;
-            usol[0] = uLframe[0] + vsol * normal[0];
-            usol[1] = uLframe[1] + vsol * normal[1];
-            usol[2] = uLframe[2] + vsol * normal[2];
+            usol = uLframe + vsol * normal;
           } else {
             vsol -= vR;
-            usol[0] = uRframe[0] + vsol * normal[0];
-            usol[1] = uRframe[1] + vsol * normal[1];
-            usol[2] = uRframe[2] + vsol * normal[2];
+            usol = uRframe + vsol * normal;
           }
 
           // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
@@ -352,10 +333,7 @@ public:
 
           // get the fluxes
           const double mflux = rhosol * vsol * surface_area * timestep;
-          CoordinateVector<> pflux = rhosol * vsol * usol;
-          pflux[0] += Psol * normal[0];
-          pflux[1] += Psol * normal[1];
-          pflux[2] += Psol * normal[2];
+          CoordinateVector<> pflux = rhosol * vsol * usol + Psol * normal;
           pflux *= surface_area * timestep;
           double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
 
@@ -365,17 +343,11 @@ public:
                    0.5 * vframe2 * mflux;
           pflux += mflux * vframe;
 
-          // add the fluxes to the right time differences
-          it.set_hydro_conserved_delta_mass(
-              it.get_hydro_conserved_delta_mass() + mflux);
-          it.set_hydro_conserved_delta_momentum_x(
-              it.get_hydro_conserved_delta_momentum_x() + pflux.x());
-          it.set_hydro_conserved_delta_momentum_y(
-              it.get_hydro_conserved_delta_momentum_y() + pflux.y());
-          it.set_hydro_conserved_delta_momentum_z(
-              it.get_hydro_conserved_delta_momentum_z() + pflux.z());
-          it.set_hydro_conserved_delta_total_energy(
-              it.get_hydro_conserved_delta_total_energy() + eflux);
+          it.get_hydro_variables().delta_conserved(0) += mflux;
+          it.get_hydro_variables().delta_conserved(1) += pflux.x();
+          it.get_hydro_variables().delta_conserved(2) += pflux.y();
+          it.get_hydro_variables().delta_conserved(3) += pflux.z();
+          it.get_hydro_variables().delta_conserved(4) += eflux;
         }
       }
     }
@@ -386,61 +358,58 @@ public:
       // half since we consider the average mass of protons and electrons
       const double mH = 1.6737236e-27;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
-        double xH = it.get_ionic_fraction(ION_H_n);
+        const double xH = it.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
         if (xH < 0.25) {
           // assume the gas is ionized; add a heating term equal to the energy
           // difference
-          double Tgas = 1.e4;
-          double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          double uold = it.get_hydro_primitive_pressure() / _gm1 /
-                        it.get_hydro_primitive_density();
-          double du = ugas - uold;
-          double dE = it.get_hydro_conserved_mass() * du;
+          const double Tgas = 1.e4;
+          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          const double uold =
+              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
+              it.get_hydro_variables().get_primitives_density();
+          const double du = ugas - uold;
+          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
           // minus sign, as delta_total_energy represents a sum of fluxes, which
           // are defined as an outflux
-          it.set_hydro_conserved_delta_total_energy(
-              it.get_hydro_conserved_delta_total_energy() - dE);
+          it.get_hydro_variables().delta_conserved(4) -= dE;
         } else {
           // assume the gas is neutral; subtract a cooling term equal to the
           // energy difference
-          double Tgas = 1.e2;
-          double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          double uold = it.get_hydro_primitive_pressure() / _gm1 /
-                        it.get_hydro_primitive_density();
-          double du = ugas - uold;
-          double dE = it.get_hydro_conserved_mass() * du;
+          const double Tgas = 1.e2;
+          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          const double uold =
+              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
+              it.get_hydro_variables().get_primitives_density();
+          const double du = ugas - uold;
+          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
           // minus sign, as delta_total_energy represents a sum of fluxes, which
           // are defined as an outflux
-          it.set_hydro_conserved_delta_total_energy(
-              it.get_hydro_conserved_delta_total_energy() - dE);
+          it.get_hydro_variables().delta_conserved(4) -= dE;
         }
       }
     }
 
     // update conserved variables
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      it.set_hydro_conserved_mass(it.get_hydro_conserved_mass() -
-                                  it.get_hydro_conserved_delta_mass());
-      it.set_hydro_conserved_momentum_x(
-          it.get_hydro_conserved_momentum_x() -
-          it.get_hydro_conserved_delta_momentum_x());
-      it.set_hydro_conserved_momentum_y(
-          it.get_hydro_conserved_momentum_y() -
-          it.get_hydro_conserved_delta_momentum_y());
-      it.set_hydro_conserved_momentum_z(
-          it.get_hydro_conserved_momentum_z() -
-          it.get_hydro_conserved_delta_momentum_z());
-      it.set_hydro_conserved_total_energy(
-          it.get_hydro_conserved_total_energy() -
-          it.get_hydro_conserved_delta_total_energy());
+
+      it.get_hydro_variables().conserved(0) -=
+          it.get_hydro_variables().delta_conserved(0);
+      it.get_hydro_variables().conserved(1) -=
+          it.get_hydro_variables().delta_conserved(1);
+      it.get_hydro_variables().conserved(2) -=
+          it.get_hydro_variables().delta_conserved(2);
+      it.get_hydro_variables().conserved(3) -=
+          it.get_hydro_variables().delta_conserved(3);
+      it.get_hydro_variables().conserved(4) -=
+          it.get_hydro_variables().delta_conserved(4);
 
       // reset time differences
-      it.set_hydro_conserved_delta_mass(0.);
-      it.set_hydro_conserved_delta_momentum_x(0.);
-      it.set_hydro_conserved_delta_momentum_y(0.);
-      it.set_hydro_conserved_delta_momentum_z(0.);
-      it.set_hydro_conserved_delta_total_energy(0.);
+      it.get_hydro_variables().delta_conserved(0) = 0.;
+      it.get_hydro_variables().delta_conserved(1) = 0.;
+      it.get_hydro_variables().delta_conserved(2) = 0.;
+      it.get_hydro_variables().delta_conserved(3) = 0.;
+      it.get_hydro_variables().delta_conserved(4) = 0.;
     }
 
     grid.evolve(timestep);
@@ -450,50 +419,43 @@ public:
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      double volume = it.get_volume();
-      double mass = it.get_hydro_conserved_mass();
-      double momentum[3] = {it.get_hydro_conserved_momentum_x(),
-                            it.get_hydro_conserved_momentum_y(),
-                            it.get_hydro_conserved_momentum_z()};
-      double total_energy = it.get_hydro_conserved_total_energy();
+      const double volume = it.get_volume();
+      const double mass = it.get_hydro_variables().get_conserved_mass();
+      const CoordinateVector<> momentum =
+          it.get_hydro_variables().get_conserved_momentum();
+      const double total_energy =
+          it.get_hydro_variables().get_conserved_total_energy();
 
-      double density, velocity[3], pressure;
+      double density, pressure;
+      CoordinateVector<> velocity;
       if (mass <= 0.) {
         if (mass < 0.) {
           cmac_error("Negative mass for cell!");
         }
         // vacuum
         density = 0.;
-        velocity[0] = 0.;
-        velocity[1] = 0.;
-        velocity[2] = 0.;
+        velocity = CoordinateVector<>(0.);
         pressure = 0.;
       } else {
         density = mass / volume;
-        velocity[0] = momentum[0] / mass;
-        velocity[1] = momentum[1] / mass;
-        velocity[2] = momentum[2] / mass;
+        velocity = momentum / mass;
         // E = V*(rho*u + 0.5*rho*v^2) = (V*P/(gamma-1) + 0.5*m*v^2)
         // P = (E - 0.5*m*v^2)*(gamma-1)/V
-        pressure =
-            _gm1 *
-            (total_energy -
-             0.5 * (momentum[0] * velocity[0] + momentum[1] * velocity[1] +
-                    momentum[2] * velocity[2])) /
-            volume;
+        pressure = _gm1 *
+                   (total_energy -
+                    0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
+                   volume;
       }
 
       cmac_assert(density >= 0.);
       cmac_assert(pressure >= 0.);
 
-      it.set_hydro_primitive_density(density);
-      it.set_hydro_primitive_velocity_x(velocity[0]);
-      it.set_hydro_primitive_velocity_y(velocity[1]);
-      it.set_hydro_primitive_velocity_z(velocity[2]);
-      it.set_hydro_primitive_pressure(pressure);
+      it.get_hydro_variables().set_primitives_density(density);
+      it.get_hydro_variables().set_primitives_velocity(velocity);
+      it.get_hydro_variables().set_primitives_pressure(pressure);
 
       it.set_number_density(density / hydrogen_mass);
-      double mean_molecular_mass =
+      const double mean_molecular_mass =
           it.get_ionic_fraction(ION_H_n) * hydrogen_mass +
           0.5 * (1. - it.get_ionic_fraction(ION_H_n)) * hydrogen_mass;
       it.set_temperature(mean_molecular_mass * pressure / boltzmann_k /

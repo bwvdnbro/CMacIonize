@@ -117,12 +117,13 @@ int main(int argc, char **argv) {
       double mtot = 0.;
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
+        const HydroVariables &hydro_vars = it.get_hydro_variables();
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << it.get_hydro_primitive_density() << "\t"
-                 << it.get_hydro_primitive_velocity_x() << "\t"
-                 << it.get_hydro_primitive_pressure() << "\n";
-        mtot += it.get_hydro_conserved_mass();
-        etot += it.get_hydro_conserved_total_energy();
+                 << hydro_vars.get_primitives_density() << "\t"
+                 << hydro_vars.get_primitives_velocity().x() << "\t"
+                 << hydro_vars.get_primitives_pressure() << "\n";
+        mtot += hydro_vars.get_conserved_mass();
+        etot += hydro_vars.get_conserved_total_energy();
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -137,12 +138,13 @@ int main(int argc, char **argv) {
       double mtot = 0.;
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
+        const HydroVariables &hydro_vars = it.get_hydro_variables();
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << it.get_hydro_primitive_density() << "\t"
-                 << it.get_hydro_primitive_velocity_x() << "\t"
-                 << it.get_hydro_primitive_pressure() << "\n";
-        mtot += it.get_hydro_conserved_mass();
-        etot += it.get_hydro_conserved_total_energy();
+                 << hydro_vars.get_primitives_density() << "\t"
+                 << hydro_vars.get_primitives_velocity().x() << "\t"
+                 << hydro_vars.get_primitives_pressure() << "\n";
+        mtot += hydro_vars.get_conserved_mass();
+        etot += hydro_vars.get_conserved_total_energy();
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -185,12 +187,13 @@ int main(int argc, char **argv) {
       double mtot = 0.;
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
+        const HydroVariables &hydro_vars = it.get_hydro_variables();
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << it.get_hydro_primitive_density() << "\t"
-                 << it.get_hydro_primitive_velocity_x() << "\t"
-                 << it.get_hydro_primitive_pressure() << "\n";
-        mtot += it.get_hydro_conserved_mass();
-        etot += it.get_hydro_conserved_total_energy();
+                 << hydro_vars.get_primitives_density() << "\t"
+                 << hydro_vars.get_primitives_velocity().x() << "\t"
+                 << hydro_vars.get_primitives_pressure() << "\n";
+        mtot += hydro_vars.get_conserved_mass();
+        etot += hydro_vars.get_conserved_total_energy();
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -205,12 +208,13 @@ int main(int argc, char **argv) {
       double mtot = 0.;
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
+        const HydroVariables &hydro_vars = it.get_hydro_variables();
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << it.get_hydro_primitive_density() << "\t"
-                 << it.get_hydro_primitive_velocity_x() << "\t"
-                 << it.get_hydro_primitive_pressure() << "\n";
-        mtot += it.get_hydro_conserved_mass();
-        etot += it.get_hydro_conserved_total_energy();
+                 << hydro_vars.get_primitives_density() << "\t"
+                 << hydro_vars.get_primitives_velocity().x() << "\t"
+                 << hydro_vars.get_primitives_pressure() << "\n";
+        mtot += hydro_vars.get_conserved_mass();
+        etot += hydro_vars.get_conserved_total_energy();
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }

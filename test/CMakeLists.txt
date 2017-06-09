@@ -704,6 +704,7 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
+    ../src/HydroVariables.hpp
     ../src/VoronoiCell.cpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiGrid.cpp

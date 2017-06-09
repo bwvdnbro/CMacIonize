@@ -69,9 +69,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
 
   allocate_memory(totnumcell);
 
-  _hydro_generator_velocity[0].resize(totnumcell, 0.);
-  _hydro_generator_velocity[1].resize(totnumcell, 0.);
-  _hydro_generator_velocity[2].resize(totnumcell, 0.);
+  _hydro_generator_velocity.resize(totnumcell);
 
   if (log) {
     log->write_status("Created VoronoiDensityGrid in a box with anchor [",
@@ -187,9 +185,7 @@ void VoronoiDensityGrid::evolve(double timestep) {
     for (auto it = begin(); it != end(); ++it) {
       const unsigned int index = it.get_index();
 
-      const CoordinateVector<> vgrid(_hydro_generator_velocity[0][index],
-                                     _hydro_generator_velocity[1][index],
-                                     _hydro_generator_velocity[2][index]);
+      const CoordinateVector<> vgrid = _hydro_generator_velocity[index];
       _voronoi_grid.move_generator(index, _hydro_timestep * vgrid);
 
 #ifdef VORONOIDENSITYGRID_PRINT_GENERATORS
@@ -223,9 +219,9 @@ void VoronoiDensityGrid::set_grid_velocity() {
     for (auto it = begin(); it != end(); ++it) {
       const unsigned int index = it.get_index();
 
-      _hydro_generator_velocity[0][index] = _hydro_primitive_velocity_x[index];
-      _hydro_generator_velocity[1][index] = _hydro_primitive_velocity_y[index];
-      _hydro_generator_velocity[2][index] = _hydro_primitive_velocity_z[index];
+      const HydroVariables &hydro_vars = it.get_hydro_variables();
+
+      _hydro_generator_velocity[index] = hydro_vars.get_primitives_velocity();
 
       const CoordinateVector<> dcell = _voronoi_grid.get_centroid(index) -
                                        _voronoi_grid.get_generator(index);
@@ -235,16 +231,14 @@ void VoronoiDensityGrid::set_grid_velocity() {
       CoordinateVector<> vcorr;
       if (dcellnorm > 0.9 * eta * R) {
         const double cs =
-            std::sqrt(_hydro_gamma * _hydro_primitive_pressure[index] /
-                      _hydro_primitive_density[index]);
+            std::sqrt(_hydro_gamma * hydro_vars.get_primitives_pressure() /
+                      hydro_vars.get_primitives_density());
         vcorr = cs * dcell / dcellnorm;
         if (dcellnorm < 1.1 * eta * R) {
           vcorr *= (dcellnorm - 0.9 * eta * R) / (0.2 * eta * R);
         }
       }
-      _hydro_generator_velocity[0][index] += vcorr.x();
-      _hydro_generator_velocity[1][index] += vcorr.y();
-      _hydro_generator_velocity[2][index] += vcorr.z();
+      _hydro_generator_velocity[index] += vcorr;
     }
   }
 }
@@ -268,25 +262,15 @@ CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
     const CoordinateVector<> rRL = _voronoi_grid.get_generator(iright) -
                                    _voronoi_grid.get_generator(ileft);
     const double rRLnorm2 = rRL.norm2();
-    CoordinateVector<> vrel;
-    vrel[0] = _hydro_generator_velocity[0][ileft] -
-              _hydro_generator_velocity[0][iright];
-    vrel[1] = _hydro_generator_velocity[1][ileft] -
-              _hydro_generator_velocity[1][iright];
-    vrel[2] = _hydro_generator_velocity[2][ileft] -
-              _hydro_generator_velocity[2][iright];
+    const CoordinateVector<> vrel =
+        _hydro_generator_velocity[ileft] - _hydro_generator_velocity[iright];
     const CoordinateVector<> rmid = 0.5 * (_voronoi_grid.get_generator(ileft) +
                                            _voronoi_grid.get_generator(iright));
     const double fac =
         CoordinateVector<>::dot_product(vrel, interface_midpoint - rmid) /
         rRLnorm2;
-    CoordinateVector<> vmid;
-    vmid[0] = 0.5 * (_hydro_generator_velocity[0][ileft] +
-                     _hydro_generator_velocity[0][iright]);
-    vmid[1] = 0.5 * (_hydro_generator_velocity[1][ileft] +
-                     _hydro_generator_velocity[1][iright]);
-    vmid[2] = 0.5 * (_hydro_generator_velocity[2][ileft] +
-                     _hydro_generator_velocity[2][iright]);
+    const CoordinateVector<> vmid = 0.5 * (_hydro_generator_velocity[ileft] +
+                                           _hydro_generator_velocity[iright]);
     vframe = vmid + fac * rRL;
   }
   return vframe;

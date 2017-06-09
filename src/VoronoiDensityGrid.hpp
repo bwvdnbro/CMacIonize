@@ -48,7 +48,7 @@ private:
   unsigned char _num_lloyd;
 
   /*! @brief Velocity of the grid generators (in m s^-1). */
-  std::vector< double > _hydro_generator_velocity[3];
+  std::vector< CoordinateVector<> > _hydro_generator_velocity;
 
   /*! @brief Time step used in the hydro scheme (in s). */
   double _hydro_timestep;
