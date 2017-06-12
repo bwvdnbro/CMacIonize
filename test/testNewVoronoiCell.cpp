@@ -62,9 +62,6 @@ int main(int argc, char **argv) {
     cmac_status("Volume tetrahedron works!");
   }
 
-  // temporarily disabled all further tests, as they are broken...
-  return 0;
-
   /// test geometrical routines
   {
     Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
@@ -73,63 +70,108 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.finalize(box, positions);
 
+    std::vector< CoordinateVector<> > full_volume_positions(4);
+    full_volume_positions[0] = CoordinateVector<>(6.26786);
+    full_volume_positions[1] = CoordinateVector<>(-8.125, 3.5, 3.5);
+    full_volume_positions[2] = CoordinateVector<>(3.5, -8.125, 3.5);
+    full_volume_positions[3] = CoordinateVector<>(3.5, 3.5, -8.125);
+    VoronoiTetrahedron full_volume_tetrahedron(0, 1, 2, 3);
+    const double full_volume =
+        full_volume_tetrahedron.get_volume(full_volume_positions);
+    const CoordinateVector<> full_centroid =
+        full_volume_tetrahedron.get_centroid(full_volume_positions);
+    const double full_area_023 =
+        0.5 *
+        CoordinateVector<>::cross_product(
+            full_volume_positions[2] - full_volume_positions[0],
+            full_volume_positions[3] - full_volume_positions[0])
+            .norm();
+    const CoordinateVector<> full_midpoint_023 =
+        (full_volume_positions[0] + full_volume_positions[2] +
+         full_volume_positions[3]) /
+        3.;
+    const double full_area_123 =
+        0.5 *
+        CoordinateVector<>::cross_product(
+            full_volume_positions[2] - full_volume_positions[1],
+            full_volume_positions[3] - full_volume_positions[1])
+            .norm();
+    const CoordinateVector<> full_midpoint_123 =
+        (full_volume_positions[1] + full_volume_positions[2] +
+         full_volume_positions[3]) /
+        3.;
+    const double full_area_013 =
+        0.5 *
+        CoordinateVector<>::cross_product(
+            full_volume_positions[1] - full_volume_positions[0],
+            full_volume_positions[3] - full_volume_positions[0])
+            .norm();
+    const CoordinateVector<> full_midpoint_013 =
+        (full_volume_positions[0] + full_volume_positions[1] +
+         full_volume_positions[3]) /
+        3.;
+    const double full_area_012 =
+        0.5 *
+        CoordinateVector<>::cross_product(
+            full_volume_positions[1] - full_volume_positions[0],
+            full_volume_positions[2] - full_volume_positions[0])
+            .norm();
+    const CoordinateVector<> full_midpoint_012 =
+        (full_volume_positions[0] + full_volume_positions[1] +
+         full_volume_positions[2]) /
+        3.;
+
+    const double tolerance = 1.e-6;
+
     double volume = cell.get_volume();
-    assert_condition(volume == 1.);
+    assert_values_equal_rel(volume, full_volume, tolerance);
     cmac_status("Cell volume computation works!");
 
     CoordinateVector<> centroid = cell.get_centroid();
-    const double tolerance = 1.e-16;
-    assert_values_equal_rel(centroid.x(), 0.5, tolerance);
-    assert_values_equal_rel(centroid.y(), 0.5, tolerance);
-    assert_values_equal_rel(centroid.z(), 0.5, tolerance);
+    assert_values_equal_rel(centroid.x(), full_centroid.x(), tolerance);
+    assert_values_equal_rel(centroid.y(), full_centroid.y(), tolerance);
+    assert_values_equal_rel(centroid.z(), full_centroid.z(), tolerance);
     cmac_status("Cell centroid computation works!");
 
     std::vector< VoronoiFace > faces = cell.get_faces();
+    assert_condition(faces.size() == 4);
 
-    assert_condition(faces[0].get_surface_area() == 1.);
+    assert_values_equal_rel(faces[0].get_surface_area(), full_area_023,
+                            tolerance);
     CoordinateVector<> midpoint = faces[0].get_midpoint();
-    assert_condition(midpoint.x() == 0.);
-    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
-    assert_condition(faces[0].get_neighbour() == NEWVORONOICELL_BOX_LEFT);
+    assert_values_equal_rel(midpoint.x(), full_midpoint_023.x(), tolerance);
+    assert_values_equal_rel(midpoint.y(), full_midpoint_023.y(), tolerance);
+    assert_values_equal_rel(midpoint.z(), full_midpoint_023.z(), tolerance);
+    assert_condition(faces[0].get_neighbour() == NEWVORONOICELL_BOX_CORNER1);
 
-    assert_condition(faces[1].get_surface_area() == 1.);
+    assert_values_equal_rel(faces[1].get_surface_area(), full_area_013,
+                            tolerance);
     midpoint = faces[1].get_midpoint();
-    assert_condition(midpoint.x() == 1.);
-    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
-    assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_RIGHT);
+    assert_values_equal_rel(midpoint.x(), full_midpoint_013.x(), tolerance);
+    assert_values_equal_rel(midpoint.y(), full_midpoint_013.y(), tolerance);
+    assert_values_equal_rel(midpoint.z(), full_midpoint_013.z(), tolerance);
+    assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_CORNER2);
 
-    assert_condition(faces[2].get_surface_area() == 1.);
+    assert_values_equal_rel(faces[2].get_surface_area(), full_area_012,
+                            tolerance);
     midpoint = faces[2].get_midpoint();
-    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
-    assert_condition(midpoint.y() == 0.);
-    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
-    assert_condition(faces[2].get_neighbour() == NEWVORONOICELL_BOX_FRONT);
+    assert_values_equal_rel(midpoint.x(), full_midpoint_012.x(), tolerance);
+    assert_values_equal_rel(midpoint.y(), full_midpoint_012.y(), tolerance);
+    assert_values_equal_rel(midpoint.z(), full_midpoint_012.z(), tolerance);
+    assert_condition(faces[2].get_neighbour() == NEWVORONOICELL_BOX_CORNER3);
 
-    assert_condition(faces[3].get_surface_area() == 1.);
+    assert_values_equal_rel(faces[3].get_surface_area(), full_area_123,
+                            tolerance);
     midpoint = faces[3].get_midpoint();
-    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
-    assert_condition(midpoint.y() == 1.);
-    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
-    assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_BACK);
-
-    assert_condition(faces[4].get_surface_area() == 1.);
-    midpoint = faces[4].get_midpoint();
-    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
-    assert_condition(midpoint.z() == 0.);
-    assert_condition(faces[4].get_neighbour() == NEWVORONOICELL_BOX_BOTTOM);
-
-    assert_condition(faces[5].get_surface_area() == 1.);
-    midpoint = faces[5].get_midpoint();
-    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
-    assert_condition(midpoint.z() == 1.);
-    assert_condition(faces[5].get_neighbour() == NEWVORONOICELL_BOX_TOP);
+    assert_values_equal_rel(midpoint.x(), full_midpoint_123.x(), tolerance);
+    assert_values_equal_rel(midpoint.y(), full_midpoint_123.y(), tolerance);
+    assert_values_equal_rel(midpoint.z(), full_midpoint_123.z(), tolerance);
+    assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_CORNER0);
 
     cmac_status("Cell face computation works!");
   }
+
+  return 0;
 
   /// test for NewVoronoiCell::find_tetrahedron
   {

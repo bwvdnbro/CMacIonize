@@ -259,6 +259,12 @@ void NewVoronoiCell::finalize(
     real_positions[i] = get_position(_ngbs[i], voronoi_box, positions);
   }
 
+  //  for(unsigned int i = 0; i < real_positions.size(); ++i){
+  //    cmac_warning("real_positions[%u]: %g %g %g", i, real_positions[i].x(),
+  //    real_positions[i].y(),
+  //                 real_positions[i].z());
+  //  }
+
   std::vector< CoordinateVector<> > cell_vertices(_tetrahedra.size() + 1);
   cell_vertices[0] = real_positions[0];
   for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
@@ -266,11 +272,85 @@ void NewVoronoiCell::finalize(
         _tetrahedra[i].get_midpoint_circumsphere(real_positions);
   }
 
+  //  for(unsigned int i = 0; i < cell_vertices.size(); ++i){
+  //    cmac_warning("cell_vertices[%u]: %g %g %g", i, cell_vertices[i].x(),
+  //    cell_vertices[i].y(),
+  //                 cell_vertices[i].z());
+  //  }
+
+  // (re)construct the connections
+  _connections.clear();
+  // we loop over all tetrahedra and check if the central generator (0) is part
+  // of it. If so, we add new connections for every other vertex of the
+  // tetrahedron that has not been processed before
+  // To check the latter, we need an additional flag vector
+  std::vector< bool > processed(_ngbs.size(), false);
+  std::vector< unsigned int > connection_vertices;
+  for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
+    unsigned int vertices[4];
+    vertices[0] = _tetrahedra[i].get_vertex(0);
+    vertices[1] = _tetrahedra[i].get_vertex(1);
+    vertices[2] = _tetrahedra[i].get_vertex(2);
+    vertices[3] = _tetrahedra[i].get_vertex(3);
+    unsigned char j = 0;
+    while (j < 4 && vertices[j] != 0) {
+      ++j;
+    }
+    if (j < 4) {
+      // generator 0 is one of the vertices: add connections for every edge
+      for (unsigned char k = 0; k < 3; ++k) {
+        const unsigned char other_j = (j + k + 1) % 4;
+        const unsigned int other_vertex = vertices[other_j];
+        if (!processed[other_vertex]) {
+          _connections.push_back(std::vector< unsigned int >());
+          connection_vertices.push_back(other_vertex);
+          // add the current tetrahedron as first connection
+          _connections.back().push_back(i);
+          // now we need to find the next tetrahedron, taking into account the
+          // ordering of the tetrahedra around the axis
+          unsigned char third_j = (other_j + 1) % 4;
+          if (third_j == j) {
+            ++third_j;
+          }
+          // 'third_j' now definitely contains the index of a vertex that is not
+          // 'j' or 'other_j'
+          unsigned int ngb = _tetrahedra[i].get_neighbour(third_j);
+          unsigned int prev_ngb = i;
+          while (ngb != i) {
+            _connections.back().push_back(ngb);
+            unsigned int ngb_vertices[4];
+            ngb_vertices[0] = _tetrahedra[ngb].get_vertex(0);
+            ngb_vertices[1] = _tetrahedra[ngb].get_vertex(1);
+            ngb_vertices[2] = _tetrahedra[ngb].get_vertex(2);
+            ngb_vertices[3] = _tetrahedra[ngb].get_vertex(3);
+            third_j = 0;
+            while (ngb_vertices[third_j] == 0 ||
+                   ngb_vertices[third_j] == other_vertex ||
+                   _tetrahedra[ngb].get_neighbour(third_j) == prev_ngb) {
+              ++third_j;
+              cmac_assert(third_j < 4);
+            }
+            prev_ngb = ngb;
+            ngb = _tetrahedra[ngb].get_neighbour(third_j);
+          }
+          processed[other_vertex] = true;
+        }
+      }
+    }
+  }
+
+  //  for(unsigned int i = 0; i < _connections.size(); ++i){
+  //    cmac_warning("connection_vertices[%u]: %u", i, connection_vertices[i]);
+  //    for(unsigned int j = 0; j < _connections[i].size(); ++j){
+  //      cmac_warning("connection[%u][%u]: %u", i, j, _connections[i][j]);
+  //    }
+  //  }
+
   // due to the ordering of the connections, this constructs the faces in a
   // counterclockwise direction when looking from outside the cell towards the
   // cell generator, through the face
   _volume = 0.;
-  for (unsigned int i = 1; i < _connections.size(); ++i) {
+  for (unsigned int i = 0; i < _connections.size(); ++i) {
     double area = 0.;
     CoordinateVector<> midpoint;
     for (unsigned int j = 2; j < _connections[i].size(); ++j) {
@@ -298,7 +378,8 @@ void NewVoronoiCell::finalize(
       midpoint += tarea * tmidpoint;
     }
     midpoint /= area;
-    _faces.push_back(VoronoiFace(area, midpoint, _ngbs[i]));
+    _faces.push_back(
+        VoronoiFace(area, midpoint, _ngbs[connection_vertices[i]]));
   }
   _centroid /= _volume;
 }
