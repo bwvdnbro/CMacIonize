@@ -399,7 +399,7 @@ public:
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       CoordinateVector<> midpoint = it.get_cell_midpoint();
       if (_box.inside(midpoint)) {
-        double ncell = it.get_number_density();
+        double ncell = it.get_ionization_variables().get_number_density();
         double Ncell = ncell * it.get_volume();
         Ntot += Ncell;
         unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
@@ -425,11 +425,11 @@ public:
                           _box.get_sides().y() * _resolution.y();
         unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
                           _box.get_sides().z() * _resolution.z();
-        double ncell = it.get_number_density();
+        double ncell = it.get_ionization_variables().get_number_density();
         double nsmooth = smooth_fraction * ncell;
         double nfractal = _fractal_fraction * fractal_norm * ncell *
                           _distribution[ix][iy][iz];
-        it.set_number_density(nsmooth + nfractal);
+        it.get_ionization_variables().set_number_density(nsmooth + nfractal);
       }
     }
   }

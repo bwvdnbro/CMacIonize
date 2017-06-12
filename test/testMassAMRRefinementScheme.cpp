@@ -50,7 +50,8 @@ int main(int argc, char **argv) {
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
   // force refinement for a random cell
-  DensityGrid::iterator(42, grid).set_number_density(8.);
+  DensityGrid::iterator(42, grid).get_ionization_variables().set_number_density(
+      8.);
 
   grid.reset_grid();
 

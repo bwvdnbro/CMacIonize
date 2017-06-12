@@ -344,12 +344,14 @@ int main(int argc, char **argv) {
   // - temperatures
   // - ionic fractions
   // we have to gather these across all processes
-  comm.gather(grid->get_number_density_handle());
-  comm.gather(grid->get_temperature_handle());
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    comm.gather(grid->get_ionic_fraction_handle(ion));
-  }
+
+  // this is currently BROKEN...
+  //  comm.gather(grid->get_number_density_handle());
+  //  comm.gather(grid->get_temperature_handle());
+  //  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+  //    IonName ion = static_cast< IonName >(i);
+  //    comm.gather(grid->get_ionic_fraction_handle(ion));
+  //  }
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
@@ -472,15 +474,19 @@ int main(int argc, char **argv) {
 
       // reduce the mean intensity integrals and heating terms across all
       // processes
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-            grid->get_mean_intensity_handle(ion));
-      }
-      if (calculate_temperature && loop > 3) {
-        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_H_handle());
-        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(grid->get_heating_He_handle());
-      }
+
+      // this code is currently BROKEN...
+      //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      //        IonName ion = static_cast< IonName >(i);
+      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+      //            grid->get_mean_intensity_handle(ion));
+      //      }
+      //      if (calculate_temperature && loop > 3) {
+      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
+      //        >(grid->get_heating_H_handle());
+      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
+      //        >(grid->get_heating_He_handle());
+      //      }
 
       if (calculate_temperature && loop > 3) {
         temperature_calculator->calculate_temperature(totweight, *grid, block);
@@ -492,13 +498,15 @@ int main(int argc, char **argv) {
       // the calculation above will have changed the ionic fractions, and might
       // have changed the temperatures
       // we have to gather these across all processes
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        comm.gather(grid->get_ionic_fraction_handle(ion));
-      }
-      if (calculate_temperature && loop > 3) {
-        comm.gather(grid->get_temperature_handle());
-      }
+
+      // this is currently BROKEN...
+      //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      //        IonName ion = static_cast< IonName >(i);
+      //        comm.gather(grid->get_ionic_fraction_handle(ion));
+      //      }
+      //      if (calculate_temperature && loop > 3) {
+      //        comm.gather(grid->get_temperature_handle());
+      //      }
 
       if (log) {
         log->write_status("Done calculating ionization state.");

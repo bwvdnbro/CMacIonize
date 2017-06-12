@@ -146,17 +146,17 @@ static double get_single_variable(DensityGrid::iterator &cell,
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       if (name == "NeutralFraction" + get_ion_name(i)) {
         IonName ion = static_cast< IonName >(i);
-        return cell.get_ionic_fraction(ion);
+        return cell.get_ionization_variables().get_ionic_fraction(ion);
       }
     }
     cmac_error("Unknown variable: %s!", name.c_str());
     return 0.;
   } else if (name == "NumberDensity") {
-    return cell.get_number_density();
+    return cell.get_ionization_variables().get_number_density();
   } else if (name == "OI_6300") {
     return cell.get_emissivities()->get_emissivity(EMISSIONLINE_OI_6300);
   } else if (name == "Temperature") {
-    return cell.get_temperature();
+    return cell.get_ionization_variables().get_temperature();
   } else {
     cmac_error("Unknown variable: %s!", name.c_str());
     return 0.;

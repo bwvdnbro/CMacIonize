@@ -574,8 +574,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
 
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
     ../src/EmissivityCalculator.cpp
     ../src/EmissivityCalculator.hpp
     ../src/EmissivityValues.hpp

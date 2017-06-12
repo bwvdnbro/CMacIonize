@@ -204,11 +204,15 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     for (auto it = _grid.begin() + offset; it != _grid.begin() + upper_limit;
          ++it) {
       coords[index] = it.get_cell_midpoint() - box.get_anchor();
-      ndens[index] = it.get_number_density();
-      temp[index] = it.get_temperature();
+
+      const IonizationVariables &ionization_variables =
+          it.get_ionization_variables();
+
+      ndens[index] = ionization_variables.get_number_density();
+      temp[index] = ionization_variables.get_temperature();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        nfrac[i][index] = it.get_ionic_fraction(ion);
+        const IonName ion = static_cast< IonName >(i);
+        nfrac[i][index] = ionization_variables.get_ionic_fraction(ion);
       }
       ++index;
     }

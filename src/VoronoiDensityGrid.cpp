@@ -425,7 +425,8 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
 
     DensityGrid::iterator it(index, *this);
 
-    const double tau = get_optical_depth(mins, it, photon);
+    const double tau =
+        get_optical_depth(mins, it.get_ionization_variables(), photon);
     optical_depth -= tau;
 
     if (optical_depth < 0.) {

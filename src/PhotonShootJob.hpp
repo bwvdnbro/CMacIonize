@@ -107,7 +107,8 @@ public:
       double tau = -std::log(_random_generator.get_uniform_random_double());
       DensityGrid::iterator it = _density_grid.interact(photon, tau);
       while (it != _density_grid.end() &&
-             _photon_source.reemit(photon, it, _random_generator)) {
+             _photon_source.reemit(photon, it.get_ionization_variables(),
+                                   _random_generator)) {
         tau = -std::log(_random_generator.get_uniform_random_double());
         it = _density_grid.interact(photon, tau);
       }

@@ -26,7 +26,12 @@
 #ifndef IONIZATIONVARIABLES_HPP
 #define IONIZATIONVARIABLES_HPP
 
+#include "Configuration.hpp"
 #include "ElementNames.hpp"
+
+#ifdef USE_LOCKFREE
+#include "Atomic.hpp"
+#endif
 
 /**
  * @brief Convenient names for reemission probabilities.
@@ -56,7 +61,7 @@ enum HeatingTermName {
   /*! @brief Heating by hydrogen ionization. */
   HEATINGTERM_H = 0,
   /*! @brief Heating by helium ionization. */
-  HEATINGTERM_HE,
+  HEATINGTERM_He,
   /*! @brief Counter. Should always be the last element! */
   NUMBER_OF_HEATINGTERMS
 };
@@ -180,6 +185,21 @@ public:
   }
 
   /**
+   * @brief Add the given increment to the mean intensity integral for the ion
+   * with the given name.
+   *
+   * @param ion IonName.
+   * @param increment Increment (without normalization factor, in m^3).
+   */
+  inline void increase_mean_intensity(IonName ion, double increment) {
+#ifdef USE_LOCKFREE
+    Atomic::add(_mean_intensity[ion], increment);
+#else
+    _mean_intensity[ion] += increment;
+#endif
+  }
+
+  /**
    * @brief Get the reemission probability for the channel with the given name.
    *
    * @param name ReemissionProbabilityName.
@@ -221,6 +241,20 @@ public:
    */
   inline void set_heating(HeatingTermName name, double heating) {
     _heating[name] = heating;
+  }
+
+  /**
+   * @brief Add the given increment to the heating term with the given name.
+   *
+   * @param name HeatingTermName.
+   * @param increment Increment (without normalization factor, in m^3 s^-1).
+   */
+  inline void increase_heating(HeatingTermName name, double increment) {
+#ifdef USE_LOCKFREE
+    Atomic::add(_heating[name], increment);
+#else
+    _heating[name] += increment;
+#endif
   }
 };
 

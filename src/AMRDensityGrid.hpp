@@ -109,15 +109,17 @@ private:
       // the contents of the new cells is initialized to these values
       double old_ionic_fractions[NUMBER_OF_IONNAMES];
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        old_ionic_fractions[i] = _ionic_fraction[i][index];
+        const IonName ion = static_cast< IonName >(i);
+        old_ionic_fractions[i] =
+            _ionization_variables[index].get_ionic_fraction(ion);
       }
-      double old_temperature = _temperature[index];
-      double old_hydrogen_reemission_probability =
-          _hydrogen_reemission_probability[index];
-      double old_helium_reemission_probability[4];
-      for (int i = 0; i < 4; ++i) {
-        old_helium_reemission_probability[i] =
-            _helium_reemission_probability[i][index];
+      double old_temperature = _ionization_variables[index].get_temperature();
+      double old_reemission_probability[NUMBER_OF_REEMISSIONPROBABILITIES];
+      for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+        const ReemissionProbabilityName name =
+            static_cast< ReemissionProbabilityName >(i);
+        old_reemission_probability[i] =
+            _ionization_variables[index].get_reemission_probability(name);
       }
       // we do not copy the mean intensity integrals from the old cell, as these
       // will be reset before the refined cells are used
@@ -134,53 +136,70 @@ private:
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
-          _number_density[index] = funcvalue.get_number_density();
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _ionic_fraction[i][index] = old_ionic_fractions[i];
-          }
-          _temperature[index] = old_temperature;
-          _hydrogen_reemission_probability[index] =
-              old_hydrogen_reemission_probability;
-          for (int i = 0; i < 4; ++i) {
-            _helium_reemission_probability[i][index] =
-                old_helium_reemission_probability[i];
-          }
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _mean_intensity[i][index] = 0.;
-          }
           _mean_intensity_H_old[index] = 0.;
           _neutral_fraction_H_old[index] = old_neutral_fraction_H_old;
-          _heating_H[index] = 0.;
-          _heating_He[index] = 0.;
           _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
+
+          _ionization_variables[index].set_number_density(
+              funcvalue.get_number_density());
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables[index].set_ionic_fraction(
+                ion, old_ionic_fractions[i]);
+          }
+          _ionization_variables[index].set_temperature(old_temperature);
+          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+            const ReemissionProbabilityName name =
+                static_cast< ReemissionProbabilityName >(i);
+            _ionization_variables[index].set_reemission_probability(
+                name, old_reemission_probability[i]);
+          }
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables[index].set_mean_intensity(ion, 0.);
+          }
+          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+            const HeatingTermName heating_term =
+                static_cast< HeatingTermName >(i);
+            _ionization_variables[index].set_heating(heating_term, 0.);
+          }
         } else {
           _ionization_variables.push_back(IonizationVariables());
-          _number_density.push_back(funcvalue.get_number_density());
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _ionic_fraction[i].push_back(old_ionic_fractions[i]);
-          }
-          _temperature.push_back(old_temperature);
-          _hydrogen_reemission_probability.push_back(
-              old_hydrogen_reemission_probability);
-          for (int i = 0; i < 4; ++i) {
-            _helium_reemission_probability[i].push_back(
-                old_helium_reemission_probability[i]);
-          }
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _mean_intensity[i].push_back(0.);
-          }
           _mean_intensity_H_old.push_back(0.);
           _neutral_fraction_H_old.push_back(old_neutral_fraction_H_old);
-          _heating_H.push_back(0.);
-          _heating_He.push_back(0.);
           _emissivities.push_back(nullptr);
 #ifndef USE_LOCKFREE
           _lock.push_back(Lock());
 #endif
           _cells.push_back(childcell);
           childcell->value() = _cells.size() - 1;
+
+          _ionization_variables.back().set_number_density(
+              funcvalue.get_number_density());
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables.back().set_ionic_fraction(
+                ion, old_ionic_fractions[i]);
+          }
+          _ionization_variables.back().set_temperature(old_temperature);
+          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+            const ReemissionProbabilityName name =
+                static_cast< ReemissionProbabilityName >(i);
+            _ionization_variables.back().set_reemission_probability(
+                name, old_reemission_probability[i]);
+          }
+          // not really necessary, as values will be initialized to zero...
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables.back().set_mean_intensity(ion, 0.);
+          }
+          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+            const HeatingTermName heating_term =
+                static_cast< HeatingTermName >(i);
+            _ionization_variables.back().set_heating(heating_term, 0.);
+          }
         }
         // recursively refine further
         refine_cell(refinement_scheme, childcell->value(), density_function);
@@ -620,7 +639,7 @@ public:
       last_cell = it;
 
       // Helium abundance. Should be a parameter.
-      double tau = get_optical_depth(ds, it, photon);
+      double tau = get_optical_depth(ds, it.get_ionization_variables(), photon);
       optical_depth -= tau;
 
       // if the optical depth exceeds or equals the wanted value: exit the loop

@@ -142,7 +142,7 @@ public:
 
   double get_total_luminosity() const;
 
-  bool reemit(Photon &photon, const DensityGrid::iterator &cell,
+  bool reemit(Photon &photon, const IonizationVariables &ionization_variables,
               RandomGenerator &random_generator) const;
 };
 

@@ -192,8 +192,10 @@ public:
     const double boltzmann_k = 1.38064852e-23;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
-      const double number_density = it.get_number_density();
-      const double temperature = it.get_temperature();
+      const double number_density =
+          it.get_ionization_variables().get_number_density();
+      const double temperature =
+          it.get_ionization_variables().get_temperature();
 
       const double density = number_density * hydrogen_mass;
       const CoordinateVector<> velocity =
@@ -358,7 +360,10 @@ public:
       // half since we consider the average mass of protons and electrons
       const double mH = 1.6737236e-27;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
-        const double xH = it.get_ionic_fraction(ION_H_n);
+        const IonizationVariables &ionization_variables =
+            it.get_ionization_variables();
+
+        const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
         if (xH < 0.25) {
           // assume the gas is ionized; add a heating term equal to the energy
@@ -454,15 +459,18 @@ public:
       it.get_hydro_variables().set_primitives_velocity(velocity);
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
-      it.set_number_density(density / hydrogen_mass);
-      const double mean_molecular_mass =
-          it.get_ionic_fraction(ION_H_n) * hydrogen_mass +
-          0.5 * (1. - it.get_ionic_fraction(ION_H_n)) * hydrogen_mass;
-      it.set_temperature(mean_molecular_mass * pressure / boltzmann_k /
-                         density);
+      IonizationVariables &ionization_variables = it.get_ionization_variables();
 
-      cmac_assert(it.get_number_density() >= 0.);
-      cmac_assert(it.get_temperature() >= 0.);
+      ionization_variables.set_number_density(density / hydrogen_mass);
+      const double mean_molecular_mass =
+          ionization_variables.get_ionic_fraction(ION_H_n) * hydrogen_mass +
+          0.5 * (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
+              hydrogen_mass;
+      ionization_variables.set_temperature(mean_molecular_mass * pressure /
+                                           boltzmann_k / density);
+
+      cmac_assert(ionization_variables.get_number_density() >= 0.);
+      cmac_assert(ionization_variables.get_temperature() >= 0.);
     }
 
     grid.set_grid_velocity();

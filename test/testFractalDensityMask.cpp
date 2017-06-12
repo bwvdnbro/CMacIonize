@@ -71,8 +71,9 @@ int main(int argc, char **argv) {
   auto it_parallel = grid.begin();
   auto it_serial = grid_serial.begin();
   while (it_parallel != grid.end() && it_serial != grid_serial.end()) {
-    assert_condition(it_parallel.get_number_density() ==
-                     it_serial.get_number_density());
+    assert_condition(
+        it_parallel.get_ionization_variables().get_number_density() ==
+        it_serial.get_ionization_variables().get_number_density());
     ++it_parallel;
     ++it_serial;
   }

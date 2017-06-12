@@ -67,7 +67,8 @@ public:
    * @return True if the density is larger than 1.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    return cell.get_number_density() > 1. && level < 6;
+    return cell.get_ionization_variables().get_number_density() > 1. &&
+           level < 6;
   }
 
   /**
@@ -83,7 +84,7 @@ public:
                        const DensityGrid::iterator *cells) const {
     double avg_density = 0.;
     for (unsigned int i = 0; i < 8; ++i) {
-      avg_density += cells->get_number_density();
+      avg_density += cells[i].get_ionization_variables().get_number_density();
     }
     avg_density *= 0.125;
     return avg_density < 1.;

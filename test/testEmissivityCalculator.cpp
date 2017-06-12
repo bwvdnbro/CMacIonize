@@ -25,10 +25,8 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
-#include "CartesianDensityGrid.hpp"
-#include "DensityValues.hpp"
 #include "EmissivityCalculator.hpp"
-#include "HomogeneousDensityFunction.hpp"
+#include "IonizationVariables.hpp"
 #include "LineCoolingData.hpp"
 #include <fstream>
 #include <sstream>
@@ -46,13 +44,7 @@ int main(int argc, char **argv) {
   LineCoolingData lines;
   EmissivityCalculator calculator(abundances);
 
-  HomogeneousDensityFunction function(1.);
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 1, function);
-  std::pair< unsigned long, unsigned long > block =
-      std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
-  DensityGrid::iterator cell = grid.begin();
+  IonizationVariables ionization_variables;
 
   // bjump
   {
@@ -109,26 +101,26 @@ int main(int argc, char **argv) {
         lstream >> em[i];
       }
 
-      cell.set_number_density(
+      ionization_variables.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
-      cell.set_temperature(temp);
-      cell.set_ionic_fraction(ION_H_n, nfracH);
-      cell.set_ionic_fraction(ION_He_n, nfracHe);
-      cell.set_ionic_fraction(ION_C_p1, ifracCp1);
-      cell.set_ionic_fraction(ION_C_p2, ifracCp2);
-      cell.set_ionic_fraction(ION_N_n, ifracN);
-      cell.set_ionic_fraction(ION_N_p1, ifracNp1);
-      cell.set_ionic_fraction(ION_N_p2, ifracNp2);
-      cell.set_ionic_fraction(ION_O_n, ifracO);
-      cell.set_ionic_fraction(ION_O_p1, ifracOp1);
-      cell.set_ionic_fraction(ION_Ne_n, ifracNe);
-      cell.set_ionic_fraction(ION_Ne_p1, ifracNep1);
-      cell.set_ionic_fraction(ION_S_p1, ifracSp1);
-      cell.set_ionic_fraction(ION_S_p2, ifracSp2);
-      cell.set_ionic_fraction(ION_S_p3, ifracSp3);
+      ionization_variables.set_temperature(temp);
+      ionization_variables.set_ionic_fraction(ION_H_n, nfracH);
+      ionization_variables.set_ionic_fraction(ION_He_n, nfracHe);
+      ionization_variables.set_ionic_fraction(ION_C_p1, ifracCp1);
+      ionization_variables.set_ionic_fraction(ION_C_p2, ifracCp2);
+      ionization_variables.set_ionic_fraction(ION_N_n, ifracN);
+      ionization_variables.set_ionic_fraction(ION_N_p1, ifracNp1);
+      ionization_variables.set_ionic_fraction(ION_N_p2, ifracNp2);
+      ionization_variables.set_ionic_fraction(ION_O_n, ifracO);
+      ionization_variables.set_ionic_fraction(ION_O_p1, ifracOp1);
+      ionization_variables.set_ionic_fraction(ION_Ne_n, ifracNe);
+      ionization_variables.set_ionic_fraction(ION_Ne_p1, ifracNep1);
+      ionization_variables.set_ionic_fraction(ION_S_p1, ifracSp1);
+      ionization_variables.set_ionic_fraction(ION_S_p2, ifracSp2);
+      ionization_variables.set_ionic_fraction(ION_S_p3, ifracSp3);
 
-      EmissivityValues values =
-          calculator.calculate_emissivities(cell, abundances, lines);
+      EmissivityValues values = calculator.calculate_emissivities(
+          ionization_variables, abundances, lines);
 
       double tolerance = 1.e-14;
 
