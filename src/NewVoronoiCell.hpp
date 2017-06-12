@@ -373,18 +373,18 @@ public:
     _datatype_ max_side = std::max(box_sides.x(), box_sides.y());
     max_side = std::max(max_side, box_sides.z());
 
-    _tetrahedron[0][0] = 2 * box_anchor.x() - box_sides.x();
-    _tetrahedron[0][1] = 2 * box_anchor.y() - box_sides.y();
-    _tetrahedron[0][2] = 2 * box_anchor.z() - box_sides.z();
-    _tetrahedron[1][0] = 2 * box_anchor.x() - box_sides.x() + 9 * max_side;
-    _tetrahedron[1][1] = 2 * box_anchor.y() - box_sides.y();
-    _tetrahedron[1][2] = 2 * box_anchor.z() - box_sides.z();
-    _tetrahedron[2][0] = 2 * box_anchor.x() - box_sides.x();
-    _tetrahedron[2][1] = 2 * box_anchor.y() - box_sides.y() + 9 * max_side;
-    _tetrahedron[2][2] = 2 * box_anchor.z() - box_sides.z();
-    _tetrahedron[3][0] = 2 * box_anchor.x() - box_sides.x();
-    _tetrahedron[3][1] = 2 * box_anchor.y() - box_sides.y();
-    _tetrahedron[3][2] = 2 * box_anchor.z() - box_sides.z() + 9 * max_side;
+    _tetrahedron[0][0] = box_anchor.x() - box_sides.x();
+    _tetrahedron[0][1] = box_anchor.y() - box_sides.y();
+    _tetrahedron[0][2] = box_anchor.z() - box_sides.z();
+    _tetrahedron[1][0] = box_anchor.x() - box_sides.x() + 9 * max_side;
+    _tetrahedron[1][1] = box_anchor.y() - box_sides.y();
+    _tetrahedron[1][2] = box_anchor.z() - box_sides.z();
+    _tetrahedron[2][0] = box_anchor.x() - box_sides.x();
+    _tetrahedron[2][1] = box_anchor.y() - box_sides.y() + 9 * max_side;
+    _tetrahedron[2][2] = box_anchor.z() - box_sides.z();
+    _tetrahedron[3][0] = box_anchor.x() - box_sides.x();
+    _tetrahedron[3][1] = box_anchor.y() - box_sides.y();
+    _tetrahedron[3][2] = box_anchor.z() - box_sides.z() + 9 * max_side;
 
     _positions[0][0] = 2 * box_anchor.x() - generator.x();
     _positions[0][1] = generator.y();
@@ -449,7 +449,9 @@ private:
   std::vector< VoronoiFace > _faces;
 
 public:
-  NewVoronoiCell(unsigned int generator);
+  NewVoronoiCell(
+      unsigned int generator, const VoronoiBox< unsigned long > &box,
+      const std::vector< CoordinateVector< unsigned long > > &positions);
 
   /// const element getters
   double get_volume() const;

@@ -30,8 +30,12 @@
  * @brief Constructor.
  *
  * @param generator Index of the generator of the cell.
+ * @param box VoronoiBox containing the box generators.
+ * @param positions Other generator positions.
  */
-NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
+NewVoronoiCell::NewVoronoiCell(
+    unsigned int generator, const VoronoiBox< unsigned long > &box,
+    const std::vector< CoordinateVector< unsigned long > > &positions) {
 
   _ngbs.resize(5);
   _ngbs[0] = generator;
@@ -73,89 +77,12 @@ NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
   _connections[3][1] = 2;
   _connections[3][2] = 1;
 
-  //  _ngbs.resize(7);
-  //  _ngbs[0] = generator;
-  //  _ngbs[1] = NEWVORONOICELL_BOX_LEFT;
-  //  _ngbs[2] = NEWVORONOICELL_BOX_RIGHT;
-  //  _ngbs[3] = NEWVORONOICELL_BOX_FRONT;
-  //  _ngbs[4] = NEWVORONOICELL_BOX_BACK;
-  //  _ngbs[5] = NEWVORONOICELL_BOX_BOTTOM;
-  //  _ngbs[6] = NEWVORONOICELL_BOX_TOP;
-
-  //  _tetrahedra.resize(8);
-  //  _tetrahedra[0] = VoronoiTetrahedron(0, 1, 3, 6, NEWVORONOICELL_MAX_INDEX,
-  //  3,
-  //                                      1, 7, 4, 2, 1, 3);
-  //  _tetrahedra[1] = VoronoiTetrahedron(0, 4, 1, 6, NEWVORONOICELL_MAX_INDEX,
-  //  0,
-  //                                      2, 4, 4, 2, 1, 3);
-  //  _tetrahedra[2] = VoronoiTetrahedron(0, 2, 4, 6, NEWVORONOICELL_MAX_INDEX,
-  //  1,
-  //                                      3, 5, 4, 2, 1, 3);
-  //  _tetrahedra[3] = VoronoiTetrahedron(0, 3, 2, 6, NEWVORONOICELL_MAX_INDEX,
-  //  2,
-  //                                      0, 6, 4, 2, 1, 3);
-  //  _tetrahedra[4] = VoronoiTetrahedron(0, 1, 4, 5, NEWVORONOICELL_MAX_INDEX,
-  //  5,
-  //                                      7, 1, 4, 2, 1, 3);
-  //  _tetrahedra[5] = VoronoiTetrahedron(0, 4, 2, 5, NEWVORONOICELL_MAX_INDEX,
-  //  6,
-  //                                      4, 2, 4, 2, 1, 3);
-  //  _tetrahedra[6] = VoronoiTetrahedron(0, 2, 3, 5, NEWVORONOICELL_MAX_INDEX,
-  //  7,
-  //                                      5, 3, 4, 2, 1, 3);
-  //  _tetrahedra[7] = VoronoiTetrahedron(0, 3, 1, 5, NEWVORONOICELL_MAX_INDEX,
-  //  4,
-  //                                      6, 0, 4, 2, 1, 3);
-
-  //  _connections.resize(7);
-  //  _connections[0].resize(8);
-  //  _connections[0][0] = 0;
-  //  _connections[0][1] = 1;
-  //  _connections[0][2] = 2;
-  //  _connections[0][3] = 3;
-  //  _connections[0][4] = 4;
-  //  _connections[0][5] = 5;
-  //  _connections[0][6] = 6;
-  //  _connections[0][7] = 7;
-
-  //  // we order the tetrahedra counterclockwise around the axis, when looking
-  //  // along the axis from outside the cell towards the cell generator
-  //  _connections[1].resize(4);
-  //  _connections[1][0] = 0;
-  //  _connections[1][1] = 7;
-  //  _connections[1][2] = 4;
-  //  _connections[1][3] = 1;
-
-  //  _connections[2].resize(4);
-  //  _connections[2][0] = 2;
-  //  _connections[2][1] = 5;
-  //  _connections[2][2] = 6;
-  //  _connections[2][3] = 3;
-
-  //  _connections[3].resize(4);
-  //  _connections[3][0] = 0;
-  //  _connections[3][1] = 3;
-  //  _connections[3][2] = 6;
-  //  _connections[3][3] = 7;
-
-  //  _connections[4].resize(4);
-  //  _connections[4][0] = 1;
-  //  _connections[4][1] = 4;
-  //  _connections[4][2] = 5;
-  //  _connections[4][3] = 2;
-
-  //  _connections[5].resize(4);
-  //  _connections[5][0] = 4;
-  //  _connections[5][1] = 7;
-  //  _connections[5][2] = 6;
-  //  _connections[5][3] = 5;
-
-  //  _connections[6].resize(4);
-  //  _connections[6][0] = 0;
-  //  _connections[6][1] = 1;
-  //  _connections[6][2] = 2;
-  //  _connections[6][3] = 3;
+  //  intersect(NEWVORONOICELL_BOX_LEFT, box, positions);
+  //  intersect(NEWVORONOICELL_BOX_RIGHT, box, positions);
+  //  intersect(NEWVORONOICELL_BOX_FRONT, box, positions);
+  //  intersect(NEWVORONOICELL_BOX_BACK, box, positions);
+  //  intersect(NEWVORONOICELL_BOX_BOTTOM, box, positions);
+  //  intersect(NEWVORONOICELL_BOX_TOP, box, positions);
 }
 
 /**
@@ -417,9 +344,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
         get_position(_ngbs[v2], box, positions);
     const CoordinateVector< unsigned long > p3 =
         get_position(_ngbs[v3], box, positions);
-    // we know that point_index is not a special point, so we can get its
-    // position straight from the positions vector
-    const CoordinateVector< unsigned long > p4 = positions[point_index];
+    const CoordinateVector< unsigned long > p4 =
+        get_position(point_index, box, positions);
 
     // make sure the tetrahedron is correctly oriented, as the tests below
     // depend on that
@@ -549,6 +475,19 @@ unsigned char NewVoronoiCell::find_tetrahedron(
  * @brief Replace the given tetrahedron with four new ones by inserting the
  * given new vertex.
  *
+ * @image html newvoronoicell_one_to_four_flip.png
+ *
+ * The original tetrahedron is positively oriented, and hence its vertices are
+ * ordered as shown in the figure. We construct four new tetrahedra by replacing
+ * one of the four original vertices with the new vertex. If we keep the
+ * ordering of the vertices, then the new tetrahedra will also be positively
+ * oriented. The new neighbour relations can be easily deduced from the figure,
+ * and the new index relations follow automatically from the way we construct
+ * the new tetrahedra.
+ *
+ * The first new tetrahedron replaces the original tetrahedron, while the three
+ * extra new tetrahedra are added to the list.
+ *
  * @param new_vertex New vertex to insert.
  * @param tetrahedron Tetrahedron to replace.
  * @param queue Stack of tetrahedra that need to be checked for validity.
@@ -600,32 +539,6 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
   if (ngbs[3] < NEWVORONOICELL_MAX_INDEX) {
     _tetrahedra[ngbs[3]].swap_neighbour(ngb_indices[3], tetrahedron, 0);
   }
-
-  // CONNECTIONS: review needed!
-
-  // remove 'tetrahedron' from the connection list of 'vertices[3]'
-  auto it = _connections[vertices[3]].begin();
-  while (it != _connections[vertices[3]].end() && *it != tetrahedron) {
-    ++it;
-  }
-  cmac_assert(it != _connections[vertices[3]].end());
-  _connections[vertices[3]].erase(it);
-
-  // add the new tetrahedra connections
-  _connections[vertices[0]].push_back(old_size);
-  _connections[vertices[0]].push_back(old_size + 1);
-  _connections[vertices[1]].push_back(old_size);
-  _connections[vertices[1]].push_back(old_size + 2);
-  _connections[vertices[2]].push_back(old_size + 1);
-  _connections[vertices[2]].push_back(old_size + 2);
-  _connections[vertices[3]].push_back(old_size);
-  _connections[vertices[3]].push_back(old_size + 1);
-  _connections[vertices[3]].push_back(old_size + 2);
-  _connections.resize(new_vertex + 1);
-  _connections[new_vertex].push_back(tetrahedron);
-  _connections[new_vertex].push_back(old_size);
-  _connections[new_vertex].push_back(old_size + 1);
-  _connections[new_vertex].push_back(old_size + 2);
 }
 
 /**
@@ -659,6 +572,14 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
 
 /**
  * @brief Replace the given two tetrahedra with three new tetrahedra.
+ *
+ * @image html newvoronoicell_two_to_three_flip.png
+ *
+ * The two positively oriented tetrahedra (0123) and (0134) in the figure are
+ * replaced by three new positively oriented tetrahedra: (0124), (4123), and
+ * (0423). The new neighbour relations can be easily deduced from the figure,
+ * while the new neighbour indices are automatically set by the way we construct
+ * the new tetrahedra.
  *
  * @param tetrahedron0 First tetrahedron.
  * @param tetrahedron1 Second tetrahedron.
@@ -862,6 +783,15 @@ unsigned int NewVoronoiCell::two_to_three_flip(
 /**
  * @brief Replace the given four tetrahedra with four new tetrahedra.
  *
+ * @image html newvoronoicell_four_to_four_flip.png
+ *
+ * The four positively oriented tetrahedra (0123), (0134), (0215), and (0145),
+ * that share the edge (01) are replaced by four new positively oriented
+ * tetrahedra that share the edge (35): (0235), (1325), (0534), and (1354).
+ * The new neighbour relations can be easily deduced from the figure, while the
+ * new neighbour indices are automatically set by the way we construct the new
+ * tetrahedra.
+ *
  * @param tetrahedron0 First tetrahedron.
  * @param tetrahedron1 Second tetrahedron.
  * @param tetrahedron2 Third tetrahedron.
@@ -877,7 +807,101 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
                                                unsigned int tetrahedron3,
                                                std::vector< bool > &queue,
                                                unsigned int next_check) {
+  // the four tetrahedra share an axis, find the indices of the axis points
+  // in the four tetrahedra
+  unsigned char axis[4][2];
+  unsigned char num_axis = 0;
+  for (unsigned char i = 0; i < 4; ++i) {
+    unsigned char t0, t1, t2, t3;
+    t0 = i;
+    t1 = 0;
+    while (t1 < 4 &&
+           _tetrahedra[tetrahedron0].get_vertex(t0) !=
+               _tetrahedra[tetrahedron1].get_vertex(t1)) {
+      ++t1;
+    }
+    t2 = 0;
+    while (t2 < 4 &&
+           _tetrahedra[tetrahedron0].get_vertex(t0) !=
+               _tetrahedra[tetrahedron2].get_vertex(t2)) {
+      ++t2;
+    }
+    t3 = 0;
+    while (t3 < 4 &&
+           _tetrahedra[tetrahedron0].get_vertex(t0) !=
+               _tetrahedra[tetrahedron3].get_vertex(t3)) {
+      ++t3;
+    }
+    if (t1 < 4 && t2 < 4 && t3 < 4) {
+      axis[0][num_axis] = t0;
+      axis[1][num_axis] = t1;
+      axis[2][num_axis] = t2;
+      axis[3][num_axis] = t3;
+      ++num_axis;
+    }
+  }
+
+  // now make sure we give the indices the same meaning as in the figure, i.e.
+  // 'v[0][0]' is the index of vertex 0 in the figure in the first tetrahedron
+  // (0123), and so on
+  unsigned char v[5][4];
+  v[0][0] = axis[0][0];
+  v[1][0] = axis[0][1];
+  if (v[0][0] == 0) {
+    if (v[1][0] == 1) {
+      v[2][0] = 2;
+      v[3][0] = 3;
+    } else if (v[1][0] == 2) {
+      v[2][0] = 3;
+      v[3][0] = 1;
+    } else {
+      v[2][0] = 1;
+      v[3][0] = 2;
+    }
+  } else if (v[0][0] == 1) {
+    if (v[1][0] == 0) {
+      v[2][0] = 3;
+      v[3][0] = 2;
+    } else if (v[1][0] == 2) {
+      v[2][0] = 0;
+      v[3][0] = 3;
+    } else {
+      v[2][0] = 2;
+      v[3][0] = 0;
+    }
+  } else if (v[0][0] == 2) {
+    if (v[1][0] == 0) {
+      v[2][0] = 1;
+      v[3][0] = 3;
+    } else if (v[1][0] == 1) {
+      v[2][0] = 3;
+      v[3][0] = 0;
+    } else {
+      v[2][0] = 0;
+      v[3][0] = 1;
+    }
+  } else {
+    if (v[1][0] == 0) {
+      v[2][0] = 2;
+      v[3][0] = 1;
+    } else if (v[1][0] == 1) {
+      v[2][0] = 0;
+      v[3][0] = 2;
+    } else {
+      v[2][0] = 1;
+      v[3][0] = 0;
+    }
+  }
+  // vertex 4 is not part of the first tetrahedron
+  v[4][0] = 4;
+
+  v[0][2] = axis[2][0];
+  v[1][2] = axis[2][1];
+  v[0][3] = axis[3][0];
+  v[1][3] = axis[3][1];
+
   cmac_error("4 to 4 flip not implemented yet!");
+
   return next_check;
 }
 

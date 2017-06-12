@@ -67,7 +67,13 @@ int main(int argc, char **argv) {
     Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
     positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
-    NewVoronoiCell cell(0);
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > long_positions(1);
+    long_positions[0] = CoordinateVector< unsigned long >(1250);
+    VoronoiBox< unsigned long > voronoi_box(long_positions[0], box_anchor,
+                                            box_sides);
+    NewVoronoiCell cell(0, voronoi_box, long_positions);
     cell.finalize(box, positions);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
@@ -171,50 +177,49 @@ int main(int argc, char **argv) {
     cmac_status("Cell face computation works!");
   }
 
-  return 0;
-
   /// test for NewVoronoiCell::find_tetrahedron
   {
-    NewVoronoiCell cell(0);
     CoordinateVector< unsigned long > box_anchor(1000);
     CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > positions(4);
     positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
-    positions[1] = CoordinateVector< unsigned long >(1250);
-    // point on face
-    positions[2] = CoordinateVector< unsigned long >(1500, 1250, 1250);
+    positions[1] = CoordinateVector< unsigned long >(1250, 1500, 1500);
     // point on axis
-    positions[3] = CoordinateVector< unsigned long >(1500, 1500, 1250);
+    positions[2] = CoordinateVector< unsigned long >(1250);
+    // point on face
+    positions[3] = CoordinateVector< unsigned long >(1250, 1250, 1500);
     VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
 
     unsigned int tetrahedra[4];
     assert_condition(cell.find_tetrahedron(1, box, positions, tetrahedra) == 1);
-    assert_condition(tetrahedra[0] == 7);
+    assert_condition(tetrahedra[0] == 1);
 
-    assert_condition(cell.find_tetrahedron(2, box, positions, tetrahedra) == 2);
-    assert_condition(tetrahedra[0] == 7);
-    assert_condition(tetrahedra[1] == 6);
+    assert_condition(cell.find_tetrahedron(2, box, positions, tetrahedra) == 3);
+    assert_condition(tetrahedra[0] == 3);
+    assert_condition(tetrahedra[1] == 1);
+    assert_condition(tetrahedra[2] == 2);
 
-    assert_condition(cell.find_tetrahedron(3, box, positions, tetrahedra) == 4);
-    assert_condition(tetrahedra[0] == 7);
-    assert_condition(tetrahedra[1] == 4);
-    assert_condition(tetrahedra[2] == 6);
-    assert_condition(tetrahedra[3] == 5);
+    assert_condition(cell.find_tetrahedron(3, box, positions, tetrahedra) == 2);
+    assert_condition(tetrahedra[0] == 1);
+    assert_condition(tetrahedra[1] == 2);
 
     cmac_status("Find tetrahedron works!");
   }
 
   /// tests for NewVoronoiCell::intersect
   {
-    NewVoronoiCell cell(0);
     CoordinateVector< unsigned long > box_anchor(1000);
     CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > positions(2);
     positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
-    positions[1] = CoordinateVector< unsigned long >(1250);
+    positions[1] = CoordinateVector< unsigned long >(1250, 1500, 1500);
     VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
 
     cell.intersect(1, box, positions);
 
@@ -225,28 +230,29 @@ int main(int argc, char **argv) {
 
     cmac_status("First intersection worked!");
   }
-  //  {
-  //    NewVoronoiCell cell(0);
-  //    CoordinateVector< unsigned long > box_anchor(1000);
-  //    CoordinateVector< unsigned long > box_sides(1000);
-  //    std::vector< CoordinateVector< unsigned long > > positions(2);
-  //    positions[0] = CoordinateVector< unsigned long >(1500);
-  //    // general point
-  //    positions[1] = CoordinateVector< unsigned long >(1005);
-  //    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(2);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    // general point
+    positions[1] = CoordinateVector< unsigned long >(1005, 1500, 1250);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
 
-  //    std::ofstream ofile("new_voronoi_cell.txt");
-  //    cell.print_tetrahedra(ofile, box, positions);
-  //    ofile << positions[1].x() << "\t" << positions[1].y() << "\t" <<
-  //    positions[1].z() << "\n";
-  //    ofile.close();
+    NewVoronoiCell cell(0, box, positions);
 
-  //    cell.intersect(1, box, positions);
+    cell.intersect(1, box, positions);
 
-  //    cell.check_empty_circumsphere(box, positions);
+    cell.check_empty_circumsphere(box, positions);
 
-  //    cmac_status("Second intersection worked!");
-  //  }
+    std::ofstream ofile("new_voronoi_cell.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+    ofile << positions[1].x() << "\t" << positions[1].y() << "\t"
+          << positions[1].z() << "\n";
+    ofile.close();
+
+    cmac_status("Second intersection worked!");
+  }
 
   return 0;
 }
