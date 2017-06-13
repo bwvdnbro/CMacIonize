@@ -22,12 +22,12 @@
 \begin{document}
 
 \begin{tikzpicture}[node distance=4.5cm]
-\node (v3) [node] {3};
-\node (v1) [node, xshift = 5.0cm, yshift=-5.0cm] {1};
-\node (v2) [node, xshift = -5.0cm, yshift=-7.5cm] {2};
-\node (v0) [node, xshift = -2.0cm, yshift=-10.0cm] {0};
-\node (v4) [node, xshift = 10.0cm, yshift=-7.5cm] {4};
-\node (v5) [node, xshift = 2.0cm, yshift=-11.0cm] {5};
+\node (v3) [node] {v3};
+\node (v1) [node, xshift = 10.0cm, yshift=-10.0cm] {v1};
+\node (v2) [node, xshift = -10.0cm, yshift=-15.0cm] {v2};
+\node (v0) [node, xshift = -4.0cm, yshift=-20.0cm] {v0};
+\node (v4) [node, xshift = 20.0cm, yshift=-15.0cm] {v4};
+\node (v5) [node, xshift = 4.0cm, yshift=-22.0cm] {v5};
 
 \drawLinewithBG{v1}{v3}{arrow}
 \drawLinewithBG{v1}{v2}{arrow}
@@ -50,6 +50,25 @@
 \drawLinewithBG{v3}{v5}{stealtharrow}
 
 \drawLinewithBG{v0}{v4}{arrow}
+
+\node [node, xshift = -1.0cm, yshift = -10.0cm] {\Large t0};
+\node [node, xshift = 7.0cm, yshift = -13.0cm] {\Large t1};
+\node [node, xshift = -1.0cm, yshift = -16.0cm] {\Large t2};
+\node [node, xshift = 7.0cm, yshift = -19.0cm] {\Large t3};
+
+\node [stealthnode, xshift = -5.0cm, yshift = -13.0cm] {\Large t'0};
+\node [stealthnode, xshift = 3.0cm, yshift = -9.0cm] {\Large t'1};
+\node [stealthnode, xshift = 6.0cm, yshift = -15.0cm] {\Large t'2};
+\node [stealthnode, xshift = 7.0cm, yshift = -9.0cm] {\Large t'3};
+
+\node [stealthnode, xshift = -5.0cm, yshift = -3.0cm] {\large ngb0};
+\node [stealthnode, xshift = 8.0cm, yshift = -3.0cm] {\large ngb1};
+\node [stealthnode, xshift = 5.0cm, yshift = -7.0cm] {\large ngb2};
+\node [stealthnode, xshift = -8.0cm, yshift = -7.0cm] {\large ngb3};
+\node [stealthnode, xshift = 1.0cm, yshift = -15.0cm] {\large ngb4};
+\node [stealthnode, xshift = 13.0cm, yshift = -15.0cm] {\large ngb5};
+\node [stealthnode, xshift = 10.0cm, yshift = -21.0cm] {\large ngb6};
+\node [stealthnode, xshift = -5.0cm, yshift = -21.0cm] {\large ngb7};
 
 \end{tikzpicture}
 

@@ -785,9 +785,9 @@ unsigned int NewVoronoiCell::two_to_three_flip(
  *
  * @image html newvoronoicell_four_to_four_flip.png
  *
- * The four positively oriented tetrahedra (0123), (0134), (0215), and (0145),
+ * The four positively oriented tetrahedra (0123), (0134), (0152), and (0514),
  * that share the edge (01) are replaced by four new positively oriented
- * tetrahedra that share the edge (35): (0235), (1325), (0534), and (1354).
+ * tetrahedra that share the edge (35): (0352), (1532), (0534), and (1354).
  * The new neighbour relations can be easily deduced from the figure, while the
  * new neighbour indices are automatically set by the way we construct the new
  * tetrahedra.
@@ -807,9 +807,10 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
                                                unsigned int tetrahedron3,
                                                std::vector< bool > &queue,
                                                unsigned int next_check) {
+
   // the four tetrahedra share an axis, find the indices of the axis points
   // in the four tetrahedra
-  unsigned char axis[4][2];
+  unsigned char axis[4][4];
   unsigned char num_axis = 0;
   for (unsigned char i = 0; i < 4; ++i) {
     unsigned char t0, t1, t2, t3;
@@ -838,70 +839,136 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
       axis[2][num_axis] = t2;
       axis[3][num_axis] = t3;
       ++num_axis;
+    } else {
+      if (t1 < 4) {
+        axis[0][3] = t0;
+      }
     }
   }
+  axis[0][2] = 6 - axis[0][0] - axis[0][1] - axis[0][3];
 
   // now make sure we give the indices the same meaning as in the figure, i.e.
   // 'v[0][0]' is the index of vertex 0 in the figure in the first tetrahedron
-  // (0123), and so on
-  unsigned char v[5][4];
-  v[0][0] = axis[0][0];
-  v[1][0] = axis[0][1];
-  if (v[0][0] == 0) {
-    if (v[1][0] == 1) {
-      v[2][0] = 2;
-      v[3][0] = 3;
-    } else if (v[1][0] == 2) {
-      v[2][0] = 3;
-      v[3][0] = 1;
-    } else {
-      v[2][0] = 1;
-      v[3][0] = 2;
-    }
-  } else if (v[0][0] == 1) {
-    if (v[1][0] == 0) {
-      v[2][0] = 3;
-      v[3][0] = 2;
-    } else if (v[1][0] == 2) {
-      v[2][0] = 0;
-      v[3][0] = 3;
-    } else {
-      v[2][0] = 2;
-      v[3][0] = 0;
-    }
-  } else if (v[0][0] == 2) {
-    if (v[1][0] == 0) {
-      v[2][0] = 1;
-      v[3][0] = 3;
-    } else if (v[1][0] == 1) {
-      v[2][0] = 3;
-      v[3][0] = 0;
-    } else {
-      v[2][0] = 0;
-      v[3][0] = 1;
-    }
-  } else {
-    if (v[1][0] == 0) {
-      v[2][0] = 2;
-      v[3][0] = 1;
-    } else if (v[1][0] == 1) {
-      v[2][0] = 0;
-      v[3][0] = 2;
-    } else {
-      v[2][0] = 1;
-      v[3][0] = 0;
-    }
+  // (v0v1v2v3), and so on
+  if (!positive_permutation(axis[0][0], axis[0][1], axis[0][2], axis[0][3])) {
+    unsigned char tmp = axis[0][0];
+    axis[0][0] = axis[0][1];
+    axis[0][1] = tmp;
+
+    tmp = axis[1][0];
+    axis[1][0] = axis[1][1];
+    axis[1][1] = tmp;
+
+    tmp = axis[2][0];
+    axis[2][0] = axis[2][1];
+    axis[2][1] = tmp;
+
+    tmp = axis[3][0];
+    axis[3][0] = axis[3][1];
+    axis[3][1] = tmp;
   }
-  // vertex 4 is not part of the first tetrahedron
-  v[4][0] = 4;
 
-  v[0][2] = axis[2][0];
-  v[1][2] = axis[2][1];
-  v[0][3] = axis[3][0];
-  v[1][3] = axis[3][1];
+  // t0 = (v0v1v2v3)
+  const unsigned char v0_0 = axis[0][0];
+  const unsigned char v1_0 = axis[0][1];
+  const unsigned char v2_0 = axis[0][2];
+  const unsigned char v3_0 = axis[0][3];
 
-  cmac_error("4 to 4 flip not implemented yet!");
+  // t1 = (v0v1v3v4)
+  const unsigned char v0_1 = axis[1][0];
+  const unsigned char v1_1 = axis[1][1];
+  const unsigned char v4_1 = _tetrahedra[tetrahedron0].get_ngb_index(v2_0);
 
+  // t2 = (v0v1v5v2)
+  const unsigned char v0_2 = axis[2][0];
+  const unsigned char v1_2 = axis[2][1];
+  const unsigned char v5_2 = _tetrahedra[tetrahedron0].get_ngb_index(v3_0);
+
+  // t3 = (v0v1v5v4)
+  const unsigned char v0_3 = axis[3][0];
+  const unsigned char v1_3 = axis[3][1];
+
+  const unsigned int vert[6] = {_tetrahedra[tetrahedron0].get_vertex(v0_0),
+                                _tetrahedra[tetrahedron0].get_vertex(v1_0),
+                                _tetrahedra[tetrahedron0].get_vertex(v2_0),
+                                _tetrahedra[tetrahedron0].get_vertex(v3_0),
+                                _tetrahedra[tetrahedron1].get_vertex(v4_1),
+                                _tetrahedra[tetrahedron2].get_vertex(v5_2)};
+
+  const unsigned int ngbs[8] = {_tetrahedra[tetrahedron0].get_neighbour(v0_0),
+                                _tetrahedra[tetrahedron1].get_neighbour(v0_1),
+                                _tetrahedra[tetrahedron1].get_neighbour(v1_1),
+                                _tetrahedra[tetrahedron0].get_neighbour(v1_0),
+                                _tetrahedra[tetrahedron2].get_neighbour(v0_2),
+                                _tetrahedra[tetrahedron3].get_neighbour(v0_3),
+                                _tetrahedra[tetrahedron3].get_neighbour(v1_3),
+                                _tetrahedra[tetrahedron2].get_neighbour(v1_2)};
+
+  const unsigned char ngbi[8] = {_tetrahedra[tetrahedron0].get_ngb_index(v0_0),
+                                 _tetrahedra[tetrahedron1].get_ngb_index(v0_1),
+                                 _tetrahedra[tetrahedron1].get_ngb_index(v1_1),
+                                 _tetrahedra[tetrahedron0].get_ngb_index(v1_0),
+                                 _tetrahedra[tetrahedron2].get_ngb_index(v0_2),
+                                 _tetrahedra[tetrahedron3].get_ngb_index(v0_3),
+                                 _tetrahedra[tetrahedron3].get_ngb_index(v1_3),
+                                 _tetrahedra[tetrahedron2].get_ngb_index(v1_2)};
+
+  // replace the tetrahedra
+  // tn0 = (v0v3v5v2)
+  _tetrahedra[tetrahedron0] = VoronoiTetrahedron(
+      vert[0], vert[3], vert[5], vert[2], tetrahedron1, ngbs[7], ngbs[3],
+      tetrahedron2, 0, ngbi[7], ngbi[3], 3);
+
+  // tn1 = (v1v5v3v2)
+  _tetrahedra[tetrahedron1] = VoronoiTetrahedron(
+      vert[1], vert[5], vert[3], vert[2], tetrahedron0, ngbs[0], ngbs[4],
+      tetrahedron3, 0, ngbi[0], ngbi[4], 3);
+
+  // tn2 = (v0v5v3v4)
+  _tetrahedra[tetrahedron2] = VoronoiTetrahedron(
+      vert[0], vert[5], vert[3], vert[4], tetrahedron3, ngbs[2], ngbs[6],
+      tetrahedron0, 0, ngbi[2], ngbi[6], 3);
+
+  // tn3 = (v1v3v5v4)
+  _tetrahedra[tetrahedron3] = VoronoiTetrahedron(
+      vert[1], vert[3], vert[5], vert[4], tetrahedron2, ngbs[5], ngbs[1],
+      tetrahedron1, 0, ngbi[5], ngbi[1], 3);
+
+  // replace the neighbour information in the neighbours
+  if (ngbs[0] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[0]].swap_neighbour(ngbi[0], tetrahedron1, 1);
+  }
+  if (ngbs[1] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[1]].swap_neighbour(ngbi[1], tetrahedron3, 2);
+  }
+  if (ngbs[2] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[2]].swap_neighbour(ngbi[2], tetrahedron2, 1);
+  }
+  if (ngbs[3] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[3]].swap_neighbour(ngbi[3], tetrahedron0, 2);
+  }
+  if (ngbs[4] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[4]].swap_neighbour(ngbi[4], tetrahedron1, 2);
+  }
+  if (ngbs[5] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[5]].swap_neighbour(ngbi[5], tetrahedron3, 1);
+  }
+  if (ngbs[6] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[6]].swap_neighbour(ngbi[6], tetrahedron2, 2);
+  }
+  if (ngbs[7] < NEWVORONOICELL_MAX_INDEX) {
+    _tetrahedra[ngbs[7]].swap_neighbour(ngbi[7], tetrahedron0, 1);
+  }
+
+  queue[tetrahedron0] = true;
+  queue[tetrahedron1] = true;
+  queue[tetrahedron2] = true;
+  queue[tetrahedron3] = true;
+
+  next_check = std::min(next_check, tetrahedron0);
+  next_check = std::min(next_check, tetrahedron1);
+  next_check = std::min(next_check, tetrahedron2);
+  next_check = std::min(next_check, tetrahedron3);
   return next_check;
 }
 

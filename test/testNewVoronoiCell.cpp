@@ -29,6 +29,161 @@
 #include <fstream>
 
 /**
+ * @brief Names for the tests that require specific cell setups.
+ */
+enum NewVoronoiCellTestName {
+  /*! @brief Test for the 4 to 4 flip routine. */
+  NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP
+};
+
+/**
+ * @brief Set up the internal variables for a specific unit test.
+ *
+ * @param test NewVoronoiCellTestName.
+ */
+void NewVoronoiCell::setup_test(int test) {
+  switch (test) {
+  case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
+    // the exact positions of the vertices are irrelevant for this test, so we
+    // just use the initial values (0)
+    _ngbs.resize(6);
+
+    // convenient names used in documentation figure
+    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
+    const unsigned int t[4] = {0, 1, 2, 3};
+    const unsigned int ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
+
+    // we need 4 tetrahedra + 8 dummy neighbours to check the neighbour handling
+    _tetrahedra.resize(12);
+    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                           ngb[3], t[1], t[2], 0, 0, 3, 2);
+    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                           ngb[2], t[3], t[0], 0, 0, 1, 2);
+    _tetrahedra[t[2]] = VoronoiTetrahedron(v[0], v[1], v[5], v[2], ngb[4],
+                                           ngb[7], t[0], t[3], 0, 0, 3, 3);
+    _tetrahedra[t[3]] = VoronoiTetrahedron(v[0], v[5], v[1], v[4], ngb[5], t[1],
+                                           ngb[6], t[2], 0, 2, 0, 3);
+    // we do not initialize the ngb tetrahedra, as their exact setup is
+    // irrelevant for this test
+
+    return;
+  }
+  }
+}
+
+/**
+ * @brief Check the internal variables after a specific unit test.
+ *
+ * @param test NewVoronoiCellTestName.
+ */
+void NewVoronoiCell::check_test(int test) {
+  switch (test) {
+  case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
+
+    // no new tetrahedra should have been created by this flip
+    assert_condition(_tetrahedra.size() == 12);
+
+    // convenient names used in documentation figure
+    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
+    const unsigned int tn[4] = {0, 1, 2, 3};
+    const unsigned int ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
+
+    // check the individual tetrahedra
+    assert_condition(_tetrahedra[tn[0]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(1) == v[3]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(2) == v[5]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(3) == v[2]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(1) == ngb[7]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(2) == ngb[3]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(3) == tn[2]);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(3) == 3);
+    assert_condition(_tetrahedra[ngb[7]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[7]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[3]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[3]].get_ngb_index(0) == 2);
+
+    assert_condition(_tetrahedra[tn[1]].get_vertex(0) == v[1]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(1) == v[5]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(2) == v[3]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(3) == v[2]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(1) == ngb[0]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(2) == ngb[4]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(3) == tn[3]);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(3) == 3);
+    assert_condition(_tetrahedra[ngb[0]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[0]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[4]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[4]].get_ngb_index(0) == 2);
+
+    assert_condition(_tetrahedra[tn[2]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(1) == v[5]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(2) == v[3]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(3) == v[4]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(0) == tn[3]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(1) == ngb[2]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(2) == ngb[6]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(3) == tn[0]);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(3) == 3);
+    assert_condition(_tetrahedra[ngb[2]].get_neighbour(0) == tn[2]);
+    assert_condition(_tetrahedra[ngb[2]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[6]].get_neighbour(0) == tn[2]);
+    assert_condition(_tetrahedra[ngb[6]].get_ngb_index(0) == 2);
+
+    assert_condition(_tetrahedra[tn[3]].get_vertex(0) == v[1]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(1) == v[3]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(2) == v[5]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(3) == v[4]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(0) == tn[2]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(1) == ngb[5]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(2) == ngb[1]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(3) == tn[1]);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(3) == 3);
+    assert_condition(_tetrahedra[ngb[5]].get_neighbour(0) == tn[3]);
+    assert_condition(_tetrahedra[ngb[5]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[1]].get_neighbour(0) == tn[3]);
+    assert_condition(_tetrahedra[ngb[1]].get_ngb_index(0) == 2);
+
+    return;
+  }
+  }
+}
+
+/**
+ * @brief Check if NewVoronoiCell::get_positive_permutation can complete the
+ * given permutation of 0123.
+ *
+ * @param a First index.
+ * @param b Second index.
+ * @param c Third index.
+ * @param d Fourth index.
+ */
+inline void check_permutation(unsigned char a, unsigned char b, unsigned char c,
+                              unsigned char d) {
+  unsigned char v[4];
+  v[0] = a;
+  v[1] = b;
+  NewVoronoiCell::get_positive_permutation(v);
+  assert_condition(v[2] == c);
+  assert_condition(v[3] == d);
+  assert_condition(
+      NewVoronoiCell::positive_permutation(v[0], v[1], v[2], v[3]) == true);
+}
+
+/**
  * @brief Unit test for the NewVoronoiCell class.
  *
  * @param argc Number of command line arguments.
@@ -252,6 +407,86 @@ int main(int argc, char **argv) {
     ofile.close();
 
     cmac_status("Second intersection worked!");
+  }
+
+  /// test permutation routine
+  {
+    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 2, 3) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 3, 1) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 1, 2) == true);
+
+    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 3, 2) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 0, 3) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 2, 0) == true);
+
+    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 1, 3) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 3, 0) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 0, 1) == true);
+
+    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 2, 1) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 0, 2) == true);
+    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 1, 0) == true);
+
+    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 3, 2) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 1, 3) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 2, 1) == false);
+
+    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 2, 3) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 3, 0) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 0, 2) == false);
+
+    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 3, 1) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 0, 3) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 1, 0) == false);
+
+    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 1, 2) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 2, 0) == false);
+    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 0, 1) == false);
+
+    cmac_status("Permutation checks work!");
+  }
+
+  /// test permutation completion routine
+  {
+    check_permutation(0, 1, 2, 3);
+    check_permutation(0, 2, 3, 1);
+    check_permutation(0, 3, 1, 2);
+
+    check_permutation(1, 0, 3, 2);
+    check_permutation(1, 2, 0, 3);
+    check_permutation(1, 3, 2, 0);
+
+    check_permutation(2, 0, 1, 3);
+    check_permutation(2, 1, 3, 0);
+    check_permutation(2, 3, 0, 1);
+
+    check_permutation(3, 0, 2, 1);
+    check_permutation(3, 1, 0, 2);
+    check_permutation(3, 2, 1, 0);
+
+    cmac_status("Permutation completion works!");
+  }
+
+  /// test 4 to 4 flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(1);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+    cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
+    std::vector< bool > queue(12, false);
+    unsigned int next_check = cell.four_to_four_flip(0, 1, 2, 3, queue, 11);
+    assert_condition(next_check == 0);
+    assert_condition(queue[0] == true);
+    assert_condition(queue[1] == true);
+    assert_condition(queue[2] == true);
+    assert_condition(queue[3] == true);
+    cell.check_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
+
+    cmac_status("4 to 4 flip works!");
   }
 
   return 0;

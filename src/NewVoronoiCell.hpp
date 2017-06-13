@@ -555,6 +555,59 @@ public:
       }
     }
   }
+
+  /**
+   * @brief Check if abcd is a positive permutation of 0123 (meaning that if
+   * 0123 are the vertices of a positively ordered tetrahedron, then abcd are
+   * also the vertices of a positively ordered tetrahedron).
+   *
+   * @param a First index.
+   * @param b Second index.
+   * @param c Third index.
+   * @param d Fourth index.
+   * @return True if abcd is a positively oriented permutation of 0123.
+   */
+  inline static bool positive_permutation(unsigned char a, unsigned char b,
+                                          unsigned char c, unsigned char d) {
+    if ((a + 1) % 4 == b) {
+      return c % 2 == 0;
+    } else if ((a + 2) % 4 == b) {
+      return b * c + a * d > b * d + a * c;
+    } else {
+      return d % 2 == 0;
+    }
+  }
+
+  /**
+   * @brief Complete the given array so that it contains a positive permutation
+   * of 0123 (assuming 0123 are the vertices of a positively oriented
+   * tetrahedron).
+   *
+   * We assume the first two elements of the given array are already set and
+   * complete the array using the 2 elements in 0123 that were not used yet.
+   *
+   * @param v Array to complete. The first two elements should already contain
+   * elements of abcd.
+   */
+  inline static void get_positive_permutation(unsigned char v[4]) {
+
+    // get the index of the other elements not yet present in the array
+    v[2] = (v[0] + 1) % 4;
+    v[2] = (v[2] + (v[2] == v[1])) % 4;
+    v[3] = 6 - v[0] - v[1] - v[2];
+    // now check if our indices form a positive or a negative permutation and
+    // set the remaining array elements accordingly
+    if (!positive_permutation(v[0], v[1], v[2], v[3])) {
+      const unsigned char tmp = v[2];
+      v[2] = v[3];
+      v[3] = tmp;
+    }
+  }
+
+  /// unit testing routines
+
+  void setup_test(int test);
+  void check_test(int test);
 };
 
 #endif // NEWVORONOICELL_HPP
