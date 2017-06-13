@@ -511,13 +511,13 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
                                  _tetrahedra[tetrahedron].get_ngb_index(2),
                                  _tetrahedra[tetrahedron].get_ngb_index(3)};
 
-  const unsigned int old_size = _tetrahedra.size();
-  const unsigned int tn[4] = {tetrahedron, old_size, old_size + 1,
-                              old_size + 2};
-
   // create new tetrahedra: we overwrite the one we replace, and create 3 new
   // ones
-  _tetrahedra.resize(old_size + 3);
+  unsigned int tn[4];
+  tn[0] = tetrahedron;
+  const unsigned int new_size = create_new_tetrahedra< 3 >(&tn[1]);
+  queue.resize(new_size);
+
   _tetrahedra[tn[0]] =
       VoronoiTetrahedron(vert[0], vert[1], vert[2], vert[4], tn[3], tn[2],
                          tn[1], ngbs[3], 3, 3, 3, ngbi[3]);
@@ -532,8 +532,10 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
                          tn[1], tn[0], ngbi[0], 0, 0, 0);
 
   // add the new tetrahedra to the control stack
-  queue[tetrahedron] = true;
-  queue.resize(old_size + 3, true);
+  queue[tn[0]] = true;
+  queue[tn[1]] = true;
+  queue[tn[2]] = true;
+  queue[tn[3]] = true;
 
   // update neighbouring tetrahedra
   if (ngbs[0] < NEWVORONOICELL_MAX_INDEX) {
@@ -665,9 +667,11 @@ unsigned int NewVoronoiCell::two_to_three_flip(
                                 _tetrahedra[tetrahedron1].get_ngb_index(v3_1)};
 
   // make new tetrahedra
-  const unsigned int old_size = _tetrahedra.size();
-  const unsigned int tn[3] = {tetrahedron0, tetrahedron1, old_size};
-  _tetrahedra.resize(old_size + 1);
+  unsigned int tn[3];
+  tn[0] = tetrahedron0;
+  tn[1] = tetrahedron1;
+  const unsigned int new_size = create_new_tetrahedra< 1 >(&tn[2]);
+  queue.resize(new_size);
 
   _tetrahedra[tn[0]] =
       VoronoiTetrahedron(vert[0], vert[1], vert[2], vert[4], tn[2], tn[1],
@@ -702,7 +706,7 @@ unsigned int NewVoronoiCell::two_to_three_flip(
   // add the new tetrahedra to the stack for checking
   queue[tn[0]] = true;
   queue[tn[1]] = true;
-  queue.push_back(true);
+  queue[tn[2]] = true;
 
   next_check = std::min(next_check, tetrahedron0);
   next_check = std::min(next_check, tetrahedron1);

@@ -439,6 +439,9 @@ private:
   /*! @brief Tetrahedra connections. */
   std::vector< VoronoiTetrahedron > _tetrahedra;
 
+  /*! @brief Free indices in the tetrahedra vector. */
+  std::vector< unsigned int > _free_tetrahedra;
+
   /*! @brief Volume of the cell (in m^3). */
   double _volume;
 
@@ -447,6 +450,32 @@ private:
 
   /*! @brief Faces of the cell. */
   std::vector< VoronoiFace > _faces;
+
+  /**
+   * @brief Create the given template amount of new tetrahedra and store the
+   * indices of the generated tetrahedra in the given array.
+   *
+   * This routine checks if free spots are available in the tetrahedra vector
+   * and fills them up.
+   *
+   * @param indices Array to fill with the indices of the new tetrahedra.
+   * @return New size of the tetrahedra vector.
+   */
+  template < unsigned char _number_ >
+  inline unsigned int create_new_tetrahedra(unsigned int *indices) {
+    unsigned int new_size = _tetrahedra.size();
+    for (unsigned char i = 0; i < _number_; ++i) {
+      if (_free_tetrahedra.size() > 0) {
+        indices[i] = _free_tetrahedra.back();
+        _free_tetrahedra.pop_back();
+      } else {
+        indices[i] = new_size;
+        ++new_size;
+      }
+    }
+    _tetrahedra.resize(new_size);
+    return new_size;
+  }
 
 public:
   NewVoronoiCell(
