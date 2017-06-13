@@ -36,6 +36,8 @@ enum NewVoronoiCellTestName {
   NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP,
   /*! @brief Test for the 2 to 3 flip routine. */
   NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP,
+  /*! @brief Test for the 3 to 2 flip routine. */
+  NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP,
   /*! @brief Test for the 4 to 4 flip routine. */
   NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP
 };
@@ -83,6 +85,29 @@ void NewVoronoiCell::setup_test(int test) {
                                            ngb[3], t[1], ngb[4], 0, 0, 3, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
                                            ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    // we do not initialize the ngb tetrahedra, as their exact setup is
+    // irrelevant for this test
+
+    return;
+  }
+  case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
+    // the exact positions of the vertices are irrelevant for this test, so we
+    // just use the initial values (0)
+    _ngbs.resize(5);
+
+    // convenient names used in documentation figure
+    const unsigned int v[5] = {0, 1, 2, 3, 4};
+    const unsigned int t[3] = {0, 1, 2};
+    const unsigned int ngb[6] = {3, 4, 5, 6, 7, 8};
+
+    // we need 3 tetrahedra + 6 dummy neighbours to check the neighbour handling
+    _tetrahedra.resize(9);
+    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2], t[1],
+                                           ngb[5], ngb[4], 3, 3, 0, 0);
+    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2], ngb[3],
+                                           ngb[2], t[0], 1, 0, 0, 1);
+    _tetrahedra[t[2]] = VoronoiTetrahedron(v[4], v[1], v[2], v[3], ngb[0], t[1],
+                                           ngb[1], t[0], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -257,6 +282,60 @@ void NewVoronoiCell::check_test(int test) {
     assert_condition(_tetrahedra[ngb[0]].get_ngb_index(0) == 0);
     assert_condition(_tetrahedra[ngb[1]].get_neighbour(0) == tn[2]);
     assert_condition(_tetrahedra[ngb[1]].get_ngb_index(0) == 2);
+
+    return;
+  }
+  case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
+
+    // no new tetrahedra should have been created by this flip
+    assert_condition(_tetrahedra.size() == 9);
+    // one free spot should have opened up
+    assert_condition(_free_tetrahedra.size() == 1);
+    assert_condition(_free_tetrahedra[0] == 2);
+
+    // convenient names used in documentation figure
+    const unsigned int v[5] = {0, 1, 2, 3, 4};
+    const unsigned int tn[2] = {0, 1};
+    const unsigned int ngb[6] = {3, 4, 5, 6, 7, 8};
+
+    // check the individual tetrahedra
+    assert_condition(_tetrahedra[tn[0]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(1) == v[1]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(2) == v[2]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(3) == v[3]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(0) == ngb[0]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(1) == ngb[3]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(2) == tn[1]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(3) == ngb[4]);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(2) == 3);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[0]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[0]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[ngb[3]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[3]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[4]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[4]].get_ngb_index(0) == 3);
+
+    assert_condition(_tetrahedra[tn[1]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(1) == v[1]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(2) == v[3]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(3) == v[4]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(0) == ngb[1]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(1) == ngb[2]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(2) == ngb[5]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(3) == tn[0]);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(3) == 2);
+    assert_condition(_tetrahedra[ngb[1]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[1]].get_ngb_index(0) == 0);
+    assert_condition(_tetrahedra[ngb[2]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[2]].get_ngb_index(0) == 1);
+    assert_condition(_tetrahedra[ngb[5]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[5]].get_ngb_index(0) == 2);
 
     return;
   }
@@ -656,6 +735,33 @@ int main(int argc, char **argv) {
     cell.check_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
 
     cmac_status("2 to 3 flip works!");
+  }
+
+  /// test 3 to 2 flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(1);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+    cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
+    std::vector< bool > queue(9, false);
+    unsigned int next_check = cell.three_to_two_flip(0, 1, 2, queue, 8);
+    assert_condition(next_check == 0);
+    assert_condition(queue.size() == 9);
+    assert_condition(queue[0] == true);
+    assert_condition(queue[1] == true);
+    assert_condition(queue[3] == false);
+    assert_condition(queue[4] == false);
+    assert_condition(queue[5] == false);
+    assert_condition(queue[6] == false);
+    assert_condition(queue[7] == false);
+    assert_condition(queue[8] == false);
+    cell.check_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
+
+    cmac_status("3 to 2 flip works!");
   }
 
   /// test 4 to 4 flip
