@@ -477,6 +477,33 @@ private:
     return new_size;
   }
 
+  /**
+   * @brief Create the given amount of new tetrahedra and store the indices of
+   * the generated tetrahedra in the given array.
+   *
+   * This is a non-template version of the routine above, for cases where the
+   * number of new tetrahedra is not known at compile time (the n to 2n flip).
+   *
+   * @param indices Array to fill with the indices of the new tetrahedra.
+   * @param number Number of new tetrahedra to generate.
+   * @return New size of the tetrahedra vector.
+   */
+  inline unsigned int create_new_tetrahedra(unsigned int *indices,
+                                            unsigned int number) {
+    unsigned int new_size = _tetrahedra.size();
+    for (unsigned char i = 0; i < number; ++i) {
+      if (_free_tetrahedra.size() > 0) {
+        indices[i] = _free_tetrahedra.back();
+        _free_tetrahedra.pop_back();
+      } else {
+        indices[i] = new_size;
+        ++new_size;
+      }
+    }
+    _tetrahedra.resize(new_size);
+    return new_size;
+  }
+
 public:
   NewVoronoiCell(
       unsigned int generator, const VoronoiBox< unsigned long > &box,

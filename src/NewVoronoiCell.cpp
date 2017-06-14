@@ -781,11 +781,10 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
 
   // create n new tetrahedra
   unsigned int tn[2 * UCHAR_MAX];
-  unsigned int new_size = _tetrahedra.size();
   for (unsigned char j = 0; j < n; ++j) {
     tn[j] = tetrahedra[j];
-    new_size = create_new_tetrahedra< 1 >(&tn[n + j]);
   }
+  const unsigned int new_size = create_new_tetrahedra(&tn[n], n);
   queue.resize(new_size);
 
   for (unsigned char j = 0; j < n; ++j) {
