@@ -690,18 +690,128 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
 }
 
 /**
- * @brief Replace the given n tetrahedra with two times n new ones by inserting
- * the given new vertex.
+ * @brief Replace the given \f$n\f$ tetrahedra with \f$2n\f$ new ones by
+ * inserting the given new vertex.
+ *
+ * @image html newvoronoicell_n_to_2n_flip.png
+ *
+ * The \f$n\f$ tetrahedra
+ * (v0 v\f$(n+1)\f$ v1 v\f$(n)\f$),
+ * \f$...\f$,
+ * (v\f$(i-1)\f$ v\f$(n+1)\f$ v\f$(i)\f$ v\f$(n)\f$),
+ * \f$...\f$,
+ * (v\f$(n-1)\f$ v\f$(n+1)\f$ v0 v\f$(n)\f$)
+ * are replaced with the \f$2n\f$ tetrahedra
+ * (v0 v\f$(n+2)\f$ v1 v\f$(n)\f$),
+ * (v0 v\f$(n+1)\f$ v1 v\f$(n+2)\f$),
+ * \f$...\f$,
+ * (v\f$(i-1)\f$ v\f$(n+2)\f$ v\f$(i)\f$ v\f$(n)\f$),
+ * (v\f$(i-1)\f$ v\f$(n+1)\f$ v\f$(i)\f$ v\f$(n+2)\f$),
+ * \f$...\f$,
+ * (v\f$(n-1)\f$ v\f$(n+2)\f$ v0 v\f$(n)\f$),
+ * (v\f$(n-1)\f$ v\f$(n+1)\f$ v0 v\f$(n+2)\f$).
+ *
+ * The new neighbour relations can easily be deduced from the figure, while the
+ * new neighbour indices are set automatically by the way the new tetrahedra are
+ * constructed.
  *
  * @param new_vertex New vertex.
  * @param tetrahedra Tetrahedra to replace.
- * @param n N: number of tetrahedra in the given array.
+ * @param n \f$n\f$: number of tetrahedra to flip (should also be the number of
+ * tetrahedra in the given array).
  * @param queue Stack of tetrahedra that need to be checked for validity.
  */
 void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
                                   unsigned int *tetrahedra, unsigned char n,
                                   std::vector< bool > &queue) {
-  cmac_error("N to 2N flip not implemented yet!");
+
+  // find the indices of the common axis in all tetrahedra
+  unsigned char axis[UCHAR_MAX][2];
+  unsigned char t1_in_t0 = 0;
+  unsigned char num_axis = 0;
+  for (unsigned char i = 0; i < 4; ++i) {
+    unsigned char tj[UCHAR_MAX];
+    tj[0] = i;
+    bool is_axis = true;
+    for (unsigned char j = 1; j < n; ++j) {
+      tj[j] = 0;
+      while (tj[j] < 4 &&
+             _tetrahedra[tetrahedra[0]].get_vertex(tj[0]) !=
+                 _tetrahedra[tetrahedra[j]].get_vertex(tj[j])) {
+        ++tj[j];
+      }
+      is_axis &= (tj[j] < 4);
+    }
+    if (is_axis) {
+      for (unsigned char j = 0; j < n; ++j) {
+        axis[j][num_axis] = tj[j];
+      }
+      ++num_axis;
+    } else {
+      if (tj[1] < 4) {
+        t1_in_t0 = tj[0];
+      }
+    }
+  }
+
+  const unsigned char tnm1_in_t0 = 6 - axis[0][0] - axis[0][1] - t1_in_t0;
+  if (!positive_permutation(tnm1_in_t0, axis[0][0], t1_in_t0, axis[0][1])) {
+    for (unsigned char j = 0; j < n; ++j) {
+      const unsigned char tmp = axis[j][0];
+      axis[j][0] = axis[j][1];
+      axis[j][1] = tmp;
+    }
+  }
+
+  // set some variables to the values in the documentation figure
+  unsigned int vert[UCHAR_MAX + 2], ngbs[2 * UCHAR_MAX], ngbi[2 * UCHAR_MAX];
+  unsigned char vnext = t1_in_t0;
+  for (unsigned char j = 0; j < n; ++j) {
+    const unsigned char vother = 6 - axis[j][0] - axis[j][1] - vnext;
+    vert[j] = _tetrahedra[tetrahedra[j]].get_vertex(vother);
+    vnext = _tetrahedra[tetrahedra[j]].get_ngb_index(vother);
+    ngbs[2 * j] = _tetrahedra[tetrahedra[j]].get_neighbour(axis[j][0]);
+    ngbs[2 * j + 1] = _tetrahedra[tetrahedra[j]].get_neighbour(axis[j][1]);
+    ngbi[2 * j] = _tetrahedra[tetrahedra[j]].get_ngb_index(axis[j][0]);
+    ngbi[2 * j + 1] = _tetrahedra[tetrahedra[j]].get_ngb_index(axis[j][1]);
+  }
+  vert[n] = _tetrahedra[tetrahedra[0]].get_vertex(axis[0][1]);
+  vert[n + 1] = _tetrahedra[tetrahedra[0]].get_vertex(axis[0][0]);
+  vert[n + 2] = new_vertex;
+
+  // create n new tetrahedra
+  unsigned int tn[2 * UCHAR_MAX];
+  unsigned int new_size = _tetrahedra.size();
+  for (unsigned char j = 0; j < n; ++j) {
+    tn[j] = tetrahedra[j];
+    new_size = create_new_tetrahedra< 1 >(&tn[n + j]);
+  }
+  queue.resize(new_size);
+
+  for (unsigned char j = 0; j < n; ++j) {
+    _tetrahedra[tn[2 * j]] = VoronoiTetrahedron(
+        vert[j], vert[n + 2], vert[(j + 1) % n], vert[n], tn[2 * ((j + 1) % n)],
+        ngbs[2 * j], tn[2 * ((j + n - 1) % n)], tn[2 * j + 1], 2, ngbi[2 * j],
+        0, 1);
+    _tetrahedra[tn[2 * j + 1]] = VoronoiTetrahedron(
+        vert[j], vert[n + 1], vert[(j + 1) % n], vert[n + 2],
+        tn[2 * ((j + 1) % n) + 1], tn[2 * j], tn[2 * ((j + n - 1) % n) + 1],
+        ngbs[2 * j + 1], 2, 3, 0, ngbi[2 * j + 1]);
+
+    if (ngbs[2 * j] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[2 * j]].swap_neighbour(ngbi[2 * j], tn[2 * j], 1);
+    }
+    if (ngbs[2 * j + 1] < NEWVORONOICELL_MAX_INDEX) {
+      _tetrahedra[ngbs[2 * j + 1]].swap_neighbour(ngbi[2 * j + 1],
+                                                  tn[2 * j + 1], 3);
+    }
+  }
+
+  // we use int instead of char as j could in principle be as large as
+  // 2*UCHAR_MAX
+  for (unsigned int j = 0; j < 2 * n; ++j) {
+    queue[tn[j]] = true;
+  }
 }
 
 /**

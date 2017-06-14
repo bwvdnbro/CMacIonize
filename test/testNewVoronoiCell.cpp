@@ -36,6 +36,8 @@ enum NewVoronoiCellTestName {
   NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP,
   /*! @brief Test for the degenerate 2 to 6 flip routine. */
   NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP,
+  /*! @brief Test for the degenerate n to 2n flip routine. */
+  NEWVORONOICELL_TEST_N_TO_2N_FLIP,
   /*! @brief Test for the 2 to 3 flip routine. */
   NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP,
   /*! @brief Test for the 3 to 2 flip routine. */
@@ -87,6 +89,36 @@ void NewVoronoiCell::setup_test(int test) {
                                            ngb[3], t[1], ngb[4], 0, 0, 3, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
                                            ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    // we do not initialize the ngb tetrahedra, as their exact setup is
+    // irrelevant for this test
+
+    return;
+  }
+  case NEWVORONOICELL_TEST_N_TO_2N_FLIP: {
+    // we test for n = 5
+
+    // the exact positions of the vertices are irrelevant for this test, so we
+    // just use the initial values (0)
+    _ngbs.resize(8);
+
+    // convenient names used in documentation figure
+    const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    const unsigned int t[5] = {0, 1, 2, 3, 4};
+    const unsigned int ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+
+    // we need 5 tetrahedra + 10 dummy neighbours to check the neighbour
+    // handling
+    _tetrahedra.resize(15);
+    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1], ngb[0],
+                                           t[4], ngb[1], 2, 0, 0, 0);
+    _tetrahedra[t[1]] = VoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2], ngb[2],
+                                           t[0], ngb[3], 2, 0, 0, 0);
+    _tetrahedra[t[2]] = VoronoiTetrahedron(v[2], v[6], v[3], v[5], t[3], ngb[4],
+                                           t[1], ngb[5], 2, 0, 0, 0);
+    _tetrahedra[t[3]] = VoronoiTetrahedron(v[3], v[6], v[4], v[5], t[4], ngb[6],
+                                           t[2], ngb[7], 2, 0, 0, 0);
+    _tetrahedra[t[4]] = VoronoiTetrahedron(v[4], v[6], v[0], v[5], t[0], ngb[8],
+                                           t[3], ngb[9], 2, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -344,6 +376,171 @@ void NewVoronoiCell::check_test(int test) {
     assert_condition(_tetrahedra[tn[5]].get_ngb_index(3) == 2);
     assert_condition(_tetrahedra[ngb[1]].get_neighbour(0) == tn[5]);
     assert_condition(_tetrahedra[ngb[1]].get_ngb_index(0) == 0);
+
+    return;
+  }
+  case NEWVORONOICELL_TEST_N_TO_2N_FLIP: {
+
+    // we test for n = 5
+
+    // n extra tetrahedra should have been created by this flip
+    assert_condition(_tetrahedra.size() == 20);
+
+    // convenient names used in documentation figure
+    const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    const unsigned int tn[10] = {0, 1, 2, 3, 4, 15, 16, 17, 18, 19};
+    const unsigned int ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+
+    // check the individual tetrahedra
+    assert_condition(_tetrahedra[tn[0]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(1) == v[7]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(2) == v[1]);
+    assert_condition(_tetrahedra[tn[0]].get_vertex(3) == v[5]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(0) == tn[2]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(1) == ngb[0]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(2) == tn[8]);
+    assert_condition(_tetrahedra[tn[0]].get_neighbour(3) == tn[1]);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[0]].get_ngb_index(3) == 1);
+    assert_condition(_tetrahedra[ngb[0]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[ngb[0]].get_ngb_index(0) == 1);
+
+    assert_condition(_tetrahedra[tn[1]].get_vertex(0) == v[0]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(1) == v[6]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(2) == v[1]);
+    assert_condition(_tetrahedra[tn[1]].get_vertex(3) == v[7]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(0) == tn[3]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(1) == tn[0]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(2) == tn[9]);
+    assert_condition(_tetrahedra[tn[1]].get_neighbour(3) == ngb[1]);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(1) == 3);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[1]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[1]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[ngb[1]].get_ngb_index(0) == 3);
+
+    assert_condition(_tetrahedra[tn[2]].get_vertex(0) == v[1]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(1) == v[7]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(2) == v[2]);
+    assert_condition(_tetrahedra[tn[2]].get_vertex(3) == v[5]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(0) == tn[4]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(1) == ngb[2]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(2) == tn[0]);
+    assert_condition(_tetrahedra[tn[2]].get_neighbour(3) == tn[3]);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[2]].get_ngb_index(3) == 1);
+    assert_condition(_tetrahedra[ngb[2]].get_neighbour(0) == tn[2]);
+    assert_condition(_tetrahedra[ngb[2]].get_ngb_index(0) == 1);
+
+    assert_condition(_tetrahedra[tn[3]].get_vertex(0) == v[1]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(1) == v[6]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(2) == v[2]);
+    assert_condition(_tetrahedra[tn[3]].get_vertex(3) == v[7]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(0) == tn[5]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(1) == tn[2]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(2) == tn[1]);
+    assert_condition(_tetrahedra[tn[3]].get_neighbour(3) == ngb[3]);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(1) == 3);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[3]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[3]].get_neighbour(0) == tn[3]);
+    assert_condition(_tetrahedra[ngb[3]].get_ngb_index(0) == 3);
+
+    assert_condition(_tetrahedra[tn[4]].get_vertex(0) == v[2]);
+    assert_condition(_tetrahedra[tn[4]].get_vertex(1) == v[7]);
+    assert_condition(_tetrahedra[tn[4]].get_vertex(2) == v[3]);
+    assert_condition(_tetrahedra[tn[4]].get_vertex(3) == v[5]);
+    assert_condition(_tetrahedra[tn[4]].get_neighbour(0) == tn[6]);
+    assert_condition(_tetrahedra[tn[4]].get_neighbour(1) == ngb[4]);
+    assert_condition(_tetrahedra[tn[4]].get_neighbour(2) == tn[2]);
+    assert_condition(_tetrahedra[tn[4]].get_neighbour(3) == tn[5]);
+    assert_condition(_tetrahedra[tn[4]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[4]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[4]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[4]].get_ngb_index(3) == 1);
+    assert_condition(_tetrahedra[ngb[4]].get_neighbour(0) == tn[4]);
+    assert_condition(_tetrahedra[ngb[4]].get_ngb_index(0) == 1);
+
+    assert_condition(_tetrahedra[tn[5]].get_vertex(0) == v[2]);
+    assert_condition(_tetrahedra[tn[5]].get_vertex(1) == v[6]);
+    assert_condition(_tetrahedra[tn[5]].get_vertex(2) == v[3]);
+    assert_condition(_tetrahedra[tn[5]].get_vertex(3) == v[7]);
+    assert_condition(_tetrahedra[tn[5]].get_neighbour(0) == tn[7]);
+    assert_condition(_tetrahedra[tn[5]].get_neighbour(1) == tn[4]);
+    assert_condition(_tetrahedra[tn[5]].get_neighbour(2) == tn[3]);
+    assert_condition(_tetrahedra[tn[5]].get_neighbour(3) == ngb[5]);
+    assert_condition(_tetrahedra[tn[5]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[5]].get_ngb_index(1) == 3);
+    assert_condition(_tetrahedra[tn[5]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[5]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[5]].get_neighbour(0) == tn[5]);
+    assert_condition(_tetrahedra[ngb[5]].get_ngb_index(0) == 3);
+
+    assert_condition(_tetrahedra[tn[6]].get_vertex(0) == v[3]);
+    assert_condition(_tetrahedra[tn[6]].get_vertex(1) == v[7]);
+    assert_condition(_tetrahedra[tn[6]].get_vertex(2) == v[4]);
+    assert_condition(_tetrahedra[tn[6]].get_vertex(3) == v[5]);
+    assert_condition(_tetrahedra[tn[6]].get_neighbour(0) == tn[8]);
+    assert_condition(_tetrahedra[tn[6]].get_neighbour(1) == ngb[6]);
+    assert_condition(_tetrahedra[tn[6]].get_neighbour(2) == tn[4]);
+    assert_condition(_tetrahedra[tn[6]].get_neighbour(3) == tn[7]);
+    assert_condition(_tetrahedra[tn[6]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[6]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[6]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[6]].get_ngb_index(3) == 1);
+    assert_condition(_tetrahedra[ngb[6]].get_neighbour(0) == tn[6]);
+    assert_condition(_tetrahedra[ngb[6]].get_ngb_index(0) == 1);
+
+    assert_condition(_tetrahedra[tn[7]].get_vertex(0) == v[3]);
+    assert_condition(_tetrahedra[tn[7]].get_vertex(1) == v[6]);
+    assert_condition(_tetrahedra[tn[7]].get_vertex(2) == v[4]);
+    assert_condition(_tetrahedra[tn[7]].get_vertex(3) == v[7]);
+    assert_condition(_tetrahedra[tn[7]].get_neighbour(0) == tn[9]);
+    assert_condition(_tetrahedra[tn[7]].get_neighbour(1) == tn[6]);
+    assert_condition(_tetrahedra[tn[7]].get_neighbour(2) == tn[5]);
+    assert_condition(_tetrahedra[tn[7]].get_neighbour(3) == ngb[7]);
+    assert_condition(_tetrahedra[tn[7]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[7]].get_ngb_index(1) == 3);
+    assert_condition(_tetrahedra[tn[7]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[7]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[7]].get_neighbour(0) == tn[7]);
+    assert_condition(_tetrahedra[ngb[7]].get_ngb_index(0) == 3);
+
+    assert_condition(_tetrahedra[tn[8]].get_vertex(0) == v[4]);
+    assert_condition(_tetrahedra[tn[8]].get_vertex(1) == v[7]);
+    assert_condition(_tetrahedra[tn[8]].get_vertex(2) == v[0]);
+    assert_condition(_tetrahedra[tn[8]].get_vertex(3) == v[5]);
+    assert_condition(_tetrahedra[tn[8]].get_neighbour(0) == tn[0]);
+    assert_condition(_tetrahedra[tn[8]].get_neighbour(1) == ngb[8]);
+    assert_condition(_tetrahedra[tn[8]].get_neighbour(2) == tn[6]);
+    assert_condition(_tetrahedra[tn[8]].get_neighbour(3) == tn[9]);
+    assert_condition(_tetrahedra[tn[8]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[8]].get_ngb_index(1) == 0);
+    assert_condition(_tetrahedra[tn[8]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[8]].get_ngb_index(3) == 1);
+    assert_condition(_tetrahedra[ngb[8]].get_neighbour(0) == tn[8]);
+    assert_condition(_tetrahedra[ngb[8]].get_ngb_index(0) == 1);
+
+    assert_condition(_tetrahedra[tn[9]].get_vertex(0) == v[4]);
+    assert_condition(_tetrahedra[tn[9]].get_vertex(1) == v[6]);
+    assert_condition(_tetrahedra[tn[9]].get_vertex(2) == v[0]);
+    assert_condition(_tetrahedra[tn[9]].get_vertex(3) == v[7]);
+    assert_condition(_tetrahedra[tn[9]].get_neighbour(0) == tn[1]);
+    assert_condition(_tetrahedra[tn[9]].get_neighbour(1) == tn[8]);
+    assert_condition(_tetrahedra[tn[9]].get_neighbour(2) == tn[7]);
+    assert_condition(_tetrahedra[tn[9]].get_neighbour(3) == ngb[9]);
+    assert_condition(_tetrahedra[tn[9]].get_ngb_index(0) == 2);
+    assert_condition(_tetrahedra[tn[9]].get_ngb_index(1) == 3);
+    assert_condition(_tetrahedra[tn[9]].get_ngb_index(2) == 0);
+    assert_condition(_tetrahedra[tn[9]].get_ngb_index(3) == 0);
+    assert_condition(_tetrahedra[ngb[9]].get_neighbour(0) == tn[9]);
+    assert_condition(_tetrahedra[ngb[9]].get_ngb_index(0) == 3);
 
     return;
   }
@@ -864,6 +1061,45 @@ int main(int argc, char **argv) {
     cell.check_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
 
     cmac_status("2 to 6 flip works!");
+  }
+
+  /// test n to 2n flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(1);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+    cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
+    std::vector< bool > queue(15, false);
+    unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
+    cell.n_to_2n_flip(7, tetrahedra, 5, queue);
+    assert_condition(queue.size() == 20);
+    assert_condition(queue[0] == true);
+    assert_condition(queue[1] == true);
+    assert_condition(queue[2] == true);
+    assert_condition(queue[3] == true);
+    assert_condition(queue[4] == true);
+    assert_condition(queue[5] == false);
+    assert_condition(queue[6] == false);
+    assert_condition(queue[7] == false);
+    assert_condition(queue[8] == false);
+    assert_condition(queue[9] == false);
+    assert_condition(queue[10] == false);
+    assert_condition(queue[11] == false);
+    assert_condition(queue[12] == false);
+    assert_condition(queue[13] == false);
+    assert_condition(queue[14] == false);
+    assert_condition(queue[15] == true);
+    assert_condition(queue[16] == true);
+    assert_condition(queue[17] == true);
+    assert_condition(queue[18] == true);
+    assert_condition(queue[19] == true);
+    cell.check_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
+
+    cmac_status("n to 2n flip works!");
   }
 
   /// test 2 to 3 flip
