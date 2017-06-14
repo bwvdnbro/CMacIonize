@@ -504,7 +504,7 @@ public:
 
   void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
                         std::vector< bool > &queue);
-  void two_to_six_flip(unsigned int new_vertex, unsigned int tethahedra[2],
+  void two_to_six_flip(unsigned int new_vertex, unsigned int tetrahedra[2],
                        std::vector< bool > &queue);
   void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
                     unsigned char n, std::vector< bool > &queue);

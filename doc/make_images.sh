@@ -1,7 +1,14 @@
 #! /bin/bash
 
+if [ $# -gt 0 ]
+then
+  files=( $1 )
+else
+  files=( *.tex )
+fi
+
 mkdir tmp
-for f in *.tex
+for f in "${files[@]}"
 do
   cp $f tmp/$f
   cd tmp
