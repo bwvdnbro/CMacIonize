@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "NewVoronoiCell.hpp"
+#include "Utilities.hpp"
 
 #include <fstream>
 
@@ -56,7 +57,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(5);
+    _vertices.resize(5);
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -76,7 +77,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(6);
+    _vertices.resize(6);
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -99,7 +100,7 @@ void NewVoronoiCell::setup_test(int test) {
 
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(8);
+    _vertices.resize(8);
 
     // convenient names used in documentation figure
     const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -127,7 +128,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(5);
+    _vertices.resize(5);
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -148,7 +149,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(5);
+    _vertices.resize(5);
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -171,7 +172,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _ngbs.resize(6);
+    _vertices.resize(6);
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -1189,6 +1190,7 @@ int main(int argc, char **argv) {
   }
 
   /// tests for NewVoronoiCell::intersect
+  /// simple insertion with a single 1 to 4 flip
   {
     CoordinateVector< unsigned long > box_anchor(1000);
     CoordinateVector< unsigned long > box_sides(1000);
@@ -1204,11 +1206,54 @@ int main(int argc, char **argv) {
 
     cell.check_empty_circumsphere(box, positions);
 
-    std::ofstream ofile("new_voronoi_cell.txt");
+    std::ofstream ofile("new_voronoi_cell_1_to_4.txt");
     cell.print_tetrahedra(ofile, box, positions);
 
-    cmac_status("First intersection worked!");
+    cmac_status("Simple 1 to 4 flip insertion worked!");
   }
+  /// simple insertion with a single 2 to 6 flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(2);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    // general point
+    positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1500);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+
+    cell.intersect(1, box, positions);
+
+    cell.check_empty_circumsphere(box, positions);
+
+    std::ofstream ofile("new_voronoi_cell_2_to_6.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+
+    cmac_status("Simple 2 to 6 flip insertion worked!");
+  }
+  /// simple insertion with a single n to 2n flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(2);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    // general point
+    positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1250);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+
+    cell.intersect(1, box, positions);
+
+    cell.check_empty_circumsphere(box, positions);
+
+    std::ofstream ofile("new_voronoi_cell_n_to_2n.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+
+    cmac_status("Simple n to 2n flip insertion worked!");
+  }
+  /// 1 to 4 flip insertion with a single 2 to 3 flip
   {
     CoordinateVector< unsigned long > box_anchor(1000);
     CoordinateVector< unsigned long > box_sides(1000);
@@ -1224,13 +1269,60 @@ int main(int argc, char **argv) {
 
     cell.check_empty_circumsphere(box, positions);
 
-    std::ofstream ofile("new_voronoi_cell.txt");
+    std::ofstream ofile("new_voronoi_cell_2_to_3.txt");
     cell.print_tetrahedra(ofile, box, positions);
     ofile << positions[1].x() << "\t" << positions[1].y() << "\t"
           << positions[1].z() << "\n";
     ofile.close();
 
-    cmac_status("Second intersection worked!");
+    cmac_status("Simple insertion + 2 to 3 flip worked!");
+  }
+  /// 2 insertions with a 3 to 2 flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(3);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    positions[1] = CoordinateVector< unsigned long >(1782, 1393, 1839);
+    positions[2] = CoordinateVector< unsigned long >(1197, 1910, 1797);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+
+    for (unsigned int i = 1; i < 3; ++i) {
+      cell.intersect(i, box, positions);
+      cell.check_empty_circumsphere(box, positions);
+    }
+
+    std::ofstream ofile("new_voronoi_cell_3_to_2.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+    ofile << positions[1].x() << "\t" << positions[1].y() << "\t"
+          << positions[1].z() << "\n";
+    ofile.close();
+
+    cmac_status("Test with 3 to 2 flip worked!");
+  }
+  /// 1 to 4 flip insertion with a 4 to 4 flip
+  {
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > positions(2);
+    positions[0] = CoordinateVector< unsigned long >(1500);
+    positions[1] = CoordinateVector< unsigned long >(1500, 1750, 1500);
+    VoronoiBox< unsigned long > box(positions[0], box_anchor, box_sides);
+
+    NewVoronoiCell cell(0, box, positions);
+
+    cell.intersect(1, box, positions);
+    cell.check_empty_circumsphere(box, positions);
+
+    std::ofstream ofile("new_voronoi_cell_4_to_4.txt");
+    cell.print_tetrahedra(ofile, box, positions);
+    ofile << positions[1].x() << "\t" << positions[1].y() << "\t"
+          << positions[1].z() << "\n";
+    ofile.close();
+
+    cmac_status("Simple insertion + 4 to 4 flip worked!");
   }
 
   return 0;

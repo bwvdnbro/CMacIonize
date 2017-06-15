@@ -431,7 +431,7 @@ public:
 class NewVoronoiCell {
 private:
   /*! @brief Neighbours. */
-  std::vector< unsigned int > _ngbs;
+  std::vector< unsigned int > _vertices;
 
   /*! @brief Tetrahedra per neighbour, oriented. */
   std::vector< std::vector< unsigned int > > _connections;
@@ -586,6 +586,33 @@ public:
   }
 
   /**
+   * @brief Check if the given tetrahedron has a positive orientation.
+   *
+   * @param tetrahedron VoronoiTetrahedron.
+   * @param vertices Vertex indices.
+   * @param box VoronoiBox containing the box generating positions.
+   * @param positions std::vector containing the other positions.
+   * @return True if the tetrahedron is positively oriented.
+   */
+  inline static bool has_positive_orientation(
+      const VoronoiTetrahedron &tetrahedron,
+      const std::vector< unsigned int > &vertices,
+      const VoronoiBox< unsigned long > &box,
+      const std::vector< CoordinateVector< unsigned long > > &positions) {
+
+    const unsigned int v[4] = {vertices[tetrahedron.get_vertex(0)],
+                               vertices[tetrahedron.get_vertex(1)],
+                               vertices[tetrahedron.get_vertex(2)],
+                               vertices[tetrahedron.get_vertex(3)]};
+
+    const CoordinateVector< unsigned long > p[4] = {
+        get_position(v[0], box, positions), get_position(v[1], box, positions),
+        get_position(v[2], box, positions), get_position(v[3], box, positions)};
+
+    return ExactGeometricTests::orient3d(p[0], p[1], p[2], p[3]) < 0;
+  }
+
+  /**
    * @brief Print the tetrahedra currently stored in this cell.
    *
    * @param stream std::ostream to write to.
@@ -597,16 +624,18 @@ public:
       std::ostream &stream, const VoronoiBox< _datatype_ > &box,
       const std::vector< CoordinateVector< _datatype_ > > &positions) {
     for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
-      for (unsigned char j = 0; j < 4; ++j) {
-        const unsigned int v0 = _tetrahedra[i].get_vertex(j);
-        for (unsigned char k = j + 1; k < 4; ++k) {
-          const unsigned int v1 = _tetrahedra[i].get_vertex(k);
-          const CoordinateVector< _datatype_ > p0 =
-              get_position(_ngbs[v0], box, positions);
-          const CoordinateVector< _datatype_ > p1 =
-              get_position(_ngbs[v1], box, positions);
-          stream << p0.x() << "\t" << p0.y() << "\t" << p0.z() << "\n";
-          stream << p1.x() << "\t" << p1.y() << "\t" << p1.z() << "\n\n";
+      if (_tetrahedra[i].get_vertex(0) < NEWVORONOICELL_MAX_INDEX) {
+        for (unsigned char j = 0; j < 4; ++j) {
+          const unsigned int v0 = _tetrahedra[i].get_vertex(j);
+          for (unsigned char k = j + 1; k < 4; ++k) {
+            const unsigned int v1 = _tetrahedra[i].get_vertex(k);
+            const CoordinateVector< _datatype_ > p0 =
+                get_position(_vertices[v0], box, positions);
+            const CoordinateVector< _datatype_ > p1 =
+                get_position(_vertices[v1], box, positions);
+            stream << p0.x() << "\t" << p0.y() << "\t" << p0.z() << "\n";
+            stream << p1.x() << "\t" << p1.y() << "\t" << p1.z() << "\n\n";
+          }
         }
       }
     }
