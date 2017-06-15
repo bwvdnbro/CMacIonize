@@ -1058,12 +1058,36 @@ unsigned int NewVoronoiCell::two_to_three_flip(
  *
  * @image html newvoronoicell_four_to_four_flip.png
  *
- * The four positively oriented tetrahedra (0123), (0134), (0152), and (0514),
- * that share the edge (01) are replaced by four new positively oriented
- * tetrahedra that share the edge (35): (0352), (1532), (0534), and (1354).
- * The new neighbour relations can be easily deduced from the figure, while the
- * new neighbour indices are automatically set by the way we construct the new
+ * The four positively oriented tetrahedra (v0 v1 v2 v3), (v0 v1 v3 v4),
+ * (v0 v1 v5 v2), and (v0 v5 v1 v4),
+ * that share the edge (v0 v1) are replaced by four new positively oriented
+ * tetrahedra that share the edge (v3 v5) (dashed line in figure):
+ * (v0 v3 v5 v2), (v1 v5 v3 v2), (v0 v5 v3 v4), and (v1 v3 v5 v4).
+ *
+ * The original red shared faces are hence replaced by the new green shared
+ * faces in the figure; the blue shared faces will also be shared by the new
  * tetrahedra.
+ *
+ * Originally, t0 has ngb0 and ngb3 as neighbours, t1 has ngb1 and ngb2 as
+ * neighbours, t2 has ngb4 and ngb7 as neighbours, and t3 has ngb5 and ngb6 as
+ * neighbours. After the flip, t'0 has ngb3 and ngb7 as neighbours, t'1 has ngb0
+ * and ngb4 as neighbours, t'2 has ngb2 and ngb6 as neighbours, and t'3 has ngb1
+ * and ngb5 as neighbours.
+ *
+ * The tetrahedra should be given to this routine in the expected order: t0
+ * should have t1 and t2 as neighbours, while t3 should be a common neighbour of
+ * t1 and t2, but not of t3.
+ *
+ * The first thing we do is figure out how the internal vertex indices of the
+ * four tetrahedra map to the names in the figure. We do this by identifying the
+ * indices of the common axis vertices v0 and v1 in all tetrahedra, and the
+ * index of v2 in t0. Once we know v0, v1 and v2 in t0, we can deduce the index
+ * of v3 in in t0, and require that (v0 v1 v2 v3) is positively oriented (if
+ * not, we swap v0 and v1 in all tetrahedra so that it is).
+ *
+ * Once the indices have been mapped, it is straightforward to deduce the
+ * actual vertices, neighbours and neighbour indices, and we can simply
+ * construct the new tetrahedra based on the figure.
  *
  * @param tetrahedron0 First tetrahedron.
  * @param tetrahedron1 Second tetrahedron.

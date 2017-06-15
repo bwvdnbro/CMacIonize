@@ -12,10 +12,9 @@ for f in "${files[@]}"
 do
   cp $f tmp/$f
   cd tmp
-  filename="${f%.*}"
-  latex $filename
-  convert $filename.dvi $filename.png
+  pdflatex -shell-escape $f
   cd ..
+  filename="${f%.*}"
   mv tmp/$filename.png $filename.png
 done
 rm -rf tmp
