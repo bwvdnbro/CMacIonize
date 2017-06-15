@@ -545,6 +545,9 @@ unsigned char NewVoronoiCell::find_tetrahedron(
  * and the new index relations follow automatically from the way we construct
  * the new tetrahedra.
  *
+ * For clarity, the common faces of the new tetrahedra are marked in green in
+ * the figure.
+ *
  * The first new tetrahedron replaces the original tetrahedron, while the three
  * extra new tetrahedra are added to the list.
  *

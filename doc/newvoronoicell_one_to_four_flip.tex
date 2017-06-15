@@ -1,10 +1,11 @@
-\documentclass[12pt]{standalone}
+\documentclass[convert={density=72,outext=.png}]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows}
 \usepackage{amsmath}
 
-\tikzstyle{node} = [rectangle, text centered, align=center]
-\tikzstyle{stealthnode} = [rectangle, text centered, align=center, color=gray]
+\tikzstyle{node} = [rectangle, text centered, align=center, fill=white]
+\tikzstyle{stealthnode} = [rectangle, text centered, align=center, color=gray,
+                           fill=white]
 \tikzstyle{arrow} = [thick,>=stealth]
 \tikzstyle{stealtharrow} = [thick,>=stealth, color=gray, dashed]
 
@@ -19,41 +20,69 @@
     \draw [#3] (#1) -- (#2);
 }
 
+\newcommand{\drawFace}[4]
+{
+  \fill [color=#4!50, opacity = 0.5] (#1) -- (#2) -- (#3) -- (#1);
+  \begin{scope}
+  \draw [color=white, line width=7pt, opacity=1.0] (#1) -- (#2) -- (#3) -- (#1);
+  \end{scope}
+  \draw (#1) -- (#2) -- (#3) -- (#1);
+}
+
 \begin{document}
 
 \begin{tikzpicture}[node distance=4.5cm]
+\coordinate (c3) at (0.0cm, 0.0cm);
+\coordinate (c1) at (10.0cm, -10.0cm);
+\coordinate (c2) at (-10.0cm, -12.0cm);
+\coordinate (c0) at (4.0cm, -20.0cm);
+\coordinate (c4) at (-1.0cm, -7.5cm);
+
+\drawLinewithBG{c1}{c3}{arrow}
+\drawLinewithBG{c1}{c2}{arrow}
+\drawLinewithBG{c0}{c1}{arrow}
+\drawLinewithBG{c0}{c2}{arrow}
+\drawLinewithBG{c2}{c3}{arrow}
+
+\node [stealthnode, xshift = 1.4cm, yshift = -15.0cm] {\large ngb3};
+
+\drawLinewithBG{c0}{c4}{stealtharrow}
+\drawLinewithBG{c1}{c4}{stealtharrow}
+\drawLinewithBG{c2}{c4}{stealtharrow}
+\drawLinewithBG{c3}{c4}{stealtharrow}
+
+\node [stealthnode, xshift = -1.0cm, yshift = -3.0cm] {\large ngb0};
+
+\node [stealthnode, xshift = 0.cm, yshift = -12.0cm] {\Large t'0};
+\node [stealthnode, xshift = -1.2cm, yshift = -6.0cm] {\Large t'3};
+
+\drawFace{c1}{c2}{c4}{green}
+\drawFace{c1}{c3}{c4}{green}
+\drawFace{c0}{c1}{c4}{green}
+\drawLinewithBG{c1}{c4}{stealtharrow}
+
+\drawFace{c0}{c2}{c4}{green}
+\drawFace{c0}{c3}{c4}{green}
+\drawFace{c2}{c3}{c4}{green}
+
+\drawLinewithBG{c2}{c4}{stealtharrow}
+\drawLinewithBG{c3}{c4}{stealtharrow}
+\drawLinewithBG{c0}{c4}{stealtharrow}
+
+\drawLinewithBG{c0}{c3}{arrow}
+
+\node [stealthnode, xshift = 4.0cm, yshift = -7.0cm] {\Large t'1};
+\node [stealthnode, xshift = -1.0cm, yshift = -9.0cm] {\Large t'2};
+\node [stealthnode, xshift = -5.0cm, yshift = -9.0cm] {\large ngb1};
+\node [stealthnode, xshift = 7.0cm, yshift = -7.0cm] {\large ngb2};
+
+\node [node, xshift = 0.5cm, yshift = -9.0cm] {\Large t0};
+
 \node (v3) [node] {v3};
 \node (v1) [node, xshift = 10.0cm, yshift=-10.0cm] {v1};
 \node (v2) [node, xshift = -10.0cm, yshift=-12.0cm] {v2};
 \node (v0) [node, xshift = 4.0cm, yshift=-20.0cm] {v0};
 \node (v4) [stealthnode, xshift = -1.0cm, yshift=-7.5cm] {v4};
-
-\drawLinewithBG{v1}{v3}{arrow}
-\drawLinewithBG{v1}{v2}{arrow}
-\drawLinewithBG{v0}{v1}{arrow}
-\drawLinewithBG{v0}{v2}{arrow}
-\drawLinewithBG{v2}{v3}{arrow}
-
-\node [stealthnode, xshift = 0.5cm, yshift = -12.0cm] {\Large t'0};
-\node [stealthnode, xshift = -1.2cm, yshift = -6.0cm] {\Large t'3};
-
-\node [stealthnode, xshift = -1.0cm, yshift = -3.0cm] {\large ngb0};
-\node [stealthnode, xshift = 1.4cm, yshift = -15.0cm] {\large ngb3};
-
-\drawLinewithBG{v0}{v4}{stealtharrow}
-\drawLinewithBG{v1}{v4}{stealtharrow}
-\drawLinewithBG{v2}{v4}{stealtharrow}
-\drawLinewithBG{v3}{v4}{stealtharrow}
-
-\drawLinewithBG{v0}{v3}{arrow}
-
-\node [node, xshift = 0.5cm, yshift = -9.0cm] {\Large t0};
-
-\node [stealthnode, xshift = 4.0cm, yshift = -7.0cm] {\Large t'1};
-\node [stealthnode, xshift = -1.0cm, yshift = -9.0cm] {\Large t'2};
-
-\node [stealthnode, xshift = -5.0cm, yshift = -9.0cm] {\large ngb1};
-\node [stealthnode, xshift = 8.0cm, yshift = -7.0cm] {\large ngb2};
 
 \end{tikzpicture}
 
