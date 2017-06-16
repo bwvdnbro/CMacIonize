@@ -918,11 +918,21 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
  *
  * @image html newvoronoicell_two_to_three_flip.png
  *
- * The two positively oriented tetrahedra (0123) and (0134) in the figure are
- * replaced with three new positively oriented tetrahedra: (0124), (0423), and
- * (4123). The new neighbour relations can be easily deduced from the figure,
- * while the new neighbour indices are automatically set by the way we construct
- * the new tetrahedra.
+ * The two positively oriented tetrahedra (v0 v1 v2 v3) and (v0 v1 v3 v4) (that
+ * share the red face in the figure) are
+ * replaced with three new positively oriented tetrahedra (that share the green
+ * faces): (v0 v1 v2 v4), (v0 v4 v2 v3), and (v4 v1 v2 v3).
+ *
+ * Before the flip, t0 has ngb0, ngb3 and ngb4 as neighbours, while t1 has ngb1,
+ * ngb2 and ngb5 as neighbours. After the flip, t'0 has ngb4 and ngb5 as
+ * neighbours, t'1 has ngb3 and ngb4 as neighbours, and t'2 has ngb0 and ngb1
+ * as neighbours.
+ *
+ * We first figure out the indices of the common triangle vertices v0, v1 and v3
+ * in both tetrahedra. Once we know these, it is very straigthforward to match
+ * each index to one of these three vertices (requiring that t0 is positively
+ * oriented). We can then get the actual vertices, neighbours and neighbour
+ * indices and construct the new tetrahedra.
  *
  * @param tetrahedron0 First tetrahedron.
  * @param tetrahedron1 Second tetrahedron.
@@ -1294,11 +1304,31 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
  *
  * @image html newvoronoicell_three_to_two_flip.png
  *
- * The three positively oriented tetrahedra (0124), (0423), and (4123) are
- * replaced with two new positively oriented tetrahedra: (0123) and (0134).
- * The new neighbour relations can be easily deduced from the figure, while the
- * new neighbour indices are automatically set by the way we construct the new
- * tetrahedra.
+ * The three positively oriented tetrahedra (v0 v1 v2 v4), (v0 v4 v2 v3), and
+ * (v4 v1 v2 v3) (with the red common faces in the figure) are
+ * replaced with two new positively oriented tetrahedra (with a green common
+ * face in the figure): (v0 v1 v2 v3) and (v0 v1 v3 v4).
+ *
+ * Originally, t0 has ngb4 and ngb5 as neighbours, t1 has ngb2 and ngb3 as
+ * neighbours, and t2 has ngb0 and ngb1 as neighbours. After the flip, t'0 has
+ * ngb0, ngb3 and ngb4 as neighbours, while t'1 has ngb1, ngb2 and ngb5 as
+ * neighbours.
+ *
+ * We first find the indices of the common axis (v2 v4) in all three tetrahedra,
+ * plus the index of v0 (the third common vertex of t0 and t1) in t0. Once we
+ * have these we also know the index of v1 in t0, and we can find out which of
+ * the two axis indices corresponds to v2 and which to v4 by requiring that the
+ * four indices are a positively oriented permutation of 0123. Once this is
+ * done, it is very straightforward to obtain the other indices in the other
+ * tetrahedra. We can then get the actual vertices, neighbours and neighbour
+ * indices, and construct the two new tetrahedra.
+ *
+ * Note that because this flip removes a tetrahedron, it will free up a spot in
+ * the tetrahedra vector. Since removing the tetrahedron from that vector would
+ * be very expensive (since it requires a reshuffle of all tetrahedra behind it
+ * and requires us to update the neighbour relations for all of these
+ * tetrahedra), we just leave it in and keep an extra stack of free spots in the
+ * tetrahedra array, which can be filled by other flips.
  *
  * @param tetrahedron0 First tetrahedron.
  * @param tetrahedron1 Second tetrahedron.
