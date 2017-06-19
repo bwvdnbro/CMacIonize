@@ -64,12 +64,8 @@
  * @brief Constructor.
  *
  * @param generator Index of the generator of the cell.
- * @param box VoronoiBox containing the box generators.
- * @param positions Other generator positions.
  */
-NewVoronoiCell::NewVoronoiCell(
-    unsigned int generator, const VoronoiBox< unsigned long > &box,
-    const std::vector< CoordinateVector< unsigned long > > &positions) {
+NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
 
   _vertices.resize(5);
   _vertices[0] = generator;
@@ -238,8 +234,7 @@ void NewVoronoiCell::finalize(
     const VoronoiBox< unsigned long > &long_voronoi_box,
     bool reflective_boundaries) {
 
-  VoronoiBox< double > voronoi_box(positions[_vertices[0]], box.get_anchor(),
-                                   box.get_sides());
+  VoronoiBox< double > voronoi_box(box);
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     real_positions[i] = get_position(_vertices[i], voronoi_box, positions);

@@ -347,76 +347,103 @@ public:
  */
 template < typename _datatype_ > class VoronoiBox {
 private:
+  /*! @brief Underlying Box. */
+  const Box< _datatype_ > _box;
+
   /*! @brief Positions of the large, all-encompassing initial tetrahedron. */
   CoordinateVector< _datatype_ > _tetrahedron[4];
 
-  /*! @brief Positions of the generators of the cubic box around a generator. */
-  CoordinateVector< _datatype_ > _positions[6];
+  /**
+   * @brief Get a reflective copy of the given generator by mirroring it with
+   * the wall with the given index.
+   *
+   * @param index Wall index.
+   * @param generator_position Position of the generator.
+   * @return Reflective copy of the generator.
+   */
+  inline CoordinateVector< _datatype_ > get_wall_copy(
+      unsigned int index,
+      const CoordinateVector< _datatype_ > &generator_position) const {
+    switch (index) {
+    case NEWVORONOICELL_BOX_LEFT:
+      return CoordinateVector< _datatype_ >(
+          2 * _box.get_anchor().x() - generator_position.x(),
+          generator_position.y(), generator_position.z());
+    case NEWVORONOICELL_BOX_RIGHT:
+      return CoordinateVector< _datatype_ >(
+          2 * (_box.get_anchor().x() + _box.get_sides().x()) -
+              generator_position.x(),
+          generator_position.y(), generator_position.z());
+    case NEWVORONOICELL_BOX_FRONT:
+      return CoordinateVector< _datatype_ >(generator_position.x(),
+                                            2 * _box.get_anchor().y() -
+                                                generator_position.y(),
+                                            generator_position.z());
+    case NEWVORONOICELL_BOX_BACK:
+      return CoordinateVector< _datatype_ >(
+          generator_position.x(),
+          2 * (_box.get_anchor().y() + _box.get_sides().y()) -
+              generator_position.y(),
+          generator_position.z());
+    case NEWVORONOICELL_BOX_BOTTOM:
+      return CoordinateVector< _datatype_ >(
+          generator_position.x(), generator_position.y(),
+          2 * _box.get_anchor().z() - generator_position.z());
+    case NEWVORONOICELL_BOX_TOP:
+      return CoordinateVector< _datatype_ >(
+          generator_position.x(), generator_position.y(),
+          2 * (_box.get_anchor().z() + _box.get_sides().z()) -
+              generator_position.z());
+    }
+    cmac_error("Unknown box wall index: %u!", index);
+    return CoordinateVector< _datatype_ >();
+  }
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param generator Position of the generator.
-   * @param box_anchor Position of the anchor of the box.
-   * @param box_sides Side lengths of the box.
+   * @param box Box.
    */
-  VoronoiBox(const CoordinateVector< _datatype_ > &generator,
-             const CoordinateVector< _datatype_ > &box_anchor,
-             const CoordinateVector< _datatype_ > &box_sides) {
+  inline VoronoiBox(const Box< _datatype_ > box) : _box(box) {
 
     // the large all-encompassing tetrahedron has one vertex in the anchor of
     // the (extended) box (with side length 3*'max_side')
     // the other vertices are at a distance of sqrt{6}*'max_side'
     // however, since we need to account for integer coordinates, we round this
     // up to 3
-    _datatype_ max_side = std::max(box_sides.x(), box_sides.y());
-    max_side = std::max(max_side, box_sides.z());
+    _datatype_ max_side = std::max(box.get_sides().x(), box.get_sides().y());
+    max_side = std::max(max_side, box.get_sides().z());
 
-    _tetrahedron[0][0] = box_anchor.x() - box_sides.x();
-    _tetrahedron[0][1] = box_anchor.y() - box_sides.y();
-    _tetrahedron[0][2] = box_anchor.z() - box_sides.z();
-    _tetrahedron[1][0] = box_anchor.x() - box_sides.x() + 9 * max_side;
-    _tetrahedron[1][1] = box_anchor.y() - box_sides.y();
-    _tetrahedron[1][2] = box_anchor.z() - box_sides.z();
-    _tetrahedron[2][0] = box_anchor.x() - box_sides.x();
-    _tetrahedron[2][1] = box_anchor.y() - box_sides.y() + 9 * max_side;
-    _tetrahedron[2][2] = box_anchor.z() - box_sides.z();
-    _tetrahedron[3][0] = box_anchor.x() - box_sides.x();
-    _tetrahedron[3][1] = box_anchor.y() - box_sides.y();
-    _tetrahedron[3][2] = box_anchor.z() - box_sides.z() + 9 * max_side;
-
-    _positions[0][0] = 2 * box_anchor.x() - generator.x();
-    _positions[0][1] = generator.y();
-    _positions[0][2] = generator.z();
-    _positions[1][0] = 2 * (box_anchor.x() + box_sides.x()) - generator.x();
-    _positions[1][1] = generator.y();
-    _positions[1][2] = generator.z();
-
-    _positions[2][0] = generator.x();
-    _positions[2][1] = 2 * box_anchor.y() - generator.y();
-    _positions[2][2] = generator.z();
-    _positions[3][0] = generator.x();
-    _positions[3][1] = 2 * (box_anchor.y() + box_sides.y()) - generator.y();
-    _positions[3][2] = generator.z();
-
-    _positions[4][0] = generator.x();
-    _positions[4][1] = generator.y();
-    _positions[4][2] = 2 * box_anchor.z() - generator.z();
-    _positions[5][0] = generator.x();
-    _positions[5][1] = generator.y();
-    _positions[5][2] = 2 * (box_anchor.z() + box_sides.z()) - generator.z();
+    _tetrahedron[0][0] = box.get_anchor().x() - box.get_sides().x();
+    _tetrahedron[0][1] = box.get_anchor().y() - box.get_sides().y();
+    _tetrahedron[0][2] = box.get_anchor().z() - box.get_sides().z();
+    _tetrahedron[1][0] =
+        box.get_anchor().x() - box.get_sides().x() + 9 * max_side;
+    _tetrahedron[1][1] = box.get_anchor().y() - box.get_sides().y();
+    _tetrahedron[1][2] = box.get_anchor().z() - box.get_sides().z();
+    _tetrahedron[2][0] = box.get_anchor().x() - box.get_sides().x();
+    _tetrahedron[2][1] =
+        box.get_anchor().y() - box.get_sides().y() + 9 * max_side;
+    _tetrahedron[2][2] = box.get_anchor().z() - box.get_sides().z();
+    _tetrahedron[3][0] = box.get_anchor().x() - box.get_sides().x();
+    _tetrahedron[3][1] = box.get_anchor().y() - box.get_sides().y();
+    _tetrahedron[3][2] =
+        box.get_anchor().z() - box.get_sides().z() + 9 * max_side;
   }
 
   /**
    * @brief Get the given component of the box.
    *
    * @param index Index of a component.
+   * @param generator_position Position of the generator of the cell.
    * @return Value for that component.
    */
-  const CoordinateVector< _datatype_ > &operator[](unsigned int index) const {
+  inline CoordinateVector< _datatype_ >
+  get_position(unsigned int index,
+               const CoordinateVector< _datatype_ > &generator_position) const {
     if (index >= NEWVORONOICELL_BOX_LEFT) {
-      return _positions[index - NEWVORONOICELL_BOX_LEFT];
+      return get_wall_copy(index, generator_position);
     } else {
       cmac_assert(index >= NEWVORONOICELL_BOX_CORNER0);
       return _tetrahedron[index - NEWVORONOICELL_BOX_CORNER0];
@@ -505,9 +532,7 @@ private:
   }
 
 public:
-  NewVoronoiCell(
-      unsigned int generator, const VoronoiBox< unsigned long > &box,
-      const std::vector< CoordinateVector< unsigned long > > &positions);
+  NewVoronoiCell(unsigned int generator);
 
   /// const element getters
   double get_volume() const;
@@ -574,17 +599,17 @@ public:
    * @return Position.
    */
   template < typename _datatype_ >
-  inline static const CoordinateVector< _datatype_ > &
-  get_position(unsigned int index, const VoronoiBox< _datatype_ > &box,
-               const std::vector< CoordinateVector< _datatype_ > > &positions) {
+  inline CoordinateVector< _datatype_ > get_position(
+      unsigned int index, const VoronoiBox< _datatype_ > &box,
+      const std::vector< CoordinateVector< _datatype_ > > &positions) const {
     if (index < NEWVORONOICELL_MAX_INDEX) {
       return positions[index];
     } else if (index > NEWVORONOICELL_MAX_INDEX) {
-      return box[index];
+      return box.get_position(index, positions[_vertices[0]]);
     } else {
       cmac_error("Invalid position index!");
       // we need to return something...
-      return positions[0];
+      return positions[_vertices[0]];
     }
   }
 
@@ -597,11 +622,11 @@ public:
    * @param positions std::vector containing the other positions.
    * @return True if the tetrahedron is positively oriented.
    */
-  inline static bool has_positive_orientation(
+  inline bool has_positive_orientation(
       const VoronoiTetrahedron &tetrahedron,
       const std::vector< unsigned int > &vertices,
       const VoronoiBox< unsigned long > &box,
-      const std::vector< CoordinateVector< unsigned long > > &positions) {
+      const std::vector< CoordinateVector< unsigned long > > &positions) const {
 
     const unsigned int v[4] = {vertices[tetrahedron.get_vertex(0)],
                                vertices[tetrahedron.get_vertex(1)],
