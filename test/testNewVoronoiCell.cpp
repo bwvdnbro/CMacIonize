@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "NewVoronoiCell.hpp"
+#include "NewVoronoiGrid.hpp"
 #include "Utilities.hpp"
 
 #include <fstream>
@@ -1047,7 +1048,7 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.finalize(box, positions, long_positions, voronoi_box, true);
 
-    const double tolerance = 1.e-16;
+    const double tolerance = 1.e-15;
 
     double volume = cell.get_volume();
     assert_values_equal_rel(volume, 1., tolerance);
@@ -1105,6 +1106,24 @@ int main(int argc, char **argv) {
     assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_TOP);
 
     cmac_status("Geometry, part 2: Cell face computation works!");
+  }
+
+  /// test NewVoronoiGrid::get_mantissa
+  {
+    assert_condition(NewVoronoiGrid::get_mantissa(1.) == 0);
+    assert_condition(NewVoronoiGrid::get_mantissa(1.5) == 0x0008000000000000);
+  }
+
+  /// test NewVoronoiGrid construction: random generators
+  {
+    std::vector< CoordinateVector<> > positions(10);
+    for (unsigned int i = 0; i < 10; ++i) {
+      positions[i] = Utilities::random_position();
+    }
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+
+    NewVoronoiGrid grid(positions, box);
+    grid.construct();
   }
 
   return 0;

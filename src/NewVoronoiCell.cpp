@@ -33,7 +33,7 @@
  * @brief Macro to print information about the route the algorithm takes.
  */
 #ifdef NEWVORONOICELL_PRINT_CASES
-#define newvoronoicell_print_case(s, ...) cmac_status(s, ##__VA_ARGS__)
+#define newvoronoicell_print_case(s, ...) cmac_warning(s, ##__VA_ARGS__)
 #else
 #define newvoronoicell_print_case(s, ...)
 #endif
@@ -43,22 +43,27 @@
  */
 #ifdef NEWVORONOICELL_PRINT_CASES
 #define newvoronoicell_print_tetrahedron(tetrahedron, s, ...)                  \
-  cmac_status(s ": %u %u %u %u (%u %u %u %u, %u %u %u %u)", ##__VA_ARGS__,     \
-              _tetrahedra[tetrahedron].get_vertex(0),                          \
-              _tetrahedra[tetrahedron].get_vertex(1),                          \
-              _tetrahedra[tetrahedron].get_vertex(2),                          \
-              _tetrahedra[tetrahedron].get_vertex(3),                          \
-              _tetrahedra[tetrahedron].get_neighbour(0),                       \
-              _tetrahedra[tetrahedron].get_neighbour(1),                       \
-              _tetrahedra[tetrahedron].get_neighbour(2),                       \
-              _tetrahedra[tetrahedron].get_neighbour(3),                       \
-              _tetrahedra[tetrahedron].get_ngb_index(0),                       \
-              _tetrahedra[tetrahedron].get_ngb_index(1),                       \
-              _tetrahedra[tetrahedron].get_ngb_index(2),                       \
-              _tetrahedra[tetrahedron].get_ngb_index(3))
+  cmac_warning(s ": %u %u %u %u (%u %u %u %u, %u %u %u %u)", ##__VA_ARGS__,    \
+               _tetrahedra[tetrahedron].get_vertex(0),                         \
+               _tetrahedra[tetrahedron].get_vertex(1),                         \
+               _tetrahedra[tetrahedron].get_vertex(2),                         \
+               _tetrahedra[tetrahedron].get_vertex(3),                         \
+               _tetrahedra[tetrahedron].get_neighbour(0),                      \
+               _tetrahedra[tetrahedron].get_neighbour(1),                      \
+               _tetrahedra[tetrahedron].get_neighbour(2),                      \
+               _tetrahedra[tetrahedron].get_neighbour(3),                      \
+               _tetrahedra[tetrahedron].get_ngb_index(0),                      \
+               _tetrahedra[tetrahedron].get_ngb_index(1),                      \
+               _tetrahedra[tetrahedron].get_ngb_index(2),                      \
+               _tetrahedra[tetrahedron].get_ngb_index(3))
 #else
 #define newvoronoicell_print_tetrahedron(tetrahedron, s, ...)
 #endif
+
+/**
+ * @brief Empty constructor.
+ */
+NewVoronoiCell::NewVoronoiCell() {}
 
 /**
  * @brief Constructor.
@@ -192,13 +197,14 @@ void NewVoronoiCell::intersect(
 
   // recursively check if the newly created tetrahedra satisfy the empty
   // circumsphere criterion that marks them as Delaunay tetrahedra
-  unsigned int i = 0;
-  while (i < queue.size()) {
-    if (queue[i]) {
-      queue[i] = false;
-      i = check_tetrahedron(i, vertex_index, box, positions, queue);
+  unsigned int next_check = 0;
+  while (next_check < queue.size()) {
+    if (queue[next_check]) {
+      queue[next_check] = false;
+      next_check =
+          check_tetrahedron(next_check, vertex_index, box, positions, queue);
     } else {
-      ++i;
+      ++next_check;
     }
   }
 }
@@ -234,12 +240,6 @@ void NewVoronoiCell::finalize(
     const VoronoiBox< unsigned long > &long_voronoi_box,
     bool reflective_boundaries) {
 
-  VoronoiBox< double > voronoi_box(box);
-  std::vector< CoordinateVector<> > real_positions(_vertices.size());
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    real_positions[i] = get_position(_vertices[i], voronoi_box, positions);
-  }
-
   if (reflective_boundaries) {
     intersect(NEWVORONOICELL_BOX_LEFT, long_voronoi_box, long_positions);
     intersect(NEWVORONOICELL_BOX_RIGHT, long_voronoi_box, long_positions);
@@ -249,11 +249,17 @@ void NewVoronoiCell::finalize(
     intersect(NEWVORONOICELL_BOX_TOP, long_voronoi_box, long_positions);
   }
 
-  //  for(unsigned int i = 0; i < real_positions.size(); ++i){
-  //    cmac_warning("real_positions[%u]: %g %g %g", i, real_positions[i].x(),
-  //    real_positions[i].y(),
-  //                 real_positions[i].z());
-  //  }
+  VoronoiBox< double > voronoi_box(box);
+  std::vector< CoordinateVector<> > real_positions(_vertices.size());
+  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    real_positions[i] = get_position(_vertices[i], voronoi_box, positions);
+  }
+
+  //    for(unsigned int i = 0; i < real_positions.size(); ++i){
+  //      cmac_warning("real_positions[%u]: %g %g %g", i, real_positions[i].x(),
+  //      real_positions[i].y(),
+  //                   real_positions[i].z());
+  //    }
 
   std::vector< CoordinateVector<> > cell_vertices(_tetrahedra.size() + 1);
   cell_vertices[0] = real_positions[0];
@@ -264,11 +270,11 @@ void NewVoronoiCell::finalize(
     }
   }
 
-  //  for(unsigned int i = 0; i < cell_vertices.size(); ++i){
-  //    cmac_warning("cell_vertices[%u]: %g %g %g", i, cell_vertices[i].x(),
-  //    cell_vertices[i].y(),
-  //                 cell_vertices[i].z());
-  //  }
+  //    for(unsigned int i = 0; i < cell_vertices.size(); ++i){
+  //      cmac_warning("cell_vertices[%u]: %g %g %g", i, cell_vertices[i].x(),
+  //      cell_vertices[i].y(),
+  //                   cell_vertices[i].z());
+  //    }
 
   // (re)construct the connections
   _connections.clear();
@@ -303,11 +309,12 @@ void NewVoronoiCell::finalize(
             // ordering of the tetrahedra around the axis
             unsigned char third_j = (other_j + 1) % 4;
             if (third_j == j) {
-              ++third_j;
+              third_j = (third_j + 1) % 4;
             }
             // 'third_j' now definitely contains the index of a vertex that is
             // not 'j' or 'other_j'
             unsigned int ngb = _tetrahedra[i].get_neighbour(third_j);
+            cmac_assert_message(ngb < _tetrahedra.size(), "ngb: %#010x", ngb);
             unsigned int prev_ngb = i;
             while (ngb != i) {
               _connections.back().push_back(ngb);
@@ -394,6 +401,11 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     unsigned int *indices) const {
   // start with an arbitrary tetrahedron, the last one is usually a good choice
   unsigned int tetrahedron = _tetrahedra.size() - 1;
+  // unless the last one was deleted of course, in which case we start with the
+  // first available tetrahedron
+  while (_tetrahedra[tetrahedron].get_vertex(0) == NEWVORONOICELL_MAX_INDEX) {
+    --tetrahedron;
+  }
   unsigned char test = 0;
   while (test == 0) {
     // get the vertices of the current tetrahedron guess
@@ -1068,8 +1080,9 @@ unsigned int NewVoronoiCell::two_to_three_flip(
   newvoronoicell_print_tetrahedron(tn[1], "tn[1]");
   newvoronoicell_print_tetrahedron(tn[2], "tn[2]");
 
-  next_check = std::min(next_check, tetrahedron0);
-  next_check = std::min(next_check, tetrahedron1);
+  next_check = std::min(next_check, tn[0]);
+  next_check = std::min(next_check, tn[1]);
+  next_check = std::min(next_check, tn[2]);
   return next_check;
 }
 
@@ -1550,6 +1563,8 @@ unsigned int NewVoronoiCell::check_tetrahedron(
 
     char test = ExactGeometricTests::insphere(p0, p1, p2, p3, p4);
     if (test < 0) {
+      newvoronoicell_print_case("Invalid tetrahedron!");
+
       // the tetrahedron (and its neighbour) are invalid!
       // we need to figure out which flip can restore them
       // this will depend on whether the line that joins 'new_vertex' and 'v4'
@@ -1649,6 +1664,8 @@ unsigned int NewVoronoiCell::check_tetrahedron(
                                                _vertices, box, positions));
           cmac_assert(has_positive_orientation(_tetrahedra[other_ngb],
                                                _vertices, box, positions));
+        } else {
+          newvoronoicell_print_case("4 to 4 flip not possible");
         }
       } else {
         // check that this is indeed the only case left
@@ -1690,6 +1707,8 @@ unsigned int NewVoronoiCell::check_tetrahedron(
                                                _vertices, box, positions));
           cmac_assert(has_positive_orientation(_tetrahedra[ngb], _vertices, box,
                                                positions));
+        } else {
+          newvoronoicell_print_case("3 to 2 flip not possible");
         }
       }
     }

@@ -68,6 +68,7 @@ public:
                         const Box<> box = Box<>(CoordinateVector<>(0.),
                                                 CoordinateVector<>(-1.)))
       : _positions(positions) {
+
     const unsigned int positions_size = positions.size();
 
     CoordinateVector<> minpos;
@@ -90,6 +91,9 @@ public:
       minpos = box.get_anchor();
       maxpos = box.get_sides();
     }
+
+    // make sure the desired number of cells makes sense
+    num_per_cell = std::min(num_per_cell, positions_size);
 
     // now find the right size for the grid: we want an average of num_per_cell
     // positions per grid cell

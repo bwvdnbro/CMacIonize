@@ -174,6 +174,12 @@ public:
    */
   CoordinateVector<> get_midpoint_circumsphere(
       const std::vector< CoordinateVector<> > &positions) const {
+
+    cmac_assert(_v[0] < positions.size());
+    cmac_assert(_v[1] < positions.size());
+    cmac_assert(_v[2] < positions.size());
+    cmac_assert(_v[3] < positions.size());
+
     const CoordinateVector<> r1 = positions[_v[1]] - positions[_v[0]];
     const CoordinateVector<> r2 = positions[_v[2]] - positions[_v[0]];
     const CoordinateVector<> r3 = positions[_v[3]] - positions[_v[0]];
@@ -348,7 +354,7 @@ public:
 template < typename _datatype_ > class VoronoiBox {
 private:
   /*! @brief Underlying Box. */
-  const Box< _datatype_ > _box;
+  Box< _datatype_ > _box;
 
   /*! @brief Positions of the large, all-encompassing initial tetrahedron. */
   CoordinateVector< _datatype_ > _tetrahedron[4];
@@ -401,6 +407,11 @@ private:
 
 public:
   /**
+   * @brief Empty constructor.
+   */
+  inline VoronoiBox() {}
+
+  /**
    * @brief Constructor.
    *
    * @param box Box.
@@ -448,6 +459,20 @@ public:
       cmac_assert(index >= NEWVORONOICELL_BOX_CORNER0);
       return _tetrahedron[index - NEWVORONOICELL_BOX_CORNER0];
     }
+  }
+
+  /**
+   * @brief Get the dimensions of the box that contains the entire VoronoiBox,
+   * including the large all-encompassing tetrahedron.
+   *
+   * @return All-encompassing Box.
+   */
+  inline Box< _datatype_ > get_box() const {
+    const CoordinateVector< _datatype_ > sides = CoordinateVector< _datatype_ >(
+        _tetrahedron[1].x() - _tetrahedron[0].x(),
+        _tetrahedron[2].y() - _tetrahedron[0].y(),
+        _tetrahedron[3].z() - _tetrahedron[0].z());
+    return Box< _datatype_ >(_tetrahedron[0], sides);
   }
 };
 
@@ -532,6 +557,7 @@ private:
   }
 
 public:
+  NewVoronoiCell();
   NewVoronoiCell(unsigned int generator);
 
   /// const element getters
@@ -603,6 +629,7 @@ public:
       unsigned int index, const VoronoiBox< _datatype_ > &box,
       const std::vector< CoordinateVector< _datatype_ > > &positions) const {
     if (index < NEWVORONOICELL_MAX_INDEX) {
+      cmac_assert(index < positions.size());
       return positions[index];
     } else if (index > NEWVORONOICELL_MAX_INDEX) {
       return box.get_position(index, positions[_vertices[0]]);
