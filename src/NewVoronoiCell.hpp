@@ -519,8 +519,11 @@ public:
   intersect(unsigned int ngb, const VoronoiBox< unsigned long > &box,
             const std::vector< CoordinateVector< unsigned long > > &positions);
   double get_max_radius_squared() const;
-  void finalize(const Box &box,
-                const std::vector< CoordinateVector<> > &positions);
+  void finalize(
+      const Box &box, const std::vector< CoordinateVector<> > &positions,
+      const std::vector< CoordinateVector< unsigned long > > &long_positions,
+      const VoronoiBox< unsigned long > &long_voronoi_box,
+      bool reflective_boundaries = false);
 
   /// helper functions (should be private, but we make them public to expose
   /// them to the unit tests)

@@ -110,13 +110,6 @@ NewVoronoiCell::NewVoronoiCell(
   _connections[3][0] = 0;
   _connections[3][1] = 2;
   _connections[3][2] = 1;
-
-  //  intersect(NEWVORONOICELL_BOX_LEFT, box, positions);
-  //  intersect(NEWVORONOICELL_BOX_RIGHT, box, positions);
-  //  intersect(NEWVORONOICELL_BOX_FRONT, box, positions);
-  //  intersect(NEWVORONOICELL_BOX_BACK, box, positions);
-  //  intersect(NEWVORONOICELL_BOX_BOTTOM, box, positions);
-  //  intersect(NEWVORONOICELL_BOX_TOP, box, positions);
 }
 
 /**
@@ -231,15 +224,34 @@ double NewVoronoiCell::get_max_radius_squared() const {
  *
  * @param box Bounding box of the grid (in m).
  * @param positions Positions of the generators (in m).
+ * @param long_positions Positions of the generators: integer representations.
+ * @param long_voronoi_box Simulation box generating positions: integer
+ * representations.
+ * @param reflective_boundaries Flag that regulates whether or not to use
+ * reflective boundaries. If set to yes, we insert mirror copies of the central
+ * mesh generator into the existing Delaunay structure to enforce the walls of
+ * the simulation box.
  */
 void NewVoronoiCell::finalize(
-    const Box &box, const std::vector< CoordinateVector<> > &positions) {
+    const Box &box, const std::vector< CoordinateVector<> > &positions,
+    const std::vector< CoordinateVector< unsigned long > > &long_positions,
+    const VoronoiBox< unsigned long > &long_voronoi_box,
+    bool reflective_boundaries) {
 
   VoronoiBox< double > voronoi_box(positions[_vertices[0]], box.get_anchor(),
                                    box.get_sides());
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     real_positions[i] = get_position(_vertices[i], voronoi_box, positions);
+  }
+
+  if (reflective_boundaries) {
+    intersect(NEWVORONOICELL_BOX_LEFT, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_RIGHT, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_FRONT, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_BACK, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_BOTTOM, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_TOP, long_voronoi_box, long_positions);
   }
 
   //  for(unsigned int i = 0; i < real_positions.size(); ++i){

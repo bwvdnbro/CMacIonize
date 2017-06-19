@@ -520,6 +520,7 @@ int main(int argc, char **argv) {
   }
 
   /// test geometrical routines
+  /// part 1: initial tetrahedron without any other insertions
   {
     Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
@@ -531,7 +532,7 @@ int main(int argc, char **argv) {
     VoronoiBox< unsigned long > voronoi_box(long_positions[0], box_anchor,
                                             box_sides);
     NewVoronoiCell cell(0, voronoi_box, long_positions);
-    cell.finalize(box, positions);
+    cell.finalize(box, positions, long_positions, voronoi_box);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
     full_volume_positions[0] = CoordinateVector<>(6.26786);
@@ -588,13 +589,13 @@ int main(int argc, char **argv) {
 
     double volume = cell.get_volume();
     assert_values_equal_rel(volume, full_volume, tolerance);
-    cmac_status("Cell volume computation works!");
+    cmac_status("Geometry, part 1: Cell volume computation works!");
 
     CoordinateVector<> centroid = cell.get_centroid();
     assert_values_equal_rel(centroid.x(), full_centroid.x(), tolerance);
     assert_values_equal_rel(centroid.y(), full_centroid.y(), tolerance);
     assert_values_equal_rel(centroid.z(), full_centroid.z(), tolerance);
-    cmac_status("Cell centroid computation works!");
+    cmac_status("Geometry, part 1: Cell centroid computation works!");
 
     std::vector< VoronoiFace > faces = cell.get_faces();
     assert_condition(faces.size() == 4);
@@ -631,7 +632,7 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.z(), full_midpoint_123.z(), tolerance);
     assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_CORNER0);
 
-    cmac_status("Cell face computation works!");
+    cmac_status("Geometry, part 1: Cell face computation works!");
   }
 
   /// test for NewVoronoiCell::find_tetrahedron
@@ -1040,6 +1041,81 @@ int main(int argc, char **argv) {
     ofile.close();
 
     cmac_status("Simple insertion + 4 to 4 flip worked!");
+  }
+
+  /// test geometrical routines
+  /// part 2: initial cell with reflective copies
+  {
+    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    std::vector< CoordinateVector<> > positions(1);
+    positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
+    CoordinateVector< unsigned long > box_anchor(1000);
+    CoordinateVector< unsigned long > box_sides(1000);
+    std::vector< CoordinateVector< unsigned long > > long_positions(1);
+    long_positions[0] = CoordinateVector< unsigned long >(1250);
+    VoronoiBox< unsigned long > voronoi_box(long_positions[0], box_anchor,
+                                            box_sides);
+    NewVoronoiCell cell(0, voronoi_box, long_positions);
+    cell.finalize(box, positions, long_positions, voronoi_box, true);
+
+    const double tolerance = 1.e-16;
+
+    double volume = cell.get_volume();
+    assert_values_equal_rel(volume, 1., tolerance);
+    cmac_status("Geometry, part 2: Cell volume computation works!");
+
+    CoordinateVector<> centroid = cell.get_centroid();
+    assert_values_equal_rel(centroid.x(), 0.5, tolerance);
+    assert_values_equal_rel(centroid.y(), 0.5, tolerance);
+    assert_values_equal_rel(centroid.z(), 0.5, tolerance);
+    cmac_status("Geometry, part 2: Cell centroid computation works!");
+
+    std::vector< VoronoiFace > faces = cell.get_faces();
+    assert_condition(faces.size() == 6);
+
+    assert_values_equal_rel(faces[3].get_surface_area(), 1., tolerance);
+    CoordinateVector<> midpoint = faces[3].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 0., tolerance);
+    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
+    assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_LEFT);
+
+    assert_values_equal_rel(faces[0].get_surface_area(), 1., tolerance);
+    midpoint = faces[0].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 1., tolerance);
+    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
+    assert_condition(faces[0].get_neighbour() == NEWVORONOICELL_BOX_RIGHT);
+
+    assert_values_equal_rel(faces[2].get_surface_area(), 1., tolerance);
+    midpoint = faces[2].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.y(), 0., tolerance);
+    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
+    assert_condition(faces[2].get_neighbour() == NEWVORONOICELL_BOX_FRONT);
+
+    assert_values_equal_rel(faces[5].get_surface_area(), 1., tolerance);
+    midpoint = faces[5].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.y(), 1., tolerance);
+    assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
+    assert_condition(faces[5].get_neighbour() == NEWVORONOICELL_BOX_BACK);
+
+    assert_values_equal_rel(faces[4].get_surface_area(), 1., tolerance);
+    midpoint = faces[4].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.z(), 0., tolerance);
+    assert_condition(faces[4].get_neighbour() == NEWVORONOICELL_BOX_BOTTOM);
+
+    assert_values_equal_rel(faces[1].get_surface_area(), 1., tolerance);
+    midpoint = faces[1].get_midpoint();
+    assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
+    assert_values_equal_rel(midpoint.z(), 1., tolerance);
+    assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_TOP);
+
+    cmac_status("Geometry, part 2: Cell face computation works!");
   }
 
   return 0;
