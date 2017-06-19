@@ -1120,8 +1120,28 @@ int main(int argc, char **argv) {
     for (unsigned int i = 0; i < 10; ++i) {
       positions[i] = Utilities::random_position();
     }
-    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
 
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    NewVoronoiGrid grid(positions, box);
+    grid.construct();
+  }
+
+  // we disabled the last test, as it does not work (yet)
+  return 0;
+
+  /// test NewVoronoiGrid construction: regular generators
+  {
+    std::vector< CoordinateVector<> > positions(27);
+    for (unsigned int ix = 0; ix < 3; ++ix) {
+      for (unsigned int iy = 0; iy < 3; ++iy) {
+        for (unsigned int iz = 0; iz < 3; ++iz) {
+          positions[9 * ix + 3 * iy + iz] = CoordinateVector<>(
+              (ix + 0.5) / 3., (iy + 0.5) / 3., (iz + 0.5) / 3.);
+        }
+      }
+    }
+
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     NewVoronoiGrid grid(positions, box);
     grid.construct();
   }
