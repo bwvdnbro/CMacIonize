@@ -522,7 +522,7 @@ int main(int argc, char **argv) {
   /// test geometrical routines
   /// part 1: initial tetrahedron without any other insertions
   {
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
     positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
     CoordinateVector< unsigned long > box_anchor(1000);
@@ -1046,7 +1046,7 @@ int main(int argc, char **argv) {
   /// test geometrical routines
   /// part 2: initial cell with reflective copies
   {
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
     positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
     CoordinateVector< unsigned long > box_anchor(1000);

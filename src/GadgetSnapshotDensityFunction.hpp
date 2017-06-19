@@ -43,7 +43,7 @@ class GadgetSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief Simulation box, only initialized if the box is periodic (if the box
    *  is not periodic, the components of the Box will all be zero). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Positions of the SPH particles in the snapshot (in m). */
   std::vector< CoordinateVector<> > _positions;

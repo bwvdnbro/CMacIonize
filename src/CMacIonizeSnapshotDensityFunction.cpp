@@ -52,10 +52,10 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         HDF5Tools::read_attribute< std::string >(group, attname);
     parameters.add_value(attname, attvalue);
   }
-  _box = Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid:box_anchor"),
-             parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid:box_sides"));
+  _box = Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
+                   "densitygrid:box_anchor"),
+               parameters.get_physical_vector< QUANTITY_LENGTH >(
+                   "densitygrid:box_sides"));
   _ncell = parameters.get_value< CoordinateVector< int > >(
       "densitygrid:ncell", CoordinateVector< int >(-1));
   std::string type = parameters.get_value< std::string >("densitygrid:type");

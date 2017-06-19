@@ -223,7 +223,8 @@ public:
    * @param log Log to write logging info to.
    */
   inline AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
+      Box<> box, CoordinateVector< int > ncell,
+      DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
       unsigned char refinement_interval = 5,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
@@ -291,10 +292,10 @@ public:
   inline AMRDensityGrid(ParameterFile &params,
                         DensityFunction &density_function, Log *log)
       : AMRDensityGrid(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid:ncell", CoordinateVector< int >(64)),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
@@ -451,7 +452,7 @@ public:
    */
   inline CoordinateVector<>
   get_wall_intersection(CoordinateVector<> &photon_origin,
-                        CoordinateVector<> &photon_direction, Box &box,
+                        CoordinateVector<> &photon_direction, Box<> &box,
                         AMRGridCell< unsigned long > *&cell, double &ds,
                         CoordinateVector<> &periodic_correction) {
     CoordinateVector<> cell_bottom_anchor = box.get_anchor();
@@ -624,7 +625,7 @@ public:
     // box
     DensityGrid::iterator last_cell = end();
     while (current_cell != nullptr && optical_depth > 0.) {
-      Box cell = current_cell->get_geometry();
+      Box<> cell = current_cell->get_geometry();
 
       double ds = 0.;
       AMRGridCell< unsigned long > *old_cell = current_cell;
@@ -689,7 +690,7 @@ public:
     AMRGridCell< unsigned long > *current_cell = _cells[index];
 
     while (current_cell != nullptr) {
-      Box cell = current_cell->get_geometry();
+      Box<> cell = current_cell->get_geometry();
 
       double ds = 0.;
       AMRGridCell< unsigned long > *old_cell = current_cell;

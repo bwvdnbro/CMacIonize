@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction testfunction(1., 2000.);
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
-  Box box(anchor, sides);
+  Box<> box(anchor, sides);
   // this actually works! (note: it should not work, since 64 is not a
   // CoordinateVector<unsigned char>)
   // the reason it works is that we have defined a converting constructor
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
   assert_condition(index == 32 * 64 * 64 + 32 * 64 + 32);
 
-  Box cell = grid.get_cell(index);
+  Box<> cell = grid.get_cell(index);
 
   assert_condition(cell.get_anchor().x() == 0.5);
   assert_condition(cell.get_anchor().y() == 0.5);

@@ -67,7 +67,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   top_anchor[1] = real_runtime_pars["ymax"] * unit_length_in_SI;
   top_anchor[2] = real_runtime_pars["zmax"] * unit_length_in_SI;
   CoordinateVector<> sides = top_anchor - anchor;
-  Box box(anchor, sides);
+  Box<> box(anchor, sides);
 
   // find out the number of blocks in each dimension
   HDF5Tools::HDF5Dictionary< int > integer_runtime_pars =

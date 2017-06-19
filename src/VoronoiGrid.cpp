@@ -48,7 +48,7 @@
  * @param numcell Number of cells that will be added to the grid (or zero if
  * unknown).
  */
-VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
+VoronoiGrid::VoronoiGrid(Box<> box, CoordinateVector< bool > periodic,
                          unsigned int numcell)
     : _box(box), _periodic(periodic), _pointlocations(nullptr),
       _epsilon(VORONOI_TOLERANCE) {
@@ -71,7 +71,7 @@ VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
   _volume_factor = 1.;
 #else
   // internally, we always use a box of 0. --> 1. (or smaller)
-  _internal_box = Box(CoordinateVector<>(0.), _box.get_sides());
+  _internal_box = Box<>(CoordinateVector<>(0.), _box.get_sides());
   _internal_box.get_sides() /= length_factor;
 
   _area_factor = length_factor * length_factor;

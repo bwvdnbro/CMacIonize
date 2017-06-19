@@ -43,7 +43,7 @@
 class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
-  Box _box;
+  Box<> _box;
 
 public:
   /**
@@ -52,7 +52,7 @@ public:
    * @param box Box in which the radiation enters (in m).
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(Box box, Log *log = nullptr) : _box(box) {
+  IsotropicContinuousPhotonSource(Box<> box, Log *log = nullptr) : _box(box) {
 
     if (log) {
       log->write_status(
@@ -71,10 +71,10 @@ public:
    */
   IsotropicContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
       : IsotropicContinuousPhotonSource(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides")),
             log) {}
 
   /**

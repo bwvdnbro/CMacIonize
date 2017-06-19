@@ -39,7 +39,7 @@
 int main(int argc, char **argv) {
   // create an empty grid
   AMRGrid< double > grid(
-      Box(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
+      Box<>(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
       CoordinateVector< int >(2, 1, 1));
 
   /// basic functionality
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
   assert_condition(midpoint.x() == 0.125);
   assert_condition(midpoint.y() == 0.125);
   assert_condition(midpoint.z() == 0.125);
-  Box geometry = grid[64].get_geometry();
+  Box<> geometry = grid[64].get_geometry();
   assert_condition(geometry.get_anchor().x() == 0.);
   assert_condition(geometry.get_anchor().y() == 0.);
   assert_condition(geometry.get_anchor().z() == 0.);
@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_TOP) == nullptr);
 
   // check a random cell
-  Box testbox = grid[696].get_geometry();
+  Box<> testbox = grid[696].get_geometry();
   // 696 = 1 010 111 000
   // anchor_x = 0. + 0.25 + 0. = 0.25
   // anchor_y = 0. + 0.25 + 0.125 = 0.375

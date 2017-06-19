@@ -42,7 +42,7 @@
  * @param log Log to write logging info to.
  */
 AsciiFileDensityFunction::AsciiFileDensityFunction(
-    std::string filename, CoordinateVector< int > ncell, Box box,
+    std::string filename, CoordinateVector< int > ncell, Box<> box,
     double temperature, double length_unit_in_SI, double density_unit_in_SI,
     Log *log)
     : _ncell(ncell), _box(box), _temperature(temperature), _log(log) {
@@ -113,10 +113,10 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
           params.get_value< std::string >("densityfunction:filename"),
           params.get_value< CoordinateVector< int > >(
               "densityfunction:ncell", CoordinateVector< int >(64)),
-          Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
-              params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
+          Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction:temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(

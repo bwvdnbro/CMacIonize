@@ -263,7 +263,8 @@ private:
 
 public:
   VoronoiCell();
-  VoronoiCell(CoordinateVector<> generator_position, Box bounding_box);
+  VoronoiCell(const CoordinateVector<> &generator_position,
+              const Box<> &bounding_box);
 
   /// const element getters
   const CoordinateVector<> &get_generator() const;

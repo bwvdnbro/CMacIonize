@@ -49,7 +49,7 @@
 class FractalDensityMask : public DensityMask {
 private:
   /*! @brief Box containing the fractal distribution (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Resolution of the grid containing the distribution. */
   CoordinateVector< int > _resolution;
@@ -301,7 +301,7 @@ public:
    * density in each cell that is affected by the mask.
    * @param log Log to write logging info to.
    */
-  FractalDensityMask(Box box, CoordinateVector< int > resolution,
+  FractalDensityMask(Box<> box, CoordinateVector< int > resolution,
                      unsigned int numpart, int seed, double fractal_dimension,
                      unsigned int num_level, double fractal_fraction,
                      Log *log = nullptr)
@@ -346,10 +346,10 @@ public:
    */
   FractalDensityMask(ParameterFile &params, Log *log = nullptr)
       : FractalDensityMask(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitymask:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitymask:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitymask:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitymask:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitymask:resolution", CoordinateVector< int >(20)),
             params.get_value< unsigned int >("densitymask:numpart", 1e6),

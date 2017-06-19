@@ -65,8 +65,8 @@ public:
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
                         unsigned int num_per_cell = 100,
-                        const Box box = Box(CoordinateVector<>(0.),
-                                            CoordinateVector<>(-1.)))
+                        const Box<> box = Box<>(CoordinateVector<>(0.),
+                                                CoordinateVector<>(-1.)))
       : _positions(positions) {
     const unsigned int positions_size = positions.size();
 

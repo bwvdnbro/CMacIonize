@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction testfunction(1., 2000.);
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
-  Box box(anchor, sides);
+  Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 8, testfunction);
   block = std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block);

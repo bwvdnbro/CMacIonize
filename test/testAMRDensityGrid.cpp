@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
   TestDensityFunction density_function;
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
-  AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
+  AMRDensityGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
                       density_function, scheme, 5, false, false, &log);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());

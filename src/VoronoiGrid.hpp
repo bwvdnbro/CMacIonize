@@ -42,10 +42,10 @@ class VoronoiCell;
 class VoronoiGrid {
 private:
   /*! @brief Bounding box containing the grid (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Internally used bounding box (internal units). */
-  Box _internal_box;
+  Box<> _internal_box;
 
   /*! @brief Factor used to convert from internal area units to actual units. */
   double _area_factor;
@@ -181,8 +181,8 @@ private:
   };
 
 public:
-  VoronoiGrid(Box box, CoordinateVector< bool > periodic =
-                           CoordinateVector< bool >(false),
+  VoronoiGrid(Box<> box, CoordinateVector< bool > periodic =
+                             CoordinateVector< bool >(false),
               unsigned int numcell = 0);
 
   ~VoronoiGrid();

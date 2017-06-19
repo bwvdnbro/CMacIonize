@@ -233,7 +233,7 @@ double NewVoronoiCell::get_max_radius_squared() const {
  * the simulation box.
  */
 void NewVoronoiCell::finalize(
-    const Box &box, const std::vector< CoordinateVector<> > &positions,
+    const Box<> &box, const std::vector< CoordinateVector<> > &positions,
     const std::vector< CoordinateVector< unsigned long > > &long_positions,
     const VoronoiBox< unsigned long > &long_voronoi_box,
     bool reflective_boundaries) {

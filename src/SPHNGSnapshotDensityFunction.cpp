@@ -188,7 +188,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   _partbox.get_sides()[1] = -DBL_MAX;
   _partbox.get_sides()[2] = -DBL_MAX;
 
-  Box rawunitsbox;
+  Box<> rawunitsbox;
   rawunitsbox.get_anchor()[0] = DBL_MAX;
   rawunitsbox.get_anchor()[1] = DBL_MAX;
   rawunitsbox.get_anchor()[2] = DBL_MAX;

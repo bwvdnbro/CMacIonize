@@ -159,7 +159,7 @@ static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
   boost::python::handle<> handle(narr);
   boost::python::numeric::array arr(handle);
 
-  Box box = grid.get_box();
+  Box<> box = grid.get_box();
 
   for (unsigned int i = 0; i < size[0]; ++i) {
     for (unsigned int j = 0; j < size[1]; ++j) {

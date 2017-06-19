@@ -110,7 +110,7 @@ initDensityGrid(const std::string &filename) {
  * expressed (m).
  */
 static boost::python::dict get_box(DensityGrid &grid) {
-  Box box = grid.get_box();
+  Box<> box = grid.get_box();
 
   npy_intp size = 3;
   PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
@@ -246,7 +246,7 @@ static boost::python::dict get_variable_cut(DensityGrid &grid, std::string name,
   boost::python::handle<> handle(narr);
   boost::python::numeric::array arr(handle);
 
-  Box box = grid.get_box();
+  Box<> box = grid.get_box();
 
   double di, dj;
   if (coordinate == 'x') {
@@ -312,7 +312,7 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
   boost::python::handle<> handle(narr);
   boost::python::numeric::array arr(handle);
 
-  Box box = grid.get_box();
+  Box<> box = grid.get_box();
 
   double di, dj, dk;
   if (coordinate == 'x') {

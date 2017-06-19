@@ -41,7 +41,7 @@ class UniformRegularVoronoiGeneratorDistribution
     : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Box containing the generators (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Resolution of the generator grid. */
   CoordinateVector< unsigned int > _resolution;
@@ -61,7 +61,8 @@ public:
    * @param log Log to write logging info to.
    */
   UniformRegularVoronoiGeneratorDistribution(
-      Box box, CoordinateVector< unsigned int > resolution, Log *log = nullptr)
+      Box<> box, CoordinateVector< unsigned int > resolution,
+      Log *log = nullptr)
       : _box(box), _resolution(resolution) {
 
     _sidelength[0] = _box.get_sides().x() / _resolution.x();
@@ -88,10 +89,10 @@ public:
   UniformRegularVoronoiGeneratorDistribution(ParameterFile &params,
                                              Log *log = nullptr)
       : UniformRegularVoronoiGeneratorDistribution(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< unsigned int > >(
                 "densitygrid:voronoi_generator_distribution:resolution",
                 CoordinateVector< unsigned int >(32)),

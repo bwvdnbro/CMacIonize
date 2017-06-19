@@ -118,7 +118,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
         HDF5Tools::read_attribute< CoordinateVector<> >(header, "BoxSize");
     // in this case, the anchor is just (0., 0., 0.)
     CoordinateVector<> anchor;
-    _box = Box(anchor, sides);
+    _box = Box<>(anchor, sides);
     // close the Header group
     HDF5Tools::close_group(header);
   }
@@ -244,13 +244,13 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     _log->write_status("Successfully read densities from file \"", name, "\".");
   }
 
-  Box box(_box);
+  Box<> box(_box);
   if (!periodic) {
     // set box to particle extents + small margin
     CoordinateVector<> sides = maxpos - minpos;
     CoordinateVector<> anchor = minpos - 0.005 * sides;
     sides *= 1.01;
-    box = Box(anchor, sides);
+    box = Box<>(anchor, sides);
   }
   if (_log) {
     string pstring;

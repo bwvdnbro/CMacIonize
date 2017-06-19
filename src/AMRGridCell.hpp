@@ -95,7 +95,7 @@ private:
   AMRGridCell *_ngbs[6];
 
   /*! @brief Geometrical dimensions of the cell. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Depth level of the cell. */
   unsigned char _level;
@@ -109,7 +109,7 @@ public:
    * @param parent Pointer to the parent cell (if this cell is not a top level
    * cell).
    */
-  inline AMRGridCell(Box box, unsigned char level, AMRGridCell *parent)
+  inline AMRGridCell(Box<> box, unsigned char level, AMRGridCell *parent)
       : _values(nullptr), _children{nullptr}, _parent(parent), _ngbs{nullptr},
         _box(box), _level(level) {}
 
@@ -177,7 +177,7 @@ public:
    *
    * @return Box specifying the geometry of the cell (in m).
    */
-  inline Box get_geometry() const { return _box; }
+  inline const Box<> get_geometry() const { return _box; }
 
   /**
    * @brief Get the midpoint of the cell.
@@ -198,7 +198,7 @@ public:
    * @return Key of the lowest level cell containing the position.
    */
   inline unsigned int get_key(unsigned char level, CoordinateVector<> position,
-                              Box &box) const {
+                              Box<> &box) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we live
       unsigned char ix =
@@ -234,7 +234,7 @@ public:
    * @param box Box specifying the geometrical extents of the cell.
    */
   inline void create_cell(unsigned char current_level, unsigned char level,
-                          CoordinateVector<> position, Box &box) {
+                          CoordinateVector<> position, Box<> &box) {
     if (current_level == level) {
       // ready: create DensityValues
       _values = new _CellContents_();
@@ -246,7 +246,7 @@ public:
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
       // check if the cell exists. If not, create it.
       if (_children[4 * ix + 2 * iy + iz] == nullptr) {
-        Box box_copy(_box);
+        Box<> box_copy(_box);
         box_copy.get_sides() *= 0.5;
         box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
         box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
@@ -286,7 +286,7 @@ public:
           unsigned char ix = (i & 4) >> 2;
           unsigned char iy = (i & 2) >> 1;
           unsigned char iz = i & 1;
-          Box box_copy(_box);
+          Box<> box_copy(_box);
           box_copy.get_sides() *= 0.5;
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
           box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
@@ -318,7 +318,7 @@ public:
           unsigned char ix = (i & 4) >> 2;
           unsigned char iy = (i & 2) >> 1;
           unsigned char iz = i & 1;
-          Box box_copy(_box);
+          Box<> box_copy(_box);
           box_copy.get_sides() *= 0.5;
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
           box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
@@ -357,7 +357,7 @@ public:
         unsigned char ix = (cell & 4) >> 2;
         unsigned char iy = (cell & 2) >> 1;
         unsigned char iz = cell & 1;
-        Box box_copy(_box);
+        Box<> box_copy(_box);
         box_copy.get_sides() *= 0.5;
         box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
         box_copy.get_anchor()[1] += iy * box_copy.get_sides().y();
@@ -376,7 +376,8 @@ public:
    * @return Contents of the deepest cell in the hierarchy that contains the
    * position.
    */
-  inline _CellContents_ &get_cell(CoordinateVector<> position, Box &box) const {
+  inline _CellContents_ &get_cell(CoordinateVector<> position,
+                                  Box<> &box) const {
     if (_values != nullptr) {
       return *_values;
     } else {
@@ -660,7 +661,7 @@ public:
    * @param stream std::ostream to write to.
    * @param box Box specifying the geometrical extents of the cell.
    */
-  inline void print(std::ostream &stream, Box &box) const {
+  inline void print(std::ostream &stream, const Box<> &box) const {
     // print cell
     stream << box.get_anchor().x() << "\t" << box.get_anchor().y() << "\t"
            << box.get_anchor().z() << "\n";
@@ -725,7 +726,7 @@ public:
               anchor[0] = box.get_anchor().x() + ix * sides.x();
               anchor[1] = box.get_anchor().y() + iy * sides.y();
               anchor[2] = box.get_anchor().z() + iz * sides.z();
-              Box cbox(anchor, sides);
+              const Box<> cbox(anchor, sides);
               _children[4 * ix + 2 * iy + iz]->print(stream, cbox);
             }
           }

@@ -40,7 +40,7 @@ class ParameterFile;
 class CMacIonizeSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< int > _ncell;

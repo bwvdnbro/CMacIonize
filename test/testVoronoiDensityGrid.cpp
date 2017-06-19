@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   /// random uniform generators
   {
     HomogeneousDensityFunction density_function(1., 2000.);
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     UniformRandomVoronoiGeneratorDistribution *test_positions =
         new UniformRandomVoronoiGeneratorDistribution(box, 100, 42);
     VoronoiDensityGrid grid(test_positions, density_function, box, 0, false,
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   /// regular generators
   {
     HomogeneousDensityFunction density_function(1., 2000.);
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     UniformRegularVoronoiGeneratorDistribution *test_positions =
         new UniformRegularVoronoiGeneratorDistribution(
             box, CoordinateVector< unsigned int >(5));

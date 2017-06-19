@@ -36,7 +36,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(8);
   HomogeneousDensityFunction density_function(1.);
   AMRRefinementScheme *scheme = new OIAMRRefinementScheme(1.e5, 4);

@@ -55,7 +55,7 @@ private:
   std::vector< double > _smoothing_lengths;
 
   /*! @brief Box containing all particles (in m). */
-  Box _partbox;
+  Box<> _partbox;
 
   /*! @brief Octree used to speed up neighbour finding. */
   Octree *_octree;

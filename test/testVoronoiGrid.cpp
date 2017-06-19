@@ -1088,7 +1088,7 @@ int main(int argc, char **argv) {
 
   /// test Voronoi cell volume, centroid and face calculation
   {
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     VoronoiCell cell(CoordinateVector<>(0.5), box);
     assert_condition(cell.get_max_radius_squared() == 0.75);
     cell.finalize();
@@ -1508,7 +1508,7 @@ int main(int argc, char **argv) {
   /// VORONOITEST_INTERSECTION
   {
     VoronoiCell cell(CoordinateVector<>(0.5, 0.5, 0.5),
-                     Box(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+                     Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
     cell.check_variables_after_test(VORONOITEST_CONSTRUCTOR);
     int status =
         cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0, VORONOI_TOLERANCE);
@@ -1520,8 +1520,8 @@ int main(int argc, char **argv) {
   /// test Voronoi grid
   {
     unsigned int numcell = 1000;
-    VoronoiGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), false,
-                     numcell);
+    VoronoiGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
+                     false, numcell);
     for (unsigned int i = 0; i < numcell; ++i) {
       unsigned int new_index = grid.add_cell(Utilities::random_position());
       assert_condition(new_index == i);
@@ -1580,7 +1580,7 @@ int main(int argc, char **argv) {
     const double box_volume = box_side * box_side * box_side;
     unsigned int numcell = 0;
     VoronoiGrid grid(
-        Box(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
+        Box<>(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
         false, 1000);
     std::vector< CoordinateVector<> > positions(1000);
     for (unsigned int ix = 0; ix < 10; ++ix) {

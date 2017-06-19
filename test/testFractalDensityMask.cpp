@@ -37,7 +37,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   HomogeneousDensityFunction density_function(1.);
 
   CartesianDensityGrid grid(box, 50, density_function);

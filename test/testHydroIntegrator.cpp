@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
   {
     HydroIntegrator integrator(5. / 3., false);
 
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     CoordinateVector< int > ncell(100, 1, 1);
     SodShockDensityFunction density_function;
     CoordinateVector< bool > periodic(false, true, true);
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
   {
     HydroIntegrator integrator(5. / 3., false);
 
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     SodShockDensityFunction density_function;
     CoordinateVector< bool > periodic(false, false, false);
     OneDVoronoiGeneratorDistribution *generators =

@@ -54,7 +54,7 @@
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
-    DensityFunction &density_function, Box box, unsigned char num_lloyd,
+    DensityFunction &density_function, Box<> box, unsigned char num_lloyd,
     CoordinateVector< bool > periodic, bool hydro, double hydro_timestep,
     double hydro_gamma, Log *log)
     : DensityGrid(density_function, box, periodic, hydro, log),
@@ -93,10 +93,10 @@ VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params,
     : VoronoiDensityGrid(
           VoronoiGeneratorDistributionFactory::generate(params, log),
           density_function,
-          Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-              params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+          Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
           params.get_value< unsigned char >("densitygrid:num_lloyd", 0),
           params.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),

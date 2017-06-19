@@ -44,8 +44,8 @@ VoronoiCell::VoronoiCell() {}
  * @param generator_position Coordinates of the cell generator (in m).
  * @param bounding_box Box containing the entire grid.
  */
-VoronoiCell::VoronoiCell(CoordinateVector<> generator_position,
-                         Box bounding_box)
+VoronoiCell::VoronoiCell(const CoordinateVector<> &generator_position,
+                         const Box<> &bounding_box)
     : _generator_position(generator_position) {
 
   // initialize the cell as a cube with vertices that coincide with the given

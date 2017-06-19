@@ -61,7 +61,7 @@ protected:
   DensityFunction &_density_function;
 
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
@@ -225,7 +225,7 @@ public:
    * @param log Log to write log messages to.
    */
   DensityGrid(
-      DensityFunction &density_function, Box box,
+      DensityFunction &density_function, Box<> box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
       : _density_function(density_function), _box(box), _periodic(periodic),
@@ -310,7 +310,7 @@ public:
    *
    * @return Box containing the grid (in m).
    */
-  inline Box get_box() const { return _box; }
+  inline const Box<> get_box() const { return _box; }
 
   /**
    * @brief Get the number of periodic boundaries of this grid.

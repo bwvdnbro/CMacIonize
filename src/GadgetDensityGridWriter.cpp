@@ -97,7 +97,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write header
   HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "Header");
-  Box box = _grid.get_box();
+  Box<> box = _grid.get_box();
   CoordinateVector<> boxsize = box.get_sides();
   HDF5Tools::write_attribute< CoordinateVector<> >(group, "BoxSize", boxsize);
   int dimension = 3;

@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
                                    ctr);
 
   HomogeneousDensityFunction function(1.);
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
   CartesianDensityGrid grid(box, 1, function);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
