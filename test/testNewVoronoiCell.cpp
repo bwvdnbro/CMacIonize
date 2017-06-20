@@ -659,8 +659,8 @@ int main(int argc, char **argv) {
 
     assert_condition(cell.find_tetrahedron(2, box, positions, tetrahedra) == 3);
     assert_condition(tetrahedra[0] == 3);
-    assert_condition(tetrahedra[1] == 1);
-    assert_condition(tetrahedra[2] == 2);
+    assert_condition(tetrahedra[1] == 2);
+    assert_condition(tetrahedra[2] == 1);
 
     assert_condition(cell.find_tetrahedron(3, box, positions, tetrahedra) == 2);
     assert_condition(tetrahedra[0] == 1);
@@ -735,7 +735,8 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
     std::vector< bool > queue(5, false);
-    cell.one_to_four_flip(4, 0, queue);
+    unsigned int tn[4];
+    cell.one_to_four_flip(4, 0, queue, tn);
     assert_condition(queue.size() == 8);
     assert_condition(queue[0] == true);
     assert_condition(queue[1] == false);
@@ -745,6 +746,10 @@ int main(int argc, char **argv) {
     assert_condition(queue[5] == true);
     assert_condition(queue[6] == true);
     assert_condition(queue[7] == true);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 5);
+    assert_condition(tn[2] == 6);
+    assert_condition(tn[3] == 7);
     cell.check_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
 
     cmac_status("1 to 4 flip works!");
@@ -759,7 +764,8 @@ int main(int argc, char **argv) {
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
     std::vector< bool > queue(8, false);
     unsigned int tetrahedra[2] = {0, 1};
-    cell.two_to_six_flip(5, tetrahedra, queue);
+    unsigned int tn[6];
+    cell.two_to_six_flip(5, tetrahedra, queue, tn);
     assert_condition(queue.size() == 12);
     assert_condition(queue[0] == true);
     assert_condition(queue[1] == true);
@@ -773,6 +779,12 @@ int main(int argc, char **argv) {
     assert_condition(queue[9] == true);
     assert_condition(queue[10] == true);
     assert_condition(queue[11] == true);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 1);
+    assert_condition(tn[2] == 8);
+    assert_condition(tn[3] == 9);
+    assert_condition(tn[4] == 10);
+    assert_condition(tn[5] == 11);
     cell.check_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
 
     cmac_status("2 to 6 flip works!");
@@ -787,7 +799,8 @@ int main(int argc, char **argv) {
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
     std::vector< bool > queue(15, false);
     unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
-    cell.n_to_2n_flip(7, tetrahedra, 5, queue);
+    unsigned int tn[2 * UCHAR_MAX];
+    cell.n_to_2n_flip(7, tetrahedra, 5, queue, tn);
     assert_condition(queue.size() == 20);
     assert_condition(queue[0] == true);
     assert_condition(queue[1] == true);
@@ -809,6 +822,16 @@ int main(int argc, char **argv) {
     assert_condition(queue[17] == true);
     assert_condition(queue[18] == true);
     assert_condition(queue[19] == true);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 1);
+    assert_condition(tn[2] == 2);
+    assert_condition(tn[3] == 3);
+    assert_condition(tn[4] == 4);
+    assert_condition(tn[5] == 15);
+    assert_condition(tn[6] == 16);
+    assert_condition(tn[7] == 17);
+    assert_condition(tn[8] == 18);
+    assert_condition(tn[9] == 19);
     cell.check_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
 
     cmac_status("n to 2n flip works!");
@@ -822,7 +845,8 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
     std::vector< bool > queue(8, false);
-    unsigned int next_check = cell.two_to_three_flip(0, 1, 2, 3, queue, 8);
+    unsigned int tn[3];
+    unsigned int next_check = cell.two_to_three_flip(0, 1, 2, 3, queue, 8, tn);
     assert_condition(next_check == 0);
     assert_condition(queue.size() == 9);
     assert_condition(queue[0] == true);
@@ -834,6 +858,9 @@ int main(int argc, char **argv) {
     assert_condition(queue[6] == false);
     assert_condition(queue[7] == false);
     assert_condition(queue[8] == true);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 1);
+    assert_condition(tn[2] == 8);
     cell.check_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
 
     cmac_status("2 to 3 flip works!");
@@ -847,7 +874,8 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
     std::vector< bool > queue(9, false);
-    unsigned int next_check = cell.three_to_two_flip(0, 1, 2, queue, 8);
+    unsigned int tn[2];
+    unsigned int next_check = cell.three_to_two_flip(0, 1, 2, queue, 8, tn);
     assert_condition(next_check == 0);
     assert_condition(queue.size() == 9);
     assert_condition(queue[0] == true);
@@ -858,6 +886,8 @@ int main(int argc, char **argv) {
     assert_condition(queue[6] == false);
     assert_condition(queue[7] == false);
     assert_condition(queue[8] == false);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 1);
     cell.check_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
 
     cmac_status("3 to 2 flip works!");
@@ -871,7 +901,8 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
     std::vector< bool > queue(12, false);
-    unsigned int next_check = cell.four_to_four_flip(0, 1, 2, 3, queue, 11);
+    unsigned int tn[4];
+    unsigned int next_check = cell.four_to_four_flip(0, 1, 2, 3, queue, 11, tn);
     assert_condition(next_check == 0);
     assert_condition(queue.size() == 12);
     assert_condition(queue[0] == true);
@@ -886,6 +917,10 @@ int main(int argc, char **argv) {
     assert_condition(queue[9] == false);
     assert_condition(queue[10] == false);
     assert_condition(queue[11] == false);
+    assert_condition(tn[0] == 0);
+    assert_condition(tn[1] == 1);
+    assert_condition(tn[2] == 2);
+    assert_condition(tn[3] == 3);
     cell.check_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
 
     cmac_status("4 to 4 flip works!");
@@ -1125,9 +1160,6 @@ int main(int argc, char **argv) {
     NewVoronoiGrid grid(positions, box);
     grid.construct();
   }
-
-  // we disabled the last test, as it does not work (yet)
-  return 0;
 
   /// test NewVoronoiGrid construction: regular generators
   {

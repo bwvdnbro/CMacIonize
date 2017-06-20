@@ -162,34 +162,45 @@ void NewVoronoiCell::intersect(
   std::vector< bool > queue(_tetrahedra.size(), false);
   if (number_of_tetrahedra == 1) {
     // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
-    one_to_four_flip(vertex_index, tetrahedra[0], queue);
+    unsigned int tn[4];
+    one_to_four_flip(vertex_index, tetrahedra[0], queue, tn);
 
-    cmac_assert(has_positive_orientation(_tetrahedra[tetrahedra[0]], _vertices,
-                                         box, positions));
-    // there is no way of knowing what the other 3 new tetrahedra are, so we
-    // cannot check those
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[3]], _vertices, box,
+                                         positions));
 
   } else if (number_of_tetrahedra == 2) {
     // point on face: replace the 2 tetrahedra with 6 new ones
-    two_to_six_flip(vertex_index, tetrahedra, queue);
+    unsigned int tn[6];
+    two_to_six_flip(vertex_index, tetrahedra, queue, tn);
 
-    cmac_assert(has_positive_orientation(_tetrahedra[tetrahedra[0]], _vertices,
-                                         box, positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tetrahedra[1]], _vertices,
-                                         box, positions));
-    // there is no way of knowing what the other 4 new tetrahedra are, so we
-    // cannot check those
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[3]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[4]], _vertices, box,
+                                         positions));
+    cmac_assert(has_positive_orientation(_tetrahedra[tn[5]], _vertices, box,
+                                         positions));
 
   } else if (number_of_tetrahedra > 2) {
     // point on edge: replace the N tetrahedra with 2N new ones
-    n_to_2n_flip(vertex_index, tetrahedra, number_of_tetrahedra, queue);
+    unsigned int tn[2 * UCHAR_MAX];
+    n_to_2n_flip(vertex_index, tetrahedra, number_of_tetrahedra, queue, tn);
 
-    for (unsigned char i = 0; i < number_of_tetrahedra; ++i) {
-      cmac_assert(has_positive_orientation(_tetrahedra[tetrahedra[i]],
-                                           _vertices, box, positions));
+    for (unsigned int i = 0; i < 2 * number_of_tetrahedra; ++i) {
+      cmac_assert(has_positive_orientation(_tetrahedra[tn[i]], _vertices, box,
+                                           positions));
     }
-    // there is no way of knowing what the other n new tetrahedra are, so we
-    // cannot check those
 
   } else {
     cmac_error("Unknown case!");
@@ -503,11 +514,7 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     if (axis0 == non_axis1) {
       axis0 = (axis0 + 1) % 4;
     }
-    unsigned char axis1 = (axis0 + 1) % 4;
-    if (axis1 == non_axis1) {
-      axis1 = (axis1 + 1) % 4;
-    }
-    cmac_assert(axis0 + axis1 + non_axis0 + non_axis1 == 6);
+    const unsigned char axis1 = 6 - non_axis0 - non_axis1 - axis0;
     cmac_assert(axis0 != axis1 && axis0 != non_axis0 && axis0 != non_axis1 &&
                 axis1 != non_axis0 && axis1 != non_axis1 &&
                 non_axis0 != non_axis1);
@@ -520,12 +527,15 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     // try to find the next tetrahedron in line: the tetrahedron opposite the
     // vertex that is not the vertex opposite 'indices[0]', and not the two
     // axis points
+    // note that since we want to end with tetrahedron 'indices[1]', we need to
+    // make sure that one was is also last in the list
     unsigned char next_vertex =
         _tetrahedra[indices[0]].get_ngb_index(non_axis1);
     unsigned int next = indices[2];
     // we use a trick to make sure 'indices[2]' is not added twice to 'indices'
-    --test;
-    while (next != indices[1]) {
+    test -= 2;
+    const unsigned int last_tetrahedron = indices[1];
+    while (next != last_tetrahedron) {
       indices[test] = next;
       ++test;
       cmac_assert(test <= UCHAR_MAX);
@@ -545,6 +555,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
       next_vertex = _tetrahedra[next].get_ngb_index(cur_vertex);
       next = _tetrahedra[next].get_neighbour(cur_vertex);
     }
+    indices[test] = last_tetrahedron;
+    ++test;
   }
 
   return test;
@@ -573,10 +585,12 @@ unsigned char NewVoronoiCell::find_tetrahedron(
  * @param new_vertex New vertex to insert.
  * @param tetrahedron Tetrahedron to replace.
  * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  */
 void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
                                       unsigned int tetrahedron,
-                                      std::vector< bool > &queue) {
+                                      std::vector< bool > &queue,
+                                      unsigned int tn[4]) {
 
   newvoronoicell_print_case("1 to 4 flip");
 
@@ -600,7 +614,6 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
 
   // create new tetrahedra: we overwrite the one we replace, and create 3 new
   // ones
-  unsigned int tn[4];
   tn[0] = tetrahedron;
   const unsigned int new_size = create_new_tetrahedra< 3 >(&tn[1]);
   queue.resize(new_size);
@@ -660,10 +673,12 @@ void NewVoronoiCell::one_to_four_flip(unsigned int new_vertex,
  * @param new_vertex New vertex.
  * @param tetrahedra Tetrahedra to replace.
  * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  */
 void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
                                      unsigned int tetrahedra[2],
-                                     std::vector< bool > &queue) {
+                                     std::vector< bool > &queue,
+                                     unsigned int tn[6]) {
 
   newvoronoicell_print_case("2 to 6 flip");
 
@@ -735,7 +750,6 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
                                 _tetrahedra[tetrahedra[1]].get_ngb_index(v3_1)};
 
   // create new tetrahedra
-  unsigned int tn[6];
   tn[0] = tetrahedra[0];
   tn[1] = tetrahedra[1];
   const unsigned int new_size = create_new_tetrahedra< 4 >(&tn[2]);
@@ -827,10 +841,12 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
  * @param n \f$n\f$: number of tetrahedra to flip (should also be the number of
  * tetrahedra in the given array).
  * @param queue Stack of tetrahedra that need to be checked for validity.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  */
 void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
                                   unsigned int *tetrahedra, unsigned char n,
-                                  std::vector< bool > &queue) {
+                                  std::vector< bool > &queue,
+                                  unsigned int tn[2 * UCHAR_MAX]) {
 
   newvoronoicell_print_case("n to 2n flip (n = %u)", n);
 
@@ -894,7 +910,6 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
   vert[n + 2] = new_vertex;
 
   // create n new tetrahedra
-  unsigned int tn[2 * UCHAR_MAX];
   for (unsigned char j = 0; j < n; ++j) {
     tn[j] = tetrahedra[j];
   }
@@ -961,12 +976,14 @@ void NewVoronoiCell::n_to_2n_flip(unsigned int new_vertex,
  * tetrahedron.
  * @param queue Stack of tetrahedra that need to be checked for validity.
  * @param next_check First tetrahedron in the stack that will be tested.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
 unsigned int NewVoronoiCell::two_to_three_flip(
     unsigned int tetrahedron0, unsigned int tetrahedron1, unsigned char top0,
-    unsigned char top1, std::vector< bool > &queue, unsigned int next_check) {
+    unsigned char top1, std::vector< bool > &queue, unsigned int next_check,
+    unsigned int tn[3]) {
 
   newvoronoicell_print_case("2 to 3 flip");
 
@@ -1034,7 +1051,6 @@ unsigned int NewVoronoiCell::two_to_three_flip(
                                 _tetrahedra[tetrahedron1].get_ngb_index(v3_1)};
 
   // make new tetrahedra
-  unsigned int tn[3];
   tn[0] = tetrahedron0;
   tn[1] = tetrahedron1;
   const unsigned int new_size = create_new_tetrahedra< 1 >(&tn[2]);
@@ -1128,15 +1144,14 @@ unsigned int NewVoronoiCell::two_to_three_flip(
  * @param tetrahedron3 Fourth tetrahedron.
  * @param queue Stack of tetrahedra that need to be checked for validity.
  * @param next_check First tetrahedron in the stack that will be tested.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
-unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
-                                               unsigned int tetrahedron1,
-                                               unsigned int tetrahedron2,
-                                               unsigned int tetrahedron3,
-                                               std::vector< bool > &queue,
-                                               unsigned int next_check) {
+unsigned int NewVoronoiCell::four_to_four_flip(
+    unsigned int tetrahedron0, unsigned int tetrahedron1,
+    unsigned int tetrahedron2, unsigned int tetrahedron3,
+    std::vector< bool > &queue, unsigned int next_check, unsigned int tn[4]) {
 
   newvoronoicell_print_case("4 to 4 flip");
 
@@ -1251,8 +1266,10 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
                                  _tetrahedra[tetrahedron3].get_ngb_index(v1_3),
                                  _tetrahedra[tetrahedron2].get_ngb_index(v1_2)};
 
-  const unsigned int tn[4] = {tetrahedron0, tetrahedron1, tetrahedron2,
-                              tetrahedron3};
+  tn[0] = tetrahedron0;
+  tn[1] = tetrahedron1;
+  tn[2] = tetrahedron2;
+  tn[3] = tetrahedron3;
 
   // replace the tetrahedra
   // tn0 = (v0v3v5v2)
@@ -1355,6 +1372,7 @@ unsigned int NewVoronoiCell::four_to_four_flip(unsigned int tetrahedron0,
  * @param tetrahedron2 Third tetrahedron.
  * @param queue Stack of tetrahedra that need to be checked for validity.
  * @param next_check First tetrahedron in the stack that will be tested.
+ * @param tn Array to store the indices of the newly created tetrahedra in.
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
@@ -1362,7 +1380,8 @@ unsigned int NewVoronoiCell::three_to_two_flip(unsigned int tetrahedron0,
                                                unsigned int tetrahedron1,
                                                unsigned int tetrahedron2,
                                                std::vector< bool > &queue,
-                                               unsigned int next_check) {
+                                               unsigned int next_check,
+                                               unsigned int tn[2]) {
 
   newvoronoicell_print_case("3 to 2 flip");
 
@@ -1458,7 +1477,8 @@ unsigned int NewVoronoiCell::three_to_two_flip(unsigned int tetrahedron0,
   // make sure the tetrahedron is removed from the stack
   queue[tetrahedron2] = false;
 
-  const unsigned int tn[2] = {tetrahedron0, tetrahedron1};
+  tn[0] = tetrahedron0;
+  tn[1] = tetrahedron1;
 
   _tetrahedra[tn[0]] =
       VoronoiTetrahedron(vert[0], vert[1], vert[2], vert[3], ngbs[0], ngbs[3],
@@ -1596,15 +1616,16 @@ unsigned int NewVoronoiCell::check_tetrahedron(
         cmac_assert(has_positive_orientation(_tetrahedra[ngb], _vertices, box,
                                              positions));
 
+        unsigned int tn[3];
         next_check = two_to_three_flip(tetrahedron, ngb, top, ngb_index, queue,
-                                       next_check);
+                                       next_check, tn);
 
-        cmac_assert(has_positive_orientation(_tetrahedra[tetrahedron],
-                                             _vertices, box, positions));
-        cmac_assert(has_positive_orientation(_tetrahedra[ngb], _vertices, box,
+        cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices, box,
                                              positions));
-        // there is no good way of knowing what the third new tetrahedron is, so
-        // we cannot check that one
+        cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices, box,
+                                             positions));
+        cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices, box,
+                                             positions));
 
       } else if (tests[i] == 0) {
         // degenerate case: possible 4 to 4 flip
@@ -1653,17 +1674,18 @@ unsigned int NewVoronoiCell::check_tetrahedron(
           // mind the order: the new axis is shared by tetrahedron and ngb, and
           // they are the first and third tetrahedron passed on to the flip
           // routine (per convention)
+          unsigned int tn[4];
           next_check = four_to_four_flip(tetrahedron, other_ngb, ngb,
-                                         second_ngb, queue, next_check);
+                                         second_ngb, queue, next_check, tn);
 
-          cmac_assert(has_positive_orientation(_tetrahedra[tetrahedron],
-                                               _vertices, box, positions));
-          cmac_assert(has_positive_orientation(_tetrahedra[ngb], _vertices, box,
-                                               positions));
-          cmac_assert(has_positive_orientation(_tetrahedra[second_ngb],
-                                               _vertices, box, positions));
-          cmac_assert(has_positive_orientation(_tetrahedra[other_ngb],
-                                               _vertices, box, positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices,
+                                               box, positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices,
+                                               box, positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices,
+                                               box, positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[3]], _vertices,
+                                               box, positions));
         } else {
           newvoronoicell_print_case("4 to 4 flip not possible");
         }
@@ -1700,13 +1722,14 @@ unsigned int NewVoronoiCell::check_tetrahedron(
           cmac_assert(has_positive_orientation(_tetrahedra[other_ngb],
                                                _vertices, box, positions));
 
-          next_check =
-              three_to_two_flip(tetrahedron, ngb, other_ngb, queue, next_check);
+          unsigned int tn[2];
+          next_check = three_to_two_flip(tetrahedron, ngb, other_ngb, queue,
+                                         next_check, tn);
 
-          cmac_assert(has_positive_orientation(_tetrahedra[tetrahedron],
-                                               _vertices, box, positions));
-          cmac_assert(has_positive_orientation(_tetrahedra[ngb], _vertices, box,
-                                               positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices,
+                                               box, positions));
+          cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices,
+                                               box, positions));
         } else {
           newvoronoicell_print_case("3 to 2 flip not possible");
         }

@@ -584,25 +584,28 @@ public:
       unsigned int *indices) const;
 
   void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
-                        std::vector< bool > &queue);
+                        std::vector< bool > &queue, unsigned int tn[4]);
   void two_to_six_flip(unsigned int new_vertex, unsigned int tetrahedra[2],
-                       std::vector< bool > &queue);
+                       std::vector< bool > &queue, unsigned int tn[6]);
   void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
-                    unsigned char n, std::vector< bool > &queue);
+                    unsigned char n, std::vector< bool > &queue,
+                    unsigned int tn[2 * UCHAR_MAX]);
 
   unsigned int two_to_three_flip(unsigned int tetrahedron0,
                                  unsigned int tetrahedron1, unsigned char top0,
                                  unsigned char top1, std::vector< bool > &queue,
-                                 unsigned int next_check);
-  unsigned int
-  four_to_four_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
-                    unsigned int tetrahedron2, unsigned int tetrahedron3,
-                    std::vector< bool > &queue, unsigned int next_check);
+                                 unsigned int next_check, unsigned int tn[3]);
+  unsigned int four_to_four_flip(unsigned int tetrahedron0,
+                                 unsigned int tetrahedron1,
+                                 unsigned int tetrahedron2,
+                                 unsigned int tetrahedron3,
+                                 std::vector< bool > &queue,
+                                 unsigned int next_check, unsigned int tn[4]);
   unsigned int three_to_two_flip(unsigned int tetrahedron0,
                                  unsigned int tetrahedron1,
                                  unsigned int tetrahedron2,
                                  std::vector< bool > &queue,
-                                 unsigned int next_check);
+                                 unsigned int next_check, unsigned int tn[2]);
 
   unsigned int check_tetrahedron(
       unsigned int tetrahedron, unsigned int new_vertex,
