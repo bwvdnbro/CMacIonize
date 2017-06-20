@@ -873,6 +873,9 @@ set(TESTNEWVORONOICELL_SOURCES
     ../src/NewVoronoiCell.hpp
     ../src/NewVoronoiGrid.cpp
     ../src/NewVoronoiGrid.hpp
+    ../src/VoronoiBox.hpp
+    ../src/VoronoiTetrahedron.hpp
+    ../src/VoronoiVariables.hpp
 )
 add_unit_test(NAME testNewVoronoiCell
               SOURCES ${TESTNEWVORONOICELL_SOURCES})

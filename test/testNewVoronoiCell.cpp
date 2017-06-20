@@ -1174,28 +1174,37 @@ int main(int argc, char **argv) {
   {
     assert_condition(NewVoronoiGrid::get_mantissa(1.) == 0);
     assert_condition(NewVoronoiGrid::get_mantissa(1.5) == 0x0008000000000000);
+
+    cmac_status("NewVoronoiCell::get_mantissa() works!");
   }
 
   /// test NewVoronoiGrid construction: random generators
   {
-    std::vector< CoordinateVector<> > positions(10);
-    for (unsigned int i = 0; i < 10; ++i) {
+    const unsigned int ncell = 100;
+    std::vector< CoordinateVector<> > positions(ncell);
+    for (unsigned int i = 0; i < ncell; ++i) {
       positions[i] = Utilities::random_position();
     }
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     NewVoronoiGrid grid(positions, box);
     grid.construct();
+
+    cmac_status("Standard grid construction works!");
   }
 
   /// test NewVoronoiGrid construction: regular generators
   {
-    std::vector< CoordinateVector<> > positions(27);
-    for (unsigned int ix = 0; ix < 3; ++ix) {
-      for (unsigned int iy = 0; iy < 3; ++iy) {
-        for (unsigned int iz = 0; iz < 3; ++iz) {
-          positions[9 * ix + 3 * iy + iz] = CoordinateVector<>(
-              (ix + 0.5) / 3., (iy + 0.5) / 3., (iz + 0.5) / 3.);
+    const unsigned int ncell_1D = 5;
+    const unsigned int ncell_2D = ncell_1D * ncell_1D;
+    const unsigned int ncell_3D = ncell_2D * ncell_1D;
+    std::vector< CoordinateVector<> > positions(ncell_3D);
+    for (unsigned int ix = 0; ix < ncell_1D; ++ix) {
+      for (unsigned int iy = 0; iy < ncell_1D; ++iy) {
+        for (unsigned int iz = 0; iz < ncell_1D; ++iz) {
+          positions[ncell_2D * ix + ncell_1D * iy + iz] =
+              CoordinateVector<>((ix + 0.5) / ncell_1D, (iy + 0.5) / ncell_1D,
+                                 (iz + 0.5) / ncell_1D);
         }
       }
     }
@@ -1203,6 +1212,8 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     NewVoronoiGrid grid(positions, box);
     grid.construct();
+
+    cmac_status("Regular (degenerate) grid construction works!");
   }
 
   return 0;

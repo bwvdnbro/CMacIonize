@@ -30,6 +30,16 @@
  *  stdout. */
 //#define NEWVORONOIGRID_PRINT_INTEGERS
 
+/*! @brief If not commented out, this checks the empty circumsphere condition
+ *  for every cell after every generator intersection (this is very slow, so you
+ *  probably want to comment this out!). */
+//#define NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
+
+/*! @brief If not commented out, this checks if the total volume of all the
+ *  cells in the grid matches the total volume of the simulation box (within a
+ *  tolerance equal to the value of this define). */
+//#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
+
 /**
  * @brief Print the hexadecimal representation of the given integer coordinate.
  *
@@ -42,6 +52,38 @@
               coordinate.z(), ##__VA_ARGS__)
 #else
 #define newvoronoigrid_print_integer_coordinate(x, s, ...) (void)x
+#endif
+
+/**
+ * @brief Check if the given cell fulfills the Delaunay condition.
+ *
+ * @param cell Index of the cell to check.
+ */
+#ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
+#define newvoronoigrid_check_cell(cell)                                        \
+  _cells[cell].check_empty_circumsphere(_integer_voronoi_box,                  \
+                                        _integer_generator_positions)
+#else
+#define newvoronoigrid_check_cell(cell)
+#endif
+
+/**
+ * @brief Check if the total volume of all cells matches the volume of the
+ * simulation box.
+ *
+ * @param total_volume Total volume of all cells (in m^3).
+ */
+#ifdef NEWVORONOIGRID_CHECK_TOTAL_VOLUME
+#define newvoronoigrid_check_volume(total_volume)                              \
+  cmac_assert_message(std::abs(total_volume - _box.get_volume()) <             \
+                          NEWVORONOIGRID_CHECK_TOTAL_VOLUME *                  \
+                              (total_volume + _box.get_volume()),              \
+                      "%g =/= %g  -- relative difference: %g", total_volume,   \
+                      _box.get_volume(),                                       \
+                      std::abs(total_volume - _box.get_volume()) /             \
+                          (total_volume + _box.get_volume()));
+#else
+#define newvoronoigrid_check_volume(total_volume) (void)total_volume
 #endif
 
 /**
@@ -160,12 +202,10 @@ void NewVoronoiGrid::construct() {
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       if (j != i) {
-        cmac_warning("Intersecting %u and %u", i, j);
         _cells[i].intersect(j, _integer_voronoi_box,
                             _integer_generator_positions, _real_voronoi_box,
                             _real_generator_positions);
-        _cells[i].check_empty_circumsphere(_integer_voronoi_box,
-                                           _integer_generator_positions);
+        newvoronoigrid_check_cell(i);
       }
     }
     while (it.increase_range() &&
@@ -176,6 +216,7 @@ void NewVoronoiGrid::construct() {
         _cells[i].intersect(j, _integer_voronoi_box,
                             _integer_generator_positions, _real_voronoi_box,
                             _real_generator_positions);
+        newvoronoigrid_check_cell(i);
       }
     }
 
@@ -185,10 +226,5 @@ void NewVoronoiGrid::construct() {
     total_volume += _cells[i].get_volume();
   }
 
-  cmac_assert_message(std::abs(total_volume - _box.get_volume()) <
-                          1.e-15 * (total_volume + _box.get_volume()),
-                      "%g =/= %g  -- relative difference: %g", total_volume,
-                      _box.get_volume(),
-                      std::abs(total_volume - _box.get_volume()) /
-                          (total_volume + _box.get_volume()));
+  newvoronoigrid_check_volume(total_volume);
 }
