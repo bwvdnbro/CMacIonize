@@ -167,22 +167,22 @@ public:
   }
 
   /**
-   * @brief Get the midpoint of the circumsphere of the tetrahedron.
+   * @brief Get the midpoint of the circumsphere of the tetrahedron with the
+   * four given vertices.
    *
-   * @param positions List of generator positions (in m).
+   * @param v0 Vertex 0 (in m).
+   * @param v1 Vertex 1 (in m).
+   * @param v2 Vertex 2 (in m).
+   * @param v3 Vertex 3 (in m).
    * @return Midpoint of the circumsphere of the tetrahedron (in m).
    */
-  CoordinateVector<> get_midpoint_circumsphere(
-      const std::vector< CoordinateVector<> > &positions) const {
+  inline static CoordinateVector<> get_midpoint_circumsphere(
+      const CoordinateVector<> &v0, const CoordinateVector<> &v1,
+      const CoordinateVector<> &v2, const CoordinateVector<> &v3) {
 
-    cmac_assert(_v[0] < positions.size());
-    cmac_assert(_v[1] < positions.size());
-    cmac_assert(_v[2] < positions.size());
-    cmac_assert(_v[3] < positions.size());
-
-    const CoordinateVector<> r1 = positions[_v[1]] - positions[_v[0]];
-    const CoordinateVector<> r2 = positions[_v[2]] - positions[_v[0]];
-    const CoordinateVector<> r3 = positions[_v[3]] - positions[_v[0]];
+    const CoordinateVector<> r1 = v1 - v0;
+    const CoordinateVector<> r2 = v2 - v0;
+    const CoordinateVector<> r3 = v3 - v0;
     const double fac1 = r1.norm2();
     const double fac2 = r2.norm2();
     const double fac3 = r3.norm2();
@@ -200,7 +200,25 @@ public:
                            r1[2] * r2[0] * r3[1] - r1[2] * r2[1] * r3[0] -
                            r2[2] * r3[1] * r1[0] - r3[2] * r1[1] * r2[0]);
     const double V_inv = 1. / V;
-    return V_inv * R + positions[_v[0]];
+    return V_inv * R + v0;
+  }
+
+  /**
+   * @brief Get the midpoint of the circumsphere of the tetrahedron.
+   *
+   * @param positions List of generator positions (in m).
+   * @return Midpoint of the circumsphere of the tetrahedron (in m).
+   */
+  CoordinateVector<> get_midpoint_circumsphere(
+      const std::vector< CoordinateVector<> > &positions) const {
+
+    cmac_assert(_v[0] < positions.size());
+    cmac_assert(_v[1] < positions.size());
+    cmac_assert(_v[2] < positions.size());
+    cmac_assert(_v[3] < positions.size());
+
+    return get_midpoint_circumsphere(positions[_v[0]], positions[_v[1]],
+                                     positions[_v[2]], positions[_v[3]]);
   }
 
   /**
@@ -494,6 +512,10 @@ private:
   /*! @brief Free indices in the tetrahedra vector. */
   std::vector< unsigned int > _free_tetrahedra;
 
+  /*! @brief Maximum distance squared between the central generator and an
+   *  arbitrary other generator that could still change the cell structure. */
+  double _max_r2;
+
   /*! @brief Volume of the cell (in m^3). */
   double _volume;
 
@@ -566,9 +588,11 @@ public:
   const std::vector< VoronoiFace > &get_faces() const;
 
   /// cell specific geometric functions
-  void
-  intersect(unsigned int ngb, const VoronoiBox< unsigned long > &box,
-            const std::vector< CoordinateVector< unsigned long > > &positions);
+  void intersect(
+      unsigned int ngb, const VoronoiBox< unsigned long > &integer_voronoi_box,
+      const std::vector< CoordinateVector< unsigned long > > &integer_positions,
+      const VoronoiBox< double > &real_voronoi_box,
+      const std::vector< CoordinateVector<> > &real_positions);
   double get_max_radius_squared() const;
   void finalize(
       const Box<> &box, const std::vector< CoordinateVector<> > &positions,

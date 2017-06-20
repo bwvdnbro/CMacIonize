@@ -162,7 +162,8 @@ void NewVoronoiGrid::construct() {
       if (j != i) {
         cmac_warning("Intersecting %u and %u", i, j);
         _cells[i].intersect(j, _integer_voronoi_box,
-                            _integer_generator_positions);
+                            _integer_generator_positions, _real_voronoi_box,
+                            _real_generator_positions);
         _cells[i].check_empty_circumsphere(_integer_voronoi_box,
                                            _integer_generator_positions);
       }
@@ -173,7 +174,8 @@ void NewVoronoiGrid::construct() {
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const unsigned int j = *ngbit;
         _cells[i].intersect(j, _integer_voronoi_box,
-                            _integer_generator_positions);
+                            _integer_generator_positions, _real_voronoi_box,
+                            _real_generator_positions);
       }
     }
 

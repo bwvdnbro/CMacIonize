@@ -111,6 +111,8 @@ NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
   _connections[3][0] = 0;
   _connections[3][1] = 2;
   _connections[3][2] = 1;
+
+  _max_r2 = DBL_MAX;
 }
 
 /**
@@ -143,17 +145,30 @@ const std::vector< VoronoiFace > &NewVoronoiCell::get_faces() const {
  * the given index.
  *
  * @param ngb Index of the neighbouring generator.
- * @param box VoronoiBox containing the box generating positions.
- * @param positions Generator positions (integer representation).
+ * @param integer_voronoi_box VoronoiBox containing the box generating positions
+ * (integer representation).
+ * @param integer_positions Generator positions (integer representation).
+ * @param real_voronoi_box VoronoiBox containing the box generating positions
+ * (real representation, in m).
+ * @param real_positions Generator positions (real representation, in m).
  */
 void NewVoronoiCell::intersect(
-    unsigned int ngb, const VoronoiBox< unsigned long > &box,
-    const std::vector< CoordinateVector< unsigned long > > &positions) {
+    unsigned int ngb, const VoronoiBox< unsigned long > &integer_voronoi_box,
+    const std::vector< CoordinateVector< unsigned long > > &integer_positions,
+    const VoronoiBox< double > &real_voronoi_box,
+    const std::vector< CoordinateVector<> > &real_positions) {
+
+  // we only add generators that are close enough to the central generator
+  const CoordinateVector<> generator_position = real_positions[_vertices[0]];
+  if ((get_position(ngb, real_voronoi_box, real_positions) - generator_position)
+          .norm2() > _max_r2) {
+    return;
+  }
 
   // find the tetrahedron/a that contains the new point
   unsigned int tetrahedra[UCHAR_MAX];
   unsigned char number_of_tetrahedra =
-      find_tetrahedron(ngb, box, positions, tetrahedra);
+      find_tetrahedron(ngb, integer_voronoi_box, integer_positions, tetrahedra);
 
   // add the new vertex
   const unsigned int vertex_index = _vertices.size();
@@ -165,32 +180,32 @@ void NewVoronoiCell::intersect(
     unsigned int tn[4];
     one_to_four_flip(vertex_index, tetrahedra[0], queue, tn);
 
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[3]], _vertices, box,
-                                         positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[0]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[1]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[2]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[3]], _vertices, integer_voronoi_box, integer_positions));
 
   } else if (number_of_tetrahedra == 2) {
     // point on face: replace the 2 tetrahedra with 6 new ones
     unsigned int tn[6];
     two_to_six_flip(vertex_index, tetrahedra, queue, tn);
 
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[0]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[1]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[2]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[3]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[4]], _vertices, box,
-                                         positions));
-    cmac_assert(has_positive_orientation(_tetrahedra[tn[5]], _vertices, box,
-                                         positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[0]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[1]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[2]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[3]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[4]], _vertices, integer_voronoi_box, integer_positions));
+    cmac_assert(has_positive_orientation(
+        _tetrahedra[tn[5]], _vertices, integer_voronoi_box, integer_positions));
 
   } else if (number_of_tetrahedra > 2) {
     // point on edge: replace the N tetrahedra with 2N new ones
@@ -198,8 +213,9 @@ void NewVoronoiCell::intersect(
     n_to_2n_flip(vertex_index, tetrahedra, number_of_tetrahedra, queue, tn);
 
     for (unsigned int i = 0; i < 2 * number_of_tetrahedra; ++i) {
-      cmac_assert(has_positive_orientation(_tetrahedra[tn[i]], _vertices, box,
-                                           positions));
+      cmac_assert(has_positive_orientation(_tetrahedra[tn[i]], _vertices,
+                                           integer_voronoi_box,
+                                           integer_positions));
     }
 
   } else {
@@ -213,11 +229,39 @@ void NewVoronoiCell::intersect(
     if (queue[next_check]) {
       queue[next_check] = false;
       next_check =
-          check_tetrahedron(next_check, vertex_index, box, positions, queue);
+          check_tetrahedron(next_check, vertex_index, integer_voronoi_box,
+                            integer_positions, queue);
     } else {
       ++next_check;
     }
   }
+
+  // update _max_r2
+  _max_r2 = 0.;
+  for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
+    const unsigned int v0 = _tetrahedra[i].get_vertex(0);
+    if (v0 != NEWVORONOICELL_MAX_INDEX) {
+      if (v0 == 0 || _tetrahedra[i].get_vertex(1) == 0 ||
+          _tetrahedra[i].get_vertex(2) == 0 ||
+          _tetrahedra[i].get_vertex(3) == 0) {
+        const CoordinateVector<> p0 =
+            get_position(_vertices[v0], real_voronoi_box, real_positions);
+        const CoordinateVector<> p1 =
+            get_position(_vertices[_tetrahedra[i].get_vertex(1)],
+                         real_voronoi_box, real_positions);
+        const CoordinateVector<> p2 =
+            get_position(_vertices[_tetrahedra[i].get_vertex(2)],
+                         real_voronoi_box, real_positions);
+        const CoordinateVector<> p3 =
+            get_position(_vertices[_tetrahedra[i].get_vertex(3)],
+                         real_voronoi_box, real_positions);
+        const CoordinateVector<> midpoint =
+            VoronoiTetrahedron::get_midpoint_circumsphere(p0, p1, p2, p3);
+        _max_r2 = std::max(_max_r2, (midpoint - generator_position).norm2());
+      }
+    }
+  }
+  _max_r2 *= 4.;
 }
 
 /**
@@ -226,10 +270,7 @@ void NewVoronoiCell::intersect(
  *
  * @return Maximum influence radius squared (in m^2).
  */
-double NewVoronoiCell::get_max_radius_squared() const {
-  cmac_error("This method has not been implemented!");
-  return 0;
-}
+double NewVoronoiCell::get_max_radius_squared() const { return _max_r2; }
 
 /**
  * @brief Compute geometrical properties of the cell and clean up the cell
@@ -251,16 +292,22 @@ void NewVoronoiCell::finalize(
     const VoronoiBox< unsigned long > &long_voronoi_box,
     bool reflective_boundaries) {
 
+  VoronoiBox< double > voronoi_box(box);
   if (reflective_boundaries) {
-    intersect(NEWVORONOICELL_BOX_LEFT, long_voronoi_box, long_positions);
-    intersect(NEWVORONOICELL_BOX_RIGHT, long_voronoi_box, long_positions);
-    intersect(NEWVORONOICELL_BOX_FRONT, long_voronoi_box, long_positions);
-    intersect(NEWVORONOICELL_BOX_BACK, long_voronoi_box, long_positions);
-    intersect(NEWVORONOICELL_BOX_BOTTOM, long_voronoi_box, long_positions);
-    intersect(NEWVORONOICELL_BOX_TOP, long_voronoi_box, long_positions);
+    intersect(NEWVORONOICELL_BOX_LEFT, long_voronoi_box, long_positions,
+              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_RIGHT, long_voronoi_box, long_positions,
+              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_FRONT, long_voronoi_box, long_positions,
+              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BACK, long_voronoi_box, long_positions,
+              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BOTTOM, long_voronoi_box, long_positions,
+              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_TOP, long_voronoi_box, long_positions,
+              voronoi_box, positions);
   }
 
-  VoronoiBox< double > voronoi_box(box);
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     real_positions[i] = get_position(_vertices[i], voronoi_box, positions);
