@@ -533,7 +533,7 @@ int main(int argc, char **argv) {
     VoronoiBox< unsigned long > voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
     NewVoronoiCell cell(0);
-    cell.finalize(box, positions, long_positions, voronoi_box);
+    cell.finalize(box, positions, long_positions, voronoi_box, positions, box);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
     full_volume_positions[0] = CoordinateVector<>(6.26786);
@@ -651,18 +651,28 @@ int main(int argc, char **argv) {
     VoronoiBox< unsigned long > box(
         Box< unsigned long >(box_anchor, box_sides));
 
+    std::vector< CoordinateVector<> > rescaled_positions(4);
+    VoronoiBox< double > rescaled_box(
+        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+
     NewVoronoiCell cell(0);
 
     unsigned int tetrahedra[4];
-    assert_condition(cell.find_tetrahedron(1, box, positions, tetrahedra) == 1);
+    assert_condition(cell.find_tetrahedron(1, box, positions, rescaled_box,
+                                           rescaled_positions,
+                                           tetrahedra) == 1);
     assert_condition(tetrahedra[0] == 1);
 
-    assert_condition(cell.find_tetrahedron(2, box, positions, tetrahedra) == 3);
+    assert_condition(cell.find_tetrahedron(2, box, positions, rescaled_box,
+                                           rescaled_positions,
+                                           tetrahedra) == 3);
     assert_condition(tetrahedra[0] == 3);
     assert_condition(tetrahedra[1] == 2);
     assert_condition(tetrahedra[2] == 1);
 
-    assert_condition(cell.find_tetrahedron(3, box, positions, tetrahedra) == 2);
+    assert_condition(cell.find_tetrahedron(3, box, positions, rescaled_box,
+                                           rescaled_positions,
+                                           tetrahedra) == 2);
     assert_condition(tetrahedra[0] == 1);
     assert_condition(tetrahedra[1] == 2);
 
@@ -944,8 +954,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
 
-    cell.intersect(1, integer_voronoi_box, integer_positions, real_voronoi_box,
-                   real_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
+                   integer_positions, real_voronoi_box, real_positions);
     cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
 
     std::ofstream ofile("new_voronoi_cell_1_to_4.txt");
@@ -970,8 +980,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
 
-    cell.intersect(1, integer_voronoi_box, integer_positions, real_voronoi_box,
-                   real_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
+                   integer_positions, real_voronoi_box, real_positions);
     cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
 
     std::ofstream ofile("new_voronoi_cell_2_to_6.txt");
@@ -996,8 +1006,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
 
-    cell.intersect(1, integer_voronoi_box, integer_positions, real_voronoi_box,
-                   real_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
+                   integer_positions, real_voronoi_box, real_positions);
     cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
 
     std::ofstream ofile("new_voronoi_cell_n_to_2n.txt");
@@ -1022,8 +1032,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
 
-    cell.intersect(1, integer_voronoi_box, integer_positions, real_voronoi_box,
-                   real_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
+                   integer_positions, real_voronoi_box, real_positions);
     cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
 
     std::ofstream ofile("new_voronoi_cell_2_to_3.txt");
@@ -1052,8 +1062,8 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0);
 
     for (unsigned int i = 1; i < 3; ++i) {
-      cell.intersect(i, integer_voronoi_box, integer_positions,
-                     real_voronoi_box, real_positions);
+      cell.intersect(i, real_voronoi_box, real_positions, integer_voronoi_box,
+                     integer_positions, real_voronoi_box, real_positions);
       cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
     }
 
@@ -1082,8 +1092,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
 
-    cell.intersect(1, integer_voronoi_box, integer_positions, real_voronoi_box,
-                   real_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
+                   integer_positions, real_voronoi_box, real_positions);
     cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
 
     std::ofstream ofile("new_voronoi_cell_4_to_4.txt");
@@ -1108,7 +1118,8 @@ int main(int argc, char **argv) {
     VoronoiBox< unsigned long > voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
     NewVoronoiCell cell(0);
-    cell.finalize(box, positions, long_positions, voronoi_box, true);
+    cell.finalize(box, positions, long_positions, voronoi_box, positions, box,
+                  true);
 
     const double tolerance = 1.e-15;
 

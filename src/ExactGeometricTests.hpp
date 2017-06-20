@@ -107,10 +107,11 @@ public:
    * @param d Fourth vertex.
    * @return -1, 0, or 1, depending on the orientation of the tetrahedron.
    */
-  inline static char orient3d(const CoordinateVector< unsigned long > &a,
-                              const CoordinateVector< unsigned long > &b,
-                              const CoordinateVector< unsigned long > &c,
-                              const CoordinateVector< unsigned long > &d) {
+  inline static char
+  orient3d_exact(const CoordinateVector< unsigned long > &a,
+                 const CoordinateVector< unsigned long > &b,
+                 const CoordinateVector< unsigned long > &c,
+                 const CoordinateVector< unsigned long > &d) {
     // the input coordinates should be the 53 bit mantissas of double precision
     // floating point values in the range [1, 2[
     const int_orient3d axp = a.x();
@@ -191,10 +192,10 @@ public:
    * outcome of the test. If this is the case, an exact test is used, using the
    * given integer representations of the vertex coordinates.
    *
-   * @param ar First vertex (real coordinates, in m).
-   * @param br Second vertex (real coordinates, in m).
-   * @param cr Third vertex (real coordinates, in m).
-   * @param dr Fourth vertex (real coordinates, in m).
+   * @param ar First vertex (real coordinates, in the range [1,2[).
+   * @param br Second vertex (real coordinates, in the range [1,2[).
+   * @param cr Third vertex (real coordinates, in the range [1,2[).
+   * @param dr Fourth vertex (real coordinates, in the range [1,2[).
    * @param ai First vertex (integer coordinates).
    * @param bi Second vertex (integer coordinates).
    * @param ci Third vertex (integer coordinates).
@@ -238,7 +239,7 @@ public:
     } else if (result > errbound) {
       return 1;
     } else {
-      return orient3d(ai, bi, ci, di);
+      return orient3d_exact(ai, bi, ci, di);
     }
   }
 
@@ -259,11 +260,12 @@ public:
    * @param e Test point.
    * @return -1, 0, or 1, depending on the outcome of the geometric test.
    */
-  inline static char insphere(const CoordinateVector< unsigned long > &a,
-                              const CoordinateVector< unsigned long > &b,
-                              const CoordinateVector< unsigned long > &c,
-                              const CoordinateVector< unsigned long > &d,
-                              const CoordinateVector< unsigned long > &e) {
+  inline static char
+  insphere_exact(const CoordinateVector< unsigned long > &a,
+                 const CoordinateVector< unsigned long > &b,
+                 const CoordinateVector< unsigned long > &c,
+                 const CoordinateVector< unsigned long > &d,
+                 const CoordinateVector< unsigned long > &e) {
     // the input coordinates should be the 53 bit mantissas of double precision
     // floating point values in the range [1, 2[
     const int_insphere axp = a.x();
@@ -357,11 +359,11 @@ public:
    * outcome of the test. If this is the case, an exact test is used, using the
    * given integer representations of the vertex coordinates.
    *
-   * @param ar First vertex (real coordinates, in m).
-   * @param br Second vertex (real coordinates, in m).
-   * @param cr Third vertex (real coordinates, in m).
-   * @param dr Fourth vertex (real coordinates, in m).
-   * @param er Fifth vertex (real coordinates, in m).
+   * @param ar First vertex (real coordinates, in the range [1,2[).
+   * @param br Second vertex (real coordinates, in the range [1,2[).
+   * @param cr Third vertex (real coordinates, in the range [1,2[).
+   * @param dr Fourth vertex (real coordinates, in the range [1,2[).
+   * @param er Fifth vertex (real coordinates, in the range [1,2[).
    * @param ai First vertex (integer coordinates).
    * @param bi Second vertex (integer coordinates).
    * @param ci Third vertex (integer coordinates).
@@ -457,7 +459,7 @@ public:
     } else if (result > errbound) {
       return 1;
     } else {
-      return insphere(ai, bi, ci, di, ei);
+      return insphere_exact(ai, bi, ci, di, ei);
     }
   }
 

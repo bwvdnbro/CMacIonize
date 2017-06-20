@@ -135,6 +135,14 @@ NewVoronoiGrid::NewVoronoiGrid(
       1. +
       (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
           max_anchor.z();
+
+  _real_rescaled_box = VoronoiBox< double >(
+      Box<>(CoordinateVector<>(box_bottom_anchor_x, box_bottom_anchor_y,
+                               box_bottom_anchor_z),
+            CoordinateVector<>(box_top_anchor_x - box_bottom_anchor_x,
+                               box_top_anchor_y - box_bottom_anchor_y,
+                               box_top_anchor_z - box_bottom_anchor_z)));
+
   const CoordinateVector< unsigned long > box_bottom_anchor(
       ExactGeometricTests::get_mantissa(box_bottom_anchor_x),
       ExactGeometricTests::get_mantissa(box_bottom_anchor_y),
@@ -171,11 +179,13 @@ NewVoronoiGrid::NewVoronoiGrid(
   cmac_assert(corner3.z() <= exp_max.z());
 
   const unsigned int psize = positions.size();
+  _real_rescaled_positions.resize(psize);
   _integer_generator_positions.resize(psize);
   for (unsigned int i = 0; i < psize; ++i) {
     const double x = 1. + (positions[i].x() - min_anchor.x()) / max_anchor.x();
     const double y = 1. + (positions[i].y() - min_anchor.y()) / max_anchor.y();
     const double z = 1. + (positions[i].z() - min_anchor.z()) / max_anchor.z();
+    _real_rescaled_positions[i] = CoordinateVector<>(x, y, z);
     _integer_generator_positions[i] =
         CoordinateVector< unsigned long >(ExactGeometricTests::get_mantissa(x),
                                           ExactGeometricTests::get_mantissa(y),
@@ -207,9 +217,9 @@ void NewVoronoiGrid::construct() {
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       if (j != i) {
-        _cells[i].intersect(j, _integer_voronoi_box,
-                            _integer_generator_positions, _real_voronoi_box,
-                            _real_generator_positions);
+        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _integer_voronoi_box, _integer_generator_positions,
+                            _real_voronoi_box, _real_generator_positions);
         newvoronoigrid_check_cell(i);
       }
     }
@@ -218,16 +228,16 @@ void NewVoronoiGrid::construct() {
       ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         const unsigned int j = *ngbit;
-        _cells[i].intersect(j, _integer_voronoi_box,
-                            _integer_generator_positions, _real_voronoi_box,
-                            _real_generator_positions);
+        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _integer_voronoi_box, _integer_generator_positions,
+                            _real_voronoi_box, _real_generator_positions);
         newvoronoigrid_check_cell(i);
       }
     }
 
     _cells[i].finalize(_box, _real_generator_positions,
                        _integer_generator_positions, _integer_voronoi_box,
-                       true);
+                       _real_rescaled_positions, _real_rescaled_box, true);
     total_volume += _cells[i].get_volume();
   }
 

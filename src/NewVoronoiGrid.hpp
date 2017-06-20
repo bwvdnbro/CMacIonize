@@ -48,6 +48,14 @@ private:
   /*! @brief Real VoronoiBox (in m). */
   const VoronoiBox< double > _real_voronoi_box;
 
+  /*! @brief Real rescaled representation of the mesh generating positions (in
+   *  the range [1,2[). */
+  std::vector< CoordinateVector<> > _real_rescaled_positions;
+
+  /*! @brief Real rescaled representation of the VoronoiBox (in the range
+   *  [1,2[). */
+  VoronoiBox< double > _real_rescaled_box;
+
   /*! @brief Integer representation of the mesh generating positions. */
   std::vector< CoordinateVector< unsigned long > > _integer_generator_positions;
 

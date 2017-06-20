@@ -35,6 +35,15 @@
 #include "VoronoiTetrahedron.hpp"
 #include "VoronoiVariables.hpp"
 
+#ifdef HAVE_MULTIPRECISION
+#include "ExactGeometricTests.hpp"
+#else
+#error                                                                         \
+    "Boost multiprecision was not found on this system, which means the new "  \
+    "Voronoi construction algorithm will not work!"
+#endif
+
+#include <climits>
 #include <ostream>
 #include <vector>
 
@@ -133,7 +142,9 @@ public:
 
   /// cell specific geometric functions
   void intersect(
-      unsigned int ngb, const VoronoiBox< unsigned long > &integer_voronoi_box,
+      unsigned int ngb, const VoronoiBox< double > &rescaled_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions,
+      const VoronoiBox< unsigned long > &integer_voronoi_box,
       const std::vector< CoordinateVector< unsigned long > > &integer_positions,
       const VoronoiBox< double > &real_voronoi_box,
       const std::vector< CoordinateVector<> > &real_positions);
@@ -142,6 +153,8 @@ public:
       const Box<> &box, const std::vector< CoordinateVector<> > &positions,
       const std::vector< CoordinateVector< unsigned long > > &long_positions,
       const VoronoiBox< unsigned long > &long_voronoi_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions,
+      const VoronoiBox< double > &rescaled_box,
       bool reflective_boundaries = false);
   void check_empty_circumsphere(
       const VoronoiBox< unsigned long > &box,
@@ -152,6 +165,8 @@ public:
   unsigned char find_tetrahedron(
       unsigned int point_index, const VoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
+      const VoronoiBox< double > &rescaled_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions,
       unsigned int *indices) const;
 
   void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
@@ -182,6 +197,8 @@ public:
       unsigned int tetrahedron, unsigned int new_vertex,
       const VoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
+      const VoronoiBox< double > &rescaled_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions,
       std::vector< bool > &queue);
 
   /// inline/template helper functions
@@ -217,24 +234,34 @@ public:
    * @param vertices Vertex indices.
    * @param box VoronoiBox containing the box generating positions.
    * @param positions std::vector containing the other positions.
+   * @param rescaled_box VoronoiBox (rescaled representation).
+   * @param rescaled_positions Positions (rescaled representation).
    * @return True if the tetrahedron is positively oriented.
    */
   inline bool has_positive_orientation(
       const VoronoiTetrahedron &tetrahedron,
       const std::vector< unsigned int > &vertices,
       const VoronoiBox< unsigned long > &box,
-      const std::vector< CoordinateVector< unsigned long > > &positions) const {
+      const std::vector< CoordinateVector< unsigned long > > &positions,
+      const VoronoiBox< double > &rescaled_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions) const {
 
     const unsigned int v[4] = {vertices[tetrahedron.get_vertex(0)],
                                vertices[tetrahedron.get_vertex(1)],
                                vertices[tetrahedron.get_vertex(2)],
                                vertices[tetrahedron.get_vertex(3)]};
 
-    const CoordinateVector< unsigned long > p[4] = {
+    const CoordinateVector<> pr[4] = {
+        get_position(v[0], rescaled_box, rescaled_positions),
+        get_position(v[1], rescaled_box, rescaled_positions),
+        get_position(v[2], rescaled_box, rescaled_positions),
+        get_position(v[3], rescaled_box, rescaled_positions)};
+    const CoordinateVector< unsigned long > pi[4] = {
         get_position(v[0], box, positions), get_position(v[1], box, positions),
         get_position(v[2], box, positions), get_position(v[3], box, positions)};
 
-    return ExactGeometricTests::orient3d(p[0], p[1], p[2], p[3]) < 0;
+    return ExactGeometricTests::orient3d_adaptive(
+               pr[0], pr[1], pr[2], pr[3], pi[0], pi[1], pi[2], pi[3]) < 0;
   }
 
   /**

@@ -30,14 +30,6 @@
 #include "CoordinateVector.hpp"
 #include "VoronoiVariables.hpp"
 
-#ifdef HAVE_MULTIPRECISION
-#include "ExactGeometricTests.hpp"
-#else
-#error                                                                         \
-    "Boost multiprecision was not found on this system, which means the new "  \
-    "Voronoi construction algorithm will not work!"
-#endif
-
 /**
  * @brief Delaunay tetrahedron used in the NewVoronoiCell incremental
  * construction algorithm.
@@ -207,46 +199,6 @@ public:
     return std::abs(CoordinateVector<>::dot_product(
                a, CoordinateVector<>::cross_product(b, c))) /
            6.;
-  }
-
-  /**
-   * @brief Check if the point with the given index is inside this tetrahedron.
-   *
-   * @param point Index of the test point.
-   * @param positions Positions of all the generators.
-   * @return 0 if the point is outside the tetrahedron, 1 if it is inside, 2 if
-   * it is on a face of the tetrahedron, and 3 if it is on an edge.
-   */
-  unsigned char inside(
-      unsigned int point,
-      const std::vector< CoordinateVector< unsigned long > > &positions) const {
-    const CoordinateVector< unsigned long > p0 = positions[_v[0]];
-    const CoordinateVector< unsigned long > p1 = positions[_v[1]];
-    const CoordinateVector< unsigned long > p2 = positions[_v[2]];
-    const CoordinateVector< unsigned long > p3 = positions[_v[3]];
-    const CoordinateVector< unsigned long > p4 = positions[point];
-
-    const char abce = ExactGeometricTests::orient3d(p0, p1, p2, p4);
-    const char acde = ExactGeometricTests::orient3d(p0, p2, p3, p4);
-    const char adbe = ExactGeometricTests::orient3d(p0, p3, p1, p4);
-    const char bdce = ExactGeometricTests::orient3d(p1, p3, p2, p4);
-    unsigned char inside = 0;
-    if (abce <= 0 && acde <= 0 && adbe <= 0 && bdce <= 0) {
-      ++inside;
-      if (abce == 0) {
-        ++inside;
-      }
-      if (acde == 0) {
-        ++inside;
-      }
-      if (adbe == 0) {
-        ++inside;
-      }
-      if (bdce == 0) {
-        ++inside;
-      }
-    }
-    return inside;
   }
 
   /**

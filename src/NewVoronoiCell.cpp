@@ -75,16 +75,20 @@
  * @param tetrahedron Tetrahedron.
  * @param integer_voronoi_box VoronoiBox (integer representation, in m).
  * @param integer_positions Generator positions (integer representation, in m).
+ * @param real_voronoi_box VoronoiBox (rescaled representation).
+ * @param real_positions Positions (rescaled representation).
  */
 #ifdef NEWVORONOICELL_ORIENTATION_TESTS
 #define newvoronoicell_test_orientation(tetrahedron, integer_voronoi_box,      \
-                                        integer_positions)                     \
+                                        integer_positions, real_voronoi_box,   \
+                                        real_positions)                        \
   cmac_assert(has_positive_orientation(_tetrahedra[tetrahedron], _vertices,    \
-                                       integer_voronoi_box,                    \
-                                       integer_positions))
+                                       integer_voronoi_box, integer_positions, \
+                                       real_voronoi_box, real_positions))
 #else
 #define newvoronoicell_test_orientation(tetrahedron, integer_voronoi_box,      \
-                                        integer_positions)
+                                        integer_positions, real_voronoi_box,   \
+                                        real_positions)
 #endif
 
 /**
@@ -172,6 +176,9 @@ const std::vector< VoronoiFace > &NewVoronoiCell::get_faces() const {
  * the given index.
  *
  * @param ngb Index of the neighbouring generator.
+ * @param rescaled_box VoronoiBox containing the generating positions (rescaled
+ * representation).
+ * @param rescaled_positions Generator positions (rescaled representation).
  * @param integer_voronoi_box VoronoiBox containing the box generating positions
  * (integer representation).
  * @param integer_positions Generator positions (integer representation).
@@ -180,7 +187,9 @@ const std::vector< VoronoiFace > &NewVoronoiCell::get_faces() const {
  * @param real_positions Generator positions (real representation, in m).
  */
 void NewVoronoiCell::intersect(
-    unsigned int ngb, const VoronoiBox< unsigned long > &integer_voronoi_box,
+    unsigned int ngb, const VoronoiBox< double > &rescaled_box,
+    const std::vector< CoordinateVector<> > &rescaled_positions,
+    const VoronoiBox< unsigned long > &integer_voronoi_box,
     const std::vector< CoordinateVector< unsigned long > > &integer_positions,
     const VoronoiBox< double > &real_voronoi_box,
     const std::vector< CoordinateVector<> > &real_positions) {
@@ -195,7 +204,8 @@ void NewVoronoiCell::intersect(
   // find the tetrahedron/a that contains the new point
   unsigned int tetrahedra[UCHAR_MAX];
   unsigned char number_of_tetrahedra =
-      find_tetrahedron(ngb, integer_voronoi_box, integer_positions, tetrahedra);
+      find_tetrahedron(ngb, integer_voronoi_box, integer_positions,
+                       rescaled_box, rescaled_positions, tetrahedra);
 
   // add the new vertex
   const unsigned int vertex_index = _vertices.size();
@@ -208,13 +218,17 @@ void NewVoronoiCell::intersect(
     one_to_four_flip(vertex_index, tetrahedra[0], queue, tn);
 
     newvoronoicell_test_orientation(tn[0], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[1], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[2], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[3], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
 
   } else if (number_of_tetrahedra == 2) {
     // point on face: replace the 2 tetrahedra with 6 new ones
@@ -222,17 +236,23 @@ void NewVoronoiCell::intersect(
     two_to_six_flip(vertex_index, tetrahedra, queue, tn);
 
     newvoronoicell_test_orientation(tn[0], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[1], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[2], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[3], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[4], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
     newvoronoicell_test_orientation(tn[5], integer_voronoi_box,
-                                    integer_positions);
+                                    integer_positions, rescaled_box,
+                                    rescaled_positions);
 
   } else if (number_of_tetrahedra > 2) {
     // point on edge: replace the N tetrahedra with 2N new ones
@@ -241,7 +261,8 @@ void NewVoronoiCell::intersect(
 
     for (unsigned int i = 0; i < 2 * number_of_tetrahedra; ++i) {
       newvoronoicell_test_orientation(tn[i], integer_voronoi_box,
-                                      integer_positions);
+                                      integer_positions, rescaled_box,
+                                      rescaled_positions);
     }
 
   } else {
@@ -254,9 +275,9 @@ void NewVoronoiCell::intersect(
   while (next_check < queue.size()) {
     if (queue[next_check]) {
       queue[next_check] = false;
-      next_check =
-          check_tetrahedron(next_check, vertex_index, integer_voronoi_box,
-                            integer_positions, queue);
+      next_check = check_tetrahedron(next_check, vertex_index,
+                                     integer_voronoi_box, integer_positions,
+                                     rescaled_box, rescaled_positions, queue);
     } else {
       ++next_check;
     }
@@ -307,6 +328,9 @@ double NewVoronoiCell::get_max_radius_squared() const { return _max_r2; }
  * @param long_positions Positions of the generators: integer representations.
  * @param long_voronoi_box Simulation box generating positions: integer
  * representations.
+ * @param rescaled_positions Positions of the generators (rescaled
+ * representation).
+ * @param rescaled_box VoronoiBox (rescaled representation).
  * @param reflective_boundaries Flag that regulates whether or not to use
  * reflective boundaries. If set to yes, we insert mirror copies of the central
  * mesh generator into the existing Delaunay structure to enforce the walls of
@@ -316,22 +340,23 @@ void NewVoronoiCell::finalize(
     const Box<> &box, const std::vector< CoordinateVector<> > &positions,
     const std::vector< CoordinateVector< unsigned long > > &long_positions,
     const VoronoiBox< unsigned long > &long_voronoi_box,
-    bool reflective_boundaries) {
+    const std::vector< CoordinateVector<> > &rescaled_positions,
+    const VoronoiBox< double > &rescaled_box, bool reflective_boundaries) {
 
   VoronoiBox< double > voronoi_box(box);
   if (reflective_boundaries) {
-    intersect(NEWVORONOICELL_BOX_LEFT, long_voronoi_box, long_positions,
-              voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_RIGHT, long_voronoi_box, long_positions,
-              voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_FRONT, long_voronoi_box, long_positions,
-              voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_BACK, long_voronoi_box, long_positions,
-              voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_BOTTOM, long_voronoi_box, long_positions,
-              voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_TOP, long_voronoi_box, long_positions,
-              voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
   }
 
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
@@ -456,6 +481,8 @@ void NewVoronoiCell::finalize(
  * @param point_index Index of the point.
  * @param box VoronoiBox containing the box generating positions.
  * @param positions Positions of all the points.
+ * @param rescaled_box VoronoiBox (rescaled representation).
+ * @param rescaled_positions Positions (rescaled representation).
  * @param indices Indices of the tetrahedron/a that contain the given points
  * @return Number of tetrahedra that contain the given point; this is the same
  * as the number of valid elements stored in the indices array.
@@ -463,6 +490,8 @@ void NewVoronoiCell::finalize(
 unsigned char NewVoronoiCell::find_tetrahedron(
     unsigned int point_index, const VoronoiBox< unsigned long > &box,
     const std::vector< CoordinateVector< unsigned long > > &positions,
+    const VoronoiBox< double > &rescaled_box,
+    const std::vector< CoordinateVector<> > &rescaled_positions,
     unsigned int *indices) const {
   // start with an arbitrary tetrahedron, the last one is usually a good choice
   unsigned int tetrahedron = _tetrahedra.size() - 1;
@@ -480,20 +509,31 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     const unsigned int v3 = _tetrahedra[tetrahedron].get_vertex(3);
 
     // get the actual positions of the vertices (and of the test point)
-    const CoordinateVector< unsigned long > p0 =
+    const CoordinateVector<> pr0 =
+        get_position(_vertices[v0], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr1 =
+        get_position(_vertices[v1], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr2 =
+        get_position(_vertices[v2], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr3 =
+        get_position(_vertices[v3], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr4 =
+        get_position(point_index, rescaled_box, rescaled_positions);
+    const CoordinateVector< unsigned long > pi0 =
         get_position(_vertices[v0], box, positions);
-    const CoordinateVector< unsigned long > p1 =
+    const CoordinateVector< unsigned long > pi1 =
         get_position(_vertices[v1], box, positions);
-    const CoordinateVector< unsigned long > p2 =
+    const CoordinateVector< unsigned long > pi2 =
         get_position(_vertices[v2], box, positions);
-    const CoordinateVector< unsigned long > p3 =
+    const CoordinateVector< unsigned long > pi3 =
         get_position(_vertices[v3], box, positions);
-    const CoordinateVector< unsigned long > p4 =
+    const CoordinateVector< unsigned long > pi4 =
         get_position(point_index, box, positions);
 
     // make sure the tetrahedron is correctly oriented, as the tests below
     // depend on that
-    cmac_assert(ExactGeometricTests::orient3d(p0, p1, p2, p3) < 0);
+    cmac_assert(ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr2, pr3, pi0,
+                                                       pi1, pi2, pi3) < 0);
 
     // now check if the test point is below or above the 4 faces of the
     // tetrahedron
@@ -502,7 +542,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
     // direction
     // however, if that tetrahedron does not exist, we continue testing until
     // we find a neighbour that does exist
-    const char abce = ExactGeometricTests::orient3d(p0, p1, p2, p4);
+    const char abce = ExactGeometricTests::orient3d_adaptive(
+        pr0, pr1, pr2, pr4, pi0, pi1, pi2, pi4);
     if (abce > 0) {
       // point is outside the tetrahedron, next tetrahedron to check is the one
       // opposite the fourth vertex
@@ -512,7 +553,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
       }
     }
 
-    const char acde = ExactGeometricTests::orient3d(p0, p2, p3, p4);
+    const char acde = ExactGeometricTests::orient3d_adaptive(
+        pr0, pr2, pr3, pr4, pi0, pi2, pi3, pi4);
     if (acde > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(1);
       if (tetrahedron != NEWVORONOICELL_MAX_INDEX) {
@@ -520,7 +562,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
       }
     }
 
-    const char adbe = ExactGeometricTests::orient3d(p0, p3, p1, p4);
+    const char adbe = ExactGeometricTests::orient3d_adaptive(
+        pr0, pr3, pr1, pr4, pi0, pi3, pi1, pi4);
     if (adbe > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(2);
       if (tetrahedron != NEWVORONOICELL_MAX_INDEX) {
@@ -528,7 +571,8 @@ unsigned char NewVoronoiCell::find_tetrahedron(
       }
     }
 
-    const char bdce = ExactGeometricTests::orient3d(p1, p3, p2, p4);
+    const char bdce = ExactGeometricTests::orient3d_adaptive(
+        pr1, pr3, pr2, pr4, pi1, pi3, pi2, pi4);
     if (bdce > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(0);
       cmac_assert(tetrahedron != NEWVORONOICELL_MAX_INDEX);
@@ -1583,6 +1627,8 @@ unsigned int NewVoronoiCell::three_to_two_flip(unsigned int tetrahedron0,
  * invalidation of the tetrahedron.
  * @param box VoronoiBox containing the box generating positions.
  * @param positions Positions of all the points.
+ * @param rescaled_box VoronoiBox (rescaled representation).
+ * @param rescaled_positions Positions (rescaled representation).
  * @param queue Stack of tetrahedra that need to be checked for validity.
  * @return Lowest index tetrahedron that needs to be checked for validity after
  * this function returns.
@@ -1591,6 +1637,8 @@ unsigned int NewVoronoiCell::check_tetrahedron(
     unsigned int tetrahedron, unsigned int new_vertex,
     const VoronoiBox< unsigned long > &box,
     const std::vector< CoordinateVector< unsigned long > > &positions,
+    const VoronoiBox< double > &rescaled_box,
+    const std::vector< CoordinateVector<> > &rescaled_positions,
     std::vector< bool > &queue) {
 
   unsigned int next_check = tetrahedron + 1;
@@ -1618,24 +1666,36 @@ unsigned int NewVoronoiCell::check_tetrahedron(
     const unsigned char ngb_index = _tetrahedra[tetrahedron].get_ngb_index(top);
     const unsigned int v4 = _tetrahedra[ngb].get_vertex(ngb_index);
 
-    const CoordinateVector< unsigned long > p0 =
+    const CoordinateVector<> pr0 =
+        get_position(_vertices[v0], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr1 =
+        get_position(_vertices[v1], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr2 =
+        get_position(_vertices[v2], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr3 =
+        get_position(_vertices[v3], rescaled_box, rescaled_positions);
+    const CoordinateVector<> pr4 =
+        get_position(_vertices[v4], rescaled_box, rescaled_positions);
+    const CoordinateVector< unsigned long > pi0 =
         get_position(_vertices[v0], box, positions);
-    const CoordinateVector< unsigned long > p1 =
+    const CoordinateVector< unsigned long > pi1 =
         get_position(_vertices[v1], box, positions);
-    const CoordinateVector< unsigned long > p2 =
+    const CoordinateVector< unsigned long > pi2 =
         get_position(_vertices[v2], box, positions);
-    const CoordinateVector< unsigned long > p3 =
+    const CoordinateVector< unsigned long > pi3 =
         get_position(_vertices[v3], box, positions);
-    const CoordinateVector< unsigned long > p4 =
+    const CoordinateVector< unsigned long > pi4 =
         get_position(_vertices[v4], box, positions);
 
     cmac_assert_message(
-        ExactGeometricTests::orient3d(p0, p1, p2, p3) < 0,
+        ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr2, pr3, pi0, pi1,
+                                               pi2, pi3) < 0,
         "p0: %lu %lu %lu, p1: %lu %lu %lu, p2: %lu %lu %lu, p3: %lu %lu %lu",
-        p0.x(), p0.y(), p0.z(), p1.x(), p1.y(), p1.z(), p2.x(), p2.y(), p2.z(),
-        p3.x(), p3.y(), p3.z());
+        pi0.x(), pi0.y(), pi0.z(), pi1.x(), pi1.y(), pi1.z(), pi2.x(), pi2.y(),
+        pi2.z(), pi3.x(), pi3.y(), pi3.z());
 
-    char test = ExactGeometricTests::insphere(p0, p1, p2, p3, p4);
+    char test = ExactGeometricTests::insphere_adaptive(pr0, pr1, pr2, pr3, pr4,
+                                                       pi0, pi1, pi2, pi3, pi4);
     if (test < 0) {
       newvoronoicell_print_case("Invalid tetrahedron!");
 
@@ -1647,16 +1707,20 @@ unsigned int NewVoronoiCell::check_tetrahedron(
       // 'tetrahedron'
       char tests[4] = {-1, -1, -1, -1};
       if (top != 3) {
-        tests[0] = ExactGeometricTests::orient3d(p0, p1, p2, p4);
+        tests[0] = ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr2, pr4,
+                                                          pi0, pi1, pi2, pi4);
       }
       if (top != 2) {
-        tests[1] = ExactGeometricTests::orient3d(p0, p1, p4, p3);
+        tests[1] = ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr4, pr3,
+                                                          pi0, pi1, pi4, pi3);
       }
       if (top != 1) {
-        tests[2] = ExactGeometricTests::orient3d(p0, p4, p2, p3);
+        tests[2] = ExactGeometricTests::orient3d_adaptive(pr0, pr4, pr2, pr3,
+                                                          pi0, pi4, pi2, pi3);
       }
       if (top != 0) {
-        tests[3] = ExactGeometricTests::orient3d(p4, p1, p2, p3);
+        tests[3] = ExactGeometricTests::orient3d_adaptive(pr4, pr1, pr2, pr3,
+                                                          pi4, pi1, pi2, pi3);
       }
       unsigned char i = 0;
       while (i < 4 && tests[i] < 0) {
@@ -1669,9 +1733,12 @@ unsigned int NewVoronoiCell::check_tetrahedron(
         next_check = two_to_three_flip(tetrahedron, ngb, top, ngb_index, queue,
                                        next_check, tn);
 
-        newvoronoicell_test_orientation(tn[0], box, positions);
-        newvoronoicell_test_orientation(tn[1], box, positions);
-        newvoronoicell_test_orientation(tn[2], box, positions);
+        newvoronoicell_test_orientation(tn[0], box, positions, rescaled_box,
+                                        rescaled_positions);
+        newvoronoicell_test_orientation(tn[1], box, positions, rescaled_box,
+                                        rescaled_positions);
+        newvoronoicell_test_orientation(tn[2], box, positions, rescaled_box,
+                                        rescaled_positions);
 
       } else if (tests[i] == 0) {
         // degenerate case: possible 4 to 4 flip
@@ -1715,10 +1782,14 @@ unsigned int NewVoronoiCell::check_tetrahedron(
           next_check = four_to_four_flip(tetrahedron, other_ngb, ngb,
                                          second_ngb, queue, next_check, tn);
 
-          newvoronoicell_test_orientation(tn[0], box, positions);
-          newvoronoicell_test_orientation(tn[1], box, positions);
-          newvoronoicell_test_orientation(tn[2], box, positions);
-          newvoronoicell_test_orientation(tn[3], box, positions);
+          newvoronoicell_test_orientation(tn[0], box, positions, rescaled_box,
+                                          rescaled_positions);
+          newvoronoicell_test_orientation(tn[1], box, positions, rescaled_box,
+                                          rescaled_positions);
+          newvoronoicell_test_orientation(tn[2], box, positions, rescaled_box,
+                                          rescaled_positions);
+          newvoronoicell_test_orientation(tn[3], box, positions, rescaled_box,
+                                          rescaled_positions);
 
         } else {
           newvoronoicell_print_case("4 to 4 flip not possible");
@@ -1753,8 +1824,10 @@ unsigned int NewVoronoiCell::check_tetrahedron(
           next_check = three_to_two_flip(tetrahedron, ngb, other_ngb, queue,
                                          next_check, tn);
 
-          newvoronoicell_test_orientation(tn[0], box, positions);
-          newvoronoicell_test_orientation(tn[1], box, positions);
+          newvoronoicell_test_orientation(tn[0], box, positions, rescaled_box,
+                                          rescaled_positions);
+          newvoronoicell_test_orientation(tn[1], box, positions, rescaled_box,
+                                          rescaled_positions);
 
         } else {
           newvoronoicell_print_case("3 to 2 flip not possible");
@@ -1795,7 +1868,8 @@ void NewVoronoiCell::check_empty_circumsphere(
         if (j != v0 && j != v1 && j != v2 && j != v3) {
           const CoordinateVector< unsigned long > p4 =
               get_position(_vertices[j], box, positions);
-          const char abcde = ExactGeometricTests::insphere(p0, p1, p2, p3, p4);
+          const char abcde =
+              ExactGeometricTests::insphere_exact(p0, p1, p2, p3, p4);
           if (abcde < 0) {
             cmac_error("Wrong tetrahedron!");
           }
