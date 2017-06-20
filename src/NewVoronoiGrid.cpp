@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "NewVoronoiGrid.hpp"
+#include "ExactGeometricTests.hpp"
 #include "PointLocations.hpp"
 
 /*! @brief If not commented out, this prints the hexadecimal integers to the
@@ -135,11 +136,13 @@ NewVoronoiGrid::NewVoronoiGrid(
       (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
           max_anchor.z();
   const CoordinateVector< unsigned long > box_bottom_anchor(
-      get_mantissa(box_bottom_anchor_x), get_mantissa(box_bottom_anchor_y),
-      get_mantissa(box_bottom_anchor_z));
+      ExactGeometricTests::get_mantissa(box_bottom_anchor_x),
+      ExactGeometricTests::get_mantissa(box_bottom_anchor_y),
+      ExactGeometricTests::get_mantissa(box_bottom_anchor_z));
   CoordinateVector< unsigned long > box_top_anchor(
-      get_mantissa(box_top_anchor_x), get_mantissa(box_top_anchor_y),
-      get_mantissa(box_top_anchor_z));
+      ExactGeometricTests::get_mantissa(box_top_anchor_x),
+      ExactGeometricTests::get_mantissa(box_top_anchor_y),
+      ExactGeometricTests::get_mantissa(box_top_anchor_z));
   Box< unsigned long > integer_box(box_bottom_anchor,
                                    box_top_anchor - box_bottom_anchor);
   newvoronoigrid_print_integer_coordinate(integer_box.get_anchor(),
@@ -173,8 +176,10 @@ NewVoronoiGrid::NewVoronoiGrid(
     const double x = 1. + (positions[i].x() - min_anchor.x()) / max_anchor.x();
     const double y = 1. + (positions[i].y() - min_anchor.y()) / max_anchor.y();
     const double z = 1. + (positions[i].z() - min_anchor.z()) / max_anchor.z();
-    _integer_generator_positions[i] = CoordinateVector< unsigned long >(
-        get_mantissa(x), get_mantissa(y), get_mantissa(z));
+    _integer_generator_positions[i] =
+        CoordinateVector< unsigned long >(ExactGeometricTests::get_mantissa(x),
+                                          ExactGeometricTests::get_mantissa(y),
+                                          ExactGeometricTests::get_mantissa(z));
     cmac_assert(_integer_generator_positions[i].x() >= exp_min.x());
     cmac_assert(_integer_generator_positions[i].x() <= exp_max.x());
     cmac_assert(_integer_generator_positions[i].y() >= exp_min.y());

@@ -34,6 +34,12 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
+  // test ExactGeometricTests::get_mantissa
+  assert_condition(ExactGeometricTests::get_mantissa(1.) == 0);
+  assert_condition(ExactGeometricTests::get_mantissa(1.5) ==
+                   0x0008000000000000);
+
   // set of test points
   // due to the way our exact geometric tests work, we need to use coordinates
   // in the range [1,2[

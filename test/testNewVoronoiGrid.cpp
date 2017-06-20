@@ -17,9 +17,9 @@
  ******************************************************************************/
 
 /**
- * @file testNewVoronoiCell.cpp
+ * @file testNewVoronoiGrid.cpp
  *
- * @brief Unit test for the NewVoronoiCell class.
+ * @brief Unit test for the NewVoronoiGrid class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
@@ -487,7 +487,7 @@ void NewVoronoiCell::check_test(int test) {
   }
 
 /**
- * @brief Unit test for the NewVoronoiCell class.
+ * @brief Unit test for the NewVoronoiGrid class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -1168,14 +1168,6 @@ int main(int argc, char **argv) {
     assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_TOP);
 
     cmac_status("Geometry, part 2: Cell face computation works!");
-  }
-
-  /// test NewVoronoiGrid::get_mantissa
-  {
-    assert_condition(NewVoronoiGrid::get_mantissa(1.) == 0);
-    assert_condition(NewVoronoiGrid::get_mantissa(1.5) == 0x0008000000000000);
-
-    cmac_status("NewVoronoiCell::get_mantissa() works!");
   }
 
   /// test NewVoronoiGrid construction: random generators

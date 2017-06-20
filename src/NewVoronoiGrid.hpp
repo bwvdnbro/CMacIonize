@@ -62,59 +62,6 @@ public:
                  const Box<> box);
 
   void construct();
-
-  /**
-   * @brief Auxiliary typedef used to extract the mantissa from a double
-   * precision floating point value.
-   *
-   * The variables in the union occupy the same memory, which allows us to
-   * access the bytes used to store the double precision floating point value.
-   */
-  typedef union {
-    /*! @brief Double precision floating point value. */
-    double dvalue;
-    /**
-     * @brief Anonymous struct containing the 3 parts of a general double
-     * precision floating point value.
-     *
-     * A general double precision floating point value has a sign \f$s\f$, a
-     * mantissa \f$m\f$, and an exponent \f$e\f$, so that the value \f$v\f$ of
-     * the double is given by
-     * \f[
-     * v = s \times 1.m \times 2^{e-1023}
-     * \f]
-     * (see
-     * https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
-     *
-     * The IEEE 754 standard specifies that \f$s\f$, \f$m\f$ and \f$e\f$ have
-     * respectively 1 bit, 52 bit and 11 bit precision. In memory (low to high
-     * bits), they are ordered as follows:
-     * \f[
-     * m e s
-     * \f]
-     */
-    struct {
-      /*! @brief Mantissa \f$m\f$. */
-      unsigned long mantissa : 52;
-      /*! @brief Exponent \f$e\f$. */
-      unsigned long exponent : 11;
-      /*! @brief Sign \f$s\f$. */
-      unsigned long sign : 1;
-    } parts;
-  } binary_double;
-
-  /**
-   * @brief Get the 52 bit mantissa of the given double precision floating point
-   * value.
-   *
-   * @param value Double precision floating point value.
-   * @return 52 bit mantissa of that same value.
-   */
-  static inline unsigned long get_mantissa(double value) {
-    binary_double dvalue;
-    dvalue.dvalue = value;
-    return dvalue.parts.mantissa;
-  }
 };
 
 #endif // NEWVORONOIGRID_HPP
