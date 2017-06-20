@@ -68,12 +68,32 @@ int main(int argc, char **argv) {
   assert_condition(ExactGeometricTests::orient3d(a_int, b_int, d_int, e_int) ==
                    0);
 
+  assert_condition(ExactGeometricTests::orient3d_adaptive(
+                       a_double, b_double, c_double, d_double, a_int, b_int,
+                       c_int, d_int) == 1);
+  assert_condition(ExactGeometricTests::orient3d_adaptive(
+                       a_double, b_double, d_double, c_double, a_int, b_int,
+                       d_int, c_int) == -1);
+  assert_condition(ExactGeometricTests::orient3d_adaptive(
+                       a_double, b_double, d_double, e_double, a_int, b_int,
+                       d_int, e_int) == 0);
+
   assert_condition(
       ExactGeometricTests::insphere(a_int, b_int, c_int, e_int, d_int) == 1);
   assert_condition(
       ExactGeometricTests::insphere(a_int, b_int, c_int, d_int, e_int) == -1);
   assert_condition(
       ExactGeometricTests::insphere(a_int, b_int, c_int, d_int, f_int) == 0);
+
+  assert_condition(ExactGeometricTests::insphere_adaptive(
+                       a_double, b_double, c_double, e_double, d_double, a_int,
+                       b_int, c_int, e_int, d_int) == 1);
+  assert_condition(ExactGeometricTests::insphere_adaptive(
+                       a_double, b_double, c_double, d_double, e_double, a_int,
+                       b_int, c_int, d_int, e_int) == -1);
+  assert_condition(ExactGeometricTests::insphere_adaptive(
+                       a_double, b_double, c_double, d_double, f_double, a_int,
+                       b_int, c_int, d_int, f_int) == 0);
 
   return 0;
 }

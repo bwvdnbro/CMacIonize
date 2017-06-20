@@ -47,6 +47,46 @@ private:
       boost::multiprecision::unchecked, void > >
       int_insphere;
 
+  /**
+   * @brief Auxiliary typedef used to extract the mantissa from a double
+   * precision floating point value.
+   *
+   * The variables in the union occupy the same memory, which allows us to
+   * access the bytes used to store the double precision floating point value.
+   */
+  typedef union {
+    /*! @brief Double precision floating point value. */
+    double dvalue;
+    /**
+     * @brief Anonymous struct containing the 3 parts of a general double
+     * precision floating point value.
+     *
+     * A general double precision floating point value has a sign \f$s\f$, a
+     * mantissa \f$m\f$, and an exponent \f$e\f$, so that the value \f$v\f$ of
+     * the double is given by
+     * \f[
+     * v = s \times 1.m \times 2^{e-1023}
+     * \f]
+     * (see
+     * https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
+     *
+     * The IEEE 754 standard specifies that \f$s\f$, \f$m\f$ and \f$e\f$ have
+     * respectively 1 bit, 52 bit and 11 bit precision. In memory (low to high
+     * bits), they are ordered as follows:
+     * \f[
+     * m e s
+     * \f]
+     */
+    struct {
+      /*! @brief Mantissa \f$m\f$. */
+      unsigned long mantissa : 52;
+      /*! @brief Exponent \f$e\f$. */
+      unsigned long exponent : 11;
+      /*! @brief Sign \f$s\f$. */
+      unsigned long sign : 1;
+    } parts;
+  } binary_double;
+
 public:
   /**
    * @brief Test the orientation of the tetrahedron that has the four given
@@ -130,6 +170,75 @@ public:
       return -1;
     } else {
       return 0;
+    }
+  }
+
+  /**
+   * @brief Test the orientation of the tetrahedron that has the four given
+   * points as vertices.
+   *
+   * The test returns a positive result if the fourth vertex is below the plane
+   * through the three other vertices, with above the direction from which the
+   * three points are ordered counterclockwise.
+   *
+   * E.g. if the four points are (0, 0, 0), (0, 0, 1), (0, 1, 0), and (1, 0, 0),
+   * then this function returns 1.
+   *
+   * If the four points are exactly coplanar, then this function returns 0.
+   *
+   * This version uses double precision floating point arithmetics and
+   * determines an error bound to check if round off error could change the
+   * outcome of the test. If this is the case, an exact test is used, using the
+   * given integer representations of the vertex coordinates.
+   *
+   * @param ar First vertex (real coordinates, in m).
+   * @param br Second vertex (real coordinates, in m).
+   * @param cr Third vertex (real coordinates, in m).
+   * @param dr Fourth vertex (real coordinates, in m).
+   * @param ai First vertex (integer coordinates).
+   * @param bi Second vertex (integer coordinates).
+   * @param ci Third vertex (integer coordinates).
+   * @param di Fourth vertex (integer coordinates).
+   * @return -1, 0, or 1, depending on the orientation of the tetrahedron.
+   */
+  inline static char
+  orient3d_adaptive(const CoordinateVector<> &ar, const CoordinateVector<> &br,
+                    const CoordinateVector<> &cr, const CoordinateVector<> &dr,
+                    const CoordinateVector< unsigned long > &ai,
+                    const CoordinateVector< unsigned long > &bi,
+                    const CoordinateVector< unsigned long > &ci,
+                    const CoordinateVector< unsigned long > &di) {
+
+    const CoordinateVector<> ad = ar - dr;
+    const CoordinateVector<> bd = br - dr;
+    const CoordinateVector<> cd = cr - dr;
+
+    const double bdxcdy = bd.x() * cd.y();
+    const double cdxbdy = cd.x() * bd.y();
+
+    const double cdxady = cd.x() * ad.y();
+    double adxcdy = ad.x() * cd.y();
+
+    const double adxbdy = ad.x() * bd.y();
+    const double bdxady = bd.x() * ad.y();
+
+    double errbound = (std::abs(bdxcdy) + std::abs(cdxbdy)) * std::abs(ad.z()) +
+                      (std::abs(cdxady) + std::abs(adxcdy)) * std::abs(bd.z()) +
+                      (std::abs(adxbdy) + std::abs(bdxady)) * std::abs(cd.z());
+    // not really the right factor (which is 7.77156e-16 on my local machine),
+    // but this will do
+    errbound *= 1.e-10;
+
+    const double result = ad.z() * (bdxcdy - cdxbdy) +
+                          bd.z() * (cdxady - adxcdy) +
+                          cd.z() * (adxbdy - bdxady);
+
+    if (result < -errbound) {
+      return -1;
+    } else if (result > errbound) {
+      return 1;
+    } else {
+      return orient3d(ai, bi, ci, di);
     }
   }
 
@@ -234,44 +343,123 @@ public:
   }
 
   /**
-   * @brief Auxiliary typedef used to extract the mantissa from a double
-   * precision floating point value.
+   * @brief Check if the fifth given point is inside the circumsphere of the
+   * tetrahedron formed by the other four given points.
    *
-   * The variables in the union occupy the same memory, which allows us to
-   * access the bytes used to store the double precision floating point value.
+   * It is assumed that the first four points are the vertices of a positively
+   * oriented tetrahedron, as defined by a negative return value of orient3d().
+   *
+   * If the fifth point is exactly on the circumsphere of the tetrahedron, this
+   * functions returns 0.
+   *
+   * This version uses double precision floating point arithmetics and
+   * determines an error bound to check if round off error could change the
+   * outcome of the test. If this is the case, an exact test is used, using the
+   * given integer representations of the vertex coordinates.
+   *
+   * @param ar First vertex (real coordinates, in m).
+   * @param br Second vertex (real coordinates, in m).
+   * @param cr Third vertex (real coordinates, in m).
+   * @param dr Fourth vertex (real coordinates, in m).
+   * @param er Fifth vertex (real coordinates, in m).
+   * @param ai First vertex (integer coordinates).
+   * @param bi Second vertex (integer coordinates).
+   * @param ci Third vertex (integer coordinates).
+   * @param di Fourth vertex (integer coordinates).
+   * @param ei Fifth vertex (integer coordinates).
+   * @return -1, 0, or 1, depending on the outcome of the geometric test.
    */
-  typedef union {
-    /*! @brief Double precision floating point value. */
-    double dvalue;
-    /**
-     * @brief Anonymous struct containing the 3 parts of a general double
-     * precision floating point value.
-     *
-     * A general double precision floating point value has a sign \f$s\f$, a
-     * mantissa \f$m\f$, and an exponent \f$e\f$, so that the value \f$v\f$ of
-     * the double is given by
-     * \f[
-     * v = s \times 1.m \times 2^{e-1023}
-     * \f]
-     * (see
-     * https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
-     *
-     * The IEEE 754 standard specifies that \f$s\f$, \f$m\f$ and \f$e\f$ have
-     * respectively 1 bit, 52 bit and 11 bit precision. In memory (low to high
-     * bits), they are ordered as follows:
-     * \f[
-     * m e s
-     * \f]
-     */
-    struct {
-      /*! @brief Mantissa \f$m\f$. */
-      unsigned long mantissa : 52;
-      /*! @brief Exponent \f$e\f$. */
-      unsigned long exponent : 11;
-      /*! @brief Sign \f$s\f$. */
-      unsigned long sign : 1;
-    } parts;
-  } binary_double;
+  inline static char
+  insphere_adaptive(const CoordinateVector<> &ar, const CoordinateVector<> &br,
+                    const CoordinateVector<> &cr, const CoordinateVector<> &dr,
+                    const CoordinateVector<> &er,
+                    const CoordinateVector< unsigned long > &ai,
+                    const CoordinateVector< unsigned long > &bi,
+                    const CoordinateVector< unsigned long > &ci,
+                    const CoordinateVector< unsigned long > &di,
+                    const CoordinateVector< unsigned long > &ei) {
+
+    const CoordinateVector<> ae = ar - er;
+    const CoordinateVector<> be = br - er;
+    const CoordinateVector<> ce = cr - er;
+    const CoordinateVector<> de = dr - er;
+
+    const double aexbey = ae.x() * be.y();
+    const double bexaey = be.x() * ae.y();
+    const double ab = aexbey - bexaey;
+    const double bexcey = be.x() * ce.y();
+    const double cexbey = ce.x() * be.y();
+    const double bc = bexcey - cexbey;
+    const double cexdey = ce.x() * de.y();
+    const double dexcey = de.x() * ce.y();
+    const double cd = cexdey - dexcey;
+    const double dexaey = de.x() * ae.y();
+    const double aexdey = ae.x() * de.y();
+    const double da = dexaey - aexdey;
+    const double aexcey = ae.x() * ce.y();
+    const double cexaey = ce.x() * ae.y();
+    const double ac = aexcey - cexaey;
+    const double bexdey = be.x() * de.y();
+    const double dexbey = de.x() * be.y();
+    const double bd = bexdey - dexbey;
+
+    const double abc = ae.z() * bc - be.z() * ac + ce.z() * ab;
+    const double bcd = be.z() * cd - ce.z() * bd + de.z() * bc;
+    const double cda = ce.z() * da + de.z() * ac + ae.z() * cd;
+    const double dab = de.z() * ab + ae.z() * bd + be.z() * da;
+
+    const double aenrm2 = ae.norm2();
+    const double benrm2 = be.norm2();
+    const double cenrm2 = ce.norm2();
+    const double denrm2 = de.norm2();
+
+    const double aezplus = std::abs(ae.z());
+    const double bezplus = std::abs(be.z());
+    const double cezplus = std::abs(ce.z());
+    const double dezplus = std::abs(de.z());
+    const double aexbeyplus = std::abs(aexbey);
+    const double bexaeyplus = std::abs(bexaey);
+    const double bexceyplus = std::abs(bexcey);
+    const double cexbeyplus = std::abs(cexbey);
+    const double cexdeyplus = std::abs(cexdey);
+    const double dexceyplus = std::abs(dexcey);
+    const double dexaeyplus = std::abs(dexaey);
+    const double aexdeyplus = std::abs(aexdey);
+    const double aexceyplus = std::abs(aexcey);
+    const double cexaeyplus = std::abs(cexaey);
+    const double bexdeyplus = std::abs(bexdey);
+    const double dexbeyplus = std::abs(dexbey);
+    double errbound = ((cexdeyplus + dexceyplus) * bezplus +
+                       (dexbeyplus + bexdeyplus) * cezplus +
+                       (bexceyplus + cexbeyplus) * dezplus) *
+                          aenrm2 +
+                      ((dexaeyplus + aexdeyplus) * cezplus +
+                       (aexceyplus + cexaeyplus) * dezplus +
+                       (cexdeyplus + dexceyplus) * aezplus) *
+                          benrm2 +
+                      ((aexbeyplus + bexaeyplus) * dezplus +
+                       (bexdeyplus + dexbeyplus) * aezplus +
+                       (dexaeyplus + aexdeyplus) * bezplus) *
+                          cenrm2 +
+                      ((bexceyplus + cexbeyplus) * aezplus +
+                       (cexaeyplus + aexceyplus) * bezplus +
+                       (aexbeyplus + bexaeyplus) * cezplus) *
+                          denrm2;
+    // not really the right factor (which is 1.77636e-15 on my local machine),
+    // but this will do
+    errbound *= 1.e-10;
+
+    const double result =
+        (denrm2 * abc - cenrm2 * dab) + (benrm2 * cda - aenrm2 * bcd);
+
+    if (result < -errbound) {
+      return -1;
+    } else if (result > errbound) {
+      return 1;
+    } else {
+      return insphere(ai, bi, ci, di, ei);
+    }
+  }
 
   /**
    * @brief Get the 52 bit mantissa of the given double precision floating point
