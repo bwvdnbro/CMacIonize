@@ -62,7 +62,7 @@ public:
   AsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
   ~AsciiFileDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 
   double get_total_hydrogen_number() const;
 };

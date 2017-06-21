@@ -242,7 +242,7 @@ public:
   double get_mass(unsigned int index);
   double get_smoothing_length(unsigned int index);
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 };
 
 /**

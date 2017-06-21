@@ -33,13 +33,15 @@
 class TestDensityFunction : public DensityFunction {
 public:
   /**
-   * @brief Get the density at the given position.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position CoordinateVector specifying a position.
-   * @return Density at that position.
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
+  DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+
+    const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density;
     if (position.z() < 0.5) {
@@ -48,9 +50,9 @@ public:
       density = 2.;
     }
 
-    cell.set_number_density(density);
-    cell.set_temperature(4000.);
-    return cell;
+    values.set_number_density(density);
+    values.set_temperature(4000.);
+    return values;
   }
 };
 

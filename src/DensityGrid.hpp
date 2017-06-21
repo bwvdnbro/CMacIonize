@@ -28,6 +28,7 @@
 
 #include "Abundances.hpp"
 #include "Box.hpp"
+#include "Cell.hpp"
 #include "Configuration.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
@@ -422,7 +423,7 @@ public:
   /**
    * @brief Iterator to loop over the cells in the grid.
    */
-  class iterator {
+  class iterator : public Cell {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */
     unsigned long _index;
@@ -446,7 +447,7 @@ public:
      *
      * @return Cell midpoint (in m).
      */
-    inline CoordinateVector<> get_cell_midpoint() const {
+    virtual CoordinateVector<> get_cell_midpoint() const {
       return _grid->get_cell_midpoint(_index);
     }
 
@@ -598,7 +599,7 @@ public:
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() const { return _grid->get_cell_volume(_index); }
+    virtual double get_volume() const { return _grid->get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -737,7 +738,7 @@ public:
      * @param it DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(iterator it) {
-      DensityValues vals = _function(it.get_cell_midpoint());
+      DensityValues vals = _function(it);
       IonizationVariables &ionization_variables = it.get_ionization_variables();
       ionization_variables.set_number_density(vals.get_number_density());
       ionization_variables.set_temperature(vals.get_temperature());

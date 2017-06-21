@@ -250,29 +250,32 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
 }
 
 /**
- * @brief Get the DensityValues at the given position.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position CoordinateVector specifying a position (in m).
- * @return DensityValues at that position (in SI units).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
 DensityValues CMacIonizeSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
+operator()(const Cell &cell) const {
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+
   if (_cartesian_grid) {
     // get the indices of the cell containing the position
-    int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
-             _box.get_sides().x();
-    int iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
-             _box.get_sides().y();
-    int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
-             _box.get_sides().z();
+    const int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
+                   _box.get_sides().x();
+    const int iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
+                   _box.get_sides().y();
+    const int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
+                   _box.get_sides().z();
 
     return _cartesian_grid[ix][iy][iz];
   } else if (_amr_grid) {
-    unsigned long key = _amr_grid->get_key(position);
-    AMRGridCell< DensityValues > &cell = (*_amr_grid)[key];
-    DensityValues values = cell.value();
+    const unsigned long key = _amr_grid->get_key(position);
+    const AMRGridCell< DensityValues > &amr_cell = (*_amr_grid)[key];
+    DensityValues values = amr_cell.value();
     // we make sure cells are refined to the correct level
-    CoordinateVector<> cell_midpoint = cell.get_midpoint();
+    const CoordinateVector<> cell_midpoint = amr_cell.get_midpoint();
     if (std::abs(cell_midpoint.x() - position.x()) >
             1.e-9 * std::abs(cell_midpoint.x() + position.x()) &&
         std::abs(cell_midpoint.y() - position.y()) >
@@ -283,7 +286,7 @@ operator()(CoordinateVector<> position) const {
     }
     return values;
   } else if (_voronoi_pointlocations) {
-    unsigned int index =
+    const unsigned int index =
         _voronoi_pointlocations->get_closest_neighbour(position);
     return _voronoi_densityvalues[index];
   } else {

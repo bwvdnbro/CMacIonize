@@ -504,36 +504,36 @@ double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
 }
 
 /**
- * @brief Get the DensityValues at the given position.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position Coordinates of a position (in m).
- * @return DensityValues at that position (in SI units).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
-DensityValues SPHNGSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
-  DensityValues cell;
+DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
 
   double density = 0.;
   std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
   const unsigned int numngbs = ngbs.size();
   for (unsigned int i = 0; i < numngbs; ++i) {
-    unsigned int index = ngbs[i];
-    double r;
-    r = (position - _positions[index]).norm();
-    double h = _smoothing_lengths[index];
-    double q = r / h;
-    double m = _masses[index];
-    double splineval = m * kernel(q, h);
+    const unsigned int index = ngbs[i];
+    const double r = (position - _positions[index]).norm();
+    const double h = _smoothing_lengths[index];
+    const double q = r / h;
+    const double m = _masses[index];
+    const double splineval = m * kernel(q, h);
     density += splineval;
   }
 
   // convert density to particle density (assuming hydrogen only)
-  cell.set_number_density(density / 1.6737236e-27);
+  values.set_number_density(density / 1.6737236e-27);
   // TODO: other quantities
   // temporary values
-  cell.set_temperature(_initial_temperature);
-  cell.set_ionic_fraction(ION_H_n, 1.e-6);
-  cell.set_ionic_fraction(ION_He_n, 1.e-6);
+  values.set_temperature(_initial_temperature);
+  values.set_ionic_fraction(ION_H_n, 1.e-6);
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
 
-  return cell;
+  return values;
 }

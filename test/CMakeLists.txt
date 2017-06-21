@@ -108,6 +108,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/Cell.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp

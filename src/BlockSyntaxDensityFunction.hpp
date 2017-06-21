@@ -129,17 +129,19 @@ public:
             params.get_value< std::string >("densityfunction:filename"), log) {}
 
   /**
-   * @brief Function that gives the DensityValues for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
    * Due to the way this function is written, the values for the last block
    * containing the given position are used. This means the order in which
    * nested blocks are given is important!
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return DensityValues at the given coordinate (in SI units).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
+  virtual DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+
+    const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density = -1.;
     double temperature = -1.;
@@ -160,12 +162,12 @@ public:
                  position.x(), position.y(), position.z());
     }
 
-    cell.set_number_density(density);
-    cell.set_temperature(temperature);
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    cell.set_velocity(velocity);
-    return cell;
+    values.set_number_density(density);
+    values.set_temperature(temperature);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_He_n, 1.e-6);
+    values.set_velocity(velocity);
+    return values;
   }
 };
 

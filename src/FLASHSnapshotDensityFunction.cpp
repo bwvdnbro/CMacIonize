@@ -176,19 +176,21 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
           log) {}
 
 /**
- * @brief Function that returns the density at the given coordinate position.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position CoordinateVector<> specifying a position.
- * @return Density at that position (in m^-3).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
-DensityValues FLASHSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
-  DensityValues cell;
+DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) const {
 
-  DensityValues &vals = _grid.get_cell(position);
-  cell.set_number_density(vals.get_number_density() / 1.6737236e-27);
-  cell.set_temperature(vals.get_temperature());
-  cell.set_ionic_fraction(ION_H_n, 1.e-6);
-  cell.set_ionic_fraction(ION_He_n, 1.e-6);
-  return cell;
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+
+  const DensityValues &vals = _grid.get_cell(position);
+  values.set_number_density(vals.get_number_density() / 1.6737236e-27);
+  values.set_temperature(vals.get_temperature());
+  values.set_ionic_fraction(ION_H_n, 1.e-6);
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
+  return values;
 }

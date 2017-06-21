@@ -684,7 +684,8 @@ public:
           position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
           position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();
           position[2] = _box.get_anchor().z() + (iz + 0.5) * _cellsides.z();
-          DensitySubGridVariables::initialize(index, function(position));
+          const DummyCell cell(position.x(), position.y(), position.z());
+          DensitySubGridVariables::initialize(index, function(cell));
         }
       }
     }
