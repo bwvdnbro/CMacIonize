@@ -26,6 +26,7 @@
 #include "Assert.hpp"
 #include "NewVoronoiCell.hpp"
 #include "NewVoronoiGrid.hpp"
+#include "Timer.hpp"
 #include "Utilities.hpp"
 
 #include <fstream>
@@ -1191,9 +1192,15 @@ int main(int argc, char **argv) {
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     NewVoronoiGrid grid(positions, box);
-    grid.construct();
 
-    cmac_status("Standard grid construction works!");
+    Timer timer;
+    timer.start();
+    grid.construct();
+    timer.stop();
+
+    double time_per_cell = timer.value() / ncell;
+    cmac_status("Standard grid construction works (%g s, %g s/cell)!",
+                timer.value(), time_per_cell);
   }
 
   /// test NewVoronoiGrid construction: regular generators
@@ -1214,9 +1221,16 @@ int main(int argc, char **argv) {
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     NewVoronoiGrid grid(positions, box);
-    grid.construct();
 
-    cmac_status("Regular (degenerate) grid construction works!");
+    Timer timer;
+    timer.start();
+    grid.construct();
+    timer.stop();
+
+    double time_per_cell = timer.value() / ncell_3D;
+    cmac_status(
+        "Regular (degenerate) grid construction works (%g s, %g s/cell)!",
+        timer.value(), time_per_cell);
   }
 
   return 0;
