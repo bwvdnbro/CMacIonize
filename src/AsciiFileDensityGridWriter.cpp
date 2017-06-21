@@ -71,11 +71,13 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
   std::ofstream file(filename);
 
-  file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\n";
+  file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\t neutral H fraction\n";   // Maya
 
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
-    double n = it.get_number_density();
-    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\n";
+    double n = it.get_number_density();        
+    IonName ion = static_cast< IonName >(0);     // Maya
+    double frac = it.get_ionic_fraction(ion);    // Maya
+    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t" << frac <<"\n";   // Maya
   }
 }
