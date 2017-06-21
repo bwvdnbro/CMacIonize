@@ -1100,7 +1100,7 @@ int main(int argc, char **argv) {
 
   /// test NewVoronoiGrid construction: random generators
   {
-    const unsigned int ncell = 1000;
+    const unsigned int ncell = 100;
     std::vector< CoordinateVector<> > positions(ncell);
     for (unsigned int i = 0; i < ncell; ++i) {
       positions[i] = Utilities::random_position();
