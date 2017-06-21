@@ -68,7 +68,7 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 1 tetrahedron + 4 dummy neighbours to check the neighbour
     // handling
-    _tetrahedra.resize(5);
+    _tetrahedra_size = 5;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
                                            ngb[1], ngb[2], ngb[3], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
@@ -87,7 +87,7 @@ void NewVoronoiCell::setup_test(int test) {
     const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
-    _tetrahedra.resize(8);
+    _tetrahedra_size = 8;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
                                            ngb[3], t[1], ngb[4], 0, 0, 3, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
@@ -111,7 +111,7 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 5 tetrahedra + 10 dummy neighbours to check the neighbour
     // handling
-    _tetrahedra.resize(15);
+    _tetrahedra_size = 15;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1], ngb[0],
                                            t[4], ngb[1], 2, 0, 0, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2], ngb[2],
@@ -138,7 +138,7 @@ void NewVoronoiCell::setup_test(int test) {
     const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
-    _tetrahedra.resize(8);
+    _tetrahedra_size = 8;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
                                            ngb[3], t[1], ngb[4], 0, 0, 3, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
@@ -159,7 +159,7 @@ void NewVoronoiCell::setup_test(int test) {
     const unsigned int ngb[6] = {3, 4, 5, 6, 7, 8};
 
     // we need 3 tetrahedra + 6 dummy neighbours to check the neighbour handling
-    _tetrahedra.resize(9);
+    _tetrahedra_size = 9;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2], t[1],
                                            ngb[5], ngb[4], 3, 3, 0, 0);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2], ngb[3],
@@ -182,7 +182,7 @@ void NewVoronoiCell::setup_test(int test) {
     const unsigned int ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
 
     // we need 4 tetrahedra + 8 dummy neighbours to check the neighbour handling
-    _tetrahedra.resize(12);
+    _tetrahedra_size = 12;
     _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
                                            ngb[3], t[1], t[2], 0, 0, 3, 2);
     _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
@@ -254,7 +254,7 @@ void NewVoronoiCell::check_test(int test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
 
     // three new tetrahedra should have been created by this flip
-    assert_condition(_tetrahedra.size() == 8);
+    assert_condition(_tetrahedra_size == 8);
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -283,7 +283,7 @@ void NewVoronoiCell::check_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP: {
 
     // four extra tetrahedra should have been created by this flip
-    assert_condition(_tetrahedra.size() == 12);
+    assert_condition(_tetrahedra_size == 12);
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -322,7 +322,7 @@ void NewVoronoiCell::check_test(int test) {
     // we test for n = 5
 
     // n extra tetrahedra should have been created by this flip
-    assert_condition(_tetrahedra.size() == 20);
+    assert_condition(_tetrahedra_size == 20);
 
     // convenient names used in documentation figure
     const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -375,7 +375,7 @@ void NewVoronoiCell::check_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP: {
 
     // one extra tetrahedron should have been created by this flip
-    assert_condition(_tetrahedra.size() == 9);
+    assert_condition(_tetrahedra_size == 9);
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -403,7 +403,7 @@ void NewVoronoiCell::check_test(int test) {
   case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
 
     // no new tetrahedra should have been created by this flip
-    assert_condition(_tetrahedra.size() == 9);
+    assert_condition(_tetrahedra_size == 9);
     // one free spot should have opened up
     assert_condition(_free_tetrahedra.size() == 1);
     assert_condition(_free_tetrahedra[0] == 2);
@@ -431,7 +431,7 @@ void NewVoronoiCell::check_test(int test) {
   case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
 
     // no new tetrahedra should have been created by this flip
-    assert_condition(_tetrahedra.size() == 12);
+    assert_condition(_tetrahedra_size == 12);
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -745,18 +745,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
-    std::vector< bool > queue(5, false);
     unsigned int tn[4];
-    cell.one_to_four_flip(4, 0, queue, tn);
-    assert_condition(queue.size() == 8);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == false);
-    assert_condition(queue[2] == false);
-    assert_condition(queue[3] == false);
-    assert_condition(queue[4] == false);
-    assert_condition(queue[5] == true);
-    assert_condition(queue[6] == true);
-    assert_condition(queue[7] == true);
+    cell.one_to_four_flip(4, 0, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 5);
     assert_condition(tn[2] == 6);
@@ -773,23 +763,9 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
-    std::vector< bool > queue(8, false);
     unsigned int tetrahedra[2] = {0, 1};
     unsigned int tn[6];
-    cell.two_to_six_flip(5, tetrahedra, queue, tn);
-    assert_condition(queue.size() == 12);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == true);
-    assert_condition(queue[2] == false);
-    assert_condition(queue[3] == false);
-    assert_condition(queue[4] == false);
-    assert_condition(queue[5] == false);
-    assert_condition(queue[6] == false);
-    assert_condition(queue[7] == false);
-    assert_condition(queue[8] == true);
-    assert_condition(queue[9] == true);
-    assert_condition(queue[10] == true);
-    assert_condition(queue[11] == true);
+    cell.two_to_six_flip(5, tetrahedra, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
     assert_condition(tn[2] == 8);
@@ -808,31 +784,9 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
-    std::vector< bool > queue(15, false);
     unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
     unsigned int tn[2 * UCHAR_MAX];
-    cell.n_to_2n_flip(7, tetrahedra, 5, queue, tn);
-    assert_condition(queue.size() == 20);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == true);
-    assert_condition(queue[2] == true);
-    assert_condition(queue[3] == true);
-    assert_condition(queue[4] == true);
-    assert_condition(queue[5] == false);
-    assert_condition(queue[6] == false);
-    assert_condition(queue[7] == false);
-    assert_condition(queue[8] == false);
-    assert_condition(queue[9] == false);
-    assert_condition(queue[10] == false);
-    assert_condition(queue[11] == false);
-    assert_condition(queue[12] == false);
-    assert_condition(queue[13] == false);
-    assert_condition(queue[14] == false);
-    assert_condition(queue[15] == true);
-    assert_condition(queue[16] == true);
-    assert_condition(queue[17] == true);
-    assert_condition(queue[18] == true);
-    assert_condition(queue[19] == true);
+    cell.n_to_2n_flip(7, tetrahedra, 5, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
     assert_condition(tn[2] == 2);
@@ -855,20 +809,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
-    std::vector< bool > queue(8, false);
     unsigned int tn[3];
-    unsigned int next_check = cell.two_to_three_flip(0, 1, 2, 3, queue, 8, tn);
-    assert_condition(next_check == 0);
-    assert_condition(queue.size() == 9);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == true);
-    assert_condition(queue[2] == false);
-    assert_condition(queue[3] == false);
-    assert_condition(queue[4] == false);
-    assert_condition(queue[5] == false);
-    assert_condition(queue[6] == false);
-    assert_condition(queue[7] == false);
-    assert_condition(queue[8] == true);
+    cell.two_to_three_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
     assert_condition(tn[2] == 8);
@@ -884,19 +826,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
-    std::vector< bool > queue(9, false);
     unsigned int tn[2];
-    unsigned int next_check = cell.three_to_two_flip(0, 1, 2, queue, 8, tn);
-    assert_condition(next_check == 0);
-    assert_condition(queue.size() == 9);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == true);
-    assert_condition(queue[3] == false);
-    assert_condition(queue[4] == false);
-    assert_condition(queue[5] == false);
-    assert_condition(queue[6] == false);
-    assert_condition(queue[7] == false);
-    assert_condition(queue[8] == false);
+    cell.three_to_two_flip(0, 1, 2, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
     cell.check_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
@@ -911,23 +842,8 @@ int main(int argc, char **argv) {
 
     NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
-    std::vector< bool > queue(12, false);
     unsigned int tn[4];
-    unsigned int next_check = cell.four_to_four_flip(0, 1, 2, 3, queue, 11, tn);
-    assert_condition(next_check == 0);
-    assert_condition(queue.size() == 12);
-    assert_condition(queue[0] == true);
-    assert_condition(queue[1] == true);
-    assert_condition(queue[2] == true);
-    assert_condition(queue[3] == true);
-    assert_condition(queue[4] == false);
-    assert_condition(queue[5] == false);
-    assert_condition(queue[6] == false);
-    assert_condition(queue[7] == false);
-    assert_condition(queue[8] == false);
-    assert_condition(queue[9] == false);
-    assert_condition(queue[10] == false);
-    assert_condition(queue[11] == false);
+    cell.four_to_four_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
     assert_condition(tn[2] == 2);
@@ -1184,7 +1100,7 @@ int main(int argc, char **argv) {
 
   /// test NewVoronoiGrid construction: random generators
   {
-    const unsigned int ncell = 100;
+    const unsigned int ncell = 1000;
     std::vector< CoordinateVector<> > positions(ncell);
     for (unsigned int i = 0; i < ncell; ++i) {
       positions[i] = Utilities::random_position();

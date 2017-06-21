@@ -48,24 +48,10 @@ private:
 public:
   /**
    * @brief Empty constructor.
+   *
+   * Does absolutely nothing, as we don't want to waste any time here.
    */
-  VoronoiTetrahedron() {
-    // fill with garbage to make sure we know it is uninitialized
-    _v[0] = NEWVORONOICELL_MAX_INDEX;
-    _v[1] = NEWVORONOICELL_MAX_INDEX;
-    _v[2] = NEWVORONOICELL_MAX_INDEX;
-    _v[3] = NEWVORONOICELL_MAX_INDEX;
-
-    _neighbours[0] = NEWVORONOICELL_MAX_INDEX;
-    _neighbours[1] = NEWVORONOICELL_MAX_INDEX;
-    _neighbours[2] = NEWVORONOICELL_MAX_INDEX;
-    _neighbours[3] = NEWVORONOICELL_MAX_INDEX;
-
-    _ngb_index[0] = 4;
-    _ngb_index[1] = 4;
-    _ngb_index[2] = 4;
-    _ngb_index[3] = 4;
-  }
+  inline VoronoiTetrahedron() {}
 
   /**
    * @brief Constructor.
@@ -95,14 +81,16 @@ public:
    * @param ngb3_index Index of this tetrahedron in the neighbour list of the
    * fourth neighbour.
    */
-  VoronoiTetrahedron(unsigned int v0, unsigned int v1, unsigned int v2,
-                     unsigned int v3,
-                     unsigned int ngb0 = NEWVORONOICELL_MAX_INDEX,
-                     unsigned int ngb1 = NEWVORONOICELL_MAX_INDEX,
-                     unsigned int ngb2 = NEWVORONOICELL_MAX_INDEX,
-                     unsigned int ngb3 = NEWVORONOICELL_MAX_INDEX,
-                     unsigned int ngb0_index = 4, unsigned int ngb1_index = 4,
-                     unsigned int ngb2_index = 4, unsigned int ngb3_index = 4) {
+  inline VoronoiTetrahedron(unsigned int v0, unsigned int v1, unsigned int v2,
+                            unsigned int v3,
+                            unsigned int ngb0 = NEWVORONOICELL_MAX_INDEX,
+                            unsigned int ngb1 = NEWVORONOICELL_MAX_INDEX,
+                            unsigned int ngb2 = NEWVORONOICELL_MAX_INDEX,
+                            unsigned int ngb3 = NEWVORONOICELL_MAX_INDEX,
+                            unsigned int ngb0_index = 4,
+                            unsigned int ngb1_index = 4,
+                            unsigned int ngb2_index = 4,
+                            unsigned int ngb3_index = 4) {
     _v[0] = v0;
     _v[1] = v1;
     _v[2] = v2;
@@ -118,6 +106,34 @@ public:
     _ngb_index[2] = ngb2_index;
     _ngb_index[3] = ngb3_index;
   }
+
+  /**
+   * @brief Fill the internal variables with garbage to make it clear that this
+   * tetrahedron is not active.
+   */
+  inline void deactivate() {
+    _v[0] = NEWVORONOICELL_MAX_INDEX;
+    _v[1] = NEWVORONOICELL_MAX_INDEX;
+    _v[2] = NEWVORONOICELL_MAX_INDEX;
+    _v[3] = NEWVORONOICELL_MAX_INDEX;
+
+    _neighbours[0] = NEWVORONOICELL_MAX_INDEX;
+    _neighbours[1] = NEWVORONOICELL_MAX_INDEX;
+    _neighbours[2] = NEWVORONOICELL_MAX_INDEX;
+    _neighbours[3] = NEWVORONOICELL_MAX_INDEX;
+
+    _ngb_index[0] = 4;
+    _ngb_index[1] = 4;
+    _ngb_index[2] = 4;
+    _ngb_index[3] = 4;
+  }
+
+  /**
+   * @brief Check if this tetrahedron is active.
+   *
+   * @return True if the tetrahedron is active, false otherwise.
+   */
+  inline bool is_active() const { return _v[0] != NEWVORONOICELL_MAX_INDEX; }
 
   /**
    * @brief Get the midpoint of the circumsphere of the tetrahedron with the
@@ -162,7 +178,7 @@ public:
    * @param positions List of generator positions (in m).
    * @return Midpoint of the circumsphere of the tetrahedron (in m).
    */
-  CoordinateVector<> get_midpoint_circumsphere(
+  inline CoordinateVector<> get_midpoint_circumsphere(
       const std::vector< CoordinateVector<> > &positions) const {
 
     cmac_assert(_v[0] < positions.size());
@@ -192,7 +208,8 @@ public:
    * @param positions List of generator positions (in m).
    * @return Volume of the tetrahedron (in m^3).
    */
-  double get_volume(const std::vector< CoordinateVector<> > &positions) const {
+  inline double
+  get_volume(const std::vector< CoordinateVector<> > &positions) const {
     const CoordinateVector<> a = positions[_v[1]] - positions[_v[0]];
     const CoordinateVector<> b = positions[_v[2]] - positions[_v[0]];
     const CoordinateVector<> c = positions[_v[3]] - positions[_v[0]];
@@ -207,7 +224,9 @@ public:
    * @param index Index.
    * @return Corresponding vertex.
    */
-  unsigned int get_vertex(unsigned char index) const { return _v[index]; }
+  inline unsigned int get_vertex(unsigned char index) const {
+    return _v[index];
+  }
 
   /**
    * @brief Get the index of the neighbouring tetrahedron opposite the vertex
@@ -216,7 +235,7 @@ public:
    * @param index Index.
    * @return Neighbouring tetrahedron index.
    */
-  unsigned int get_neighbour(unsigned char index) const {
+  inline unsigned int get_neighbour(unsigned char index) const {
     return _neighbours[index];
   }
 
@@ -227,7 +246,7 @@ public:
    * @param index Neighbour index.
    * @return Index of this tetrahedron in the neighbour list of that neighbour.
    */
-  unsigned char get_ngb_index(unsigned char index) const {
+  inline unsigned char get_ngb_index(unsigned char index) const {
     return _ngb_index[index];
   }
 
@@ -238,7 +257,7 @@ public:
    * @param neighbour Neighbour index.
    * @return Index of that neighbour in the neighbour list of this tetrahedron.
    */
-  unsigned char get_index(unsigned int neighbour) const {
+  inline unsigned char get_index(unsigned int neighbour) const {
     unsigned char i = 0;
     while (i < 4 && _neighbours[i] != neighbour) {
       ++i;
@@ -257,7 +276,7 @@ public:
    * @param neighbour Neighbour index.
    * @return Index of the neighbour if it is found, 4 otherwise.
    */
-  unsigned char is_neighbour(unsigned int neighbour) const {
+  inline unsigned char is_neighbour(unsigned int neighbour) const {
     unsigned char i = 0;
     while (i < 4 && _neighbours[i] != neighbour) {
       ++i;
@@ -272,8 +291,8 @@ public:
    * @param neighbour New neighbour value.
    * @param ngb_index New neighbour index value.
    */
-  void swap_neighbour(unsigned char index, unsigned int neighbour,
-                      unsigned char ngb_index) {
+  inline void swap_neighbour(unsigned char index, unsigned int neighbour,
+                             unsigned char ngb_index) {
     _neighbours[index] = neighbour;
     _ngb_index[index] = ngb_index;
   }

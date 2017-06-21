@@ -203,7 +203,8 @@ NewVoronoiGrid::NewVoronoiGrid(
  * @brief Construct the Voronoi grid.
  */
 void NewVoronoiGrid::construct() {
-  PointLocations point_locations(_real_generator_positions, 10,
+  PointLocations point_locations(_real_generator_positions,
+                                 NEWVORONOIGRID_NUM_BUCKET,
                                  _real_voronoi_box.get_box());
 
   const unsigned int psize = _real_generator_positions.size();

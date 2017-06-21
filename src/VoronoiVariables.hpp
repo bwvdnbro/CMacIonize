@@ -61,4 +61,14 @@
  *  coordinate). */
 #define NEWVORONOICELL_BOX_TOP 0xffffffff
 
+/*! @brief Size of the queue used for checking tetrahedra. */
+#define NEWVORONOICELL_QUEUE_SIZE 10000
+
+/*! @brief Size of the tetrahedra array stored in a cell. */
+#define NEWVORONOICELL_TETRAHEDRA_SIZE 10000
+
+/*! @brief Desired number of cells per bucket in the neigbour search
+ *  structure. */
+#define NEWVORONOIGRID_NUM_BUCKET 10
+
 #endif // VORONOIVARIABLES_HPP

@@ -56,11 +56,11 @@ private:
   /*! @brief Neighbours. */
   std::vector< unsigned int > _vertices;
 
-  /*! @brief Tetrahedra per neighbour, oriented. */
-  std::vector< std::vector< unsigned int > > _connections;
-
   /*! @brief Tetrahedra connections. */
-  std::vector< VoronoiTetrahedron > _tetrahedra;
+  VoronoiTetrahedron _tetrahedra[NEWVORONOICELL_TETRAHEDRA_SIZE];
+
+  /*! @brief Size of the tetrahedra array. */
+  unsigned int _tetrahedra_size;
 
   /*! @brief Free indices in the tetrahedra vector. */
   std::vector< unsigned int > _free_tetrahedra;
@@ -90,7 +90,7 @@ private:
    */
   template < unsigned char _number_ >
   inline unsigned int create_new_tetrahedra(unsigned int *indices) {
-    unsigned int new_size = _tetrahedra.size();
+    unsigned int new_size = _tetrahedra_size;
     for (unsigned char i = 0; i < _number_; ++i) {
       if (_free_tetrahedra.size() > 0) {
         indices[i] = _free_tetrahedra.back();
@@ -100,7 +100,8 @@ private:
         ++new_size;
       }
     }
-    _tetrahedra.resize(new_size);
+    _tetrahedra_size = new_size;
+    cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
     return new_size;
   }
 
@@ -117,7 +118,7 @@ private:
    */
   inline unsigned int create_new_tetrahedra(unsigned int *indices,
                                             unsigned int number) {
-    unsigned int new_size = _tetrahedra.size();
+    unsigned int new_size = _tetrahedra_size;
     for (unsigned char i = 0; i < number; ++i) {
       if (_free_tetrahedra.size() > 0) {
         indices[i] = _free_tetrahedra.back();
@@ -127,7 +128,8 @@ private:
         ++new_size;
       }
     }
-    _tetrahedra.resize(new_size);
+    _tetrahedra_size = new_size;
+    cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
     return new_size;
   }
 
@@ -170,36 +172,28 @@ public:
       unsigned int *indices) const;
 
   void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
-                        std::vector< bool > &queue, unsigned int tn[4]);
+                        unsigned int tn[4]);
   void two_to_six_flip(unsigned int new_vertex, unsigned int tetrahedra[2],
-                       std::vector< bool > &queue, unsigned int tn[6]);
+                       unsigned int tn[6]);
   void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
-                    unsigned char n, std::vector< bool > &queue,
-                    unsigned int tn[2 * UCHAR_MAX]);
+                    unsigned char n, unsigned int tn[2 * UCHAR_MAX]);
 
-  unsigned int two_to_three_flip(unsigned int tetrahedron0,
-                                 unsigned int tetrahedron1, unsigned char top0,
-                                 unsigned char top1, std::vector< bool > &queue,
-                                 unsigned int next_check, unsigned int tn[3]);
-  unsigned int four_to_four_flip(unsigned int tetrahedron0,
-                                 unsigned int tetrahedron1,
-                                 unsigned int tetrahedron2,
-                                 unsigned int tetrahedron3,
-                                 std::vector< bool > &queue,
-                                 unsigned int next_check, unsigned int tn[4]);
-  unsigned int three_to_two_flip(unsigned int tetrahedron0,
-                                 unsigned int tetrahedron1,
-                                 unsigned int tetrahedron2,
-                                 std::vector< bool > &queue,
-                                 unsigned int next_check, unsigned int tn[2]);
+  void two_to_three_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
+                         unsigned char top0, unsigned char top1,
+                         unsigned int tn[3]);
+  void four_to_four_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
+                         unsigned int tetrahedron2, unsigned int tetrahedron3,
+                         unsigned int tn[4]);
+  void three_to_two_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
+                         unsigned int tetrahedron2, unsigned int tn[2]);
 
   unsigned int check_tetrahedron(
       unsigned int tetrahedron, unsigned int new_vertex,
       const VoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
       const VoronoiBox< double > &rescaled_box,
-      const std::vector< CoordinateVector<> > &rescaled_positions,
-      std::vector< bool > &queue);
+      const std::vector< CoordinateVector<> > &rescaled_positions, bool queue[],
+      unsigned int &queue_size);
 
   /// inline/template helper functions
 
@@ -275,7 +269,7 @@ public:
   inline void print_tetrahedra(
       std::ostream &stream, const VoronoiBox< _datatype_ > &box,
       const std::vector< CoordinateVector< _datatype_ > > &positions) {
-    for (unsigned int i = 0; i < _tetrahedra.size(); ++i) {
+    for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
       if (_tetrahedra[i].get_vertex(0) < NEWVORONOICELL_MAX_INDEX) {
         for (unsigned char j = 0; j < 4; ++j) {
           const unsigned int v0 = _tetrahedra[i].get_vertex(j);
@@ -341,6 +335,21 @@ public:
       v[2] = v[3];
       v[3] = tmp;
     }
+  }
+
+  /**
+   * @brief Add the given tetrahedron to the given check queue.
+   *
+   * @param tetrahedron Tetrahedron to add.
+   * @param queue Queue to add to.
+   * @param queue_size Size of the queue.
+   */
+  inline static void add_to_queue(unsigned int tetrahedron,
+                                  bool queue[NEWVORONOICELL_QUEUE_SIZE],
+                                  unsigned int &queue_size) {
+    queue[tetrahedron] = true;
+    queue_size = std::max(queue_size, tetrahedron + 1);
+    cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
   }
 
   /// unit testing routines
