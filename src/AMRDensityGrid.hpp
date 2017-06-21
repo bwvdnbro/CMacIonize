@@ -762,6 +762,16 @@ public:
   }
 
   /**
+   * @brief Get the faces of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Empty vector, as this function is not implemented yet.
+   */
+  virtual std::vector< Face > get_faces(unsigned long index) const {
+    return std::vector< Face >();
+  }
+
+  /**
    * @brief Print the grid to the given stream for visual inspection.
    *
    * @param stream std::ostream to write to.

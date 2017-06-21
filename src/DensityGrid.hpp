@@ -362,6 +362,14 @@ public:
   get_neighbours(unsigned long index) = 0;
 
   /**
+   * @brief Get the faces of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Faces of the cell.
+   */
+  virtual std::vector< Face > get_faces(unsigned long index) const = 0;
+
+  /**
    * @brief Get an iterator to the cell containing the given position.
    *
    * @param position CoordinateVector<> specifying a position (in m).
@@ -449,6 +457,15 @@ public:
      */
     virtual CoordinateVector<> get_cell_midpoint() const {
       return _grid->get_cell_midpoint(_index);
+    }
+
+    /**
+     * @brief Get the faces of the cell.
+     *
+     * @return Faces of the cell.
+     */
+    virtual std::vector< Face > get_faces() const {
+      return _grid->get_faces(_index);
     }
 
     /**

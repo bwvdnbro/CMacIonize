@@ -27,6 +27,7 @@
 #define CELL_HPP
 
 #include "CoordinateVector.hpp"
+#include "Face.hpp"
 
 /**
  * @brief General interface for geometrical cell information.
@@ -46,6 +47,13 @@ public:
    * @return Volume of the cell (in m^3).
    */
   virtual double get_volume() const = 0;
+
+  /**
+   * @brief Get the faces of the cell.
+   *
+   * @return Faces of the cell.
+   */
+  virtual std::vector< Face > get_faces() const = 0;
 };
 
 /**
@@ -81,6 +89,15 @@ public:
    * @return 0, since this function is never actually used.
    */
   virtual double get_volume() const { return 0; }
+
+  /**
+   * @brief Get the faces of the cell.
+   *
+   * @return An empty vector, since this function is never actually used.
+   */
+  virtual std::vector< Face > get_faces() const {
+    return std::vector< Face >();
+  }
 };
 
 #endif // CELL_HPP

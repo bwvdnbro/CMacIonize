@@ -118,6 +118,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/Face.hpp
     ../src/HomogeneousDensityFunction.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
