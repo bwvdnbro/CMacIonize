@@ -1059,6 +1059,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_LEFT);
+    std::vector< CoordinateVector<> > vertices = faces[3].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
 
     assert_values_equal_rel(faces[0].get_surface_area(), 1., tolerance);
     midpoint = faces[0].get_midpoint();
@@ -1066,6 +1072,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[0].get_neighbour() == NEWVORONOICELL_BOX_RIGHT);
+    vertices = faces[0].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 1., 1.));
 
     assert_values_equal_rel(faces[2].get_surface_area(), 1., tolerance);
     midpoint = faces[2].get_midpoint();
@@ -1073,6 +1085,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 0., tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[2].get_neighbour() == NEWVORONOICELL_BOX_FRONT);
+    vertices = faces[2].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 0.));
 
     assert_values_equal_rel(faces[5].get_surface_area(), 1., tolerance);
     midpoint = faces[5].get_midpoint();
@@ -1080,6 +1098,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 1., tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[5].get_neighbour() == NEWVORONOICELL_BOX_BACK);
+    vertices = faces[5].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
 
     assert_values_equal_rel(faces[4].get_surface_area(), 1., tolerance);
     midpoint = faces[4].get_midpoint();
@@ -1087,6 +1111,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.z(), 0., tolerance);
     assert_condition(faces[4].get_neighbour() == NEWVORONOICELL_BOX_BOTTOM);
+    vertices = faces[4].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 0.));
 
     assert_values_equal_rel(faces[1].get_surface_area(), 1., tolerance);
     midpoint = faces[1].get_midpoint();
@@ -1094,6 +1124,12 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.z(), 1., tolerance);
     assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_TOP);
+    vertices = faces[1].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 0., 1.));
 
     cmac_status("Geometry, part 2: Cell face computation works!");
   }

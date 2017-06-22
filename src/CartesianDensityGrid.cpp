@@ -626,7 +626,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
  * @brief Get the faces of the cell with the given index.
  *
  * @param index Index of a cell.
- * @return Empty vector, as this function is not implemented yet.
+ * @return Faces of the cell.
  */
 std::vector< Face > CartesianDensityGrid::get_faces(unsigned long index) const {
   const double sidelength[3] = {_box.get_sides().x() / _ncell.x(),
