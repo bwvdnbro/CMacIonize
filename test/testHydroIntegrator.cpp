@@ -37,16 +37,17 @@
 class SodShockDensityFunction : public DensityFunction {
 public:
   /**
-   * @brief Get the density field at the given position.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position Position.
-   * @return DensityValues at that position.
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
+  virtual DensityValues operator()(const Cell &cell) const {
+    const CoordinateVector<> position = cell.get_cell_midpoint();
     const double hydrogen_mass = 1.6737236e-27;
     const double boltzmann_k = 1.38064852e-23;
-    double density_unit = 1. / hydrogen_mass;
-    double temperature_unit = hydrogen_mass / boltzmann_k;
+    const double density_unit = 1. / hydrogen_mass;
+    const double temperature_unit = hydrogen_mass / boltzmann_k;
     DensityValues values;
     if (position.x() < 0.5) {
       values.set_number_density(density_unit);

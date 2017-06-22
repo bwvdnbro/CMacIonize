@@ -131,7 +131,7 @@ public:
    */
   virtual ~InterpolatedDensityFunction() {}
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 };
 
 #endif // INTERPOLATEDDENSITYFUNCTION_HPP

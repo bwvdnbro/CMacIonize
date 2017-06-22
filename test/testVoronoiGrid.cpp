@@ -1101,36 +1101,72 @@ int main(int argc, char **argv) {
     assert_condition(VoronoiCell::get_face_surface_area(faces[0]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[0]) ==
                      CoordinateVector<>(0.5, 0., 0.5));
+    std::vector< CoordinateVector<> > vertices = faces[0].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 0.));
 
     assert_condition(VoronoiCell::get_face_neighbour(faces[1]) ==
                      VORONOI_BOX_LEFT);
     assert_condition(VoronoiCell::get_face_surface_area(faces[1]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[1]) ==
                      CoordinateVector<>(0., 0.5, 0.5));
+    vertices = faces[1].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 0., 1.));
 
     assert_condition(VoronoiCell::get_face_neighbour(faces[2]) ==
                      VORONOI_BOX_BOTTOM);
     assert_condition(VoronoiCell::get_face_surface_area(faces[2]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[2]) ==
                      CoordinateVector<>(0.5, 0.5, 0.));
+    vertices = faces[2].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 0.));
 
     assert_condition(VoronoiCell::get_face_neighbour(faces[3]) ==
                      VORONOI_BOX_TOP);
     assert_condition(VoronoiCell::get_face_surface_area(faces[3]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[3]) ==
                      CoordinateVector<>(0.5, 0.5, 1.));
+    vertices = faces[3].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 1., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 1.));
 
     assert_condition(VoronoiCell::get_face_neighbour(faces[4]) ==
                      VORONOI_BOX_BACK);
     assert_condition(VoronoiCell::get_face_surface_area(faces[4]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[4]) ==
                      CoordinateVector<>(0.5, 1., 0.5));
+    vertices = faces[4].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
 
     assert_condition(VoronoiCell::get_face_neighbour(faces[5]) ==
                      VORONOI_BOX_RIGHT);
     assert_condition(VoronoiCell::get_face_surface_area(faces[5]) == 1.);
     assert_condition(VoronoiCell::get_face_midpoint(faces[5]) ==
                      CoordinateVector<>(1., 0.5, 0.5));
+    vertices = faces[5].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 1., 0.));
   }
 
   /// test Voronoi cell intersection algorithm

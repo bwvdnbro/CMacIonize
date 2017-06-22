@@ -447,7 +447,11 @@ void NewVoronoiCell::finalize(
   for (unsigned int i = 0; i < connections.size(); ++i) {
     double area = 0.;
     CoordinateVector<> midpoint;
+    std::vector< CoordinateVector<> > vertices;
+    vertices.push_back(cell_vertices[connections[i][0] + 1]);
+    vertices.push_back(cell_vertices[connections[i][1] + 1]);
     for (unsigned int j = 2; j < connections[i].size(); ++j) {
+      vertices.push_back(cell_vertices[connections[i][j] + 1]);
       const VoronoiTetrahedron tetrahedron(0, connections[i][0] + 1,
                                            connections[i][j] + 1,
                                            connections[i][j - 1] + 1);
@@ -472,8 +476,8 @@ void NewVoronoiCell::finalize(
       midpoint += tarea * tmidpoint;
     }
     midpoint /= area;
-    _faces.push_back(
-        VoronoiFace(area, midpoint, _vertices[connection_vertices[i]]));
+    _faces.push_back(VoronoiFace(area, midpoint,
+                                 _vertices[connection_vertices[i]], vertices));
   }
   _centroid /= _volume;
 }

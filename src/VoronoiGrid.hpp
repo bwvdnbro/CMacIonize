@@ -27,6 +27,7 @@
 #define VORONOIGRID_HPP
 
 #include "Box.hpp"
+#include "Face.hpp"
 #include "Lock.hpp"
 #include "VoronoiFace.hpp"
 
@@ -200,6 +201,7 @@ public:
   void move_generator(unsigned int index, const CoordinateVector<> &dx);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
   std::vector< VoronoiFace > get_faces(unsigned int index) const;
+  std::vector< Face > get_geometrical_faces(unsigned int index) const;
   unsigned int get_index(const CoordinateVector<> &position) const;
 
   bool is_inside(CoordinateVector<> position) const;

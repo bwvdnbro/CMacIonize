@@ -621,3 +621,130 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
 
   return ngbs;
 }
+
+/**
+ * @brief Get the faces of the cell with the given index.
+ *
+ * @param index Index of a cell.
+ * @return Faces of the cell.
+ */
+std::vector< Face > CartesianDensityGrid::get_faces(unsigned long index) const {
+  const double sidelength[3] = {_box.get_sides().x() / _ncell.x(),
+                                _box.get_sides().y() / _ncell.y(),
+                                _box.get_sides().z() / _ncell.z()};
+  const CoordinateVector< int > cellindices = get_indices(index);
+  const CoordinateVector<> cell_midpoint = get_cell_midpoint(cellindices);
+
+  std::vector< Face > faces;
+
+  std::vector< CoordinateVector<> > vertices(4);
+
+  // negative x face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                              cell_midpoint.y(), cell_midpoint.z()),
+           vertices));
+  // positive x face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                              cell_midpoint.y(), cell_midpoint.z()),
+           vertices));
+
+  // negative y face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x(),
+                              cell_midpoint.y() - 0.5 * sidelength[1],
+                              cell_midpoint.z()),
+           vertices));
+  // positive y face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x(),
+                              cell_midpoint.y() + 0.5 * sidelength[1],
+                              cell_midpoint.z()),
+           vertices));
+
+  // negative z face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() - 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x(), cell_midpoint.y(),
+                              cell_midpoint.z() - 0.5 * sidelength[2]),
+           vertices));
+  // positive z face
+  vertices[0] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[1] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() - 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[2] = CoordinateVector<>(cell_midpoint.x() + 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  vertices[3] = CoordinateVector<>(cell_midpoint.x() - 0.5 * sidelength[0],
+                                   cell_midpoint.y() + 0.5 * sidelength[1],
+                                   cell_midpoint.z() + 0.5 * sidelength[2]);
+  faces.push_back(
+      Face(CoordinateVector<>(cell_midpoint.x(), cell_midpoint.y(),
+                              cell_midpoint.z() + 0.5 * sidelength[2]),
+           vertices));
+
+  return faces;
+}

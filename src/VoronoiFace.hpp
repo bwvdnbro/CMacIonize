@@ -28,6 +28,8 @@
 
 #include "CoordinateVector.hpp"
 
+#include <vector>
+
 /**
  * @brief Face of the Voronoi grid.
  */
@@ -42,6 +44,9 @@ private:
   /*! @brief Neighbour of the face. */
   unsigned int _neighbour;
 
+  /*! @brief Vertices of the face. */
+  std::vector< CoordinateVector<> > _vertices;
+
 public:
   /**
    * @brief (Empty) constructor.
@@ -54,11 +59,13 @@ public:
    * @param surface_area Surface area of the face (in m^2).
    * @param midpoint Midpoint of the face (in m).
    * @param neighbour Neighbour of the face.
+   * @param vertices Vertices of the face (ordered, in m).
    */
   inline VoronoiFace(double surface_area, CoordinateVector<> midpoint,
-                     unsigned int neighbour)
-      : _surface_area(surface_area), _midpoint(midpoint),
-        _neighbour(neighbour) {}
+                     unsigned int neighbour,
+                     const std::vector< CoordinateVector<> > &vertices)
+      : _surface_area(surface_area), _midpoint(midpoint), _neighbour(neighbour),
+        _vertices(vertices) {}
 
   /**
    * @brief Get the surface area of the face.
@@ -105,6 +112,24 @@ public:
    * @param neighbour Neighbour of the face.
    */
   inline void set_neighbour(unsigned int neighbour) { _neighbour = neighbour; }
+
+  /**
+   * @brief Get the vertices of the face (ordered).
+   *
+   * @return Vertex positions (ordered, in m).
+   */
+  inline std::vector< CoordinateVector<> > get_vertices() const {
+    return _vertices;
+  }
+
+  /**
+   * @brief Set the vertices of the face (ordered).
+   *
+   * @param vertices New vertex positions (ordered, in m).
+   */
+  inline void set_vertices(const std::vector< CoordinateVector<> > &vertices) {
+    _vertices = vertices;
+  }
 };
 
 #endif // VORONOIFACE_HPP

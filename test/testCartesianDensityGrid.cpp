@@ -184,6 +184,121 @@ int main(int argc, char **argv) {
   surface_area = std::get< 3 >(ngbs[5]);
   assert_condition(surface_area == 0.000244140625);
 
+  // check faces
+  {
+    std::vector< Face > faces = grid.get_faces(index);
+
+    assert_condition(faces[0].get_midpoint() ==
+                     CoordinateVector<>(0.5, 0.5078125, 0.5078125));
+    {
+      auto vertices = faces[0].first_vertex();
+      assert_condition(vertices != faces[0].last_vertex());
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.515625));
+      ++vertices;
+      assert_condition(vertices == faces[0].last_vertex());
+    }
+
+    assert_condition(faces[1].get_midpoint() ==
+                     CoordinateVector<>(0.515625, 0.5078125, 0.5078125));
+    {
+      auto vertices = faces[1].first_vertex();
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.515625));
+      ++vertices;
+    }
+
+    assert_condition(faces[2].get_midpoint() ==
+                     CoordinateVector<>(0.5078125, 0.5, 0.5078125));
+    {
+      auto vertices = faces[2].first_vertex();
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.515625));
+      ++vertices;
+    }
+
+    assert_condition(faces[3].get_midpoint() ==
+                     CoordinateVector<>(0.5078125, 0.515625, 0.5078125));
+    {
+      auto vertices = faces[3].first_vertex();
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.515625));
+      ++vertices;
+    }
+
+    assert_condition(faces[4].get_midpoint() ==
+                     CoordinateVector<>(0.5078125, 0.5078125, 0.5));
+    {
+      auto vertices = faces[4].first_vertex();
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.5));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.5));
+      ++vertices;
+    }
+
+    assert_condition(faces[5].get_midpoint() ==
+                     CoordinateVector<>(0.5078125, 0.5078125, 0.515625));
+    {
+      auto vertices = faces[5].first_vertex();
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.5, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.5, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.515625, 0.515625, 0.515625));
+      ++vertices;
+      assert_condition(vertices.get_position() ==
+                       CoordinateVector<>(0.5, 0.515625, 0.515625));
+      ++vertices;
+    }
+  }
+
   // check different scenarios for the wall intersection algorithm
   CoordinateVector< char > next_index;
   double ds;

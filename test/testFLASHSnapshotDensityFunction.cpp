@@ -52,7 +52,8 @@ int main(int argc, char **argv) {
   for (unsigned int i = 0; i < np; ++i) {
     CoordinateVector<> p((i + 0.5) * 0.02 / np, (i + 0.5) * 0.01 / np,
                          (i + 0.5) * 0.01 / np);
-    DensityValues vals = density(p);
+    DummyCell cell(p.x(), p.y(), p.z());
+    DensityValues vals = density(cell);
     double rho = vals.get_number_density();
     double rho_ex = expected_density(p);
     double diff = (rho - rho_ex) / (rho + rho_ex);

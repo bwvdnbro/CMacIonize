@@ -345,6 +345,16 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
 }
 
 /**
+ * @brief Get the faces of the cell with the given index.
+ *
+ * @param index Index of a cell.
+ * @return Faces of the cell.
+ */
+std::vector< Face > VoronoiDensityGrid::get_faces(unsigned long index) const {
+  return _voronoi_grid.get_geometrical_faces(index);
+}
+
+/**
  * @brief Get the volume of the cell with the given index.
  *
  * @param index Index of a cell.

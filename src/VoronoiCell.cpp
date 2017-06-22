@@ -1443,6 +1443,10 @@ void VoronoiCell::finalize() {
         // this is vertex 3
         v3 = _vertices[k];
 
+        std::vector< CoordinateVector<> > vertices;
+        vertices.push_back(v2 + _generator_position);
+        vertices.push_back(v3 + _generator_position);
+
         // _edges[i][j].second contains the index of the edge connecting vertex
         // 2 and vertex 3 in the edge list for vertex 3
         // get the next edge of vertex 3, which is the next edge of the current
@@ -1470,6 +1474,7 @@ void VoronoiCell::finalize() {
           }
           // this is vertex 4
           v4 = _vertices[m];
+          vertices.push_back(v4 + _generator_position);
           // volume and centroid contribution:
           // make sure we exclude all triangles that have vertex 1 as one of the
           // vertices
@@ -1502,6 +1507,7 @@ void VoronoiCell::finalize() {
         // position, so the face midpoint position will also be relative
         // here we convert it to an absolute position
         increase_face_midpoint(_faces.size() - 1, _generator_position);
+        _faces.back().set_vertices(vertices);
       }
     }
   }

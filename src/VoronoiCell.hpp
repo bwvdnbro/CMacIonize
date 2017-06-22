@@ -123,7 +123,8 @@ private:
   std::vector< std::vector< VoronoiEdge > > _edges;
 
   /*! @brief Cell faces. Each face has a surface area (in m^2), a midpoint
-   *  position (in m), and an associated index of the cell that generated it. */
+   *  position (in m), an associated index of the cell that generated it, and a
+   *  list of vertex positions (in m). */
   std::vector< VoronoiFace > _faces;
 
   /*! @brief Cell volume (in m^3). */

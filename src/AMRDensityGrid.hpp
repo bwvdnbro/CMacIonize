@@ -132,7 +132,6 @@ private:
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
         AMRGridCell< unsigned long > *childcell = cell.get_child(child);
-        DensityValues funcvalue = density_function(childcell->get_midpoint());
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
@@ -141,6 +140,9 @@ private:
           _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
+
+          const DensityValues funcvalue =
+              density_function(DensityGrid::iterator(index, *this));
 
           _ionization_variables[index].set_number_density(
               funcvalue.get_number_density());
@@ -175,6 +177,9 @@ private:
 #endif
           _cells.push_back(childcell);
           childcell->value() = _cells.size() - 1;
+
+          const DensityValues funcvalue =
+              density_function(DensityGrid::iterator(_cells.size() - 1, *this));
 
           _ionization_variables.back().set_number_density(
               funcvalue.get_number_density());
@@ -754,6 +759,16 @@ public:
         ngbs;
 
     return ngbs;
+  }
+
+  /**
+   * @brief Get the faces of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Empty vector, as this function is not implemented yet.
+   */
+  virtual std::vector< Face > get_faces(unsigned long index) const {
+    return std::vector< Face >();
   }
 
   /**

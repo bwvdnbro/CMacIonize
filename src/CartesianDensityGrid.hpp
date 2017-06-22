@@ -216,6 +216,8 @@ public:
   virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                                    CoordinateVector<>, double > >
   get_neighbours(unsigned long index);
+
+  virtual std::vector< Face > get_faces(unsigned long index) const;
 };
 
 #endif // CARTESIANDENSITYGRID_HPP

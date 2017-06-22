@@ -108,6 +108,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/Cell.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
@@ -117,6 +118,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/Face.hpp
     ../src/HomogeneousDensityFunction.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp

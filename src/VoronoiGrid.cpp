@@ -340,6 +340,24 @@ std::vector< VoronoiFace > VoronoiGrid::get_faces(unsigned int index) const {
 }
 
 /**
+ * @brief Get the geometrical faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Faces of that cell.
+ */
+std::vector< Face >
+VoronoiGrid::get_geometrical_faces(unsigned int index) const {
+  const std::vector< VoronoiFace > faces = _cells[index]->get_faces();
+  std::vector< Face > geometrical_faces;
+  for (unsigned int i = 0; i < faces.size(); ++i) {
+    const CoordinateVector<> midpoint = faces[i].get_midpoint();
+    const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    geometrical_faces.push_back(Face(midpoint, vertices));
+  }
+  return geometrical_faces;
+}
+
+/**
  * @brief Get the index of the cell containing the given position.
  *
  * @param position Position (in m).
