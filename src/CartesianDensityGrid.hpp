@@ -46,7 +46,7 @@ class RecombinationRates;
 class CartesianDensityGrid : public DensityGrid {
 private:
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
@@ -91,7 +91,7 @@ private:
     return CoordinateVector< int >(index_x, index_y, long_index);
   }
 
-  Box get_cell(CoordinateVector< int > index) const;
+  Box<> get_cell(CoordinateVector< int > index) const;
 
   /**
    * @brief Get the midpoint of the given cell.
@@ -101,7 +101,7 @@ private:
    */
   inline CoordinateVector<>
   get_cell_midpoint(CoordinateVector< int > index) const {
-    Box box = get_cell(index);
+    Box<> box = get_cell(index);
     CoordinateVector<> midpoint = box.get_anchor() + 0.5 * box.get_sides();
     return midpoint;
   }
@@ -119,11 +119,15 @@ private:
 
   CoordinateVector< int > get_cell_indices(CoordinateVector<> position) const;
 
-  bool is_inside(CoordinateVector< int > &index, CoordinateVector<> &position);
+  bool is_inside(CoordinateVector< int > &index,
+                 CoordinateVector<> &position) const;
+  bool is_inside_non_periodic(CoordinateVector< int > &index,
+                              CoordinateVector<> &position) const;
 
 public:
   CartesianDensityGrid(
-      Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
+      Box<> box, CoordinateVector< int > ncell,
+      DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
@@ -156,7 +160,7 @@ public:
    * @param index Long index.
    * @return Box specifying the geometry of the cell.
    */
-  inline Box get_cell(unsigned long index) const {
+  inline Box<> get_cell(unsigned long index) const {
     return get_cell(get_indices(index));
   }
 
@@ -183,11 +187,15 @@ public:
 
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
-                                           Box &cell,
+                                           Box<> &cell,
                                            CoordinateVector< char > &next_index,
-                                           double &ds);
+                                           double &ds) const;
 
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
+
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line);
 
   /**
    * @brief Get an iterator to the first cell in the grid.
@@ -208,6 +216,8 @@ public:
   virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                                    CoordinateVector<>, double > >
   get_neighbours(unsigned long index);
+
+  virtual std::vector< Face > get_faces(unsigned long index) const;
 };
 
 #endif // CARTESIANDENSITYGRID_HPP

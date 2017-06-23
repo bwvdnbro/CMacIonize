@@ -17,6 +17,12 @@
 ################################################################################
 
 cmake_minimum_required(VERSION 2.6)
+
+# Set the default CMAKE_BUILD_TYPE
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "blabla" FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 project(CMacIonize)
 
 macro(add_compiler_flag FLAG FATAL)
@@ -70,6 +76,38 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E echo
 
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)
+
+# Check if the compiler supports atomic floating point operations (it should if
+# it truly supports C++11, but e.g. the Intel compiler does actually not)
+set(ATOMIC_COMPILER_TEST_SOURCE
+    "#include <atomic>\n"
+    "#include <new>\n"
+    "int main(int, char**){\n"
+    "double a = 1.\;\n"
+    "std::atomic<double> *atom = new(&a) std::atomic<double>\;\n"
+    "double old = *atom\;\n"
+    "while (!atom->compare_exchange_weak(old, old + 1.)) {}\n"
+    "return 0\;}")
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${ATOMIC_COMPILER_TEST_SOURCE}
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/atomictest.cpp)
+try_compile(HAVE_ATOMIC ${PROJECT_BINARY_DIR}
+                        ${PROJECT_BINARY_DIR}/atomictest.cpp)
+if(NOT HAVE_ATOMIC)
+  message(WARNING
+          "This system does not support atomic floating point operations! "
+          "Lock-free data access will not work.")
+endif(NOT HAVE_ATOMIC)
+
+# Check if we want to use atomic operations to get lock free cell access
+# Our current tests show that this is in fact slower than just locking the cell,
+# so this is disabled by default
+if(LOCKFREE)
+  message(STATUS "Enabling lock free cell operations.")
+  set(USE_LOCKFREE True)
+else(LOCKFREE)
+  message(STATUS "Lock free cell operations disabled.")
+  set(USE_LOCKFREE False)
+endif(LOCKFREE)
 
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
@@ -165,6 +203,7 @@ if(Boost_FOUND)
       include_directories(${Boost_INCLUDE_DIRS})
       include_directories(${PYTHON_INCLUDE_PATH})
       include_directories(${NUMPY_OUTPUT})
+      set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
       set(HAVE_PYTHON True)
     else(NUMPY_RESULT STREQUAL "0")
       message(WARNING
@@ -178,6 +217,18 @@ if(Boost_FOUND)
 else(Boost_FOUND)
   message(WARNING "Boost Python not found. Not building Python modules.")
   set(HAVE_PYTHON False)
+endif(Boost_FOUND)
+
+# Find Boost multiprecision (available since Boost 1.53.0)
+find_package(Boost 1.53.0)
+if(Boost_FOUND)
+  message(STATUS "Found Boost multiprecision.")
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(HAVE_MULTIPRECISION True)
+else(Boost_FOUND)
+  message(WARNING
+          "Boost multiprecision not found. Exact arithmetics will not work!")
+  set(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
 
 # Check if we need to activate fast math
@@ -200,6 +251,15 @@ else(ACTIVATE_ASSERTIONS)
   set(HAVE_ASSERTIONS False)
   message(STATUS "Assertions not activated.")
 endif(ACTIVATE_ASSERTIONS)
+
+# Check if we need to output information about the jobs being executed on
+# different threads
+if(ACTIVATE_OUTPUT_CYCLES)
+  set(HAVE_OUTPUT_CYCLES True)
+  message(STATUS "Each thread will output a job statistics file (slow!).")
+else(ACTIVATE_OUTPUT_CYCLES)
+  set(HAVE_OUTPUT_CYCLES False)
+endif(ACTIVATE_OUTPUT_CYCLES)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)

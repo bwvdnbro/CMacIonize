@@ -350,5 +350,18 @@ int main(int argc, char **argv) {
     check_quantity< QUANTITY_TIME >(unitnames, unitlogic);
   }
 
+  /// VELOCITY
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("m s^-1");
+    unitlogic.push_back(0);
+    unitnames.push_back("km s^-1");
+    // 1 km a second is more than 1 meter a second
+    unitlogic.push_back(1);
+
+    check_quantity< QUANTITY_VELOCITY >(unitnames, unitlogic);
+  }
+
   return 0;
 }

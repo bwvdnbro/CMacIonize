@@ -108,6 +108,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/Cell.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
@@ -117,9 +118,11 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/Face.hpp
     ../src/HomogeneousDensityFunction.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
+    ../src/IonizationVariables.hpp
     ../src/Log.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
@@ -573,8 +576,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
 
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
     ../src/EmissivityCalculator.cpp
     ../src/EmissivityCalculator.hpp
     ../src/EmissivityValues.hpp
@@ -704,12 +705,22 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
+    ../src/HydroVariables.hpp
     ../src/VoronoiCell.cpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiGrid.cpp
 )
-add_unit_test(NAME testHydroIntegrator
-              SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTHYDROINTEGRATOR_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+endif(HAVE_HDF5)
 
 ## ParallelCartesianDensityGrid test
 if(HAVE_HDF5)
@@ -755,6 +766,8 @@ set(TESTVORONOIGRID_SOURCES
 
     ../src/VoronoiCell.cpp
     ../src/VoronoiCell.hpp
+    ../src/VoronoiEdge.hpp
+    ../src/VoronoiFace.hpp
     ../src/VoronoiGrid.cpp
     ../src/VoronoiGrid.hpp
 )
@@ -822,6 +835,7 @@ set(TESTVORONOIDENSITYGRID_SOURCES
 
     ../src/DensityGrid.cpp
     ../src/UniformRandomVoronoiGeneratorDistribution.hpp
+    ../src/UniformRegularVoronoiGeneratorDistribution.hpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiDensityGrid.hpp
     ../src/VoronoiGeneratorDistribution.hpp
@@ -830,8 +844,54 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     ../src/VoronoiGrid.cpp
     ../src/VoronoiGrid.hpp
 )
-add_unit_test(NAME testVoronoiDensityGrid
-              SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTVORONOIDENSITYGRID_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+endif(HAVE_HDF5)
+
+## Unit test for OIAMRRefinementScheme
+set(TESTOIAMRREFINEMENTSCHEME_SOURCES
+    testOIAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
+    ../src/OIAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testOIAMRRefinementScheme
+              SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
+
+## Unit test for NewVoronoiGrid
+set(TESTNEWVORONOIGRID_SOURCES
+    testNewVoronoiGrid.cpp
+
+    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCell.hpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/NewVoronoiGrid.hpp
+    ../src/VoronoiBox.hpp
+    ../src/VoronoiTetrahedron.hpp
+    ../src/VoronoiVariables.hpp
+)
+add_unit_test(NAME testNewVoronoiGrid
+              SOURCES ${TESTNEWVORONOIGRID_SOURCES})
+
+## Unit test for ExactGeometricTests
+if(HAVE_MULTIPRECISION)
+  set(TESTEXACTGEOMETRICTESTS_SOURCES
+      testExactGeometricTests.cpp
+
+      ../src/ExactGeometricTests.hpp
+  )
+  add_unit_test(NAME testExactGeometricTests
+                SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
+endif(HAVE_MULTIPRECISION)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

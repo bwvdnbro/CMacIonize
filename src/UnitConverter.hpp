@@ -75,7 +75,8 @@ enum Quantity {
   QUANTITY_REACTION_RATE,
   QUANTITY_SURFACE_AREA,
   QUANTITY_TEMPERATURE,
-  QUANTITY_TIME
+  QUANTITY_TIME,
+  QUANTITY_VELOCITY
 };
 
 /**
@@ -102,6 +103,8 @@ public:
       return Unit(3.086e19, 1, 0, 0, 0, 0);
     } else if (name == "angstrom") {
       return Unit(1.e-10, 1, 0, 0, 0, 0);
+    } else if (name == "km") {
+      return Unit(1000., 1, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
       return Unit(1., 0, 1, 0, 0, 0);
@@ -182,6 +185,8 @@ public:
       return "K";
     case QUANTITY_TIME:
       return "s";
+    case QUANTITY_VELOCITY:
+      return "m s^-1";
     default:
       cmac_error("Unknown quantity: %i!", quantity);
       return "";

@@ -28,16 +28,24 @@
 
 #include "Abundances.hpp"
 #include "Box.hpp"
+#include "Cell.hpp"
+#include "Configuration.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunction.hpp"
 #include "DensityValues.hpp"
 #include "EmissivityValues.hpp"
+#include "HydroVariables.hpp"
+#include "IonizationVariables.hpp"
 #include "Lock.hpp"
 #include "Log.hpp"
 #include "Photon.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include "WorkDistributor.hpp"
+
+#ifdef USE_LOCKFREE
+#include "Atomic.hpp"
+#endif
 
 #include <cmath>
 #include <tuple>
@@ -54,7 +62,7 @@ protected:
   DensityFunction &_density_function;
 
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodic;
@@ -65,29 +73,8 @@ protected:
   /*! @brief Ionization energy of helium (in Hz). */
   double _ionization_energy_He;
 
-  /*! @brief Number densities stored in the grid (in m^-3). */
-  std::vector< double > _number_density;
-
-  /*! @brief Ionic fractions. For hydrogen and helium, these are the neutral
-   *  fractions. For other elements, they are the fraction of the end product
-   *  of ionization (e.g. _ionic_fraction[ION_C_p1] is the fraction of C that
-   *  is in the form of C++). */
-  std::vector< double > _ionic_fraction[NUMBER_OF_IONNAMES];
-
-  /*! @brief Temperatures stored in the grid (in K). */
-  std::vector< double > _temperature;
-
-  /*! @brief Probabilities for re-emitting an ionizing photon after absorption
-   *  by hydrogen. */
-  std::vector< double > _hydrogen_reemission_probability;
-
-  /*! @brief Probabilities for re-emitting an ionizing photon after absorption
-   *  by helium. */
-  std::vector< double > _helium_reemission_probability[4];
-
-  /*! @brief Mean intensity integrals of ionizing radiation (without
-   *  normalization factor, in m^3). */
-  std::vector< double > _mean_intensity[NUMBER_OF_IONNAMES];
+  /*! @brief Ionization calculation variables. */
+  std::vector< IonizationVariables > _ionization_variables;
 
   /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
    *  sub-step (in m^3 s^-1). */
@@ -96,83 +83,23 @@ protected:
   /*! @brief Hydrogen neutral fraction during the previous iteration. */
   std::vector< double > _neutral_fraction_H_old;
 
-  /*! @brief Heating due to the ionization of hydrogen (without normalization
-   *  factor, in m^3 s^-1). */
-  std::vector< double > _heating_H;
-
-  /*! @brief Heating due to the ionization of helium (without normalization
-   *  factor, in m^3 s^-1). */
-  std::vector< double > _heating_He;
-
   /// hydro
 
   /*! @brief Flag indicating whether hydro is active or not. */
   bool _hydro;
 
-  /*! @brief Mass of the hydrodynamical fluid in each cell (in kg). */
-  std::vector< double > _hydro_conserved_mass;
-
-  /*! @brief X-component of the momentum of the hydrodynamical fluid in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_momentum_x;
-
-  /*! @brief Y-component of the momentum of the hydrodynamical fluid in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_momentum_y;
-
-  /*! @brief Z-component of the momentum of the hydrodynamical fluid in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_momentum_z;
-
-  /*! @brief Total energy of the hydrodynamical fluid in each cell (in kg m^2
-   *  s^-2). */
-  std::vector< double > _hydro_conserved_total_energy;
-
-  /*! @brief Density of the hydrodynamical fluid in each cell (in kg m^-3). */
-  std::vector< double > _hydro_primitive_density;
-
-  /*! @brief X-component of the velocity of the hydrodynamical fluid in each
-   *  cell (in m s^-1). */
-  std::vector< double > _hydro_primitive_velocity_x;
-
-  /*! @brief Y-component of the velocity of the hydrodynamical fluid in each
-   *  cell (in m s^-1). */
-  std::vector< double > _hydro_primitive_velocity_y;
-
-  /*! @brief Z-component of the velocity of the hydrodynamical fluid in each
-   *  cell (in m s^-1). */
-  std::vector< double > _hydro_primitive_velocity_z;
-
-  /*! @brief Pressure of the hydrodynamical fluid in each cell (in kg m^-1
-   *  s^-2). */
-  std::vector< double > _hydro_primitive_pressure;
-
-  /*! @brief Time step difference of the mass in each cell (in kg). */
-  std::vector< double > _hydro_conserved_delta_mass;
-
-  /*! @brief Time step difference of the X-component of the momentum in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_delta_momentum_x;
-
-  /*! @brief Time step difference of the Y-component of the momentum in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_delta_momentum_y;
-
-  /*! @brief Time step difference of the Z-component of the momentum in each
-   *  cell (in kg m s^-1). */
-  std::vector< double > _hydro_conserved_delta_momentum_z;
-
-  /*! @brief Time step difference of the total energy in each cell (in kg m^2
-   *  s^-2). */
-  std::vector< double > _hydro_conserved_delta_total_energy;
+  /*! @brief Hydrodynamic variables. */
+  std::vector< HydroVariables > _hydro_variables;
 
   /// end hydro
 
   /*! @brief EmissivityValues for the cells. */
   std::vector< EmissivityValues * > _emissivities;
 
+#ifndef USE_LOCKFREE
   /*! @brief Locks to ensure safe write access to the cell data. */
   std::vector< Lock > _lock;
+#endif
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -182,19 +109,18 @@ protected:
    * given cell.
    *
    * @param ds Path length the photon traverses (in m).
-   * @param cell DensityGrid::iterator pointing to the cell the photon travels
-   * in.
+   * @param ionization_variables IonizationVariables of the cell.
    * @param photon Photon.
    * @return Optical depth.
    */
-  inline static double get_optical_depth(double ds,
-                                         const DensityGrid::iterator &cell,
-                                         const Photon &photon) {
-    return ds * cell.get_number_density() *
+  inline static double
+  get_optical_depth(double ds, const IonizationVariables &ionization_variables,
+                    const Photon &photon) {
+    return ds * ionization_variables.get_number_density() *
            (photon.get_cross_section(ION_H_n) *
-                cell.get_ionic_fraction(ION_H_n) +
+                ionization_variables.get_ionic_fraction(ION_H_n) +
             photon.get_cross_section_He_corr() *
-                cell.get_ionic_fraction(ION_He_n));
+                ionization_variables.get_ionic_fraction(ION_He_n));
   }
 
   /**
@@ -207,7 +133,8 @@ protected:
    */
   inline void update_integrals(double ds, DensityGrid::iterator &cell,
                                const Photon &photon) const {
-    if (cell.get_number_density() > 0.) {
+    IonizationVariables &ionization_variables = cell.get_ionization_variables();
+    if (ionization_variables.get_number_density() > 0.) {
       // we tried speeding things up by using lock-free addition, but it turns
       // out that the overhead caused by doing this is larger than the overhead
       // of using a single lock
@@ -227,47 +154,59 @@ protected:
       double dheating_He = ds * photon.get_weight() *
                            photon.get_cross_section(ION_He_n) *
                            (photon.get_energy() - _ionization_energy_He);
+#ifndef USE_LOCKFREE
       cell.lock();
+#endif
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        cell.increase_mean_intensity(ion, dmean_intensity[i]);
+        ionization_variables.increase_mean_intensity(ion, dmean_intensity[i]);
       }
-      cell.increase_heating_H(dheating_H);
-      cell.increase_heating_He(dheating_He);
+      ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
+      ionization_variables.increase_heating(HEATINGTERM_He, dheating_He);
+#ifndef USE_LOCKFREE
       cell.unlock();
+#endif
     }
   }
 
 protected:
   /**
-   * @brief Set the re-emission probabilities for the given cell for the given
-   * temperature.
+   * @brief Set the re-emission probabilities for the given cell.
    *
    * These quantities are all dimensionless.
    *
-   * @param T Temperature (in K).
-   * @param it DensityGrid::iterator pointing to a cell.
+   * @param ionization_variables IonizationVariables of the cell.
    */
-  inline static void set_reemission_probabilities(double T,
-                                                  DensityGrid::iterator &it) {
-    // reemission probabilities
-    double alpha_1_H = 1.58e-13 * std::pow(T * 1.e-4, -0.53);
-    double alpha_A_agn = 4.18e-13 * std::pow(T * 1.e-4, -0.7);
-    it.set_hydrogen_reemission_probability(alpha_1_H / alpha_A_agn);
-    double alpha_1_He = 1.54e-13 * std::pow(T * 1.e-4, -0.486);
-    double alpha_e_2tS = 2.1e-13 * std::pow(T * 1.e-4, -0.381);
-    double alpha_e_2sS = 2.06e-14 * std::pow(T * 1.e-4, -0.451);
-    double alpha_e_2sP = 4.17e-14 * std::pow(T * 1.e-4, -0.695);
-    // We make sure the sum of all probabilities is 1...
-    double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+  inline static void
+  set_reemission_probabilities(IonizationVariables &ionization_variables) {
+    const double T4 = ionization_variables.get_temperature() * 1.e-4;
 
-    it.set_helium_reemission_probability(0, alpha_1_He / alphaHe);
-    it.set_helium_reemission_probability(
-        1, it.get_helium_reemission_probability(0) + alpha_e_2tS / alphaHe);
-    it.set_helium_reemission_probability(
-        2, it.get_helium_reemission_probability(1) + alpha_e_2sS / alphaHe);
-    it.set_helium_reemission_probability(
-        3, it.get_helium_reemission_probability(2) + alpha_e_2sP / alphaHe);
+    // reemission probabilities
+    const double alpha_1_H = 1.58e-13 * std::pow(T4, -0.53);
+    const double alpha_A_agn = 4.18e-13 * std::pow(T4, -0.7);
+    ionization_variables.set_reemission_probability(
+        REEMISSIONPROBABILITY_HYDROGEN, alpha_1_H / alpha_A_agn);
+
+    const double alpha_1_He = 1.54e-13 * std::pow(T4, -0.486);
+    const double alpha_e_2tS = 2.1e-13 * std::pow(T4, -0.381);
+    const double alpha_e_2sS = 2.06e-14 * std::pow(T4, -0.451);
+    const double alpha_e_2sP = 4.17e-14 * std::pow(T4, -0.695);
+    // We make sure the sum of all probabilities is 1...
+    const double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
+
+    const double He_LyC = alpha_1_He / alphaHe;
+    const double He_NpEEv = He_LyC + alpha_e_2tS / alphaHe;
+    const double He_TPC = He_NpEEv + alpha_e_2sS / alphaHe;
+    const double He_LyA = He_TPC + alpha_e_2sP / alphaHe;
+    // make cumulative
+    ionization_variables.set_reemission_probability(
+        REEMISSIONPROBABILITY_HELIUM_LYC, He_LyC);
+    ionization_variables.set_reemission_probability(
+        REEMISSIONPROBABILITY_HELIUM_NPEEV, He_NpEEv);
+    ionization_variables.set_reemission_probability(
+        REEMISSIONPROBABILITY_HELIUM_TPC, He_TPC);
+    ionization_variables.set_reemission_probability(
+        REEMISSIONPROBABILITY_HELIUM_LYA, He_LyA);
   }
 
 public:
@@ -287,7 +226,7 @@ public:
    * @param log Log to write log messages to.
    */
   DensityGrid(
-      DensityFunction &density_function, Box box,
+      DensityFunction &density_function, Box<> box,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
       : _density_function(density_function), _box(box), _periodic(periodic),
@@ -303,6 +242,33 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~DensityGrid() {}
+
+  /**
+   * @brief Allocate memory for the given number of cells.
+   *
+   * @param numcell Number of cells that will be stored in the grid.
+   */
+  inline void allocate_memory(unsigned long numcell) {
+    if (_log) {
+      _log->write_status(
+          "Allocating memory for ", numcell, " cells (",
+          Utilities::human_readable_bytes(numcell * sizeof(DensityValues)),
+          ")...");
+    }
+    // we allocate memory for the cells, so that --dry-run can already check the
+    // available memory
+    _ionization_variables.resize(numcell);
+    _mean_intensity_H_old.resize(numcell);
+    _neutral_fraction_H_old.resize(numcell);
+    _emissivities.resize(numcell, nullptr);
+#ifndef USE_LOCKFREE
+    _lock.resize(numcell);
+#endif
+
+    if (_log) {
+      _log->write_status("Done allocating memory.");
+    }
+  }
 
   /**
    * @brief Routine that does the actual initialization of the grid.
@@ -325,25 +291,8 @@ public:
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
       }
-      unsigned int numcell = get_number_of_cells();
-      // conserved variables
-      _hydro_conserved_mass.resize(numcell, 0.);
-      _hydro_conserved_momentum_x.resize(numcell, 0.);
-      _hydro_conserved_momentum_y.resize(numcell, 0.);
-      _hydro_conserved_momentum_z.resize(numcell, 0.);
-      _hydro_conserved_total_energy.resize(numcell, 0.);
-      // primitive variables
-      _hydro_primitive_density.resize(numcell, 0.);
-      _hydro_primitive_velocity_x.resize(numcell, 0.);
-      _hydro_primitive_velocity_y.resize(numcell, 0.);
-      _hydro_primitive_velocity_z.resize(numcell, 0.);
-      _hydro_primitive_pressure.resize(numcell, 0.);
-      // time differences of conserved variables
-      _hydro_conserved_delta_mass.resize(numcell, 0.);
-      _hydro_conserved_delta_momentum_x.resize(numcell, 0.);
-      _hydro_conserved_delta_momentum_y.resize(numcell, 0.);
-      _hydro_conserved_delta_momentum_z.resize(numcell, 0.);
-      _hydro_conserved_delta_total_energy.resize(numcell, 0.);
+      const unsigned int numcell = get_number_of_cells();
+      _hydro_variables.resize(numcell);
       if (_log) {
         _log->write_status("Done.");
       }
@@ -362,7 +311,7 @@ public:
    *
    * @return Box containing the grid (in m).
    */
-  inline Box get_box() const { return _box; }
+  inline const Box<> get_box() const { return _box; }
 
   /**
    * @brief Get the number of periodic boundaries of this grid.
@@ -394,109 +343,11 @@ public:
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const = 0;
 
   /**
-   * @brief Get a handle to the number density vector that can be used in MPI
-   * communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_number_density_handle() {
-    return _number_density;
-  }
-
-  /**
-   * @brief Get a handle to the temperature vector that can be used in MPI
-   * communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_temperature_handle() {
-    return _temperature;
-  }
-
-  /**
-   * @brief Get a handle to the ionic fraction vector for the given ion that can
-   * be used in MPI communications.
-   *
-   * @param ion IonName.
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_ionic_fraction_handle(IonName ion) {
-    return _ionic_fraction[ion];
-  }
-
-  /**
-   * @brief Get a handle to the mean intensity vector for the given ion that can
-   * be used in MPI communications.
-   *
-   * @param ion IonName.
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_mean_intensity_handle(IonName ion) {
-    return _mean_intensity[ion];
-  }
-
-  /**
-   * @brief Get a handle to the hydrogen ionization heating vector that can be
-   * used in MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_heating_H_handle() { return _heating_H; }
-
-  /**
-   * @brief Get a handle to the helium ionization heating vector that can be
-   * used in MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_heating_He_handle() { return _heating_He; }
-
-  /**
    * @brief Check if hydro is active.
    *
    * @return True if hydro is active.
    */
   inline bool has_hydro() const { return _hydro; }
-
-  /**
-   * @brief Get a handle to the hydrodynamical density vector that can be used
-   * in MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_hydro_primitive_density_handle() {
-    return _hydro_primitive_density;
-  }
-
-  /**
-   * @brief Get a handle to the hydrodynamical pressure vector that can be used
-   * in MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_hydro_primitive_pressure_handle() {
-    return _hydro_primitive_pressure;
-  }
-
-  /**
-   * @brief Get a handle to the hydrodynamical mass vector that can be used in
-   * MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_hydro_conserved_mass_handle() {
-    return _hydro_conserved_mass;
-  }
-
-  /**
-   * @brief Get a handle to the hydrodynamical total energy vector that can be
-   * used in MPI communications.
-   *
-   * @return Reference to the internal std::vector.
-   */
-  inline std::vector< double > &get_hydro_conserved_total_energy_handle() {
-    return _hydro_conserved_total_energy;
-  }
 
   /**
    * @brief Get the neighbours of the cell with the given index.
@@ -509,6 +360,14 @@ public:
   virtual std::vector<
       std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
   get_neighbours(unsigned long index) = 0;
+
+  /**
+   * @brief Get the faces of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Faces of the cell.
+   */
+  virtual std::vector< Face > get_faces(unsigned long index) const = 0;
 
   /**
    * @brief Get an iterator to the cell containing the given position.
@@ -543,19 +402,36 @@ public:
                                          double optical_depth) = 0;
 
   /**
+   * @brief Get the total line emission along a ray with the given origin and
+   * direction.
+   *
+   * @param origin Origin of the ray (in m).
+   * @param direction Direction of the ray.
+   * @param line EmissionLine name of the line to trace.
+   * @return Accumulated emission along the ray (in J m^-2 s^-1).
+   */
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line) = 0;
+
+  /**
    * @brief Index increment used in the iterator.
    *
    * More sofisticated grids (like the AMR grid) might implement their own
    * version.
    *
    * @param index Index to increase.
+   * @param increment Increment (default = 1).
    */
-  virtual void increase_index(unsigned long &index) { ++index; }
+  virtual void increase_index(unsigned long &index,
+                              unsigned long increment = 1) {
+    index += increment;
+  }
 
   /**
    * @brief Iterator to loop over the cells in the grid.
    */
-  class iterator {
+  class iterator : public Cell {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */
     unsigned long _index;
@@ -579,70 +455,17 @@ public:
      *
      * @return Cell midpoint (in m).
      */
-    inline CoordinateVector<> get_cell_midpoint() const {
+    virtual CoordinateVector<> get_cell_midpoint() const {
       return _grid->get_cell_midpoint(_index);
     }
 
     /**
-     * @brief Get the number density of hydrogen for the cell the iterator is
-     * currently pointing to.
+     * @brief Get the faces of the cell.
      *
-     * @return Number density of hydrogen (in m^-3).
+     * @return Faces of the cell.
      */
-    inline double get_number_density() const {
-      return _grid->_number_density[_index];
-    }
-
-    /**
-     * @brief set the number density of hydrogen for the cell the iterator is
-     * currently pointing to.
-     *
-     * @param number_density Number density of hydrogen (in m^-3).
-     */
-    inline void set_number_density(double number_density) {
-      _grid->_number_density[_index] = number_density;
-    }
-
-    /**
-     * @brief Get the temperature of the cell the iterator is currently pointing
-     * to.
-     *
-     * @return Temperature (in K).
-     */
-    inline double get_temperature() const {
-      return _grid->_temperature[_index];
-    }
-
-    /**
-     * @brief Set the temperature of the cell the iterator is currently pointing
-     * to.
-     *
-     * @param temperature Temperature (in K).
-     */
-    inline void set_temperature(double temperature) {
-      _grid->_temperature[_index] = temperature;
-    }
-
-    /**
-     * @brief Get the ionic fraction for the given IonName for the cell the
-     * iterator is currently pointing to.
-     *
-     * @param ion IonName.
-     * @return Ionic fraction for that ion.
-     */
-    inline double get_ionic_fraction(IonName ion) const {
-      return _grid->_ionic_fraction[ion][_index];
-    }
-
-    /**
-     * @brief Set the ionic fraction for the given IonName for the cell the
-     * iterator is currently pointing to.
-     *
-     * @param ion IonName.
-     * @param ionic_fraction Ionic fraction for that ion.
-     */
-    inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
-      _grid->_ionic_fraction[ion][_index] = ionic_fraction;
+    virtual std::vector< Face > get_faces() const {
+      return _grid->get_faces(_index);
     }
 
     /**
@@ -664,69 +487,6 @@ public:
      */
     inline void set_neutral_fraction_H_old(double neutral_fraction_H_old) {
       _grid->_neutral_fraction_H_old[_index] = neutral_fraction_H_old;
-    }
-
-    /**
-     * @brief Get the mean intensity of ionizing radiation for the given IonName
-     * for the cell the iterator is currently pointing to.
-     *
-     * @param ion IonName.
-     * @return Mean intensity of ionizing radiation for that ion (without
-     * normalization factor, in m^3).
-     */
-    inline double get_mean_intensity(IonName ion) const {
-      return _grid->_mean_intensity[ion][_index];
-    }
-
-    /**
-     * @brief Increase the mean ionizing intensity for the given ion for the
-     * cell the iterator is currently pointing to.
-     *
-     * @param ion IonName.
-     * @param mean_intensity_increment Mean ionizing intensity increment
-     * (without normalization factor, in m^3).
-     */
-    inline void increase_mean_intensity(IonName ion,
-                                        double mean_intensity_increment) {
-      _grid->_mean_intensity[ion][_index] += mean_intensity_increment;
-    }
-
-    /**
-     * @brief Get the heating by ionization of hydrogen for the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Heating by ionization of hydrogen (in m^3 s^-1).
-     */
-    inline double get_heating_H() const { return _grid->_heating_H[_index]; }
-
-    /**
-     * @brief Increase the ionizing heating for hydrogen for the cell the
-     * iterator is currently pointing to.
-     *
-     * @param heating_H_increment Heating by ionization of hydrogen (in m^3
-     * s^-1).
-     */
-    inline void increase_heating_H(double heating_H_increment) {
-      _grid->_heating_H[_index] += heating_H_increment;
-    }
-
-    /**
-     * @brief Get the heating by ionization of helium for the cell the iterator
-     * is currently pointing to.
-     *
-     * @return Heating by ionization of helium (in m^3 s^-1).
-     */
-    inline double get_heating_He() const { return _grid->_heating_He[_index]; }
-
-    /**
-     * @brief Increase the ionizing heating for helium for the cell the iterator
-     * is currently pointing to.
-     *
-     * @param heating_He_increment Heating by ionization of helium (in m^3
-     * s^-1).
-     */
-    inline void increase_heating_He(double heating_He_increment) {
-      _grid->_heating_He[_index] += heating_He_increment;
     }
 
     /**
@@ -752,407 +512,60 @@ public:
     }
 
     /**
-     * @brief Get the probability for hydrogen of reemitting an ionizing photon
-     * for the cell the iterator is currently pointing to.
-     *
-     * @return Hydrogen ionizing reemission probability.
-     */
-    inline double get_hydrogen_reemission_probability() const {
-      return _grid->_hydrogen_reemission_probability[_index];
-    }
-
-    /**
-     * @brief Set the probability for hydrogen of reemitting an ionizing photon
-     * for the cell the iterator is currently pointing to.
-     *
-     * @param hydrogen_reemission_probability Hydrogen ionizing reemission
-     * probability.
-     */
-    inline void set_hydrogen_reemission_probability(
-        double hydrogen_reemission_probability) {
-      _grid->_hydrogen_reemission_probability[_index] =
-          hydrogen_reemission_probability;
-    }
-
-    /**
-     * @brief Get the helium reemission probability in the given channel for the
-     * cell the iterator is currently pointing to.
-     *
-     * @param channel Channel in which the radiation is emitted.
-     * @return Helium reemission probability in that channel.
-     */
-    inline double
-    get_helium_reemission_probability(unsigned char channel) const {
-      return _grid->_helium_reemission_probability[channel][_index];
-    }
-
-    /**
-     * @brief Set the helium reemission probability in the given channel for the
-     * cell the iterator is currently pointing to.
-     *
-     * @param channel Channel in which the radiation is emitted.
-     * @param helium_reemission_probability Helium reemission probability in
-     * that channel.
-     */
-    inline void
-    set_helium_reemission_probability(unsigned char channel,
-                                      double helium_reemission_probability) {
-      _grid->_helium_reemission_probability[channel][_index] =
-          helium_reemission_probability;
-    }
-
-    /**
      * @brief Reset the mean intensity counters for the cell the iterator is
      * currently pointing to.
      */
     inline void reset_mean_intensities() {
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        _grid->_mean_intensity[i][_index] = 0.;
+        const IonName ion = static_cast< IonName >(i);
+        _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
       _grid->_mean_intensity_H_old[_index] = 0.;
-      _grid->_heating_H[_index] = 0.;
-      _grid->_heating_He[_index] = 0.;
-    }
-
-    /// hydro
-
-    /**
-     * @brief Get the mass of the hydrodynamical fluid in the cell the iterator
-     * is currently pointing to.
-     *
-     * @return Mass of the fluid in the cell (in kg).
-     */
-    inline double get_hydro_conserved_mass() const {
-      return _grid->_hydro_conserved_mass[_index];
+      for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+        const HeatingTermName name = static_cast< HeatingTermName >(i);
+        _grid->_ionization_variables[_index].set_heating(name, 0.);
+      }
     }
 
     /**
-     * @brief Set the mass of the hydrodynamical fluid in the cell the iterator
-     * is currently pointing to.
+     * @brief Get read only access to the ionization variables stored in this
+     * cell.
      *
-     * @param hydro_conserved_mass Mass of the fluid in the cell (in kg).
+     * @return Read only access to the ionization variables.
      */
-    inline void set_hydro_conserved_mass(double hydro_conserved_mass) {
-      _grid->_hydro_conserved_mass[_index] = hydro_conserved_mass;
+    inline const IonizationVariables &get_ionization_variables() const {
+      return _grid->_ionization_variables[_index];
     }
 
     /**
-     * @brief Get the X-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
+     * @brief Get read/write access to the ionization variables stored in this
+     * cell.
      *
-     * @return X-component of the momentum of the fluid in the cell (in kg m
-     * s^-1).
+     * @return Read/write access to the ionization variables.
      */
-    inline double get_hydro_conserved_momentum_x() const {
-      return _grid->_hydro_conserved_momentum_x[_index];
+    inline IonizationVariables &get_ionization_variables() {
+      return _grid->_ionization_variables[_index];
     }
 
     /**
-     * @brief Set the X-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
+     * @brief Get read only access to the hydrodynamical variables stored in
+     * this cell.
      *
-     * @param hydro_conserved_momentum_x X-component of the momentum of the
-     * fluid in the cell (in kg m s^-1).
+     * @return Read only access to the hydrodynamical variables.
      */
-    inline void
-    set_hydro_conserved_momentum_x(double hydro_conserved_momentum_x) {
-      _grid->_hydro_conserved_momentum_x[_index] = hydro_conserved_momentum_x;
+    inline const HydroVariables &get_hydro_variables() const {
+      return _grid->_hydro_variables[_index];
     }
 
     /**
-     * @brief Get the Y-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
+     * @brief Get read/write access to the hydrodynamical variables stored in
+     * this cell.
      *
-     * @return Y-component of the momentum of the fluid in the cell (in kg m
-     * s^-1).
+     * @return Read/write access to the hydrodynamical variables.
      */
-    inline double get_hydro_conserved_momentum_y() const {
-      return _grid->_hydro_conserved_momentum_y[_index];
+    inline HydroVariables &get_hydro_variables() {
+      return _grid->_hydro_variables[_index];
     }
-
-    /**
-     * @brief Set the Y-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
-     *
-     * @param hydro_conserved_momentum_y Y-component of the momentum of the
-     * fluid in the cell (in kg m s^-1).
-     */
-    inline void
-    set_hydro_conserved_momentum_y(double hydro_conserved_momentum_y) {
-      _grid->_hydro_conserved_momentum_y[_index] = hydro_conserved_momentum_y;
-    }
-
-    /**
-     * @brief Get the Z-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
-     *
-     * @return Z-component of the momentum of the fluid in the cell (in kg m
-     * s^-1).
-     */
-    inline double get_hydro_conserved_momentum_z() const {
-      return _grid->_hydro_conserved_momentum_z[_index];
-    }
-
-    /**
-     * @brief Set the Z-component of the momentum of the hydrodynamical fluid in
-     * the cell the iterator is currently pointing to.
-     *
-     * @param hydro_conserved_momentum_z Z-component of the momentum of the
-     * fluid in the cell (in kg m s^-1).
-     */
-    inline void
-    set_hydro_conserved_momentum_z(double hydro_conserved_momentum_z) {
-      _grid->_hydro_conserved_momentum_z[_index] = hydro_conserved_momentum_z;
-    }
-
-    /**
-     * @brief Get the total energy of the hydrodynamical fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Total energy of the fluid in the cell (in kg m^2 s^-2).
-     */
-    inline double get_hydro_conserved_total_energy() const {
-      return _grid->_hydro_conserved_total_energy[_index];
-    }
-
-    /**
-     * @brief Set the total energy of the hydrodynamical fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_conserved_total_energy Total energy of the fluid in the cell
-     * (in kg m^2 s^-2).
-     */
-    inline void
-    set_hydro_conserved_total_energy(double hydro_conserved_total_energy) {
-      _grid->_hydro_conserved_total_energy[_index] =
-          hydro_conserved_total_energy;
-    }
-
-    /**
-     * @brief Get the density of the fluid in the cell the iterator is currently
-     * pointing to.
-     *
-     * @return Density of the fluid in the cell (in kg m^-3).
-     */
-    inline double get_hydro_primitive_density() const {
-      return _grid->_hydro_primitive_density[_index];
-    }
-
-    /**
-     * @brief Set the density of the fluid in the cell the iterator is currently
-     * pointing to.
-     *
-     * @param hydro_primitive_density Density of the fluid in the cell (in kg
-     * m^-3).
-     */
-    inline void set_hydro_primitive_density(double hydro_primitive_density) {
-      _grid->_hydro_primitive_density[_index] = hydro_primitive_density;
-    }
-
-    /**
-     * @brief Get the X-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @return X-component of the velocity of the fluid in the cell (in m s^-1).
-     */
-    inline double get_hydro_primitive_velocity_x() const {
-      return _grid->_hydro_primitive_velocity_x[_index];
-    }
-
-    /**
-     * @brief Set the X-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_primitive_velocity_x X-component of the velocity of the
-     * fluid in the cell (in m s^-1).
-     */
-    inline void
-    set_hydro_primitive_velocity_x(double hydro_primitive_velocity_x) {
-      _grid->_hydro_primitive_velocity_x[_index] = hydro_primitive_velocity_x;
-    }
-
-    /**
-     * @brief Get the Y-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Y-component of the velocity of the fluid in the cell (in m s^-1).
-     */
-    inline double get_hydro_primitive_velocity_y() const {
-      return _grid->_hydro_primitive_velocity_y[_index];
-    }
-
-    /**
-     * @brief Set the Y-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_primitive_velocity_y Y-component of the velocity of the
-     * fluid in the cell (in m s^-1).
-     */
-    inline void
-    set_hydro_primitive_velocity_y(double hydro_primitive_velocity_y) {
-      _grid->_hydro_primitive_velocity_y[_index] = hydro_primitive_velocity_y;
-    }
-
-    /**
-     * @brief Get the Z-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Z-component of the velocity of the fluid in the cell (in m s^-1).
-     */
-    inline double get_hydro_primitive_velocity_z() const {
-      return _grid->_hydro_primitive_velocity_z[_index];
-    }
-
-    /**
-     * @brief Set the Z-component of the velocity of the fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_primitive_velocity_z Z-component of the velocity of the
-     * fluid in the cell (in m s^-1).
-     */
-    inline void
-    set_hydro_primitive_velocity_z(double hydro_primitive_velocity_z) {
-      _grid->_hydro_primitive_velocity_z[_index] = hydro_primitive_velocity_z;
-    }
-
-    /**
-     * @brief Get the pressure of the hydrodynamical fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Pressure of the fluid in the cell (in kg m^-1 s^-2).
-     */
-    inline double get_hydro_primitive_pressure() const {
-      return _grid->_hydro_primitive_pressure[_index];
-    }
-
-    /**
-     * @brief Set the pressure of the hydrodynamical fluid in the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_primitive_pressure Pressure of the fluid in the cell (in kg
-     * m^-1 s^-2).
-     */
-    inline void set_hydro_primitive_pressure(double hydro_primitive_pressure) {
-      _grid->_hydro_primitive_pressure[_index] = hydro_primitive_pressure;
-    }
-
-    /**
-     * @brief Get the time step difference in mass in the cell the iterator is
-     * currently pointing to.
-     *
-     * @return Time step difference in mass (in kg).
-     */
-    inline double get_hydro_conserved_delta_mass() const {
-      return _grid->_hydro_conserved_delta_mass[_index];
-    }
-
-    /**
-     * @brief Set the time step difference in mass in the cell the iterator is
-     * currently pointing to.
-     *
-     * @param hydro_conserved_delta_mass Time step difference in mass (in kg).
-     */
-    inline void
-    set_hydro_conserved_delta_mass(double hydro_conserved_delta_mass) {
-      _grid->_hydro_conserved_delta_mass[_index] = hydro_conserved_delta_mass;
-    }
-
-    /**
-     * @brief Get the time step difference for the X-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @return Time step difference for the X-component of the momentum (in kg m
-     * s^-1).
-     */
-    inline double get_hydro_conserved_delta_momentum_x() const {
-      return _grid->_hydro_conserved_delta_momentum_x[_index];
-    }
-
-    /**
-     * @brief Set the time step difference for the X-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @param hydro_conserved_delta_momentum_x Time step difference for the
-     * X-component of the momentum (in kg m s^-1).
-     */
-    inline void set_hydro_conserved_delta_momentum_x(
-        double hydro_conserved_delta_momentum_x) {
-      _grid->_hydro_conserved_delta_momentum_x[_index] =
-          hydro_conserved_delta_momentum_x;
-    }
-
-    /**
-     * @brief Get the time step difference for the Y-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @return Time step difference for the Y-component of the momentum (in kg m
-     * s^-1).
-     */
-    inline double get_hydro_conserved_delta_momentum_y() const {
-      return _grid->_hydro_conserved_delta_momentum_y[_index];
-    }
-
-    /**
-     * @brief Set the time step difference for the Y-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @param hydro_conserved_delta_momentum_y Time step difference for the
-     * Y-component of the momentum (in kg m s^-1).
-     */
-    inline void set_hydro_conserved_delta_momentum_y(
-        double hydro_conserved_delta_momentum_y) {
-      _grid->_hydro_conserved_delta_momentum_y[_index] =
-          hydro_conserved_delta_momentum_y;
-    }
-
-    /**
-     * @brief Get the time step difference for the Z-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @return Time step difference for the Z-component of the momentum (in kg m
-     * s^-1).
-     */
-    inline double get_hydro_conserved_delta_momentum_z() const {
-      return _grid->_hydro_conserved_delta_momentum_z[_index];
-    }
-
-    /**
-     * @brief Set the time step difference for the Z-component of the momentum
-     *  in the cell the iterator is currently pointing to.
-     *
-     * @param hydro_conserved_delta_momentum_z Time step difference for the
-     * Z-component of the momentum (in kg m s^-1).
-     */
-    inline void set_hydro_conserved_delta_momentum_z(
-        double hydro_conserved_delta_momentum_z) {
-      _grid->_hydro_conserved_delta_momentum_z[_index] =
-          hydro_conserved_delta_momentum_z;
-    }
-
-    /**
-     * @brief Get the time step difference in total energy for the cell the
-     * iterator is currently pointing to.
-     *
-     * @return Time step difference in total energy (in kg m^2 s^-2).
-     */
-    inline double get_hydro_conserved_delta_total_energy() const {
-      return _grid->_hydro_conserved_delta_total_energy[_index];
-    }
-
-    /**
-     * @brief Set the time step difference in total energy for the cell the
-     * iterator is currently pointing to.
-     *
-     * @param hydro_conserved_delta_total_energy Time step difference in total
-     * energy (in kg m^2 s^-2).
-     */
-    inline void set_hydro_conserved_delta_total_energy(
-        double hydro_conserved_delta_total_energy) {
-      _grid->_hydro_conserved_delta_total_energy[_index] =
-          hydro_conserved_delta_total_energy;
-    }
-
-    /// end hydro
 
     /**
      * @brief Get the neighbours of the cell the iterator is currently pointing
@@ -1186,6 +599,7 @@ public:
       _grid->_emissivities[_index] = emissivities;
     }
 
+#ifndef USE_LOCKFREE
     /**
      * @brief Lock the cell the iterator is pointing to.
      */
@@ -1195,13 +609,14 @@ public:
      * @brief Unlock the cell the iterator is pointing to.
      */
     inline void unlock() { _grid->_lock[_index].unlock(); }
+#endif
 
     /**
      * @brief Get the volume of the cell the iterator is pointing to.
      *
      * @return Volume of the cell (in m^3).
      */
-    inline double get_volume() const { return _grid->get_cell_volume(_index); }
+    virtual double get_volume() const { return _grid->get_cell_volume(_index); }
 
     /**
      * @brief Increment operator.
@@ -1214,6 +629,29 @@ public:
     inline iterator &operator++() {
       _grid->increase_index(_index);
       return *this;
+    }
+
+    /**
+     * @brief Increment operator.
+     *
+     * @param increment Increment to add.
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator+=(unsigned long increment) {
+      _grid->increase_index(_index, increment);
+      return *this;
+    }
+
+    /**
+     * @brief Free addition operator.
+     *
+     * @param increment Increment to add to the iterator.
+     * @return Incremented iterator.
+     */
+    inline iterator operator+(unsigned long increment) {
+      iterator it(*this);
+      it += increment;
+      return it;
     }
 
     /**
@@ -1297,15 +735,19 @@ public:
      */
     DensityFunction &_function;
 
+    /*! @brief Do we need to initialize hydro variables? */
+    bool _hydro;
+
   public:
     /**
      * @brief Constructor.
      *
      * @param function DensityFunction that set the density for each cell in the
      * grid.
+     * @param hydro Do we need to initialize hydro variables?
      */
-    DensityGridInitializationFunction(DensityFunction &function)
-        : _function(function) {}
+    DensityGridInitializationFunction(DensityFunction &function, bool hydro)
+        : _function(function), _hydro(hydro) {}
 
     /**
      * @brief Routine that sets the density for a single cell in the grid.
@@ -1313,14 +755,20 @@ public:
      * @param it DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(iterator it) {
-      DensityValues vals = _function(it.get_cell_midpoint());
-      it.set_number_density(vals.get_number_density());
-      it.set_temperature(vals.get_temperature());
+      DensityValues vals = _function(it);
+      IonizationVariables &ionization_variables = it.get_ionization_variables();
+      ionization_variables.set_number_density(vals.get_number_density());
+      ionization_variables.set_temperature(vals.get_temperature());
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
-        it.set_ionic_fraction(ion, vals.get_ionic_fraction(ion));
+        ionization_variables.set_ionic_fraction(ion,
+                                                vals.get_ionic_fraction(ion));
       }
-      set_reemission_probabilities(it.get_temperature(), it);
+      if (_hydro) {
+        const CoordinateVector<> v = vals.get_velocity();
+        it.get_hydro_variables().set_primitives_velocity(v);
+      }
+      set_reemission_probabilities(ionization_variables);
     }
   };
 
@@ -1333,7 +781,7 @@ public:
    */
   virtual void reset_grid() {
     for (auto it = begin(); it != end(); ++it) {
-      set_reemission_probabilities(it.get_temperature(), it);
+      set_reemission_probabilities(it.get_ionization_variables());
       it.reset_mean_intensities();
     }
   }
@@ -1365,7 +813,8 @@ public:
   inline double get_total_hydrogen_number() {
     double ntot = 0.;
     for (auto it = begin(); it != end(); ++it) {
-      ntot += it.get_number_density() * it.get_volume();
+      ntot +=
+          it.get_ionization_variables().get_number_density() * it.get_volume();
     }
     return ntot;
   }
@@ -1382,8 +831,9 @@ public:
     double temperature = 0.;
     double ntot = 0.;
     for (auto it = begin(); it != end(); ++it) {
-      double n = it.get_number_density() * it.get_volume();
-      temperature += n * it.get_temperature();
+      double n =
+          it.get_ionization_variables().get_number_density() * it.get_volume();
+      temperature += n * it.get_ionization_variables().get_temperature();
       ntot += n;
     }
     return temperature / ntot;

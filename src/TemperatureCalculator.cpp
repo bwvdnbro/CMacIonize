@@ -102,8 +102,9 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
                                    LineCoolingData &data,
                                    RecombinationRates &rates,
                                    ChargeTransferRates &ctr) {
-  double alphaH = rates.get_recombination_rate(ION_H_n, T);
-  double alphaHe = rates.get_recombination_rate(ION_He_n, T);
+
+  const double alphaH = rates.get_recombination_rate(ION_H_n, T);
+  const double alphaHe = rates.get_recombination_rate(ION_He_n, T);
   double alphaC[2];
   alphaC[0] = rates.get_recombination_rate(ION_C_p1, T);
   alphaC[1] = rates.get_recombination_rate(ION_C_p2, T);
@@ -122,39 +123,44 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   alphaS[1] = rates.get_recombination_rate(ION_S_p2, T);
   alphaS[2] = rates.get_recombination_rate(ION_S_p3, T);
 
-  double t4 = T * 1.e-4;
-  double alpha_e_2sP = 4.27e-14 * std::pow(t4, -0.695);
-  double n = cell.get_number_density();
+  IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
-  double jH = jfac * cell.get_mean_intensity(ION_H_n);
-  double jHe = jfac * cell.get_mean_intensity(ION_He_n);
-  double AHe = abundances.get_abundance(ELEMENT_He);
+  const double T4 = T * 1.e-4;
+  const double alpha_e_2sP = 4.27e-14 * std::pow(T4, -0.695);
+  const double n = ionization_variables.get_number_density();
+
+  const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
+  const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+  const double AHe = abundances.get_abundance(ELEMENT_He);
   IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, n, AHe, T, h0,
                                      he0);
 
-  double ne = n * (1. - h0 + AHe * (1. - he0));
+  const double ne = n * (1. - h0 + AHe * (1. - he0));
   cmac_assert(ne == ne);
-  double nhp = n * (1. - h0);
-  double nhep = (1. - he0) * n * AHe;
-  double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
+  const double nhp = n * (1. - h0);
+  const double nhep = (1. - he0) * n * AHe;
+  const double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
 
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
-  double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
-  gain = hfac * n *
-         (cell.get_heating_H() * h0 + cell.get_heating_He() * AHe * he0);
+  const double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
+  gain =
+      hfac * n * (ionization_variables.get_heating(HEATINGTERM_H) * h0 +
+                  ionization_variables.get_heating(HEATINGTERM_He) * AHe * he0);
   // pahs
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
-  double heatpah = 3.e-38 * 5. * n * ne * pahfac;
+  const double heatpah = 3.e-38 * 5. * n * ne * pahfac;
 
   // cosmic rays
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
   // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
   double heatcr = 0.;
-  heatcr = crfac * 1.2e-25 / std::sqrt(ne);
-  if (crscale > 0.) {
-    heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+  if (crfac > 0.) {
+    heatcr = crfac * 1.2e-25 / std::sqrt(ne);
+    if (crscale > 0.) {
+      heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+    }
   }
 
   gain += heatpah;
@@ -164,148 +170,161 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // coolants
 
   // carbon
-  double C21 = jfac * cell.get_mean_intensity(ION_C_p1) / ne / alphaC[0];
+  const double C21 =
+      jfac * ionization_variables.get_mean_intensity(ION_C_p1) / ne / alphaC[0];
   // as can be seen below, CTHerecom has the same units as a recombination
   // rate: m^3s^-1
   // in Kenny's code, recombination rates are in cm^3s^-1
   // to put them in m^3s^-1 as well, we hence need to multiply Kenny's
   // original factor 1.e-9 with 1.e-6
-  double CTHerecom = 1.e-15 * 0.046 * t4 * t4;
-  double C32 = jfac * cell.get_mean_intensity(ION_C_p2) /
-               (ne * alphaC[1] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(4, 6, T) +
-                n * he0 * AHe * CTHerecom);
-  double C31 = C32 * C21;
-  double sumC = C21 + C31;
-  cell.set_ionic_fraction(ION_C_p1, C21 / (1. + sumC));
-  cell.set_ionic_fraction(ION_C_p2, C31 / (1. + sumC));
+  double CTHerecom = 1.e-15 * 0.046 * T4 * T4;
+  const double C32 =
+      jfac * ionization_variables.get_mean_intensity(ION_C_p2) /
+      (ne * alphaC[1] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 6, T) +
+       n * he0 * AHe * CTHerecom);
+  const double C31 = C32 * C21;
+  const double sumC = C21 + C31;
+  ionization_variables.set_ionic_fraction(ION_C_p1, C21 / (1. + sumC));
+  ionization_variables.set_ionic_fraction(ION_C_p2, C31 / (1. + sumC));
 
   // nitrogen
-  double N21 = (jfac * cell.get_mean_intensity(ION_N_n) +
-                nhp * ctr.get_charge_transfer_ionization_rate(1, 7, T)) /
-               (ne * alphaN[0] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(2, 7, T));
+  const double N21 =
+      (jfac * ionization_variables.get_mean_intensity(ION_N_n) +
+       nhp * ctr.get_charge_transfer_ionization_rate(1, 7, T)) /
+      (ne * alphaN[0] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(2, 7, T));
   // multiplied Kenny's value with 1.e-6
   CTHerecom =
-      1.e-15 * 0.33 * std::pow(t4, 0.29) * (1. + 1.3 * std::exp(-4.5 / t4));
-  double N32 = jfac * cell.get_mean_intensity(ION_N_p1) /
-               (ne * alphaN[1] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(3, 7, T) +
-                n * he0 * AHe * CTHerecom);
+      1.e-15 * 0.33 * std::pow(T4, 0.29) * (1. + 1.3 * std::exp(-4.5 / T4));
+  const double N32 =
+      jfac * ionization_variables.get_mean_intensity(ION_N_p1) /
+      (ne * alphaN[1] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 7, T) +
+       n * he0 * AHe * CTHerecom);
   // multiplied Kenny's value with 1.e-6
   CTHerecom = 1.e-15 * 0.15;
-  double N43 = jfac * cell.get_mean_intensity(ION_N_p2) /
-               (ne * alphaN[2] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(4, 7, T) +
-                n * he0 * AHe * CTHerecom);
-  double N31 = N32 * N21;
-  double N41 = N43 * N31;
-  double sumN = N21 + N31 + N41;
-  cell.set_ionic_fraction(ION_N_n, N21 / (1. + sumN));
-  cell.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
-  cell.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
+  const double N43 =
+      jfac * ionization_variables.get_mean_intensity(ION_N_p2) /
+      (ne * alphaN[2] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 7, T) +
+       n * he0 * AHe * CTHerecom);
+  const double N31 = N32 * N21;
+  const double N41 = N43 * N31;
+  const double sumN = N21 + N31 + N41;
+  ionization_variables.set_ionic_fraction(ION_N_n, N21 / (1. + sumN));
+  ionization_variables.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
+  ionization_variables.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
 
   // Sulphur
-  double S21 = jfac * cell.get_mean_intensity(ION_S_p1) /
-               (ne * alphaS[0] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(3, 16, T));
+  const double S21 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p1) /
+      (ne * alphaS[0] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 16, T));
   // multiplied Kenny's value with 1.e-6
-  CTHerecom = 1.e-15 * 1.1 * std::pow(t4, 0.56);
-  double S32 = jfac * cell.get_mean_intensity(ION_S_p2) /
-               (ne * alphaS[1] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(4, 16, T) +
-                n * he0 * AHe * CTHerecom);
+  CTHerecom = 1.e-15 * 1.1 * std::pow(T4, 0.56);
+  const double S32 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p2) /
+      (ne * alphaS[1] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 16, T) +
+       n * he0 * AHe * CTHerecom);
   // multiplied Kenny's value with 1.e-6
   CTHerecom =
-      1.e-15 * 7.6e-4 * std::pow(t4, 0.32) * (1. + 3.4 * std::exp(-5.25 * t4));
-  double S43 = jfac * cell.get_mean_intensity(ION_S_p3) /
-               (ne * alphaS[2] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(5, 16, T) +
-                n * he0 * AHe * CTHerecom);
-  double S31 = S32 * S21;
-  double S41 = S43 * S31;
-  double sumS = S21 + S31 + S41;
-  cell.set_ionic_fraction(ION_S_p1, S21 / (1. + sumS));
-  cell.set_ionic_fraction(ION_S_p2, S31 / (1. + sumS));
-  cell.set_ionic_fraction(ION_S_p3, S41 / (1. + sumS));
+      1.e-15 * 7.6e-4 * std::pow(T4, 0.32) * (1. + 3.4 * std::exp(-5.25 * T4));
+  const double S43 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p3) /
+      (ne * alphaS[2] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(5, 16, T) +
+       n * he0 * AHe * CTHerecom);
+  const double S31 = S32 * S21;
+  const double S41 = S43 * S31;
+  const double sumS = S21 + S31 + S41;
+  ionization_variables.set_ionic_fraction(ION_S_p1, S21 / (1. + sumS));
+  ionization_variables.set_ionic_fraction(ION_S_p2, S31 / (1. + sumS));
+  ionization_variables.set_ionic_fraction(ION_S_p3, S41 / (1. + sumS));
 
   // Neon
-  double Ne21 = jfac * cell.get_mean_intensity(ION_Ne_n) / (ne * alphaNe[0]);
+  const double Ne21 = jfac * ionization_variables.get_mean_intensity(ION_Ne_n) /
+                      (ne * alphaNe[0]);
   // multiplied Kenny's value with 1.e-6
   CTHerecom = 1.e-15 * 1.e-5;
-  double Ne32 = jfac * cell.get_mean_intensity(ION_Ne_p1) /
-                (ne * alphaNe[1] +
-                 n * h0 * ctr.get_charge_transfer_recombination_rate(3, 10, T) +
-                 n * he0 * AHe * CTHerecom);
-  double Ne31 = Ne32 * Ne21;
-  double sumNe = Ne21 + Ne31;
-  cell.set_ionic_fraction(ION_Ne_n, Ne21 / (1. + sumNe));
-  cell.set_ionic_fraction(ION_Ne_p1, Ne31 / (1. + sumNe));
+  const double Ne32 =
+      jfac * ionization_variables.get_mean_intensity(ION_Ne_p1) /
+      (ne * alphaNe[1] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 10, T) +
+       n * he0 * AHe * CTHerecom);
+  const double Ne31 = Ne32 * Ne21;
+  const double sumNe = Ne21 + Ne31;
+  ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 / (1. + sumNe));
+  ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 / (1. + sumNe));
 
   // Oxygen
-  double O21 = (jfac * cell.get_mean_intensity(ION_O_n) +
-                nhp * ctr.get_charge_transfer_ionization_rate(1, 8, T)) /
-               (ne * alphaO[0] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(2, 8, T));
+  const double O21 =
+      (jfac * ionization_variables.get_mean_intensity(ION_O_n) +
+       nhp * ctr.get_charge_transfer_ionization_rate(1, 8, T)) /
+      (ne * alphaO[0] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(2, 8, T));
   // multiplied Kenny's value with 1.e-6
-  CTHerecom = 0.2e-15 * std::pow(t4, 0.95);
-  double O32 = jfac * cell.get_mean_intensity(ION_O_p1) /
-               (ne * alphaO[1] +
-                n * h0 * ctr.get_charge_transfer_recombination_rate(3, 8, T) +
-                n * he0 * AHe * CTHerecom);
-  double O31 = O32 * O21;
-  double sumO = O21 + O31;
-  cell.set_ionic_fraction(ION_O_n, O21 / (1. + sumO));
-  cell.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
+  CTHerecom = 0.2e-15 * std::pow(T4, 0.95);
+  const double O32 =
+      jfac * ionization_variables.get_mean_intensity(ION_O_p1) /
+      (ne * alphaO[1] +
+       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 8, T) +
+       n * he0 * AHe * CTHerecom);
+  const double O31 = O32 * O21;
+  const double sumO = O21 + O31;
+  ionization_variables.set_ionic_fraction(ION_O_n, O21 / (1. + sumO));
+  ionization_variables.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
 
   double abund[12];
-  abund[0] =
-      abundances.get_abundance(ELEMENT_N) *
-      (1. - cell.get_ionic_fraction(ION_N_n) -
-       cell.get_ionic_fraction(ION_N_p1) - cell.get_ionic_fraction(ION_N_p2));
-  abund[1] =
-      abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_n);
+  abund[0] = abundances.get_abundance(ELEMENT_N) *
+             (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
+              ionization_variables.get_ionic_fraction(ION_N_p1) -
+              ionization_variables.get_ionic_fraction(ION_N_p2));
+  abund[1] = abundances.get_abundance(ELEMENT_N) *
+             ionization_variables.get_ionic_fraction(ION_N_n);
   abund[2] = abundances.get_abundance(ELEMENT_O) *
-             (1. - cell.get_ionic_fraction(ION_O_n) -
-              cell.get_ionic_fraction(ION_O_p1));
-  abund[3] =
-      abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_n);
-  abund[4] =
-      abundances.get_abundance(ELEMENT_O) * cell.get_ionic_fraction(ION_O_p1);
-  abund[5] =
-      abundances.get_abundance(ELEMENT_Ne) * cell.get_ionic_fraction(ION_Ne_p1);
-  abund[6] =
-      abundances.get_abundance(ELEMENT_S) *
-      (1. - cell.get_ionic_fraction(ION_S_p1) -
-       cell.get_ionic_fraction(ION_S_p2) - cell.get_ionic_fraction(ION_S_p3));
-  abund[7] =
-      abundances.get_abundance(ELEMENT_S) * cell.get_ionic_fraction(ION_S_p1);
+             (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
+              ionization_variables.get_ionic_fraction(ION_O_p1));
+  abund[3] = abundances.get_abundance(ELEMENT_O) *
+             ionization_variables.get_ionic_fraction(ION_O_n);
+  abund[4] = abundances.get_abundance(ELEMENT_O) *
+             ionization_variables.get_ionic_fraction(ION_O_p1);
+  abund[5] = abundances.get_abundance(ELEMENT_Ne) *
+             ionization_variables.get_ionic_fraction(ION_Ne_p1);
+  abund[6] = abundances.get_abundance(ELEMENT_S) *
+             (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
+              ionization_variables.get_ionic_fraction(ION_S_p2) -
+              ionization_variables.get_ionic_fraction(ION_S_p3));
+  abund[7] = abundances.get_abundance(ELEMENT_S) *
+             ionization_variables.get_ionic_fraction(ION_S_p1);
   abund[8] = abundances.get_abundance(ELEMENT_C) *
-             (1. - cell.get_ionic_fraction(ION_C_p1) -
-              cell.get_ionic_fraction(ION_C_p2));
-  abund[9] =
-      abundances.get_abundance(ELEMENT_C) * cell.get_ionic_fraction(ION_C_p1);
-  abund[10] =
-      abundances.get_abundance(ELEMENT_N) * cell.get_ionic_fraction(ION_N_p1);
-  abund[11] =
-      abundances.get_abundance(ELEMENT_Ne) * cell.get_ionic_fraction(ION_Ne_n);
+             (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
+              ionization_variables.get_ionic_fraction(ION_C_p2));
+  abund[9] = abundances.get_abundance(ELEMENT_C) *
+             ionization_variables.get_ionic_fraction(ION_C_p1);
+  abund[10] = abundances.get_abundance(ELEMENT_N) *
+              ionization_variables.get_ionic_fraction(ION_N_p1);
+  abund[11] = abundances.get_abundance(ELEMENT_Ne) *
+              ionization_variables.get_ionic_fraction(ION_Ne_n);
 
   // FFcool
-  double c = 5.5 - std::log(T);
-  double gff = 1.1 + 0.34 * std::exp(-c * c / 3.);
+  const double c = 5.5 - std::log(T);
+  const double gff = 1.1 + 0.34 * std::exp(-c * c / 3.);
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
-  double Lff = 1.42e-40 * gff * std::sqrt(T) * (nhp + nhep) * ne;
+  const double Lff = 1.42e-40 * gff * std::sqrt(T) * (nhp + nhep) * ne;
 
   // RECcool
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
-  double Lhp = 2.85e-14 * ne * nhp * std::sqrt(T) *
-               (5.914 - 0.5 * std::log(T) + 0.01184 * std::pow(T, 0.33333));
-  double Lhep = 2.6e-13 * ne * nhep * std::pow(T, 0.32);
-  double LRec = 1.e-26 * (Lhp + Lhep);
+  const double Lhp =
+      2.85e-14 * ne * nhp * std::sqrt(T) *
+      (5.914 - 0.5 * std::log(T) + 0.01184 * std::pow(T, 0.33333));
+  const double Lhep = 2.6e-13 * ne * nhep * std::pow(T, 0.32);
+  const double LRec = 1.e-26 * (Lhp + Lhep);
 
-  double Lc = data.get_cooling(T, ne, abund) * n;
+  const double Lc = data.get_cooling(T, ne, abund) * n;
 
   loss = Lc + Lff + LRec;
 }
@@ -322,71 +341,78 @@ void TemperatureCalculator::calculate_temperature(
   const double eps = 1.e-3;
   const unsigned int max_iterations = 100;
 
-  if ((cell.get_heating_H() == 0. && cell.get_mean_intensity(ION_He_n) == 0.) ||
-      cell.get_number_density() == 0.) {
-    cell.set_temperature(500.);
+  IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
-    cell.set_ionic_fraction(ION_H_n, 1.);
+  if ((ionization_variables.get_mean_intensity(ION_H_n) == 0. &&
+       ionization_variables.get_mean_intensity(ION_He_n) == 0.) ||
+      ionization_variables.get_number_density() == 0.) {
+    ionization_variables.set_temperature(500.);
 
-    cell.set_ionic_fraction(ION_He_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_H_n, 1.);
 
-    cell.set_ionic_fraction(ION_C_p1, 0.);
-    cell.set_ionic_fraction(ION_C_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_He_n, 1.);
 
-    cell.set_ionic_fraction(ION_N_n, 1.);
-    cell.set_ionic_fraction(ION_N_p1, 0.);
-    cell.set_ionic_fraction(ION_N_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 1.);
-    cell.set_ionic_fraction(ION_O_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 1.);
-    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_S_p1, 0.);
-    cell.set_ionic_fraction(ION_S_p2, 0.);
-    cell.set_ionic_fraction(ION_S_p3, 0.);
+    ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+
+    ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
 
     return;
   }
 
   double h0, he0;
-  double alphaH = _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
-  double alphaHe = _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
-  double jH = jfac * cell.get_mean_intensity(ION_H_n);
-  double jHe = jfac * cell.get_mean_intensity(ION_He_n);
-  double nH = cell.get_number_density();
-  double AHe = _abundances.get_abundance(ELEMENT_He);
-  IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
-                                     h0, he0);
-  if (h0 > _crlim) {
-    // assume fully neutral
-    cell.set_temperature(500.);
-    cell.set_ionic_fraction(ION_H_n, 1.);
-    cell.set_ionic_fraction(ION_He_n, 1.);
+  if (_crfac > 0.) {
+    const double alphaH =
+        _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
+    const double alphaHe =
+        _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
+    const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
+    const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+    const double nH = ionization_variables.get_number_density();
+    const double AHe = _abundances.get_abundance(ELEMENT_He);
+    IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
+                                       h0, he0);
+    if (_crfac > 0. && h0 > _crlim) {
+      // assume fully neutral
+      ionization_variables.set_temperature(500.);
+      ionization_variables.set_ionic_fraction(ION_H_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_He_n, 1.);
 
-    cell.set_ionic_fraction(ION_C_p1, 0.);
-    cell.set_ionic_fraction(ION_C_p2, 0.);
+      ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
+      ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 1.);
-    cell.set_ionic_fraction(ION_N_p1, 0.);
-    cell.set_ionic_fraction(ION_N_p2, 0.);
+      ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
+      ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 1.);
-    cell.set_ionic_fraction(ION_O_p1, 0.);
+      ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 1.);
-    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+      ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
-    cell.set_ionic_fraction(ION_S_p1, 0.);
-    cell.set_ionic_fraction(ION_S_p2, 0.);
-    cell.set_ionic_fraction(ION_S_p3, 0.);
-    return;
+      ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
+      ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
+      ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+      return;
+    }
   }
 
   double T0;
-  if (cell.get_temperature() > 4000.) {
-    T0 = cell.get_temperature();
+  if (ionization_variables.get_temperature() > 4000.) {
+    T0 = ionization_variables.get_temperature();
   } else {
     T0 = 8000.;
   }
@@ -398,14 +424,14 @@ void TemperatureCalculator::calculate_temperature(
   he0 = 0.;
   while (std::abs(gain0 - loss0) > eps * gain0 && niter < max_iterations) {
     ++niter;
-    double T1 = 1.1 * T0;
+    const double T1 = 1.1 * T0;
     // ioneng
     double h01, he01, gain1, loss1;
     ioneng(h01, he01, gain1, loss1, T1, cell, jfac, _abundances, hfac, _pahfac,
            _crfac, _crscale, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
-    double T2 = 0.9 * T0;
+    const double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     ioneng(h02, he02, gain2, loss2, T2, cell, jfac, _abundances, hfac, _pahfac,
@@ -417,9 +443,9 @@ void TemperatureCalculator::calculate_temperature(
            _crfac, _crscale, _line_cooling_data, _recombination_rates,
            _charge_transfer_rates);
 
-    double logtt = std::log(T1 / T2);
-    double expgain = std::log(gain1 / gain2) / logtt;
-    double exploss = std::log(loss1 / loss2) / logtt;
+    const double logtt = std::log(T1 / T2);
+    const double expgain = std::log(gain1 / gain2) / logtt;
+    const double exploss = std::log(loss1 / loss2) / logtt;
     T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
 
     if (T0 < 4000.) {
@@ -432,12 +458,12 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
 
-    if (T0 > 25000.) {
+    if (T0 > 1.e10) {
       // gas is ionized, temperature is 10^10 K (should probably be a lower
       // value)
-      T0 = 25000.;
-      h0 = 0.;
-      he0 = 0.;
+      T0 = 1.e10;
+      h0 = 1.e-10;
+      he0 = 1.e-10;
       // force exit out of loop
       gain0 = 1.;
       loss0 = 1.;
@@ -449,53 +475,56 @@ void TemperatureCalculator::calculate_temperature(
                  T0, std::abs(loss0 - gain0) / gain0, eps);
   }
 
-  cell.set_temperature(T0);
-  cell.set_ionic_fraction(ION_H_n, h0);
-  cell.set_ionic_fraction(ION_He_n, he0);
+  // cap the temperature at 30,000 K
+  T0 = std::min(30000., T0);
 
-  if (cell.get_mean_intensity(ION_H_n) == 0.) {
-    cell.set_ionic_fraction(ION_H_n, 1.);
+  ionization_variables.set_temperature(T0);
+  ionization_variables.set_ionic_fraction(ION_H_n, h0);
+  ionization_variables.set_ionic_fraction(ION_He_n, he0);
+
+  if (ionization_variables.get_mean_intensity(ION_H_n) == 0.) {
+    ionization_variables.set_ionic_fraction(ION_H_n, 1.);
   }
-  if (cell.get_mean_intensity(ION_He_n) == 0.) {
-    cell.set_ionic_fraction(ION_He_n, 1.);
+  if (ionization_variables.get_mean_intensity(ION_He_n) == 0.) {
+    ionization_variables.set_ionic_fraction(ION_He_n, 1.);
   }
 
   if (h0 == 1.) {
-    cell.set_ionic_fraction(ION_C_p1, 0.);
-    cell.set_ionic_fraction(ION_C_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 1.);
-    cell.set_ionic_fraction(ION_N_p1, 0.);
-    cell.set_ionic_fraction(ION_N_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 1.);
-    cell.set_ionic_fraction(ION_O_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 1.);
-    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
-    cell.set_ionic_fraction(ION_S_p1, 0.);
-    cell.set_ionic_fraction(ION_S_p2, 0.);
-    cell.set_ionic_fraction(ION_S_p3, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
   }
 
-  if (h0 == 0.) {
-    cell.set_ionic_fraction(ION_C_p1, 0.);
-    cell.set_ionic_fraction(ION_C_p2, 0.);
+  if (h0 <= 1.e-10) {
+    ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    cell.set_ionic_fraction(ION_N_n, 0.);
-    cell.set_ionic_fraction(ION_N_p1, 0.);
-    cell.set_ionic_fraction(ION_N_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_n, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    cell.set_ionic_fraction(ION_O_n, 0.);
-    cell.set_ionic_fraction(ION_O_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_O_n, 0.);
+    ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    cell.set_ionic_fraction(ION_Ne_n, 0.);
-    cell.set_ionic_fraction(ION_Ne_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
+    ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
-    cell.set_ionic_fraction(ION_S_p1, 0.);
-    cell.set_ionic_fraction(ION_S_p2, 0.);
-    cell.set_ionic_fraction(ION_S_p3, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
+    ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
   }
 }
 

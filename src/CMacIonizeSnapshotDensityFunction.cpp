@@ -36,7 +36,8 @@
  */
 CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     std::string filename, Log *log)
-    : _cartesian_grid(nullptr), _amr_grid(nullptr) {
+    : _cartesian_grid(nullptr), _amr_grid(nullptr),
+      _voronoi_pointlocations(nullptr) {
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
@@ -51,13 +52,33 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         HDF5Tools::read_attribute< std::string >(group, attname);
     parameters.add_value(attname, attvalue);
   }
-  _box = Box(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid:box_anchor"),
-             parameters.get_physical_vector< QUANTITY_LENGTH >(
-                 "densitygrid:box_sides"));
-  _ncell = parameters.get_value< CoordinateVector< int > >("densitygrid:ncell");
+  _box = Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
+                   "densitygrid:box_anchor"),
+               parameters.get_physical_vector< QUANTITY_LENGTH >(
+                   "densitygrid:box_sides"));
+  _ncell = parameters.get_value< CoordinateVector< int > >(
+      "densitygrid:ncell", CoordinateVector< int >(-1));
   std::string type = parameters.get_value< std::string >("densitygrid:type");
   HDF5Tools::close_group(group);
+
+  // units
+  double unit_length_in_SI = 1.;
+  double unit_density_in_SI = 1.;
+  double unit_temperature_in_SI = 1.;
+  if (HDF5Tools::group_exists(file, "/Units")) {
+    HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
+    double unit_length_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
+    double unit_temperature_in_cgs = HDF5Tools::read_attribute< double >(
+        units, "Unit temperature in cgs (U_T)");
+    unit_length_in_SI =
+        UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
+    unit_density_in_SI =
+        1. / unit_length_in_SI / unit_length_in_SI / unit_length_in_SI;
+    // K is K
+    unit_temperature_in_SI = unit_temperature_in_cgs;
+    HDF5Tools::close_group(units);
+  }
 
   // read cell midpoints, densities, and temperatures
   group = HDF5Tools::open_group(file, "/PartType0");
@@ -75,6 +96,15 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   HDF5Tools::close_group(group);
 
   HDF5Tools::close_file(file);
+
+  // unit conversion
+  for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+    cell_midpoints[i][0] *= unit_length_in_SI;
+    cell_midpoints[i][1] *= unit_length_in_SI;
+    cell_midpoints[i][2] *= unit_length_in_SI;
+    cell_densities[i] *= unit_density_in_SI;
+    cell_temperatures[i] *= unit_temperature_in_SI;
+  }
 
   if (log) {
     log->write_status(
@@ -165,6 +195,21 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         values.set_ionic_fraction(ion, neutral_fractions[j][i]);
       }
     }
+  } else if (type == "Voronoi") {
+    _voronoi_generators.resize(cell_midpoints.size());
+    _voronoi_densityvalues.resize(cell_midpoints.size());
+    for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+      _voronoi_generators[i] = cell_midpoints[i] + _box.get_anchor();
+      _voronoi_densityvalues[i].set_number_density(cell_densities[i]);
+      _voronoi_densityvalues[i].set_temperature(cell_temperatures[i]);
+      for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+        IonName ion = static_cast< IonName >(j);
+        _voronoi_densityvalues[i].set_ionic_fraction(ion,
+                                                     neutral_fractions[j][i]);
+      }
+    }
+    _voronoi_pointlocations =
+        new PointLocations(_voronoi_generators, 100, _box);
   } else {
     cmac_error("Reconstructing a density field from a %sDensityGrid is not yet "
                "supported!",
@@ -199,33 +244,38 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
     delete[] _cartesian_grid;
   } else if (_amr_grid) {
     delete _amr_grid;
+  } else if (_voronoi_pointlocations) {
+    delete _voronoi_pointlocations;
   }
 }
 
 /**
- * @brief Get the DensityValues at the given position.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position CoordinateVector specifying a position (in m).
- * @return DensityValues at that position (in SI units).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
 DensityValues CMacIonizeSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
+operator()(const Cell &cell) const {
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+
   if (_cartesian_grid) {
     // get the indices of the cell containing the position
-    int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
-             _box.get_sides().x();
-    int iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
-             _box.get_sides().y();
-    int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
-             _box.get_sides().z();
+    const int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
+                   _box.get_sides().x();
+    const int iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
+                   _box.get_sides().y();
+    const int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
+                   _box.get_sides().z();
 
     return _cartesian_grid[ix][iy][iz];
   } else if (_amr_grid) {
-    unsigned long key = _amr_grid->get_key(position);
-    AMRGridCell< DensityValues > &cell = (*_amr_grid)[key];
-    DensityValues values = cell.value();
+    const unsigned long key = _amr_grid->get_key(position);
+    const AMRGridCell< DensityValues > &amr_cell = (*_amr_grid)[key];
+    DensityValues values = amr_cell.value();
     // we make sure cells are refined to the correct level
-    CoordinateVector<> cell_midpoint = cell.get_midpoint();
+    const CoordinateVector<> cell_midpoint = amr_cell.get_midpoint();
     if (std::abs(cell_midpoint.x() - position.x()) >
             1.e-9 * std::abs(cell_midpoint.x() + position.x()) &&
         std::abs(cell_midpoint.y() - position.y()) >
@@ -235,6 +285,10 @@ operator()(CoordinateVector<> position) const {
       values.set_number_density(-1.);
     }
     return values;
+  } else if (_voronoi_pointlocations) {
+    const unsigned int index =
+        _voronoi_pointlocations->get_closest_neighbour(position);
+    return _voronoi_densityvalues[index];
   } else {
     cmac_error("This grid type is not supported (and you should never see this "
                "error)!");

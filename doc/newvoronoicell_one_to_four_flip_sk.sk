@@ -1,0 +1,118 @@
+special |\tikzstyle{transparentstyle} = [fill opacity=0.3, fill = white]|[lay=under]
+special |\tikzstyle{node} = [fill = white]|[lay=under]
+special |\tikzstyle{line} = [green, thick, dashed]|[lay=under]
+
+def p0 (-6.0, 0.0, 2.0)
+def p1 (10.0, 0.0, -5.0)
+def p2 (0.0, 10.0, 0.0)
+def p3 (5.0, 0.0, 10.0)
+def p4 (0.0, 1.0, 2.0)
+
+def O (0.0, 0.0, 0.0)
+def c0123 ((p0)-(O) + (p1)-(O) + (p2)-(O) + (p3)-(O)) / 4 + (O)
+def c0124 ((p0)-(O) + (p1)-(O) + (p2)-(O) + (p4)-(O)) / 4 + (O)
+def c0143 ((p0)-(O) + (p1)-(O) + (p4)-(O) + (p3)-(O)) / 4 + (O)
+def c0423 ((p0)-(O) + (p4)-(O) + (p2)-(O) + (p3)-(O)) / 4 + (O)
+def c4123 ((p4)-(O) + (p1)-(O) + (p2)-(O) + (p3)-(O)) / 4 + (O)
+
+def N012 unit( ((p2)-(p0)) * ((p1)-(p0)) )
+def N013 unit( ((p1)-(p0)) * ((p3)-(p0)) )
+def N023 unit( ((p3)-(p0)) * ((p2)-(p0)) )
+def N123 unit( ((p2)-(p1)) * ((p3)-(p1)) )
+def c012 ((p0)-(O) + (p1)-(O) + (p2)-(O)) / 3 + (O)
+def c013 ((p0)-(O) + (p1)-(O) + (p3)-(O)) / 3 + (O)
+def c023 ((p0)-(O) + (p2)-(O) + (p3)-(O)) / 3 + (O)
+def c123 ((p1)-(O) + (p2)-(O) + (p3)-(O)) / 3 + (O)
+def n012 (c012)+[N012]
+def n013 (c013)+[N013]
+def n023 (c023)+[N023]
+def n123 (c123)+[N123]
+
+def n012l line(c012)(n012)
+def n013l line(c013)(n013)
+def n023l line(c023)(n023)
+def n123l line(c123)(n123)
+
+def l04 unit( (p0)-(p4) )
+def l14 unit( (p1)-(p4) )
+def l24 unit( (p2)-(p4) )
+def l34 unit( (p3)-(p4) )
+
+def p0label (p0)+0.3*[l04]
+def p1label (p1)+0.3*[l14]
+def p2label (p2)+0.3*[l24]
+def p3label (p3)+0.3*[l34]
+def p4label (p4)
+
+def t01 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def t03 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
+def t02 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
+def t00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
+
+def p0p4 line[line style=line](p0)(p4)
+def p1p4 line[line style=line](p1)(p4)
+def p2p4 line[line style=line](p2)(p4)
+def p3p4 line[line style=line](p3)(p4)
+
+def v0label { special |\node[node] at #1 {v0};|[lay=in](p0label) }
+def v1label { special |\node[node] at #1 {v1};|[lay=in](p1label) }
+def v2label { special |\node[node] at #1 {v2};|[lay=in](p2label) }
+def v3label { special |\node[node] at #1 {v3};|[lay=in](p3label) }
+def v4label { special |\node[node] at #1 {v4};|[lay=in](p4label) }
+def t0label { special |\node[node] at #1 {\Large t0};|[lay=in](c0123) }
+def tn0label { special |\node[node] at #1 {\Large t'0};|[lay=in](c0124) }
+def tn1label { special |\node[node] at #1 {\Large t'1};|[lay=in](c0143) }
+def tn2label { special |\node[node] at #1 {\Large t'2};|[lay=in](c0423) }
+def tn3label { special |\node[node] at #1 {\Large t'3};|[lay=in](c4123) }
+def n012label { special |\node[node] at #1 {\large ngb3};|[lay=in](n012) }
+def n013label { special |\node[node] at #1 {\large ngb2};|[lay=in](n013) }
+def n023label { special |\node[node] at #1 {\large ngb1};|[lay=in](n023) }
+def n123label { special |\node[node] at #1 {\large ngb0};|[lay=in](n123) }
+
+def t0 {{t00}{t01}{t02}{t03}{v0label}{v1label}{v2label}{v3label}{t0label}
+        {n012label}{n013label}{n023label}{n123label}
+        {n012l}{n013l}{n023l}{n123l}}
+def new_vertex {{v4label}{p0p4}{p1p4}{p2p4}{p3p4}}
+
+def tn00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
+def tn01 line[line style=line](p0)(p4)
+def tn02 line[line style=line](p1)(p4)
+def tn03 line[line style=line](p2)(p4)
+def tn0 {{tn00}{tn01}{tn02}{tn03}{v0label}{v1label}{v2label}{v4label}
+         {tn0label}{n012label}{n012l}}
+
+def tn11 line[line style=line](p0)(p4)
+def tn12 line[line style=line](p1)(p4)
+def tn13 line[line style=line](p3)(p4)
+def tn10 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def tn1 {{tn10}{tn11}{tn12}{tn13}{v0label}{v1label}{v3label}{v4label}
+         {tn1label}{n013label}{n013l}}
+
+def tn21 line[line style=line](p0)(p4)
+def tn22 line[line style=line](p2)(p4)
+def tn23 line[line style=line](p3)(p4)
+def tn20 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
+def tn2 {{tn20}{tn21}{tn22}{tn23}{v0label}{v2label}{v3label}{v4label}
+         {tn2label}{n023label}{n023l}}
+
+def tn30 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
+def tn31 line[line style=line](p1)(p4)
+def tn32 line[line style=line](p2)(p4)
+def tn33 line[line style=line](p3)(p4)
+def tn3 {{tn30}{tn31}{tn32}{tn33}{v1label}{v2label}{v3label}{v4label}
+         {tn3label}{n123label}{n123l}}
+
+def scale 4.0
+
+def tn0t put {translate(scale*[N012])}{tn0}
+def tn1t put {translate(scale*[N013])}{tn1}
+def tn2t put {translate(scale*[N023])}{tn2}
+def tn3t put {translate(scale*[N123])}{tn3}
+
+def eye (10.0, 10.0, 10.0)
+def look_at (0.0, 0.0, 0.0)
+
+def decomposed put {translate([15.0, 0.0, -15.0])}{{tn0t}{tn1t}{tn2t}{tn3t}}
+put {view((eye), (look_at))} {{t0}{new_vertex}{decomposed}}
+
+global { language tikz }

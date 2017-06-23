@@ -50,7 +50,7 @@ public:
                                Log *log = nullptr);
   FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 };
 
 #endif // FLASHSNAPSHOTDENSITYFUNCTION_HPP

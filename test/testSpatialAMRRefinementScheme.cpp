@@ -37,11 +37,11 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(8);
   HomogeneousDensityFunction density_function(1.);
   AMRRefinementScheme *scheme = new SpatialAMRRefinementScheme(
-      Box(CoordinateVector<>(0.3125), CoordinateVector<>(0.375)), 5);
+      Box<>(CoordinateVector<>(0.3125), CoordinateVector<>(0.375)), 5);
 
   AMRDensityGrid grid(box, ncell, density_function, scheme);
   std::pair< unsigned long, unsigned long > block =

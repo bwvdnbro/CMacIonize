@@ -79,5 +79,6 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
     IonName ion = static_cast< IonName >(0);     // Maya
     double frac = it.get_ionic_fraction(ion);    // Maya
     file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t" << frac <<"\n";   // Maya
+
   }
 }

@@ -123,6 +123,7 @@ set(CMACIONIZE_SOURCES
     ChargeTransferRates.cpp
     CMacIonize.cpp
     CMacIonizeSnapshotDensityFunction.cpp
+    CMacIonizeVoronoiGeneratorDistribution.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
@@ -156,9 +157,8 @@ set(CMACIONIZE_SOURCES
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
     ChargeTransferRatesDataLocation.hpp.in
-    ChiSquaredIterationConvergenceChecker.hpp
-    ChiSquaredPhotonNumberConvergenceChecker.hpp
     CMacIonizeSnapshotDensityFunction.hpp
+    CMacIonizeVoronoiGeneratorDistribution.hpp
     Configuration.hpp.in
     ContinuousPhotonSourceFactory.hpp
     CoordinateVector.hpp
@@ -185,20 +185,14 @@ set(CMACIONIZE_SOURCES
     HeliumTwoPhotonContinuumSpectrum.hpp
     InterpolatedDensityFunction.hpp
     IonizationStateCalculator.hpp
-    IterationConvergenceChecker.hpp
-    IterationConvergenceCheckerFactory.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp
     ParameterFile.hpp
-    PassiveIterationConvergenceChecker.hpp
-    PassivePhotonNumberConvergenceChecker.hpp
     PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
-    PhotonNumberConvergenceChecker.hpp
-    PhotonNumberConvergenceCheckerFactory.hpp
     PhotonShootJob.hpp
     PhotonShootJobMarket.hpp
     PhotonSource.hpp

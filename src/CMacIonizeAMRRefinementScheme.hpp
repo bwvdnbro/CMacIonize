@@ -63,7 +63,7 @@ public:
    * @return True if the cell should be split in 8 smaller cells.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    return cell.get_number_density() < 0.;
+    return cell.get_ionization_variables().get_number_density() < 0.;
   }
 };
 

@@ -40,8 +40,8 @@
  */
 static double get_temperature(FLASHSnapshotDensityFunction &density_function,
                               double x, double y, double z) {
-  CoordinateVector<> position(x, y, z);
-  DensityValues vals = density_function(position);
+  DummyCell cell(x, y, z);
+  DensityValues vals = density_function(cell);
   return vals.get_temperature();
 }
 

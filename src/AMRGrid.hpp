@@ -41,7 +41,7 @@
 template < typename _CellContents_ > class AMRGrid {
 private:
   /*! @brief Extents of the entire grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of top level blocks in the grid. */
   CoordinateVector< int > _ncell;
@@ -117,7 +117,7 @@ public:
    * @param ncell Number of blocks in each dimension. The actual number of cells
    * in a given dimensions is limited to this number times a power of 2.
    */
-  inline AMRGrid(Box box, CoordinateVector< int > ncell)
+  inline AMRGrid(const Box<> &box, CoordinateVector< int > ncell)
       : _box(box), _ncell(ncell) {
     CoordinateVector<> sides;
     sides[0] = _box.get_sides().x() / _ncell.x();
@@ -133,7 +133,7 @@ public:
           anchor[0] = _box.get_anchor().x() + i * sides.x();
           anchor[1] = _box.get_anchor().y() + j * sides.y();
           anchor[2] = _box.get_anchor().z() + k * sides.z();
-          Box box(anchor, sides);
+          Box<> box(anchor, sides);
           _top_level[i][j][k] =
               new AMRGridCell< _CellContents_ >(box, 0, nullptr);
         }
@@ -169,7 +169,7 @@ public:
           anchor[0] = _box.get_anchor().x() + i * sides.x();
           anchor[1] = _box.get_anchor().y() + j * sides.y();
           anchor[2] = _box.get_anchor().z() + k * sides.z();
-          Box box(anchor, sides);
+          Box<> box(anchor, sides);
           _top_level[i][j][k] =
               new AMRGridCell< _CellContents_ >(box, 0, nullptr);
         }
@@ -238,7 +238,7 @@ public:
     anchor[0] = _box.get_anchor().x() + ix * sides.x();
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
+    Box<> box(anchor, sides);
     unsigned int cell = 0;
     for (unsigned char ilevel = 0; ilevel < level; ++ilevel) {
       ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
@@ -288,7 +288,7 @@ public:
     anchor[0] = _box.get_anchor().x() + ix * sides.x();
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
+    Box<> box(anchor, sides);
     // recursively get the key until we have reached the lowest level
     unsigned int cell = _top_level[ix][iy][iz]->get_key(0, position, box);
     unsigned long key = block;
@@ -324,7 +324,7 @@ public:
     anchor[0] = _box.get_anchor().x() + ix * sides.x();
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
+    Box<> box(anchor, sides);
     _top_level[ix][iy][iz]->create_cell(0, level, position, box);
   }
 
@@ -394,7 +394,7 @@ public:
     anchor[0] = _box.get_anchor().x() + ix * sides.x();
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
-    Box box(anchor, sides);
+    Box<> box(anchor, sides);
     return _top_level[ix][iy][iz]->get_cell(position, box);
   }
 
@@ -556,7 +556,7 @@ public:
           anchor[0] = _box.get_anchor().x() + ix * sides.x();
           anchor[1] = _box.get_anchor().y() + iy * sides.y();
           anchor[2] = _box.get_anchor().z() + iz * sides.z();
-          Box box(anchor, sides);
+          Box<> box(anchor, sides);
           _top_level[ix][iy][iz]->print(stream, box);
         }
       }

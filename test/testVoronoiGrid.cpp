@@ -318,11 +318,11 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[1] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(2);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint_index(1, 0, 0);
     break;
   }
 
@@ -333,13 +333,13 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint_index(0, 1, 0);
     _edges[1].resize(3);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 0);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -350,13 +350,13 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint_index(0, 1, 0);
     _edges[1].resize(3);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 1, 0);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -368,9 +368,9 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(2., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint(0, 2, 3);
     break;
   }
 
@@ -381,14 +381,14 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 2;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 2);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint_index(1, 0, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
+    set_edge_endpoint(2, 0, 1);
+    set_edge_endpoint_index(2, 0, 0);
     break;
   }
 
@@ -400,19 +400,19 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 3);
     _edges[1].resize(4);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][3]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][3]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 1, 3);
+    set_edge_endpoint(1, 3, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
+    set_edge_endpoint_index(1, 3, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 1);
     break;
   }
 
@@ -424,21 +424,21 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 3);
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_1_4_2 (+ the indices of the third edge)
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 1, 3);
+    set_edge_endpoint(1, 2, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 1);
     break;
   }
 
@@ -449,17 +449,17 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_1_4_0
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 1);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -471,19 +471,19 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(4);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint(1, 2, 3);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 1);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 0);
     break;
   }
 
@@ -495,21 +495,21 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(-1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_1_4_4
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint(1, 2, 3);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 1);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 0;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 0);
     break;
   }
 
@@ -520,12 +520,12 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(2., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint_index(1, 0, 0);
     _edges[2].resize(3);
     break;
   }
@@ -536,11 +536,11 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[1] = CoordinateVector<>(0.5, 0., 0.);
     _edges.resize(2);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint_index(1, 0, 0);
     break;
   }
 
@@ -550,11 +550,11 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[1] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(2);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint_index(1, 0, 0);
     break;
   }
 
@@ -565,13 +565,13 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint_index(0, 1, 0);
     _edges[1].resize(3);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 0);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -584,13 +584,13 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_2_1
     _edges[0].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint_index(0, 1, 0);
     _edges[1].resize(3);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 0);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -602,9 +602,9 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(-2., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint(0, 1, 2);
+    set_edge_endpoint(0, 2, 3);
     _edges[1].resize(3);
     _edges[2].resize(3);
     _edges[3].resize(3);
@@ -618,16 +618,16 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 2;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 2);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 2, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
+    set_edge_endpoint(2, 0, 1);
+    set_edge_endpoint_index(2, 0, 0);
     break;
   }
 
@@ -639,19 +639,19 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 3);
     _edges[1].resize(4);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][3]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][3]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 1, 3);
+    set_edge_endpoint(1, 3, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
+    set_edge_endpoint_index(1, 3, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 1);
     break;
   }
 
@@ -663,21 +663,21 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 3;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 3);
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_2_4_2 (+ the indices of the third edge)
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 1, 3);
+    set_edge_endpoint(1, 2, 0);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 1);
     break;
   }
 
@@ -688,16 +688,16 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 1;
+    set_edge_endpoint(2, 0, 1);
+    set_edge_endpoint_index(2, 0, 1);
     break;
   }
 
@@ -709,18 +709,18 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(4);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint(1, 2, 3);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 2;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 2);
     break;
   }
 
@@ -732,20 +732,20 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[3] = CoordinateVector<>(1., 0., 0.);
     _edges.resize(4);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     // the line below is the only difference between this test and
     // VORONOITEST_PATH_2_4_4
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint(1, 2, 3);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 2;
+    set_edge_endpoint(3, 0, 1);
+    set_edge_endpoint_index(3, 0, 2);
     break;
   }
 
@@ -756,13 +756,13 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[2] = CoordinateVector<>(-2., 0., 0.);
     _edges.resize(3);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(2);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint(1, 1, 2);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
     _edges[2].resize(3);
     break;
   }
@@ -773,59 +773,64 @@ void VoronoiCell::setup_variables_for_test(int testcase) {
     _vertices[1] = CoordinateVector<>(0.5, 0., 0.);
     _edges.resize(2);
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
+    set_edge_endpoint(1, 0, 0);
+    set_edge_endpoint_index(1, 0, 0);
     break;
   }
 
   case VORONOITEST_VERTEX_DELETION: {
     _vertices.resize(6);
     // the actual positions of the vertices are completely irrelevant for this
-    // test, so we don't set them
+    // test, but we do set them to different values to please some assertions
+    _vertices[1][0] = 1.;
+    _vertices[2][0] = 2.;
+    _vertices[3][0] = 3.;
+    _vertices[4][0] = 4.;
+    _vertices[5][0] = 5.;
     _edges.resize(6);
     // the first vertex needs to be deleted, and is connected to the fourth
     // vertex
     _edges[0].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) = 3;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) = -1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) = -1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) = 0;
+    set_edge_endpoint(0, 0, 3);
+    set_edge_endpoint(0, 1, -1);
+    set_edge_endpoint(0, 2, -1);
+    set_edge_endpoint_index(0, 0, 0);
     _edges[1].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) = 4;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) = 5;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) = 0;
+    set_edge_endpoint(1, 0, 2);
+    set_edge_endpoint(1, 1, 4);
+    set_edge_endpoint(1, 2, 5);
+    set_edge_endpoint_index(1, 0, 0);
+    set_edge_endpoint_index(1, 1, 0);
+    set_edge_endpoint_index(1, 2, 0);
     _edges[2].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) = 5;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][2]) = 4;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][1]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][2]) = 1;
+    set_edge_endpoint(2, 0, 1);
+    set_edge_endpoint(2, 1, 5);
+    set_edge_endpoint(2, 2, 4);
+    set_edge_endpoint_index(2, 0, 0);
+    set_edge_endpoint_index(2, 1, 1);
+    set_edge_endpoint_index(2, 2, 1);
     _edges[3].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) = 0;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][1]) = -1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][2]) = -1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) = 1;
+    set_edge_endpoint(3, 0, 0);
+    set_edge_endpoint(3, 1, -1);
+    set_edge_endpoint(3, 2, -1);
+    set_edge_endpoint_index(3, 0, 1);
     _edges[4].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][2]) = 5;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][2]) = 2;
+    set_edge_endpoint(4, 0, 1);
+    set_edge_endpoint(4, 1, 2);
+    set_edge_endpoint(4, 2, 5);
+    set_edge_endpoint_index(4, 0, 1);
+    set_edge_endpoint_index(4, 1, 2);
+    set_edge_endpoint_index(4, 2, 2);
     _edges[5].resize(3);
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][0]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][1]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][2]) = 4;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][0]) = 2;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][1]) = 1;
-    std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][2]) = 2;
+    set_edge_endpoint(5, 0, 1);
+    set_edge_endpoint(5, 1, 2);
+    set_edge_endpoint(5, 2, 4);
+    set_edge_endpoint_index(5, 0, 2);
+    set_edge_endpoint_index(5, 1, 1);
+    set_edge_endpoint_index(5, 2, 2);
     break;
   }
   }
@@ -845,48 +850,36 @@ void VoronoiCell::check_variables_after_test(int testcase) {
     assert_condition(_edges.size() == 4);
 
     assert_condition(_edges[0].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][2]) ==
-                     0);
+    assert_condition(get_edge_endpoint(0, 0) == 1);
+    assert_condition(get_edge_endpoint(0, 1) == 2);
+    assert_condition(get_edge_endpoint(0, 2) == 3);
+    assert_condition(get_edge_endpoint_index(0, 0) == 0);
+    assert_condition(get_edge_endpoint_index(0, 1) == 0);
+    assert_condition(get_edge_endpoint_index(0, 2) == 0);
 
     assert_condition(_edges[1].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) ==
-                     1);
+    assert_condition(get_edge_endpoint(1, 0) == 0);
+    assert_condition(get_edge_endpoint(1, 1) == 3);
+    assert_condition(get_edge_endpoint(1, 2) == 2);
+    assert_condition(get_edge_endpoint_index(1, 0) == 0);
+    assert_condition(get_edge_endpoint_index(1, 1) == 1);
+    assert_condition(get_edge_endpoint_index(1, 2) == 1);
 
     assert_condition(_edges[2].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][2]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][2]) ==
-                     2);
+    assert_condition(get_edge_endpoint(2, 0) == 0);
+    assert_condition(get_edge_endpoint(2, 1) == 1);
+    assert_condition(get_edge_endpoint(2, 2) == 3);
+    assert_condition(get_edge_endpoint_index(2, 0) == 1);
+    assert_condition(get_edge_endpoint_index(2, 1) == 2);
+    assert_condition(get_edge_endpoint_index(2, 2) == 2);
 
     assert_condition(_edges[3].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][1]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][2]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][2]) ==
-                     2);
+    assert_condition(get_edge_endpoint(3, 0) == 0);
+    assert_condition(get_edge_endpoint(3, 1) == 1);
+    assert_condition(get_edge_endpoint(3, 2) == 2);
+    assert_condition(get_edge_endpoint_index(3, 0) == 2);
+    assert_condition(get_edge_endpoint_index(3, 1) == 1);
+    assert_condition(get_edge_endpoint_index(3, 2) == 2);
 
     break;
   }
@@ -923,170 +916,114 @@ void VoronoiCell::check_variables_after_test(int testcase) {
     assert_condition(_vertices[9] == CoordinateVector<>(0., -0.5, 0.5));
 
     assert_condition(_edges[0].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][0]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][1]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[0][2]) == 6);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[0][2]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][0]) ==
-                     VORONOI_BOX_FRONT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][1]) ==
-                     VORONOI_BOX_LEFT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[0][2]) ==
-                     VORONOI_BOX_BOTTOM);
+    assert_condition(get_edge_endpoint(0, 0) == 1);
+    assert_condition(get_edge_endpoint(0, 1) == 2);
+    assert_condition(get_edge_endpoint(0, 2) == 6);
+    assert_condition(get_edge_endpoint_index(0, 0) == 0);
+    assert_condition(get_edge_endpoint_index(0, 1) == 2);
+    assert_condition(get_edge_endpoint_index(0, 2) == 1);
+    assert_condition(get_edge_neighbour(0, 0) == VORONOI_BOX_FRONT);
+    assert_condition(get_edge_neighbour(0, 1) == VORONOI_BOX_LEFT);
+    assert_condition(get_edge_neighbour(0, 2) == VORONOI_BOX_BOTTOM);
 
     assert_condition(_edges[1].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][1]) == 9);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[1][2]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[1][2]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][0]) ==
-                     VORONOI_BOX_LEFT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][1]) ==
-                     VORONOI_BOX_FRONT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[1][2]) ==
-                     VORONOI_BOX_TOP);
+    assert_condition(get_edge_endpoint(1, 0) == 0);
+    assert_condition(get_edge_endpoint(1, 1) == 9);
+    assert_condition(get_edge_endpoint(1, 2) == 3);
+    assert_condition(get_edge_endpoint(1, 0) == 0);
+    assert_condition(get_edge_endpoint_index(1, 1) == 1);
+    assert_condition(get_edge_endpoint_index(1, 2) == 1);
+    assert_condition(get_edge_neighbour(1, 0) == VORONOI_BOX_LEFT);
+    assert_condition(get_edge_neighbour(1, 1) == VORONOI_BOX_FRONT);
+    assert_condition(get_edge_neighbour(1, 2) == VORONOI_BOX_TOP);
 
     assert_condition(_edges[2].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][0]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][1]) == 4);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[2][2]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][1]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[2][2]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][0]) ==
-                     VORONOI_BOX_LEFT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][1]) ==
-                     VORONOI_BOX_BACK);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[2][2]) ==
-                     VORONOI_BOX_BOTTOM);
+    assert_condition(get_edge_endpoint(2, 0) == 3);
+    assert_condition(get_edge_endpoint(2, 1) == 4);
+    assert_condition(get_edge_endpoint(2, 2) == 0);
+    assert_condition(get_edge_endpoint_index(2, 0) == 0);
+    assert_condition(get_edge_endpoint_index(2, 1) == 0);
+    assert_condition(get_edge_endpoint_index(2, 2) == 1);
+    assert_condition(get_edge_neighbour(2, 0) == VORONOI_BOX_LEFT);
+    assert_condition(get_edge_neighbour(2, 1) == VORONOI_BOX_BACK);
+    assert_condition(get_edge_neighbour(2, 2) == VORONOI_BOX_BOTTOM);
 
     assert_condition(_edges[3].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][0]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][1]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[3][2]) == 5);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][0]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[3][2]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][0]) ==
-                     VORONOI_BOX_BACK);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][1]) ==
-                     VORONOI_BOX_LEFT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[3][2]) ==
-                     VORONOI_BOX_TOP);
+    assert_condition(get_edge_endpoint(3, 0) == 2);
+    assert_condition(get_edge_endpoint(3, 1) == 1);
+    assert_condition(get_edge_endpoint(3, 2) == 5);
+    assert_condition(get_edge_endpoint_index(3, 0) == 0);
+    assert_condition(get_edge_endpoint_index(3, 1) == 2);
+    assert_condition(get_edge_endpoint_index(3, 2) == 0);
+    assert_condition(get_edge_neighbour(3, 0) == VORONOI_BOX_BACK);
+    assert_condition(get_edge_neighbour(3, 1) == VORONOI_BOX_LEFT);
+    assert_condition(get_edge_neighbour(3, 2) == VORONOI_BOX_TOP);
 
     assert_condition(_edges[4].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][0]) == 2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][1]) == 5);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[4][2]) == 7);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][0]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[4][2]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][0]) ==
-                     VORONOI_BOX_BOTTOM);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][1]) ==
-                     VORONOI_BOX_BACK);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[4][2]) ==
-                     VORONOI_BOX_RIGHT);
+    assert_condition(get_edge_endpoint(4, 0) == 2);
+    assert_condition(get_edge_endpoint(4, 1) == 5);
+    assert_condition(get_edge_endpoint(4, 2) == 7);
+    assert_condition(get_edge_endpoint_index(4, 0) == 1);
+    assert_condition(get_edge_endpoint_index(4, 1) == 2);
+    assert_condition(get_edge_endpoint_index(4, 2) == 1);
+    assert_condition(get_edge_neighbour(4, 0) == VORONOI_BOX_BOTTOM);
+    assert_condition(get_edge_neighbour(4, 1) == VORONOI_BOX_BACK);
+    assert_condition(get_edge_neighbour(4, 2) == VORONOI_BOX_RIGHT);
 
     assert_condition(_edges[5].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][0]) == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][1]) == 8);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[5][2]) == 4);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[5][2]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][0]) ==
-                     VORONOI_BOX_BACK);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][1]) ==
-                     VORONOI_BOX_TOP);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[5][2]) ==
-                     VORONOI_BOX_RIGHT);
+    assert_condition(get_edge_endpoint(5, 0) == 3);
+    assert_condition(get_edge_endpoint(5, 1) == 8);
+    assert_condition(get_edge_endpoint(5, 2) == 4);
+    assert_condition(get_edge_endpoint_index(5, 0) == 2);
+    assert_condition(get_edge_endpoint_index(5, 1) == 1);
+    assert_condition(get_edge_endpoint_index(5, 2) == 1);
+    assert_condition(get_edge_neighbour(5, 0) == VORONOI_BOX_BACK);
+    assert_condition(get_edge_neighbour(5, 1) == VORONOI_BOX_TOP);
+    assert_condition(get_edge_neighbour(5, 2) == VORONOI_BOX_RIGHT);
 
     assert_condition(_edges[6].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][0]) == 9);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][1]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[6][2]) == 7);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[6][2]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][1]) ==
-                     VORONOI_BOX_FRONT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[6][2]) ==
-                     VORONOI_BOX_BOTTOM);
+    assert_condition(get_edge_endpoint(6, 0) == 9);
+    assert_condition(get_edge_endpoint(6, 1) == 0);
+    assert_condition(get_edge_endpoint(6, 2) == 7);
+    assert_condition(get_edge_endpoint_index(6, 0) == 2);
+    assert_condition(get_edge_endpoint_index(6, 1) == 2);
+    assert_condition(get_edge_endpoint_index(6, 2) == 0);
+    assert_condition(get_edge_neighbour(6, 0) == 0);
+    assert_condition(get_edge_neighbour(6, 1) == VORONOI_BOX_FRONT);
+    assert_condition(get_edge_neighbour(6, 2) == VORONOI_BOX_BOTTOM);
 
     assert_condition(_edges[7].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][0]) == 6);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][1]) == 4);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[7][2]) == 8);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][1]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[7][2]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][1]) ==
-                     VORONOI_BOX_BOTTOM);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[7][2]) ==
-                     VORONOI_BOX_RIGHT);
+    assert_condition(get_edge_endpoint(7, 0) == 6);
+    assert_condition(get_edge_endpoint(7, 1) == 4);
+    assert_condition(get_edge_endpoint(7, 2) == 8);
+    assert_condition(get_edge_endpoint_index(7, 0) == 2);
+    assert_condition(get_edge_endpoint_index(7, 1) == 2);
+    assert_condition(get_edge_endpoint_index(7, 2) == 0);
+    assert_condition(get_edge_neighbour(7, 0) == 0);
+    assert_condition(get_edge_neighbour(7, 1) == VORONOI_BOX_BOTTOM);
+    assert_condition(get_edge_neighbour(7, 2) == VORONOI_BOX_RIGHT);
 
     assert_condition(_edges[8].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[8][0]) == 7);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[8][1]) == 5);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[8][2]) == 9);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[8][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[8][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[8][2]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[8][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[8][1]) ==
-                     VORONOI_BOX_RIGHT);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[8][2]) ==
-                     VORONOI_BOX_TOP);
+    assert_condition(get_edge_endpoint(8, 0) == 7);
+    assert_condition(get_edge_endpoint(8, 1) == 5);
+    assert_condition(get_edge_endpoint(8, 2) == 9);
+    assert_condition(get_edge_endpoint_index(8, 0) == 2);
+    assert_condition(get_edge_endpoint_index(8, 1) == 1);
+    assert_condition(get_edge_endpoint_index(8, 2) == 0);
+    assert_condition(get_edge_neighbour(8, 0) == 0);
+    assert_condition(get_edge_neighbour(8, 1) == VORONOI_BOX_RIGHT);
+    assert_condition(get_edge_neighbour(8, 2) == VORONOI_BOX_TOP);
 
     assert_condition(_edges[9].size() == 3);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[9][0]) == 8);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[9][1]) == 1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT >(_edges[9][2]) == 6);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[9][0]) ==
-                     2);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[9][1]) ==
-                     1);
-    assert_condition(std::get< VORONOI_EDGE_ENDPOINT_INDEX >(_edges[9][2]) ==
-                     0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[9][0]) == 0);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[9][1]) ==
-                     VORONOI_BOX_TOP);
-    assert_condition(std::get< VORONOI_EDGE_NEIGHBOUR >(_edges[9][2]) ==
-                     VORONOI_BOX_FRONT);
+    assert_condition(get_edge_endpoint(9, 0) == 8);
+    assert_condition(get_edge_endpoint(9, 1) == 1);
+    assert_condition(get_edge_endpoint(9, 2) == 6);
+    assert_condition(get_edge_endpoint_index(9, 0) == 2);
+    assert_condition(get_edge_endpoint_index(9, 1) == 1);
+    assert_condition(get_edge_endpoint_index(9, 2) == 0);
+    assert_condition(get_edge_neighbour(9, 0) == 0);
+    assert_condition(get_edge_neighbour(9, 1) == VORONOI_BOX_TOP);
+    assert_condition(get_edge_neighbour(9, 2) == VORONOI_BOX_FRONT);
 
     break;
   }
@@ -1128,27 +1065,30 @@ int main(int argc, char **argv) {
         CoordinateVector<>(1. / 3., 1. / 3., 0.));
 
     // vertex below plane
-    auto vertex_test = VoronoiCell::test_vertex(
-        CoordinateVector<>(0.5, 1., 0.), CoordinateVector<>(1., 0., 0.), 1.);
+    auto vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(0.5, 1., 0.),
+                                                CoordinateVector<>(1., 0., 0.),
+                                                1., VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == -1);
     assert_condition(vertex_test.second == -0.5);
 
     // vertex above plane
     vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(1.5, 1., 0.),
-                                           CoordinateVector<>(1., 0., 0.), 1.);
+                                           CoordinateVector<>(1., 0., 0.), 1.,
+                                           VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == 1);
     assert_condition(vertex_test.second == 0.5);
 
     // vertex on plane
     vertex_test = VoronoiCell::test_vertex(CoordinateVector<>(1., 1., 0.),
-                                           CoordinateVector<>(1., 0., 0.), 1.);
+                                           CoordinateVector<>(1., 0., 0.), 1.,
+                                           VORONOI_TOLERANCE);
     assert_condition(vertex_test.first == 0);
     assert_condition(vertex_test.second == 0.);
   }
 
   /// test Voronoi cell volume, centroid and face calculation
   {
-    Box box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     VoronoiCell cell(CoordinateVector<>(0.5), box);
     assert_condition(cell.get_max_radius_squared() == 0.75);
     cell.finalize();
@@ -1156,486 +1096,592 @@ int main(int argc, char **argv) {
     assert_condition(cell.get_centroid() == CoordinateVector<>(0.5));
 
     auto faces = cell.get_faces();
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[0]) == VORONOI_BOX_FRONT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[0]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[0]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[0]) ==
+                     VORONOI_BOX_FRONT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[0]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[0]) ==
                      CoordinateVector<>(0.5, 0., 0.5));
+    std::vector< CoordinateVector<> > vertices = faces[0].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 0.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[1]) == VORONOI_BOX_LEFT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[1]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[1]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[1]) ==
+                     VORONOI_BOX_LEFT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[1]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[1]) ==
                      CoordinateVector<>(0., 0.5, 0.5));
+    vertices = faces[1].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 0., 1.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[2]) == VORONOI_BOX_BOTTOM);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[2]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[2]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[2]) ==
+                     VORONOI_BOX_BOTTOM);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[2]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[2]) ==
                      CoordinateVector<>(0.5, 0.5, 0.));
+    vertices = faces[2].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 0.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[3]) == VORONOI_BOX_TOP);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[3]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[3]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[3]) ==
+                     VORONOI_BOX_TOP);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[3]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[3]) ==
                      CoordinateVector<>(0.5, 0.5, 1.));
+    vertices = faces[3].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 1.));
+    assert_condition(vertices[1] == CoordinateVector<>(0., 1., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 1.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[4]) == VORONOI_BOX_BACK);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[4]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[4]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[4]) ==
+                     VORONOI_BOX_BACK);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[4]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[4]) ==
                      CoordinateVector<>(0.5, 1., 0.5));
+    vertices = faces[4].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(0., 1., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 0.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
 
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(
-                         faces[5]) == VORONOI_BOX_RIGHT);
-    assert_condition(
-        std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(faces[5]) == 1.);
-    assert_condition(std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(faces[5]) ==
+    assert_condition(VoronoiCell::get_face_neighbour(faces[5]) ==
+                     VORONOI_BOX_RIGHT);
+    assert_condition(VoronoiCell::get_face_surface_area(faces[5]) == 1.);
+    assert_condition(VoronoiCell::get_face_midpoint(faces[5]) ==
                      CoordinateVector<>(1., 0.5, 0.5));
+    vertices = faces[5].get_vertices();
+    assert_condition(vertices.size() == 4);
+    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 0.));
+    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 1.));
+    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 1.));
+    assert_condition(vertices[3] == CoordinateVector<>(1., 1., 0.));
   }
 
   /// test Voronoi cell intersection algorithm
-  {/// First part of the intersection algorithm: see anonymous enum above for
-   /// a detailed description of each test.
 
-   /// VORONOITEST_PATH_1_0
-   {VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_0);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 0);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 0);
-}
+  /// First part of the intersection algorithm: see anonymous enum above for
+  /// a detailed description of each test.
 
-/// VORONOITEST_PATH_1_1
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_1);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 0);
-  assert_condition(varcheck[1] == 1);
-  assert_condition(varcheck[2] == 2);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_2
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_2);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 0);
-  assert_condition(varcheck[1] == 1);
-  assert_condition(varcheck[2] == 2);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_3
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_3);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.3: %i", status);
-  assert_condition(status == -1);
-}
-
-/// VORONOITEST_PATH_1_4_0
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_0);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 2);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_1
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_1);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 1);
-  assert_condition(varcheck[2] == 3);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_2
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_2);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 1);
-  assert_condition(varcheck[2] == 3);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_3
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_3);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.3: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 1);
-  assert_condition(varcheck[2] == 2);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_4
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_4);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.4: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 2);
-  assert_condition(varcheck[2] == 3);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_5
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_5);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.5: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 2);
-  assert_condition(varcheck[2] == 3);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_1_4_6
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_4_6);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.4.6: %i", status);
-  assert_condition(status == -1);
-}
-
-/// VORONOITEST_PATH_1_5
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_1_5);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 1.5: %i (%i)", status, varcheck[0]);
-  assert_condition(status == 2);
-  assert_condition(varcheck[0] == 1);
-}
-
-/// VORONOITEST_PATH_2_0
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_0);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 1);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 0);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_2_1
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_1);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 2);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 0);
-  assert_condition(varcheck[3] == 1);
-}
-
-/// VORONOITEST_PATH_2_2
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_2);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 2);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 0);
-  assert_condition(varcheck[3] == 1);
-}
-
-/// VORONOITEST_PATH_2_3
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_3);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.3: %i", status);
-  assert_condition(status == 0);
-}
-
-/// VORONOITEST_PATH_2_4_0
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_0);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 2);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 0);
-}
-
-/// VORONOITEST_PATH_2_4_1
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_1);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 3);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 1);
-}
-
-/// VORONOITEST_PATH_2_4_2
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_2);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 3);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 1);
-}
-
-/// VORONOITEST_PATH_2_4_3
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_3);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.3: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 2);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 1);
-}
-
-/// VORONOITEST_PATH_2_4_4
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_4);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.4: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 3);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 2);
-}
-
-/// VORONOITEST_PATH_2_4_5
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_5);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.5: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-               varcheck[2], varcheck[3]);
-  assert_condition(status == 1);
-  assert_condition(varcheck[0] == 3);
-  assert_condition(varcheck[1] == 0);
-  assert_condition(varcheck[2] == 1);
-  assert_condition(varcheck[3] == 2);
-}
-
-/// VORONOITEST_PATH_2_4_6
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_4_6);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.4.6: %i", status);
-  assert_condition(status == 0);
-}
-
-/// VORONOITEST_PATH_2_5
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_PATH_2_5);
-  CoordinateVector<> dx(1., 0., 0.);
-  int varcheck[4];
-  int status = cell.intersect(dx, 0, varcheck);
-  cmac_warning("Path 2.5: %i (%i)", status, varcheck[0]);
-  assert_condition(status == 2);
-  assert_condition(varcheck[0] == 1);
-}
-
-/// VORONOITEST_VERTEX_DELETION
-{
-  VoronoiCell cell;
-  cell.setup_variables_for_test(VORONOITEST_VERTEX_DELETION);
-  std::vector< bool > delete_stack(6, false);
-  delete_stack[0] = true;
-  cell.delete_vertices(delete_stack);
-  cell.check_variables_after_test(VORONOITEST_VERTEX_DELETION);
-}
-
-/// VORONOITEST_INTERSECTION
-{
-  VoronoiCell cell(CoordinateVector<>(0.5, 0.5, 0.5),
-                   Box(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-  cell.check_variables_after_test(VORONOITEST_CONSTRUCTOR);
-  int status = cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0);
-  assert_condition(status == 1);
-  cell.check_variables_after_test(VORONOITEST_INTERSECTION);
-}
-}
-
-/// test Voronoi grid
-{
-  unsigned int numcell = 1000;
-  VoronoiGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), false,
-                   numcell);
-  for (unsigned int i = 0; i < numcell; ++i) {
-    unsigned int new_index = grid.add_cell(Utilities::random_position());
-    assert_condition(new_index == i);
+  /// VORONOITEST_PATH_1_0
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_0);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 0);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 0);
   }
-  grid.compute_grid();
 
-  // print the grid while we have the grid connections
-  std::ofstream file("test_voronoi_grid.txt");
-  grid.print_grid(file);
-  file.close();
+  /// VORONOITEST_PATH_1_1
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_1);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 0);
+    assert_condition(varcheck[1] == 1);
+    assert_condition(varcheck[2] == 2);
+    assert_condition(varcheck[3] == 0);
+  }
 
-  grid.finalize();
-  const double tolerance = 1.e-11;
-  double total_volume = 0.;
-  for (unsigned int i = 0; i < numcell; ++i) {
-    double cell_volume = grid.get_volume(i);
-    // no single cell should fill the entire volume
-    assert_condition(cell_volume < 1.);
-    total_volume += cell_volume;
+  /// VORONOITEST_PATH_1_2
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_2);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 0);
+    assert_condition(varcheck[1] == 1);
+    assert_condition(varcheck[2] == 2);
+    assert_condition(varcheck[3] == 0);
+  }
 
-    // check that all neighbours of this cell have this cell as neighbour as
-    // well
-    const auto faces = grid.get_faces(i);
-    for (auto it = faces.begin(); it != faces.end(); ++it) {
-      const unsigned int ngb =
-          std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*it);
-      // some faces have the walls of the box as neighbour, we ignore these
-      if (ngb < VORONOI_MAX_INDEX) {
-        const double area =
-            std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*it);
-        const CoordinateVector<> midpoint =
-            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*it);
-        const auto ngbfaces = grid.get_faces(ngb);
-        auto ngbit = ngbfaces.begin();
-        while (ngbit != ngbfaces.end() &&
-               std::get< VoronoiCell::VORONOI_FACE_NEIGHBOUR >(*ngbit) != i) {
-          ++ngbit;
+  /// VORONOITEST_PATH_1_3
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_3);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.3: %i", status);
+    assert_condition(status == -1);
+  }
+
+  /// VORONOITEST_PATH_1_4_0
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_0);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.0: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 2);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_1
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_1);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.1: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 1);
+    assert_condition(varcheck[2] == 3);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_2
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_2);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.2: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 1);
+    assert_condition(varcheck[2] == 3);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_3
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_3);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.3: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 1);
+    assert_condition(varcheck[2] == 2);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_4
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_4);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.4: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 2);
+    assert_condition(varcheck[2] == 3);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_5
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_5);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.5: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 2);
+    assert_condition(varcheck[2] == 3);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_1_4_6
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_4_6);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.6: %i", status);
+    assert_condition(status == -1);
+  }
+
+  /// VORONOITEST_PATH_1_5
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_1_5);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.5: %i (%i)", status, varcheck[0]);
+    assert_condition(status == 2);
+    assert_condition(varcheck[0] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_0
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_0);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 1);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 0);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_2_1
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_1);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 2);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 0);
+    assert_condition(varcheck[3] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_2
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_2);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
+                 varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 2);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 0);
+    assert_condition(varcheck[3] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_3
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_3);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.3: %i", status);
+    assert_condition(status == 0);
+  }
+
+  /// VORONOITEST_PATH_2_4_0
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_0);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.0: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 2);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 0);
+  }
+
+  /// VORONOITEST_PATH_2_4_1
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_1);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.1: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 3);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_4_2
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_2);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.2: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 3);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_4_3
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_3);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.3: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 2);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 1);
+  }
+
+  /// VORONOITEST_PATH_2_4_4
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_4);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.4: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 3);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 2);
+  }
+
+  /// VORONOITEST_PATH_2_4_5
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_5);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.5: %i (%i %i %i %i)", status, varcheck[0],
+                 varcheck[1], varcheck[2], varcheck[3]);
+    assert_condition(status == 1);
+    assert_condition(varcheck[0] == 3);
+    assert_condition(varcheck[1] == 0);
+    assert_condition(varcheck[2] == 1);
+    assert_condition(varcheck[3] == 2);
+  }
+
+  /// VORONOITEST_PATH_2_4_6
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_4_6);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.6: %i", status);
+    assert_condition(status == 0);
+  }
+
+  /// VORONOITEST_PATH_2_5
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_PATH_2_5);
+    CoordinateVector<> dx(1., 0., 0.);
+    int varcheck[4];
+    int status = cell.intersect(dx, 0, VORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.5: %i (%i)", status, varcheck[0]);
+    assert_condition(status == 2);
+    assert_condition(varcheck[0] == 1);
+  }
+
+  /// VORONOITEST_VERTEX_DELETION
+  {
+    VoronoiCell cell;
+    cell.setup_variables_for_test(VORONOITEST_VERTEX_DELETION);
+    std::vector< bool > delete_stack(6, false);
+    delete_stack[0] = true;
+    cell.delete_vertices(delete_stack);
+    cell.check_variables_after_test(VORONOITEST_VERTEX_DELETION);
+    cmac_warning("Deletion test succeeded!");
+  }
+
+  /// VORONOITEST_INTERSECTION
+  {
+    VoronoiCell cell(CoordinateVector<>(0.5, 0.5, 0.5),
+                     Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    cell.check_variables_after_test(VORONOITEST_CONSTRUCTOR);
+    int status =
+        cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0, VORONOI_TOLERANCE);
+    assert_condition(status == 1);
+    cell.check_variables_after_test(VORONOITEST_INTERSECTION);
+    cmac_warning("Intersection test succeeded!");
+  }
+
+  /// test Voronoi grid
+  {
+    unsigned int numcell = 1000;
+    VoronoiGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
+                     false, numcell);
+    for (unsigned int i = 0; i < numcell; ++i) {
+      unsigned int new_index = grid.add_cell(Utilities::random_position());
+      assert_condition(new_index == i);
+    }
+    grid.compute_grid();
+
+    // print the grid while we have the grid connections
+    std::ofstream file("test_voronoi_grid.txt");
+    grid.print_grid(file);
+    file.close();
+
+    grid.finalize();
+    const double tolerance = 1.e-11;
+    double total_volume = 0.;
+    for (unsigned int i = 0; i < numcell; ++i) {
+      double cell_volume = grid.get_volume(i);
+      // no single cell should fill the entire volume
+      assert_condition(cell_volume < 1.);
+      total_volume += cell_volume;
+
+      // check that all neighbours of this cell have this cell as neighbour as
+      // well
+      const auto faces = grid.get_faces(i);
+      for (auto it = faces.begin(); it != faces.end(); ++it) {
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        // some faces have the walls of the box as neighbour, we ignore these
+        if (ngb < VORONOI_MAX_INDEX) {
+          const double area = VoronoiCell::get_face_surface_area(*it);
+          const CoordinateVector<> midpoint =
+              VoronoiCell::get_face_midpoint(*it);
+          const auto ngbfaces = grid.get_faces(ngb);
+          auto ngbit = ngbfaces.begin();
+          while (ngbit != ngbfaces.end() &&
+                 VoronoiCell::get_face_neighbour(*ngbit) != i) {
+            ++ngbit;
+          }
+          assert_condition(ngbit != ngbfaces.end());
+          const double ngbarea = VoronoiCell::get_face_surface_area(*ngbit);
+          const CoordinateVector<> ngbmidpoint =
+              VoronoiCell::get_face_midpoint(*ngbit);
+          assert_values_equal_rel(ngbarea, area, tolerance);
+          assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
+          assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);
+          assert_values_equal_rel(ngbmidpoint.z(), midpoint.z(), tolerance);
         }
-        assert_condition(ngbit != ngbfaces.end());
-        const double ngbarea =
-            std::get< VoronoiCell::VORONOI_FACE_SURFACE_AREA >(*ngbit);
-        const CoordinateVector<> ngbmidpoint =
-            std::get< VoronoiCell::VORONOI_FACE_MIDPOINT >(*ngbit);
-        assert_values_equal_rel(ngbarea, area, tolerance);
-        assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
-        assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);
-        assert_values_equal_rel(ngbmidpoint.z(), midpoint.z(), tolerance);
       }
     }
+    assert_values_equal_rel(total_volume, 1., 1.e-15);
+    cmac_warning("Random grid test succeeded!");
   }
-  assert_values_equal_rel(total_volume, 1., 1.e-15);
-}
 
-return 0;
+  /// test regular (degenerate) Voronoi grid
+  {
+    const double box_anchor = 0.;
+    const double box_side = 2.e15;
+    const double box_volume = box_side * box_side * box_side;
+    unsigned int numcell = 0;
+    VoronoiGrid grid(
+        Box<>(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
+        false, 1000);
+    std::vector< CoordinateVector<> > positions(1000);
+    for (unsigned int ix = 0; ix < 10; ++ix) {
+      for (unsigned int iy = 0; iy < 10; ++iy) {
+        for (unsigned int iz = 0; iz < 10; ++iz) {
+          positions[ix * 100 + iy * 10 + iz] =
+              CoordinateVector<>((ix + 0.5) * box_side * 0.1 + box_anchor,
+                                 (iy + 0.5) * box_side * 0.1 + box_anchor,
+                                 (iz + 0.5) * box_side * 0.1 + box_anchor);
+        }
+      }
+    }
+    // add a random (small) displacement to one of the generators
+    positions[42] += 1.e-5 * box_side * Utilities::random_position();
+    for (unsigned int i = 0; i < positions.size(); ++i) {
+      unsigned int new_index = grid.add_cell(positions[i]);
+      assert_condition(new_index == numcell);
+      ++numcell;
+    }
+    grid.compute_grid();
+
+    // print the grid while we have the grid connections
+    std::ofstream file("test_voronoi_grid_regular.txt");
+    grid.print_grid(file);
+    file.close();
+
+    grid.finalize();
+    const double tolerance = 1.e-10;
+    double total_volume = 0.;
+    for (unsigned int i = 0; i < numcell; ++i) {
+      double cell_volume = grid.get_volume(i);
+      // no single cell should fill the entire volume
+      assert_condition(cell_volume < box_volume);
+      total_volume += cell_volume;
+
+      // check that all neighbours of this cell have this cell as neighbour as
+      // well
+      const auto faces = grid.get_faces(i);
+      for (auto it = faces.begin(); it != faces.end(); ++it) {
+        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        // some faces have the walls of the box as neighbour, we ignore these
+        if (ngb < VORONOI_MAX_INDEX) {
+          const double area = VoronoiCell::get_face_surface_area(*it);
+          const CoordinateVector<> midpoint =
+              VoronoiCell::get_face_midpoint(*it);
+          const auto ngbfaces = grid.get_faces(ngb);
+          auto ngbit = ngbfaces.begin();
+          while (ngbit != ngbfaces.end() &&
+                 VoronoiCell::get_face_neighbour(*ngbit) != i) {
+            ++ngbit;
+          }
+          assert_condition(ngbit != ngbfaces.end());
+          const double ngbarea = VoronoiCell::get_face_surface_area(*ngbit);
+          const CoordinateVector<> ngbmidpoint =
+              VoronoiCell::get_face_midpoint(*ngbit);
+          assert_values_equal_rel(ngbarea, area, tolerance);
+          assert_values_equal_rel(ngbmidpoint.x(), midpoint.x(), tolerance);
+          assert_values_equal_rel(ngbmidpoint.y(), midpoint.y(), tolerance);
+          assert_values_equal_rel(ngbmidpoint.z(), midpoint.z(), tolerance);
+        }
+      }
+    }
+    assert_values_equal_rel(total_volume, box_volume, 1.e-14);
+    cmac_warning("Regular grid test succeeded!");
+  }
+
+  return 0;
 }

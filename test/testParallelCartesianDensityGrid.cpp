@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   // this is shorthand for box(CoordinateVector<>(0.), CoordinateVector<>(1.))
   // and only works because we have defined the single value constructor for
   // CoordinateVector<>
-  Box box(0., 1.);
+  Box<> box(0., 1.);
   CoordinateVector< int > numcell(32, 32, 32);
   unsigned int numdomain = 64;
   std::pair< int, int > domain = std::make_pair(0, 64);

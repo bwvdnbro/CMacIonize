@@ -29,6 +29,7 @@
 #include "AMRGrid.hpp"
 #include "Box.hpp"
 #include "DensityFunction.hpp"
+#include "PointLocations.hpp"
 
 class Log;
 class ParameterFile;
@@ -39,7 +40,7 @@ class ParameterFile;
 class CMacIonizeSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< int > _ncell;
@@ -49,6 +50,16 @@ private:
 
   /*! @brief AMR density grid (if applicable). */
   AMRGrid< DensityValues > *_amr_grid;
+
+  /*! @brief Locations of the Voronoi grid generators (if applicable). */
+  std::vector< CoordinateVector<> > _voronoi_generators;
+
+  /*! @brief PointLocations object used to query the Voronoi grid generator
+   *  locations (if applicable). */
+  PointLocations *_voronoi_pointlocations;
+
+  /*! @brief DensityValues stored in the Voronoi grid (if applicable). */
+  std::vector< DensityValues > _voronoi_densityvalues;
 
   /**
    * @brief Get the largest odd factor of the given number.
@@ -86,7 +97,7 @@ public:
 
   virtual ~CMacIonizeSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 };
 
 #endif // CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

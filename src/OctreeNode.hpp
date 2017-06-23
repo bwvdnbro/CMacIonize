@@ -54,7 +54,7 @@ private:
   unsigned int _index;
 
   /*! @brief Geometrical box corresponding to this node. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Auxiliary variable. */
   double _variable;
@@ -89,7 +89,7 @@ public:
    * particle check.
    */
   inline void add_position(std::vector< CoordinateVector<> > &positions,
-                           unsigned int index, Box &box,
+                           unsigned int index, Box<> &box,
                            unsigned int level = 0) {
     unsigned char ix, iy, iz;
     if (_index < OCTREE_NOLEAF) {
@@ -200,7 +200,7 @@ public:
    *
    * @return Box containing this node.
    */
-  inline const Box &get_box() const { return _box; }
+  inline const Box<> &get_box() const { return _box; }
 
   /**
    * @brief Get the index of the leaf.

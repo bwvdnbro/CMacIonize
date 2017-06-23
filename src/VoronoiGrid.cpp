@@ -29,6 +29,17 @@
 #include "VoronoiCell.hpp"
 #include "WorkDistributor.hpp"
 
+//#define VORONOIGRID_OUTPUT_GENERATORS
+
+#define VORONOIGRID_REMAP
+
+//#define VORONOIGRID_CHECK_TOTAL_VOLUME
+
+#ifdef VORONOIGRID_OUTPUT_GENERATORS
+#include <fstream>
+#include <iomanip>
+#endif
+
 /**
  * @brief Constructor.
  *
@@ -37,18 +48,35 @@
  * @param numcell Number of cells that will be added to the grid (or zero if
  * unknown).
  */
-VoronoiGrid::VoronoiGrid(Box box, CoordinateVector< bool > periodic,
+VoronoiGrid::VoronoiGrid(Box<> box, CoordinateVector< bool > periodic,
                          unsigned int numcell)
-    : _box(box), _periodic(periodic), _pointlocations(nullptr) {
+    : _box(box), _periodic(periodic), _pointlocations(nullptr),
+      _epsilon(VORONOI_TOLERANCE) {
 
   _cells.reserve(numcell);
 
+  double length_factor = 0.;
   for (unsigned int i = 0; i < 3; ++i) {
     if (_periodic[i]) {
       _box.get_anchor()[i] -= 0.5 * _box.get_sides()[i];
       _box.get_sides()[i] *= 2.;
     }
+    length_factor = std::max(length_factor, _box.get_sides()[i]);
   }
+
+#ifndef VORONOIGRID_REMAP
+  _epsilon *= _box.get_sides().norm2();
+  _internal_box = _box;
+  _area_factor = 1.;
+  _volume_factor = 1.;
+#else
+  // internally, we always use a box of 0. --> 1. (or smaller)
+  _internal_box = Box<>(CoordinateVector<>(0.), _box.get_sides());
+  _internal_box.get_sides() /= length_factor;
+
+  _area_factor = length_factor * length_factor;
+  _volume_factor = length_factor * _area_factor;
+#endif
 }
 
 /**
@@ -72,7 +100,7 @@ VoronoiGrid::~VoronoiGrid() {
 void VoronoiGrid::reset(int worksize) {
   for (unsigned int i = 0; i < _cells.size(); ++i) {
     delete _cells[i];
-    _cells[i] = new VoronoiCell(_generator_positions[i], _box);
+    _cells[i] = new VoronoiCell(_generator_positions[i], _internal_box);
   }
   delete _pointlocations;
   compute_grid(worksize);
@@ -90,8 +118,17 @@ unsigned int VoronoiGrid::add_cell(CoordinateVector<> generator_position) {
   if (_cells.size() + 1 == VORONOI_MAX_INDEX) {
     cmac_error("Too many Voronoi cells!");
   }
+
+  // convert the generator position to internal units
+  for (unsigned int i = 0; i < 3; ++i) {
+    generator_position[i] = _internal_box.get_anchor()[i] +
+                            (generator_position[i] - _box.get_anchor()[i]) *
+                                _internal_box.get_sides()[i] /
+                                _box.get_sides()[i];
+  }
+
   _generator_positions.push_back(generator_position);
-  _cells.push_back(new VoronoiCell(generator_position, _box));
+  _cells.push_back(new VoronoiCell(generator_position, _internal_box));
   return _cells.size() - 1;
 }
 
@@ -107,7 +144,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
     const unsigned int j = *ngbit;
     if (j != index) {
       _cells[index]->intersect(
-          _generator_positions[j] - _generator_positions[index], j);
+          _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
   }
   while (it.increase_range() &&
@@ -116,7 +153,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       _cells[index]->intersect(
-          _generator_positions[j] - _generator_positions[index], j);
+          _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
   }
 }
@@ -127,7 +164,17 @@ void VoronoiGrid::compute_cell(unsigned int index) {
  * @param worksize Number of parallel threads to use.
  */
 void VoronoiGrid::compute_grid(int worksize) {
-  _pointlocations = new PointLocations(_generator_positions, 10, _box);
+#ifdef VORONOIGRID_OUTPUT_GENERATORS
+  std::ofstream ofile("voronoigrid_generators.txt");
+  ofile << std::setprecision(20);
+  for (unsigned int i = 0; i < _generator_positions.size(); ++i) {
+    ofile << _generator_positions[i].x() << "\t" << _generator_positions[i].y()
+          << "\t" << _generator_positions[i].z() << "\n";
+  }
+  ofile.close();
+#endif
+
+  _pointlocations = new PointLocations(_generator_positions, 10, _internal_box);
 
   WorkDistributor< VoronoiGridConstructionJobMarket,
                    VoronoiGridConstructionJob >
@@ -149,11 +196,14 @@ void VoronoiGrid::finalize() {
     totvol += _cells[i]->get_volume();
   }
 
-  cmac_assert_message(std::abs(totvol - _box.get_volume()) <
-                          1.e-13 * (totvol + _box.get_volume()),
+#ifdef VORONOIGRID_CHECK_TOTAL_VOLUME
+  cmac_assert_message(std::abs(totvol - _internal_box.get_volume()) <
+                          1.e-9 * (totvol + _internal_box.get_volume()),
                       "%g =/= %g  -- relative difference: %g", totvol,
-                      _box.get_volume(), std::abs(totvol - _box.get_volume()) /
-                                             (totvol + _box.get_volume()));
+                      _internal_box.get_volume(),
+                      std::abs(totvol - _internal_box.get_volume()) /
+                          (totvol + _internal_box.get_volume()));
+#endif
 }
 
 /**
@@ -163,7 +213,7 @@ void VoronoiGrid::finalize() {
  * @return Volume of that cell (in m^3).
  */
 double VoronoiGrid::get_volume(unsigned int index) const {
-  return _cells[index]->get_volume();
+  return _volume_factor * _cells[index]->get_volume();
 }
 
 /**
@@ -172,8 +222,16 @@ double VoronoiGrid::get_volume(unsigned int index) const {
  * @param index Index of a cell in the grid.
  * @return Centroid of that cell (in m).
  */
-const CoordinateVector<> &VoronoiGrid::get_centroid(unsigned int index) const {
-  return _cells[index]->get_centroid();
+CoordinateVector<> VoronoiGrid::get_centroid(unsigned int index) const {
+  //  return _cells[index]->get_centroid();
+  CoordinateVector<> centroid = _cells[index]->get_centroid();
+  // unit conversion
+  for (unsigned int i = 0; i < 3; ++i) {
+    centroid[i] = _box.get_anchor()[i] +
+                  (centroid[i] - _internal_box.get_anchor()[i]) *
+                      _box.get_sides()[i] / _internal_box.get_sides()[i];
+  }
+  return centroid;
 }
 
 /**
@@ -182,18 +240,51 @@ const CoordinateVector<> &VoronoiGrid::get_centroid(unsigned int index) const {
  * @param index Index of a cell in the grid.
  * @return Position of the generator of that cell (in m).
  */
-const CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) const {
-  return _generator_positions[index];
+CoordinateVector<> VoronoiGrid::get_generator(unsigned int index) const {
+  //  return _generator_positions[index];
+  CoordinateVector<> generator = _generator_positions[index];
+  // unit conversion
+  for (unsigned int i = 0; i < 3; ++i) {
+    generator[i] = _box.get_anchor()[i] +
+                   (generator[i] - _internal_box.get_anchor()[i]) *
+                       _box.get_sides()[i] / _internal_box.get_sides()[i];
+  }
+  return generator;
+}
+
+/**
+ * @brief Set the position of the generator of the cell with the given index to
+ * the given new value.
+ *
+ * @param index Index of a cell in the grid.
+ * @param pos New position for the generator of that cell (in m).
+ */
+void VoronoiGrid::set_generator(unsigned int index,
+                                const CoordinateVector<> &pos) {
+  CoordinateVector<> generator(pos);
+  // unit conversion
+  for (unsigned int i = 0; i < 3; ++i) {
+    generator[i] = _internal_box.get_anchor()[i] +
+                   (generator[i] - _box.get_anchor()[i]) *
+                       _internal_box.get_sides()[i] / _box.get_sides()[i];
+  }
+  _generator_positions[index] = generator;
 }
 
 /**
  * @brief Get the position of the generator of the cell with the given index.
  *
  * @param index Index of a cell in the grid.
- * @return Position of the generator of that cell (in m).
+ * @param dx Displacement vector to apply to the generator position (in m).
  */
-CoordinateVector<> &VoronoiGrid::get_generator(unsigned int index) {
-  return _generator_positions[index];
+void VoronoiGrid::move_generator(unsigned int index,
+                                 const CoordinateVector<> &dx) {
+  CoordinateVector<> dpos(dx);
+  // unit conversion
+  for (unsigned int i = 0; i < 3; ++i) {
+    dpos[i] = dpos[i] * _internal_box.get_sides()[i] / _box.get_sides()[i];
+  }
+  _generator_positions[index] += dpos;
 }
 
 /**
@@ -232,9 +323,38 @@ CoordinateVector<> VoronoiGrid::get_wall_normal(unsigned int wallindex) const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
-VoronoiGrid::get_faces(unsigned int index) const {
-  return _cells[index]->get_faces();
+std::vector< VoronoiFace > VoronoiGrid::get_faces(unsigned int index) const {
+  std::vector< VoronoiFace > faces = _cells[index]->get_faces();
+  // unit conversion
+  for (unsigned int i = 0; i < faces.size(); ++i) {
+    faces[i].set_surface_area(_area_factor * faces[i].get_surface_area());
+    CoordinateVector<> midpoint = faces[i].get_midpoint();
+    for (unsigned int j = 0; j < 3; ++j) {
+      midpoint[j] = _box.get_anchor()[j] +
+                    (midpoint[j] - _internal_box.get_anchor()[j]) *
+                        _box.get_sides()[j] / _internal_box.get_sides()[j];
+    }
+    faces[i].set_midpoint(midpoint);
+  }
+  return faces;
+}
+
+/**
+ * @brief Get the geometrical faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Faces of that cell.
+ */
+std::vector< Face >
+VoronoiGrid::get_geometrical_faces(unsigned int index) const {
+  const std::vector< VoronoiFace > faces = _cells[index]->get_faces();
+  std::vector< Face > geometrical_faces;
+  for (unsigned int i = 0; i < faces.size(); ++i) {
+    const CoordinateVector<> midpoint = faces[i].get_midpoint();
+    const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    geometrical_faces.push_back(Face(midpoint, vertices));
+  }
+  return geometrical_faces;
 }
 
 /**
@@ -244,7 +364,14 @@ VoronoiGrid::get_faces(unsigned int index) const {
  * @return Index of the cell containing that position.
  */
 unsigned int VoronoiGrid::get_index(const CoordinateVector<> &position) const {
-  return _pointlocations->get_closest_neighbour(position);
+  CoordinateVector<> pos(position);
+  // unit conversion
+  for (unsigned int i = 0; i < 3; ++i) {
+    pos[i] = _internal_box.get_anchor()[i] +
+             (pos[i] - _box.get_anchor()[i]) * _internal_box.get_sides()[i] /
+                 _box.get_sides()[i];
+  }
+  return _pointlocations->get_closest_neighbour(pos);
 }
 
 /**

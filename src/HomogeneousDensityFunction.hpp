@@ -75,20 +75,18 @@ public:
             log) {}
 
   /**
-   * @brief Function that gives the density for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return Density at the given coordinate: the single value stored
-   * internally (in m^-3).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
-
-    cell.set_number_density(_density);
-    cell.set_temperature(_temperature);
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    return cell;
+  virtual DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+    values.set_number_density(_density);
+    values.set_temperature(_temperature);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_He_n, 1.e-6);
+    return values;
   }
 };
 

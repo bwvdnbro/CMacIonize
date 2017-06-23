@@ -26,7 +26,7 @@
 #ifndef DENSITYFUNCTION_HPP
 #define DENSITYFUNCTION_HPP
 
-#include "CoordinateVector.hpp"
+#include "Cell.hpp"
 #include "DensityValues.hpp"
 
 /**
@@ -50,12 +50,12 @@ public:
   virtual void initialize() {}
 
   /**
-   * @brief Function that gives the density for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return Density at the given coordinate (in m^-3).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const = 0;
+  virtual DensityValues operator()(const Cell &cell) const = 0;
 };
 
 #endif // DENSITYFUNCTION_HPP

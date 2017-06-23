@@ -118,7 +118,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
         HDF5Tools::read_attribute< CoordinateVector<> >(header, "BoxSize");
     // in this case, the anchor is just (0., 0., 0.)
     CoordinateVector<> anchor;
-    _box = Box(anchor, sides);
+    _box = Box<>(anchor, sides);
     // close the Header group
     HDF5Tools::close_group(header);
   }
@@ -244,13 +244,13 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     _log->write_status("Successfully read densities from file \"", name, "\".");
   }
 
-  Box box(_box);
+  Box<> box(_box);
   if (!periodic) {
     // set box to particle extents + small margin
     CoordinateVector<> sides = maxpos - minpos;
     CoordinateVector<> anchor = minpos - 0.005 * sides;
     sides *= 1.01;
-    box = Box(anchor, sides);
+    box = Box<>(anchor, sides);
   }
   if (_log) {
     string pstring;
@@ -309,51 +309,38 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
 }
 
 /**
- * @brief Function that returns the density for the given coordinate.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position CoordinateVector specifying a coordinate position (in m).
- * @return Density at the given coordinate (in m^-3).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
 DensityValues GadgetSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
-  DensityValues cell;
+operator()(const Cell &cell) const {
 
-  // brute force version: slow
-  /*double density = 0.;
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
-    double r;
-    if (!_box.get_sides().x()) {
-      r = (position - _positions[i]).norm();
-    } else {
-      r = _box.periodic_distance(position, _positions[i]).norm();
-    }
-    double h = _smoothing_lengths[i];
-    double u = r / h;
-    double m = _masses[i];
-    density += m * cubic_spline_kernel(u, h);
-  }
-  return density / 1.6737236e-27;*/
-  // tree version
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+
   double density = 0.;
   double temperature = 0.;
   double neutral_fraction = -1.;
   if (_neutral_fractions.size() > 0) {
     neutral_fraction = 0.;
   }
-  std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
+  const std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
   const unsigned int numngbs = ngbs.size();
   for (unsigned int i = 0; i < numngbs; ++i) {
-    unsigned int index = ngbs[i];
+    const unsigned int index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();
     } else {
       r = _box.periodic_distance(position, _positions[index]).norm();
     }
-    double h = _smoothing_lengths[index];
-    double u = r / h;
-    double m = _masses[index];
-    double splineval = m * cubic_spline_kernel(u, h);
+    const double h = _smoothing_lengths[index];
+    const double u = r / h;
+    const double m = _masses[index];
+    const double splineval = m * cubic_spline_kernel(u, h);
     density += splineval;
     temperature += splineval * _temperatures[index] / _densities[index];
     if (neutral_fraction >= 0.) {
@@ -361,15 +348,15 @@ operator()(CoordinateVector<> position) const {
     }
   }
 
-  cell.set_number_density(density / 1.6737236e-27);
-  cell.set_temperature(temperature);
+  values.set_number_density(density / 1.6737236e-27);
+  values.set_temperature(temperature);
   if (neutral_fraction >= 0.) {
-    cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);
+    values.set_ionic_fraction(ION_H_n, neutral_fraction / density);
   } else {
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
   }
-  cell.set_ionic_fraction(ION_He_n, 1.e-6);
-  return cell;
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
+  return values;
 }
 
 /**

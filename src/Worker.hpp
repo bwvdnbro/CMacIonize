@@ -27,9 +27,7 @@
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
-//#define OUTPUT_CYCLES
-
-#ifdef OUTPUT_CYCLES
+#ifdef HAVE_OUTPUT_CYCLES
 #include <fstream>
 #include <sstream>
 #endif
@@ -45,7 +43,7 @@ private:
   /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
   int _thread_id;
 
-#ifdef OUTPUT_CYCLES
+#ifdef HAVE_OUTPUT_CYCLES
   /**
    * @brief Get the CPU cycle number.
    *
@@ -75,18 +73,20 @@ public:
    * @param jobs JobMarket that spawns jobs.
    */
   inline void do_work(_JobMarket_ &jobs) const {
-#ifdef OUTPUT_CYCLES
+#ifdef HAVE_OUTPUT_CYCLES
     std::stringstream ofname;
     ofname << "jobtimes_" << _thread_id << ".txt";
-    std::ofstream ofile(ofname.str());
+    // we append to the existing file, so that different workers executed on the
+    // same thread write to the same file
+    std::ofstream ofile(ofname.str(), std::ofstream::out | std::ofstream::app);
 #endif
     _Job_ *job;
     while ((job = jobs.get_job(_thread_id))) {
-#ifdef OUTPUT_CYCLES
-      ofile << get_cycle() << "\t";
+#ifdef HAVE_OUTPUT_CYCLES
+      ofile << job->get_tag() << "\t" << get_cycle() << "\t";
 #endif
       job->execute();
-#ifdef OUTPUT_CYCLES
+#ifdef HAVE_OUTPUT_CYCLES
       ofile << get_cycle() << "\n";
 #endif
       if (job->do_cleanup()) {

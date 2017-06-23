@@ -68,7 +68,7 @@ public:
    * @param numdomain Total number of subgrids.
    * @param domain Part of the domain stored on the local process.
    */
-  ParallelCartesianDensityGrid(Box box, CoordinateVector< int > numcell,
+  ParallelCartesianDensityGrid(Box<> box, CoordinateVector< int > numcell,
                                unsigned int numdomain,
                                std::pair< int, int > domain)
       : _box_anchor(box.get_anchor()), _domain(domain),
@@ -103,7 +103,7 @@ public:
             blockanchor[0] += ix * _block_sides[0];
             blockanchor[1] += iy * _block_sides[1];
             blockanchor[2] += iz * _block_sides[2];
-            Box blockbox(blockanchor, _block_sides);
+            Box<> blockbox(blockanchor, _block_sides);
             _subgrids.push_back(new ParallelCartesianDensitySubGrid(
                 blockbox, block_resolution));
           } else {

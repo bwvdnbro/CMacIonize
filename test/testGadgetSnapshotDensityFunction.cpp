@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
-  Box box(anchor, sides);
+  Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 32, density);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());

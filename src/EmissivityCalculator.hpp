@@ -70,9 +70,10 @@ public:
   void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
              double &emhemi) const;
 
-  EmissivityValues calculate_emissivities(DensityGrid::iterator &cell,
-                                          Abundances &abundances,
-                                          const LineCoolingData &lines) const;
+  EmissivityValues
+  calculate_emissivities(const IonizationVariables &ionization_variables,
+                         Abundances &abundances,
+                         const LineCoolingData &lines) const;
 
   void calculate_emissivities(DensityGrid &grid) const;
   std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;

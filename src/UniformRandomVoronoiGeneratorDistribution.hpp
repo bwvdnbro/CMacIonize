@@ -45,7 +45,7 @@ private:
   unsigned int _current_number;
 
   /*! @brief Box containing the generators (in m). */
-  const Box _box;
+  const Box<> _box;
 
   /*! @brief RandomGenerator used to generate the positions. */
   RandomGenerator _random_generator;
@@ -60,7 +60,7 @@ public:
    * @param random_seed Seed for the random number generator.
    * @param log Log to write logging info to.
    */
-  UniformRandomVoronoiGeneratorDistribution(Box box,
+  UniformRandomVoronoiGeneratorDistribution(Box<> box,
                                             unsigned int number_of_positions,
                                             int random_seed, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
@@ -82,10 +82,10 @@ public:
   UniformRandomVoronoiGeneratorDistribution(ParameterFile &params,
                                             Log *log = nullptr)
       : UniformRandomVoronoiGeneratorDistribution(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >("densitygrid:voronoi_generator_"
                                              "distribution:number_of_positions",
                                              100),

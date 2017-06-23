@@ -42,7 +42,7 @@ set_target_properties(linecoolingdata PROPERTIES
                      COMPILE_FLAGS "-Wno-unused-function -fno-sanitize=address")
 set_target_properties(linecoolingdata PROPERTIES
                       LINK_FLAGS "-fno-sanitize=address")
-target_link_libraries(linecoolingdata ${Boost_LIBRARIES})
+target_link_libraries(linecoolingdata ${BOOST_PYTHON_LIBRARIES})
 
 # DensityGridModule
 if(HAVE_HDF5)
@@ -53,6 +53,8 @@ if(HAVE_HDF5)
       ../src/CartesianDensityGrid.cpp
       ../src/CMacIonizeAMRRefinementScheme.hpp
       ../src/CMacIonizeSnapshotDensityFunction.cpp
+      ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+      ../src/CMacIonizeVoronoiGeneratorDistribution.hpp
       ../src/DensityGrid.cpp
       ../src/VoronoiCell.cpp
       ../src/VoronoiDensityGrid.cpp
@@ -66,7 +68,7 @@ if(HAVE_HDF5)
                         COMPILE_FLAGS "-fno-sanitize=address")
   set_target_properties(densitygrid PROPERTIES
                         LINK_FLAGS "-fno-sanitize=address")
-  target_link_libraries(densitygrid ${Boost_LIBRARIES})
+  target_link_libraries(densitygrid ${BOOST_PYTHON_LIBRARIES})
   target_link_libraries(densitygrid ${HDF5_LIBRARIES})
 
 endif(HAVE_HDF5)
@@ -86,7 +88,7 @@ set_target_properties(emissivitycalculator PROPERTIES
                       COMPILE_FLAGS "-fno-sanitize=address")
 set_target_properties(emissivitycalculator PROPERTIES
                       LINK_FLAGS "-fno-sanitize=address")
-target_link_libraries(emissivitycalculator ${Boost_LIBRARIES})
+target_link_libraries(emissivitycalculator ${BOOST_PYTHON_LIBRARIES})
 
 # FLASHSnapshotDensityFunctionModule
 if(HAVE_HDF5)
@@ -108,7 +110,7 @@ if(HAVE_HDF5)
                         COMPILE_FLAGS "-fno-sanitize=address")
   set_target_properties(flashsnapshotdensityfunction PROPERTIES
                         LINK_FLAGS "-fno-sanitize=address")
-  target_link_libraries(flashsnapshotdensityfunction ${Boost_LIBRARIES})
+  target_link_libraries(flashsnapshotdensityfunction ${BOOST_PYTHON_LIBRARIES})
   target_link_libraries(flashsnapshotdensityfunction ${HDF5_LIBRARIES})
 
 endif(HAVE_HDF5)

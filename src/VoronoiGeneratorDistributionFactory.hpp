@@ -35,11 +35,38 @@
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
 #include "SPHVoronoiGeneratorDistribution.hpp"
 
+// HDF5 dependent implementations
+#ifdef HAVE_HDF5
+#include "CMacIonizeVoronoiGeneratorDistribution.hpp"
+#endif
+
+
 /**
  * @brief Factory for VoronoiGeneratorDistribution instances.
  */
 class VoronoiGeneratorDistributionFactory {
 public:
+  /**
+   * @brief Method that checks if the requested VoronoiGeneratorDistribution
+   * implementation requires HDF5.
+   *
+   * @param type Requested VoronoiGeneratorDistribution type.
+   * @param log Log to write logging info to.
+   */
+  static void check_hdf5(std::string type, Log *log = nullptr) {
+    if (type == "CMacIonize") {
+      if (log) {
+        log->write_error("Cannot create an instance of ", type,
+                         "VoronoiGeneratorDistribution, since the code was "
+                         "compiled without HDF5 support.");
+      }
+      cmac_error(
+          "A %sVoronoiGeneratorDistribution requires HDF5. However, the code "
+          "was compiled without HDF5 support!",
+          type.c_str());
+    }
+  }
+
   /**
    * @brief Generate a VoronoiGeneratorDistribution based on the parameters in
    * the given ParameterFile.
@@ -59,12 +86,21 @@ public:
       log->write_info("Requested VoronoiGeneratorDistribution type: ", type);
     }
 
+#ifndef HAVE_HDF5
+    check_hdf5(type, log);
+#endif
+
     if (type == "PerturbedCartesian") {
       return new PerturbedCartesianVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
     } else if (type == "SPH") {                                            // Maya
       return new SPHVoronoiGeneratorDistribution(params, log);   // Maya
+#ifdef HAVE_HDF5
+    } else if (type == "CMacIonize") {
+      return new CMacIonizeVoronoiGeneratorDistribution(params);
+#endif
+
     } else {
       cmac_error("Unknown VoronoiGeneratorDistribution type: \"%s\".",
                  type.c_str());

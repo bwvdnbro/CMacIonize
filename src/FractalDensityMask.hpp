@@ -49,7 +49,7 @@
 class FractalDensityMask : public DensityMask {
 private:
   /*! @brief Box containing the fractal distribution (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Resolution of the grid containing the distribution. */
   CoordinateVector< int > _resolution;
@@ -69,7 +69,7 @@ private:
   std::vector< int > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
-  std::vector< std::vector< std::vector< double > > > _distribution;
+  std::vector< std::vector< std::vector< unsigned long > > > _distribution;
 
   /*! @brief Fractal fraction: maximal fraction of the number density in a cell
    *  that is affected by the mask. */
@@ -144,7 +144,8 @@ private:
 
       // use an atomic operation to add the point, to make this method thread
       // safe
-      Atomic::add(_distribution[ix][iy][iz], 1.);
+      Atomic::add(_distribution[ix][iy][iz], 1ul);
+      cmac_assert(_distribution[ix][iy][iz] < 0xffffffffffffffff);
     }
   }
 
@@ -194,6 +195,13 @@ private:
      * level.
      */
     inline void execute() { _mask.make_fractal_grid(_random_generator); }
+
+    /**
+     * @brief Get a name tag for this job.
+     *
+     * @return "fractaldensitymask_construction".
+     */
+    inline std::string get_tag() { return "fractaldensitymask_construction"; }
   };
 
   /**
@@ -202,7 +210,7 @@ private:
   class FractalDensityMaskConstructionJobMarket {
   private:
     /*! @brief Per thread FractalDensityMaskConstructionJob. */
-    std::vector< FractalDensityMaskConstructionJob > _jobs;
+    std::vector< FractalDensityMaskConstructionJob * > _jobs;
 
     /*! @brief Current index on the first level. */
     unsigned int _current_index;
@@ -226,7 +234,18 @@ private:
       _current_index = 0;
       _jobs.reserve(worksize);
       for (int i = 0; i < worksize; ++i) {
-        _jobs.push_back(FractalDensityMaskConstructionJob(mask));
+        _jobs.push_back(new FractalDensityMaskConstructionJob(mask));
+      }
+    }
+
+    /**
+     * @brief Destructor.
+     *
+     * Clean up memory used by jobs.
+     */
+    inline ~FractalDensityMaskConstructionJobMarket() {
+      for (unsigned int i = 0; i < _jobs.size(); ++i) {
+        delete _jobs[i];
       }
     }
 
@@ -256,8 +275,8 @@ private:
       }
       _lock.unlock();
       if (has_job) {
-        _jobs[thread_id].set_index(current_index);
-        return &_jobs[thread_id];
+        _jobs[thread_id]->set_index(current_index);
+        return _jobs[thread_id];
       } else {
         return nullptr;
       }
@@ -282,7 +301,7 @@ public:
    * density in each cell that is affected by the mask.
    * @param log Log to write logging info to.
    */
-  FractalDensityMask(Box box, CoordinateVector< int > resolution,
+  FractalDensityMask(Box<> box, CoordinateVector< int > resolution,
                      unsigned int numpart, int seed, double fractal_dimension,
                      unsigned int num_level, double fractal_fraction,
                      Log *log = nullptr)
@@ -293,7 +312,7 @@ public:
     for (int ix = 0; ix < _resolution.x(); ++ix) {
       _distribution[ix].resize(resolution.y());
       for (int iy = 0; iy < _resolution.y(); ++iy) {
-        _distribution[ix][iy].resize(_resolution.z(), 0.);
+        _distribution[ix][iy].resize(_resolution.z(), 0);
       }
     }
 
@@ -327,10 +346,10 @@ public:
    */
   FractalDensityMask(ParameterFile &params, Log *log = nullptr)
       : FractalDensityMask(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitymask:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitymask:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitymask:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitymask:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitymask:resolution", CoordinateVector< int >(20)),
             params.get_value< unsigned int >("densitymask:numpart", 1e6),
@@ -380,7 +399,7 @@ public:
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       CoordinateVector<> midpoint = it.get_cell_midpoint();
       if (_box.inside(midpoint)) {
-        double ncell = it.get_number_density();
+        double ncell = it.get_ionization_variables().get_number_density();
         double Ncell = ncell * it.get_volume();
         Ntot += Ncell;
         unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
@@ -406,11 +425,11 @@ public:
                           _box.get_sides().y() * _resolution.y();
         unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
                           _box.get_sides().z() * _resolution.z();
-        double ncell = it.get_number_density();
+        double ncell = it.get_ionization_variables().get_number_density();
         double nsmooth = smooth_fraction * ncell;
         double nfractal = _fractal_fraction * fractal_norm * ncell *
                           _distribution[ix][iy][iz];
-        it.set_number_density(nsmooth + nfractal);
+        it.get_ionization_variables().set_number_density(nsmooth + nfractal);
       }
     }
   }

@@ -97,6 +97,10 @@ public:
           blockname.str() + "number density");
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
+      CoordinateVector<> velocity =
+          blockfile.get_physical_vector< QUANTITY_VELOCITY >(
+              blockname.str() + "initial velocity",
+              "[0. m s^-1, 0. m s^-1, 0. m s^-1]");
       if (density < 0.) {
         cmac_error("Negative density (%g) given for block %i!", density, i);
       }
@@ -104,8 +108,8 @@ public:
         cmac_error("Negative temperature (%g) given for block %i!", temperature,
                    i);
       }
-      _blocks.push_back(
-          BlockSyntaxBlock(origin, sides, exponent, density, temperature));
+      _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
+                                         temperature, velocity));
     }
 
     if (log) {
@@ -125,24 +129,28 @@ public:
             params.get_value< std::string >("densityfunction:filename"), log) {}
 
   /**
-   * @brief Function that gives the DensityValues for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
    * Due to the way this function is written, the values for the last block
    * containing the given position are used. This means the order in which
    * nested blocks are given is important!
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return DensityValues at the given coordinate (in SI units).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
+  virtual DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+
+    const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density = -1.;
     double temperature = -1.;
+    CoordinateVector<> velocity;
     for (unsigned int i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
-        density = _blocks[i].get_density();
+        density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();
+        velocity = _blocks[i].get_velocity();
       }
     }
     if (density < 0.) {
@@ -154,11 +162,12 @@ public:
                  position.x(), position.y(), position.z());
     }
 
-    cell.set_number_density(density);
-    cell.set_temperature(temperature);
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    return cell;
+    values.set_number_density(density);
+    values.set_temperature(temperature);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_He_n, 1.e-6);
+    values.set_velocity(velocity);
+    return values;
   }
 };
 

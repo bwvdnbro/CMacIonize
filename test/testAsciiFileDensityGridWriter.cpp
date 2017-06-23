@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     // translated to a box with origin 0.
     CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
-    Box box(origin, side);
+    Box<> box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
     CartesianDensityGrid grid(box, ncell, density_function);

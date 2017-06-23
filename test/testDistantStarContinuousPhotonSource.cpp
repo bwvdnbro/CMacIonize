@@ -42,7 +42,7 @@
 int main(int argc, char **argv) {
   TerminalLog log(LOGLEVEL_INFO);
   RandomGenerator rg;
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
 
   /// source illuminates a corner of the box
   {

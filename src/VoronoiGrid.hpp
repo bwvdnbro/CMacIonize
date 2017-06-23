@@ -27,7 +27,9 @@
 #define VORONOIGRID_HPP
 
 #include "Box.hpp"
+#include "Face.hpp"
 #include "Lock.hpp"
+#include "VoronoiFace.hpp"
 
 #include <ostream>
 #include <vector>
@@ -40,8 +42,18 @@ class VoronoiCell;
  */
 class VoronoiGrid {
 private:
-  /*! @brief Bounding box containing the grid. */
-  Box _box;
+  /*! @brief Bounding box containing the grid (in m). */
+  Box<> _box;
+
+  /*! @brief Internally used bounding box (internal units). */
+  Box<> _internal_box;
+
+  /*! @brief Factor used to convert from internal area units to actual units. */
+  double _area_factor;
+
+  /*! @brief Factor used to convert from internal volume units to actual
+   *  units. */
+  double _volume_factor;
 
   /*! @brief Periodicity flags for the bounding box. */
   CoordinateVector< bool > _periodic;
@@ -54,6 +66,10 @@ private:
 
   /*! @brief PointLocations object used for fast neighbour searching. */
   PointLocations *_pointlocations;
+
+  /*! @brief Tolerance used when deciding if a vertex is below, above, or on a
+   *  plane. */
+  double _epsilon;
 
   void compute_cell(unsigned int index);
 
@@ -101,6 +117,13 @@ private:
         _grid.compute_cell(i);
       }
     }
+
+    /**
+     * @brief Get a name tag for this job.
+     *
+     * @return "voronoigrid_construction".
+     */
+    inline std::string get_tag() const { return "voronoigrid_construction"; }
   };
 
   /**
@@ -159,8 +182,8 @@ private:
   };
 
 public:
-  VoronoiGrid(Box box, CoordinateVector< bool > periodic =
-                           CoordinateVector< bool >(false),
+  VoronoiGrid(Box<> box, CoordinateVector< bool > periodic =
+                             CoordinateVector< bool >(false),
               unsigned int numcell = 0);
 
   ~VoronoiGrid();
@@ -172,12 +195,13 @@ public:
   void finalize();
 
   double get_volume(unsigned int index) const;
-  const CoordinateVector<> &get_centroid(unsigned int index) const;
-  const CoordinateVector<> &get_generator(unsigned int index) const;
-  CoordinateVector<> &get_generator(unsigned int index);
+  CoordinateVector<> get_centroid(unsigned int index) const;
+  CoordinateVector<> get_generator(unsigned int index) const;
+  void set_generator(unsigned int index, const CoordinateVector<> &pos);
+  void move_generator(unsigned int index, const CoordinateVector<> &dx);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  const std::vector< std::tuple< double, CoordinateVector<>, unsigned int > > &
-  get_faces(unsigned int index) const;
+  std::vector< VoronoiFace > get_faces(unsigned int index) const;
+  std::vector< Face > get_geometrical_faces(unsigned int index) const;
   unsigned int get_index(const CoordinateVector<> &position) const;
 
   bool is_inside(CoordinateVector<> position) const;

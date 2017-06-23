@@ -43,7 +43,7 @@ private:
   std::vector< CoordinateVector<> > &_positions;
 
   /*! @brief Box containing the tree structure. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Periodicity flag. */
   bool _periodic;
@@ -59,7 +59,7 @@ public:
    * @param box Box containing the tree structure.
    * @param periodic Periodicity flag.
    */
-  inline Octree(std::vector< CoordinateVector<> > &positions, Box box,
+  inline Octree(std::vector< CoordinateVector<> > &positions, Box<> box,
                 bool periodic = false)
       : _positions(positions), _box(box), _periodic(periodic) {
     // create the root of the tree
@@ -67,7 +67,7 @@ public:
 
     const auto possize = _positions.size();
     for (unsigned int i = 1; i < possize; ++i) {
-      Box box(_box);
+      Box<> box(_box);
       _root->add_position(_positions, i, box);
     }
     _root->collapse();

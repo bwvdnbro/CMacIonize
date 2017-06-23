@@ -65,9 +65,10 @@ public:
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
                         unsigned int num_per_cell = 100,
-                        const Box box = Box(CoordinateVector<>(0.),
-                                            CoordinateVector<>(-1.)))
+                        const Box<> box = Box<>(CoordinateVector<>(0.),
+                                                CoordinateVector<>(-1.)))
       : _positions(positions) {
+
     const unsigned int positions_size = positions.size();
 
     CoordinateVector<> minpos;
@@ -91,6 +92,9 @@ public:
       maxpos = box.get_sides();
     }
 
+    // make sure the desired number of cells makes sense
+    num_per_cell = std::min(num_per_cell, positions_size);
+
     // now find the right size for the grid: we want an average of num_per_cell
     // positions per grid cell
     const double desired_num_cell = positions_size / num_per_cell;
@@ -112,6 +116,12 @@ public:
     // add the positions to the positions grid
     _cell_map.resize(positions_size);
     for (unsigned int i = 0; i < positions_size; ++i) {
+      cmac_assert(positions[i].x() >= minpos.x() &&
+                  positions[i].x() <= maxpos.x());
+      cmac_assert(positions[i].y() >= minpos.y() &&
+                  positions[i].y() <= maxpos.y());
+      cmac_assert(positions[i].z() >= minpos.z() &&
+                  positions[i].z() <= maxpos.z());
       unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
       unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
       unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
