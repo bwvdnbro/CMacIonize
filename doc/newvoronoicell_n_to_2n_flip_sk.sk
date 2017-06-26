@@ -49,7 +49,7 @@ def Ntn2nm1 unit( (c0nm1np1np2)-(pnp2) )
 
 def N0nm1n unit( ((pn)-(pnm1)) * ((p0)-(pnm1)) )
 def N01n unit( ((p0)-(p1)) * ((pn)-(p1)) )
-def Ninm1n unit( ((pn)-(pnm1)) * ((pi)-(pnm1)) )
+def Ninm1n unit( ((pi)-(pnm1)) * ((pn)-(pnm1)) )
 def N1in unit( ((pn)-(p1)) * ((pi)-(p1)) )
 def N0nm1np1 unit( ((p0)-(pnm1)) * ((pnp1)-(pnm1)) )
 def N01np1 unit( ((pnp1)-(p1)) * ((p0)-(p1)) )
