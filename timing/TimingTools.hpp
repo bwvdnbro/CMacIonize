@@ -26,14 +26,58 @@
 #ifndef TIMINGTOOLS_HPP
 #define TIMINGTOOLS_HPP
 
+#include "CommandLineParser.hpp"
 #include "Error.hpp"
 #include "Timer.hpp"
+#include "WorkEnvironment.hpp"
 
 #include <cmath>
+#include <string>
 #include <vector>
 
-/*! @brief Number of samples to use for statistical timing. */
-#define TIMINGTOOLS_NUM_SAMPLE 10
+/**
+ * @brief Wrapper around printf.
+ *
+ * @param s String to print out.
+ */
+#define timingtools_print(s, ...) printf(s "\n", ##__VA_ARGS__)
+
+/**
+ * @brief Wrapper around printf that adds a '#' banner around the printed text.
+ *
+ * @param s String to print out.
+ */
+#define timingtools_print_header(s, ...)                                       \
+  printf("%s\n", std::string(80, '#').c_str());                                \
+  printf("# " s "\n", ##__VA_ARGS__);                                          \
+  printf("%s\n", std::string(80, '#').c_str());
+
+/**
+ * @brief Initialize the timing tools based on the given command line arguments.
+ *
+ * All other macros in this file only work after this macro has been called.
+ *
+ * @param name Name of the timing test.
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ */
+#define timingtools_init(name, argc, argv)                                     \
+  CommandLineParser timingtools_command_line_parser(name);                     \
+  timingtools_command_line_parser.add_option(                                  \
+      "number_of_samples", 'n',                                                \
+      "Set the number of samples to use for statistical timing.",              \
+      COMMANDLINEOPTION_INTARGUMENT, "10");                                    \
+  timingtools_command_line_parser.add_option(                                  \
+      "number_of_threads", 't',                                                \
+      "Set the maximum number of threads available on the system.",            \
+      COMMANDLINEOPTION_INTARGUMENT, "1");                                     \
+  timingtools_command_line_parser.parse_arguments(argc, argv);                 \
+  const unsigned int timingtools_num_sample =                                  \
+      timingtools_command_line_parser.get_value< int >("number_of_samples");   \
+  const unsigned int timingtools_num_threads =                                 \
+      timingtools_command_line_parser.get_value< int >("number_of_threads");   \
+  (void)timingtools_num_sample;                                                \
+  (void)timingtools_num_threads;
 
 /**
  * @brief Start a timing block with the given name.
@@ -49,10 +93,10 @@
  */
 #define timingtools_start_timing_block(name)                                   \
   {                                                                            \
-    cmac_status("Starting timing %s...", name);                                \
-    std::vector< double > timingtools_times_array(TIMINGTOOLS_NUM_SAMPLE, 0.); \
+    timingtools_print("Starting timing %s...", name);                          \
+    std::vector< double > timingtools_times_array(timingtools_num_sample, 0.); \
     for (unsigned char timingtools_index = 0;                                  \
-         timingtools_index < TIMINGTOOLS_NUM_SAMPLE; ++timingtools_index)
+         timingtools_index < timingtools_num_sample; ++timingtools_index)
 
 /**
  * @brief End the timing block with the given name.
@@ -64,22 +108,22 @@
 #define timingtools_end_timing_block(name)                                     \
   double timingtools_average_time = 0.;                                        \
   for (unsigned char timingtools_index = 0;                                    \
-       timingtools_index < TIMINGTOOLS_NUM_SAMPLE; ++timingtools_index) {      \
+       timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     timingtools_average_time += timingtools_times_array[timingtools_index];    \
   }                                                                            \
-  timingtools_average_time /= TIMINGTOOLS_NUM_SAMPLE;                          \
+  timingtools_average_time /= timingtools_num_sample;                          \
   double timingtools_standard_deviation = 0.;                                  \
   for (unsigned char timingtools_index = 0;                                    \
-       timingtools_index < TIMINGTOOLS_NUM_SAMPLE; ++timingtools_index) {      \
+       timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     const double timingtools_time_diff =                                       \
         timingtools_times_array[timingtools_index] - timingtools_average_time; \
     timingtools_standard_deviation +=                                          \
         timingtools_time_diff * timingtools_time_diff;                         \
   }                                                                            \
-  timingtools_standard_deviation /= TIMINGTOOLS_NUM_SAMPLE;                    \
+  timingtools_standard_deviation /= timingtools_num_sample;                    \
   timingtools_standard_deviation = std::sqrt(timingtools_standard_deviation);  \
-  cmac_status("Finished timing %s: %g +- %g s.", name,                         \
-              timingtools_average_time, timingtools_standard_deviation);       \
+  timingtools_print("Finished timing %s: %g +- %g s.", name,                   \
+                    timingtools_average_time, timingtools_standard_deviation); \
   }
 
 /**
@@ -97,5 +141,47 @@
 #define timingtools_stop_timing()                                              \
   timingtools_timer.stop();                                                    \
   timingtools_times_array[timingtools_index] += timingtools_timer.value();
+
+/**
+ * @brief Start a scaling block with the given name.
+ *
+ * The scaling block needs to be enclosed within parentheses, like a for loop.
+ *
+ * The scaling block needs to be ended with a corresponding call to
+ * timingtools_end_scaling_block.
+ *
+ * @param name Name of the scaling block.
+ */
+#define timingtools_start_scaling_block(name)                                  \
+  {                                                                            \
+    timingtools_print("Starting scaling test for %s...", name);                \
+    std::vector< double > timingtools_times_array(timingtools_num_threads,     \
+                                                  0.);                         \
+    for (unsigned char timingtools_index = 0;                                  \
+         timingtools_index < timingtools_num_threads; ++timingtools_index) {   \
+      WorkEnvironment::set_max_num_threads(timingtools_index + 1);             \
+      for (unsigned char timingtools_index2 = 0;                               \
+           timingtools_index2 < timingtools_num_sample; ++timingtools_index2)
+
+/**
+ * @brief End the scaling block with the given name.
+ *
+ * See timingtools_start_scaling_block for more information.
+ *
+ * @param name Name of the scaling block.
+ */
+#define timingtools_end_scaling_block(name)                                    \
+  timingtools_times_array[timingtools_index] /= timingtools_num_sample;        \
+  }                                                                            \
+  timingtools_print("Finished scaling test for %s:", name);                    \
+  timingtools_print("number of threads\ttotal time\tspeedup");                 \
+  for (unsigned char timingtools_index = 0;                                    \
+       timingtools_index < timingtools_num_threads; ++timingtools_index) {     \
+    const double speedup = timingtools_times_array[0] /                        \
+                           timingtools_times_array[timingtools_index];         \
+    timingtools_print("%u\t%g\t%g", timingtools_index + 1,                     \
+                      timingtools_times_array[timingtools_index], speedup);    \
+  }                                                                            \
+  }
 
 #endif // TIMINGTOOLS_HPP

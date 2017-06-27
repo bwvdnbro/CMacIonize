@@ -25,6 +25,11 @@ macro(add_timing_test)
   cmake_parse_arguments(TIME "${options}" "${oneValueArgs}" "${multiValueArgs}"
                         ${ARGN})
   message(STATUS "generating " ${TIME_NAME})
+  # add additional source files that are needed in every timing test
+  list(APPEND TIME_SOURCES
+       ../src/CommandLineOption.cpp
+       ../src/CommandLineParser.cpp
+       TimingTools.hpp)
   add_executable(${TIME_NAME} ${TIME_SOURCES})
   set_target_properties(${TIME_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                         ${PROJECT_BINARY_DIR}/rundir/timing)
@@ -37,7 +42,6 @@ endmacro(add_timing_test)
 set(TIMEVORONOIGRIDS_SOURCES
     timeVoronoiGrids.cpp
 
-    TimingTools.hpp
     ../src/NewVoronoiCell.cpp
     ../src/NewVoronoiGrid.cpp
     ../src/VoronoiCell.cpp
