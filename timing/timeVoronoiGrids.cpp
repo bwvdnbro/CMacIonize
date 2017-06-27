@@ -42,7 +42,9 @@ int main(int argc, char **argv) {
 
   /// Test 1: random generator positions
   {
-    const unsigned int numpositions = 1000;
+    const unsigned int numpositions = 10000;
+
+    cmac_status("Constructing random grid with %u generators.", numpositions);
 
     // set up the generator positions
     std::vector< CoordinateVector<> > positions(numpositions);
@@ -67,17 +69,69 @@ int main(int argc, char **argv) {
       grid.finalize();
       timingtools_stop_timing();
     }
-    timingtools_end_timing_block("old Voronoi grid")
+    timingtools_end_timing_block("old Voronoi grid");
 
-        /// new algorithm
-        timingtools_start_timing_block("new Voronoi grid") {
+    /// new algorithm
+    timingtools_start_timing_block("new Voronoi grid") {
       NewVoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
       grid.construct(1);
       timingtools_stop_timing();
     }
-    timingtools_end_timing_block("new Voronoi grid")
+    timingtools_end_timing_block("new Voronoi grid");
+  }
+
+  /// Test 2: regular (degenerate) generator positions
+  {
+    const unsigned int numpositions_1D = 20;
+    const unsigned int numpositions_2D = numpositions_1D * numpositions_1D;
+    const unsigned int numpositions_3D = numpositions_1D * numpositions_2D;
+
+    cmac_status("Constructing regular (degenerate) grid with %u generators.",
+                numpositions_3D);
+
+    // set up the generator positions
+    std::vector< CoordinateVector<> > positions(numpositions_3D);
+
+    const double dx = 1. / numpositions_1D;
+    for (unsigned int ix = 0; ix < numpositions_1D; ++ix) {
+      for (unsigned int iy = 0; iy < numpositions_1D; ++iy) {
+        for (unsigned int iz = 0; iz < numpositions_1D; ++iz) {
+          positions[ix * numpositions_2D + iy * numpositions_1D + iz] =
+              CoordinateVector<>((ix + 0.5) * dx, (iy + 0.5) * dx,
+                                 (iz + 0.5) * dx);
+        }
+      }
+    }
+
+    // set up the simulation box
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+
+    /// voro++ algorithm
+    timingtools_start_timing_block("old Voronoi grid") {
+      VoronoiGrid grid(box, false, numpositions_3D);
+
+      for (unsigned int i = 0; i < positions.size(); ++i) {
+        grid.add_cell(positions[i]);
+      }
+
+      timingtools_start_timing();
+      grid.compute_grid(1);
+      grid.finalize();
+      timingtools_stop_timing();
+    }
+    timingtools_end_timing_block("old Voronoi grid");
+
+    /// new algorithm
+    timingtools_start_timing_block("new Voronoi grid") {
+      NewVoronoiGrid grid(positions, box);
+
+      timingtools_start_timing();
+      grid.construct(1);
+      timingtools_stop_timing();
+    }
+    timingtools_end_timing_block("new Voronoi grid");
   }
 
   return 0;

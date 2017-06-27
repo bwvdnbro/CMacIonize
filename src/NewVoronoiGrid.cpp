@@ -96,6 +96,7 @@
  * @return NewVoronoiCell.
  */
 NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
+
   NewVoronoiCell cell(index, _box, _real_generator_positions,
                       _integer_generator_positions, _integer_voronoi_box,
                       _real_rescaled_positions, _real_rescaled_box, true);
@@ -140,7 +141,7 @@ NewVoronoiGrid::NewVoronoiGrid(
     const std::vector< CoordinateVector<> > &positions, const Box<> box)
     : _box(box), _real_generator_positions(positions), _real_voronoi_box(box),
       _point_locations(_real_generator_positions, NEWVORONOIGRID_NUM_BUCKET,
-                       _real_voronoi_box.get_box()) {
+                       _box) {
 
   CoordinateVector<> min_anchor, max_anchor;
   min_anchor =

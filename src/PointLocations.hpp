@@ -350,30 +350,36 @@ public:
       }
       if (level > oldlevel) {
         // increase exclusion range
-        const int ax = std::get< 0 >(_anchor);
-        const int ay = std::get< 1 >(_anchor);
-        const int az = std::get< 2 >(_anchor);
-        const int sx = _locations._grid.size();
-        const int sy = _locations._grid[0].size();
-        const int sz = _locations._grid[0][0].size();
-        if (oldlevel <= ax) {
-          _lower_bound[0] -= _locations._grid_cell_sides.x();
-        }
-        if (oldlevel <= ay) {
-          _lower_bound[1] -= _locations._grid_cell_sides.y();
-        }
-        if (oldlevel <= az) {
-          _lower_bound[2] -= _locations._grid_cell_sides.z();
-        }
-        if (oldlevel + ax < sx) {
-          _upper_bound[0] += _locations._grid_cell_sides.x();
-        }
-        if (oldlevel + ay < sy) {
-          _upper_bound[1] += _locations._grid_cell_sides.y();
-        }
-        if (oldlevel + az < sz) {
-          _upper_bound[2] += _locations._grid_cell_sides.z();
-        }
+        // the commented out code below made sure the covered region is always
+        // entirely inside the box
+        // however, this makes neighbour searches close to the box edge very
+        // slow, as max_radius2 will always be very small in this case
+        // as I am not entirely sure why we would want the covered region to be
+        // inside the box, I have disabled but not removed this code
+        //        const int ax = std::get< 0 >(_anchor);
+        //        const int ay = std::get< 1 >(_anchor);
+        //        const int az = std::get< 2 >(_anchor);
+        //        const int sx = _locations._grid.size();
+        //        const int sy = _locations._grid[0].size();
+        //        const int sz = _locations._grid[0][0].size();
+        //        if (oldlevel <= ax) {
+        _lower_bound[0] -= _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel <= ay) {
+        _lower_bound[1] -= _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel <= az) {
+        _lower_bound[2] -= _locations._grid_cell_sides.z();
+        //        }
+        //        if (oldlevel + ax < sx) {
+        _upper_bound[0] += _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel + ay < sy) {
+        _upper_bound[1] += _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel + az < sz) {
+        _upper_bound[2] += _locations._grid_cell_sides.z();
+        //        }
       }
       return true;
     }

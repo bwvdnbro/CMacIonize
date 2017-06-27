@@ -30,6 +30,7 @@
 #include "Timer.hpp"
 
 #include <cmath>
+#include <vector>
 
 /*! @brief Number of samples to use for statistical timing. */
 #define TIMINGTOOLS_NUM_SAMPLE 10
@@ -41,7 +42,7 @@
  * needs to be ended with a corresponding call to timingtools_end_timing_block.
  *
  * Different timing blocks should not be nested, and a block should contain
- * exactly one call to timingtools_start_timing and timingtools_stop_timing (in
+ * at least one call to timingtools_start_timing and timingtools_stop_timing (in
  * that order).
  *
  * @param name Name of the timing block.
@@ -49,7 +50,7 @@
 #define timingtools_start_timing_block(name)                                   \
   {                                                                            \
     cmac_status("Starting timing %s...", name);                                \
-    double timingtools_times_array[TIMINGTOOLS_NUM_SAMPLE];                    \
+    std::vector< double > timingtools_times_array(TIMINGTOOLS_NUM_SAMPLE, 0.); \
     for (unsigned char timingtools_index = 0;                                  \
          timingtools_index < TIMINGTOOLS_NUM_SAMPLE; ++timingtools_index)
 
@@ -95,6 +96,6 @@
  */
 #define timingtools_stop_timing()                                              \
   timingtools_timer.stop();                                                    \
-  timingtools_times_array[timingtools_index] = timingtools_timer.value();
+  timingtools_times_array[timingtools_index] += timingtools_timer.value();
 
 #endif // TIMINGTOOLS_HPP
