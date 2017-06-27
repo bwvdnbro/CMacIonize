@@ -25,7 +25,7 @@
  */
 #include "NewVoronoiGrid.hpp"
 #include "ExactGeometricTests.hpp"
-#include "PointLocations.hpp"
+#include "WorkDistributor.hpp"
 
 /*! @brief If not commented out, this prints the hexadecimal integers to the
  *  stdout. */
@@ -39,7 +39,7 @@
 /*! @brief If not commented out, this checks if the total volume of all the
  *  cells in the grid matches the total volume of the simulation box (within a
  *  tolerance equal to the value of this define). */
-//#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
+#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
 
 /**
  * @brief Print the hexadecimal representation of the given integer coordinate.
@@ -71,11 +71,13 @@
 /**
  * @brief Check if the total volume of all cells matches the volume of the
  * simulation box.
- *
- * @param total_volume Total volume of all cells (in m^3).
  */
 #ifdef NEWVORONOIGRID_CHECK_TOTAL_VOLUME
-#define newvoronoigrid_check_volume(total_volume)                              \
+#define newvoronoigrid_check_volume()                                          \
+  double total_volume = 0.;                                                    \
+  for (unsigned int i = 0; i < _cells.size(); ++i) {                           \
+    total_volume += _cells[i].get_volume();                                    \
+  }                                                                            \
   cmac_assert_message(std::abs(total_volume - _box.get_volume()) <             \
                           NEWVORONOIGRID_CHECK_TOTAL_VOLUME *                  \
                               (total_volume + _box.get_volume()),              \
@@ -84,8 +86,47 @@
                       std::abs(total_volume - _box.get_volume()) /             \
                           (total_volume + _box.get_volume()));
 #else
-#define newvoronoigrid_check_volume(total_volume) (void)total_volume
+#define newvoronoigrid_check_volume()
 #endif
+
+/**
+ * @brief Compute the cell with the given index.
+ *
+ * @param index Index of the cell to compute.
+ * @return NewVoronoiCell.
+ */
+NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
+  NewVoronoiCell cell(index);
+
+  auto it = _point_locations.get_neighbours(index);
+  auto ngbs = it.get_neighbours();
+  for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+    const unsigned int j = *ngbit;
+    if (j != index) {
+      cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                     _integer_voronoi_box, _integer_generator_positions,
+                     _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(index);
+    }
+  }
+  while (it.increase_range() &&
+         it.get_max_radius2() < 4. * cell.get_max_radius_squared()) {
+    ngbs = it.get_neighbours();
+    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+      const unsigned int j = *ngbit;
+      cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                     _integer_voronoi_box, _integer_generator_positions,
+                     _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(index);
+    }
+  }
+
+  cell.finalize(_box, _real_generator_positions, _integer_generator_positions,
+                _integer_voronoi_box, _real_rescaled_positions,
+                _real_rescaled_box, true);
+
+  return cell;
+}
 
 /**
  * @brief Constructor.
@@ -95,7 +136,9 @@
  */
 NewVoronoiGrid::NewVoronoiGrid(
     const std::vector< CoordinateVector<> > &positions, const Box<> box)
-    : _box(box), _real_generator_positions(positions), _real_voronoi_box(box) {
+    : _box(box), _real_generator_positions(positions), _real_voronoi_box(box),
+      _point_locations(_real_generator_positions, NEWVORONOIGRID_NUM_BUCKET,
+                       _real_voronoi_box.get_box()) {
 
   CoordinateVector<> min_anchor, max_anchor;
   min_anchor =
@@ -201,46 +244,20 @@ NewVoronoiGrid::NewVoronoiGrid(
 
 /**
  * @brief Construct the Voronoi grid.
+ *
+ * @param worksize Number of shared memory threads to use during the grid
+ * construction.
  */
-void NewVoronoiGrid::construct() {
-  PointLocations point_locations(_real_generator_positions,
-                                 NEWVORONOIGRID_NUM_BUCKET,
-                                 _real_voronoi_box.get_box());
+void NewVoronoiGrid::construct(int worksize) {
 
   const unsigned int psize = _real_generator_positions.size();
   _cells.resize(psize);
-  double total_volume = 0.;
-  for (unsigned int i = 0; i < psize; ++i) {
-    _cells[i] = NewVoronoiCell(i);
 
-    auto it = point_locations.get_neighbours(i);
-    auto ngbs = it.get_neighbours();
-    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      const unsigned int j = *ngbit;
-      if (j != i) {
-        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                            _integer_voronoi_box, _integer_generator_positions,
-                            _real_voronoi_box, _real_generator_positions);
-        newvoronoigrid_check_cell(i);
-      }
-    }
-    while (it.increase_range() &&
-           it.get_max_radius2() < 4. * _cells[i].get_max_radius_squared()) {
-      ngbs = it.get_neighbours();
-      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        const unsigned int j = *ngbit;
-        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                            _integer_voronoi_box, _integer_generator_positions,
-                            _real_voronoi_box, _real_generator_positions);
-        newvoronoigrid_check_cell(i);
-      }
-    }
+  WorkDistributor< NewVoronoiGridConstructionJobMarket,
+                   NewVoronoiGridConstructionJob >
+      workers(worksize);
+  NewVoronoiGridConstructionJobMarket jobs(*this, 100);
+  workers.do_in_parallel(jobs);
 
-    _cells[i].finalize(_box, _real_generator_positions,
-                       _integer_generator_positions, _integer_voronoi_box,
-                       _real_rescaled_positions, _real_rescaled_box, true);
-    total_volume += _cells[i].get_volume();
-  }
-
-  newvoronoigrid_check_volume(total_volume);
+  newvoronoigrid_check_volume();
 }

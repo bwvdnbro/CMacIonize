@@ -28,7 +28,9 @@
 #ifndef NEWVORONOIGRID_HPP
 #define NEWVORONOIGRID_HPP
 
+#include "Lock.hpp"
 #include "NewVoronoiCell.hpp"
+#include "PointLocations.hpp"
 
 #include <vector>
 
@@ -65,11 +67,126 @@ private:
   /*! @brief Voronoi cells. */
   std::vector< NewVoronoiCell > _cells;
 
+  /*! @brief PointLocations object used to speed up neighbour searching. */
+  PointLocations _point_locations;
+
+  NewVoronoiCell compute_cell(unsigned int index) const;
+
+  /**
+   * @brief Job that constructs part of the Voronoi grid.
+   */
+  class NewVoronoiGridConstructionJob {
+  private:
+    /*! @brief Reference to the NewVoronoiGrid we are constructing. */
+    NewVoronoiGrid &_grid;
+
+    /*! @brief Index of the first cell that this job will construct. */
+    const unsigned int _first_index;
+
+    /*! @brief Index of the beyond last cell that this job will construct. */
+    const unsigned int _last_index;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param grid Reference to the NewVoronoiGrid we are constructing.
+     * @param first_index Index of the first cell that this job will construct.
+     * @param last_index Index of the beyond last cell that this job will
+     * construct.
+     */
+    inline NewVoronoiGridConstructionJob(NewVoronoiGrid &grid,
+                                         unsigned int first_index,
+                                         unsigned int last_index)
+        : _grid(grid), _first_index(first_index), _last_index(last_index) {}
+
+    /**
+     * @brief Should the Worker delete the Job when it is finished?
+     *
+     * @return True, since there is no information that needs to be stored in
+     * between jobs.
+     */
+    inline bool do_cleanup() const { return true; }
+
+    /**
+     * @brief Construct the Voronoi cell for each index in the job range.
+     */
+    inline void execute() {
+      for (unsigned int i = _first_index; i < _last_index; ++i) {
+        _grid._cells[i] = _grid.compute_cell(i);
+      }
+    }
+
+    /**
+     * @brief Get a name tag for this job.
+     *
+     * @return "newvoronoigrid_construction".
+     */
+    inline std::string get_tag() const { return "newvoronoigrid_construction"; }
+  };
+
+  /**
+   * @brief JobMarket for NewVoronoiGridConstructionJobs.
+   */
+  class NewVoronoiGridConstructionJobMarket {
+  private:
+    /*! @brief Reference to the NewVoronoiGrid we want to construct. */
+    NewVoronoiGrid &_grid;
+
+    /*! @brief Index of the first cell that still needs to be constructed. */
+    unsigned int _current_index;
+
+    /*! @brief Number of cells constructed by a single job. */
+    const unsigned int _jobsize;
+
+    /*! @brief Lock used to ensure safe access to the internal index. */
+    Lock _lock;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param grid NewVoronoiGrid we want to construct.
+     * @param jobsize Number of cell constructed by a single job.
+     */
+    inline NewVoronoiGridConstructionJobMarket(NewVoronoiGrid &grid,
+                                               unsigned int jobsize)
+        : _grid(grid), _current_index(0), _jobsize(jobsize) {}
+
+    /**
+     * @brief Get a NewVoronoiGridConstructionJob.
+     *
+     * @param thread_id Id of the thread that calls this function.
+     * @return Pointer to a unique and thread safe
+     * NewVoronoiGridConstructionJob.
+     */
+    inline NewVoronoiGridConstructionJob *get_job(int thread_id) {
+      const unsigned int cellsize = _grid._cells.size();
+      if (_current_index == cellsize) {
+        return nullptr;
+      }
+      unsigned int first_index;
+      unsigned int jobsize;
+      _lock.lock();
+      first_index = _current_index;
+      jobsize = std::min(_jobsize, cellsize - _current_index);
+      _current_index += jobsize;
+      _lock.unlock();
+      if (first_index < cellsize) {
+        const unsigned int last_index = first_index + jobsize;
+        return new NewVoronoiGridConstructionJob(_grid, first_index,
+                                                 last_index);
+      } else {
+        return nullptr;
+      }
+    }
+  };
+
 public:
   NewVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
                  const Box<> box);
 
-  void construct();
+  void construct(int worksize = -1);
 };
 
 #endif // NEWVORONOIGRID_HPP
