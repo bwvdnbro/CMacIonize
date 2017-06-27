@@ -160,13 +160,19 @@
 #define timingtools_start_scaling_block(name)                                  \
   {                                                                            \
     timingtools_print("Starting scaling test for %s...", name);                \
-    std::vector< double > timingtools_times_array(timingtools_num_threads,     \
-                                                  0.);                         \
-    for (unsigned char timingtools_index = 0;                                  \
-         timingtools_index < timingtools_num_threads; ++timingtools_index) {   \
-      WorkEnvironment::set_max_num_threads(timingtools_index + 1);             \
-      for (unsigned char timingtools_index2 = 0;                               \
-           timingtools_index2 < timingtools_num_sample; ++timingtools_index2)
+    std::vector< double > timingtools_scaling_array(timingtools_num_threads,   \
+                                                    0.);                       \
+    std::vector< double > timingtools_scaling_standard_deviation(              \
+        timingtools_num_threads, 0.);                                          \
+    for (unsigned char timingtools_current_num_threads = 0;                    \
+         timingtools_current_num_threads < timingtools_num_threads;            \
+         ++timingtools_current_num_threads) {                                  \
+      WorkEnvironment::set_max_num_threads(timingtools_current_num_threads +   \
+                                           1);                                 \
+      std::vector< double > timingtools_times_array(timingtools_num_sample,    \
+                                                    0.);                       \
+      for (unsigned char timingtools_index = 0;                                \
+           timingtools_index < timingtools_num_sample; ++timingtools_index)
 
 /**
  * @brief End the scaling block with the given name.
@@ -177,10 +183,26 @@
  * @param filename Name of the file to write scaling statistics to.
  */
 #define timingtools_end_scaling_block(name, filename)                          \
-  timingtools_times_array[timingtools_index] /= timingtools_num_sample;        \
+  for (unsigned char timingtools_index = 0;                                    \
+       timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
+    timingtools_scaling_array[timingtools_current_num_threads] +=              \
+        timingtools_times_array[timingtools_index];                            \
+  }                                                                            \
+  timingtools_scaling_array[timingtools_current_num_threads] /=                \
+      timingtools_num_sample;                                                  \
+  for (unsigned char timingtools_index = 0;                                    \
+       timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
+    const double timingtools_time_diff =                                       \
+        timingtools_times_array[timingtools_index] -                           \
+        timingtools_scaling_array[timingtools_current_num_threads];            \
+    timingtools_scaling_standard_deviation[timingtools_current_num_threads] += \
+        timingtools_time_diff * timingtools_time_diff;                         \
+  }                                                                            \
+  timingtools_scaling_standard_deviation[timingtools_current_num_threads] /=   \
+      timingtools_num_sample;                                                  \
   }                                                                            \
   timingtools_print("Finished scaling test for %s:", name);                    \
-  timingtools_print("number of threads\ttotal time (s)\tspeedup");             \
+  timingtools_print("number of threads\ttotal time (s)\tstandard deviation");  \
   std::ofstream timingtools_ofile(filename);                                   \
   timingtools_ofile << "# File generated on " << Utilities::get_timestamp()    \
                     << "\n#\n";                                                \
@@ -196,17 +218,23 @@
   timingtools_ofile << "# Number of samples used: " << timingtools_num_sample  \
                     << "\n#\n";                                                \
   timingtools_ofile << "# File contents:\n";                                   \
-  timingtools_ofile << "# number_of_threads\ttotal_time\tspeedup\n";           \
-  timingtools_ofile << "# dimensionless\t(s)\tdimensionless\n";                \
-  for (unsigned char timingtools_index = 0;                                    \
-       timingtools_index < timingtools_num_threads; ++timingtools_index) {     \
-    const double speedup = timingtools_times_array[0] /                        \
-                           timingtools_times_array[timingtools_index];         \
-    timingtools_print("%u\t%g\t%g", timingtools_index + 1,                     \
-                      timingtools_times_array[timingtools_index], speedup);    \
-    timingtools_ofile << timingtools_index + 1 << "\t"                         \
-                      << timingtools_times_array[timingtools_index] << "\t"    \
-                      << speedup << "\n";                                      \
+  timingtools_ofile                                                            \
+      << "# number_of_threads\ttotal_time\tstandard_deviation\n";              \
+  timingtools_ofile << "# dimensionless\t(s)\t(s)\n";                          \
+  for (unsigned char timingtools_current_num_threads = 0;                      \
+       timingtools_current_num_threads < timingtools_num_threads;              \
+       ++timingtools_current_num_threads) {                                    \
+    timingtools_print(                                                         \
+        "%u\t%g\t%g", timingtools_current_num_threads + 1,                     \
+        timingtools_scaling_array[timingtools_current_num_threads],            \
+        timingtools_scaling_standard_deviation                                 \
+            [timingtools_current_num_threads]);                                \
+    timingtools_ofile                                                          \
+        << timingtools_current_num_threads + 1 << "\t"                         \
+        << timingtools_scaling_array[timingtools_current_num_threads] << "\t"  \
+        << timingtools_scaling_standard_deviation                              \
+               [timingtools_current_num_threads]                               \
+        << "\n";                                                               \
   }                                                                            \
   }
 
