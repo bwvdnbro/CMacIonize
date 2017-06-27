@@ -69,6 +69,6 @@
 
 /*! @brief Desired number of cells per bucket in the neigbour search
  *  structure. */
-#define NEWVORONOIGRID_NUM_BUCKET 10
+#define NEWVORONOIGRID_NUM_BUCKET 100
 
 #endif // VORONOIVARIABLES_HPP

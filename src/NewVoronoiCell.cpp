@@ -100,8 +100,26 @@ NewVoronoiCell::NewVoronoiCell() {}
  * @brief Constructor.
  *
  * @param generator Index of the generator of the cell.
+ * @param box Bounding box of the grid (in m).
+ * @param positions Positions of the generators (in m).
+ * @param long_positions Positions of the generators: integer representations.
+ * @param long_voronoi_box Simulation box generating positions: integer
+ * representations.
+ * @param rescaled_positions Positions of the generators (rescaled
+ * representation).
+ * @param rescaled_box VoronoiBox (rescaled representation).
+ * @param reflective_boundaries Flag that regulates whether or not to use
+ * reflective boundaries. If set to yes, we insert mirror copies of the central
+ * mesh generator into the existing Delaunay structure to enforce the walls of
+ * the simulation box.
  */
-NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
+NewVoronoiCell::NewVoronoiCell(
+    unsigned int generator, const Box<> &box,
+    const std::vector< CoordinateVector<> > &positions,
+    const std::vector< CoordinateVector< unsigned long > > &long_positions,
+    const VoronoiBox< unsigned long > &long_voronoi_box,
+    const std::vector< CoordinateVector<> > &rescaled_positions,
+    const VoronoiBox< double > &rescaled_box, bool reflective_boundaries) {
 
   _vertices.resize(5);
   _vertices[0] = generator;
@@ -121,6 +139,22 @@ NewVoronoiCell::NewVoronoiCell(unsigned int generator) {
                                       NEWVORONOICELL_MAX_INDEX, 3, 3, 3, 4);
 
   _max_r2 = DBL_MAX;
+
+  VoronoiBox< double > voronoi_box(box);
+  if (reflective_boundaries) {
+    intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+    intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
+              long_voronoi_box, long_positions, voronoi_box, positions);
+  }
 }
 
 /**
@@ -350,20 +384,20 @@ void NewVoronoiCell::finalize(
     const VoronoiBox< double > &rescaled_box, bool reflective_boundaries) {
 
   VoronoiBox< double > voronoi_box(box);
-  if (reflective_boundaries) {
-    intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-    intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
-  }
+  //  if (reflective_boundaries) {
+  //    intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //    intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //    intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //    intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //    intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //    intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
+  //              long_voronoi_box, long_positions, voronoi_box, positions);
+  //  }
 
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
   for (unsigned int i = 0; i < _vertices.size(); ++i) {

@@ -270,6 +270,9 @@ add_subdirectory(src)
 # Enter the folder containing the unit tests
 add_subdirectory(test)
 
+# Enter the folder containing the timing tests
+add_subdirectory(timing)
+
 # If we have Python, enter the folder containing the Python modules
 if(HAVE_PYTHON)
   add_subdirectory(python)

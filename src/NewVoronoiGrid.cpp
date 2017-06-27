@@ -39,7 +39,7 @@
 /*! @brief If not commented out, this checks if the total volume of all the
  *  cells in the grid matches the total volume of the simulation box (within a
  *  tolerance equal to the value of this define). */
-#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
+//#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
 
 /**
  * @brief Print the hexadecimal representation of the given integer coordinate.
@@ -96,7 +96,9 @@
  * @return NewVoronoiCell.
  */
 NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
-  NewVoronoiCell cell(index);
+  NewVoronoiCell cell(index, _box, _real_generator_positions,
+                      _integer_generator_positions, _integer_voronoi_box,
+                      _real_rescaled_positions, _real_rescaled_box, true);
 
   auto it = _point_locations.get_neighbours(index);
   auto ngbs = it.get_neighbours();
@@ -110,7 +112,7 @@ NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
     }
   }
   while (it.increase_range() &&
-         it.get_max_radius2() < 4. * cell.get_max_radius_squared()) {
+         it.get_max_radius2() < cell.get_max_radius_squared()) {
     ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;

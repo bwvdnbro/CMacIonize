@@ -135,7 +135,14 @@ private:
 
 public:
   NewVoronoiCell();
-  NewVoronoiCell(unsigned int generator);
+  NewVoronoiCell(
+      unsigned int generator, const Box<> &box,
+      const std::vector< CoordinateVector<> > &positions,
+      const std::vector< CoordinateVector< unsigned long > > &long_positions,
+      const VoronoiBox< unsigned long > &long_voronoi_box,
+      const std::vector< CoordinateVector<> > &rescaled_positions,
+      const VoronoiBox< double > &rescaled_box,
+      bool reflective_boundaries = false);
 
   /// const element getters
   double get_volume() const;
