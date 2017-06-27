@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
       timingtools_stop_timing();
     }
     timingtools_end_scaling_block("old Voronoi grid",
-                                  "timeVoronoiGrids_scaling_regular_new.txt");
+                                  "timeVoronoiGrids_scaling_regular_old.txt");
 
     /// new algorithm
     timingtools_start_scaling_block("new Voronoi grid") {
