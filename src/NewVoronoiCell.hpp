@@ -69,6 +69,10 @@ private:
    *  arbitrary other generator that could still change the cell structure. */
   double _max_r2;
 
+  /*! @brief Tetrahedron that has the largest maximum distance squared. We only
+   *  need to update _max_r2 if this tetrahedron changes. */
+  unsigned int _max_tetrahedron;
+
   /*! @brief Volume of the cell (in m^3). */
   double _volume;
 

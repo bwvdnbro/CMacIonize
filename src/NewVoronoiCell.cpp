@@ -94,7 +94,8 @@
 /**
  * @brief Empty constructor.
  */
-NewVoronoiCell::NewVoronoiCell() {}
+NewVoronoiCell::NewVoronoiCell()
+    : _tetrahedra_size(0), _max_r2(0.), _max_tetrahedron(0), _volume(0.) {}
 
 /**
  * @brief Constructor.
@@ -139,6 +140,7 @@ NewVoronoiCell::NewVoronoiCell(
                                       NEWVORONOICELL_MAX_INDEX, 3, 3, 3, 4);
 
   _max_r2 = DBL_MAX;
+  _max_tetrahedron = 0;
 
   VoronoiBox< double > voronoi_box(box);
   if (reflective_boundaries) {
@@ -309,9 +311,14 @@ void NewVoronoiCell::intersect(
     cmac_error("Unknown case!");
   }
 
+  // check if the tetrahedron with the largest circumradius was affected
+  // if so, we need to update the largest circumradius
+  // insertion of new points will never cause the circumradius to grow
+  bool update_max_r2 = queue[_max_tetrahedron];
   // recursively check if the newly created tetrahedra satisfy the empty
   // circumsphere criterion that marks them as Delaunay tetrahedra
   while (next_check < queue_size) {
+    update_max_r2 |= queue[_max_tetrahedron];
     if (queue[next_check]) {
       queue[next_check] = false;
       next_check = check_tetrahedron(
@@ -322,33 +329,40 @@ void NewVoronoiCell::intersect(
     }
   }
 
-  // update _max_r2
-  _max_r2 = 0.;
-  for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
-    if (_tetrahedra[i].is_active()) {
-      if (_tetrahedra[i].get_vertex(0) == 0 ||
-          _tetrahedra[i].get_vertex(1) == 0 ||
-          _tetrahedra[i].get_vertex(2) == 0 ||
-          _tetrahedra[i].get_vertex(3) == 0) {
-        const CoordinateVector<> p0 =
-            get_position(_vertices[_tetrahedra[i].get_vertex(0)],
-                         real_voronoi_box, real_positions);
-        const CoordinateVector<> p1 =
-            get_position(_vertices[_tetrahedra[i].get_vertex(1)],
-                         real_voronoi_box, real_positions);
-        const CoordinateVector<> p2 =
-            get_position(_vertices[_tetrahedra[i].get_vertex(2)],
-                         real_voronoi_box, real_positions);
-        const CoordinateVector<> p3 =
-            get_position(_vertices[_tetrahedra[i].get_vertex(3)],
-                         real_voronoi_box, real_positions);
-        const CoordinateVector<> midpoint =
-            VoronoiTetrahedron::get_midpoint_circumsphere(p0, p1, p2, p3);
-        _max_r2 = std::max(_max_r2, (midpoint - generator_position).norm2());
+  if (update_max_r2) {
+    // update _max_r2
+    _max_r2 = 0.;
+    _max_tetrahedron = 0;
+    for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+      if (_tetrahedra[i].is_active()) {
+        if (_tetrahedra[i].get_vertex(0) == 0 ||
+            _tetrahedra[i].get_vertex(1) == 0 ||
+            _tetrahedra[i].get_vertex(2) == 0 ||
+            _tetrahedra[i].get_vertex(3) == 0) {
+          const CoordinateVector<> p0 =
+              get_position(_vertices[_tetrahedra[i].get_vertex(0)],
+                           real_voronoi_box, real_positions);
+          const CoordinateVector<> p1 =
+              get_position(_vertices[_tetrahedra[i].get_vertex(1)],
+                           real_voronoi_box, real_positions);
+          const CoordinateVector<> p2 =
+              get_position(_vertices[_tetrahedra[i].get_vertex(2)],
+                           real_voronoi_box, real_positions);
+          const CoordinateVector<> p3 =
+              get_position(_vertices[_tetrahedra[i].get_vertex(3)],
+                           real_voronoi_box, real_positions);
+          const CoordinateVector<> midpoint =
+              VoronoiTetrahedron::get_midpoint_circumsphere(p0, p1, p2, p3);
+          const double r2 = (midpoint - generator_position).norm2();
+          if (r2 > _max_r2) {
+            _max_r2 = r2;
+            _max_tetrahedron = i;
+          }
+        }
       }
     }
+    _max_r2 *= 4.;
   }
-  _max_r2 *= 4.;
 }
 
 /**
@@ -384,20 +398,6 @@ void NewVoronoiCell::finalize(
     const VoronoiBox< double > &rescaled_box, bool reflective_boundaries) {
 
   VoronoiBox< double > voronoi_box(box);
-  //  if (reflective_boundaries) {
-  //    intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //    intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //    intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //    intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //    intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //    intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
-  //              long_voronoi_box, long_positions, voronoi_box, positions);
-  //  }
 
   std::vector< CoordinateVector<> > real_positions(_vertices.size());
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
@@ -514,6 +514,10 @@ void NewVoronoiCell::finalize(
                                  _vertices[connection_vertices[i]], vertices));
   }
   _centroid /= _volume;
+
+  // free up unused memory
+  _vertices.clear();
+  _free_tetrahedra.clear();
 }
 
 /**

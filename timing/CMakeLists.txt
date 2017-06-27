@@ -37,6 +37,7 @@ endmacro(add_timing_test)
 set(TIMEVORONOIGRIDS_SOURCES
     timeVoronoiGrids.cpp
 
+    TimingTools.hpp
     ../src/NewVoronoiCell.cpp
     ../src/NewVoronoiGrid.cpp
     ../src/VoronoiCell.cpp
