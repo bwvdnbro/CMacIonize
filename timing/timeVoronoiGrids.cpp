@@ -169,7 +169,8 @@ int main(int argc, char **argv) {
       grid.finalize();
       timingtools_stop_timing();
     }
-    timingtools_end_scaling_block("old Voronoi grid");
+    timingtools_end_scaling_block("old Voronoi grid",
+                                  "timeVoronoiGrids_scaling_random_old.txt");
 
     /// new algorithm
     timingtools_start_scaling_block("new Voronoi grid") {
@@ -179,7 +180,8 @@ int main(int argc, char **argv) {
       grid.construct(-1);
       timingtools_stop_timing();
     }
-    timingtools_end_scaling_block("new Voronoi grid");
+    timingtools_end_scaling_block("new Voronoi grid",
+                                  "timeVoronoiGrids_scaling_random_new.txt");
   }
 
   /// Test 4: scaling test for regular (degenerate) generator positions
@@ -222,7 +224,8 @@ int main(int argc, char **argv) {
       grid.finalize();
       timingtools_stop_timing();
     }
-    timingtools_end_scaling_block("old Voronoi grid");
+    timingtools_end_scaling_block("old Voronoi grid",
+                                  "timeVoronoiGrids_scaling_regular_new.txt");
 
     /// new algorithm
     timingtools_start_scaling_block("new Voronoi grid") {
@@ -232,7 +235,8 @@ int main(int argc, char **argv) {
       grid.construct(-1);
       timingtools_stop_timing();
     }
-    timingtools_end_scaling_block("new Voronoi grid");
+    timingtools_end_scaling_block("new Voronoi grid",
+                                  "timeVoronoiGrids_scaling_regular_new.txt");
   }
 
   return 0;

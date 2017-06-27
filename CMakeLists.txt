@@ -264,6 +264,19 @@ endif(ACTIVATE_OUTPUT_CYCLES)
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 
+# Add the command that creates the CompilerInfo.cpp file
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                          CompilerInfo
+                   COMMAND ${CMAKE_COMMAND}
+                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
+                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
+                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
+                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
+
 # Enter the folder containing the source files and configure the executables.
 add_subdirectory(src)
 

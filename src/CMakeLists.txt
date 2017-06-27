@@ -103,19 +103,6 @@ configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
 
-# Add the command that creates the CompilerInfo.cpp file
-add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-                          CompilerInfo
-                   COMMAND ${CMAKE_COMMAND}
-                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
-                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
-                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
-                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
-                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
-                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
-                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
-
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp

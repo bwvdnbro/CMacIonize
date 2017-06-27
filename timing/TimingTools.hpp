@@ -27,11 +27,13 @@
 #define TIMINGTOOLS_HPP
 
 #include "CommandLineParser.hpp"
-#include "Error.hpp"
+#include "CompilerInfo.hpp"
 #include "Timer.hpp"
+#include "Utilities.hpp"
 #include "WorkEnvironment.hpp"
 
 #include <cmath>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -129,6 +131,9 @@
 /**
  * @brief Start timing all code between this call and the consecutive call to
  * timingtools_stop_timing.
+ *
+ * This only works within a block started with either
+ * timingtools_start_timing_block or timingtools_start_scaling_block.
  */
 #define timingtools_start_timing()                                             \
   Timer timingtools_timer;                                                     \
@@ -169,18 +174,39 @@
  * See timingtools_start_scaling_block for more information.
  *
  * @param name Name of the scaling block.
+ * @param filename Name of the file to write scaling statistics to.
  */
-#define timingtools_end_scaling_block(name)                                    \
+#define timingtools_end_scaling_block(name, filename)                          \
   timingtools_times_array[timingtools_index] /= timingtools_num_sample;        \
   }                                                                            \
   timingtools_print("Finished scaling test for %s:", name);                    \
-  timingtools_print("number of threads\ttotal time\tspeedup");                 \
+  timingtools_print("number of threads\ttotal time (s)\tspeedup");             \
+  std::ofstream timingtools_ofile(filename);                                   \
+  timingtools_ofile << "# File generated on " << Utilities::get_timestamp()    \
+                    << "\n#\n";                                                \
+  timingtools_ofile << "# System information:\n";                              \
+  for (auto timingtools_compiler_iterator = CompilerInfo::begin();             \
+       timingtools_compiler_iterator != CompilerInfo::end();                   \
+       ++timingtools_compiler_iterator) {                                      \
+    timingtools_ofile << "#   " << timingtools_compiler_iterator.get_key()     \
+                      << ": " << timingtools_compiler_iterator.get_value()     \
+                      << "\n";                                                 \
+  }                                                                            \
+  timingtools_ofile << "#\n";                                                  \
+  timingtools_ofile << "# Number of samples used: " << timingtools_num_sample  \
+                    << "\n#\n";                                                \
+  timingtools_ofile << "# File contents:\n";                                   \
+  timingtools_ofile << "# number_of_threads\ttotal_time\tspeedup\n";           \
+  timingtools_ofile << "# dimensionless\t(s)\tdimensionless\n";                \
   for (unsigned char timingtools_index = 0;                                    \
        timingtools_index < timingtools_num_threads; ++timingtools_index) {     \
     const double speedup = timingtools_times_array[0] /                        \
                            timingtools_times_array[timingtools_index];         \
     timingtools_print("%u\t%g\t%g", timingtools_index + 1,                     \
                       timingtools_times_array[timingtools_index], speedup);    \
+    timingtools_ofile << timingtools_index + 1 << "\t"                         \
+                      << timingtools_times_array[timingtools_index] << "\t"    \
+                      << speedup << "\n";                                      \
   }                                                                            \
   }
 

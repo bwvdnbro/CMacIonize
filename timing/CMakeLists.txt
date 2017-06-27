@@ -29,6 +29,7 @@ macro(add_timing_test)
   list(APPEND TIME_SOURCES
        ../src/CommandLineOption.cpp
        ../src/CommandLineParser.cpp
+       ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
        TimingTools.hpp)
   add_executable(${TIME_NAME} ${TIME_SOURCES})
   set_target_properties(${TIME_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
