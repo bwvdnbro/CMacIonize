@@ -62,15 +62,10 @@ int main(int argc, char **argv) {
 
     /// voro++ algorithm
     timingtools_start_scaling_block("old Voronoi grid") {
-      VoronoiGrid grid(box, false, numpositions);
-
-      for (unsigned int i = 0; i < positions.size(); ++i) {
-        grid.add_cell(positions[i]);
-      }
+      VoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
       grid.compute_grid(-1);
-      grid.finalize();
       timingtools_stop_timing();
     }
     timingtools_end_scaling_block("old Voronoi grid",
@@ -117,15 +112,10 @@ int main(int argc, char **argv) {
 
     /// voro++ algorithm
     timingtools_start_scaling_block("old Voronoi grid") {
-      VoronoiGrid grid(box, false, numpositions_3D);
-
-      for (unsigned int i = 0; i < positions.size(); ++i) {
-        grid.add_cell(positions[i]);
-      }
+      VoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
       grid.compute_grid(-1);
-      grid.finalize();
       timingtools_stop_timing();
     }
     timingtools_end_scaling_block("old Voronoi grid",

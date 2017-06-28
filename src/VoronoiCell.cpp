@@ -1929,17 +1929,24 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
 void VoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
   stream << _generator_position.x() << "\t" << _generator_position.y() << "\t"
          << _generator_position.z() << "\n\n";
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    for (unsigned int j = 0; j < _edges[i].size(); ++j) {
-      int edge = get_edge_endpoint(i, j);
-      CoordinateVector<> a = _vertices[i] + _generator_position;
-      CoordinateVector<> b = _vertices[edge] + _generator_position;
+  for (unsigned int i = 0; i < _faces.size(); ++i) {
+    const std::vector< CoordinateVector<> > &vertices =
+        _faces[i].get_vertices();
+    const unsigned int vsize = vertices.size();
+    for (unsigned int j = 0; j < vsize; ++j) {
+      const unsigned int jnext = (j + 1) % vsize;
+      const CoordinateVector<> &a = vertices[j];
+      const CoordinateVector<> &b = vertices[jnext];
       stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
       stream << b.x() << "\t" << b.y() << "\t" << b.z() << "\n\n";
     }
   }
 
   if (show_structure) {
+    if (_vertices.size() == 0) {
+      cmac_error("Printing the cell structure only works before "
+                 "VoronoiCell::finalize was called!");
+    }
     stream << "vertices:\n";
     for (unsigned int i = 0; i < _vertices.size(); ++i) {
       CoordinateVector<> p = _vertices[i] + _generator_position;

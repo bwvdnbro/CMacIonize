@@ -71,6 +71,8 @@ private:
    *  plane. */
   double _epsilon;
 
+  unsigned int add_cell(CoordinateVector<> generator_position);
+
   void compute_cell(unsigned int index);
 
   /**
@@ -182,29 +184,34 @@ private:
   };
 
 public:
-  VoronoiGrid(Box<> box, CoordinateVector< bool > periodic =
-                             CoordinateVector< bool >(false),
-              unsigned int numcell = 0);
+  /// constructor and destructor
+
+  VoronoiGrid(const std::vector< CoordinateVector<> > &positions,
+              const Box<> box, const CoordinateVector< bool > periodic =
+                                   CoordinateVector< bool >(false));
 
   ~VoronoiGrid();
 
-  void reset(int worksize = -1);
+  /// grid computation methods
 
-  unsigned int add_cell(CoordinateVector<> generator_position);
+  void reset(int worksize = -1);
   void compute_grid(int worksize = -1);
-  void finalize();
+  void reset_generator(unsigned int index, const CoordinateVector<> &pos);
+
+  /// cell/grid property access
 
   double get_volume(unsigned int index) const;
   CoordinateVector<> get_centroid(unsigned int index) const;
-  CoordinateVector<> get_generator(unsigned int index) const;
-  void set_generator(unsigned int index, const CoordinateVector<> &pos);
-  void move_generator(unsigned int index, const CoordinateVector<> &dx);
   CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
   std::vector< VoronoiFace > get_faces(unsigned int index) const;
   std::vector< Face > get_geometrical_faces(unsigned int index) const;
-  unsigned int get_index(const CoordinateVector<> &position) const;
 
+  /// grid navigation
+
+  unsigned int get_index(const CoordinateVector<> &position) const;
   bool is_inside(CoordinateVector<> position) const;
+
+  /// printing
 
   void print_cell(unsigned int index, std::ostream &stream);
   void print_grid(std::ostream &stream);

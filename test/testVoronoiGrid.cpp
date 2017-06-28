@@ -1555,21 +1555,20 @@ int main(int argc, char **argv) {
 
   /// test Voronoi grid
   {
-    unsigned int numcell = 1000;
-    VoronoiGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
-                     false, numcell);
+    const unsigned int numcell = 1000;
+    std::vector< CoordinateVector<> > positions(numcell);
     for (unsigned int i = 0; i < numcell; ++i) {
-      unsigned int new_index = grid.add_cell(Utilities::random_position());
-      assert_condition(new_index == i);
+      positions[i] = Utilities::random_position();
     }
+    VoronoiGrid grid(positions,
+                     Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
+                     false);
     grid.compute_grid();
 
-    // print the grid while we have the grid connections
     std::ofstream file("test_voronoi_grid.txt");
     grid.print_grid(file);
     file.close();
 
-    grid.finalize();
     const double tolerance = 1.e-11;
     double total_volume = 0.;
     for (unsigned int i = 0; i < numcell; ++i) {
@@ -1614,28 +1613,26 @@ int main(int argc, char **argv) {
     const double box_anchor = 0.;
     const double box_side = 2.e15;
     const double box_volume = box_side * box_side * box_side;
-    unsigned int numcell = 0;
-    VoronoiGrid grid(
-        Box<>(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
-        false, 1000);
-    std::vector< CoordinateVector<> > positions(1000);
-    for (unsigned int ix = 0; ix < 10; ++ix) {
-      for (unsigned int iy = 0; iy < 10; ++iy) {
-        for (unsigned int iz = 0; iz < 10; ++iz) {
-          positions[ix * 100 + iy * 10 + iz] =
-              CoordinateVector<>((ix + 0.5) * box_side * 0.1 + box_anchor,
-                                 (iy + 0.5) * box_side * 0.1 + box_anchor,
-                                 (iz + 0.5) * box_side * 0.1 + box_anchor);
+    const unsigned int numcell_1D = 10;
+    const unsigned int numcell_2D = numcell_1D * numcell_1D;
+    const unsigned int numcell_3D = numcell_1D * numcell_2D;
+    const double dx = box_side / numcell_1D;
+    std::vector< CoordinateVector<> > positions(numcell_3D);
+    for (unsigned int ix = 0; ix < numcell_1D; ++ix) {
+      for (unsigned int iy = 0; iy < numcell_1D; ++iy) {
+        for (unsigned int iz = 0; iz < numcell_1D; ++iz) {
+          positions[ix * numcell_2D + iy * numcell_1D + iz] =
+              CoordinateVector<>((ix + 0.5) * dx + box_anchor,
+                                 (iy + 0.5) * dx + box_anchor,
+                                 (iz + 0.5) * dx + box_anchor);
         }
       }
     }
     // add a random (small) displacement to one of the generators
     positions[42] += 1.e-5 * box_side * Utilities::random_position();
-    for (unsigned int i = 0; i < positions.size(); ++i) {
-      unsigned int new_index = grid.add_cell(positions[i]);
-      assert_condition(new_index == numcell);
-      ++numcell;
-    }
+    VoronoiGrid grid(positions, Box<>(CoordinateVector<>(box_anchor),
+                                      CoordinateVector<>(box_side)),
+                     false);
     grid.compute_grid();
 
     // print the grid while we have the grid connections
@@ -1643,10 +1640,9 @@ int main(int argc, char **argv) {
     grid.print_grid(file);
     file.close();
 
-    grid.finalize();
     const double tolerance = 1.e-10;
     double total_volume = 0.;
-    for (unsigned int i = 0; i < numcell; ++i) {
+    for (unsigned int i = 0; i < numcell_3D; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
       assert_condition(cell_volume < box_volume);

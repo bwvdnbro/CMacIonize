@@ -29,11 +29,18 @@
 #include "VoronoiCell.hpp"
 #include "WorkDistributor.hpp"
 
-//#define VORONOIGRID_OUTPUT_GENERATORS
+/*! @brief If defined, outputs the grid generators to a file with the given
+ *  name. */
+//#define VORONOIGRID_OUTPUT_GENERATORS "voronoigrid_generators.txt"
 
+/*! @brief If defined, this internally remaps all coordinates to the interval
+ *  [0., 1.]. */
 #define VORONOIGRID_REMAP
 
-//#define VORONOIGRID_CHECK_TOTAL_VOLUME
+/*! @brief If not commented out, this checks if the total volume of all the
+ *  cells in the grid matches the total volume of the simulation box (within a
+ *  tolerance equal to the value of this define). */
+//#define VORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
 
 #ifdef VORONOIGRID_OUTPUT_GENERATORS
 #include <fstream>
@@ -41,42 +48,100 @@
 #endif
 
 /**
+ * @brief Macro that prints out the grid generators to a file.
+ */
+#ifdef VORONOIGRID_OUTPUT_GENERATORS
+#define voronoigrid_output_generators()                                        \
+  std::ofstream ofile(VORONOIGRID_OUTPUT_GENERATORS);                          \
+  ofile << std::setprecision(20);                                              \
+  for (unsigned int i = 0; i < _generator_positions.size(); ++i) {             \
+    ofile << _generator_positions[i].x() << "\t"                               \
+          << _generator_positions[i].y() << "\t"                               \
+          << _generator_positions[i].z() << "\n";                              \
+  }                                                                            \
+  ofile.close();
+#else
+#define voronoigrid_output_generators()
+#endif
+
+/**
+ * @brief Set the size of the internal box, which will determine if the
+ * generator positions are internally remapped or not.
+ */
+#ifdef VORONOIGRID_REMAP
+#define voronoigrid_remap()                                                    \
+  double length_factor = 0.;                                                   \
+  for (unsigned int i = 0; i < 3; ++i) {                                       \
+    length_factor = std::max(length_factor, _box.get_sides()[i]);              \
+  }                                                                            \
+  _epsilon = VORONOI_TOLERANCE;                                                \
+  _internal_box = Box<>(CoordinateVector<>(0.), _box.get_sides());             \
+  _internal_box.get_sides() /= length_factor;                                  \
+  _area_factor = length_factor * length_factor;                                \
+  _volume_factor = length_factor * _area_factor;
+#else
+#define voronoigrid_remap()
+#endif
+
+/**
+ * @brief Check if the total volume of all cells matches the volume of the
+ * simulation box.
+ */
+#ifdef VORONOIGRID_CHECK_TOTAL_VOLUME
+#define voronoigrid_check_volume()                                             \
+  double total_volume = 0.;                                                    \
+  for (unsigned int i = 0; i < _cells.size(); ++i) {                           \
+    total_volume += _cells[i]->get_volume();                                   \
+  }                                                                            \
+  cmac_assert_message(std::abs(total_volume - _internal_box.get_volume()) <    \
+                          VORONOIGRID_CHECK_TOTAL_VOLUME *                     \
+                              (total_volume + _internal_box.get_volume()),     \
+                      "%g =/= %g  -- relative difference: %g", total_volume,   \
+                      _internal_box.get_volume(),                              \
+                      std::abs(total_volume - _internal_box.get_volume()) /    \
+                          (total_volume + _internal_box.get_volume()));
+#else
+#define voronoigrid_check_volume()
+#endif
+
+/**
  * @brief Constructor.
  *
- * @param box Bounding box containing the entire grid.
- * @param periodic Periodicity flags for the bounding box.
- * @param numcell Number of cells that will be added to the grid (or zero if
- * unknown).
+ * @param positions Generator positions (in m).
+ * @param box Simulation box (in m).
+ * @param periodic Periodicity flags for the walls of the box.
  */
-VoronoiGrid::VoronoiGrid(Box<> box, CoordinateVector< bool > periodic,
-                         unsigned int numcell)
+VoronoiGrid::VoronoiGrid(const std::vector< CoordinateVector<> > &positions,
+                         const Box<> box,
+                         const CoordinateVector< bool > periodic)
     : _box(box), _periodic(periodic), _pointlocations(nullptr),
       _epsilon(VORONOI_TOLERANCE) {
 
+  if (_periodic.x() || _periodic.y() || _periodic.z()) {
+    cmac_error("Periodic Voronoi grids are not (yet) supported!");
+  }
+
+  const unsigned int numcell = positions.size();
+
   _cells.reserve(numcell);
 
-  double length_factor = 0.;
   for (unsigned int i = 0; i < 3; ++i) {
     if (_periodic[i]) {
       _box.get_anchor()[i] -= 0.5 * _box.get_sides()[i];
       _box.get_sides()[i] *= 2.;
     }
-    length_factor = std::max(length_factor, _box.get_sides()[i]);
   }
 
-#ifndef VORONOIGRID_REMAP
   _epsilon *= _box.get_sides().norm2();
   _internal_box = _box;
   _area_factor = 1.;
   _volume_factor = 1.;
-#else
-  // internally, we always use a box of 0. --> 1. (or smaller)
-  _internal_box = Box<>(CoordinateVector<>(0.), _box.get_sides());
-  _internal_box.get_sides() /= length_factor;
 
-  _area_factor = length_factor * length_factor;
-  _volume_factor = length_factor * _area_factor;
-#endif
+  voronoigrid_remap();
+
+  for (unsigned int i = 0; i < numcell; ++i) {
+    add_cell(positions[i]);
+  }
 }
 
 /**
@@ -156,6 +221,8 @@ void VoronoiGrid::compute_cell(unsigned int index) {
           _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
   }
+
+  _cells[index]->finalize();
 }
 
 /**
@@ -164,15 +231,7 @@ void VoronoiGrid::compute_cell(unsigned int index) {
  * @param worksize Number of parallel threads to use.
  */
 void VoronoiGrid::compute_grid(int worksize) {
-#ifdef VORONOIGRID_OUTPUT_GENERATORS
-  std::ofstream ofile("voronoigrid_generators.txt");
-  ofile << std::setprecision(20);
-  for (unsigned int i = 0; i < _generator_positions.size(); ++i) {
-    ofile << _generator_positions[i].x() << "\t" << _generator_positions[i].y()
-          << "\t" << _generator_positions[i].z() << "\n";
-  }
-  ofile.close();
-#endif
+  voronoigrid_output_generators();
 
   _pointlocations = new PointLocations(_generator_positions, 10, _internal_box);
 
@@ -181,29 +240,8 @@ void VoronoiGrid::compute_grid(int worksize) {
       workers(worksize);
   VoronoiGridConstructionJobMarket jobs(*this, 100);
   workers.do_in_parallel(jobs);
-}
 
-/**
- * @brief Finalize the cells of the grid.
- *
- * After this routine has been called, the actual grid information is lost, but
- * every cell has a volume, centroid and faces based on the grid.
- */
-void VoronoiGrid::finalize() {
-  double totvol = 0.;
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
-    _cells[i]->finalize();
-    totvol += _cells[i]->get_volume();
-  }
-
-#ifdef VORONOIGRID_CHECK_TOTAL_VOLUME
-  cmac_assert_message(std::abs(totvol - _internal_box.get_volume()) <
-                          1.e-9 * (totvol + _internal_box.get_volume()),
-                      "%g =/= %g  -- relative difference: %g", totvol,
-                      _internal_box.get_volume(),
-                      std::abs(totvol - _internal_box.get_volume()) /
-                          (totvol + _internal_box.get_volume()));
-#endif
+  voronoigrid_check_volume();
 }
 
 /**
@@ -235,32 +273,14 @@ CoordinateVector<> VoronoiGrid::get_centroid(unsigned int index) const {
 }
 
 /**
- * @brief Get the position of the generator of the cell with the given index.
- *
- * @param index Index of a cell in the grid.
- * @return Position of the generator of that cell (in m).
- */
-CoordinateVector<> VoronoiGrid::get_generator(unsigned int index) const {
-  //  return _generator_positions[index];
-  CoordinateVector<> generator = _generator_positions[index];
-  // unit conversion
-  for (unsigned int i = 0; i < 3; ++i) {
-    generator[i] = _box.get_anchor()[i] +
-                   (generator[i] - _internal_box.get_anchor()[i]) *
-                       _box.get_sides()[i] / _internal_box.get_sides()[i];
-  }
-  return generator;
-}
-
-/**
  * @brief Set the position of the generator of the cell with the given index to
  * the given new value.
  *
  * @param index Index of a cell in the grid.
  * @param pos New position for the generator of that cell (in m).
  */
-void VoronoiGrid::set_generator(unsigned int index,
-                                const CoordinateVector<> &pos) {
+void VoronoiGrid::reset_generator(unsigned int index,
+                                  const CoordinateVector<> &pos) {
   CoordinateVector<> generator(pos);
   // unit conversion
   for (unsigned int i = 0; i < 3; ++i) {
@@ -269,22 +289,6 @@ void VoronoiGrid::set_generator(unsigned int index,
                        _internal_box.get_sides()[i] / _box.get_sides()[i];
   }
   _generator_positions[index] = generator;
-}
-
-/**
- * @brief Get the position of the generator of the cell with the given index.
- *
- * @param index Index of a cell in the grid.
- * @param dx Displacement vector to apply to the generator position (in m).
- */
-void VoronoiGrid::move_generator(unsigned int index,
-                                 const CoordinateVector<> &dx) {
-  CoordinateVector<> dpos(dx);
-  // unit conversion
-  for (unsigned int i = 0; i < 3; ++i) {
-    dpos[i] = dpos[i] * _internal_box.get_sides()[i] / _box.get_sides()[i];
-  }
-  _generator_positions[index] += dpos;
 }
 
 /**
