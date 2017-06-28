@@ -28,6 +28,7 @@
 #ifndef NEWVORONOIGRID_HPP
 #define NEWVORONOIGRID_HPP
 
+#include "Face.hpp"
 #include "Lock.hpp"
 #include "NewVoronoiCell.hpp"
 #include "PointLocations.hpp"
@@ -48,7 +49,7 @@ private:
   const std::vector< CoordinateVector<> > &_real_generator_positions;
 
   /*! @brief Real VoronoiBox (in m). */
-  const VoronoiBox< double > _real_voronoi_box;
+  const NewVoronoiBox< double > _real_voronoi_box;
 
   /*! @brief Real rescaled representation of the mesh generating positions (in
    *  the range [1,2[). */
@@ -56,13 +57,13 @@ private:
 
   /*! @brief Real rescaled representation of the VoronoiBox (in the range
    *  [1,2[). */
-  VoronoiBox< double > _real_rescaled_box;
+  NewVoronoiBox< double > _real_rescaled_box;
 
   /*! @brief Integer representation of the mesh generating positions. */
   std::vector< CoordinateVector< unsigned long > > _integer_generator_positions;
 
   /*! @brief Integer VoronoiBox. */
-  VoronoiBox< unsigned long > _integer_voronoi_box;
+  NewVoronoiBox< unsigned long > _integer_voronoi_box;
 
   /*! @brief Voronoi cells. */
   std::vector< NewVoronoiCell > _cells;
@@ -183,10 +184,29 @@ private:
   };
 
 public:
-  NewVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
-                 const Box<> box);
+  /// constructor and destructor
 
-  void construct(int worksize = -1);
+  NewVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
+                 const Box<> box, const CoordinateVector< bool > periodic =
+                                      CoordinateVector< bool >(false));
+  ~NewVoronoiGrid();
+
+  /// grid computation methods
+
+  void compute_grid(int worksize = -1);
+
+  /// cell/grid property access
+
+  double get_volume(unsigned int index) const;
+  CoordinateVector<> get_centroid(unsigned int index) const;
+  CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
+  std::vector< VoronoiFace > get_faces(unsigned int index) const;
+  std::vector< Face > get_geometrical_faces(unsigned int index) const;
+
+  /// grid navigation
+
+  unsigned int get_index(const CoordinateVector<> &position) const;
+  bool is_inside(CoordinateVector<> position) const;
 };
 
 #endif // NEWVORONOIGRID_HPP

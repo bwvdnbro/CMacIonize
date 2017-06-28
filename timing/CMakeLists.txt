@@ -58,8 +58,8 @@ set(TIMEVORONOIGRIDS_SOURCES
 
     ../src/NewVoronoiCell.cpp
     ../src/NewVoronoiGrid.cpp
-    ../src/VoronoiCell.cpp
-    ../src/VoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
 )
 add_timing_test(NAME timeVoronoiGrids
                 SOURCES ${TIMEVORONOIGRIDS_SOURCES})

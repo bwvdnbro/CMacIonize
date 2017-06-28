@@ -136,12 +136,19 @@ NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
  *
  * @param positions Mesh generating positions (in m).
  * @param box Simulation box (in m).
+ * @param periodic Periodicity flags for the simulation box.
  */
 NewVoronoiGrid::NewVoronoiGrid(
-    const std::vector< CoordinateVector<> > &positions, const Box<> box)
+    const std::vector< CoordinateVector<> > &positions, const Box<> box,
+    const CoordinateVector< bool > periodic)
     : _box(box), _real_generator_positions(positions), _real_voronoi_box(box),
       _point_locations(_real_generator_positions, NEWVORONOIGRID_NUM_BUCKET,
                        _box) {
+
+  if (periodic.x() || periodic.y() || periodic.z()) {
+    cmac_error(
+        "NewVoronoiGrids with periodic boundaries are not (yet) supported!");
+  }
 
   CoordinateVector<> min_anchor, max_anchor;
   min_anchor =
@@ -182,7 +189,7 @@ NewVoronoiGrid::NewVoronoiGrid(
       (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
           max_anchor.z();
 
-  _real_rescaled_box = VoronoiBox< double >(
+  _real_rescaled_box = NewVoronoiBox< double >(
       Box<>(CoordinateVector<>(box_bottom_anchor_x, box_bottom_anchor_y,
                                box_bottom_anchor_z),
             CoordinateVector<>(box_top_anchor_x - box_bottom_anchor_x,
@@ -202,7 +209,7 @@ NewVoronoiGrid::NewVoronoiGrid(
   newvoronoigrid_print_integer_coordinate(integer_box.get_anchor(),
                                           "Box anchor");
   newvoronoigrid_print_integer_coordinate(integer_box.get_sides(), "Box sides");
-  _integer_voronoi_box = VoronoiBox< unsigned long >(integer_box);
+  _integer_voronoi_box = NewVoronoiBox< unsigned long >(integer_box);
   CoordinateVector< unsigned long > exp_min(0);
   CoordinateVector< unsigned long > exp_max(0x000fffffffffffff);
   CoordinateVector< unsigned long > corner0 =
@@ -246,12 +253,17 @@ NewVoronoiGrid::NewVoronoiGrid(
 }
 
 /**
+ * @brief Virtual destructor.
+ */
+NewVoronoiGrid::~NewVoronoiGrid() {}
+
+/**
  * @brief Construct the Voronoi grid.
  *
  * @param worksize Number of shared memory threads to use during the grid
  * construction.
  */
-void NewVoronoiGrid::construct(int worksize) {
+void NewVoronoiGrid::compute_grid(int worksize) {
 
   const unsigned int psize = _real_generator_positions.size();
   _cells.resize(psize);
@@ -263,4 +275,104 @@ void NewVoronoiGrid::construct(int worksize) {
   workers.do_in_parallel(jobs);
 
   newvoronoigrid_check_volume();
+}
+
+/**
+ * @brief Get the volume of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Volume of the cell (in m^3).
+ */
+double NewVoronoiGrid::get_volume(unsigned int index) const {
+  return _cells[index].get_volume();
+}
+
+/**
+ * @brief Get the centroid of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Centroid of that cell (in m).
+ */
+CoordinateVector<> NewVoronoiGrid::get_centroid(unsigned int index) const {
+  return _cells[index].get_centroid();
+}
+
+/**
+ * @brief Get the normal of the wall with the given index.
+ *
+ * @param wallindex Index of a wall of the box.
+ * @return Normal vector to the given wall.
+ */
+CoordinateVector<>
+NewVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
+  cmac_assert(wallindex >= NEWVORONOICELL_MAX_INDEX);
+
+  switch (wallindex) {
+  case NEWVORONOICELL_BOX_LEFT:
+    return CoordinateVector<>(-1., 0., 0.);
+  case NEWVORONOICELL_BOX_RIGHT:
+    return CoordinateVector<>(1., 0., 0.);
+  case NEWVORONOICELL_BOX_FRONT:
+    return CoordinateVector<>(0., -1., 0.);
+  case NEWVORONOICELL_BOX_BACK:
+    return CoordinateVector<>(0., 1., 0.);
+  case NEWVORONOICELL_BOX_BOTTOM:
+    return CoordinateVector<>(0., 0., -1.);
+  case NEWVORONOICELL_BOX_TOP:
+    return CoordinateVector<>(0., 0., 1.);
+  }
+
+  cmac_error("Not a valid wall index: %u!", wallindex);
+  return CoordinateVector<>();
+}
+
+/**
+ * @brief Get the faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return std::vector containing, for each face, its surface area (in m^2), its
+ * midpoint (in m), and the index of the neighbouring cell that generated the
+ * face.
+ */
+std::vector< VoronoiFace > NewVoronoiGrid::get_faces(unsigned int index) const {
+  return _cells[index].get_faces();
+}
+
+/**
+ * @brief Get the geometrical faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Faces of that cell.
+ */
+std::vector< Face >
+NewVoronoiGrid::get_geometrical_faces(unsigned int index) const {
+  const std::vector< VoronoiFace > faces = _cells[index].get_faces();
+  std::vector< Face > geometrical_faces;
+  for (unsigned int i = 0; i < faces.size(); ++i) {
+    const CoordinateVector<> midpoint = faces[i].get_midpoint();
+    const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    geometrical_faces.push_back(Face(midpoint, vertices));
+  }
+  return geometrical_faces;
+}
+
+/**
+ * @brief Get the index of the Voronoi cell that contains the given position.
+ *
+ * @param position Arbitrary position (in m).
+ * @return Index of the cell that contains that position.
+ */
+unsigned int
+NewVoronoiGrid::get_index(const CoordinateVector<> &position) const {
+  return _point_locations.get_closest_neighbour(position);
+}
+
+/**
+ * @brief Check if the given position is inside the simulation box.
+ *
+ * @param position Arbitrary position (in m).
+ * @return True if that position is inside the simulation box, false otherwise.
+ */
+bool NewVoronoiGrid::is_inside(CoordinateVector<> position) const {
+  return _box.inside(position);
 }

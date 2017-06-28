@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiVariables.hpp
+ * @file NewVoronoiVariables.hpp
  *
  * @brief Global defines used by the NewVoronoiGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOIVARIABLES_HPP
-#define VORONOIVARIABLES_HPP
+#ifndef NEWVORONOIVARIABLES_HPP
+#define NEWVORONOIVARIABLES_HPP
 
 /*! @brief Some neighbour indices are reserved for special neighbours: the
  *  boundaries of the simulation box. To minimize the risk of collisions, these
@@ -71,4 +71,4 @@
  *  structure. */
 #define NEWVORONOIGRID_NUM_BUCKET 1
 
-#endif // VORONOIVARIABLES_HPP
+#endif // NEWVORONOIVARIABLES_HPP

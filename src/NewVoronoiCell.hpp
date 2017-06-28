@@ -30,10 +30,10 @@
 #include "Box.hpp"
 #include "Configuration.hpp"
 #include "Error.hpp"
-#include "VoronoiBox.hpp"
+#include "NewVoronoiBox.hpp"
+#include "NewVoronoiTetrahedron.hpp"
+#include "NewVoronoiVariables.hpp"
 #include "VoronoiFace.hpp"
-#include "VoronoiTetrahedron.hpp"
-#include "VoronoiVariables.hpp"
 
 #ifdef HAVE_MULTIPRECISION
 #include "ExactGeometricTests.hpp"
@@ -57,7 +57,7 @@ private:
   std::vector< unsigned int > _vertices;
 
   /*! @brief Tetrahedra connections. */
-  VoronoiTetrahedron _tetrahedra[NEWVORONOICELL_TETRAHEDRA_SIZE];
+  NewVoronoiTetrahedron _tetrahedra[NEWVORONOICELL_TETRAHEDRA_SIZE];
 
   /*! @brief Size of the tetrahedra array. */
   unsigned int _tetrahedra_size;
@@ -143,9 +143,9 @@ public:
       unsigned int generator, const Box<> &box,
       const std::vector< CoordinateVector<> > &positions,
       const std::vector< CoordinateVector< unsigned long > > &long_positions,
-      const VoronoiBox< unsigned long > &long_voronoi_box,
+      const NewVoronoiBox< unsigned long > &long_voronoi_box,
       const std::vector< CoordinateVector<> > &rescaled_positions,
-      const VoronoiBox< double > &rescaled_box,
+      const NewVoronoiBox< double > &rescaled_box,
       bool reflective_boundaries = false);
 
   /// const element getters
@@ -155,30 +155,30 @@ public:
 
   /// cell specific geometric functions
   void intersect(
-      unsigned int ngb, const VoronoiBox< double > &rescaled_box,
+      unsigned int ngb, const NewVoronoiBox< double > &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions,
-      const VoronoiBox< unsigned long > &integer_voronoi_box,
+      const NewVoronoiBox< unsigned long > &integer_voronoi_box,
       const std::vector< CoordinateVector< unsigned long > > &integer_positions,
-      const VoronoiBox< double > &real_voronoi_box,
+      const NewVoronoiBox< double > &real_voronoi_box,
       const std::vector< CoordinateVector<> > &real_positions);
   double get_max_radius_squared() const;
   void finalize(
       const Box<> &box, const std::vector< CoordinateVector<> > &positions,
       const std::vector< CoordinateVector< unsigned long > > &long_positions,
-      const VoronoiBox< unsigned long > &long_voronoi_box,
+      const NewVoronoiBox< unsigned long > &long_voronoi_box,
       const std::vector< CoordinateVector<> > &rescaled_positions,
-      const VoronoiBox< double > &rescaled_box,
+      const NewVoronoiBox< double > &rescaled_box,
       bool reflective_boundaries = false);
   void check_empty_circumsphere(
-      const VoronoiBox< unsigned long > &box,
+      const NewVoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions) const;
 
   /// helper functions (should be private, but we make them public to expose
   /// them to the unit tests)
   unsigned char find_tetrahedron(
-      unsigned int point_index, const VoronoiBox< unsigned long > &box,
+      unsigned int point_index, const NewVoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
-      const VoronoiBox< double > &rescaled_box,
+      const NewVoronoiBox< double > &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions,
       unsigned int *indices) const;
 
@@ -200,9 +200,9 @@ public:
 
   unsigned int check_tetrahedron(
       unsigned int tetrahedron, unsigned int new_vertex,
-      const VoronoiBox< unsigned long > &box,
+      const NewVoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
-      const VoronoiBox< double > &rescaled_box,
+      const NewVoronoiBox< double > &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions, bool queue[],
       unsigned int &queue_size);
 
@@ -218,7 +218,7 @@ public:
    */
   template < typename _datatype_ >
   inline CoordinateVector< _datatype_ > get_position(
-      unsigned int index, const VoronoiBox< _datatype_ > &box,
+      unsigned int index, const NewVoronoiBox< _datatype_ > &box,
       const std::vector< CoordinateVector< _datatype_ > > &positions) const {
     if (index < NEWVORONOICELL_MAX_INDEX) {
       cmac_assert(index < positions.size());
@@ -244,11 +244,11 @@ public:
    * @return True if the tetrahedron is positively oriented.
    */
   inline bool has_positive_orientation(
-      const VoronoiTetrahedron &tetrahedron,
+      const NewVoronoiTetrahedron &tetrahedron,
       const std::vector< unsigned int > &vertices,
-      const VoronoiBox< unsigned long > &box,
+      const NewVoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions,
-      const VoronoiBox< double > &rescaled_box,
+      const NewVoronoiBox< double > &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions) const {
 
     const unsigned int v[4] = {vertices[tetrahedron.get_vertex(0)],
@@ -278,7 +278,7 @@ public:
    */
   template < typename _datatype_ >
   inline void print_tetrahedra(
-      std::ostream &stream, const VoronoiBox< _datatype_ > &box,
+      std::ostream &stream, const NewVoronoiBox< _datatype_ > &box,
       const std::vector< CoordinateVector< _datatype_ > > &positions) {
     for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
       if (_tetrahedra[i].get_vertex(0) < NEWVORONOICELL_MAX_INDEX) {

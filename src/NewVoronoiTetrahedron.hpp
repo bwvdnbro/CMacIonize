@@ -17,24 +17,24 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiTetrahedron.hpp
+ * @file NewVoronoiTetrahedron.hpp
  *
  * @brief Delaunay tetrahedron used in the NewVoronoiCell incremental
  * construction algorithm.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOITETRAHEDRON_HPP
-#define VORONOITETRAHEDRON_HPP
+#ifndef NEWVORONOITETRAHEDRON_HPP
+#define NEWVORONOITETRAHEDRON_HPP
 
 #include "CoordinateVector.hpp"
-#include "VoronoiVariables.hpp"
+#include "NewVoronoiVariables.hpp"
 
 /**
  * @brief Delaunay tetrahedron used in the NewVoronoiCell incremental
  * construction algorithm.
  */
-class VoronoiTetrahedron {
+class NewVoronoiTetrahedron {
 private:
   /*! @brief Vertex indices. */
   unsigned int _v[4];
@@ -51,7 +51,7 @@ public:
    *
    * Does absolutely nothing, as we don't want to waste any time here.
    */
-  inline VoronoiTetrahedron() {}
+  inline NewVoronoiTetrahedron() {}
 
   /**
    * @brief Constructor.
@@ -81,16 +81,16 @@ public:
    * @param ngb3_index Index of this tetrahedron in the neighbour list of the
    * fourth neighbour.
    */
-  inline VoronoiTetrahedron(unsigned int v0, unsigned int v1, unsigned int v2,
-                            unsigned int v3,
-                            unsigned int ngb0 = NEWVORONOICELL_MAX_INDEX,
-                            unsigned int ngb1 = NEWVORONOICELL_MAX_INDEX,
-                            unsigned int ngb2 = NEWVORONOICELL_MAX_INDEX,
-                            unsigned int ngb3 = NEWVORONOICELL_MAX_INDEX,
-                            unsigned int ngb0_index = 4,
-                            unsigned int ngb1_index = 4,
-                            unsigned int ngb2_index = 4,
-                            unsigned int ngb3_index = 4) {
+  inline NewVoronoiTetrahedron(unsigned int v0, unsigned int v1,
+                               unsigned int v2, unsigned int v3,
+                               unsigned int ngb0 = NEWVORONOICELL_MAX_INDEX,
+                               unsigned int ngb1 = NEWVORONOICELL_MAX_INDEX,
+                               unsigned int ngb2 = NEWVORONOICELL_MAX_INDEX,
+                               unsigned int ngb3 = NEWVORONOICELL_MAX_INDEX,
+                               unsigned int ngb0_index = 4,
+                               unsigned int ngb1_index = 4,
+                               unsigned int ngb2_index = 4,
+                               unsigned int ngb3_index = 4) {
     _v[0] = v0;
     _v[1] = v1;
     _v[2] = v2;
@@ -298,4 +298,4 @@ public:
   }
 };
 
-#endif // VORONOITETRAHEDRON_HPP
+#endif // NEWVORONOITETRAHEDRON_HPP

@@ -17,22 +17,22 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiBox.hpp
+ * @file NewVoronoiBox.hpp
  *
  * @brief Special type of Box used to store a NewVoronoiGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOIBOX_HPP
-#define VORONOIBOX_HPP
+#ifndef NEWVORONOIBOX_HPP
+#define NEWVORONOIBOX_HPP
 
 #include "Box.hpp"
-#include "VoronoiVariables.hpp"
+#include "NewVoronoiVariables.hpp"
 
 /**
  * @brief Special type of Box used to store a NewVoronoiGrid.
  */
-template < typename _datatype_ > class VoronoiBox {
+template < typename _datatype_ > class NewVoronoiBox {
 private:
   /*! @brief Underlying Box. */
   Box< _datatype_ > _box;
@@ -90,14 +90,14 @@ public:
   /**
    * @brief Empty constructor.
    */
-  inline VoronoiBox() {}
+  inline NewVoronoiBox() {}
 
   /**
    * @brief Constructor.
    *
    * @param box Box.
    */
-  inline VoronoiBox(const Box< _datatype_ > box) : _box(box) {
+  inline NewVoronoiBox(const Box< _datatype_ > box) : _box(box) {
 
     // the large all-encompassing tetrahedron has one vertex in the anchor of
     // the (extended) box (with side length 3*'max_side')
@@ -157,4 +157,4 @@ public:
   }
 };
 
-#endif // VORONOIBOX_HPP
+#endif // NEWVORONOIBOX_HPP

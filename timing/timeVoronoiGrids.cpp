@@ -26,9 +26,9 @@
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "NewVoronoiGrid.hpp"
+#include "OldVoronoiGrid.hpp"
 #include "TimingTools.hpp"
 #include "Utilities.hpp"
-#include "VoronoiGrid.hpp"
 #include <vector>
 
 /**
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
     /// voro++ algorithm
     timingtools_start_scaling_block("old Voronoi grid") {
-      VoronoiGrid grid(positions, box);
+      OldVoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
       grid.compute_grid(-1);
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
       NewVoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
-      grid.construct(-1);
+      grid.compute_grid(-1);
       timingtools_stop_timing();
     }
     timingtools_end_scaling_block("new Voronoi grid",
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
     /// voro++ algorithm
     timingtools_start_scaling_block("old Voronoi grid") {
-      VoronoiGrid grid(positions, box);
+      OldVoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
       grid.compute_grid(-1);
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
       NewVoronoiGrid grid(positions, box);
 
       timingtools_start_timing();
-      grid.construct(-1);
+      grid.compute_grid(-1);
       timingtools_stop_timing();
     }
     timingtools_end_scaling_block("new Voronoi grid",

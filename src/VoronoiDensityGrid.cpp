@@ -24,10 +24,10 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "VoronoiDensityGrid.hpp"
-#include "VoronoiCell.hpp"
+#include "OldVoronoiCell.hpp"
+#include "OldVoronoiGrid.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 #include "VoronoiGeneratorDistributionFactory.hpp"
-#include "VoronoiGrid.hpp"
 
 /*! @brief If defined, this prints out the grid to a file with the given name
  *  after it has been constructed. */
@@ -63,7 +63,7 @@
   ofile << "# " << Utilities::get_timestamp() << "\n";                         \
   for (auto it = begin(); it != end(); ++it) {                                 \
     const unsigned int index = it.get_index();                                 \
-    const CoordinateVector<> p = _voronoi_grid->get_generator(index);          \
+    const CoordinateVector<> p = _generator_positions[index];                  \
     ofile << index << "\t" << p.x() << "\t" << p.y() << "\t" << p.z() << "\t"  \
           << _hydro_timestep * _hydro_generator_velocity[0][index] << "\t"     \
           << _hydro_timestep * _hydro_generator_velocity[1][index] << "\t"     \
@@ -168,7 +168,7 @@ void VoronoiDensityGrid::initialize(
   for (unsigned int i = 0; i < numcell; ++i) {
     _generator_positions[i] = _position_generator->get_position();
   }
-  _voronoi_grid = new VoronoiGrid(_generator_positions, _box, _periodic);
+  _voronoi_grid = new OldVoronoiGrid(_generator_positions, _box, _periodic);
 
   // compute the grid
   _voronoi_grid->compute_grid();
@@ -187,9 +187,10 @@ void VoronoiDensityGrid::initialize(
     for (unsigned char illoyd = 0; illoyd < _num_lloyd; ++illoyd) {
       for (unsigned int i = 0; i < numcell; ++i) {
         _generator_positions[i] = _voronoi_grid->get_centroid(i);
-        _voronoi_grid->reset_generator(i, _generator_positions[i]);
       }
-      _voronoi_grid->reset();
+      delete _voronoi_grid;
+      _voronoi_grid = new OldVoronoiGrid(_generator_positions, _box, _periodic);
+      _voronoi_grid->compute_grid();
     }
 
     if (_log) {
@@ -219,12 +220,13 @@ void VoronoiDensityGrid::evolve(double timestep) {
 
       const CoordinateVector<> vgrid = _hydro_generator_velocity[index];
       _generator_positions[index] += _hydro_timestep * vgrid;
-      _voronoi_grid->reset_generator(index, _generator_positions[index]);
     }
 
     voronoidensitygrid_print_generators();
 
-    _voronoi_grid->reset();
+    delete _voronoi_grid;
+    _voronoi_grid = new OldVoronoiGrid(_generator_positions, _box, _periodic);
+    _voronoi_grid->compute_grid();
 
     if (_log) {
       _log->write_status("Done evolving Voronoi grid.");
@@ -279,7 +281,7 @@ CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
   const unsigned int ileft = left.get_index();
   const unsigned int iright = right.get_index();
   CoordinateVector<> vframe(0.);
-  if (iright < VORONOI_MAX_INDEX) {
+  if (iright < OLDVORONOI_MAX_INDEX) {
     const CoordinateVector<> rRL =
         _generator_positions[iright] - _generator_positions[ileft];
     const double rRLnorm2 = rRL.norm2();
@@ -344,11 +346,11 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
 
   auto faces = _voronoi_grid->get_faces(index);
   for (auto it = faces.begin(); it != faces.end(); ++it) {
-    unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
-    double area = VoronoiCell::get_face_surface_area(*it);
-    CoordinateVector<> midpoint = VoronoiCell::get_face_midpoint(*it);
+    unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
+    double area = OldVoronoiCell::get_face_surface_area(*it);
+    CoordinateVector<> midpoint = OldVoronoiCell::get_face_midpoint(*it);
     CoordinateVector<> normal;
-    if (ngb < VORONOI_MAX_INDEX) {
+    if (ngb < OLDVORONOI_MAX_INDEX) {
       // normal neighbour
       normal = _generator_positions[ngb] - _generator_positions[index];
       normal /= normal.norm();
@@ -405,7 +407,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
   photon_origin += _epsilon * photon_direction;
 
   unsigned int index = _voronoi_grid->get_index(photon_origin);
-  while (index < VORONOI_MAX_INDEX && optical_depth > 0.) {
+  while (index < OLDVORONOI_MAX_INDEX && optical_depth > 0.) {
     CoordinateVector<> ipos = _generator_positions[index];
     unsigned int next_index = 0;
     unsigned int loopcount = 0;
@@ -414,9 +416,9 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
       mins = -1;
       auto faces = _voronoi_grid->get_faces(index);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
         CoordinateVector<> normal;
-        if (ngb < VORONOI_MAX_INDEX) {
+        if (ngb < OLDVORONOI_MAX_INDEX) {
           normal = _generator_positions[ngb] - ipos;
         } else {
           normal = _voronoi_grid->get_wall_normal(ngb);
@@ -424,7 +426,8 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
         const double nk =
             CoordinateVector<>::dot_product(normal, photon_direction);
         if (nk > 0) {
-          const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
+          const CoordinateVector<> point =
+              OldVoronoiCell::get_face_midpoint(*it);
           // in principle, the dot product should always be positive (as
           // 'photon_origin' is supposed to lie inside the cell)
           // however, due to roundoff, it could happen that 'photon_origin'
@@ -449,7 +452,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
         ipos = _generator_positions[index];
       }
     }
-    if (index >= VORONOI_MAX_INDEX) {
+    if (index >= OLDVORONOI_MAX_INDEX) {
       break;
     }
 
@@ -467,11 +470,11 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
     }
     photon_origin += mins * photon_direction;
 
-    cmac_assert_message(index >= VORONOI_MAX_INDEX ||
+    cmac_assert_message(index >= OLDVORONOI_MAX_INDEX ||
                             _voronoi_grid->is_inside(photon_origin),
                         "index: %u (max: %u), mins: %g, position: %g %g %g, "
                         "photon direction: %g %g %g",
-                        index, VORONOI_MAX_INDEX, mins, photon_origin[0],
+                        index, OLDVORONOI_MAX_INDEX, mins, photon_origin[0],
                         photon_origin[1], photon_origin[2], photon_direction[0],
                         photon_direction[1], photon_direction[2]);
 
@@ -481,7 +484,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
   }
 
   photon.set_position(photon_origin);
-  if (index >= VORONOI_MAX_INDEX) {
+  if (index >= OLDVORONOI_MAX_INDEX) {
     return end();
   } else {
     return DensityGrid::iterator(index, *this);
@@ -507,7 +510,7 @@ double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
   origin += _epsilon * direction;
 
   unsigned int index = _voronoi_grid->get_index(origin);
-  while (index < VORONOI_MAX_INDEX) {
+  while (index < OLDVORONOI_MAX_INDEX) {
     CoordinateVector<> ipos = _generator_positions[index];
     unsigned int next_index = 0;
     unsigned int loopcount = 0;
@@ -516,16 +519,17 @@ double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
       mins = -1;
       auto faces = _voronoi_grid->get_faces(index);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = VoronoiCell::get_face_neighbour(*it);
+        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
         CoordinateVector<> normal;
-        if (ngb < VORONOI_MAX_INDEX) {
+        if (ngb < OLDVORONOI_MAX_INDEX) {
           normal = _generator_positions[ngb] - ipos;
         } else {
           normal = _voronoi_grid->get_wall_normal(ngb);
         }
         const double nk = CoordinateVector<>::dot_product(normal, direction);
         if (nk > 0) {
-          const CoordinateVector<> point = VoronoiCell::get_face_midpoint(*it);
+          const CoordinateVector<> point =
+              OldVoronoiCell::get_face_midpoint(*it);
           const double sngb = std::abs(CoordinateVector<>::dot_product(
                                   normal, (point - origin))) /
                               nk;
@@ -543,7 +547,7 @@ double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
         ipos = _generator_positions[index];
       }
     }
-    if (index >= VORONOI_MAX_INDEX) {
+    if (index >= OLDVORONOI_MAX_INDEX) {
       break;
     }
 

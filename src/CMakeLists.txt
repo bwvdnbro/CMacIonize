@@ -123,6 +123,8 @@ set(CMACIONIZE_SOURCES
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
+    OldVoronoiCell.cpp
+    OldVoronoiGrid.cpp
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
@@ -130,9 +132,7 @@ set(CMACIONIZE_SOURCES
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
-    VoronoiCell.cpp
     VoronoiDensityGrid.cpp
-    VoronoiGrid.cpp
     WMBasicPhotonSourceSpectrum.cpp
 
     Abundances.hpp

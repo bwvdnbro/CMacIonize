@@ -69,8 +69,8 @@ void NewVoronoiCell::setup_test(int test) {
     // we need 1 tetrahedron + 4 dummy neighbours to check the neighbour
     // handling
     _tetrahedra_size = 5;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[1], ngb[2], ngb[3], 0, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(
+        v[0], v[1], v[2], v[3], ngb[0], ngb[1], ngb[2], ngb[3], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -88,10 +88,10 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], ngb[4], 0, 0, 3, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], ngb[4], 0, 0, 3, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], ngb[5], t[0], 0, 0, 0, 2);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -112,16 +112,16 @@ void NewVoronoiCell::setup_test(int test) {
     // we need 5 tetrahedra + 10 dummy neighbours to check the neighbour
     // handling
     _tetrahedra_size = 15;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1], ngb[0],
-                                           t[4], ngb[1], 2, 0, 0, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2], ngb[2],
-                                           t[0], ngb[3], 2, 0, 0, 0);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[2], v[6], v[3], v[5], t[3], ngb[4],
-                                           t[1], ngb[5], 2, 0, 0, 0);
-    _tetrahedra[t[3]] = VoronoiTetrahedron(v[3], v[6], v[4], v[5], t[4], ngb[6],
-                                           t[2], ngb[7], 2, 0, 0, 0);
-    _tetrahedra[t[4]] = VoronoiTetrahedron(v[4], v[6], v[0], v[5], t[0], ngb[8],
-                                           t[3], ngb[9], 2, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1],
+                                              ngb[0], t[4], ngb[1], 2, 0, 0, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2],
+                                              ngb[2], t[0], ngb[3], 2, 0, 0, 0);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[2], v[6], v[3], v[5], t[3],
+                                              ngb[4], t[1], ngb[5], 2, 0, 0, 0);
+    _tetrahedra[t[3]] = NewVoronoiTetrahedron(v[3], v[6], v[4], v[5], t[4],
+                                              ngb[6], t[2], ngb[7], 2, 0, 0, 0);
+    _tetrahedra[t[4]] = NewVoronoiTetrahedron(v[4], v[6], v[0], v[5], t[0],
+                                              ngb[8], t[3], ngb[9], 2, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -139,10 +139,10 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], ngb[4], 0, 0, 3, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], ngb[4], 0, 0, 3, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], ngb[5], t[0], 0, 0, 0, 2);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -160,12 +160,12 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 3 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 9;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2], t[1],
-                                           ngb[5], ngb[4], 3, 3, 0, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2], ngb[3],
-                                           ngb[2], t[0], 1, 0, 0, 1);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[4], v[1], v[2], v[3], ngb[0], t[1],
-                                           ngb[1], t[0], 0, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2],
+                                              t[1], ngb[5], ngb[4], 3, 3, 0, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2],
+                                              ngb[3], ngb[2], t[0], 1, 0, 0, 1);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[4], v[1], v[2], v[3], ngb[0],
+                                              t[1], ngb[1], t[0], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -183,14 +183,14 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 4 tetrahedra + 8 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 12;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], t[2], 0, 0, 3, 2);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], t[3], t[0], 0, 0, 1, 2);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[0], v[1], v[5], v[2], ngb[4],
-                                           ngb[7], t[0], t[3], 0, 0, 3, 3);
-    _tetrahedra[t[3]] = VoronoiTetrahedron(v[0], v[5], v[1], v[4], ngb[5], t[1],
-                                           ngb[6], t[2], 0, 2, 0, 3);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], t[2], 0, 0, 3, 2);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], t[3], t[0], 0, 0, 1, 2);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[0], v[1], v[5], v[2], ngb[4],
+                                              ngb[7], t[0], t[3], 0, 0, 3, 3);
+    _tetrahedra[t[3]] = NewVoronoiTetrahedron(v[0], v[5], v[1], v[4], ngb[5],
+                                              t[1], ngb[6], t[2], 0, 2, 0, 3);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -502,7 +502,7 @@ int main(int argc, char **argv) {
     positions[1] = CoordinateVector<>(-1., -1., 1.);
     positions[2] = CoordinateVector<>(-1., 1., -1.);
     positions[3] = CoordinateVector<>(1., -1., -1.);
-    VoronoiTetrahedron tetrahedron(0, 1, 2, 3);
+    NewVoronoiTetrahedron tetrahedron(0, 1, 2, 3);
     CoordinateVector<> midpoint =
         tetrahedron.get_midpoint_circumsphere(positions);
     assert_condition(midpoint.x() == 0.);
@@ -531,7 +531,7 @@ int main(int argc, char **argv) {
     CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > long_positions(1);
     long_positions[0] = CoordinateVector< unsigned long >(1250);
-    VoronoiBox< unsigned long > voronoi_box(
+    NewVoronoiBox< unsigned long > voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
     NewVoronoiCell cell(0, box, positions, long_positions, voronoi_box,
                         positions, box, false);
@@ -542,7 +542,7 @@ int main(int argc, char **argv) {
     full_volume_positions[1] = CoordinateVector<>(-8.125, 3.5, 3.5);
     full_volume_positions[2] = CoordinateVector<>(3.5, -8.125, 3.5);
     full_volume_positions[3] = CoordinateVector<>(3.5, 3.5, -8.125);
-    VoronoiTetrahedron full_volume_tetrahedron(0, 1, 2, 3);
+    NewVoronoiTetrahedron full_volume_tetrahedron(0, 1, 2, 3);
     const double full_volume =
         full_volume_tetrahedron.get_volume(full_volume_positions);
     const CoordinateVector<> full_centroid =
@@ -650,20 +650,20 @@ int main(int argc, char **argv) {
     positions[2] = CoordinateVector< unsigned long >(1250);
     // point on face
     positions[3] = CoordinateVector< unsigned long >(1250, 1250, 1500);
-    VoronoiBox< unsigned long > box(
+    NewVoronoiBox< unsigned long > box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > rescaled_positions(4);
-    VoronoiBox< double > rescaled_box(
+    NewVoronoiBox< double > rescaled_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -754,11 +754,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -781,11 +781,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -811,11 +811,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -845,11 +845,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -871,11 +871,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -896,11 +896,11 @@ int main(int argc, char **argv) {
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -925,20 +925,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1500, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -959,20 +959,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -993,20 +993,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1250);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -1027,20 +1027,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1005, 1500, 1250);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -1064,20 +1064,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     integer_positions[1] = CoordinateVector< unsigned long >(1782, 1393, 1839);
     integer_positions[2] = CoordinateVector< unsigned long >(1197, 1910, 1797);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(3);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -1103,20 +1103,20 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1500, 1750, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
+    NewVoronoiBox< unsigned long > integer_voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
+    NewVoronoiBox< double > real_voronoi_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
     Box<> dummybox(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > dummypositions;
-    VoronoiBox< unsigned long > dummyintbox(
+    NewVoronoiBox< unsigned long > dummyintbox(
         Box< unsigned long >(CoordinateVector< unsigned long >(0),
                              CoordinateVector< unsigned long >(1)));
     std::vector< CoordinateVector< unsigned long > > dummyintpositions;
-    VoronoiBox< double > dummyrealbox(dummybox);
+    NewVoronoiBox< double > dummyrealbox(dummybox);
     NewVoronoiCell cell(0, dummybox, dummypositions, dummyintpositions,
                         dummyintbox, dummypositions, dummyrealbox, false);
 
@@ -1143,7 +1143,7 @@ int main(int argc, char **argv) {
     CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > long_positions(1);
     long_positions[0] = CoordinateVector< unsigned long >(1250);
-    VoronoiBox< unsigned long > voronoi_box(
+    NewVoronoiBox< unsigned long > voronoi_box(
         Box< unsigned long >(box_anchor, box_sides));
 
     NewVoronoiCell cell(0, box, positions, long_positions, voronoi_box,
@@ -1261,7 +1261,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
     timer.start();
-    grid.construct();
+    grid.compute_grid();
     timer.stop();
 
     double time_per_cell = timer.value() / ncell;
@@ -1290,7 +1290,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
     timer.start();
-    grid.construct();
+    grid.compute_grid();
     timer.stop();
 
     double time_per_cell = timer.value() / ncell_3D;

@@ -29,7 +29,7 @@
 #include "DensityGrid.hpp"
 
 class VoronoiGeneratorDistribution;
-class VoronoiGrid;
+class OldVoronoiGrid;
 
 /**
  * @brief DensityGrid implementation that uses an unstructured Voronoi grid.
@@ -41,7 +41,7 @@ private:
   VoronoiGeneratorDistribution *_position_generator;
 
   /*! @brief Underlying Voronoi grid. */
-  VoronoiGrid *_voronoi_grid;
+  OldVoronoiGrid *_voronoi_grid;
 
   /*! @brief Periodicity flags for the simulation box. */
   CoordinateVector< bool > _periodic;

@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiGrid.hpp
+ * @file OldVoronoiGrid.hpp
  *
- * @brief Voronoi grid.
+ * @brief Old Voronoi grid: voro++ construction algorithm.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOIGRID_HPP
-#define VORONOIGRID_HPP
+#ifndef OLDVORONOIGRID_HPP
+#define OLDVORONOIGRID_HPP
 
 #include "Box.hpp"
 #include "Face.hpp"
@@ -35,12 +35,12 @@
 #include <vector>
 
 class PointLocations;
-class VoronoiCell;
+class OldVoronoiCell;
 
 /**
  * @brief Voronoi grid.
  */
-class VoronoiGrid {
+class OldVoronoiGrid {
 private:
   /*! @brief Bounding box containing the grid (in m). */
   Box<> _box;
@@ -59,7 +59,7 @@ private:
   CoordinateVector< bool > _periodic;
 
   /*! @brief Cells of the grid. */
-  std::vector< VoronoiCell * > _cells;
+  std::vector< OldVoronoiCell * > _cells;
 
   /*! @brief Positions of the cell generators (in m). */
   std::vector< CoordinateVector<> > _generator_positions;
@@ -78,10 +78,10 @@ private:
   /**
    * @brief Job that constructs part of the Voronoi grid.
    */
-  class VoronoiGridConstructionJob {
+  class OldVoronoiGridConstructionJob {
   private:
     /*! @brief Reference to the VoronoiGrid we are constructing. */
-    VoronoiGrid &_grid;
+    OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that this job will construct. */
     const unsigned int _first_index;
@@ -98,9 +98,9 @@ private:
      * @param last_index Index of the beyond last cell that this job will
      * construct.
      */
-    inline VoronoiGridConstructionJob(VoronoiGrid &grid,
-                                      unsigned int first_index,
-                                      unsigned int last_index)
+    inline OldVoronoiGridConstructionJob(OldVoronoiGrid &grid,
+                                         unsigned int first_index,
+                                         unsigned int last_index)
         : _grid(grid), _first_index(first_index), _last_index(last_index) {}
 
     /**
@@ -131,10 +131,10 @@ private:
   /**
    * @brief JobMarket for VoronoiGridConstructionJobs.
    */
-  class VoronoiGridConstructionJobMarket {
+  class OldVoronoiGridConstructionJobMarket {
   private:
     /*! @brief Reference to the VoronoiGrid we want to construct. */
-    VoronoiGrid &_grid;
+    OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that still needs to be constructed. */
     unsigned int _current_index;
@@ -152,8 +152,8 @@ private:
      * @param grid VoronoiGrid we want to construct.
      * @param jobsize Number of cell constructed by a single job.
      */
-    inline VoronoiGridConstructionJobMarket(VoronoiGrid &grid,
-                                            unsigned int jobsize)
+    inline OldVoronoiGridConstructionJobMarket(OldVoronoiGrid &grid,
+                                               unsigned int jobsize)
         : _grid(grid), _current_index(0), _jobsize(jobsize) {}
 
     /**
@@ -162,7 +162,7 @@ private:
      * @param thread_id Id of the thread that calls this function.
      * @return Pointer to a unique and thread safe VoronoiGridConstructionJob.
      */
-    inline VoronoiGridConstructionJob *get_job(int thread_id) {
+    inline OldVoronoiGridConstructionJob *get_job(int thread_id) {
       const unsigned int cellsize = _grid._cells.size();
       if (_current_index == cellsize) {
         return nullptr;
@@ -176,7 +176,8 @@ private:
       _lock.unlock();
       if (first_index < cellsize) {
         const unsigned int last_index = first_index + jobsize;
-        return new VoronoiGridConstructionJob(_grid, first_index, last_index);
+        return new OldVoronoiGridConstructionJob(_grid, first_index,
+                                                 last_index);
       } else {
         return nullptr;
       }
@@ -186,17 +187,15 @@ private:
 public:
   /// constructor and destructor
 
-  VoronoiGrid(const std::vector< CoordinateVector<> > &positions,
-              const Box<> box, const CoordinateVector< bool > periodic =
-                                   CoordinateVector< bool >(false));
+  OldVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
+                 const Box<> box, const CoordinateVector< bool > periodic =
+                                      CoordinateVector< bool >(false));
 
-  ~VoronoiGrid();
+  ~OldVoronoiGrid();
 
   /// grid computation methods
 
-  void reset(int worksize = -1);
   void compute_grid(int worksize = -1);
-  void reset_generator(unsigned int index, const CoordinateVector<> &pos);
 
   /// cell/grid property access
 
@@ -217,4 +216,4 @@ public:
   void print_grid(std::ostream &stream);
 };
 
-#endif // VORONOIGRID_HPP
+#endif // OLDVORONOIGRID_HPP
