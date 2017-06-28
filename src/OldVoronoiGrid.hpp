@@ -30,6 +30,7 @@
 #include "Face.hpp"
 #include "Lock.hpp"
 #include "VoronoiFace.hpp"
+#include "VoronoiGrid.hpp"
 
 #include <ostream>
 #include <vector>
@@ -40,7 +41,7 @@ class OldVoronoiCell;
 /**
  * @brief Voronoi grid.
  */
-class OldVoronoiGrid {
+class OldVoronoiGrid : public VoronoiGrid {
 private:
   /*! @brief Bounding box containing the grid (in m). */
   Box<> _box;
@@ -191,24 +192,25 @@ public:
                  const Box<> box, const CoordinateVector< bool > periodic =
                                       CoordinateVector< bool >(false));
 
-  ~OldVoronoiGrid();
+  virtual ~OldVoronoiGrid();
 
   /// grid computation methods
 
-  void compute_grid(int worksize = -1);
+  virtual void compute_grid(int worksize = -1);
 
   /// cell/grid property access
 
-  double get_volume(unsigned int index) const;
-  CoordinateVector<> get_centroid(unsigned int index) const;
-  CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  std::vector< VoronoiFace > get_faces(unsigned int index) const;
-  std::vector< Face > get_geometrical_faces(unsigned int index) const;
+  virtual double get_volume(unsigned int index) const;
+  virtual CoordinateVector<> get_centroid(unsigned int index) const;
+  virtual CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
+  virtual std::vector< VoronoiFace > get_faces(unsigned int index) const;
+  virtual std::vector< Face > get_geometrical_faces(unsigned int index) const;
 
   /// grid navigation
 
-  unsigned int get_index(const CoordinateVector<> &position) const;
-  bool is_inside(CoordinateVector<> position) const;
+  virtual unsigned int get_index(const CoordinateVector<> &position) const;
+  virtual bool is_inside(CoordinateVector<> position) const;
+  virtual bool is_real_neighbour(unsigned int index) const;
 
   /// printing
 

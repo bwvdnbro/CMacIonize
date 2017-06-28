@@ -123,6 +123,8 @@ set(CMACIONIZE_SOURCES
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
+    NewVoronoiCell.cpp
+    NewVoronoiGrid.cpp
     OldVoronoiCell.cpp
     OldVoronoiGrid.cpp
     ParameterFile.cpp

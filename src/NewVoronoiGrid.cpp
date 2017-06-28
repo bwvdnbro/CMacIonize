@@ -376,3 +376,14 @@ NewVoronoiGrid::get_index(const CoordinateVector<> &position) const {
 bool NewVoronoiGrid::is_inside(CoordinateVector<> position) const {
   return _box.inside(position);
 }
+
+/**
+ * @brief Check if the given index corresponds to a real neighbouring cell or to
+ * a ghost cell that represents a wall of the simulation box.
+ *
+ * @param index Index to check.
+ * @return True if the given index corresponds to a real neighbouring cell.
+ */
+bool NewVoronoiGrid::is_real_neighbour(unsigned int index) const {
+  return index < NEWVORONOICELL_MAX_INDEX;
+}

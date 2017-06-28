@@ -357,6 +357,17 @@ bool OldVoronoiGrid::is_inside(CoordinateVector<> position) const {
 }
 
 /**
+ * @brief Check if the given index corresponds to a real neighbouring cell or to
+ * a ghost cell that represents a wall of the simulation box.
+ *
+ * @param index Index to check.
+ * @return True if the given index corresponds to a real neighbouring cell.
+ */
+bool OldVoronoiGrid::is_real_neighbour(unsigned int index) const {
+  return index < OLDVORONOI_MAX_INDEX;
+}
+
+/**
  * @brief Print the cell with the given index to the given stream in a format
  * that can be easily plotted using gnuplot.
  *

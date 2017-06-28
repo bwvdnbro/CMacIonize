@@ -706,6 +706,8 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
     ../src/HydroVariables.hpp
+    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiGrid.cpp
     ../src/VoronoiDensityGrid.cpp
@@ -834,6 +836,8 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     testVoronoiDensityGrid.cpp
 
     ../src/DensityGrid.cpp
+    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiCell.hpp
     ../src/OldVoronoiGrid.cpp
@@ -843,6 +847,8 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiDensityGrid.hpp
     ../src/VoronoiGeneratorDistribution.hpp
+    ../src/VoronoiGrid.hpp
+    ../src/VoronoiGridFactory.hpp
 )
 if(HAVE_HDF5)
   list(APPEND TESTVORONOIDENSITYGRID_SOURCES
