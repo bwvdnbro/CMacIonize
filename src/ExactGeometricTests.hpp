@@ -61,8 +61,8 @@ private:
      * @brief Anonymous struct containing the 3 parts of a general double
      * precision floating point value.
      *
-     * A general double precision floating point value has a sign \f$s\f$, a
-     * mantissa \f$m\f$, and an exponent \f$e\f$, so that the value \f$v\f$ of
+     * A general double precision floating point value has a sign @f$s@f$, a
+     * mantissa @f$m@f$, and an exponent @f$e@f$, so that the value @f$v@f$ of
      * the double is given by
      * \f[
      * v = s \times 1.m \times 2^{e-1023}
@@ -70,7 +70,7 @@ private:
      * (see
      * https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
      *
-     * The IEEE 754 standard specifies that \f$s\f$, \f$m\f$ and \f$e\f$ have
+     * The IEEE 754 standard specifies that @f$s@f$, @f$m@f$ and @f$e@f$ have
      * respectively 1 bit, 52 bit and 11 bit precision. In memory (low to high
      * bits), they are ordered as follows:
      * \f[
@@ -78,11 +78,11 @@ private:
      * \f]
      */
     struct {
-      /*! @brief Mantissa \f$m\f$. */
+      /*! @brief Mantissa @f$m@f$. */
       unsigned long mantissa : 52;
-      /*! @brief Exponent \f$e\f$. */
+      /*! @brief Exponent @f$e@f$. */
       unsigned long exponent : 11;
-      /*! @brief Sign \f$s\f$. */
+      /*! @brief Sign @f$s@f$. */
       unsigned long sign : 1;
     } parts;
   } binary_double;

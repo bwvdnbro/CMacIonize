@@ -63,3 +63,9 @@ set(TIMEVORONOIGRIDS_SOURCES
 )
 add_timing_test(NAME timeVoronoiGrids
                 SOURCES ${TIMEVORONOIGRIDS_SOURCES})
+
+set(TIMERIEMANNSOLVER_SOURCES
+    timeRiemannSolver.cpp
+)
+add_timing_test(NAME timeRiemannSolver
+                SOURCES ${TIMERIEMANNSOLVER_SOURCES})

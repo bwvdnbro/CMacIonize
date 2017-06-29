@@ -935,26 +935,26 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
 }
 
 /**
- * @brief Replace the given \f$n\f$ tetrahedra with \f$2n\f$ new ones by
+ * @brief Replace the given @f$n@f$ tetrahedra with @f$2n@f$ new ones by
  * inserting the given new vertex.
  *
  * @image html newvoronoicell_n_to_2n_flip.png
  *
- * The \f$n\f$ tetrahedra
- * (v0 v\f$(n+1)\f$ v1 v\f$(n)\f$),
- * \f$...\f$,
- * (v\f$(i-1)\f$ v\f$(n+1)\f$ v\f$(i)\f$ v\f$(n)\f$),
- * \f$...\f$,
- * (v\f$(n-1)\f$ v\f$(n+1)\f$ v0 v\f$(n)\f$)
- * are replaced with the \f$2n\f$ tetrahedra
- * (v0 v\f$(n+2)\f$ v1 v\f$(n)\f$),
- * (v0 v\f$(n+1)\f$ v1 v\f$(n+2)\f$),
- * \f$...\f$,
- * (v\f$(i-1)\f$ v\f$(n+2)\f$ v\f$(i)\f$ v\f$(n)\f$),
- * (v\f$(i-1)\f$ v\f$(n+1)\f$ v\f$(i)\f$ v\f$(n+2)\f$),
- * \f$...\f$,
- * (v\f$(n-1)\f$ v\f$(n+2)\f$ v0 v\f$(n)\f$),
- * (v\f$(n-1)\f$ v\f$(n+1)\f$ v0 v\f$(n+2)\f$).
+ * The @f$n@f$ tetrahedra
+ * (v0 v@f$(n+1)@f$ v1 v@f$(n)@f$),
+ * @f$...@f$,
+ * (v@f$(i-1)@f$ v@f$(n+1)@f$ v@f$(i)@f$ v@f$(n)@f$),
+ * @f$...@f$,
+ * (v@f$(n-1)@f$ v@f$(n+1)@f$ v0 v@f$(n)@f$)
+ * are replaced with the @f$2n@f$ tetrahedra
+ * (v0 v@f$(n+2)@f$ v1 v@f$(n)@f$),
+ * (v0 v@f$(n+1)@f$ v1 v@f$(n+2)@f$),
+ * @f$...@f$,
+ * (v@f$(i-1)@f$ v@f$(n+2)@f$ v@f$(i)@f$ v@f$(n)@f$),
+ * (v@f$(i-1)@f$ v@f$(n+1)@f$ v@f$(i)@f$ v@f$(n+2)@f$),
+ * @f$...@f$,
+ * (v@f$(n-1)@f$ v@f$(n+2)@f$ v0 v@f$(n)@f$),
+ * (v@f$(n-1)@f$ v@f$(n+1)@f$ v0 v@f$(n+2)@f$).
  *
  * The new neighbour relations can easily be deduced from the figure, while the
  * new neighbour indices are set automatically by the way the new tetrahedra are
@@ -962,7 +962,7 @@ void NewVoronoiCell::two_to_six_flip(unsigned int new_vertex,
  *
  * @param new_vertex New vertex.
  * @param tetrahedra Tetrahedra to replace.
- * @param n \f$n\f$: number of tetrahedra to flip (should also be the number of
+ * @param n @f$n@f$: number of tetrahedra to flip (should also be the number of
  * tetrahedra in the given array).
  * @param tn Array to store the indices of the newly created tetrahedra in.
  */
