@@ -35,7 +35,7 @@ macro(add_timing_test)
        TimingTools.hpp)
 
   # create the timing test executable and set its properties
-  add_executable(${TIME_NAME} ${TIME_SOURCES})
+  add_executable(${TIME_NAME} EXCLUDE_FROM_ALL ${TIME_SOURCES})
   set_target_properties(${TIME_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                         ${PROJECT_BINARY_DIR}/rundir/timing)
   target_link_libraries(${TIME_NAME} ${TIME_LIBS})
@@ -48,11 +48,15 @@ macro(add_timing_test)
                    ${PROJECT_BINARY_DIR}/rundir/timing/${TIME_SCRIPT_NAME}
                    COPYONLY)
   endforeach(TIME_SCRIPT ${TIME_SCRIPTS})
+
+  # add the timing test to the list of 'make timing' targets
+  set(TIMINGNAMES ${TIMINGNAMES} ${TIME_NAME})
 endmacro(add_timing_test)
 
 ### Actual timing test generation ##############################################
 ### Add new timing tests below #################################################
 
+## Voronoi grid implementations comparison
 set(TIMEVORONOIGRIDS_SOURCES
     timeVoronoiGrids.cpp
 
@@ -64,8 +68,23 @@ set(TIMEVORONOIGRIDS_SOURCES
 add_timing_test(NAME timeVoronoiGrids
                 SOURCES ${TIMEVORONOIGRIDS_SOURCES})
 
+## Riemann solver optimization timings
 set(TIMERIEMANNSOLVER_SOURCES
     timeRiemannSolver.cpp
 )
 add_timing_test(NAME timeRiemannSolver
                 SOURCES ${TIMERIEMANNSOLVER_SOURCES})
+
+## NewVoronoiGrid optimization timings
+set(TIMENEWVORONOIGRID_SOURCES
+    timeNewVoronoiGrid.cpp
+
+    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiGrid.cpp
+)
+add_timing_test(NAME timeNewVoronoiGrid
+                SOURCES ${TIMENEWVORONOIGRID_SOURCES})
+
+### Done adding timing tests. Create the 'make timing' target ##################
+### Do not touch these lines unless you know what you're doing! ################
+add_custom_target(timing DEPENDS ${TIMINGNAMES})

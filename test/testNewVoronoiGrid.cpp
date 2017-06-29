@@ -405,7 +405,7 @@ void NewVoronoiCell::check_test(int test) {
     // no new tetrahedra should have been created by this flip
     assert_condition(_tetrahedra_size == 9);
     // one free spot should have opened up
-    assert_condition(_free_tetrahedra.size() == 1);
+    assert_condition(_free_size == 1);
     assert_condition(_free_tetrahedra[0] == 2);
 
     // convenient names used in documentation figure
@@ -535,7 +535,7 @@ int main(int argc, char **argv) {
         Box< unsigned long >(box_anchor, box_sides));
     NewVoronoiCell cell(0, box, positions, long_positions, voronoi_box,
                         positions, box, false);
-    cell.finalize(box, positions, long_positions, voronoi_box, positions, box);
+    cell.finalize(box, positions);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
     full_volume_positions[0] = CoordinateVector<>(6.26786);
@@ -1149,8 +1149,7 @@ int main(int argc, char **argv) {
     NewVoronoiCell cell(0, box, positions, long_positions, voronoi_box,
                         positions, box, true);
 
-    cell.finalize(box, positions, long_positions, voronoi_box, positions, box,
-                  true);
+    cell.finalize(box, positions);
 
     const double tolerance = 1.e-15;
 

@@ -218,17 +218,15 @@ public:
     const double cdxbdy = cd.x() * bd.y();
 
     const double cdxady = cd.x() * ad.y();
-    double adxcdy = ad.x() * cd.y();
+    const double adxcdy = ad.x() * cd.y();
 
     const double adxbdy = ad.x() * bd.y();
     const double bdxady = bd.x() * ad.y();
 
-    double errbound = (std::abs(bdxcdy) + std::abs(cdxbdy)) * std::abs(ad.z()) +
-                      (std::abs(cdxady) + std::abs(adxcdy)) * std::abs(bd.z()) +
-                      (std::abs(adxbdy) + std::abs(bdxady)) * std::abs(cd.z());
-    // not really the right factor (which is 7.77156e-16 on my local machine),
-    // but this will do
-    errbound *= 1.e-10;
+    const double errbound =
+        1.e-10 * ((std::abs(bdxcdy) + std::abs(cdxbdy)) * std::abs(ad.z()) +
+                  (std::abs(cdxady) + std::abs(adxcdy)) * std::abs(bd.z()) +
+                  (std::abs(adxbdy) + std::abs(bdxady)) * std::abs(cd.z()));
 
     const double result = ad.z() * (bdxcdy - cdxbdy) +
                           bd.z() * (cdxady - adxcdy) +
@@ -431,25 +429,22 @@ public:
     const double cexaeyplus = std::abs(cexaey);
     const double bexdeyplus = std::abs(bexdey);
     const double dexbeyplus = std::abs(dexbey);
-    double errbound = ((cexdeyplus + dexceyplus) * bezplus +
-                       (dexbeyplus + bexdeyplus) * cezplus +
-                       (bexceyplus + cexbeyplus) * dezplus) *
-                          aenrm2 +
-                      ((dexaeyplus + aexdeyplus) * cezplus +
-                       (aexceyplus + cexaeyplus) * dezplus +
-                       (cexdeyplus + dexceyplus) * aezplus) *
-                          benrm2 +
-                      ((aexbeyplus + bexaeyplus) * dezplus +
-                       (bexdeyplus + dexbeyplus) * aezplus +
-                       (dexaeyplus + aexdeyplus) * bezplus) *
-                          cenrm2 +
-                      ((bexceyplus + cexbeyplus) * aezplus +
-                       (cexaeyplus + aexceyplus) * bezplus +
-                       (aexbeyplus + bexaeyplus) * cezplus) *
-                          denrm2;
-    // not really the right factor (which is 1.77636e-15 on my local machine),
-    // but this will do
-    errbound *= 1.e-10;
+    const double errbound = 1.e-10 * (((cexdeyplus + dexceyplus) * bezplus +
+                                       (dexbeyplus + bexdeyplus) * cezplus +
+                                       (bexceyplus + cexbeyplus) * dezplus) *
+                                          aenrm2 +
+                                      ((dexaeyplus + aexdeyplus) * cezplus +
+                                       (aexceyplus + cexaeyplus) * dezplus +
+                                       (cexdeyplus + dexceyplus) * aezplus) *
+                                          benrm2 +
+                                      ((aexbeyplus + bexaeyplus) * dezplus +
+                                       (bexdeyplus + dexbeyplus) * aezplus +
+                                       (dexaeyplus + aexdeyplus) * bezplus) *
+                                          cenrm2 +
+                                      ((bexceyplus + cexbeyplus) * aezplus +
+                                       (cexaeyplus + aexceyplus) * bezplus +
+                                       (aexbeyplus + bexaeyplus) * cezplus) *
+                                          denrm2);
 
     const double result =
         (denrm2 * abc - cenrm2 * dab) + (benrm2 * cda - aenrm2 * bcd);

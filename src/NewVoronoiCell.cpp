@@ -95,13 +95,14 @@
  * @brief Empty constructor.
  */
 NewVoronoiCell::NewVoronoiCell()
-    : _tetrahedra_size(0), _max_r2(0.), _max_tetrahedron(0), _volume(0.) {}
+    : _tetrahedra_size(0), _free_size(0), _max_r2(0.), _max_tetrahedron(0),
+      _volume(0.) {}
 
 /**
  * @brief Constructor.
  *
  * @param generator Index of the generator of the cell.
- * @param box Bounding box of the grid (in m).
+ * @param box Simulation box generating positions (in m).
  * @param positions Positions of the generators (in m).
  * @param long_positions Positions of the generators: integer representations.
  * @param long_voronoi_box Simulation box generating positions: integer
@@ -115,7 +116,7 @@ NewVoronoiCell::NewVoronoiCell()
  * the simulation box.
  */
 NewVoronoiCell::NewVoronoiCell(
-    unsigned int generator, const Box<> &box,
+    unsigned int generator, const NewVoronoiBox< double > &box,
     const std::vector< CoordinateVector<> > &positions,
     const std::vector< CoordinateVector< unsigned long > > &long_positions,
     const NewVoronoiBox< unsigned long > &long_voronoi_box,
@@ -139,23 +140,24 @@ NewVoronoiCell::NewVoronoiCell(
   _tetrahedra[3] = NewVoronoiTetrahedron(1, 2, 3, 0, 0, 1, 2,
                                          NEWVORONOICELL_MAX_INDEX, 3, 3, 3, 4);
 
+  _free_size = 0;
+
   _max_r2 = DBL_MAX;
   _max_tetrahedron = 0;
 
-  NewVoronoiBox< double > voronoi_box(box);
   if (reflective_boundaries) {
     intersect(NEWVORONOICELL_BOX_LEFT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
     intersect(NEWVORONOICELL_BOX_RIGHT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
     intersect(NEWVORONOICELL_BOX_FRONT, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
     intersect(NEWVORONOICELL_BOX_BACK, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
     intersect(NEWVORONOICELL_BOX_BOTTOM, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
     intersect(NEWVORONOICELL_BOX_TOP, rescaled_box, rescaled_positions,
-              long_voronoi_box, long_positions, voronoi_box, positions);
+              long_voronoi_box, long_positions, box, positions);
   }
 }
 
@@ -216,7 +218,7 @@ void NewVoronoiCell::intersect(
 
   // find the tetrahedron/a that contains the new point
   unsigned int tetrahedra[UCHAR_MAX];
-  unsigned char number_of_tetrahedra =
+  const unsigned char number_of_tetrahedra =
       find_tetrahedron(ngb, integer_voronoi_box, integer_positions,
                        rescaled_box, rescaled_positions, tetrahedra);
 
@@ -379,23 +381,9 @@ double NewVoronoiCell::get_max_radius_squared() const { return _max_r2; }
  *
  * @param box Bounding box of the grid (in m).
  * @param positions Positions of the generators (in m).
- * @param long_positions Positions of the generators: integer representations.
- * @param long_voronoi_box Simulation box generating positions: integer
- * representations.
- * @param rescaled_positions Positions of the generators (rescaled
- * representation).
- * @param rescaled_box VoronoiBox (rescaled representation).
- * @param reflective_boundaries Flag that regulates whether or not to use
- * reflective boundaries. If set to yes, we insert mirror copies of the central
- * mesh generator into the existing Delaunay structure to enforce the walls of
- * the simulation box.
  */
 void NewVoronoiCell::finalize(
-    const Box<> &box, const std::vector< CoordinateVector<> > &positions,
-    const std::vector< CoordinateVector< unsigned long > > &long_positions,
-    const NewVoronoiBox< unsigned long > &long_voronoi_box,
-    const std::vector< CoordinateVector<> > &rescaled_positions,
-    const NewVoronoiBox< double > &rescaled_box, bool reflective_boundaries) {
+    const Box<> &box, const std::vector< CoordinateVector<> > &positions) {
 
   NewVoronoiBox< double > voronoi_box(box);
 
@@ -517,7 +505,6 @@ void NewVoronoiCell::finalize(
 
   // free up unused memory
   _vertices.clear();
-  _free_tetrahedra.clear();
 }
 
 /**
@@ -1557,7 +1544,8 @@ void NewVoronoiCell::three_to_two_flip(unsigned int tetrahedron0,
 
   // make new tetrahedra: remove the second old tetrahedron and overwrite the
   // two other ones
-  _free_tetrahedra.push_back(tetrahedron2);
+  _free_tetrahedra[_free_size] = tetrahedron2;
+  ++_free_size;
   // make sure we know this tetrahedron is inactive
   _tetrahedra[tetrahedron2].deactivate();
 
@@ -1673,8 +1661,8 @@ unsigned int NewVoronoiCell::check_tetrahedron(
         pi0.x(), pi0.y(), pi0.z(), pi1.x(), pi1.y(), pi1.z(), pi2.x(), pi2.y(),
         pi2.z(), pi3.x(), pi3.y(), pi3.z());
 
-    char test = ExactGeometricTests::insphere_adaptive(pr0, pr1, pr2, pr3, pr4,
-                                                       pi0, pi1, pi2, pi3, pi4);
+    const char test = ExactGeometricTests::insphere_adaptive(
+        pr0, pr1, pr2, pr3, pr4, pi0, pi1, pi2, pi3, pi4);
     if (test < 0) {
       newvoronoicell_print_case("Invalid tetrahedron!");
 

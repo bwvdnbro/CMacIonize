@@ -97,7 +97,7 @@
  */
 NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
 
-  NewVoronoiCell cell(index, _box, _real_generator_positions,
+  NewVoronoiCell cell(index, _real_voronoi_box, _real_generator_positions,
                       _integer_generator_positions, _integer_voronoi_box,
                       _real_rescaled_positions, _real_rescaled_box, true);
 
@@ -124,9 +124,7 @@ NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
     }
   }
 
-  cell.finalize(_box, _real_generator_positions, _integer_generator_positions,
-                _integer_voronoi_box, _real_rescaled_positions,
-                _real_rescaled_box, true);
+  cell.finalize(_box, _real_generator_positions);
 
   return cell;
 }

@@ -63,7 +63,10 @@ private:
   unsigned int _tetrahedra_size;
 
   /*! @brief Free indices in the tetrahedra vector. */
-  std::vector< unsigned int > _free_tetrahedra;
+  unsigned int _free_tetrahedra[NEWVORONOICELL_FREE_SIZE];
+
+  /*! @brief Size of the free tetrahedra array. */
+  unsigned int _free_size;
 
   /*! @brief Maximum distance squared between the central generator and an
    *  arbitrary other generator that could still change the cell structure. */
@@ -90,15 +93,14 @@ private:
    * and fills them up.
    *
    * @param indices Array to fill with the indices of the new tetrahedra.
-   * @return New size of the tetrahedra vector.
    */
   template < unsigned char _number_ >
-  inline unsigned int create_new_tetrahedra(unsigned int *indices) {
+  inline void create_new_tetrahedra(unsigned int *indices) {
     unsigned int new_size = _tetrahedra_size;
     for (unsigned char i = 0; i < _number_; ++i) {
-      if (_free_tetrahedra.size() > 0) {
-        indices[i] = _free_tetrahedra.back();
-        _free_tetrahedra.pop_back();
+      if (_free_size > 0) {
+        indices[i] = _free_tetrahedra[_free_size - 1];
+        --_free_size;
       } else {
         indices[i] = new_size;
         ++new_size;
@@ -106,7 +108,6 @@ private:
     }
     _tetrahedra_size = new_size;
     cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
-    return new_size;
   }
 
   /**
@@ -118,15 +119,14 @@ private:
    *
    * @param indices Array to fill with the indices of the new tetrahedra.
    * @param number Number of new tetrahedra to generate.
-   * @return New size of the tetrahedra vector.
    */
-  inline unsigned int create_new_tetrahedra(unsigned int *indices,
-                                            unsigned int number) {
+  inline void create_new_tetrahedra(unsigned int *indices,
+                                    unsigned int number) {
     unsigned int new_size = _tetrahedra_size;
     for (unsigned char i = 0; i < number; ++i) {
-      if (_free_tetrahedra.size() > 0) {
-        indices[i] = _free_tetrahedra.back();
-        _free_tetrahedra.pop_back();
+      if (_free_size > 0) {
+        indices[i] = _free_tetrahedra[_free_size - 1];
+        --_free_size;
       } else {
         indices[i] = new_size;
         ++new_size;
@@ -134,13 +134,12 @@ private:
     }
     _tetrahedra_size = new_size;
     cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
-    return new_size;
   }
 
 public:
   NewVoronoiCell();
   NewVoronoiCell(
-      unsigned int generator, const Box<> &box,
+      unsigned int generator, const NewVoronoiBox< double > &box,
       const std::vector< CoordinateVector<> > &positions,
       const std::vector< CoordinateVector< unsigned long > > &long_positions,
       const NewVoronoiBox< unsigned long > &long_voronoi_box,
@@ -162,13 +161,8 @@ public:
       const NewVoronoiBox< double > &real_voronoi_box,
       const std::vector< CoordinateVector<> > &real_positions);
   double get_max_radius_squared() const;
-  void finalize(
-      const Box<> &box, const std::vector< CoordinateVector<> > &positions,
-      const std::vector< CoordinateVector< unsigned long > > &long_positions,
-      const NewVoronoiBox< unsigned long > &long_voronoi_box,
-      const std::vector< CoordinateVector<> > &rescaled_positions,
-      const NewVoronoiBox< double > &rescaled_box,
-      bool reflective_boundaries = false);
+  void finalize(const Box<> &box,
+                const std::vector< CoordinateVector<> > &positions);
   void check_empty_circumsphere(
       const NewVoronoiBox< unsigned long > &box,
       const std::vector< CoordinateVector< unsigned long > > &positions) const;

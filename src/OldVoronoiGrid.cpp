@@ -142,6 +142,8 @@ OldVoronoiGrid::OldVoronoiGrid(
   for (unsigned int i = 0; i < numcell; ++i) {
     add_cell(positions[i]);
   }
+
+  _pointlocations = new PointLocations(_generator_positions, 10, _internal_box);
 }
 
 /**
@@ -217,8 +219,6 @@ void OldVoronoiGrid::compute_cell(unsigned int index) {
  */
 void OldVoronoiGrid::compute_grid(int worksize) {
   oldvoronoigrid_output_generators();
-
-  _pointlocations = new PointLocations(_generator_positions, 10, _internal_box);
 
   WorkDistributor< OldVoronoiGridConstructionJobMarket,
                    OldVoronoiGridConstructionJob >
