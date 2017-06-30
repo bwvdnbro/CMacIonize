@@ -706,7 +706,7 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
     ../src/HydroVariables.hpp
-    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCellConstructor.cpp
     ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiGrid.cpp
@@ -836,7 +836,7 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     testVoronoiDensityGrid.cpp
 
     ../src/DensityGrid.cpp
-    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCellConstructor.cpp
     ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiCell.hpp
@@ -878,8 +878,9 @@ set(TESTNEWVORONOIGRID_SOURCES
     testNewVoronoiGrid.cpp
 
     ../src/NewVoronoiBox.hpp
-    ../src/NewVoronoiCell.cpp
     ../src/NewVoronoiCell.hpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiCellConstructor.hpp
     ../src/NewVoronoiGrid.cpp
     ../src/NewVoronoiGrid.hpp
     ../src/NewVoronoiTetrahedron.hpp

@@ -26,6 +26,27 @@
 #ifndef NEWVORONOIVARIABLES_HPP
 #define NEWVORONOIVARIABLES_HPP
 
+/// adjustable parameters
+
+/*! @brief Size of the vertex array stored in a cell. */
+#define NEWVORONOICELL_VERTEX_SIZE 1000
+
+/*! @brief Size of the tetrahedra array stored in a cell. */
+#define NEWVORONOICELL_TETRAHEDRA_SIZE 1000
+
+/*! @brief Size of the free tetrahedra array stored in a cell. */
+#define NEWVORONOICELL_FREE_SIZE 100
+
+/*! @brief Desired number of cells per bucket in the neigbour search
+ *  structure. */
+#define NEWVORONOIGRID_NUM_BUCKET 1
+
+/*! @brief Maximum number of shared memory threads to use during parallel grid
+ *  construction. */
+#define NEWVORONOIGRID_MAX_NUM_THREADS 128
+
+/// fixed parameters: do not touch!
+
 /*! @brief Some neighbour indices are reserved for special neighbours: the
  *  boundaries of the simulation box. To minimize the risk of collisions, these
  *  indices correspond to the 6 highest possible 32-bit unsigned integers. No
@@ -62,16 +83,6 @@
 #define NEWVORONOICELL_BOX_TOP 0xffffffff
 
 /*! @brief Size of the queue used for checking tetrahedra. */
-#define NEWVORONOICELL_QUEUE_SIZE 1000
-
-/*! @brief Size of the tetrahedra array stored in a cell. */
-#define NEWVORONOICELL_TETRAHEDRA_SIZE 1000
-
-/*! @brief Size of the free tetrahedra array stored in a cell. */
-#define NEWVORONOICELL_FREE_SIZE 100
-
-/*! @brief Desired number of cells per bucket in the neigbour search
- *  structure. */
-#define NEWVORONOIGRID_NUM_BUCKET 1
+#define NEWVORONOICELL_QUEUE_SIZE NEWVORONOICELL_TETRAHEDRA_SIZE
 
 #endif // NEWVORONOIVARIABLES_HPP

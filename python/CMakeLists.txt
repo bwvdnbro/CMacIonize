@@ -56,7 +56,7 @@ if(HAVE_HDF5)
       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
       ../src/CMacIonizeVoronoiGeneratorDistribution.hpp
       ../src/DensityGrid.cpp
-      ../src/NewVoronoiCell.cpp
+      ../src/NewVoronoiCellConstructor.cpp
       ../src/NewVoronoiGrid.cpp
       ../src/OldVoronoiCell.cpp
       ../src/OldVoronoiGrid.cpp

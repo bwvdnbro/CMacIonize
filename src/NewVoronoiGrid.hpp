@@ -30,7 +30,9 @@
 
 #include "Face.hpp"
 #include "Lock.hpp"
+#include "NewVoronoiBox.hpp"
 #include "NewVoronoiCell.hpp"
+#include "NewVoronoiCellConstructor.hpp"
 #include "PointLocations.hpp"
 #include "VoronoiGrid.hpp"
 
@@ -66,7 +68,8 @@ private:
   /*! @brief PointLocations object used to speed up neighbour searching. */
   PointLocations _point_locations;
 
-  NewVoronoiCell compute_cell(unsigned int index) const;
+  NewVoronoiCell compute_cell(unsigned int index,
+                              NewVoronoiCellConstructor &constructor) const;
 
   /**
    * @brief Job that constructs part of the Voronoi grid.
@@ -77,10 +80,13 @@ private:
     NewVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that this job will construct. */
-    const unsigned int _first_index;
+    unsigned int _first_index;
 
     /*! @brief Index of the beyond last cell that this job will construct. */
-    const unsigned int _last_index;
+    unsigned int _last_index;
+
+    /*! @brief NewVoronoiCellConstructor object used by this thread. */
+    NewVoronoiCellConstructor _constructor;
 
   public:
     /**
@@ -97,19 +103,33 @@ private:
         : _grid(grid), _first_index(first_index), _last_index(last_index) {}
 
     /**
+     * @brief Update the cell range that will be constructed during the next run
+     * of this job.
+     *
+     * @param first_index Index of the first cell that this job will construct.
+     * @param last_index Index of the beyond last cell that this job will
+     * construct.
+     */
+    inline void update_indices(unsigned int first_index,
+                               unsigned int last_index) {
+      _first_index = first_index;
+      _last_index = last_index;
+    }
+
+    /**
      * @brief Should the Worker delete the Job when it is finished?
      *
      * @return True, since there is no information that needs to be stored in
      * between jobs.
      */
-    inline bool do_cleanup() const { return true; }
+    inline bool do_cleanup() const { return false; }
 
     /**
      * @brief Construct the Voronoi cell for each index in the job range.
      */
     inline void execute() {
       for (unsigned int i = _first_index; i < _last_index; ++i) {
-        _grid._cells[i] = _grid.compute_cell(i);
+        _grid._cells[i] = _grid.compute_cell(i, _constructor);
       }
     }
 
@@ -129,6 +149,9 @@ private:
     /*! @brief Reference to the NewVoronoiGrid we want to construct. */
     NewVoronoiGrid &_grid;
 
+    /*! @brief Per thread NewVoronoiGridConstructionJob. */
+    NewVoronoiGridConstructionJob *_jobs[NEWVORONOIGRID_MAX_NUM_THREADS];
+
     /*! @brief Index of the first cell that still needs to be constructed. */
     unsigned int _current_index;
 
@@ -147,7 +170,23 @@ private:
      */
     inline NewVoronoiGridConstructionJobMarket(NewVoronoiGrid &grid,
                                                unsigned int jobsize)
-        : _grid(grid), _current_index(0), _jobsize(jobsize) {}
+        : _grid(grid), _current_index(0), _jobsize(jobsize) {
+
+      for (unsigned int i = 0; i < NEWVORONOIGRID_MAX_NUM_THREADS; ++i) {
+        _jobs[i] = nullptr;
+      }
+    }
+
+    /**
+     * @brief Destructor.
+     *
+     * Free up memory used by NewVoronoiGridConstructionJobs.
+     */
+    inline ~NewVoronoiGridConstructionJobMarket() {
+      for (unsigned int i = 0; i < NEWVORONOIGRID_MAX_NUM_THREADS; ++i) {
+        delete _jobs[i];
+      }
+    }
 
     /**
      * @brief Get a NewVoronoiGridConstructionJob.
@@ -170,8 +209,13 @@ private:
       _lock.unlock();
       if (first_index < cellsize) {
         const unsigned int last_index = first_index + jobsize;
-        return new NewVoronoiGridConstructionJob(_grid, first_index,
-                                                 last_index);
+        if (_jobs[thread_id] == nullptr) {
+          _jobs[thread_id] =
+              new NewVoronoiGridConstructionJob(_grid, first_index, last_index);
+        } else {
+          _jobs[thread_id]->update_indices(first_index, last_index);
+        }
+        return _jobs[thread_id];
       } else {
         return nullptr;
       }

@@ -24,7 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "NewVoronoiCell.hpp"
+#include "NewVoronoiCellConstructor.hpp"
 #include "NewVoronoiGrid.hpp"
 #include "Timer.hpp"
 #include "Utilities.hpp"
@@ -54,12 +54,12 @@ enum NewVoronoiCellTestName {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCell::setup_test(int test) {
+void NewVoronoiCellConstructor::setup_test(int test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -79,7 +79,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(6);
+    _vertices_size = 6;
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -102,7 +102,7 @@ void NewVoronoiCell::setup_test(int test) {
 
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(8);
+    _vertices_size = 8;
 
     // convenient names used in documentation figure
     const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -130,7 +130,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -151,7 +151,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -174,7 +174,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(6);
+    _vertices_size = 6;
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -249,7 +249,7 @@ void NewVoronoiCell::setup_test(int test) {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCell::check_test(int test) {
+void NewVoronoiCellConstructor::check_test(int test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
 
@@ -465,8 +465,8 @@ void NewVoronoiCell::check_test(int test) {
 }
 
 /**
- * @brief Check if NewVoronoiCell::get_positive_permutation can complete the
- * given permutation of 0123.
+ * @brief Check if NewVoronoiCellConstructor::get_positive_permutation can
+ * complete the given permutation of 0123.
  *
  * We define this as a macro so that we get useful line numbers in our error
  * messages (i.e. the line where this macro is called, and not the line in this
@@ -480,11 +480,11 @@ void NewVoronoiCell::check_test(int test) {
 #define check_permutation(a, b, c, d)                                          \
   {                                                                            \
     unsigned char v[4] = {a, b, 4, 4};                                         \
-    NewVoronoiCell::get_positive_permutation(v);                               \
+    NewVoronoiCellConstructor::get_positive_permutation(v);                    \
     assert_condition(v[2] == c);                                               \
     assert_condition(v[3] == d);                                               \
-    assert_condition(                                                          \
-        NewVoronoiCell::positive_permutation(v[0], v[1], v[2], v[3]) == true); \
+    assert_condition(NewVoronoiCellConstructor::positive_permutation(          \
+                         v[0], v[1], v[2], v[3]) == true);                     \
   }
 
 /**
@@ -559,8 +559,9 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
     positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
-    NewVoronoiCell cell(0, positions, box, positions, box, false);
-    cell.finalize(box, positions);
+    NewVoronoiCellConstructor cell_constructor;
+    cell_constructor.setup(0, positions, box, positions, box, false);
+    NewVoronoiCell cell = cell_constructor.get_cell(box, positions);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
     full_volume_positions[0] = CoordinateVector<>(6.26786);
@@ -663,7 +664,7 @@ int main(int argc, char **argv) {
     cmac_status("Geometry, part 1: Cell face computation works!");
   }
 
-  /// test for NewVoronoiCell::find_tetrahedron
+  /// test for NewVoronoiCellConstructor::find_tetrahedron
   {
     std::vector< CoordinateVector< unsigned long > > positions(4);
     positions[0] = CoordinateVector< unsigned long >(1500);
@@ -682,8 +683,9 @@ int main(int argc, char **argv) {
     NewVoronoiBox rescaled_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
-    NewVoronoiCell cell(0, rescaled_positions, rescaled_box, rescaled_positions,
-                        rescaled_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, rescaled_positions, rescaled_box, rescaled_positions,
+               rescaled_box, false);
 
     unsigned int tetrahedra[4];
     assert_condition(cell.find_tetrahedron(1, rescaled_box, rescaled_positions,
@@ -706,37 +708,61 @@ int main(int argc, char **argv) {
 
   /// test permutation routine
   {
-    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 2, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 3, 1) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 1, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 1, 2, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 2, 3, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 3, 1, 2) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 3, 2) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 0, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 2, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 0, 3, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 2, 0, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 3, 2, 0) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 1, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 3, 0) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 0, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 0, 1, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 1, 3, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 3, 0, 1) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 2, 1) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 0, 2) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 1, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 0, 2, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 1, 0, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 2, 1, 0) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 3, 2) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 1, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 2, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 1, 3, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 2, 1, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 3, 2, 1) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 2, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 3, 0) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 0, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 0, 2, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 2, 3, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 3, 0, 2) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 3, 1) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 0, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 1, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 0, 3, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 1, 0, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 3, 1, 0) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 1, 2) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 2, 0) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 0, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 0, 1, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 1, 2, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 2, 0, 1) == false);
 
     cmac_status("Permutation checks work!");
   }
@@ -764,11 +790,7 @@ int main(int argc, char **argv) {
 
   /// test 1 to 4 flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
     unsigned int tn[4];
@@ -784,11 +806,7 @@ int main(int argc, char **argv) {
 
   /// test 2 to 6 flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
     unsigned int tetrahedra[2] = {0, 1};
@@ -807,11 +825,7 @@ int main(int argc, char **argv) {
 
   /// test n to 2n flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
     unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
@@ -834,11 +848,7 @@ int main(int argc, char **argv) {
 
   /// test 2 to 3 flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
     unsigned int tn[3];
@@ -853,11 +863,7 @@ int main(int argc, char **argv) {
 
   /// test 3 to 2 flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
     unsigned int tn[2];
@@ -871,11 +877,7 @@ int main(int argc, char **argv) {
 
   /// test 4 to 4 flip
   {
-    std::vector< CoordinateVector<> > dummypositions;
-    NewVoronoiBox dummyrealbox(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
-    NewVoronoiCell cell(0, dummypositions, dummyrealbox, dummypositions,
-                        dummyrealbox, false);
+    NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
     unsigned int tn[4];
@@ -889,7 +891,7 @@ int main(int argc, char **argv) {
     cmac_status("4 to 4 flip works!");
   }
 
-  /// tests for NewVoronoiCell::intersect
+  /// tests for NewVoronoiCellConstructor::intersect
   /// simple insertion with a single 1 to 4 flip
   {
     CoordinateVector< unsigned long > box_anchor(1000);
@@ -906,8 +908,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
                    real_positions);
@@ -935,8 +938,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
                    real_positions);
@@ -964,8 +968,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
                    real_positions);
@@ -993,8 +998,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
                    real_positions);
@@ -1026,8 +1032,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     for (unsigned int i = 1; i < 3; ++i) {
       cell.intersect(i, real_voronoi_box, real_positions, real_voronoi_box,
@@ -1060,8 +1067,9 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, real_positions, real_voronoi_box, real_positions,
-                        real_voronoi_box, false);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
                    real_positions);
@@ -1094,10 +1102,11 @@ int main(int argc, char **argv) {
               get_rescaled_coordinates(box_anchor + box_sides) -
                   get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0, positions, box, real_positions, real_voronoi_box,
-                        true);
+    NewVoronoiCellConstructor cell_constructor;
+    cell_constructor.setup(0, positions, box, real_positions, real_voronoi_box,
+                           true);
 
-    cell.finalize(box, positions);
+    NewVoronoiCell cell = cell_constructor.get_cell(box, positions);
 
     const double tolerance = 1.e-15;
 

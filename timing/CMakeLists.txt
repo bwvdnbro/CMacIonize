@@ -60,7 +60,7 @@ endmacro(add_timing_test)
 set(TIMEVORONOIGRIDS_SOURCES
     timeVoronoiGrids.cpp
 
-    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCellConstructor.cpp
     ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiGrid.cpp
@@ -79,7 +79,7 @@ add_timing_test(NAME timeRiemannSolver
 set(TIMENEWVORONOIGRID_SOURCES
     timeNewVoronoiGrid.cpp
 
-    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiCellConstructor.cpp
     ../src/NewVoronoiGrid.cpp
 )
 add_timing_test(NAME timeNewVoronoiGrid

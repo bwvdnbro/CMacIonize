@@ -25,6 +25,7 @@
  */
 #include "NewVoronoiGrid.hpp"
 #include "ExactGeometricTests.hpp"
+#include "NewVoronoiCellConstructor.hpp"
 #include "WorkDistributor.hpp"
 
 /*! @brief If not commented out, this checks the empty circumsphere condition
@@ -40,14 +41,13 @@
 /**
  * @brief Check if the given cell fulfills the Delaunay condition.
  *
- * @param cell Index of the cell to check.
+ * @param cell_constructor Cell to check.
  */
 #ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
-#define newvoronoigrid_check_cell(cell)                                        \
-  _cells[cell].check_empty_circumsphere(_real_rescaled_box,                    \
-                                        _real_rescaled_positions)
+#define newvoronoigrid_check_cell(cell_constructor)                            \
+  cell.check_empty_circumsphere(_real_rescaled_box, _real_rescaled_positions)
 #else
-#define newvoronoigrid_check_cell(cell)
+#define newvoronoigrid_check_cell(cell_constructor)
 #endif
 
 /**
@@ -75,35 +75,39 @@
  * @brief Compute the cell with the given index.
  *
  * @param index Index of the cell to compute.
+ * @param constructor NewVoronoiCellConstructor to use.
  * @return NewVoronoiCell.
  */
-NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
+NewVoronoiCell
+NewVoronoiGrid::compute_cell(unsigned int index,
+                             NewVoronoiCellConstructor &constructor) const {
 
-  NewVoronoiCell cell(index, _real_generator_positions, _real_voronoi_box,
-                      _real_rescaled_positions, _real_rescaled_box, true);
+  constructor.setup(index, _real_generator_positions, _real_voronoi_box,
+                    _real_rescaled_positions, _real_rescaled_box, true);
 
   auto it = _point_locations.get_neighbours(index);
   auto ngbs = it.get_neighbours();
   for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
     const unsigned int j = *ngbit;
     if (j != index) {
-      cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                     _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(index);
+      constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(cell_constructor);
     }
   }
   while (it.increase_range() &&
-         it.get_max_radius2() < cell.get_max_radius_squared()) {
+         it.get_max_radius2() < constructor.get_max_radius_squared()) {
     ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
-      cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                     _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(index);
+      constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(cell_constructor);
     }
   }
 
-  cell.finalize(_real_voronoi_box, _real_generator_positions);
+  NewVoronoiCell cell =
+      constructor.get_cell(_real_voronoi_box, _real_generator_positions);
 
   return cell;
 }

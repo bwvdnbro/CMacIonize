@@ -19,7 +19,7 @@
 /**
  * @file NewVoronoiTetrahedron.hpp
  *
- * @brief Delaunay tetrahedron used in the NewVoronoiCell incremental
+ * @brief Delaunay tetrahedron used in the NewVoronoiCellConstructor incremental
  * construction algorithm.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
@@ -31,7 +31,7 @@
 #include "NewVoronoiVariables.hpp"
 
 /**
- * @brief Delaunay tetrahedron used in the NewVoronoiCell incremental
+ * @brief Delaunay tetrahedron used in the NewVoronoiCellConstructor incremental
  * construction algorithm.
  */
 class NewVoronoiTetrahedron {
