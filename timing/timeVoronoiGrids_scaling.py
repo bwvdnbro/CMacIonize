@@ -49,9 +49,9 @@ num_threads = len(rand_old)
 
 fig, ax = pl.subplots(2, 2, sharex = True, sharey = "row")
 
-ax[0][0].errorbar(rand_old[:,0], rand_old[:,1], yerr = rand_old[:,2], fmt = 'o',
+ax[0][0].errorbar(rand_old[:,0], rand_old[:,1], yerr = rand_old[:,2], fmt = '.',
                   label = "old")
-ax[0][0].errorbar(rand_new[:,0], rand_new[:,1], yerr = rand_new[:,2], fmt = 'o',
+ax[0][0].errorbar(rand_new[:,0], rand_new[:,1], yerr = rand_new[:,2], fmt = '.',
                   label = "new")
 ax[0][0].set_xscale("log", basex = 2)
 ax[0][0].set_title("random")
@@ -59,9 +59,9 @@ ax[0][0].legend(loc = "best")
 ax[0][0].set_ylabel("total time (s)")
 ax[0][0].set_xlim(0.9, num_threads*1.1)
 
-ax[0][1].errorbar(reg_old[:,0], reg_old[:,1], yerr = reg_old[:,2], fmt = 'o',
+ax[0][1].errorbar(reg_old[:,0], reg_old[:,1], yerr = reg_old[:,2], fmt = '.',
                   label = "old")
-ax[0][1].errorbar(reg_new[:,0], reg_new[:,1], yerr = reg_new[:,2], fmt = 'o',
+ax[0][1].errorbar(reg_new[:,0], reg_new[:,1], yerr = reg_new[:,2], fmt = '.',
                   label = "new")
 ax[0][1].set_xscale("log", basex = 2)
 ax[0][1].set_title("regular")
@@ -69,9 +69,9 @@ ax[0][1].legend(loc = "best")
 
 ax[1][0].plot([1, num_threads], [1, num_threads], "k-")
 ax[1][0].errorbar(rand_old[:,0], rand_old_speedup, yerr = rand_old_speedup_std,
-                  fmt = 'o', label = "old")
+                  fmt = '.', label = "old")
 ax[1][0].errorbar(rand_new[:,0], rand_new_speedup, yerr = rand_new_speedup_std,
-                  fmt = 'o', label = "new")
+                  fmt = '.', label = "new")
 ax[1][0].set_xscale("log", basex = 2)
 ax[1][0].set_yscale("log", basey = 2)
 ax[1][0].legend(loc = "best")
@@ -81,9 +81,9 @@ ax[1][0].set_ylim(0.9, num_threads*1.1)
 
 ax[1][1].plot([1, num_threads], [1, num_threads], "k-")
 ax[1][1].errorbar(reg_old[:,0], reg_old_speedup, yerr = reg_old_speedup_std, 
-                  fmt = 'o', label = "old")
+                  fmt = '.', label = "old")
 ax[1][1].errorbar(reg_new[:,0], reg_new_speedup, yerr = reg_new_speedup_std,
-                  fmt = 'o', label = "new")
+                  fmt = '.', label = "new")
 ax[1][1].set_xscale("log", basex = 2)
 ax[1][1].set_yscale("log", basey = 2)
 ax[1][1].legend(loc = "best")
