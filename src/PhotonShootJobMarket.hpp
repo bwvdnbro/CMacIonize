@@ -92,6 +92,14 @@ public:
   }
 
   /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int worksize) {}
+
+  /**
    * @brief Set the number of photons.
    *
    * This routine can be used to reset a PhotonShootJobMarket that was used

@@ -93,14 +93,9 @@ private:
      * @brief Constructor.
      *
      * @param grid Reference to the NewVoronoiGrid we are constructing.
-     * @param first_index Index of the first cell that this job will construct.
-     * @param last_index Index of the beyond last cell that this job will
-     * construct.
      */
-    inline NewVoronoiGridConstructionJob(NewVoronoiGrid &grid,
-                                         unsigned int first_index,
-                                         unsigned int last_index)
-        : _grid(grid), _first_index(first_index), _last_index(last_index) {}
+    inline NewVoronoiGridConstructionJob(NewVoronoiGrid &grid)
+        : _grid(grid), _first_index(0), _last_index(0) {}
 
     /**
      * @brief Update the cell range that will be constructed during the next run
@@ -150,7 +145,7 @@ private:
     NewVoronoiGrid &_grid;
 
     /*! @brief Per thread NewVoronoiGridConstructionJob. */
-    NewVoronoiGridConstructionJob *_jobs[NEWVORONOIGRID_MAX_NUM_THREADS];
+    NewVoronoiGridConstructionJob *_jobs[MAX_NUM_THREADS];
 
     /*! @brief Index of the first cell that still needs to be constructed. */
     unsigned int _current_index;
@@ -172,7 +167,7 @@ private:
                                                unsigned int jobsize)
         : _grid(grid), _current_index(0), _jobsize(jobsize) {
 
-      for (unsigned int i = 0; i < NEWVORONOIGRID_MAX_NUM_THREADS; ++i) {
+      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
         _jobs[i] = nullptr;
       }
     }
@@ -183,8 +178,20 @@ private:
      * Free up memory used by NewVoronoiGridConstructionJobs.
      */
     inline ~NewVoronoiGridConstructionJobMarket() {
-      for (unsigned int i = 0; i < NEWVORONOIGRID_MAX_NUM_THREADS; ++i) {
+      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
         delete _jobs[i];
+      }
+    }
+
+    /**
+     * @brief Set the number of parallel threads that will be used to execute
+     * the jobs.
+     *
+     * @param worksize Number of parallel threads that will be used.
+     */
+    inline void set_worksize(int worksize) {
+      for (int i = 0; i < worksize; ++i) {
+        _jobs[i] = new NewVoronoiGridConstructionJob(_grid);
       }
     }
 
@@ -209,12 +216,7 @@ private:
       _lock.unlock();
       if (first_index < cellsize) {
         const unsigned int last_index = first_index + jobsize;
-        if (_jobs[thread_id] == nullptr) {
-          _jobs[thread_id] =
-              new NewVoronoiGridConstructionJob(_grid, first_index, last_index);
-        } else {
-          _jobs[thread_id]->update_indices(first_index, last_index);
-        }
+        _jobs[thread_id]->update_indices(first_index, last_index);
         return _jobs[thread_id];
       } else {
         return nullptr;

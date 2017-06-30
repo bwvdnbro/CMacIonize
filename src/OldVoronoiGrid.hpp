@@ -158,6 +158,14 @@ private:
         : _grid(grid), _current_index(0), _jobsize(jobsize) {}
 
     /**
+     * @brief Set the number of parallel threads that will be used to execute
+     * the jobs.
+     *
+     * @param worksize Number of parallel threads that will be used.
+     */
+    inline void set_worksize(int worksize) {}
+
+    /**
      * @brief Get a VoronoiGridConstructionJob.
      *
      * @param thread_id Id of the thread that calls this function.

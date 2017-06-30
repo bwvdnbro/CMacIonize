@@ -239,6 +239,14 @@ private:
     }
 
     /**
+     * @brief Set the number of parallel threads that will be used to execute
+     * the jobs.
+     *
+     * @param worksize Number of parallel threads that will be used.
+     */
+    inline void set_worksize(int worksize) {}
+
+    /**
      * @brief Destructor.
      *
      * Clean up memory used by jobs.

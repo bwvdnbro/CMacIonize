@@ -126,6 +126,14 @@ public:
       : _array(array), _size(size), _jobsize(jobsize) {}
 
   /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int worksize) {}
+
+  /**
    * @brief Get a job.
    *
    * @param thread_id Rank of the thread that wants to get a job (in a parallel
