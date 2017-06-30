@@ -212,6 +212,9 @@ set(CMACIONIZE_SOURCES
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
 
+set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                            PROPERTIES GENERATED TRUE)
+
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
 list(APPEND CMACIONIZE_SOURCES
@@ -228,6 +231,7 @@ list(APPEND CMACIONIZE_SOURCES
 endif(HAVE_HDF5)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+add_dependencies(CMacIonize CompilerInfo)
 
 # link to HDF5, if we have found it
 if(HAVE_HDF5)

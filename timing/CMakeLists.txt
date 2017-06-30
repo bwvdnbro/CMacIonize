@@ -19,6 +19,9 @@
 ### Convenient macros to automate timing test generation #######################
 ### Do not touch the code below unless you know what you're doing! #############
 
+set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                            PROPERTIES GENERATED TRUE)
+
 macro(add_timing_test)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES LIBS)
@@ -36,6 +39,7 @@ macro(add_timing_test)
 
   # create the timing test executable and set its properties
   add_executable(${TIME_NAME} EXCLUDE_FROM_ALL ${TIME_SOURCES})
+  add_dependencies(${TIME_NAME} CompilerInfo)
   set_target_properties(${TIME_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                         ${PROJECT_BINARY_DIR}/rundir/timing)
   target_link_libraries(${TIME_NAME} ${TIME_LIBS})
