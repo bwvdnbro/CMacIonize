@@ -32,13 +32,13 @@
 /**
  * @brief Special type of Box used to store a NewVoronoiGrid.
  */
-template < typename _datatype_ > class NewVoronoiBox {
+class NewVoronoiBox {
 private:
   /*! @brief Underlying Box. */
-  Box< _datatype_ > _box;
+  Box<> _box;
 
   /*! @brief Positions of the large, all-encompassing initial tetrahedron. */
-  CoordinateVector< _datatype_ > _tetrahedron[4];
+  CoordinateVector<> _tetrahedron[4];
 
   /**
    * @brief Get a reflective copy of the given generator by mirroring it with
@@ -48,42 +48,42 @@ private:
    * @param generator_position Position of the generator.
    * @return Reflective copy of the generator.
    */
-  inline CoordinateVector< _datatype_ > get_wall_copy(
-      unsigned int index,
-      const CoordinateVector< _datatype_ > &generator_position) const {
+  inline CoordinateVector<>
+  get_wall_copy(unsigned int index,
+                const CoordinateVector<> &generator_position) const {
     switch (index) {
     case NEWVORONOICELL_BOX_LEFT:
-      return CoordinateVector< _datatype_ >(
-          2 * _box.get_anchor().x() - generator_position.x(),
-          generator_position.y(), generator_position.z());
+      return CoordinateVector<>(2 * _box.get_anchor().x() -
+                                    generator_position.x(),
+                                generator_position.y(), generator_position.z());
     case NEWVORONOICELL_BOX_RIGHT:
-      return CoordinateVector< _datatype_ >(
+      return CoordinateVector<>(
           2 * (_box.get_anchor().x() + _box.get_sides().x()) -
               generator_position.x(),
           generator_position.y(), generator_position.z());
     case NEWVORONOICELL_BOX_FRONT:
-      return CoordinateVector< _datatype_ >(generator_position.x(),
-                                            2 * _box.get_anchor().y() -
-                                                generator_position.y(),
-                                            generator_position.z());
+      return CoordinateVector<>(generator_position.x(),
+                                2 * _box.get_anchor().y() -
+                                    generator_position.y(),
+                                generator_position.z());
     case NEWVORONOICELL_BOX_BACK:
-      return CoordinateVector< _datatype_ >(
+      return CoordinateVector<>(
           generator_position.x(),
           2 * (_box.get_anchor().y() + _box.get_sides().y()) -
               generator_position.y(),
           generator_position.z());
     case NEWVORONOICELL_BOX_BOTTOM:
-      return CoordinateVector< _datatype_ >(
-          generator_position.x(), generator_position.y(),
-          2 * _box.get_anchor().z() - generator_position.z());
+      return CoordinateVector<>(generator_position.x(), generator_position.y(),
+                                2 * _box.get_anchor().z() -
+                                    generator_position.z());
     case NEWVORONOICELL_BOX_TOP:
-      return CoordinateVector< _datatype_ >(
+      return CoordinateVector<>(
           generator_position.x(), generator_position.y(),
           2 * (_box.get_anchor().z() + _box.get_sides().z()) -
               generator_position.z());
     }
     cmac_error("Unknown box wall index: %u!", index);
-    return CoordinateVector< _datatype_ >();
+    return CoordinateVector<>();
   }
 
 public:
@@ -97,14 +97,14 @@ public:
    *
    * @param box Box.
    */
-  inline NewVoronoiBox(const Box< _datatype_ > box) : _box(box) {
+  inline NewVoronoiBox(const Box<> box) : _box(box) {
 
     // the large all-encompassing tetrahedron has one vertex in the anchor of
     // the (extended) box (with side length 3*'max_side')
     // the other vertices are at a distance of sqrt{6}*'max_side'
     // however, since we need to account for integer coordinates, we round this
     // up to 3
-    _datatype_ max_side = std::max(box.get_sides().x(), box.get_sides().y());
+    double max_side = std::max(box.get_sides().x(), box.get_sides().y());
     max_side = std::max(max_side, box.get_sides().z());
 
     _tetrahedron[0][0] = box.get_anchor().x() - box.get_sides().x();
@@ -131,9 +131,9 @@ public:
    * @param generator_position Position of the generator of the cell.
    * @return Value for that component.
    */
-  inline CoordinateVector< _datatype_ >
+  inline CoordinateVector<>
   get_position(unsigned int index,
-               const CoordinateVector< _datatype_ > &generator_position) const {
+               const CoordinateVector<> &generator_position) const {
     if (index >= NEWVORONOICELL_BOX_LEFT) {
       return get_wall_copy(index, generator_position);
     } else {
@@ -148,12 +148,12 @@ public:
    *
    * @return All-encompassing Box.
    */
-  inline Box< _datatype_ > get_box() const {
-    const CoordinateVector< _datatype_ > sides = CoordinateVector< _datatype_ >(
-        _tetrahedron[1].x() - _tetrahedron[0].x(),
-        _tetrahedron[2].y() - _tetrahedron[0].y(),
-        _tetrahedron[3].z() - _tetrahedron[0].z());
-    return Box< _datatype_ >(_tetrahedron[0], sides);
+  inline Box<> get_box() const {
+    const CoordinateVector<> sides =
+        CoordinateVector<>(_tetrahedron[1].x() - _tetrahedron[0].x(),
+                           _tetrahedron[2].y() - _tetrahedron[0].y(),
+                           _tetrahedron[3].z() - _tetrahedron[0].z());
+    return Box<>(_tetrahedron[0], sides);
   }
 };
 

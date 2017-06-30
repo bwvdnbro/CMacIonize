@@ -47,6 +47,7 @@ private:
       boost::multiprecision::unchecked, void > >
       int_insphere;
 
+public:
   /**
    * @brief Auxiliary typedef used to extract the mantissa from a double
    * precision floating point value.
@@ -87,7 +88,19 @@ private:
     } parts;
   } binary_double;
 
-public:
+  /**
+   * @brief Get the 52 bit mantissa of the given double precision floating point
+   * value.
+   *
+   * @param value Double precision floating point value.
+   * @return 52 bit mantissa of that same value.
+   */
+  inline static unsigned long get_mantissa(double value) {
+    binary_double dvalue;
+    dvalue.dvalue = value;
+    return dvalue.parts.mantissa;
+  }
+
   /**
    * @brief Test the orientation of the tetrahedron that has the four given
    * points as vertices.
@@ -107,28 +120,26 @@ public:
    * @param d Fourth vertex.
    * @return -1, 0, or 1, depending on the orientation of the tetrahedron.
    */
-  inline static char
-  orient3d_exact(const CoordinateVector< unsigned long > &a,
-                 const CoordinateVector< unsigned long > &b,
-                 const CoordinateVector< unsigned long > &c,
-                 const CoordinateVector< unsigned long > &d) {
-    // the input coordinates should be the 53 bit mantissas of double precision
-    // floating point values in the range [1, 2[
-    const int_orient3d axp = a.x();
-    const int_orient3d ayp = a.y();
-    const int_orient3d azp = a.z();
+  inline static char orient3d_exact(const CoordinateVector< double > &a,
+                                    const CoordinateVector< double > &b,
+                                    const CoordinateVector< double > &c,
+                                    const CoordinateVector< double > &d) {
 
-    const int_orient3d bxp = b.x();
-    const int_orient3d byp = b.y();
-    const int_orient3d bzp = b.z();
+    const int_orient3d axp = get_mantissa(a.x());
+    const int_orient3d ayp = get_mantissa(a.y());
+    const int_orient3d azp = get_mantissa(a.z());
 
-    const int_orient3d cxp = c.x();
-    const int_orient3d cyp = c.y();
-    const int_orient3d czp = c.z();
+    const int_orient3d bxp = get_mantissa(b.x());
+    const int_orient3d byp = get_mantissa(b.y());
+    const int_orient3d bzp = get_mantissa(b.z());
 
-    const int_orient3d dxp = d.x();
-    const int_orient3d dyp = d.y();
-    const int_orient3d dzp = d.z();
+    const int_orient3d cxp = get_mantissa(c.x());
+    const int_orient3d cyp = get_mantissa(c.y());
+    const int_orient3d czp = get_mantissa(c.z());
+
+    const int_orient3d dxp = get_mantissa(d.x());
+    const int_orient3d dyp = get_mantissa(d.y());
+    const int_orient3d dzp = get_mantissa(d.z());
 
     // since all values above are positive, their differences can be at most 53
     // bits long as well
@@ -196,19 +207,12 @@ public:
    * @param br Second vertex (real coordinates, in the range [1,2[).
    * @param cr Third vertex (real coordinates, in the range [1,2[).
    * @param dr Fourth vertex (real coordinates, in the range [1,2[).
-   * @param ai First vertex (integer coordinates).
-   * @param bi Second vertex (integer coordinates).
-   * @param ci Third vertex (integer coordinates).
-   * @param di Fourth vertex (integer coordinates).
    * @return -1, 0, or 1, depending on the orientation of the tetrahedron.
    */
-  inline static char
-  orient3d_adaptive(const CoordinateVector<> &ar, const CoordinateVector<> &br,
-                    const CoordinateVector<> &cr, const CoordinateVector<> &dr,
-                    const CoordinateVector< unsigned long > &ai,
-                    const CoordinateVector< unsigned long > &bi,
-                    const CoordinateVector< unsigned long > &ci,
-                    const CoordinateVector< unsigned long > &di) {
+  inline static char orient3d_adaptive(const CoordinateVector<> &ar,
+                                       const CoordinateVector<> &br,
+                                       const CoordinateVector<> &cr,
+                                       const CoordinateVector<> &dr) {
 
     const CoordinateVector<> ad = ar - dr;
     const CoordinateVector<> bd = br - dr;
@@ -237,7 +241,7 @@ public:
     } else if (result > errbound) {
       return 1;
     } else {
-      return orient3d_exact(ai, bi, ci, di);
+      return orient3d_exact(ar, br, cr, dr);
     }
   }
 
@@ -258,33 +262,32 @@ public:
    * @param e Test point.
    * @return -1, 0, or 1, depending on the outcome of the geometric test.
    */
-  inline static char
-  insphere_exact(const CoordinateVector< unsigned long > &a,
-                 const CoordinateVector< unsigned long > &b,
-                 const CoordinateVector< unsigned long > &c,
-                 const CoordinateVector< unsigned long > &d,
-                 const CoordinateVector< unsigned long > &e) {
+  inline static char insphere_exact(const CoordinateVector<> &a,
+                                    const CoordinateVector<> &b,
+                                    const CoordinateVector<> &c,
+                                    const CoordinateVector<> &d,
+                                    const CoordinateVector<> &e) {
     // the input coordinates should be the 53 bit mantissas of double precision
     // floating point values in the range [1, 2[
-    const int_insphere axp = a.x();
-    const int_insphere ayp = a.y();
-    const int_insphere azp = a.z();
+    const int_insphere axp = get_mantissa(a.x());
+    const int_insphere ayp = get_mantissa(a.y());
+    const int_insphere azp = get_mantissa(a.z());
 
-    const int_insphere bxp = b.x();
-    const int_insphere byp = b.y();
-    const int_insphere bzp = b.z();
+    const int_insphere bxp = get_mantissa(b.x());
+    const int_insphere byp = get_mantissa(b.y());
+    const int_insphere bzp = get_mantissa(b.z());
 
-    const int_insphere cxp = c.x();
-    const int_insphere cyp = c.y();
-    const int_insphere czp = c.z();
+    const int_insphere cxp = get_mantissa(c.x());
+    const int_insphere cyp = get_mantissa(c.y());
+    const int_insphere czp = get_mantissa(c.z());
 
-    const int_insphere dxp = d.x();
-    const int_insphere dyp = d.y();
-    const int_insphere dzp = d.z();
+    const int_insphere dxp = get_mantissa(d.x());
+    const int_insphere dyp = get_mantissa(d.y());
+    const int_insphere dzp = get_mantissa(d.z());
 
-    const int_insphere exp = e.x();
-    const int_insphere eyp = e.y();
-    const int_insphere ezp = e.z();
+    const int_insphere exp = get_mantissa(e.x());
+    const int_insphere eyp = get_mantissa(e.y());
+    const int_insphere ezp = get_mantissa(e.z());
 
     // since all values above are positive, the differences below can have at
     // most 53 significant bits
@@ -362,22 +365,13 @@ public:
    * @param cr Third vertex (real coordinates, in the range [1,2[).
    * @param dr Fourth vertex (real coordinates, in the range [1,2[).
    * @param er Fifth vertex (real coordinates, in the range [1,2[).
-   * @param ai First vertex (integer coordinates).
-   * @param bi Second vertex (integer coordinates).
-   * @param ci Third vertex (integer coordinates).
-   * @param di Fourth vertex (integer coordinates).
-   * @param ei Fifth vertex (integer coordinates).
    * @return -1, 0, or 1, depending on the outcome of the geometric test.
    */
-  inline static char
-  insphere_adaptive(const CoordinateVector<> &ar, const CoordinateVector<> &br,
-                    const CoordinateVector<> &cr, const CoordinateVector<> &dr,
-                    const CoordinateVector<> &er,
-                    const CoordinateVector< unsigned long > &ai,
-                    const CoordinateVector< unsigned long > &bi,
-                    const CoordinateVector< unsigned long > &ci,
-                    const CoordinateVector< unsigned long > &di,
-                    const CoordinateVector< unsigned long > &ei) {
+  inline static char insphere_adaptive(const CoordinateVector<> &ar,
+                                       const CoordinateVector<> &br,
+                                       const CoordinateVector<> &cr,
+                                       const CoordinateVector<> &dr,
+                                       const CoordinateVector<> &er) {
 
     const CoordinateVector<> ae = ar - er;
     const CoordinateVector<> be = br - er;
@@ -454,21 +448,8 @@ public:
     } else if (result > errbound) {
       return 1;
     } else {
-      return insphere_exact(ai, bi, ci, di, ei);
+      return insphere_exact(ar, br, cr, dr, er);
     }
-  }
-
-  /**
-   * @brief Get the 52 bit mantissa of the given double precision floating point
-   * value.
-   *
-   * @param value Double precision floating point value.
-   * @return 52 bit mantissa of that same value.
-   */
-  inline static unsigned long get_mantissa(double value) {
-    binary_double dvalue;
-    dvalue.dvalue = value;
-    return dvalue.parts.mantissa;
   }
 };
 

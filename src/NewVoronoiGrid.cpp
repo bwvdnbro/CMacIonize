@@ -27,10 +27,6 @@
 #include "ExactGeometricTests.hpp"
 #include "WorkDistributor.hpp"
 
-/*! @brief If not commented out, this prints the hexadecimal integers to the
- *  stdout. */
-//#define NEWVORONOIGRID_PRINT_INTEGERS
-
 /*! @brief If not commented out, this checks the empty circumsphere condition
  *  for every cell after every generator intersection (this is very slow, so you
  *  probably want to comment this out!). */
@@ -42,28 +38,14 @@
 //#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
 
 /**
- * @brief Print the hexadecimal representation of the given integer coordinate.
- *
- * @param x Integer coordinate.
- * @param s Identifying string that is prepended to the output.
- */
-#ifdef NEWVORONOIGRID_PRINT_INTEGERS
-#define newvoronoigrid_print_integer_coordinate(coordinate, s, ...)            \
-  cmac_status(s ": %#018lx %#018lx %#018lx", coordinate.x(), coordinate.y(),   \
-              coordinate.z(), ##__VA_ARGS__)
-#else
-#define newvoronoigrid_print_integer_coordinate(x, s, ...) (void)x
-#endif
-
-/**
  * @brief Check if the given cell fulfills the Delaunay condition.
  *
  * @param cell Index of the cell to check.
  */
 #ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
 #define newvoronoigrid_check_cell(cell)                                        \
-  _cells[cell].check_empty_circumsphere(_integer_voronoi_box,                  \
-                                        _integer_generator_positions)
+  _cells[cell].check_empty_circumsphere(_real_rescaled_box,                    \
+                                        _real_rescaled_positions)
 #else
 #define newvoronoigrid_check_cell(cell)
 #endif
@@ -97,8 +79,7 @@
  */
 NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
 
-  NewVoronoiCell cell(index, _real_voronoi_box, _real_generator_positions,
-                      _integer_generator_positions, _integer_voronoi_box,
+  NewVoronoiCell cell(index, _real_generator_positions, _real_voronoi_box,
                       _real_rescaled_positions, _real_rescaled_box, true);
 
   auto it = _point_locations.get_neighbours(index);
@@ -107,7 +88,6 @@ NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
     const unsigned int j = *ngbit;
     if (j != index) {
       cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                     _integer_voronoi_box, _integer_generator_positions,
                      _real_voronoi_box, _real_generator_positions);
       newvoronoigrid_check_cell(index);
     }
@@ -118,13 +98,12 @@ NewVoronoiCell NewVoronoiGrid::compute_cell(unsigned int index) const {
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const unsigned int j = *ngbit;
       cell.intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                     _integer_voronoi_box, _integer_generator_positions,
                      _real_voronoi_box, _real_generator_positions);
       newvoronoigrid_check_cell(index);
     }
   }
 
-  cell.finalize(_box, _real_generator_positions);
+  cell.finalize(_real_voronoi_box, _real_generator_positions);
 
   return cell;
 }
@@ -187,66 +166,20 @@ NewVoronoiGrid::NewVoronoiGrid(
       (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
           max_anchor.z();
 
-  _real_rescaled_box = NewVoronoiBox< double >(
+  _real_rescaled_box = NewVoronoiBox(
       Box<>(CoordinateVector<>(box_bottom_anchor_x, box_bottom_anchor_y,
                                box_bottom_anchor_z),
             CoordinateVector<>(box_top_anchor_x - box_bottom_anchor_x,
                                box_top_anchor_y - box_bottom_anchor_y,
                                box_top_anchor_z - box_bottom_anchor_z)));
 
-  const CoordinateVector< unsigned long > box_bottom_anchor(
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_x),
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_y),
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_z));
-  CoordinateVector< unsigned long > box_top_anchor(
-      ExactGeometricTests::get_mantissa(box_top_anchor_x),
-      ExactGeometricTests::get_mantissa(box_top_anchor_y),
-      ExactGeometricTests::get_mantissa(box_top_anchor_z));
-  Box< unsigned long > integer_box(box_bottom_anchor,
-                                   box_top_anchor - box_bottom_anchor);
-  newvoronoigrid_print_integer_coordinate(integer_box.get_anchor(),
-                                          "Box anchor");
-  newvoronoigrid_print_integer_coordinate(integer_box.get_sides(), "Box sides");
-  _integer_voronoi_box = NewVoronoiBox< unsigned long >(integer_box);
-  CoordinateVector< unsigned long > exp_min(0);
-  CoordinateVector< unsigned long > exp_max(0x000fffffffffffff);
-  CoordinateVector< unsigned long > corner0 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER0, exp_min);
-  CoordinateVector< unsigned long > corner1 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER1, exp_min);
-  CoordinateVector< unsigned long > corner2 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER2, exp_min);
-  CoordinateVector< unsigned long > corner3 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER3, exp_min);
-  newvoronoigrid_print_integer_coordinate(corner0, "Corner0:");
-  newvoronoigrid_print_integer_coordinate(corner1, "Corner1:");
-  newvoronoigrid_print_integer_coordinate(corner2, "Corner2:");
-  newvoronoigrid_print_integer_coordinate(corner3, "Corner3:");
-  cmac_assert(corner0.x() >= exp_min.x());
-  cmac_assert(corner0.y() >= exp_min.y());
-  cmac_assert(corner0.z() >= exp_min.z());
-  cmac_assert(corner1.x() <= exp_max.x());
-  cmac_assert(corner2.y() <= exp_max.y());
-  cmac_assert(corner3.z() <= exp_max.z());
-
   const unsigned int psize = positions.size();
   _real_rescaled_positions.resize(psize);
-  _integer_generator_positions.resize(psize);
   for (unsigned int i = 0; i < psize; ++i) {
     const double x = 1. + (positions[i].x() - min_anchor.x()) / max_anchor.x();
     const double y = 1. + (positions[i].y() - min_anchor.y()) / max_anchor.y();
     const double z = 1. + (positions[i].z() - min_anchor.z()) / max_anchor.z();
     _real_rescaled_positions[i] = CoordinateVector<>(x, y, z);
-    _integer_generator_positions[i] =
-        CoordinateVector< unsigned long >(ExactGeometricTests::get_mantissa(x),
-                                          ExactGeometricTests::get_mantissa(y),
-                                          ExactGeometricTests::get_mantissa(z));
-    cmac_assert(_integer_generator_positions[i].x() >= exp_min.x());
-    cmac_assert(_integer_generator_positions[i].x() <= exp_max.x());
-    cmac_assert(_integer_generator_positions[i].y() >= exp_min.y());
-    cmac_assert(_integer_generator_positions[i].y() <= exp_max.y());
-    cmac_assert(_integer_generator_positions[i].z() >= exp_min.z());
-    cmac_assert(_integer_generator_positions[i].z() <= exp_max.z());
   }
 }
 
