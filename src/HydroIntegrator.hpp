@@ -63,6 +63,9 @@ private:
   /*! @brief Flag indicating whether we use radiative heating or not. */
   bool _do_radiative_heating;
 
+  /*! @brief Flag indicating whether we want radiative cooling or not. */
+  bool _do_radiative_cooling;
+
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   RiemannSolver _solver;
 
@@ -96,6 +99,8 @@ public:
    * @param gamma Adiabatic index of the gas.
    * @param do_radiative_heating Flag indicating whether to use radiative
    * heating or not.
+   * @param do_radiative_cooling Flag indicating whether to use radiative
+   * cooling or not.
    * @param boundary_xlow Type of boundary for the lower x boundary.
    * @param boundary_xhigh Type of boundary for the upper x boundary.
    * @param boundary_ylow Type of boundary for the lower y boundary.
@@ -106,6 +111,7 @@ public:
    * the validity of the boundary condition types).
    */
   inline HydroIntegrator(double gamma, bool do_radiative_heating,
+                         bool do_radiative_cooling,
                          std::string boundary_xlow = "reflective",
                          std::string boundary_xhigh = "reflective",
                          std::string boundary_ylow = "reflective",
@@ -115,7 +121,7 @@ public:
                          CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false))
       : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
-        _solver(gamma) {
+        _do_radiative_cooling(do_radiative_cooling), _solver(gamma) {
 
     _gm1 = _gamma - 1.;
 
@@ -167,6 +173,7 @@ public:
       : HydroIntegrator(
             params.get_value< double >("hydro:polytropic_index", 5. / 3.),
             params.get_value< bool >("hydro:radiative_heating", true),
+            params.get_value< bool >("hydro:radiative_cooling", false),
             params.get_value< std::string >("hydro:boundary_xlow",
                                             "reflective"),
             params.get_value< std::string >("hydro:boundary_xhigh",
@@ -355,7 +362,7 @@ public:
     }
 
     // do radiation (if enabled)
-    if (_do_radiative_heating) {
+    if (_do_radiative_heating || _do_radiative_cooling) {
       const double boltzmann_k = 1.38064852e-23;
       // half since we consider the average mass of protons and electrons
       const double mH = 1.6737236e-27;
@@ -365,7 +372,7 @@ public:
 
         const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
-        if (xH < 0.25) {
+        if (_do_radiative_heating && xH < 0.25) {
           // assume the gas is ionized; add a heating term equal to the energy
           // difference
           const double Tgas = 1.e4;
@@ -378,7 +385,8 @@ public:
           // minus sign, as delta_total_energy represents a sum of fluxes, which
           // are defined as an outflux
           it.get_hydro_variables().delta_conserved(4) -= dE;
-        } else {
+        }
+        if (_do_radiative_cooling && xH >= 0.25) {
           // assume the gas is neutral; subtract a cooling term equal to the
           // energy difference
           const double Tgas = 1.e2;

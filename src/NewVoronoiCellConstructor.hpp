@@ -36,13 +36,7 @@
 #include "NewVoronoiVariables.hpp"
 #include "VoronoiFace.hpp"
 
-#ifdef HAVE_MULTIPRECISION
 #include "ExactGeometricTests.hpp"
-#else
-#error                                                                         \
-    "Boost multiprecision was not found on this system, which means the new "  \
-    "Voronoi construction algorithm will not work!"
-#endif
 
 #include <climits>
 #include <ostream>
