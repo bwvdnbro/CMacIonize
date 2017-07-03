@@ -19,7 +19,8 @@
 /**
  * @file SPHVoronoiGeneratorDistribution.hpp
  *
- * @brief VoronoiGeneratorDistribution implementation with generating sites imported from a file.
+ * @brief VoronoiGeneratorDistribution implementation with generating sites 
+ * imported from a file.
  *
  * @author Maya A. Petkova
  */
@@ -36,7 +37,8 @@
 #include <fstream>
 
 /**
- * @brief Uniform random VoronoiGeneratorDistribution implementation.
+ * @brief VoronoiGeneratorDistribution implementation with generating sites 
+ * imported from a file.
  */
 class SPHVoronoiGeneratorDistribution
     : public VoronoiGeneratorDistribution {
@@ -48,12 +50,9 @@ private:
   unsigned int _current_number;
 
   /*! @brief Box containing the generators (in m). */
-  const Box _box;
+  const Box<> _box;
 
-  /*! @brief RandomGenerator used to generate the positions. */
-  RandomGenerator _random_generator;
-
-  /*! @brief Name of file used to import Voronoi generating sites from. */
+  /*! @brief Name of ASCII file used to import Voronoi generating sites from. */
   std::string _filename;
 
   /*! @brief RandomGenerator used to generate the positions. */
@@ -64,37 +63,47 @@ public:
    * @brief Constructor.
    *
    * @param box Box containing the generators (in m).
-   * @param number_of_positions Number of random generator positions to
+   * @param number_of_positions Number of SPH generator positions to
    * generate.
-   * @param random_seed Seed for the random number generator.
+   * @param filename Name of the ASCII text file to read.
    * @param log Log to write logging info to.
    */
-  SPHVoronoiGeneratorDistribution(Box box,
+  SPHVoronoiGeneratorDistribution(Box<> box,
 				  unsigned int number_of_positions,
 				  std::string filename,
-				  int random_seed, Log *log = nullptr)
+				  Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
-        _box(box), _random_generator(random_seed), _filename(filename) {
+        _box(box), _filename(filename) {
 
     _generator_positions.resize(number_of_positions);
 
-    std::ifstream infile(filename);
-    unsigned int index_i=0;
-    double cx, cy, cz, num_d, nutr_f;
-    while (infile >> cx >> cy >> cz >> num_d >> nutr_f) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    cmac_error("Could not open file \"%s\"!", filename.c_str());
+  }
+
+  unsigned int index_i=0;
+  std::string line;
+  while (getline(file, line)) {
+    if (line[0] != '#') {
+      double cx, cy, cz;
+      std::stringstream linestream(line);
+      // read Voronoi cell generating cite coordinates
+      linestream >> cx >> cy >> cz;
       _generator_positions[index_i][0] = cx;
       _generator_positions[index_i][1] = cy;
       _generator_positions[index_i][2] = cz;
-    index_i++;
+      index_i++;
     }
-    infile.close();
+  }
+   
+  file.close();
 
 
     if (log) {
       log->write_status(
           "SPHVoronoiGeneratorDistribution with ",
-          _number_of_positions, " positions and random seed ", random_seed,
-          ".");
+          _number_of_positions, ".");
     }
   }
 
@@ -107,18 +116,16 @@ public:
   SPHVoronoiGeneratorDistribution(ParameterFile &params,
                                             Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
+					Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >("densitygrid:voronoi_generator_"
                                              "distribution:number_of_positions",
-                                             100),
+                                             1000),
             params.get_value< std::string >("densitygrid:voronoi_generator_"
                                              "distribution:file_name",
                                              "SPH.txt"),
-            params.get_value< int >(
-                "densitygrid:voronoi_generator_distribution:random_seed", 42),
             log) {}
 
   /**
@@ -131,9 +138,9 @@ public:
   }
 
   /**
-   * @brief Get a uniform random generator position.
+   * @brief Get SPH generator position.
    *
-   * @return Uniform random generator position (in m).
+   * @return SPH generator position (in m).
    */
   virtual CoordinateVector<> get_position() {
     cmac_assert(_current_number < _generator_positions.size());

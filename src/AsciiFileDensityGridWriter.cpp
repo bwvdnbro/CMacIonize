@@ -75,9 +75,10 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
 
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
-    double n = it.get_number_density();        
-    IonName ion = static_cast< IonName >(0);     // Maya
-    double frac = it.get_ionic_fraction(ion);    // Maya
+    double n = it.get_ionization_variables().get_number_density();        
+    //IonName ion = static_cast< IonName >(0);     // Maya
+    IonName ion = ION_H_n;
+    double frac = it.get_ionization_variables().get_ionic_fraction(ion);    // Maya
     file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t" << frac <<"\n";   // Maya
 
   }
