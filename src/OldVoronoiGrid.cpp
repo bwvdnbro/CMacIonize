@@ -321,8 +321,21 @@ OldVoronoiGrid::get_geometrical_faces(unsigned int index) const {
   const std::vector< VoronoiFace > faces = _cells[index]->get_faces();
   std::vector< Face > geometrical_faces;
   for (unsigned int i = 0; i < faces.size(); ++i) {
-    const CoordinateVector<> midpoint = faces[i].get_midpoint();
-    const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    CoordinateVector<> midpoint = faces[i].get_midpoint();
+    std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    // unit conversion
+    for (unsigned int j = 0; j < 3; ++j) {
+      midpoint[j] = _box.get_anchor()[j] +
+                    (midpoint[j] - _internal_box.get_anchor()[j]) *
+                        _box.get_sides()[j] / _internal_box.get_sides()[j];
+    }
+    for (unsigned int j = 0; j < vertices.size(); ++j) {
+      for (unsigned int k = 0; k < 3; ++k) {
+        vertices[j][k] = _box.get_anchor()[k] +
+                         (vertices[j][k] - _internal_box.get_anchor()[k]) *
+                             _box.get_sides()[k] / _internal_box.get_sides()[k];
+      }
+    }
     geometrical_faces.push_back(Face(midpoint, vertices));
   }
   return geometrical_faces;
