@@ -35,7 +35,7 @@
 
 /*! @brief If defined, this internally remaps all coordinates to the interval
  *  [0., 1.]. */
-#define OLDVORONOIGRID_REMAP
+//#define OLDVORONOIGRID_REMAP
 
 /*! @brief If not commented out, this checks if the total volume of all the
  *  cells in the grid matches the total volume of the simulation box (within a
