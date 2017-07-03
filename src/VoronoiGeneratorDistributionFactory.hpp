@@ -34,11 +34,13 @@
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
 #include "UniformRegularVoronoiGeneratorDistribution.hpp"
+#include "SPHVoronoiGeneratorDistribution.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
 #include "CMacIonizeVoronoiGeneratorDistribution.hpp"
 #endif
+
 
 /**
  * @brief Factory for VoronoiGeneratorDistribution instances.
@@ -95,10 +97,13 @@ public:
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRegular") {
       return new UniformRegularVoronoiGeneratorDistribution(params, log);
+    } else if (type == "SPH") {                                            // Maya
+      return new SPHVoronoiGeneratorDistribution(params, log);   // Maya
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonize") {
       return new CMacIonizeVoronoiGeneratorDistribution(params);
 #endif
+
     } else {
       cmac_error("Unknown VoronoiGeneratorDistribution type: \"%s\".",
                  type.c_str());
