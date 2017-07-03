@@ -33,6 +33,10 @@
 #include <fstream>
 #include <map>
 
+//Maya
+#include "VoronoiFace.hpp"
+#include "VoronoiGrid.hpp"
+
 /**
  * @brief Cubic spline kernel.
  *
@@ -509,7 +513,8 @@ double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
+// Maya
+/*DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
   DensityValues values;
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
@@ -526,6 +531,221 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     const double splineval = m * kernel(q, h);
     density += splineval;
   }
+
+  // convert density to particle density (assuming hydrogen only)
+  values.set_number_density(density / 1.6737236e-27);
+  // TODO: other quantities
+  // temporary values
+  values.set_temperature(_initial_temperature);
+  values.set_ionic_fraction(ION_H_n, 1.e-6);
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
+
+  return values;
+}
+
+*/
+
+
+
+
+double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, double R_0, double h) {
+
+  double B1, B2, B3, mu, a, logs, u;
+  double full_int;
+  double a2, cosp, cosp2, r03, r0h2, r0h3, r0h_2, r0h_3, tanp;
+  double r2, R, linedist2, phi1, phi2, h2;
+  double I0, I1, I_1, I_2, I_3, I_4, I_5;
+  double D2, D3;
+
+  B1=0.0;
+  B2=0.0;
+  B3=0.0;
+
+  if(r0==0.0) return 0.0;
+  if(R_0==0.0) return 0.0;
+  if(phi==0.0) return 0.0;
+
+  h2 = h*h;
+  r03 = r0*r0*r0;
+  r0h2 = r0/h*r0/h;
+  r0h3 = r0h2*r0/h;
+  r0h_2 = h/r0*h/r0;
+  r0h_3 = r0h_2*h/r0;
+
+
+  if(r0 >= 2.0*h) {
+    B3 = h2*h /4.;
+  }
+  else if(r0 > h) {
+    B3 = r03/4. *(-4./3. + (r0/h) - 0.3*r0h2 + 1./30.*r0h3 - 1./15. *r0h_3+ 8./5.*r0h_2);
+    B2 = r03/4. *(-4./3. + (r0/h) - 0.3*r0h2 + 1./30.*r0h3 - 1./15. *r0h_3);
+  }
+  else {
+    B3 = r03/4. *(-2./3. + 0.3*r0h2 - 0.1*r0h3 + 7./5.*r0h_2);
+    B2 = r03/4. *(-2./3. + 0.3*r0h2 - 0.1*r0h3 - 1./5.*r0h_2);
+    B1 = r03/4. *(-2./3. + 0.3*r0h2 - 0.1*r0h3);
+  }
+
+
+  a = R_0/r0;
+  a2 = a*a;
+
+  linedist2 = r0*r0 + R_0*R_0;
+  R = R_0/cos(phi);
+  r2 = r0*r0 + R*R;
+
+
+  full_int = 0.0;
+  D2 = 0.0;
+  D3 = 0.0;
+
+  if(linedist2 <= h2) {
+    ////// phi1 business /////
+    phi1 = acos(R_0/sqrt(h*h-r0*r0));
+    
+    cosp = cos(phi1);
+    cosp2 = cosp*cosp;
+    mu = cosp/a / sqrt(1. + cosp2/a2);
+    
+    tanp = tan(phi1);
+    
+    I0  = phi1;
+    I_2 = phi1 +   a2 * tanp;
+    I_4 = phi1 + 2*a2 * tanp + 1./3.*a2*a2 * tanp*(2. + 1./cosp2);
+    
+    u = sin(phi1)*sqrt(1-mu*mu);
+    logs = log(1+u) - log(1-u);
+    I1 = atan(u/a);
+    
+    I_1 = a/2.*logs + I1;
+    I_3 = I_1 + a*(1.+a2)/4. *(2*u/(1-u*u) + logs);
+    I_5 = I_3 + a*(1.+a2)*(1.+a2)/16. *( (10*u - 6*u*u*u)/(1-u*u)/(1-u*u) + 3.*logs);
+    
+    D2 = -1./6.*I_2 + 0.25*(r0/h) *I_3 - 0.15*r0h2 *I_4 + 1./30.*r0h3 *I_5 - 1./60. *r0h_3 *I1 + (B1-B2)/r03 *I0;
+    
+    
+    ////// phi2 business /////
+    phi2 = acos(R_0/sqrt(4.0*h*h-r0*r0));
+    
+    cosp = cos(phi2);
+    cosp2 = cosp*cosp;
+    mu = cosp/a / sqrt(1. + cosp2/a2);
+    
+    tanp = tan(phi2);
+    
+    I0  = phi2;
+    I_2 = phi2 +   a2 * tanp;
+    I_4 = phi2 + 2*a2 * tanp + 1./3.*a2*a2 * tanp*(2. + 1./cosp2);
+    
+    u = sin(phi2)*sqrt(1-mu*mu);
+    logs = log(1+u) - log(1-u);
+    I1 = atan(u/a);
+    
+    I_1 = a/2.*logs + I1;
+    I_3 = I_1 + a*(1.+a2)/4. *(2*u/(1-u*u) + logs);
+    I_5 = I_3 + a*(1.+a2)*(1.+a2)/16. *( (10*u - 6*u*u*u)/(1-u*u)/(1-u*u) + 3.*logs);
+    
+    D3 = 1./3.*I_2 - 0.25*(r0/h) *I_3 + 3./40.*r0h2 *I_4 - 1./120.*r0h3 *I_5 + 4./15. *r0h_3 *I1 + (B2-B3)/r03 *I0 + D2;
+  }
+  else if(linedist2 <= 4.0*h2) {
+    ////// phi2 business /////
+    phi2 = acos(R_0/sqrt(4.0*h*h-r0*r0));
+    
+    cosp = cos(phi2);
+    cosp2 = cosp*cosp;
+    mu = cosp/a / sqrt(1. + cosp2/a2);
+    
+    tanp = tan(phi2);
+    
+    I0  = phi2;
+    I_2 = phi2 +   a2 * tanp;
+    I_4 = phi2 + 2*a2 * tanp + 1./3.*a2*a2 * tanp*(2. + 1./cosp2);
+    
+    u = sin(phi2)*sqrt(1-mu*mu);
+    logs = log(1+u) - log(1-u);
+    I1 = atan(u/a);
+    
+    I_1 = a/2.*logs + I1;
+    I_3 = I_1 + a*(1.+a2)/4. *(2*u/(1-u*u) + logs);
+    I_5 = I_3 + a*(1.+a2)*(1.+a2)/16. *( (10*u - 6*u*u*u)/(1-u*u)/(1-u*u) + 3.*logs);
+    
+    D3 = 1./3.*I_2 - 0.25*(r0/h) *I_3 + 3./40.*r0h2 *I_4 - 1./120.*r0h3 *I_5 + 4./15. *r0h_3 *I1 + (B2-B3)/r03 *I0 + D2;
+  }
+  
+  
+
+  //////////////////////////////
+
+
+  cosp = cos(phi);
+  cosp2 = cosp*cosp;
+  mu = cosp/a / sqrt(1. + cosp2/a2);
+
+  tanp = tan(phi);
+
+  I0  = phi;
+  I_2 = phi +   a2 * tanp;
+  I_4 = phi + 2*a2 * tanp + 1./3.*a2*a2 * tanp*(2. + 1./cosp2);
+
+  u = sin(phi)*sqrt(1-mu*mu);
+  logs = log(1+u) - log(1-u);
+  I1 = atan(u/a);
+
+  I_1 = a/2.*logs + I1;
+  I_3 = I_1 + a*(1.+a2)/4. *(2*u/(1-u*u) + logs);
+  I_5 = I_3 + a*(1.+a2)*(1.+a2)/16. *( (10*u - 6*u*u*u)/(1-u*u)/(1-u*u) + 3.*logs);
+
+  
+  if(r2 < h2) {
+    full_int = r0h3/M_PI  * (1./6. *I_2 - 3./40.*r0h2 *I_4 + 1./40.*r0h3 *I_5 + B1/r03 *I0);
+  }
+  else if(r2 < 4.0*h2) {
+    full_int=  r0h3/M_PI  * (0.25 * (4./3. *I_2 - (r0/h) *I_3 + 0.3*r0h2 *I_4 - 
+					  1./30.*r0h3 *I_5 + 1./15. *r0h_3 *I1) + B2/r03 *I0 + D2);
+  }
+  else {
+    full_int = r0h3/M_PI  * (-0.25*r0h_3 *I1 + B3/r03 *I0 + D3);
+  }
+  
+  return full_int;
+}
+
+/**
+ * @brief Function that gives the density for a given cell -> Maya.
+ *
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
+ */
+DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+  const CoordinateVector<> particle(0.,0.,0.);
+  printf("Cell midpoint: %g %g %g\n",position[0],position[1],position[2]);
+
+  double density = 0.;
+  const double r = (position-particle).norm();
+  const double h = 0.5*1.543e+17;
+  const double q = r / h;
+  const double splineval = kernel(q, h);
+  
+
+  std::vector< Face > face_vector=cell.get_faces();
+  //std::vector< VoronoiFace > face_vector=VoronoiGrid::get_faces();
+  //printf("Faces: %lu\n",face_vector.size());
+  for(unsigned int i=0; i<face_vector.size(); i++) {
+    if(i==0){
+      const CoordinateVector<> face_position =face_vector[1].get_midpoint();
+      printf("Face midpoint: %g %g %g\n",face_position[0],face_position[1],face_position[2]);
+
+      for(Face::Vertices j=face_vector[i].first_vertex(); j!=face_vector[i].last_vertex(); ++j) {
+	//const CoordinateVector<> vert_position = j.get_position();
+	//printf("Vertices of first face: %g %g %g\n",vert_position[0],vert_position[1],vert_position[2]);
+      }
+    }
+  }
+
+  density += splineval;
 
   // convert density to particle density (assuming hydrogen only)
   values.set_number_density(density / 1.6737236e-27);

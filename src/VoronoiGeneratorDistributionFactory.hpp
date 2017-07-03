@@ -33,6 +33,7 @@
 // implementations
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
+#include "UniformRegularVoronoiGeneratorDistribution.hpp"
 #include "SPHVoronoiGeneratorDistribution.hpp"
 
 // HDF5 dependent implementations
@@ -94,6 +95,8 @@ public:
       return new PerturbedCartesianVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
+    } else if (type == "UniformRegular") {
+      return new UniformRegularVoronoiGeneratorDistribution(params, log);
     } else if (type == "SPH") {                                            // Maya
       return new SPHVoronoiGeneratorDistribution(params, log);   // Maya
 #ifdef HAVE_HDF5
