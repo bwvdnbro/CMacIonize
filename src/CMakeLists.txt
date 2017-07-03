@@ -109,8 +109,6 @@ set(CMACIONIZE_SOURCES
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     CMacIonize.cpp
-    CMacIonizeSnapshotDensityFunction.cpp
-    CMacIonizeVoronoiGeneratorDistribution.cpp
     CommandLineOption.cpp
     CommandLineParser.cpp
     CompilerInfo.cpp.in
@@ -218,6 +216,8 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
 list(APPEND CMACIONIZE_SOURCES
+    CMacIonizeSnapshotDensityFunction.cpp
+    CMacIonizeVoronoiGeneratorDistribution.cpp
     FLASHSnapshotDensityFunction.cpp
     GadgetDensityGridWriter.cpp
     GadgetSnapshotDensityFunction.cpp

@@ -62,4 +62,6 @@
  *  just hardcode its value. */
 #define MAX_NUM_THREADS 128
 
+#define CONFIGURATION_OPTIONS @CONFIGURATION_OPTIONS@
+
 #endif // CONFIGURATION_HPP

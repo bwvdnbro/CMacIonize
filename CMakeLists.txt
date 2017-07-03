@@ -20,7 +20,8 @@ cmake_minimum_required(VERSION 2.6)
 
 # Set the default CMAKE_BUILD_TYPE
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "blabla" FORCE)
+    set(CMAKE_BUILD_TYPE Release CACHE INTERNAL
+        "Set the default CMake build type to Release" FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 project(CMacIonize)
@@ -39,6 +40,11 @@ macro(add_compiler_flag FLAG FATAL)
     endif(${FATAL} STREQUAL "REQUIRED")
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
+
+macro(add_configuration_option NAME VALUE)
+  set(${NAME} ${VALUE})
+  set(CONFIGURATION_OPTIONS "${CONFIGURATION_OPTIONS}\"${NAME}=${VALUE}\",")
+endmacro(add_configuration_option)
 
 # Check if we are on a POSIX system. If not, some functionality will not work
 # and we abort the configuration
@@ -103,10 +109,10 @@ endif(NOT HAVE_ATOMIC)
 # so this is disabled by default
 if(LOCKFREE)
   message(STATUS "Enabling lock free cell operations.")
-  set(USE_LOCKFREE True)
+  add_configuration_option(USE_LOCKFREE True)
 else(LOCKFREE)
   message(STATUS "Lock free cell operations disabled.")
-  set(USE_LOCKFREE False)
+  add_configuration_option(USE_LOCKFREE False)
 endif(LOCKFREE)
 
 # Enable all standard compiler warnings and enforce them
@@ -131,7 +137,8 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 # Find HDF5.
 find_package(HDF5)
 if(HDF5_FOUND)
-  set(HAVE_HDF5 True)
+  add_configuration_option(HAVE_HDF5 True)
+
   message(STATUS "HDF5 found: ${HDF5_VERSION}")
   # Link the appropriate headers and libraries.
   include_directories(${HDF5_INCLUDE_DIRS})
@@ -156,18 +163,18 @@ if(HDF5_FOUND)
     add_definitions(-DHDF5_OLD_API)
   endif(NOT ${HDF5_VERSION} VERSION_GREATER "1.6")
 else(HDF5_FOUND)
-  set(HAVE_HDF5 False)
+  add_configuration_option(HAVE_HDF5 False)
   message(WARNING "HDF5 not found, some modules will not be build!")
 endif(HDF5_FOUND)
 
 # Find OpenMP.
 find_package(OpenMP)
 if(OPENMP_FOUND)
-  set(HAVE_OPENMP True)
+  add_configuration_option(HAVE_OPENMP True)
   message(STATUS "OpenMP found. Shared memory parallelization will work.")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 else(OPENMP_FOUND)
-  set(HAVE_OPENMP False)
+  add_configuration_option(HAVE_OPENMP False)
   message(WARNING
           "OpenMP not found. Shared memory parallelization will not work.")
 endif(OPENMP_FOUND)
@@ -175,13 +182,14 @@ endif(OPENMP_FOUND)
 # Find MPI
 find_package(MPI)
 if(MPI_CXX_FOUND)
-  set(HAVE_MPI True)
+  add_configuration_option(HAVE_MPI True)
   message(STATUS "MPI found. Distributed memory parallelization will work.")
   message(STATUS "MPI exec: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS"
                  "${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
   include_directories(${MPI_C_INCLUDE_PATH})
   include_directories(${MPI_CXX_INCLUDE_PATH})
 else(MPI_CXX_FOUND)
+  add_configuration_option(HAVE_MPI False)
   message(WARNING
           "MPI not found. Distributed memory parallelization will not work.")
 endif(MPI_CXX_FOUND)
@@ -204,19 +212,19 @@ if(Boost_FOUND)
       include_directories(${PYTHON_INCLUDE_PATH})
       include_directories(${NUMPY_OUTPUT})
       set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
-      set(HAVE_PYTHON True)
+      add_configuration_option(HAVE_PYTHON True)
     else(NUMPY_RESULT STREQUAL "0")
       message(WARNING
               "NumPy not found: ${NUMPY_ERROR}. Not building Python modules.")
-      set(HAVE_PYTHON False)
+      add_configuration_option(HAVE_PYTHON False)
     endif(NUMPY_RESULT STREQUAL "0")
   else(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
     message(WARNING "Python not found. Not building Python modules.")
-    set(HAVE_PYTHON False)
+    add_configuration_option(HAVE_PYTHON False)
   endif(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
 else(Boost_FOUND)
   message(WARNING "Boost Python not found. Not building Python modules.")
-  set(HAVE_PYTHON False)
+  add_configuration_option(HAVE_PYTHON False)
 endif(Boost_FOUND)
 
 # Find Boost multiprecision (available since Boost 1.53.0)
@@ -224,41 +232,47 @@ find_package(Boost 1.53.0)
 if(Boost_FOUND)
   message(STATUS "Found Boost multiprecision.")
   include_directories(${Boost_INCLUDE_DIRS})
-  set(HAVE_MULTIPRECISION True)
+  add_configuration_option(HAVE_MULTIPRECISION True)
 else(Boost_FOUND)
   message(WARNING
           "Boost multiprecision not found. Exact arithmetics will not work!")
-  set(HAVE_MULTIPRECISION False)
+  add_configuration_option(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
 
 # Check if we need to activate fast math
 if(ACTIVATE_FAST_MATH)
   message(STATUS "Activating Fast Math...")
   add_compiler_flag("-ffast-math" OPTIONAL)
+  add_configuration_option(HAVE_FAST_MATH True)
+else(ACTIVATE_FAST_MATH)
+  add_configuration_option(HAVE_FAST_MATH False)
 endif(ACTIVATE_FAST_MATH)
 
 # Check if we need to activate vectorization
 if(ACTIVATE_VECTORIZATION)
   message(STATUS "Activating vectorization...")
   add_compiler_flag("-ftree-vectorize" OPTIONAL)
+  add_configuration_option(HAVE_VECTORIZATION True)
+else(ACTIVATE_VECTORIZATION)
+  add_configuration_option(HAVE_VECTORIZATION False)
 endif(ACTIVATE_VECTORIZATION)
 
 # Check if we need to activate assertions
 if(ACTIVATE_ASSERTIONS)
-  set(HAVE_ASSERTIONS True)
+  add_configuration_option(HAVE_ASSERTIONS True)
   message(STATUS "Assertions are activated.")
 else(ACTIVATE_ASSERTIONS)
-  set(HAVE_ASSERTIONS False)
+  add_configuration_option(HAVE_ASSERTIONS False)
   message(STATUS "Assertions not activated.")
 endif(ACTIVATE_ASSERTIONS)
 
 # Check if we need to output information about the jobs being executed on
 # different threads
 if(ACTIVATE_OUTPUT_CYCLES)
-  set(HAVE_OUTPUT_CYCLES True)
+  add_configuration_option(HAVE_OUTPUT_CYCLES True)
   message(STATUS "Each thread will output a job statistics file (slow!).")
 else(ACTIVATE_OUTPUT_CYCLES)
-  set(HAVE_OUTPUT_CYCLES False)
+  add_configuration_option(HAVE_OUTPUT_CYCLES True)
 endif(ACTIVATE_OUTPUT_CYCLES)
 
 # Set the path where the generated executables are stored.
