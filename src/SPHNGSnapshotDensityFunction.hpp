@@ -80,6 +80,8 @@ private:
 
   static double kernel(const double q, const double h);
 
+  static double full_integral_new(double phi, double r0, double R_0, double h);
+
   /**
    * @brief Skip a block from the given Fortran unformatted binary file.
    *
