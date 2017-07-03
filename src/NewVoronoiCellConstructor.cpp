@@ -25,6 +25,7 @@
  */
 #include "NewVoronoiCellConstructor.hpp"
 #include "Error.hpp"
+#include <cfloat>
 
 /*! @brief Control if the algorithm should print detailed case information. */
 //#define NEWVORONOICELL_PRINT_CASES

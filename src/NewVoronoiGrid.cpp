@@ -27,6 +27,7 @@
 #include "ExactGeometricTests.hpp"
 #include "NewVoronoiCellConstructor.hpp"
 #include "WorkDistributor.hpp"
+#include <cfloat>
 
 /*! @brief If not commented out, this checks the empty circumsphere condition
  *  for every cell after every generator intersection (this is very slow, so you

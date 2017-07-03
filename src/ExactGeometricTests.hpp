@@ -27,15 +27,19 @@
 #ifndef EXACTGEOMETRICTESTS_HPP
 #define EXACTGEOMETRICTESTS_HPP
 
+#include "Configuration.hpp"
 #include "CoordinateVector.hpp"
 
+#ifdef HAVE_MULTIPRECISION
 #include <boost/multiprecision/integer.hpp>
+#endif
 
 /**
  * @brief Exact geometric tests to test the orientation of a tetrahedron, and
  * to test if a point is inside the circumsphere of a tetrahedron.
  */
 class ExactGeometricTests {
+#ifdef HAVE_MULTIPRECISION
 private:
   /*! @brief Extended precision integer used for the exact tetrahedron
    *  orientation test. */
@@ -46,6 +50,7 @@ private:
       278, 278, boost::multiprecision::signed_magnitude,
       boost::multiprecision::unchecked, void > >
       int_insphere;
+#endif
 
 public:
   /**
@@ -124,7 +129,7 @@ public:
                                     const CoordinateVector< double > &b,
                                     const CoordinateVector< double > &c,
                                     const CoordinateVector< double > &d) {
-
+#ifdef HAVE_MULTIPRECISION
     const int_orient3d axp = get_mantissa(a.x());
     const int_orient3d ayp = get_mantissa(a.y());
     const int_orient3d azp = get_mantissa(a.z());
@@ -183,6 +188,10 @@ public:
     } else {
       return 0;
     }
+#else
+    cmac_error("Cannot use exact geometric tests, as Boost Multiprecision was "
+               "not found on the system!");
+#endif
   }
 
   /**
@@ -267,8 +276,7 @@ public:
                                     const CoordinateVector<> &c,
                                     const CoordinateVector<> &d,
                                     const CoordinateVector<> &e) {
-    // the input coordinates should be the 53 bit mantissas of double precision
-    // floating point values in the range [1, 2[
+#ifdef HAVE_MULTIPRECISION
     const int_insphere axp = get_mantissa(a.x());
     const int_insphere ayp = get_mantissa(a.y());
     const int_insphere azp = get_mantissa(a.z());
@@ -343,6 +351,10 @@ public:
     } else {
       return 0;
     }
+#else
+    cmac_error("Cannot use exact geometric tests, as Boost Multiprecision was "
+               "not found on the system!");
+#endif
   }
 
   /**

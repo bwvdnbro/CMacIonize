@@ -874,20 +874,22 @@ add_unit_test(NAME testOIAMRRefinementScheme
               SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
 
 ## Unit test for NewVoronoiGrid
-set(TESTNEWVORONOIGRID_SOURCES
-    testNewVoronoiGrid.cpp
+if(HAVE_MULTIPRECISION)
+  set(TESTNEWVORONOIGRID_SOURCES
+      testNewVoronoiGrid.cpp
 
-    ../src/NewVoronoiBox.hpp
-    ../src/NewVoronoiCell.hpp
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiCellConstructor.hpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/NewVoronoiGrid.hpp
-    ../src/NewVoronoiTetrahedron.hpp
-    ../src/NewVoronoiVariables.hpp
-)
-add_unit_test(NAME testNewVoronoiGrid
-              SOURCES ${TESTNEWVORONOIGRID_SOURCES})
+      ../src/NewVoronoiBox.hpp
+      ../src/NewVoronoiCell.hpp
+      ../src/NewVoronoiCellConstructor.cpp
+      ../src/NewVoronoiCellConstructor.hpp
+      ../src/NewVoronoiGrid.cpp
+      ../src/NewVoronoiGrid.hpp
+      ../src/NewVoronoiTetrahedron.hpp
+      ../src/NewVoronoiVariables.hpp
+  )
+  add_unit_test(NAME testNewVoronoiGrid
+                SOURCES ${TESTNEWVORONOIGRID_SOURCES})
+endif(HAVE_MULTIPRECISION)
 
 ## Unit test for ExactGeometricTests
 if(HAVE_MULTIPRECISION)
