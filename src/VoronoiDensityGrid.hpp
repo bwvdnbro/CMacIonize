@@ -27,9 +27,9 @@
 #define VORONOIDENSITYGRID_HPP
 
 #include "DensityGrid.hpp"
-#include "VoronoiGrid.hpp"
 
 class VoronoiGeneratorDistribution;
+class VoronoiGrid;
 
 /**
  * @brief DensityGrid implementation that uses an unstructured Voronoi grid.
@@ -41,11 +41,17 @@ private:
   VoronoiGeneratorDistribution *_position_generator;
 
   /*! @brief Underlying Voronoi grid. */
-  VoronoiGrid _voronoi_grid;
+  VoronoiGrid *_voronoi_grid;
+
+  /*! @brief Periodicity flags for the simulation box. */
+  CoordinateVector< bool > _periodic;
 
   /*! @brief Number of Lloyd iterations to apply to the grid after it has been
    *  constructed for the first time. */
   unsigned char _num_lloyd;
+
+  /*! @brief Generator positions (in m). */
+  std::vector< CoordinateVector<> > _generator_positions;
 
   /*! @brief Velocity of the grid generators (in m s^-1). */
   std::vector< CoordinateVector<> > _hydro_generator_velocity;
@@ -60,10 +66,14 @@ private:
    *  a cell. */
   double _epsilon;
 
+  /*! @brief Type of Voronoi grid to use. */
+  std::string _voronoi_grid_type;
+
 public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
-      DensityFunction &density_function, Box<> box, unsigned char num_lloyd = 0,
+      DensityFunction &density_function, Box<> box,
+      std::string grid_type = "Old", unsigned char num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, double hydro_timestep = 0.,
       double hydro_gamma = 5. / 3., Log *log = nullptr);

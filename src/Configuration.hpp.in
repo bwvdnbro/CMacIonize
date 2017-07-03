@@ -28,14 +28,38 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+/*! @brief If defined, activates inline assertions (which slows down the code
+ *  considerably).*/
 #cmakedefine HAVE_ASSERTIONS
+
+/*! @brief If defined, the operating system has support for atomic floating
+ *  point operations. */
 #cmakedefine HAVE_ATOMIC
+
+/*! @brief If defined, the HDF5 library was found on the system. */
 #cmakedefine HAVE_HDF5
+
+/*! @brief If defined, an MPI installation was found on the system. */
 #cmakedefine HAVE_MPI
+
+/*! @brief If defined, Boost Multiprecision was found on the system. */
 #cmakedefine HAVE_MULTIPRECISION
+
+/*! @brief If defined, the compiler supports OpenMP. */
 #cmakedefine HAVE_OPENMP
+
+/*! @brief If defined, this will output a file for every shared memory thread
+ *  that gives a detailed overview of what this thread is doing over time (this
+ *  makes the code very slow!). */
 #cmakedefine HAVE_OUTPUT_CYCLES
 
+/*! @brief If defined, lock free operations will be used to update cell counters
+ *  (which might or might not speed up the code). */
 #cmakedefine USE_LOCKFREE
+
+/*! @brief Maximum number of shared memory threads that can be used on the
+ *  system. This variable should be configured at compile time, but for now we
+ *  just hardcode its value. */
+#define MAX_NUM_THREADS 128
 
 #endif // CONFIGURATION_HPP

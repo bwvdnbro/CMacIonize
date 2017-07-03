@@ -24,7 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "NewVoronoiCell.hpp"
+#include "NewVoronoiCellConstructor.hpp"
 #include "NewVoronoiGrid.hpp"
 #include "Timer.hpp"
 #include "Utilities.hpp"
@@ -54,12 +54,12 @@ enum NewVoronoiCellTestName {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCell::setup_test(int test) {
+void NewVoronoiCellConstructor::setup_test(int test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -69,8 +69,8 @@ void NewVoronoiCell::setup_test(int test) {
     // we need 1 tetrahedron + 4 dummy neighbours to check the neighbour
     // handling
     _tetrahedra_size = 5;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[1], ngb[2], ngb[3], 0, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(
+        v[0], v[1], v[2], v[3], ngb[0], ngb[1], ngb[2], ngb[3], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -79,7 +79,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(6);
+    _vertices_size = 6;
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -88,10 +88,10 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], ngb[4], 0, 0, 3, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], ngb[4], 0, 0, 3, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], ngb[5], t[0], 0, 0, 0, 2);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -102,7 +102,7 @@ void NewVoronoiCell::setup_test(int test) {
 
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(8);
+    _vertices_size = 8;
 
     // convenient names used in documentation figure
     const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -112,16 +112,16 @@ void NewVoronoiCell::setup_test(int test) {
     // we need 5 tetrahedra + 10 dummy neighbours to check the neighbour
     // handling
     _tetrahedra_size = 15;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1], ngb[0],
-                                           t[4], ngb[1], 2, 0, 0, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2], ngb[2],
-                                           t[0], ngb[3], 2, 0, 0, 0);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[2], v[6], v[3], v[5], t[3], ngb[4],
-                                           t[1], ngb[5], 2, 0, 0, 0);
-    _tetrahedra[t[3]] = VoronoiTetrahedron(v[3], v[6], v[4], v[5], t[4], ngb[6],
-                                           t[2], ngb[7], 2, 0, 0, 0);
-    _tetrahedra[t[4]] = VoronoiTetrahedron(v[4], v[6], v[0], v[5], t[0], ngb[8],
-                                           t[3], ngb[9], 2, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[6], v[1], v[5], t[1],
+                                              ngb[0], t[4], ngb[1], 2, 0, 0, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[1], v[6], v[2], v[5], t[2],
+                                              ngb[2], t[0], ngb[3], 2, 0, 0, 0);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[2], v[6], v[3], v[5], t[3],
+                                              ngb[4], t[1], ngb[5], 2, 0, 0, 0);
+    _tetrahedra[t[3]] = NewVoronoiTetrahedron(v[3], v[6], v[4], v[5], t[4],
+                                              ngb[6], t[2], ngb[7], 2, 0, 0, 0);
+    _tetrahedra[t[4]] = NewVoronoiTetrahedron(v[4], v[6], v[0], v[5], t[0],
+                                              ngb[8], t[3], ngb[9], 2, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -130,7 +130,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -139,10 +139,10 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], ngb[4], 0, 0, 3, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], ngb[5], t[0], 0, 0, 0, 2);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], ngb[4], 0, 0, 3, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], ngb[5], t[0], 0, 0, 0, 2);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -151,7 +151,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(5);
+    _vertices_size = 5;
 
     // convenient names used in documentation figure
     const unsigned int v[5] = {0, 1, 2, 3, 4};
@@ -160,12 +160,12 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 3 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 9;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2], t[1],
-                                           ngb[5], ngb[4], 3, 3, 0, 0);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2], ngb[3],
-                                           ngb[2], t[0], 1, 0, 0, 1);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[4], v[1], v[2], v[3], ngb[0], t[1],
-                                           ngb[1], t[0], 0, 0, 0, 0);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[4], t[2],
+                                              t[1], ngb[5], ngb[4], 3, 3, 0, 0);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[4], v[2], v[3], t[2],
+                                              ngb[3], ngb[2], t[0], 1, 0, 0, 1);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[4], v[1], v[2], v[3], ngb[0],
+                                              t[1], ngb[1], t[0], 0, 0, 0, 0);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -174,7 +174,7 @@ void NewVoronoiCell::setup_test(int test) {
   case NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
     // just use the initial values (0)
-    _vertices.resize(6);
+    _vertices_size = 6;
 
     // convenient names used in documentation figure
     const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
@@ -183,14 +183,14 @@ void NewVoronoiCell::setup_test(int test) {
 
     // we need 4 tetrahedra + 8 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 12;
-    _tetrahedra[t[0]] = VoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
-                                           ngb[3], t[1], t[2], 0, 0, 3, 2);
-    _tetrahedra[t[1]] = VoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
-                                           ngb[2], t[3], t[0], 0, 0, 1, 2);
-    _tetrahedra[t[2]] = VoronoiTetrahedron(v[0], v[1], v[5], v[2], ngb[4],
-                                           ngb[7], t[0], t[3], 0, 0, 3, 3);
-    _tetrahedra[t[3]] = VoronoiTetrahedron(v[0], v[5], v[1], v[4], ngb[5], t[1],
-                                           ngb[6], t[2], 0, 2, 0, 3);
+    _tetrahedra[t[0]] = NewVoronoiTetrahedron(v[0], v[1], v[2], v[3], ngb[0],
+                                              ngb[3], t[1], t[2], 0, 0, 3, 2);
+    _tetrahedra[t[1]] = NewVoronoiTetrahedron(v[0], v[1], v[3], v[4], ngb[1],
+                                              ngb[2], t[3], t[0], 0, 0, 1, 2);
+    _tetrahedra[t[2]] = NewVoronoiTetrahedron(v[0], v[1], v[5], v[2], ngb[4],
+                                              ngb[7], t[0], t[3], 0, 0, 3, 3);
+    _tetrahedra[t[3]] = NewVoronoiTetrahedron(v[0], v[5], v[1], v[4], ngb[5],
+                                              t[1], ngb[6], t[2], 0, 2, 0, 3);
     // we do not initialize the ngb tetrahedra, as their exact setup is
     // irrelevant for this test
 
@@ -249,7 +249,7 @@ void NewVoronoiCell::setup_test(int test) {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCell::check_test(int test) {
+void NewVoronoiCellConstructor::check_test(int test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
 
@@ -405,7 +405,7 @@ void NewVoronoiCell::check_test(int test) {
     // no new tetrahedra should have been created by this flip
     assert_condition(_tetrahedra_size == 9);
     // one free spot should have opened up
-    assert_condition(_free_tetrahedra.size() == 1);
+    assert_condition(_free_size == 1);
     assert_condition(_free_tetrahedra[0] == 2);
 
     // convenient names used in documentation figure
@@ -465,8 +465,8 @@ void NewVoronoiCell::check_test(int test) {
 }
 
 /**
- * @brief Check if NewVoronoiCell::get_positive_permutation can complete the
- * given permutation of 0123.
+ * @brief Check if NewVoronoiCellConstructor::get_positive_permutation can
+ * complete the given permutation of 0123.
  *
  * We define this as a macro so that we get useful line numbers in our error
  * messages (i.e. the line where this macro is called, and not the line in this
@@ -480,12 +480,44 @@ void NewVoronoiCell::check_test(int test) {
 #define check_permutation(a, b, c, d)                                          \
   {                                                                            \
     unsigned char v[4] = {a, b, 4, 4};                                         \
-    NewVoronoiCell::get_positive_permutation(v);                               \
+    NewVoronoiCellConstructor::get_positive_permutation(v);                    \
     assert_condition(v[2] == c);                                               \
     assert_condition(v[3] == d);                                               \
-    assert_condition(                                                          \
-        NewVoronoiCell::positive_permutation(v[0], v[1], v[2], v[3]) == true); \
+    assert_condition(NewVoronoiCellConstructor::positive_permutation(          \
+                         v[0], v[1], v[2], v[3]) == true);                     \
   }
+
+/**
+ * @brief Get the rescaled coordinate in the range [1,2[ that corresponds to the
+ * given 53-bit integer mantissa.
+ *
+ * @param integer_coordinate Integer mantissa.
+ * @return Rescaled coordinate.
+ */
+inline static double get_rescaled_coordinate(unsigned long integer_coordinate) {
+  ExactGeometricTests::binary_double real_value;
+  // initialize as a value in the correct range to get the correct sign bit
+  // and exponent
+  real_value.dvalue = 1.1;
+  // now overwrite the mantissa
+  real_value.parts.mantissa = integer_coordinate;
+  // return the new value
+  return real_value.dvalue;
+}
+
+/**
+ * @brief Get the rescaled coordinates in the range [1,2[ that correspond to the
+ * given 53-bit integer coordinates.
+ *
+ * @param integer_coordinates Integer coordinates.
+ * @return Rescaled coordinates.
+ */
+inline static CoordinateVector<> get_rescaled_coordinates(
+    const CoordinateVector< unsigned long > &integer_coordinates) {
+  return CoordinateVector<>(get_rescaled_coordinate(integer_coordinates.x()),
+                            get_rescaled_coordinate(integer_coordinates.y()),
+                            get_rescaled_coordinate(integer_coordinates.z()));
+}
 
 /**
  * @brief Unit test for the NewVoronoiGrid class.
@@ -502,7 +534,7 @@ int main(int argc, char **argv) {
     positions[1] = CoordinateVector<>(-1., -1., 1.);
     positions[2] = CoordinateVector<>(-1., 1., -1.);
     positions[3] = CoordinateVector<>(1., -1., -1.);
-    VoronoiTetrahedron tetrahedron(0, 1, 2, 3);
+    NewVoronoiTetrahedron tetrahedron(0, 1, 2, 3);
     CoordinateVector<> midpoint =
         tetrahedron.get_midpoint_circumsphere(positions);
     assert_condition(midpoint.x() == 0.);
@@ -527,21 +559,16 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     std::vector< CoordinateVector<> > positions(1);
     positions[0] = CoordinateVector<>(0.25, 0.25, 0.25);
-    CoordinateVector< unsigned long > box_anchor(1000);
-    CoordinateVector< unsigned long > box_sides(1000);
-    std::vector< CoordinateVector< unsigned long > > long_positions(1);
-    long_positions[0] = CoordinateVector< unsigned long >(1250);
-    VoronoiBox< unsigned long > voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
-    NewVoronoiCell cell(0);
-    cell.finalize(box, positions, long_positions, voronoi_box, positions, box);
+    NewVoronoiCellConstructor cell_constructor;
+    cell_constructor.setup(0, positions, box, positions, box, false);
+    NewVoronoiCell cell = cell_constructor.get_cell(box, positions);
 
     std::vector< CoordinateVector<> > full_volume_positions(4);
     full_volume_positions[0] = CoordinateVector<>(6.26786);
     full_volume_positions[1] = CoordinateVector<>(-8.125, 3.5, 3.5);
     full_volume_positions[2] = CoordinateVector<>(3.5, -8.125, 3.5);
     full_volume_positions[3] = CoordinateVector<>(3.5, 3.5, -8.125);
-    VoronoiTetrahedron full_volume_tetrahedron(0, 1, 2, 3);
+    NewVoronoiTetrahedron full_volume_tetrahedron(0, 1, 2, 3);
     const double full_volume =
         full_volume_tetrahedron.get_volume(full_volume_positions);
     const CoordinateVector<> full_centroid =
@@ -637,10 +664,8 @@ int main(int argc, char **argv) {
     cmac_status("Geometry, part 1: Cell face computation works!");
   }
 
-  /// test for NewVoronoiCell::find_tetrahedron
+  /// test for NewVoronoiCellConstructor::find_tetrahedron
   {
-    CoordinateVector< unsigned long > box_anchor(1000);
-    CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > positions(4);
     positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
@@ -649,30 +674,31 @@ int main(int argc, char **argv) {
     positions[2] = CoordinateVector< unsigned long >(1250);
     // point on face
     positions[3] = CoordinateVector< unsigned long >(1250, 1250, 1500);
-    VoronoiBox< unsigned long > box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > rescaled_positions(4);
-    VoronoiBox< double > rescaled_box(
+    rescaled_positions[0] = get_rescaled_coordinates(positions[0]);
+    rescaled_positions[1] = get_rescaled_coordinates(positions[1]);
+    rescaled_positions[2] = get_rescaled_coordinates(positions[2]);
+    rescaled_positions[3] = get_rescaled_coordinates(positions[3]);
+    NewVoronoiBox rescaled_box(
         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, rescaled_positions, rescaled_box, rescaled_positions,
+               rescaled_box, false);
 
     unsigned int tetrahedra[4];
-    assert_condition(cell.find_tetrahedron(1, box, positions, rescaled_box,
-                                           rescaled_positions,
+    assert_condition(cell.find_tetrahedron(1, rescaled_box, rescaled_positions,
                                            tetrahedra) == 1);
     assert_condition(tetrahedra[0] == 1);
 
-    assert_condition(cell.find_tetrahedron(2, box, positions, rescaled_box,
-                                           rescaled_positions,
+    assert_condition(cell.find_tetrahedron(2, rescaled_box, rescaled_positions,
                                            tetrahedra) == 3);
     assert_condition(tetrahedra[0] == 3);
     assert_condition(tetrahedra[1] == 2);
     assert_condition(tetrahedra[2] == 1);
 
-    assert_condition(cell.find_tetrahedron(3, box, positions, rescaled_box,
-                                           rescaled_positions,
+    assert_condition(cell.find_tetrahedron(3, rescaled_box, rescaled_positions,
                                            tetrahedra) == 2);
     assert_condition(tetrahedra[0] == 1);
     assert_condition(tetrahedra[1] == 2);
@@ -682,37 +708,61 @@ int main(int argc, char **argv) {
 
   /// test permutation routine
   {
-    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 2, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 3, 1) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 1, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 1, 2, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 2, 3, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 3, 1, 2) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 3, 2) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 0, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 2, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 0, 3, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 2, 0, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 3, 2, 0) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 1, 3) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 3, 0) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 0, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 0, 1, 3) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 1, 3, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 3, 0, 1) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 2, 1) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 0, 2) == true);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 1, 0) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 0, 2, 1) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 1, 0, 2) == true);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 2, 1, 0) == true);
 
-    assert_condition(NewVoronoiCell::positive_permutation(0, 1, 3, 2) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 2, 1, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(0, 3, 2, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 1, 3, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 2, 1, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(0, 3, 2, 1) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(1, 0, 2, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 2, 3, 0) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(1, 3, 0, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 0, 2, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 2, 3, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(1, 3, 0, 2) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(2, 0, 3, 1) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 1, 0, 3) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(2, 3, 1, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 0, 3, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 1, 0, 3) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(2, 3, 1, 0) == false);
 
-    assert_condition(NewVoronoiCell::positive_permutation(3, 0, 1, 2) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 1, 2, 0) == false);
-    assert_condition(NewVoronoiCell::positive_permutation(3, 2, 0, 1) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 0, 1, 2) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 1, 2, 0) == false);
+    assert_condition(
+        NewVoronoiCellConstructor::positive_permutation(3, 2, 0, 1) == false);
 
     cmac_status("Permutation checks work!");
   }
@@ -740,10 +790,8 @@ int main(int argc, char **argv) {
 
   /// test 1 to 4 flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
     unsigned int tn[4];
     cell.one_to_four_flip(4, 0, tn);
@@ -758,10 +806,8 @@ int main(int argc, char **argv) {
 
   /// test 2 to 6 flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
     unsigned int tetrahedra[2] = {0, 1};
     unsigned int tn[6];
@@ -779,10 +825,8 @@ int main(int argc, char **argv) {
 
   /// test n to 2n flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
     unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
     unsigned int tn[2 * UCHAR_MAX];
@@ -804,10 +848,8 @@ int main(int argc, char **argv) {
 
   /// test 2 to 3 flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
     unsigned int tn[3];
     cell.two_to_three_flip(0, 1, 2, 3, tn);
@@ -821,10 +863,8 @@ int main(int argc, char **argv) {
 
   /// test 3 to 2 flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
     unsigned int tn[2];
     cell.three_to_two_flip(0, 1, 2, tn);
@@ -837,10 +877,8 @@ int main(int argc, char **argv) {
 
   /// test 4 to 4 flip
   {
-    std::vector< CoordinateVector< unsigned long > > positions(1);
-    positions[0] = CoordinateVector< unsigned long >(1500);
+    NewVoronoiCellConstructor cell;
 
-    NewVoronoiCell cell(0);
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
     unsigned int tn[4];
     cell.four_to_four_flip(0, 1, 2, 3, tn);
@@ -853,7 +891,7 @@ int main(int argc, char **argv) {
     cmac_status("4 to 4 flip works!");
   }
 
-  /// tests for NewVoronoiCell::intersect
+  /// tests for NewVoronoiCellConstructor::intersect
   /// simple insertion with a single 1 to 4 flip
   {
     CoordinateVector< unsigned long > box_anchor(1000);
@@ -862,21 +900,24 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1500, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
-
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
-    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
-                   integer_positions, real_voronoi_box, real_positions);
-    cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
+                   real_positions);
+    cell.check_empty_circumsphere(real_voronoi_box, real_positions);
 
     std::ofstream ofile("new_voronoi_cell_1_to_4.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
 
     cmac_status("Simple 1 to 4 flip insertion worked!");
   }
@@ -888,21 +929,25 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
-    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
-                   integer_positions, real_voronoi_box, real_positions);
-    cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
+                   real_positions);
+    cell.check_empty_circumsphere(real_voronoi_box, real_positions);
 
     std::ofstream ofile("new_voronoi_cell_2_to_6.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
 
     cmac_status("Simple 2 to 6 flip insertion worked!");
   }
@@ -914,21 +959,25 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1250, 1250, 1250);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
-    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
-                   integer_positions, real_voronoi_box, real_positions);
-    cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
+                   real_positions);
+    cell.check_empty_circumsphere(real_voronoi_box, real_positions);
 
     std::ofstream ofile("new_voronoi_cell_n_to_2n.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
 
     cmac_status("Simple n to 2n flip insertion worked!");
   }
@@ -940,23 +989,27 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1005, 1500, 1250);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
-    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
-                   integer_positions, real_voronoi_box, real_positions);
-    cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
+                   real_positions);
+    cell.check_empty_circumsphere(real_voronoi_box, real_positions);
 
     std::ofstream ofile("new_voronoi_cell_2_to_3.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
-    ofile << integer_positions[1].x() << "\t" << integer_positions[1].y()
-          << "\t" << integer_positions[1].z() << "\n";
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
+    ofile << real_positions[1].x() << "\t" << real_positions[1].y() << "\t"
+          << real_positions[1].z() << "\n";
     ofile.close();
 
     cmac_status("Simple insertion + 2 to 3 flip worked!");
@@ -969,25 +1022,30 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     integer_positions[1] = CoordinateVector< unsigned long >(1782, 1393, 1839);
     integer_positions[2] = CoordinateVector< unsigned long >(1197, 1910, 1797);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(3);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    real_positions[2] = get_rescaled_coordinates(integer_positions[2]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
     for (unsigned int i = 1; i < 3; ++i) {
-      cell.intersect(i, real_voronoi_box, real_positions, integer_voronoi_box,
-                     integer_positions, real_voronoi_box, real_positions);
-      cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+      cell.intersect(i, real_voronoi_box, real_positions, real_voronoi_box,
+                     real_positions);
+      cell.check_empty_circumsphere(real_voronoi_box, real_positions);
     }
 
     std::ofstream ofile("new_voronoi_cell_3_to_2.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
-    ofile << integer_positions[1].x() << "\t" << integer_positions[1].y()
-          << "\t" << integer_positions[1].z() << "\n";
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
+    ofile << real_positions[1].x() << "\t" << real_positions[1].y() << "\t"
+          << real_positions[1].z() << "\n";
     ofile.close();
 
     cmac_status("Test with 3 to 2 flip worked!");
@@ -1000,23 +1058,27 @@ int main(int argc, char **argv) {
     integer_positions[0] = CoordinateVector< unsigned long >(1500);
     // general point
     integer_positions[1] = CoordinateVector< unsigned long >(1500, 1750, 1500);
-    VoronoiBox< unsigned long > integer_voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
 
     std::vector< CoordinateVector<> > real_positions(2);
-    VoronoiBox< double > real_voronoi_box(
-        Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
+    real_positions[0] = get_rescaled_coordinates(integer_positions[0]);
+    real_positions[1] = get_rescaled_coordinates(integer_positions[1]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
 
-    NewVoronoiCell cell(0);
+    NewVoronoiCellConstructor cell;
+    cell.setup(0, real_positions, real_voronoi_box, real_positions,
+               real_voronoi_box, false);
 
-    cell.intersect(1, real_voronoi_box, real_positions, integer_voronoi_box,
-                   integer_positions, real_voronoi_box, real_positions);
-    cell.check_empty_circumsphere(integer_voronoi_box, integer_positions);
+    cell.intersect(1, real_voronoi_box, real_positions, real_voronoi_box,
+                   real_positions);
+    cell.check_empty_circumsphere(real_voronoi_box, real_positions);
 
     std::ofstream ofile("new_voronoi_cell_4_to_4.txt");
-    cell.print_tetrahedra(ofile, integer_voronoi_box, integer_positions);
-    ofile << integer_positions[1].x() << "\t" << integer_positions[1].y()
-          << "\t" << integer_positions[1].z() << "\n";
+    cell.print_tetrahedra(ofile, real_voronoi_box, real_positions);
+    ofile << real_positions[1].x() << "\t" << real_positions[1].y() << "\t"
+          << real_positions[1].z() << "\n";
     ofile.close();
 
     cmac_status("Simple insertion + 4 to 4 flip worked!");
@@ -1032,11 +1094,19 @@ int main(int argc, char **argv) {
     CoordinateVector< unsigned long > box_sides(1000);
     std::vector< CoordinateVector< unsigned long > > long_positions(1);
     long_positions[0] = CoordinateVector< unsigned long >(1250);
-    VoronoiBox< unsigned long > voronoi_box(
-        Box< unsigned long >(box_anchor, box_sides));
-    NewVoronoiCell cell(0);
-    cell.finalize(box, positions, long_positions, voronoi_box, positions, box,
-                  true);
+
+    std::vector< CoordinateVector<> > real_positions(1);
+    real_positions[0] = get_rescaled_coordinates(long_positions[0]);
+    NewVoronoiBox real_voronoi_box(
+        Box<>(get_rescaled_coordinates(box_anchor),
+              get_rescaled_coordinates(box_anchor + box_sides) -
+                  get_rescaled_coordinates(box_anchor)));
+
+    NewVoronoiCellConstructor cell_constructor;
+    cell_constructor.setup(0, positions, box, real_positions, real_voronoi_box,
+                           true);
+
+    NewVoronoiCell cell = cell_constructor.get_cell(box, positions);
 
     const double tolerance = 1.e-15;
 
@@ -1147,7 +1217,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
     timer.start();
-    grid.construct();
+    grid.compute_grid();
     timer.stop();
 
     double time_per_cell = timer.value() / ncell;
@@ -1176,7 +1246,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
     timer.start();
-    grid.construct();
+    grid.compute_grid();
     timer.stop();
 
     double time_per_cell = timer.value() / ncell_3D;

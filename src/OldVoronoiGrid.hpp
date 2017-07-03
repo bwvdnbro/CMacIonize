@@ -17,99 +17,92 @@
  ******************************************************************************/
 
 /**
- * @file NewVoronoiGrid.hpp
+ * @file OldVoronoiGrid.hpp
  *
- * @brief Voronoi grid implementation that uses an incremental Delaunay
- * construction algorithm (that should work in all cases, even in highly
- * degenerate grids).
+ * @brief Old Voronoi grid: voro++ construction algorithm.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef NEWVORONOIGRID_HPP
-#define NEWVORONOIGRID_HPP
+#ifndef OLDVORONOIGRID_HPP
+#define OLDVORONOIGRID_HPP
 
+#include "Box.hpp"
 #include "Face.hpp"
 #include "Lock.hpp"
-#include "NewVoronoiBox.hpp"
-#include "NewVoronoiCell.hpp"
-#include "NewVoronoiCellConstructor.hpp"
-#include "PointLocations.hpp"
+#include "VoronoiFace.hpp"
 #include "VoronoiGrid.hpp"
 
+#include <ostream>
 #include <vector>
 
+class PointLocations;
+class OldVoronoiCell;
+
 /**
- * @brief Voronoi grid implementation that uses an incremental Delaunay
- * construction algorithm (that should work in all cases, even in highly
- * degenerate grids).
+ * @brief Voronoi grid.
  */
-class NewVoronoiGrid : public VoronoiGrid {
+class OldVoronoiGrid : public VoronoiGrid {
 private:
-  /*! @brief Simulation box (in m). */
-  const Box<> _box;
+  /*! @brief Bounding box containing the grid (in m). */
+  Box<> _box;
 
-  /*! @brief Reference to the mesh generating positions (in m). */
-  const std::vector< CoordinateVector<> > &_real_generator_positions;
+  /*! @brief Internally used bounding box (internal units). */
+  Box<> _internal_box;
 
-  /*! @brief Real VoronoiBox (in m). */
-  const NewVoronoiBox _real_voronoi_box;
+  /*! @brief Factor used to convert from internal area units to actual units. */
+  double _area_factor;
 
-  /*! @brief Real rescaled representation of the mesh generating positions (in
-   *  the range [1,2[). */
-  std::vector< CoordinateVector<> > _real_rescaled_positions;
+  /*! @brief Factor used to convert from internal volume units to actual
+   *  units. */
+  double _volume_factor;
 
-  /*! @brief Real rescaled representation of the VoronoiBox (in the range
-   *  [1,2[). */
-  NewVoronoiBox _real_rescaled_box;
+  /*! @brief Periodicity flags for the bounding box. */
+  CoordinateVector< bool > _periodic;
 
-  /*! @brief Voronoi cells. */
-  std::vector< NewVoronoiCell > _cells;
+  /*! @brief Cells of the grid. */
+  std::vector< OldVoronoiCell * > _cells;
 
-  /*! @brief PointLocations object used to speed up neighbour searching. */
-  PointLocations _point_locations;
+  /*! @brief Positions of the cell generators (in m). */
+  std::vector< CoordinateVector<> > _generator_positions;
 
-  NewVoronoiCell compute_cell(unsigned int index,
-                              NewVoronoiCellConstructor &constructor) const;
+  /*! @brief PointLocations object used for fast neighbour searching. */
+  PointLocations *_pointlocations;
+
+  /*! @brief Tolerance used when deciding if a vertex is below, above, or on a
+   *  plane. */
+  double _epsilon;
+
+  unsigned int add_cell(CoordinateVector<> generator_position);
+
+  void compute_cell(unsigned int index);
 
   /**
    * @brief Job that constructs part of the Voronoi grid.
    */
-  class NewVoronoiGridConstructionJob {
+  class OldVoronoiGridConstructionJob {
   private:
-    /*! @brief Reference to the NewVoronoiGrid we are constructing. */
-    NewVoronoiGrid &_grid;
+    /*! @brief Reference to the VoronoiGrid we are constructing. */
+    OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that this job will construct. */
-    unsigned int _first_index;
+    const unsigned int _first_index;
 
     /*! @brief Index of the beyond last cell that this job will construct. */
-    unsigned int _last_index;
-
-    /*! @brief NewVoronoiCellConstructor object used by this thread. */
-    NewVoronoiCellConstructor _constructor;
+    const unsigned int _last_index;
 
   public:
     /**
      * @brief Constructor.
      *
-     * @param grid Reference to the NewVoronoiGrid we are constructing.
-     */
-    inline NewVoronoiGridConstructionJob(NewVoronoiGrid &grid)
-        : _grid(grid), _first_index(0), _last_index(0) {}
-
-    /**
-     * @brief Update the cell range that will be constructed during the next run
-     * of this job.
-     *
+     * @param grid Reference to the VoronoiGrid we are constructing.
      * @param first_index Index of the first cell that this job will construct.
      * @param last_index Index of the beyond last cell that this job will
      * construct.
      */
-    inline void update_indices(unsigned int first_index,
-                               unsigned int last_index) {
-      _first_index = first_index;
-      _last_index = last_index;
-    }
+    inline OldVoronoiGridConstructionJob(OldVoronoiGrid &grid,
+                                         unsigned int first_index,
+                                         unsigned int last_index)
+        : _grid(grid), _first_index(first_index), _last_index(last_index) {}
 
     /**
      * @brief Should the Worker delete the Job when it is finished?
@@ -117,35 +110,32 @@ private:
      * @return True, since there is no information that needs to be stored in
      * between jobs.
      */
-    inline bool do_cleanup() const { return false; }
+    inline bool do_cleanup() const { return true; }
 
     /**
      * @brief Construct the Voronoi cell for each index in the job range.
      */
     inline void execute() {
       for (unsigned int i = _first_index; i < _last_index; ++i) {
-        _grid._cells[i] = _grid.compute_cell(i, _constructor);
+        _grid.compute_cell(i);
       }
     }
 
     /**
      * @brief Get a name tag for this job.
      *
-     * @return "newvoronoigrid_construction".
+     * @return "voronoigrid_construction".
      */
-    inline std::string get_tag() const { return "newvoronoigrid_construction"; }
+    inline std::string get_tag() const { return "voronoigrid_construction"; }
   };
 
   /**
-   * @brief JobMarket for NewVoronoiGridConstructionJobs.
+   * @brief JobMarket for VoronoiGridConstructionJobs.
    */
-  class NewVoronoiGridConstructionJobMarket {
+  class OldVoronoiGridConstructionJobMarket {
   private:
-    /*! @brief Reference to the NewVoronoiGrid we want to construct. */
-    NewVoronoiGrid &_grid;
-
-    /*! @brief Per thread NewVoronoiGridConstructionJob. */
-    NewVoronoiGridConstructionJob *_jobs[MAX_NUM_THREADS];
+    /*! @brief Reference to the VoronoiGrid we want to construct. */
+    OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that still needs to be constructed. */
     unsigned int _current_index;
@@ -160,28 +150,12 @@ private:
     /**
      * @brief Constructor.
      *
-     * @param grid NewVoronoiGrid we want to construct.
+     * @param grid VoronoiGrid we want to construct.
      * @param jobsize Number of cell constructed by a single job.
      */
-    inline NewVoronoiGridConstructionJobMarket(NewVoronoiGrid &grid,
+    inline OldVoronoiGridConstructionJobMarket(OldVoronoiGrid &grid,
                                                unsigned int jobsize)
-        : _grid(grid), _current_index(0), _jobsize(jobsize) {
-
-      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
-        _jobs[i] = nullptr;
-      }
-    }
-
-    /**
-     * @brief Destructor.
-     *
-     * Free up memory used by NewVoronoiGridConstructionJobs.
-     */
-    inline ~NewVoronoiGridConstructionJobMarket() {
-      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
-        delete _jobs[i];
-      }
-    }
+        : _grid(grid), _current_index(0), _jobsize(jobsize) {}
 
     /**
      * @brief Set the number of parallel threads that will be used to execute
@@ -189,20 +163,15 @@ private:
      *
      * @param worksize Number of parallel threads that will be used.
      */
-    inline void set_worksize(int worksize) {
-      for (int i = 0; i < worksize; ++i) {
-        _jobs[i] = new NewVoronoiGridConstructionJob(_grid);
-      }
-    }
+    inline void set_worksize(int worksize) {}
 
     /**
-     * @brief Get a NewVoronoiGridConstructionJob.
+     * @brief Get a VoronoiGridConstructionJob.
      *
      * @param thread_id Id of the thread that calls this function.
-     * @return Pointer to a unique and thread safe
-     * NewVoronoiGridConstructionJob.
+     * @return Pointer to a unique and thread safe VoronoiGridConstructionJob.
      */
-    inline NewVoronoiGridConstructionJob *get_job(int thread_id) {
+    inline OldVoronoiGridConstructionJob *get_job(int thread_id) {
       const unsigned int cellsize = _grid._cells.size();
       if (_current_index == cellsize) {
         return nullptr;
@@ -216,8 +185,8 @@ private:
       _lock.unlock();
       if (first_index < cellsize) {
         const unsigned int last_index = first_index + jobsize;
-        _jobs[thread_id]->update_indices(first_index, last_index);
-        return _jobs[thread_id];
+        return new OldVoronoiGridConstructionJob(_grid, first_index,
+                                                 last_index);
       } else {
         return nullptr;
       }
@@ -227,10 +196,11 @@ private:
 public:
   /// constructor and destructor
 
-  NewVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
+  OldVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
                  const Box<> box, const CoordinateVector< bool > periodic =
                                       CoordinateVector< bool >(false));
-  virtual ~NewVoronoiGrid();
+
+  virtual ~OldVoronoiGrid();
 
   /// grid computation methods
 
@@ -249,6 +219,11 @@ public:
   virtual unsigned int get_index(const CoordinateVector<> &position) const;
   virtual bool is_inside(CoordinateVector<> position) const;
   virtual bool is_real_neighbour(unsigned int index) const;
+
+  /// printing
+
+  void print_cell(unsigned int index, std::ostream &stream);
+  void print_grid(std::ostream &stream);
 };
 
-#endif // NEWVORONOIGRID_HPP
+#endif // OLDVORONOIGRID_HPP

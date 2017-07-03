@@ -103,19 +103,6 @@ configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
 
-# Add the command that creates the CompilerInfo.cpp file
-add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-                          CompilerInfo
-                   COMMAND ${CMAKE_COMMAND}
-                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
-                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
-                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
-                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
-                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
-                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
-                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
-
 set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
@@ -136,6 +123,10 @@ set(CMACIONIZE_SOURCES
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
+    NewVoronoiCellConstructor.cpp
+    NewVoronoiGrid.cpp
+    OldVoronoiCell.cpp
+    OldVoronoiGrid.cpp
     ParameterFile.cpp
     PhotonSource.cpp
     PlanckPhotonSourceSpectrum.cpp
@@ -143,9 +134,7 @@ set(CMACIONIZE_SOURCES
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
-    VoronoiCell.cpp
     VoronoiDensityGrid.cpp
-    VoronoiGrid.cpp
     WMBasicPhotonSourceSpectrum.cpp
 
     Abundances.hpp
@@ -223,6 +212,9 @@ set(CMACIONIZE_SOURCES
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 )
 
+set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                            PROPERTIES GENERATED TRUE)
+
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
 list(APPEND CMACIONIZE_SOURCES
@@ -239,6 +231,7 @@ list(APPEND CMACIONIZE_SOURCES
 endif(HAVE_HDF5)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+add_dependencies(CMacIonize CompilerInfo)
 
 # link to HDF5, if we have found it
 if(HAVE_HDF5)

@@ -1,5 +1,6 @@
 special |\tikzstyle{transparentstyle} = [fill opacity=0.3, fill = white]|[lay=under]
-special |\tikzstyle{newstyle} = [fill opacity=0.3, fill = white, dashed, draw=green]|[lay=under]
+special |\tikzstyle{oldstyle} = [fill opacity=0.2, fill = red]|[lay=under]
+special |\tikzstyle{newstyle} = [fill opacity=0.2, fill = green]|[lay=under]
 special |\tikzstyle{node} = [fill = white]|[lay=under]
 special |\tikzstyle{line} = [green, thick, dashed]|[lay=under]
 
@@ -86,45 +87,45 @@ def p3label (p3)
 def p4label (p4)
 def p5label (p5)
 
-def t01 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def t01 polygon[cull=false, fill style=oldstyle](p0)(p1)(p3)
 def t03 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
 def t02 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
-def t00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
+def t00 polygon[cull=false, fill style=oldstyle](p0)(p1)(p2)
 
-def t11 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def t11 polygon[cull=false, fill style=oldstyle](p0)(p1)(p3)
 def t13 polygon[cull=false, fill style=transparentstyle](p1)(p4)(p3)
 def t12 polygon[cull=false, fill style=transparentstyle](p0)(p4)(p3)
-def t10 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p4)
+def t10 polygon[cull=false, fill style=oldstyle](p0)(p1)(p4)
 
-def t21 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
-def t23 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p5)
+def t21 polygon[cull=false, fill style=oldstyle](p0)(p1)(p2)
+def t23 polygon[cull=false, fill style=oldstyle](p0)(p1)(p5)
 def t22 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p5)
 def t20 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p5)
 
-def t31 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p5)
+def t31 polygon[cull=false, fill style=oldstyle](p0)(p1)(p5)
 def t33 polygon[cull=false, fill style=transparentstyle](p0)(p4)(p5)
 def t32 polygon[cull=false, fill style=transparentstyle](p1)(p4)(p5)
-def t30 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p4)
+def t30 polygon[cull=false, fill style=oldstyle](p0)(p1)(p4)
 
 def tn01 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
 def tn03 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p5)
-def tn02 polygon[cull=false, fill style=transparentstyle](p0)(p3)(p5)
-def tn00 polygon[cull=false, fill style=transparentstyle](p2)(p3)(p5)
+def tn02 polygon[cull=false, fill style=newstyle](p0)(p3)(p5)
+def tn00 polygon[cull=false, fill style=newstyle](p2)(p3)(p5)
 
 def tn11 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
 def tn13 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p5)
-def tn12 polygon[cull=false, fill style=transparentstyle](p1)(p3)(p5)
-def tn10 polygon[cull=false, fill style=transparentstyle](p2)(p3)(p5)
+def tn12 polygon[cull=false, fill style=newstyle](p1)(p3)(p5)
+def tn10 polygon[cull=false, fill style=newstyle](p2)(p3)(p5)
 
 def tn21 polygon[cull=false, fill style=transparentstyle](p0)(p3)(p4)
-def tn23 polygon[cull=false, fill style=transparentstyle](p0)(p3)(p5)
+def tn23 polygon[cull=false, fill style=newstyle](p0)(p3)(p5)
 def tn22 polygon[cull=false, fill style=transparentstyle](p0)(p4)(p5)
-def tn20 polygon[cull=false, fill style=transparentstyle](p3)(p4)(p5)
+def tn20 polygon[cull=false, fill style=newstyle](p3)(p4)(p5)
 
 def tn31 polygon[cull=false, fill style=transparentstyle](p1)(p3)(p4)
-def tn33 polygon[cull=false, fill style=transparentstyle](p1)(p3)(p5)
+def tn33 polygon[cull=false, fill style=newstyle](p1)(p3)(p5)
 def tn32 polygon[cull=false, fill style=transparentstyle](p1)(p4)(p5)
-def tn30 polygon[cull=false, fill style=transparentstyle](p3)(p4)(p5)
+def tn30 polygon[cull=false, fill style=newstyle](p3)(p4)(p5)
 
 def v0label { special |\node[node] at #1 {v0};|[lay=in](p0label) }
 def v1label { special |\node[node] at #1 {v1};|[lay=in](p1label) }

@@ -17,16 +17,16 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiCell.cpp
+ * @file OldVoronoiCell.cpp
  *
- * @brief VoronoiCell implementation.
+ * @brief OldVoronoiCell implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "VoronoiCell.hpp"
+#include "OldVoronoiCell.hpp"
 #include "Error.hpp"
 
-//#define VORONOICELL_CHECK_DEGENERATE_CASES
+//#define OLDVORONOICELL_CHECK_DEGENERATE_CASES
 
 #include <iostream>
 #include <sstream>
@@ -36,7 +36,7 @@
  *
  * Should only be used in the unit tests.
  */
-VoronoiCell::VoronoiCell() {}
+OldVoronoiCell::OldVoronoiCell() {}
 
 /**
  * @brief Constructor.
@@ -44,8 +44,8 @@ VoronoiCell::VoronoiCell() {}
  * @param generator_position Coordinates of the cell generator (in m).
  * @param bounding_box Box containing the entire grid.
  */
-VoronoiCell::VoronoiCell(const CoordinateVector<> &generator_position,
-                         const Box<> &bounding_box)
+OldVoronoiCell::OldVoronoiCell(const CoordinateVector<> &generator_position,
+                               const Box<> &bounding_box)
     : _generator_position(generator_position) {
 
   // initialize the cell as a cube with vertices that coincide with the given
@@ -92,97 +92,97 @@ VoronoiCell::VoronoiCell(const CoordinateVector<> &generator_position,
   _edges[0].resize(3);
   set_edge_endpoint(0, 0, 1);
   set_edge_endpoint_index(0, 0, 0);
-  set_edge_neighbour(0, 0, VORONOI_BOX_FRONT);
+  set_edge_neighbour(0, 0, OLDVORONOI_BOX_FRONT);
   set_edge_endpoint(0, 1, 2);
   set_edge_endpoint_index(0, 1, 2);
-  set_edge_neighbour(0, 1, VORONOI_BOX_LEFT);
+  set_edge_neighbour(0, 1, OLDVORONOI_BOX_LEFT);
   set_edge_endpoint(0, 2, 4);
   set_edge_endpoint_index(0, 2, 0);
-  set_edge_neighbour(0, 2, VORONOI_BOX_BOTTOM);
+  set_edge_neighbour(0, 2, OLDVORONOI_BOX_BOTTOM);
 
   // (0, 0, 1) corner
   _edges[1].resize(3);
   set_edge_endpoint(1, 0, 0);
   set_edge_endpoint_index(1, 0, 0);
-  set_edge_neighbour(1, 0, VORONOI_BOX_LEFT);
+  set_edge_neighbour(1, 0, OLDVORONOI_BOX_LEFT);
   set_edge_endpoint(1, 1, 5);
   set_edge_endpoint_index(1, 1, 2);
-  set_edge_neighbour(1, 1, VORONOI_BOX_FRONT);
+  set_edge_neighbour(1, 1, OLDVORONOI_BOX_FRONT);
   set_edge_endpoint(1, 2, 3);
   set_edge_endpoint_index(1, 2, 1);
-  set_edge_neighbour(1, 2, VORONOI_BOX_TOP);
+  set_edge_neighbour(1, 2, OLDVORONOI_BOX_TOP);
 
   // (0, 1, 0) corner
   _edges[2].resize(3);
   set_edge_endpoint(2, 0, 3);
   set_edge_endpoint_index(2, 0, 0);
-  set_edge_neighbour(2, 0, VORONOI_BOX_LEFT);
+  set_edge_neighbour(2, 0, OLDVORONOI_BOX_LEFT);
   set_edge_endpoint(2, 1, 6);
   set_edge_endpoint_index(2, 1, 0);
-  set_edge_neighbour(2, 1, VORONOI_BOX_BACK);
+  set_edge_neighbour(2, 1, OLDVORONOI_BOX_BACK);
   set_edge_endpoint(2, 2, 0);
   set_edge_endpoint_index(2, 2, 1);
-  set_edge_neighbour(2, 2, VORONOI_BOX_BOTTOM);
+  set_edge_neighbour(2, 2, OLDVORONOI_BOX_BOTTOM);
 
   // (0, 1, 1) corner
   _edges[3].resize(3);
   set_edge_endpoint(3, 0, 2);
   set_edge_endpoint_index(3, 0, 0);
-  set_edge_neighbour(3, 0, VORONOI_BOX_BACK);
+  set_edge_neighbour(3, 0, OLDVORONOI_BOX_BACK);
   set_edge_endpoint(3, 1, 1);
   set_edge_endpoint_index(3, 1, 2);
-  set_edge_neighbour(3, 1, VORONOI_BOX_LEFT);
+  set_edge_neighbour(3, 1, OLDVORONOI_BOX_LEFT);
   set_edge_endpoint(3, 2, 7);
   set_edge_endpoint_index(3, 2, 0);
-  set_edge_neighbour(3, 2, VORONOI_BOX_TOP);
+  set_edge_neighbour(3, 2, OLDVORONOI_BOX_TOP);
 
   // (1, 0, 0) corner
   _edges[4].resize(3);
   set_edge_endpoint(4, 0, 0);
   set_edge_endpoint_index(4, 0, 2);
-  set_edge_neighbour(4, 0, VORONOI_BOX_FRONT);
+  set_edge_neighbour(4, 0, OLDVORONOI_BOX_FRONT);
   set_edge_endpoint(4, 1, 6);
   set_edge_endpoint_index(4, 1, 2);
-  set_edge_neighbour(4, 1, VORONOI_BOX_BOTTOM);
+  set_edge_neighbour(4, 1, OLDVORONOI_BOX_BOTTOM);
   set_edge_endpoint(4, 2, 5);
   set_edge_endpoint_index(4, 2, 0);
-  set_edge_neighbour(4, 2, VORONOI_BOX_RIGHT);
+  set_edge_neighbour(4, 2, OLDVORONOI_BOX_RIGHT);
 
   // (1, 0, 1) corner
   _edges[5].resize(3);
   set_edge_endpoint(5, 0, 4);
   set_edge_endpoint_index(5, 0, 2);
-  set_edge_neighbour(5, 0, VORONOI_BOX_FRONT);
+  set_edge_neighbour(5, 0, OLDVORONOI_BOX_FRONT);
   set_edge_endpoint(5, 1, 7);
   set_edge_endpoint_index(5, 1, 1);
-  set_edge_neighbour(5, 1, VORONOI_BOX_RIGHT);
+  set_edge_neighbour(5, 1, OLDVORONOI_BOX_RIGHT);
   set_edge_endpoint(5, 2, 1);
   set_edge_endpoint_index(5, 2, 1);
-  set_edge_neighbour(5, 2, VORONOI_BOX_TOP);
+  set_edge_neighbour(5, 2, OLDVORONOI_BOX_TOP);
 
   // (1, 1, 0) corner
   _edges[6].resize(3);
   set_edge_endpoint(6, 0, 2);
   set_edge_endpoint_index(6, 0, 1);
-  set_edge_neighbour(6, 0, VORONOI_BOX_BOTTOM);
+  set_edge_neighbour(6, 0, OLDVORONOI_BOX_BOTTOM);
   set_edge_endpoint(6, 1, 7);
   set_edge_endpoint_index(6, 1, 2);
-  set_edge_neighbour(6, 1, VORONOI_BOX_BACK);
+  set_edge_neighbour(6, 1, OLDVORONOI_BOX_BACK);
   set_edge_endpoint(6, 2, 4);
   set_edge_endpoint_index(6, 2, 1);
-  set_edge_neighbour(6, 2, VORONOI_BOX_RIGHT);
+  set_edge_neighbour(6, 2, OLDVORONOI_BOX_RIGHT);
 
   // (1, 1, 1) corner
   _edges[7].resize(3);
   set_edge_endpoint(7, 0, 3);
   set_edge_endpoint_index(7, 0, 2);
-  set_edge_neighbour(7, 0, VORONOI_BOX_BACK);
+  set_edge_neighbour(7, 0, OLDVORONOI_BOX_BACK);
   set_edge_endpoint(7, 1, 5);
   set_edge_endpoint_index(7, 1, 1);
-  set_edge_neighbour(7, 1, VORONOI_BOX_TOP);
+  set_edge_neighbour(7, 1, OLDVORONOI_BOX_TOP);
   set_edge_endpoint(7, 2, 6);
   set_edge_endpoint_index(7, 2, 1);
-  set_edge_neighbour(7, 2, VORONOI_BOX_RIGHT);
+  set_edge_neighbour(7, 2, OLDVORONOI_BOX_RIGHT);
 }
 
 /// const element getters
@@ -192,7 +192,7 @@ VoronoiCell::VoronoiCell(const CoordinateVector<> &generator_position,
  *
  * @return Position of the generator of the cell (in m).
  */
-const CoordinateVector<> &VoronoiCell::get_generator() const {
+const CoordinateVector<> &OldVoronoiCell::get_generator() const {
   return _generator_position;
 }
 
@@ -203,7 +203,7 @@ const CoordinateVector<> &VoronoiCell::get_generator() const {
  *
  * @return Volume of the cell (in m^3).
  */
-double VoronoiCell::get_volume() const { return _volume; }
+double OldVoronoiCell::get_volume() const { return _volume; }
 
 /**
  * @brief Get the centroid of the cell.
@@ -212,7 +212,7 @@ double VoronoiCell::get_volume() const { return _volume; }
  *
  * @return Centroid of the cell (in m).
  */
-const CoordinateVector<> &VoronoiCell::get_centroid() const {
+const CoordinateVector<> &OldVoronoiCell::get_centroid() const {
   return _centroid;
 }
 
@@ -223,7 +223,7 @@ const CoordinateVector<> &VoronoiCell::get_centroid() const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-const std::vector< VoronoiFace > &VoronoiCell::get_faces() const {
+const std::vector< VoronoiFace > &OldVoronoiCell::get_faces() const {
   return _faces;
 }
 
@@ -265,9 +265,9 @@ const std::vector< VoronoiFace > &VoronoiCell::get_faces() const {
  * given neighbour, 1 otherwise. If find_edge_and_exit is set to true, other
  * status codes are possible.
  */
-int VoronoiCell::intersect(CoordinateVector<> relative_position,
-                           unsigned int ngb_index, double epsilon,
-                           int *find_edge_and_exit) {
+int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
+                              unsigned int ngb_index, double epsilon,
+                              int *find_edge_and_exit) {
   // make sure the intersecting point has a different position than the cell
   // generator
   cmac_assert(relative_position.norm2() != 0.);
@@ -487,7 +487,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     }
   }
 
-  //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+  //#ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
   //  std::stringstream original_cell;
   //  print_cell(original_cell);
   //#endif
@@ -886,8 +886,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
     // do the normal setup
 
     // this should always be the case, but we better make sure
-    cmac_assert(u.second > VORONOI_TOLERANCE);
-    cmac_assert(l.second < -VORONOI_TOLERANCE);
+    cmac_assert(u.second > OLDVORONOI_TOLERANCE);
+    cmac_assert(l.second < -OLDVORONOI_TOLERANCE);
 
     // if the assertions above hold, the division below can never go wrong
     double upper_fraction = u.second / (u.second - l.second);
@@ -1050,7 +1050,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
       // find out if 'qp' was already visited before (and hence replaced with a
       // new vertex)
       int j = visitflags[qp];
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+#ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
       if (j > 0) {
         cmac_error(
             "You are entering a buggy part of the original voro++ algorithm!");
@@ -1116,7 +1116,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
           }
         }
       }
-      //#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+      //#ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
       //      if (new_double_edge) {
       //        CoordinateVector<> p = _generator_position + relative_position;
       //        std::cerr << p.x() << "\t" << p.y() << "\t" << p.z() << "\n"
@@ -1243,8 +1243,8 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
         // create a new vertex
 
         // this should always be the case, but we better make sure
-        cmac_assert(q.second > VORONOI_TOLERANCE);
-        cmac_assert(l.second < -VORONOI_TOLERANCE);
+        cmac_assert(q.second > OLDVORONOI_TOLERANCE);
+        cmac_assert(l.second < -OLDVORONOI_TOLERANCE);
 
         // if the assertions above hold, the division below can never go wrong
         double upper_fraction = q.second / (q.second - l.second);
@@ -1361,7 +1361,7 @@ int VoronoiCell::intersect(CoordinateVector<> relative_position,
  * @return Squared maximum distance between the cell generator and any of its
  * vertices (in m^2).
  */
-double VoronoiCell::get_max_radius_squared() const {
+double OldVoronoiCell::get_max_radius_squared() const {
   double r2 = 0.;
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     r2 = std::max(r2, _vertices[i].norm2());
@@ -1375,7 +1375,7 @@ double VoronoiCell::get_max_radius_squared() const {
  * This will compute the cell volume, centroid, and faces, but will also remove
  * the vertices and edges.
  */
-void VoronoiCell::finalize() {
+void OldVoronoiCell::finalize() {
   // we loop over all the faces of the cell, and split each face up into
   // triangles
   // the surface area and midpoint of a face are then given by respectively the
@@ -1535,8 +1535,8 @@ void VoronoiCell::finalize() {
  * @param delete_stack std::vector containing a deletion flag for each vertex in
  * the internal vertex list. If the flag is true, the vertex will be deleted.
  */
-void VoronoiCell::delete_connections(unsigned int vertex_index,
-                                     std::vector< bool > &delete_stack) {
+void OldVoronoiCell::delete_connections(unsigned int vertex_index,
+                                        std::vector< bool > &delete_stack) {
   for (unsigned int edge_index = 0; edge_index < _edges[vertex_index].size();
        ++edge_index) {
     int edge = get_edge_endpoint(vertex_index, edge_index);
@@ -1559,7 +1559,7 @@ void VoronoiCell::delete_connections(unsigned int vertex_index,
  * @param delete_stack std::vector containing a deletion flag for each vertex in
  * the internal vertex list. If the flag is true, the vertex will be deleted.
  */
-void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
+void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   cmac_assert(delete_stack.size() == _vertices.size());
   cmac_assert(delete_stack.size() == _edges.size());
 
@@ -1664,7 +1664,7 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
     _edges.resize(new_num_vert);
   }
 
-#ifdef VORONOICELL_CHECK_DEGENERATE_CASES
+#ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
   // check that no two vertices are exactly the same
   for (unsigned int i = 0; i < _vertices.size(); ++i) {
     for (unsigned int j = i + 1; j < _vertices.size(); ++j) {
@@ -1685,7 +1685,8 @@ void VoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
  * @param vertex Vertex to delete.
  * @param stack Stack to add new low order vertices to.
  */
-void VoronoiCell::delete_order_2_vertex(int vertex, std::vector< int > &stack) {
+void OldVoronoiCell::delete_order_2_vertex(int vertex,
+                                           std::vector< int > &stack) {
   int j = get_edge_endpoint(vertex, 0);
   int k = get_edge_endpoint(vertex, 1);
   unsigned char a = get_edge_endpoint_index(vertex, 0);
@@ -1743,7 +1744,8 @@ void VoronoiCell::delete_order_2_vertex(int vertex, std::vector< int > &stack) {
  * @param vertex Vertex to delete.
  * @param stack Stack to add new low order vertices to.
  */
-void VoronoiCell::delete_order_1_vertex(int vertex, std::vector< int > &stack) {
+void OldVoronoiCell::delete_order_1_vertex(int vertex,
+                                           std::vector< int > &stack) {
   int j = get_edge_endpoint(vertex, 0);
   unsigned char a = get_edge_endpoint_index(vertex, 0);
   for (unsigned char i = a; i < _edges[j].size() - 1; ++i) {
@@ -1772,10 +1774,10 @@ void VoronoiCell::delete_order_1_vertex(int vertex, std::vector< int > &stack) {
  * @return Volume of the tetrahedron that has the given coordinates as vertices
  * (in m^3).
  */
-double VoronoiCell::volume_tetrahedron(CoordinateVector<> v1,
-                                       CoordinateVector<> v2,
-                                       CoordinateVector<> v3,
-                                       CoordinateVector<> v4) {
+double OldVoronoiCell::volume_tetrahedron(CoordinateVector<> v1,
+                                          CoordinateVector<> v2,
+                                          CoordinateVector<> v3,
+                                          CoordinateVector<> v4) {
   // if two or more vertices have the same position, the volume of the
   // tetrahedron is zero, so this poses no real problem
   // we only added these assertions to check that our algorithm does not call
@@ -1807,10 +1809,10 @@ double VoronoiCell::volume_tetrahedron(CoordinateVector<> v1,
  * @return Coordinates of the centroid of the tetrahedron that has the given
  * coordinates as vertices (in m).
  */
-CoordinateVector<> VoronoiCell::centroid_tetrahedron(CoordinateVector<> v1,
-                                                     CoordinateVector<> v2,
-                                                     CoordinateVector<> v3,
-                                                     CoordinateVector<> v4) {
+CoordinateVector<> OldVoronoiCell::centroid_tetrahedron(CoordinateVector<> v1,
+                                                        CoordinateVector<> v2,
+                                                        CoordinateVector<> v3,
+                                                        CoordinateVector<> v4) {
   // if two or more vertices have the same position, the volume of the
   // tetrahedron is zero, so this centroid will be ignored by our cell centroid
   // calculation
@@ -1835,9 +1837,9 @@ CoordinateVector<> VoronoiCell::centroid_tetrahedron(CoordinateVector<> v1,
  * @return Surface area of the triangle that has the given coordinates as
  * vertices (in m^2).
  */
-double VoronoiCell::surface_area_triangle(CoordinateVector<> v1,
-                                          CoordinateVector<> v2,
-                                          CoordinateVector<> v3) {
+double OldVoronoiCell::surface_area_triangle(CoordinateVector<> v1,
+                                             CoordinateVector<> v2,
+                                             CoordinateVector<> v3) {
   // if two or more vertices have the same position, the surface area of the
   // triangle is zero, which is not really a problem
   // we only added these assertions to check that our algorithm does not call
@@ -1862,9 +1864,9 @@ double VoronoiCell::surface_area_triangle(CoordinateVector<> v1,
  * @return Coordinates of the midpoint of the triangle that has the given
  * coordinates as vertices (in m).
  */
-CoordinateVector<> VoronoiCell::midpoint_triangle(CoordinateVector<> v1,
-                                                  CoordinateVector<> v2,
-                                                  CoordinateVector<> v3) {
+CoordinateVector<> OldVoronoiCell::midpoint_triangle(CoordinateVector<> v1,
+                                                     CoordinateVector<> v2,
+                                                     CoordinateVector<> v3) {
   // if two or more vertices have the same position, the surface area of the
   // triangle is zero, and the triangle midpoint will be ignored in our cell
   // face midpoint calculation
@@ -1895,9 +1897,9 @@ CoordinateVector<> VoronoiCell::midpoint_triangle(CoordinateVector<> v1,
  * generator.
  */
 std::pair< int, double >
-VoronoiCell::test_vertex(CoordinateVector<> vertex,
-                         CoordinateVector<> plane_vector,
-                         double plane_distance_squared, double epsilon) {
+OldVoronoiCell::test_vertex(CoordinateVector<> vertex,
+                            CoordinateVector<> plane_vector,
+                            double plane_distance_squared, double epsilon) {
   // let's make sure we have passed on correct arguments
   cmac_assert(plane_vector.norm2() == plane_distance_squared);
   // strictly speaking okay, but we don't want this for our intersection
@@ -1926,20 +1928,27 @@ VoronoiCell::test_vertex(CoordinateVector<> vertex,
  * the vertices and edges, allowing a detailed reconstruction of the internal
  * structure of the cell.
  */
-void VoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
+void OldVoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
   stream << _generator_position.x() << "\t" << _generator_position.y() << "\t"
          << _generator_position.z() << "\n\n";
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    for (unsigned int j = 0; j < _edges[i].size(); ++j) {
-      int edge = get_edge_endpoint(i, j);
-      CoordinateVector<> a = _vertices[i] + _generator_position;
-      CoordinateVector<> b = _vertices[edge] + _generator_position;
+  for (unsigned int i = 0; i < _faces.size(); ++i) {
+    const std::vector< CoordinateVector<> > &vertices =
+        _faces[i].get_vertices();
+    const unsigned int vsize = vertices.size();
+    for (unsigned int j = 0; j < vsize; ++j) {
+      const unsigned int jnext = (j + 1) % vsize;
+      const CoordinateVector<> &a = vertices[j];
+      const CoordinateVector<> &b = vertices[jnext];
       stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
       stream << b.x() << "\t" << b.y() << "\t" << b.z() << "\n\n";
     }
   }
 
   if (show_structure) {
+    if (_vertices.size() == 0) {
+      cmac_error("Printing the cell structure only works before "
+                 "VoronoiCell::finalize was called!");
+    }
     stream << "vertices:\n";
     for (unsigned int i = 0; i < _vertices.size(); ++i) {
       CoordinateVector<> p = _vertices[i] + _generator_position;

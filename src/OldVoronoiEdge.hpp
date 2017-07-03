@@ -17,19 +17,19 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiEdge.hpp
+ * @file OldVoronoiEdge.hpp
  *
- * @brief Edge of the Voronoi grid.
+ * @brief Edge of the old Voronoi grid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOIEDGE_HPP
-#define VORONOIEDGE_HPP
+#ifndef OLDVORONOIEDGE_HPP
+#define OLDVORONOIEDGE_HPP
 
 /**
- * @brief Edge of the Voronoi grid.
+ * @brief Edge of the old Voronoi grid.
  */
-class VoronoiEdge {
+class OldVoronoiEdge {
 private:
   /*! @brief Index of the vertex on the other side of the edge. */
   int _endpoint;
@@ -44,7 +44,7 @@ public:
   /**
    * @brief (Empty) constructor.
    */
-  inline VoronoiEdge() : _endpoint(0), _endpoint_index(0), _neighbour(0) {}
+  inline OldVoronoiEdge() : _endpoint(0), _endpoint_index(0), _neighbour(0) {}
 
   /**
    * @brief Get the index of the vertex on the other side of the edge.
@@ -92,4 +92,4 @@ public:
   inline void set_neighbour(unsigned int neighbour) { _neighbour = neighbour; }
 };
 
-#endif // VORONOIEDGE_HPP
+#endif // OLDVORONOIEDGE_HPP

@@ -19,195 +19,101 @@
 /**
  * @file VoronoiGrid.hpp
  *
- * @brief Voronoi grid.
+ * @brief General interface for Voronoi grids.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #ifndef VORONOIGRID_HPP
 #define VORONOIGRID_HPP
 
-#include "Box.hpp"
+#include "CoordinateVector.hpp"
 #include "Face.hpp"
-#include "Lock.hpp"
 #include "VoronoiFace.hpp"
 
-#include <ostream>
-#include <vector>
-
-class PointLocations;
-class VoronoiCell;
-
 /**
- * @brief Voronoi grid.
+ * @brief General interface for Voronoi grids.
  */
 class VoronoiGrid {
-private:
-  /*! @brief Bounding box containing the grid (in m). */
-  Box<> _box;
-
-  /*! @brief Internally used bounding box (internal units). */
-  Box<> _internal_box;
-
-  /*! @brief Factor used to convert from internal area units to actual units. */
-  double _area_factor;
-
-  /*! @brief Factor used to convert from internal volume units to actual
-   *  units. */
-  double _volume_factor;
-
-  /*! @brief Periodicity flags for the bounding box. */
-  CoordinateVector< bool > _periodic;
-
-  /*! @brief Cells of the grid. */
-  std::vector< VoronoiCell * > _cells;
-
-  /*! @brief Positions of the cell generators (in m). */
-  std::vector< CoordinateVector<> > _generator_positions;
-
-  /*! @brief PointLocations object used for fast neighbour searching. */
-  PointLocations *_pointlocations;
-
-  /*! @brief Tolerance used when deciding if a vertex is below, above, or on a
-   *  plane. */
-  double _epsilon;
-
-  void compute_cell(unsigned int index);
-
-  /**
-   * @brief Job that constructs part of the Voronoi grid.
-   */
-  class VoronoiGridConstructionJob {
-  private:
-    /*! @brief Reference to the VoronoiGrid we are constructing. */
-    VoronoiGrid &_grid;
-
-    /*! @brief Index of the first cell that this job will construct. */
-    const unsigned int _first_index;
-
-    /*! @brief Index of the beyond last cell that this job will construct. */
-    const unsigned int _last_index;
-
-  public:
-    /**
-     * @brief Constructor.
-     *
-     * @param grid Reference to the VoronoiGrid we are constructing.
-     * @param first_index Index of the first cell that this job will construct.
-     * @param last_index Index of the beyond last cell that this job will
-     * construct.
-     */
-    inline VoronoiGridConstructionJob(VoronoiGrid &grid,
-                                      unsigned int first_index,
-                                      unsigned int last_index)
-        : _grid(grid), _first_index(first_index), _last_index(last_index) {}
-
-    /**
-     * @brief Should the Worker delete the Job when it is finished?
-     *
-     * @return True, since there is no information that needs to be stored in
-     * between jobs.
-     */
-    inline bool do_cleanup() const { return true; }
-
-    /**
-     * @brief Construct the Voronoi cell for each index in the job range.
-     */
-    inline void execute() {
-      for (unsigned int i = _first_index; i < _last_index; ++i) {
-        _grid.compute_cell(i);
-      }
-    }
-
-    /**
-     * @brief Get a name tag for this job.
-     *
-     * @return "voronoigrid_construction".
-     */
-    inline std::string get_tag() const { return "voronoigrid_construction"; }
-  };
-
-  /**
-   * @brief JobMarket for VoronoiGridConstructionJobs.
-   */
-  class VoronoiGridConstructionJobMarket {
-  private:
-    /*! @brief Reference to the VoronoiGrid we want to construct. */
-    VoronoiGrid &_grid;
-
-    /*! @brief Index of the first cell that still needs to be constructed. */
-    unsigned int _current_index;
-
-    /*! @brief Number of cells constructed by a single job. */
-    const unsigned int _jobsize;
-
-    /*! @brief Lock used to ensure safe access to the internal index. */
-    Lock _lock;
-
-  public:
-    /**
-     * @brief Constructor.
-     *
-     * @param grid VoronoiGrid we want to construct.
-     * @param jobsize Number of cell constructed by a single job.
-     */
-    inline VoronoiGridConstructionJobMarket(VoronoiGrid &grid,
-                                            unsigned int jobsize)
-        : _grid(grid), _current_index(0), _jobsize(jobsize) {}
-
-    /**
-     * @brief Get a VoronoiGridConstructionJob.
-     *
-     * @param thread_id Id of the thread that calls this function.
-     * @return Pointer to a unique and thread safe VoronoiGridConstructionJob.
-     */
-    inline VoronoiGridConstructionJob *get_job(int thread_id) {
-      const unsigned int cellsize = _grid._cells.size();
-      if (_current_index == cellsize) {
-        return nullptr;
-      }
-      unsigned int first_index;
-      unsigned int jobsize;
-      _lock.lock();
-      first_index = _current_index;
-      jobsize = std::min(_jobsize, cellsize - _current_index);
-      _current_index += jobsize;
-      _lock.unlock();
-      if (first_index < cellsize) {
-        const unsigned int last_index = first_index + jobsize;
-        return new VoronoiGridConstructionJob(_grid, first_index, last_index);
-      } else {
-        return nullptr;
-      }
-    }
-  };
-
 public:
-  VoronoiGrid(Box<> box, CoordinateVector< bool > periodic =
-                             CoordinateVector< bool >(false),
-              unsigned int numcell = 0);
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~VoronoiGrid() {}
 
-  ~VoronoiGrid();
+  /**
+   * @brief Compute the Voronoi grid.
+   *
+   * @param worksize Number of shared memory threads to use during the grid
+   * construction.
+   */
+  virtual void compute_grid(int worksize = -1) = 0;
 
-  void reset(int worksize = -1);
+  /**
+   * @brief Get the volume of the Voronoi cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Volume of that cell (in m^3).
+   */
+  virtual double get_volume(unsigned int index) const = 0;
 
-  unsigned int add_cell(CoordinateVector<> generator_position);
-  void compute_grid(int worksize = -1);
-  void finalize();
+  /**
+   * @brief Get the centroid of the Voronoi cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Centroid of that cell (in m).
+   */
+  virtual CoordinateVector<> get_centroid(unsigned int index) const = 0;
 
-  double get_volume(unsigned int index) const;
-  CoordinateVector<> get_centroid(unsigned int index) const;
-  CoordinateVector<> get_generator(unsigned int index) const;
-  void set_generator(unsigned int index, const CoordinateVector<> &pos);
-  void move_generator(unsigned int index, const CoordinateVector<> &dx);
-  CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  std::vector< VoronoiFace > get_faces(unsigned int index) const;
-  std::vector< Face > get_geometrical_faces(unsigned int index) const;
-  unsigned int get_index(const CoordinateVector<> &position) const;
+  /**
+   * @brief Get the surface normal of the wall with the given index.
+   *
+   * @param wallindex Index of a wall of the simulation box.
+   * @return Surface normal of the wall.
+   */
+  virtual CoordinateVector<> get_wall_normal(unsigned int wallindex) const = 0;
 
-  bool is_inside(CoordinateVector<> position) const;
+  /**
+   * @brief Get the faces of the Voronoi cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Faces of that cell.
+   */
+  virtual std::vector< VoronoiFace > get_faces(unsigned int index) const = 0;
 
-  void print_cell(unsigned int index, std::ostream &stream);
-  void print_grid(std::ostream &stream);
+  /**
+   * @brief Get the geometrical faces of the Voronoi cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Geometrical faces of that cell.
+   */
+  virtual std::vector< Face >
+  get_geometrical_faces(unsigned int index) const = 0;
+
+  /**
+   * @brief Get the index of the Voronoi cell that contains the given position.
+   *
+   * @param position Arbitrary position (in m).
+   * @return Index of the cell that contains that position.
+   */
+  virtual unsigned int get_index(const CoordinateVector<> &position) const = 0;
+
+  /**
+   * @brief Check if the given position is inside the simulation box of the
+   * grid.
+   *
+   * @param position Arbitrary position (in m).
+   * @return True if the position is inside the simulation box.
+   */
+  virtual bool is_inside(CoordinateVector<> position) const = 0;
+
+  /**
+   * @brief Check if the given index corresponds to a real neighbouring cell or
+   * to a ghost cell that represents a wall of the simulation box.
+   *
+   * @param index Index to check.
+   * @return True if the given index corresponds to a real neighbouring cell.
+   */
+  virtual bool is_real_neighbour(unsigned int index) const = 0;
 };
 
 #endif // VORONOIGRID_HPP

@@ -1,0 +1,179 @@
+special |\tikzstyle{transparentstyle} = [fill opacity=0.3, fill = white]|[lay=under]
+special |\tikzstyle{newstyle} = [fill opacity=0.3, fill = white, dashed, draw=green]|[lay=under]
+special |\tikzstyle{node} = [fill = white]|[lay=under]
+special |\tikzstyle{line} = [green, thick, dashed]|[lay=under]
+
+def p2 (-6.0, 0.0, 2.0)
+def p1 (5.0, 0.0, -10.0)
+def p3 (0.0, 10.0, 0.0)
+def p0 (5.0, 0.0, 10.0)
+def p4 (15.0, 2.0, 2.0)
+def p5 (3.5, 3.0, 1.0)
+
+def O (0.0, 0.0, 0.0)
+def c0123 ((p0)-(O) + (p1)-(O) + (p2)-(O) + (p3)-(O)) / 4 + (O)
+def c0134 ((p0)-(O) + (p1)-(O) + (p3)-(O) + (p4)-(O)) / 4 + (O)
+def c0125 ((p0)-(O) + (p1)-(O) + (p2)-(O) + (p5)-(O)) / 4 + (O)
+def c0235 ((p0)-(O) + (p2)-(O) + (p3)-(O) + (p5)-(O)) / 4 + (O)
+def c1235 ((p1)-(O) + (p2)-(O) + (p3)-(O) + (p5)-(O)) / 4 + (O)
+def c0145 ((p0)-(O) + (p1)-(O) + (p4)-(O) + (p5)-(O)) / 4 + (O)
+def c0345 ((p0)-(O) + (p3)-(O) + (p4)-(O) + (p5)-(O)) / 4 + (O)
+def c1345 ((p1)-(O) + (p3)-(O) + (p4)-(O) + (p5)-(O)) / 4 + (O)
+
+def Ntn0 unit( (c0125)-(p5) )
+def Ntn1 unit( (c0235)-(p5) )
+def Ntn2 unit( (c1235)-(p5) )
+def Ntn3 unit( (c0145)-(p5) )
+def Ntn4 unit( (c0345)-(p5) )
+def Ntn5 unit( (c1345)-(p5) )
+
+def N023 unit( ((p3)-(p0)) * ((p2)-(p0)) )
+def N123 unit( ((p2)-(p1)) * ((p3)-(p1)) )
+def N012 unit( ((p2)-(p0)) * ((p1)-(p0)) )
+def N034 unit( ((p3)-(p0)) * ((p4)-(p0)) )
+def N134 unit( ((p3)-(p1)) * ((p4)-(p1)) )
+def N014 unit( ((p1)-(p0)) * ((p4)-(p0)) )
+
+def N013 unit( ((p3)-(p0)) * ((p1)-(p0)) )
+
+def c023 ((p0)-(O) + (p2)-(O) + (p3)-(O)) / 3 + (O)
+def c123 ((p1)-(O) + (p2)-(O) + (p3)-(O)) / 3 + (O)
+def c012 ((p0)-(O) + (p1)-(O) + (p2)-(O)) / 3 + (O)
+def c034 ((p0)-(O) + (p3)-(O) + (p4)-(O)) / 3 + (O)
+def c134 ((p1)-(O) + (p3)-(O) + (p4)-(O)) / 3 + (O)
+def c014 ((p0)-(O) + (p1)-(O) + (p4)-(O)) / 3 + (O)
+
+def n023 (c023)+[N023]
+def n123 (c123)+[N123]
+def n012 (c012)+[N012]
+def n034 (c034)+[N034]
+def n134 (c134)+[N134]
+def n014 (c014)+[N014]
+
+def n023l line(c023)(n023)
+def n123l line(c123)(n123)
+def n012l line(c012)(n012)
+def n034l line(c034)(n034)
+def n134l line(c134)(n134)
+def n014l line(c014)(n014)
+
+def n023label { special |\node[node] at #1 {\large ngb3};|[lay=in](n023) }
+def n123label { special |\node[node] at #1 {\large ngb0};|[lay=in](n123) }
+def n012label { special |\node[node] at #1 {\large ngb4};|[lay=in](n012) }
+def n034label { special |\node[node] at #1 {\large ngb2};|[lay=in](n034) }
+def n134label { special |\node[node] at #1 {\large ngb1};|[lay=in](n134) }
+def n014label { special |\node[node] at #1 {\large ngb5};|[lay=in](n014) }
+
+def p0label (p0)
+def p1label (p1)
+def p2label (p2)
+def p3label (p3)
+def p4label (p4)
+def p5label (p5)
+
+def t01 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def t03 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
+def t02 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
+def t00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
+
+def t11 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p3)
+def t13 polygon[cull=false, fill style=transparentstyle](p1)(p4)(p3)
+def t12 polygon[cull=false, fill style=transparentstyle](p0)(p4)(p3)
+def t10 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p4)
+
+def tn00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p2)
+def tn01 polygon[cull=false, fill style=newstyle](p0)(p1)(p5)
+def tn02 polygon[cull=false, fill style=newstyle](p0)(p2)(p5)
+def tn03 polygon[cull=false, fill style=newstyle](p1)(p2)(p5)
+
+def tn10 polygon[cull=false, fill style=transparentstyle](p0)(p2)(p3)
+def tn11 polygon[cull=false, fill style=newstyle](p0)(p3)(p5)
+def tn12 polygon[cull=false, fill style=newstyle](p0)(p2)(p5)
+def tn13 polygon[cull=false, fill style=newstyle](p2)(p3)(p5)
+
+def tn20 polygon[cull=false, fill style=transparentstyle](p1)(p2)(p3)
+def tn21 polygon[cull=false, fill style=newstyle](p1)(p3)(p5)
+def tn22 polygon[cull=false, fill style=newstyle](p2)(p3)(p5)
+def tn23 polygon[cull=false, fill style=newstyle](p1)(p2)(p5)
+
+def tn30 polygon[cull=false, fill style=transparentstyle](p0)(p1)(p4)
+def tn31 polygon[cull=false, fill style=newstyle](p0)(p1)(p5)
+def tn32 polygon[cull=false, fill style=newstyle](p0)(p4)(p5)
+def tn33 polygon[cull=false, fill style=newstyle](p1)(p4)(p5)
+
+def tn40 polygon[cull=false, fill style=transparentstyle](p0)(p3)(p4)
+def tn41 polygon[cull=false, fill style=newstyle](p0)(p3)(p5)
+def tn42 polygon[cull=false, fill style=newstyle](p0)(p4)(p5)
+def tn43 polygon[cull=false, fill style=newstyle](p3)(p4)(p5)
+
+def tn50 polygon[cull=false, fill style=transparentstyle](p1)(p3)(p4)
+def tn51 polygon[cull=false, fill style=newstyle](p1)(p3)(p5)
+def tn52 polygon[cull=false, fill style=newstyle](p1)(p4)(p5)
+def tn53 polygon[cull=false, fill style=newstyle](p3)(p4)(p5)
+
+def v0label { special |\node[node] at #1 {v0};|[lay=in](p0label) }
+def v1label { special |\node[node] at #1 {v1};|[lay=in](p1label) }
+def v2label { special |\node[node] at #1 {v2};|[lay=in](p2label) }
+def v3label { special |\node[node] at #1 {v3};|[lay=in](p3label) }
+def v4label { special |\node[node] at #1 {v4};|[lay=in](p4label) }
+def v5label { special |\node[node] at #1 {v5};|[lay=in](p5label) }
+def t0label { special |\node[node] at #1 {\Large t0};|[lay=in](c0123) }
+def t1label { special |\node[node] at #1 {\Large t1};|[lay=in](c0134) }
+def tn0label { special |\node[node] at #1 {\Large t'0};|[lay=in](c0125) }
+def tn1label { special |\node[node] at #1 {\Large t'1};|[lay=in](c0235) }
+def tn2label { special |\node[node] at #1 {\Large t'2};|[lay=in](c1235) }
+def tn3label { special |\node[node] at #1 {\Large t'3};|[lay=in](c0145) }
+def tn4label { special |\node[node] at #1 {\Large t'4};|[lay=in](c0345) }
+def tn5label { special |\node[node] at #1 {\Large t'5};|[lay=in](c1345) }
+
+def t0 {{t00}{t01}{t02}{t03}{v0label}{v1label}{v2label}{v3label}{t0label}
+        {n023label}{n123label}{n012label}{n023l}{n123l}{n012l}}
+def t1 {{t10}{t11}{t12}{t13}{v0label}{v1label}{v4label}{v3label}{t1label}
+        {n034label}{n134label}{n014label}{n034l}{n134l}{n014l}}
+
+def tn0 {{tn00}{tn01}{tn02}{tn03}{v0label}{v1label}{v2label}{v5label}{tn0label}
+         {n012label}{n012l}}
+def tn1 {{tn10}{tn11}{tn12}{tn13}{v0label}{v5label}{v2label}{v3label}{tn1label}
+         {n023label}{n023l}}
+def tn2 {{tn20}{tn21}{tn22}{tn23}{v5label}{v1label}{v2label}{v3label}{tn2label}
+         {n123label}{n123l}}
+def tn3 {{tn30}{tn31}{tn32}{tn33}{v5label}{v1label}{v4label}{v3label}{tn3label}
+         {n014label}{n014l}}
+def tn4 {{tn40}{tn41}{tn42}{tn43}{v5label}{v1label}{v4label}{v3label}{tn4label}
+         {n034label}{n034l}}
+def tn5 {{tn50}{tn51}{tn52}{tn53}{v5label}{v1label}{v4label}{v3label}{tn5label}
+         {n134label}{n134l}}
+
+def scale 4.0
+
+def t0t put {translate(scale*[N013])}{t0}
+def t1t put {translate(-scale*[N013])}{t1}
+
+def tn0t put {translate(scale*[Ntn0])}{tn0}
+def tn1t put {translate(scale*[Ntn1])}{tn1}
+def tn2t put {translate(scale*[Ntn2])}{tn2}
+def tn3t put {translate(scale*[Ntn3])}{tn3}
+def tn4t put {translate(scale*[Ntn4])}{tn4}
+def tn5t put {translate(scale*[Ntn5])}{tn5}
+
+def eye (10.0, 10.0, 10.0)
+def look_at (0.0, 0.0, 0.0)
+
+def decomposed1 put {translate([15.0, 0.0, -15.0])}{{t0t}{t1t}}
+
+def p0p5 line[line style=line](p0)(p5)
+def p1p5 line[line style=line](p1)(p5)
+def p2p5 line[line style=line](p2)(p5)
+def p3p5 line[line style=line](p3)(p5)
+def p4p5 line[line style=line](p4)(p5)
+
+def new_point {{p0p5}{p1p5}{p2p5}{p3p5}{p4p5}{v5label}}
+
+def t0line put {translate([7.5, -18.0, -7.5])}{{t0}{t1}{new_point}}
+def tn put {translate([0.0, -40.0, 0.0])}{{tn0}{tn1}{tn2}{tn3}{tn4}{tn5}}
+def decomposed2 put {translate([15.0, -40.0, -15.0])}{{tn0t}{tn1t}{tn2t}
+                                                      {tn3t}{tn4t}{tn5t}}
+
+put {view((eye), (look_at))} {{t0}{t1}{decomposed1}{t0line}{tn}{decomposed2}}
+
+global { language tikz }

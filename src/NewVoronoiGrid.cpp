@@ -25,11 +25,8 @@
  */
 #include "NewVoronoiGrid.hpp"
 #include "ExactGeometricTests.hpp"
-#include "PointLocations.hpp"
-
-/*! @brief If not commented out, this prints the hexadecimal integers to the
- *  stdout. */
-//#define NEWVORONOIGRID_PRINT_INTEGERS
+#include "NewVoronoiCellConstructor.hpp"
+#include "WorkDistributor.hpp"
 
 /*! @brief If not commented out, this checks the empty circumsphere condition
  *  for every cell after every generator intersection (this is very slow, so you
@@ -42,40 +39,27 @@
 //#define NEWVORONOIGRID_CHECK_TOTAL_VOLUME 1.e-14
 
 /**
- * @brief Print the hexadecimal representation of the given integer coordinate.
- *
- * @param x Integer coordinate.
- * @param s Identifying string that is prepended to the output.
- */
-#ifdef NEWVORONOIGRID_PRINT_INTEGERS
-#define newvoronoigrid_print_integer_coordinate(coordinate, s, ...)            \
-  cmac_status(s ": %#018lx %#018lx %#018lx", coordinate.x(), coordinate.y(),   \
-              coordinate.z(), ##__VA_ARGS__)
-#else
-#define newvoronoigrid_print_integer_coordinate(x, s, ...) (void)x
-#endif
-
-/**
  * @brief Check if the given cell fulfills the Delaunay condition.
  *
- * @param cell Index of the cell to check.
+ * @param cell_constructor Cell to check.
  */
 #ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
-#define newvoronoigrid_check_cell(cell)                                        \
-  _cells[cell].check_empty_circumsphere(_integer_voronoi_box,                  \
-                                        _integer_generator_positions)
+#define newvoronoigrid_check_cell(cell_constructor)                            \
+  cell.check_empty_circumsphere(_real_rescaled_box, _real_rescaled_positions)
 #else
-#define newvoronoigrid_check_cell(cell)
+#define newvoronoigrid_check_cell(cell_constructor)
 #endif
 
 /**
  * @brief Check if the total volume of all cells matches the volume of the
  * simulation box.
- *
- * @param total_volume Total volume of all cells (in m^3).
  */
 #ifdef NEWVORONOIGRID_CHECK_TOTAL_VOLUME
-#define newvoronoigrid_check_volume(total_volume)                              \
+#define newvoronoigrid_check_volume()                                          \
+  double total_volume = 0.;                                                    \
+  for (unsigned int i = 0; i < _cells.size(); ++i) {                           \
+    total_volume += _cells[i].get_volume();                                    \
+  }                                                                            \
   cmac_assert_message(std::abs(total_volume - _box.get_volume()) <             \
                           NEWVORONOIGRID_CHECK_TOTAL_VOLUME *                  \
                               (total_volume + _box.get_volume()),              \
@@ -84,18 +68,68 @@
                       std::abs(total_volume - _box.get_volume()) /             \
                           (total_volume + _box.get_volume()));
 #else
-#define newvoronoigrid_check_volume(total_volume) (void)total_volume
+#define newvoronoigrid_check_volume()
 #endif
+
+/**
+ * @brief Compute the cell with the given index.
+ *
+ * @param index Index of the cell to compute.
+ * @param constructor NewVoronoiCellConstructor to use.
+ * @return NewVoronoiCell.
+ */
+NewVoronoiCell
+NewVoronoiGrid::compute_cell(unsigned int index,
+                             NewVoronoiCellConstructor &constructor) const {
+
+  constructor.setup(index, _real_generator_positions, _real_voronoi_box,
+                    _real_rescaled_positions, _real_rescaled_box, true);
+
+  auto it = _point_locations.get_neighbours(index);
+  auto ngbs = it.get_neighbours();
+  for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+    const unsigned int j = *ngbit;
+    if (j != index) {
+      constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(cell_constructor);
+    }
+  }
+  while (it.increase_range() &&
+         it.get_max_radius2() < constructor.get_max_radius_squared()) {
+    ngbs = it.get_neighbours();
+    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+      const unsigned int j = *ngbit;
+      constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
+                            _real_voronoi_box, _real_generator_positions);
+      newvoronoigrid_check_cell(cell_constructor);
+    }
+  }
+
+  NewVoronoiCell cell =
+      constructor.get_cell(_real_voronoi_box, _real_generator_positions);
+
+  return cell;
+}
 
 /**
  * @brief Constructor.
  *
  * @param positions Mesh generating positions (in m).
  * @param box Simulation box (in m).
+ * @param periodic Periodicity flags for the simulation box.
  */
 NewVoronoiGrid::NewVoronoiGrid(
-    const std::vector< CoordinateVector<> > &positions, const Box<> box)
-    : _box(box), _real_generator_positions(positions), _real_voronoi_box(box) {
+    const std::vector< CoordinateVector<> > &positions, const Box<> box,
+    const CoordinateVector< bool > periodic)
+    : _box(box), _real_generator_positions(positions), _real_voronoi_box(box),
+      _point_locations(_real_generator_positions, NEWVORONOIGRID_NUM_BUCKET,
+                       _box) {
+
+  if (periodic.x() || periodic.y() || periodic.z()) {
+    cmac_error(
+        "NewVoronoiGrids with periodic boundaries are not (yet) supported!");
+  }
 
   CoordinateVector<> min_anchor, max_anchor;
   min_anchor =
@@ -136,111 +170,155 @@ NewVoronoiGrid::NewVoronoiGrid(
       (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
           max_anchor.z();
 
-  _real_rescaled_box = VoronoiBox< double >(
+  _real_rescaled_box = NewVoronoiBox(
       Box<>(CoordinateVector<>(box_bottom_anchor_x, box_bottom_anchor_y,
                                box_bottom_anchor_z),
             CoordinateVector<>(box_top_anchor_x - box_bottom_anchor_x,
                                box_top_anchor_y - box_bottom_anchor_y,
                                box_top_anchor_z - box_bottom_anchor_z)));
 
-  const CoordinateVector< unsigned long > box_bottom_anchor(
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_x),
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_y),
-      ExactGeometricTests::get_mantissa(box_bottom_anchor_z));
-  CoordinateVector< unsigned long > box_top_anchor(
-      ExactGeometricTests::get_mantissa(box_top_anchor_x),
-      ExactGeometricTests::get_mantissa(box_top_anchor_y),
-      ExactGeometricTests::get_mantissa(box_top_anchor_z));
-  Box< unsigned long > integer_box(box_bottom_anchor,
-                                   box_top_anchor - box_bottom_anchor);
-  newvoronoigrid_print_integer_coordinate(integer_box.get_anchor(),
-                                          "Box anchor");
-  newvoronoigrid_print_integer_coordinate(integer_box.get_sides(), "Box sides");
-  _integer_voronoi_box = VoronoiBox< unsigned long >(integer_box);
-  CoordinateVector< unsigned long > exp_min(0);
-  CoordinateVector< unsigned long > exp_max(0x000fffffffffffff);
-  CoordinateVector< unsigned long > corner0 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER0, exp_min);
-  CoordinateVector< unsigned long > corner1 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER1, exp_min);
-  CoordinateVector< unsigned long > corner2 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER2, exp_min);
-  CoordinateVector< unsigned long > corner3 =
-      _integer_voronoi_box.get_position(NEWVORONOICELL_BOX_CORNER3, exp_min);
-  newvoronoigrid_print_integer_coordinate(corner0, "Corner0:");
-  newvoronoigrid_print_integer_coordinate(corner1, "Corner1:");
-  newvoronoigrid_print_integer_coordinate(corner2, "Corner2:");
-  newvoronoigrid_print_integer_coordinate(corner3, "Corner3:");
-  cmac_assert(corner0.x() >= exp_min.x());
-  cmac_assert(corner0.y() >= exp_min.y());
-  cmac_assert(corner0.z() >= exp_min.z());
-  cmac_assert(corner1.x() <= exp_max.x());
-  cmac_assert(corner2.y() <= exp_max.y());
-  cmac_assert(corner3.z() <= exp_max.z());
-
   const unsigned int psize = positions.size();
   _real_rescaled_positions.resize(psize);
-  _integer_generator_positions.resize(psize);
   for (unsigned int i = 0; i < psize; ++i) {
     const double x = 1. + (positions[i].x() - min_anchor.x()) / max_anchor.x();
     const double y = 1. + (positions[i].y() - min_anchor.y()) / max_anchor.y();
     const double z = 1. + (positions[i].z() - min_anchor.z()) / max_anchor.z();
     _real_rescaled_positions[i] = CoordinateVector<>(x, y, z);
-    _integer_generator_positions[i] =
-        CoordinateVector< unsigned long >(ExactGeometricTests::get_mantissa(x),
-                                          ExactGeometricTests::get_mantissa(y),
-                                          ExactGeometricTests::get_mantissa(z));
-    cmac_assert(_integer_generator_positions[i].x() >= exp_min.x());
-    cmac_assert(_integer_generator_positions[i].x() <= exp_max.x());
-    cmac_assert(_integer_generator_positions[i].y() >= exp_min.y());
-    cmac_assert(_integer_generator_positions[i].y() <= exp_max.y());
-    cmac_assert(_integer_generator_positions[i].z() >= exp_min.z());
-    cmac_assert(_integer_generator_positions[i].z() <= exp_max.z());
   }
 }
 
 /**
- * @brief Construct the Voronoi grid.
+ * @brief Virtual destructor.
  */
-void NewVoronoiGrid::construct() {
-  PointLocations point_locations(_real_generator_positions,
-                                 NEWVORONOIGRID_NUM_BUCKET,
-                                 _real_voronoi_box.get_box());
+NewVoronoiGrid::~NewVoronoiGrid() {}
+
+/**
+ * @brief Construct the Voronoi grid.
+ *
+ * @param worksize Number of shared memory threads to use during the grid
+ * construction.
+ */
+void NewVoronoiGrid::compute_grid(int worksize) {
 
   const unsigned int psize = _real_generator_positions.size();
   _cells.resize(psize);
-  double total_volume = 0.;
-  for (unsigned int i = 0; i < psize; ++i) {
-    _cells[i] = NewVoronoiCell(i);
 
-    auto it = point_locations.get_neighbours(i);
-    auto ngbs = it.get_neighbours();
-    for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      const unsigned int j = *ngbit;
-      if (j != i) {
-        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                            _integer_voronoi_box, _integer_generator_positions,
-                            _real_voronoi_box, _real_generator_positions);
-        newvoronoigrid_check_cell(i);
-      }
-    }
-    while (it.increase_range() &&
-           it.get_max_radius2() < 4. * _cells[i].get_max_radius_squared()) {
-      ngbs = it.get_neighbours();
-      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        const unsigned int j = *ngbit;
-        _cells[i].intersect(j, _real_rescaled_box, _real_rescaled_positions,
-                            _integer_voronoi_box, _integer_generator_positions,
-                            _real_voronoi_box, _real_generator_positions);
-        newvoronoigrid_check_cell(i);
-      }
-    }
+  WorkDistributor< NewVoronoiGridConstructionJobMarket,
+                   NewVoronoiGridConstructionJob >
+      workers(worksize);
+  NewVoronoiGridConstructionJobMarket jobs(*this, 100);
+  workers.do_in_parallel(jobs);
 
-    _cells[i].finalize(_box, _real_generator_positions,
-                       _integer_generator_positions, _integer_voronoi_box,
-                       _real_rescaled_positions, _real_rescaled_box, true);
-    total_volume += _cells[i].get_volume();
+  newvoronoigrid_check_volume();
+}
+
+/**
+ * @brief Get the volume of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Volume of the cell (in m^3).
+ */
+double NewVoronoiGrid::get_volume(unsigned int index) const {
+  return _cells[index].get_volume();
+}
+
+/**
+ * @brief Get the centroid of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Centroid of that cell (in m).
+ */
+CoordinateVector<> NewVoronoiGrid::get_centroid(unsigned int index) const {
+  return _cells[index].get_centroid();
+}
+
+/**
+ * @brief Get the normal of the wall with the given index.
+ *
+ * @param wallindex Index of a wall of the box.
+ * @return Normal vector to the given wall.
+ */
+CoordinateVector<>
+NewVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
+  cmac_assert(wallindex >= NEWVORONOICELL_MAX_INDEX);
+
+  switch (wallindex) {
+  case NEWVORONOICELL_BOX_LEFT:
+    return CoordinateVector<>(-1., 0., 0.);
+  case NEWVORONOICELL_BOX_RIGHT:
+    return CoordinateVector<>(1., 0., 0.);
+  case NEWVORONOICELL_BOX_FRONT:
+    return CoordinateVector<>(0., -1., 0.);
+  case NEWVORONOICELL_BOX_BACK:
+    return CoordinateVector<>(0., 1., 0.);
+  case NEWVORONOICELL_BOX_BOTTOM:
+    return CoordinateVector<>(0., 0., -1.);
+  case NEWVORONOICELL_BOX_TOP:
+    return CoordinateVector<>(0., 0., 1.);
   }
 
-  newvoronoigrid_check_volume(total_volume);
+  cmac_error("Not a valid wall index: %u!", wallindex);
+  return CoordinateVector<>();
+}
+
+/**
+ * @brief Get the faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return std::vector containing, for each face, its surface area (in m^2), its
+ * midpoint (in m), and the index of the neighbouring cell that generated the
+ * face.
+ */
+std::vector< VoronoiFace > NewVoronoiGrid::get_faces(unsigned int index) const {
+  return _cells[index].get_faces();
+}
+
+/**
+ * @brief Get the geometrical faces of the cell with the given index.
+ *
+ * @param index Index of a cell in the grid.
+ * @return Faces of that cell.
+ */
+std::vector< Face >
+NewVoronoiGrid::get_geometrical_faces(unsigned int index) const {
+  const std::vector< VoronoiFace > faces = _cells[index].get_faces();
+  std::vector< Face > geometrical_faces;
+  for (unsigned int i = 0; i < faces.size(); ++i) {
+    const CoordinateVector<> midpoint = faces[i].get_midpoint();
+    const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
+    geometrical_faces.push_back(Face(midpoint, vertices));
+  }
+  return geometrical_faces;
+}
+
+/**
+ * @brief Get the index of the Voronoi cell that contains the given position.
+ *
+ * @param position Arbitrary position (in m).
+ * @return Index of the cell that contains that position.
+ */
+unsigned int
+NewVoronoiGrid::get_index(const CoordinateVector<> &position) const {
+  return _point_locations.get_closest_neighbour(position);
+}
+
+/**
+ * @brief Check if the given position is inside the simulation box.
+ *
+ * @param position Arbitrary position (in m).
+ * @return True if that position is inside the simulation box, false otherwise.
+ */
+bool NewVoronoiGrid::is_inside(CoordinateVector<> position) const {
+  return _box.inside(position);
+}
+
+/**
+ * @brief Check if the given index corresponds to a real neighbouring cell or to
+ * a ghost cell that represents a wall of the simulation box.
+ *
+ * @param index Index to check.
+ * @return True if the given index corresponds to a real neighbouring cell.
+ */
+bool NewVoronoiGrid::is_real_neighbour(unsigned int index) const {
+  return index < NEWVORONOICELL_MAX_INDEX;
 }

@@ -17,18 +17,18 @@
  ******************************************************************************/
 
 /**
- * @file VoronoiCell.hpp
+ * @file OldVoronoiCell.hpp
  *
- * @brief Single cell of the Voronoi grid.
+ * @brief Single cell of the old Voronoi grid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef VORONOICELL_HPP
-#define VORONOICELL_HPP
+#ifndef OLDVORONOICELL_HPP
+#define OLDVORONOICELL_HPP
 
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
-#include "VoronoiEdge.hpp"
+#include "OldVoronoiEdge.hpp"
 #include "VoronoiFace.hpp"
 
 #include <ostream>
@@ -40,35 +40,35 @@
  *  indices correspond to the 6 highest possible 32-bit unsigned integers. No
  *  cells should be added to the VoronoiGrid if the total number of cells has
  *  reached the lowest of these values, which is given in the define below. */
-#define VORONOI_MAX_INDEX 0xfffffffa
+#define OLDVORONOI_MAX_INDEX 0xfffffffa
 
 /*! @brief Neigbour index used for the left of the box (constant low x
  *  coordinate). */
-#define VORONOI_BOX_LEFT 0xfffffffa
+#define OLDVORONOI_BOX_LEFT 0xfffffffa
 /*! @brief Neigbour index used for the right of the box (constant high x
  *  coordinate). */
-#define VORONOI_BOX_RIGHT 0xfffffffb
+#define OLDVORONOI_BOX_RIGHT 0xfffffffb
 /*! @brief Neighbour index used for the front of the box (constant low y
  *  coordinate). */
-#define VORONOI_BOX_FRONT 0xfffffffc
+#define OLDVORONOI_BOX_FRONT 0xfffffffc
 /*! @brief Neigbour index used for the back of the box (constant high y
  *  coordinate). */
-#define VORONOI_BOX_BACK 0xfffffffd
+#define OLDVORONOI_BOX_BACK 0xfffffffd
 /*! @brief Neigbour index used for the bottom of the box (constant low z
  *  coordinate). */
-#define VORONOI_BOX_BOTTOM 0xfffffffe
+#define OLDVORONOI_BOX_BOTTOM 0xfffffffe
 /*! @brief Neigbour index used for the top of the box (constant high z
  *  coordinate). */
-#define VORONOI_BOX_TOP 0xffffffff
+#define OLDVORONOI_BOX_TOP 0xffffffff
 
 /*! @brief Tolerance used when deciding if a vertex is close enough to a plane
  *  to consider it to lie inside the plane. */
-#define VORONOI_TOLERANCE 2.e-10
+#define OLDVORONOI_TOLERANCE 2.e-10
 
 /**
- * @brief Single cell of the Voronoi grid.
+ * @brief Single cell of the old Voronoi grid.
  */
-class VoronoiCell {
+class OldVoronoiCell {
 private:
   /*! @brief Position of the cell generator (in m). */
   CoordinateVector<> _generator_position;
@@ -120,7 +120,7 @@ private:
    * (next meaning it is the next edge in the edge list for that vertex), that
    * edge is guaranteed to have the same neighbour.
    */
-  std::vector< std::vector< VoronoiEdge > > _edges;
+  std::vector< std::vector< OldVoronoiEdge > > _edges;
 
   /*! @brief Cell faces. Each face has a surface area (in m^2), a midpoint
    *  position (in m), an associated index of the cell that generated it, and a
@@ -263,9 +263,9 @@ private:
   }
 
 public:
-  VoronoiCell();
-  VoronoiCell(const CoordinateVector<> &generator_position,
-              const Box<> &bounding_box);
+  OldVoronoiCell();
+  OldVoronoiCell(const CoordinateVector<> &generator_position,
+                 const Box<> &bounding_box);
 
   /// const element getters
   const CoordinateVector<> &get_generator() const;
@@ -347,4 +347,4 @@ public:
   void print_cell(std::ostream &stream, bool show_structure = false);
 };
 
-#endif // VORONOICELL_HPP
+#endif // OLDVORONOICELL_HPP

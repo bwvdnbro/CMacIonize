@@ -264,11 +264,33 @@ endif(ACTIVATE_OUTPUT_CYCLES)
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 
+# Add the command and target that creates the CompilerInfo.cpp file
+# Note that we need to add the 'dummy_file_that_is_not_created' to the outputs
+# to force rerunnning this command every time the code is compiled
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                          dummy_file_that_is_not_created
+                   COMMENT "Generating CompilerInfo.cpp"
+                   COMMAND ${CMAKE_COMMAND}
+                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
+                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
+                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
+                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
+
+add_custom_target(CompilerInfo
+                  DEPENDS ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp)
+
 # Enter the folder containing the source files and configure the executables.
 add_subdirectory(src)
 
 # Enter the folder containing the unit tests
 add_subdirectory(test)
+
+# Enter the folder containing the timing tests
+add_subdirectory(timing)
 
 # If we have Python, enter the folder containing the Python modules
 if(HAVE_PYTHON)

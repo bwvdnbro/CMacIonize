@@ -706,9 +706,11 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
     ../src/HydroVariables.hpp
-    ../src/VoronoiCell.cpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
     ../src/VoronoiDensityGrid.cpp
-    ../src/VoronoiGrid.cpp
 )
 if(HAVE_HDF5)
   list(APPEND TESTHYDROINTEGRATOR_SOURCES
@@ -761,18 +763,18 @@ add_unit_test(NAME testAsciiFileDensityGridWriter
               SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
 
 ## VoronoiGrid test
-set(TESTVORONOIGRID_SOURCES
-    testVoronoiGrid.cpp
+set(TESTOLDVORONOIGRID_SOURCES
+    testOldVoronoiGrid.cpp
 
-    ../src/VoronoiCell.cpp
-    ../src/VoronoiCell.hpp
-    ../src/VoronoiEdge.hpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiCell.hpp
+    ../src/OldVoronoiEdge.hpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/OldVoronoiGrid.hpp
     ../src/VoronoiFace.hpp
-    ../src/VoronoiGrid.cpp
-    ../src/VoronoiGrid.hpp
 )
-add_unit_test(NAME testVoronoiGrid
-              SOURCES ${TESTVORONOIGRID_SOURCES})
+add_unit_test(NAME testOldVoronoiGrid
+              SOURCES ${TESTOLDVORONOIGRID_SOURCES})
 
 ## PointLocations test
 set(TESTPOINTLOCATIONS_SOURCES
@@ -834,15 +836,19 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     testVoronoiDensityGrid.cpp
 
     ../src/DensityGrid.cpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiCell.hpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/OldVoronoiGrid.hpp
     ../src/UniformRandomVoronoiGeneratorDistribution.hpp
     ../src/UniformRegularVoronoiGeneratorDistribution.hpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiDensityGrid.hpp
     ../src/VoronoiGeneratorDistribution.hpp
-    ../src/VoronoiCell.cpp
-    ../src/VoronoiCell.hpp
-    ../src/VoronoiGrid.cpp
     ../src/VoronoiGrid.hpp
+    ../src/VoronoiGridFactory.hpp
 )
 if(HAVE_HDF5)
   list(APPEND TESTVORONOIDENSITYGRID_SOURCES
@@ -871,13 +877,14 @@ add_unit_test(NAME testOIAMRRefinementScheme
 set(TESTNEWVORONOIGRID_SOURCES
     testNewVoronoiGrid.cpp
 
-    ../src/NewVoronoiCell.cpp
+    ../src/NewVoronoiBox.hpp
     ../src/NewVoronoiCell.hpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiCellConstructor.hpp
     ../src/NewVoronoiGrid.cpp
     ../src/NewVoronoiGrid.hpp
-    ../src/VoronoiBox.hpp
-    ../src/VoronoiTetrahedron.hpp
-    ../src/VoronoiVariables.hpp
+    ../src/NewVoronoiTetrahedron.hpp
+    ../src/NewVoronoiVariables.hpp
 )
 add_unit_test(NAME testNewVoronoiGrid
               SOURCES ${TESTNEWVORONOIGRID_SOURCES})
