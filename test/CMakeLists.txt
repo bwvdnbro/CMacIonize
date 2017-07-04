@@ -903,6 +903,15 @@ if(HAVE_MULTIPRECISION)
                 SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
 endif(HAVE_MULTIPRECISION)
 
+## Unit test for HilbertKeyGenerator
+set(TESTHILBERTKEYGENERATOR_SOURCES
+    testHilbertKeyGenerator.cpp
+
+    ../src/HilbertKeyGenerator.hpp
+)
+add_unit_test(NAME testHilbertKeyGenerator
+              SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
@@ -951,4 +960,5 @@ endif(HAVE_PYTHON)
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                                -R testHilbertKeyGenerator
                         DEPENDS ${TESTNAMES})
