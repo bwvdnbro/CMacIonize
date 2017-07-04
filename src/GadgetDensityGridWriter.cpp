@@ -26,6 +26,7 @@
 #include "GadgetDensityGridWriter.hpp"
 #include "Box.hpp"
 #include "CompilerInfo.hpp"
+#include "ConfigurationInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
@@ -125,6 +126,16 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   // write code info
   group = HDF5Tools::create_group(file, "Code");
   for (auto it = CompilerInfo::begin(); it != CompilerInfo::end(); ++it) {
+    std::string key = it.get_key();
+    std::string value = it.get_value();
+    HDF5Tools::write_attribute< std::string >(group, key, value);
+  }
+  HDF5Tools::close_group(group);
+
+  // write configuration info
+  group = HDF5Tools::create_group(file, "Configuration");
+  for (auto it = ConfigurationInfo::begin(); it != ConfigurationInfo::end();
+       ++it) {
     std::string key = it.get_key();
     std::string value = it.get_value();
     HDF5Tools::write_attribute< std::string >(group, key, value);

@@ -349,6 +349,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/Timer.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                             PROPERTIES GENERATED TRUE)

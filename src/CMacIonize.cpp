@@ -30,6 +30,7 @@
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
 #include "Configuration.hpp"
+#include "ConfigurationInfo.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityFunctionFactory.hpp"
@@ -166,6 +167,11 @@ int main(int argc, char **argv) {
                       ", ", CompilerInfo::get_kernel_name(), " on ",
                       CompilerInfo::get_hardware_name(), " (",
                       CompilerInfo::get_host_name(), ").");
+    log->write_status("Configuration options:");
+    for (auto it = ConfigurationInfo::begin(); it != ConfigurationInfo::end();
+         ++it) {
+      log->write_status(it.get_key(), ": ", it.get_value());
+    }
   }
 
   if (log) {

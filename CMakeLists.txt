@@ -41,9 +41,13 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+set(CONFIGURATION_OPTIONS_NUMBER "0")
 macro(add_configuration_option NAME VALUE)
   set(${NAME} ${VALUE})
-  set(CONFIGURATION_OPTIONS "${CONFIGURATION_OPTIONS}\"${NAME}=${VALUE}\",")
+  set(CONFIGURATION_OPTIONS_NUMBER "${CONFIGURATION_OPTIONS_NUMBER}+1")
+  set(CONFIGURATION_OPTIONS_KEYS "${CONFIGURATION_OPTIONS_KEYS}\"${NAME}\",")
+  set(CONFIGURATION_OPTIONS_VALUES
+      "${CONFIGURATION_OPTIONS_VALUES}\"${VALUE}\",")
 endmacro(add_configuration_option)
 
 # Check if we are on a POSIX system. If not, some functionality will not work
@@ -272,7 +276,7 @@ if(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES True)
   message(STATUS "Each thread will output a job statistics file (slow!).")
 else(ACTIVATE_OUTPUT_CYCLES)
-  add_configuration_option(HAVE_OUTPUT_CYCLES True)
+  add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
 
 # Set the path where the generated executables are stored.
