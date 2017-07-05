@@ -60,6 +60,8 @@
 /*! @brief Maximum number of shared memory threads that can be used on the
  *  system. This variable should be configured at compile time, but for now we
  *  just hardcode its value. */
-#define MAX_NUM_THREADS 128
+// clang-format off
+#define MAX_NUM_THREADS @MAX_NUM_THREADS@
+// clang-format on
 
 #endif // CONFIGURATION_HPP

@@ -16,7 +16,9 @@
 # along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-cmake_minimum_required(VERSION 2.6)
+# the most advanced feature we use is the ProcessorCount module, which is only
+# available since CMake 2.8.5
+cmake_minimum_required(VERSION 2.8.5)
 
 # Set the default CMAKE_BUILD_TYPE
 if(NOT CMAKE_BUILD_TYPE)
@@ -278,6 +280,22 @@ if(ACTIVATE_OUTPUT_CYCLES)
 else(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
+
+# If not explicitly set, try to find the number of cores on the system
+if(MAX_NUMBER_OF_THREADS)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+else(MAX_NUMBER_OF_THREADS)
+  include(ProcessorCount)
+  ProcessorCount(MAX_NUMBER_OF_THREADS)
+  if(MAX_NUMBER_OF_THREADS EQUAL 0)
+    # If we cannot determine the number of cores, we set it to a safe large
+    # value
+    message(WARNING
+            "Cannot determine core count on this system, using value 128")
+    set(MAX_NUMBER_OF_THREADS 128)
+  endif(MAX_NUMBER_OF_THREADS EQUAL 0)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+endif(MAX_NUMBER_OF_THREADS)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
