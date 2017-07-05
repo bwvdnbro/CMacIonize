@@ -9,10 +9,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - boost-latest
           packages:
             - g++-4.9
-            - libboost1.55-dev
       env:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - os: linux
@@ -21,10 +19,8 @@ matrix:
         apt:
           sources:
             - llvm-toolchain-trusty-4.0
-            - boost-latest
           packages:
             - clang-4.0
-            - libboost1.55-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
@@ -32,6 +28,7 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-dev
   - sudo apt-get install -y python-numpy
+  - sudo apt-get install -y libboost-dev
   - eval "${MATRIX_EVAL}"
 script:
   - cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True
