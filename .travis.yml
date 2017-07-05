@@ -3,7 +3,7 @@ sudo: enabled
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-serial-dev
-  - sudo apt-get instlal -y libboost-dev
+  - sudo apt-get install -y libboost-dev
 compiler:
   - clang
   - gcc
