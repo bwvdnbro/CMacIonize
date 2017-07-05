@@ -1,9 +1,17 @@
 language: c++
 sudo: enabled
+os: linux
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-serial-dev
   - sudo apt-get install -y libboost-dev
+  - eval "CC=gcc-4.9 && CXX=g++-4.9"
 compiler:
   - clang
   - gcc

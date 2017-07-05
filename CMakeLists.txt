@@ -67,7 +67,7 @@ endif(NOT HAVE_POSIX)
 find_package(Git)
 
 # The version number.
-execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
                 OUTPUT_VARIABLE GIT_BUILD_STRING
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REGEX REPLACE "v([0-9]*).*" "\\1" GIT_VERSION_MAJOR ${GIT_BUILD_STRING})
