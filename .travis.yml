@@ -1,18 +1,32 @@
 language: c++
 sudo: enabled
-os: linux
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.9
+matrix:
+  - os: linux
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+          - boost-latest
+        packages:
+          - g++-4.9
+          - libboost1.55-all-dev
+    env:
+      - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+  - os: linux
+    compiler: clang
+    addons:
+      apt:
+        sources:
+          - boost-latest
+        packages:
+          - libboost1.55-all-dev
+    env:
+      - MATRIX_EVAL="CC=clang && CXX=clang++"
+
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-serial-dev
   - sudo apt-get install -y libboost-dev
-  - eval "CC=gcc-4.9 && CXX=g++-4.9"
-compiler:
-  - clang
-  - gcc
+  - eval "${MATRIX_EVAL}"
 script: cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True && make
