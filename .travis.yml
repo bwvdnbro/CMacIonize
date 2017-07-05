@@ -1,0 +1,10 @@
+language: c++
+sudo: enabled
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libhdf5-serial-dev
+  - sudo apt-get instlal -y libboost-dev
+compiler:
+  - clang
+  - gcc
+script: cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True && make
