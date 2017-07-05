@@ -173,17 +173,38 @@ else(HDF5_FOUND)
   message(WARNING "HDF5 not found, some modules will not be build!")
 endif(HDF5_FOUND)
 
-# Find OpenMP.
-find_package(OpenMP)
-if(OPENMP_FOUND)
-  add_configuration_option(HAVE_OPENMP True)
-  message(STATUS "OpenMP found. Shared memory parallelization will work.")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-else(OPENMP_FOUND)
+# If not explicitly set, try to find the number of cores on the system
+if(MAX_NUMBER_OF_THREADS)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+else(MAX_NUMBER_OF_THREADS)
+  include(ProcessorCount)
+  ProcessorCount(MAX_NUMBER_OF_THREADS)
+  if(MAX_NUMBER_OF_THREADS EQUAL 0)
+    # If we cannot determine the number of cores, we set it to a safe large
+    # value
+    message(WARNING
+            "Cannot determine core count on this system, using value 128")
+    set(MAX_NUMBER_OF_THREADS 128)
+  endif(MAX_NUMBER_OF_THREADS EQUAL 0)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+endif(MAX_NUMBER_OF_THREADS)
+
+# If we have multiple cores available: find OpenMP.
+if(MAX_NUM_THREADS GREATER 1)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    add_configuration_option(HAVE_OPENMP True)
+    message(STATUS "OpenMP found. Shared memory parallelization will work.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  else(OPENMP_FOUND)
+    add_configuration_option(HAVE_OPENMP False)
+    message(WARNING
+            "OpenMP not found. Shared memory parallelization will not work.")
+  endif(OPENMP_FOUND)
+else(MAX_NUM_THREADS GREATER 1)
   add_configuration_option(HAVE_OPENMP False)
-  message(WARNING
-          "OpenMP not found. Shared memory parallelization will not work.")
-endif(OPENMP_FOUND)
+  message(WARNING "Only 1 core available, so not enabling OpenMP support.")
+endif(MAX_NUM_THREADS GREATER 1)
 
 # Find MPI
 find_package(MPI)
@@ -280,22 +301,6 @@ if(ACTIVATE_OUTPUT_CYCLES)
 else(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
-
-# If not explicitly set, try to find the number of cores on the system
-if(MAX_NUMBER_OF_THREADS)
-  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
-else(MAX_NUMBER_OF_THREADS)
-  include(ProcessorCount)
-  ProcessorCount(MAX_NUMBER_OF_THREADS)
-  if(MAX_NUMBER_OF_THREADS EQUAL 0)
-    # If we cannot determine the number of cores, we set it to a safe large
-    # value
-    message(WARNING
-            "Cannot determine core count on this system, using value 128")
-    set(MAX_NUMBER_OF_THREADS 128)
-  endif(MAX_NUMBER_OF_THREADS EQUAL 0)
-  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
-endif(MAX_NUMBER_OF_THREADS)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
