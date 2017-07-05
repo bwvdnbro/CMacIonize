@@ -28,10 +28,11 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-dev
   - sudo apt-get install -y python-numpy
-  - sudo apt-get install -y libboost-dev
+  - sudo apt-get install -y libboost-dev libboost-python-dev
+  - sudo apt-get install -y libopenmpi-dev
   - eval "${MATRIX_EVAL}"
 script:
   - cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True
-  - make
-  - make timing
-  - make check
+  - make -j 4
+  - make timing -j 4
+  - make check -j 4
