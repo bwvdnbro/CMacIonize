@@ -1,4 +1,5 @@
 language: cpp
+dist: trusty
 sudo: enabled
 matrix:
   include:
