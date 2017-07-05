@@ -28,6 +28,7 @@ matrix:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-serial-dev
-  - sudo apt-get install -y libboost-dev
   - eval "${MATRIX_EVAL}"
-script: cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True && make
+script:
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True
+  - make
