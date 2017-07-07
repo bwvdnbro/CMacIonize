@@ -42,7 +42,7 @@
  * @param log Log to write logging info to.
  */
 AsciiFileDensityFunction::AsciiFileDensityFunction(
-    std::string filename, CoordinateVector< int > ncell, Box box,
+    std::string filename, CoordinateVector< int > ncell, Box<> box,
     double temperature, double length_unit_in_SI, double density_unit_in_SI,
     Log *log)
     : _ncell(ncell), _box(box), _temperature(temperature), _log(log) {
@@ -113,10 +113,10 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
           params.get_value< std::string >("densityfunction:filename"),
           params.get_value< CoordinateVector< int > >(
               "densityfunction:ncell", CoordinateVector< int >(64)),
-          Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
-              params.get_physical_vector< QUANTITY_LENGTH >(
-                  "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
+          Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "densityfunction:temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(
@@ -141,17 +141,18 @@ AsciiFileDensityFunction::~AsciiFileDensityFunction() {
 }
 
 /**
- * @brief Function that gives the density for a given coordinate.
+ * @brief Function that gives the density for a given cell.
  *
  * We calculate in which cell of the grid the given coordinate sits, and return
- * the density in that cell.
+ * the values in that cell.
  *
- * @param position CoordinateVector specifying a coordinate position (in m).
- * @return Density at the given coordinate (in m^-3).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
-DensityValues AsciiFileDensityFunction::
-operator()(CoordinateVector<> position) const {
-  DensityValues cell;
+DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
 
   int ix, iy, iz;
   ix = (position.x() - _box.get_anchor().x()) / _box.get_sides().x() *
@@ -161,11 +162,11 @@ operator()(CoordinateVector<> position) const {
   iz = (position.z() - _box.get_anchor().z()) / _box.get_sides().z() *
        _ncell.z();
 
-  cell.set_number_density(_grid[ix][iy][iz]);
-  cell.set_temperature(_temperature);
-  cell.set_ionic_fraction(ION_H_n, 1.e-6);
-  cell.set_ionic_fraction(ION_He_n, 1.e-6);
-  return cell;
+  values.set_number_density(_grid[ix][iy][iz]);
+  values.set_temperature(_temperature);
+  values.set_ionic_fraction(ION_H_n, 1.e-6);
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
+  return values;
 }
 
 /**

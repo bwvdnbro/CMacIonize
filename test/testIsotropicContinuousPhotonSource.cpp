@@ -75,7 +75,7 @@ CoordinateVector<> get_sphere_position(CoordinateVector<> f,
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  Box box(CoordinateVector<>(-0.5), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(-0.5), CoordinateVector<>(1.));
   RandomGenerator random_generator(44);
   IsotropicContinuousPhotonSource source(box);
 

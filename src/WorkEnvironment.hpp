@@ -32,6 +32,11 @@
 #include <omp.h>
 #endif
 
+#ifdef HAVE_OUTPUT_CYCLES
+#include <fstream>
+#include <sstream>
+#endif
+
 /**
  * @brief Class that is responsible for managing the global number of threads.
  */
@@ -48,6 +53,15 @@ public:
   inline static void set_max_num_threads(int max_num_threads) {
 #ifdef HAVE_OPENMP
     omp_set_num_threads(max_num_threads);
+#endif
+
+#ifdef HAVE_OUTPUT_CYCLES
+    // make sure the jobtimes_*.txt files are empty
+    for (int i = 0; i < max_num_threads; ++i) {
+      std::stringstream filename;
+      filename << "jobtimes_" << i << ".txt";
+      std::ofstream file(filename.str(), std::ofstream::trunc);
+    }
 #endif
   }
 };

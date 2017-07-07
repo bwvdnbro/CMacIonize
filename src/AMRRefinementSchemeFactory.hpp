@@ -33,6 +33,7 @@
 // implementations
 #include "CMacIonizeAMRRefinementScheme.hpp"
 #include "MassAMRRefinementScheme.hpp"
+#include "OIAMRRefinementScheme.hpp"
 #include "OpacityAMRRefinementScheme.hpp"
 #include "SpatialAMRRefinementScheme.hpp"
 
@@ -63,6 +64,8 @@ public:
       return new CMacIonizeAMRRefinementScheme(params, log);
     } else if (type == "Mass") {
       return new MassAMRRefinementScheme(params, log);
+    } else if (type == "OI") {
+      return new OIAMRRefinementScheme(params, log);
     } else if (type == "Opacity") {
       return new OpacityAMRRefinementScheme(params, log);
     } else if (type == "Spatial") {

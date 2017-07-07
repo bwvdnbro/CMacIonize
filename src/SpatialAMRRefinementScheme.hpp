@@ -39,7 +39,7 @@
 class SpatialAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Zone where the grid should be refined (in m). */
-  Box _refinement_zone;
+  Box<> _refinement_zone;
 
   /*! @brief Maximum refinement level. */
   unsigned char _max_level;
@@ -52,7 +52,7 @@ public:
    * @param max_level Maximum refinement level.
    * @param log Log to write logging info to.
    */
-  SpatialAMRRefinementScheme(Box refinement_zone, unsigned char max_level,
+  SpatialAMRRefinementScheme(Box<> refinement_zone, unsigned char max_level,
                              Log *log = nullptr)
       : _refinement_zone(refinement_zone), _max_level(max_level) {
     if (log) {
@@ -76,12 +76,12 @@ public:
    */
   SpatialAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : SpatialAMRRefinementScheme(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:amrrefinementscheme:zone_anchor",
-                    "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:amrrefinementscheme:zone_sides",
-                    "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:amrrefinementscheme:zone_anchor",
+                      "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:amrrefinementscheme:zone_sides",
+                      "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >(
                 "densitygrid:amrrefinementscheme:max_level", 4)) {}
 

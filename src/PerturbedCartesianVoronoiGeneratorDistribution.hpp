@@ -61,7 +61,7 @@ public:
    * @param log Log to write logging info to.
    */
   PerturbedCartesianVoronoiGeneratorDistribution(
-      Box box, const CoordinateVector< unsigned int > resolution,
+      Box<> box, const CoordinateVector< unsigned int > resolution,
       double random_seed, double amplitude, Log *log = nullptr)
       : _current_number(0) {
     RandomGenerator rg(random_seed);
@@ -107,10 +107,10 @@ public:
   PerturbedCartesianVoronoiGeneratorDistribution(ParameterFile &params,
                                                  Log *log = nullptr)
       : PerturbedCartesianVoronoiGeneratorDistribution(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< unsigned int > >(
                 "densitygrid:voronoi_generator_distribution:ncell",
                 CoordinateVector< unsigned int >(10, 10, 10)),

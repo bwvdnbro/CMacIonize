@@ -293,7 +293,7 @@ class ParallelCartesianDensitySubGrid : public DensitySubGrid,
                                         public DensitySubGridVariables {
 private:
   /*! @brief Box containing the sub region of the grid (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of cells per dimension. */
   CoordinateVector< int > _numcell;
@@ -371,11 +371,12 @@ private:
    * right
    * corner of the cell (in m).
    */
-  Box get_cell(CoordinateVector< int > index) const {
+  Box<> get_cell(CoordinateVector< int > index) const {
     double cell_xmin = _box.get_anchor().x() + _cellsides.x() * index.x();
     double cell_ymin = _box.get_anchor().y() + _cellsides.y() * index.y();
     double cell_zmin = _box.get_anchor().z() + _cellsides.z() * index.z();
-    return Box(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin), _cellsides);
+    return Box<>(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin),
+                 _cellsides);
   }
 
 public:
@@ -385,7 +386,7 @@ public:
    * @param box Box containing the sub region of the grid.
    * @param numcell Resolution of the sub region.
    */
-  ParallelCartesianDensitySubGrid(Box box, CoordinateVector< int > numcell)
+  ParallelCartesianDensitySubGrid(Box<> box, CoordinateVector< int > numcell)
       : DensitySubGrid(numcell.x() * numcell.y() * numcell.z()),
         DensitySubGridVariables(numcell.x() * numcell.y() * numcell.z()),
         _box(box), _numcell(numcell), _index(-1),
@@ -455,7 +456,7 @@ public:
    */
   CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
                                            CoordinateVector<> &photon_direction,
-                                           Box &cell,
+                                           Box<> &cell,
                                            CoordinateVector< char > &next_index,
                                            double &ds) const {
     CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
@@ -597,7 +598,7 @@ public:
     // box
     while (is_inside(index) && optical_depth > 0.) {
       ++ncell;
-      Box cell = get_cell(index);
+      Box<> cell = get_cell(index);
 
       double ds;
       CoordinateVector< char > next_index;
@@ -683,7 +684,8 @@ public:
           position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
           position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();
           position[2] = _box.get_anchor().z() + (iz + 0.5) * _cellsides.z();
-          DensitySubGridVariables::initialize(index, function(position));
+          const DummyCell cell(position.x(), position.y(), position.z());
+          DensitySubGridVariables::initialize(index, function(cell));
         }
       }
     }

@@ -50,6 +50,13 @@ private:
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
 
+  /*! @brief Refinement interval: number of grid resets before the grid is
+      refined for the first time. */
+  unsigned char _refinement_interval;
+
+  /*! @brief Number of times the reset() method was called. */
+  unsigned char _reset_count;
+
   /**
    * @brief Get the largest odd factor of the given number.
    *
@@ -102,15 +109,17 @@ private:
       // the contents of the new cells is initialized to these values
       double old_ionic_fractions[NUMBER_OF_IONNAMES];
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        old_ionic_fractions[i] = _ionic_fraction[i][index];
+        const IonName ion = static_cast< IonName >(i);
+        old_ionic_fractions[i] =
+            _ionization_variables[index].get_ionic_fraction(ion);
       }
-      double old_temperature = _temperature[index];
-      double old_hydrogen_reemission_probability =
-          _hydrogen_reemission_probability[index];
-      double old_helium_reemission_probability[4];
-      for (int i = 0; i < 4; ++i) {
-        old_helium_reemission_probability[i] =
-            _helium_reemission_probability[i][index];
+      double old_temperature = _ionization_variables[index].get_temperature();
+      double old_reemission_probability[NUMBER_OF_REEMISSIONPROBABILITIES];
+      for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+        const ReemissionProbabilityName name =
+            static_cast< ReemissionProbabilityName >(i);
+        old_reemission_probability[i] =
+            _ionization_variables[index].get_reemission_probability(name);
       }
       // we do not copy the mean intensity integrals from the old cell, as these
       // will be reset before the refined cells are used
@@ -123,54 +132,79 @@ private:
       for (unsigned int ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
         AMRGridCell< unsigned long > *childcell = cell.get_child(child);
-        DensityValues funcvalue = density_function(childcell->get_midpoint());
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
-          _number_density[index] = funcvalue.get_number_density();
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _ionic_fraction[i][index] = old_ionic_fractions[i];
-          }
-          _temperature[index] = old_temperature;
-          _hydrogen_reemission_probability[index] =
-              old_hydrogen_reemission_probability;
-          for (int i = 0; i < 4; ++i) {
-            _helium_reemission_probability[i][index] =
-                old_helium_reemission_probability[i];
-          }
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _mean_intensity[i][index] = 0.;
-          }
           _mean_intensity_H_old[index] = 0.;
           _neutral_fraction_H_old[index] = old_neutral_fraction_H_old;
-          _heating_H[index] = 0.;
-          _heating_He[index] = 0.;
           _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
+
+          const DensityValues funcvalue =
+              density_function(DensityGrid::iterator(index, *this));
+
+          _ionization_variables[index].set_number_density(
+              funcvalue.get_number_density());
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables[index].set_ionic_fraction(
+                ion, old_ionic_fractions[i]);
+          }
+          _ionization_variables[index].set_temperature(old_temperature);
+          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+            const ReemissionProbabilityName name =
+                static_cast< ReemissionProbabilityName >(i);
+            _ionization_variables[index].set_reemission_probability(
+                name, old_reemission_probability[i]);
+          }
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables[index].set_mean_intensity(ion, 0.);
+          }
+          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+            const HeatingTermName heating_term =
+                static_cast< HeatingTermName >(i);
+            _ionization_variables[index].set_heating(heating_term, 0.);
+          }
         } else {
-          _number_density.push_back(funcvalue.get_number_density());
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _ionic_fraction[i].push_back(old_ionic_fractions[i]);
-          }
-          _temperature.push_back(old_temperature);
-          _hydrogen_reemission_probability.push_back(
-              old_hydrogen_reemission_probability);
-          for (int i = 0; i < 4; ++i) {
-            _helium_reemission_probability[i].push_back(
-                old_helium_reemission_probability[i]);
-          }
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            _mean_intensity[i].push_back(0.);
-          }
+          _ionization_variables.push_back(IonizationVariables());
           _mean_intensity_H_old.push_back(0.);
           _neutral_fraction_H_old.push_back(old_neutral_fraction_H_old);
-          _heating_H.push_back(0.);
-          _heating_He.push_back(0.);
           _emissivities.push_back(nullptr);
+#ifndef USE_LOCKFREE
           _lock.push_back(Lock());
+#endif
           _cells.push_back(childcell);
           childcell->value() = _cells.size() - 1;
+
+          const DensityValues funcvalue =
+              density_function(DensityGrid::iterator(_cells.size() - 1, *this));
+
+          _ionization_variables.back().set_number_density(
+              funcvalue.get_number_density());
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables.back().set_ionic_fraction(
+                ion, old_ionic_fractions[i]);
+          }
+          _ionization_variables.back().set_temperature(old_temperature);
+          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+            const ReemissionProbabilityName name =
+                static_cast< ReemissionProbabilityName >(i);
+            _ionization_variables.back().set_reemission_probability(
+                name, old_reemission_probability[i]);
+          }
+          // not really necessary, as values will be initialized to zero...
+          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+            const IonName ion = static_cast< IonName >(i);
+            _ionization_variables.back().set_mean_intensity(ion, 0.);
+          }
+          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+            const HeatingTermName heating_term =
+                static_cast< HeatingTermName >(i);
+            _ionization_variables.back().set_heating(heating_term, 0.);
+          }
         }
         // recursively refine further
         refine_cell(refinement_scheme, childcell->value(), density_function);
@@ -187,17 +221,22 @@ public:
    * @param density_function DensityFunction that defines the density field.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
+   * @param refinement_interval Number of grid resets before the grid is
+   * refined for the first time.
    * @param periodic Periodicity flags.
    * @param hydro Hydro flag.
    * @param log Log to write logging info to.
    */
   inline AMRDensityGrid(
-      Box box, CoordinateVector< int > ncell, DensityFunction &density_function,
+      Box<> box, CoordinateVector< int > ncell,
+      DensityFunction &density_function,
       AMRRefinementScheme *refinement_scheme = nullptr,
+      unsigned char refinement_interval = 5,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
       : DensityGrid(density_function, box, periodic, hydro, log),
-        _refinement_scheme(refinement_scheme) {
+        _refinement_scheme(refinement_scheme),
+        _refinement_interval(refinement_interval), _reset_count(0) {
 
     // find the smallest number of blocks that fits the requested top level grid
     // for one dimension, this is the largest odd factor in that dimension
@@ -233,24 +272,7 @@ public:
       key = _grid.get_next_key(key);
     }
 
-    _number_density.resize(_grid.get_number_of_cells());
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      _ionic_fraction[i].resize(_grid.get_number_of_cells());
-    }
-    _temperature.resize(_grid.get_number_of_cells());
-    _hydrogen_reemission_probability.resize(_grid.get_number_of_cells());
-    for (int i = 0; i < 4; ++i) {
-      _helium_reemission_probability[i].resize(_grid.get_number_of_cells());
-    }
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      _mean_intensity[i].resize(_grid.get_number_of_cells());
-    }
-    _mean_intensity_H_old.resize(_grid.get_number_of_cells());
-    _neutral_fraction_H_old.resize(_grid.get_number_of_cells());
-    _heating_H.resize(_grid.get_number_of_cells());
-    _heating_He.resize(_grid.get_number_of_cells());
-    _emissivities.resize(_grid.get_number_of_cells(), nullptr);
-    _lock.resize(_grid.get_number_of_cells());
+    allocate_memory(_grid.get_number_of_cells());
 
     if (_log) {
       int levelint = level;
@@ -275,13 +297,15 @@ public:
   inline AMRDensityGrid(ParameterFile &params,
                         DensityFunction &density_function, Log *log)
       : AMRDensityGrid(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
                 "densitygrid:ncell", CoordinateVector< int >(64)),
             density_function, AMRRefinementSchemeFactory::generate(params, log),
+            params.get_value< unsigned char >("densitygrid:refinement_interval",
+                                              5),
             params.get_value< CoordinateVector< bool > >(
                 "densitygrid:periodicity", CoordinateVector< bool >(false)),
             params.get_value< bool >("hydro:active", false), log) {}
@@ -347,23 +371,24 @@ public:
       _log->write_status("Resetting grid...");
     }
 
+    ++_reset_count;
     // we only refine the cells that are already present
     // newly added refined cells are recursively refined within the refinement
     // routine
-    const unsigned int cells2size = _cells.size();
-    for (unsigned int i = 0; i < cells2size; ++i) {
-      if (_refinement_scheme) {
+    if (_refinement_scheme != nullptr && _reset_count >= _refinement_interval) {
+      const unsigned int cells2size = _cells.size();
+      for (unsigned int i = 0; i < cells2size; ++i) {
         refine_cell(*_refinement_scheme, i, _density_function);
       }
-    }
 
-    if (_log) {
-      _log->write_status("Number of cells after reset: ",
-                         _grid.get_number_of_cells(), ".");
-    }
+      if (_log) {
+        _log->write_status("Number of cells after reset: ",
+                           _grid.get_number_of_cells(), ".");
+      }
 
-    // reset the ngbs
-    _grid.set_ngbs(_periodic);
+      // reset the ngbs
+      _grid.set_ngbs(_periodic);
+    }
 
     // make sure all cells are correctly reset (also the new ones, if any)
     DensityGrid::reset_grid();
@@ -386,7 +411,7 @@ public:
    * @return Index of the cell containing that position.
    */
   virtual unsigned long get_cell_index(CoordinateVector<> position) const {
-    return _grid.get_key(position);
+    return _grid.get_cell(position);
   }
 
   /**
@@ -432,7 +457,7 @@ public:
    */
   inline CoordinateVector<>
   get_wall_intersection(CoordinateVector<> &photon_origin,
-                        CoordinateVector<> &photon_direction, Box &box,
+                        CoordinateVector<> &photon_direction, Box<> &box,
                         AMRGridCell< unsigned long > *&cell, double &ds,
                         CoordinateVector<> &periodic_correction) {
     CoordinateVector<> cell_bottom_anchor = box.get_anchor();
@@ -599,13 +624,13 @@ public:
     CoordinateVector<> photon_direction = photon.get_direction();
 
     unsigned long index = get_cell_index(photon_origin);
-    AMRGridCell< unsigned long > *current_cell = &_grid[index];
+    AMRGridCell< unsigned long > *current_cell = _cells[index];
 
     // while the photon has not exceeded the optical depth and is still in the
     // box
     DensityGrid::iterator last_cell = end();
     while (current_cell != nullptr && optical_depth > 0.) {
-      Box cell = current_cell->get_geometry();
+      Box<> cell = current_cell->get_geometry();
 
       double ds = 0.;
       AMRGridCell< unsigned long > *old_cell = current_cell;
@@ -615,13 +640,12 @@ public:
                                 current_cell, ds, periodic_correction);
 
       // get the optical depth of the path from the current photon location to
-      // the
-      // cell wall, update S
+      // the cell wall, update S
       DensityGrid::iterator it(old_cell->value(), *this);
       last_cell = it;
 
       // Helium abundance. Should be a parameter.
-      double tau = get_optical_depth(ds, it, photon);
+      double tau = get_optical_depth(ds, it.get_ionization_variables(), photon);
       optical_depth -= tau;
 
       // if the optical depth exceeds or equals the wanted value: exit the loop
@@ -654,14 +678,58 @@ public:
   }
 
   /**
+   * @brief Get the total line emission along a ray with the given origin and
+   * direction.
+   *
+   * @param origin Origin of the ray (in m).
+   * @param direction Direction of the ray.
+   * @param line EmissionLine name of the line to trace.
+   * @return Accumulated emission along the ray (in J m^-2 s^-1).
+   */
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line) {
+    double S = 0.;
+
+    unsigned long index = get_cell_index(origin);
+    AMRGridCell< unsigned long > *current_cell = _cells[index];
+
+    while (current_cell != nullptr) {
+      Box<> cell = current_cell->get_geometry();
+
+      double ds = 0.;
+      AMRGridCell< unsigned long > *old_cell = current_cell;
+      CoordinateVector<> periodic_correction;
+      CoordinateVector<> next_wall = get_wall_intersection(
+          origin, direction, cell, current_cell, ds, periodic_correction);
+
+      DensityGrid::iterator it(old_cell->value(), *this);
+
+      origin = next_wall;
+
+      S += it.get_emissivities()->get_emissivity(line);
+
+      if (periodic_correction.norm2() > 0.) {
+        break;
+      }
+    }
+
+    return S;
+  }
+
+  /**
    * @brief Increment the iterator index.
    *
    * In this case, the index encodes a lot of extra information and we cannot
-   * simply increment it by 1.
+   * simply increment it by 1 (we do now however).
    *
    * @param index Index to increment.
+   * @param increment Increment (default = 1).
    */
-  virtual void increase_index(unsigned long &index) { ++index; }
+  virtual void increase_index(unsigned long &index,
+                              unsigned long increment = 1) {
+    index += increment;
+  }
 
   /**
    * @brief Get an iterator to the first cell in the grid.
@@ -691,6 +759,16 @@ public:
         ngbs;
 
     return ngbs;
+  }
+
+  /**
+   * @brief Get the faces of the cell with the given index.
+   *
+   * @param index Index of a cell.
+   * @return Empty vector, as this function is not implemented yet.
+   */
+  virtual std::vector< Face > get_faces(unsigned long index) const {
+    return std::vector< Face >();
   }
 
   /**

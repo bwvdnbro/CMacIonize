@@ -46,7 +46,7 @@ private:
   CoordinateVector< int > _ncell;
 
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Initial temperature of the ISM (in K). */
   double _temperature;
@@ -56,13 +56,13 @@ private:
 
 public:
   AsciiFileDensityFunction(std::string filename, CoordinateVector< int > ncell,
-                           Box box, double temperature,
+                           Box<> box, double temperature,
                            double length_unit_in_SI = 1.,
                            double density_unit_in_SI = 1., Log *log = nullptr);
   AsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
   ~AsciiFileDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 
   double get_total_hydrogen_number() const;
 };

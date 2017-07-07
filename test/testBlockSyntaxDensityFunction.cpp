@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
-  Box box(anchor, sides);
+  Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 64, density_function);
   assert_values_equal_tol(grid.get_total_hydrogen_number(),
                           4. * M_PI * 0.25 * 0.25 * 0.25 / 3 +

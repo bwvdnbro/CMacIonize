@@ -75,7 +75,7 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
 
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
-    double n = it.get_number_density();
+    double n = it.get_ionization_variables().get_number_density();
     file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\n";
   }
 }

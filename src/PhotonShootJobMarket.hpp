@@ -92,6 +92,14 @@ public:
   }
 
   /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int worksize) {}
+
+  /**
    * @brief Set the number of photons.
    *
    * This routine can be used to reset a PhotonShootJobMarket that was used
@@ -121,7 +129,7 @@ public:
    * @return PhotonShootJob.
    */
   inline PhotonShootJob *get_job(int thread_id) {
-    unsigned int jobsize = std::max(_numphoton / 10, _jobsize);
+    unsigned int jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
       jobsize = _numphoton;

@@ -217,30 +217,34 @@ double PhotonSource::get_total_luminosity() const { return _total_luminosity; }
  * direction.
  *
  * @param photon Photon to reemit.
- * @param cell DensityGrid::iterator pointing to the cell in which the Photon
- * currently resides.
+ * @param ionization_variables IonizationVariables of the cell that contains the
+ * current location of the Photon.
  * @param random_generator RandomGenerator to use.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, const DensityGrid::iterator &cell,
+bool PhotonSource::reemit(Photon &photon,
+                          const IonizationVariables &ionization_variables,
                           RandomGenerator &random_generator) const {
+
   double new_frequency = 0.;
   double helium_abundance = _abundances.get_abundance(ELEMENT_He);
-  double pHabs = 1. / (1. +
-                       cell.get_ionic_fraction(ION_He_n) * helium_abundance *
-                           photon.get_cross_section(ION_He_n) /
-                           cell.get_ionic_fraction(ION_H_n) /
-                           photon.get_cross_section(ION_H_n));
+  double pHabs =
+      1. / (1. +
+            ionization_variables.get_ionic_fraction(ION_He_n) *
+                helium_abundance * photon.get_cross_section(ION_He_n) /
+                ionization_variables.get_ionic_fraction(ION_H_n) /
+                photon.get_cross_section(ION_H_n));
 
   double x = random_generator.get_uniform_random_double();
   if (x <= pHabs) {
     // photon absorbed by hydrogen
     x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_hydrogen_reemission_probability()) {
+    if (x <= ionization_variables.get_reemission_probability(
+                 REEMISSIONPROBABILITY_HYDROGEN)) {
       // sample new frequency from H Ly c
       new_frequency = _HLyc_spectrum.get_random_frequency(
-          random_generator, cell.get_temperature());
+          random_generator, ionization_variables.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HI);
     } else {
       // photon escapes
@@ -250,42 +254,48 @@ bool PhotonSource::reemit(Photon &photon, const DensityGrid::iterator &cell,
   } else {
     // photon absorbed by helium
     x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_helium_reemission_probability(0)) {
+    if (x <= ionization_variables.get_reemission_probability(
+                 REEMISSIONPROBABILITY_HELIUM_LYC)) {
       // sample new frequency from He Ly c
       new_frequency = _HeLyc_spectrum.get_random_frequency(
-          random_generator, cell.get_temperature());
+          random_generator, ionization_variables.get_temperature());
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_helium_reemission_probability(1)) {
+    } else if (x <= ionization_variables.get_reemission_probability(
+                        REEMISSIONPROBABILITY_HELIUM_NPEEV)) {
       // new frequency is 19.8eV
       new_frequency = 4.788e15;
       photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_helium_reemission_probability(2)) {
+    } else if (x <= ionization_variables.get_reemission_probability(
+                        REEMISSIONPROBABILITY_HELIUM_TPC)) {
       x = random_generator.get_uniform_random_double();
       if (x < 0.56) {
         // sample new frequency from H-ionizing part of He 2-photon continuum
         new_frequency = _He2pc_spectrum.get_random_frequency(
-            random_generator, cell.get_temperature());
+            random_generator, ionization_variables.get_temperature());
         photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
       } else {
         // photon escapes
         photon.set_type(PHOTONTYPE_ABSORBED);
         return false;
       }
-    } else if (x <= cell.get_helium_reemission_probability(3)) {
+    } else if (x <= ionization_variables.get_reemission_probability(
+                        REEMISSIONPROBABILITY_HELIUM_LYA)) {
       // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
       // 2-photon continuum
-      double pHots = 1. / (1. +
-                           77. * cell.get_ionic_fraction(ION_He_n) /
-                               sqrt(cell.get_temperature()) /
-                               cell.get_ionic_fraction(ION_H_n));
+      double pHots =
+          1. / (1. +
+                77. * ionization_variables.get_ionic_fraction(ION_He_n) /
+                    sqrt(ionization_variables.get_temperature()) /
+                    ionization_variables.get_ionic_fraction(ION_H_n));
       x = random_generator.get_uniform_random_double();
       if (x < pHots) {
         // absorbed on the spot
         x = random_generator.get_uniform_random_double();
-        if (x <= cell.get_hydrogen_reemission_probability()) {
+        if (x <= ionization_variables.get_reemission_probability(
+                     REEMISSIONPROBABILITY_HYDROGEN)) {
           // H Ly c, like above
           new_frequency = _HLyc_spectrum.get_random_frequency(
-              random_generator, cell.get_temperature());
+              random_generator, ionization_variables.get_temperature());
           photon.set_type(PHOTONTYPE_DIFFUSE_HI);
         } else {
           // photon escapes

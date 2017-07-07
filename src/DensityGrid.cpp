@@ -39,7 +39,7 @@
  */
 void DensityGrid::initialize(std::pair< unsigned long, unsigned long > &block,
                              DensityFunction &function, int worksize) {
-  DensityGridInitializationFunction init(function);
+  DensityGridInitializationFunction init(function, _hydro);
   WorkDistributor<
       DensityGridTraversalJobMarket< DensityGridInitializationFunction >,
       DensityGridTraversalJob< DensityGridInitializationFunction > >

@@ -65,9 +65,10 @@ public:
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
                         unsigned int num_per_cell = 100,
-                        const Box box = Box(CoordinateVector<>(0.),
-                                            CoordinateVector<>(-1.)))
+                        const Box<> box = Box<>(CoordinateVector<>(0.),
+                                                CoordinateVector<>(-1.)))
       : _positions(positions) {
+
     const unsigned int positions_size = positions.size();
 
     CoordinateVector<> minpos;
@@ -91,6 +92,9 @@ public:
       maxpos = box.get_sides();
     }
 
+    // make sure the desired number of cells makes sense
+    num_per_cell = std::min(num_per_cell, positions_size);
+
     // now find the right size for the grid: we want an average of num_per_cell
     // positions per grid cell
     const double desired_num_cell = positions_size / num_per_cell;
@@ -112,6 +116,12 @@ public:
     // add the positions to the positions grid
     _cell_map.resize(positions_size);
     for (unsigned int i = 0; i < positions_size; ++i) {
+      cmac_assert(positions[i].x() >= minpos.x() &&
+                  positions[i].x() <= maxpos.x());
+      cmac_assert(positions[i].y() >= minpos.y() &&
+                  positions[i].y() <= maxpos.y());
+      cmac_assert(positions[i].z() >= minpos.z() &&
+                  positions[i].z() <= maxpos.z());
       unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
       unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
       unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
@@ -340,30 +350,36 @@ public:
       }
       if (level > oldlevel) {
         // increase exclusion range
-        const int ax = std::get< 0 >(_anchor);
-        const int ay = std::get< 1 >(_anchor);
-        const int az = std::get< 2 >(_anchor);
-        const int sx = _locations._grid.size();
-        const int sy = _locations._grid[0].size();
-        const int sz = _locations._grid[0][0].size();
-        if (oldlevel <= ax) {
-          _lower_bound[0] -= _locations._grid_cell_sides.x();
-        }
-        if (oldlevel <= ay) {
-          _lower_bound[1] -= _locations._grid_cell_sides.y();
-        }
-        if (oldlevel <= az) {
-          _lower_bound[2] -= _locations._grid_cell_sides.z();
-        }
-        if (oldlevel + ax < sx) {
-          _upper_bound[0] += _locations._grid_cell_sides.x();
-        }
-        if (oldlevel + ay < sy) {
-          _upper_bound[1] += _locations._grid_cell_sides.y();
-        }
-        if (oldlevel + az < sz) {
-          _upper_bound[2] += _locations._grid_cell_sides.z();
-        }
+        // the commented out code below made sure the covered region is always
+        // entirely inside the box
+        // however, this makes neighbour searches close to the box edge very
+        // slow, as max_radius2 will always be very small in this case
+        // as I am not entirely sure why we would want the covered region to be
+        // inside the box, I have disabled but not removed this code
+        //        const int ax = std::get< 0 >(_anchor);
+        //        const int ay = std::get< 1 >(_anchor);
+        //        const int az = std::get< 2 >(_anchor);
+        //        const int sx = _locations._grid.size();
+        //        const int sy = _locations._grid[0].size();
+        //        const int sz = _locations._grid[0][0].size();
+        //        if (oldlevel <= ax) {
+        _lower_bound[0] -= _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel <= ay) {
+        _lower_bound[1] -= _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel <= az) {
+        _lower_bound[2] -= _locations._grid_cell_sides.z();
+        //        }
+        //        if (oldlevel + ax < sx) {
+        _upper_bound[0] += _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel + ay < sy) {
+        _upper_bound[1] += _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel + az < sz) {
+        _upper_bound[2] += _locations._grid_cell_sides.z();
+        //        }
       }
       return true;
     }

@@ -1,0 +1,43 @@
+language: cpp
+dist: trusty
+sudo: enabled
+branches:
+  only:
+    - master
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+virtualenv:
+  system_site_packages: true
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libhdf5-dev
+  - sudo apt-get install -y python-numpy
+  - sudo apt-get install -y libboost-dev libboost-python-dev
+  - eval "${MATRIX_EVAL}"
+script:
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_ASSERTIONS=True
+  - make -j 4
+  - make timing -j 4
+  - make check -j 4

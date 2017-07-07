@@ -135,7 +135,7 @@ public:
   /**
    * @brief Get the compilation time, in the format hour:minutes:seconds.
    *
-   * @return std::string represenation of the compilation time.
+   * @return std::string representation of the compilation time.
    */
   static inline std::string get_compilation_time() {
     std::stringstream timestring;

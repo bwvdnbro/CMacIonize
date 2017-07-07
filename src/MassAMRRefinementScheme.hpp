@@ -78,7 +78,9 @@ public:
    * @return True if the cell should be split into 8 smaller cells.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    return cell.get_volume() * cell.get_number_density() > _target_npart;
+    return cell.get_volume() *
+               cell.get_ionization_variables().get_number_density() >
+           _target_npart;
   }
 };
 

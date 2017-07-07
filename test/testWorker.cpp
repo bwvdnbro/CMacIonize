@@ -86,6 +86,13 @@ public:
       --_size;
     }
   }
+
+  /**
+   * @brief Get a name tag for this job.
+   *
+   * @return "testjob".
+   */
+  inline std::string get_tag() const { return "testjob"; }
 };
 
 /**
@@ -117,6 +124,14 @@ public:
   inline TestJobMarket(double *array, unsigned int size,
                        unsigned int jobsize = 100)
       : _array(array), _size(size), _jobsize(jobsize) {}
+
+  /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int worksize) {}
 
   /**
    * @brief Get a job.

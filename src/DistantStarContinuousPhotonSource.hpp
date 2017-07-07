@@ -51,7 +51,7 @@ private:
   char _exposed_faces[3];
 
   /*! @brief Box containing the simulation grid (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Bottom anchor of the box (in m). */
   CoordinateVector<> &_bottom_anchor;
@@ -68,7 +68,7 @@ public:
    * @param log Log to write logging info to.
    */
   DistantStarContinuousPhotonSource(CoordinateVector<> position,
-                                    Box simulation_box, Log *log = nullptr)
+                                    Box<> simulation_box, Log *log = nullptr)
       : _position(position), _exposed_faces{0}, _box(simulation_box),
         _bottom_anchor(_box.get_anchor()), _top_anchor(_box.get_top_anchor()) {
     unsigned int num_exposed = 0;
@@ -114,10 +114,10 @@ public:
       : DistantStarContinuousPhotonSource(
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "continuousphotonsource:position"),
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides")),
             log) {}
 
   /**

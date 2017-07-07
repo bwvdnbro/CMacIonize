@@ -34,6 +34,7 @@ const char CompilerInfo::_git_build_string[] = "@GIT_BUILD_STRING@";
 
 /// Compilation time info
 
+// clang-format off
 const unsigned int CompilerInfo::_compilation_time_day =
     @COMPILATION_TIME_DAY@;
 const unsigned int CompilerInfo::_compilation_time_month =
@@ -46,6 +47,7 @@ const unsigned int CompilerInfo::_compilation_time_minutes =
     @COMPILATION_TIME_MINUTES@;
 const unsigned int CompilerInfo::_compilation_time_seconds =
     @COMPILATION_TIME_SECONDS@;
+// clang-format on
 
 // Compiler info
 

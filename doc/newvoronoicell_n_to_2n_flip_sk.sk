@@ -1,0 +1,257 @@
+special |\tikzstyle{transparentstyle} = [fill opacity=0.3, fill = white]|[lay=under]
+special |\tikzstyle{dotstyle} = [fill opacity=0.3, fill = white, dashed]|[lay=under]
+special |\tikzstyle{oldstyle} = [fill opacity=0.2, fill = red]|[lay=under]
+special |\tikzstyle{newstyle} = [fill opacity=0.2, fill = white, dashed, draw = green]|[lay=under]
+special |\tikzstyle{node} = [fill = white]|[lay=under]
+special |\tikzstyle{line} = [green, thick, dashed]|[lay=under]
+
+def p0 (-8.0, 0.0, 3.0)
+def p1 (0.0, 1.0, -10.0)
+def pn (0.0, 12.0, 0.0)
+def pnm1 (0.0, 0.0, 9.0)
+def pi (10.0, 2.0, -6.0)
+def pnp1 (0.0, -10.0, -2.0)
+
+def new_factor 0.6
+
+def O (0.0, 0.0, 0.0)
+
+def pnp2 (new_factor * ((pn)-(O)) + (1-new_factor)*((pnp1)-(O))) + (O)
+
+def c01nnp1 ((p0)-(O) + (p1)-(O) + (pn)-(O) + (pnp1)-(O)) / 4 + (O)
+def c0nm1nnp1 ((p0)-(O) + (pnm1)-(O) + (pn)-(O) + (pnp1)-(O)) / 4 + (O)
+def c1innp1 ((p1)-(O) + (pi)-(O) + (pn)-(O) + (pnp1)-(O)) / 4 + (O)
+def cinm1nnp1 ((pi)-(O) + (pnm1)-(O) + (pn)-(O) + (pnp1)-(O)) / 4 + (O)
+
+def c01nnp2 ((p0)-(O) + (p1)-(O) + (pn)-(O) + (pnp2)-(O)) / 4 + (O)
+def c01np1np2 ((p0)-(O) + (p1)-(O) + (pnp1)-(O) + (pnp2)-(O)) / 4 + (O)
+def c1innp2 ((p1)-(O) + (pi)-(O) + (pn)-(O) + (pnp2)-(O)) / 4 + (O)
+def c1inp1np2 ((p1)-(O) + (pi)-(O) + (pnp1)-(O) + (pnp2)-(O)) / 4 + (O)
+def cinm1nnp2 ((pi)-(O) + (pnm1)-(O) + (pn)-(O) + (pnp2)-(O)) / 4 + (O)
+def cinm1np1np2 ((pi)-(O) + (pnm1)-(O) + (pnp1)-(O) + (pnp2)-(O)) / 4 + (O)
+def c0nm1nnp2 ((p0)-(O) + (pnm1)-(O) + (pn)-(O) + (pnp2)-(O)) / 4 + (O)
+def c0nm1np1np2 ((p0)-(O) + (pnm1)-(O) + (pnp1)-(O) + (pnp2)-(O)) / 4 + (O)
+
+def midpnpnp1 ((pn)-(O) + (pnp1)-(O)) / 2 + (O)
+def Nt0 unit( (c01nnp1)-(midpnpnp1) )
+def Ntim1 unit( (c1innp1)-(midpnpnp1) )
+def Nti unit( (cinm1nnp1)-(midpnpnp1) )
+def Ntnm1 unit( (c0nm1nnp1)-(midpnpnp1) )
+
+def Ntn0 unit( (c01nnp2)-(pnp2) )
+def Ntn1 unit( (c01np1np2)-(pnp2) )
+def Ntn2im2 unit( (c1innp2)-(pnp2) )
+def Ntn2im1 unit( (c1inp1np2)-(pnp2) )
+def Ntn2i unit( (cinm1nnp2)-(pnp2) )
+def Ntn2ip1 unit( (cinm1np1np2)-(pnp2) )
+def Ntn2nm2 unit( (c0nm1nnp2)-(pnp2) )
+def Ntn2nm1 unit( (c0nm1np1np2)-(pnp2) )
+
+def N0nm1n unit( ((pn)-(pnm1)) * ((p0)-(pnm1)) )
+def N01n unit( ((p0)-(p1)) * ((pn)-(p1)) )
+def Ninm1n unit( ((pi)-(pnm1)) * ((pn)-(pnm1)) )
+def N1in unit( ((pn)-(p1)) * ((pi)-(p1)) )
+def N0nm1np1 unit( ((p0)-(pnm1)) * ((pnp1)-(pnm1)) )
+def N01np1 unit( ((pnp1)-(p1)) * ((p0)-(p1)) )
+def Ninm1np1 unit( ((pnp1)-(pnm1)) * ((pi)-(pnm1)) )
+def N1inp1 unit( ((pi)-(p1)) * ((pnp1)-(p1)) )
+
+def c0nm1n ((p0)-(O) + (pnm1)-(O) + (pn)-(O)) / 3 + (O)
+def c01n ((p0)-(O) + (p1)-(O) + (pn)-(O)) / 3 + (O)
+def cinm1n ((pi)-(O) + (pnm1)-(O) + (pn)-(O)) / 3 + (O)
+def c1in ((p1)-(O) + (pi)-(O) + (pn)-(O)) / 3 + (O)
+def c0nm1np1 ((p0)-(O) + (pnm1)-(O) + (pnp1)-(O)) / 3 + (O)
+def c01np1 ((p0)-(O) + (p1)-(O) + (pnp1)-(O)) / 3 + (O)
+def cinm1np1 ((pi)-(O) + (pnm1)-(O) + (pnp1)-(O)) / 3 + (O)
+def c1inp1 ((p1)-(O) + (pi)-(O) + (pnp1)-(O)) / 3 + (O)
+
+def n0nm1n (c0nm1n)+[N0nm1n]
+def n01n (c01n)+[N01n]
+def ninm1n (cinm1n)+[Ninm1n]
+def n1in (c1in)+[N1in]
+def n0nm1np1 (c0nm1np1)+[N0nm1np1]
+def n01np1 (c01np1)+[N01np1]
+def ninm1np1 (cinm1np1)+[Ninm1np1]
+def n1inp1 (c1inp1)+[N1inp1]
+
+def n0nm1nl line(c0nm1n)(n0nm1n)
+def n01nl line(c01n)(n01n)
+def ninm1nl line(cinm1n)(ninm1n)
+def n1inl line(c1in)(n1in)
+def n0nm1np1l line(c0nm1np1)(n0nm1np1)
+def n01np1l line(c01np1)(n01np1)
+def ninm1np1l line(cinm1np1)(ninm1np1)
+def n1inp1l line(c1inp1)(n1inp1)
+
+def n0nm1nlabel {
+  special |\node[node] at #1 {\large ngb($2n-2$)};|[lay=in](n0nm1n) }
+def n01nlabel {
+  special |\node[node] at #1 {\large ngb0};|[lay=in](n01n) }
+def ninm1nlabel {
+  special |\node[node] at #1 {\large ngb($2i$)};|[lay=in](ninm1n) }
+def n1inlabel {
+  special |\node[node] at #1 {\large ngb($2i-2$)};|[lay=in](n1in) }
+def n0nm1np1label {
+  special |\node[node] at #1 {\large ngb($2n-1$)};|[lay=in](n0nm1np1) }
+def n01np1label {
+  special |\node[node] at #1 {\large ngb1};|[lay=in](n01np1) }
+def ninm1np1label {
+  special |\node[node] at #1 {\large ngb($2i+1$)};|[lay=in](ninm1np1) }
+def n1inp1label {
+  special |\node[node] at #1 {\large ngb($2i-1$)};|[lay=in](n1inp1) }
+
+def t01 polygon[cull=false, fill style=transparentstyle](p0)(p1)(pn)
+def t03 polygon[cull=false, fill style=transparentstyle](p0)(p1)(pnp1)
+def t02 polygon[cull=false, fill style=transparentstyle](p0)(pn)(pnp1)
+def t00 polygon[cull=false, fill style=transparentstyle](p1)(pn)(pnp1)
+
+def tim11 polygon[cull=false, fill style=dotstyle](p1)(pi)(pn)
+def tim13 polygon[cull=false, fill style=dotstyle](p1)(pi)(pnp1)
+def tim12 polygon[cull=false, fill style=transparentstyle](p1)(pn)(pnp1)
+def tim10 polygon[cull=false, fill style=dotstyle](pi)(pn)(pnp1)
+
+def ti1 polygon[cull=false, fill style=dotstyle](pi)(pnm1)(pn)
+def ti3 polygon[cull=false, fill style=dotstyle](pi)(pnm1)(pnp1)
+def ti2 polygon[cull=false, fill style=dotstyle](pi)(pn)(pnp1)
+def ti0 polygon[cull=false, fill style=transparentstyle](pnm1)(pn)(pnp1)
+
+def tnm11 polygon[cull=false, fill style=transparentstyle](p0)(pnm1)(pn)
+def tnm13 polygon[cull=false, fill style=transparentstyle](p0)(pnm1)(pnp1)
+def tnm12 polygon[cull=false, fill style=transparentstyle](p0)(pn)(pnp1)
+def tnm10 polygon[cull=false, fill style=transparentstyle](pnm1)(pn)(pnp1)
+
+def tn00 polygon[cull=false, fill style=transparentstyle](p0)(p1)(pn)
+def tn01 polygon[cull=false, fill style=newstyle](p0)(p1)(pnp2)
+def tn02 polygon[cull=false, fill style=newstyle](p0)(pn)(pnp2)
+def tn03 polygon[cull=false, fill style=newstyle](p1)(pn)(pnp2)
+
+def tn10 polygon[cull=false, fill style=transparentstyle](p0)(p1)(pnp1)
+def tn11 polygon[cull=false, fill style=newstyle](p0)(p1)(pnp2)
+def tn12 polygon[cull=false, fill style=newstyle](p0)(pnp1)(pnp2)
+def tn13 polygon[cull=false, fill style=newstyle](p1)(pnp1)(pnp2)
+
+def tn2im20 polygon[cull=false, fill style=dotstyle](p1)(pi)(pn)
+def tn2im21 polygon[cull=false, fill style=newstyle](p1)(pi)(pnp2)
+def tn2im22 polygon[cull=false, fill style=newstyle](p1)(pn)(pnp2)
+def tn2im23 polygon[cull=false, fill style=newstyle](pi)(pn)(pnp2)
+
+def tn2im10 polygon[cull=false, fill style=dotstyle](p1)(pi)(pnp1)
+def tn2im11 polygon[cull=false, fill style=newstyle](p1)(pi)(pnp2)
+def tn2im12 polygon[cull=false, fill style=newstyle](p1)(pnp1)(pnp2)
+def tn2im13 polygon[cull=false, fill style=newstyle](pi)(pnp1)(pnp2)
+
+def tn2i0 polygon[cull=false, fill style=dotstyle](pi)(pnm1)(pn)
+def tn2i1 polygon[cull=false, fill style=newstyle](pi)(pnm1)(pnp2)
+def tn2i2 polygon[cull=false, fill style=newstyle](pi)(pn)(pnp2)
+def tn2i3 polygon[cull=false, fill style=newstyle](pnm1)(pn)(pnp2)
+
+def tn2ip10 polygon[cull=false, fill style=dotstyle](pi)(pnm1)(pnp1)
+def tn2ip11 polygon[cull=false, fill style=newstyle](pi)(pnm1)(pnp2)
+def tn2ip12 polygon[cull=false, fill style=newstyle](pi)(pnp1)(pnp2)
+def tn2ip13 polygon[cull=false, fill style=newstyle](pnm1)(pnp1)(pnp2)
+
+def tn2nm20 polygon[cull=false, fill style=dotstyle](p0)(pnm1)(pn)
+def tn2nm21 polygon[cull=false, fill style=newstyle](p0)(pnm1)(pnp2)
+def tn2nm22 polygon[cull=false, fill style=newstyle](p0)(pn)(pnp2)
+def tn2nm23 polygon[cull=false, fill style=newstyle](pnm1)(pn)(pnp2)
+
+def tn2nm10 polygon[cull=false, fill style=dotstyle](p0)(pnm1)(pnp1)
+def tn2nm11 polygon[cull=false, fill style=newstyle](p0)(pnm1)(pnp2)
+def tn2nm12 polygon[cull=false, fill style=newstyle](p0)(pnp1)(pnp2)
+def tn2nm13 polygon[cull=false, fill style=newstyle](pnm1)(pnp1)(pnp2)
+
+def v0label { special |\node[node] at #1 {v0};|[lay=in](p0) }
+def v1label { special |\node[node] at #1 {v1};|[lay=in](p1) }
+def vilabel { special |\node[node] at #1 {v$i$};|[lay=in](pi) }
+def vnm1label { special |\node[node] at #1 {v($n-1$)};|[lay=in](pnm1) }
+def vnlabel { special |\node[node] at #1 {v$n$};|[lay=in](pn) }
+def vnp1label { special |\node[node] at #1 {v($n+1$)};|[lay=in](pnp1) }
+def vnp2label { special |\node[node] at #1 {v($n+2$)};|[lay=in](pnp2) }
+def t0label { special |\node[node] at #1 {\Large t0};|[lay=in](c01nnp1) }
+def tim1label {
+  special |\node[node] at #1 {\Large t($i-1$)};|[lay=in](c1innp1) }
+def tilabel { special |\node[node] at #1 {\Large t$i$};|[lay=in](cinm1nnp1) }
+def tnm1label {
+  special |\node[node] at #1 {\Large t($n-1$)};|[lay=in](c0nm1nnp1) }
+def tn0label {
+  special |\node[node] at #1 {\Large t'0};|[lay=in](c01nnp2) }
+def tn1label {
+  special |\node[node] at #1 {\Large t'1};|[lay=in](c01np1np2) }
+def tn2im2label {
+  special |\node[node] at #1 {\Large t'($2i-2$)};|[lay=in](c1innp2) }
+def tn2im1label {
+  special |\node[node] at #1 {\Large t'($2i-1$)};|[lay=in](c1inp1np2) }
+def tn2ilabel {
+  special |\node[node] at #1 {\Large t'($2i$)};|[lay=in](cinm1nnp2) }
+def tn2ip1label {
+  special |\node[node] at #1 {\Large t'($2i+1$)};|[lay=in](cinm1np1np2) }
+def tn2nm2label {
+  special |\node[node] at #1 {\Large t'($2n-2$)};|[lay=in](c0nm1nnp2) }
+def tn2nm1label {
+  special |\node[node] at #1 {\Large t'($2n-1$)};|[lay=in](c0nm1np1np2) }
+
+def t0 {{t00}{t01}{t02}{t03}{v0label}{v1label}{vnlabel}{vnp1label}{t0label}
+        {n01nlabel}{n01np1label}{n01nl}{n01np1l}}
+def tim1 {{tim10}{tim11}{tim12}{tim13}{v1label}{vilabel}{vnlabel}{vnp1label}
+          {tim1label}{n1inlabel}{n1inp1label}{n1inl}{n1inp1l}}
+def ti {{ti0}{ti1}{ti2}{ti3}{vilabel}{vnm1label}{vnlabel}{vnp1label}{tilabel}
+        {ninm1nlabel}{ninm1np1label}{ninm1nl}{ninm1np1l}}
+def tnm1 {{tnm10}{tnm11}{tnm12}{tnm13}{v0label}{vnm1label}{vnlabel}{vnp1label}
+          {tnm1label}{n0nm1nlabel}{n0nm1np1label}{n0nm1nl}{n0nm1np1l}}
+
+def tn0 {{tn00}{tn01}{tn02}{tn03}{v0label}{v1label}{vnlabel}{vnp2label}
+         {tn0label}{n01nlabel}{n01nl}}
+def tn1 {{tn10}{tn11}{tn12}{tn13}{v0label}{v1label}{vnp1label}{vnp2label}
+         {tn1label}{n01np1label}{n01np1l}}
+def tn2im2 {{tn2im20}{tn2im21}{tn2im22}{tn2im23}{v1label}{vilabel}{vnlabel}
+            {vnp2label}{tn2im2label}{n1inlabel}{n1inl}}
+def tn2im1 {{tn2im10}{tn2im11}{tn2im12}{tn2im13}{v1label}{vilabel}{vnp1label}
+            {vnp2label}{tn2im1label}{n1inp1label}{n1inp1l}}
+def tn2i {{tn2i0}{tn2i1}{tn2i2}{tn2i3}{vilabel}{vnm1label}{vnlabel}{vnp2label}
+          {tn2ilabel}{ninm1nlabel}{ninm1nl}}
+def tn2ip1 {{tn2ip10}{tn2ip11}{tn2ip12}{tn2ip13}{vilabel}{vnm1label}{vnp1label}
+            {vnp2label}{tn2ip1label}{ninm1np1label}{ninm1np1l}}
+def tn2nm2 {{tn2nm20}{tn2nm21}{tn2nm22}{tn2nm23}{v0label}{vnm1label}{vnlabel}
+            {vnp2label}{tn2nm2label}{n0nm1nlabel}{n0nm1nl}}
+def tn2nm1 {{tn2nm10}{tn2nm11}{tn2nm12}{tn2nm13}{v0label}{vnm1label}{vnp1label}
+            {vnp2label}{tn2nm1label}{n0nm1np1label}{n0nm1np1l}}
+
+def scale 4.0
+
+def t0t put {translate(scale*[Nt0])}{t0}
+def tim1t put {translate(scale*[Ntim1])}{tim1}
+def tit put {translate(scale*[Nti])}{ti}
+def tnm1t put {translate(scale*[Ntnm1])}{tnm1}
+
+def tn0t put {translate(scale*[Ntn0])}{tn0}
+def tn1t put {translate(scale*[Ntn1])}{tn1}
+def tn2im2t put {translate(scale*[Ntn2im2])}{tn2im2}
+def tn2im1t put {translate(scale*[Ntn2im1])}{tn2im1}
+def tn2it put {translate(scale*[Ntn2i])}{tn2i}
+def tn2ip1t put {translate(scale*[Ntn2ip1])}{tn2ip1}
+def tn2nm2t put {translate(scale*[Ntn2nm2])}{tn2nm2}
+def tn2nm1t put {translate(scale*[Ntn2nm1])}{tn2nm1}
+
+def eye (10.0, 10.0, 10.0)
+def look_at (0.0, 0.0, 0.0)
+
+def decomposed1 put {translate([17.0, 0.0, -17.0])}{{t0t}{tim1t}{tit}{tnm1t}}
+
+def p0pnp2 line[line style=line](p0)(pnp2)
+def p1pnp2 line[line style=line](p1)(pnp2)
+def pipnp2 line[line style=line](pi)(pnp2)
+def pnm1pnp2 line[line style=line](pnm1)(pnp2)
+
+def t0line put {translate([8.5, -24.0, -8.5])}{{t0}{tim1}{ti}{tnm1}{vnp2label}
+                                               {p0pnp2}{p1pnp2}{pipnp2}
+                                               {pnm1pnp2}}
+def tn put {translate([0.0, -48.0, 0.0])}{{tn0}{tn1}{tn2im2}{tn2im1}{tn2i}
+                                          {tn2ip1}{tn2nm2}{tn2nm1}}
+def decomposed2 put {translate([17.0, -48.0, -17.0])}{{tn0t}{tn1t}{tn2im2t}
+                                                      {tn2im1t}{tn2it}{tn2ip1t}
+                                                      {tn2nm2t}{tn2nm1t}}
+
+put {view((eye), (look_at))} {{t0}{tim1}{ti}{tnm1}{decomposed1}{t0line}{tn}
+                              {decomposed2}}
+
+global { language tikz }

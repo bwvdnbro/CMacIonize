@@ -108,6 +108,7 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/Box.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/CartesianDensityGrid.hpp
+    ../src/Cell.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
@@ -117,9 +118,11 @@ set(TESTCARTESIANDENSITYGRID_SOURCES
     ../src/DensityValues.hpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
+    ../src/Face.hpp
     ../src/HomogeneousDensityFunction.hpp
     ../src/IonizationStateCalculator.cpp
     ../src/IonizationStateCalculator.hpp
+    ../src/IonizationVariables.hpp
     ../src/Log.hpp
     ../src/ParameterFile.cpp
     ../src/ParameterFile.hpp
@@ -346,6 +349,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/Timer.hpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                             PROPERTIES GENERATED TRUE)
@@ -573,8 +577,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
 
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
     ../src/EmissivityCalculator.cpp
     ../src/EmissivityCalculator.hpp
     ../src/EmissivityValues.hpp
@@ -704,12 +706,24 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
     ../src/HydroIntegrator.hpp
-    ../src/VoronoiCell.cpp
+    ../src/HydroVariables.hpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
     ../src/VoronoiDensityGrid.cpp
-    ../src/VoronoiGrid.cpp
 )
-add_unit_test(NAME testHydroIntegrator
-              SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTHYDROINTEGRATOR_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testHydroIntegrator
+                SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
+endif(HAVE_HDF5)
 
 ## ParallelCartesianDensityGrid test
 if(HAVE_HDF5)
@@ -750,16 +764,18 @@ add_unit_test(NAME testAsciiFileDensityGridWriter
               SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
 
 ## VoronoiGrid test
-set(TESTVORONOIGRID_SOURCES
-    testVoronoiGrid.cpp
+set(TESTOLDVORONOIGRID_SOURCES
+    testOldVoronoiGrid.cpp
 
-    ../src/VoronoiCell.cpp
-    ../src/VoronoiCell.hpp
-    ../src/VoronoiGrid.cpp
-    ../src/VoronoiGrid.hpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiCell.hpp
+    ../src/OldVoronoiEdge.hpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/OldVoronoiGrid.hpp
+    ../src/VoronoiFace.hpp
 )
-add_unit_test(NAME testVoronoiGrid
-              SOURCES ${TESTVORONOIGRID_SOURCES})
+add_unit_test(NAME testOldVoronoiGrid
+              SOURCES ${TESTOLDVORONOIGRID_SOURCES})
 
 ## PointLocations test
 set(TESTPOINTLOCATIONS_SOURCES
@@ -821,17 +837,80 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     testVoronoiDensityGrid.cpp
 
     ../src/DensityGrid.cpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiCell.hpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/OldVoronoiGrid.hpp
     ../src/UniformRandomVoronoiGeneratorDistribution.hpp
+    ../src/UniformRegularVoronoiGeneratorDistribution.hpp
     ../src/VoronoiDensityGrid.cpp
     ../src/VoronoiDensityGrid.hpp
     ../src/VoronoiGeneratorDistribution.hpp
-    ../src/VoronoiCell.cpp
-    ../src/VoronoiCell.hpp
-    ../src/VoronoiGrid.cpp
     ../src/VoronoiGrid.hpp
+    ../src/VoronoiGridFactory.hpp
 )
-add_unit_test(NAME testVoronoiDensityGrid
-              SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTVORONOIDENSITYGRID_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testVoronoiDensityGrid
+                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
+endif(HAVE_HDF5)
+
+## Unit test for OIAMRRefinementScheme
+set(TESTOIAMRREFINEMENTSCHEME_SOURCES
+    testOIAMRRefinementScheme.cpp
+
+    ../src/AMRRefinementScheme.hpp
+    ../src/DensityGrid.cpp
+    ../src/OIAMRRefinementScheme.hpp
+)
+add_unit_test(NAME testOIAMRRefinementScheme
+              SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
+
+## Unit test for NewVoronoiGrid
+if(HAVE_MULTIPRECISION)
+  set(TESTNEWVORONOIGRID_SOURCES
+      testNewVoronoiGrid.cpp
+
+      ../src/NewVoronoiBox.hpp
+      ../src/NewVoronoiCell.hpp
+      ../src/NewVoronoiCellConstructor.cpp
+      ../src/NewVoronoiCellConstructor.hpp
+      ../src/NewVoronoiGrid.cpp
+      ../src/NewVoronoiGrid.hpp
+      ../src/NewVoronoiTetrahedron.hpp
+      ../src/NewVoronoiVariables.hpp
+  )
+  add_unit_test(NAME testNewVoronoiGrid
+                SOURCES ${TESTNEWVORONOIGRID_SOURCES})
+endif(HAVE_MULTIPRECISION)
+
+## Unit test for ExactGeometricTests
+if(HAVE_MULTIPRECISION)
+  set(TESTEXACTGEOMETRICTESTS_SOURCES
+      testExactGeometricTests.cpp
+
+      ../src/ExactGeometricTests.hpp
+  )
+  add_unit_test(NAME testExactGeometricTests
+                SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
+endif(HAVE_MULTIPRECISION)
+
+## Unit test for HilbertKeyGenerator
+set(TESTHILBERTKEYGENERATOR_SOURCES
+    testHilbertKeyGenerator.cpp
+
+    ../src/HilbertKeyGenerator.hpp
+)
+add_unit_test(NAME testHilbertKeyGenerator
+              SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

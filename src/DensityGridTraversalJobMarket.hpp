@@ -75,6 +75,14 @@ public:
   }
 
   /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int worksize) {}
+
+  /**
    * @brief Get a DensityGridTraversalJob.
    *
    * @param thread_id Id of the thread that calls this function.
@@ -93,7 +101,7 @@ public:
     }
     double begin_fraction = _fraction_done;
     double end_fraction =
-        _fraction_done + std::max(0.1 * (1. - _fraction_done), 0.01);
+        _fraction_done + std::max(0.05 * (1. - _fraction_done), 0.01);
     end_fraction = std::min(end_fraction, 1.);
     _fraction_done = end_fraction;
     _lock.unlock();

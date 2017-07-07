@@ -69,6 +69,11 @@ public:
       _worksize = worksize;
       omp_set_num_threads(_worksize);
     }
+    if (_worksize > MAX_NUM_THREADS) {
+      cmac_error("More shared memory threads requested than allowed by the "
+                 "configuration file (%i requested, MAX_NUM_THREADS = %i)!",
+                 _worksize, MAX_NUM_THREADS);
+    }
 #else
     // no OpenMP. Always run a single worker.
     _worksize = 1;
@@ -102,6 +107,7 @@ public:
    * @param jobs JobMarket to execute.
    */
   inline void do_in_parallel(_JobMarket_ &jobs) const {
+    jobs.set_worksize(_worksize);
     if (_worksize > 1) {
 #ifdef HAVE_OPENMP
 #pragma omp parallel for default(shared)

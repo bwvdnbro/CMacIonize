@@ -87,8 +87,12 @@ public:
     // we assume an ionizing cross section of 1.e-18 cm^2
     const double xsecH = 1.e-22;
 
-    double opacity =
-        cell.get_number_density() * cell.get_ionic_fraction(ION_H_n) * xsecH;
+    const IonizationVariables &ioniziation_variables =
+        cell.get_ionization_variables();
+
+    const double opacity = ioniziation_variables.get_number_density() *
+                           ioniziation_variables.get_ionic_fraction(ION_H_n) *
+                           xsecH;
 
     return opacity > _target_opacity && level < _max_level;
   }

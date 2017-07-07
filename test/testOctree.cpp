@@ -41,7 +41,7 @@
  */
 int main(int argc, char **argv) {
   // first test the Box-CoordinateVector distance function
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
   {
     // point outside and smaller coordinate
     CoordinateVector<> caseA(-0.5, 0., 0.);
@@ -60,50 +60,50 @@ int main(int argc, char **argv) {
   // and the periodic Box-CoordinateVector distance function
   {
     // point outside and larger coordinate, no periodicity
-    Box boxCaseA(CoordinateVector<>(), CoordinateVector<>(0.25));
+    Box<> boxCaseA(CoordinateVector<>(), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseA(0., 0., 0.5);
     assert_condition(box.periodic_distance(boxCaseA, vecCaseA) == 0.25);
   }
   {
     // point outside and smaller coordinate, no periodicity
-    Box boxCaseB(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
+    Box<> boxCaseB(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseB(0.75, 0.75, 0.5);
     assert_condition(box.periodic_distance(boxCaseB, vecCaseB) == 0.25);
   }
   {
     // point inside, no periodicity
-    Box boxCaseC(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
+    Box<> boxCaseC(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseC(0.875);
     assert_condition(box.periodic_distance(boxCaseC, vecCaseC) == 0.);
   }
   {
     // point outside and larger coordinate, periodicity
-    Box boxCaseD(CoordinateVector<>(0.), CoordinateVector<>(0.25));
+    Box<> boxCaseD(CoordinateVector<>(0.), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseD(0., 0., 0.875);
     assert_condition(box.periodic_distance(boxCaseD, vecCaseD) == 0.125);
   }
   {
     // point outside and smaller coordinate, periodicity
-    Box boxCaseE(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
+    Box<> boxCaseE(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseE(0.75, 0.75, 0.125);
     assert_condition(box.periodic_distance(boxCaseE, vecCaseE) == 0.125);
   }
   {
     // point inside, periodicity (pathological case)
-    Box boxCaseF(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
+    Box<> boxCaseF(CoordinateVector<>(0.75), CoordinateVector<>(0.25));
     CoordinateVector<> vecCaseF(0., 0., 0.);
     assert_condition(box.periodic_distance(boxCaseF, vecCaseF) == 0.);
   }
   {
     // point inside (pathological case)
-    Box boxCaseG(CoordinateVector<>(0., 0., 0.5), CoordinateVector<>(0.5));
+    Box<> boxCaseG(CoordinateVector<>(0., 0., 0.5), CoordinateVector<>(0.5));
     CoordinateVector<> vecCaseG(0., 0., 0.);
     assert_condition(box.periodic_distance(boxCaseG, vecCaseG) == 0.);
   }
   {
     // point outside, non-periodically wrapped distance seems short enough,
     // but wrapped distance is shorter
-    Box boxCaseH(CoordinateVector<>(0., 0.5, 0.), CoordinateVector<>(0.5));
+    Box<> boxCaseH(CoordinateVector<>(0., 0.5, 0.), CoordinateVector<>(0.5));
     CoordinateVector<> vecCaseH(0.125, 0.125, 0.125);
     assert_condition(box.periodic_distance(boxCaseH, vecCaseH) == 0.125);
   }
