@@ -52,6 +52,19 @@ macro(add_configuration_option NAME VALUE)
       "${CONFIGURATION_OPTIONS_VALUES}\"${VALUE}\",")
 endmacro(add_configuration_option)
 
+# Check if we are compiling on Windows
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS True)
+else(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS False)
+endif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+
+# If we are on Windows, make sure to add the _USE_MATH_DEFINES define to the
+# compilation command
+if(HAVE_WINDOWS)
+  add_compiler_flag("-D_USE_MATH_DEFINES" REQUIRED)
+endif(HAVE_WINDOWS)
+
 # Check if we are on a POSIX system. If not, some functionality will not work
 # and we abort the configuration
 execute_process(COMMAND ${CMAKE_COMMAND} -E echo
