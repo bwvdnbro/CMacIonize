@@ -1,6 +1,4 @@
 language: cpp
-python:
-  - "2.7_with_system_site_packages"
 dist: trusty
 sudo: enabled
 branches:
@@ -28,6 +26,9 @@ matrix:
             - clang-4.0
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+virtualenv:
+  system_site_packages: true
 
 before_install:
   - sudo apt-get -qq update
