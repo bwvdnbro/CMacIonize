@@ -35,11 +35,14 @@
 #include "MPIUtilities.hpp"
 
 #include <sstream>
-#include <unistd.h>
 #include <vector>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
+#endif
+
+#ifdef HAVE_POSIX
+#include <unistd.h>
 #endif
 
 #if defined(__clang__)
@@ -119,6 +122,7 @@ public:
       cmac_error("Failed to obtain number of MPI processes!");
     }
 #else
+
     // check that we do not accidentally run the program in parallel
     // we first try an OpenMP specific check
     char *env = getenv("OMPI_COMM_WORLD_SIZE");
@@ -130,14 +134,14 @@ public:
                    "support!");
       }
     } else {
-      // the OMPI environment variable was not found
-      // this means that either we are not running in MPI mode (which is fine)
-      // OR we are not using OpenMPI, or an old version that does not set the
-      // environment variable
-      // we try to see if the program has a parent process that might indicate
-      // we are running in MPI mode
-      // the method below will only work for POSIX systems, but since we only
-      // allow compilation on POSIX systems, this should work
+// the OMPI environment variable was not found
+// this means that either we are not running in MPI mode (which is fine)
+// OR we are not using OpenMPI, or an old version that does not set the
+// environment variable
+// we try to see if the program has a parent process that might indicate
+// we are running in MPI mode
+// the method below will only work for POSIX systems
+#ifdef HAVE_POSIX
       pid_t ppid = getppid();
       std::stringstream procfilename;
       procfilename << "/proc/" << ppid << "/cmdline";
@@ -150,6 +154,11 @@ public:
                    "disabled at compile time! Please compile again with MPI "
                    "support!");
       }
+#else
+      cmac_warning("Unable to check if non MPI build is being run in parallel. "
+                   "Are you sure you want to run a serial version of the "
+                   "code?");
+#endif
     }
     // no MPI: we assume a single process with rank 0
     _rank = 0;

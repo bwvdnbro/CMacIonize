@@ -53,6 +53,9 @@
  *  makes the code very slow!). */
 #cmakedefine HAVE_OUTPUT_CYCLES
 
+/*! @brief If defined, this system is a POSIX system. */
+#cmakedefine HAVE_POSIX
+
 /*! @brief If defined, lock free operations will be used to update cell counters
  *  (which might or might not speed up the code). */
 #cmakedefine USE_LOCKFREE

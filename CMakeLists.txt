@@ -57,11 +57,14 @@ endmacro(add_configuration_option)
 execute_process(COMMAND ${CMAKE_COMMAND} -E echo
                 "#include <unistd.h>\nint main(int, char**){ return 0; }"
                 OUTPUT_FILE ${PROJECT_BINARY_DIR}/posixtest.cpp)
-try_compile(HAVE_POSIX ${PROJECT_BINARY_DIR}
+try_compile(DETECT_POSIX ${PROJECT_BINARY_DIR}
                        ${PROJECT_BINARY_DIR}/posixtest.cpp)
-if(NOT HAVE_POSIX)
-  message(FATAL_ERROR "This is not a POSIX system! Compilation will not work!")
-endif(NOT HAVE_POSIX)
+if(NOT DETECT_POSIX)
+  add_configuration_option(HAVE_POSIX False)
+  message(WARNING "This is not a POSIX system! Some features will not work!")
+else(NOT DETECT_POSIX)
+  add_configuration_option(HAVE_POSIX True)
+endif(NOT DETECT_POSIX)
 
 # Find Git
 find_package(Git)
@@ -69,7 +72,8 @@ find_package(Git)
 # The version number.
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
                 OUTPUT_VARIABLE GIT_BUILD_STRING
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 string(REGEX REPLACE "v([0-9]*).*" "\\1" GIT_VERSION_MAJOR ${GIT_BUILD_STRING})
 string(REGEX REPLACE "v[0-9]*.([0-9]*).*" "\\1" GIT_VERSION_MINOR
        ${GIT_BUILD_STRING})
