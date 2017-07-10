@@ -29,6 +29,7 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "OperatingSystem.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -570,13 +571,7 @@ inline std::string get_absolute_path(std::string path) {
     path = path.substr(0, path.size() - 1);
   }
 
-  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
-  if (absolute_path_ptr == nullptr) {
-    cmac_error("Unable to resolve path \"%s\"!", path.c_str());
-  }
-  std::string absolute_path(absolute_path_ptr);
-  free(absolute_path_ptr);
-  return absolute_path;
+  return OperatingSystem::absolute_path(path);
 }
 
 /**

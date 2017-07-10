@@ -183,6 +183,7 @@ set(CMACIONIZE_SOURCES
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp
+    OperatingSystem.hpp
     ParameterFile.hpp
     PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
@@ -222,20 +223,28 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
-list(APPEND CMACIONIZE_SOURCES
-    CMacIonizeSnapshotDensityFunction.cpp
-    CMacIonizeVoronoiGeneratorDistribution.cpp
-    FLASHSnapshotDensityFunction.cpp
-    GadgetDensityGridWriter.cpp
-    GadgetSnapshotDensityFunction.cpp
-    GadgetSnapshotPhotonSourceDistribution.cpp
+    list(APPEND CMACIONIZE_SOURCES
+        CMacIonizeSnapshotDensityFunction.cpp
+        CMacIonizeVoronoiGeneratorDistribution.cpp
+        FLASHSnapshotDensityFunction.cpp
+        GadgetDensityGridWriter.cpp
+        GadgetSnapshotDensityFunction.cpp
+        GadgetSnapshotPhotonSourceDistribution.cpp
 
-    FLASHSnapshotDensityFunction.hpp
-    GadgetDensityGridWriter.hpp
-    GadgetSnapshotDensityFunction.hpp
-    GadgetSnapshotPhotonSourceDistribution.hpp
-    HDF5Tools.hpp)
+        FLASHSnapshotDensityFunction.hpp
+        GadgetDensityGridWriter.hpp
+        GadgetSnapshotDensityFunction.hpp
+        GadgetSnapshotPhotonSourceDistribution.hpp
+        HDF5Tools.hpp)
 endif(HAVE_HDF5)
+
+if(HAVE_WINDOWS)
+    list(APPEND CMACIONIZE_SOURCES
+         Windows.hpp)
+else(HAVE_WINDOWS)
+    list(APPEND CMACIONIZE_SOURCES
+         Unix.hpp)
+endif(HAVE_WINDOWS)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 add_dependencies(CMacIonize CompilerInfo)
