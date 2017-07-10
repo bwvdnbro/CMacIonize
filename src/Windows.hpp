@@ -42,9 +42,7 @@ public:
   /**
    * @brief Constructor.
    */
-  inline TimeValue() {
-	  _time_value.QuadPart = 0;
-  }
+  inline TimeValue() { _time_value.QuadPart = 0; }
 
   /**
    * @brief Get a pointer to the wrapped value.
@@ -62,7 +60,7 @@ public:
 };
 
 inline void OperatingSystem::clear_time_value(TimeValue &time_value) {
-	time_value.get_wrapped_value()->QuadPart = 0;
+  time_value.get_wrapped_value()->QuadPart = 0;
 }
 
 inline void OperatingSystem::get_time_value(TimeValue &time_value) {
@@ -73,20 +71,23 @@ inline void OperatingSystem::subtract_time_values(const TimeValue &first_term,
                                                   const TimeValue &second_term,
                                                   TimeValue &result) {
   result.get_wrapped_value()->QuadPart =
-      first_term.get_wrapped_value()->QuadPart - second_term.get_wrapped_value()->QuadPart;
+      first_term.get_wrapped_value()->QuadPart -
+      second_term.get_wrapped_value()->QuadPart;
 }
 
 inline void OperatingSystem::add_time_values(const TimeValue &first_term,
                                              const TimeValue &second_term,
                                              TimeValue &result) {
   result.get_wrapped_value()->QuadPart =
-      first_term.get_wrapped_value()->QuadPart + second_term.get_wrapped_value()->QuadPart;
+      first_term.get_wrapped_value()->QuadPart +
+      second_term.get_wrapped_value()->QuadPart;
 }
 
 inline double OperatingSystem::convert_to_seconds(const TimeValue &time_value) {
   LARGE_INTEGER frequency;
   QueryPerformanceFrequency(&frequency);
-  return (time_value.get_wrapped_value()->QuadPart) / ((double)frequency.QuadPart);
+  return (time_value.get_wrapped_value()->QuadPart) /
+         ((double)frequency.QuadPart);
 }
 
 inline std::string OperatingSystem::absolute_path(std::string path) {
