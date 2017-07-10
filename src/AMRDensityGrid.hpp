@@ -265,7 +265,7 @@ public:
     // index values
     _cells.resize(_grid.get_number_of_cells());
     unsigned int index = 0;
-    unsigned long key = _grid.get_first_key();
+    uint64_t key = _grid.get_first_key();
     while (key != _grid.get_max_key()) {
       _cells[index] = &_grid[key];
       _cells[index]->value() = index;
