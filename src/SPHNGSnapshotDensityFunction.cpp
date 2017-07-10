@@ -710,6 +710,159 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
   return full_int;
 }
 
+
+double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const CoordinateVector<> particle, const double h)  {
+	  double M, Msum;
+
+	  Msum =0.;
+	  M=0.;
+
+	  std::vector< Face > face_vector=cell.get_faces();
+	  for(unsigned int i=0; i<face_vector.size(); i++) {
+
+		CoordinateVector<> vert_position1;
+		CoordinateVector<> projected_particle;
+		double r0 = 0.;
+		double ar0 = 0.;
+	    //double r = 0.;
+		double s2 = 0.;
+
+		for(Face::Vertices j=face_vector[i].first_vertex(); j!=face_vector[i].last_vertex(); ++j) {
+	    	  //printf("Vertices of first face: %g %g %g\n",vert_position[0],vert_position[1],vert_position[2]);
+
+	  	  if(j==face_vector[i].first_vertex()) {     // Calculating the distance from particle to each face of a cell
+	                                     // http://mathinsight.org/distance_point_plane
+	                                     // http://mathinsight.org/forming_planes
+	  		Face::Vertices j_twin=j;
+	    	    vert_position1 = j_twin.get_position();
+	  		CoordinateVector<> vert_position2 = (++j_twin).get_position();
+	  		CoordinateVector<> vert_position3 = (++j_twin).get_position();
+
+	  	    const double A = (vert_position2[1]-vert_position1[1])*(vert_position3[2]-vert_position1[2])
+	  	    		- (vert_position3[1]-vert_position1[1])*(vert_position2[2]-vert_position1[2]);
+	  	    const double B = (vert_position2[2]-vert_position1[2])*(vert_position3[0]-vert_position1[0])
+	  	    		- (vert_position3[2]-vert_position1[2])*(vert_position2[0]-vert_position1[0]);
+	  	    const double C = (vert_position2[0]-vert_position1[0])*(vert_position3[1]-vert_position1[1])
+	  	    		- (vert_position3[0]-vert_position1[0])*(vert_position2[1]-vert_position1[1]);
+	  	    const double D = -A*vert_position1[0] -B*vert_position1[1] -C*vert_position1[2];
+
+	  	    const double norm = sqrt(A*A+B*B+C*C);
+	  	    r0 = (A*particle[0]+B*particle[1]+C*particle[2]+D)/norm;
+	  	    ar0 = fabs(r0);
+
+	  	    projected_particle[0] = particle[0] - r0*A/norm;
+	  	    projected_particle[1] = particle[1] - r0*B/norm;
+	  		projected_particle[2] = particle[2] - r0*C/norm;
+
+	  		//if(projected_particle.norm() != ar0) printf("Error: issue with projection! -> %g %g %g\n",projected_particle.norm(),ar0,r0);
+
+	        s2 = vert_position1[0]*(vert_position2[1]*vert_position3[2]-
+	        		vert_position2[2]*vert_position3[1]) + vert_position1[1]*(vert_position2[2]*
+	        		vert_position3[0]-vert_position2[0]*vert_position3[2]) + vert_position1[2]*
+				(vert_position2[0]*vert_position3[1]-vert_position2[1]*vert_position3[0]);
+
+	        //M=M+Msum+s2+ar0; //Fake
+	        //printf("Face projection: %g %g %g -> r0: %g\n",projected_particle[0],projected_particle[1],projected_particle[2], r0);
+	  	  }
+
+	  	  Face::Vertices j_twin=j;
+	      const CoordinateVector<> vert_position2 = j_twin.get_position();
+	      CoordinateVector<> vert_position3;
+
+	      if (++j_twin==face_vector[i].last_vertex()) {
+	    	    //break;
+	    	    vert_position3 = vert_position1;
+	      }
+	      else {
+		    vert_position3 = j_twin.get_position();
+	      }
+
+
+		  const double r23 = (vert_position2-vert_position3).norm();
+		  const double r12 = (projected_particle-vert_position2).norm();
+		  const double r13 = (projected_particle-vert_position3).norm();
+		  const double cosa = ((vert_position3[0]-vert_position2[0])*(projected_particle[0]-vert_position2[0])
+		    		+ (vert_position3[1]-vert_position2[1])*(projected_particle[1]-vert_position2[1])
+				+ (vert_position3[2]-vert_position2[2])*(projected_particle[2]-vert_position2[2])) /r12/r23;
+
+		  //double R=0.;
+		  double R_0=0.;
+		  double phi1=0.;
+		  double phi2=0.;
+
+		  if(fabs(cosa)<1.0){
+		    R_0 = r12 * sqrt(1-cosa*cosa);
+		    //printf("R_0: %g\n",R_0);
+	      }
+	      else {
+		    if(fabs(cosa)-1.0 < 0.00001){
+			  R_0=0.0;
+		    }
+		    else {
+	            printf("Error: cosa > 1: %g\n", cosa);
+		    }
+	      }
+
+		  const double s1 = projected_particle[0]*(vert_position2[1]*vert_position3[2]
+				-vert_position2[2]*vert_position3[1]) + projected_particle[1]*(vert_position2[2]
+				*vert_position3[0]-vert_position2[0]*vert_position3[2]) + projected_particle[2]*
+				(vert_position2[0]*vert_position3[1]-vert_position2[1]*vert_position3[0]);
+		    //printf("s1: %g\n", s1);
+
+		  if(R_0<r12){
+	        phi1 = acos(R_0/r12);
+	      }
+	      else {
+	        if((R_0-r12)/h < 0.00001){
+	        	  phi1=0.0;
+	        }
+	        else {
+	          printf("Error: R0 > r12: %g\n", R_0-r12);
+	        }
+	      }
+		  if(R_0<r13){
+		    phi2 = acos(R_0/r13);
+		  }
+	      else {
+	        if((R_0-r13)/h < 0.00001){
+	          phi2=0.0;
+	        }
+	        else {
+	          printf("Error: R0 > r13: %g\n", R_0-r13);
+	        }
+	      }
+
+		  //R = R_0/cos(phi1);
+		  //r = sqrt(r0*r0 + R*R);
+
+	      if(s1*s2*r0 <= 0) {
+	        M = -1.;
+	      }
+		  else {
+		    M = 1.;
+		  }
+
+		  if((r12*sin(phi1) >= r23) || (r13*sin(phi2) >= r23)) {
+		    if(phi1 >= phi2) {
+			  M = M*(full_integral_new(phi1, ar0, R_0, h) - full_integral_new(phi2, ar0, R_0, h));
+		    }
+		    else {
+			  M = M*(full_integral_new(phi2, ar0, R_0, h) - full_integral_new(phi1, ar0, R_0, h));
+		    }
+		  }
+		  else {
+		    M = M*(full_integral_new(phi1, ar0, R_0, h) + full_integral_new(phi2, ar0, R_0, h));
+		  }
+		  Msum = Msum+M;
+
+	    }
+	  }
+
+	  //printf("Msum: %g\n", Msum);
+  return Msum;
+}
+
+
 /**
  * @brief Function that gives the density for a given cell -> Maya.
  *
@@ -719,33 +872,30 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
 DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
   DensityValues values;
 
-  const CoordinateVector<> position = cell.get_cell_midpoint();
-  const CoordinateVector<> particle(0.,0.,0.);
-  printf("Cell midpoint: %g %g %g\n",position[0],position[1],position[2]);
-
-  double density = 0.;
-  const double r = (position-particle).norm();
-  const double h = 0.5*1.543e+17;
-  const double q = r / h;
-  const double splineval = kernel(q, h);
-  
+  CoordinateVector<> position = cell.get_cell_midpoint();
 
   std::vector< Face > face_vector=cell.get_faces();
-  //std::vector< VoronoiFace > face_vector=VoronoiGrid::get_faces();
-  //printf("Faces: %lu\n",face_vector.size());
+  double radius = 0.0;
   for(unsigned int i=0; i<face_vector.size(); i++) {
-    if(i==0){
-      const CoordinateVector<> face_position =face_vector[1].get_midpoint();
-      printf("Face midpoint: %g %g %g\n",face_position[0],face_position[1],face_position[2]);
-
-      for(Face::Vertices j=face_vector[i].first_vertex(); j!=face_vector[i].last_vertex(); ++j) {
-	//const CoordinateVector<> vert_position = j.get_position();
-	//printf("Vertices of first face: %g %g %g\n",vert_position[0],vert_position[1],vert_position[2]);
-      }
-    }
+	for(Face::Vertices j=face_vector[i].first_vertex(); j!=face_vector[i].last_vertex(); ++j) {
+	  double distance = j.get_position().norm();
+	  if(distance > radius) radius = distance;
+	}
   }
 
-  density += splineval;
+  std::vector< unsigned int > ngbs = _octree->get_ngbs_sphere(position, radius);
+  const unsigned int numngbs = ngbs.size();
+
+  double density = 0.;
+
+  for (unsigned int i=0; i<numngbs; i++) {
+	  const unsigned int index = ngbs[i];
+	  const double h = _smoothing_lengths[index];
+	  const CoordinateVector<> particle = _positions[index];
+	  density += mass_contribution(cell, particle, h) * _masses[index];
+  }
+  density = density/cell.get_volume();
+  //printf("mass: %g\n",_masses[0]);
 
   // convert density to particle density (assuming hydrogen only)
   values.set_number_density(density / 1.6737236e-27);
