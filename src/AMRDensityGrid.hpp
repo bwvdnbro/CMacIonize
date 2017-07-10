@@ -32,6 +32,7 @@
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
 
+#include <algorithm>
 #include <cfloat>
 #include <ostream>
 #include <vector>

@@ -61,8 +61,14 @@ endif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 # If we are on Windows, make sure to add the _USE_MATH_DEFINES define to the
 # compilation command
+# And the NOMINMAX define to disable use of the min and max macros defined
+# by windows.h
+# And the _CRT_SECURE_NO_WARNINGS define to disable warnings about unsafe
+# sprintf usages
 if(HAVE_WINDOWS)
   add_compiler_flag("-D_USE_MATH_DEFINES" REQUIRED)
+  add_compiler_flag("-DNOMINMAX" REQUIRED)
+  add_compiler_flag("-D_CRT_SECURE_NO_WARNINGS" REQUIRED)
 endif(HAVE_WINDOWS)
 
 # Check if we are on a POSIX system. If not, some functionality will not work
