@@ -28,6 +28,64 @@
 
 #include "OperatingSystem.hpp"
 
+#include <sys/time.h>
+
+/**
+ * @brief Class used to store time information.
+ */
+class OperatingSystem::TimeValue {
+private:
+  /*! @brief Wrapped timevalue struct. */
+  timeval _time_value;
+
+public:
+  /**
+   * @brief Constructor.
+   */
+  inline TimeValue() { timerclear(&_time_value); }
+
+  /**
+   * @brief Get a pointer to the wrapped timeval.
+   *
+   * @return Pointer to the wrapped timeval.
+   */
+  inline const timeval *get_wrapped_timeval() const { return &_time_value; }
+
+  /**
+   * @brief Get a pointer to the wrapped timeval.
+   *
+   * @return Pointer to the wrapped timeval.
+   */
+  inline timeval *get_wrapped_timeval() { return &_time_value; }
+};
+
+inline void OperatingSystem::clear_time_value(TimeValue &time_value) {
+  timerclear(time_value.get_wrapped_timeval());
+}
+
+inline void OperatingSystem::get_time_value(TimeValue &time_value) {
+  gettimeofday(time_value.get_wrapped_timeval(), nullptr);
+}
+
+inline void OperatingSystem::subtract_time_values(const TimeValue &first_term,
+                                                  const TimeValue &second_term,
+                                                  TimeValue &result) {
+  timersub(first_term.get_wrapped_timeval(), second_term.get_wrapped_timeval(),
+           result.get_wrapped_timeval());
+}
+
+inline void OperatingSystem::add_time_values(const TimeValue &first_term,
+                                             const TimeValue &second_term,
+                                             TimeValue &result) {
+  timeradd(first_term.get_wrapped_timeval(), second_term.get_wrapped_timeval(),
+           result.get_wrapped_timeval());
+}
+
+inline double OperatingSystem::convert_to_seconds(const TimeValue &time_value) {
+  const timeval *tval = time_value.get_wrapped_timeval();
+  return tval->tv_sec + 1.e-6 * tval->tv_usec;
+}
+
 inline std::string OperatingSystem::absolute_path(std::string path) {
   char *absolute_path_ptr = realpath(path.c_str(), nullptr);
   if (absolute_path_ptr == nullptr) {

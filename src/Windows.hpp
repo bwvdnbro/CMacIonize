@@ -28,6 +28,65 @@
 
 #include "OperatingSystem.hpp"
 
+#include <windows.h>
+
+/**
+ * @brief Class used to store time information.
+ */
+class OperatingSystem::TimeValue {
+private:
+  /*! @brief Wrapped large integer. */
+  LARGE_INTEGER _time_value;
+
+public:
+  /**
+   * @brief Constructor.
+   */
+  inline TimeValue() : _time_value(0) {}
+
+  /**
+   * @brief Get a pointer to the wrapped value.
+   *
+   * @return Pointer to the wrapped value.
+   */
+  inline const LARGE_INTEGER *get_wrapped_value() const { return &_time_value; }
+
+  /**
+   * @brief Get a pointer to the wrapped value.
+   *
+   * @return Pointer to the wrapped value.
+   */
+  inline LARGE_INTEGER *get_wrapped_value() { return &_time_value; }
+};
+
+inline void OperatingSystem::clear_time_value(TimeValue &time_value) {
+  *time_value.get_wrapped_value() = 0;
+}
+
+inline void OperatingSystem::get_time_value(TimeValue &time_value) {
+  QueryPerformanceCounter(time_value.get_wrapped_value());
+}
+
+inline void OperatingSystem::subtract_time_values(const TimeValue &first_term,
+                                                  const TimeValue &second_term,
+                                                  TimeValue &result) {
+  *result.get_wrapped_value() =
+      *first_term.get_wrapped_value() - *second_term.get_wrapped_value();
+}
+
+inline void OperatingSystem::add_time_values(const TimeValue &first_term,
+                                             const TimeValue &second_term,
+                                             TimeValue &result) {
+  *result.get_wrapped_value() =
+      *first_term.get_wrapped_value() + *second_term.get_wrapped_value();
+}
+
+inline void OperatingSystem::convert_to_seconds(const TimeValue &time_value) {
+  LARGE_INTEGER frequency;
+  QueryPerformanceFrequency(&frequency);
+  return (*time_value.get_wrapped_value()) / ((double)frequency);
+}
+
 inline std::string OperatingSystem::absolute_path(std::string path) {
   // a maximum length of 1000 should be more than enough...
   char *absolute_path_ptr = _fullpath(nullptr, path.c_str(), 1000);

@@ -40,6 +40,57 @@
 namespace OperatingSystem {
 
 /**
+ * @brief Class used to store time information.
+ */
+class TimeValue;
+
+/**
+ * @brief Reset the given TimeValue object.
+ *
+ * @param time_value TimeValue object to reset.
+ */
+static void clear_time_value(TimeValue &time_value);
+
+/**
+ * @brief Set the value of the given TimeValue object to the current system
+ * time value.
+ *
+ * @param time_value TimeValue object to set.
+ */
+static void get_time_value(TimeValue &time_value);
+
+/**
+ * @brief Subtract the given two TimeValue objects and store the result in the
+ * third given TimeValue object.
+ *
+ * @param first_term First term.
+ * @param second_term Second term.
+ * @param result TimeValue object to store the result in.
+ */
+static void subtract_time_values(const TimeValue &first_term,
+                                 const TimeValue &second_term,
+                                 TimeValue &result);
+
+/**
+ * @brief Add the given two TimeValue objects and store the result in the third
+ * given TimeValue object.
+ *
+ * @param first_term First term.
+ * @param second_term Second term.
+ * @param result TimeValue object to store the result in.
+ */
+static void add_time_values(const TimeValue &first_term,
+                            const TimeValue &second_term, TimeValue &result);
+
+/**
+ * @brief Convert the given TimeValue object to a time in seconds.
+ *
+ * @param time_value TimeValue object to convert.
+ * @return Time in seconds (with microsecond precision).
+ */
+static double convert_to_seconds(const TimeValue &time_value);
+
+/**
  * @brief Get the absolute path corresponding to the given relative or absolute
  * path.
  *
