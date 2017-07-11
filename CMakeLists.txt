@@ -28,6 +28,11 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 project(CMacIonize)
 
+# Add minimal cpp file for flag testing
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
 macro(add_compiler_flag FLAG FATAL)
   set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
@@ -103,11 +108,6 @@ set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 
 # Enable unit testing using CTest
 enable_testing()
-
-# Add minimal cpp file for flag testing
-execute_process(COMMAND ${CMAKE_COMMAND} -E echo
-                "int main(int argc, char **argv){ return 0; }"
-                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)
