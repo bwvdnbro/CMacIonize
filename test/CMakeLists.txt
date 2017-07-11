@@ -912,6 +912,19 @@ set(TESTHILBERTKEYGENERATOR_SOURCES
 add_unit_test(NAME testHilbertKeyGenerator
               SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
 
+## Unit test for SpiralGalaxyDensityFunction
+set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES
+    testSpiralGalaxyDensityFunction.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/ParameterFile.cpp
+    ../src/SpiralGalaxyDensityFunction.hpp
+)
+add_unit_test(NAME testSpiralGalaxyDensityFunction
+              SOURCES ${TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
