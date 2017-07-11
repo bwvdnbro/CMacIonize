@@ -925,6 +925,15 @@ set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES
 add_unit_test(NAME testSpiralGalaxyDensityFunction
               SOURCES ${TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES})
 
+## Unit test for SpiralGalaxyContinuousPhotonSource
+set(TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES
+    testSpiralGalaxyContinuousPhotonSource.cpp
+
+    ../src/SpiralGalaxyContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testSpiralGalaxyContinuousPhotonSource
+              SOURCES ${TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
