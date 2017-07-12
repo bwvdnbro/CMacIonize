@@ -191,6 +191,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds) const;
 
+  virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
 
   virtual double get_total_emission(CoordinateVector<> origin,

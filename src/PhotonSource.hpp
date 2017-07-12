@@ -107,6 +107,38 @@ private:
   /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
   HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
 
+  /// scattering
+
+  /*! @brief @f$H_G@f$ parameter for scattering. */
+  const double _scattering_hgg;
+
+  /*! @brief @f$H_G^2@f$. */
+  const double _scattering_g2;
+
+  /*! @brief @f$1-H_G^2@f$. */
+  const double _scattering_omg2;
+
+  /*! @brief @f$2H_G@f$. */
+  const double _scattering_thgg;
+
+  /*! @brief @f$1-H_G@f$. */
+  const double _scattering_omhgg;
+
+  /*! @brief @f$\frac{1}{2H_G}@f$. */
+  const double _scattering_od2hgg;
+
+  /*! @brief @f$1+H_G^2@f$. */
+  const double _scattering_opg2;
+
+  /*! @brief Peak linear polarization. */
+  const double _scattering_pl;
+
+  /*! @brief Asymmetry of the circular polarization. */
+  const double _scattering_sc;
+
+  /*! @brief Peak value of linear to circular polarization conversion. */
+  const double _scattering_pc;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
@@ -144,6 +176,10 @@ public:
 
   bool reemit(Photon &photon, const IonizationVariables &ionization_variables,
               RandomGenerator &random_generator) const;
+
+  void scatter(Photon &photon, RandomGenerator &random_generator) const;
+  double scatter_towards(Photon &photon,
+                         const CoordinateVector<> direction) const;
 };
 
 #endif // PHOTONSOURCE_HPP

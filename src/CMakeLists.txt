@@ -169,6 +169,8 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityMaskFactory.hpp
     DensityValues.hpp
+    DustPhotonShootJob.hpp
+    DustPhotonShootJobMarket.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp

@@ -398,6 +398,50 @@ CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
 }
 
 /**
+ * @brief Get the total optical depth traversed by the given Photon until it
+ * reaches the boundaries of the simulation box.
+ *
+ * @param photon Photon.
+ * @return Total optical depth along the photon's path before it reaches the
+ * boundaries of the simulation box.
+ */
+double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
+
+  double optical_depth = 0.;
+
+  CoordinateVector<> photon_origin = photon.get_position();
+  CoordinateVector<> photon_direction = photon.get_direction();
+
+  // find out in which cell the photon is currently hiding
+  CoordinateVector< int > index = get_cell_indices(photon_origin);
+
+  unsigned int ncell = 0;
+  // while the photon is still in the box
+  while (is_inside(index, photon_origin)) {
+    ++ncell;
+    Box<> cell = get_cell(index);
+
+    double ds;
+    CoordinateVector< char > next_index;
+    CoordinateVector<> next_wall = get_wall_intersection(
+        photon_origin, photon_direction, cell, next_index, ds);
+
+    // get the optical depth of the path from the current photon location to the
+    // cell wall, update S
+    DensityGrid::iterator it(get_long_index(index), *this);
+
+    // Helium abundance. Should be a parameter.
+    optical_depth +=
+        get_optical_depth(ds, it.get_ionization_variables(), photon);
+
+    photon_origin = next_wall;
+    index += next_index;
+  }
+
+  return optical_depth;
+}
+
+/**
  * @brief Let the given Photon travel through the density grid until the given
  * optical depth is reached.
  *

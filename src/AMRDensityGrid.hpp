@@ -610,6 +610,19 @@ public:
   }
 
   /**
+   * @brief Get the total optical depth traversed by the given Photon until it
+   * reaches the boundaries of the simulation box.
+   *
+   * @param photon Photon.
+   * @return Total optical depth along the photon's path before it reaches the
+   * boundaries of the simulation box.
+   */
+  virtual double integrate_optical_depth(const Photon &photon) {
+    cmac_error("This function is not implemented (yet)!");
+    return 0.;
+  }
+
+  /**
    * @brief Let the given Photon travel through the density grid until the given
    * optical depth is reached.
    *

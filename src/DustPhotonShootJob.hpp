@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file IonizationPhotonShootJob.hpp
+ * @file DustPhotonShootJob.hpp
  *
- * @brief Job implementation that shoots ionizing photons through a DensityGrid.
+ * @brief Job implementation that shoots photons through a dusty DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef IONIZATIONPHOTONSHOOTJOB_HPP
-#define IONIZATIONPHOTONSHOOTJOB_HPP
+#ifndef DUSTPHOTONSHOOTJOB_HPP
+#define DUSTPHOTONSHOOTJOB_HPP
 
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
@@ -32,9 +32,9 @@
 #include "RandomGenerator.hpp"
 
 /**
- * @brief Job implementation that shoots ionizing photons through a DensityGrid.
+ * @brief Job implementation that shoots photons through a dusty DensityGrid.
  */
-class IonizationPhotonShootJob {
+class DustPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
   PhotonSource &_photon_source;
@@ -63,8 +63,8 @@ public:
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
    */
-  inline IonizationPhotonShootJob(PhotonSource &photon_source, int random_seed,
-                                  DensityGrid &density_grid)
+  inline DustPhotonShootJob(PhotonSource &photon_source, int random_seed,
+                            DensityGrid &density_grid)
       : _photon_source(photon_source), _random_generator(random_seed),
         _density_grid(density_grid), _totweight(0.), _typecount{0.},
         _numphoton(0) {}
@@ -95,7 +95,7 @@ public:
    * @brief Should the Job be deleted by the Worker when it is finished?
    *
    * @return False, since the Job is reused and managed by the
-   * IonizationPhotonShootJobMarket.
+   * DustPhotonShootJobMarket.
    */
   inline bool do_cleanup() const { return false; }
 
@@ -105,11 +105,15 @@ public:
   inline void execute() {
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
-      double tau = -std::log(_random_generator.get_uniform_random_double());
+      // make sure the photon scatters at least once by forcing a first
+      // interaction
+      const double tau_max = _density_grid.integrate_optical_depth(photon);
+      const double weight = (1. - std::exp(-tau_max));
+      double tau = -std::log(
+          1. - _random_generator.get_uniform_random_double() * weight);
       DensityGrid::iterator it = _density_grid.interact(photon, tau);
-      while (it != _density_grid.end() &&
-             _photon_source.reemit(photon, it.get_ionization_variables(),
-                                   _random_generator)) {
+      while (it != _density_grid.end()) {
+        _photon_source.scatter(photon, _random_generator);
         tau = -std::log(_random_generator.get_uniform_random_double());
         it = _density_grid.interact(photon, tau);
       }
@@ -121,9 +125,9 @@ public:
   /**
    * @brief Get a name tag for this job.
    *
-   * @return "ionizationphotonshootjob".
+   * @return "dustphotonshootjob".
    */
-  inline std::string get_tag() const { return "ionizationphotonshootjob"; }
+  inline std::string get_tag() const { return "dustphotonshootjob"; }
 };
 
-#endif // IONIZATIONPHOTONSHOOTJOB_HPP
+#endif // DUSTPHOTONSHOOTJOB_HPP

@@ -75,6 +75,9 @@ private:
   /*! @brief Weight of the photon. */
   double _weight;
 
+  /*! @brief Stokes parameters for scattering. */
+  double _stokes_parameters[4];
+
 public:
   /**
    * @brief Constructor.
@@ -90,6 +93,10 @@ public:
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cross_sections[i] = 0.;
     }
+    _stokes_parameters[0] = 1.;
+    _stokes_parameters[1] = 0.;
+    _stokes_parameters[2] = 0.;
+    _stokes_parameters[3] = 0.;
   }
 
   /**
@@ -204,6 +211,39 @@ public:
    * @return Weight of the Photon.
    */
   inline double get_weight() const { return _weight; }
+
+  /**
+   * @brief Get the Stokes parameters for scattering and store them in the given
+   * variables.
+   *
+   * @param fi First parameter.
+   * @param fq Second parameter.
+   * @param fu Third parameter.
+   * @param fv Fourth parameter.
+   */
+  inline void get_stokes_parameters(double &fi, double &fq, double &fu,
+                                    double &fv) const {
+    fi = _stokes_parameters[0];
+    fq = _stokes_parameters[1];
+    fu = _stokes_parameters[2];
+    fv = _stokes_parameters[3];
+  }
+
+  /**
+   * @brief Set new values for the Stokes parameters.
+   *
+   * @param fi First parameter.
+   * @param fq Second parameter.
+   * @param fu Third parameter.
+   * @param fv Fourth parameter.
+   */
+  inline void set_stokes_parameters(double fi, double fq, double fu,
+                                    double fv) {
+    _stokes_parameters[0] = fi;
+    _stokes_parameters[1] = fq;
+    _stokes_parameters[2] = fu;
+    _stokes_parameters[3] = fv;
+  }
 };
 
 #endif // PHOTON_HPP
