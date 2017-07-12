@@ -934,6 +934,15 @@ set(TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES
 add_unit_test(NAME testSpiralGalaxyContinuousPhotonSource
               SOURCES ${TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES})
 
+## Unit test for CCDImage
+set(TESTCCDIMAGE_SOURCES
+    testCCDImage.cpp
+
+    ../src/CCDImage.hpp
+)
+add_unit_test(NAME testCCDImage
+              SOURCES ${TESTCCDIMAGE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

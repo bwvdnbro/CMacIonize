@@ -161,12 +161,11 @@ public:
    */
   inline static CoordinateVector<>
   get_random_direction(RandomGenerator &random_generator) {
-    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
-    double sint = 1. - cost * cost;
-    sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
-    double cosp = std::cos(phi);
-    double sinp = std::sin(phi);
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 
