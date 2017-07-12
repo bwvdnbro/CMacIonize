@@ -51,6 +51,22 @@ int main(int argc, char **argv) {
     image.add_photon(position, 1., 0., 0.);
   }
 
+  CCDImage image2(CoordinateVector<>(1., 0., 0.), 1000, 1000, 0., 0., 1., 1.);
+  for (unsigned int i = 0; i < 100000; ++i) {
+    const double r =
+        0.2 * std::sqrt(random_generator.get_uniform_random_double());
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
+    const CoordinateVector<> position(r * sint * cosp + 0.3,
+                                      r * sint * sinp + 0.24, r * cost + 0.54);
+    image2.add_photon(position, 1., 0., 0.);
+  }
+
+  image += image2;
+
   image.save("test_ccdimage");
 
   return 0;

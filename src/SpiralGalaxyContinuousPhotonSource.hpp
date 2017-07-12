@@ -154,6 +154,29 @@ public:
   }
 
   /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   */
+  SpiralGalaxyContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
+      : SpiralGalaxyContinuousPhotonSource(
+            Box<>(
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "densitygrid:box_sides", "[24. kpc, 24. kpc, 24. kpc]")),
+            params.get_value< CoordinateVector< unsigned int > >(
+                "continuousphotonsource:ncell",
+                CoordinateVector< unsigned int >(201)),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "continuousphotonsource:r_stars", "5. kpc"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "continuousphotonsource:h_stars", "0.6 kpc"),
+            params.get_value< double >("continuousphotonsource:B_over_T",
+                                       0.2)) {}
+
+  /**
    * @brief Get the position and direction of a random photon.
    *
    * @param random_generator RandomGenerator to use.

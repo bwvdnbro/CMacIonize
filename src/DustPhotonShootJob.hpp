@@ -26,6 +26,7 @@
 #ifndef DUSTPHOTONSHOOTJOB_HPP
 #define DUSTPHOTONSHOOTJOB_HPP
 
+#include "CCDImage.hpp"
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
@@ -45,11 +46,8 @@ private:
   /*! @brief DensityGrid through which photons are propagated. */
   DensityGrid &_density_grid;
 
-  /*! @brief Total weight of all photons. */
-  double _totweight;
-
-  /*! @brief Total weights per photon type. */
-  double _typecount[PHOTONTYPE_NUMBER];
+  /*! @brief CCDImage computed by this thread. */
+  CCDImage _image;
 
   /*! @brief Number of photons to propagate through the DensityGrid. */
   unsigned int _numphoton;
@@ -62,12 +60,12 @@ public:
    * @param random_seed Seed for the RandomGenerator used by this specific
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
+   * @param image CCDImage to construct.
    */
   inline DustPhotonShootJob(PhotonSource &photon_source, int random_seed,
-                            DensityGrid &density_grid)
+                            DensityGrid &density_grid, const CCDImage &image)
       : _photon_source(photon_source), _random_generator(random_seed),
-        _density_grid(density_grid), _totweight(0.), _typecount{0.},
-        _numphoton(0) {}
+        _density_grid(density_grid), _image(image), _numphoton(0) {}
 
   /**
    * @brief Set the number of photons for the next execution of the job.
@@ -77,18 +75,13 @@ public:
   inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
 
   /**
-   * @brief Update the given weight counters and reset the internal counters.
+   * @brief Update the given CCDImage.
    *
-   * @param totweight Total weight of all photons.
-   * @param typecount Total weights per photon type.
+   * @param image CCDImage to update.
    */
-  inline void update_counters(double &totweight, double *typecount) {
-    totweight += _totweight;
-    _totweight = 0.;
-    for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
-      typecount[i] += _typecount[i];
-      _typecount[i] = 0.;
-    }
+  inline void update_image(CCDImage &image) {
+    image += _image;
+    _image.reset();
   }
 
   /**
@@ -103,8 +96,19 @@ public:
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
    */
   inline void execute() {
+    // parameter
+    const double band_albedo = 0.54; // or 0.21 for band == 1
+
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
+
+      Photon old_photon(photon);
+      old_photon.set_direction(_image.get_direction());
+      const double tau_old = _density_grid.integrate_optical_depth(old_photon);
+      _image.add_photon(old_photon.get_position(),
+                        0.25 * std::exp(-tau_old) / M_PI, 0., 0.);
+
+      double albedo = 1.;
       // make sure the photon scatters at least once by forcing a first
       // interaction
       const double tau_max = _density_grid.integrate_optical_depth(photon);
@@ -113,12 +117,25 @@ public:
           1. - _random_generator.get_uniform_random_double() * weight);
       DensityGrid::iterator it = _density_grid.interact(photon, tau);
       while (it != _density_grid.end()) {
+
+        // peel off a photon towards the observer
+        Photon new_photon(photon);
+        const double hgfac =
+            _photon_source.scatter_towards(new_photon, _image.get_direction());
+        const double tau_new =
+            _density_grid.integrate_optical_depth(new_photon);
+        double fi, fq, fu, fv;
+        new_photon.get_stokes_parameters(fi, fq, fu, fv);
+        // after every scattering event, the accumulated albedo is reduced
+        albedo *= band_albedo;
+        const double weight_new = weight * hgfac * albedo * std::exp(-tau_new);
+        _image.add_photon(new_photon.get_position(), weight_new * fi,
+                          weight_new * fq, weight_new * fu);
+
         _photon_source.scatter(photon, _random_generator);
         tau = -std::log(_random_generator.get_uniform_random_double());
         it = _density_grid.interact(photon, tau);
       }
-      _totweight += photon.get_weight();
-      _typecount[photon.get_type()] += photon.get_weight();
     }
   }
 

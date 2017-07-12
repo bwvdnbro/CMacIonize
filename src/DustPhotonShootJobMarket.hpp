@@ -31,9 +31,10 @@
 #include "DustPhotonShootJob.hpp"
 #include "Lock.hpp"
 
+class CCDImage;
+class DensityGrid;
 class PhotonSource;
 class RandomGenerator;
-class DensityGrid;
 
 /**
  * @brief JobMarket implementation that shoots photons through a dusty
@@ -65,20 +66,22 @@ public:
    * @param random_seed Seed for the RandomGenerator.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Total number of photons to propagate through the grid.
+   * @param image CCDImage to construct (threads will update a copy of this
+   * image).
    * @param jobsize Number of photons to shoot during a single
    * DustPhotonShootJob.
    * @param worksize Number of threads used in the calculation.
    */
   inline DustPhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
                                   DensityGrid &density_grid,
-                                  unsigned int numphoton, unsigned int jobsize,
-                                  int worksize)
+                                  unsigned int numphoton, const CCDImage &image,
+                                  unsigned int jobsize, int worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
-      _jobs[i] =
-          new DustPhotonShootJob(photon_source, random_seed + i, density_grid);
+      _jobs[i] = new DustPhotonShootJob(photon_source, random_seed + i,
+                                        density_grid, image);
     }
   }
 
@@ -112,14 +115,13 @@ public:
   inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
 
   /**
-   * @brief Update the given weight counters.
+   * @brief Update the given CCDImage.
    *
-   * @param totweight Total weight of all photons.
-   * @param typecount Total weights per photon type.
+   * @param image CCDImage to update.
    */
-  inline void update_counters(double &totweight, double *typecount) {
+  inline void update_image(CCDImage &image) {
     for (int i = 0; i < _worksize; ++i) {
-      _jobs[i]->update_counters(totweight, typecount);
+      _jobs[i]->update_image(image);
     }
   }
 

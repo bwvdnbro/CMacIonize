@@ -90,6 +90,17 @@ public:
   }
 
   /**
+   * @brief Reset the image contents to zero.
+   */
+  inline void reset() {
+    for (unsigned int i = 0; i < _image_total.size(); ++i) {
+      _image_total[i] = 0.;
+      _image_Q[i] = 0.;
+      _image_U[i] = 0.;
+    }
+  }
+
+  /**
    * @brief Get the direction of the observer.
    *
    * @return Direction of the observer.
@@ -112,7 +123,7 @@ public:
     const double cospo = std::cos(po);
     const double sinpo = std::sin(po);
     const double costo = _direction.z();
-    double sinto = std::sqrt(1. - costo * costo);
+    double sinto = std::sqrt(std::max(0., 1. - costo * costo));
     if (cospo * _direction.x() > 0) {
       if (sinto * _direction.x() < 0) {
         sinto = -sinto;
@@ -139,6 +150,32 @@ public:
         _image_U[ix * _resolution[1] + iy] += weight_U;
       }
     }
+  }
+
+  /**
+   * @brief Add the given CCDImage to this image.
+   *
+   * @param image CCDImage to add.
+   * @return Reference to the updated image.
+   */
+  inline CCDImage &operator+=(const CCDImage &image) {
+
+    // make sure we are adding images of the same thing
+    cmac_assert(_anchor[0] == image._anchor[0] &&
+                _anchor[1] == image._anchor[1]);
+    cmac_assert(_sides[0] == image._sides[0] && _sides[1] == image._sides[1]);
+    cmac_assert(_resolution[0] == image._resolution[0] &&
+                _resolution[1] == image._resolution[1]);
+    cmac_assert(_direction == image._direction);
+    cmac_assert(_image_total.size() == image._image_total.size());
+
+    for (unsigned int i = 0; i < _image_total.size(); ++i) {
+      _image_total[i] += image._image_total[i];
+      _image_Q[i] += image._image_Q[i];
+      _image_U[i] += image._image_U[i];
+    }
+
+    return *this;
   }
 
   /**

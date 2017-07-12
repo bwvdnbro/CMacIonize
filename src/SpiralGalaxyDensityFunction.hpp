@@ -104,12 +104,12 @@ public:
   SpiralGalaxyDensityFunction(ParameterFile &params, Log *log = nullptr)
       : SpiralGalaxyDensityFunction(
             params.get_physical_value< QUANTITY_LENGTH >(
-                "densityfunction.r_ISM", "6.0 kpc"),
+                "densityfunction:r_ISM", "6.0 kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "densityfunction.h_ISM", "0.22 kpc"),
+                "densityfunction:h_ISM", "0.22 kpc"),
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-                "densityfunction.n_0", "1. cm^-3"),
-            params.get_value< int >("densityfunction.band", 0), log) {}
+                "densityfunction:n_0", "1. cm^-3"),
+            params.get_value< int >("densityfunction:band", 0), log) {}
 
   /**
    * @brief Perform all computationally expensive initialization that needs to

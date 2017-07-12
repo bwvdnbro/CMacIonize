@@ -37,6 +37,7 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
+#include "DustPhotonShootJobMarket.hpp"
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
@@ -363,6 +364,8 @@ int main(int argc, char **argv) {
   WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
   workdistributor(parser.get_value< int >("threads"));
   const int worksize = workdistributor.get_worksize();
+  WorkDistributor< DustPhotonShootJobMarket, DustPhotonShootJob >
+      dust_workdistributor(worksize);
   Timer worktimer;
 
   if (density_mask != nullptr) {
@@ -381,8 +384,16 @@ int main(int argc, char **argv) {
                       workdistributor.get_worksize_string(),
                       " for photon shooting.");
   }
-  IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
-                                                 100, worksize);
+  IonizationPhotonShootJobMarket *photonshootjobs = nullptr;
+  DustPhotonShootJobMarket *dustphotonshootjobs = nullptr;
+  //  photonshootjobs = new IonizationPhotonShootJobMarket(source, random_seed,
+  //  *grid, 0,
+  //                                                 100, worksize);
+  const double kpc = 3.086e19;
+  CCDImage dust_image(CoordinateVector<>(1., 0., 0.), 200, 200, -12. * kpc,
+                      -12. * kpc, 24. * kpc, 24. * kpc);
+  dustphotonshootjobs = new DustPhotonShootJobMarket(
+      source, random_seed, *grid, 0, dust_image, 100, worksize);
 
   if (hydro_integrator != nullptr) {
     // initialize the hydro variables (before we write the initial snapshot)
@@ -434,12 +445,20 @@ int main(int argc, char **argv) {
       // make sure this process does only part of the total number of photons
       local_numphoton = comm.distribute(local_numphoton);
 
-      photonshootjobs.set_numphoton(local_numphoton);
-      worktimer.start();
-      workdistributor.do_in_parallel(photonshootjobs);
-      worktimer.stop();
-
-      photonshootjobs.update_counters(totweight, typecount);
+      if (photonshootjobs) {
+        photonshootjobs->set_numphoton(local_numphoton);
+        worktimer.start();
+        workdistributor.do_in_parallel(*photonshootjobs);
+        worktimer.stop();
+        photonshootjobs->update_counters(totweight, typecount);
+      }
+      if (dustphotonshootjobs) {
+        dustphotonshootjobs->set_numphoton(local_numphoton);
+        worktimer.start();
+        dust_workdistributor.do_in_parallel(*dustphotonshootjobs);
+        worktimer.stop();
+        dustphotonshootjobs->update_image(dust_image);
+      }
 
       // make sure the total weight and typecount is reduced across all
       // processes
@@ -558,6 +577,8 @@ int main(int argc, char **argv) {
     }
   }
 
+  dust_image.save("galaxy_image");
+
   programtimer.stop();
   if (log) {
     log->write_status("Total program time: ",
@@ -585,6 +606,12 @@ int main(int argc, char **argv) {
   delete temperature_calculator;
   delete continuousspectrum;
   delete spectrum;
+  if (photonshootjobs != nullptr) {
+    delete photonshootjobs;
+  }
+  if (dustphotonshootjobs != nullptr) {
+    delete dustphotonshootjobs;
+  }
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program
