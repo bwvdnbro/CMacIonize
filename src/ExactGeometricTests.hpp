@@ -85,7 +85,7 @@ public:
      */
     struct {
       /*! @brief Mantissa @f$m@f$. */
-      unsigned long mantissa : 32;	//This should be 52 
+      unsigned long long mantissa : 52;	 
       /*! @brief Exponent @f$e@f$. */
       unsigned long exponent : 11;
       /*! @brief Sign @f$s@f$. */
