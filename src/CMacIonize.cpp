@@ -40,11 +40,11 @@
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
+#include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
-#include "PhotonShootJobMarket.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
@@ -360,8 +360,8 @@ int main(int argc, char **argv) {
   //  }
 
   // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
-      parser.get_value< int >("threads"));
+  WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
+  workdistributor(parser.get_value< int >("threads"));
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
@@ -381,8 +381,8 @@ int main(int argc, char **argv) {
                       workdistributor.get_worksize_string(),
                       " for photon shooting.");
   }
-  PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
-                                       worksize);
+  IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
+                                                 100, worksize);
 
   if (hydro_integrator != nullptr) {
     // initialize the hydro variables (before we write the initial snapshot)

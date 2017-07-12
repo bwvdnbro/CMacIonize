@@ -52,6 +52,10 @@ private:
   /*! @brief Conversion factor from kpc to m (in m). */
   const double _kpc;
 
+  /*! @brief Mass attenuation coefficient @f$\kappa{}@f$ for the ISM
+   *  (in m^2 kg^-1). */
+  double _kappa;
+
 public:
   /**
    * @brief Constructor.
@@ -62,14 +66,27 @@ public:
    * (in m).
    * @param n_0 Central density @f$n_0@f$ of the gas and dust in the ISM
    * (in m^-3).
+   * @param band Band for which we want an image.
    * @param log Log to write logging info to.
    */
-  SpiralGalaxyDensityFunction(double rdust, double hdust, double n_0,
+  SpiralGalaxyDensityFunction(double rdust, double hdust, double n_0, int band,
                               Log *log = nullptr)
       : _rdust(rdust), _hdust(hdust),
         /* we multiplied the value in Kenny's code with 1.e-3 to convert g to
          * kg */
         _rho_0(1.674e-27 * n_0), _kpc(3.086e19) {
+
+    if (band == 0) {
+      // 219 cm^2 g^-1 = 21.9 m^2 kg^-1
+      _kappa = 21.9;
+    } else if (band == 1) {
+      // 20 cm^2 g^-1 = 2.0 m^2 kg^-1
+      _kappa = 2.;
+    } else {
+      cmac_error("Unknown band: %i!", band);
+      _kappa = 0.;
+    }
+
     if (log) {
       log->write_status(
           "Constructed SpiralGalaxyDensityFunction with scale length ", _rdust,
@@ -92,7 +109,7 @@ public:
                 "densityfunction.h_ISM", "0.22 kpc"),
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
                 "densityfunction.n_0", "1. cm^-3"),
-            log) {}
+            params.get_value< int >("densityfunction.band", 0), log) {}
 
   /**
    * @brief Perform all computationally expensive initialization that needs to
@@ -116,7 +133,10 @@ public:
             std::exp(-std::abs(position.z()) / _hdust);
     }
     DensityValues values;
-    values.set_number_density(rho);
+    values.set_number_density(rho * _kappa);
+    values.set_ionic_fraction(ION_H_n, 1.);
+    values.set_ionic_fraction(ION_He_n, 0.);
+    values.set_temperature(0.);
     return values;
   }
 };

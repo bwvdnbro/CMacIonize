@@ -177,6 +177,8 @@ set(CMACIONIZE_SOURCES
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
     InterpolatedDensityFunction.hpp
+    IonizationPhotonShootJob.hpp
+    IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
@@ -186,8 +188,6 @@ set(CMACIONIZE_SOURCES
     ParameterFile.hpp
     PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
-    PhotonShootJob.hpp
-    PhotonShootJobMarket.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
