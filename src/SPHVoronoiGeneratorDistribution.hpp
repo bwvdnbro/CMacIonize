@@ -22,7 +22,7 @@
  * @brief VoronoiGeneratorDistribution implementation with generating sites 
  * imported from a file.
  *
- * @author Maya A. Petkova
+ * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #ifndef SPHVORONOIGENERATORDISTRIBUTION_HPP
 #define SPHVORONOIGENERATORDISTRIBUTION_HPP
@@ -43,7 +43,7 @@
 class SPHVoronoiGeneratorDistribution
     : public VoronoiGeneratorDistribution {
 private:
-  /*! @brief Number of random generator positions to generate. */
+  /*! @brief Number of generator positions to generate. */
   const unsigned int _number_of_positions;
 
   /*! @brief Number of positions already generated. */
@@ -55,7 +55,7 @@ private:
   /*! @brief Name of ASCII file used to import Voronoi generating sites from. */
   std::string _filename;
 
-  /*! @brief RandomGenerator used to generate the positions. */
+  /*! @brief Generator positions. */
   std::vector< CoordinateVector<> > _generator_positions;
 
 public:
@@ -75,7 +75,7 @@ public:
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(box), _filename(filename) {
 
-    _generator_positions.resize(number_of_positions);
+  _generator_positions.resize(number_of_positions);
 
   std::ifstream file(filename);
   if (!file.is_open()) {
@@ -85,6 +85,10 @@ public:
   unsigned int index_i=0;
   std::string line;
   while (getline(file, line)) {
+    if(index_i == number_of_positions) {
+    	  cmac_warning("The file %s exceeds the number of generator positions provided.\n", filename.c_str());
+    	  break;
+    }
     if (line[0] != '#') {
       double cx, cy, cz;
       std::stringstream linestream(line);
@@ -96,11 +100,16 @@ public:
       index_i++;
     }
   }
+
+  if(index_i < number_of_positions) {
+	cmac_error("The file %s has fewer generator positions (%d) than needed (%d).\n", filename.c_str(),
+			index_i, number_of_positions);
+  }
    
   file.close();
 
 
-    if (log) {
+  if (log) {
       log->write_status(
           "SPHVoronoiGeneratorDistribution with ",
           _number_of_positions, ".");

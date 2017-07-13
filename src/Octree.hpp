@@ -158,13 +158,14 @@ public:
   /**
    * @brief Get the indices of the neighbours of the sphere of given position and radius.
    *
-   * A neighbour is a position in the internal list for which the sphere of given position
-   * and radius lies inside the sphere with the list position as centre and the
+   * A neighbour is a position in the internal list for which the input sphere
+   * overlaps with the sphere with the list position as center and the
    * corresponding smoothing length in the given list as radius.
    *
-   * @param centre Position for which we search neighbours.
+   * @param centre The center of the sphere for which we search neighbours.
+   * @param radius The radius of the sphere for which we search neighbours.
    * @return Indicies of the positions in the internal list that are neighbours
-   * of the given centre.
+   * of the given center.
    */
   inline std::vector< unsigned int > get_ngbs_sphere(CoordinateVector<> centre, double radius) const {
     std::vector< unsigned int > ngbs;
@@ -204,15 +205,15 @@ public:
   /**
    * @brief Get the indices of the neighbours of the given list of positions.
    *
-   * A neighbour is a position in the internal list for which the given position
-   * lies inside the sphere with the list position as centre and the
-   * corresponding smoothing length in the given list as radius.
+   * A neighbour is a position in the internal list for which one or more of
+   * the input positions lie inside the sphere with the list position as centre
+   * and the corresponding smoothing length in the given list as radius.
    *
    * @param centre_list Positions for which we search neighbours.
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre list.
    */
-  inline std::vector< unsigned int > get_ngbs_area(std::vector<CoordinateVector<>> centre_list) const {
+  inline std::vector< unsigned int > get_ngbs_list(std::vector<CoordinateVector<>> centre_list) const {
     std::vector< unsigned int > ngbs;
     const unsigned int clist_size = centre_list.size();
     OctreeNode *next = _root->get_child();

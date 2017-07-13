@@ -513,7 +513,7 @@ double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-// Maya
+
 /*DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
   DensityValues values;
 
@@ -546,9 +546,19 @@ double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
 */
 
 
+/**
+ * @brief Function that gives the 3D integral of the kernel of
+ * a particle for a given vertex of a cell face.
+ *
+ * @param phi Azimuthal angle of the vertex.
+ * @param r0 Distance from the particle to the face of the cell.
+ * @param R_0 Distance from the orthogonal projection of the particle
+ * onto the face of the cell to a side of the face (containing the vertex).
+ * @param h The kernel smoothing length of the particle.
+ * @return The integral of the kernel for the given vertex.
+ */
 
-
-double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, double R_0, double h) {
+double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0, double R_0, double h) {
 
   double B1, B2, B3, mu, a, logs, u;
   double full_int;
@@ -572,6 +582,7 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
   r0h_2 = h/r0*h/r0;
   r0h_3 = r0h_2*h/r0;
 
+  // Setting up the B1, B2, B3 constants of integration.
 
   if(r0 >= 2.0*h) {
     B3 = h2*h /4.;
@@ -674,8 +685,9 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
   
   
 
-  //////////////////////////////
-
+  //////////////////////////////////
+  // Calculating I_n expressions. //
+  //////////////////////////////////
 
   cosp = cos(phi);
   cosp2 = cosp*cosp;
@@ -695,6 +707,8 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
   I_3 = I_1 + a*(1.+a2)/4. *(2*u/(1-u*u) + logs);
   I_5 = I_3 + a*(1.+a2)*(1.+a2)/16. *( (10*u - 6*u*u*u)/(1-u*u)/(1-u*u) + 3.*logs);
 
+
+  // Calculating the integral expression.
   
   if(r2 < h2) {
     full_int = r0h3/M_PI  * (1./6. *I_2 - 3./40.*r0h2 *I_4 + 1./40.*r0h3 *I_5 + B1/r03 *I0);
@@ -711,6 +725,16 @@ double SPHNGSnapshotDensityFunction::full_integral_new(double phi, double r0, do
 }
 
 
+/**
+ * @brief Function that calculates the mass contribution of a particle
+ * towards the total mass of a cell.
+ *
+ * @param cell Geometrical information about the cell.
+ * @param particle The particle position.
+ * @param h The kernel smoothing length of the particle.
+ * @return The mass contribution of the particle to the cell.
+ */
+
 double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const CoordinateVector<> particle, const double h)  {
 	  double M, Msum;
 
@@ -718,18 +742,18 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 	  M=0.;
 
 	  std::vector< Face > face_vector=cell.get_faces();
+
+	  // Loop over each face of a cell.
 	  for(unsigned int i=0; i<face_vector.size(); i++) {
 
 		CoordinateVector<> vert_position1;
 		CoordinateVector<> projected_particle;
 		double r0 = 0.;
 		double ar0 = 0.;
-	    //double r = 0.;
 		double s2 = 0.;
 
+		// Loop over the vertices of each face.
 		for(Face::Vertices j=face_vector[i].first_vertex(); j!=face_vector[i].last_vertex(); ++j) {
-	    	  //printf("Vertices of first face: %g %g %g\n",vert_position[0],vert_position[1],vert_position[2]);
-
 	  	  if(j==face_vector[i].first_vertex()) {     // Calculating the distance from particle to each face of a cell
 	                                     // http://mathinsight.org/distance_point_plane
 	                                     // http://mathinsight.org/forming_planes
@@ -750,19 +774,16 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 	  	    r0 = (A*particle[0]+B*particle[1]+C*particle[2]+D)/norm;
 	  	    ar0 = fabs(r0);
 
+            // Calculate of the orthogonal projection of the particle position onto the face.
 	  	    projected_particle[0] = particle[0] - r0*A/norm;
 	  	    projected_particle[1] = particle[1] - r0*B/norm;
 	  		projected_particle[2] = particle[2] - r0*C/norm;
 
-	  		//if(projected_particle.norm() != ar0) printf("Error: issue with projection! -> %g %g %g\n",projected_particle.norm(),ar0,r0);
-
+	  		// s2 contains information about the orientation of the face vertices.
 	        s2 = vert_position1[0]*(vert_position2[1]*vert_position3[2]-
 	        		vert_position2[2]*vert_position3[1]) + vert_position1[1]*(vert_position2[2]*
 	        		vert_position3[0]-vert_position2[0]*vert_position3[2]) + vert_position1[2]*
 				(vert_position2[0]*vert_position3[1]-vert_position2[1]*vert_position3[0]);
-
-	        //M=M+Msum+s2+ar0; //Fake
-	        //printf("Face projection: %g %g %g -> r0: %g\n",projected_particle[0],projected_particle[1],projected_particle[2], r0);
 	  	  }
 
 	  	  Face::Vertices j_twin=j;
@@ -770,7 +791,6 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 	      CoordinateVector<> vert_position3;
 
 	      if (++j_twin==face_vector[i].last_vertex()) {
-	    	    //break;
 	    	    vert_position3 = vert_position1;
 	      }
 	      else {
@@ -785,14 +805,12 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 		    		+ (vert_position3[1]-vert_position2[1])*(projected_particle[1]-vert_position2[1])
 				+ (vert_position3[2]-vert_position2[2])*(projected_particle[2]-vert_position2[2])) /r12/r23;
 
-		  //double R=0.;
 		  double R_0=0.;
 		  double phi1=0.;
 		  double phi2=0.;
 
 		  if(fabs(cosa)<1.0){
 		    R_0 = r12 * sqrt(1-cosa*cosa);
-		    //printf("R_0: %g\n",R_0);
 	      }
 	      else {
 		    if(fabs(cosa)-1.0 < 0.00001){
@@ -807,7 +825,6 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 				-vert_position2[2]*vert_position3[1]) + projected_particle[1]*(vert_position2[2]
 				*vert_position3[0]-vert_position2[0]*vert_position3[2]) + projected_particle[2]*
 				(vert_position2[0]*vert_position3[1]-vert_position2[1]*vert_position3[0]);
-		    //printf("s1: %g\n", s1);
 
 		  if(R_0<r12){
 	        phi1 = acos(R_0/r12);
@@ -832,9 +849,7 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 	        }
 	      }
 
-		  //R = R_0/cos(phi1);
-		  //r = sqrt(r0*r0 + R*R);
-
+		  // Find out if the vertex integral will contribute positively or negatively to the cell mass.
 	      if(s1*s2*r0 <= 0) {
 	        M = -1.;
 	      }
@@ -842,23 +857,23 @@ double SPHNGSnapshotDensityFunction::mass_contribution(const Cell &cell, const C
 		    M = 1.;
 		  }
 
+	      // Calculate the vertex integral.
 		  if((r12*sin(phi1) >= r23) || (r13*sin(phi2) >= r23)) {
 		    if(phi1 >= phi2) {
-			  M = M*(full_integral_new(phi1, ar0, R_0, h) - full_integral_new(phi2, ar0, R_0, h));
+			  M = M*(full_integral(phi1, ar0, R_0, h) - full_integral(phi2, ar0, R_0, h));
 		    }
 		    else {
-			  M = M*(full_integral_new(phi2, ar0, R_0, h) - full_integral_new(phi1, ar0, R_0, h));
+			  M = M*(full_integral(phi2, ar0, R_0, h) - full_integral(phi1, ar0, R_0, h));
 		    }
 		  }
 		  else {
-		    M = M*(full_integral_new(phi1, ar0, R_0, h) + full_integral_new(phi2, ar0, R_0, h));
+		    M = M*(full_integral(phi1, ar0, R_0, h) + full_integral(phi2, ar0, R_0, h));
 		  }
 		  Msum = Msum+M;
 
 	    }
 	  }
 
-	  //printf("Msum: %g\n", Msum);
   return Msum;
 }
 
@@ -874,6 +889,7 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
 
   CoordinateVector<> position = cell.get_cell_midpoint();
 
+  // Find the vetex that is furthest away from the cell midpoint.
   std::vector< Face > face_vector=cell.get_faces();
   double radius = 0.0;
   for(unsigned int i=0; i<face_vector.size(); i++) {
@@ -883,19 +899,23 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
 	}
   }
 
+  // Find the neighbours that are contained inside of a sphere of centre the cell midpoint
+  // and radius given by the distance to the furthest vertex.
   std::vector< unsigned int > ngbs = _octree->get_ngbs_sphere(position, radius);
   const unsigned int numngbs = ngbs.size();
 
   double density = 0.;
 
+  // Loop over all the neighbouring particles and calculate their mass contributions.
   for (unsigned int i=0; i<numngbs; i++) {
 	  const unsigned int index = ngbs[i];
 	  const double h = _smoothing_lengths[index];
 	  const CoordinateVector<> particle = _positions[index];
 	  density += mass_contribution(cell, particle, h) * _masses[index];
   }
+
+  // Divide the cell mass by the cell volume to get density.
   density = density/cell.get_volume();
-  //printf("mass: %g\n",_masses[0]);
 
   // convert density to particle density (assuming hydrogen only)
   values.set_number_density(density / 1.6737236e-27);

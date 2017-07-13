@@ -80,7 +80,8 @@ private:
 
   static double kernel(const double q, const double h);
 
-  static double full_integral_new(double phi, double r0, double R_0, double h);
+  static double full_integral(double phi, double r0, double R_0, double h);
+
   static double mass_contribution(const Cell &cell, const CoordinateVector<> particle, const double h);
 
   /**
