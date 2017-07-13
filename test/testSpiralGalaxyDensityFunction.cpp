@@ -37,6 +37,7 @@
 int main(int argc, char **argv) {
   const double kpc = 3.086e19;
   SpiralGalaxyDensityFunction density_function(6.0 * kpc, 0.22 * kpc, 1.e6, 0);
+
   CoordinateVector<> anchor(-12. * kpc, -12. * kpc, -12. * kpc);
   CoordinateVector<> sides(24. * kpc, 24. * kpc, 24. * kpc);
   Box<> box(anchor, sides);

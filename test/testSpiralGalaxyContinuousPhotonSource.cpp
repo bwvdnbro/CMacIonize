@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "CCDImage.hpp"
 #include "SpiralGalaxyContinuousPhotonSource.hpp"
 #include <fstream>
 
@@ -43,10 +44,14 @@ int main(int argc, char **argv) {
                                             0.2);
   RandomGenerator random_generator(42);
 
-  std::vector< double > dens(64 * 64 * 64, 0.);
+  CCDImage image(0.5 * M_PI, 0., 200, 200, -12. * kpc, -12. * kpc, 24. * kpc,
+                 24. * kpc);
+  const unsigned int ntot = ncell.x() * ncell.y() * ncell.z();
+  std::vector< double > dens(ntot, 0.);
   for (unsigned int i = 0; i < 500000; ++i) {
     auto photon = source.get_random_incoming_direction(random_generator);
     const CoordinateVector<> p = photon.first;
+    image.add_photon(p, 1., 0., 0.);
     const unsigned int ix =
         ncell.x() * (p.x() - box_anchor.x()) / box_sides.x();
     const unsigned int iy =
@@ -58,9 +63,12 @@ int main(int argc, char **argv) {
     dens[index] += 1.;
   }
 
+  image.save("test_spiralgalaxycontinuousphotonsource_image",
+             CCDIMAGETYPE_BINARY_ARRAY);
+
   std::ofstream ofile("test_spiralgalaxycontinuousphotonsource.txt");
   ofile << "#x (m)\ty (m)\tz (m)\tnumber of photons\n";
-  for (unsigned int i = 0; i < 64 * 64 * 64; ++i) {
+  for (unsigned int i = 0; i < ntot; ++i) {
     const unsigned int ix = i / ncell.y() / ncell.z();
     const unsigned int iy = (i - ix * ncell.y() * ncell.z()) / ncell.z();
     const unsigned int iz = i - ix * ncell.y() * ncell.z() - iy * ncell.z();

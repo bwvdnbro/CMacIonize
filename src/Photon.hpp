@@ -78,6 +78,10 @@ private:
   /*! @brief Stokes parameters for scattering. */
   double _stokes_parameters[4];
 
+  /*! @brief Direction parameters: @f$\sin(\theta{})@f$, @f$\cos(\theta{})@f$,
+   *  @f$\phi{}@f$ (in radians), @f$\sin(\phi{})@f$, and @f$\cos(\phi{})@f$. */
+  double _direction_parameters[5];
+
 public:
   /**
    * @brief Constructor.
@@ -243,6 +247,44 @@ public:
     _stokes_parameters[1] = fq;
     _stokes_parameters[2] = fu;
     _stokes_parameters[3] = fv;
+  }
+
+  /**
+   * @brief Get the direction components of the photon direction.
+   *
+   * @param sin_theta Variable to store @f$\sin(\theta{})@f$ in.
+   * @param cos_theta Variable to store @f$\cos(\theta{})@f$ in.
+   * @param phi Variable to store @f$\phi@f$ in (in radians).
+   * @param sin_phi Variable to store @f$\sin(\phi{})@f$ in.
+   * @param cos_phi Variable to store @f$\cos(\phi{})@f$ in.
+   */
+  inline void get_direction_parameters(double &sin_theta, double &cos_theta,
+                                       double &phi, double &sin_phi,
+                                       double &cos_phi) const {
+    sin_theta = _direction_parameters[0];
+    cos_theta = _direction_parameters[1];
+    phi = _direction_parameters[2];
+    sin_phi = _direction_parameters[3];
+    cos_phi = _direction_parameters[4];
+  }
+
+  /**
+   * @brief Set new values for the direction components.
+   *
+   * @param sin_theta New value for @f$\sin(\theta{})@f$.
+   * @param cos_theta New value for @f$\cos(\theta{})@f$.
+   * @param phi New value for @f$\phi{}@f$ (in radians).
+   * @param sin_phi New value for @f$\sin(\phi{})@f$.
+   * @param cos_phi New value for @f$\cos(\phi{})@f$.
+   */
+  inline void set_direction_parameters(double sin_theta, double cos_theta,
+                                       double phi, double sin_phi,
+                                       double cos_phi) {
+    _direction_parameters[0] = sin_theta;
+    _direction_parameters[1] = cos_theta;
+    _direction_parameters[2] = phi;
+    _direction_parameters[3] = sin_phi;
+    _direction_parameters[4] = cos_phi;
   }
 };
 

@@ -177,8 +177,9 @@ public:
               RandomGenerator &random_generator) const;
 
   void scatter(Photon &photon, RandomGenerator &random_generator) const;
-  double scatter_towards(Photon &photon,
-                         const CoordinateVector<> direction) const;
+  double scatter_towards(Photon &photon, const CoordinateVector<> direction,
+                         double sint, double cost, double phi, double sinp,
+                         double cosp) const;
 };
 
 #endif // PHOTONSOURCE_HPP

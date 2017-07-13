@@ -38,11 +38,26 @@
 #define CCDIMAGE_NUM_LEVELS 255
 
 /**
+ * @brief Types of CCD image output file.
+ */
+enum CCDImageType {
+  /*! @brief Grayscale Netpbm format. */
+  CCDIMAGETYPE_PGM,
+  /*! @brief Binary floating point array. */
+  CCDIMAGETYPE_BINARY_ARRAY
+};
+
+/**
  * @brief CCD detector image.
  */
 class CCDImage {
 private:
-  /*! @brief Direction of the observer. */
+  /*! @brief Direction components: @f$\sin(\theta{})@f$, @f$\cos(\theta{})@f$,
+   *  @f$\phi{}@f$ (in radians), @f$\sin(\phi{})@f$, and @f$\cos(\phi{})@f$. */
+  const double _direction_parameters[5];
+
+  /*! @brief Direction of the observer (@f$(\sin(\theta{})\cos(\phi{}),
+   *  \sin(\theta{})\sin(\phi{}), \cos(\theta{}))@f$. */
   const CoordinateVector<> _direction;
 
   /*! @brief Combined flux image. */
@@ -67,7 +82,8 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param direction Direction of the observer.
+   * @param theta @f$\theta{}@f$ angle of the observer's direction (in radians).
+   * @param phi @f$\phi{}@f$ angle of the observer's direction (in radians).
    * @param resolution_x Number of pixels in the horizontal direction.
    * @param resolution_y Number of pixels in the vertical direction.
    * @param anchor_x Left corner of the image box (in kpc).
@@ -75,13 +91,17 @@ public:
    * @param sides_x Horizontal side length of the image box (in kpc).
    * @param sides_y Vertical side length of the image box (in kpc).
    */
-  inline CCDImage(const CoordinateVector<> direction, unsigned int resolution_x,
+  inline CCDImage(double theta, double phi, unsigned int resolution_x,
                   unsigned int resolution_y, double anchor_x, double anchor_y,
                   double sides_x, double sides_y)
-      : _direction(direction), _resolution{resolution_x, resolution_y},
-        _anchor{anchor_x, anchor_y}, _sides{sides_x, sides_y} {
-
-    cmac_assert(_direction.norm2() == 1.);
+      : _direction_parameters{std::sin(theta), std::cos(theta), phi,
+                              std::sin(phi), std::cos(phi)},
+        _direction(CoordinateVector<>(
+            _direction_parameters[0] * _direction_parameters[4],
+            _direction_parameters[0] * _direction_parameters[3],
+            _direction_parameters[1])),
+        _resolution{resolution_x, resolution_y}, _anchor{anchor_x, anchor_y},
+        _sides{sides_x, sides_y} {
 
     const double npixel = _resolution[0] * _resolution[1];
     _image_total.resize(npixel, 0.);
@@ -101,11 +121,26 @@ public:
   }
 
   /**
-   * @brief Get the direction of the observer.
+   * @brief Get the direction of the observer (and the direction components).
    *
+   * @param sin_theta Variable to store @f$\sin(\theta{})@f$ in.
+   * @param cos_theta Variable to store @f$\cos(\theta{})@f$ in.
+   * @param phi Variable to store @f$\phi{}@f$ in (in radians).
+   * @param sin_phi Variable to store @f$\sin(\phi{})@f$ in.
+   * @param cos_phi Variable to store @f$\cos(\phi{})@f$ in.
    * @return Direction of the observer.
    */
-  inline const CoordinateVector<> get_direction() const { return _direction; }
+  inline const CoordinateVector<> get_direction(double &sin_theta,
+                                                double &cos_theta, double &phi,
+                                                double &sin_phi,
+                                                double &cos_phi) const {
+    sin_theta = _direction_parameters[0];
+    cos_theta = _direction_parameters[1];
+    phi = _direction_parameters[2];
+    sin_phi = _direction_parameters[3];
+    cos_phi = _direction_parameters[4];
+    return _direction;
+  }
 
   /**
    * @brief Add a photon emitted from the given position and with the given
@@ -119,20 +154,10 @@ public:
   inline void add_photon(const CoordinateVector<> position, double weight_total,
                          double weight_Q, double weight_U) {
 
-    const double po = std::atan2(_direction.y(), _direction.x());
-    const double cospo = std::cos(po);
-    const double sinpo = std::sin(po);
-    const double costo = _direction.z();
-    double sinto = std::sqrt(std::max(0., 1. - costo * costo));
-    if (cospo * _direction.x() > 0) {
-      if (sinto * _direction.x() < 0) {
-        sinto = -sinto;
-      }
-    } else {
-      if (sinto * _direction.x() > 0) {
-        sinto = -sinto;
-      }
-    }
+    const double cospo = _direction_parameters[4];
+    const double sinpo = _direction_parameters[3];
+    const double costo = _direction_parameters[1];
+    const double sinto = _direction_parameters[0];
 
     double xphoton = position.y() * cospo - position.x() * sinpo;
     double yphoton = position.z() * sinto - position.y() * costo * sinpo -
@@ -179,47 +204,64 @@ public:
   }
 
   /**
-   * @brief Save the image as a PGM image with the given name.
+   * @brief Save the image as a file with the given name and type.
    *
    * @param filename Name of the image file.
+   * @param type Type of image to save.
    */
-  inline void save(std::string filename) const {
+  inline void save(std::string filename,
+                   CCDImageType type = CCDIMAGETYPE_PGM) const {
 
-    if (!Utilities::string_ends_with(filename, ".pgm")) {
-      filename += ".pgm";
-    }
+    if (type == CCDIMAGETYPE_PGM) {
 
-    double min_value = _image_total[0];
-    double max_value = _image_total[0];
-    for (unsigned int i = 1; i < _image_total.size(); ++i) {
-      min_value = std::min(min_value, _image_total[i]);
-      max_value = std::max(max_value, _image_total[i]);
-    }
-    max_value -= min_value;
-
-    std::ofstream image_file(filename);
-    image_file << "P2\n"
-               << _resolution[0] << " " << _resolution[1] << "\n"
-               << CCDIMAGE_NUM_LEVELS << "\n";
-    for (unsigned int iy = 0; iy < _resolution[1]; ++iy) {
-      unsigned int pixelvalue = 0;
-      if (max_value > 0.) {
-        pixelvalue = std::round(CCDIMAGE_NUM_LEVELS *
-                                (_image_total[iy] - min_value) / max_value);
+      if (!Utilities::string_ends_with(filename, ".pgm")) {
+        filename += ".pgm";
       }
-      image_file << pixelvalue;
-      for (unsigned int ix = 1; ix < _resolution[0]; ++ix) {
-        pixelvalue = 0;
+
+      double min_value = _image_total[0];
+      double max_value = _image_total[0];
+      for (unsigned int i = 1; i < _image_total.size(); ++i) {
+        min_value = std::min(min_value, _image_total[i]);
+        max_value = std::max(max_value, _image_total[i]);
+      }
+      max_value -= min_value;
+
+      std::ofstream image_file(filename);
+      image_file << "P2\n"
+                 << _resolution[0] << " " << _resolution[1] << "\n"
+                 << CCDIMAGE_NUM_LEVELS << "\n";
+      for (unsigned int iy = 0; iy < _resolution[1]; ++iy) {
+        unsigned int pixelvalue = 0;
         if (max_value > 0.) {
-          pixelvalue = std::round(
-              CCDIMAGE_NUM_LEVELS *
-              (_image_total[ix * _resolution[1] + iy] - min_value) / max_value);
+          pixelvalue = std::round(CCDIMAGE_NUM_LEVELS *
+                                  (_image_total[iy] - min_value) / max_value);
         }
-        image_file << " " << pixelvalue;
+        image_file << pixelvalue;
+        for (unsigned int ix = 1; ix < _resolution[0]; ++ix) {
+          pixelvalue = 0;
+          if (max_value > 0.) {
+            pixelvalue = std::round(
+                CCDIMAGE_NUM_LEVELS *
+                (_image_total[ix * _resolution[1] + iy] - min_value) /
+                max_value);
+          }
+          image_file << " " << pixelvalue;
+        }
+        image_file << "\n";
       }
-      image_file << "\n";
+      image_file.close();
+
+    } else {
+
+      if (!Utilities::string_ends_with(filename, ".dat")) {
+        filename += ".dat";
+      }
+
+      std::ofstream array_file(filename, std::ios::binary);
+      array_file.write(reinterpret_cast< const char * >(&_image_total[0]),
+                       _image_total.size() * sizeof(double));
+      array_file.close();
     }
-    image_file.close();
   }
 };
 

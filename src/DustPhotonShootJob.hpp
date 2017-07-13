@@ -101,13 +101,26 @@ public:
 
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
+      // overwrite direction
+      double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
+      double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+      double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
+      double cosp = std::cos(phi);
+      double sinp = std::sin(phi);
+      const CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
+      photon.set_direction(direction);
+      photon.set_direction_parameters(sint, cost, phi, sinp, cosp);
+      // overwrite cross section
+      photon.set_cross_section(ION_H_n, 1.);
 
       Photon old_photon(photon);
-      old_photon.set_direction(_image.get_direction());
+      old_photon.set_direction(
+          _image.get_direction(sint, cost, phi, sinp, cosp));
       const double tau_old = _density_grid.integrate_optical_depth(old_photon);
       _image.add_photon(old_photon.get_position(),
                         0.25 * std::exp(-tau_old) / M_PI, 0., 0.);
 
+      continue;
       double albedo = 1.;
       // make sure the photon scatters at least once by forcing a first
       // interaction
@@ -120,8 +133,10 @@ public:
 
         // peel off a photon towards the observer
         Photon new_photon(photon);
-        const double hgfac =
-            _photon_source.scatter_towards(new_photon, _image.get_direction());
+        const CoordinateVector<> direction_new =
+            _image.get_direction(sint, cost, phi, sinp, cosp);
+        const double hgfac = _photon_source.scatter_towards(
+            new_photon, direction_new, sint, cost, phi, sinp, cosp);
         const double tau_new =
             _density_grid.integrate_optical_depth(new_photon);
         double fi, fq, fu, fv;

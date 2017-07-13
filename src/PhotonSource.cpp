@@ -373,6 +373,7 @@ void PhotonSource::scatter(Photon &photon,
 
   double fi_new, fq_new, fu_new, fv_new;
   CoordinateVector<> direction_new;
+  double sin_theta_new, cos_theta_new, phi_new, sin_phi_new, cos_phi_new;
 
   if (std::abs(bmu) == 1.) {
 
@@ -386,25 +387,16 @@ void PhotonSource::scatter(Photon &photon,
     fv_new = fv;
 
     direction_new = photon.get_direction();
+    photon.get_direction_parameters(sin_theta_new, cos_theta_new, phi_new,
+                                    sin_phi_new, cos_phi_new);
 
   } else {
 
     const double weight = fi_old;
 
-    const CoordinateVector<> direction_old = photon.get_direction();
-    const double cos_theta_old = direction_old.z();
-    const double phi_old = std::atan2(direction_old.y(), direction_old.x());
-    double sin_theta_old =
-        std::sqrt(std::max(0., 1. - cos_theta_old * cos_theta_old));
-    if (cos_theta_old * direction_old.x() > 0) {
-      if (sin_theta_old * direction_old.x() < 0) {
-        sin_theta_old = -sin_theta_old;
-      }
-    } else {
-      if (sin_theta_old * direction_old.x() > 0) {
-        sin_theta_old = -sin_theta_old;
-      }
-    }
+    double sin_theta_old, cos_theta_old, phi_old, sin_phi_old, cos_phi_old;
+    photon.get_direction_parameters(sin_theta_old, cos_theta_old, phi_old,
+                                    sin_phi_old, cos_phi_old);
 
     const double cosb2 = bmu * bmu;
     const double b = cosb2 - 1.;
@@ -426,7 +418,6 @@ void PhotonSource::scatter(Photon &photon,
     const double ri1 = 2. * M_PI * random_generator.get_uniform_random_double();
 
     double a11, a12, a13, a21, a22, a23, a24, a31, a32, a33, a34, a42, a43, a44;
-    double phi_new, cos_theta_new, sin_theta_new;
 
     if (ri1 > M_PI) {
 
@@ -457,10 +448,10 @@ void PhotonSource::scatter(Photon &photon,
           std::min(1., std::max(-1., -cosi2 * cosi3 + sini2 * sini3 * bmu));
       phi_new = phi_old + std::acos(cosdph);
       if (phi_new > 2. * M_PI) {
-        phi_new = phi_old - 2. * M_PI;
+        phi_new -= 2. * M_PI;
       }
       if (phi_new < 0.) {
-        phi_new = phi_new + 2. * M_PI;
+        phi_new += 2. * M_PI;
       }
 
       const double sin2i2 = 2. * sini2 * cosi2;
@@ -473,15 +464,18 @@ void PhotonSource::scatter(Photon &photon,
       a11 = p1;
       a12 = p2 * cos2i3;
       a13 = p2 * sin2i3;
+
       a21 = p2 * cos2i2;
       a22 = p1 * cos2 - p3 * sin2;
       a23 = p1 * cos2sin1 + p3 * sin2cos1;
       a24 = -p4 * sin2i2;
+
       a31 = -p2 * sin2i2;
       a32 = -p1 * sin2cos1 - p3 * cos2sin1;
       a33 = -p1 * sin2 + p3 * cos2;
       a34 = -p4 * cos2i2;
-      a42 = -p4 * cos2i2;
+
+      a42 = -p4 * sin2i3;
       a43 = p4 * cos2i3;
       a44 = p3;
 
@@ -513,10 +507,10 @@ void PhotonSource::scatter(Photon &photon,
           std::min(1., std::max(-1., -cosi2 * cosi1 + sini2 * sini1 * bmu));
       phi_new = phi_old - std::acos(cosdph);
       if (phi_new > 2. * M_PI) {
-        phi_new = phi_old - 2. * M_PI;
+        phi_new -= 2. * M_PI;
       }
       if (phi_new < 0.) {
-        phi_new = phi_new + 2. * M_PI;
+        phi_new += 2. * M_PI;
       }
 
       const double sin2i2 = 2. * sini2 * cosi2;
@@ -528,16 +522,19 @@ void PhotonSource::scatter(Photon &photon,
 
       a11 = p1;
       a12 = p2 * cos2i1;
-      a13 = p2 * sin2i1;
+      a13 = -p2 * sin2i1;
+
       a21 = p2 * cos2i2;
       a22 = p1 * cos2 - p3 * sin2;
       a23 = -p1 * cos2sin1 - p3 * sin2cos1;
       a24 = p4 * sin2i2;
+
       a31 = p2 * sin2i2;
       a32 = p1 * sin2cos1 + p3 * cos2sin1;
       a33 = -p1 * sin2 + p3 * cos2;
       a34 = -p4 * cos2i2;
-      a42 = p4 * cos2i2;
+
+      a42 = p4 * sin2i1;
       a43 = p4 * cos2i1;
       a44 = p3;
     }
@@ -552,13 +549,17 @@ void PhotonSource::scatter(Photon &photon,
     fu_new = su * weight;
     fv_new = sv * weight;
 
-    direction_new[0] = sin_theta_new * std::cos(phi_new);
-    direction_new[1] = sin_theta_new * std::sin(phi_new);
+    cos_phi_new = std::cos(phi_new);
+    sin_phi_new = std::sin(phi_new);
+    direction_new[0] = sin_theta_new * cos_phi_new;
+    direction_new[1] = sin_theta_new * sin_phi_new;
     direction_new[2] = cos_theta_new;
   }
 
   photon.set_stokes_parameters(fi_new, fq_new, fu_new, fv_new);
   photon.set_direction(direction_new);
+  photon.set_direction_parameters(sin_theta_new, cos_theta_new, phi_new,
+                                  sin_phi_new, cos_phi_new);
 }
 
 /**
@@ -570,27 +571,27 @@ void PhotonSource::scatter(Photon &photon,
  *
  * @param photon Photon to scatter.
  * @param direction Direction in which the photon is observed.
+ * @param sint @f$\sin(\theta{})@f$ of the observation direction.
+ * @param cost @f$\cos(\theta{})@f$ of the observation direction.
+ * @param phi @f$\phi{}@f$ of the observation direction (in radians).
+ * @param sinp @f$\sin(\phi{})@f$ of the observation direction.
+ * @param cosp @f$\cos(\phi{})@f$ of the observation direction.
  * @return Weight of the scattered photon.
  */
 double PhotonSource::scatter_towards(Photon &photon,
-                                     const CoordinateVector<> direction) const {
+                                     const CoordinateVector<> direction,
+                                     double sint, double cost, double phi,
+                                     double sinp, double cosp) const {
 
+  double cos_theta_old, sin_theta_old, phi_old, sin_phi_old, cos_phi_old;
   const CoordinateVector<> direction_old = photon.get_direction();
+  photon.get_direction_parameters(sin_theta_old, cos_theta_old, phi_old,
+                                  sin_phi_old, cos_phi_old);
 
   const double calpha =
       CoordinateVector<>::dot_product(direction, direction_old);
-  const double cos_theta = direction.z();
-  const double phi = std::atan2(direction.y(), direction.x());
-  double sin_theta = std::sqrt(std::max(0., 1. - cos_theta * cos_theta));
-  if (cos_theta * direction.x() > 0) {
-    if (sin_theta * direction.x() < 0) {
-      sin_theta = -sin_theta;
-    }
-  } else {
-    if (sin_theta * direction.x() > 0) {
-      sin_theta = -sin_theta;
-    }
-  }
+  const double cos_theta = cost;
+  double sin_theta = sint;
 
   // Stokes parameters
   double fi_old, fq_old, fu_old, fv_old;
@@ -619,20 +620,6 @@ double PhotonSource::scatter_towards(Photon &photon,
   } else {
 
     const double weight = fi_old;
-
-    const double cos_theta_old = direction_old.z();
-    const double phi_old = std::atan2(direction_old.y(), direction_old.x());
-    double sin_theta_old =
-        std::sqrt(std::max(0., 1. - cos_theta_old * cos_theta_old));
-    if (cos_theta_old * direction_old.x() > 0) {
-      if (sin_theta_old * direction_old.x() < 0) {
-        sin_theta_old = -sin_theta_old;
-      }
-    } else {
-      if (sin_theta_old * direction_old.x() > 0) {
-        sin_theta_old = -sin_theta_old;
-      }
-    }
 
     const double cosb2 = bmu * bmu;
     const double b = cosb2 - 1.;
@@ -696,15 +683,18 @@ double PhotonSource::scatter_towards(Photon &photon,
       a11 = p1;
       a12 = p2 * cos2i3;
       a13 = p2 * sin2i3;
+
       a21 = p2 * cos2i2;
       a22 = p1 * cos2 - p3 * sin2;
       a23 = p1 * cos2sin1 + p3 * sin2cos1;
       a24 = -p4 * sin2i2;
+
       a31 = -p2 * sin2i2;
       a32 = -p1 * sin2cos1 - p3 * cos2sin1;
       a33 = -p1 * sin2 + p3 * cos2;
       a34 = -p4 * cos2i2;
-      a42 = -p4 * cos2i2;
+
+      a42 = -p4 * sin2i3;
       a43 = p4 * cos2i3;
       a44 = p3;
 
@@ -738,16 +728,19 @@ double PhotonSource::scatter_towards(Photon &photon,
 
       a11 = p1;
       a12 = p2 * cos2i1;
-      a13 = p2 * sin2i1;
+      a13 = -p2 * sin2i1;
+
       a21 = p2 * cos2i2;
       a22 = p1 * cos2 - p3 * sin2;
       a23 = -p1 * cos2sin1 - p3 * sin2cos1;
       a24 = p4 * sin2i2;
+
       a31 = p2 * sin2i2;
       a32 = p1 * sin2cos1 + p3 * cos2sin1;
       a33 = -p1 * sin2 + p3 * cos2;
       a34 = -p4 * cos2i2;
-      a42 = p4 * cos2i2;
+
+      a42 = p4 * sin2i1;
       a43 = p4 * cos2i1;
       a44 = p3;
     }
@@ -764,6 +757,7 @@ double PhotonSource::scatter_towards(Photon &photon,
   }
 
   photon.set_direction(direction);
+  photon.set_direction_parameters(sint, cost, phi, sinp, cosp);
   photon.set_stokes_parameters(fi_new, fq_new, fu_new, fv_new);
 
   return 0.25 * _scattering_omg2 *

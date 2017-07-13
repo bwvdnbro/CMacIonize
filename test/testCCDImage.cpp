@@ -36,7 +36,7 @@
 int main(int argc, char **argv) {
 
   RandomGenerator random_generator(42);
-  CCDImage image(CoordinateVector<>(1., 0., 0.), 1000, 1000, 0., 0., 1., 1.);
+  CCDImage image(0., 0., 1000, 1000, 0., 0., 1., 1.);
 
   for (unsigned int i = 0; i < 1000000; ++i) {
     const double r =
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     image.add_photon(position, 1., 0., 0.);
   }
 
-  CCDImage image2(CoordinateVector<>(1., 0., 0.), 1000, 1000, 0., 0., 1., 1.);
+  CCDImage image2(0., 0., 1000, 1000, 0., 0., 1., 1.);
   for (unsigned int i = 0; i < 100000; ++i) {
     const double r =
         0.2 * std::sqrt(random_generator.get_uniform_random_double());
