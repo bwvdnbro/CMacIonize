@@ -1,0 +1,17 @@
+Dusty galaxy benchmark
+
+This benchmark consists of a galaxy luminosity model with a bulge and a disc,
+with in the centre a disc of dust that scatters light. The parameters of both
+the source disc and the dust disc can be customized, as well as the source
+bulge to total ratio.
+
+This setup is used in a galaxy lab taught at the University of St Andrews.
+
+This test can be run using the provided parameter file dusty_galaxy.param
+(the extra command line option --dusty-radiative-transfer is required for this
+test!). The resulting galaxy image can be plotted using the provided Python
+script.
+
+List of files necessary for this benchmark test:
+input:dusty_galaxy.param
+input:dusty_galaxy.py
