@@ -943,6 +943,29 @@ set(TESTCCDIMAGE_SOURCES
 add_unit_test(NAME testCCDImage
               SOURCES ${TESTCCDIMAGE_SOURCES})
 
+## Unit test for DustSimulation
+set(TESTDUSTSIMULATION_SOURCES
+    testDustSimulation.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/CommandLineOption.cpp
+    ../src/CommandLineParser.cpp
+    ../src/DensityGrid.cpp
+    ../src/DustSimulation.cpp
+    ../src/DustSimulation.hpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/ParameterFile.cpp
+    ../src/PhotonSource.cpp
+    ../src/VernerCrossSections.cpp
+)
+add_unit_test(NAME testDustSimulation
+              SOURCES ${TESTDUSTSIMULATION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_dustsimulation.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_dustsimulation.param
+               COPYONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

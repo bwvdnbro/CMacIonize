@@ -43,24 +43,17 @@ private:
   /*! @brief Box containing the luminosity distribution grid (in m). */
   const Box<> _box;
 
-  /*! @brief Number of cells in each dimension. */
-  const CoordinateVector< unsigned int > _ncell;
-
-  /*! @brief Luminosity distribution grid. */
-  std::vector< double > _luminosities;
-
   /*! @brief Conversion factor from kpc to m (in m). */
   const double _kpc;
 
-  /*! @brief Cutoff radius of the bulge (in m). */
-  const double _rbulge;
+  /*! @brief Inner cutoff radius of the bulge (in m). */
+  const double _rC;
+
+  /*! @brief Outer cutoff radius of the bulge (in m). */
+  const double _rB;
 
   /*! @brief Scale radius of the bulge (in m). */
-  const double _r_jaffe;
-
-  /*! @brief Luminosity of the bulge (no unit, as we are only interested in the
-   *  distribution function). */
-  const double _lb0;
+  const double _rJ;
 
   /*! @brief Scale length @f$r_*@f$ of the stellar disk (in m). */
   const double _rstars;
@@ -68,15 +61,14 @@ private:
   /*! @brief Scale height @f$h_*@f$ of the stellar disk (in m). */
   const double _hstars;
 
-  /*! @brief Luminosity of the disk (no unit, as we are only interested in the
-   *  distribution function). */
-  const double _ld0;
-
   /*! @brief Fraction of the total luminosity that comes from the bulge. */
-  const double _bulge_to_total;
+  double _bulge_to_total;
 
   /*! @brief Constant used to sample from the bulge. */
   const double _rB_over_rJ_plus_rB;
+
+  /*! @brief Constant used to sample from the bulge. */
+  const double _rC_over_rJ_plus_rC;
 
   /*! @brief Cumulative disc luminosity distribution: x coordinates (in m). */
   std::vector< double > _cumulative_distribution_x;
@@ -84,110 +76,53 @@ private:
   /*! @brief Cumulative disc luminosity distribution: y coordinates. */
   std::vector< double > _cumulative_distribution_y;
 
-  /**
-   * @brief Get the luminosity value at the given position.
-   *
-   * @param position Position (in m).
-   * @return Luminosity (no unit, as we are only interested in the distribution
-   * function).
-   */
-  inline double get_luminosity(const CoordinateVector<> position) const {
-    const double w2 = position.x() * position.x() + position.y() * position.y();
-    const double w = std::sqrt(w2);
-    const double r2 = w2 + position.z() * position.z();
-    const double r = std::sqrt(r2);
-    double lbulge = 0.;
-    if (r < _rbulge && r > 0.2 * _kpc) {
-      const double u = r / _r_jaffe;
-      const double up1 = 1. + u;
-      lbulge = 0.25 * _lb0 / (M_PI * u * u * up1 * up1);
-    }
-    double ldisk = 0.;
-    if (r < 15. * _kpc) {
-      ldisk = _ld0 * std::exp(-std::abs(position.z()) / _hstars) *
-              std::exp(-w / _rstars);
-    }
-    return ldisk + lbulge;
-  }
-
 public:
   /**
    * @brief Constructor.
    *
    * @param box Box containing the luminosity distribution grid (in m).
-   * @param ncell Number of cells in each dimension.
    * @param rstars Scale length @f$r_*@f$ of the stellar disk (in m).
    * @param hstars Scale height @f$h_*@f$ of the stellar disk (in m).
    * @param B_over_T Ratio of the bulge luminosity and the total luminosity,
    * @f$B/T@f$.
    * @param log Log to write logging info to.
    */
-  SpiralGalaxyContinuousPhotonSource(
-      const Box<> box, const CoordinateVector< unsigned int > ncell,
-      double rstars, double hstars, double B_over_T, Log *log = nullptr)
-      : _box(box), _ncell(ncell), _kpc(3.086e19), _rbulge(2. * _kpc),
-        _r_jaffe(0.4 * _kpc),
-        _lb0(B_over_T / (_r_jaffe * _r_jaffe * _r_jaffe *
-                         (1. - 1. / (1. + _rbulge / _r_jaffe)))),
-        _rstars(rstars), _hstars(hstars),
-        _ld0(0.25 * (1. - B_over_T) / (M_PI * _hstars * _rstars * _rstars)),
-        _bulge_to_total(B_over_T),
-        _rB_over_rJ_plus_rB(_rbulge / (_rbulge + _r_jaffe)) {
+  SpiralGalaxyContinuousPhotonSource(const Box<> box, double rstars,
+                                     double hstars, double B_over_T,
+                                     Log *log = nullptr)
+      : _box(box), _kpc(3.086e19), _rC(0.2 * _kpc), _rB(2. * _kpc),
+        _rJ(0.4 * _kpc), _rstars(rstars), _hstars(hstars),
+        _bulge_to_total(B_over_T), _rB_over_rJ_plus_rB(_rB / (_rB + _rJ)),
+        _rC_over_rJ_plus_rC(_rC / (_rC + _rJ)) {
 
-    _cumulative_distribution_x.resize(1000, 0.);
-    _cumulative_distribution_y.resize(1000, 0.);
-    for (unsigned int i = 0; i < 999; ++i) {
-      const double w = i * 15. * _kpc * 0.001;
+    // the total bulge luminosity is 4\pi L_{B,0} r_j^3 (\frac{r_b}{r_j+r_b})
+    // however, we cut off the bulge in the inner r_c = 0.2 kpc, removing a part
+    // 4 \pi L_{B,0} r_j^3(\frac{r_c}{r_j+r_c})
+    // this means that the part of the bulge we sample has a lower luminosity,
+    // and the sampled bulge to total needs to be adjusted
+    _bulge_to_total *= (1. - _rC_over_rJ_plus_rC / _rB_over_rJ_plus_rB);
+
+    // we assume the box is centered on (0., 0., 0.)
+    const double rmax = 1.2 * _box.get_anchor().norm();
+    const unsigned int nbin = 1000;
+    _cumulative_distribution_x.resize(nbin + 1, 0.);
+    _cumulative_distribution_y.resize(nbin + 1, 0.);
+    for (unsigned int i = 0; i < nbin; ++i) {
+      const double w = i * rmax / nbin;
       _cumulative_distribution_x[i] = w;
       const double x = w / _rstars;
       _cumulative_distribution_y[i] = 1. - (1. + x) * std::exp(-x);
     }
-    _cumulative_distribution_x[999] = 15. * _kpc;
-    _cumulative_distribution_y[999] = 1.;
-
-    const unsigned int ntot = ncell.x() * ncell.y() * ncell.z() + 1;
-    _luminosities.resize(ntot);
-    unsigned int index = 0;
-    for (unsigned int ix = 0; ix < ncell.x(); ++ix) {
-      for (unsigned int iy = 0; iy < ncell.y(); ++iy) {
-        for (unsigned int iz = 0; iz < ncell.z(); ++iz) {
-          const CoordinateVector<> position(
-              box.get_anchor().x() +
-                  (ix + 0.5) * box.get_sides().x() / ncell.x(),
-              box.get_anchor().y() +
-                  (iy + 0.5) * box.get_sides().y() / ncell.y(),
-              box.get_anchor().z() +
-                  (iz + 0.5) * box.get_sides().z() / ncell.z());
-
-          _luminosities[index] = get_luminosity(position);
-          ++index;
-        }
-      }
-    }
-    _luminosities[index] = 0.;
-    ++index;
-
-    cmac_assert(index == ntot);
-
-    // make cumulative
-    for (unsigned int i = 1; i < ntot; ++i) {
-      _luminosities[i] += _luminosities[i - 1];
-    }
-
-    // normalize
-    for (unsigned int i = 0; i < ntot; ++i) {
-      _luminosities[i] /= _luminosities.back();
-    }
+    // we make sure the maximum of our distribution is outside the box, so that
+    // positions sampled in that bin always end up being thrown away...
+    _cumulative_distribution_x[nbin] = rmax;
+    _cumulative_distribution_y[nbin] = 1.;
 
     if (log) {
-      log->write_status("Constructed SpiralGalaxyContinuousPhotonSource in a "
-                        "box with anchor [",
-                        _box.get_anchor().x(), " m, ", _box.get_anchor().y(),
-                        " m, ", _box.get_anchor().z(), " m] and sides [",
-                        _box.get_sides().x(), " m, ", _box.get_sides().y(),
-                        " m, ", _box.get_sides().z(),
-                        " m], with a disc scale length of ", _rstars,
-                        " m, and a disc scale height of ", _hstars, " m.");
+      log->write_status("Constructed SpiralGalaxyContinuousPhotonSource with a "
+                        "disc scale length of ",
+                        _rstars, " m, a disc scale height of ", _hstars,
+                        " m, and a bulge to total ratio of ", B_over_T, ".");
     }
   }
 
@@ -204,9 +139,6 @@ public:
                     "densitygrid:box_anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_sides", "[24. kpc, 24. kpc, 24. kpc]")),
-            params.get_value< CoordinateVector< unsigned int > >(
-                "continuousphotonsource:ncell",
-                CoordinateVector< unsigned int >(201)),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "continuousphotonsource:r_stars", "5. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
@@ -239,12 +171,38 @@ public:
    *   L_{B,0} = \frac{1+\frac{r_B}{r_J}}{4\pi{}r_J^2r_B}.
    * @f]
    *
-   * If @f$u@f$ is a random uniform number in the range [0,1], then we can find
-   * a radius @f$r@f$ distributed according to the bulge luminosity distribution
-   * by inverting the cumulative distribution @f$L_B(<r)@f$:
+   * If @f$u@f$ is a random uniform number in the range @f$[0,1]@f$, then we can
+   * find a radius @f$r@f$ distributed according to the bulge luminosity
+   * distribution by inverting the cumulative distribution @f$L_B(<r)@f$:
    * @f[
-   *   r = \frac{r_J}{1 - \left(\frac{r_B}{r_J+r_B}\right)u} - r_J.
+   *   r = \frac{r_J}{\frac{1}{\left(\frac{r_B}{r_J+r_B}\right)u}-1}.
    * @f]
+   *
+   * For the specific case here, we also use an inner cutoff radius @f$r_C@f$.
+   * The integrated luminosity within some radius @f$r \geq{} r_C@f$ is
+   * @f[
+   *   L_B(r_C \leq{} r) = 4\pi{}L_{B,0}r_J^3\left(\frac{r}{r+r_J} -
+   *   \frac{r_C}{r_C + r_J} \right).
+   * @f]
+   * Still requiring that the total luminosity within @f$[r_C, r_B]@f$ is unity,
+   * we get a new value for the constant @f$L_{B,0}@f$:
+   * @f[
+   *   L_{B,0} = \frac{1}{4\pi{}r_J^3}\frac{1}{\frac{r_B}{r_J+r_B} -
+   *   \frac{r_C}{r_J+r_C}} = \frac{1}{4\pi{}r_J^3}\frac{1}{r_{BJ} - r_{CJ}},
+   * @f]
+   * where we introduced @f$r_{BJ} = \frac{r_B}{r_J+r_B}@f$ and @f$r_{CJ} =
+   * \frac{r_C}{r_J+r_C}@f$.
+   *
+   * Plugging this into the expression for the integrated luminosity, we get
+   * @f[
+   *   L_B(r_C \leq{} r) = \frac{1}{r_{BJ}-r_{CJ}} \left(\frac{r}{r+r_J} -
+   *   r_{CJ} \right).
+   * @f]
+   * If @f$u@f$ is a random uniform number in the range @f$[0,1]@f$, then
+   * @f[
+   *   r = \frac{r_J}{\frac{1}{r_{BJ}u + (1-u)r_{CJ}}-1}
+   * @f]
+   * is distributed according to the truncated bulge luminosity function.
    *
    * The disc luminosity is given by
    * @f[
@@ -282,7 +240,7 @@ public:
    * can sample the polar coordinate and the height separately.
    *
    * The height distribution can be easily inverted: if @f$u@f$ is a random
-   * uniform number in the range [0,1], then
+   * uniform number in the range @f$[0,1]@f$, then
    * @f[
    *   |z| = -h \ln{u}.
    * @f]
@@ -315,7 +273,9 @@ public:
       if (x_bulge <= _bulge_to_total) {
         // sample from bulge
         const double u = random_generator.get_uniform_random_double();
-        const double r = _r_jaffe / (1. - _rB_over_rJ_plus_rB * u) - _r_jaffe;
+        const double A =
+            u * _rB_over_rJ_plus_rB + (1. - u) * _rC_over_rJ_plus_rC;
+        const double r = _rJ / (1. / A - 1.);
         const double phi =
             2. * M_PI * random_generator.get_uniform_random_double();
         const double cost =
@@ -339,11 +299,12 @@ public:
         const double u2 = random_generator.get_uniform_random_double();
         unsigned int i = Utilities::locate(u2, &_cumulative_distribution_y[0],
                                            _cumulative_distribution_y.size());
-        const double w =
-            (u2 - _cumulative_distribution_y[i]) /
-            (_cumulative_distribution_y[i + 1] -
-             _cumulative_distribution_y[i]) *
-            (_cumulative_distribution_x[i + 1] - _cumulative_distribution_x[i]);
+        const double w = _cumulative_distribution_x[i] +
+                         (u2 - _cumulative_distribution_y[i]) /
+                             (_cumulative_distribution_y[i + 1] -
+                              _cumulative_distribution_y[i]) *
+                             (_cumulative_distribution_x[i + 1] -
+                              _cumulative_distribution_x[i]);
         position[0] = w * std::cos(phi);
         position[1] = w * std::sin(phi);
         position[2] = z;

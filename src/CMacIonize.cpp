@@ -390,8 +390,9 @@ int main(int argc, char **argv) {
   //  *grid, 0,
   //                                                 100, worksize);
   const double kpc = 3.086e19;
-  CCDImage dust_image(0.5 * M_PI, 0., 200, 200, -12.1 * kpc, -12.1 * kpc,
-                      24.2 * kpc, 24.2 * kpc);
+  CCDImage dust_image(89.7 * M_PI / 180., 0., 200, 200, -12.1 * kpc,
+                      -12.1 * kpc, 24.2 * kpc, 24.2 * kpc, "BinaryArray",
+                      "galaxy_image", ".");
   dustphotonshootjobs = new DustPhotonShootJobMarket(
       source, random_seed, *grid, 0, dust_image, 100, worksize);
 
@@ -577,7 +578,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  dust_image.save("galaxy_image", CCDIMAGETYPE_BINARY_ARRAY);
+  dust_image.save(1. / numphoton);
 
   programtimer.stop();
   if (log) {

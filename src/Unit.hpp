@@ -37,6 +37,8 @@
  * mass, temperature, and current. The exponents specify the power of the unit
  * of that quantity when the unit is written out as a string, e.g.
  * Unit(1., 1, 2, -3, 4, -5) --> 1. m s^2 kg^-3 K^4 A^-5.
+ *
+ * To support angle conversions, we added a 6th quantity.
  */
 class Unit {
 private:
@@ -58,6 +60,9 @@ private:
   /*! @brief Current scale exponent. */
   int _current;
 
+  /*! @brief 1D angular scale exponent. */
+  int _angle;
+
 public:
   /**
    * @brief Constructor.
@@ -68,11 +73,12 @@ public:
    * @param mass Mass scale exponent.
    * @param temperature Temperature scale exponent.
    * @param current Current scale exponent.
+   * @param angle 1D angular scale exponent.
    */
   inline Unit(double value, int length, int time, int mass, int temperature,
-              int current)
+              int current, int angle)
       : _value(value), _length(length), _time(time), _mass(mass),
-        _temperature(temperature), _current(current) {}
+        _temperature(temperature), _current(current), _angle(angle) {}
 
   /**
    * @brief Multiply another Unit with this one.
@@ -87,6 +93,7 @@ public:
     _mass += unit._mass;
     _temperature += unit._temperature;
     _current += unit._current;
+    _angle += unit._angle;
     return *this;
   }
 
@@ -103,6 +110,7 @@ public:
     _mass -= unit._mass;
     _temperature -= unit._temperature;
     _current -= unit._current;
+    _angle -= unit._angle;
     return *this;
   }
 
@@ -134,6 +142,7 @@ public:
     _mass *= power;
     _temperature *= power;
     _current *= power;
+    _angle *= power;
     return *this;
   }
 
@@ -166,7 +175,7 @@ public:
   inline bool is_same_quantity(Unit unit) const {
     return _length == unit._length && _time == unit._time &&
            _mass == unit._mass && _temperature == unit._temperature &&
-           _current == unit._current;
+           _current == unit._current && _angle == unit._angle;
   }
 
   /**
@@ -216,6 +225,12 @@ public:
       stream << " A";
       if (_current != 1) {
         stream << "^" << _current;
+      }
+    }
+    if (_angle != 0) {
+      stream << " radians";
+      if (_angle != 1) {
+        stream << "^" << _angle;
       }
     }
     return stream.str();

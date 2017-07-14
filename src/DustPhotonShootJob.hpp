@@ -101,7 +101,8 @@ public:
 
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
-      // overwrite direction
+      // overwrite direction: we need the direction components to speed things
+      // up in other parts of the algorithm
       double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
       double sint = std::sqrt(std::max(1. - cost * cost, 0.));
       double phi = 2. * M_PI * _random_generator.get_uniform_random_double();
@@ -120,7 +121,6 @@ public:
       _image.add_photon(old_photon.get_position(),
                         0.25 * std::exp(-tau_old) / M_PI, 0., 0.);
 
-      continue;
       double albedo = 1.;
       // make sure the photon scatters at least once by forcing a first
       // interaction

@@ -40,12 +40,12 @@ int main(int argc, char **argv) {
   const CoordinateVector<> box_sides(24. * kpc);
   const Box<> box(box_anchor, box_sides);
   const CoordinateVector< unsigned int > ncell(64);
-  SpiralGalaxyContinuousPhotonSource source(box, ncell, 5. * kpc, 0.6 * kpc,
-                                            0.2);
+  SpiralGalaxyContinuousPhotonSource source(box, 5. * kpc, 0.6 * kpc, 0.2);
   RandomGenerator random_generator(42);
 
   CCDImage image(0.5 * M_PI, 0., 200, 200, -12. * kpc, -12. * kpc, 24. * kpc,
-                 24. * kpc);
+                 24. * kpc, "BinaryArray",
+                 "test_spiralgalaxycontinuousphotonsource_image", ".");
   const unsigned int ntot = ncell.x() * ncell.y() * ncell.z();
   std::vector< double > dens(ntot, 0.);
   for (unsigned int i = 0; i < 500000; ++i) {
@@ -63,8 +63,7 @@ int main(int argc, char **argv) {
     dens[index] += 1.;
   }
 
-  image.save("test_spiralgalaxycontinuousphotonsource_image",
-             CCDIMAGETYPE_BINARY_ARRAY);
+  image.save();
 
   std::ofstream ofile("test_spiralgalaxycontinuousphotonsource.txt");
   ofile << "#x (m)\ty (m)\tz (m)\tnumber of photons\n";

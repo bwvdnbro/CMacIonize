@@ -60,6 +60,7 @@
  */
 enum Quantity {
   QUANTITY_ACCELERATION,
+  QUANTITY_ANGLE,
   QUANTITY_DENSITY,
   QUANTITY_ENERGY,
   QUANTITY_ENERGY_CHANGE_RATE,
@@ -94,52 +95,57 @@ public:
   static inline Unit get_single_unit(std::string name) {
     /// length units
     if (name == "m") {
-      return Unit(1., 1, 0, 0, 0, 0);
+      return Unit(1., 1, 0, 0, 0, 0, 0);
     } else if (name == "cm") {
-      return Unit(0.01, 1, 0, 0, 0, 0);
+      return Unit(0.01, 1, 0, 0, 0, 0, 0);
     } else if (name == "pc") {
-      return Unit(3.086e16, 1, 0, 0, 0, 0);
+      return Unit(3.086e16, 1, 0, 0, 0, 0, 0);
     } else if (name == "kpc") {
-      return Unit(3.086e19, 1, 0, 0, 0, 0);
+      return Unit(3.086e19, 1, 0, 0, 0, 0, 0);
     } else if (name == "angstrom") {
-      return Unit(1.e-10, 1, 0, 0, 0, 0);
+      return Unit(1.e-10, 1, 0, 0, 0, 0, 0);
     } else if (name == "km") {
-      return Unit(1000., 1, 0, 0, 0, 0);
+      return Unit(1000., 1, 0, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
-      return Unit(1., 0, 1, 0, 0, 0);
+      return Unit(1., 0, 1, 0, 0, 0, 0);
     } else if (name == "Gyr") {
-      return Unit(3.154e16, 0, 1, 0, 0, 0);
+      return Unit(3.154e16, 0, 1, 0, 0, 0, 0);
     } else if (name == "Myr") {
-      return Unit(3.154e13, 0, 1, 0, 0, 0);
+      return Unit(3.154e13, 0, 1, 0, 0, 0, 0);
     } else if (name == "yr") {
-      return Unit(3.154e7, 0, 1, 0, 0, 0);
+      return Unit(3.154e7, 0, 1, 0, 0, 0, 0);
       /// mass units
     } else if (name == "kg") {
-      return Unit(1., 0, 0, 1, 0, 0);
+      return Unit(1., 0, 0, 1, 0, 0, 0);
     } else if (name == "g") {
-      return Unit(0.001, 0, 0, 1, 0, 0);
+      return Unit(0.001, 0, 0, 1, 0, 0, 0);
     } else if (name == "Msol") {
-      return Unit(1.98855e30, 0, 0, 1, 0, 0);
+      return Unit(1.98855e30, 0, 0, 1, 0, 0, 0);
       /// temperature units
     } else if (name == "K") {
-      return Unit(1., 0, 0, 0, 1, 0);
+      return Unit(1., 0, 0, 0, 1, 0, 0);
+      /// angle units
+    } else if (name == "radians") {
+      return Unit(1., 0, 0, 0, 0, 0, 1);
+    } else if (name == "degrees") {
+      return Unit(M_PI / 180., 0, 0, 0, 0, 0, 1);
       /// alias units
       /// frequency units
     } else if (name == "Hz") {
-      return Unit(1., 0, -1, 0, 0, 0);
+      return Unit(1., 0, -1, 0, 0, 0, 0);
       /// multi-quantity units
       /// energy units
     } else if (name == "J") {
-      return Unit(1., 2, -2, 1, 0, 0);
+      return Unit(1., 2, -2, 1, 0, 0, 0);
     } else if (name == "erg") {
-      return Unit(1.e-7, 2, -2, 1, 0, 0);
+      return Unit(1.e-7, 2, -2, 1, 0, 0, 0);
     } else if (name == "eV") {
-      return Unit(1.60217662e-19, 2, -2, 1, 0, 0);
+      return Unit(1.60217662e-19, 2, -2, 1, 0, 0, 0);
     } else {
       /// error handler
       cmac_error("Unknown unit: \"%s\"!", name.c_str());
-      return Unit(0., 0, 0, 0, 0, 0);
+      return Unit(0., 0, 0, 0, 0, 0, 0);
     }
   }
 
@@ -153,6 +159,8 @@ public:
     switch (quantity) {
     case QUANTITY_ACCELERATION:
       return "m s^-2";
+    case QUANTITY_ANGLE:
+      return "radians";
     case QUANTITY_DENSITY:
       return "kg m^-3";
     case QUANTITY_ENERGY:

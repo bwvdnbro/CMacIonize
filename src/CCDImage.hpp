@@ -28,6 +28,8 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "Log.hpp"
+#include "ParameterFile.hpp"
 #include "Utilities.hpp"
 
 #include <fstream>
@@ -78,6 +80,29 @@ private:
   /*! @brief Side lengths of the image box (in kpc). */
   const double _sides[2];
 
+  /*! @brief CCDImageType. */
+  const CCDImageType _type;
+
+  /*! @brief Name of the output file. */
+  const std::string _filename;
+
+  /**
+   * @brief Get the CCDImageType corresponding to the given string.
+   *
+   * @param type std::string representation of a CCDImageType.
+   * @return Corresponding CCDImageType.
+   */
+  inline CCDImageType get_type(std::string type) {
+    if (type == "PGM") {
+      return CCDIMAGETYPE_PGM;
+    } else if (type == "BinaryArray") {
+      return CCDIMAGETYPE_BINARY_ARRAY;
+    } else {
+      cmac_error("Unknown image type: %s!", type.c_str());
+      return CCDIMAGETYPE_BINARY_ARRAY;
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -90,10 +115,16 @@ public:
    * @param anchor_y Lower corner of the image box (in kpc).
    * @param sides_x Horizontal side length of the image box (in kpc).
    * @param sides_y Vertical side length of the image box (in kpc).
+   * @param type Type of image file.
+   * @param filename Name of the output file.
+   * @param output_folder Folder where the image is saved.
+   * @param log Log to write logging info to.
    */
   inline CCDImage(double theta, double phi, unsigned int resolution_x,
                   unsigned int resolution_y, double anchor_x, double anchor_y,
-                  double sides_x, double sides_y)
+                  double sides_x, double sides_y, std::string type,
+                  std::string filename, std::string output_folder,
+                  Log *log = nullptr)
       : _direction_parameters{std::sin(theta), std::cos(theta), phi,
                               std::sin(phi), std::cos(phi)},
         _direction(CoordinateVector<>(
@@ -101,13 +132,52 @@ public:
             _direction_parameters[0] * _direction_parameters[3],
             _direction_parameters[1])),
         _resolution{resolution_x, resolution_y}, _anchor{anchor_x, anchor_y},
-        _sides{sides_x, sides_y} {
+        _sides{sides_x, sides_y}, _type(get_type(type)),
+        _filename(Utilities::get_absolute_path(output_folder) + "/" +
+                  filename) {
 
     const double npixel = _resolution[0] * _resolution[1];
     _image_total.resize(npixel, 0.);
     _image_Q.resize(npixel, 0.);
     _image_U.resize(npixel, 0.);
+
+    if (log) {
+      log->write_status(
+          "Created emtpy CCDImage with a resolution of ", _resolution[0], "x",
+          _resolution[1], ", with a viewing angle of (", theta, ", ", phi,
+          "), and a viewport box with anchor [", _anchor[0], " m, ", _anchor[1],
+          " m] and sides [", _sides[0], " m, ", _sides[1],
+          " m]. The image will be saved under the name \"", _filename,
+          "\", as an image of type ", type, ".");
+    }
   }
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   */
+  inline CCDImage(ParameterFile &params, Log *log = nullptr)
+      : CCDImage(
+            params.get_physical_value< QUANTITY_ANGLE >("ccdimage:view_theta",
+                                                        "89.7 degrees"),
+            params.get_physical_value< QUANTITY_ANGLE >("ccdimage:view_phi",
+                                                        "0. degrees"),
+            params.get_value< unsigned int >("ccdimage:image_width", 200),
+            params.get_value< unsigned int >("ccdimage:image_height", 200),
+            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:anchor_x",
+                                                         "-12.1 kpc"),
+            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:anchor_y",
+                                                         "-12.1 kpc"),
+            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:sides_x",
+                                                         "24.2 kpc"),
+            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:sides_y",
+                                                         "24.2 kpc"),
+            params.get_value< std::string >("ccdimage:type", "BinaryArray"),
+            params.get_value< std::string >("ccdimage:filename",
+                                            "galaxy_image"),
+            params.get_value< std::string >("output_folder", "."), log) {}
 
   /**
    * @brief Reset the image contents to zero.
@@ -206,13 +276,13 @@ public:
   /**
    * @brief Save the image as a file with the given name and type.
    *
-   * @param filename Name of the image file.
-   * @param type Type of image to save.
+   * @param normalization Normalization constant for the image.
    */
-  inline void save(std::string filename,
-                   CCDImageType type = CCDIMAGETYPE_PGM) const {
+  inline void save(double normalization = 1.) const {
 
-    if (type == CCDIMAGETYPE_PGM) {
+    std::string filename(_filename);
+
+    if (_type == CCDIMAGETYPE_PGM) {
 
       if (!Utilities::string_ends_with(filename, ".pgm")) {
         filename += ".pgm";
@@ -251,16 +321,25 @@ public:
       }
       image_file.close();
 
-    } else {
+    } else if (_type == CCDIMAGETYPE_BINARY_ARRAY) {
 
       if (!Utilities::string_ends_with(filename, ".dat")) {
         filename += ".dat";
       }
 
+      std::vector< double > image_copy = _image_total;
+      for (unsigned int i = 0; i < image_copy.size(); ++i) {
+        image_copy[i] *= normalization;
+      }
+
       std::ofstream array_file(filename, std::ios::binary);
-      array_file.write(reinterpret_cast< const char * >(&_image_total[0]),
-                       _image_total.size() * sizeof(double));
+      array_file.write(reinterpret_cast< const char * >(&image_copy[0]),
+                       image_copy.size() * sizeof(double));
       array_file.close();
+
+    } else {
+
+      cmac_error("Unknown image type: %i!", _type);
     }
   }
 };
