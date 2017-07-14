@@ -118,6 +118,8 @@ set(CMACIONIZE_SOURCES
     CompilerInfo.cpp.in
     ConfigurationInfo.cpp.in
     DensityGrid.cpp
+    DustScattering.cpp
+    DustSimulation.cpp
     EmissivityCalculator.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
@@ -169,6 +171,8 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityMaskFactory.hpp
     DensityValues.hpp
+    DustPhotonShootJob.hpp
+    DustPhotonShootJobMarket.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp
@@ -177,6 +181,8 @@ set(CMACIONIZE_SOURCES
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
     InterpolatedDensityFunction.hpp
+    IonizationPhotonShootJob.hpp
+    IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
     LineCoolingData.hpp
     LineCoolingDataLocation.hpp.in
@@ -187,8 +193,6 @@ set(CMACIONIZE_SOURCES
     ParameterFile.hpp
     PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
-    PhotonShootJob.hpp
-    PhotonShootJobMarket.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp

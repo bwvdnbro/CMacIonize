@@ -37,14 +37,15 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
+#include "DustSimulation.hpp"
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
+#include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
-#include "PhotonShootJobMarket.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
@@ -74,6 +75,10 @@ int main(int argc, char **argv) {
   MPICommunicator comm(argc, argv);
   bool write_log = (comm.get_rank() == 0);
   bool write_output = (comm.get_rank() == 0);
+
+  if (comm.get_size() > 1) {
+    cmac_error("MPI parallelization is currently broken...");
+  }
 
   Timer programtimer;
 
@@ -118,6 +123,10 @@ int main(int argc, char **argv) {
                     "using a workflow system, to ensure that every remote node "
                     "is running the same code version.",
                     COMMANDLINEOPTION_STRINGARGUMENT);
+  parser.add_option("dusty-radiative-transfer", 0,
+                    "Run a dusty radiative transfer simulation instead of an "
+                    "ionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -201,6 +210,16 @@ int main(int argc, char **argv) {
         log->write_warning("However, dirty running is enabled.");
       }
     }
+  }
+
+  // we wait until this point to call DustSimulation (if necessary), so that all
+  // the checks above are also done for DustSimulation
+  if (parser.get_value< bool >("dusty-radiative-transfer")) {
+    if (comm.get_size() > 1) {
+      cmac_error("MPI parallel dusty radiative transfer is not supported!");
+    }
+    return DustSimulation::do_simulation(parser, write_output, programtimer,
+                                         log);
   }
 
   bool every_iteration_output =
@@ -360,8 +379,8 @@ int main(int argc, char **argv) {
   //  }
 
   // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor< PhotonShootJobMarket, PhotonShootJob > workdistributor(
-      parser.get_value< int >("threads"));
+  WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
+  workdistributor(parser.get_value< int >("threads"));
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 
@@ -381,8 +400,8 @@ int main(int argc, char **argv) {
                       workdistributor.get_worksize_string(),
                       " for photon shooting.");
   }
-  PhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0, 100,
-                                       worksize);
+  IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
+                                                 100, worksize);
 
   if (hydro_integrator != nullptr) {
     // initialize the hydro variables (before we write the initial snapshot)

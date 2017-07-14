@@ -393,6 +393,19 @@ double VoronoiDensityGrid::get_cell_volume(unsigned long index) const {
 }
 
 /**
+ * @brief Get the total optical depth traversed by the given Photon until it
+ * reaches the boundaries of the simulation box.
+ *
+ * @param photon Photon.
+ * @return Total optical depth along the photon's path before it reaches the
+ * boundaries of the simulation box.
+ */
+double VoronoiDensityGrid::integrate_optical_depth(const Photon &photon) {
+  cmac_error("This function is not implemented (yet)!");
+  return 0.;
+}
+
+/**
  * @brief Traverse the given Photon through the grid until the given optical
  * depth is reached (or the Photon leaves the system).
  *

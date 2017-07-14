@@ -38,6 +38,7 @@
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
+#include "SpiralGalaxyDensityFunction.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
@@ -106,6 +107,8 @@ public:
       return new InterpolatedDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
+    } else if (type == "SpiralGalaxy") {
+      return new SpiralGalaxyDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonizeSnapshot") {
       return new CMacIonizeSnapshotDensityFunction(params, log);

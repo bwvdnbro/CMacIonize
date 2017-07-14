@@ -35,6 +35,7 @@
 // implementations
 #include "DistantStarContinuousPhotonSource.hpp"
 #include "IsotropicContinuousPhotonSource.hpp"
+#include "SpiralGalaxyContinuousPhotonSource.hpp"
 
 /**
  * @brief Factory class for ContinuousPhotonSource instances (currently there
@@ -63,6 +64,8 @@ public:
       return new DistantStarContinuousPhotonSource(params, log);
     } else if (type == "Isotropic") {
       return new IsotropicContinuousPhotonSource(params, log);
+    } else if (type == "SpiralGalaxy") {
+      return new SpiralGalaxyContinuousPhotonSource(params, log);
     } else if (type == "None") {
       return nullptr;
     } else {

@@ -85,13 +85,13 @@ void check_quantity(std::vector< std::string > unitnames,
 int main(int argc, char **argv) {
   {
     Unit unit = UnitConverter::get_unit(" m");
-    Unit unit2(1., 1, 0, 0, 0, 0);
+    Unit unit2(1., 1, 0, 0, 0, 0, 0);
     assert_condition(unit == unit2);
   }
 
   {
     Unit unit = UnitConverter::get_unit("K kg^3 s^-1m ");
-    Unit unit2(1., 1, -1, 3, 1, 0);
+    Unit unit2(1., 1, -1, 3, 1, 0, 0);
     assert_condition(unit == unit2);
   }
   {
@@ -116,6 +116,19 @@ int main(int argc, char **argv) {
     unitlogic.push_back(0);
 
     check_quantity< QUANTITY_ACCELERATION >(unitnames, unitlogic);
+  }
+
+  /// ANGLE
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int > unitlogic;
+    unitnames.push_back("radians");
+    unitlogic.push_back(0);
+    unitnames.push_back("degrees");
+    // 1 degree is less than 1 radian
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_ANGLE >(unitnames, unitlogic);
   }
 
   /// DENSITY

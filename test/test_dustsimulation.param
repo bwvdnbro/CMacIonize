@@ -1,0 +1,31 @@
+ccdimage:
+  anchor_x: -12.1 kpc
+  anchor_y: -12.1 kpc
+  filename: test_dustsimulation_output
+  image_height: 200
+  image_width: 200
+  sides_x: 24.2 kpc
+  sides_y: 24.2 kpc
+  type: BinaryArray
+  view_phi: 0 degrees
+  view_theta: 89.7 degrees
+continuousphotonsource:
+  B_over_T: 0.2
+  h_stars: 0.6 kpc
+  r_stars: 5. kpc
+densityfunction:
+  h_ISM: 0.22 kpc
+  n_0: 1. cm^-3
+  r_ISM: 6.0 kpc
+densitygrid:
+  box_anchor: [-12. kpc, -12. kpc, -12. kpc]
+  box_sides: [24. kpc, 24. kpc, 24. kpc]
+  ncell: [100, 100, 100]
+  periodicity: [false, false, false]
+dust:
+  band: V
+hydro:
+  active: false
+number of photons: 50000
+output_folder: .
+random_seed: 42
