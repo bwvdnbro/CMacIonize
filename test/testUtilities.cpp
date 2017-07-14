@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
   assert_condition(block.y() == 10);
   assert_condition(block.z() == 20);
 
-  unsigned long test_value = 0xf300;
+  uint64_t test_value = 0xf300;
   assert_condition(Utilities::as_binary_sequence(test_value) ==
                    "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 "
                    "0000 1111 0011 0000 0000")

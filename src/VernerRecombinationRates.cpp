@@ -31,6 +31,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 /**
  * @brief Constructor.

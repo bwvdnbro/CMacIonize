@@ -29,6 +29,7 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "OperatingSystem.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -570,13 +571,7 @@ inline std::string get_absolute_path(std::string path) {
     path = path.substr(0, path.size() - 1);
   }
 
-  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
-  if (absolute_path_ptr == nullptr) {
-    cmac_error("Unable to resolve path \"%s\"!", path.c_str());
-  }
-  std::string absolute_path(absolute_path_ptr);
-  free(absolute_path_ptr);
-  return absolute_path;
+  return OperatingSystem::absolute_path(path);
 }
 
 /**
@@ -779,10 +774,10 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
  * @param long_value Long value to convert.
  * @return std::string containing a binary representation of the long value.
  */
-inline std::string as_binary_sequence(unsigned long long_value) {
+inline std::string as_binary_sequence(uint64_t long_value) {
   std::stringstream binary_stream;
-  unsigned long mask = 0x8000000000000000;
-  for (unsigned int i = 0; i < 64; ++i) {
+  uint64_t mask = 0x8000000000000000;
+  for (unsigned char i = 0; i < 64; ++i) {
     if (i > 0 && i % 4 == 0) {
       binary_stream << " ";
     }

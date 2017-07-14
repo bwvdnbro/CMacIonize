@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   grid.print(gfile);
 
   // test the methods to generate a key from a level and a position
-  unsigned long key = grid.get_key(2, CoordinateVector<>(0.1));
+  uint64_t key = grid.get_key(2, CoordinateVector<>(0.1));
   assert_condition(key == 64);
   key = grid.get_key(2, CoordinateVector<>(1.1, 0.1, 0.1));
   assert_condition(key == 0x0010000000000040);
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
   // basic indexing: check first key and next key routines
   assert_condition(grid.get_first_key() == 512);
-  unsigned long next_key = grid.get_next_key(512);
+  uint64_t next_key = grid.get_next_key(512);
   // 576: 1*512 + (0*256 + 0*128 + 1*64) + (0*32 + 0*16 + 0*8) +
   //              (0*4 + 0*2 + 0*1)
   assert_condition(next_key == 576);
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
   unsigned int ncell = 0;
   // we need a way to make sure all cells are traversed (exactly once)
   // to this end, we calculate the sum of all keys
-  unsigned long keysum = 0;
+  uint64_t keysum = 0;
   while (key != grid.get_max_key()) {
     keysum += key;
     key = grid.get_next_key(key);
@@ -138,14 +138,14 @@ int main(int argc, char **argv) {
   assert_condition(ncell == grid.get_number_of_cells());
   // the sum should be the sum of all numbers between 512 and 1023
   // + all numbers between 0x0010000000000200 and 0x00100000000003ff
-  unsigned long refsum =
+  uint64_t refsum =
       256 * (512 + 1023) + 256 * (0x0010000000000200 + 0x00100000000003ff);
   assert_condition(keysum == refsum);
 
   /// mesh refinement
 
   // refine a single cell
-  unsigned long refined_key = grid.refine_cell(703);
+  uint64_t refined_key = grid.refine_cell(703);
   assert_condition(refined_key == 4287);
   // repeat the Morton iteration test
   assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8 + 7);
@@ -185,92 +185,120 @@ int main(int argc, char **argv) {
   assert_condition(grid[512].get_ngb(AMRNGBPOSITION_TOP)->value() == 576.);
 
   // now a couple arbitrary ones in the middle of the first block
-  unsigned long tests[8][7] = {// 568 = 1 000 111 000
-                               // 792 = 1 100 011 000
-                               // 824 = 1 100 111 000
-                               // 680 = 1 010 101 000
-                               // 696 = 1 010 111 000
-                               // 624 = 1 001 110 000
-                               // 632 = 1 001 111 000
-                               {568, 792, 824, 680, 696, 624, 632},
-                               // 632 = 1 001 111 000
-                               // 856 = 1 101 011 000
-                               // 888 = 1 101 111 000
-                               // 744 = 1 011 101 000
-                               // 760 = 1 011 111 000
-                               // 568 = 1 000 111 000
-                               // 561 = 1 000 110 001
-                               {632, 856, 888, 744, 760, 568, 561},
-                               // 696 = 1 010 111 000
-                               // 920 = 1 110 011 000
-                               // 952 = 1 110 111 000
-                               // 568 = 1 000 111 000
-                               // 554 = 1 000 101 010
-                               // 752 = 1 011 110 000
-                               // 760 = 1 011 111 000
-                               {696, 920, 952, 568, 554, 752, 760},
-                               // 760 = 1 011 111 000
-                               // 984 = 1 111 011 000
-                               // 1016 = 1 111 111 000
-                               // 632 = 1 001 111 000
-                               // 618 = 1 001 101 010
-                               // 696 = 1 010 111 000
-                               // 689 = 1 010 110 001
-                               {760, 984, 1016, 632, 618, 696, 689},
-                               // 824 = 1 100 111 000
-                               // 568 = 1 000 111 000
-                               // 540 = 1 000 011 100
-                               // 936 = 1 110 101 000
-                               // 952 = 1 110 111 000
-                               // 880 = 1 101 110 000
-                               // 888 = 1 101 111 000
-                               {824, 568, 540, 936, 952, 880, 888},
-                               // 888 = 1 101 111 000
-                               // 632 = 1 001 111 000
-                               // 604 = 1 001 011 100
-                               // 1000 = 1 111 101 000
-                               // 1016 = 1 111 111 000
-                               // 824 = 1 100 111 000
-                               // 817 = 1 100 110 001
-                               {888, 632, 604, 1000, 1016, 824, 817},
-                               // 952 = 1 110 111 000
-                               // 969 = 1 010 111 000
-                               // 668 = 1 010 011 100
-                               // 824 = 1 100 111 000
-                               // 810 = 1 100 101 010
-                               // 1008 = 1 111 110 000
-                               // 1016 = 1 111 111 000
-                               {952, 969, 668, 824, 810, 1008, 1016},
-                               // 1016 = 1 111 111 000
-                               // 760 = 1 011 111 000
-                               // 732 = 1 011 011 100
-                               // 888 = 1 101 111 000
-                               // 874 = 1 101 101 010
-                               // 952 = 1 110 111 000
-                               // 945 = 1 110 110 001
-                               {1016, 760, 732, 888, 874, 952, 945}};
-  for (unsigned int i = 0; i < 1; ++i) {
+  uint64_t tests[8][7] = {// 568 = 1 000 111 000
+                          // 792 = 1 100 011 000
+                          // 824 = 1 100 111 000
+                          // 680 = 1 010 101 000
+                          // 696 = 1 010 111 000
+                          // 624 = 1 001 110 000
+                          // 632 = 1 001 111 000
+                          {568, 792, 824, 680, 696, 624, 632},
+                          // 632 = 1 001 111 000
+                          // 856 = 1 101 011 000
+                          // 888 = 1 101 111 000
+                          // 744 = 1 011 101 000
+                          // 760 = 1 011 111 000
+                          // 568 = 1 000 111 000
+                          // 561 = 1 000 110 001
+                          {632, 856, 888, 744, 760, 568, 561},
+                          // 696 = 1 010 111 000
+                          // 920 = 1 110 011 000
+                          // 952 = 1 110 111 000
+                          // 568 = 1 000 111 000
+                          // 554 = 1 000 101 010
+                          // 752 = 1 011 110 000
+                          // 760 = 1 011 111 000
+                          {696, 920, 952, 568, 554, 752, 760},
+                          // 760 = 1 011 111 000
+                          // 984 = 1 111 011 000
+                          // 1016 = 1 111 111 000
+                          // 632 = 1 001 111 000
+                          // 618 = 1 001 101 010
+                          // 696 = 1 010 111 000
+                          // 689 = 1 010 110 001
+                          {760, 984, 1016, 632, 618, 696, 689},
+                          // 824 = 1 100 111 000
+                          // 568 = 1 000 111 000
+                          // 540 = 1 000 011 100
+                          // 936 = 1 110 101 000
+                          // 952 = 1 110 111 000
+                          // 880 = 1 101 110 000
+                          // 888 = 1 101 111 000
+                          {824, 568, 540, 936, 952, 880, 888},
+                          // 888 = 1 101 111 000
+                          // 632 = 1 001 111 000
+                          // 604 = 1 001 011 100
+                          // 1000 = 1 111 101 000
+                          // 1016 = 1 111 111 000
+                          // 824 = 1 100 111 000
+                          // 817 = 1 100 110 001
+                          {888, 632, 604, 1000, 1016, 824, 817},
+                          // 952 = 1 110 111 000
+                          // 696 = 1 010 111 000
+                          // 668 = 1 010 011 100
+                          // 824 = 1 100 111 000
+                          // 810 = 1 100 101 010
+                          // 1008 = 1 111 110 000
+                          // 1016 = 1 111 111 000
+                          {952, 696, 668, 824, 810, 1008, 1016},
+                          // 1016 = 1 111 111 000
+                          // 760 = 1 011 111 000
+                          // 732 = 1 011 011 100
+                          // 888 = 1 101 111 000
+                          // 874 = 1 101 101 010
+                          // 952 = 1 110 111 000
+                          // 945 = 1 110 110 001
+                          {1016, 760, 732, 888, 874, 952, 945}};
+  for (unsigned int i = 0; i < 8; ++i) {
     cmac_status("Testing cell %lu", tests[i][0]);
+
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
+                tests[i][1]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][1]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
+                tests[i][2]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][2]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
+                tests[i][3]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][3]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value(),
+                tests[i][4]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][4]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
+                tests[i][5]);
     assert_condition(
         grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][5]);
@@ -280,8 +308,14 @@ int main(int argc, char **argv) {
     assert_condition(grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %lu",
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value(),
+                tests[i][6]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][6]);
+    cmac_status("%g should be %lu",
+                grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
+                tests[i][0]);
     assert_condition(
         grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][0]);
