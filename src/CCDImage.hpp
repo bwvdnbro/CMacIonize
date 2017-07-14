@@ -92,7 +92,7 @@ private:
    * @param type std::string representation of a CCDImageType.
    * @return Corresponding CCDImageType.
    */
-  inline CCDImageType get_type(std::string type) {
+  inline static CCDImageType get_type(std::string type) {
     if (type == "PGM") {
       return CCDIMAGETYPE_PGM;
     } else if (type == "BinaryArray") {

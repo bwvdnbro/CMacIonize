@@ -118,6 +118,8 @@ set(CMACIONIZE_SOURCES
     CompilerInfo.cpp.in
     ConfigurationInfo.cpp.in
     DensityGrid.cpp
+    DustScattering.cpp
+    DustSimulation.cpp
     EmissivityCalculator.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp

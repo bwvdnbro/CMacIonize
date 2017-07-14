@@ -14,7 +14,6 @@ continuousphotonsource:
   h_stars: 0.6 kpc
   r_stars: 5. kpc
 densityfunction:
-  band: 0
   h_ISM: 0.22 kpc
   n_0: 1. cm^-3
   r_ISM: 6.0 kpc
@@ -23,6 +22,8 @@ densitygrid:
   box_sides: [24. kpc, 24. kpc, 24. kpc]
   ncell: [100, 100, 100]
   periodicity: [false, false, false]
+dust:
+  band: V
 hydro:
   active: false
 number of photons: 50000

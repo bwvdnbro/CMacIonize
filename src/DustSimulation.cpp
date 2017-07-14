@@ -33,6 +33,7 @@
 #include "ConfigurationInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DustPhotonShootJobMarket.hpp"
+#include "DustScattering.hpp"
 #include "Log.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "ParameterFile.hpp"
@@ -83,6 +84,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   PhotonSource source(nullptr, nullptr, &continuoussource, &continuousspectrum,
                       abundances, cross_sections, log);
 
+  DustScattering dust_scattering(params, log);
   CCDImage dust_image(params, log);
 
   unsigned int numphoton =
@@ -126,8 +128,8 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
                       dust_workdistributor.get_worksize_string(),
                       " for photon shooting.");
   }
-  DustPhotonShootJobMarket dustphotonshootjobs(source, random_seed, grid, 0,
-                                               dust_image, 100, worksize);
+  DustPhotonShootJobMarket dustphotonshootjobs(
+      source, dust_scattering, random_seed, grid, 0, dust_image, 100, worksize);
 
   if (log) {
     log->write_status("Start shooting ", numphoton, " photons...");

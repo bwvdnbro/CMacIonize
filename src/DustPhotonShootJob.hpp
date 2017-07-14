@@ -28,6 +28,7 @@
 
 #include "CCDImage.hpp"
 #include "DensityGrid.hpp"
+#include "DustScattering.hpp"
 #include "Photon.hpp"
 #include "PhotonSource.hpp"
 #include "RandomGenerator.hpp"
@@ -39,6 +40,9 @@ class DustPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
   PhotonSource &_photon_source;
+
+  /*! @brief DustScattering object that scatters photons off dust. */
+  const DustScattering &_dust_scattering;
 
   /*! @brief RandomGenerator used to generate random uniform numbers. */
   RandomGenerator _random_generator;
@@ -57,15 +61,20 @@ public:
    * @brief Constructor.
    *
    * @param photon_source PhotonSource that emits photons.
+   * @param dust_scattering DustScattering object that scatters photons off
+   * dust.
    * @param random_seed Seed for the RandomGenerator used by this specific
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param image CCDImage to construct.
    */
-  inline DustPhotonShootJob(PhotonSource &photon_source, int random_seed,
-                            DensityGrid &density_grid, const CCDImage &image)
-      : _photon_source(photon_source), _random_generator(random_seed),
-        _density_grid(density_grid), _image(image), _numphoton(0) {}
+  inline DustPhotonShootJob(PhotonSource &photon_source,
+                            const DustScattering &dust_scattering,
+                            int random_seed, DensityGrid &density_grid,
+                            const CCDImage &image)
+      : _photon_source(photon_source), _dust_scattering(dust_scattering),
+        _random_generator(random_seed), _density_grid(density_grid),
+        _image(image), _numphoton(0) {}
 
   /**
    * @brief Set the number of photons for the next execution of the job.
@@ -97,7 +106,7 @@ public:
    */
   inline void execute() {
     // parameter
-    const double band_albedo = 0.54; // or 0.21 for band == 1
+    const double band_albedo = _dust_scattering.get_albedo();
 
     for (unsigned int i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
@@ -111,8 +120,8 @@ public:
       const CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
       photon.set_direction(direction);
       photon.set_direction_parameters(sint, cost, phi, sinp, cosp);
-      // overwrite cross section
-      photon.set_cross_section(ION_H_n, 1.);
+      // overwrite cross section: we want it to be the dust attenuation
+      photon.set_cross_section(ION_H_n, _dust_scattering.get_kappa());
 
       Photon old_photon(photon);
       old_photon.set_direction(
@@ -135,7 +144,7 @@ public:
         Photon new_photon(photon);
         const CoordinateVector<> direction_new =
             _image.get_direction(sint, cost, phi, sinp, cosp);
-        const double hgfac = _photon_source.scatter_towards(
+        const double hgfac = _dust_scattering.scatter_towards(
             new_photon, direction_new, sint, cost, phi, sinp, cosp);
         const double tau_new =
             _density_grid.integrate_optical_depth(new_photon);
@@ -147,7 +156,7 @@ public:
         _image.add_photon(new_photon.get_position(), weight_new * fi,
                           weight_new * fq, weight_new * fu);
 
-        _photon_source.scatter(photon, _random_generator);
+        _dust_scattering.scatter(photon, _random_generator);
         tau = -std::log(_random_generator.get_uniform_random_double());
         it = _density_grid.interact(photon, tau);
       }

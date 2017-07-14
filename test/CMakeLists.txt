@@ -951,6 +951,8 @@ set(TESTDUSTSIMULATION_SOURCES
     ../src/CommandLineOption.cpp
     ../src/CommandLineParser.cpp
     ../src/DensityGrid.cpp
+    ../src/DustScattering.cpp
+    ../src/DustScattering.hpp
     ../src/DustSimulation.cpp
     ../src/DustSimulation.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp

@@ -33,6 +33,7 @@
 
 class CCDImage;
 class DensityGrid;
+class DustScattering;
 class PhotonSource;
 class RandomGenerator;
 
@@ -63,6 +64,8 @@ public:
    * @brief Constructor.
    *
    * @param photon_source PhotonSource that emits photons.
+   * @param dust_scattering DustScattering object used to compute scattering off
+   * dust.
    * @param random_seed Seed for the RandomGenerator.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Total number of photons to propagate through the grid.
@@ -72,16 +75,17 @@ public:
    * DustPhotonShootJob.
    * @param worksize Number of threads used in the calculation.
    */
-  inline DustPhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
-                                  DensityGrid &density_grid,
+  inline DustPhotonShootJobMarket(PhotonSource &photon_source,
+                                  const DustScattering &dust_scattering,
+                                  int random_seed, DensityGrid &density_grid,
                                   unsigned int numphoton, const CCDImage &image,
                                   unsigned int jobsize, int worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
-      _jobs[i] = new DustPhotonShootJob(photon_source, random_seed + i,
-                                        density_grid, image);
+      _jobs[i] = new DustPhotonShootJob(photon_source, dust_scattering,
+                                        random_seed + i, density_grid, image);
     }
   }
 
