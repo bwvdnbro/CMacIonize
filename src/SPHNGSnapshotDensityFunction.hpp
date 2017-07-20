@@ -287,8 +287,7 @@ SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
  * @param value Next (and last) value to read from the file.
  */
 template <>
-inline void
-SPHNGSnapshotDensityFunction::read_value< std::vector< uint64_t > >(
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< uint64_t > >(
     std::ifstream &ifile, std::vector< uint64_t > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
              value.size() * sizeof(uint64_t));
@@ -359,7 +358,8 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
 /**
  * @brief Get the size of the given template datatype.
  *
- * Template specialization for a std::vector containing 64-bit unsigned integers.
+ * Template specialization for a std::vector containing 64-bit unsigned
+ * integers.
  *
  * @param value Reference to a value of the template datatype.
  * @return Size of the template datatype.

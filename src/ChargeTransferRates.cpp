@@ -25,11 +25,11 @@
  */
 #include "ChargeTransferRates.hpp"
 #include "ChargeTransferRatesDataLocation.hpp"
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <algorithm>
 
 /**
  * @brief Constructor.

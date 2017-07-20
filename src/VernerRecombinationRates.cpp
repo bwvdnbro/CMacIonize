@@ -27,11 +27,11 @@
 #include "VernerRecombinationRates.hpp"
 #include "Error.hpp"
 #include "VernerRecombinationRatesDataLocation.hpp"
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <algorithm>
 
 /**
  * @brief Constructor.

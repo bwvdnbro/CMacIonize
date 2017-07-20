@@ -212,7 +212,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::vector< unsigned int > nums(8);
     read_block(file, npart, nums);
 
-	uint64_t nptmass;
+    uint64_t nptmass;
     std::vector< unsigned int > numssink(8);
     read_block(file, nptmass, numssink);
 

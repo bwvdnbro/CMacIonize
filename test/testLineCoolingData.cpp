@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
       for (unsigned int j = 0; j < 5; ++j) {
         a += Ac[i][j] * B[j];
       }
-	  assert_values_equal_tol (a, Bc[i], 1.e-11);
+      assert_values_equal_tol(a, Bc[i], 1.e-11);
     }
   }
 
