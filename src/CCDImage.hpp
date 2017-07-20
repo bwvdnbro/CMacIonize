@@ -136,7 +136,7 @@ public:
         _filename(Utilities::get_absolute_path(output_folder) + "/" +
                   filename) {
 
-    const double npixel = _resolution[0] * _resolution[1];
+    const unsigned int npixel = _resolution[0] * _resolution[1];
     _image_total.resize(npixel, 0.);
     _image_Q.resize(npixel, 0.);
     _image_U.resize(npixel, 0.);

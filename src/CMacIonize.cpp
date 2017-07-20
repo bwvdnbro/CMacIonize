@@ -356,7 +356,7 @@ int main(int argc, char **argv) {
     if (log) {
       log->write_warning("Dry run requested. Program will now halt.");
     }
-    return 0.;
+    return 0;
   }
 
   // done writing file, now initialize grid
