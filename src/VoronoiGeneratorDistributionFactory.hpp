@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +23,7 @@
  * @brief Factory for VoronoiGeneratorDistribution instances.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef VORONOIGENERATORDISTRIBUTIONFACTORY_HPP
 #define VORONOIGENERATORDISTRIBUTIONFACTORY_HPP
@@ -32,15 +34,14 @@
 
 // implementations
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
+#include "SPHVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
 #include "UniformRegularVoronoiGeneratorDistribution.hpp"
-#include "SPHVoronoiGeneratorDistribution.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
 #include "CMacIonizeVoronoiGeneratorDistribution.hpp"
 #endif
-
 
 /**
  * @brief Factory for VoronoiGeneratorDistribution instances.
@@ -97,8 +98,8 @@ public:
       return new UniformRandomVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRegular") {
       return new UniformRegularVoronoiGeneratorDistribution(params, log);
-    } else if (type == "SPH") {                                            // Maya
-      return new SPHVoronoiGeneratorDistribution(params, log);   // Maya
+    } else if (type == "SPH") {                                // Maya
+      return new SPHVoronoiGeneratorDistribution(params, log); // Maya
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonize") {
       return new CMacIonizeVoronoiGeneratorDistribution(params);

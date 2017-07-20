@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +23,7 @@
  * @brief Octree used to speed up neighbour searches.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef OCTREE_HPP
 #define OCTREE_HPP
@@ -156,7 +158,8 @@ public:
   }
 
   /**
-   * @brief Get the indices of the neighbours of the sphere of given position and radius.
+   * @brief Get the indices of the neighbours of the sphere of given position
+   * and radius.
    *
    * A neighbour is a position in the internal list for which the input sphere
    * overlaps with the sphere with the list position as center and the
@@ -167,7 +170,8 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given center.
    */
-  inline std::vector< unsigned int > get_ngbs_sphere(CoordinateVector<> centre, double radius) const {
+  inline std::vector< unsigned int > get_ngbs_sphere(CoordinateVector<> centre,
+                                                     double radius) const {
     std::vector< unsigned int > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
@@ -201,7 +205,6 @@ public:
     return ngbs;
   }
 
-
   /**
    * @brief Get the indices of the neighbours of the given list of positions.
    *
@@ -213,18 +216,19 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre list.
    */
-  inline std::vector< unsigned int > get_ngbs_list(std::vector<CoordinateVector<>> centre_list) const {
+  inline std::vector< unsigned int >
+  get_ngbs_list(std::vector< CoordinateVector<> > centre_list) const {
     std::vector< unsigned int > ngbs;
     const unsigned int clist_size = centre_list.size();
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
-    	    for(unsigned int i = 0; i < clist_size; i++) {
-    	    	  CoordinateVector<> centre = centre_list[i];
+        for (unsigned int i = 0; i < clist_size; i++) {
+          CoordinateVector<> centre = centre_list[i];
           double r;
           if (_periodic) {
             r = _box.periodic_distance(_positions[next->get_index()], centre)
-                  .norm();
+                    .norm();
           } else {
             r = (_positions[next->get_index()] - centre).norm();
           }
@@ -232,13 +236,13 @@ public:
             ngbs.push_back(next->get_index());
             break;
           }
-    	    }
+        }
         next = next->get_sibling();
       } else {
         // check opening criterion
-    	    unsigned int centre_num = 0;
-  	    for(unsigned int i = 0; i < clist_size; i++) {
-  	    	  CoordinateVector<> centre = centre_list[i];
+        unsigned int centre_num = 0;
+        for (unsigned int i = 0; i < clist_size; i++) {
+          CoordinateVector<> centre = centre_list[i];
           double r;
           if (_periodic) {
             r = _box.periodic_distance(next->get_box(), centre);
@@ -246,12 +250,12 @@ public:
             r = next->get_box().get_distance(centre);
           }
           if (r > next->get_variable()) {
-            centre_num ++;
+            centre_num++;
           } else {
-        	    next = next->get_child();
-        	    break;
+            next = next->get_child();
+            break;
           }
-  	    }
+        }
         if (centre_num == clist_size) {
           next = next->get_sibling();
         }
@@ -259,7 +263,6 @@ public:
     }
     return ngbs;
   }
-
 
   /**
    * @brief Print the Octree for visual inspection.

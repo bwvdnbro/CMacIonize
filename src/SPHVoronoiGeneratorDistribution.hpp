@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,29 +19,28 @@
 /**
  * @file SPHVoronoiGeneratorDistribution.hpp
  *
- * @brief VoronoiGeneratorDistribution implementation with generating sites 
+ * @brief VoronoiGeneratorDistribution implementation with generating sites
  * imported from a file.
  *
- * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef SPHVORONOIGENERATORDISTRIBUTION_HPP
 #define SPHVORONOIGENERATORDISTRIBUTION_HPP
 
 #include "Box.hpp"
+#include "CoordinateVector.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
-#include "CoordinateVector.hpp"
 
 #include <fstream>
 
 /**
- * @brief VoronoiGeneratorDistribution implementation with generating sites 
+ * @brief VoronoiGeneratorDistribution implementation with generating sites
  * imported from a file.
  */
-class SPHVoronoiGeneratorDistribution
-    : public VoronoiGeneratorDistribution {
+class SPHVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Number of generator positions to generate. */
   const unsigned int _number_of_positions;
@@ -68,51 +67,50 @@ public:
    * @param filename Name of the ASCII text file to read.
    * @param log Log to write logging info to.
    */
-  SPHVoronoiGeneratorDistribution(Box<> box,
-				  unsigned int number_of_positions,
-				  std::string filename,
-				  Log *log = nullptr)
+  SPHVoronoiGeneratorDistribution(Box<> box, unsigned int number_of_positions,
+                                  std::string filename, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(box), _filename(filename) {
 
-  _generator_positions.resize(number_of_positions);
+    _generator_positions.resize(number_of_positions);
 
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    cmac_error("Could not open file \"%s\"!", filename.c_str());
-  }
-
-  unsigned int index_i=0;
-  std::string line;
-  while (getline(file, line)) {
-    if(index_i == number_of_positions) {
-    	  cmac_warning("The file %s exceeds the number of generator positions provided.\n", filename.c_str());
-    	  break;
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+      cmac_error("Could not open file \"%s\"!", filename.c_str());
     }
-    if (line[0] != '#') {
-      double cx, cy, cz;
-      std::stringstream linestream(line);
-      // read Voronoi cell generating cite coordinates
-      linestream >> cx >> cy >> cz;
-      _generator_positions[index_i][0] = cx;
-      _generator_positions[index_i][1] = cy;
-      _generator_positions[index_i][2] = cz;
-      index_i++;
+
+    unsigned int index_i = 0;
+    std::string line;
+    while (getline(file, line)) {
+      if (index_i == number_of_positions) {
+        cmac_warning(
+            "The file %s exceeds the number of generator positions provided.\n",
+            filename.c_str());
+        break;
+      }
+      if (line[0] != '#') {
+        double cx, cy, cz;
+        std::stringstream linestream(line);
+        // read Voronoi cell generating cite coordinates
+        linestream >> cx >> cy >> cz;
+        _generator_positions[index_i][0] = cx;
+        _generator_positions[index_i][1] = cy;
+        _generator_positions[index_i][2] = cz;
+        index_i++;
+      }
     }
-  }
 
-  if(index_i < number_of_positions) {
-	cmac_error("The file %s has fewer generator positions (%d) than needed (%d).\n", filename.c_str(),
-			index_i, number_of_positions);
-  }
-   
-  file.close();
+    if (index_i < number_of_positions) {
+      cmac_error(
+          "The file %s has fewer generator positions (%d) than needed (%d).\n",
+          filename.c_str(), index_i, number_of_positions);
+    }
 
+    file.close();
 
-  if (log) {
-      log->write_status(
-          "SPHVoronoiGeneratorDistribution with ",
-          _number_of_positions, ".");
+    if (log) {
+      log->write_status("SPHVoronoiGeneratorDistribution with ",
+                        _number_of_positions, ".");
     }
   }
 
@@ -122,19 +120,18 @@ public:
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  SPHVoronoiGeneratorDistribution(ParameterFile &params,
-                                            Log *log = nullptr)
+  SPHVoronoiGeneratorDistribution(ParameterFile &params, Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
-					Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                  params.get_physical_vector< QUANTITY_LENGTH >(
+                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >("densitygrid:voronoi_generator_"
                                              "distribution:number_of_positions",
                                              1000),
             params.get_value< std::string >("densitygrid:voronoi_generator_"
-                                             "distribution:file_name",
-                                             "SPH.txt"),
+                                            "distribution:file_name",
+                                            "SPH.txt"),
             log) {}
 
   /**

@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +23,7 @@
  * @brief AsciiFileDensityGridWriter implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 
 #include "AsciiFileDensityGridWriter.hpp"
@@ -75,11 +77,11 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
 
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
-    double n = it.get_ionization_variables().get_number_density();        
+    double n = it.get_ionization_variables().get_number_density();
     IonName ion = ION_H_n;
     double frac = it.get_ionization_variables().get_ionic_fraction(ion);
     double volume = it.get_volume();
-    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t" << volume << "\t" << frac <<"\n";
-
+    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t"
+         << volume << "\t" << frac << "\n";
   }
 }

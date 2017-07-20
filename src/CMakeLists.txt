@@ -199,6 +199,7 @@ set(CMACIONIZE_SOURCES
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
     SPHNGSnapshotDensityFunction.hpp
+    SPHVoronoiGeneratorDistribution.hpp
     TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp

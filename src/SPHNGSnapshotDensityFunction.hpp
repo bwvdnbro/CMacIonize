@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +24,7 @@
  * SPHNG snapshot file.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 #define SPHNGSNAPSHOTDENSITYFUNCTION_HPP
@@ -82,7 +84,9 @@ private:
 
   static double full_integral(double phi, double r0, double R_0, double h);
 
-  static double mass_contribution(const Cell &cell, const CoordinateVector<> particle, const double h);
+  static double mass_contribution(const Cell &cell,
+                                  const CoordinateVector<> particle,
+                                  const double h);
 
   /**
    * @brief Skip a block from the given Fortran unformatted binary file.
