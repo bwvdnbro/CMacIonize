@@ -71,11 +71,15 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
   std::ofstream file(filename);
 
-  file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\n";
+  file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\tvolume (m^3)\tneutral H fraction\n";
 
   for (auto it = _grid.begin(); it != _grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
-    double n = it.get_ionization_variables().get_number_density();
-    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\n";
+    double n = it.get_ionization_variables().get_number_density();        
+    IonName ion = ION_H_n;
+    double frac = it.get_ionization_variables().get_ionic_fraction(ion);
+    double volume = it.get_volume();
+    file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t" << volume << "\t" << frac <<"\n";
+
   }
 }
