@@ -203,16 +203,16 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   _positions.reserve(numpart);
   _masses.reserve(numpart);
   _smoothing_lengths.reserve(numpart);
-  //  std::vector<unsigned long> all_iunique;
+  //  std::vector<uint64_t> all_iunique;
   //  all_iunique.reserve(numpart);
 
   // read blocks
   for (unsigned int iblock = 0; iblock < numblock; ++iblock) {
-    unsigned long npart;
+    uint64_t npart;
     std::vector< unsigned int > nums(8);
     read_block(file, npart, nums);
 
-    unsigned long nptmass;
+	uint64_t nptmass;
     std::vector< unsigned int > numssink(8);
     read_block(file, nptmass, numssink);
 
@@ -245,7 +245,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::vector< char > iphase(npart);
     read_block(file, iphase);
 
-    //    std::vector<unsigned long> iunique(npart);
+    //    std::vector<uint64_t> iunique(npart);
     if (nums[4] >= 1) {
       // skip iunique block
       if (tagged) {
