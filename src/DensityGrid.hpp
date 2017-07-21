@@ -58,9 +58,6 @@ public:
   class iterator;
 
 protected:
-  /*! @brief DensityFunction defining the density field. */
-  DensityFunction &_density_function;
-
   /*! @brief Box containing the grid. */
   Box<> _box;
 
@@ -219,18 +216,15 @@ public:
    * computationally expensive part of the initialization to the initialize()
    * routine.
    *
-   * @param density_function DensityFunction that defines the density field.
    * @param box Box containing the grid.
    * @param periodic Periodicity flags.
    * @param hydro Hydro flag.
    * @param log Log to write log messages to.
    */
-  DensityGrid(
-      DensityFunction &density_function, Box<> box,
-      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, Log *log = nullptr)
-      : _density_function(density_function), _box(box), _periodic(periodic),
-        _hydro(hydro), _log(log) {
+  DensityGrid(Box<> box, CoordinateVector< bool > periodic =
+                             CoordinateVector< bool >(false),
+              bool hydro = false, Log *log = nullptr)
+      : _box(box), _periodic(periodic), _hydro(hydro), _log(log) {
 
     _ionization_energy_H =
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
@@ -278,15 +272,10 @@ public:
    * constructor.
    *
    * @param block Block that should be initialized by this MPI process.
+   * @param density_function DensityFunction to use.
    */
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block) {
-    if (_log) {
-      _log->write_status("Initializing DensityFunction...");
-    }
-    _density_function.initialize();
-    if (_log) {
-      _log->write_status("Done.");
-    }
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+                          DensityFunction &density_function) {
     if (_hydro) {
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
@@ -782,14 +771,17 @@ public:
     }
   };
 
-  void initialize(std::pair< unsigned long, unsigned long > &block,
-                  DensityFunction &function, int worksize = -1);
+  void set_densities(std::pair< unsigned long, unsigned long > &block,
+                     DensityFunction &function, int worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission
    * probabilities for all cells.
+   *
+   * @param density_function DensityFunction to use to set the density in newly
+   * created cells.
    */
-  virtual void reset_grid() {
+  virtual void reset_grid(DensityFunction &density_function) {
     for (auto it = begin(); it != end(); ++it) {
       set_reemission_probabilities(it.get_ionization_variables());
       it.reset_mean_intensities();

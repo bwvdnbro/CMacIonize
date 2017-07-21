@@ -39,13 +39,14 @@ int main(int argc, char **argv) {
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< int > ncell(8);
   HomogeneousDensityFunction density_function(1.);
+  density_function.initialize();
   AMRRefinementScheme *scheme =
       new MassAMRRefinementScheme(0.125 * 0.125 * 0.125);
 
-  AMRDensityGrid grid(box, ncell, density_function, scheme, 1);
+  AMRDensityGrid grid(box, ncell, scheme, 1);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density_function);
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8);
 
@@ -53,7 +54,7 @@ int main(int argc, char **argv) {
   DensityGrid::iterator(42, grid).get_ionization_variables().set_number_density(
       8.);
 
-  grid.reset_grid();
+  grid.reset_grid(density_function);
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8 + 7);
 

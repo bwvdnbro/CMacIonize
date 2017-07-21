@@ -264,8 +264,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  DensityGrid *grid =
-      DensityGridFactory::generate(params, *density_function, log);
+  DensityGrid *grid = DensityGridFactory::generate(params, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -359,10 +358,18 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  if (log) {
+    log->write_status("Initializing DensityFunction...");
+  }
+  density_function->initialize();
+  if (log) {
+    log->write_status("Done.");
+  }
+
   // done writing file, now initialize grid
   std::pair< unsigned long, unsigned long > block =
       comm.distribute_block(0, grid->get_number_of_cells());
-  grid->initialize(block);
+  grid->initialize(block, *density_function);
 
   // grid->initialize initialized:
   // - densities
@@ -439,7 +446,7 @@ int main(int argc, char **argv) {
         lnumphoton = numphoton1;
       }
 
-      grid->reset_grid();
+      grid->reset_grid(*density_function);
       if (log) {
         log->write_status("Start shooting ", lnumphoton, " photons...");
       }

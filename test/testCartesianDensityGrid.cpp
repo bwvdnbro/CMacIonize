@@ -42,6 +42,7 @@ using namespace std;
  */
 int main(int argc, char **argv) {
   HomogeneousDensityFunction testfunction(1., 2000.);
+  testfunction.initialize();
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box<> box(anchor, sides);
@@ -52,10 +53,10 @@ int main(int argc, char **argv) {
   // unsigned char into a CoordinateVector<unsigned char>. The compiler is
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
-  CartesianDensityGrid grid(box, 64, testfunction);
+  CartesianDensityGrid grid(box, 64);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, testfunction);
 
   assert_values_equal(1., grid.get_total_hydrogen_number());
   assert_values_equal(2000., grid.get_average_temperature());

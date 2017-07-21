@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
   ParallelCartesianDensityGrid grid(box, numcell, numdomain, domain);
 
   BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
+  density_function.initialize();
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     (*it).initialize(density_function);

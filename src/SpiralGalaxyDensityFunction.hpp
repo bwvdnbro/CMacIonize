@@ -96,12 +96,6 @@ public:
             log) {}
 
   /**
-   * @brief Perform all computationally expensive initialization that needs to
-   * be done before operator() will work.
-   */
-  inline void initialize() {}
-
-  /**
    * @brief Function that gives the density for a given cell.
    *
    * @param cell Geometrical information about the cell.

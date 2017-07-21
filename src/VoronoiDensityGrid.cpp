@@ -79,8 +79,6 @@
  *
  * @param position_generator VoronoiGeneratorDistribution used to generate
  * generator positions.
- * @param density_function DensityFunction to use to initialize the cell
- * variables.
  * @param box Box containing the entire grid (in m).
  * @param grid_type Type of Voronoi grid to use.
  * @param num_lloyd Number of Lloyd iterations to apply to the grid after it has
@@ -92,11 +90,11 @@
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
-    VoronoiGeneratorDistribution *position_generator,
-    DensityFunction &density_function, Box<> box, std::string grid_type,
-    unsigned char num_lloyd, CoordinateVector< bool > periodic, bool hydro,
-    double hydro_timestep, double hydro_gamma, Log *log)
-    : DensityGrid(density_function, box, periodic, hydro, log),
+    VoronoiGeneratorDistribution *position_generator, Box<> box,
+    std::string grid_type, unsigned char num_lloyd,
+    CoordinateVector< bool > periodic, bool hydro, double hydro_timestep,
+    double hydro_gamma, Log *log)
+    : DensityGrid(box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
       _periodic(periodic), _num_lloyd(num_lloyd),
       _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma),
@@ -122,15 +120,11 @@ VoronoiDensityGrid::VoronoiDensityGrid(
  * @brief ParameterFile constructor.
  *
  * @param params ParameterFile to read from.
- * @param density_function DensityFunction used to initialize the cell values.
  * @param log Log to write logging info to.
  */
-VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params,
-                                       DensityFunction &density_function,
-                                       Log *log)
+VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params, Log *log)
     : VoronoiDensityGrid(
           VoronoiGeneratorDistributionFactory::generate(params, log),
-          density_function,
           Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
@@ -158,9 +152,11 @@ VoronoiDensityGrid::~VoronoiDensityGrid() {
  * @brief Initialize the cells in the grid.
  *
  * @param block Block that should be initialized by this MPI process.
+ * @param density_function DensityFunction to use.
  */
 void VoronoiDensityGrid::initialize(
-    std::pair< unsigned long, unsigned long > &block) {
+    std::pair< unsigned long, unsigned long > &block,
+    DensityFunction &density_function) {
   // set up the cells
   if (_log) {
     _log->write_status("Initializing Voronoi grid...");
@@ -202,8 +198,8 @@ void VoronoiDensityGrid::initialize(
     }
   }
 
-  DensityGrid::initialize(block);
-  DensityGrid::initialize(block, _density_function);
+  DensityGrid::initialize(block, density_function);
+  DensityGrid::set_densities(block, density_function);
 }
 
 /**

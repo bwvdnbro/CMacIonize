@@ -29,7 +29,7 @@ macro(add_unit_test)
     set(multiValueArgs SOURCES LIBS)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
                                "${multiValueArgs}" ${ARGN})
-    message(STATUS "generating " ${TEST_NAME})
+    message(STATUS "generating ${TEST_NAME}")
     add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_SOURCES})
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                           ${PROJECT_BINARY_DIR}/rundir/test)
@@ -967,6 +967,61 @@ add_unit_test(NAME testDustSimulation
 configure_file(${PROJECT_SOURCE_DIR}/test/test_dustsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_dustsimulation.param
                COPYONLY)
+
+## Unit test for IonizationSimulation
+set(TESTIONIZATIONSIMULATION_SOURCES
+    testIonizationSimulation.cpp
+
+    ../src/AsciiFileDensityFunction.cpp
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/ChargeTransferRates.cpp
+    ../src/DensityGrid.cpp
+    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/InterpolatedDensityFunction.cpp
+    ../src/IonizationSimulation.cpp
+    ../src/IonizationSimulation.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/LineCoolingData.cpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/ParameterFile.cpp
+    ../src/PhotonSource.cpp
+    ../src/PlanckPhotonSourceSpectrum.cpp
+    ../src/SPHNGSnapshotDensityFunction.cpp
+    ../src/TemperatureCalculator.cpp
+    ../src/VernerCrossSections.cpp
+    ../src/VernerRecombinationRates.cpp
+    ../src/VoronoiDensityGrid.cpp
+    ../src/WMBasicPhotonSourceSpectrum.cpp
+
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
+)
+if(HAVE_MPI)
+  list(APPEND TESTIONIZATIONSIMULATION_LIBRARIES
+       ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)
+if(HAVE_HDF5)
+  list(APPEND TESTIONIZATIONSIMULATION_SOURCES
+       ../src/CMacIonizeSnapshotDensityFunction.cpp
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       ../src/FLASHSnapshotDensityFunction.cpp
+       ../src/GadgetDensityGridWriter.cpp
+       ../src/GadgetSnapshotDensityFunction.cpp
+       ../src/GadgetSnapshotPhotonSourceDistribution.cpp
+       )
+  list(APPEND TESTIONIZATIONSIMULATION_LIBRARIES
+       ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+add_unit_test(NAME testIonizationSimulation
+              SOURCES ${TESTIONIZATIONSIMULATION_SOURCES}
+              LIBS ${TESTIONIZATIONSIMULATION_LIBRARIES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

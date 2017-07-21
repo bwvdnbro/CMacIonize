@@ -104,11 +104,12 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     CoordinateVector< int > ncell(100, 1, 1);
     SodShockDensityFunction density_function;
+    density_function.initialize();
     CoordinateVector< bool > periodic(false, true, true);
-    CartesianDensityGrid grid(box, ncell, density_function, periodic, true);
+    CartesianDensityGrid grid(box, ncell, periodic, true);
     std::pair< unsigned long, unsigned long > block =
         std::make_pair(0, grid.get_number_of_cells());
-    grid.initialize(block);
+    grid.initialize(block, density_function);
 
     integrator.initialize_hydro_variables(grid);
 
@@ -171,14 +172,15 @@ int main(int argc, char **argv) {
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     SodShockDensityFunction density_function;
+    density_function.initialize();
     CoordinateVector< bool > periodic(false, false, false);
     OneDVoronoiGeneratorDistribution *generators =
         new OneDVoronoiGeneratorDistribution();
-    VoronoiDensityGrid grid(generators, density_function, box, "Old", 0,
-                            periodic, true, 0.001, 5. / 3.);
+    VoronoiDensityGrid grid(generators, box, "Old", 0, periodic, true, 0.001,
+                            5. / 3.);
     std::pair< unsigned long, unsigned long > block =
         std::make_pair(0, grid.get_number_of_cells());
-    grid.initialize(block);
+    grid.initialize(block, density_function);
 
     integrator.initialize_hydro_variables(grid);
 

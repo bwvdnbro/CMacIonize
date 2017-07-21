@@ -53,11 +53,12 @@ int main(int argc, char **argv) {
                                    ctr);
 
   HomogeneousDensityFunction function(1.);
+  function.initialize();
   Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 1, function);
+  CartesianDensityGrid grid(box, 1);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, function);
   DensityGrid::iterator cell = grid.begin();
 
   // test ioneng

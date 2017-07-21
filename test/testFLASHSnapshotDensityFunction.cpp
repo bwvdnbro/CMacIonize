@@ -46,6 +46,7 @@ double expected_density(CoordinateVector<> x) {
  */
 int main(int argc, char **argv) {
   FLASHSnapshotDensityFunction density("FLASHtest.hdf5");
+  density.initialize();
 
   unsigned int np = 128;
   double xi2 = 0.;

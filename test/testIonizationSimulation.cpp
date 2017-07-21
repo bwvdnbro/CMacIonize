@@ -17,44 +17,19 @@
  ******************************************************************************/
 
 /**
- * @file testInterpolatedDensityFunction.cpp
+ * @file testIonizationSimulation.cpp
  *
- * @brief Unit test for the InterpolatedDensityFunction class.
+ * @brief Unit test for the IonizationSimulation class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "Assert.hpp"
-#include "InterpolatedDensityFunction.hpp"
+#include "IonizationSimulation.hpp"
 
 /**
- * @brief Get the number density at the given vertical position.
- *
- * The test number density is @f$n = (z-1)^2 @f$.
- *
- * @param z Vertical position (in m).
- * @return Number density (in m^-3).
- */
-double get_number_density(double z) { return 1. + z * z; }
-
-/**
- * @brief Unit test for the InterpolateDensityFunction class.
+ * @brief Unit test for the IonizationSimulation class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
-int main(int argc, char **argv) {
-  InterpolatedDensityFunction density_function("test_interpolated_density.txt",
-                                               4000.);
-  density_function.initialize();
-
-  for (unsigned int i = 0; i < 1000; ++i) {
-    const CoordinateVector<> p(0.5, 0.5, (i + 0.5) * 0.001);
-    const DummyCell cell(p.x(), p.y(), p.z());
-    assert_values_equal_rel(density_function(cell).get_number_density(),
-                            get_number_density(p.z()), 1.e-4);
-    assert_condition(density_function(cell).get_temperature() == 4000.);
-  }
-
-  return 0;
-}
+int main(int argc, char **argv) { return 0; }

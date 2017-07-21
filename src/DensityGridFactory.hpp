@@ -46,13 +46,11 @@ public:
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
-   * @param function DensityFunction that returns the density field.
    * @param log Log to write logging info to.
    * @return Pointer to a newly created DensityGrid implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
   inline static DensityGrid *generate(ParameterFile &params,
-                                      DensityFunction &function,
                                       Log *log = nullptr) {
     std::string type =
         params.get_value< std::string >("densitygrid:type", "Cartesian");
@@ -60,11 +58,11 @@ public:
       log->write_info("Requested DensityGrid type: ", type);
     }
     if (type == "AMR") {
-      return new AMRDensityGrid(params, function, log);
+      return new AMRDensityGrid(params, log);
     } else if (type == "Cartesian") {
-      return new CartesianDensityGrid(params, function, log);
+      return new CartesianDensityGrid(params, log);
     } else if (type == "Voronoi") {
-      return new VoronoiDensityGrid(params, function, log);
+      return new VoronoiDensityGrid(params, log);
     } else {
       cmac_error("Unknown DensityGrid type: \"%s\".", type.c_str());
       return nullptr;

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,29 +17,35 @@
  ******************************************************************************/
 
 /**
- * @file testAsciiFileDensityFunction.cpp
+ * @file IonizationSimulation.hpp
  *
- * @brief Unit test for the AsciiDensityFunction class.
+ * @brief Ionization radiative transfer simulation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "AsciiFileDensityFunction.hpp"
-#include "Assert.hpp"
+#ifndef IONIZATIONSIMULATION_HPP
+#define IONIZATIONSIMULATION_HPP
+
+#include <string>
+
+class CommandLineParser;
+class Log;
+class MPICommunicator;
+class Timer;
 
 /**
- * @brief Unit test for the AsciiDensityFunction class.
- *
- * @param argc Number of command line arguments.
- * @param argv Command line arguments.
- * @return Exit code: 0 on success.
+ * @brief Ionization radiative transfer simulation.
  */
-int main(int argc, char **argv) {
-  CoordinateVector< int > ncell(8);
-  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
-  AsciiFileDensityFunction densityfunction("testgrid.txt", ncell, box, 2000.);
-  densityfunction.initialize();
+class IonizationSimulation {
+private:
+  /*! @brief Log to write logging info to. */
+  const Log *_log;
 
-  assert_condition(densityfunction.get_total_hydrogen_number() == 1.);
+public:
+  IonizationSimulation(const bool write_output,
+                       const bool every_iteration_output, const int num_threads,
+                       const std::string parameterfile, const bool dry_run,
+                       MPICommunicator &comm, Log *log = nullptr);
+};
 
-  return 0;
-}
+#endif // IONIZATIONSIMULATION_HPP

@@ -72,7 +72,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   // DensityGrid object with geometrical and physical properties
   SpiralGalaxyDensityFunction density_function(params, log);
 
-  CartesianDensityGrid grid(params, density_function, log);
+  CartesianDensityGrid grid(params, log);
 
   int random_seed = params.get_value< int >("random_seed", 42);
 
@@ -112,10 +112,18 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
     return 0;
   }
 
+  if (log) {
+    log->write_status("Initializing DensityFunction...");
+  }
+  density_function.initialize();
+  if (log) {
+    log->write_status("Done.");
+  }
+
   // done writing file, now initialize grid
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density_function);
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< DustPhotonShootJobMarket, DustPhotonShootJob >

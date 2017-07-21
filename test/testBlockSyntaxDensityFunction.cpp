@@ -36,16 +36,20 @@
  */
 int main(int argc, char **argv) {
   BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
+  density_function.initialize();
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box<> box(anchor, sides);
-  CartesianDensityGrid grid(box, 64, density_function);
-  assert_values_equal_tol(grid.get_total_hydrogen_number(),
+  CartesianDensityGrid grid(box, 64);
+  std::pair< unsigned long, unsigned long > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block, density_function);
+  assert_values_equal_rel(grid.get_total_hydrogen_number(),
                           4. * M_PI * 0.25 * 0.25 * 0.25 / 3 +
                               4. * M_PI * 0.125 * 0.125 * 0.125 / 3. +
                               4. * 0.125 * 0.125 * 0.125 / 3.,
-                          0.1);
+                          0.003);
 
   return 0;
 }

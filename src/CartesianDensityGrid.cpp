@@ -40,18 +40,16 @@ using namespace std;
  *
  * @param box Box containing the grid.
  * @param ncell Number of cells for each dimension.
- * @param density_function DensityFunction that defines the density field.
  * @param periodic Periodicity flags.
  * @param hydro Hydro flag.
  * @param log Log to write log messages to.
  */
 CartesianDensityGrid::CartesianDensityGrid(Box<> box,
                                            CoordinateVector< int > ncell,
-                                           DensityFunction &density_function,
                                            CoordinateVector< bool > periodic,
                                            bool hydro, Log *log)
-    : DensityGrid(density_function, box, periodic, hydro, log), _box(box),
-      _periodic(periodic), _ncell(ncell), _log(log) {
+    : DensityGrid(box, periodic, hydro, log), _box(box), _periodic(periodic),
+      _ncell(ncell), _log(log) {
 
   if (_log) {
     _log->write_status(
@@ -114,13 +112,9 @@ CartesianDensityGrid::CartesianDensityGrid(Box<> box,
  *   - an initial temperature for the gas of 8,000K.
  *
  * @param parameters ParameterFile to read.
- * @param density_function DensityFunction used to set the densities in each
- * cell.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
-                                           DensityFunction &density_function,
-                                           Log *log)
+CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters, Log *log)
     : CartesianDensityGrid(
           Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
                     "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
@@ -128,7 +122,6 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
                     "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
               "densitygrid:ncell", CoordinateVector< int >(64)),
-          density_function,
           parameters.get_value< CoordinateVector< bool > >(
               "densitygrid:periodicity", CoordinateVector< bool >(false)),
           parameters.get_value< bool >("hydro:active", false), log) {}
@@ -137,11 +130,13 @@ CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
  * @brief Initialize the cells in the grid.
  *
  * @param block Block that should be initialized by this MPI process.
+ * @param density_function DensityFunction to use.
  */
 void CartesianDensityGrid::initialize(
-    std::pair< unsigned long, unsigned long > &block) {
-  DensityGrid::initialize(block);
-  DensityGrid::initialize(block, _density_function);
+    std::pair< unsigned long, unsigned long > &block,
+    DensityFunction &density_function) {
+  DensityGrid::initialize(block, density_function);
+  DensityGrid::set_densities(block, density_function);
 }
 
 /**

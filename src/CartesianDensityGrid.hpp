@@ -127,19 +127,18 @@ private:
 public:
   CartesianDensityGrid(
       Box<> box, CoordinateVector< int > ncell,
-      DensityFunction &density_function,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
-  CartesianDensityGrid(ParameterFile &parameters,
-                       DensityFunction &density_function, Log *log = nullptr);
+  CartesianDensityGrid(ParameterFile &parameters, Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.
    */
   virtual ~CartesianDensityGrid() {}
 
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+                          DensityFunction &density_function);
 
   virtual unsigned int get_number_of_cells() const;
 

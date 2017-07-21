@@ -102,13 +102,14 @@ public:
  */
 int main(int argc, char **argv) {
   TestDensityFunction density_function;
+  density_function.initialize();
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      density_function, scheme, 5, false, false, &log);
+                      scheme, 5, false, false, &log);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density_function);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
   assert_values_equal(4000., grid.get_average_temperature());
