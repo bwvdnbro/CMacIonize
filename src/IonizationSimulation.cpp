@@ -30,7 +30,6 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
-#include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
@@ -49,145 +48,168 @@
  * @param write_output Should this process write output?
  * @param every_iteration_output Write an output file after every iteration of
  * the algorithm?
- * @param num_threads Number of shared memory parallel threads to use.
+ * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile Name of the parameter file to use.
- * @param dry_run Do a dry_run?
- * @param comm MPICommunicator to use for distributed memory communications.
+ * @param mpi_communicator MPICommunicator to use for distributed memory
+ * communications.
  * @param log Log to write logging info to.
  */
 IonizationSimulation::IonizationSimulation(const bool write_output,
                                            const bool every_iteration_output,
-                                           const int num_threads,
+                                           const int num_thread,
                                            const std::string parameterfile,
-                                           const bool dry_run,
-                                           MPICommunicator &comm, Log *log)
-    : _log(log) {
+                                           MPICommunicator *mpi_communicator,
+                                           Log *log)
+    : _num_thread(WorkEnvironment::set_max_num_threads(num_thread)),
+      _every_iteration_output(every_iteration_output),
+      _mpi_communicator(mpi_communicator), _log(log),
+      _work_distributor(_num_thread), _parameter_file(parameterfile),
+      _number_of_iterations(_parameter_file.get_value< unsigned int >(
+          "max_number_iterations", 10)),
+      _number_of_photons(
+          _parameter_file.get_value< unsigned int >("number of photons", 100)),
+      _number_of_photons_init(_parameter_file.get_value< unsigned int >(
+          "number of photons init", _number_of_photons)),
+      _abundances(_parameter_file, _log) {
 
-  // set the maximum number of openmp threads
-  WorkEnvironment::set_max_num_threads(num_threads);
+  if (_log) {
+    if (_num_thread == 1) {
+      _log->write_status("IonizationSimulation will use 1 thread.");
+    } else {
+      _log->write_status("IonizationSimulation will use ", _num_thread,
+                         " threads.");
+    }
+  }
 
-  // second: initialize the parameters that are read in from static files
-  // these files should be configured by CMake and put in a location that is
-  // stored in a CMake configured header
-  LineCoolingData line_cooling_data;
+  // create the density grid and related objects
+  _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
+  _density_mask = DensityMaskFactory::generate(_parameter_file, _log);
 
-  // third: read in the parameters of the run from a parameter file. This file
-  // should be read by a ParameterFile object that acts as a dictionary
-  ParameterFile params(parameterfile);
+  _density_grid = DensityGridFactory::generate(_parameter_file, _log);
 
-  // fourth: construct the density grid. This should be stored in a separate
-  // DensityGrid object with geometrical and physical properties
-  DensityFunction *density_function =
-      DensityFunctionFactory::generate(params, log);
-  DensityMask *density_mask = DensityMaskFactory::generate(params, log);
-  VernerCrossSections cross_sections;
-  VernerRecombinationRates recombination_rates;
+  // create the discrete UV sources
+  _photon_source_distribution =
+      PhotonSourceDistributionFactory::generate(_parameter_file, _log);
+  _photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
+      "photonsourcespectrum", _parameter_file, _log);
 
-  DensityGrid *grid = DensityGridFactory::generate(params, log);
-
-  // fifth: construct the stellar sources. These should be stored in a
-  // separate StellarSources object with geometrical and physical properties.
-  PhotonSourceDistribution *sourcedistribution =
-      PhotonSourceDistributionFactory::generate(params, log);
-  int random_seed = params.get_value< int >("random_seed", 42);
-  PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
-      "photonsourcespectrum", params, log);
-
-  if (sourcedistribution != nullptr && spectrum == nullptr) {
+  // sanity checks on discrete sources
+  if (_photon_source_distribution != nullptr &&
+      _photon_source_spectrum == nullptr) {
     cmac_error("No spectrum provided for the discrete photon sources!");
   }
-  if (sourcedistribution == nullptr && spectrum != nullptr) {
+  if (_photon_source_distribution == nullptr &&
+      _photon_source_spectrum != nullptr) {
     cmac_warning("Discrete photon source spectrum provided, but no discrete "
                  "photon source distributions. The given spectrum will be "
                  "ignored.");
   }
 
-  ContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(params, log);
-  PhotonSourceSpectrum *continuousspectrum =
-      PhotonSourceSpectrumFactory::generate("continuousphotonsourcespectrum",
-                                            params, log);
+  // create the continuous UV sources
+  _continuous_photon_source =
+      ContinuousPhotonSourceFactory::generate(_parameter_file, _log);
+  _continuous_photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
+      "continuousphotonsourcespectrum", _parameter_file, _log);
 
-  if (continuoussource != nullptr && continuousspectrum == nullptr) {
+  // sanity checks on continuous sources
+  if (_continuous_photon_source != nullptr &&
+      _continuous_photon_source_spectrum == nullptr) {
     cmac_error("No spectrum provided for the continuous photon sources!");
   }
-  if (continuoussource == nullptr && continuousspectrum != nullptr) {
+  if (_continuous_photon_source == nullptr &&
+      _continuous_photon_source_spectrum != nullptr) {
     cmac_warning("Continuous photon source spectrum provided, but no "
                  "continuous photon source. The given spectrum will be "
                  "ignored.");
   }
 
-  Abundances abundances(params, log);
-
-  PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, cross_sections, log);
+  // create the actual photon source objects that emits the UV photons
+  _photon_source = new PhotonSource(
+      _photon_source_distribution, _photon_source_spectrum,
+      _continuous_photon_source, _continuous_photon_source_spectrum,
+      _abundances, _cross_sections, _log);
+  const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output
-  DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(params, *grid, log);
+  _density_grid_writer = nullptr;
+  if (write_output) {
+    _density_grid_writer = DensityGridWriterFactory::generate(
+        _parameter_file, *_density_grid, _log);
+  }
 
-  unsigned int nloop =
-      params.get_value< unsigned int >("max_number_iterations", 10);
-
-  unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 100);
-  unsigned int numphoton1 =
-      params.get_value< unsigned int >("number of photons init", numphoton);
-  double Q = source.get_total_luminosity();
-
-  ChargeTransferRates charge_transfer_rates;
+  // computation objects
 
   // used to calculate the ionization state at fixed temperature
-  IonizationStateCalculator ionization_state_calculator(
-      Q, abundances, recombination_rates, charge_transfer_rates);
+  _ionization_state_calculator = new IonizationStateCalculator(
+      total_luminosity, _abundances, _recombination_rates,
+      _charge_transfer_rates);
 
   bool calculate_temperature =
-      params.get_value< bool >("calculate_temperature", true);
+      _parameter_file.get_value< bool >("calculate_temperature", true);
 
-  TemperatureCalculator *temperature_calculator = nullptr;
+  _temperature_calculator = nullptr;
   if (calculate_temperature) {
     // used to calculate both the ionization state and the temperature
-    temperature_calculator = new TemperatureCalculator(
-        Q, abundances, params.get_value< double >("pahfac", 1.),
-        params.get_value< double >("crfac", 0.),
-        params.get_value< double >("crlim", 0.75),
-        params.get_physical_value< QUANTITY_LENGTH >("crscale", "1.33333 kpc"),
-        line_cooling_data, recombination_rates, charge_transfer_rates, log);
+    _temperature_calculator = new TemperatureCalculator(
+        total_luminosity, _abundances,
+        _parameter_file.get_value< double >("pahfac", 1.),
+        _parameter_file.get_value< double >("crfac", 0.),
+        _parameter_file.get_value< double >("crlim", 0.75),
+        _parameter_file.get_physical_value< QUANTITY_LENGTH >("crscale",
+                                                              "1.33333 kpc"),
+        _line_cooling_data, _recombination_rates, _charge_transfer_rates, _log);
   }
+
+  // create ray tracing objects
+  int random_seed = _parameter_file.get_value< int >("random_seed", 42);
+  // make sure every thread on every process has another random seed
+  random_seed += _mpi_communicator->get_rank() * _num_thread;
+  _ionization_photon_shoot_job_market = new IonizationPhotonShootJobMarket(
+      *_photon_source, random_seed, *_density_grid, 0, 100, _num_thread);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
-    std::string folder = Utilities::get_absolute_path(
-        params.get_value< std::string >("densitygridwriter:folder", "."));
+    std::string folder =
+        Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
+            "densitygridwriter:folder", "."));
     std::ofstream pfile(folder + "/parameters-usedvalues.param");
-    params.print_contents(pfile);
+    _parameter_file.print_contents(pfile);
     pfile.close();
-    if (log) {
-      log->write_status("Wrote used parameters to ", folder,
-                        "/parameters-usedvalues.param.");
+    if (_log) {
+      _log->write_status("Wrote used parameters to ", folder,
+                         "/parameters-usedvalues.param.");
     }
   }
+}
 
-  if (dry_run) {
-    if (log) {
-      log->write_warning("Dry run requested. Program will now halt.");
-    }
+/**
+ * @brief Initialize the simulation.
+ *
+ * @param density_function DensityFunction to use. If no DensityFunction is
+ * given, the internal DensityFunction is used.
+ */
+void IonizationSimulation::initialize(DensityFunction *density_function) {
+
+  if (density_function == nullptr) {
+    density_function = _density_function;
   }
 
-  if (log) {
-    log->write_status("Initializing DensityFunction...");
+  // initialize the density function
+  if (_log) {
+    _log->write_status("Initializing DensityFunction...");
   }
   density_function->initialize();
-  if (log) {
-    log->write_status("Done.");
+  if (_log) {
+    _log->write_status("Done.");
   }
 
-  // done writing file, now initialize grid
+  // initialize the actual grid
   std::pair< unsigned long, unsigned long > block =
-      comm.distribute_block(0, grid->get_number_of_cells());
-  grid->initialize(block, *density_function);
+      _mpi_communicator->distribute_block(0,
+                                          _density_grid->get_number_of_cells());
+  _density_grid->initialize(block, *density_function);
 
   // grid->initialize initialized:
   // - densities
@@ -203,60 +225,55 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   //    comm.gather(grid->get_ionic_fraction_handle(ion));
   //  }
 
-  // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
-      workdistributor(num_threads);
-  const int worksize = workdistributor.get_worksize();
-  Timer worktimer;
+  // if necessary, initialize and apply the density mask
+  if (_density_mask != nullptr) {
+    if (_log) {
+      _log->write_status("Initializing DensityMask...");
+    }
+    _density_mask->initialize();
+    if (_log) {
+      _log->write_status("Done initializing mask. Applying mask...");
+    }
+    _density_mask->apply(*_density_grid);
+    if (_log) {
+      _log->write_status("Done applying mask.");
+    }
+  }
+}
 
-  if (density_mask != nullptr) {
-    log->write_status("Initializing DensityMask...");
-    density_mask->initialize(worksize);
-    log->write_status("Done initializing mask. Applying mask...");
-    density_mask->apply(*grid);
-    log->write_status("Done applying mask.");
+/**
+ * @brief Run the actual simulation.
+ */
+void IonizationSimulation::run() {
+  // write the initial state of the grid to an output file
+  if (_density_grid_writer) {
+    _density_grid_writer->write(0, _parameter_file);
   }
 
-  // make sure every thread on every process has another random seed
-  random_seed += comm.get_rank() * worksize;
-
-  if (log) {
-    log->write_status("Program will use ",
-                      workdistributor.get_worksize_string(),
-                      " for photon shooting.");
-  }
-  IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
-                                                 100, worksize);
-
-  if (write_output) {
-    writer->write(0, params);
-  }
-
+  std::pair< unsigned long, unsigned long > block =
+      _mpi_communicator->distribute_block(0,
+                                          _density_grid->get_number_of_cells());
   // finally: the actual program loop whereby the density grid is ray traced
   // using photon packets generated by the stellar sources
   unsigned int loop = 0;
-  while (loop < nloop) {
+  while (loop < _number_of_iterations) {
 
-    if (log) {
-      log->write_status("Starting loop ", loop, ".");
+    if (_log) {
+      _log->write_status("Starting loop ", loop, ".");
     }
 
-    //    if (loop == 3 || loop == 9) {
-    //      numphoton *= 10;
-    //    }
-
-    unsigned int lnumphoton = numphoton;
+    unsigned int lnumphoton = _number_of_photons;
 
     if (loop == 0) {
       // overwrite the number of photons for the first loop (might be useful
       // if more than 1 boundary is periodic, since the initial neutral
       // fractions are very low)
-      lnumphoton = numphoton1;
+      lnumphoton = _number_of_photons_init;
     }
 
-    grid->reset_grid(*density_function);
-    if (log) {
-      log->write_status("Start shooting ", lnumphoton, " photons...");
+    _density_grid->reset_grid(*_density_function);
+    if (_log) {
+      _log->write_status("Start shooting ", lnumphoton, " photons...");
     }
 
     double typecount[PHOTONTYPE_NUMBER] = {0};
@@ -266,28 +283,30 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
     unsigned int local_numphoton = lnumphoton;
 
     // make sure this process does only part of the total number of photons
-    local_numphoton = comm.distribute(local_numphoton);
+    local_numphoton = _mpi_communicator->distribute(local_numphoton);
 
-    photonshootjobs.set_numphoton(local_numphoton);
-    worktimer.start();
-    workdistributor.do_in_parallel(photonshootjobs);
-    worktimer.stop();
+    _ionization_photon_shoot_job_market->set_numphoton(local_numphoton);
+    _work_timer.start();
+    _work_distributor.do_in_parallel(*_ionization_photon_shoot_job_market);
+    _work_timer.stop();
 
-    photonshootjobs.update_counters(totweight, typecount);
+    _ionization_photon_shoot_job_market->update_counters(totweight, typecount);
 
     // make sure the total weight and typecount is reduced across all
     // processes
-    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
-    comm.reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(typecount);
+    _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
+    _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(
+        typecount);
 
-    if (log) {
-      log->write_status("Done shooting photons.");
-      log->write_status(100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
-                        "% of photons were reemitted as non-ionizing photons.");
-      log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                typecount[PHOTONTYPE_DIFFUSE_HeI]) /
-                            totweight,
-                        "% of photons were scattered.");
+    if (_log) {
+      _log->write_status("Done shooting photons.");
+      _log->write_status(
+          100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
+          "% of photons were reemitted as non-ionizing photons.");
+      _log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                                 typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+                             totweight,
+                         "% of photons were scattered.");
       double escape_fraction =
           (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
       // since totweight is updated in chunks, while the counters are updated
@@ -295,20 +314,20 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       // than the counter value. This gives (strange looking) negative escape
       // fractions, which we reset to 0 here.
       escape_fraction = std::max(0., escape_fraction);
-      log->write_status("Escape fraction: ", escape_fraction, "%.");
+      _log->write_status("Escape fraction: ", escape_fraction, "%.");
       double escape_fraction_HI =
           (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
-      log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
-                        "%.");
+      _log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
+                         "%.");
       double escape_fraction_HeI =
           (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
-      log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
-                        "%.");
+      _log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
+                         "%.");
     }
 
-    if (log) {
-      log->write_status("Calculating ionization state after shooting ",
-                        lnumphoton, " photons...");
+    if (_log) {
+      _log->write_status("Calculating ionization state after shooting ",
+                         lnumphoton, " photons...");
     }
 
     // reduce the mean intensity integrals and heating terms across all
@@ -327,11 +346,12 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
     //        >(grid->get_heating_He_handle());
     //      }
 
-    if (calculate_temperature && loop > 3) {
-      temperature_calculator->calculate_temperature(totweight, *grid, block);
+    if (_temperature_calculator && loop > 3) {
+      _temperature_calculator->calculate_temperature(totweight, *_density_grid,
+                                                     block);
     } else {
-      ionization_state_calculator.calculate_ionization_state(totweight, *grid,
-                                                             block);
+      _ionization_state_calculator->calculate_ionization_state(
+          totweight, *_density_grid, block);
     }
 
     // the calculation above will have changed the ionic fractions, and might
@@ -347,8 +367,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
     //        comm.gather(grid->get_temperature_handle());
     //      }
 
-    if (log) {
-      log->write_status("Done calculating ionization state.");
+    if (_log) {
+      _log->write_status("Done calculating ionization state.");
     }
 
     // calculate emissivities
@@ -360,39 +380,62 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
 
     ++loop;
 
-    if (write_output && every_iteration_output && loop < nloop) {
-      writer->write(loop, params);
+    if (_density_grid_writer && _every_iteration_output &&
+        loop < _number_of_iterations) {
+      _density_grid_writer->write(loop, _parameter_file);
     }
   }
 
-  if (log && loop == nloop) {
-    log->write_status("Maximum number of iterations (", nloop,
-                      ") reached, stopping.");
+  if (_log && loop == _number_of_iterations) {
+    _log->write_status("Maximum number of iterations (", _number_of_iterations,
+                       ") reached, stopping.");
   }
 
-  // write snapshot
-  if (write_output) {
-    writer->write(nloop, params);
+  // write final snapshot
+  if (_density_grid_writer) {
+    _density_grid_writer->write(_number_of_iterations, _parameter_file);
+  }
+}
+
+/**
+ * @brief Destructor.
+ *
+ * Deallocate memory used by internal variables.
+ */
+IonizationSimulation::~IonizationSimulation() {
+  if (_log) {
+    _log->write_status("Total photon shooting time: ",
+                       Utilities::human_readable_time(_work_timer.value()),
+                       ".");
   }
 
-  if (log) {
-    log->write_status("Total photon shooting time: ",
-                      Utilities::human_readable_time(worktimer.value()), ".");
-  }
+  // we delete the objects in the opposite order in which they were created
+  // note that we do not check for nullptrs, as deleting a nullptr is allowed
+  // and won't do anything
 
-  if (sourcedistribution != nullptr) {
-    delete sourcedistribution;
-  }
-  if (continuoussource != nullptr) {
-    delete continuoussource;
-  }
-  delete density_function;
-  if (density_mask != nullptr) {
-    delete density_mask;
-  }
-  delete writer;
-  delete grid;
-  delete temperature_calculator;
-  delete continuousspectrum;
-  delete spectrum;
+  // ray tracing objects
+  delete _ionization_photon_shoot_job_market;
+
+  // computation objects
+  delete _temperature_calculator;
+  delete _ionization_state_calculator;
+
+  // snapshot output
+  delete _density_grid_writer;
+
+  // actual photon source object
+  delete _photon_source;
+
+  // continuous sources
+  delete _continuous_photon_source_spectrum;
+  delete _continuous_photon_source;
+
+  // discrete sources
+  delete _photon_source_spectrum;
+  delete _photon_source_distribution;
+
+  // density grid and related objects
+  delete _density_grid;
+  delete _density_mask;
+  delete _density_function;
 }

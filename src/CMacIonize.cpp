@@ -42,6 +42,7 @@
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
+#include "IonizationSimulation.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
@@ -126,6 +127,9 @@ int main(int argc, char **argv) {
   parser.add_option("dusty-radiative-transfer", 0,
                     "Run a dusty radiative transfer simulation instead of an "
                     "ionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
+                              "instead of an ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
@@ -220,6 +224,31 @@ int main(int argc, char **argv) {
     }
     return DustSimulation::do_simulation(parser, write_output, programtimer,
                                          log);
+  }
+
+  if (!parser.get_value< bool >("rhd")) {
+    IonizationSimulation simulation(
+        write_output, parser.get_value< bool >("every-iteration-output"),
+        parser.get_value< int >("threads"),
+        parser.get_value< string >("params"), &comm, log);
+
+    if (parser.get_value< bool >("dry-run")) {
+      if (log) {
+        log->write_warning("Dry run requested. Program will now halt.");
+      }
+      return 0;
+    }
+
+    simulation.initialize();
+    simulation.run();
+
+    programtimer.stop();
+    if (log) {
+      log->write_status("Total program time: ",
+                        Utilities::human_readable_time(programtimer.value()),
+                        ".");
+    }
+    return 0;
   }
 
   bool every_iteration_output =

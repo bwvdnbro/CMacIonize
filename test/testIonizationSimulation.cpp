@@ -24,6 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "IonizationSimulation.hpp"
+#include "MPICommunicator.hpp"
+#include "TerminalLog.hpp"
 
 /**
  * @brief Unit test for the IonizationSimulation class.
@@ -32,4 +34,13 @@
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
-int main(int argc, char **argv) { return 0; }
+int main(int argc, char **argv) {
+  MPICommunicator comm(argc, argv);
+  TerminalLog log(LOGLEVEL_STATUS);
+  IonizationSimulation simulation(
+      true, false, -1, "test_ionizationsimulation.param", &comm, &log);
+  simulation.initialize();
+  simulation.run();
+
+  return 0;
+}

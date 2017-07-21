@@ -126,6 +126,7 @@ set(CMACIONIZE_SOURCES
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
+    IonizationSimulation.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     NewVoronoiCellConstructor.cpp

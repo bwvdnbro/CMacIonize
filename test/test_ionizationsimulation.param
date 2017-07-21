@@ -1,0 +1,69 @@
+# density grid
+densitygrid:
+  # type: a cartesian density grid
+  type: Cartesian
+  # anchor of the box: corner with the smallest coordinates
+  box_anchor: [-5. pc, -5. pc, -5. pc]
+  # side lengths of the box
+  box_sides: [10. pc, 10. pc, 10. pc]
+  # periodicity of the box
+  periodicity: [false, false, false]
+  # number of cells in each dimension
+  ncell: [32, 32, 32]
+
+# density function that sets up the density field in the box
+densityfunction:
+  # type of densityfunction: a constant density throughout the box
+  type: Homogeneous
+  # value for the constant density
+  density: 100. cm^-3
+  # value for the constant initial temperature
+  temperature: 8000. K
+
+# assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
+abundances:
+  helium: 0.
+
+# disable temperature calculation
+calculate_temperature: false
+
+# distribution of photon sources in the box
+photonsourcedistribution:
+  # type of distribution: a single stellar source
+  type: SingleStar
+  # position of the single stellar source
+  position: [0. pc, 0. pc, 0. pc]
+  # ionizing luminosity of the single stellar source
+  luminosity: 4.26e49 s^-1
+
+# spectrum of the photon sources
+photonsourcespectrum:
+  # type: a Planck black body spectrum
+  type: Planck
+  # temperature of the black body spectrum
+  temperature: 40000. K
+
+# number of photons to use
+number of photons: 50000
+
+# maximum number of iterations
+max_number_iterations: 4
+
+# iteration convergence: used to control convergence of the neutral fraction
+# calculation
+iterationconvergencechecker:
+  # type of IterationConvergenceChecker: disabled for this code version
+  type: Passive
+
+# photon number convergence: used to control convergence of the photon shooting
+# sub steps during a single iteration of the algorithm
+photonnumberconvergencechecker:
+  # Type of PhotonNumberConvergenceChecker: disabled for this code version
+  type: Passive
+
+# output options
+densitygridwriter:
+  # type of output files to write
+  type: AsciiFile
+  # prefix to add to output files
+  prefix: test_ionizationsimulation

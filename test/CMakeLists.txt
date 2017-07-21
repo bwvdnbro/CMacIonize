@@ -1022,6 +1022,9 @@ endif(HAVE_HDF5)
 add_unit_test(NAME testIonizationSimulation
               SOURCES ${TESTIONIZATIONSIMULATION_SOURCES}
               LIBS ${TESTIONIZATIONSIMULATION_LIBRARIES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
+               COPYONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
