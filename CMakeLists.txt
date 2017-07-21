@@ -28,6 +28,11 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 project(CMacIonize)
 
+# Add minimal cpp file for flag testing
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
 macro(add_compiler_flag FLAG FATAL)
   set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
@@ -51,6 +56,25 @@ macro(add_configuration_option NAME VALUE)
   set(CONFIGURATION_OPTIONS_VALUES
       "${CONFIGURATION_OPTIONS_VALUES}\"${VALUE}\",")
 endmacro(add_configuration_option)
+
+# Check if we are compiling on Windows
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS True)
+else(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS False)
+endif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+
+# If we are on Windows, make sure to add the _USE_MATH_DEFINES define to the
+# compilation command
+# And the NOMINMAX define to disable use of the min and max macros defined
+# by windows.h
+# And the _CRT_SECURE_NO_WARNINGS define to disable warnings about unsafe
+# sprintf usages
+if(HAVE_WINDOWS)
+  add_compiler_flag("-D_USE_MATH_DEFINES" REQUIRED)
+  add_compiler_flag("-DNOMINMAX" REQUIRED)
+  add_compiler_flag("-D_CRT_SECURE_NO_WARNINGS" REQUIRED)
+endif(HAVE_WINDOWS)
 
 # Check if we are on a POSIX system. If not, some functionality will not work
 # and we abort the configuration
@@ -84,11 +108,6 @@ set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 
 # Enable unit testing using CTest
 enable_testing()
-
-# Add minimal cpp file for flag testing
-execute_process(COMMAND ${CMAKE_COMMAND} -E echo
-                "int main(int argc, char **argv){ return 0; }"
-                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)

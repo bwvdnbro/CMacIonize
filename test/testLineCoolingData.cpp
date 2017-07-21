@@ -107,14 +107,14 @@ int main(int argc, char **argv) {
       Bc[i] = b;
     }
 
-    LineCoolingData::simq(A, B);
+    assert_condition(LineCoolingData::simq(A, B) == 0);
 
     for (unsigned int i = 0; i < 5; ++i) {
       double a = 0.;
       for (unsigned int j = 0; j < 5; ++j) {
         a += Ac[i][j] * B[j];
       }
-      assert_values_equal_rel(a, Bc[i], 1.e-11);
+      assert_values_equal_tol(a, Bc[i], 1.e-11);
     }
   }
 

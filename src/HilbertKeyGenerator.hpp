@@ -27,6 +27,7 @@
 #define HILBERTKEYGENERATOR_HPP
 
 #include "Box.hpp"
+#include <vector>
 
 /**
  * @brief Generator for Hilbert keys.

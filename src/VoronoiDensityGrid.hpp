@@ -99,6 +99,7 @@ public:
   get_neighbours(unsigned long index);
   virtual std::vector< Face > get_faces(unsigned long index) const;
   virtual double get_cell_volume(unsigned long index) const;
+  virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
   virtual double get_total_emission(CoordinateVector<> origin,
                                     CoordinateVector<> direction,

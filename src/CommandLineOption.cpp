@@ -19,7 +19,7 @@
 /**
  * @file CommandLineOption.cpp
  *
- * @brief Command line option: implementation
+ * @brief Command line option: implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */

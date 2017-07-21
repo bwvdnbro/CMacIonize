@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file PhotonShootJob.hpp
+ * @file IonizationPhotonShootJob.hpp
  *
- * @brief Job implementation that shoots photons through a DensityGrid.
+ * @brief Job implementation that shoots ionizing photons through a DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef PHOTONSHOOTJOB_HPP
-#define PHOTONSHOOTJOB_HPP
+#ifndef IONIZATIONPHOTONSHOOTJOB_HPP
+#define IONIZATIONPHOTONSHOOTJOB_HPP
 
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
@@ -32,9 +32,9 @@
 #include "RandomGenerator.hpp"
 
 /**
- * @brief Job implementation that shoots photons through a DensityGrid.
+ * @brief Job implementation that shoots ionizing photons through a DensityGrid.
  */
-class PhotonShootJob {
+class IonizationPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
   PhotonSource &_photon_source;
@@ -63,8 +63,8 @@ public:
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
    */
-  inline PhotonShootJob(PhotonSource &photon_source, int random_seed,
-                        DensityGrid &density_grid)
+  inline IonizationPhotonShootJob(PhotonSource &photon_source, int random_seed,
+                                  DensityGrid &density_grid)
       : _photon_source(photon_source), _random_generator(random_seed),
         _density_grid(density_grid), _totweight(0.), _typecount{0.},
         _numphoton(0) {}
@@ -94,7 +94,8 @@ public:
   /**
    * @brief Should the Job be deleted by the Worker when it is finished?
    *
-   * @return False, since the Job is reused and managed by PhotonShootJobMarket.
+   * @return False, since the Job is reused and managed by the
+   * IonizationPhotonShootJobMarket.
    */
   inline bool do_cleanup() const { return false; }
 
@@ -120,9 +121,9 @@ public:
   /**
    * @brief Get a name tag for this job.
    *
-   * @return "photonshootjob".
+   * @return "ionizationphotonshootjob".
    */
-  inline std::string get_tag() const { return "photonshootjob"; }
+  inline std::string get_tag() const { return "ionizationphotonshootjob"; }
 };
 
-#endif // PHOTONSHOOTJOB_HPP
+#endif // IONIZATIONPHOTONSHOOTJOB_HPP
