@@ -1026,6 +1026,16 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
                COPYONLY)
 
+## Unit test for SPHArrayDensityFunction
+set(TESTSPHARRAYDENSITYFUNCTION_SOURCES
+    testSPHArrayDensityFunction.cpp
+
+    ../src/SPHArrayDensityFunction.cpp
+    ../src/SPHArrayDensityFunction.hpp
+)
+add_unit_test(NAME testSPHArrayDensityFunction
+              SOURCES ${TESTSPHARRAYDENSITYFUNCTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
