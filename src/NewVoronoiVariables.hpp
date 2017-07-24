@@ -41,10 +41,6 @@
  *  structure. */
 #define NEWVORONOIGRID_NUM_BUCKET 1
 
-/*! @brief Maximum number of shared memory threads to use during parallel grid
- *  construction. */
-#define NEWVORONOIGRID_MAX_NUM_THREADS 128
-
 /// fixed parameters: do not touch!
 
 /*! @brief Some neighbour indices are reserved for special neighbours: the
