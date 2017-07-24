@@ -107,26 +107,19 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.cpp.in
 configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
                ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.hpp @ONLY)
 
-set(CMACIONIZE_SOURCES
+set(LIBIONIZATIONSIMULATION_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
-    CMacIonize.cpp
-    CommandLineOption.cpp
-    CommandLineParser.cpp
-    CompilerInfo.cpp.in
-    ConfigurationInfo.cpp.in
     DensityGrid.cpp
-    DustScattering.cpp
-    DustSimulation.cpp
-    EmissivityCalculator.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
-    HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationSimulation.cpp
+    IonizationSimulation.hpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     NewVoronoiCellConstructor.cpp
@@ -142,6 +135,30 @@ set(CMACIONIZE_SOURCES
     VernerRecombinationRates.cpp
     VoronoiDensityGrid.cpp
     WMBasicPhotonSourceSpectrum.cpp
+
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
+)
+if(HAVE_HDF5)
+  list(APPEND LIBIONIZATIONSIMULATION_SOURCES
+       ../src/CMacIonizeSnapshotDensityFunction.cpp
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       ../src/FLASHSnapshotDensityFunction.cpp
+       ../src/GadgetDensityGridWriter.cpp
+       ../src/GadgetSnapshotDensityFunction.cpp
+       ../src/GadgetSnapshotPhotonSourceDistribution.cpp
+       )
+endif(HAVE_HDF5)
+
+set(CMACIONIZE_SOURCES
+    CMacIonize.cpp
+    CommandLineOption.cpp
+    CommandLineParser.cpp
+    CompilerInfo.cpp.in
+    ConfigurationInfo.cpp.in
+    DustScattering.cpp
+    DustSimulation.cpp
+    EmissivityCalculator.cpp
 
     Abundances.hpp
     AMRRefinementScheme.hpp
@@ -219,9 +236,6 @@ set(CMACIONIZE_SOURCES
     WorkDistributor.hpp
     WorkEnvironment.hpp
     Worker.hpp
-
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
@@ -252,7 +266,21 @@ else(HAVE_WINDOWS)
          Unix.hpp)
 endif(HAVE_WINDOWS)
 
+add_library(IonizationSimulation ${LIBIONIZATIONSIMULATION_SOURCES})
+add_dependencies(IonizationSimulation CompilerInfo)
+
+# link to HDF5, if we have found it
+if(HAVE_HDF5)
+    target_link_libraries(IonizationSimulation ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(IonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)
+
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+target_link_libraries(CMacIonize IonizationSimulation)
 add_dependencies(CMacIonize CompilerInfo)
 
 # link to HDF5, if we have found it
