@@ -1030,6 +1030,9 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
 set(TESTSPHARRAYDENSITYFUNCTION_SOURCES
     testSPHArrayDensityFunction.cpp
 
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
     ../src/SPHArrayDensityFunction.cpp
     ../src/SPHArrayDensityFunction.hpp
 )

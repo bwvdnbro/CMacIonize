@@ -117,6 +117,8 @@ public:
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotDensityFunction(params, log);
 #endif
+    } else if (type == "None") {
+      return nullptr;
     } else {
       cmac_error("Unknown DensityFunction type: \"%s\".", type.c_str());
       return nullptr;
