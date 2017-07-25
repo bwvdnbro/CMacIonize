@@ -971,57 +971,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_dustsimulation.param
 ## Unit test for IonizationSimulation
 set(TESTIONIZATIONSIMULATION_SOURCES
     testIonizationSimulation.cpp
-
-    ../src/AsciiFileDensityFunction.cpp
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/ChargeTransferRates.cpp
-    ../src/DensityGrid.cpp
-    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/InterpolatedDensityFunction.cpp
-    ../src/IonizationSimulation.cpp
-    ../src/IonizationSimulation.hpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/LineCoolingData.cpp
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiGrid.cpp
-    ../src/ParameterFile.cpp
-    ../src/PhotonSource.cpp
-    ../src/PlanckPhotonSourceSpectrum.cpp
-    ../src/SPHNGSnapshotDensityFunction.cpp
-    ../src/TemperatureCalculator.cpp
-    ../src/VernerCrossSections.cpp
-    ../src/VernerRecombinationRates.cpp
-    ../src/VoronoiDensityGrid.cpp
-    ../src/WMBasicPhotonSourceSpectrum.cpp
-
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
-if(HAVE_MPI)
-  list(APPEND TESTIONIZATIONSIMULATION_LIBRARIES
-       ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-endif(HAVE_MPI)
-if(HAVE_HDF5)
-  list(APPEND TESTIONIZATIONSIMULATION_SOURCES
-       ../src/CMacIonizeSnapshotDensityFunction.cpp
-       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
-       ../src/FLASHSnapshotDensityFunction.cpp
-       ../src/GadgetDensityGridWriter.cpp
-       ../src/GadgetSnapshotDensityFunction.cpp
-       ../src/GadgetSnapshotPhotonSourceDistribution.cpp
-       )
-  list(APPEND TESTIONIZATIONSIMULATION_LIBRARIES
-       ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
 add_unit_test(NAME testIonizationSimulation
               SOURCES ${TESTIONIZATIONSIMULATION_SOURCES}
-              LIBS ${TESTIONIZATIONSIMULATION_LIBRARIES})
+              LIBS IonizationSimulation)
 configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
                COPYONLY)
@@ -1038,6 +991,14 @@ set(TESTSPHARRAYDENSITYFUNCTION_SOURCES
 )
 add_unit_test(NAME testSPHArrayDensityFunction
               SOURCES ${TESTSPHARRAYDENSITYFUNCTION_SOURCES})
+
+## Unit test for CMILibrary
+set(TESTCMILIBRARY_SOURCES
+    testCMILibrary.cpp
+)
+add_unit_test(NAME testCMILibrary
+              SOURCES ${TESTCMILIBRARY_SOURCES}
+              LIBS CMILibrary)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

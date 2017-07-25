@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
   ParameterFile params;
+  SPHArrayDensityFunction density_function(1., 1.);
 
   /// double precision arrays
   {
@@ -58,9 +59,8 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    SPHArrayDensityFunction density_function(x.data(), y.data(), z.data(),
-                                             h.data(), m.data(), 1000, 1., 1.,
-                                             false, nullptr, nullptr);
+    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
+                           1000);
     density_function.initialize();
 
     grid.initialize(block, density_function);
@@ -88,9 +88,8 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    SPHArrayDensityFunction density_function(x.data(), y.data(), z.data(),
-                                             h.data(), m.data(), 1000, 1., 1.,
-                                             false, nullptr, nullptr);
+    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
+                           1000);
     density_function.initialize();
 
     grid.initialize(block, density_function);
@@ -118,9 +117,8 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    SPHArrayDensityFunction density_function(x.data(), y.data(), z.data(),
-                                             h.data(), m.data(), 1000, 1., 1.,
-                                             false, nullptr, nullptr);
+    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
+                           1000);
     density_function.initialize();
 
     grid.initialize(block, density_function);

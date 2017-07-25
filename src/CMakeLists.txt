@@ -244,13 +244,6 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
     list(APPEND CMACIONIZE_SOURCES
-        CMacIonizeSnapshotDensityFunction.cpp
-        CMacIonizeVoronoiGeneratorDistribution.cpp
-        FLASHSnapshotDensityFunction.cpp
-        GadgetDensityGridWriter.cpp
-        GadgetSnapshotDensityFunction.cpp
-        GadgetSnapshotPhotonSourceDistribution.cpp
-
         FLASHSnapshotDensityFunction.hpp
         GadgetDensityGridWriter.hpp
         GadgetSnapshotDensityFunction.hpp
@@ -266,6 +259,13 @@ else(HAVE_WINDOWS)
          Unix.hpp)
 endif(HAVE_WINDOWS)
 
+set(LIBCMILIBRARY_SOURCES
+    CMILibrary.cpp
+    SPHArrayDensityFunction.cpp
+
+    CMILibrary.hpp
+)
+
 add_library(IonizationSimulation ${LIBIONIZATIONSIMULATION_SOURCES})
 add_dependencies(IonizationSimulation CompilerInfo)
 
@@ -278,6 +278,9 @@ endif(HAVE_HDF5)
 if(HAVE_MPI)
     target_link_libraries(IonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif(HAVE_MPI)
+
+add_library(CMILibrary ${LIBCMILIBRARY_SOURCES})
+target_link_libraries(CMILibrary IonizationSimulation)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 target_link_libraries(CMacIonize IonizationSimulation)

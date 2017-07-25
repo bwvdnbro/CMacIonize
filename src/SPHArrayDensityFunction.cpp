@@ -52,170 +52,68 @@ double SPHArrayDensityFunction::cubic_spline_kernel(double u, double h) {
 /**
  * @brief Constructor.
  *
- * @param x Array containing x coordinates (in the given length unit).
- * @param y Array containing y coordinates (in the given length unit).
- * @param z Array containing z coordinates (in the given length unit).
- * @param h Array containing smoothing lengths (in the given length unit).
- * @param m Array containing masses (in the given mass unit).
- * @param npart Number of elements in each of the arrays.
+ * Non-periodic version.
+ *
  * @param unit_length_in_SI Length unit used in the input arrays (in m).
  * @param unit_mass_in_SI Mass unit used in the input arrays (in kg).
- * @param periodic Periodicity flag.
+ */
+SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
+                                                 const double unit_mass_in_SI)
+    : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _periodic(false), _octree(nullptr) {}
+
+/**
+ * @brief Constructor.
+ *
+ * Periodic double precision version.
+ *
+ * @param unit_length_in_SI Length unit used in the input arrays (in m).
+ * @param unit_mass_in_SI Mass unit used in the input arrays (in kg).
  * @param box_anchor Coordinates of the left front bottom corner of the
  * simulation box (in the given length unit).
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  */
-SPHArrayDensityFunction::SPHArrayDensityFunction(
-    const double *x, const double *y, const double *z, const double *h,
-    const double *m, const size_t npart, const double unit_length_in_SI,
-    const double unit_mass_in_SI, const bool periodic, const double *box_anchor,
-    const double *box_sides)
+SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
+                                                 const double unit_mass_in_SI,
+                                                 const double *box_anchor,
+                                                 const double *box_sides)
     : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _periodic(periodic), _octree(nullptr) {
+      _periodic(true), _octree(nullptr) {
 
-  _positions.resize(npart);
-  _smoothing_lengths.resize(npart, 0.);
-  _masses.resize(npart, 0.);
-
-  CoordinateVector<> minpos(DBL_MAX);
-  CoordinateVector<> maxpos(-DBL_MAX);
-  for (size_t i = 0; i < npart; ++i) {
-    _positions[i][0] = x[i] * _unit_length_in_SI;
-    _positions[i][1] = y[i] * _unit_length_in_SI;
-    _positions[i][2] = z[i] * _unit_length_in_SI;
-    _smoothing_lengths[i] = h[i] * _unit_length_in_SI;
-    _masses[i] = m[i] * _unit_mass_in_SI;
-    minpos = CoordinateVector<>::min(minpos, _positions[i]);
-    maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
-  }
-
-  if (_periodic) {
-    _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
-    _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
-    _box.get_anchor()[2] = box_anchor[2] * _unit_length_in_SI;
-    _box.get_sides()[0] = box_sides[0] * _unit_length_in_SI;
-    _box.get_sides()[1] = box_sides[1] * _unit_length_in_SI;
-    _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
-  } else {
-    maxpos -= minpos;
-    _box.get_anchor() = minpos - 0.005 * maxpos;
-    _box.get_sides() = 1.01 * maxpos;
-  }
+  _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
+  _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
+  _box.get_anchor()[2] = box_anchor[2] * _unit_length_in_SI;
+  _box.get_sides()[0] = box_sides[0] * _unit_length_in_SI;
+  _box.get_sides()[1] = box_sides[1] * _unit_length_in_SI;
+  _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
 }
 
 /**
  * @brief Constructor.
  *
- * This version uses single precision smoothing lengths and masses.
+ * Periodic single precision version.
  *
- * @param x Array containing x coordinates (in the given length unit).
- * @param y Array containing y coordinates (in the given length unit).
- * @param z Array containing z coordinates (in the given length unit).
- * @param h Array containing smoothing lengths (in the given length unit).
- * @param m Array containing masses (in the given mass unit).
- * @param npart Number of elements in each of the arrays.
  * @param unit_length_in_SI Length unit used in the input arrays (in m).
  * @param unit_mass_in_SI Mass unit used in the input arrays (in kg).
- * @param periodic Periodicity flag.
  * @param box_anchor Coordinates of the left front bottom corner of the
  * simulation box (in the given length unit).
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  */
-SPHArrayDensityFunction::SPHArrayDensityFunction(
-    const double *x, const double *y, const double *z, const float *h,
-    const float *m, const size_t npart, const double unit_length_in_SI,
-    const double unit_mass_in_SI, const bool periodic, const double *box_anchor,
-    const double *box_sides)
+SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
+                                                 const double unit_mass_in_SI,
+                                                 const float *box_anchor,
+                                                 const float *box_sides)
     : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _periodic(periodic), _octree(nullptr) {
+      _periodic(true), _octree(nullptr) {
 
-  _positions.resize(npart);
-  _smoothing_lengths.resize(npart, 0.);
-  _masses.resize(npart, 0.);
-
-  CoordinateVector<> minpos(DBL_MAX);
-  CoordinateVector<> maxpos(-DBL_MAX);
-  for (size_t i = 0; i < npart; ++i) {
-    _positions[i][0] = x[i] * _unit_length_in_SI;
-    _positions[i][1] = y[i] * _unit_length_in_SI;
-    _positions[i][2] = z[i] * _unit_length_in_SI;
-    _smoothing_lengths[i] = h[i] * _unit_length_in_SI;
-    _masses[i] = m[i] * _unit_mass_in_SI;
-    minpos = CoordinateVector<>::min(minpos, _positions[i]);
-    maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
-  }
-
-  if (_periodic) {
-    _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
-    _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
-    _box.get_anchor()[2] = box_anchor[2] * _unit_length_in_SI;
-    _box.get_sides()[0] = box_sides[0] * _unit_length_in_SI;
-    _box.get_sides()[1] = box_sides[1] * _unit_length_in_SI;
-    _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
-  } else {
-    maxpos -= minpos;
-    _box.get_anchor() = minpos - 0.005 * maxpos;
-    _box.get_sides() = 1.01 * maxpos;
-  }
-}
-
-/**
- * @brief Constructor.
- *
- * This version uses single precision coordinates, smoothing lengths and masses.
- *
- * @param x Array containing x coordinates (in the given length unit).
- * @param y Array containing y coordinates (in the given length unit).
- * @param z Array containing z coordinates (in the given length unit).
- * @param h Array containing smoothing lengths (in the given length unit).
- * @param m Array containing masses (in the given mass unit).
- * @param npart Number of elements in each of the arrays.
- * @param unit_length_in_SI Length unit used in the input arrays (in m).
- * @param unit_mass_in_SI Mass unit used in the input arrays (in kg).
- * @param periodic Periodicity flag.
- * @param box_anchor Coordinates of the left front bottom corner of the
- * simulation box (in the given length unit).
- * @param box_sides Side lengths of the simulation box (in the given length
- * unit).
- */
-SPHArrayDensityFunction::SPHArrayDensityFunction(
-    const float *x, const float *y, const float *z, const float *h,
-    const float *m, const size_t npart, const double unit_length_in_SI,
-    const double unit_mass_in_SI, const bool periodic, const float *box_anchor,
-    const float *box_sides)
-    : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _periodic(periodic), _octree(nullptr) {
-
-  _positions.resize(npart);
-  _smoothing_lengths.resize(npart, 0.);
-  _masses.resize(npart, 0.);
-
-  CoordinateVector<> minpos(DBL_MAX);
-  CoordinateVector<> maxpos(-DBL_MAX);
-  for (size_t i = 0; i < npart; ++i) {
-    _positions[i][0] = x[i] * _unit_length_in_SI;
-    _positions[i][1] = y[i] * _unit_length_in_SI;
-    _positions[i][2] = z[i] * _unit_length_in_SI;
-    _smoothing_lengths[i] = h[i] * _unit_length_in_SI;
-    _masses[i] = m[i] * _unit_mass_in_SI;
-    minpos = CoordinateVector<>::min(minpos, _positions[i]);
-    maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
-  }
-
-  if (_periodic) {
-    _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
-    _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
-    _box.get_anchor()[2] = box_anchor[2] * _unit_length_in_SI;
-    _box.get_sides()[0] = box_sides[0] * _unit_length_in_SI;
-    _box.get_sides()[1] = box_sides[1] * _unit_length_in_SI;
-    _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
-  } else {
-    maxpos -= minpos;
-    _box.get_anchor() = minpos - 0.005 * maxpos;
-    _box.get_sides() = 1.01 * maxpos;
-  }
+  _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
+  _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
+  _box.get_anchor()[2] = box_anchor[2] * _unit_length_in_SI;
+  _box.get_sides()[0] = box_sides[0] * _unit_length_in_SI;
+  _box.get_sides()[1] = box_sides[1] * _unit_length_in_SI;
+  _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
 }
 
 /**

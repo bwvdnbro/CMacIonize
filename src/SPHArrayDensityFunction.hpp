@@ -65,21 +65,14 @@ private:
   static double cubic_spline_kernel(double u, double h);
 
 public:
-  SPHArrayDensityFunction(const double *x, const double *y, const double *z,
-                          const double *h, const double *m, const size_t npart,
-                          const double unit_length_in_SI,
-                          const double unit_mass_in_SI, const bool periodic,
+  SPHArrayDensityFunction(const double unit_length_in_SI,
+                          const double unit_mass_in_SI);
+  SPHArrayDensityFunction(const double unit_length_in_SI,
+                          const double unit_mass_in_SI,
                           const double *box_anchor, const double *box_sides);
-  SPHArrayDensityFunction(const double *x, const double *y, const double *z,
-                          const float *h, const float *m, const size_t npart,
-                          const double unit_length_in_SI,
-                          const double unit_mass_in_SI, const bool periodic,
-                          const double *box_anchor, const double *box_sides);
-  SPHArrayDensityFunction(const float *x, const float *y, const float *z,
-                          const float *h, const float *m, const size_t npart,
-                          const double unit_length_in_SI,
-                          const double unit_mass_in_SI, const bool periodic,
-                          const float *box_anchor, const float *box_sides);
+  SPHArrayDensityFunction(const double unit_length_in_SI,
+                          const double unit_mass_in_SI, const float *box_anchor,
+                          const float *box_sides);
   ~SPHArrayDensityFunction();
 
   void reset(const double *x, const double *y, const double *z, const double *h,
