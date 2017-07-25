@@ -26,9 +26,11 @@
 #include "CMILibrary.hpp"
 #include "IonizationSimulation.hpp"
 #include "SPHArrayDensityFunction.hpp"
+#include "SPHArrayDensityGridWriter.hpp"
 
 IonizationSimulation *global_ionization_simulation = nullptr;
 SPHArrayDensityFunction *global_density_function = nullptr;
+SPHArrayDensityGridWriter *global_density_grid_writer = nullptr;
 
 /**
  * @brief Initialize the CMI library.
@@ -47,6 +49,7 @@ void cmi_init(const char *parameter_file, const int num_thread,
       false, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function =
       new SPHArrayDensityFunction(unit_length_in_SI, unit_mass_in_SI);
+  global_density_grid_writer = new SPHArrayDensityGridWriter();
 }
 
 /**
@@ -69,9 +72,10 @@ void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
                           const double *box_anchor, const double *box_sides) {
 
   global_ionization_simulation = new IonizationSimulation(
-      false, false, num_thread, parameter_file, nullptr, nullptr);
+      true, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function = new SPHArrayDensityFunction(
       unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
+  global_density_grid_writer = new SPHArrayDensityGridWriter();
 }
 
 /**
@@ -97,6 +101,7 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
       false, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function = new SPHArrayDensityFunction(
       unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
+  global_density_grid_writer = new SPHArrayDensityGridWriter();
 }
 
 /**
@@ -105,6 +110,7 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
 void cmi_destroy() {
   delete global_ionization_simulation;
   delete global_density_function;
+  delete global_density_grid_writer;
 }
 
 /**
@@ -128,7 +134,9 @@ void cmi_compute_neutral_fraction_dp(const double *x, const double *y,
 
   global_density_function->reset(x, y, z, h, m, N);
   global_ionization_simulation->initialize(global_density_function);
-  global_ionization_simulation->run();
+  global_density_grid_writer->reset(N, global_density_function->get_octree());
+  global_ionization_simulation->run(global_density_grid_writer);
+  global_density_grid_writer->fill_array(nH);
 }
 
 /**
@@ -152,7 +160,9 @@ void cmi_compute_neutral_fraction_mp(const double *x, const double *y,
 
   global_density_function->reset(x, y, z, h, m, N);
   global_ionization_simulation->initialize(global_density_function);
-  global_ionization_simulation->run();
+  global_density_grid_writer->reset(N, global_density_function->get_octree());
+  global_ionization_simulation->run(global_density_grid_writer);
+  global_density_grid_writer->fill_array(nH);
 }
 
 /**
@@ -176,5 +186,7 @@ void cmi_compute_neutral_fraction_sp(const float *x, const float *y,
 
   global_density_function->reset(x, y, z, h, m, N);
   global_ionization_simulation->initialize(global_density_function);
-  global_ionization_simulation->run();
+  global_density_grid_writer->reset(N, global_density_function->get_octree());
+  global_ionization_simulation->run(global_density_grid_writer);
+  global_density_grid_writer->fill_array(nH);
 }

@@ -30,12 +30,16 @@
 
 class IonizationSimulation;
 class SPHArrayDensityFunction;
+class SPHArrayDensityGridWriter;
 
 /*! @brief Global IonizationSimulation object used by the library. */
 extern IonizationSimulation *global_ionization_simulation;
 
 /*! @brief Global SPHArrayDensityFunction object used by the library. */
 extern SPHArrayDensityFunction *global_density_function;
+
+/*! @brief Global SPHArrayDensityGridWriter object used by the library. */
+extern SPHArrayDensityGridWriter *global_density_grid_writer;
 
 extern "C" {
 void cmi_init(const char *parameter_file, const int num_thread,

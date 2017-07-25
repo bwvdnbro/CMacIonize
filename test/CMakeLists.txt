@@ -999,6 +999,9 @@ set(TESTCMILIBRARY_SOURCES
 add_unit_test(NAME testCMILibrary
               SOURCES ${TESTCMILIBRARY_SOURCES}
               LIBS CMILibrary)
+configure_file(${PROJECT_SOURCE_DIR}/test/test_CMI_library.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_CMI_library.param
+               COPYONLY)
 
 ## Unit test for SPHArrayDensityGridWriter
 set(TESTSPHARRAYDENSITYGRIDWRITER_SOURCES
