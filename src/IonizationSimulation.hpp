@@ -177,7 +177,7 @@ public:
                        Log *log = nullptr);
 
   void initialize(DensityFunction *density_function = nullptr);
-  void run();
+  void run(DensityGridWriter *density_grid_writer = nullptr);
 
   ~IonizationSimulation();
 };

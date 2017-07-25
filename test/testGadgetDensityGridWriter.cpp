@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);
-    GadgetDensityGridWriter writer("testgrid", grid, ".", &log);
-    writer.write(0, params);
+    GadgetDensityGridWriter writer("testgrid", ".", &log);
+    writer.write(grid, 0, params);
   }
 
   // read file and check contents

@@ -82,6 +82,8 @@ public:
   void reset(const float *x, const float *y, const float *z, const float *h,
              const float *m, const size_t npart);
 
+  Octree *get_octree();
+
   virtual void initialize();
   virtual DensityValues operator()(const Cell &cell) const;
 };

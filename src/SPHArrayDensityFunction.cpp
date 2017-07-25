@@ -251,6 +251,13 @@ void SPHArrayDensityFunction::reset(const float *x, const float *y,
 }
 
 /**
+ * @brief Get a pointer to the internal Octree.
+ *
+ * @return Pointer to the internal Octree.
+ */
+Octree *SPHArrayDensityFunction::get_octree() { return _octree; }
+
+/**
  * @brief Initialize the internal Octree.
  */
 void SPHArrayDensityFunction::initialize() {

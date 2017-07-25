@@ -54,10 +54,9 @@ int main(int argc, char **argv) {
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
-  AsciiFileDensityGridWriter writer("test_spiralgalaxydensityfunction", grid,
-                                    ".");
+  AsciiFileDensityGridWriter writer("test_spiralgalaxydensityfunction", ".");
   ParameterFile params;
-  writer.write(0, params);
+  writer.write(grid, 0, params);
 
   return 0;
 }

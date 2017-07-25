@@ -133,8 +133,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   // set up output
   _density_grid_writer = nullptr;
   if (write_output) {
-    _density_grid_writer = DensityGridWriterFactory::generate(
-        _parameter_file, *_density_grid, _log);
+    _density_grid_writer =
+        DensityGridWriterFactory::generate(_parameter_file, _log);
   }
 
   // computation objects
@@ -249,11 +249,14 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
 
 /**
  * @brief Run the actual simulation.
+ *
+ * @param density_grid_writer DensityGridWriter to use for the final output. If
+ * an internal DensityGridWriter exists, this one will write more output.
  */
-void IonizationSimulation::run() {
+void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
   // write the initial state of the grid to an output file
   if (_density_grid_writer) {
-    _density_grid_writer->write(0, _parameter_file);
+    _density_grid_writer->write(*_density_grid, 0, _parameter_file);
   }
 
   std::pair< unsigned long, unsigned long > block;
@@ -396,7 +399,7 @@ void IonizationSimulation::run() {
 
     if (_density_grid_writer && _every_iteration_output &&
         loop < _number_of_iterations) {
-      _density_grid_writer->write(loop, _parameter_file);
+      _density_grid_writer->write(*_density_grid, loop, _parameter_file);
     }
   }
 
@@ -407,7 +410,12 @@ void IonizationSimulation::run() {
 
   // write final snapshot
   if (_density_grid_writer) {
-    _density_grid_writer->write(_number_of_iterations, _parameter_file);
+    _density_grid_writer->write(*_density_grid, _number_of_iterations,
+                                _parameter_file);
+  }
+  if (density_grid_writer) {
+    density_grid_writer->write(*_density_grid, _number_of_iterations,
+                               _parameter_file);
   }
 }
 

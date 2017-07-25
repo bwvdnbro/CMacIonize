@@ -40,9 +40,6 @@ class ParameterFile;
  */
 class DensityGridWriter {
 protected:
-  /*! @brief DensityGrid containing the data to write. */
-  DensityGrid &_grid;
-
   /*! @brief Name of the folder where output files should be placed. */
   std::string _output_folder;
 
@@ -53,15 +50,16 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param grid Grid to write out.
    * @param output_folder Name of the folder where output files should be
    * placed.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(DensityGrid &grid, std::string output_folder,
-                    Log *log = nullptr)
-      : _grid(grid), _output_folder(output_folder), _log(log) {
-    _output_folder = Utilities::get_absolute_path(_output_folder);
+  DensityGridWriter(std::string output_folder, Log *log = nullptr)
+      : _output_folder(output_folder), _log(log) {
+
+    if (_output_folder != "") {
+      _output_folder = Utilities::get_absolute_path(_output_folder);
+    }
     if (_log) {
       _log->write_status("Output will be written to ", _output_folder, "/");
     }
@@ -75,13 +73,14 @@ public:
   /**
    * @brief Write a snapshot.
    *
+   * @param grid DensityGrid to write.
    * @param iteration Iteration number to use in the snapshot file name(s).
    * @param params ParameterFile containing the run parameters that should be
    * written to the file.
    * @param time Simulation time (in s).
    */
-  virtual void write(unsigned int iteration, ParameterFile &params,
-                     double time = 0.) = 0;
+  virtual void write(DensityGrid &grid, unsigned int iteration,
+                     ParameterFile &params, double time = 0.) = 0;
 };
 
 #endif // DENSITYGRIDWRITER_HPP

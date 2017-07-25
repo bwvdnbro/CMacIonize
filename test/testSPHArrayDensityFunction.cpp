@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.25878e26,
                             1.e-6);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_double",
-                                      grid, ".");
-    writer.write(0, params);
+                                      ".");
+    writer.write(grid, 0, params);
   }
 
   /// double precision positions, single precision smoothing lengths and masses
@@ -98,8 +98,8 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.19135e26,
                             1.e-6);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_dfloat",
-                                      grid, ".");
-    writer.write(0, params);
+                                      ".");
+    writer.write(grid, 0, params);
   }
 
   /// single precision arrays
@@ -127,8 +127,8 @@ int main(int argc, char **argv) {
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.23194e26,
                             1.e-7);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_float",
-                                      grid, ".");
-    writer.write(0, params);
+                                      ".");
+    writer.write(grid, 0, params);
   }
 
   return 0;

@@ -35,39 +35,38 @@
  * @brief Constructor.
  *
  * @param prefix Prefix of snapshot file names.
- * @param grid DensityGrid to write out.
  * @param output_folder Name of the folder where output files should be placed.
  * @param log Log to write logging information to.
  */
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
-    std::string prefix, DensityGrid &grid, std::string output_folder, Log *log)
-    : DensityGridWriter(grid, output_folder, log), _prefix(prefix) {}
+    std::string prefix, std::string output_folder, Log *log)
+    : DensityGridWriter(output_folder, log), _prefix(prefix) {}
 
 /**
  * @brief ParameterFile constructor.
  *
  * @param params ParameterFile to read.
- * @param grid DensityGrid to write out.
  * @param log Log to write logging information to.
  */
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(ParameterFile &params,
-                                                       DensityGrid &grid,
                                                        Log *log)
-    : AsciiFileDensityGridWriter(params.get_value< std::string >(
-                                     "densitygridwriter:prefix", "snapshot"),
-                                 grid, params.get_value< std::string >(
-                                           "densitygridwriter:folder", "."),
-                                 log) {}
+    : AsciiFileDensityGridWriter(
+          params.get_value< std::string >("densitygridwriter:prefix",
+                                          "snapshot"),
+          params.get_value< std::string >("densitygridwriter:folder", "."),
+          log) {}
 
 /**
  * @brief Write a snapshot.
  *
+ * @param grid DensityGrid to write out.
  * @param iteration Iteration number to use in the snapshot file name(s).
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
  */
-void AsciiFileDensityGridWriter::write(unsigned int iteration,
+void AsciiFileDensityGridWriter::write(DensityGrid &grid,
+                                       unsigned int iteration,
                                        ParameterFile &params, double time) {
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
@@ -75,7 +74,7 @@ void AsciiFileDensityGridWriter::write(unsigned int iteration,
 
   file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\tvolume (m^3)\tneutral H fraction\n";
 
-  for (auto it = _grid.begin(); it != _grid.end(); ++it) {
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
     CoordinateVector<> x = it.get_cell_midpoint();
     double n = it.get_ionization_variables().get_number_density();
     IonName ion = ION_H_n;

@@ -56,10 +56,10 @@ int main(int argc, char **argv) {
   // just moves them around in the box to create a fractal structure
   assert_values_equal_rel(Ntot_old, grid.get_total_hydrogen_number(), 1.e-13);
 
-  AsciiFileDensityGridWriter writer("test_fractal_distribution", grid, ".");
+  AsciiFileDensityGridWriter writer("test_fractal_distribution", ".");
 
   ParameterFile params;
-  writer.write(0, params);
+  writer.write(grid, 0, params);
 
   // now check that the parallel version creates the exact same mask as the
   // serial version for the same seed

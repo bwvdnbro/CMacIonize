@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     grid.initialize(block, density_function);
 
     ParameterFile params("test.param");
-    AsciiFileDensityGridWriter writer("testgrid", grid, ".");
-    writer.write(0, params);
+    AsciiFileDensityGridWriter writer("testgrid", ".");
+    writer.write(grid, 0, params);
   }
 
   // read file and check contents

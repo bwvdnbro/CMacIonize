@@ -1000,6 +1000,18 @@ add_unit_test(NAME testCMILibrary
               SOURCES ${TESTCMILIBRARY_SOURCES}
               LIBS CMILibrary)
 
+## Unit test for SPHArrayDensityGridWriter
+set(TESTSPHARRAYDENSITYGRIDWRITER_SOURCES
+    testSPHArrayDensityGridWriter.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SPHArrayDensityGridWriter.cpp
+    ../src/SPHArrayDensityGridWriter.hpp
+)
+add_unit_test(NAME testSPHArrayDensityGridWriter
+              SOURCES ${TESTSPHARRAYDENSITYGRIDWRITER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

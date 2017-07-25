@@ -33,6 +33,7 @@
 #include "Error.hpp"
 #include "OctreeNode.hpp"
 
+#include <cfloat>
 #include <ostream>
 #include <vector>
 
@@ -262,6 +263,49 @@ public:
       }
     }
     return ngbs;
+  }
+
+  /**
+   * @brief Get the index of the closest particle to the given position.
+   *
+   * @param centre Position that is at the centre of the search radius.
+   * @return Index of the closest neighbour to that position.
+   */
+  inline unsigned int get_closest_ngb(const CoordinateVector<> centre) {
+    double rmin = DBL_MAX;
+    unsigned int imin = 0;
+    OctreeNode *next = _root->get_child();
+    while (next != nullptr) {
+      if (next->is_leaf()) {
+        double r;
+        if (_periodic) {
+          r = _box.periodic_distance(_positions[next->get_index()], centre)
+                  .norm();
+        } else {
+          r = (_positions[next->get_index()] - centre).norm();
+        }
+        if (r <= rmin) {
+          rmin = r;
+          imin = next->get_index();
+        }
+        next = next->get_sibling();
+      } else {
+        // check opening criterion
+        double r;
+        if (_periodic) {
+          r = _box.periodic_distance(next->get_box(), centre);
+        } else {
+          r = next->get_box().get_distance(centre);
+        }
+        if (r > rmin) {
+          next = next->get_sibling();
+        } else {
+          next = next->get_child();
+        }
+      }
+    }
+
+    return imin;
   }
 
   /**

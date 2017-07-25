@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,40 +17,44 @@
  ******************************************************************************/
 
 /**
- * @file GadgetDensityGridWriter.hpp
+ * @file SPHArrayDensityGridWriter.hpp
  *
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief DensityGridWriter implementation that maps back to an SPH particle
+ * data array.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef GADGETDENSITYGRIDWRITER_HPP
-#define GADGETDENSITYGRIDWRITER_HPP
+#ifndef SPHARRAYDENSITYGRIDWRITER_HPP
+#define SPHARRAYDENSITYGRIDWRITER_HPP
 
 #include "DensityGridWriter.hpp"
 
-#include <string>
-
-class ParameterFile;
+class Octree;
 
 /**
- * @brief HDF5-file writer for the DensityGrid.
+ * @brief DensityGridWriter implementation that maps back to an SPH particle
+ * data array.
  */
-class GadgetDensityGridWriter : public DensityGridWriter {
+class SPHArrayDensityGridWriter : public DensityGridWriter {
 private:
-  /*! @brief Prefix of the name for the file to write. */
-  std::string _prefix;
+  /*! @brief Neutral fractions on the positions of the SPH particles. */
+  std::vector< double > _neutral_fractions;
 
-  /*! @brief Number of digits used for the counter in the filenames. */
-  unsigned char _padding;
+  /*! @brief Octree that contains the SPH particles. */
+  Octree *_octree;
+
+  static double cubic_spline_kernel(double u, double h);
 
 public:
-  GadgetDensityGridWriter(std::string prefix,
-                          std::string output_folder = std::string("."),
-                          Log *log = nullptr, unsigned char padding = 3);
-  GadgetDensityGridWriter(ParameterFile &params, Log *log = nullptr);
+  SPHArrayDensityGridWriter();
+
+  void reset(const size_t numpart, Octree *octree);
+
+  void fill_array(double *nH);
+  void fill_array(float *nH);
 
   virtual void write(DensityGrid &grid, unsigned int iteration,
-                     ParameterFile &params, double time = 0.);
+                     ParameterFile &params, double time);
 };
 
-#endif // GADGETDENSITYGRIDWRITER_HPP
+#endif // SPHARRAYDENSITYGRIDWRITER_HPP

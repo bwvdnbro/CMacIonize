@@ -333,8 +333,7 @@ int main(int argc, char **argv) {
                       continuousspectrum, abundances, cross_sections, log);
 
   // set up output
-  DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(params, *grid, log);
+  DensityGridWriter *writer = DensityGridWriterFactory::generate(params, log);
 
   unsigned int nloop =
       params.get_value< unsigned int >("max_number_iterations", 10);
@@ -445,7 +444,7 @@ int main(int argc, char **argv) {
   }
 
   if (write_output) {
-    writer->write(0, params);
+    writer->write(*grid, 0, params);
   }
 
   for (unsigned int istep = 0; istep < numstep; ++istep) {
@@ -583,7 +582,7 @@ int main(int argc, char **argv) {
       ++loop;
 
       if (write_output && every_iteration_output && loop < nloop) {
-        writer->write(loop, params);
+        writer->write(*grid, loop, params);
       }
     }
 
@@ -598,7 +597,8 @@ int main(int argc, char **argv) {
       // write snapshot
       if (write_output &&
           hydro_lastsnap * hydro_snaptime < (istep + 1) * hydro_timestep) {
-        writer->write(hydro_lastsnap, params, hydro_lastsnap * hydro_snaptime);
+        writer->write(*grid, hydro_lastsnap, params,
+                      hydro_lastsnap * hydro_snaptime);
         ++hydro_lastsnap;
       }
     }
@@ -607,9 +607,10 @@ int main(int argc, char **argv) {
   // write snapshot
   if (write_output) {
     if (hydro_integrator == nullptr) {
-      writer->write(nloop, params);
+      writer->write(*grid, nloop, params);
     } else {
-      writer->write(hydro_lastsnap, params, hydro_lastsnap * hydro_snaptime);
+      writer->write(*grid, hydro_lastsnap, params,
+                    hydro_lastsnap * hydro_snaptime);
     }
   }
 
