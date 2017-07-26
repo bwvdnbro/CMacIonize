@@ -18,4 +18,4 @@
 
 # Copy the library header file
 configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_library.h
-               ${PROJECT_BINARY_DIR}/includes/cmi_c_library.h COPYONLY)
+               ${PROJECT_BINARY_DIR}/include/cmi_c_library.h COPYONLY)

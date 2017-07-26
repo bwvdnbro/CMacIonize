@@ -358,11 +358,11 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
 # Tell CMake that C header files are in the includes folder.
-include_directories(${PROJECT_BINARY_DIR}/includes)
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 # Tell CMake that Fortran module files are in the includes folder.
 if(HAVE_FORTRAN)
-  include_directories(${PROJECT_BINARY_DIR}/includes)
+  include_directories(${PROJECT_BINARY_DIR}/include)
 endif(HAVE_FORTRAN)
 
 # Set the path where the generated executables are stored.
@@ -373,7 +373,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # Set the path where the generated Fortran module files are stored.
 if(HAVE_FORTRAN)
-  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/includes)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
 endif(HAVE_FORTRAN)
 
 # Add the command and target that creates the CompilerInfo.cpp file
