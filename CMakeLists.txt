@@ -357,17 +357,23 @@ endif(CMAKE_Fortran_COMPILER_WORKS)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
-# Tell CMake that Fortran module files are in the fortran folder.
+# Tell CMake that C header files are in the includes folder.
+include_directories(${PROJECT_BINARY_DIR}/includes)
+
+# Tell CMake that Fortran module files are in the includes folder.
 if(HAVE_FORTRAN)
-  include_directories(${PROJECT_BINARY_DIR}/fortran)
+  include_directories(${PROJECT_BINARY_DIR}/includes)
 endif(HAVE_FORTRAN)
 
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
 
+# Set the path where the generated libraries are stored
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
 # Set the path where the generated Fortran module files are stored.
 if(HAVE_FORTRAN)
-  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/includes)
 endif(HAVE_FORTRAN)
 
 # Add the command and target that creates the CompilerInfo.cpp file
@@ -397,6 +403,9 @@ add_subdirectory(test)
 
 # Enter the folder containing the timing tests
 add_subdirectory(timing)
+
+# Enter the folder containing the c library wrapper
+add_subdirectory(c)
 
 # If we have Python, enter the folder containing the Python modules
 if(HAVE_PYTHON)

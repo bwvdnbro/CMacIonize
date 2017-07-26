@@ -1025,6 +1025,14 @@ if(HAVE_FORTRAN)
                 LIBS CMIFortranLibrary)
 endif(HAVE_FORTRAN)
 
+## Unit test for cmi_c_library
+set(TESTCMICLIBRARY_SOURCES
+    testCMICLibrary.c
+)
+add_unit_test(NAME testCMICLibrary
+              SOURCES ${TESTCMICLIBRARY_SOURCES}
+              LIBS CMILibrary)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
