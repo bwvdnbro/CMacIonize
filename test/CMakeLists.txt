@@ -1015,6 +1015,16 @@ set(TESTSPHARRAYDENSITYGRIDWRITER_SOURCES
 add_unit_test(NAME testSPHArrayDensityGridWriter
               SOURCES ${TESTSPHARRAYDENSITYGRIDWRITER_SOURCES})
 
+## Unit test for CMIFortranLibrary
+if(HAVE_FORTRAN)
+  set(TESTCMIFORTRANLIBRARY_SOURCES
+      testCMIFortranLibrary.f90
+  )
+  add_unit_test(NAME testCMIFortranLibrary
+                SOURCES ${TESTCMIFORTRANLIBRARY_SOURCES}
+                LIBS CMIFortranLibrary)
+endif(HAVE_FORTRAN)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
