@@ -25,12 +25,10 @@ configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_library.h
 # An example compilation could look like this:
 #  gcc -o test `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_includes.txt` \
 #    test.c `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_libs.txt`
-find_package(PkgConfig)
-if(PKG_CONFIG_FOUND)
-  pkg_check_modules(CLIBS hdf5 mpi-cxx)
-  string(REPLACE ";" " " CLIBS_LDFLAGS_STRING "${CLIBS_STATIC_LDFLAGS}")
-  configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_libs.txt
-                 ${PROJECT_BINARY_DIR}/compilation/cmi_c_libs.txt @ONLY)
-  configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_includes.txt
-                 ${PROJECT_BINARY_DIR}/compilation/cmi_c_includes.txt @ONLY)
-endif(PKG_CONFIG_FOUND)
+string(REPLACE ";" " " HDF5LIBS_STRING "${HDF5_LIBRARIES}")
+string(REPLACE ";" " " MPILIBS_STRING  "${MPI_CXX_LIBRARIES}")
+set(CLIBS_LDFLAGS_STRING "${HDF5LIBS_STRING} ${MPILIBS_STRING}")
+configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_libs.txt
+               ${PROJECT_BINARY_DIR}/compilation/cmi_c_libs.txt @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_includes.txt
+               ${PROJECT_BINARY_DIR}/compilation/cmi_c_includes.txt @ONLY)

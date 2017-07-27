@@ -28,14 +28,11 @@ target_link_libraries(CMIFortranLibrary CMILibrary)
 # An example compilation could look like this:
 # gcc -o test `cat ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_includes.txt` \
 #   test.c `cat ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_libs.txt`
-find_package(PkgConfig)
-if(PKG_CONFIG_FOUND)
-  pkg_check_modules(FortranLIBS hdf5 mpi-cxx)
-  string(REPLACE ";" " " FortranLIBS_LDFLAGS_STRING
-                 "${FortranLIBS_STATIC_LDFLAGS}")
-  configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_libs.txt
-                 ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_libs.txt @ONLY)
-  configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_includes.txt
-                 ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_includes.txt
-                 @ONLY)
-endif(PKG_CONFIG_FOUND)
+string(REPLACE ";" " " HDF5LIBS_STRING "${HDF5_LIBRARIES}")
+string(REPLACE ";" " " MPILIBS_STRING  "${MPI_CXX_LIBRARIES}")
+set(FortranLIBS_LDFLAGS_STRING "${HDF5LIBS_STRING} ${MPILIBS_STRING}")
+configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_libs.txt
+               ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_libs.txt @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_includes.txt
+               ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_includes.txt
+               @ONLY)
