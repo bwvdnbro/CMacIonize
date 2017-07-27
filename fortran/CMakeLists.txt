@@ -22,3 +22,20 @@ set(LIBCMIFORTRANLIBRARY_SOURCES
 
 add_library(CMIFortranLibrary ${LIBCMIFORTRANLIBRARY_SOURCES})
 target_link_libraries(CMIFortranLibrary CMILibrary)
+
+# Create files that contain the necessary includes and linker dependencies to
+# compile a program that uses the CMI Fortran library
+# An example compilation could look like this:
+# gcc -o test `cat ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_includes.txt` \
+#   test.c `cat ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_libs.txt`
+find_package(PkgConfig)
+if(PKG_CONFIG_FOUND)
+  pkg_check_modules(FortranLIBS hdf5 mpi-cxx)
+  string(REPLACE ";" " " FortranLIBS_LDFLAGS_STRING
+                 "${FortranLIBS_STATIC_LDFLAGS}")
+  configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_libs.txt
+                 ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_libs.txt @ONLY)
+  configure_file(${PROJECT_SOURCE_DIR}/fortran/cmi_fortran_includes.txt
+                 ${PROJECT_BINARY_DIR}/compilation/cmi_fortran_includes.txt
+                 @ONLY)
+endif(PKG_CONFIG_FOUND)

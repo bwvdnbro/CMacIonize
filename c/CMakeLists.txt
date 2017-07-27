@@ -23,8 +23,8 @@ configure_file(${PROJECT_SOURCE_DIR}/c/cmi_c_library.h
 # Create files that contain the necessary includes and linker dependencies to
 # compile a program that uses the CMI C library
 # An example compilation could look like this:
-#  gcc -o test `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_libs.txt` test.c \
-#    `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_includes.txt`
+#  gcc -o test `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_includes.txt` \
+#    test.c `cat ${PROJECT_BINARY_DIR}/compilation/cmi_c_libs.txt`
 find_package(PkgConfig)
 if(PKG_CONFIG_FOUND)
   pkg_check_modules(CLIBS hdf5 mpi-cxx)
