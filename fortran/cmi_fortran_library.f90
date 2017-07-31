@@ -24,6 +24,9 @@
 !> @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 !-
 
+!-
+!> @brief Fortran exposure of the CMI library.
+!-
 module cmi_fortran_library
 
   use iso_c_binding

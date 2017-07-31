@@ -22,9 +22,6 @@
  * @brief PhotonSourceSpectrum implementation for the Pauldrach, Hoffmann &
  * Lennon (2001) stellar model spectra.
  *
- * The data used comes from Sternberg, Hoffmann & Pauldrach (2003), and was
- * downloaded from the link in that paper (ftp://wise3.tau.ac.il/pub/stars).
- *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #ifndef WMBASICPHOTONSOURCESPECTRUM_HPP
@@ -46,6 +43,27 @@ class RandomGenerator;
 /**
  * @brief PhotonSourceSpectrum implementation for the Pauldrach, Hoffmann &
  * Lennon (2001) stellar model spectra.
+ *
+ * The data used comes from Sternberg, Hoffmann & Pauldrach (2003), and was
+ * downloaded from the link in that paper (ftp://wise3.tau.ac.il/pub/stars).
+ *
+ * The model spectra are based on detailed models of stellar atmospheres and
+ * take into account key processes like radiation driven winds. They should be
+ * representative for the atmospheres of young O stars.
+ *
+ * The spectra depend on two parameters: the effective temperature of the star,
+ * and its surface gravity. We only have data tables for a limited number of
+ * parameter values: temperatures in the range [25,000 K; 50,000 K] (every 1,000
+ * K), and surface gravities in the range \f$\left[ \log_{10}\left(\frac{300}
+ * {{\rm{} cm\,s^{-2}}}\right), \log_{10}\left(\frac{400}{{\rm{} cm\,s^{-2}}}
+ * \right)\right]\f$ (every \f$\log_{10}\left(\frac{20}{{\rm{} cm\,s^{-2}}}
+ * \right) \f$). Some combinations are missing. If tables are requested for a
+ * non-existent combination of parameter values, the code will crash.
+ *
+ * We resample the spectra on a frequency grid of 1000 bins in the range
+ * [13.6 eV, 54.4 eV]. This smooths out some of the features in the spectrum,
+ * but works pretty well overall (as can be visually confirmed by looking at the
+ * file wmbasic.txt produced by testWMBasicPhotonSourceSpectrum).
  */
 class WMBasicPhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:

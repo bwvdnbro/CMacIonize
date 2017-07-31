@@ -390,7 +390,8 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                            -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
                            -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
                    DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
-                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_custom_target(CompilerInfo
                   DEPENDS ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp)

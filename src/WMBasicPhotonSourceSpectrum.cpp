@@ -38,6 +38,9 @@
 /**
  * @brief Constructor.
  *
+ * Reads in the correct model spectrum and resamples it on the 1000 bin internal
+ * frequency grid.
+ *
  * @param temperature Effective temperature of the star (in K).
  * @param surface_gravity Surface gravity of the star (in m s^-2).
  * @param log Log to write logging info to.
@@ -210,6 +213,10 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
 /**
  * @brief Get a random frequency from a stellar model spectrum.
  *
+ * We draw a random uniform number in the range [0, 1] and find the bin in the
+ * tabulated cumulative distribution that contains that number. The sampled
+ * frequency is then the linearly interpolated value corresponding to that bin.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
@@ -229,6 +236,9 @@ double WMBasicPhotonSourceSpectrum::get_random_frequency(
 
 /**
  * @brief Get the total ionizing flux of the spectrum.
+ *
+ * The total ionizing flux depends on the model spectrum that is used and is
+ * computed in the constructor, after the spectrum has been regridded.
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
