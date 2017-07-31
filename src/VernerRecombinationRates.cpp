@@ -141,69 +141,101 @@ double VernerRecombinationRates::get_recombination_rate_verner(unsigned char iz,
 double
 VernerRecombinationRates::get_recombination_rate(IonName ion,
                                                  double temperature) const {
+
   double rate = 0.;
-  double T4 = temperature * 1.e-4;
+  const double T4 = temperature * 1.e-4;
+
   switch (ion) {
 
   case ION_H_n:
+    // Verner & Ferland (1996) formula (4) with values from Table 1 (HI).
     rate = 7.982e-11 / (std::sqrt(temperature / 3.148) *
                         std::pow(1. + std::sqrt(temperature / 3.148), 0.252) *
                         std::pow(1. + std::sqrt(temperature / 7.036e5), 1.748));
     break;
 
   case ION_He_n:
+    // Verner & Ferland (1996) formula (4) with values from Table 1 (HeIa).
+    // Note that we use the first version, which is only valid in the range
+    // [3 K, 10^6 K].
     rate = 3.294e-11 / (std::sqrt(temperature / 15.54) *
                         std::pow(1. + std::sqrt(temperature / 15.54), 0.309) *
                         std::pow(1. + std::sqrt(temperature / 3.676e7), 1.691));
     break;
 
   case ION_C_p1:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (C2+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(6, 5, temperature) +
            1.e-12 * (1.8267 / T4 + 4.1012 + 4.8443 * T4 + 0.2261 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.5960 / T4);
     break;
   case ION_C_p2:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (C3+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(6, 4, temperature) +
            1.e-12 * (2.3196 / T4 + 10.7328 + 6.8830 * T4 - 0.1824 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.4101 / T4);
     break;
 
   case ION_N_n:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (N+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(7, 7, temperature) +
-           1.e-12 * (0.0000 / T4 + 0.6310 + 0.1990 * T4 - 0.0197 * T4 * T4) *
+           1.e-12 * (0.6310 + 0.1990 * T4 - 0.0197 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.4398 / T4);
     break;
   case ION_N_p1:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (N2+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(7, 6, temperature) +
            1.e-12 * (0.0320 / T4 - 0.6624 + 4.3191 * T4 + 0.0003 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.5946 / T4);
     break;
   case ION_N_p2:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (N3+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(7, 5, temperature) +
            1.e-12 * (-0.8806 / T4 + 11.2406 + 30.7066 * T4 - 1.1721 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.6127 / T4);
     break;
 
   case ION_O_n:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (O+).
+    // version 2, valid in the range [1,000 K; 20,000 K]
     rate = get_recombination_rate_verner(8, 8, temperature) +
            1.e-12 * (-0.0001 / T4 + 0.0001 + 0.0956 * T4 + 0.0193 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.4106 / T4);
     break;
   case ION_O_p1:
+    // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (O2+).
+    // valid in the range [1,000 K; 60,000 K]
     rate = get_recombination_rate_verner(8, 7, temperature) +
            1.e-12 * (-0.0036 / T4 + 0.7519 + 1.5252 * T4 - 0.0838 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.2769 / T4);
     break;
 
   case ION_Ne_n:
+    // According to Nussbaumer & Storey (1987), dielectronic recombination is
+    // negligible for this ion
     rate = get_recombination_rate_verner(10, 10, temperature);
     break;
   case ION_Ne_p1:
+    // Nussbaumer & Storey (1987) formula (7) with values from Table II(b)
+    // (Total)
+    // valid in the range [1,000 K; 60,000 K]
+    // NOTE the sign difference in the first term w.r.t. Kenny's code.
     rate = get_recombination_rate_verner(10, 9, temperature) +
-           1.e-12 * (-0.0129 / T4 - 0.1779 + 0.9353 * T4 - 0.0682 * T4 * T4) *
+           1.e-12 * (0.0129 / T4 - 0.1779 + 0.9353 * T4 - 0.0682 * T4 * T4) *
                std::pow(T4, -1.5) * std::exp(-0.4156 / T4);
     break;
 
+  // the extra terms below seem to be based on the recombination rates of
+  // Nahar (1995) (or better: the improved version of the erratum to that
+  // paper). However, it is not clear how these values were used to obtain a
+  // single value for each ion, nor is it clear where the S_p3 value comes
+  // from
+  // to be continued...
   case ION_S_p1:
     rate = get_recombination_rate_verner(16, 15, temperature) + 3.e-12;
     break;

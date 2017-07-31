@@ -42,10 +42,12 @@ class RandomGenerator;
 
 /**
  * @brief PhotonSourceSpectrum implementation for the Pauldrach, Hoffmann &
- * Lennon (2001) stellar model spectra.
+ * Lennon (2001) (http://adsabs.harvard.edu/abs/2001A%26A...375..161P) stellar
+ * model spectra.
  *
- * The data used comes from Sternberg, Hoffmann & Pauldrach (2003), and was
- * downloaded from the link in that paper (ftp://wise3.tau.ac.il/pub/stars).
+ * The data used comes from Sternberg, Hoffmann & Pauldrach (2003)
+ * (http://adsabs.harvard.edu/abs/2003IAUS..212..206H), and was downloaded from
+ * the link in that paper (ftp://wise3.tau.ac.il/pub/stars).
  *
  * The model spectra are based on detailed models of stellar atmospheres and
  * take into account key processes like radiation driven winds. They should be

@@ -356,6 +356,7 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 add_unit_test(NAME testGadgetDensityGridWriter
               SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}
               LIBS ${HDF5_LIBRARIES})
+add_dependencies(testGadgetDensityGridWriter CompilerInfo)
 endif(HAVE_HDF5)
 
 ## Unit test for GadgetSnapshotPhotonSourceDistribution
