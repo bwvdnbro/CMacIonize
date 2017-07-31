@@ -93,6 +93,10 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   }
   cmac_assert(i == num_frequency);
 
+  // allocate memory for the data tables
+  _frequencies.resize(WMBASICPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(WMBASICPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+
   // construct the frequency bins
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
@@ -224,7 +228,7 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
 double WMBasicPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(x, _cumulative_distribution,
+  unsigned int inu = Utilities::locate(x, _cumulative_distribution.data(),
                                        WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =
       _frequencies[inu] +

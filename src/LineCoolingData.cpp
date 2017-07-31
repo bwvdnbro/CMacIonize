@@ -31,7 +31,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 /**
  * @brief Read a given number of values from the given string into the given
@@ -43,7 +42,7 @@ using namespace std;
  * @param size Number of values to read.
  * @return True if the read was successful, false otherwise.
  */
-bool LineCoolingData::read_values(string line, double *array,
+bool LineCoolingData::read_values(std::string line, double *array,
                                   unsigned int size) {
   int start, end;
   unsigned int index;
@@ -74,13 +73,13 @@ bool LineCoolingData::read_values(string line, double *array,
 LineCoolingData::LineCoolingData() {
   double enlev[5];
 
-  ifstream file(LINECOOLINGDATALOCATION);
-  string line;
+  std::ifstream file(LINECOOLINGDATALOCATION);
+  std::string line;
 
   // there are 10 groups of 5 rows
   for (unsigned int i = 0; i < LINECOOLINGDATA_NUMELEMENTS; ++i) {
     // the first row holds energy level information
-    getline(file, line);
+    std::getline(file, line);
     read_values(line, enlev, 5);
     // these values need to be converted before we can store them
     unsigned int l = 0;

@@ -33,7 +33,6 @@
 #include "RecombinationRates.hpp"
 #include "Timer.hpp"
 #include <sstream>
-using namespace std;
 
 /**
  * @brief Constructor

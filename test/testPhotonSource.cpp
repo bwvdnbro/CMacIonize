@@ -33,7 +33,6 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
-using namespace std;
 
 /**
  * @brief Test implementation of CrossSections.

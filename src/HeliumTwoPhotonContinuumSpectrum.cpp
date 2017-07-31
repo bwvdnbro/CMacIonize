@@ -33,7 +33,6 @@
 #include "Utilities.hpp"
 #include <fstream>
 #include <vector>
-using namespace std;
 
 /**
  * @brief Constructor.
@@ -42,8 +41,13 @@ using namespace std;
  * cumulative distribution used for random sampling.
  */
 HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
-  vector< double > yHe2q;
-  vector< double > AHe2q;
+
+  // allocate memory for the data tables
+  _frequency.resize(HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ, 0.);
+
+  std::vector< double > yHe2q;
+  std::vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
 
   // 13.6 eV in Hz
@@ -96,7 +100,7 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
  */
 void HeliumTwoPhotonContinuumSpectrum::get_spectrum(
     std::vector< double > &yHe2q, std::vector< double > &AHe2q) {
-  ifstream ifile(HELIUMTWOPHOTONCONTINUUMDATALOCATION);
+  std::ifstream ifile(HELIUMTWOPHOTONCONTINUUMDATALOCATION);
   yHe2q.resize(41);
   AHe2q.resize(41);
   for (unsigned int i = 0; i < 41; ++i) {
@@ -137,8 +141,9 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
 double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(
-      x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu =
+      Utilities::locate(x, _cumulative_distribution.data(),
+                        HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
   double frequency =
       _frequency[inu] +
       (_frequency[inu + 1] - _frequency[inu]) *

@@ -38,7 +38,6 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-using namespace std;
 
 /**
  * @brief Get the Planck black body luminosity for a given frequency.
@@ -101,11 +100,11 @@ double HeLyc_luminosity(CrossSections &cross_sections, double T,
  * @param frequency Frequency value.
  * @return Helium 2-photon continuum luminosity.
  */
-double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
-                        double frequency) {
+double He2pc_luminosity(std::vector< double > &yHe2q,
+                        std::vector< double > &AHe2q, double frequency) {
   double y = frequency * 3.289e15 / 4.98e15;
   if (y < 1.) {
-    unsigned int i = Utilities::locate(y, &yHe2q[0], 41);
+    unsigned int i = Utilities::locate(y, yHe2q.data(), 41);
     double f = (y - yHe2q[i]) / (yHe2q[i + 1] - yHe2q[i]);
     return AHe2q[i] + f * (AHe2q[i + 1] - AHe2q[i]);
   } else {
@@ -259,8 +258,8 @@ int main(int argc, char **argv) {
   {
     std::ofstream file("heliumtwophotoncontinuum.txt");
     HeliumTwoPhotonContinuumSpectrum spectrum;
-    vector< double > yHe2q;
-    vector< double > AHe2q;
+    std::vector< double > yHe2q;
+    std::vector< double > AHe2q;
     spectrum.get_spectrum(yHe2q, AHe2q);
 
     unsigned int counts[100];
