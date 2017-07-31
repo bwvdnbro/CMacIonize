@@ -42,6 +42,12 @@
  */
 FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     double redshift, Log *log) {
+
+  // allocate memory for the data tables
+  _frequencies.resize(FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ,
+                                  0.);
+
   // construct the frequency bins
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
@@ -223,8 +229,9 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() const {
 double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(
-      x, _cumulative_distribution, FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
+  unsigned int inu =
+      Utilities::locate(x, _cumulative_distribution.data(),
+                        FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =
       _frequencies[inu] +
       (_frequencies[inu + 1] - _frequencies[inu]) *

@@ -30,6 +30,7 @@
 #include "PhotonSourceSpectrum.hpp"
 
 #include <string>
+#include <vector>
 
 class Log;
 class ParameterFile;
@@ -45,10 +46,10 @@ class RandomGenerator;
 class FaucherGiguerePhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins. */
-  double _frequencies[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ];
+  std::vector< double > _frequencies;
 
   /*! @brief Cumulative distribution of the spectrum. */
-  double _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ];
+  std::vector< double > _cumulative_distribution;
 
   /*! @brief Total ionizing flux of the spectrum (in m^-2 s^-1). */
   double _total_flux;

@@ -31,7 +31,6 @@
 #include "UnitConverter.hpp"
 #include <cfloat>
 #include <fstream>
-using namespace std;
 
 /**
  * @brief Cubic spline kernel used in Gadget2.
@@ -253,7 +252,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     box = Box<>(anchor, sides);
   }
   if (_log) {
-    string pstring;
+    std::string pstring;
     if (periodic) {
       pstring = "periodic ";
     }
@@ -281,7 +280,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction:filename"),
+          params.get_value< std::string >("densityfunction:filename"),
           params.get_value< bool >("densityfunction:fallback_periodic_flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(

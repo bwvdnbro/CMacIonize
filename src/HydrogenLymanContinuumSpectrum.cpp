@@ -33,7 +33,6 @@
 #include "ElementNames.hpp"
 #include "Utilities.hpp"
 #include <cmath>
-using namespace std;
 
 /**
  * @brief Constructor.
@@ -44,6 +43,14 @@ using namespace std;
  */
 HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     CrossSections &cross_sections) {
+
+  // allocate memory for the data tables
+  _frequency.resize(HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.);
+  _temperature.resize(HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP, 0.);
+  _cumulative_distribution.resize(
+      HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP,
+      std::vector< double >(HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.));
+
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   // 54.4 eV in Hz
@@ -106,13 +113,14 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
  */
 double HydrogenLymanContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  unsigned int iT = Utilities::locate(temperature, _temperature,
+  unsigned int iT = Utilities::locate(temperature, _temperature.data(),
                                       HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
+  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT].data(),
                                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
-                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 =
+      Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
+                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
   double frequency = _frequency[inu1] +
                      (temperature - _temperature[iT]) *
                          (_frequency[inu2] - _frequency[inu1]) /

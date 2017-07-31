@@ -60,8 +60,6 @@
 #include <iostream>
 #include <string>
 
-using namespace std;
-
 /**
  * @brief Entrance point of the program
  *
@@ -86,7 +84,7 @@ int main(int argc, char **argv) {
   // we need to define a CommandLineParser object that does this and acts as a
   // dictionary that can be queried
   CommandLineParser parser("CMacIonize");
-  parser.add_required_option< string >(
+  parser.add_required_option< std::string >(
       "params", 'p',
       "Name of the parameter file containing the simulation parameters.");
   parser.add_option("verbose", 'v', "Set the logging level to the lowest "
@@ -235,7 +233,7 @@ int main(int argc, char **argv) {
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
-  ParameterFile params(parser.get_value< string >("params"));
+  ParameterFile params(parser.get_value< std::string >("params"));
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
@@ -343,7 +341,7 @@ int main(int argc, char **argv) {
   if (write_output) {
     std::string folder = Utilities::get_absolute_path(
         params.get_value< std::string >("densitygridwriter:folder", "."));
-    ofstream pfile(folder + "/parameters-usedvalues.param");
+    std::ofstream pfile(folder + "/parameters-usedvalues.param");
     params.print_contents(pfile);
     pfile.close();
     if (log) {

@@ -30,6 +30,8 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "RandomGenerator.hpp"
 
+#include <vector>
+
 class CrossSections;
 
 /*! @brief Number of frequencies in the internal table. */
@@ -44,14 +46,13 @@ class CrossSections;
 class HydrogenLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins (in 13.6 eV). */
-  double _frequency[HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< double > _frequency;
 
   /*! @brief Temperature bins (in K). */
-  double _temperature[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP];
+  std::vector< double > _temperature;
 
   /*! @brief Cumulative distribution function. */
-  double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
-                                 [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< std::vector< double > > _cumulative_distribution;
 
 public:
   HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);

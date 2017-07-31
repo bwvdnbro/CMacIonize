@@ -30,7 +30,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-using namespace std;
 
 /**
  * @brief Read test line cooling data from a file outputted by Kenny's Fortran
@@ -44,7 +43,7 @@ using namespace std;
  */
 void read_fortran_file(double *cs, double *cse, double *ea, double *en,
                        double *sw) {
-  ifstream file("linecool_fortran_data.txt");
+  std::ifstream file("linecool_fortran_data.txt");
   for (unsigned int i = 0; i < 10; ++i) {
     for (unsigned int j = 0; j < 10; ++j) {
       file >> cs[10 * i + j];

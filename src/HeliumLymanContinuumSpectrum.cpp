@@ -43,6 +43,14 @@
  */
 HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     CrossSections &cross_sections) {
+
+  // allocate memory for the data tables
+  _frequency.resize(HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.);
+  _temperature.resize(HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP, 0.);
+  _cumulative_distribution.resize(
+      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP,
+      std::vector< double >(HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.));
+
   // 24.6 eV in Hz (1.81 x 13.6 eV)
   const double min_frequency = 1.81 * 3.288465385e15;
   // 54.4 eV in Hz
@@ -105,13 +113,14 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
  */
 double HeliumLymanContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  unsigned int iT = Utilities::locate(temperature, _temperature,
+  unsigned int iT = Utilities::locate(temperature, _temperature.data(),
                                       HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
+  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT].data(),
                                         HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
-                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  unsigned int inu2 =
+      Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
+                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
   double frequency = _frequency[inu1] +
                      (temperature - _temperature[iT]) *
                          (_frequency[inu2] - _frequency[inu1]) /

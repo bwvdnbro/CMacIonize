@@ -35,7 +35,6 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "Utilities.hpp"
 #include <cmath>
-using namespace std;
 
 /**
  * @brief Constructor.

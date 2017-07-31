@@ -28,6 +28,7 @@
 
 #include "PhotonSourceSpectrum.hpp"
 #include "RandomGenerator.hpp"
+
 #include <vector>
 
 /*! @brief Number of frequencies in the internal table. */
@@ -39,10 +40,10 @@
 class HeliumTwoPhotonContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins (in 13.6 eV). */
-  double _frequency[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< double > _frequency;
 
   /*! @brief Cumulative distribution function. */
-  double _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< double > _cumulative_distribution;
 
 public:
   HeliumTwoPhotonContinuumSpectrum();

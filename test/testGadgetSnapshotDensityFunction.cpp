@@ -29,7 +29,6 @@
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "TerminalLog.hpp"
-using namespace std;
 
 /**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.

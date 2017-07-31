@@ -25,7 +25,6 @@
  */
 #include "CommandLineOption.hpp"
 #include "Utilities.hpp"
-using namespace std;
 
 /**
  * @brief Get a description of an argument with the given type.
@@ -114,7 +113,7 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
  * @param stream std::ostream to write to.
  */
 void CommandLineOption::print_usage(std::ostream &stream) const {
-  string uppercase_name(_name);
+  std::string uppercase_name(_name);
   transform(_name.begin(), _name.end(), uppercase_name.begin(), ::toupper);
   if (get_default_value_description(_argument, _default_value).size()) {
     stream << "[--" << _name;
@@ -140,7 +139,7 @@ void CommandLineOption::print_description(std::ostream &stream) const {
   stream << "--" << _name << " (-" << _abbreviation << ")\n";
   stream << _description << "\n";
   stream << get_argument_description(_argument);
-  string default_value_description =
+  std::string default_value_description =
       get_default_value_description(_argument, _default_value);
   if (default_value_description.size()) {
     if (_argument != COMMANDLINEOPTION_NOARGUMENT) {
