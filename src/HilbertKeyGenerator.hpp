@@ -44,7 +44,7 @@ private:
    * @param c Position.
    * @return Corresponding Hilbert key.
    */
-  inline unsigned long get_key(const CoordinateVector<> &c) const {
+  inline uint64_t get_key(const CoordinateVector<> &c) const {
 
     static const unsigned char forward_table[12][8][2] = {
         {{5, 0}, {1, 7}, {4, 1}, {2, 6}, {3, 3}, {3, 4}, {4, 2}, {2, 5}},
@@ -60,7 +60,7 @@ private:
         {{11, 2}, {11, 1}, {3, 5}, {3, 6}, {5, 3}, {2, 0}, {5, 4}, {8, 7}},
         {{7, 4}, {7, 3}, {4, 5}, {2, 2}, {6, 7}, {10, 0}, {4, 6}, {2, 1}}};
 
-    const CoordinateVector< unsigned long > bits(
+    const CoordinateVector< uint64_t > bits(
         0x00000000001fffff * (c.x() - _box.get_anchor().x()) /
             _box.get_sides().x(),
         0x00000000001fffff * (c.y() - _box.get_anchor().y()) /
@@ -68,8 +68,8 @@ private:
         0x00000000001fffff * (c.z() - _box.get_anchor().z()) /
             _box.get_sides().z());
 
-    unsigned long key = 0;
-    unsigned long mask = 0x0000000000100000;
+    uint64_t key = 0;
+    uint64_t mask = 0x0000000000100000;
     bool x[3];
     unsigned char ci;
     unsigned char si = 4;
@@ -101,10 +101,10 @@ public:
    * @param positions std::vector containing positions (in m).
    * @return std::vector containing the corresponding Hilbert keys.
    */
-  inline std::vector< unsigned long >
+  inline std::vector< uint64_t >
   get_keys(const std::vector< CoordinateVector<> > &positions) const {
     const unsigned int positions_size = positions.size();
-    std::vector< unsigned long > keys(positions_size, 0);
+    std::vector< uint64_t > keys(positions_size, 0);
     for (unsigned int i = 0; i < positions_size; ++i) {
       keys[i] = get_key(positions[i]);
     }
