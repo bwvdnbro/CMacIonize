@@ -38,6 +38,19 @@
  * Reads in the data from the data files.
  */
 VernerCrossSections::VernerCrossSections() {
+
+  // we apply som data conversions:
+  //  - sigma values are always converted by multiplying with 1.e-22, so we
+  //    premultiply them here
+  //  - y_a values are always used in divisions, so we predivide here and use
+  //    multiplications instead
+  //  - l is always used as 0.5 * P - 5.5 - l, so we precompute that expression
+  //    here
+  //  - E_th and E_0 are needed in Hz, so we convert the units here
+  //  - E_0 is always used in divisions, so we predivide here and use
+  //    multiplications instead
+  const double eV_to_Hz = 1.5091902e33 * 1.60217662e-19;
+
   std::ifstream fileA(VERNERCROSSSECTIONSDATALOCATION_A);
   std::string lineA;
   while (getline(fileA, lineA)) {
@@ -49,8 +62,8 @@ VernerCrossSections::VernerCrossSections() {
 
       lstream >> Z >> N >> n >> l >> E_th >> E_0 >> sigma_0 >> y_a >> P >> y_w;
 
-      unsigned int iZ = Z - 1;
-      unsigned int iN = N - 1;
+      const unsigned int iZ = Z - 1;
+      const unsigned int iN = N - 1;
 
       // n and l need to be combined to get the shell number
       if (n < 3) {
@@ -64,7 +77,7 @@ VernerCrossSections::VernerCrossSections() {
         }
       }
 
-      unsigned int in = n - 1;
+      const unsigned int in = n - 1;
       if (Z > _data_A.size()) {
         _data_A.resize(Z);
       }
@@ -75,11 +88,11 @@ VernerCrossSections::VernerCrossSections() {
         _data_A[iZ][iN].resize(n);
       }
       _data_A[iZ][iN][in].resize(VERNERDATA_A_NUMELEMENTS);
-      _data_A[iZ][iN][in][VERNERDATA_A_l] = l;
-      _data_A[iZ][iN][in][VERNERDATA_A_E_th] = E_th;
-      _data_A[iZ][iN][in][VERNERDATA_A_E_0] = E_0;
-      _data_A[iZ][iN][in][VERNERDATA_A_sigma_0] = sigma_0;
-      _data_A[iZ][iN][in][VERNERDATA_A_y_a] = y_a;
+      _data_A[iZ][iN][in][VERNERDATA_A_Plconst] = 0.5 * P - 5.5 - l;
+      _data_A[iZ][iN][in][VERNERDATA_A_E_th] = E_th * eV_to_Hz;
+      _data_A[iZ][iN][in][VERNERDATA_A_E_0_inv] = 1. / (E_0 * eV_to_Hz);
+      _data_A[iZ][iN][in][VERNERDATA_A_sigma_0] = 1.e-22 * sigma_0;
+      _data_A[iZ][iN][in][VERNERDATA_A_one_over_y_a] = 1. / y_a;
       _data_A[iZ][iN][in][VERNERDATA_A_P] = P;
       _data_A[iZ][iN][in][VERNERDATA_A_y_w_squared] = y_w * y_w;
     }
@@ -97,8 +110,8 @@ VernerCrossSections::VernerCrossSections() {
       lstream >> Z >> N >> E_th >> E_max >> E_0 >> sigma_0 >> y_a >> P >> y_w >>
           y_0 >> y_1;
 
-      unsigned int iZ = Z - 1;
-      unsigned int iN = N - 1;
+      const unsigned int iZ = Z - 1;
+      const unsigned int iN = N - 1;
       if (Z > _data_B.size()) {
         _data_B.resize(Z);
       }
@@ -106,9 +119,9 @@ VernerCrossSections::VernerCrossSections() {
         _data_B[iZ].resize(N);
       }
       _data_B[iZ][iN].resize(VERNERDATA_B_NUMELEMENTS);
-      _data_B[iZ][iN][VERNERDATA_B_E_0] = E_0;
-      _data_B[iZ][iN][VERNERDATA_B_sigma_0] = sigma_0;
-      _data_B[iZ][iN][VERNERDATA_B_y_a] = y_a;
+      _data_B[iZ][iN][VERNERDATA_B_E_0_inv] = 1. / (E_0 * eV_to_Hz);
+      _data_B[iZ][iN][VERNERDATA_B_sigma_0] = 1.e-22 * sigma_0;
+      _data_B[iZ][iN][VERNERDATA_B_one_over_y_a] = 1. / y_a;
       _data_B[iZ][iN][VERNERDATA_B_P] = P;
       _data_B[iZ][iN][VERNERDATA_B_y_w_squared] = y_w * y_w;
       _data_B[iZ][iN][VERNERDATA_B_y_0] = y_0;
@@ -126,7 +139,7 @@ VernerCrossSections::VernerCrossSections() {
 
       lstream >> N >> Ninn >> Ntot;
 
-      unsigned int iN = N - 1;
+      const unsigned int iN = N - 1;
       if (N > _data_C.size()) {
         _data_C.resize(N);
       }
@@ -151,17 +164,13 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
                                                      unsigned char ne,
                                                      unsigned char is,
                                                      double e) const {
-  // convert Hz to eV
-  e /= (1.5091902e33 * 1.60217662e-19);
 
-  // assertions. Most compilers optimize these out if optimization flags are
-  // given.
-  assert(nz > 0 && nz <= 30);
-  assert(ne > 0 && ne <= nz);
+  cmac_assert(nz > 0 && nz <= 30);
+  cmac_assert(ne > 0 && ne <= nz);
 
-  unsigned int iZ = nz - 1;
-  unsigned int iN = ne - 1;
-  unsigned int in = is - 1;
+  const unsigned int iZ = nz - 1;
+  const unsigned int iN = ne - 1;
+  const unsigned int in = is - 1;
 
   // if the energy is lower than the ionization threshold energy, the cross
   // section is trivially 0
@@ -185,7 +194,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     return 0.;
   }
 
-  unsigned int nint = _data_C[iN][VERNERDATA_C_Ninn];
+  const unsigned int nint = _data_C[iN][VERNERDATA_C_Ninn];
   double einn;
   if (nz == 15 || nz == 17 || nz == 19 || (nz > 20 && nz != 26)) {
     einn = 0.;
@@ -202,38 +211,42 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
   }
 
   if (is <= nint || e >= einn) {
-    double E_0 = _data_A[iZ][iN][in][VERNERDATA_A_E_0];
-    double sigma_0 = _data_A[iZ][iN][in][VERNERDATA_A_sigma_0];
-    double y_a = _data_A[iZ][iN][in][VERNERDATA_A_y_a];
-    double P = _data_A[iZ][iN][in][VERNERDATA_A_P];
-    double y_w_squared = _data_A[iZ][iN][in][VERNERDATA_A_y_w_squared];
-    unsigned int l = _data_A[iZ][iN][in][VERNERDATA_A_l];
+    const double E_0_inv = _data_A[iZ][iN][in][VERNERDATA_A_E_0_inv];
+    const double sigma_0 = _data_A[iZ][iN][in][VERNERDATA_A_sigma_0];
+    const double y_a_inv = _data_A[iZ][iN][in][VERNERDATA_A_one_over_y_a];
+    const double P = _data_A[iZ][iN][in][VERNERDATA_A_P];
+    const double y_w_squared = _data_A[iZ][iN][in][VERNERDATA_A_y_w_squared];
+    const double Plconst = _data_A[iZ][iN][in][VERNERDATA_A_Plconst];
 
-    double y = e / E_0;
-    double ym1 = y - 1.;
-    double Fy = (ym1 * ym1 + y_w_squared) * std::pow(y, 0.5 * P - 5.5 - l) *
-                std::pow(1. + std::sqrt(y / y_a), -P);
-    return 1.e-22 * sigma_0 * Fy;
+    const double y = e * E_0_inv;
+    const double ym1 = y - 1.;
+    const double Fy = (ym1 * ym1 + y_w_squared) * std::pow(y, Plconst) *
+                      std::pow(1. + std::sqrt(y * y_a_inv), -P);
+    return sigma_0 * Fy;
   } else {
-    double E_0 = _data_B[iZ][iN][VERNERDATA_B_E_0];
-    double y_0 = _data_B[iZ][iN][VERNERDATA_B_y_0];
-    double y_1_squared = _data_B[iZ][iN][VERNERDATA_B_y_1_squared];
-    double y_w_squared = _data_B[iZ][iN][VERNERDATA_B_y_w_squared];
-    double P = _data_B[iZ][iN][VERNERDATA_B_P];
-    double y_a = _data_B[iZ][iN][VERNERDATA_B_y_a];
-    double sigma_0 = _data_B[iZ][iN][VERNERDATA_B_sigma_0];
+    const double E_0_inv = _data_B[iZ][iN][VERNERDATA_B_E_0_inv];
+    const double y_0 = _data_B[iZ][iN][VERNERDATA_B_y_0];
+    const double y_1_squared = _data_B[iZ][iN][VERNERDATA_B_y_1_squared];
+    const double y_w_squared = _data_B[iZ][iN][VERNERDATA_B_y_w_squared];
+    const double P = _data_B[iZ][iN][VERNERDATA_B_P];
+    const double y_a_inv = _data_B[iZ][iN][VERNERDATA_B_one_over_y_a];
+    const double sigma_0 = _data_B[iZ][iN][VERNERDATA_B_sigma_0];
 
-    double x = e / E_0 - y_0;
-    double y = std::sqrt(x * x + y_1_squared);
-    double xm1 = x - 1.;
-    double Fy = (xm1 * xm1 + y_w_squared) * std::pow(y, 0.5 * P - 5.5) *
-                std::pow(1. + std::sqrt(y / y_a), -P);
-    return 1.e-22 * sigma_0 * Fy;
+    const double x = e * E_0_inv - y_0;
+    const double y = std::sqrt(x * x + y_1_squared);
+    const double xm1 = x - 1.;
+    const double Fy = (xm1 * xm1 + y_w_squared) * std::pow(y, 0.5 * P - 5.5) *
+                      std::pow(1. + std::sqrt(y * y_a_inv), -P);
+    return sigma_0 * Fy;
   }
 }
 
 /**
  * @brief Get the photoionization cross section of the given ion.
+ *
+ * The photoionization cross section is strictly speaking the sum of the cross
+ * sections to all levels of the element. However, we only sum the relevant
+ * contributions.
  *
  * @param ion IonName of a valid ion.
  * @param energy Photon energy (in Hz).
