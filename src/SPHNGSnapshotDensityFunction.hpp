@@ -47,6 +47,9 @@ class ParameterFile;
  */
 class SPHNGSnapshotDensityFunction : public DensityFunction {
 private:
+  /*! @brief Use the new mapping algorithm? */
+  const bool _use_new_algorithm;
+
   /*! @brief Positions of the SPH particles in the snapshot (in m). */
   std::vector< CoordinateVector<> > _positions;
 
@@ -238,7 +241,9 @@ public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
                                bool write_stats, unsigned int stats_numbin,
                                double stats_mindist, double stats_maxdist,
-                               std::string stats_filename, Log *log = nullptr);
+                               std::string stats_filename,
+                               bool use_new_algorithm = false,
+                               Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
