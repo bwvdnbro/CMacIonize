@@ -55,10 +55,11 @@
  * @param log Log to write logging info to.
  */
 TemperatureCalculator::TemperatureCalculator(
-    double luminosity, Abundances &abundances, double pahfac, double crfac,
-    double crlim, double crscale, LineCoolingData &line_cooling_data,
-    RecombinationRates &recombination_rates,
-    ChargeTransferRates &charge_transfer_rates, Log *log)
+    double luminosity, const Abundances &abundances, double pahfac,
+    double crfac, double crlim, double crscale,
+    const LineCoolingData &line_cooling_data,
+    const RecombinationRates &recombination_rates,
+    const ChargeTransferRates &charge_transfer_rates, Log *log)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
       _crfac(crfac), _crlim(crlim), _crscale(crscale),
       _line_cooling_data(line_cooling_data),
@@ -97,59 +98,70 @@ TemperatureCalculator::TemperatureCalculator(
 void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
                                    double &loss, double T,
                                    DensityGrid::iterator &cell, double jfac,
-                                   Abundances &abundances, double hfac,
+                                   const Abundances &abundances, double hfac,
                                    double pahfac, double crfac, double crscale,
-                                   LineCoolingData &data,
-                                   RecombinationRates &rates,
-                                   ChargeTransferRates &ctr) {
+                                   const LineCoolingData &data,
+                                   const RecombinationRates &rates,
+                                   const ChargeTransferRates &ctr) {
 
+  // get the recombination rates of all elements at the selected temperature
   const double alphaH = rates.get_recombination_rate(ION_H_n, T);
   const double alphaHe = rates.get_recombination_rate(ION_He_n, T);
-  double alphaC[2];
-  alphaC[0] = rates.get_recombination_rate(ION_C_p1, T);
-  alphaC[1] = rates.get_recombination_rate(ION_C_p2, T);
-  double alphaN[3];
-  alphaN[0] = rates.get_recombination_rate(ION_N_n, T);
-  alphaN[1] = rates.get_recombination_rate(ION_N_p1, T);
-  alphaN[2] = rates.get_recombination_rate(ION_N_p2, T);
-  double alphaO[2];
-  alphaO[0] = rates.get_recombination_rate(ION_O_n, T);
-  alphaO[1] = rates.get_recombination_rate(ION_O_p1, T);
-  double alphaNe[2];
-  alphaNe[0] = rates.get_recombination_rate(ION_Ne_n, T);
-  alphaNe[1] = rates.get_recombination_rate(ION_Ne_p1, T);
-  double alphaS[3];
-  alphaS[0] = rates.get_recombination_rate(ION_S_p1, T);
-  alphaS[1] = rates.get_recombination_rate(ION_S_p2, T);
-  alphaS[2] = rates.get_recombination_rate(ION_S_p3, T);
+  const double alphaC[2] = {rates.get_recombination_rate(ION_C_p1, T),
+                            rates.get_recombination_rate(ION_C_p2, T)};
+  const double alphaN[3] = {rates.get_recombination_rate(ION_N_n, T),
+                            rates.get_recombination_rate(ION_N_p1, T),
+                            rates.get_recombination_rate(ION_N_p2, T)};
+  const double alphaO[2] = {rates.get_recombination_rate(ION_O_n, T),
+                            rates.get_recombination_rate(ION_O_p1, T)};
+  const double alphaNe[2] = {rates.get_recombination_rate(ION_Ne_n, T),
+                             rates.get_recombination_rate(ION_Ne_p1, T)};
+  const double alphaS[3] = {rates.get_recombination_rate(ION_S_p1, T),
+                            rates.get_recombination_rate(ION_S_p2, T),
+                            rates.get_recombination_rate(ION_S_p3, T)};
 
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
   const double T4 = T * 1.e-4;
+  // this is NOT the value used in Kenny's code paper!
   const double alpha_e_2sP = 4.27e-14 * std::pow(T4, -0.695);
   const double n = ionization_variables.get_number_density();
 
+  // these should be precomputed once at the start of the temperature iteration
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
   const double AHe = abundances.get_abundance(ELEMENT_He);
+
+  // once we now the current value of the recombination rates, we can compute
+  // the ionization equilibrium for hydrogen and helium
   IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, n, AHe, T, h0,
                                      he0);
 
+  // the ionization equilibrium gives us the electron density (we neglect free
+  // electrons coming from ionization of coolants)
   const double ne = n * (1. - h0 + AHe * (1. - he0));
+  // make sure the electron density is a number
   cmac_assert(ne == ne);
+
   const double nhp = n * (1. - h0);
   const double nhep = (1. - he0) * n * AHe;
   const double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
 
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
+  // the constant factor is the energy gain due to a helium Lyman alpha photon
+  // being absorbed by hydrogen
   const double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
+  // again, these should be precomputed once at the start of the temperature
+  // iteration
   gain =
       hfac * n * (ionization_variables.get_heating(HEATINGTERM_H) * h0 +
                   ionization_variables.get_heating(HEATINGTERM_He) * AHe * he0);
   // pahs
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
+  // estimated from Weingartner & Draine (see Kenny's file)
+  /// continue HERE....
   const double heatpah = 3.e-38 * 5. * n * ne * pahfac;
 
   // cosmic rays

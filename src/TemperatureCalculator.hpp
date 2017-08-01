@@ -42,47 +42,49 @@ class RecombinationRates;
 class TemperatureCalculator {
 private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
-  double _luminosity;
+  const double _luminosity;
 
   /*! @brief Abundances. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief PAH heating factor. */
-  double _pahfac;
+  const double _pahfac;
 
   /*! @brief Cosmic ray heating factor. */
-  double _crfac;
+  const double _crfac;
 
   /*! @brief Upper limit on the neutral fraction below which cosmic ray heating
    *  is applied to a cell. */
-  double _crlim;
+  const double _crlim;
 
   /*! @brief Scale height of the cosmic ray heating term (0 for a constant
    *  heating term; in m). */
-  double _crscale;
+  const double _crscale;
 
   /*! @brief LineCoolingData used to calculate cooling due to line emission. */
-  LineCoolingData &_line_cooling_data;
+  const LineCoolingData &_line_cooling_data;
 
   /*! @brief RecombinationRates used to calculate ionic fractions. */
-  RecombinationRates &_recombination_rates;
+  const RecombinationRates &_recombination_rates;
 
   /*! @brief ChargeTransferRates used to calculate ionic fractions. */
-  ChargeTransferRates &_charge_transfer_rates;
+  const ChargeTransferRates &_charge_transfer_rates;
 
 public:
-  TemperatureCalculator(double luminosity, Abundances &abundances,
+  TemperatureCalculator(double luminosity, const Abundances &abundances,
                         double pahfac, double crfac, double crlim,
-                        double crscale, LineCoolingData &line_cooling_data,
-                        RecombinationRates &recombination_rates,
-                        ChargeTransferRates &charge_transfer_rates,
+                        double crscale,
+                        const LineCoolingData &line_cooling_data,
+                        const RecombinationRates &recombination_rates,
+                        const ChargeTransferRates &charge_transfer_rates,
                         Log *log = nullptr);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell, double jfac,
-                     Abundances &abundances, double hfac, double pahfac,
-                     double crfac, double crscale, LineCoolingData &data,
-                     RecombinationRates &rates, ChargeTransferRates &ctr);
+                     const Abundances &abundances, double hfac, double pahfac,
+                     double crfac, double crscale, const LineCoolingData &data,
+                     const RecombinationRates &rates,
+                     const ChargeTransferRates &ctr);
 
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;
@@ -97,11 +99,11 @@ public:
 
     /*! @brief First normalization factor used in the TemperatureCalculator
      * call. */
-    double _jfac;
+    const double _jfac;
 
     /*! @brief Second normalization factor used in the TemperatureCalculator
      * call. */
-    double _hfac;
+    const double _hfac;
 
   public:
     /**
