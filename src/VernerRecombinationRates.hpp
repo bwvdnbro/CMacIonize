@@ -53,9 +53,9 @@
  *  - Shull, J. M., & Van Steenberg, M. 1982, ApJS, 48, 95
  *    (http://adsabs.harvard.edu/abs/1982ApJS...48...95S)
  *
- * It provides fits to the recombination rates of all elements from H to Zn,
- * which are valid in the temperature range \f$[3 {\rm{}\,K}, 10^9 {\rm{}\,K} ]
- * \f$.
+ * It provides fits to the radiative recombination rates of all elements from H
+ * to Zn, which are valid in the temperature range \f$[3 {\rm{}\,K}, 10^9
+ * {\rm{}\,K} ]\f$.
  *
  * We have extended the recombination rates for metals with the low temperature
  * dielectronic recombination rates provided by Nussbaumer, H., & Storey, P. J.
@@ -63,6 +63,13 @@
  * Nussbaumer, H., & Storey, P. J. 1987, A&AS, 69, 123
  * (http://adsabs.harvard.edu/abs/1987A%26AS...69..123N),
  * which are valid in a temperature range [1,000 K; 60,000 K].
+ *
+ * For the sulphur dielectronic recombination rates, we use data from
+ * Mazzotta, P., Mazzitelli, G., Colafrancesco, S. & Vittorio, N. 1998, A&AS,
+ * 133, 403 (http://adsabs.harvard.edu/abs/1998A%26AS..133..403M), and more
+ * recent fits from Abdel-Naby, Sh. A., Nikolić, D., Gorczyca, T. W., Korista,
+ * K. T. & Badnell, N. R. 2012, A&A, 537, 40
+ * (http://adsabs.harvard.edu/abs/2012A%26A...537A..40A).
  */
 class VernerRecombinationRates : public RecombinationRates {
 private:
