@@ -201,7 +201,7 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // the cooling consists of three term:
   //  - cooling by recombination of coolants (C, N, O, Ne, S)
   //  - cooling due to free-free radiation (bremsstrahlung)
-  //  - Rrec cooling (?)
+  //  - cooling due to recombination of hydrogen and helium
 
   // coolants
 
@@ -382,21 +382,21 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   // (http://adsabs.harvard.edu/abs/2006agna.book.....O)
   const double Lff = 1.42e-40 * gff * std::sqrt(T) * (nhp + nhep) * ne;
 
-  // RECcool
+  // cooling due to recombination of hydrogen and helium
+
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
-  // no idea where these come from, but see
-  // Hummer (1994), Hummer & Storey (1999), and Mao, Kaastra & Badnell (2017)
-  // (who make a distinction between case A and case B rates: case A is a Lyman
-  //  transparent region, case B is an opaque region, where the cooling loss is
-  //  smaller)
-  /// continue here...
-  const double Lhp =
-      2.85e-40 * ne * nhp * std::sqrt(T) *
-      (5.914 - 0.5 * std::log(T) + 0.01184 * std::pow(T, 0.33333));
-  const double Lhep = 2.6e-39 * ne * nhep * std::pow(T, 0.32);
+  // expressions come from Black, J. H. 1981, MNRAS, 197, 553
+  // (http://adsabs.harvard.edu/abs/1981MNRAS.197..553B), table 3
+  // valid in the range [5,000 K; 50,000 K]
+  // NOTE that the expression for helium is different from that in Kenny's code
+  // (it is the same as the commented out expression in Kenny's code)
+  const double Lhp = 2.85e-40 * ne * nhp * std::sqrt(T) *
+                     (5.914 - 0.5 * std::log(T) + 0.01184 * std::cbrt(T));
+  const double Lhep = 1.55e-39 * ne * nhep * std::pow(T, 0.3647);
   const double LRec = Lhp + Lhep;
 
+  // sum the different cooling terms
   loss = Lc + Lff + LRec;
 }
 
@@ -409,11 +409,16 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
  */
 void TemperatureCalculator::calculate_temperature(
     double jfac, double hfac, DensityGrid::iterator &cell) const {
+
+  // parameters that control the iteration
+  // could potentially be made into real parameters for better control
   const double eps = 1.e-3;
   const unsigned int max_iterations = 100;
 
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
+  // if the ionizing intensity is 0, the gas is trivially neutral and all
+  // coolants are in the ground state
   if ((ionization_variables.get_mean_intensity(ION_H_n) == 0. &&
        ionization_variables.get_mean_intensity(ION_He_n) == 0.) ||
       ionization_variables.get_number_density() == 0.) {
@@ -443,6 +448,8 @@ void TemperatureCalculator::calculate_temperature(
     return;
   }
 
+  // if cosmic ray heating is active, check that the gas is ionized enough
+  // if it is not, we just assume the gas is neutral and do not apply heating
   double h0, he0;
   if (_crfac > 0.) {
     const double alphaH =
@@ -481,13 +488,18 @@ void TemperatureCalculator::calculate_temperature(
     }
   }
 
-  double T0;
-  if (ionization_variables.get_temperature() > 4000.) {
-    T0 = ionization_variables.get_temperature();
-  } else {
+  // we make sure our initial temperature guess is high enough
+  double T0 = ionization_variables.get_temperature();
+  if (ionization_variables.get_temperature() <= 4000.) {
     T0 = 8000.;
   }
 
+  // iteratively find the equilibrium temperature by starting from a guess and
+  // computing the ionization equilibrium and cooling and heating for that guess
+  // based on the net cooling and heating we can then find a new temperature
+  // guess, until the difference between cooling and heating drops below a
+  // threshold value
+  // we enforce upper and lower limits on the temperature of 10^10 and 500 K
   unsigned int niter = 0;
   double gain0 = 1.;
   double loss0 = 0.;
@@ -546,9 +558,11 @@ void TemperatureCalculator::calculate_temperature(
                  T0, std::abs(loss0 - gain0) / gain0, eps);
   }
 
-  // cap the temperature at 30,000 K
+  // cap the temperature at 30,000 K, since helium charge transfer rates are
+  // only valid until 30,000 K
   T0 = std::min(30000., T0);
 
+  // update the ionic fractions and temperature
   ionization_variables.set_temperature(T0);
   ionization_variables.set_ionic_fraction(ION_H_n, h0);
   ionization_variables.set_ionic_fraction(ION_He_n, he0);

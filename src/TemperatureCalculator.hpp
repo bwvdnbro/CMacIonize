@@ -38,6 +38,23 @@ class RecombinationRates;
 /**
  * @brief Class that calculates the temperature for every cell of a grid after
  * the photon shoot loop.
+ *
+ * This class uses data values and fits from
+ *  - Wood, K., Mathis, J. S. & Ercolano, B. 2004, MNRAS, 348, 1337
+ *    (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W)
+ *  - Weingartner, J. C. & Draine, B. T. 2001, ApJS, 134, 263
+ *    (http://adsabs.harvard.edu/abs/2001ApJS..134..263W)
+ *  - Wiener, J., Zweibel, E. G. & Oh, S. P. 2013, ApJ, 767, 87
+ *    (http://adsabs.harvard.edu/abs/2013ApJ...767...87W)
+ *  - Arnaud, M. & Rothenflug, R. 1985, A&AS, 60, 425
+ *    (http://adsabs.harvard.edu/abs/1985A%26AS...60..425A)
+ *  - Katz, N., Weinberg, D. H. & Hernquist, L. 1996, ApJS, 105, 19
+ *    (http://adsabs.harvard.edu/abs/1996ApJS..105...19K)
+ *  - Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of Gaseous Nebulae
+ *    and Active Galactic Nuclei, 2nd edition
+ *    (http://adsabs.harvard.edu/abs/2006agna.book.....O)
+ *  - Black, J. H. 1981, MNRAS, 197, 553
+ *    (http://adsabs.harvard.edu/abs/1981MNRAS.197..553B)
  */
 class TemperatureCalculator {
 private:
