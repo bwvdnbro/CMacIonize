@@ -123,8 +123,6 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
   const double T4 = T * 1.e-4;
-  // this is NOT the value used in Kenny's code paper!
-  const double alpha_e_2sP = 4.27e-14 * std::pow(T4, -0.695);
   const double n = ionization_variables.get_number_density();
 
   // these should be precomputed once at the start of the temperature iteration
@@ -145,28 +143,39 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
 
   const double nhp = n * (1. - h0);
   const double nhep = (1. - he0) * n * AHe;
-  const double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
 
-  // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
-  // we then multiplied with 0.1 to convert to J m^-3s^-1
+  /// heating
+  // the heating consists of 4 terms:
+  //  - heating by ionization of hydrogen and helium
+  //  - on the spot heating by absorption by hydrogen of He Lyman alpha
+  //    radiation
+  //  - PAH heating (if active)
+  //  - cosmic ray heating (if active)
+
+  // Wood, Mathis & Ercolano (2004), equation 25
+  // NOTE that this is a different expression from the one in Kenny's code!
+  // Kenny's expression is in units cm^3 s^-1, we multiplied by 1.e-6 to convert
+  // to m^3 s^-1
+  const double alpha_e_2sP = 4.17e-20 * std::pow(T4, -0.861);
+  // Wood, Mathis & Ercolano (2004), equation 17
+  // we extracted the factor 10^4 from the square root and multiplied it with
+  // the constant 0.77
+  const double pHots = 1. / (1. + 77. / std::sqrt(T) * he0 / h0);
   // the constant factor is the energy gain due to a helium Lyman alpha photon
-  // being absorbed by hydrogen
-  const double heatHeLa = pHots * 1.2196e-12 * alpha_e_2sP * ne * nhep * 1.e-12;
-  // again, these should be precomputed once at the start of the temperature
-  // iteration
-  gain =
-      hfac * n * (ionization_variables.get_heating(HEATINGTERM_H) * h0 +
-                  ionization_variables.get_heating(HEATINGTERM_He) * AHe * he0);
+  // being absorbed by hydrogen: (21.2 eV - 13.6 eV) = 1.21765423e-18 J
+  const double heatHeLa = pHots * 1.21765423e-18 * alpha_e_2sP * ne * nhep;
   // pahs
+  // the numerical factors were estimated from Weingartner, J. C. & Draine, B.
+  // T. 2001, ApJS, 134, 263 (http://adsabs.harvard.edu/abs/2001ApJS..134..263W)
+  // as the net heating-cooling rate for a full black body star (tables 4 and 5)
   // we multiplied Kenny's value with 1.e-12 to convert densities to m^-3
   // we then multiplied with 0.1 to convert to J m^-3s^-1
-  // estimated from Weingartner & Draine (see Kenny's file)
-  /// continue HERE....
-  const double heatpah = 3.e-38 * 5. * n * ne * pahfac;
+  const double heatpah = 1.5e-37 * n * ne * pahfac;
 
   // cosmic rays
   // erg/cm^(9/2)/s --> J/m^(9/2)/s ==> 1.2e-27 --> 1.2e-25
-  // value comes from equation (53) in Wiener, Zweibel & Oh, 2013, ApJ, 767, 87
+  // value comes from equation (53) in Wiener, J., Zweibel, E. G. & Oh, S. P.
+  // 2013, ApJ, 767, 87 (http://adsabs.harvard.edu/abs/2013ApJ...767...87W)
   double heatcr = 0.;
   if (crfac > 0.) {
     heatcr = crfac * 1.2e-25 / std::sqrt(ne);
@@ -175,118 +184,156 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
     }
   }
 
-  gain += heatpah;
+  // ionization heating
+  // again, these should be precomputed once at the start of the temperature
+  // iteration
+  gain =
+      hfac * n * (ionization_variables.get_heating(HEATINGTERM_H) * h0 +
+                  ionization_variables.get_heating(HEATINGTERM_He) * AHe * he0);
+  // He Lyman alpha on the spot heating
   gain += heatHeLa;
+  // PAH heating
+  gain += heatpah;
+  // cosmic ray heating
   gain += heatcr;
+
+  /// cooling
+  // the cooling consists of three term:
+  //  - cooling by recombination of coolants (C, N, O, Ne, S)
+  //  - cooling due to free-free radiation (bremsstrahlung)
+  //  - Rrec cooling (?)
 
   // coolants
 
+  // we first compute the ionic fractions of the different ions of the coolants
+  // they are then used as input for the line cooling routine
+  // the procedure is always the same: the total density for an element X with
+  // ionization states X0, X+, X2+... is
+  //   n(X) = n(X0) + n(X+) + n(X2+) + ...
+  // the ionization balance for each ion is given by
+  //   n(X+)rec(X+) = n(X0)ion(X+)
+  // or
+  //   n(X) = n(X0)ion(X+)/rec(X+) = n(X0)C(X+)
+  // recombination from X2+ to X0 happens in two stages, so the recombination
+  // rate from X2+ to X0 is the product of the recombination rates from X2+ to
+  // X+ and from X+ to X0
+  // We want the ionic fractions n(X+)/n(X), so
+  //  n(X+)/n(X) = n(X0)C(X+) / (n(X0) + n(X+) + n(X2+) + ...)
+  //             = n(X0)C(X+) / (n(X0) + n(X0)C(X+) + n(X+)C(X2+) + ...)
+  //             = n(X0)C(X+) / (n(X0) + n(X0)C(X+) + n(X0)C(X+)C(X2+) + ...)
+  //             = C(X+) / (1 + C(X+) + C(X+)C(X2+) + ...)
+
+  // again, all mean intensity products could be precomputed once at the start
+  // of the temperature iteration
+  const double nh0 = n * h0;
+  const double nhe0 = n * he0 * AHe;
+
+  // the He charge transfer recombination rates below all come from Arnaud, M. &
+  // Rothenflug, R. 1985, A&AS, 60, 425
+  // (http://adsabs.harvard.edu/abs/1985A%26AS...60..425A), table III
+
   // carbon
-  const double C21 =
-      jfac * ionization_variables.get_mean_intensity(ION_C_p1) / ne / alphaC[0];
-  // as can be seen below, CTHerecom has the same units as a recombination
-  // rate: m^3s^-1
-  // in Kenny's code, recombination rates are in cm^3s^-1
-  // to put them in m^3s^-1 as well, we hence need to multiply Kenny's
-  // original factor 1.e-9 with 1.e-6
-  double CTHerecom = 1.e-15 * 0.046 * T4 * T4;
+  // the charge transfer recombination rates for C+ are negligble
+  const double C21 = jfac * ionization_variables.get_mean_intensity(ION_C_p1) /
+                     (ne * alphaC[0]);
+  // valid in the temperature range [1,000 K; 30,000 K]
+  double CTHerecom = 4.6e-17 * T4 * T4;
   const double C32 =
       jfac * ionization_variables.get_mean_intensity(ION_C_p2) /
       (ne * alphaC[1] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 6, T) +
-       n * he0 * AHe * CTHerecom);
+       nh0 * ctr.get_charge_transfer_recombination_rate(4, 6, T) +
+       nhe0 * CTHerecom);
   const double C31 = C32 * C21;
-  const double sumC = C21 + C31;
-  ionization_variables.set_ionic_fraction(ION_C_p1, C21 / (1. + sumC));
-  ionization_variables.set_ionic_fraction(ION_C_p2, C31 / (1. + sumC));
+  const double sumC_inv = 1. / (1. + C21 + C31);
+  ionization_variables.set_ionic_fraction(ION_C_p1, C21 * sumC_inv);
+  ionization_variables.set_ionic_fraction(ION_C_p2, C31 * sumC_inv);
 
   // nitrogen
   const double N21 =
       (jfac * ionization_variables.get_mean_intensity(ION_N_n) +
        nhp * ctr.get_charge_transfer_ionization_rate(1, 7, T)) /
       (ne * alphaN[0] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(2, 7, T));
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom =
-      1.e-15 * 0.33 * std::pow(T4, 0.29) * (1. + 1.3 * std::exp(-4.5 / T4));
+       nh0 * ctr.get_charge_transfer_recombination_rate(2, 7, T));
+  // NOTE the mistake in Kenny's code: division by T4 instead of multiplication
+  // valid in the range [1,000 K; 30,000 K]
+  CTHerecom = 3.3e-16 * std::pow(T4, 0.29) * (1. + 1.3 * std::exp(-4.5 * T4));
   const double N32 =
       jfac * ionization_variables.get_mean_intensity(ION_N_p1) /
       (ne * alphaN[1] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 7, T) +
-       n * he0 * AHe * CTHerecom);
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom = 1.e-15 * 0.15;
+       nh0 * ctr.get_charge_transfer_recombination_rate(3, 7, T) +
+       nhe0 * CTHerecom);
+  // valid in the range [1,000 K; 30,000 K]
+  CTHerecom = 1.5e-16;
   const double N43 =
       jfac * ionization_variables.get_mean_intensity(ION_N_p2) /
       (ne * alphaN[2] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 7, T) +
-       n * he0 * AHe * CTHerecom);
+       nh0 * ctr.get_charge_transfer_recombination_rate(4, 7, T) +
+       nhe0 * CTHerecom);
   const double N31 = N32 * N21;
   const double N41 = N43 * N31;
-  const double sumN = N21 + N31 + N41;
-  ionization_variables.set_ionic_fraction(ION_N_n, N21 / (1. + sumN));
-  ionization_variables.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
-  ionization_variables.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
-
-  // Sulphur
-  const double S21 =
-      jfac * ionization_variables.get_mean_intensity(ION_S_p1) /
-      (ne * alphaS[0] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 16, T));
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom = 1.e-15 * 1.1 * std::pow(T4, 0.56);
-  const double S32 =
-      jfac * ionization_variables.get_mean_intensity(ION_S_p2) /
-      (ne * alphaS[1] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(4, 16, T) +
-       n * he0 * AHe * CTHerecom);
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom =
-      1.e-15 * 7.6e-4 * std::pow(T4, 0.32) * (1. + 3.4 * std::exp(-5.25 * T4));
-  const double S43 =
-      jfac * ionization_variables.get_mean_intensity(ION_S_p3) /
-      (ne * alphaS[2] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(5, 16, T) +
-       n * he0 * AHe * CTHerecom);
-  const double S31 = S32 * S21;
-  const double S41 = S43 * S31;
-  const double sumS = S21 + S31 + S41;
-  ionization_variables.set_ionic_fraction(ION_S_p1, S21 / (1. + sumS));
-  ionization_variables.set_ionic_fraction(ION_S_p2, S31 / (1. + sumS));
-  ionization_variables.set_ionic_fraction(ION_S_p3, S41 / (1. + sumS));
-
-  // Neon
-  const double Ne21 = jfac * ionization_variables.get_mean_intensity(ION_Ne_n) /
-                      (ne * alphaNe[0]);
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom = 1.e-15 * 1.e-5;
-  const double Ne32 =
-      jfac * ionization_variables.get_mean_intensity(ION_Ne_p1) /
-      (ne * alphaNe[1] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 10, T) +
-       n * he0 * AHe * CTHerecom);
-  const double Ne31 = Ne32 * Ne21;
-  const double sumNe = Ne21 + Ne31;
-  ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 / (1. + sumNe));
-  ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 / (1. + sumNe));
+  const double sumN_inv = 1. / (1. + N21 + N31 + N41);
+  ionization_variables.set_ionic_fraction(ION_N_n, N21 * sumN_inv);
+  ionization_variables.set_ionic_fraction(ION_N_p1, N31 * sumN_inv);
+  ionization_variables.set_ionic_fraction(ION_N_p2, N41 * sumN_inv);
 
   // Oxygen
   const double O21 =
       (jfac * ionization_variables.get_mean_intensity(ION_O_n) +
        nhp * ctr.get_charge_transfer_ionization_rate(1, 8, T)) /
       (ne * alphaO[0] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(2, 8, T));
-  // multiplied Kenny's value with 1.e-6
-  CTHerecom = 0.2e-15 * std::pow(T4, 0.95);
+       nh0 * ctr.get_charge_transfer_recombination_rate(2, 8, T));
+  // valid in the range [5,000 K; 50,000 K]
+  CTHerecom = 2.e-16 * std::pow(T4, 0.95);
   const double O32 =
       jfac * ionization_variables.get_mean_intensity(ION_O_p1) /
       (ne * alphaO[1] +
-       n * h0 * ctr.get_charge_transfer_recombination_rate(3, 8, T) +
-       n * he0 * AHe * CTHerecom);
+       nh0 * ctr.get_charge_transfer_recombination_rate(3, 8, T) +
+       nhe0 * CTHerecom);
   const double O31 = O32 * O21;
-  const double sumO = O21 + O31;
-  ionization_variables.set_ionic_fraction(ION_O_n, O21 / (1. + sumO));
-  ionization_variables.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
+  const double sumO_inv = 1. / (1. + O21 + O31);
+  ionization_variables.set_ionic_fraction(ION_O_n, O21 * sumO_inv);
+  ionization_variables.set_ionic_fraction(ION_O_p1, O31 * sumO_inv);
+
+  // Neon
+  const double Ne21 = jfac * ionization_variables.get_mean_intensity(ION_Ne_n) /
+                      (ne * alphaNe[0]);
+  // valid in the range [1,000 K; 30,000 K]
+  CTHerecom = 1.e-20;
+  const double Ne32 =
+      jfac * ionization_variables.get_mean_intensity(ION_Ne_p1) /
+      (ne * alphaNe[1] +
+       nh0 * ctr.get_charge_transfer_recombination_rate(3, 10, T) +
+       nhe0 * CTHerecom);
+  const double Ne31 = Ne32 * Ne21;
+  const double sumNe_inv = 1. / (1. + Ne21 + Ne31);
+  ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 * sumNe_inv);
+  ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 * sumNe_inv);
+
+  // Sulphur
+  const double S21 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p1) /
+      (ne * alphaS[0] +
+       nh0 * ctr.get_charge_transfer_recombination_rate(3, 16, T));
+  // valid in the range [1,000 K; 30,000 K]
+  CTHerecom = 1.1e-15 * std::pow(T4, 0.56);
+  const double S32 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p2) /
+      (ne * alphaS[1] +
+       nh0 * ctr.get_charge_transfer_recombination_rate(4, 16, T) +
+       nhe0 * CTHerecom);
+  // valid in the range [1,000 K; 30,000 K]
+  CTHerecom = 7.6e-19 * std::pow(T4, 0.32) * (1. + 3.4 * std::exp(-5.25 * T4));
+  const double S43 =
+      jfac * ionization_variables.get_mean_intensity(ION_S_p3) /
+      (ne * alphaS[2] +
+       nh0 * ctr.get_charge_transfer_recombination_rate(5, 16, T) +
+       nhe0 * CTHerecom);
+  const double S31 = S32 * S21;
+  const double S41 = S43 * S31;
+  const double sumS_inv = 1. / (1. + S21 + S31 + S41);
+  ionization_variables.set_ionic_fraction(ION_S_p1, S21 * sumS_inv);
+  ionization_variables.set_ionic_fraction(ION_S_p2, S31 * sumS_inv);
+  ionization_variables.set_ionic_fraction(ION_S_p3, S41 * sumS_inv);
 
   double abund[12];
   abund[0] = abundances.get_abundance(ELEMENT_N) *
@@ -320,23 +367,35 @@ void TemperatureCalculator::ioneng(double &h0, double &he0, double &gain,
   abund[11] = abundances.get_abundance(ELEMENT_Ne) *
               ionization_variables.get_ionic_fraction(ION_Ne_n);
 
-  // FFcool
+  const double Lc = data.get_cooling(T, ne, abund) * n;
+
+  // free-free cooling (bremsstrahlung)
+
+  // fit to the free-free emission Gaunt factor from Katz, N., Weinberg, D. H. &
+  // Hernquist, L. 1996, ApJS, 105, 19
+  // (http://adsabs.harvard.edu/abs/1996ApJS..105...19K), equation 23
   const double c = 5.5 - std::log(T);
   const double gff = 1.1 + 0.34 * std::exp(-c * c / 3.);
-  // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
-  // we then multiplied with 0.1 to convert them to J m^-3s^-1
+  // Wood, Mathis & Ercolano (2004), equation 22
+  // based on section 3.4 of Osterbrock, D. E. & Ferland, G. J. 2006,
+  // Astrophysics of Gaseous Nebulae and Active Galactic Nuclei, 2nd edition
+  // (http://adsabs.harvard.edu/abs/2006agna.book.....O)
   const double Lff = 1.42e-40 * gff * std::sqrt(T) * (nhp + nhep) * ne;
 
   // RECcool
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
+  // no idea where these come from, but see
+  // Hummer (1994), Hummer & Storey (1999), and Mao, Kaastra & Badnell (2017)
+  // (who make a distinction between case A and case B rates: case A is a Lyman
+  //  transparent region, case B is an opaque region, where the cooling loss is
+  //  smaller)
+  /// continue here...
   const double Lhp =
-      2.85e-14 * ne * nhp * std::sqrt(T) *
+      2.85e-40 * ne * nhp * std::sqrt(T) *
       (5.914 - 0.5 * std::log(T) + 0.01184 * std::pow(T, 0.33333));
-  const double Lhep = 2.6e-13 * ne * nhep * std::pow(T, 0.32);
-  const double LRec = 1.e-26 * (Lhp + Lhep);
-
-  const double Lc = data.get_cooling(T, ne, abund) * n;
+  const double Lhep = 2.6e-39 * ne * nhep * std::pow(T, 0.32);
+  const double LRec = Lhp + Lhep;
 
   loss = Lc + Lff + LRec;
 }

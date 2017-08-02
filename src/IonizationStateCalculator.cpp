@@ -408,7 +408,7 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
   }
 
   // we multiplied Kenny's value with 1.e-6 to convert from cm^3s^-1 to m^3s^-1
-  double alpha_e_2sP = 4.27e-20 * std::pow(T * 1.e-4, -0.695);
+  double alpha_e_2sP = 4.17e-20 * std::pow(T * 1.e-4, -0.861);
   double ch1 = alphaH * nH / jH;
   double ch2 = AHe * alpha_e_2sP * nH / jH;
   double che = 0.;
