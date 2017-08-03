@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
         assert_values_equal_rel(
             recombination_rate,
             UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
-                rates.get_charge_transfer_recombination_rate_H(ion[atom][stage],
-                                                               temperature),
+                rates.get_charge_transfer_recombination_rate_H(
+                    ion[atom][stage], temperature * 1.e-4),
                 "cm^3s^-1"),
             1.e-6);
       }
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         assert_values_equal_rel(
             ionization_rate, UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
                                  rates.get_charge_transfer_ionization_rate_H(
-                                     ion[atom][stage], temperature),
+                                     ion[atom][stage], temperature * 1.e-4),
                                  "cm^3s^-1"),
             1.e-6);
       }

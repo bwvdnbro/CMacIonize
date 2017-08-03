@@ -19,7 +19,8 @@
 /**
  * @file ChargeTransferRates.hpp
  *
- * @brief Recombination rates from charge transfer from one element to another.
+ * @brief Recombination and ionization rates due to charge transfer reactions
+ * with hydrogen and helium.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
@@ -29,7 +30,8 @@
 #include "ElementNames.hpp"
 
 /**
- * @brief  Recombination rates from charge transfer from one element to another.
+ * @brief Recombination and ionization rates due to charge transfer reactions
+ * with hydrogen and helium.
  *
  * The rates for hydrogen are based on Kingdon, J. B. & Ferland, G. J. 1996,
  * ApJS, 106, 205 (http://adsabs.harvard.edu/abs/1996ApJS..106..205K), tables 1
@@ -41,7 +43,7 @@
  * Note that this class does not store any data, so we could make the member
  * functions static. However, we might want to use tabulated values at some
  * point in the future, and then it will be useful that this class is treated as
- * being non-static.
+ * being non-static in other parts of the program.
  */
 class ChargeTransferRates {
 public:
