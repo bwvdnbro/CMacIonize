@@ -87,34 +87,19 @@ int main(int argc, char **argv) {
       IonizationVariables &ionization_variables =
           cell.get_ionization_variables();
 
-      ionization_variables.increase_mean_intensity(ION_H_n, jH);
-      ionization_variables.increase_mean_intensity(ION_He_n, jHe);
-      ionization_variables.increase_mean_intensity(ION_C_p1, jCp1);
-      ionization_variables.increase_mean_intensity(ION_C_p2, jCp2);
-      ionization_variables.increase_mean_intensity(ION_N_n, jN);
-      ionization_variables.increase_mean_intensity(ION_N_p1, jNp1);
-      ionization_variables.increase_mean_intensity(ION_N_p2, jNp2);
-      ionization_variables.increase_mean_intensity(ION_O_n, jO);
-      ionization_variables.increase_mean_intensity(ION_O_p1, jOp1);
-      ionization_variables.increase_mean_intensity(ION_Ne_n, jNe);
-      ionization_variables.increase_mean_intensity(ION_Ne_p1, jNep1);
-      ionization_variables.increase_mean_intensity(ION_S_p1, jSp1);
-      ionization_variables.increase_mean_intensity(ION_S_p2, jSp2);
-      ionization_variables.increase_mean_intensity(ION_S_p3, jSp3);
-      ionization_variables.increase_heating(
-          HEATINGTERM_H,
-          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"));
-      ionization_variables.increase_heating(
-          HEATINGTERM_He,
-          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
+      const double j[NUMBER_OF_IONNAMES] = {jH,    jHe,  jCp1, jCp2, jN,
+                                            jNp1,  jNp2, jO,   jOp1, jNe,
+                                            jNep1, jSp1, jSp2, jSp3};
+      const double h[NUMBER_OF_HEATINGTERMS] = {
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"),
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1")};
       ionization_variables.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(n, "cm^-3"));
       ionization_variables.set_temperature(T);
 
       double gain, loss, h0, he0;
-      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1.,
-                                    abundances, 1., 1., 0., 0.75, data, rates,
-                                    ctr);
+      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, j, abundances,
+                                    h, 1., 0., 0.75, data, rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 

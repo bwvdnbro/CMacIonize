@@ -108,8 +108,8 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_C_p2) /
         (ne * _recombination_rates.get_recombination_rate(ION_C_p2, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 6,
-                                                                           T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_C_p2, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     const double C31 = C32 * C21;
     const double sumC = C21 + C31;
@@ -120,12 +120,12 @@ void IonizationStateCalculator::calculate_ionization_state(
     const double N21 =
         (jfac * ionization_variables.get_mean_intensity(ION_N_n) +
          nhp *
-             _charge_transfer_rates.get_charge_transfer_ionization_rate(1, 7,
-                                                                        T)) /
+             _charge_transfer_rates.get_charge_transfer_ionization_rate_H(
+                 ION_N_n, T)) /
         (ne * _recombination_rates.get_recombination_rate(ION_N_n, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(2, 7,
-                                                                           T));
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_n, T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom =
         1.e-15 * 0.33 * std::pow(T4, 0.29) * (1. + 1.3 * std::exp(-4.5 / T4));
@@ -133,8 +133,8 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_N_p1) /
         (ne * _recombination_rates.get_recombination_rate(ION_N_p1, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 7,
-                                                                           T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_p1, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 0.15;
@@ -142,8 +142,8 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_N_p2) /
         (ne * _recombination_rates.get_recombination_rate(ION_N_p2, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(4, 7,
-                                                                           T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_p2, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     const double N31 = N32 * N21;
     const double N41 = N43 * N31;
@@ -157,16 +157,16 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_S_p1) /
         (ne * _recombination_rates.get_recombination_rate(ION_S_p1, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(
-                 3, 16, T));
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p1, T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 1.1 * std::pow(T4, 0.56);
     const double S32 =
         jfac * ionization_variables.get_mean_intensity(ION_S_p2) /
         (ne * _recombination_rates.get_recombination_rate(ION_S_p2, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(
-                 4, 16, T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p2, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 1.e-15 * 7.6e-4 * std::pow(T4, 0.32) *
@@ -175,8 +175,8 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_S_p3) /
         (ne * _recombination_rates.get_recombination_rate(ION_S_p3, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(
-                 5, 16, T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p3, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     const double S31 = S32 * S21;
     const double S41 = S43 * S31;
@@ -195,8 +195,8 @@ void IonizationStateCalculator::calculate_ionization_state(
         jfac * ionization_variables.get_mean_intensity(ION_Ne_p1) /
         (ne * _recombination_rates.get_recombination_rate(ION_Ne_p1, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(
-                 3, 10, T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_Ne_p1, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     const double Ne31 = Ne32 * Ne21;
     const double sumNe = Ne21 + Ne31;
@@ -207,20 +207,20 @@ void IonizationStateCalculator::calculate_ionization_state(
     const double O21 =
         (jfac * ionization_variables.get_mean_intensity(ION_O_n) +
          nhp *
-             _charge_transfer_rates.get_charge_transfer_ionization_rate(1, 8,
-                                                                        T)) /
+             _charge_transfer_rates.get_charge_transfer_ionization_rate_H(
+                 ION_O_n, T)) /
         (ne * _recombination_rates.get_recombination_rate(ION_O_n, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(2, 8,
-                                                                           T));
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_O_n, T));
     // multiplied Kenny's value with 1.e-6
     CTHerecom = 0.2e-15 * std::pow(T4, 0.95);
     const double O32 =
         jfac * ionization_variables.get_mean_intensity(ION_O_p1) /
         (ne * _recombination_rates.get_recombination_rate(ION_O_p1, T) +
          ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate(3, 8,
-                                                                           T) +
+             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_O_p1, T) +
          ntot * he0 * _abundances.get_abundance(ELEMENT_He) * CTHerecom);
     const double O31 = O32 * O21;
     const double sumO = O21 + O31;

@@ -55,17 +55,6 @@ configure_file(
     ${PROJECT_BINARY_DIR}/src/VernerRecombinationRatesDataLocation.hpp
                @ONLY)
 
-# ChargeTransferRatesDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/KingdonFerland_ct1data.txt
-               ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt COPYONLY)
-set(CHARGETRANSFERRATESDATALOCATION
-    ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt)
-message(STATUS
-      "ChargeTransferRatesDataLocation.hpp: ${CHARGETRANSFERRATESDATALOCATION}")
-configure_file(${PROJECT_SOURCE_DIR}/src/ChargeTransferRatesDataLocation.hpp.in
-               ${PROJECT_BINARY_DIR}/src/ChargeTransferRatesDataLocation.hpp
-               @ONLY)
-
 # HeliumTwoPhotonContinuumDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/He2q.dat
                ${PROJECT_BINARY_DIR}/data/He2q.dat COPYONLY)
@@ -168,7 +157,6 @@ set(CMACIONIZE_SOURCES
     Box.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
-    ChargeTransferRatesDataLocation.hpp.in
     CMacIonizeSnapshotDensityFunction.hpp
     CMacIonizeVoronoiGeneratorDistribution.hpp
     Configuration.hpp.in

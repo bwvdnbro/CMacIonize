@@ -97,8 +97,10 @@ public:
                         Log *log = nullptr);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     double T, DensityGrid::iterator &cell, double jfac,
-                     const Abundances &abundances, double hfac, double pahfac,
+                     double T, DensityGrid::iterator &cell,
+                     const double j[NUMBER_OF_IONNAMES],
+                     const Abundances &abundances,
+                     const double h[NUMBER_OF_HEATINGTERMS], double pahfac,
                      double crfac, double crscale, const LineCoolingData &data,
                      const RecombinationRates &rates,
                      const ChargeTransferRates &ctr);
@@ -108,6 +110,10 @@ public:
 
   /**
    * @brief Functor used to calculate the temperature of a single cell.
+   *
+   * This functor is called by the thread that is doing the computation for that
+   * cell, and calls TemperatureCalculator::calculate_temperature on the
+   * underlying TemperatureCalculator object.
    */
   class TemperatureCalculatorFunction {
   private:
