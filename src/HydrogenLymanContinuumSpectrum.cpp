@@ -21,11 +21,6 @@
  *
  * @brief HydrogenLymanContinuumSpectrum implementation.
  *
- * We do not care about units inside this class, and just use the internal units
- * as they were used in Kenny's code. However, we do convert the frequency when
- * it leaves the class, so that the outer world does not need to know about our
- * strange unit system.
- *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -51,6 +46,7 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
       HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP,
       std::vector< double >(HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.));
 
+  // some constants
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   // 54.4 eV in Hz
@@ -59,34 +55,51 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
   const double planck_constant = 6.626e-34;
   // Boltzmann constant (in J s^-1)
   const double boltzmann_constant = 1.38e-23;
+
   // set up the frequency bins
   for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +
                     i * (max_frequency - min_frequency) /
                         (HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
+
+  // set up the temperature bins and precompute the spectrum
   for (unsigned int iT = 0; iT < HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
     _cumulative_distribution[iT][0] = 0.;
     _temperature[iT] =
         1500. + (iT + 0.5) * 13500. / HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP;
+    // precompute the spectrum for this temperature
     for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
+      // first do the lower edge of the frequency interval
       double xsecH =
           cross_sections.get_cross_section(ION_H_n, _frequency[inu - 1]);
-      double jHIi1 =
+      // Wood, Mathis & Ercolano (2004), equation (8)
+      // note that we ignore all constant prefactors, since we normalize the
+      // spectrum afterwards
+      // note that the temperature prefactor is also constant within a
+      // temperature table and since we normalize temperature tables, we can
+      // also ignore it here
+      const double jHIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecH *
           std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
+      // now do the upper edge of the interval
       xsecH = cross_sections.get_cross_section(ION_H_n, _frequency[inu]);
-      double jHIi2 =
+      const double jHIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecH *
           std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
+      // the spectrum in the bin is computed using a simple linear quadrature
+      // rule
+      // we convert the energy spectrum to a number spectrum by dividing by the
+      // frequency
       _cumulative_distribution[iT][inu] =
           0.5 * (jHIi1 / _frequency[inu] + jHIi2 / _frequency[inu - 1]) *
           (_frequency[inu] - _frequency[inu - 1]);
     }
+
     // make cumulative
     for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
@@ -107,24 +120,31 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
 /**
  * @brief Get a random frequency from the spectrum.
  *
+ * We first locate the given temperature value in the temperature table. Then we
+ * generate a random uniform number and locate it in the two cumulative
+ * distributions that border the temperature value. The sampled frequency is
+ * then given by linear interpolation on the temperature and frequency tables.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
 double HydrogenLymanContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  unsigned int iT = Utilities::locate(temperature, _temperature.data(),
-                                      HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
-  double x = random_generator.get_uniform_random_double();
-  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT].data(),
-                                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 =
+
+  const unsigned int iT = Utilities::locate(
+      temperature, _temperature.data(), HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
+  const double x = random_generator.get_uniform_random_double();
+  const unsigned int inu1 =
+      Utilities::locate(x, _cumulative_distribution[iT].data(),
+                        HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  const unsigned int inu2 =
       Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency = _frequency[inu1] +
-                     (temperature - _temperature[iT]) *
-                         (_frequency[inu2] - _frequency[inu1]) /
-                         (_temperature[iT + 1] - _temperature[iT]);
+  const double frequency = _frequency[inu1] +
+                           (temperature - _temperature[iT]) *
+                               (_frequency[inu2] - _frequency[inu1]) /
+                               (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 
