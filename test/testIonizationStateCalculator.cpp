@@ -173,10 +173,10 @@ int main(int argc, char **argv) {
         0., UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"), 0.,
         UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), 0., T,
         h0, he0);
-    IonizationStateCalculator::find_H0_simple(
+    h0s = IonizationStateCalculator::find_H0_simple(
         UnitConverter::to_SI< QUANTITY_REACTION_RATE >(3.12e-13, "cm^3s^-1"),
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"),
-        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), T, h0s);
+        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
     assert_values_equal_tol(h0, h0s, 1.e-4);
   }
 

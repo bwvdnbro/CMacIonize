@@ -46,9 +46,9 @@
  * calculation for coolants.
  */
 IonizationStateCalculator::IonizationStateCalculator(
-    double luminosity, Abundances &abundances,
-    RecombinationRates &recombination_rates,
-    ChargeTransferRates &charge_transfer_rates)
+    double luminosity, const Abundances &abundances,
+    const RecombinationRates &recombination_rates,
+    const ChargeTransferRates &charge_transfer_rates)
     : _luminosity(luminosity), _abundances(abundances),
       _recombination_rates(recombination_rates),
       _charge_transfer_rates(charge_transfer_rates) {}
@@ -62,13 +62,20 @@ IonizationStateCalculator::IonizationStateCalculator(
  */
 void IonizationStateCalculator::calculate_ionization_state(
     double jfac, DensityGrid::iterator &cell) const {
+
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
+  // should probably be removed
   cell.set_neutral_fraction_H_old(
       ionization_variables.get_ionic_fraction(ION_H_n));
+
+  // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+  // get the number density
   const double ntot = ionization_variables.get_number_density();
+
+  // find the ionization equilibrium for hydrogen and helium
   if (jH > 0. && ntot > 0.) {
     const double T = ionization_variables.get_temperature();
     const double alphaH =
@@ -81,14 +88,16 @@ void IonizationStateCalculator::calculate_ionization_state(
       find_H0(alphaH, alphaHe, jH, jHe, ntot,
               _abundances.get_abundance(ELEMENT_He), T, h0, he0);
     } else {
-      find_H0_simple(alphaH, jH, ntot, T, h0);
-      he0 = 0.;
+      h0 = find_H0_simple(alphaH, jH, ntot);
     }
 
     ionization_variables.set_ionic_fraction(ION_H_n, h0);
     ionization_variables.set_ionic_fraction(ION_He_n, he0);
 
-    // coolants
+    // do the coolants
+    // this is completely duplicated in TemperatureCalculator, and should be
+    // isolated into one separate function
+
     const double ne =
         ntot * (1. - h0 + _abundances.get_abundance(ELEMENT_He) * (1. - he0));
     const double T4 = T * 1.e-4;
@@ -222,18 +231,21 @@ void IonizationStateCalculator::calculate_ionization_state(
     ionization_variables.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
 
   } else {
+    // either we have a vacuum cell, or the mean intensity integral for hydrogen
+    // was zero
     if (ntot > 0.) {
+      // mean intensity for hydrogen was zero: cell is entirely neutral
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
       ionization_variables.set_ionic_fraction(ION_He_n, 1.);
       // all coolants are also neutral, so their ionic fractions are 0
       ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
-      ionization_variables.set_ionic_fraction(ION_N_n, 0.);
+      ionization_variables.set_ionic_fraction(ION_N_n, 1.);
       ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
-      ionization_variables.set_ionic_fraction(ION_O_n, 0.);
+      ionization_variables.set_ionic_fraction(ION_O_n, 1.);
       ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
-      ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
+      ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
       ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
@@ -269,8 +281,11 @@ void IonizationStateCalculator::calculate_ionization_state(
 void IonizationStateCalculator::calculate_ionization_state(
     double totweight, DensityGrid &grid,
     std::pair< unsigned long, unsigned long > &block) const {
-  // Kenny's jfac contains a lot of unit conversion factors. These drop out
-  // since we work in SI units.
+
+  // compute the normalization factor for the mean intensity integrals, which
+  // depends on the total weight of all photons, and on the volume of each cell
+  // the volume of the cell is taken into account on a cell level, since cells
+  // don't necessarily have the same volume
   double jfac = _luminosity / totweight;
   WorkDistributor<
       DensityGridTraversalJobMarket< IonizationStateCalculatorFunction >,
@@ -402,9 +417,10 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
   }
 
   // we multiplied Kenny's value with 1.e-6 to convert from cm^3s^-1 to m^3s^-1
-  double alpha_e_2sP = 4.17e-20 * std::pow(T * 1.e-4, -0.861);
-  double ch1 = alphaH * nH / jH;
-  double ch2 = AHe * alpha_e_2sP * nH / jH;
+  // NOTE that this is a different expression from the one in Kenny's code!
+  const double alpha_e_2sP = 4.17e-20 * std::pow(T * 1.e-4, -0.861);
+  const double ch1 = alphaH * nH / jH;
+  const double ch2 = AHe * alpha_e_2sP * nH / jH;
   double che = 0.;
   if (jHe > 0.) {
     che = alphaHe * nH / jHe;
@@ -439,7 +455,7 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
       he0old = 0.;
     }
     // calculate a new guess for C_H
-    double pHots = 1. / (1. + 77. * he0old / std::sqrt(T) / h0old);
+    const double pHots = 1. / (1. + 77. * he0old / std::sqrt(T) / h0old);
     // make sure pHots is not NaN
     cmac_assert(pHots == pHots);
     double ch = ch1 - ch2 * AHe * (1. - he0old) * pHots / (1. - h0old);
@@ -447,29 +463,31 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
     // find the helium neutral fraction
     he0 = 1.;
     if (che) {
-      double bhe = (1. + 2. * AHe - h0) * che + 1.;
-      double t1he = 4. * AHe * (1. + AHe - h0) * che * che / bhe / bhe;
+      const double bhe = (1. + 2. * AHe - h0) * che + 1.;
+      const double che_bhe = che / bhe;
+      const double opAHeh0 = 1. + AHe - h0;
+      const double t1he = 4. * AHe * opAHeh0 * che_bhe * che_bhe;
       if (t1he < 1.e-3) {
         // first order expansion of the square root in the exact solution of the
         // quadratic equation
-        he0 = (1. + AHe - h0) * che / bhe;
+        he0 = opAHeh0 * che_bhe;
       } else {
         // exact solution of the quadratic equation
-        he0 = (bhe -
-               std::sqrt(bhe * bhe - 4. * AHe * (1. + AHe - h0) * che * che)) /
+        he0 = (bhe - std::sqrt(bhe * bhe - 4. * AHe * opAHeh0 * che * che)) /
               (2. * AHe * che);
       }
     }
     // find the hydrogen neutral fraction
-    double b = ch * (2. + AHe - he0 * AHe) + 1.;
-    double t1 = 4. * ch * ch * (1. + AHe - he0 * AHe) / b / b;
+    const double b = ch * (2. + AHe - he0 * AHe) + 1.;
+    const double ch_b = ch / b;
+    const double opAHeh0AHe = 1. + AHe - he0 * AHe;
+    const double t1 = 4. * ch_b * ch_b * opAHeh0AHe;
     if (t1 < 1.e-3) {
-      h0 = ch * (1. + AHe - he0 * AHe) / b;
+      h0 = ch_b * opAHeh0AHe;
     } else {
-      cmac_assert_message(b * b > 4. * ch * ch * (1. + AHe - he0 * AHe),
+      cmac_assert_message(b * b > 4. * ch * ch * opAHeh0AHe,
                           "T: %g, jH: %g, jHe: %g, nH: %g", T, jH, jHe, nH);
-      h0 = (b - std::sqrt(b * b - 4. * ch * ch * (1. + AHe - he0 * AHe))) /
-           (2. * ch);
+      h0 = (b - std::sqrt(b * b - 4. * ch * ch * opAHeh0AHe)) / (2. * ch);
     }
     if (niter > 10) {
       // if we have a lot of iterations: use the mean value to speed up
@@ -492,18 +510,16 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
  * @param alphaH Hydrogen recombination rate (in m^3s^-1).
  * @param jH Hydrogen intensity integral (in s^-1).
  * @param nH Hydrogen number density (in m^-3).
- * @param T Temperature (in K).
- * @param h0 Variable to store resulting hydrogen neutral fraction in.
+ * @return Neutral fraction of hydrogen.
  */
-void IonizationStateCalculator::find_H0_simple(double alphaH, double jH,
-                                               double nH, double T,
-                                               double &h0) {
+double IonizationStateCalculator::find_H0_simple(double alphaH, double jH,
+                                                 double nH) {
   if (jH > 0. && nH > 0.) {
-    double aa = 0.5 * jH / nH / alphaH;
-    double bb = 2. / aa;
-    double cc = std::sqrt(bb + 1.);
-    h0 = 1. + aa * (1. - cc);
+    const double aa = 0.5 * jH / nH / alphaH;
+    const double bb = 2. / aa;
+    const double cc = std::sqrt(bb + 1.);
+    return 1. + aa * (1. - cc);
   } else {
-    h0 = 1.;
+    return 1.;
   }
 }

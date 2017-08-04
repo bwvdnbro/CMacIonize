@@ -36,26 +36,31 @@ class RecombinationRates;
 /**
  * @brief Class that calculates the ionization state on a grid after the photon
  * shoot loop.
+ *
+ * The procedure in this class is based on Wood, K., Mathis, J. S. & Ercolano,
+ * B. 2004, MNRAS, 348, 1337
+ * (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W), section 4 (more
+ * specifically equations (13), (14), (18), and (19)).
  */
 class IonizationStateCalculator {
 private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
-  double _luminosity;
+  const double _luminosity;
 
   /*! @brief Abundances. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief Recombination rates used in ionization balance calculation. */
-  RecombinationRates &_recombination_rates;
+  const RecombinationRates &_recombination_rates;
 
   /*! @brief Charge transfer recombination rates used in ionization balance
    *  calculation for coolants. */
-  ChargeTransferRates &_charge_transfer_rates;
+  const ChargeTransferRates &_charge_transfer_rates;
 
 public:
-  IonizationStateCalculator(double luminosity, Abundances &abundances,
-                            RecombinationRates &recombination_rates,
-                            ChargeTransferRates &charge_transfer_rates);
+  IonizationStateCalculator(double luminosity, const Abundances &abundances,
+                            const RecombinationRates &recombination_rates,
+                            const ChargeTransferRates &charge_transfer_rates);
 
   void calculate_ionization_state(double jfac,
                                   DensityGrid::iterator &cell) const;
@@ -63,8 +68,7 @@ public:
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);
 
-  static void find_H0_simple(double alphaH, double jH, double nH, double T,
-                             double &h0);
+  static double find_H0_simple(double alphaH, double jH, double nH);
 
   /**
    * @brief Functor used to calculate the ionization state of a single cell.
@@ -76,7 +80,7 @@ public:
 
     /*! @brief Normalization factor used in the IonizationStateCalculator call.
      */
-    double _jfac;
+    const double _jfac;
 
   public:
     /**
