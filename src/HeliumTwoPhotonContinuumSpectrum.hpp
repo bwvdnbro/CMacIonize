@@ -36,6 +36,12 @@
 
 /**
  * @brief Helium 2-photon continuum photoionization spectrum.
+ *
+ * The data used comes from Drake, G. W. F., Victor, G. A. & Dalgarno, A. 1969,
+ * PhRev, 180, 25 (http://adsabs.harvard.edu/abs/1969PhRv..180...25D), table II.
+ * We took into account the symmetry in the variable \f$y\f$ to double the
+ * number of rows in that table and stored the data values for helium in an
+ * external data file.
  */
 class HeliumTwoPhotonContinuumSpectrum : public PhotonSourceSpectrum {
 private:
@@ -53,9 +59,10 @@ public:
    */
   virtual ~HeliumTwoPhotonContinuumSpectrum() {}
 
-  void get_spectrum(std::vector< double > &yHe2q, std::vector< double > &AHe2q);
+  void get_spectrum(std::vector< double > &yHe2q,
+                    std::vector< double > &AHe2q) const;
   double get_integral(std::vector< double > &yHe2q,
-                      std::vector< double > &AHe2q);
+                      std::vector< double > &AHe2q) const;
 
   virtual double get_random_frequency(RandomGenerator &random_generator,
                                       double temperature = 0.) const;
