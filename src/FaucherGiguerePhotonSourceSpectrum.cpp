@@ -28,6 +28,7 @@
 #include "FaucherGiguereDataLocation.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 #include <cmath>
@@ -133,11 +134,12 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     // _cumulative_distribution (using a zeroth order quadrature)
     // its value is in 10^-21 erg Hz^-1 s^-1 cm^-2 sr^-1
     // we convert to s^-1 cm^-2 sr^-1 by dividing by Planck's constant
-    // (in 10^-21 erg Hz^-1)
+    // (in J s = J Hz^-1) and multiplying by 10^-28
     _total_flux =
+        1.e-28 *
         _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ -
                                  1] /
-        6.62607e-6;
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
     // we integrate out over all solid angles
     _total_flux *= 4. * M_PI;
     // and convert from cm^-2 to m^-2

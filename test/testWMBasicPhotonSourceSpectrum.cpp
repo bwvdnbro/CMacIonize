@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
 #include "WMBasicDataLocation.hpp"
@@ -97,7 +98,9 @@ int main(int argc, char **argv) {
       std::istringstream lstream(line);
       lstream >> nuarr[i] >> earr[i];
       // convert from Angstrom to Rydberg
-      nuarr[i] = 299792458. * 1.e10 / nuarr[i] / 3.288465385e15;
+      nuarr[i] = PhysicalConstants::get_physical_constant(
+                     PHYSICALCONSTANT_LIGHTSPEED) *
+                 1.e10 / nuarr[i] / 3.288465385e15;
     }
 
     std::ofstream file("wmbasic.txt");

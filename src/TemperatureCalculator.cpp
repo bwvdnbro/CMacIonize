@@ -31,6 +31,7 @@
 #include "DensityValues.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
+#include "PhysicalConstants.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
 #include <cmath>
@@ -681,7 +682,8 @@ void TemperatureCalculator::calculate_temperature(
   // the integral calculation uses the photon frequency (in Hz)
   // we want to convert this to the photon energy (in Joule)
   // we do this by multiplying with the Planck constant (in Js)
-  double hfac = jfac * 6.626070040e-34;
+  double hfac =
+      jfac * PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
 
   WorkDistributor<
       DensityGridTraversalJobMarket< TemperatureCalculatorFunction >,

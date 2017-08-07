@@ -26,6 +26,7 @@
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "CrossSections.hpp"
 #include "ElementNames.hpp"
+#include "PhysicalConstants.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -52,9 +53,11 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
   // 54.4 eV in Hz
   const double max_frequency = 4. * min_frequency;
   // Planck constant (in J s)
-  const double planck_constant = 6.626e-34;
+  const double planck_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // Boltzmann constant (in J s^-1)
-  const double boltzmann_constant = 1.38e-23;
+  const double boltzmann_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
   // set up the frequency bins
   for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {

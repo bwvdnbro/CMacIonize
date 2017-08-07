@@ -33,6 +33,7 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 #include <cmath>
@@ -64,9 +65,11 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   // Planck constant (in J s)
-  const double planck_constant = 6.626e-34;
+  const double planck_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // Boltzmann constant (in J s^-1)
-  const double boltzmann_constant = 1.38e-23;
+  const double boltzmann_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   // set up the frequency bins and calculate the Planck luminosities
   std::vector< double > frequency(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
   std::vector< double > luminosity(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);

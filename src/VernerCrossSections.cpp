@@ -25,6 +25,7 @@
  */
 #include "VernerCrossSections.hpp"
 #include "Error.hpp"
+#include "PhysicalConstants.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
 #include <cassert>
 #include <cmath>
@@ -49,7 +50,9 @@ VernerCrossSections::VernerCrossSections() {
   //  - E_th and E_0 are needed in Hz, so we convert the units here
   //  - E_0 is always used in divisions, so we predivide here and use
   //    multiplications instead
-  const double eV_to_Hz = 1.5091902e33 * 1.60217662e-19;
+  const double eV_to_Hz =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRONVOLT) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
 
   std::ifstream fileA(VERNERCROSSSECTIONSDATALOCATION_A);
   std::string lineA;

@@ -31,6 +31,7 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "CrossSections.hpp"
 #include "ElementNames.hpp"
+#include "PhysicalConstants.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -56,9 +57,11 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
   // 54.4 eV in Hz
   const double max_frequency = 4. * 3.288465385e15;
   // Planck constant (in J s)
-  const double planck_constant = 6.626e-34;
+  const double planck_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // Boltzmann constant (in J s^-1)
-  const double boltzmann_constant = 1.38e-23;
+  const double boltzmann_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   // set up the frequency bins
   for (unsigned int i = 0; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +

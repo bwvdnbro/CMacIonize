@@ -26,6 +26,7 @@
 #include "WMBasicPhotonSourceSpectrum.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
@@ -81,12 +82,14 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   std::vector< double > file_frequencies(num_frequency);
   std::vector< double > file_eddington_fluxes(num_frequency);
   unsigned int i = 0;
+  const double lightspeed =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
   while (std::getline(file, line)) {
     std::stringstream linestream(line);
     linestream >> file_frequencies[i] >> file_eddington_fluxes[i];
 
     // file contains wavelength (in Angstrom), convert to frequency
-    file_frequencies[i] = 299792458. * 1.e10 / file_frequencies[i];
+    file_frequencies[i] = lightspeed * 1.e10 / file_frequencies[i];
 
     ++i;
     cmac_assert(i <= num_frequency);
@@ -138,10 +141,11 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // _cumulative_distribution (using a zeroth order quadrature)
   // its value is in erg Hz^-1 s^-1 cm^-2 sr^-1
   // we convert to s^-1 cm^-2 sr^-1 by dividing by Planck's constant
-  // (in erg Hz^-1)
+  // (in J s = J Hz^-1) and multiplying with 10^-7
   _total_flux =
+      1.e-7 *
       _cumulative_distribution[WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1] /
-      6.62607e-27;
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // we integrate out over all solid angles
   _total_flux *= 4. * M_PI;
   // and convert from cm^-2 to m^-2

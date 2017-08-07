@@ -28,6 +28,7 @@
 #define UNITCONVERTER_HPP
 
 #include "Error.hpp"
+#include "PhysicalConstants.hpp"
 #include "Unit.hpp"
 
 #include <cmath>
@@ -141,7 +142,9 @@ public:
     } else if (name == "erg") {
       return Unit(1.e-7, 2, -2, 1, 0, 0, 0);
     } else if (name == "eV") {
-      return Unit(1.60217662e-19, 2, -2, 1, 0, 0, 0);
+      return Unit(PhysicalConstants::get_physical_constant(
+                      PHYSICALCONSTANT_ELECTRONVOLT),
+                  2, -2, 1, 0, 0, 0);
     } else {
       /// error handler
       cmac_error("Unknown unit: \"%s\"!", name.c_str());
@@ -233,12 +236,14 @@ public:
     // energy to frequency conversion for photons
     Aunits.push_back(QUANTITY_ENERGY);
     Bunits.push_back(QUANTITY_FREQUENCY);
-    A_in_B_fac.push_back(1.5091902e33);
+    A_in_B_fac.push_back(
+        1. / PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK));
     A_in_B_pow.push_back(1);
     // wavelength to frequency conversion for photons
     Aunits.push_back(QUANTITY_LENGTH);
     Bunits.push_back(QUANTITY_FREQUENCY);
-    A_in_B_fac.push_back(299792458.);
+    A_in_B_fac.push_back(
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED));
     A_in_B_pow.push_back(-1);
 
     /// don't change the part below unless you know what you're doing
