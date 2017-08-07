@@ -44,8 +44,10 @@ public:
    */
   virtual DensityValues operator()(const Cell &cell) const {
     const CoordinateVector<> position = cell.get_cell_midpoint();
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     const double density_unit = 1. / hydrogen_mass;
     const double temperature_unit = hydrogen_mass / boltzmann_k;
     DensityValues values;

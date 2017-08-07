@@ -40,6 +40,8 @@ enum PhysicalConstantName {
   PHYSICALCONSTANT_LIGHTSPEED,
   /*! @brief Electron volt eV (in J). */
   PHYSICALCONSTANT_ELECTRONVOLT,
+  /*! @brief Mass of a proton (in kg). */
+  PHYSICALCONSTANT_PROTON_MASS,
   /*! @brief Counter (should always be last element!). */
   NUMBER_OF_PHYSICALCONSTANTS
 };
@@ -78,6 +80,11 @@ public:
       // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?tevj
       // in J
       return 1.6021766208e-19;
+
+    case PHYSICALCONSTANT_PROTON_MASS:
+      // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?mp
+      // in kg
+      return 1.672621898e-27;
 
     default:
       cmac_error("Unknown physical constant: %i!", name);

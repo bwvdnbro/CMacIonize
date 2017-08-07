@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
 
 #include <cfloat>
@@ -195,8 +196,10 @@ public:
    * @param grid DensityGrid to operate on.
    */
   inline void initialize_hydro_variables(DensityGrid &grid) const {
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
       const double number_density =
@@ -363,9 +366,11 @@ public:
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {
-      const double boltzmann_k = 1.38064852e-23;
+      const double boltzmann_k =
+          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
       // half since we consider the average mass of protons and electrons
-      const double mH = 1.6737236e-27;
+      const double mH = PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_PROTON_MASS);
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const IonizationVariables &ionization_variables =
             it.get_ionization_variables();
@@ -427,8 +432,10 @@ public:
 
     grid.evolve(timestep);
 
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {

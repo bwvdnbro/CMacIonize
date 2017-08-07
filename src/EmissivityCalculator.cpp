@@ -28,6 +28,7 @@
 #include "DensityGrid.hpp"
 #include "DensityValues.hpp"
 #include "LineCoolingData.hpp"
+#include "PhysicalConstants.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -48,11 +49,12 @@ EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
   // wavelength 3646 respectively
   // all values are in 1.e-40 erg cm^3s^-1Hz^-1 (except for the ttab values,
   // which are in K).
-  double ttab[8] = {4.e3, 6.e3, 8.e3, 1.e4, 1.2e4, 1.4e4, 1.6e4, 1.8e4};
-  double hplt[8] = {0.162, 0.584, 1.046, 1.437, 1.742, 1.977, 2.159, 2.297};
-  double hmit[8] = {92.6, 50.9, 33.8, 24.8, 19.53, 16.09, 13.7, 11.96};
-  double heplt[8] = {0.189, 0.622, 1.076, 1.45, 1.74, 1.963, 2.14, 2.27};
-  double hemit[8] = {15.7, 9.23, 6.71, 5.49, 4.83, 4.41, 4.135, 3.94};
+  const double ttab[8] = {4.e3, 6.e3, 8.e3, 1.e4, 1.2e4, 1.4e4, 1.6e4, 1.8e4};
+  const double hplt[8] = {0.162, 0.584, 1.046, 1.437,
+                          1.742, 1.977, 2.159, 2.297};
+  const double hmit[8] = {92.6, 50.9, 33.8, 24.8, 19.53, 16.09, 13.7, 11.96};
+  const double heplt[8] = {0.189, 0.622, 1.076, 1.45, 1.74, 1.963, 2.14, 2.27};
+  const double hemit[8] = {15.7, 9.23, 6.71, 5.49, 4.83, 4.41, 4.135, 3.94};
 
   for (unsigned int i = 0; i < 8; ++i) {
     _logttab[i] = std::log(ttab[i]);
@@ -75,7 +77,7 @@ EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
  */
 void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
                                  double &emhepl, double &emhemi) const {
-  double logt = std::log(T);
+  const double logt = std::log(T);
 
   int i = Utilities::locate(logt, _logttab, 8);
   i = std::max(i, 0);
@@ -98,12 +100,14 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
   emhmi = std::exp(emhmi);
   emhepl = std::exp(emhepl);
   emhemi = std::exp(emhemi);
-  // the values above are in 1.e-40 erg cm^3s^-1Hz^-1
-  // convert to J m^3s^-1angstrom^-1
-  emhpl *= 1.e-53 * 2.99792458e18 / 3681. / 3681.;
-  emhmi *= 1.e-53 * 2.99792458e18 / 3643. / 3643.;
-  emhepl *= 1.e-53 * 2.99792458e18 / 3681. / 3681.;
-  emhemi *= 1.e-53 * 2.99792458e18 / 3643. / 3643.;
+  // the values above are in 1.e-40 erg cm^3 s^-1 Hz^-1
+  // convert to J m^3 s^-1 angstrom^-1
+  const double lightspeed =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
+  emhpl *= 1.e-43 * lightspeed / 3681. / 3681.;
+  emhmi *= 1.e-43 * lightspeed / 3643. / 3643.;
+  emhepl *= 1.e-43 * lightspeed / 3681. / 3681.;
+  emhemi *= 1.e-43 * lightspeed / 3643. / 3643.;
 }
 
 /**

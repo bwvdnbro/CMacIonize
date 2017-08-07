@@ -26,6 +26,7 @@
  */
 #include "LineCoolingData.hpp"
 #include "Error.hpp"
+#include "PhysicalConstants.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -299,20 +300,21 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     return 1.e-99;
   }
 
-  double EnNIII = 251.;
-  double EaNIII = 4.77e-5;
-  double OmNIII = 1.45;
-  double EnNeII = 1125.;
-  double EaNeII = 8.55e-3;
-  double OmNeII = 0.303;
+  const double EnNIII = 251.;
+  const double EaNIII = 4.77e-5;
+  const double OmNIII = 1.45;
+  const double EnNeII = 1125.;
+  const double EaNeII = 8.55e-3;
+  const double OmNeII = 0.303;
 
   // Boltzmann constant (in J s^-1)
-  double kb = 1.38e-23;
+  const double kb =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
   // we multiplied Kenny's value with 1.e-6 to take into account the fact that
   // electron_density is in m^-3 and not in cm^-3
-  double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
-  double T4 = temperature * 1.e-4;
+  const double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
+  const double T4 = temperature * 1.e-4;
 
   double Om[10][10];
   double cs[10][10], cse[10][10];
@@ -323,9 +325,9 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     }
   }
   double T1;
-  double A1 = std::pow(T4, 0.91);
-  double A2 = std::pow(T4, 1.11);
-  double A3 = std::pow(T4, 0.8);
+  const double A1 = std::pow(T4, 0.91);
+  const double A2 = std::pow(T4, 1.11);
+  const double A3 = std::pow(T4, 0.8);
   cs[0][0] = 0.29 * A1;
   cs[0][1] = 0.194 * A1;
   cs[0][2] = 0.113 * A1;
@@ -337,7 +339,7 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   cs[0][8] = 0.097 * std::pow(T4, 0.69);
   cs[0][9] = 0.071 * A2;
   T1 = 0.266 * A2;
-  double T2 = 0.0324 * A2;
+  const double T2 = 0.0324 * A2;
   cs[2][0] = 0.0987 * A2;
   cs[2][1] = 0.0292 * T4;
   cs[2][2] = 0.55556 * T1;
@@ -419,17 +421,17 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
       cmac_error("We better stop!");
     }
 
-    double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
-    double cl3 = abundances[j] * kb * lev[2] *
-                 (_ea[j][1] * _en[j][1] + _ea[j][4] * _en[j][4]);
-    double cl4 =
+    const double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
+    const double cl3 = abundances[j] * kb * lev[2] *
+                       (_ea[j][1] * _en[j][1] + _ea[j][4] * _en[j][4]);
+    const double cl4 =
         abundances[j] * kb * lev[3] *
         (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5] + _ea[j][7] * _en[j][7]);
-    double cl5 = abundances[j] * kb * lev[4] *
-                 (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
-                  _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
+    const double cl5 = abundances[j] * kb * lev[4] *
+                       (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
+                        _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
 
-    double coolj = cl2 + cl3 + cl4 + cl5;
+    const double coolj = cl2 + cl3 + cl4 + cl5;
     cooling += coolj;
   }
 
@@ -437,13 +439,15 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   double sw1 = 2.;
   double sw2 = 4.;
   T1 = std::exp(-EnNIII / temperature);
-  double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
-                 (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
+  const double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 *
+                       EaNIII /
+                       (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
   sw1 = 4.;
   sw2 = 2.;
   T1 = std::exp(-EnNeII / temperature);
-  double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
-                 (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
+  const double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 *
+                       EaNeII /
+                       (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
   cooling += CNIII + CNeII;
 
   return cooling;
@@ -516,20 +520,22 @@ void LineCoolingData::linestr(
     double &c4072, double &c6717, double &c6725, double &c3869, double &cniii57,
     double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
     double &ciii1908, double &coii7325, double &csiv10) const {
-  double EnNIII = 251.;
-  double EaNIII = 4.77e-5;
-  double OmNIII = 1.45;
-  double EnNeII = 1125.;
-  double EaNeII = 8.55e-3;
-  double OmNeII = 0.303;
+
+  const double EnNIII = 251.;
+  const double EaNIII = 4.77e-5;
+  const double OmNIII = 1.45;
+  const double EnNeII = 1125.;
+  const double EaNeII = 8.55e-3;
+  const double OmNeII = 0.303;
 
   // Boltzmann constant (in J s^-1)
-  double kb = 1.38e-23;
+  const double kb =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
   // we multiplied Kenny's value with 1.e-6 to take into account the fact that
   // electron_density is in m^-3 and not in cm^-3
-  double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
-  double T4 = temperature * 1.e-4;
+  const double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
+  const double T4 = temperature * 1.e-4;
 
   double Om[10][10];
   double cs[10][10], cse[10][10];
@@ -539,9 +545,9 @@ void LineCoolingData::linestr(
       cse[j][mm] = _cse[j][mm];
     }
   }
-  double A1 = std::pow(T4, 0.91);
-  double A2 = std::pow(T4, 1.11);
-  double A3 = std::pow(T4, 0.8);
+  const double A1 = std::pow(T4, 0.91);
+  const double A2 = std::pow(T4, 1.11);
+  const double A3 = std::pow(T4, 0.8);
   cs[0][0] = 0.29 * A1;
   cs[0][1] = 0.194 * A1;
   cs[0][2] = 0.113 * A1;
@@ -553,7 +559,7 @@ void LineCoolingData::linestr(
   cs[0][8] = 0.097 * std::pow(T4, 0.69);
   cs[0][9] = 0.071 * A2;
   double T1 = 0.266 * A2;
-  double T2 = 0.0324 * A2;
+  const double T2 = 0.0324 * A2;
   cs[2][0] = 0.0987 * A2;
   cs[2][1] = 0.0292 * T4;
   cs[2][2] = 0.55556 * T1;
@@ -625,7 +631,7 @@ void LineCoolingData::linestr(
           (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
-    int status = simq(alev, lev);
+    const int status = simq(alev, lev);
     if (status != 0) {
       // something went wrong
       cmac_warning("Singular matrix given to simq!");
@@ -634,15 +640,15 @@ void LineCoolingData::linestr(
       cmac_error("We better stop!");
     }
 
-    double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
-    double cl3 = abundances[j] * kb * lev[2] *
-                 (_ea[j][1] * _en[j][1] + _ea[j][4] * _en[j][4]);
-    double cl4 =
+    const double cl2 = abundances[j] * kb * lev[1] * _ea[j][0] * _en[j][0];
+    const double cl3 = abundances[j] * kb * lev[2] *
+                       (_ea[j][1] * _en[j][1] + _ea[j][4] * _en[j][4]);
+    const double cl4 =
         abundances[j] * kb * lev[3] *
         (_ea[j][2] * _en[j][2] + _ea[j][5] * _en[j][5] + _ea[j][7] * _en[j][7]);
-    double cl5 = abundances[j] * kb * lev[4] *
-                 (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
-                  _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
+    const double cl5 = abundances[j] * kb * lev[4] *
+                       (_ea[j][3] * _en[j][3] + _ea[j][6] * _en[j][6] +
+                        _ea[j][8] * _en[j][8] + _ea[j][9] * _en[j][9]);
 
     if (j == 1) {
       c5755 = abundances[j] * kb * lev[4] * _ea[j][9] * _en[j][9];

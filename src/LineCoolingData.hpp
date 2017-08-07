@@ -60,6 +60,12 @@ enum LineCoolingDataElements {
 
 /**
  * @brief Internal representation of the line cooling data in "atom4.dat"
+ *
+ * The data used here comes from Pradhan A. K. & Peng, J. 1995, The Analsis of
+ * Emission Lines, STScI Symp. 8, Cambridge Univ. Press, and data that used to
+ * be available from http://www-astronomy.mps.ohio-state.edu/∼pradhan/.
+ * Unfortunately, these data are no longer accessible, so we just hope our
+ * legacy version is accurate.
  */
 class LineCoolingData {
 private:
