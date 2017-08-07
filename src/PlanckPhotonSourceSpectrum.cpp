@@ -40,7 +40,10 @@
 /**
  * @brief Constructor.
  *
- * Sets up the internal arrays used for random sampling.
+ * Sets up the internal arrays used for random sampling. Note that we use
+ * logarithmic binning for this spectrum due to its high dynamic range in
+ * values. This means we need to store both the cumulative distribution function
+ * and the logarithm of the cumulative distribution function.
  *
  * @param temperature Temperature of the black body (in K).
  * @param ionizing_flux Ionizing flux of the spectrum (in m^-2 s^-1).
@@ -50,6 +53,11 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
                                                        double ionizing_flux,
                                                        Log *log)
     : _ionizing_flux(ionizing_flux) {
+
+  _log_frequency.resize(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _log_cumulative_distribution.resize(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+
   // some constants
   // in units 13.6 eV (corresponds to 54.4 eV)
   const double max_frequency = 4.;
@@ -60,24 +68,25 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   // Boltzmann constant (in J s^-1)
   const double boltzmann_constant = 1.38e-23;
   // set up the frequency bins and calculate the Planck luminosities
+  std::vector< double > frequency(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  std::vector< double > luminosity(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
   for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] =
+    frequency[i] =
         1. +
         i * (max_frequency - 1.) / (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
-    _luminosity[i] = _frequency[i] * _frequency[i] * _frequency[i] /
-                     (exp(planck_constant * _frequency[i] * min_frequency /
-                          (boltzmann_constant * temperature)) -
-                      1.);
+    luminosity[i] = frequency[i] * frequency[i] * frequency[i] /
+                    (std::exp(planck_constant * frequency[i] * min_frequency /
+                              (boltzmann_constant * temperature)) -
+                     1.);
   }
 
   // convert the Planck luminosities to a cumulative distribution
   _cumulative_distribution[0] = 0.;
   for (unsigned int i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] = _cumulative_distribution[i - 1] +
-                                  0.5 *
-                                      (_luminosity[i] / _frequency[i] +
-                                       _luminosity[i - 1] / _frequency[i - 1]) *
-                                      (_frequency[i] - _frequency[i - 1]);
+                                  0.5 * (luminosity[i] / frequency[i] +
+                                         luminosity[i - 1] / frequency[i - 1]) *
+                                      (frequency[i] - frequency[i - 1]);
   }
 
   // normalize the cumulative distribution and calculate the logarithms
@@ -86,8 +95,8 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   for (unsigned int i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
         _cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1];
-    _log_cumulative_distribution[i] = log10(_cumulative_distribution[i]);
-    _log_frequency[i] = log10(_frequency[i]);
+    _log_cumulative_distribution[i] = std::log10(_cumulative_distribution[i]);
+    _log_frequency[i] = std::log10(frequency[i]);
   }
 
   if (log) {
@@ -121,6 +130,10 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(std::string role,
 /**
  * @brief Get a random frequency from a Planck blackbody spectrum.
  *
+ * We sample a random uniform number and find its location in the cumulative
+ * distribution array. We then use the logarithmic arrays to convert this into a
+ * frequency.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
@@ -129,15 +142,15 @@ double PlanckPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
 
-  unsigned int ix = Utilities::locate(x, _cumulative_distribution,
+  unsigned int ix = Utilities::locate(x, _cumulative_distribution.data(),
                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
   double log_random_frequency =
-      (log10(x) - _log_cumulative_distribution[ix]) /
+      (std::log10(x) - _log_cumulative_distribution[ix]) /
           (_log_cumulative_distribution[ix + 1] -
            _log_cumulative_distribution[ix]) *
           (_log_frequency[ix + 1] - _log_frequency[ix]) +
       _log_frequency[ix];
-  double frequency = pow(10., log_random_frequency);
+  double frequency = std::pow(10., log_random_frequency);
   // we manually convert from 13.6 eV to Hz, since the UnitConverter is too
   // slow (and binning the actual frequencies in Hz yields a bad interpolation)
   return frequency * 3.288465385e15;
