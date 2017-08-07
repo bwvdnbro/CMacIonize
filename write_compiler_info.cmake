@@ -20,6 +20,14 @@ execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
                 OUTPUT_VARIABLE GIT_BUILD_STRING
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+if(HAVE_WINDOWS)
+
+execute_process(COMMAND WMIC os GET LocalDateTime
+                OUTPUT_VARIABLE FULL_DATE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+else(HAVE_WINDOWS)
+
 # We want to get the entire date in one command, to have a single time stamp.
 set(DATE_STRING
     "+Day: %-d, Month: %-m, Year: %Y, Hour: %-H, Minutes: %-M, Seconds: %-S")
@@ -60,6 +68,8 @@ execute_process(COMMAND uname --machine
 execute_process(COMMAND uname --nodename
                 OUTPUT_VARIABLE OS_HOST_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+endif(HAVE_WINDOWS)
 
 configure_file(${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
                ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp @ONLY)
