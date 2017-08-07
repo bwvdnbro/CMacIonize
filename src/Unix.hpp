@@ -28,6 +28,7 @@
 
 #include "OperatingSystem.hpp"
 
+#include <sys/resource.h>
 #include <sys/time.h>
 
 /**
@@ -94,6 +95,18 @@ inline std::string OperatingSystem::absolute_path(std::string path) {
   std::string absolute_path(absolute_path_ptr);
   free(absolute_path_ptr);
   return absolute_path;
+}
+
+/**
+ * @brief Get the peak memory usage of the current application.
+ *
+ * @return Peak memory usage of the application (in bytes).
+ */
+inline size_t OperatingSystem::get_peak_memory_usage() {
+  struct rusage resource_usage;
+  getrusage(RUSAGE_SELF, &resource_usage);
+  return static_cast< size_t >(resource_usage.ru_maxrss) *
+         static_cast< size_t >(1024);
 }
 
 #endif // UNIX_HPP

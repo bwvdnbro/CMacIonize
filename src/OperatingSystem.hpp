@@ -98,6 +98,13 @@ static double convert_to_seconds(const TimeValue &time_value);
  * @return Absolute path.
  */
 static std::string absolute_path(std::string path);
+
+/**
+ * @brief Get the peak memory usage of the current application.
+ *
+ * @return Peak memory usage of the application (in bytes).
+ */
+static size_t get_peak_memory_usage();
 }
 
 // ...then include the correct implementation

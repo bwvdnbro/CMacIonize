@@ -245,6 +245,10 @@ int main(int argc, char **argv) {
       log->write_status("Total program time: ",
                         Utilities::human_readable_time(programtimer.value()),
                         ".");
+      log->write_status("Peak memory usage: ",
+                        Utilities::human_readable_bytes(
+                            OperatingSystem::get_peak_memory_usage()),
+                        ".");
     }
     return 0;
   }

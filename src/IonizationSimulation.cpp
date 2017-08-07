@@ -417,6 +417,12 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     density_grid_writer->write(*_density_grid, _number_of_iterations,
                                _parameter_file);
   }
+
+  if (_log) {
+    _log->write_status("Total photon shooting time: ",
+                       Utilities::human_readable_time(_work_timer.value()),
+                       ".");
+  }
 }
 
 /**
@@ -425,11 +431,6 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
  * Deallocate memory used by internal variables.
  */
 IonizationSimulation::~IonizationSimulation() {
-  if (_log) {
-    _log->write_status("Total photon shooting time: ",
-                       Utilities::human_readable_time(_work_timer.value()),
-                       ".");
-  }
 
   // we delete the objects in the opposite order in which they were created
   // note that we do not check for nullptrs, as deleting a nullptr is allowed

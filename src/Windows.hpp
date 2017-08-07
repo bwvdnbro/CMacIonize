@@ -101,4 +101,15 @@ inline std::string OperatingSystem::absolute_path(std::string path) {
   return absolute_path;
 }
 
+/**
+ * @brief Get the peak memory usage of the current application.
+ *
+ * @return Peak memory usage of the application (in bytes).
+ */
+inline size_t OperatingSystem::get_peak_memory_usage() {
+  PROCESS_MEMORY_COUNTERS info;
+  GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
+  return static_cast< size_t >(info.PeakWorkingSetSize);
+}
+
 #endif // WINDOWS_HPP
