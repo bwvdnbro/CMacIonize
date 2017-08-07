@@ -122,9 +122,6 @@ private:
         old_reemission_probability[i] =
             _ionization_variables[index].get_reemission_probability(name);
       }
-      // we do not copy the mean intensity integrals from the old cell, as these
-      // will be reset before the refined cells are used
-      double old_neutral_fraction_H_old = _neutral_fraction_H_old[index];
       // we will not copy the heating terms for the same reasons
       // nor the EmissivityValues
       // nor the Lock, since that has to be unique
@@ -136,8 +133,6 @@ private:
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
-          _mean_intensity_H_old[index] = 0.;
-          _neutral_fraction_H_old[index] = old_neutral_fraction_H_old;
           _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
@@ -170,8 +165,6 @@ private:
           }
         } else {
           _ionization_variables.push_back(IonizationVariables());
-          _mean_intensity_H_old.push_back(0.);
-          _neutral_fraction_H_old.push_back(old_neutral_fraction_H_old);
           _emissivities.push_back(nullptr);
 #ifndef USE_LOCKFREE
           _lock.push_back(Lock());

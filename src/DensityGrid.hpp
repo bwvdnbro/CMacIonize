@@ -73,13 +73,6 @@ protected:
   /*! @brief Ionization calculation variables. */
   std::vector< IonizationVariables > _ionization_variables;
 
-  /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
-   *  sub-step (in m^3 s^-1). */
-  std::vector< double > _mean_intensity_H_old;
-
-  /*! @brief Hydrogen neutral fraction during the previous iteration. */
-  std::vector< double > _neutral_fraction_H_old;
-
   /// hydro
 
   /*! @brief Flag indicating whether hydro is active or not. */
@@ -252,8 +245,6 @@ public:
     // we allocate memory for the cells, so that --dry-run can already check the
     // available memory
     _ionization_variables.resize(numcell);
-    _mean_intensity_H_old.resize(numcell);
-    _neutral_fraction_H_old.resize(numcell);
     _emissivities.resize(numcell, nullptr);
 #ifndef USE_LOCKFREE
     _lock.resize(numcell);
@@ -468,49 +459,6 @@ public:
     }
 
     /**
-     * @brief Get the neutral fraction of hydrogen during the previous iteration
-     * for the cell the iterator is currently pointing to.
-     *
-     * @return Neutral fraction of hydrogen during the previous iteration.
-     */
-    inline double get_neutral_fraction_H_old() const {
-      return _grid->_neutral_fraction_H_old[_index];
-    }
-
-    /**
-     * @brief Set the neutral fraction of hydrogen during the previous iteration
-     * for the cell the iterator is currently pointing to.
-     *
-     * @param neutral_fraction_H_old Neutral fraction of hydrogen during the
-     * previous iteration.
-     */
-    inline void set_neutral_fraction_H_old(double neutral_fraction_H_old) {
-      _grid->_neutral_fraction_H_old[_index] = neutral_fraction_H_old;
-    }
-
-    /**
-     * @brief Get the mean intensity of hydrogen ionizing radiation during the
-     * previous iteration for the cell the iterator is currently pointing to.
-     *
-     * @return Mean intensity of hydrogen ionizing radiation during the previous
-     * iteration (without normalization factor, in m^3).
-     */
-    inline double get_mean_intensity_H_old() const {
-      return _grid->_mean_intensity_H_old[_index];
-    }
-
-    /**
-     * @brief Set the mean intensity of hydrogen ionizing radiation during the
-     * previous iteration for the cell the iterator is currently pointing to.
-     *
-     * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
-     * during the previous iteration (without normalization factor, in m^3).
-     */
-    inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
-      _grid->_mean_intensity_H_old[_index] = mean_intensity_H_old;
-    }
-
-    /**
      * @brief Reset the mean intensity counters for the cell the iterator is
      * currently pointing to.
      */
@@ -519,7 +467,6 @@ public:
         const IonName ion = static_cast< IonName >(i);
         _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
-      _grid->_mean_intensity_H_old[_index] = 0.;
       for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
         const HeatingTermName name = static_cast< HeatingTermName >(i);
         _grid->_ionization_variables[_index].set_heating(name, 0.);

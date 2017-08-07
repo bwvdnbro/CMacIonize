@@ -65,10 +65,6 @@ void IonizationStateCalculator::calculate_ionization_state(
 
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
-  // should probably be removed
-  cell.set_neutral_fraction_H_old(
-      ionization_variables.get_ionic_fraction(ION_H_n));
-
   // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
