@@ -34,20 +34,18 @@ const char CompilerInfo::_git_build_string[] = "@GIT_BUILD_STRING@";
 
 /// Compilation time info
 
-// clang-format off
 const unsigned int CompilerInfo::_compilation_time_day =
-    @COMPILATION_TIME_DAY@;
+    atoi("@COMPILATION_TIME_DAY@");
 const unsigned int CompilerInfo::_compilation_time_month =
-    @COMPILATION_TIME_MONTH@;
+    atoi("@COMPILATION_TIME_MONTH@");
 const unsigned int CompilerInfo::_compilation_time_year =
-    @COMPILATION_TIME_YEAR@;
+    atoi("@COMPILATION_TIME_YEAR@");
 const unsigned int CompilerInfo::_compilation_time_hour =
-    @COMPILATION_TIME_HOUR@;
+    atoi("@COMPILATION_TIME_HOUR@");
 const unsigned int CompilerInfo::_compilation_time_minutes =
-    @COMPILATION_TIME_MINUTES@;
+    atoi("@COMPILATION_TIME_MINUTES@");
 const unsigned int CompilerInfo::_compilation_time_seconds =
-    @COMPILATION_TIME_SECONDS@;
-// clang-format on
+    atoi("@COMPILATION_TIME_SECONDS@");
 
 // Compiler info
 
