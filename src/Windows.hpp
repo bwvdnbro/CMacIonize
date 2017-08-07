@@ -30,6 +30,11 @@
 
 #include <windows.h>
 
+// needed for memory info functionality
+// needs to be included after windows.h, because otherwise lots and lots of
+// compilation errors are generated
+#include <psapi.h>
+
 /**
  * @brief Class used to store time information.
  */
