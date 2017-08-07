@@ -23,7 +23,41 @@ execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
 if(HAVE_WINDOWS)
 
 execute_process(COMMAND WMIC os GET LocalDateTime
-                OUTPUT_VARIABLE FULL_DATE
+                OUTPUT_VARIABLE FULL_DATE_BLOCK
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE "[^0-9]*([0-9]+)" "\\1" FULL_DATE ${FULL_DATE_BLOCK})
+
+string(REGEX REPLACE "([0-9][0-9][0-9][0-9]).*" "\\1" COMPILATION_TIME_YEAR
+       ${FULL_DATE})
+string(REGEX REPLACE "[0-9][0-9][0-9][0-9]([0-9][0-9]).*" "\\1"
+       COMPILATION_TIME_MONTH ${FULL_DATE})
+string(REGEX REPLACE "[0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9]).*" "\\1"
+        COMPILATION_TIME_DAY ${FULL_DATE})
+string(REGEX REPLACE "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9]).*"
+       "\\1" COMPILATION_TIME_HOUR ${FULL_DATE})
+string(REGEX REPLACE
+       "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9]).*" "\\1"
+       COMPILATION_TIME_MINUTES ${FULL_DATE})
+string(
+  REGEX REPLACE
+  "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9]).*"
+  "\\1" COMPILATION_TIME_SECONDS ${FULL_DATE})
+
+set(OS_NAME "Windows")
+set(OS_KERNEL_NAME "Windows")
+set(OS_KERNEL_RELEASE "Microsoft Windows")
+execute_process(COMMAND cmd.exe /c ver
+                OUTPUT_VARIABLE OS_KERNEL_VERSION_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE ".*Version (.*)." "\\1" OS_KERNEL_VERSION
+       ${OS_KERNEL_VERSION_STRING})
+execute_process(COMMAND WMIC os GET OSArchitecture
+                OUTPUT_VARIABLE OS_HARDWARE_NAME_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX REPLACE ".*([0-9][0-9]-bit).*" "\\1" OS_HARDWARE_NAME
+       ${OS_HARDWARE_NAME_STRING})
+execute_process(COMMAND hostname
+                OUTPUT_VARIABLE OS_HOST_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 else(HAVE_WINDOWS)
