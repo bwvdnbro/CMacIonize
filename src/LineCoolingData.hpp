@@ -59,30 +59,48 @@ enum LineCoolingDataElements {
 };
 
 /**
- * @brief Internal representation of the line cooling data in "atom4.dat"
+ * @brief Internal representation of the line cooling data in "atom4.dat".
  *
- * The data used here comes from Pradhan A. K. & Peng, J. 1995, The Analsis of
+ * The cooling by collisionally excited line radiation is based on section 3.5
+ * of Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of Gaseous Nebulae
+ * and Active Galactic Nuclei, 2nd edition
+ * (http://adsabs.harvard.edu/abs/2006agna.book.....O).
+ *
+ * The data used comes from Pradhan A. K. & Peng, J. 1995, The Analsis of
  * Emission Lines, STScI Symp. 8, Cambridge Univ. Press, and data that used to
  * be available from http://www-astronomy.mps.ohio-state.edu/∼pradhan/.
  * Unfortunately, these data are no longer accessible, so we just hope our
  * legacy version is accurate.
+ *
+ * We use data from
+ *  - http://cdsweb.u-strasbg.fr/tipbase/home.html
+ *  - Blum, R. D. & Pradhan, A. K. 1992, ApJS, 80, 425
+ *    (http://adsabs.harvard.edu/abs/1992ApJS...80..425B)
+ *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1998, A&AS, 131, 499
+ *    (http://adsabs.harvard.edu/abs/1998A%26AS..131..499G)
+ *  - Saraph, H. E. & Tully, J. A. 1994, A&AS, 107, 29
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..107...29S)
+ *  - Kaufman, V. & Sugar, J. 1986, JPCRD, 15, 321
+ *    (http://adsabs.harvard.edu/abs/1986JPCRD..15..321K)
+ *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPB, 34, 4401
+ *    (http://adsabs.harvard.edu/abs/2001JPhB...34.4401G)
  */
 class LineCoolingData {
 private:
-  /*! @brief Omega values */
+  /*! @brief Omega values. */
   double _cs[LINECOOLINGDATA_NUMELEMENTS][10];
 
-  /*! @brief Omega exponent values */
+  /*! @brief Omega exponent values. */
   double _cse[LINECOOLINGDATA_NUMELEMENTS][10];
 
-  /*! @brief Einstein A values */
+  /*! @brief Einstein A values. */
   double _ea[LINECOOLINGDATA_NUMELEMENTS][10];
 
-  /*! @brief Energy levels */
+  /*! @brief Energy levels. */
   double _en[LINECOOLINGDATA_NUMELEMENTS][10];
 
-  /*! @brief sw values */
-  double _sw[LINECOOLINGDATA_NUMELEMENTS][5];
+  /*! @brief Inverse sw values. */
+  double _sw_inv[LINECOOLINGDATA_NUMELEMENTS][5];
 
   static bool read_values(std::string line, double *array, unsigned int size);
 

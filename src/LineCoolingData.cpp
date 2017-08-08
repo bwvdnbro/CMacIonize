@@ -35,7 +35,7 @@
 
 /**
  * @brief Read a given number of values from the given string into the given
- * array
+ * array.
  *
  * @param line string containing comma separated values.
  * @param array Pointer to a double array of at least the given size which will
@@ -67,7 +67,7 @@ bool LineCoolingData::read_values(std::string line, double *array,
 }
 
 /**
- * @brief Constructor
+ * @brief Constructor.
  *
  * Reads the data file and stores the necessary quantities in internal arrays.
  */
@@ -102,27 +102,34 @@ LineCoolingData::LineCoolingData() {
     read_values(line, _cse[i], 10);
     // the fifth row contains the sw values
     getline(file, line);
-    read_values(line, _sw[i], 5);
+    read_values(line, _sw_inv[i], 5);
+  }
+
+  // invert the sw values
+  for (unsigned int i = 0; i < LINECOOLINGDATA_NUMELEMENTS; ++i) {
+    for (unsigned char j = 0; j < 5; ++j) {
+      _sw_inv[i][j] = 1. / _sw_inv[i][j];
+    }
   }
 }
 
 /**
- * @brief Get the cs value for the given level of the given element
+ * @brief Get the cs value for the given level of the given element.
  *
- * @param element Element index
- * @param level Energy level index
- * @return cs value
+ * @param element Element index.
+ * @param level Energy level index.
+ * @return cs value.
  */
 double LineCoolingData::get_cs(unsigned int element, unsigned int level) const {
   return _cs[element][level];
 }
 
 /**
- * @brief Get the cse value for the given level of the given element
+ * @brief Get the cse value for the given level of the given element.
  *
- * @param element Element index
- * @param level Energy level index
- * @return cse value
+ * @param element Element index.
+ * @param level Energy level index.
+ * @return cse value.
  */
 double LineCoolingData::get_cse(unsigned int element,
                                 unsigned int level) const {
@@ -130,36 +137,36 @@ double LineCoolingData::get_cse(unsigned int element,
 }
 
 /**
- * @brief Get the ea value for the given level of the given element
+ * @brief Get the ea value for the given level of the given element.
  *
- * @param element Element index
- * @param level Energy level index
- * @return ea value
+ * @param element Element index.
+ * @param level Energy level index.
+ * @return ea value.
  */
 double LineCoolingData::get_ea(unsigned int element, unsigned int level) const {
   return _ea[element][level];
 }
 
 /**
- * @brief Get the en value for the given level of the given element
+ * @brief Get the en value for the given level of the given element.
  *
- * @param element Element index
- * @param level Energy level index
- * @return en value
+ * @param element Element index.
+ * @param level Energy level index.
+ * @return en value.
  */
 double LineCoolingData::get_en(unsigned int element, unsigned int level) const {
   return _en[element][level];
 }
 
 /**
- * @brief Get the sw value for the given level of the given element
+ * @brief Get the sw value for the given level of the given element.
  *
- * @param element Element index
- * @param level Energy level index
- * @return sw value
+ * @param element Element index.
+ * @param level Energy level index.
+ * @return sw value.
  */
 double LineCoolingData::get_sw(unsigned int element, unsigned int level) const {
-  return _sw[element][level];
+  return 1. / _sw_inv[element][level];
 }
 
 /**
@@ -286,6 +293,26 @@ int LineCoolingData::simq(double A[5][5], double B[5]) {
  * @brief Get the radiative energy losses due to line cooling at the given
  * temperature, electron density and coolant abundances.
  *
+ * We consider 12 ions; 10 with 5 low lying collisionally excited levels, and 2
+ * with only 2 levels. For the former, we solve equations (3.27) and (3.28) in
+ * Osterbrock & Ferland (2006), with the cooling rate given by equation (3.29).
+ *
+ * For the latter, we use equations (3.24) and (3.25), together with the total
+ * number of ions:
+ *\f[
+ * n_1 + n_2 = n.
+ * \f]
+ * Equation (3.24) gives a relation between the level populations of ion 1 and
+ * 2:
+ * \f[
+ * \frac{n_2}{n_1} = f,
+ * \f]
+ * which together with the total number of ions leads to
+ * \f[
+ * n_2 = \frac{f}{1+f}n.
+ * \f]
+ * We substitute this in equation (3.25).
+ *
  * @param temperature Temperature (in K).
  * @param electron_density Electron density (in m^-3).
  * @param abundances Abdunances of coolants.
@@ -300,21 +327,21 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     return 1.e-99;
   }
 
-  const double EnNIII = 251.;
-  const double EaNIII = 4.77e-5;
-  const double OmNIII = 1.45;
-  const double EnNeII = 1125.;
-  const double EaNeII = 8.55e-3;
-  const double OmNeII = 0.303;
-
   // Boltzmann constant (in J s^-1)
   const double kb =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  // Planck constant (in J s)
+  const double h =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+  // electron mass (in kg)
+  const double m_e =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS);
 
-  // we multiplied Kenny's value with 1.e-6 to take into account the fact that
-  // electron_density is in m^-3 and not in cm^-3
-  const double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
+  const double numfac =
+      h * h / (std::sqrt(kb) * std::pow(2. * M_PI * m_e, 1.5));
+  const double cfac = numfac * electron_density / std::sqrt(temperature);
   const double T4 = temperature * 1.e-4;
+  const double Tinv = 1. / temperature;
 
   double Om[10][10];
   double cs[10][10], cse[10][10];
@@ -363,53 +390,42 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
       Om[j][mm] = cs[j][mm] * std::pow(T4, cse[j][mm]);
     }
 
-    alev[1][0] =
-        cfac * Om[j][0] / (_sw[j][0] * std::exp(_en[j][0] / temperature));
-    alev[1][1] =
-        -(_ea[j][0] +
-          (cfac / _sw[j][1]) *
-              (Om[j][0] + Om[j][4] * std::exp(-_en[j][4] / temperature) +
-               Om[j][5] * std::exp(-_en[j][5] / temperature) +
-               Om[j][6] * std::exp(-_en[j][6] / temperature)));
-    alev[1][2] = _ea[j][4] + (cfac / _sw[j][2]) * Om[j][4];
-    alev[1][3] = _ea[j][5] + (cfac / _sw[j][3]) * Om[j][5];
-    alev[1][4] = _ea[j][6] + (cfac / _sw[j][4]) * Om[j][6];
+    alev[1][0] = cfac * Om[j][0] * _sw_inv[j][0] * std::exp(-_en[j][0] * Tinv);
+    alev[1][1] = -(_ea[j][0] +
+                   cfac * _sw_inv[j][1] *
+                       (Om[j][0] + Om[j][4] * std::exp(-_en[j][4] * Tinv) +
+                        Om[j][5] * std::exp(-_en[j][5] * Tinv) +
+                        Om[j][6] * std::exp(-_en[j][6] * Tinv)));
+    alev[1][2] = _ea[j][4] + cfac * _sw_inv[j][2] * Om[j][4];
+    alev[1][3] = _ea[j][5] + cfac * _sw_inv[j][3] * Om[j][5];
+    alev[1][4] = _ea[j][6] + cfac * _sw_inv[j][4] * Om[j][6];
 
-    alev[2][0] =
-        cfac * Om[j][1] * std::exp(-_en[j][1] / temperature) / _sw[j][0];
-    alev[2][1] =
-        cfac * Om[j][4] * std::exp(-_en[j][4] / temperature) / _sw[j][1];
+    alev[2][0] = cfac * Om[j][1] * std::exp(-_en[j][1] * Tinv) * _sw_inv[j][0];
+    alev[2][1] = cfac * Om[j][4] * std::exp(-_en[j][4] * Tinv) * _sw_inv[j][1];
     alev[2][2] =
         -(_ea[j][1] + _ea[j][4] +
-          (cfac / _sw[j][2]) * (Om[j][1] + Om[j][4] +
-                                Om[j][7] * std::exp(-_en[j][7] / temperature) +
-                                Om[j][8] * std::exp(-_en[j][8] / temperature)));
-    alev[2][3] = _ea[j][7] + cfac * Om[j][7] / _sw[j][3];
-    alev[2][4] = _ea[j][8] + cfac * Om[j][8] / _sw[j][4];
+          cfac * _sw_inv[j][2] *
+              (Om[j][1] + Om[j][4] + Om[j][7] * std::exp(-_en[j][7] * Tinv) +
+               Om[j][8] * std::exp(-_en[j][8] * Tinv)));
+    alev[2][3] = _ea[j][7] + cfac * Om[j][7] * _sw_inv[j][3];
+    alev[2][4] = _ea[j][8] + cfac * Om[j][8] * _sw_inv[j][4];
 
-    alev[3][0] =
-        cfac * Om[j][2] * std::exp(-_en[j][2] / temperature) / _sw[j][0];
-    alev[3][1] =
-        cfac * Om[j][5] * std::exp(-_en[j][5] / temperature) / _sw[j][1];
-    alev[3][2] =
-        cfac * Om[j][7] * std::exp(-_en[j][7] / temperature) / _sw[j][2];
+    alev[3][0] = cfac * Om[j][2] * std::exp(-_en[j][2] * Tinv) * _sw_inv[j][0];
+    alev[3][1] = cfac * Om[j][5] * std::exp(-_en[j][5] * Tinv) * _sw_inv[j][1];
+    alev[3][2] = cfac * Om[j][7] * std::exp(-_en[j][7] * Tinv) * _sw_inv[j][2];
     alev[3][3] =
         -(_ea[j][2] + _ea[j][5] + _ea[j][7] +
-          (cfac / _sw[j][3]) * (Om[j][2] + Om[j][5] + Om[j][7] +
-                                Om[j][9] * std::exp(-_en[j][9] / temperature)));
-    alev[3][4] = _ea[j][9] + cfac * Om[j][9] / _sw[j][4];
+          cfac * _sw_inv[j][3] * (Om[j][2] + Om[j][5] + Om[j][7] +
+                                  Om[j][9] * std::exp(-_en[j][9] * Tinv)));
+    alev[3][4] = _ea[j][9] + cfac * Om[j][9] * _sw_inv[j][4];
 
-    alev[4][0] =
-        cfac * Om[j][3] * std::exp(-_en[j][3] / temperature) / _sw[j][0];
-    alev[4][1] =
-        cfac * Om[j][6] * std::exp(-_en[j][6] / temperature) / _sw[j][1];
-    alev[4][2] =
-        cfac * Om[j][8] * std::exp(-_en[j][8] / temperature) / _sw[j][2];
-    alev[4][3] =
-        cfac * Om[j][9] * std::exp(-_en[j][9] / temperature) / _sw[j][3];
+    alev[4][0] = cfac * Om[j][3] * std::exp(-_en[j][3] * Tinv) * _sw_inv[j][0];
+    alev[4][1] = cfac * Om[j][6] * std::exp(-_en[j][6] * Tinv) * _sw_inv[j][1];
+    alev[4][2] = cfac * Om[j][8] * std::exp(-_en[j][8] * Tinv) * _sw_inv[j][2];
+    alev[4][3] = cfac * Om[j][9] * std::exp(-_en[j][9] * Tinv) * _sw_inv[j][3];
     alev[4][4] =
         -(_ea[j][3] + _ea[j][6] + _ea[j][8] + _ea[j][9] +
-          (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
+          cfac * _sw_inv[j][4] * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
     int status = simq(alev, lev);
@@ -436,15 +452,33 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
   }
 
   // 2 level atoms
+
+  const double econst = PhysicalConstants::get_physical_constant(
+                            PHYSICALCONSTANT_RYDBERG_ENERGY) /
+                        kb;
+  // Blum & Pradhan (1992), table 5, first energy level
+  const double EnNIII = 0.00159 * econst;
+  // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition
+  const double EaNIII = 4.736e-5;
+  // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
+  const double OmNIII = 1.4454;
+
+  // Saraph & Tully (1994), table 2, fine structure splitting energy for Z = 10
+  const double EnNeII = 0.0071 * econst;
+  // Kaufman & Sugar (1986), table 7
+  const double EaNeII = 8.55e-3;
+  // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
+  const double OmNeII = 0.314;
+
   double sw1 = 2.;
   double sw2 = 4.;
-  T1 = std::exp(-EnNIII / temperature);
+  T1 = std::exp(-EnNIII * Tinv);
   const double CNIII = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 *
                        EaNIII /
                        (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
   sw1 = 4.;
   sw2 = 2.;
-  T1 = std::exp(-EnNeII / temperature);
+  T1 = std::exp(-EnNeII * Tinv);
   const double CNeII = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 *
                        EaNeII /
                        (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
@@ -521,21 +555,21 @@ void LineCoolingData::linestr(
     double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
     double &ciii1908, double &coii7325, double &csiv10) const {
 
-  const double EnNIII = 251.;
-  const double EaNIII = 4.77e-5;
-  const double OmNIII = 1.45;
-  const double EnNeII = 1125.;
-  const double EaNeII = 8.55e-3;
-  const double OmNeII = 0.303;
-
   // Boltzmann constant (in J s^-1)
   const double kb =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  // Planck constant (in J s)
+  const double h =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+  // electron mass (in kg)
+  const double m_e =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS);
 
-  // we multiplied Kenny's value with 1.e-6 to take into account the fact that
-  // electron_density is in m^-3 and not in cm^-3
-  const double cfac = 8.63e-12 * electron_density / std::sqrt(temperature);
+  const double numfac =
+      h * h / (std::sqrt(kb) * std::pow(2. * M_PI * m_e, 1.5));
+  const double cfac = numfac * electron_density / std::sqrt(temperature);
   const double T4 = temperature * 1.e-4;
+  const double Tinv = 1. / temperature;
 
   double Om[10][10];
   double cs[10][10], cse[10][10];
@@ -582,53 +616,42 @@ void LineCoolingData::linestr(
       Om[j][mm] = cs[j][mm] * std::pow(T4, cse[j][mm]);
     }
 
-    alev[1][0] =
-        cfac * Om[j][0] / (_sw[j][0] * std::exp(_en[j][0] / temperature));
-    alev[1][1] =
-        -(_ea[j][0] +
-          (cfac / _sw[j][1]) *
-              (Om[j][0] + Om[j][4] * std::exp(-_en[j][4] / temperature) +
-               Om[j][5] * std::exp(-_en[j][5] / temperature) +
-               Om[j][6] * std::exp(-_en[j][6] / temperature)));
-    alev[1][2] = _ea[j][4] + (cfac / _sw[j][2]) * Om[j][4];
-    alev[1][3] = _ea[j][5] + (cfac / _sw[j][3]) * Om[j][5];
-    alev[1][4] = _ea[j][6] + (cfac / _sw[j][4]) * Om[j][6];
+    alev[1][0] = cfac * Om[j][0] * _sw_inv[j][0] * std::exp(-_en[j][0] * Tinv);
+    alev[1][1] = -(_ea[j][0] +
+                   cfac * _sw_inv[j][1] *
+                       (Om[j][0] + Om[j][4] * std::exp(-_en[j][4] * Tinv) +
+                        Om[j][5] * std::exp(-_en[j][5] * Tinv) +
+                        Om[j][6] * std::exp(-_en[j][6] * Tinv)));
+    alev[1][2] = _ea[j][4] + cfac * _sw_inv[j][2] * Om[j][4];
+    alev[1][3] = _ea[j][5] + cfac * _sw_inv[j][3] * Om[j][5];
+    alev[1][4] = _ea[j][6] + cfac * _sw_inv[j][4] * Om[j][6];
 
-    alev[2][0] =
-        cfac * Om[j][1] * std::exp(-_en[j][1] / temperature) / _sw[j][0];
-    alev[2][1] =
-        cfac * Om[j][4] * std::exp(-_en[j][4] / temperature) / _sw[j][1];
+    alev[2][0] = cfac * Om[j][1] * std::exp(-_en[j][1] * Tinv) * _sw_inv[j][0];
+    alev[2][1] = cfac * Om[j][4] * std::exp(-_en[j][4] * Tinv) * _sw_inv[j][1];
     alev[2][2] =
         -(_ea[j][1] + _ea[j][4] +
-          (cfac / _sw[j][2]) * (Om[j][1] + Om[j][4] +
-                                Om[j][7] * std::exp(-_en[j][7] / temperature) +
-                                Om[j][8] * std::exp(-_en[j][8] / temperature)));
-    alev[2][3] = _ea[j][7] + cfac * Om[j][7] / _sw[j][3];
-    alev[2][4] = _ea[j][8] + cfac * Om[j][8] / _sw[j][4];
+          cfac * _sw_inv[j][2] *
+              (Om[j][1] + Om[j][4] + Om[j][7] * std::exp(-_en[j][7] * Tinv) +
+               Om[j][8] * std::exp(-_en[j][8] * Tinv)));
+    alev[2][3] = _ea[j][7] + cfac * Om[j][7] * _sw_inv[j][3];
+    alev[2][4] = _ea[j][8] + cfac * Om[j][8] * _sw_inv[j][4];
 
-    alev[3][0] =
-        cfac * Om[j][2] * std::exp(-_en[j][2] / temperature) / _sw[j][0];
-    alev[3][1] =
-        cfac * Om[j][5] * std::exp(-_en[j][5] / temperature) / _sw[j][1];
-    alev[3][2] =
-        cfac * Om[j][7] * std::exp(-_en[j][7] / temperature) / _sw[j][2];
+    alev[3][0] = cfac * Om[j][2] * std::exp(-_en[j][2] * Tinv) * _sw_inv[j][0];
+    alev[3][1] = cfac * Om[j][5] * std::exp(-_en[j][5] * Tinv) * _sw_inv[j][1];
+    alev[3][2] = cfac * Om[j][7] * std::exp(-_en[j][7] * Tinv) * _sw_inv[j][2];
     alev[3][3] =
         -(_ea[j][2] + _ea[j][5] + _ea[j][7] +
-          (cfac / _sw[j][3]) * (Om[j][2] + Om[j][5] + Om[j][7] +
-                                Om[j][9] * std::exp(-_en[j][9] / temperature)));
-    alev[3][4] = _ea[j][9] + cfac * Om[j][9] / _sw[j][4];
+          cfac * _sw_inv[j][3] * (Om[j][2] + Om[j][5] + Om[j][7] +
+                                  Om[j][9] * std::exp(-_en[j][9] * Tinv)));
+    alev[3][4] = _ea[j][9] + cfac * Om[j][9] * _sw_inv[j][4];
 
-    alev[4][0] =
-        cfac * Om[j][3] * std::exp(-_en[j][3] / temperature) / _sw[j][0];
-    alev[4][1] =
-        cfac * Om[j][6] * std::exp(-_en[j][6] / temperature) / _sw[j][1];
-    alev[4][2] =
-        cfac * Om[j][8] * std::exp(-_en[j][8] / temperature) / _sw[j][2];
-    alev[4][3] =
-        cfac * Om[j][9] * std::exp(-_en[j][9] / temperature) / _sw[j][3];
+    alev[4][0] = cfac * Om[j][3] * std::exp(-_en[j][3] * Tinv) * _sw_inv[j][0];
+    alev[4][1] = cfac * Om[j][6] * std::exp(-_en[j][6] * Tinv) * _sw_inv[j][1];
+    alev[4][2] = cfac * Om[j][8] * std::exp(-_en[j][8] * Tinv) * _sw_inv[j][2];
+    alev[4][3] = cfac * Om[j][9] * std::exp(-_en[j][9] * Tinv) * _sw_inv[j][3];
     alev[4][4] =
         -(_ea[j][3] + _ea[j][6] + _ea[j][8] + _ea[j][9] +
-          (cfac / _sw[j][4]) * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
+          cfac * _sw_inv[j][4] * (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
 
     // find level populations
     const int status = simq(alev, lev);
@@ -698,14 +721,32 @@ void LineCoolingData::linestr(
   }
 
   // 2 level atoms
+
+  const double econst = PhysicalConstants::get_physical_constant(
+                            PHYSICALCONSTANT_RYDBERG_ENERGY) /
+                        kb;
+  // Blum & Pradhan (1992), table 5, first energy level
+  const double EnNIII = 0.00159 * econst;
+  // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition
+  const double EaNIII = 4.736e-5;
+  // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
+  const double OmNIII = 1.4454;
+
+  // Saraph & Tully (1994), table 2, fine structure splitting energy for Z = 10
+  const double EnNeII = 0.0071 * econst;
+  // Kaufman & Sugar (1986), table 7
+  const double EaNeII = 8.55e-3;
+  // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
+  const double OmNeII = 0.314;
+
   double sw1 = 2.;
   double sw2 = 4.;
-  T1 = std::exp(-EnNIII / temperature);
+  T1 = std::exp(-EnNIII * Tinv);
   cniii57 = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
             (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
   sw1 = 4.;
   sw2 = 2.;
-  T1 = std::exp(-EnNeII / temperature);
+  T1 = std::exp(-EnNeII * Tinv);
   cneii12 = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
             (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
 }

@@ -63,9 +63,8 @@
  *  (which might or might not speed up the code). */
 #cmakedefine USE_LOCKFREE
 
-/*! @brief Maximum number of shared memory threads that can be used on the
- *  system. This variable should be configured at compile time, but for now we
- *  just hardcode its value. */
+/*! @brief Maximum number of shared memory threads that can be used on this
+ *  system. */
 // clang-format off
 #define MAX_NUM_THREADS @MAX_NUM_THREADS@
 // clang-format on

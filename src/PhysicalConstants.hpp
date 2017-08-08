@@ -42,6 +42,10 @@ enum PhysicalConstantName {
   PHYSICALCONSTANT_ELECTRONVOLT,
   /*! @brief Mass of a proton (in kg). */
   PHYSICALCONSTANT_PROTON_MASS,
+  /*! @brief Mass of an electron (in kg). */
+  PHYSICALCONSTANT_ELECTRON_MASS,
+  /*! @brief Rydberg energy (in J). */
+  PHYSICALCONSTANT_RYDBERG_ENERGY,
   /*! @brief Counter (should always be last element!). */
   NUMBER_OF_PHYSICALCONSTANTS
 };
@@ -85,6 +89,16 @@ public:
       // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?mp
       // in kg
       return 1.672621898e-27;
+
+    case PHYSICALCONSTANT_ELECTRON_MASS:
+      // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?me
+      // in kg
+      return 9.10938356e-31;
+
+    case PHYSICALCONSTANT_RYDBERG_ENERGY:
+      // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?rydhcj
+      // in J
+      return 2.179872325e-18;
 
     default:
       cmac_error("Unknown physical constant: %i!", name);
