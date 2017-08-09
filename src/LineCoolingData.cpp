@@ -132,66 +132,133 @@ LineCoolingData::LineCoolingData() {
   //      *PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED)/
   //      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   const double hc_over_k = 1.439;
-  // data from Galavis, Mendoza & Zeippen (1997), tables 4 and 5
-  // ground state: 3P0
-  // excited states: 3P1, 3P2, 1D2, 1S0
-  const double energy_levels[4] = {48.7, 130.8, 15316.3, 32688.9};
-  _inverse_statistical_weight[NII][0] = 1.;
-  _inverse_statistical_weight[NII][1] = 1. / 3.;
-  _inverse_statistical_weight[NII][2] = 0.2;
-  _inverse_statistical_weight[NII][3] = 0.2;
-  _inverse_statistical_weight[NII][4] = 1.;
-  _transition_probability[NII][TRANSITION_0_to_1] = 2.077e-6;
-  _transition_probability[NII][TRANSITION_0_to_2] = 1.127e-12;
-  _transition_probability[NII][TRANSITION_0_to_3] = 3.554e-7;
-  _transition_probability[NII][TRANSITION_0_to_4] = 0.;
-  _transition_probability[NII][TRANSITION_1_to_2] = 7.463e-6;
-  _transition_probability[NII][TRANSITION_1_to_3] = 1.016e-3;
-  _transition_probability[NII][TRANSITION_1_to_4] = 3.297e-2;
-  _transition_probability[NII][TRANSITION_2_to_3] = 3.005e-3;
-  _transition_probability[NII][TRANSITION_2_to_4] = 1.315e-4;
-  _transition_probability[NII][TRANSITION_3_to_4] = 1.023;
-  _energy_difference[NII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
-  _energy_difference[NII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
-  _energy_difference[NII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
-  _energy_difference[NII][TRANSITION_0_to_4] = energy_levels[3] * hc_over_k;
-  _energy_difference[NII][TRANSITION_1_to_2] =
-      (energy_levels[1] - energy_levels[0]) * hc_over_k;
-  _energy_difference[NII][TRANSITION_1_to_3] =
-      (energy_levels[2] - energy_levels[0]) * hc_over_k;
-  _energy_difference[NII][TRANSITION_1_to_4] =
-      (energy_levels[3] - energy_levels[0]) * hc_over_k;
-  _energy_difference[NII][TRANSITION_2_to_3] =
-      (energy_levels[2] - energy_levels[1]) * hc_over_k;
-  _energy_difference[NII][TRANSITION_2_to_4] =
-      (energy_levels[3] - energy_levels[1]) * hc_over_k;
-  _energy_difference[NII][TRANSITION_3_to_4] =
-      (energy_levels[3] - energy_levels[2]) * hc_over_k;
-  // our own fits to the data of Lennon & Burke (1994)
-  // these fits were made with the script data/linecooling/gamma_NII.py
-  // (this script also outputs the code below)
-  // validity estimated by eye, is approximately [5,000 K; 25,000 K] for all
-  // curves (and definitely better than the values used in Kenny's code)
-  _collision_strength[NII][TRANSITION_0_to_1] = 0.4076;
-  _collision_strength_exponent[NII][TRANSITION_0_to_1] = 0.120890503443;
-  _collision_strength[NII][TRANSITION_0_to_2] = 0.272;
-  _collision_strength_exponent[NII][TRANSITION_0_to_2] = 0.206218494855;
-  _collision_strength[NII][TRANSITION_0_to_3] = 0.293433333333;
-  _collision_strength_exponent[NII][TRANSITION_0_to_3] = 0.0454386659465;
-  _collision_strength[NII][TRANSITION_0_to_4] = 0.0325666666667;
-  _collision_strength_exponent[NII][TRANSITION_0_to_4] = 0.0531252760254;
-  _collision_strength[NII][TRANSITION_1_to_2] = 1.12;
-  _collision_strength_exponent[NII][TRANSITION_1_to_2] = 0.167121267122;
-  _collision_strength[NII][TRANSITION_1_to_3] = 0.8803;
-  _collision_strength_exponent[NII][TRANSITION_1_to_3] = 0.0459250739371;
-  _collision_strength[NII][TRANSITION_1_to_4] = 0.0977;
-  _collision_strength_exponent[NII][TRANSITION_1_to_4] = 0.0455168342781;
-  _collision_strength[NII][TRANSITION_2_to_3] = 1.46716666667;
-  _collision_strength_exponent[NII][TRANSITION_2_to_3] = 0.0459250736643;
-  _collision_strength[NII][TRANSITION_2_to_4] = 0.162833333333;
-  _collision_strength_exponent[NII][TRANSITION_2_to_4] = 0.0427417408534;
-  _collision_strength[NII][TRANSITION_3_to_4] = 0.8338;
-  _collision_strength_exponent[NII][TRANSITION_3_to_4] = -0.204643342755;
+  /// NII
+  {
+    // data from Galavis, Mendoza & Zeippen (1997), tables 4 and 5
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    const double energy_levels[4] = {48.7, 130.8, 15316.3, 32688.9};
+    _inverse_statistical_weight[NII][0] = 1.;
+    _inverse_statistical_weight[NII][1] = 1. / 3.;
+    _inverse_statistical_weight[NII][2] = 0.2;
+    _inverse_statistical_weight[NII][3] = 0.2;
+    _inverse_statistical_weight[NII][4] = 1.;
+    _transition_probability[NII][TRANSITION_0_to_1] = 2.077e-6;
+    _transition_probability[NII][TRANSITION_0_to_2] = 1.127e-12;
+    _transition_probability[NII][TRANSITION_0_to_3] = 3.554e-7;
+    _transition_probability[NII][TRANSITION_0_to_4] = 0.;
+    _transition_probability[NII][TRANSITION_1_to_2] = 7.463e-6;
+    _transition_probability[NII][TRANSITION_1_to_3] = 1.016e-3;
+    _transition_probability[NII][TRANSITION_1_to_4] = 3.297e-2;
+    _transition_probability[NII][TRANSITION_2_to_3] = 3.005e-3;
+    _transition_probability[NII][TRANSITION_2_to_4] = 1.315e-4;
+    _transition_probability[NII][TRANSITION_3_to_4] = 1.023;
+    _energy_difference[NII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
+    _energy_difference[NII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
+    _energy_difference[NII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
+    _energy_difference[NII][TRANSITION_0_to_4] = energy_levels[3] * hc_over_k;
+    _energy_difference[NII][TRANSITION_1_to_2] =
+        (energy_levels[1] - energy_levels[0]) * hc_over_k;
+    _energy_difference[NII][TRANSITION_1_to_3] =
+        (energy_levels[2] - energy_levels[0]) * hc_over_k;
+    _energy_difference[NII][TRANSITION_1_to_4] =
+        (energy_levels[3] - energy_levels[0]) * hc_over_k;
+    _energy_difference[NII][TRANSITION_2_to_3] =
+        (energy_levels[2] - energy_levels[1]) * hc_over_k;
+    _energy_difference[NII][TRANSITION_2_to_4] =
+        (energy_levels[3] - energy_levels[1]) * hc_over_k;
+    _energy_difference[NII][TRANSITION_3_to_4] =
+        (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // our own fits to the data of Lennon & Burke (1994)
+    // these fits were made with the script data/linecooling/gamma_NII.py
+    // (this script also outputs the code below)
+    // validity estimated by eye, is approximately [5,000 K; 25,000 K] for all
+    // curves (and definitely better than the values used in Kenny's code)
+    _collision_strength[NII][TRANSITION_0_to_1] = 0.4076;
+    _collision_strength_exponent[NII][TRANSITION_0_to_1] = 0.120890503443;
+    _collision_strength[NII][TRANSITION_0_to_2] = 0.272;
+    _collision_strength_exponent[NII][TRANSITION_0_to_2] = 0.206218494855;
+    _collision_strength[NII][TRANSITION_0_to_3] = 0.293433333333;
+    _collision_strength_exponent[NII][TRANSITION_0_to_3] = 0.0454386659465;
+    _collision_strength[NII][TRANSITION_0_to_4] = 0.0325666666667;
+    _collision_strength_exponent[NII][TRANSITION_0_to_4] = 0.0531252760254;
+    _collision_strength[NII][TRANSITION_1_to_2] = 1.12;
+    _collision_strength_exponent[NII][TRANSITION_1_to_2] = 0.167121267122;
+    _collision_strength[NII][TRANSITION_1_to_3] = 0.8803;
+    _collision_strength_exponent[NII][TRANSITION_1_to_3] = 0.0459250739371;
+    _collision_strength[NII][TRANSITION_1_to_4] = 0.0977;
+    _collision_strength_exponent[NII][TRANSITION_1_to_4] = 0.0455168342781;
+    _collision_strength[NII][TRANSITION_2_to_3] = 1.46716666667;
+    _collision_strength_exponent[NII][TRANSITION_2_to_3] = 0.0459250736643;
+    _collision_strength[NII][TRANSITION_2_to_4] = 0.162833333333;
+    _collision_strength_exponent[NII][TRANSITION_2_to_4] = 0.0427417408534;
+    _collision_strength[NII][TRANSITION_3_to_4] = 0.8338;
+    _collision_strength_exponent[NII][TRANSITION_3_to_4] = -0.204643342755;
+  }
+
+  /// OIII
+  {
+    // data from Galavis, Mendoza & Zeippen (1997), tables 4 and 5
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    const double energy_levels[4] = {114., 307., 20274., 43186.};
+    _inverse_statistical_weight[OIII][0] = 1.;
+    _inverse_statistical_weight[OIII][1] = 1. / 3.;
+    _inverse_statistical_weight[OIII][2] = 0.2;
+    _inverse_statistical_weight[OIII][3] = 0.2;
+    _inverse_statistical_weight[OIII][4] = 1.;
+    _transition_probability[OIII][TRANSITION_0_to_1] = 2.664e-5;
+    _transition_probability[OIII][TRANSITION_0_to_2] = 3.094e-11;
+    _transition_probability[OIII][TRANSITION_0_to_3] = 1.69e-6;
+    _transition_probability[OIII][TRANSITION_0_to_4] = 0.;
+    _transition_probability[OIII][TRANSITION_1_to_2] = 9.695e-5;
+    _transition_probability[OIII][TRANSITION_1_to_3] = 6.995e-3;
+    _transition_probability[OIII][TRANSITION_1_to_4] = 2.268e-1;
+    _transition_probability[OIII][TRANSITION_2_to_3] = 2.041e-2;
+    _transition_probability[OIII][TRANSITION_2_to_4] = 6.091e-4;
+    _transition_probability[OIII][TRANSITION_3_to_4] = 1.561;
+    _energy_difference[OIII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
+    _energy_difference[OIII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
+    _energy_difference[OIII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
+    _energy_difference[OIII][TRANSITION_0_to_4] = energy_levels[3] * hc_over_k;
+    _energy_difference[OIII][TRANSITION_1_to_2] =
+        (energy_levels[1] - energy_levels[0]) * hc_over_k;
+    _energy_difference[OIII][TRANSITION_1_to_3] =
+        (energy_levels[2] - energy_levels[0]) * hc_over_k;
+    _energy_difference[OIII][TRANSITION_1_to_4] =
+        (energy_levels[3] - energy_levels[0]) * hc_over_k;
+    _energy_difference[OIII][TRANSITION_2_to_3] =
+        (energy_levels[2] - energy_levels[1]) * hc_over_k;
+    _energy_difference[OIII][TRANSITION_2_to_4] =
+        (energy_levels[3] - energy_levels[1]) * hc_over_k;
+    _energy_difference[OIII][TRANSITION_3_to_4] =
+        (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // our own fits to the data of Lennon & Burke (1994)
+    // these fits were made with the script data/linecooling/gamma_OIII.py
+    // (this script also outputs the code below)
+    // validity estimated by eye, is approximately [5,000 K; 25,000 K] for all
+    // curves (and definitely better than the values used in Kenny's code)
+    _collision_strength[OIII][TRANSITION_0_to_1] = 0.5454;
+    _collision_strength_exponent[OIII][TRANSITION_0_to_1] = 0.0583811855633;
+    _collision_strength[OIII][TRANSITION_0_to_2] = 0.2713;
+    _collision_strength_exponent[OIII][TRANSITION_0_to_2] = 0.0893900923473;
+    _collision_strength[OIII][TRANSITION_0_to_3] = 0.254355555556;
+    _collision_strength_exponent[OIII][TRANSITION_0_to_3] = 0.138947107346;
+    _collision_strength[OIII][TRANSITION_0_to_4] = 0.0325;
+    _collision_strength_exponent[OIII][TRANSITION_0_to_4] = 0.141146060784;
+    _collision_strength[OIII][TRANSITION_1_to_2] = 1.291;
+    _collision_strength_exponent[OIII][TRANSITION_1_to_2] = 0.0731403594743;
+    _collision_strength[OIII][TRANSITION_1_to_3] = 0.763066666667;
+    _collision_strength_exponent[OIII][TRANSITION_1_to_3] = 0.138947108288;
+    _collision_strength[OIII][TRANSITION_1_to_4] = 0.0975;
+    _collision_strength_exponent[OIII][TRANSITION_1_to_4] = 0.159858565366;
+    _collision_strength[OIII][TRANSITION_2_to_3] = 1.27177777778;
+    _collision_strength_exponent[OIII][TRANSITION_2_to_3] = 0.13894710933;
+    _collision_strength[OIII][TRANSITION_2_to_4] = 0.1625;
+    _collision_strength_exponent[OIII][TRANSITION_2_to_4] = 0.159858567059;
+    _collision_strength[OIII][TRANSITION_3_to_4] = 0.5815;
+    _collision_strength_exponent[OIII][TRANSITION_3_to_4] = 0.157486912474;
+  }
 
   // two level elements
 
