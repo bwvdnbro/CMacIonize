@@ -72,15 +72,27 @@ int main(int argc, char **argv) {
                     sw_fortran);
 
   LineCoolingData data;
-  for (unsigned int i = 0; i < 10; ++i) {
-    for (unsigned int j = 0; j < 10; ++j) {
-      assert_condition(cs_fortran[10 * i + j] == data.get_cs(i, j));
-      assert_condition(cse_fortran[10 * i + j] == data.get_cse(i, j));
-      assert_condition(ea_fortran[10 * i + j] == data.get_ea(i, j));
-      assert_condition(en_fortran[10 * i + j] == data.get_en(i, j));
+  for (unsigned char i = 0; i < 10; ++i) {
+    for (unsigned char j = 0; j < 10; ++j) {
+      const LineCoolingDataFiveLevelElement element =
+          static_cast< LineCoolingDataFiveLevelElement >(i);
+      const LineCoolingDataTransition transition =
+          static_cast< LineCoolingDataTransition >(j);
+      assert_condition(cs_fortran[10 * i + j] ==
+                       data.get_collision_strength(element, transition));
+      assert_condition(
+          cse_fortran[10 * i + j] ==
+          data.get_collision_strength_exponent(element, transition));
+      assert_condition(ea_fortran[10 * i + j] ==
+                       data.get_transition_probability(element, transition));
+      assert_condition(en_fortran[10 * i + j] ==
+                       data.get_energy_difference(element, transition));
     }
-    for (unsigned int j = 0; j < 5; ++j) {
-      assert_condition(sw_fortran[5 * i + j] == data.get_sw(i, j));
+    for (unsigned char j = 0; j < 5; ++j) {
+      const LineCoolingDataFiveLevelElement element =
+          static_cast< LineCoolingDataFiveLevelElement >(i);
+      assert_condition(sw_fortran[5 * i + j] ==
+                       data.get_statistical_weight(element, j));
     }
   }
 

@@ -31,31 +31,98 @@
 #include <string>
 
 /**
- * @brief Names of supported elements
+ * @brief Names of supported five level elements.
  */
-enum LineCoolingDataElements {
-  /*! @brief Nitrogen I */
+enum LineCoolingDataFiveLevelElement {
+  /*! @brief Nitrogen I. */
   NI = 0,
-  /*! @brief Nitrogen II */
+  /*! @brief Nitrogen II. */
   NII,
-  /*! @brief Oxygen I */
+  /*! @brief Oxygen I. */
   OI,
-  /*! @brief Oxygen II */
+  /*! @brief Oxygen II. */
   OII,
-  /*! @brief Oxygen III */
+  /*! @brief Oxygen III. */
   OIII,
-  /*! @brief Neon III */
+  /*! @brief Neon III. */
   NEIII,
-  /*! @brief Sulphur II */
+  /*! @brief Sulphur II. */
   SII,
-  /*! @brief Sulphur III */
+  /*! @brief Sulphur III. */
   SIII,
-  /*! @brief Carbon II */
+  /*! @brief Carbon II. */
   CII,
-  /*! @brief Carbon III */
+  /*! @brief Carbon III. */
   CIII,
-  /*! @brief Number of elements stored in the internal arrays */
-  LINECOOLINGDATA_NUMELEMENTS
+  /*! @brief Counter. Should always be the last element! */
+  LINECOOLINGDATA_NUMFIVELEVELELEMENTS
+};
+
+/**
+ * @brief Names of supported two level elements.
+ */
+enum LineCoolingDataTwoLevelElement {
+  /*! @brief Nitrogen III. */
+  NIII = 0,
+  /*! @brief Neon II. */
+  NeII,
+  /*! @brief Counter. Should always be the last element! */
+  LINECOOLINGDATA_NUMTWOLEVELELEMENTS
+};
+
+/**
+ * @brief Names of the two level element data fields.
+ */
+enum LineCoolingDataTwoLevelFields {
+  /*! @brief Energy difference between the ground level and first excited level
+   *  (in K). */
+  TWOLEVELFIELD_ENERGY_DIFFERENCE,
+  /*! @brief Transition probability for deexcitation from the first excited
+   *  level to the ground level (in s^-1). */
+  TWOLEVELFIELD_TRANSITION_PROBABILITY,
+  /*! @brief Velocity-averaged collision strength for the transition from the
+   *  ground level to the first excited level (at 10,000 K). */
+  TWOLEVELFIELD_COLLISION_STRENGTH,
+  /*! @brief Statistical weight of the ground level. */
+  TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0,
+  /*! @brief Statistical weight of the first excited level. */
+  TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1,
+  /*! @brief Counter. Should always be the last element! */
+  LINECOOLINGDATA_NUMTWOLEVELFIELDS
+};
+
+/**
+ * @brief Convenient names for transitions between levels.
+ */
+enum LineCoolingDataTransition {
+  /*! @brief A transition from the ground level to the first excited level. */
+  TRANSITION_0_to_1 = 0,
+  /*! @brief A transition from the ground level to the second excited level. */
+  TRANSITION_0_to_2,
+  /*! @brief A transition from the ground level to the third excited level. */
+  TRANSITION_0_to_3,
+  /*! @brief A transition from the ground level to the fourth excited level. */
+  TRANSITION_0_to_4,
+  /*! @brief A transition from the first excited level to the second excited
+   *  level. */
+  TRANSITION_1_to_2,
+  /*! @brief A transition from the first excited level to the third excited
+   *  level. */
+  TRANSITION_1_to_3,
+  /*! @brief A transition from the first excited level to the fourth excited
+   *  level. */
+  TRANSITION_1_to_4,
+  /*! @brief A transition from the second excited level to the third excited
+   *  level. */
+  TRANSITION_2_to_3,
+  /*! @brief A transition from the second excited level to the fourth excited
+   *  level. */
+  TRANSITION_2_to_4,
+  /*! @brief A transition from the third excited level to the fourth excited
+   *  level. */
+  TRANSITION_3_to_4,
+  /*! @brief Counter. Should always be the last element! */
+  NUMBER_OF_TRANSITIONS
 };
 
 /**
@@ -84,34 +151,55 @@ enum LineCoolingDataElements {
  *    (http://adsabs.harvard.edu/abs/1986JPCRD..15..321K)
  *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPB, 34, 4401
  *    (http://adsabs.harvard.edu/abs/2001JPhB...34.4401G)
+ *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1997, A&AS, 123, 159
+ *    (http://adsabs.harvard.edu/abs/1997A%26AS..123..159G)
+ *  - Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L)
  */
 class LineCoolingData {
 private:
-  /*! @brief Omega values. */
-  double _cs[LINECOOLINGDATA_NUMELEMENTS][10];
+  /*! @brief Velocity-averaged collision strengths at 10,000 K. */
+  double _collision_strength[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                            [NUMBER_OF_TRANSITIONS];
 
-  /*! @brief Omega exponent values. */
-  double _cse[LINECOOLINGDATA_NUMELEMENTS][10];
+  /*! @brief Exponents for the temperature variation of the collision
+   *  strengths. */
+  double _collision_strength_exponent[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                     [NUMBER_OF_TRANSITIONS];
 
-  /*! @brief Einstein A values. */
-  double _ea[LINECOOLINGDATA_NUMELEMENTS][10];
+  /*! @brief Transition probabilities for deexcitation between different
+   *  levels. */
+  double _transition_probability[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                [NUMBER_OF_TRANSITIONS];
 
-  /*! @brief Energy levels. */
-  double _en[LINECOOLINGDATA_NUMELEMENTS][10];
+  /*! @brief Energy differences for the transitions between different levels
+   *  (in K). */
+  double _energy_difference[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [NUMBER_OF_TRANSITIONS];
 
-  /*! @brief Inverse sw values. */
-  double _sw_inv[LINECOOLINGDATA_NUMELEMENTS][5];
+  /*! @brief Inverse statistical weights for the different levels. */
+  double _inverse_statistical_weight[LINECOOLINGDATA_NUMFIVELEVELELEMENTS][5];
+
+  /*! @brief Data values for the two level elements. */
+  double _two_level_element_data[LINECOOLINGDATA_NUMTWOLEVELELEMENTS]
+                                [LINECOOLINGDATA_NUMTWOLEVELFIELDS];
 
   static bool read_values(std::string line, double *array, unsigned int size);
 
 public:
   LineCoolingData();
 
-  double get_cs(unsigned int element, unsigned int level) const;
-  double get_cse(unsigned int element, unsigned int level) const;
-  double get_ea(unsigned int element, unsigned int level) const;
-  double get_en(unsigned int element, unsigned int level) const;
-  double get_sw(unsigned int element, unsigned int level) const;
+  double get_collision_strength(LineCoolingDataFiveLevelElement element,
+                                LineCoolingDataTransition transition) const;
+  double
+  get_collision_strength_exponent(LineCoolingDataFiveLevelElement element,
+                                  LineCoolingDataTransition transition) const;
+  double get_transition_probability(LineCoolingDataFiveLevelElement element,
+                                    LineCoolingDataTransition transition) const;
+  double get_energy_difference(LineCoolingDataFiveLevelElement element,
+                               LineCoolingDataTransition transition) const;
+  double get_statistical_weight(LineCoolingDataFiveLevelElement element,
+                                unsigned char level) const;
 
   static int simq(double A[5][5], double B[5]);
 
