@@ -167,27 +167,31 @@ LineCoolingData::LineCoolingData() {
       (energy_levels[3] - energy_levels[1]) * hc_over_k;
   _energy_difference[NII][TRANSITION_3_to_4] =
       (energy_levels[3] - energy_levels[2]) * hc_over_k;
-  // need to use data from Lennon & Burke (1994)
-  //  _collision_strength[NII][TRANSITION_0_to_1] = 0.;
-  //  _collision_strength[NII][TRANSITION_0_to_2] = 0.;
-  //  _collision_strength[NII][TRANSITION_0_to_3] = 0.;
-  //  _collision_strength[NII][TRANSITION_0_to_4] = 0.;
-  //  _collision_strength[NII][TRANSITION_1_to_2] = 0.;
-  //  _collision_strength[NII][TRANSITION_1_to_3] = 0.;
-  //  _collision_strength[NII][TRANSITION_1_to_4] = 0.;
-  //  _collision_strength[NII][TRANSITION_2_to_3] = 0.;
-  //  _collision_strength[NII][TRANSITION_2_to_4] = 0.;
-  //  _collision_strength[NII][TRANSITION_3_to_4] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_0_to_1] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_0_to_2] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_0_to_3] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_0_to_4] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_1_to_2] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_1_to_3] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_1_to_4] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_2_to_3] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_2_to_4] = 0.;
-  //  _collision_strength_exponent[NII][TRANSITION_3_to_4] = 0.;
+  // our own fits to the data of Lennon & Burke (1994)
+  // these fits were made with the script data/linecooling/gamma_NII.py
+  // (this script also outputs the code below)
+  // validity estimated by eye, is approximately [5,000 K; 25,000 K] for all
+  // curves (and definitely better than the values used in Kenny's code)
+  _collision_strength[NII][TRANSITION_0_to_1] = 0.4076;
+  _collision_strength_exponent[NII][TRANSITION_0_to_1] = 0.120890503443;
+  _collision_strength[NII][TRANSITION_0_to_2] = 0.272;
+  _collision_strength_exponent[NII][TRANSITION_0_to_2] = 0.206218494855;
+  _collision_strength[NII][TRANSITION_0_to_3] = 0.293433333333;
+  _collision_strength_exponent[NII][TRANSITION_0_to_3] = 0.0454386659465;
+  _collision_strength[NII][TRANSITION_0_to_4] = 0.0325666666667;
+  _collision_strength_exponent[NII][TRANSITION_0_to_4] = 0.0531252760254;
+  _collision_strength[NII][TRANSITION_1_to_2] = 1.12;
+  _collision_strength_exponent[NII][TRANSITION_1_to_2] = 0.167121267122;
+  _collision_strength[NII][TRANSITION_1_to_3] = 0.8803;
+  _collision_strength_exponent[NII][TRANSITION_1_to_3] = 0.0459250739371;
+  _collision_strength[NII][TRANSITION_1_to_4] = 0.0977;
+  _collision_strength_exponent[NII][TRANSITION_1_to_4] = 0.0455168342781;
+  _collision_strength[NII][TRANSITION_2_to_3] = 1.46716666667;
+  _collision_strength_exponent[NII][TRANSITION_2_to_3] = 0.0459250736643;
+  _collision_strength[NII][TRANSITION_2_to_4] = 0.162833333333;
+  _collision_strength_exponent[NII][TRANSITION_2_to_4] = 0.0427417408534;
+  _collision_strength[NII][TRANSITION_3_to_4] = 0.8338;
+  _collision_strength_exponent[NII][TRANSITION_3_to_4] = -0.204643342755;
 
   // two level elements
 

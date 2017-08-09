@@ -37,6 +37,21 @@ import matplotlib
 matplotlib.use("Agg")
 import pylab as pl
 
+# dictionary that links abbreviated transition names to the full names used in
+# LineCoolingData
+transitions = {
+  "G0t1": "TRANSITION_0_to_1",
+  "G0t2": "TRANSITION_0_to_2",
+  "G0t3": "TRANSITION_0_to_3",
+  "G0t4": "TRANSITION_0_to_4",
+  "G1t2": "TRANSITION_1_to_2",
+  "G1t3": "TRANSITION_1_to_3",
+  "G1t4": "TRANSITION_1_to_4",
+  "G2t3": "TRANSITION_2_to_3",
+  "G2t4": "TRANSITION_2_to_4",
+  "G3t4": "TRANSITION_3_to_4"
+}
+
 ##
 # @brief Fitting curve.
 #
@@ -45,7 +60,7 @@ import pylab as pl
 ##
 def fitting_curve(T, A):
   T4 = T * 1.e-4
-  return B * T4**A
+  return norm * T4**A
 
 # main function: computes fits to the data of Lennon & Burke (1994) and plots
 # the data and fits for visual comparison
@@ -83,11 +98,47 @@ if __name__ == "__main__":
   data["G2t3"] = 5.*GPtD/9.
   data["G2t4"] = 5.*GPtS/9.
 
+  # initialize the strings for code and value output
+  code = ""
+  values_om = ""
+  values_ome = ""
   # do the curve fitting
-  for key in data:
-    B = data[key][5]
-    A,_ = opt.curve_fit(fitting_curve, T, data[key])
-    print key, B, A
+  for key in sorted(data):
+    # we force the curve to go through the value at 10,000 K using a global
+    # variable
+    norm = data[key][5]
+    # we start by fitting to the full data set
+    imin = 0
+    imax = len(T)
+    # fit the curve
+    A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax])
+    # compute the xi2 difference between the data values (in the fitting
+    # interval) and the curve
+    xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
+    # if xi2 is too large: shrink the fitting interval and try again
+    while xi2 > 1.e-5:
+      imin += 1
+      imax -= 1
+      # if the interval becomes too small, we bail out
+      if imax - imin < 2:
+        break
+      A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax])
+      xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
+    # output some info
+    print "Transition:", key
+    print "Gamma:", norm
+    print "exponent:", A
+    print "convergence:", xi2
+    print "validity: [", T[imin], ",", T[imax], "]"
+    # write the fitting code for this transition
+    code += "_collision_strength[NII][{transition}] = {value};\n".format(
+      transition = transitions[key], value = norm)
+    code += \
+      "_collision_strength_exponent[NII][{transition}] = {value};\n".format(
+        transition = transitions[key], value = A[0])
+    # add the values to the list strings
+    values_om += "{value},".format(value = norm)
+    values_ome += "{value},".format(value = A[0])
 
     # plot the data and fit for visual comparison
     Trange = np.logspace(3., 5., 100)
@@ -95,3 +146,13 @@ if __name__ == "__main__":
     pl.plot(Trange, fitting_curve(Trange, *A), "r-")
     pl.savefig("tmp/NII_{key}.png".format(key = key))
     pl.close()
+
+  # output the code to put into the LineCoolingData constructor
+  print "code:"
+  print code
+  # output the values to put in atom4.dat in Kenny's code (to update the
+  # reference values for the unit tests)
+  print "values omega:"
+  print values_om
+  print "values omega exponent:"
+  print values_ome
