@@ -518,6 +518,141 @@ LineCoolingData::LineCoolingData() {
     _collision_strength_exponent[NeIII][TRANSITION_3_to_4] = 0.0408073833617;
   }
 
+  const double eV_over_k =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRONVOLT) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  /// SII
+  {
+    // data from Tayal & Zatsarinny (2010), tables 1 and 3
+    // ground state: 4S3/2
+    // excited states: 2D3/2, 2D5/2, 2P1/2, 2P3/2
+    const double energy_levels[4] = {1.842, 1.845, 3.041, 3.046};
+    _inverse_statistical_weight[SII][0] = 0.25;
+    _inverse_statistical_weight[SII][1] = 0.25;
+    _inverse_statistical_weight[SII][2] = 1. / 6.;
+    _inverse_statistical_weight[SII][3] = 0.5;
+    _inverse_statistical_weight[SII][4] = 0.25;
+    // we take the sum of all contributions
+    _transition_probability[SII][TRANSITION_0_to_1] = 6.32e-4;
+    _transition_probability[SII][TRANSITION_0_to_2] = 2.20e-4;
+    _transition_probability[SII][TRANSITION_0_to_3] = 7.64e-2;
+    _transition_probability[SII][TRANSITION_0_to_4] = 1.90e-1;
+    _transition_probability[SII][TRANSITION_1_to_2] = 1.71e-7;
+    _transition_probability[SII][TRANSITION_1_to_3] = 1.47e-1;
+    _transition_probability[SII][TRANSITION_1_to_4] = 1.165e-1;
+    _transition_probability[SII][TRANSITION_2_to_3] = 7.16e-2;
+    _transition_probability[SII][TRANSITION_2_to_4] = 1.61e-1;
+    _transition_probability[SII][TRANSITION_3_to_4] = 2.43e-7;
+    _energy_difference[SII][TRANSITION_0_to_1] = energy_levels[0] * eV_over_k;
+    _energy_difference[SII][TRANSITION_0_to_2] = energy_levels[1] * eV_over_k;
+    _energy_difference[SII][TRANSITION_0_to_3] = energy_levels[2] * eV_over_k;
+    _energy_difference[SII][TRANSITION_0_to_4] = energy_levels[3] * eV_over_k;
+    _energy_difference[SII][TRANSITION_1_to_2] =
+        (energy_levels[1] - energy_levels[0]) * eV_over_k;
+    _energy_difference[SII][TRANSITION_1_to_3] =
+        (energy_levels[2] - energy_levels[0]) * eV_over_k;
+    _energy_difference[SII][TRANSITION_1_to_4] =
+        (energy_levels[3] - energy_levels[0]) * eV_over_k;
+    _energy_difference[SII][TRANSITION_2_to_3] =
+        (energy_levels[2] - energy_levels[1]) * eV_over_k;
+    _energy_difference[SII][TRANSITION_2_to_4] =
+        (energy_levels[3] - energy_levels[1]) * eV_over_k;
+    _energy_difference[SII][TRANSITION_3_to_4] =
+        (energy_levels[3] - energy_levels[2]) * eV_over_k;
+    // our own fits to the data of Tayal & Zatsarinny (2010)
+    // these fits were made with the script data/linecooling/gamma_SII.py
+    // (this script also outputs the code below)
+    // the fits are reasonable in this case
+    _collision_strength[SII][TRANSITION_0_to_1] = 2.56;
+    _collision_strength_exponent[SII][TRANSITION_0_to_1] = -0.0940407351461;
+    _collision_strength[SII][TRANSITION_0_to_2] = 3.83;
+    _collision_strength_exponent[SII][TRANSITION_0_to_2] = -0.0933764679975;
+    _collision_strength[SII][TRANSITION_0_to_3] = 0.704;
+    _collision_strength_exponent[SII][TRANSITION_0_to_3] = 0.042753148509;
+    _collision_strength[SII][TRANSITION_0_to_4] = 1.42;
+    _collision_strength_exponent[SII][TRANSITION_0_to_4] = 0.0381510814487;
+    _collision_strength[SII][TRANSITION_1_to_2] = 6.89;
+    _collision_strength_exponent[SII][TRANSITION_1_to_2] = -0.121018378151;
+    _collision_strength[SII][TRANSITION_1_to_3] = 1.47;
+    _collision_strength_exponent[SII][TRANSITION_1_to_3] = 0.0155625859981;
+    _collision_strength[SII][TRANSITION_1_to_4] = 2.39;
+    _collision_strength_exponent[SII][TRANSITION_1_to_4] = -0.0044941415539;
+    _collision_strength[SII][TRANSITION_2_to_3] = 1.78;
+    _collision_strength_exponent[SII][TRANSITION_2_to_3] = -0.0145851038874;
+    _collision_strength[SII][TRANSITION_2_to_4] = 4.06;
+    _collision_strength_exponent[SII][TRANSITION_2_to_4] = 0.00459345784943;
+    _collision_strength[SII][TRANSITION_3_to_4] = 1.8;
+    _collision_strength_exponent[SII][TRANSITION_3_to_4] = 0.0302135311733;
+  }
+
+  const double econst =
+      PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_RYDBERG_ENERGY) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  /// SIII
+  {
+    // data from Mendoza & Zeippen (1982), table 2 and 3
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    const double energy_levels[4] = {0.002708, 0.007586, 0.103157, 0.247532};
+    _inverse_statistical_weight[SIII][0] = 1.;
+    _inverse_statistical_weight[SIII][1] = 1. / 3.;
+    _inverse_statistical_weight[SIII][2] = 0.2;
+    _inverse_statistical_weight[SIII][3] = 0.2;
+    _inverse_statistical_weight[SIII][4] = 1.;
+    // we take the sum of all contributions
+    _transition_probability[SIII][TRANSITION_0_to_1] = 4.72e-4;
+    _transition_probability[SIII][TRANSITION_0_to_2] = 4.61e-8;
+    _transition_probability[SIII][TRANSITION_0_to_3] = 5.82e-6;
+    _transition_probability[SIII][TRANSITION_0_to_4] = 0.;
+    _transition_probability[SIII][TRANSITION_1_to_2] = 2.07e-3;
+    _transition_probability[SIII][TRANSITION_1_to_3] = 2.20e-2;
+    _transition_probability[SIII][TRANSITION_1_to_4] = 7.96e-1;
+    _transition_probability[SIII][TRANSITION_2_to_3] = 5.76e-2;
+    _transition_probability[SIII][TRANSITION_2_to_4] = 1.05e-2;
+    _transition_probability[SIII][TRANSITION_3_to_4] = 2.22;
+    _energy_difference[SIII][TRANSITION_0_to_1] = energy_levels[0] * econst;
+    _energy_difference[SIII][TRANSITION_0_to_2] = energy_levels[1] * econst;
+    _energy_difference[SIII][TRANSITION_0_to_3] = energy_levels[2] * econst;
+    _energy_difference[SIII][TRANSITION_0_to_4] = energy_levels[3] * econst;
+    _energy_difference[SIII][TRANSITION_1_to_2] =
+        (energy_levels[1] - energy_levels[0]) * econst;
+    _energy_difference[SIII][TRANSITION_1_to_3] =
+        (energy_levels[2] - energy_levels[0]) * econst;
+    _energy_difference[SIII][TRANSITION_1_to_4] =
+        (energy_levels[3] - energy_levels[0]) * econst;
+    _energy_difference[SIII][TRANSITION_2_to_3] =
+        (energy_levels[2] - energy_levels[1]) * econst;
+    _energy_difference[SIII][TRANSITION_2_to_4] =
+        (energy_levels[3] - energy_levels[1]) * econst;
+    _energy_difference[SIII][TRANSITION_3_to_4] =
+        (energy_levels[3] - energy_levels[2]) * econst;
+    // our own fits to the data of Tayal & Zatsarinny (2010)
+    // these fits were made with the script data/linecooling/gamma_SIII.py
+    // (this script also outputs the code below)
+    // the fits are reasonable in this case
+    _collision_strength[SIII][TRANSITION_0_to_1] = 2.26;
+    _collision_strength_exponent[SIII][TRANSITION_0_to_1] = -0.0980735715102;
+    _collision_strength[SIII][TRANSITION_0_to_2] = 1.02;
+    _collision_strength_exponent[SIII][TRANSITION_0_to_2] = 0.187197754794;
+    _collision_strength[SIII][TRANSITION_0_to_3] = 0.729;
+    _collision_strength_exponent[SIII][TRANSITION_0_to_3] = 0.0646941085028;
+    _collision_strength[SIII][TRANSITION_0_to_4] = 0.125;
+    _collision_strength_exponent[SIII][TRANSITION_0_to_4] = 0.22673505046;
+    _collision_strength[SIII][TRANSITION_1_to_2] = 5.1;
+    _collision_strength_exponent[SIII][TRANSITION_1_to_2] = 0.0383455125877;
+    _collision_strength[SIII][TRANSITION_1_to_3] = 2.17;
+    _collision_strength_exponent[SIII][TRANSITION_1_to_3] = 0.0676576085243;
+    _collision_strength[SIII][TRANSITION_1_to_4] = 0.33;
+    _collision_strength_exponent[SIII][TRANSITION_1_to_4] = 0.156636569012;
+    _collision_strength[SIII][TRANSITION_2_to_3] = 4.02;
+    _collision_strength_exponent[SIII][TRANSITION_2_to_3] = 0.0513491293562;
+    _collision_strength[SIII][TRANSITION_2_to_4] = 0.545;
+    _collision_strength_exponent[SIII][TRANSITION_2_to_4] = 0.155917865017;
+    _collision_strength[SIII][TRANSITION_3_to_4] = 1.38;
+    _collision_strength_exponent[SIII][TRANSITION_3_to_4] = 0.255995735614;
+  }
+
   /// CII
   {
     // data from Froese Fischer & Tachiev (2004), table 2
@@ -650,10 +785,6 @@ LineCoolingData::LineCoolingData() {
 
   // two level elements
 
-  const double econst =
-      PhysicalConstants::get_physical_constant(
-          PHYSICALCONSTANT_RYDBERG_ENERGY) /
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   // Blum & Pradhan (1992), table 5, first energy level
   _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
       0.00159 * econst;

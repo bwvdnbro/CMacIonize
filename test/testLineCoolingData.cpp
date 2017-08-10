@@ -85,8 +85,9 @@ int main(int argc, char **argv) {
           data.get_collision_strength_exponent(element, transition));
       assert_condition(ea_fortran[10 * i + j] ==
                        data.get_transition_probability(element, transition));
-      assert_condition(en_fortran[10 * i + j] ==
-                       data.get_energy_difference(element, transition));
+      assert_values_equal_rel(en_fortran[10 * i + j],
+                              data.get_energy_difference(element, transition),
+                              1.e-13);
     }
     for (unsigned char j = 0; j < 5; ++j) {
       const LineCoolingDataFiveLevelElement element =

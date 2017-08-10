@@ -47,7 +47,7 @@ enum LineCoolingDataFiveLevelElement {
   /*! @brief Neon III. */
   NeIII, // done
   /*! @brief Sulphur II. */
-  SII,
+  SII, // done
   /*! @brief Sulphur III. */
   SIII,
   /*! @brief Carbon II. */
@@ -171,6 +171,12 @@ enum LineCoolingDataTransition {
  *    (http://adsabs.harvard.edu/abs/2008A%26A...486..629T)
  *  - Berrington, K. A., Burke, P. G., Dufton, P. L. & Kingston, A. E. 1985,
  *    ADNDT, 33, 195 (http://adsabs.harvard.edu/abs/1985ADNDT..33..195B)
+ *  - Tayal, S. S. & Zatsarinny, O. 2010, ApJS, 188, 32
+ *    (http://adsabs.harvard.edu/abs/2010ApJS..188...32T)
+ *  - Mendoza, C. & Zeippen, C. J. 1982, MNRAS, 199, 1025
+ *    (http://adsabs.harvard.edu/abs/1982MNRAS.199.1025M)
+ *  - Hudson, C. E., Ramsbottom, C. A. & Scott, M. P. 2012, ApJ, 750, 65
+ *    (http://adsabs.harvard.edu/abs/2012ApJ...750...65H)
  */
 class LineCoolingData {
 private:
