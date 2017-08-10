@@ -19,11 +19,11 @@
 ################################################################################
 
 ##
-# @file gamma_OII.py
+# @file gamma_CII.py
 #
 # @brief Script that fits curves to the velocity-averaged collision strength
-# data from Kisielius, R., Storey, P. J., Ferland, G. J. & Keenan, F. P. 2009,
-# MNRAS, 397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K).
+# data from Tayal, S. S. 2008, A&A, 486, 629
+# (http://adsabs.harvard.edu/abs/2008A%26A...486..629T).
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
@@ -68,50 +68,39 @@ def fitting_curve(T, A):
 if __name__ == "__main__":
   data = {}
 
-  # data from Kisielius et al. (2009), table 3
-  T = np.array([100., 150., 200., 300., 500., 750., 1000., 1500., 2000., 3000.,
-                5000., 7500., 10000., 15000., 20000., 30000., 50000., 75000.,
-                100000.])
-  # 4S3/2 to 2D5/2
-  data["G0t1"] = np.array([0.796, 0.797, 0.798, 0.801, 0.808, 0.817, 0.823,
-                           0.830, 0.832, 0.832, 0.831, 0.833, 0.834, 0.839,
-                           0.844, 0.856, 0.881, 0.905, 0.919])
-  # 4S3/2 to 2D3/2
-  data["G0t2"] = np.array([0.531, 0.533, 0.533, 0.535, 0.540, 0.546, 0.550,
-                           0.554, 0.555, 0.554, 0.553, 0.553, 0.554, 0.557,
-                           0.561, 0.569, 0.585, 0.601, 0.611])
-  # 2D5/2 to 2D3/2
-  data["G1t2"] = np.array([1.095, 1.086, 1.078, 1.072, 1.097, 1.151, 1.194,
-                           1.239, 1.254, 1.256, 1.241, 1.221, 1.203, 1.183,
-                           1.179, 1.193, 1.229, 1.257, 1.270])
-  # 2P3/2 to 2P1/2
-  data["G3t4"] = np.array([0.273, 0.274, 0.274, 0.274, 0.274, 0.275, 0.275,
-                           0.276, 0.276, 0.277, 0.279, 0.282, 0.285, 0.294,
-                           0.305, 0.327, 0.361, 0.388, 0.405])
-  # 4S3/2 to 2P3/2
-  data["G0t3"] = np.array([0.244, 0.245, 0.245, 0.245, 0.245, 0.246, 0.246,
-                           0.247, 0.247, 0.249, 0.251, 0.253, 0.256, 0.260,
-                           0.265, 0.274, 0.290, 0.304, 0.312])
-  # 4S3/2 to 2P1/2
-  data["G0t4"] = np.array([0.126, 0.126, 0.126, 0.126, 0.127, 0.127, 0.127,
-                           0.127, 0.128, 0.128, 0.129, 0.131, 0.132, 0.134,
-                           0.136, 0.141, 0.149, 0.155, 0.159])
-  # 2D5/2 to 2P3/2
-  data["G1t3"] = np.array([0.791, 0.793, 0.793, 0.794, 0.796, 0.797, 0.799,
-                           0.801, 0.804, 0.809, 0.820, 0.834, 0.851, 0.891,
-                           0.930, 0.997, 1.084, 1.144, 1.178])
-  # 2D5/2 to 2P1/2
-  data["G1t4"] = np.array([0.315, 0.316, 0.316, 0.316, 0.317, 0.318, 0.318,
-                           0.319, 0.320, 0.322, 0.326, 0.332, 0.339, 0.356,
-                           0.371, 0.396, 0.427, 0.447, 0.458])
-  # 2D3/2 to 2P3/2
-  data["G2t3"] = np.array([0.439, 0.440, 0.440, 0.440, 0.441, 0.442, 0.443,
-                           0.444, 0.445, 0.448, 0.454, 0.462, 0.472, 0.494,
-                           0.516, 0.551, 0.595, 0.624, 0.639])
-  # 2D3/2 to 2P1/2
-  data["G2t4"] = np.array([0.308, 0.308, 0.309, 0.309, 0.310, 0.310, 0.311,
-                           0.312, 0.313, 0.315, 0.319, 0.324, 0.331, 0.345,
-                           0.360, 0.386, 0.421, 0.445, 0.459])
+  # data from Tayal (2008), table 5
+  T = np.array([1000., 2000., 3000., 5000., 10000., 20000., 30000., 50000.,
+                100000., 200000., 400000.])
+  # 2P1/2 to 2P3/2
+  data["G0t1"] = np.array([1.551, 1.579, 1.621, 1.744, 2.028, 2.200, 2.193,
+                           2.102, 1.874, 1.586, 1.298])
+  # 2P1/2 to 4P1/2
+  data["G0t2"] = np.array([0.229, 0.253, 0.259, 0.260, 0.261, 0.262, 0.259,
+                           0.246, 0.218, 0.185, 0.150])
+  # 2P3/2 to 4P1/2
+  data["G1t2"] = np.array([0.126, 0.158, 0.167, 0.173, 0.181, 0.188, 0.188,
+                           0.179, 0.158, 0.132, 0.107])
+  # 4P3/2 to 4P5/2
+  data["G3t4"] = np.array([1.565, 1.575, 1.592, 1.658, 1.926, 2.300, 2.439,
+                           2.496, 2.443, 2.328, 2.146])
+  # 2P1/2 to 4P3/2
+  data["G0t3"] = np.array([0.379, 0.392, 0.394, 0.392, 0.392, 0.394, 0.389,
+                           0.370, 0.326, 0.275, 0.221])
+  # 2P1/2 to 4P5/2
+  data["G0t4"] = np.array([0.242, 0.242, 0.242, 0.242, 0.247, 0.255, 0.253,
+                           0.241, 0.210, 0.175, 0.141])
+  # 2P3/2 to 4P3/2
+  data["G1t3"] = np.array([0.401, 0.462, 0.479, 0.489, 0.501, 0.513, 0.509,
+                           0.486, 0.428, 0.359, 0.289])
+  # 2P3/2 to 4P5/2
+  data["G1t4"] = np.array([1.138, 1.136, 1.131, 1.117, 1.111, 1.114, 1.098,
+                           1.043, 0.919, 0.774, 0.629])
+  # 4P1/2 to 4P3/2
+  data["G2t3"] = np.array([0.574, 0.627, 0.643, 0.672, 0.792, 0.984, 1.073,
+                           1.128, 1.118, 1.048, 0.919])
+  # 4P1/2 to 4P5/2
+  data["G2t4"] = np.array([0.660, 0.672, 0.685, 0.722, 0.836, 0.969, 1.005,
+                           1.007, 0.975, 0.944, 0.911])
 
   # initialize the strings for code and value output
   code = ""
@@ -121,7 +110,7 @@ if __name__ == "__main__":
   for key in sorted(data):
     # we force the curve to go through the value at 10,000 K using a global
     # variable
-    norm = data[key][12]
+    norm = data[key][4]
     # we start by fitting to the full data set
     imin = 0
     imax = len(T)
@@ -146,10 +135,10 @@ if __name__ == "__main__":
     print "convergence:", xi2
     print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
-    code += "_collision_strength[OII][{transition}] = {value};\n".format(
+    code += "_collision_strength[CII][{transition}] = {value};\n".format(
       transition = transitions[key], value = norm)
     code += \
-      "_collision_strength_exponent[OII][{transition}] = {value};\n".format(
+      "_collision_strength_exponent[CII][{transition}] = {value};\n".format(
         transition = transitions[key], value = A[0])
     # add the values to the list strings
     values_om += "{value},".format(value = norm)
@@ -160,7 +149,7 @@ if __name__ == "__main__":
     pl.plot(T, data[key], "k.")
     pl.plot(Trange, fitting_curve(Trange, *A), "r-")
     pl.xlim(0., 1.e5)
-    pl.savefig("tmp/OII_{key}.png".format(key = key))
+    pl.savefig("tmp/CII_{key}.png".format(key = key))
     pl.close()
 
   # output the code to put into the LineCoolingData constructor

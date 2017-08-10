@@ -51,9 +51,9 @@ enum LineCoolingDataFiveLevelElement {
   /*! @brief Sulphur III. */
   SIII,
   /*! @brief Carbon II. */
-  CII,
+  CII, // done
   /*! @brief Carbon III. */
-  CIII,
+  CIII, // done
   /*! @brief Counter. Should always be the last element! */
   LINECOOLINGDATA_NUMFIVELEVELELEMENTS
 };
@@ -167,6 +167,10 @@ enum LineCoolingDataTransition {
  *    (http://adsabs.harvard.edu/abs/2000ADNDT..76..191T)
  *  - Kisielius, R., Storey, P. J., Ferland, G. J. & Keenan, F. P. 2009, MNRAS,
  *    397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K)
+ *  - Tayal, S. S. 2008, A&A, 486, 629
+ *    (http://adsabs.harvard.edu/abs/2008A%26A...486..629T)
+ *  - Berrington, K. A., Burke, P. G., Dufton, P. L. & Kingston, A. E. 1985,
+ *    ADNDT, 33, 195 (http://adsabs.harvard.edu/abs/1985ADNDT..33..195B)
  */
 class LineCoolingData {
 private:
