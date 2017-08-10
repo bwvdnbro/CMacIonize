@@ -129,7 +129,7 @@ if __name__ == "__main__":
     print "Gamma:", norm
     print "exponent:", A
     print "convergence:", xi2
-    print "validity: [", T[imin], ",", T[imax], "]"
+    print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
     code += "_collision_strength[OIII][{transition}] = {value};\n".format(
       transition = transitions[key], value = norm)

@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
           abundances);
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_ENERGY_RATE >(cool, "erg s^-1"),
-          coolf, 1.e-15);
+          coolf, 1.e-14);
     }
   }
 

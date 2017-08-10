@@ -19,11 +19,11 @@
 ################################################################################
 
 ##
-# @file gamma_NII.py
+# @file gamma_NeIII.py
 #
 # @brief Script that fits curves to the velocity-averaged collision strength
-# data from Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
-# (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L).
+# data from Butler, K. & Zeippen, C. J. 1994, A&AS, 108, 1
+# (http://adsabs.harvard.edu/abs/1994A%26AS..108....1B).
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
@@ -62,41 +62,45 @@ def fitting_curve(T, A):
   T4 = T * 1.e-4
   return norm * T4**A
 
-# main function: computes fits to the data of Lennon & Burke (1994) and plots
-# the data and fits for visual comparison
+# main function: computes fits to the data and plots the data and fits for
+# visual comparison
 # the fitted curve coefficients are printed to the stdout
 if __name__ == "__main__":
   data = {}
 
-  # data from Lennon & Burke (1994), table 2
+  # data from Butler & Zeippen (1994), table 2
   logT = np.array([3., 3.2, 3.4, 3.6, 3.8, 4., 4.2, 4.4, 4.6, 4.8, 5.])
   T = 10.**logT
-  # 3P0 to 3P1
-  data["G0t1"] = np.array([0.3336, 0.3333, 0.3394, 0.3581, 0.3837, 0.4076,
-                           0.4293, 0.4566, 0.491, 0.5238, 0.5499])
-  # 3P0 to 3P2
-  data["G0t2"] = np.array([0.2142, 0.2194, 0.2256, 0.2351, 0.2499, 0.272,
-                           0.3012, 0.3316, 0.3542, 0.3572, 0.3494])
-  # 3P1 to 3P2
-  data["G1t2"] = np.array([0.8978, 0.9092, 0.9307, 0.9753, 1.041, 1.12, 1.213,
-                           1.316,  1.405, 1.458, 1.473])
-  # 3P? to 1D2
-  GPtD = np.array([2.4841, 2.4963, 2.5163, 2.5469, 2.5884, 2.6409, 2.7,
-                   2.7663, 2.8444, 2.9235, 2.9668])
-  # 3P? to 1S0
-  GPtS = np.array([0.2813, 0.2821, 0.2833, 0.2853, 0.2884, 0.2931,
-                   0.2999, 0.3099, 0.324, 0.3396, 0.3524])
+  # 3P2 to 3P1
+  data["G0t1"] = np.array([0.481, 0.545, 0.634, 0.708, 0.752, 0.774, 0.778,
+                           0.771, 0.764, 0.773, 0.794])
+  # 3P2 to 3P0
+  data["G0t2"] = np.array([0.128, 0.149, 0.174, 0.194, 0.204, 0.208, 0.208,
+                           0.205, 0.203, 0.205, 0.211])
+  # 3P1 to 3P0
+  data["G1t2"] = np.array([0.154, 0.168, 0.194, 0.218, 0.235, 0.244, 0.247,
+                           0.247, 0.246, 0.249, 0.256])
   # 1D2 to 1S0
-  data["G3t4"] = np.array([1.164, 1.126, 1.071, 0.9998, 0.9176, 0.8338, 0.7605,
-                           0.7097, 0.6825, 0.6686, 0.6571])
-
-  # formula (1) in Lennon & Burke (1994)
-  data["G0t3"] = GPtD/9.
-  data["G0t4"] = GPtS/9.
-  data["G1t3"] = GPtD/3.
-  data["G1t4"] = GPtS/3.
-  data["G2t3"] = 5.*GPtD/9.
-  data["G2t4"] = 5.*GPtS/9.
+  data["G3t4"] = np.array([0.266, 0.266, 0.266, 0.266, 0.267, 0.269, 0.277,
+                           0.292, 0.31, 0.325, 0.333])
+  # 3P2 to 1D2
+  data["G0t3"] = np.array([0.749, 0.765, 0.771, 0.767, 0.76, 0.754, 0.749,
+                           0.746, 0.749, 0.763, 0.782])
+  # 3P2 to 1S0
+  data["G0t4"] = np.array([0.083, 0.083, 0.083, 0.083, 0.084, 0.084, 0.084,
+                           0.086, 0.09, 0.095, 0.1])
+  # 3P1 to 1D2
+  data["G1t3"] = np.array([0.45, 0.459, 0.462, 0.46, 0.456, 0.452, 0.449,
+                           0.448, 0.449, 0.458, 0.469])
+  # 3P1 to 1S0
+  data["G1t4"] = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.051,
+                           0.054, 0.057, 0.06])
+  # 3P0 to 1D2
+  data["G2t3"] = np.array([0.15, 0.153, 0.154, 0.153, 0.152, 0.151, 0.15,
+                           0.149, 0.15, 0.153, 0.156])
+  # 3P0 to 1S0
+  data["G2t4"] = np.array([0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017,
+                           0.017, 0.018, 0.019, 0.02])
 
   # initialize the strings for code and value output
   code = ""
@@ -131,10 +135,10 @@ if __name__ == "__main__":
     print "convergence:", xi2
     print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
-    code += "_collision_strength[NII][{transition}] = {value};\n".format(
+    code += "_collision_strength[NeIII][{transition}] = {value};\n".format(
       transition = transitions[key], value = norm)
     code += \
-      "_collision_strength_exponent[NII][{transition}] = {value};\n".format(
+      "_collision_strength_exponent[NeIII][{transition}] = {value};\n".format(
         transition = transitions[key], value = A[0])
     # add the values to the list strings
     values_om += "{value},".format(value = norm)
@@ -144,7 +148,7 @@ if __name__ == "__main__":
     Trange = np.logspace(3., 5., 100)
     pl.plot(T, data[key], "k.")
     pl.plot(Trange, fitting_curve(Trange, *A), "r-")
-    pl.savefig("tmp/NII_{key}.png".format(key = key))
+    pl.savefig("tmp/NeIII_{key}.png".format(key = key))
     pl.close()
 
   # output the code to put into the LineCoolingData constructor

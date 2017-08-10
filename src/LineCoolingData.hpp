@@ -35,17 +35,17 @@
  */
 enum LineCoolingDataFiveLevelElement {
   /*! @brief Nitrogen I. */
-  NI = 0,
+  NI = 0, // done
   /*! @brief Nitrogen II. */
-  NII,
+  NII, // done
   /*! @brief Oxygen I. */
-  OI,
+  OI, // done
   /*! @brief Oxygen II. */
-  OII,
+  OII, // done
   /*! @brief Oxygen III. */
-  OIII,
+  OIII, // done
   /*! @brief Neon III. */
-  NEIII,
+  NeIII, // done
   /*! @brief Sulphur II. */
   SII,
   /*! @brief Sulphur III. */
@@ -149,12 +149,24 @@ enum LineCoolingDataTransition {
  *    (http://adsabs.harvard.edu/abs/1994A%26AS..107...29S)
  *  - Kaufman, V. & Sugar, J. 1986, JPCRD, 15, 321
  *    (http://adsabs.harvard.edu/abs/1986JPCRD..15..321K)
- *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPB, 34, 4401
+ *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPhB, 34, 4401
  *    (http://adsabs.harvard.edu/abs/2001JPhB...34.4401G)
  *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1997, A&AS, 123, 159
  *    (http://adsabs.harvard.edu/abs/1997A%26AS..123..159G)
  *  - Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
  *    (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L)
+ *  - Butler, K. & Zeippen, C. J. 1994, A&AS, 108, 1
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..108....1B)
+ *  - Zatsarinny, O. & Tayal, S. S. 2003, ApJS, 148, 575
+ *    (http://adsabs.harvard.edu/abs/2003ApJS..148..575Z)
+ *  - Berrington, K. A. 1988, JPhB, 21, 1083
+ *    (http://adsabs.harvard.edu/abs/1988JPhB...21.1083B)
+ *  - Froese Fischer, C. & Tachiev, G. 2004, ADNDT, 87, 1
+ *    (http://adsabs.harvard.edu/abs/2004ADNDT..87....1F)
+ *  - Tayal, S. S. 2000, ADNDT, 76, 191
+ *    (http://adsabs.harvard.edu/abs/2000ADNDT..76..191T)
+ *  - Kisielius, R., Storey, P. J., Ferland, G. J. & Keenan, F. P. 2009, MNRAS,
+ *    397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K)
  */
 class LineCoolingData {
 private:
