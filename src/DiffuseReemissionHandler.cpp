@@ -54,90 +54,136 @@ double DiffuseReemissionHandler::reemit(
     RandomGenerator &random_generator, PhotonType &type) const {
 
   double new_frequency = 0.;
-  double pHabs =
-      1. / (1. +
-            ionization_variables.get_ionic_fraction(ION_He_n) *
-                helium_abundance * photon.get_cross_section(ION_He_n) /
-                ionization_variables.get_ionic_fraction(ION_H_n) /
-                photon.get_cross_section(ION_H_n));
+
+  // Wood, Mathis & Ercolano (2004), section 3.3
+
+  // determine whether the photon is absorbed by hydrogen or by helium
+  const double nH0anuH0 = ionization_variables.get_ionic_fraction(ION_H_n) *
+                          photon.get_cross_section(ION_H_n);
+  const double nHe0anuHe0 = ionization_variables.get_ionic_fraction(ION_He_n) *
+                            helium_abundance *
+                            photon.get_cross_section(ION_He_n);
+  const double pHabs = nH0anuH0 / (nH0anuH0 + nHe0anuHe0);
 
   double x = random_generator.get_uniform_random_double();
   if (x <= pHabs) {
-    // photon absorbed by hydrogen
+
+    // photon absorbed by hydrogen:
+    // determine whether or not to reemit as a hydrogen Lyman continuum photon
     x = random_generator.get_uniform_random_double();
     if (x <= ionization_variables.get_reemission_probability(
                  REEMISSIONPROBABILITY_HYDROGEN)) {
-      // sample new frequency from H Ly c
+
+      // sample new frequency from hydrogen Lyman continuum
       new_frequency = _HLyc_spectrum.get_random_frequency(
           random_generator, ionization_variables.get_temperature());
       type = PHOTONTYPE_DIFFUSE_HI;
+
     } else {
+
       // photon absorbed
       type = PHOTONTYPE_ABSORBED;
     }
+
   } else {
-    // photon absorbed by helium
+
+    // photon absorbed by helium: determine a reemission channel
+    // possible channels are:
+    //  - He I Lyman continuum
+    //  - 2^3S to 1^1S line emission at 19.8 eV
+    //  - He I two-photon continuum
+    //  - He I Lyman alpha photon
+
     x = random_generator.get_uniform_random_double();
     if (x <= ionization_variables.get_reemission_probability(
                  REEMISSIONPROBABILITY_HELIUM_LYC)) {
+
       // sample new frequency from He Ly c
       new_frequency = _HeLyc_spectrum.get_random_frequency(
           random_generator, ionization_variables.get_temperature());
       type = PHOTONTYPE_DIFFUSE_HeI;
+
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_NPEEV)) {
+
       // new frequency is 19.8eV
       new_frequency = 4.788e15;
       type = PHOTONTYPE_DIFFUSE_HeI;
+
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_TPC)) {
+
+      // two photons are emitted; a fraction of 28% of these photons has an
+      // energy high enough to ionize hydrogen (and since there are two, the
+      // probability is 56%)
       x = random_generator.get_uniform_random_double();
       if (x < 0.56) {
+
         // sample new frequency from H-ionizing part of He 2-photon continuum
         new_frequency = _He2pc_spectrum.get_random_frequency(
             random_generator, ionization_variables.get_temperature());
         type = PHOTONTYPE_DIFFUSE_HeI;
+
       } else {
+
         // photon absorbed
         type = PHOTONTYPE_ABSORBED;
       }
+
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_LYA)) {
-      // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
-      // 2-photon continuum
+
+      // helium Lyman alpha, is either absorbed on the spot, or converted to
+      // helium two-photon emission
+
+      // we precompute this factor to limit the number of divisions
+      const double sqrtTnH0 =
+          std::sqrt(ionization_variables.get_temperature()) *
+          ionization_variables.get_ionic_fraction(ION_H_n);
       double pHots =
-          1. / (1. +
-                77. * ionization_variables.get_ionic_fraction(ION_He_n) /
-                    sqrt(ionization_variables.get_temperature()) /
-                    ionization_variables.get_ionic_fraction(ION_H_n));
+          sqrtTnH0 /
+          (sqrtTnH0 + 77. * ionization_variables.get_ionic_fraction(ION_He_n));
       x = random_generator.get_uniform_random_double();
       if (x < pHots) {
-        // absorbed on the spot
+
+        // absorbed on the spot (by hydrogen)
+        // determine whether or not to reemit as hydrogen Lyman continuum
+        // radiation
         x = random_generator.get_uniform_random_double();
         if (x <= ionization_variables.get_reemission_probability(
                      REEMISSIONPROBABILITY_HYDROGEN)) {
-          // H Ly c, like above
+
+          // hydrogen Lyman continuum, like above
           new_frequency = _HLyc_spectrum.get_random_frequency(
               random_generator, ionization_variables.get_temperature());
           type = PHOTONTYPE_DIFFUSE_HI;
+
         } else {
+
           // photon absorbed
           type = PHOTONTYPE_ABSORBED;
         }
+
       } else {
-        // He 2-photon continuum
+
+        // helium two-photon continuum
         x = random_generator.get_uniform_random_double();
         if (x < 0.56) {
+
           // sample like above
           new_frequency =
               _He2pc_spectrum.get_random_frequency(random_generator);
           type = PHOTONTYPE_DIFFUSE_HeI;
+
         } else {
+
           // photon absorbed
           type = PHOTONTYPE_ABSORBED;
         }
       }
+
     } else {
+
       // photon absorbed
       // this code should never be called, as the total probabilities sum to 1
       type = PHOTONTYPE_ABSORBED;

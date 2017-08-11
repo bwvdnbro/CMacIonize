@@ -33,6 +33,12 @@
 
 /**
  * @brief ReemissionHandler for diffuse reemission.
+ *
+ * We use data from Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of
+ * Gaseous Nebulae and Active Galactic Nuclei, 2nd edition
+ * (http://adsabs.harvard.edu/abs/2006agna.book.....O) and the fitting formula
+ * from Wood, K., Mathis, J. S. & Ercolano, B. 2004, MNRAS, 348, 1337
+ * (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W).
  */
 class DiffuseReemissionHandler {
 private:
@@ -60,14 +66,18 @@ public:
 
     /// hydrogen
 
-    // reemission probabilities
+    // Wood, Mathis & Ercolano (2004), sections 3.3 and 7
+    // equation (24)
     const double alpha_1_H = 1.58e-13 * std::pow(T4, -0.53);
+    // fit to table 2.1 in Osterbrock & Ferland (2006)
     const double alpha_A_agn = 4.18e-13 * std::pow(T4, -0.7);
     ionization_variables.set_reemission_probability(
         REEMISSIONPROBABILITY_HYDROGEN, alpha_1_H / alpha_A_agn);
 
     /// helium
 
+    // Wood, Mathis & Ercolano (2004), sections 3.3 and 7
+    // equation (25)
     const double alpha_1_He = 1.54e-13 * std::pow(T4, -0.486);
     const double alpha_e_2tS = 2.1e-13 * std::pow(T4, -0.381);
     const double alpha_e_2sS = 2.06e-14 * std::pow(T4, -0.451);
@@ -75,11 +85,11 @@ public:
     // We make sure the sum of all probabilities is 1...
     const double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
 
+    // we make sure the rates are cumulative
     const double He_LyC = alpha_1_He / alphaHe;
     const double He_NpEEv = He_LyC + alpha_e_2tS / alphaHe;
     const double He_TPC = He_NpEEv + alpha_e_2sS / alphaHe;
     const double He_LyA = He_TPC + alpha_e_2sP / alphaHe;
-    // make cumulative
     ionization_variables.set_reemission_probability(
         REEMISSIONPROBABILITY_HELIUM_LYC, He_LyC);
     ionization_variables.set_reemission_probability(
@@ -91,7 +101,7 @@ public:
   }
 
   /**
-   * @brief Set the reemission probabilities for the cell in the given grid.
+   * @brief Set the reemission probabilities for the cells in the given grid.
    *
    * @param grid DensityGrid.
    */

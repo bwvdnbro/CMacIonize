@@ -79,7 +79,7 @@ void IonizationStateCalculator::calculate_ionization_state(
     const double alphaHe =
         _recombination_rates.get_recombination_rate(ION_He_n, T);
     // h0find
-    double h0, he0;
+    double h0, he0 = 0.;
     if (_abundances.get_abundance(ELEMENT_He) != 0.) {
       find_H0(alphaH, alphaHe, jH, jHe, ntot,
               _abundances.get_abundance(ELEMENT_He), T, h0, he0);
