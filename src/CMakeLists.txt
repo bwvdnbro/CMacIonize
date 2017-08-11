@@ -94,6 +94,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     DensityGrid.cpp
+    DiffuseReemissionHandler.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp

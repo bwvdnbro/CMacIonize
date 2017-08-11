@@ -37,6 +37,7 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "DustSimulation.hpp"
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
@@ -477,6 +478,7 @@ int main(int argc, char **argv) {
       }
 
       grid->reset_grid(*density_function);
+      DiffuseReemissionHandler::set_reemission_probabilities(*grid);
       if (log) {
         log->write_status("Start shooting ", lnumphoton, " photons...");
       }

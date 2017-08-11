@@ -28,6 +28,7 @@
 
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -106,6 +107,9 @@ private:
 
   /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
   HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
+
+  /*! @brief ReemissionHandler for diffuse reemission. */
+  const DiffuseReemissionHandler _reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
