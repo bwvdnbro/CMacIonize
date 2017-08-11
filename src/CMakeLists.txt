@@ -19,14 +19,6 @@
 # Rules for files that need to be configured.
 message(STATUS "Configuring external data files...")
 
-# LineCoolingDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/atom4.dat
-               ${PROJECT_BINARY_DIR}/data/atom4.dat COPYONLY)
-set(LINECOOLINGDATALOCATION ${PROJECT_BINARY_DIR}/data/atom4.dat)
-message(STATUS "LineCoolingDataLocation.hpp: ${LINECOOLINGDATALOCATION}")
-configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
-               ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
-
 # VernerCrossSectionsDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/verner_A.dat
                ${PROJECT_BINARY_DIR}/data/verner_A.dat COPYONLY)
@@ -191,7 +183,6 @@ set(CMACIONIZE_SOURCES
     IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
     LineCoolingData.hpp
-    LineCoolingDataLocation.hpp.in
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp

@@ -34,127 +34,46 @@
 #include <sstream>
 
 /**
- * @brief Read a given number of values from the given string into the given
- * array.
- *
- * @param line string containing comma separated values.
- * @param array Pointer to a double array of at least the given size which will
- * be filled with values.
- * @param size Number of values to read.
- * @return True if the read was successful, false otherwise.
- */
-bool LineCoolingData::read_values(std::string line, double *array,
-                                  unsigned int size) {
-  int start, end;
-  unsigned int index;
-  start = 0;
-  end = line.find(',', start);
-  index = 0;
-  while (end > 0 && index < size) {
-    array[index] = atof(line.substr(start, end - start).c_str());
-    start = end + 1;
-    end = line.find(',', start);
-    ++index;
-  }
-  if (end < 0) {
-    // try to extract a value from the remainder of the string
-    array[index] = atof(line.substr(start, end - start).c_str());
-    ++index;
-  }
-  // if index == size, we know we were able to read size values
-  // if not, we failed to fill the array and we return false
-  return (index == size);
-}
-
-/**
  * @brief Constructor.
  *
- * Reads the data file and stores the necessary quantities in internal arrays.
+ * Initializes the data values.
  */
 LineCoolingData::LineCoolingData() {
 
-  // five level elements
+  /// some energy conversion constants (for energy differences)
 
-  std::ifstream file(LINECOOLINGDATALOCATION);
-  std::string line;
+  // conversion factor from cm^-1 to K
+  const double hc_over_k =
+      100. * PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK) *
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
-  // there are 10 groups of 5 rows
-  for (unsigned int i = 0; i < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++i) {
+  // conversion factor from eV to K
+  const double eV_over_k =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRONVOLT) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
-    // the first row holds energy level information (in cm^-1)
-    std::getline(file, line);
-    double enlev[5];
-    read_values(line, enlev, 5);
-    // convert from cm^-1 to K and compute energy differences for the
-    // transitions
-    _energy_difference[i][TRANSITION_0_to_1] = enlev[1] * 1.439;
-    _energy_difference[i][TRANSITION_0_to_2] = enlev[2] * 1.439;
-    _energy_difference[i][TRANSITION_0_to_3] = enlev[3] * 1.439;
-    _energy_difference[i][TRANSITION_0_to_4] = enlev[4] * 1.439;
-    _energy_difference[i][TRANSITION_1_to_2] = (enlev[2] - enlev[1]) * 1.439;
-    _energy_difference[i][TRANSITION_1_to_3] = (enlev[3] - enlev[1]) * 1.439;
-    _energy_difference[i][TRANSITION_1_to_4] = (enlev[4] - enlev[1]) * 1.439;
-    _energy_difference[i][TRANSITION_2_to_3] = (enlev[3] - enlev[2]) * 1.439;
-    _energy_difference[i][TRANSITION_2_to_4] = (enlev[4] - enlev[2]) * 1.439;
-    _energy_difference[i][TRANSITION_3_to_4] = (enlev[4] - enlev[3]) * 1.439;
+  // conversion factor from Ry to K
+  const double Ry_over_k =
+      PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_RYDBERG_ENERGY) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
-    // the second row contains the transition probabilities for deexcitation
-    // between different levels (in s^-1)
-    getline(file, line);
-    read_values(line, _transition_probability[i], NUMBER_OF_TRANSITIONS);
-
-    // the third row contains the velocity-averaged collision strengths (at
-    // 10,000 K)
-    getline(file, line);
-    read_values(line, _collision_strength[i], NUMBER_OF_TRANSITIONS);
-
-    // the fourth row contains exponents for the temperature variation of the
-    // collision strengths
-    getline(file, line);
-    read_values(line, _collision_strength_exponent[i], NUMBER_OF_TRANSITIONS);
-
-    // the fifth row contains the statistical weights of the different levels
-    getline(file, line);
-    read_values(line, _inverse_statistical_weight[i], 5);
-    // invert the sw values, since they are only used in divisions
-    for (unsigned char j = 0; j < 5; ++j) {
-      _inverse_statistical_weight[i][j] =
-          1. / _inverse_statistical_weight[i][j];
-    }
-  }
-
-  // we can only change to the correct conversion factor once all energy values
-  // have been updated in the old code, so that we can change it in the old code
-  // as well...
-  // conversion factor from cm^-1 to K (for energy differences)
-  //  const double hc_over_k = 100. *
-  //  PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK)
-  //      *PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED)/
-  //      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
-  const double hc_over_k = 1.439;
+  /// five level elements
 
   /// NI
   {
     // data from Froese Fischer & Tachiev (2004), table 4
     // ground state: 4S3/2
     // excited states: 2D5/2, 2D3/2, 2P1/2, 2P3/2
+    // in cm^-1
     const double energy_levels[4] = {19224.37, 19233.09, 28839.05, 28839.07};
     _inverse_statistical_weight[NI][0] = 0.25;
     _inverse_statistical_weight[NI][1] = 1. / 6.;
     _inverse_statistical_weight[NI][2] = 0.25;
     _inverse_statistical_weight[NI][3] = 0.5;
     _inverse_statistical_weight[NI][4] = 0.25;
-    // we take the sum of all transition probabilities
-    _transition_probability[NI][TRANSITION_0_to_1] = 7.566e-6;
-    _transition_probability[NI][TRANSITION_0_to_2] = 2.029e-5;
-    _transition_probability[NI][TRANSITION_0_to_3] = 2.605e-3;
-    _transition_probability[NI][TRANSITION_0_to_4] = 6.504e-3;
-    _transition_probability[NI][TRANSITION_1_to_2] = 1.071e-8;
-    _transition_probability[NI][TRANSITION_1_to_3] = 3.447e-2;
-    _transition_probability[NI][TRANSITION_1_to_4] = 6.135e-2;
-    _transition_probability[NI][TRANSITION_2_to_3] = 5.272e-2;
-    _transition_probability[NI][TRANSITION_2_to_4] = 2.745e-2;
-    _transition_probability[NI][TRANSITION_3_to_4] = 9.504e-17;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[NI][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[NI][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[NI][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -171,6 +90,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[NI][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // we take the sum of all transition probabilities (in s^-1)
+    _transition_probability[NI][TRANSITION_0_to_1] = 7.566e-6;
+    _transition_probability[NI][TRANSITION_0_to_2] = 2.029e-5;
+    _transition_probability[NI][TRANSITION_0_to_3] = 2.605e-3;
+    _transition_probability[NI][TRANSITION_0_to_4] = 6.504e-3;
+    _transition_probability[NI][TRANSITION_1_to_2] = 1.071e-8;
+    _transition_probability[NI][TRANSITION_1_to_3] = 3.447e-2;
+    _transition_probability[NI][TRANSITION_1_to_4] = 6.135e-2;
+    _transition_probability[NI][TRANSITION_2_to_3] = 5.272e-2;
+    _transition_probability[NI][TRANSITION_2_to_4] = 2.745e-2;
+    _transition_probability[NI][TRANSITION_3_to_4] = 9.504e-17;
     // our own fits to the data of Tayal (2000)
     // these fits were made with the script data/linecooling/gamma_NI.py
     // (this script also outputs the code below)
@@ -202,22 +132,14 @@ LineCoolingData::LineCoolingData() {
     // data from Galavis, Mendoza & Zeippen (1997), tables 4 and 5
     // ground state: 3P0
     // excited states: 3P1, 3P2, 1D2, 1S0
+    // in cm^-1
     const double energy_levels[4] = {48.7, 130.8, 15316.3, 32688.9};
     _inverse_statistical_weight[NII][0] = 1.;
     _inverse_statistical_weight[NII][1] = 1. / 3.;
     _inverse_statistical_weight[NII][2] = 0.2;
     _inverse_statistical_weight[NII][3] = 0.2;
     _inverse_statistical_weight[NII][4] = 1.;
-    _transition_probability[NII][TRANSITION_0_to_1] = 2.077e-6;
-    _transition_probability[NII][TRANSITION_0_to_2] = 1.127e-12;
-    _transition_probability[NII][TRANSITION_0_to_3] = 3.554e-7;
-    _transition_probability[NII][TRANSITION_0_to_4] = 0.;
-    _transition_probability[NII][TRANSITION_1_to_2] = 7.463e-6;
-    _transition_probability[NII][TRANSITION_1_to_3] = 1.016e-3;
-    _transition_probability[NII][TRANSITION_1_to_4] = 3.297e-2;
-    _transition_probability[NII][TRANSITION_2_to_3] = 3.005e-3;
-    _transition_probability[NII][TRANSITION_2_to_4] = 1.315e-4;
-    _transition_probability[NII][TRANSITION_3_to_4] = 1.023;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[NII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[NII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[NII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -234,6 +156,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[NII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // in s^-1
+    _transition_probability[NII][TRANSITION_0_to_1] = 2.077e-6;
+    _transition_probability[NII][TRANSITION_0_to_2] = 1.127e-12;
+    _transition_probability[NII][TRANSITION_0_to_3] = 3.554e-7;
+    _transition_probability[NII][TRANSITION_0_to_4] = 0.;
+    _transition_probability[NII][TRANSITION_1_to_2] = 7.463e-6;
+    _transition_probability[NII][TRANSITION_1_to_3] = 1.016e-3;
+    _transition_probability[NII][TRANSITION_1_to_4] = 3.297e-2;
+    _transition_probability[NII][TRANSITION_2_to_3] = 3.005e-3;
+    _transition_probability[NII][TRANSITION_2_to_4] = 1.315e-4;
+    _transition_probability[NII][TRANSITION_3_to_4] = 1.023;
     // our own fits to the data of Lennon & Burke (1994)
     // these fits were made with the script data/linecooling/gamma_NII.py
     // (this script also outputs the code below)
@@ -266,22 +199,14 @@ LineCoolingData::LineCoolingData() {
     // data from Galavis, Mendoza & Zeippen (1997), tables 6 and 7
     // ground state: 3P2
     // excited states: 3P1, 3P0, 1D2, 1S0
+    // in cm^-1
     const double energy_levels[4] = {158., 227., 15868., 33793.};
     _inverse_statistical_weight[OI][0] = 0.2;
     _inverse_statistical_weight[OI][1] = 1. / 3.;
     _inverse_statistical_weight[OI][2] = 1.;
     _inverse_statistical_weight[OI][3] = 0.2;
     _inverse_statistical_weight[OI][4] = 1.;
-    _transition_probability[OI][TRANSITION_0_to_1] = 8.865e-5;
-    _transition_probability[OI][TRANSITION_0_to_2] = 1.275e-10;
-    _transition_probability[OI][TRANSITION_0_to_3] = 6.535e-3;
-    _transition_probability[OI][TRANSITION_0_to_4] = 2.945e-4;
-    _transition_probability[OI][TRANSITION_1_to_2] = 1.772e-5;
-    _transition_probability[OI][TRANSITION_1_to_3] = 2.111e-3;
-    _transition_probability[OI][TRANSITION_1_to_4] = 7.909e-2;
-    _transition_probability[OI][TRANSITION_2_to_3] = 6.388e-7;
-    _transition_probability[OI][TRANSITION_2_to_4] = 0.;
-    _transition_probability[OI][TRANSITION_3_to_4] = 1.124;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[OI][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[OI][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[OI][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -298,6 +223,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[OI][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // in s^-1
+    _transition_probability[OI][TRANSITION_0_to_1] = 8.865e-5;
+    _transition_probability[OI][TRANSITION_0_to_2] = 1.275e-10;
+    _transition_probability[OI][TRANSITION_0_to_3] = 6.535e-3;
+    _transition_probability[OI][TRANSITION_0_to_4] = 2.945e-4;
+    _transition_probability[OI][TRANSITION_1_to_2] = 1.772e-5;
+    _transition_probability[OI][TRANSITION_1_to_3] = 2.111e-3;
+    _transition_probability[OI][TRANSITION_1_to_4] = 7.909e-2;
+    _transition_probability[OI][TRANSITION_2_to_3] = 6.388e-7;
+    _transition_probability[OI][TRANSITION_2_to_4] = 0.;
+    _transition_probability[OI][TRANSITION_3_to_4] = 1.124;
     // our own fits to the data of Zatsarinny & Tayal (2003) and Berrington
     // (1988)
     // these fits were made with the script data/linecooling/gamma_OI.py
@@ -331,23 +267,14 @@ LineCoolingData::LineCoolingData() {
     // data from Froese Fischer & Tachiev (2004), table 4
     // ground state: 4S3/2
     // excited states: 2D5/2, 2D3/2, 2P3/2, 2P1/2
+    // in cm^-1
     const double energy_levels[4] = {26810.73, 26830.45, 40468.36, 40470.96};
     _inverse_statistical_weight[OII][0] = 0.25;
     _inverse_statistical_weight[OII][1] = 1. / 6.;
     _inverse_statistical_weight[OII][2] = 0.25;
     _inverse_statistical_weight[OII][3] = 0.25;
     _inverse_statistical_weight[OII][4] = 0.5;
-    // we sum contributions of all types
-    _transition_probability[OII][TRANSITION_0_to_1] = 4.124e-5;
-    _transition_probability[OII][TRANSITION_0_to_2] = 1.635e-4;
-    _transition_probability[OII][TRANSITION_0_to_3] = 5.646e-2;
-    _transition_probability[OII][TRANSITION_0_to_4] = 2.265e-2;
-    _transition_probability[OII][TRANSITION_1_to_2] = 1.241e-7;
-    _transition_probability[OII][TRANSITION_1_to_3] = 1.106e-1;
-    _transition_probability[OII][TRANSITION_1_to_4] = 5.824e-2;
-    _transition_probability[OII][TRANSITION_2_to_3] = 5.871e-2;
-    _transition_probability[OII][TRANSITION_2_to_4] = 9.668e-2;
-    _transition_probability[OII][TRANSITION_3_to_4] = 3.158e-10;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[OII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[OII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[OII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -364,6 +291,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[OII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // we sum contributions of all types (in s^-1)
+    _transition_probability[OII][TRANSITION_0_to_1] = 4.124e-5;
+    _transition_probability[OII][TRANSITION_0_to_2] = 1.635e-4;
+    _transition_probability[OII][TRANSITION_0_to_3] = 5.646e-2;
+    _transition_probability[OII][TRANSITION_0_to_4] = 2.265e-2;
+    _transition_probability[OII][TRANSITION_1_to_2] = 1.241e-7;
+    _transition_probability[OII][TRANSITION_1_to_3] = 1.106e-1;
+    _transition_probability[OII][TRANSITION_1_to_4] = 5.824e-2;
+    _transition_probability[OII][TRANSITION_2_to_3] = 5.871e-2;
+    _transition_probability[OII][TRANSITION_2_to_4] = 9.668e-2;
+    _transition_probability[OII][TRANSITION_3_to_4] = 3.158e-10;
     // our own fits to the data of Kisielius et al. (2009)
     // these fits were made with the script data/linecooling/gamma_OII.py
     // (this script also outputs the code below)
@@ -395,22 +333,14 @@ LineCoolingData::LineCoolingData() {
     // data from Galavis, Mendoza & Zeippen (1997), tables 4 and 5
     // ground state: 3P0
     // excited states: 3P1, 3P2, 1D2, 1S0
+    // in cm^-1
     const double energy_levels[4] = {114., 307., 20274., 43186.};
     _inverse_statistical_weight[OIII][0] = 1.;
     _inverse_statistical_weight[OIII][1] = 1. / 3.;
     _inverse_statistical_weight[OIII][2] = 0.2;
     _inverse_statistical_weight[OIII][3] = 0.2;
     _inverse_statistical_weight[OIII][4] = 1.;
-    _transition_probability[OIII][TRANSITION_0_to_1] = 2.664e-5;
-    _transition_probability[OIII][TRANSITION_0_to_2] = 3.094e-11;
-    _transition_probability[OIII][TRANSITION_0_to_3] = 1.69e-6;
-    _transition_probability[OIII][TRANSITION_0_to_4] = 0.;
-    _transition_probability[OIII][TRANSITION_1_to_2] = 9.695e-5;
-    _transition_probability[OIII][TRANSITION_1_to_3] = 6.995e-3;
-    _transition_probability[OIII][TRANSITION_1_to_4] = 2.268e-1;
-    _transition_probability[OIII][TRANSITION_2_to_3] = 2.041e-2;
-    _transition_probability[OIII][TRANSITION_2_to_4] = 6.091e-4;
-    _transition_probability[OIII][TRANSITION_3_to_4] = 1.561;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[OIII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[OIII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[OIII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -427,6 +357,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[OIII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // in s^-1
+    _transition_probability[OIII][TRANSITION_0_to_1] = 2.664e-5;
+    _transition_probability[OIII][TRANSITION_0_to_2] = 3.094e-11;
+    _transition_probability[OIII][TRANSITION_0_to_3] = 1.69e-6;
+    _transition_probability[OIII][TRANSITION_0_to_4] = 0.;
+    _transition_probability[OIII][TRANSITION_1_to_2] = 9.695e-5;
+    _transition_probability[OIII][TRANSITION_1_to_3] = 6.995e-3;
+    _transition_probability[OIII][TRANSITION_1_to_4] = 2.268e-1;
+    _transition_probability[OIII][TRANSITION_2_to_3] = 2.041e-2;
+    _transition_probability[OIII][TRANSITION_2_to_4] = 6.091e-4;
+    _transition_probability[OIII][TRANSITION_3_to_4] = 1.561;
     // our own fits to the data of Lennon & Burke (1994)
     // these fits were made with the script data/linecooling/gamma_OIII.py
     // (this script also outputs the code below)
@@ -459,22 +400,14 @@ LineCoolingData::LineCoolingData() {
     // data from Galavis, Mendoza & Zeippen (1997), tables 6 and 7
     // ground state: 3P2
     // excited states: 3P1, 3P0, 1D2, 1S0
+    // in cm^-1
     const double energy_levels[4] = {643., 921., 25841., 55751.};
     _inverse_statistical_weight[NeIII][0] = 0.2;
     _inverse_statistical_weight[NeIII][1] = 1. / 3.;
     _inverse_statistical_weight[NeIII][2] = 1.;
     _inverse_statistical_weight[NeIII][3] = 0.2;
     _inverse_statistical_weight[NeIII][4] = 1.;
-    _transition_probability[NeIII][TRANSITION_0_to_1] = 5.974e-3;
-    _transition_probability[NeIII][TRANSITION_0_to_2] = 2.081e-8;
-    _transition_probability[NeIII][TRANSITION_0_to_3] = 0.173;
-    _transition_probability[NeIII][TRANSITION_0_to_4] = 3.985e-3;
-    _transition_probability[NeIII][TRANSITION_1_to_2] = 1.159e-3;
-    _transition_probability[NeIII][TRANSITION_1_to_3] = 5.344e-2;
-    _transition_probability[NeIII][TRANSITION_1_to_4] = 2.028;
-    _transition_probability[NeIII][TRANSITION_2_to_3] = 8.269e-6;
-    _transition_probability[NeIII][TRANSITION_2_to_4] = 0.;
-    _transition_probability[NeIII][TRANSITION_3_to_4] = 2.563;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[NeIII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[NeIII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[NeIII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -491,6 +424,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[NeIII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // in s^-1
+    _transition_probability[NeIII][TRANSITION_0_to_1] = 5.974e-3;
+    _transition_probability[NeIII][TRANSITION_0_to_2] = 2.081e-8;
+    _transition_probability[NeIII][TRANSITION_0_to_3] = 0.173;
+    _transition_probability[NeIII][TRANSITION_0_to_4] = 3.985e-3;
+    _transition_probability[NeIII][TRANSITION_1_to_2] = 1.159e-3;
+    _transition_probability[NeIII][TRANSITION_1_to_3] = 5.344e-2;
+    _transition_probability[NeIII][TRANSITION_1_to_4] = 2.028;
+    _transition_probability[NeIII][TRANSITION_2_to_3] = 8.269e-6;
+    _transition_probability[NeIII][TRANSITION_2_to_4] = 0.;
+    _transition_probability[NeIII][TRANSITION_3_to_4] = 2.563;
     // our own fits to the data of Butler & Zeippen (1994)
     // these fits were made with the script data/linecooling/gamma_NeIII.py
     // (this script also outputs the code below)
@@ -518,31 +462,19 @@ LineCoolingData::LineCoolingData() {
     _collision_strength_exponent[NeIII][TRANSITION_3_to_4] = 0.0408073833617;
   }
 
-  const double eV_over_k =
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRONVOLT) /
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   /// SII
   {
     // data from Tayal & Zatsarinny (2010), tables 1 and 3
     // ground state: 4S3/2
     // excited states: 2D3/2, 2D5/2, 2P1/2, 2P3/2
+    // in eV
     const double energy_levels[4] = {1.842, 1.845, 3.041, 3.046};
     _inverse_statistical_weight[SII][0] = 0.25;
     _inverse_statistical_weight[SII][1] = 0.25;
     _inverse_statistical_weight[SII][2] = 1. / 6.;
     _inverse_statistical_weight[SII][3] = 0.5;
     _inverse_statistical_weight[SII][4] = 0.25;
-    // we take the sum of all contributions
-    _transition_probability[SII][TRANSITION_0_to_1] = 6.32e-4;
-    _transition_probability[SII][TRANSITION_0_to_2] = 2.20e-4;
-    _transition_probability[SII][TRANSITION_0_to_3] = 7.64e-2;
-    _transition_probability[SII][TRANSITION_0_to_4] = 1.90e-1;
-    _transition_probability[SII][TRANSITION_1_to_2] = 1.71e-7;
-    _transition_probability[SII][TRANSITION_1_to_3] = 1.47e-1;
-    _transition_probability[SII][TRANSITION_1_to_4] = 1.165e-1;
-    _transition_probability[SII][TRANSITION_2_to_3] = 7.16e-2;
-    _transition_probability[SII][TRANSITION_2_to_4] = 1.61e-1;
-    _transition_probability[SII][TRANSITION_3_to_4] = 2.43e-7;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[SII][TRANSITION_0_to_1] = energy_levels[0] * eV_over_k;
     _energy_difference[SII][TRANSITION_0_to_2] = energy_levels[1] * eV_over_k;
     _energy_difference[SII][TRANSITION_0_to_3] = energy_levels[2] * eV_over_k;
@@ -559,6 +491,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * eV_over_k;
     _energy_difference[SII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * eV_over_k;
+    // we take the sum of all contributions (in s^-1)
+    _transition_probability[SII][TRANSITION_0_to_1] = 6.32e-4;
+    _transition_probability[SII][TRANSITION_0_to_2] = 2.20e-4;
+    _transition_probability[SII][TRANSITION_0_to_3] = 7.64e-2;
+    _transition_probability[SII][TRANSITION_0_to_4] = 1.90e-1;
+    _transition_probability[SII][TRANSITION_1_to_2] = 1.71e-7;
+    _transition_probability[SII][TRANSITION_1_to_3] = 1.47e-1;
+    _transition_probability[SII][TRANSITION_1_to_4] = 1.165e-1;
+    _transition_probability[SII][TRANSITION_2_to_3] = 7.16e-2;
+    _transition_probability[SII][TRANSITION_2_to_4] = 1.61e-1;
+    _transition_probability[SII][TRANSITION_3_to_4] = 2.43e-7;
     // our own fits to the data of Tayal & Zatsarinny (2010)
     // these fits were made with the script data/linecooling/gamma_SII.py
     // (this script also outputs the code below)
@@ -585,22 +528,36 @@ LineCoolingData::LineCoolingData() {
     _collision_strength_exponent[SII][TRANSITION_3_to_4] = 0.0302135311733;
   }
 
-  const double econst =
-      PhysicalConstants::get_physical_constant(
-          PHYSICALCONSTANT_RYDBERG_ENERGY) /
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   /// SIII
   {
     // data from Mendoza & Zeippen (1982), table 2 and 3
     // ground state: 3P0
     // excited states: 3P1, 3P2, 1D2, 1S0
+    // in Ry
     const double energy_levels[4] = {0.002708, 0.007586, 0.103157, 0.247532};
     _inverse_statistical_weight[SIII][0] = 1.;
     _inverse_statistical_weight[SIII][1] = 1. / 3.;
     _inverse_statistical_weight[SIII][2] = 0.2;
     _inverse_statistical_weight[SIII][3] = 0.2;
     _inverse_statistical_weight[SIII][4] = 1.;
-    // we take the sum of all contributions
+    // convert energy levels to energy differences (and convert units)
+    _energy_difference[SIII][TRANSITION_0_to_1] = energy_levels[0] * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_0_to_2] = energy_levels[1] * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_0_to_3] = energy_levels[2] * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_0_to_4] = energy_levels[3] * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_1_to_2] =
+        (energy_levels[1] - energy_levels[0]) * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_1_to_3] =
+        (energy_levels[2] - energy_levels[0]) * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_1_to_4] =
+        (energy_levels[3] - energy_levels[0]) * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_2_to_3] =
+        (energy_levels[2] - energy_levels[1]) * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_2_to_4] =
+        (energy_levels[3] - energy_levels[1]) * Ry_over_k;
+    _energy_difference[SIII][TRANSITION_3_to_4] =
+        (energy_levels[3] - energy_levels[2]) * Ry_over_k;
+    // we take the sum of all contributions (in s^-1)
     _transition_probability[SIII][TRANSITION_0_to_1] = 4.72e-4;
     _transition_probability[SIII][TRANSITION_0_to_2] = 4.61e-8;
     _transition_probability[SIII][TRANSITION_0_to_3] = 5.82e-6;
@@ -611,23 +568,7 @@ LineCoolingData::LineCoolingData() {
     _transition_probability[SIII][TRANSITION_2_to_3] = 5.76e-2;
     _transition_probability[SIII][TRANSITION_2_to_4] = 1.05e-2;
     _transition_probability[SIII][TRANSITION_3_to_4] = 2.22;
-    _energy_difference[SIII][TRANSITION_0_to_1] = energy_levels[0] * econst;
-    _energy_difference[SIII][TRANSITION_0_to_2] = energy_levels[1] * econst;
-    _energy_difference[SIII][TRANSITION_0_to_3] = energy_levels[2] * econst;
-    _energy_difference[SIII][TRANSITION_0_to_4] = energy_levels[3] * econst;
-    _energy_difference[SIII][TRANSITION_1_to_2] =
-        (energy_levels[1] - energy_levels[0]) * econst;
-    _energy_difference[SIII][TRANSITION_1_to_3] =
-        (energy_levels[2] - energy_levels[0]) * econst;
-    _energy_difference[SIII][TRANSITION_1_to_4] =
-        (energy_levels[3] - energy_levels[0]) * econst;
-    _energy_difference[SIII][TRANSITION_2_to_3] =
-        (energy_levels[2] - energy_levels[1]) * econst;
-    _energy_difference[SIII][TRANSITION_2_to_4] =
-        (energy_levels[3] - energy_levels[1]) * econst;
-    _energy_difference[SIII][TRANSITION_3_to_4] =
-        (energy_levels[3] - energy_levels[2]) * econst;
-    // our own fits to the data of Tayal & Zatsarinny (2010)
+    // our own fits to the data of Hudson, Ramsbottom & Scott (2012)
     // these fits were made with the script data/linecooling/gamma_SIII.py
     // (this script also outputs the code below)
     // the fits are reasonable in this case
@@ -658,23 +599,14 @@ LineCoolingData::LineCoolingData() {
     // data from Froese Fischer & Tachiev (2004), table 2
     // ground state: 2P1/2
     // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
+    // in cm^-1
     const double energy_levels[4] = {63.67, 43057.99, 43080.21, 43108.66};
     _inverse_statistical_weight[CII][0] = 0.5;
     _inverse_statistical_weight[CII][1] = 0.25;
     _inverse_statistical_weight[CII][2] = 0.5;
     _inverse_statistical_weight[CII][3] = 0.25;
     _inverse_statistical_weight[CII][4] = 1. / 6.;
-    // we sum contributions of all types
-    _transition_probability[CII][TRANSITION_0_to_1] = 2.321e-6;
-    _transition_probability[CII][TRANSITION_0_to_2] = 6.136e1;
-    _transition_probability[CII][TRANSITION_0_to_3] = 1.463;
-    _transition_probability[CII][TRANSITION_0_to_4] = 8.177e-4;
-    _transition_probability[CII][TRANSITION_1_to_2] = 6.929e1;
-    _transition_probability[CII][TRANSITION_1_to_3] = 8.853;
-    _transition_probability[CII][TRANSITION_1_to_4] = 4.477e1;
-    _transition_probability[CII][TRANSITION_2_to_3] = 2.467e-7;
-    _transition_probability[CII][TRANSITION_2_to_4] = 3.571e-14;
-    _transition_probability[CII][TRANSITION_3_to_4] = 3.725e-7;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[CII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[CII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[CII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -691,6 +623,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[CII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // we sum contributions of all types (in s^-1)
+    _transition_probability[CII][TRANSITION_0_to_1] = 2.321e-6;
+    _transition_probability[CII][TRANSITION_0_to_2] = 6.136e1;
+    _transition_probability[CII][TRANSITION_0_to_3] = 1.463;
+    _transition_probability[CII][TRANSITION_0_to_4] = 8.177e-4;
+    _transition_probability[CII][TRANSITION_1_to_2] = 6.929e1;
+    _transition_probability[CII][TRANSITION_1_to_3] = 8.853;
+    _transition_probability[CII][TRANSITION_1_to_4] = 4.477e1;
+    _transition_probability[CII][TRANSITION_2_to_3] = 2.467e-7;
+    _transition_probability[CII][TRANSITION_2_to_4] = 3.571e-14;
+    _transition_probability[CII][TRANSITION_3_to_4] = 3.725e-7;
     // our own fits to the data of Tayal (2008)
     // these fits were made with the script data/linecooling/gamma_CII.py
     // (this script also outputs the code below)
@@ -723,23 +666,14 @@ LineCoolingData::LineCoolingData() {
     // data from Froese Fischer & Tachiev (2004), table 1
     // ground state: 1S0
     // excited states: 3P0, 3P1, 3P2, 1P1
+    // in cm^-1
     const double energy_levels[4] = {52391.87, 52415.53, 52472.16, 102446.94};
     _inverse_statistical_weight[CIII][0] = 1.;
     _inverse_statistical_weight[CIII][1] = 1.;
     _inverse_statistical_weight[CIII][2] = 1. / 3.;
     _inverse_statistical_weight[CIII][3] = 0.2;
     _inverse_statistical_weight[CIII][4] = 1. / 3.;
-    // we sum contributions of all types
-    _transition_probability[CIII][TRANSITION_0_to_1] = 0.;
-    _transition_probability[CIII][TRANSITION_0_to_2] = 1.040e2;
-    _transition_probability[CIII][TRANSITION_0_to_3] = 5.216e-3;
-    _transition_probability[CIII][TRANSITION_0_to_4] = 1.769e9;
-    _transition_probability[CIII][TRANSITION_1_to_2] = 2.381e-7;
-    _transition_probability[CIII][TRANSITION_1_to_3] = 1.486e-13;
-    _transition_probability[CIII][TRANSITION_1_to_4] = 1.595e-3;
-    _transition_probability[CIII][TRANSITION_2_to_3] = 2.450e-6;
-    _transition_probability[CIII][TRANSITION_2_to_4] = 1.269e-3;
-    _transition_probability[CIII][TRANSITION_3_to_4] = 2.036e-3;
+    // convert energy levels to energy differences (and convert units)
     _energy_difference[CIII][TRANSITION_0_to_1] = energy_levels[0] * hc_over_k;
     _energy_difference[CIII][TRANSITION_0_to_2] = energy_levels[1] * hc_over_k;
     _energy_difference[CIII][TRANSITION_0_to_3] = energy_levels[2] * hc_over_k;
@@ -756,6 +690,17 @@ LineCoolingData::LineCoolingData() {
         (energy_levels[3] - energy_levels[1]) * hc_over_k;
     _energy_difference[CIII][TRANSITION_3_to_4] =
         (energy_levels[3] - energy_levels[2]) * hc_over_k;
+    // we sum contributions of all types (in s^-1)
+    _transition_probability[CIII][TRANSITION_0_to_1] = 0.;
+    _transition_probability[CIII][TRANSITION_0_to_2] = 1.040e2;
+    _transition_probability[CIII][TRANSITION_0_to_3] = 5.216e-3;
+    _transition_probability[CIII][TRANSITION_0_to_4] = 1.769e9;
+    _transition_probability[CIII][TRANSITION_1_to_2] = 2.381e-7;
+    _transition_probability[CIII][TRANSITION_1_to_3] = 1.486e-13;
+    _transition_probability[CIII][TRANSITION_1_to_4] = 1.595e-3;
+    _transition_probability[CIII][TRANSITION_2_to_3] = 2.450e-6;
+    _transition_probability[CIII][TRANSITION_2_to_4] = 1.269e-3;
+    _transition_probability[CIII][TRANSITION_3_to_4] = 2.036e-3;
     // our own fits to the data of Berrington et al. (1985)
     // these fits were made with the script data/linecooling/gamma_CIII.py
     // (this script also outputs the code below)
@@ -783,34 +728,59 @@ LineCoolingData::LineCoolingData() {
     _collision_strength_exponent[CIII][TRANSITION_3_to_4] = -0.227262416164;
   }
 
-  // two level elements
+  /// two level elements
 
-  // Blum & Pradhan (1992), table 5, first energy level
-  _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
-      0.00159 * econst;
-  // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition
-  _two_level_element_data[NIII][TWOLEVELFIELD_TRANSITION_PROBABILITY] =
-      4.736e-5;
-  // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
-  _two_level_element_data[NIII][TWOLEVELFIELD_COLLISION_STRENGTH] = 1.4454;
-  // statistical weights: level 0 is a P_{1/2} level, while level 1 is a P_{3/2}
-  _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
-      0.5;
-  _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
-      0.25;
+  /// NIII
+  {
+    // Blum & Pradhan (1992), table 5, first energy level (in Ry)
+    _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
+        0.00159 * Ry_over_k;
+    // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition (in s^-1)
+    _two_level_element_data[NIII][TWOLEVELFIELD_TRANSITION_PROBABILITY] =
+        4.736e-5;
+    // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
+    _two_level_element_data[NIII][TWOLEVELFIELD_COLLISION_STRENGTH] = 1.4454;
+    // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
+    // P_{3/2}
+    _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
+        0.5;
+    _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
+        0.25;
+  }
 
-  // Saraph & Tully (1994), table 2, fine structure splitting energy for Z = 10
-  _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
-      0.0071 * econst;
-  // Kaufman & Sugar (1986), table 7
-  _two_level_element_data[NeII][TWOLEVELFIELD_TRANSITION_PROBABILITY] = 8.55e-3;
-  // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
-  _two_level_element_data[NeII][TWOLEVELFIELD_COLLISION_STRENGTH] = 0.314;
-  // statistical weights: level 0 is a P_{3/2} level, while level 1 is a P_{1/2}
-  _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
-      0.25;
-  _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
-      0.5;
+  /// NeII
+  {
+    // Saraph & Tully (1994), table 2, fine structure splitting energy for
+    // Z = 10 (in Ry)
+    _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
+        0.0071 * Ry_over_k;
+    // Kaufman & Sugar (1986), table 7 (in s^-1)
+    _two_level_element_data[NeII][TWOLEVELFIELD_TRANSITION_PROBABILITY] =
+        8.55e-3;
+    // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
+    _two_level_element_data[NeII][TWOLEVELFIELD_COLLISION_STRENGTH] = 0.314;
+    // statistical weights: level 0 is a P_{3/2} level, while level 1 is a
+    // P_{1/2}
+    _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
+        0.25;
+    _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
+        0.5;
+  }
+
+  /// numerical factors that are precomputed
+
+  // Boltzmann constant (in J s^-1)
+  const double kb =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  // Planck constant (in J s)
+  const double h =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+  // electron mass (in kg)
+  const double m_e =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS);
+
+  _collision_strength_prefactor =
+      h * h / (std::sqrt(kb) * std::pow(2. * M_PI * m_e, 1.5));
 }
 
 /**
@@ -941,11 +911,11 @@ LineCoolingData::get_statistical_weight(LineCoolingDataFiveLevelElement element,
  */
 int LineCoolingData::simq(double A[5][5], double B[5]) {
 
-  for (unsigned int j = 0; j < 5; ++j) {
+  for (unsigned char j = 0; j < 5; ++j) {
     // find the next row with the largest coefficient
-    unsigned int imax = 0;
+    unsigned char imax = 0;
     double Amax = 0.;
-    for (unsigned int i = j; i < 5; ++i) {
+    for (unsigned char i = j; i < 5; ++i) {
       if (std::abs(A[i][j]) > std::abs(Amax)) {
         Amax = A[i][j];
         imax = i;
@@ -955,31 +925,32 @@ int LineCoolingData::simq(double A[5][5], double B[5]) {
     if (Amax == 0.) {
       return 1;
     }
+    const double Amax_inv = 1. / Amax;
     // imax now contains the index of the row with the largest coefficient
     // interchange rows if necessary to make sure that the row with the largest
     // coefficient is the next row to eliminate with
-    for (unsigned int k = 0; k < 5; ++k) {
+    for (unsigned char k = 0; k < 5; ++k) {
       if (imax != j) {
-        double save = A[j][k];
+        const double save = A[j][k];
         A[j][k] = A[imax][k];
         A[imax][k] = save;
       }
-      A[j][k] /= Amax;
+      A[j][k] *= Amax_inv;
     }
     if (imax != j) {
-      double save = B[j];
+      const double save = B[j];
       B[j] = B[imax];
       B[imax] = save;
     }
-    B[j] /= Amax;
+    B[j] *= Amax_inv;
     // row j now contains a 1 at position j
     // all elements in columns with indices smaller than j are supposed to be
     // zero due to previous eliminations (we do not set them to zero however to
     // save computations)
     if (j < 4) {
       // we are not finished yet: use row j to eliminate all rows below row j
-      for (unsigned int i = j + 1; i < 5; ++i) {
-        for (unsigned int k = j + 1; k < 5; ++k) {
+      for (unsigned char i = j + 1; i < 5; ++i) {
+        for (unsigned char k = j + 1; k < 5; ++k) {
           A[i][k] -= A[i][j] * A[j][k];
         }
         B[i] -= A[i][j] * B[j];
@@ -994,12 +965,168 @@ int LineCoolingData::simq(double A[5][5], double B[5]) {
   //  0   0   0   0   1  B4
   // In other words: B[4] contains the value of the last variable
   // use it to recursively solve for the others
-  for (unsigned int i = 0; i < 4; ++i) {
-    for (unsigned int j = 0; j < i + 1; ++j) {
+  for (unsigned char i = 0; i < 4; ++i) {
+    for (unsigned char j = 0; j < i + 1; ++j) {
       B[3 - i] -= B[4 - j] * A[3 - i][4 - j];
     }
   }
   return 0;
+}
+
+/**
+ * @brief Find the level populations for the given element at the given
+ * temperature.
+ *
+ * @param element LineCoolingDataFiveLevelElement.
+ * @param collision_strength_prefactor Prefactor for the collision strengths
+ * (in s^-1).
+ * @param Tinv Inverse of the temperature (in K^-1).
+ * @param T4 Temperature (in 10^4 K).
+ * @param level_populations Array to store the resulting level populations in.
+ */
+void LineCoolingData::compute_level_populations(
+    LineCoolingDataFiveLevelElement element,
+    double collision_strength_prefactor, double Tinv, double T4,
+    double level_populations[5]) const {
+
+  double level_matrix[5][5];
+  // initialize the level populations and the first row of the coefficient
+  // matrix
+  for (unsigned char i = 0; i < 5; ++i) {
+    level_matrix[0][i] = 1.;
+    level_populations[i] = 0.;
+  }
+  // the first row of the coefficient matrix expresses the constant number of
+  // particles: the sum of all level populations is unity
+  level_populations[0] = 1.;
+
+  // precompute the collision rates for the given temperature
+  double collision_rate_down[NUMBER_OF_TRANSITIONS];
+  double collision_rate_up[NUMBER_OF_TRANSITIONS];
+  for (int i = 0; i < NUMBER_OF_TRANSITIONS; ++i) {
+    const double collision_strength =
+        collision_strength_prefactor * _collision_strength[element][i] *
+        std::pow(T4, _collision_strength_exponent[element][i]);
+    collision_rate_down[i] = collision_strength;
+    collision_rate_up[i] =
+        collision_strength * std::exp(-_energy_difference[element][i] * Tinv);
+  }
+
+  level_matrix[1][0] = collision_rate_up[TRANSITION_0_to_1] *
+                       _inverse_statistical_weight[element][0];
+  level_matrix[1][1] = -(_transition_probability[element][TRANSITION_0_to_1] +
+                         _inverse_statistical_weight[element][1] *
+                             (collision_rate_down[TRANSITION_0_to_1] +
+                              collision_rate_up[TRANSITION_1_to_2] +
+                              collision_rate_up[TRANSITION_1_to_3] +
+                              collision_rate_up[TRANSITION_1_to_4]));
+  level_matrix[1][2] = _transition_probability[element][TRANSITION_1_to_2] +
+                       _inverse_statistical_weight[element][2] *
+                           collision_rate_down[TRANSITION_1_to_2];
+  level_matrix[1][3] = _transition_probability[element][TRANSITION_1_to_3] +
+                       _inverse_statistical_weight[element][3] *
+                           collision_rate_down[TRANSITION_1_to_3];
+  level_matrix[1][4] = _transition_probability[element][TRANSITION_1_to_4] +
+                       _inverse_statistical_weight[element][4] *
+                           collision_rate_down[TRANSITION_1_to_4];
+
+  level_matrix[2][0] = collision_rate_up[TRANSITION_0_to_2] *
+                       _inverse_statistical_weight[element][0];
+  level_matrix[2][1] = collision_rate_up[TRANSITION_1_to_2] *
+                       _inverse_statistical_weight[element][1];
+  level_matrix[2][2] = -(_transition_probability[element][TRANSITION_0_to_2] +
+                         _transition_probability[element][TRANSITION_1_to_2] +
+                         _inverse_statistical_weight[element][2] *
+                             (collision_rate_down[TRANSITION_0_to_2] +
+                              collision_rate_down[TRANSITION_1_to_2] +
+                              collision_rate_up[TRANSITION_2_to_3] +
+                              collision_rate_up[TRANSITION_2_to_4]));
+  level_matrix[2][3] = _transition_probability[element][TRANSITION_2_to_3] +
+                       collision_rate_down[TRANSITION_2_to_3] *
+                           _inverse_statistical_weight[element][3];
+  level_matrix[2][4] = _transition_probability[element][TRANSITION_2_to_4] +
+                       collision_rate_down[TRANSITION_2_to_4] *
+                           _inverse_statistical_weight[element][4];
+
+  level_matrix[3][0] = collision_rate_up[TRANSITION_0_to_3] *
+                       _inverse_statistical_weight[element][0];
+  level_matrix[3][1] = collision_rate_up[TRANSITION_1_to_3] *
+                       _inverse_statistical_weight[element][1];
+  level_matrix[3][2] = collision_rate_up[TRANSITION_2_to_3] *
+                       _inverse_statistical_weight[element][2];
+  level_matrix[3][3] = -(_transition_probability[element][TRANSITION_0_to_3] +
+                         _transition_probability[element][TRANSITION_1_to_3] +
+                         _transition_probability[element][TRANSITION_2_to_3] +
+                         _inverse_statistical_weight[element][3] *
+                             (collision_rate_down[TRANSITION_0_to_3] +
+                              collision_rate_down[TRANSITION_1_to_3] +
+                              collision_rate_down[TRANSITION_2_to_3] +
+                              collision_rate_up[TRANSITION_3_to_4]));
+  level_matrix[3][4] = _transition_probability[element][TRANSITION_3_to_4] +
+                       collision_rate_down[TRANSITION_3_to_4] *
+                           _inverse_statistical_weight[element][4];
+
+  level_matrix[4][0] = collision_rate_up[TRANSITION_0_to_4] *
+                       _inverse_statistical_weight[element][0];
+  level_matrix[4][1] = collision_rate_up[TRANSITION_1_to_4] *
+                       _inverse_statistical_weight[element][1];
+  level_matrix[4][2] = collision_rate_up[TRANSITION_2_to_4] *
+                       _inverse_statistical_weight[element][2];
+  level_matrix[4][3] = collision_rate_up[TRANSITION_3_to_4] *
+                       _inverse_statistical_weight[element][3];
+  level_matrix[4][4] = -(_transition_probability[element][TRANSITION_0_to_4] +
+                         _transition_probability[element][TRANSITION_1_to_4] +
+                         _transition_probability[element][TRANSITION_2_to_4] +
+                         _transition_probability[element][TRANSITION_3_to_4] +
+                         _inverse_statistical_weight[element][4] *
+                             (collision_rate_down[TRANSITION_0_to_4] +
+                              collision_rate_down[TRANSITION_1_to_4] +
+                              collision_rate_down[TRANSITION_2_to_4] +
+                              collision_rate_down[TRANSITION_3_to_4]));
+
+  // find level populations
+  const int status = simq(level_matrix, level_populations);
+  if (status != 0) {
+    // something went wrong
+    cmac_error("Singular matrix in level population computation (element: %i, "
+               "T: %g, n_e: %g)!",
+               element, 1. / Tinv,
+               collision_strength_prefactor /
+                   (_collision_strength_prefactor * std::sqrt(Tinv)));
+  }
+}
+
+/**
+ * @brief Find the level population of the second level for the given two level
+ * element at the given temperature.
+ *
+ * @param element LineCoolingDataTwoLevelElement.
+ * @param collision_strength_prefactor Prefactor for the collision strengths
+ * (in s^-1).
+ * @param Tinv Inverse temperature (in K^-1).
+ * @return Level population of the second level.
+ */
+double LineCoolingData::compute_level_population(
+    LineCoolingDataTwoLevelElement element, double collision_strength_prefactor,
+    double Tinv) const {
+
+  const double ksi =
+      _two_level_element_data[element][TWOLEVELFIELD_ENERGY_DIFFERENCE];
+  const double A =
+      _two_level_element_data[element][TWOLEVELFIELD_TRANSITION_PROBABILITY];
+  const double Gamma =
+      _two_level_element_data[element][TWOLEVELFIELD_COLLISION_STRENGTH];
+  const double inv_omega_1 =
+      _two_level_element_data[element]
+                             [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0];
+  const double inv_omega_2 =
+      _two_level_element_data[element]
+                             [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1];
+  const double Texp = std::exp(-ksi * Tinv);
+  return collision_strength_prefactor * Gamma * Texp * inv_omega_1 /
+         (A +
+          collision_strength_prefactor * Gamma *
+              (inv_omega_2 + Texp * inv_omega_1));
 }
 
 /**
@@ -1040,190 +1167,75 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
     return 1.e-99;
   }
 
+  /// initialize some variables
+
   // Boltzmann constant (in J s^-1)
   const double kb =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
-  // Planck constant (in J s)
-  const double h =
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
-  // electron mass (in kg)
-  const double m_e =
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS);
 
-  const double numfac =
-      h * h / (std::sqrt(kb) * std::pow(2. * M_PI * m_e, 1.5));
-  const double cfac = numfac * electron_density / std::sqrt(temperature);
+  // _collision_strength_prefactor has units K^0.5 m^3 s^-1;
+  // collision_strength_prefactor has units s^-1
+  const double collision_strength_prefactor =
+      _collision_strength_prefactor * electron_density / std::sqrt(temperature);
   const double T4 = temperature * 1.e-4;
   const double Tinv = 1. / temperature;
 
-  double Om[10][10];
-  double cs[10][10], cse[10][10];
-  for (unsigned int j = 0; j < 10; ++j) {
-    for (unsigned int mm = 0; mm < 10; ++mm) {
-      cs[j][mm] = _collision_strength[j][mm];
-      cse[j][mm] = _collision_strength_exponent[j][mm];
-    }
-  }
+  /// five level elements
 
   double cooling = 0.;
-  double alev[5][5], lev[5];
-  for (unsigned int j = 0; j < 10; ++j) {
-    for (unsigned int mm = 0; mm < 5; ++mm) {
-      alev[0][mm] = 1.;
-      lev[mm] = 0.;
-    }
-    lev[0] = 1.;
-    for (unsigned int mm = 0; mm < 10; ++mm) {
-      Om[j][mm] = cs[j][mm] * std::pow(T4, cse[j][mm]);
-    }
+  for (int j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
 
-    alev[1][0] = cfac * Om[j][TRANSITION_0_to_1] *
-                 _inverse_statistical_weight[j][0] *
-                 std::exp(-_energy_difference[j][TRANSITION_0_to_1] * Tinv);
-    alev[1][1] =
-        -(_transition_probability[j][TRANSITION_0_to_1] +
-          cfac * _inverse_statistical_weight[j][1] *
-              (Om[j][TRANSITION_0_to_1] +
-               Om[j][TRANSITION_1_to_2] *
-                   std::exp(-_energy_difference[j][TRANSITION_1_to_2] * Tinv) +
-               Om[j][TRANSITION_1_to_3] *
-                   std::exp(-_energy_difference[j][TRANSITION_1_to_3] * Tinv) +
-               Om[j][TRANSITION_1_to_4] *
-                   std::exp(-_energy_difference[j][TRANSITION_1_to_4] * Tinv)));
-    alev[1][2] =
-        _transition_probability[j][TRANSITION_1_to_2] +
-        cfac * _inverse_statistical_weight[j][2] * Om[j][TRANSITION_1_to_2];
-    alev[1][3] =
-        _transition_probability[j][TRANSITION_1_to_3] +
-        cfac * _inverse_statistical_weight[j][3] * Om[j][TRANSITION_1_to_3];
-    alev[1][4] =
-        _transition_probability[j][TRANSITION_1_to_4] +
-        cfac * _inverse_statistical_weight[j][4] * Om[j][TRANSITION_1_to_4];
+    const LineCoolingDataFiveLevelElement element =
+        static_cast< LineCoolingDataFiveLevelElement >(j);
 
-    alev[2][0] = cfac * Om[j][TRANSITION_0_to_2] *
-                 std::exp(-_energy_difference[j][TRANSITION_0_to_2] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[2][1] = cfac * Om[j][TRANSITION_1_to_2] *
-                 std::exp(-_energy_difference[j][TRANSITION_1_to_2] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[2][2] =
-        -(_transition_probability[j][TRANSITION_0_to_2] +
-          _transition_probability[j][TRANSITION_1_to_2] +
-          cfac * _inverse_statistical_weight[j][2] *
-              (Om[j][TRANSITION_0_to_2] + Om[j][TRANSITION_1_to_2] +
-               Om[j][TRANSITION_2_to_3] *
-                   std::exp(-_energy_difference[j][TRANSITION_2_to_3] * Tinv) +
-               Om[j][TRANSITION_2_to_4] *
-                   std::exp(-_energy_difference[j][TRANSITION_2_to_4] * Tinv)));
-    alev[2][3] =
-        _transition_probability[j][TRANSITION_2_to_3] +
-        cfac * Om[j][TRANSITION_2_to_3] * _inverse_statistical_weight[j][3];
-    alev[2][4] =
-        _transition_probability[j][TRANSITION_2_to_4] +
-        cfac * Om[j][TRANSITION_2_to_4] * _inverse_statistical_weight[j][4];
+    double level_populations[5];
+    compute_level_populations(element, collision_strength_prefactor, Tinv, T4,
+                              level_populations);
 
-    alev[3][0] = cfac * Om[j][TRANSITION_0_to_3] *
-                 std::exp(-_energy_difference[j][TRANSITION_0_to_3] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[3][1] = cfac * Om[j][TRANSITION_1_to_3] *
-                 std::exp(-_energy_difference[j][TRANSITION_1_to_3] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[3][2] = cfac * Om[j][TRANSITION_2_to_3] *
-                 std::exp(-_energy_difference[j][TRANSITION_2_to_3] * Tinv) *
-                 _inverse_statistical_weight[j][2];
-    alev[3][3] =
-        -(_transition_probability[j][TRANSITION_0_to_3] +
-          _transition_probability[j][TRANSITION_1_to_3] +
-          _transition_probability[j][TRANSITION_2_to_3] +
-          cfac * _inverse_statistical_weight[j][3] *
-              (Om[j][TRANSITION_0_to_3] + Om[j][TRANSITION_1_to_3] +
-               Om[j][TRANSITION_2_to_3] +
-               Om[j][TRANSITION_3_to_4] *
-                   std::exp(-_energy_difference[j][TRANSITION_3_to_4] * Tinv)));
-    alev[3][4] =
-        _transition_probability[j][TRANSITION_3_to_4] +
-        cfac * Om[j][TRANSITION_3_to_4] * _inverse_statistical_weight[j][4];
-
-    alev[4][0] = cfac * Om[j][TRANSITION_0_to_4] *
-                 std::exp(-_energy_difference[j][TRANSITION_0_to_4] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[4][1] = cfac * Om[j][TRANSITION_1_to_4] *
-                 std::exp(-_energy_difference[j][TRANSITION_1_to_4] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[4][2] = cfac * Om[j][TRANSITION_2_to_4] *
-                 std::exp(-_energy_difference[j][TRANSITION_2_to_4] * Tinv) *
-                 _inverse_statistical_weight[j][2];
-    alev[4][3] = cfac * Om[j][TRANSITION_3_to_4] *
-                 std::exp(-_energy_difference[j][TRANSITION_3_to_4] * Tinv) *
-                 _inverse_statistical_weight[j][3];
-    alev[4][4] = -(_transition_probability[j][TRANSITION_0_to_4] +
-                   _transition_probability[j][TRANSITION_1_to_4] +
-                   _transition_probability[j][TRANSITION_2_to_4] +
-                   _transition_probability[j][TRANSITION_3_to_4] +
-                   cfac * _inverse_statistical_weight[j][4] *
-                       (Om[j][TRANSITION_0_to_4] + Om[j][TRANSITION_1_to_4] +
-                        Om[j][TRANSITION_2_to_4] + Om[j][TRANSITION_3_to_4]));
-
-    // find level populations
-    int status = simq(alev, lev);
-    if (status != 0) {
-      // something went wrong
-      cmac_warning("Singular matrix given to simq!");
-      cmac_warning("Temperature: %g", temperature);
-      cmac_warning("Electron density: %g", electron_density);
-      cmac_error("We better stop!");
-    }
-
-    const double cl2 = abundances[j] * kb * lev[1] *
+    // compute the cooling for each transition
+    // this corresponds to equation (3.29) in Osterbrock & Ferland (2006)
+    const double cl2 = level_populations[1] *
                        _transition_probability[j][TRANSITION_0_to_1] *
                        _energy_difference[j][TRANSITION_0_to_1];
-    const double cl3 = abundances[j] * kb * lev[2] *
-                       (_transition_probability[j][TRANSITION_0_to_2] *
-                            _energy_difference[j][TRANSITION_0_to_2] +
-                        _transition_probability[j][TRANSITION_1_to_2] *
-                            _energy_difference[j][TRANSITION_1_to_2]);
-    const double cl4 = abundances[j] * kb * lev[3] *
-                       (_transition_probability[j][TRANSITION_0_to_3] *
-                            _energy_difference[j][TRANSITION_0_to_3] +
-                        _transition_probability[j][TRANSITION_1_to_3] *
-                            _energy_difference[j][TRANSITION_1_to_3] +
-                        _transition_probability[j][TRANSITION_2_to_3] *
-                            _energy_difference[j][TRANSITION_2_to_3]);
-    const double cl5 = abundances[j] * kb * lev[4] *
-                       (_transition_probability[j][TRANSITION_0_to_4] *
-                            _energy_difference[j][TRANSITION_0_to_4] +
-                        _transition_probability[j][TRANSITION_1_to_4] *
-                            _energy_difference[j][TRANSITION_1_to_4] +
-                        _transition_probability[j][TRANSITION_2_to_4] *
-                            _energy_difference[j][TRANSITION_2_to_4] +
-                        _transition_probability[j][TRANSITION_3_to_4] *
-                            _energy_difference[j][TRANSITION_3_to_4]);
+    const double cl3 =
+        level_populations[2] * (_transition_probability[j][TRANSITION_0_to_2] *
+                                    _energy_difference[j][TRANSITION_0_to_2] +
+                                _transition_probability[j][TRANSITION_1_to_2] *
+                                    _energy_difference[j][TRANSITION_1_to_2]);
+    const double cl4 =
+        level_populations[3] * (_transition_probability[j][TRANSITION_0_to_3] *
+                                    _energy_difference[j][TRANSITION_0_to_3] +
+                                _transition_probability[j][TRANSITION_1_to_3] *
+                                    _energy_difference[j][TRANSITION_1_to_3] +
+                                _transition_probability[j][TRANSITION_2_to_3] *
+                                    _energy_difference[j][TRANSITION_2_to_3]);
+    const double cl5 =
+        level_populations[4] * (_transition_probability[j][TRANSITION_0_to_4] *
+                                    _energy_difference[j][TRANSITION_0_to_4] +
+                                _transition_probability[j][TRANSITION_1_to_4] *
+                                    _energy_difference[j][TRANSITION_1_to_4] +
+                                _transition_probability[j][TRANSITION_2_to_4] *
+                                    _energy_difference[j][TRANSITION_2_to_4] +
+                                _transition_probability[j][TRANSITION_3_to_4] *
+                                    _energy_difference[j][TRANSITION_3_to_4]);
 
-    const double coolj = cl2 + cl3 + cl4 + cl5;
-    cooling += coolj;
+    cooling += abundances[j] * kb * (cl2 + cl3 + cl4 + cl5);
   }
 
-  // 2 level atoms
+  /// 2 level atoms
 
   // offset of two level elements in the abundances array
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
-    const double ksi =
-        _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE];
-    const double A =
-        _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY];
-    const double Gamma =
-        _two_level_element_data[i][TWOLEVELFIELD_COLLISION_STRENGTH];
-    const double inv_omega_1 =
-        _two_level_element_data[i][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0];
-    const double inv_omega_2 =
-        _two_level_element_data[i][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1];
-    const double n = abundances[offset + i];
-    const double Texp = std::exp(-ksi * Tinv);
-    const double Celement =
-        n * kb * cfac * ksi * Gamma * Texp * A * inv_omega_1 /
-        (A + cfac * Gamma * (inv_omega_2 + Texp * inv_omega_1));
-    cooling += Celement;
+    const LineCoolingDataTwoLevelElement element =
+        static_cast< LineCoolingDataTwoLevelElement >(i);
+    const double level_population =
+        compute_level_population(element, collision_strength_prefactor, Tinv);
+    cooling +=
+        abundances[offset + i] * kb *
+        _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+        _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
+        level_population;
   }
 
   return cooling;
@@ -1232,6 +1244,10 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 /**
  * @brief Calculate the strength of a number of emission lines for the given
  * temperature, electron density and ion abundances.
+ *
+ * The matching of lines to transitions is based on tables 3.8-14 in Osterbrock
+ * & Ferland (2006) and similar data in the data papers used for transition
+ * data.
  *
  * @param temperature Temperature (in K).
  * @param electron_density Electron density (in m^-3).
@@ -1297,222 +1313,215 @@ void LineCoolingData::linestr(
     double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
     double &ciii1908, double &coii7325, double &csiv10) const {
 
+  /// initialize some variables
+
   // Boltzmann constant (in J s^-1)
   const double kb =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
-  // Planck constant (in J s)
-  const double h =
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
-  // electron mass (in kg)
-  const double m_e =
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS);
 
-  const double numfac =
-      h * h / (std::sqrt(kb) * std::pow(2. * M_PI * m_e, 1.5));
-  const double cfac = numfac * electron_density / std::sqrt(temperature);
+  const double collision_strength_prefactor =
+      _collision_strength_prefactor * electron_density / std::sqrt(temperature);
   const double T4 = temperature * 1.e-4;
   const double Tinv = 1. / temperature;
 
-  double Om[10][10];
-  double cs[10][10], cse[10][10];
-  for (unsigned int j = 0; j < 10; ++j) {
-    for (unsigned int mm = 0; mm < 10; ++mm) {
-      cs[j][mm] = _collision_strength[j][mm];
-      cse[j][mm] = _collision_strength_exponent[j][mm];
-    }
-  }
-  double T1;
+  /// 5 level elements
 
-  double alev[5][5], lev[5];
-  for (unsigned int j = 0; j < 10; ++j) {
-    for (unsigned int mm = 0; mm < 5; ++mm) {
-      alev[0][mm] = 1.;
-      lev[mm] = 0.;
-    }
-    lev[0] = 1.;
-    for (unsigned int mm = 0; mm < 10; ++mm) {
-      Om[j][mm] = cs[j][mm] * std::pow(T4, cse[j][mm]);
-    }
+  // there are no lines for element 0 (NI), so we skip the iteration for that
+  // element
+  for (int j = 1; j < 10; ++j) {
 
-    alev[1][0] = cfac * Om[j][0] * _inverse_statistical_weight[j][0] *
-                 std::exp(-_energy_difference[j][0] * Tinv);
-    alev[1][1] = -(_transition_probability[j][0] +
-                   cfac * _inverse_statistical_weight[j][1] *
-                       (Om[j][0] +
-                        Om[j][4] * std::exp(-_energy_difference[j][4] * Tinv) +
-                        Om[j][5] * std::exp(-_energy_difference[j][5] * Tinv) +
-                        Om[j][6] * std::exp(-_energy_difference[j][6] * Tinv)));
-    alev[1][2] = _transition_probability[j][4] +
-                 cfac * _inverse_statistical_weight[j][2] * Om[j][4];
-    alev[1][3] = _transition_probability[j][5] +
-                 cfac * _inverse_statistical_weight[j][3] * Om[j][5];
-    alev[1][4] = _transition_probability[j][6] +
-                 cfac * _inverse_statistical_weight[j][4] * Om[j][6];
+    const LineCoolingDataFiveLevelElement element =
+        static_cast< LineCoolingDataFiveLevelElement >(j);
 
-    alev[2][0] = cfac * Om[j][1] * std::exp(-_energy_difference[j][1] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[2][1] = cfac * Om[j][4] * std::exp(-_energy_difference[j][4] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[2][2] =
-        -(_transition_probability[j][1] + _transition_probability[j][4] +
-          cfac * _inverse_statistical_weight[j][2] *
-              (Om[j][1] + Om[j][4] +
-               Om[j][7] * std::exp(-_energy_difference[j][7] * Tinv) +
-               Om[j][8] * std::exp(-_energy_difference[j][8] * Tinv)));
-    alev[2][3] = _transition_probability[j][7] +
-                 cfac * Om[j][7] * _inverse_statistical_weight[j][3];
-    alev[2][4] = _transition_probability[j][8] +
-                 cfac * Om[j][8] * _inverse_statistical_weight[j][4];
+    double level_populations[5];
+    compute_level_populations(element, collision_strength_prefactor, Tinv, T4,
+                              level_populations);
 
-    alev[3][0] = cfac * Om[j][2] * std::exp(-_energy_difference[j][2] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[3][1] = cfac * Om[j][5] * std::exp(-_energy_difference[j][5] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[3][2] = cfac * Om[j][7] * std::exp(-_energy_difference[j][7] * Tinv) *
-                 _inverse_statistical_weight[j][2];
-    alev[3][3] =
-        -(_transition_probability[j][2] + _transition_probability[j][5] +
-          _transition_probability[j][7] +
-          cfac * _inverse_statistical_weight[j][3] *
-              (Om[j][2] + Om[j][5] + Om[j][7] +
-               Om[j][9] * std::exp(-_energy_difference[j][9] * Tinv)));
-    alev[3][4] = _transition_probability[j][9] +
-                 cfac * Om[j][9] * _inverse_statistical_weight[j][4];
+    const double prefactor = abundances[j] * kb;
 
-    alev[4][0] = cfac * Om[j][3] * std::exp(-_energy_difference[j][3] * Tinv) *
-                 _inverse_statistical_weight[j][0];
-    alev[4][1] = cfac * Om[j][6] * std::exp(-_energy_difference[j][6] * Tinv) *
-                 _inverse_statistical_weight[j][1];
-    alev[4][2] = cfac * Om[j][8] * std::exp(-_energy_difference[j][8] * Tinv) *
-                 _inverse_statistical_weight[j][2];
-    alev[4][3] = cfac * Om[j][9] * std::exp(-_energy_difference[j][9] * Tinv) *
-                 _inverse_statistical_weight[j][3];
-    alev[4][4] =
-        -(_transition_probability[j][3] + _transition_probability[j][6] +
-          _transition_probability[j][8] + _transition_probability[j][9] +
-          cfac * _inverse_statistical_weight[j][4] *
-              (Om[j][3] + Om[j][6] + Om[j][8] + Om[j][9]));
+    if (element == NII) {
 
-    // find level populations
-    const int status = simq(alev, lev);
-    if (status != 0) {
-      // something went wrong
-      cmac_warning("Singular matrix given to simq!");
-      cmac_warning("Temperature: %g", temperature);
-      cmac_warning("Electron density: %g", electron_density);
-      cmac_error("We better stop!");
-    }
+      c5755 = prefactor * level_populations[4] *
+              _transition_probability[NII][TRANSITION_3_to_4] *
+              _energy_difference[NII][TRANSITION_3_to_4];
+      c6584 = prefactor * level_populations[3] *
+              _transition_probability[NII][TRANSITION_2_to_3] *
+              _energy_difference[NII][TRANSITION_2_to_3];
+      cnii122 = prefactor * level_populations[2] *
+                _transition_probability[NII][TRANSITION_1_to_2] *
+                _energy_difference[j][TRANSITION_1_to_2];
 
-    const double cl2 = abundances[j] * kb * lev[1] *
-                       _transition_probability[j][0] * _energy_difference[j][0];
-    const double cl3 =
-        abundances[j] * kb * lev[2] *
-        (_transition_probability[j][1] * _energy_difference[j][1] +
-         _transition_probability[j][4] * _energy_difference[j][4]);
-    const double cl4 =
-        abundances[j] * kb * lev[3] *
-        (_transition_probability[j][2] * _energy_difference[j][2] +
-         _transition_probability[j][5] * _energy_difference[j][5] +
-         _transition_probability[j][7] * _energy_difference[j][7]);
-    const double cl5 =
-        abundances[j] * kb * lev[4] *
-        (_transition_probability[j][3] * _energy_difference[j][3] +
-         _transition_probability[j][6] * _energy_difference[j][6] +
-         _transition_probability[j][8] * _energy_difference[j][8] +
-         _transition_probability[j][9] * _energy_difference[j][9]);
+    } else if (element == OI) {
 
-    if (j == 1) {
-      c5755 = abundances[j] * kb * lev[4] * _transition_probability[j][9] *
-              _energy_difference[j][9];
-      c6584 = abundances[j] * kb * lev[3] * _transition_probability[j][7] *
-              _energy_difference[j][7];
-      cnii122 = abundances[j] * kb * lev[2] * _transition_probability[j][4] *
-                _energy_difference[j][4];
-    }
-    if (j == 2) {
-      c6300_6363 = abundances[j] * kb * lev[3] *
-                   (_transition_probability[j][2] * _energy_difference[j][2] +
-                    _transition_probability[j][5] * _energy_difference[j][5]);
-    }
-    if (j == 3) {
-      c3729 = cl2;
-      c3727 = cl2 + cl3;
+      c6300_6363 = prefactor * level_populations[3] *
+                   (_transition_probability[OI][TRANSITION_0_to_3] *
+                        _energy_difference[OI][TRANSITION_0_to_3] +
+                    _transition_probability[OI][TRANSITION_1_to_3] *
+                        _energy_difference[OI][TRANSITION_1_to_3]);
+
+    } else if (element == OII) {
+
+      c3729 = prefactor * level_populations[1] *
+              _transition_probability[OII][TRANSITION_0_to_1] *
+              _energy_difference[OII][TRANSITION_0_to_1];
+      c3727 =
+          prefactor * (level_populations[1] *
+                           _transition_probability[OII][TRANSITION_0_to_1] *
+                           _energy_difference[OII][TRANSITION_0_to_1] +
+                       level_populations[2] *
+                           (_transition_probability[OII][TRANSITION_0_to_2] *
+                                _energy_difference[OII][TRANSITION_0_to_2] +
+                            _transition_probability[OII][TRANSITION_1_to_2] *
+                                _energy_difference[OII][TRANSITION_1_to_2]));
       coii7325 =
-          abundances[j] * kb *
-          (lev[4] * (_transition_probability[j][6] * _energy_difference[j][6] +
-                     _transition_probability[j][8] * _energy_difference[j][8]) +
-           lev[3] * (_transition_probability[j][5] * _energy_difference[j][5] +
-                     _transition_probability[j][7] * _energy_difference[j][7]));
-    }
-    if (j == 4) {
-      c4363 = abundances[j] * kb * lev[4] * _transition_probability[j][9] *
-              _energy_difference[j][9];
-      c5007 = abundances[j] * kb * lev[3] * _transition_probability[j][7] *
-              _energy_difference[j][7];
-      c52mu = abundances[j] * kb * lev[2] * _transition_probability[j][4] *
-              _energy_difference[j][4];
-      c88mu = abundances[j] * kb * lev[1] * _transition_probability[j][0] *
-              _energy_difference[j][0];
-    }
-    if (j == 5) {
-      c3869 = abundances[j] * kb * lev[3] * _transition_probability[j][2] *
-              _energy_difference[j][2];
-      cneiii15 = cl2;
-    }
-    if (j == 6) {
-      c4072 =
-          abundances[j] * kb *
-          (lev[3] * _transition_probability[j][2] * _energy_difference[j][2] +
-           lev[4] * _transition_probability[j][3] * _energy_difference[j][3]);
-      c6717 = cl3;
-      c6725 = cl2 + cl3;
-    }
-    if (j == 7) {
-      c9405 = abundances[j] * kb * lev[3] *
-              (_transition_probability[j][5] * _energy_difference[j][5] +
-               _transition_probability[j][7] * _energy_difference[j][7]);
-      c6312 = abundances[j] * kb * lev[4] * _transition_probability[j][9] *
-              _energy_difference[j][9];
-      c33mu = abundances[j] * kb * lev[1] * _transition_probability[j][0] *
-              _energy_difference[j][0];
-      c19mu = abundances[j] * kb * lev[2] * _transition_probability[j][4] *
-              _energy_difference[j][4];
-    }
-    if (j == 8) {
-      cii2325 = cl3 + cl4 + cl5;
-    }
-    if (j == 9) {
-      ciii1908 = cl2 + cl3 + cl4;
+          prefactor * (level_populations[4] *
+                           (_transition_probability[OII][TRANSITION_1_to_4] *
+                                _energy_difference[OII][TRANSITION_1_to_4] +
+                            _transition_probability[OII][TRANSITION_2_to_4] *
+                                _energy_difference[OII][TRANSITION_2_to_4]) +
+                       level_populations[3] *
+                           (_transition_probability[OII][TRANSITION_1_to_3] *
+                                _energy_difference[OII][TRANSITION_1_to_3] +
+                            _transition_probability[OII][TRANSITION_2_to_3] *
+                                _energy_difference[OII][TRANSITION_2_to_3]));
+
+    } else if (element == OIII) {
+
+      c4363 = prefactor * level_populations[4] *
+              _transition_probability[OIII][TRANSITION_3_to_4] *
+              _energy_difference[OIII][TRANSITION_3_to_4];
+      c5007 = prefactor * level_populations[3] *
+              _transition_probability[OIII][TRANSITION_2_to_3] *
+              _energy_difference[OIII][TRANSITION_2_to_3];
+      c52mu = prefactor * level_populations[2] *
+              _transition_probability[OIII][TRANSITION_1_to_2] *
+              _energy_difference[OIII][TRANSITION_1_to_2];
+      c88mu = prefactor * level_populations[1] *
+              _transition_probability[OIII][TRANSITION_0_to_1] *
+              _energy_difference[OIII][TRANSITION_0_to_1];
+
+    } else if (element == NeIII) {
+
+      c3869 = prefactor * level_populations[3] *
+              _transition_probability[NeIII][TRANSITION_0_to_3] *
+              _energy_difference[NeIII][TRANSITION_0_to_3];
+      cneiii15 = prefactor * level_populations[1] *
+                 _transition_probability[NeIII][TRANSITION_0_to_1] *
+                 _energy_difference[NeIII][TRANSITION_0_to_1];
+
+    } else if (element == SII) {
+
+      c4072 = prefactor * (level_populations[3] *
+                               _transition_probability[SII][TRANSITION_0_to_3] *
+                               _energy_difference[SII][TRANSITION_0_to_3] +
+                           level_populations[4] *
+                               _transition_probability[SII][TRANSITION_0_to_4] *
+                               _energy_difference[SII][TRANSITION_0_to_4]);
+      c6717 = prefactor * level_populations[2] *
+              (_transition_probability[SII][TRANSITION_0_to_2] *
+                   _energy_difference[SII][TRANSITION_0_to_2] +
+               _transition_probability[SII][TRANSITION_1_to_2] *
+                   _energy_difference[SII][TRANSITION_1_to_2]);
+      c6725 =
+          prefactor * (level_populations[1] *
+                           _transition_probability[SII][TRANSITION_0_to_1] *
+                           _energy_difference[SII][TRANSITION_0_to_1] +
+                       level_populations[2] *
+                           (_transition_probability[SII][TRANSITION_0_to_2] *
+                                _energy_difference[SII][TRANSITION_0_to_2] +
+                            _transition_probability[SII][TRANSITION_1_to_2] *
+                                _energy_difference[SII][TRANSITION_1_to_2]));
+
+    } else if (element == SIII) {
+
+      c9405 = prefactor * level_populations[3] *
+              (_transition_probability[SIII][TRANSITION_1_to_3] *
+                   _energy_difference[SIII][TRANSITION_1_to_3] +
+               _transition_probability[SIII][TRANSITION_2_to_3] *
+                   _energy_difference[SIII][TRANSITION_2_to_3]);
+      c6312 = prefactor * level_populations[4] *
+              _transition_probability[SIII][TRANSITION_3_to_4] *
+              _energy_difference[SIII][TRANSITION_3_to_4];
+      c33mu = prefactor * level_populations[1] *
+              _transition_probability[SIII][TRANSITION_0_to_1] *
+              _energy_difference[SIII][TRANSITION_0_to_1];
+      c19mu = prefactor * level_populations[2] *
+              _transition_probability[SIII][TRANSITION_1_to_2] *
+              _energy_difference[SIII][TRANSITION_1_to_2];
+
+    } else if (element == CII) {
+
+      cii2325 =
+          prefactor * (level_populations[2] *
+                           (_transition_probability[CII][TRANSITION_0_to_2] *
+                                _energy_difference[CII][TRANSITION_0_to_2] +
+                            _transition_probability[CII][TRANSITION_1_to_2] *
+                                _energy_difference[CII][TRANSITION_1_to_2]) +
+                       level_populations[3] *
+                           (_transition_probability[CII][TRANSITION_0_to_3] *
+                                _energy_difference[CII][TRANSITION_0_to_3] +
+                            _transition_probability[CII][TRANSITION_1_to_3] *
+                                _energy_difference[CII][TRANSITION_1_to_3] +
+                            _transition_probability[CII][TRANSITION_2_to_3] *
+                                _energy_difference[CII][TRANSITION_2_to_3]) +
+                       level_populations[4] *
+                           (_transition_probability[CII][TRANSITION_0_to_4] *
+                                _energy_difference[CII][TRANSITION_0_to_4] +
+                            _transition_probability[CII][TRANSITION_1_to_4] *
+                                _energy_difference[CII][TRANSITION_1_to_4] +
+                            _transition_probability[CII][TRANSITION_2_to_4] *
+                                _energy_difference[CII][TRANSITION_2_to_4] +
+                            _transition_probability[CII][TRANSITION_3_to_4] *
+                                _energy_difference[CII][TRANSITION_3_to_4]));
+
+    } else if (element == CIII) {
+
+      ciii1908 =
+          prefactor * (level_populations[1] *
+                           _transition_probability[CIII][TRANSITION_0_to_1] *
+                           _energy_difference[CIII][TRANSITION_0_to_1] +
+                       level_populations[2] *
+                           (_transition_probability[CIII][TRANSITION_0_to_2] *
+                                _energy_difference[CIII][TRANSITION_0_to_2] +
+                            _transition_probability[CIII][TRANSITION_1_to_2] *
+                                _energy_difference[CIII][TRANSITION_1_to_2]) +
+                       level_populations[3] *
+                           (_transition_probability[CIII][TRANSITION_0_to_3] *
+                                _energy_difference[CIII][TRANSITION_0_to_3] +
+                            _transition_probability[CIII][TRANSITION_1_to_3] *
+                                _energy_difference[CIII][TRANSITION_1_to_3] +
+                            _transition_probability[CIII][TRANSITION_2_to_3] *
+                                _energy_difference[CIII][TRANSITION_2_to_3]));
     }
   }
 
-  // 2 level atoms
+  /// 2 level elements
 
-  const double econst = PhysicalConstants::get_physical_constant(
-                            PHYSICALCONSTANT_RYDBERG_ENERGY) /
-                        kb;
-  // Blum & Pradhan (1992), table 5, first energy level
-  const double EnNIII = 0.00159 * econst;
-  // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition
-  const double EaNIII = 4.736e-5;
-  // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
-  const double OmNIII = 1.4454;
+  // offset of two level elements in the abundances array
+  const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-  // Saraph & Tully (1994), table 2, fine structure splitting energy for Z = 10
-  const double EnNeII = 0.0071 * econst;
-  // Kaufman & Sugar (1986), table 7
-  const double EaNeII = 8.55e-3;
-  // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
-  const double OmNeII = 0.314;
+    const LineCoolingDataTwoLevelElement element =
+        static_cast< LineCoolingDataTwoLevelElement >(i);
 
-  double sw1 = 2.;
-  double sw2 = 4.;
-  T1 = std::exp(-EnNIII * Tinv);
-  cniii57 = abundances[10] * kb * cfac * EnNIII * OmNIII * T1 * EaNIII /
-            (sw1 * (EaNIII + cfac * OmNIII * (1. / sw2 + T1 / sw1)));
-  sw1 = 4.;
-  sw2 = 2.;
-  T1 = std::exp(-EnNeII * Tinv);
-  cneii12 = abundances[11] * kb * cfac * OmNeII * EnNeII * T1 * EaNeII /
-            (sw1 * (EaNeII + cfac * OmNeII * (1. / sw2 + T1 / sw1)));
+    const double level_population =
+        compute_level_population(element, collision_strength_prefactor, Tinv);
+
+    if (element == NIII) {
+
+      cniii57 =
+          abundances[offset + NIII] * kb *
+          _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+          _two_level_element_data[NIII][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
+          level_population;
+
+    } else if (element == NeII) {
+
+      cneii12 =
+          abundances[offset + NeII] * kb *
+          _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+          _two_level_element_data[NeII][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
+          level_population;
+    }
+  }
 }

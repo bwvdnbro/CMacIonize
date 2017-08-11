@@ -64,7 +64,6 @@ set(TESTLINECOOLINGDATA_SOURCES
     ../src/Error.hpp
     ../src/LineCoolingData.cpp
     ../src/LineCoolingData.hpp
-    ../src/LineCoolingDataLocation.hpp.in
 )
 # Call the macro that creates the unit test
 add_unit_test(NAME testLineCoolingData

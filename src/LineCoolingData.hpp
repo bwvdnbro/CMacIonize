@@ -32,28 +32,30 @@
 
 /**
  * @brief Names of supported five level elements.
+ *
+ * The order is historical: this was the order of the elements in Kenny's code.
  */
 enum LineCoolingDataFiveLevelElement {
   /*! @brief Nitrogen I. */
-  NI = 0, // done
+  NI = 0,
   /*! @brief Nitrogen II. */
-  NII, // done
+  NII,
   /*! @brief Oxygen I. */
-  OI, // done
+  OI,
   /*! @brief Oxygen II. */
-  OII, // done
+  OII,
   /*! @brief Oxygen III. */
-  OIII, // done
+  OIII,
   /*! @brief Neon III. */
-  NeIII, // done
+  NeIII,
   /*! @brief Sulphur II. */
-  SII, // done
+  SII,
   /*! @brief Sulphur III. */
   SIII,
   /*! @brief Carbon II. */
-  CII, // done
+  CII,
   /*! @brief Carbon III. */
-  CIII, // done
+  CIII,
   /*! @brief Counter. Should always be the last element! */
   LINECOOLINGDATA_NUMFIVELEVELELEMENTS
 };
@@ -133,50 +135,59 @@ enum LineCoolingDataTransition {
  * and Active Galactic Nuclei, 2nd edition
  * (http://adsabs.harvard.edu/abs/2006agna.book.....O).
  *
- * The data used comes from Pradhan A. K. & Peng, J. 1995, The Analsis of
- * Emission Lines, STScI Symp. 8, Cambridge Univ. Press, and data that used to
- * be available from http://www-astronomy.mps.ohio-state.edu/∼pradhan/.
- * Unfortunately, these data are no longer accessible, so we just hope our
- * legacy version is accurate.
+ * We use data from a large number of different sources, many of which are part
+ * of the the IRON project and were located using their online database
+ * (http://cdsweb.u-strasbg.fr/tipbase/home.html). We also used the extensive
+ * list of data sources in Lykins, M. L., Ferland, G. J., Kisielius, R.,
+ * Chatzikos, M., Porter, R. L., van Hoof, P. A. M., Williams, R. J. R., Keenan,
+ * F. P. & Stancil, P. C. 2015, ApJ, 807, 118
+ * (http://adsabs.harvard.edu/abs/2015ApJ...807..118L) to locate data for ions
+ * that seem to be missing from the IRON database.
  *
- * We use data from
- *  - http://cdsweb.u-strasbg.fr/tipbase/home.html
- *  - Blum, R. D. & Pradhan, A. K. 1992, ApJS, 80, 425
- *    (http://adsabs.harvard.edu/abs/1992ApJS...80..425B)
- *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1998, A&AS, 131, 499
- *    (http://adsabs.harvard.edu/abs/1998A%26AS..131..499G)
- *  - Saraph, H. E. & Tully, J. A. 1994, A&AS, 107, 29
- *    (http://adsabs.harvard.edu/abs/1994A%26AS..107...29S)
- *  - Kaufman, V. & Sugar, J. 1986, JPCRD, 15, 321
- *    (http://adsabs.harvard.edu/abs/1986JPCRD..15..321K)
- *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPhB, 34, 4401
- *    (http://adsabs.harvard.edu/abs/2001JPhB...34.4401G)
- *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1997, A&AS, 123, 159
- *    (http://adsabs.harvard.edu/abs/1997A%26AS..123..159G)
- *  - Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
- *    (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L)
- *  - Butler, K. & Zeippen, C. J. 1994, A&AS, 108, 1
- *    (http://adsabs.harvard.edu/abs/1994A%26AS..108....1B)
- *  - Zatsarinny, O. & Tayal, S. S. 2003, ApJS, 148, 575
- *    (http://adsabs.harvard.edu/abs/2003ApJS..148..575Z)
+ * The actual data used comes from (in alphabetical order):
  *  - Berrington, K. A. 1988, JPhB, 21, 1083
- *    (http://adsabs.harvard.edu/abs/1988JPhB...21.1083B)
- *  - Froese Fischer, C. & Tachiev, G. 2004, ADNDT, 87, 1
- *    (http://adsabs.harvard.edu/abs/2004ADNDT..87....1F)
- *  - Tayal, S. S. 2000, ADNDT, 76, 191
- *    (http://adsabs.harvard.edu/abs/2000ADNDT..76..191T)
- *  - Kisielius, R., Storey, P. J., Ferland, G. J. & Keenan, F. P. 2009, MNRAS,
- *    397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K)
- *  - Tayal, S. S. 2008, A&A, 486, 629
- *    (http://adsabs.harvard.edu/abs/2008A%26A...486..629T)
+ *    (http://adsabs.harvard.edu/abs/1988JPhB...21.1083B) (OI)
  *  - Berrington, K. A., Burke, P. G., Dufton, P. L. & Kingston, A. E. 1985,
- *    ADNDT, 33, 195 (http://adsabs.harvard.edu/abs/1985ADNDT..33..195B)
- *  - Tayal, S. S. & Zatsarinny, O. 2010, ApJS, 188, 32
- *    (http://adsabs.harvard.edu/abs/2010ApJS..188...32T)
- *  - Mendoza, C. & Zeippen, C. J. 1982, MNRAS, 199, 1025
- *    (http://adsabs.harvard.edu/abs/1982MNRAS.199.1025M)
+ *    ADNDT, 33, 195 (http://adsabs.harvard.edu/abs/1985ADNDT..33..195B) (CIII)
+ *  - Blum, R. D. & Pradhan, A. K. 1992, ApJS, 80, 425
+ *    (http://adsabs.harvard.edu/abs/1992ApJS...80..425B) (NIII)
+ *  - Butler, K. & Zeippen, C. J. 1994, A&AS, 108, 1
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..108....1B) (NeIII)
+ *  - Froese Fischer, C. & Tachiev, G. 2004, ADNDT, 87, 1
+ *    (http://adsabs.harvard.edu/abs/2004ADNDT..87....1F) (NI, OII, CII, CIII)
+ *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1997, A&AS, 123, 159
+ *    (http://adsabs.harvard.edu/abs/1997A%26AS..123..159G) (NII, OI, OIII,
+ *    NeIII)
+ *  - Galavis, M. E., Mendoza, C. & Zeippen, C. J. 1998, A&AS, 131, 499
+ *    (http://adsabs.harvard.edu/abs/1998A%26AS..131..499G) (NIII)
+ *  - Griffin, D. C, Mitnik, D. M., Badnell, N. R. 2001, JPhB, 34, 4401
+ *    (http://adsabs.harvard.edu/abs/2001JPhB...34.4401G) (NeII)
  *  - Hudson, C. E., Ramsbottom, C. A. & Scott, M. P. 2012, ApJ, 750, 65
- *    (http://adsabs.harvard.edu/abs/2012ApJ...750...65H)
+ *    (http://adsabs.harvard.edu/abs/2012ApJ...750...65H) (SIII)
+ *  - Kaufman, V. & Sugar, J. 1986, JPCRD, 15, 321
+ *    (http://adsabs.harvard.edu/abs/1986JPCRD..15..321K) (NeII)
+ *  - Kisielius, R., Storey, P. J., Ferland, G. J. & Keenan, F. P. 2009, MNRAS,
+ *    397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K) (OII)
+ *  - Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L) (NII, OIII)
+ *  - Mendoza, C. & Zeippen, C. J. 1982, MNRAS, 199, 1025
+ *    (http://adsabs.harvard.edu/abs/1982MNRAS.199.1025M) (SIII)
+ *  - Saraph, H. E. & Tully, J. A. 1994, A&AS, 107, 29
+ *    (http://adsabs.harvard.edu/abs/1994A%26AS..107...29S) (NeII)
+ *  - Tayal, S. S. 2000, ADNDT, 76, 191
+ *    (http://adsabs.harvard.edu/abs/2000ADNDT..76..191T) (NI)
+ *  - Tayal, S. S. 2008, A&A, 486, 629
+ *    (http://adsabs.harvard.edu/abs/2008A%26A...486..629T) (CII)
+ *  - Tayal, S. S. & Zatsarinny, O. 2010, ApJS, 188, 32
+ *    (http://adsabs.harvard.edu/abs/2010ApJS..188...32T) (SII)
+ *  - Zatsarinny, O. & Tayal, S. S. 2003, ApJS, 148, 575
+ *    (http://adsabs.harvard.edu/abs/2003ApJS..148..575Z) (OI)
+ *
+ * Adding new lines is straightforward: add an entry in the corresponding enum
+ * (LineCoolingDataFiveLevelElement or LineCoolingDataTwoLevelElement; before
+ * the counter element), and initialize the data in the constructor. To compute
+ * line strengths, add relevant code to linestr(). Adding new elements will
+ * break some unit tests in testLineCoolingData, but should work fine.
  */
 class LineCoolingData {
 private:
@@ -206,7 +217,18 @@ private:
   double _two_level_element_data[LINECOOLINGDATA_NUMTWOLEVELELEMENTS]
                                 [LINECOOLINGDATA_NUMTWOLEVELFIELDS];
 
-  static bool read_values(std::string line, double *array, unsigned int size);
+  /*! @brief Prefactor for collision strengths: \f$\frac{h^2}{\sqrt{k}
+   *  \left(2\pi{}m_e\right)^\frac{3}{2}\f$ (in K^0.5 m^3 s^-1). */
+  double _collision_strength_prefactor;
+
+  void compute_level_populations(LineCoolingDataFiveLevelElement element,
+                                 double collision_strength_prefactor,
+                                 double Tinv, double T4,
+                                 double level_populations[5]) const;
+
+  double compute_level_population(LineCoolingDataTwoLevelElement element,
+                                  double collision_strength_prefactor,
+                                  double Tinv) const;
 
 public:
   LineCoolingData();
