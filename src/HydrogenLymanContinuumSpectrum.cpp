@@ -38,7 +38,7 @@
  * @param cross_sections Photoionization cross sections.
  */
 HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
-    CrossSections &cross_sections) {
+    const CrossSections &cross_sections) {
 
   // allocate memory for the data tables
   _frequency.resize(HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.);

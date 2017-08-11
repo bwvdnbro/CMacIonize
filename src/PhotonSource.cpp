@@ -51,16 +51,15 @@
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
-                           PhotonSourceSpectrum *discrete_spectrum,
-                           ContinuousPhotonSource *continuous_source,
-                           PhotonSourceSpectrum *continuous_spectrum,
-                           Abundances &abundances,
-                           CrossSections &cross_sections, Log *log)
+                           const PhotonSourceSpectrum *discrete_spectrum,
+                           const ContinuousPhotonSource *continuous_source,
+                           const PhotonSourceSpectrum *continuous_spectrum,
+                           const Abundances &abundances,
+                           const CrossSections &cross_sections, Log *log)
     : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum), _abundances(abundances),
-      _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
-      _HeLyc_spectrum(cross_sections), _reemission_handler(cross_sections),
+      _cross_sections(cross_sections), _reemission_handler(cross_sections),
       _log(log) {
 
   double discrete_luminosity = 0.;
@@ -109,7 +108,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     }
   }
 
-  double discrete_fraction = discrete_luminosity / _total_luminosity;
+  const double discrete_fraction = discrete_luminosity / _total_luminosity;
 
   if (discrete_luminosity > 0.) {
     if (continuous_luminosity > 0.) {
@@ -146,7 +145,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
+    const IonName ion = static_cast< IonName >(i);
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }

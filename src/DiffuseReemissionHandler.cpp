@@ -31,7 +31,7 @@
  * @param cross_sections Cross sections for photoionization.
  */
 DiffuseReemissionHandler::DiffuseReemissionHandler(
-    CrossSections &cross_sections)
+    const CrossSections &cross_sections)
     : _HLyc_spectrum(cross_sections), _HeLyc_spectrum(cross_sections) {}
 
 /**

@@ -64,7 +64,7 @@ private:
   std::vector< CoordinateVector<> > _discrete_positions;
 
   /*! @brief Spectrum of the discrete photon sources. */
-  PhotonSourceSpectrum *_discrete_spectrum;
+  const PhotonSourceSpectrum *_discrete_spectrum;
 
   /*! @brief Weight of discrete photons. */
   double _discrete_photon_weight;
@@ -76,10 +76,10 @@ private:
   /// continuous sources
 
   /*! @brief ContinuousPhotonSource instance used. */
-  ContinuousPhotonSource *_continuous_source;
+  const ContinuousPhotonSource *_continuous_source;
 
   /*! @brief Spectrum of the continuous sources. */
-  PhotonSourceSpectrum *_continuous_spectrum;
+  const PhotonSourceSpectrum *_continuous_spectrum;
 
   /*! @brief Weight of continuous photons. */
   double _continuous_photon_weight;
@@ -94,19 +94,10 @@ private:
   double _total_luminosity;
 
   /*! @brief Abundances of the elements in the ISM. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief Cross sections for photoionization. */
-  CrossSections &_cross_sections;
-
-  /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
-  HydrogenLymanContinuumSpectrum _HLyc_spectrum;
-
-  /*! @brief Helium Lyman continuum spectrum, used for re-emission. */
-  HeliumLymanContinuumSpectrum _HeLyc_spectrum;
-
-  /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
-  HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
+  const CrossSections &_cross_sections;
 
   /*! @brief ReemissionHandler for diffuse reemission. */
   const DiffuseReemissionHandler _reemission_handler;
@@ -118,11 +109,11 @@ private:
 
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
-               PhotonSourceSpectrum *discrete_spectrum,
-               ContinuousPhotonSource *continuous_source,
-               PhotonSourceSpectrum *continuous_spectrum,
-               Abundances &abundances, CrossSections &cross_sections,
-               Log *log = nullptr);
+               const PhotonSourceSpectrum *discrete_spectrum,
+               const ContinuousPhotonSource *continuous_source,
+               const PhotonSourceSpectrum *continuous_spectrum,
+               const Abundances &abundances,
+               const CrossSections &cross_sections, Log *log = nullptr);
 
   /**
    * @brief Get a random direction.

@@ -52,7 +52,7 @@ private:
   const HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
 
 public:
-  DiffuseReemissionHandler(CrossSections &cross_sections);
+  DiffuseReemissionHandler(const CrossSections &cross_sections);
 
   /**
    * @brief Set the re-emission probabilities for the given cell.

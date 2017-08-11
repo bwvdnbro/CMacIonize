@@ -62,7 +62,7 @@ private:
   std::vector< std::vector< double > > _cumulative_distribution;
 
 public:
-  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
+  HydrogenLymanContinuumSpectrum(const CrossSections &cross_sections);
 
   /**
    * @brief Virtual destructor.
