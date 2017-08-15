@@ -280,22 +280,22 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
-          params.get_value< bool >("densityfunction:fallback_periodic_flag",
+          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_value< bool >("DensityFunction:fallback periodic flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:fallback_unit_length", "0. m"),
+              "DensityFunction:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
-              "densityfunction:fallback_unit_mass", "0. kg"),
+              "DensityFunction:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_unit_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:use_neutral_fraction",
+              "DensityFunction:fallback unit temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:use neutral fraction",
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_initial_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:comoving_integration_flag",
+              "DensityFunction:fallback initial temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:comoving integration flag",
                                    false),
-          params.get_value< double >("densityfunction:hubble_parameter", 0.7),
+          params.get_value< double >("DensityFunction:hubble parameter", 0.7),
           log) {}
 
 /**

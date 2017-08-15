@@ -160,24 +160,24 @@ public:
    */
   inline CCDImage(ParameterFile &params, Log *log = nullptr)
       : CCDImage(
-            params.get_physical_value< QUANTITY_ANGLE >("ccdimage:view_theta",
+            params.get_physical_value< QUANTITY_ANGLE >("CCDImage:view theta",
                                                         "89.7 degrees"),
-            params.get_physical_value< QUANTITY_ANGLE >("ccdimage:view_phi",
+            params.get_physical_value< QUANTITY_ANGLE >("CCDImage:view phi",
                                                         "0. degrees"),
-            params.get_value< unsigned int >("ccdimage:image_width", 200),
-            params.get_value< unsigned int >("ccdimage:image_height", 200),
-            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:anchor_x",
+            params.get_value< unsigned int >("CCDImage:image width", 200),
+            params.get_value< unsigned int >("CCDImage:image height", 200),
+            params.get_physical_value< QUANTITY_LENGTH >("CCDImage:anchor x",
                                                          "-12.1 kpc"),
-            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:anchor_y",
+            params.get_physical_value< QUANTITY_LENGTH >("CCDImage:anchor y",
                                                          "-12.1 kpc"),
-            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:sides_x",
+            params.get_physical_value< QUANTITY_LENGTH >("CCDImage:sides x",
                                                          "24.2 kpc"),
-            params.get_physical_value< QUANTITY_LENGTH >("ccdimage:sides_y",
+            params.get_physical_value< QUANTITY_LENGTH >("CCDImage:sides y",
                                                          "24.2 kpc"),
-            params.get_value< std::string >("ccdimage:type", "BinaryArray"),
-            params.get_value< std::string >("ccdimage:filename",
+            params.get_value< std::string >("CCDImage:type", "BinaryArray"),
+            params.get_value< std::string >("CCDImage:filename",
                                             "galaxy_image"),
-            params.get_value< std::string >("output_folder", "."), log) {}
+            params.get_value< std::string >("output folder", "."), log) {}
 
   /**
    * @brief Reset the image contents to zero.

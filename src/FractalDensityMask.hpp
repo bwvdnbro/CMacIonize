@@ -355,16 +355,17 @@ public:
   FractalDensityMask(ParameterFile &params, Log *log = nullptr)
       : FractalDensityMask(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitymask:box_anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityMask:box anchor", "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitymask:box_sides", "[1. m, 1. m, 1. m]")),
+                      "DensityMask:box sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< int > >(
-                "densitymask:resolution", CoordinateVector< int >(20)),
-            params.get_value< unsigned int >("densitymask:numpart", 1e6),
-            params.get_value< int >("densitymask:random_seed", 42),
-            params.get_value< double >("densitymask:fractal_dimension", 2.6),
-            params.get_value< unsigned int >("densitymask:num_level", 4),
-            params.get_value< double >("densitymask:fractal_fraction", 1.),
+                "DensityMask:resolution", CoordinateVector< int >(20)),
+            params.get_value< unsigned int >("DensityMask:number of particles",
+                                             1e6),
+            params.get_value< int >("DensityMask:random seed", 42),
+            params.get_value< double >("DensityMask:fractal dimension", 2.6),
+            params.get_value< unsigned int >("DensityMask:number of levels", 4),
+            params.get_value< double >("DensityMask:fractal fraction", 1.),
             log) {}
 
   /**

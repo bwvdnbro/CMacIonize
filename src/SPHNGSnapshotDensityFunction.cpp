@@ -389,19 +389,19 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : SPHNGSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
+          params.get_value< std::string >("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:initial_temperature", "8000. K"),
-          params.get_value< bool >("densityfunction:write_statistics", false),
+              "DensityFunction:initial temperature", "8000. K"),
+          params.get_value< bool >("DensityFunction:write statistics", false),
           params.get_value< unsigned int >(
-              "densityfunction:statistics_number_of_bins", 200),
+              "DensityFunction:statistics number of bins", 200),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:statistics_minimum_distance", "1.e-5 m"),
+              "DensityFunction:statistics minimum distance", "1.e-5 m"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:statistics_maximum_distance", "1. kpc"),
-          params.get_value< std::string >("densityfunction:statistics_filename",
+              "DensityFunction:statistics maximum distance", "1. kpc"),
+          params.get_value< std::string >("DensityFunction:statistics filename",
                                           "ngb_statistics.txt"),
-          params.get_value< bool >("densityfunction:use_new_algorithm", false),
+          params.get_value< bool >("DensityFunction:use new algorithm", false),
           log) {}
 
 /**

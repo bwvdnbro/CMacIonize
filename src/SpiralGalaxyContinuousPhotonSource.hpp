@@ -136,14 +136,15 @@ public:
       : SpiralGalaxyContinuousPhotonSource(
             Box<>(
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
+                    "DensityGrid:box anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[24. kpc, 24. kpc, 24. kpc]")),
+                    "DensityGrid:box sides", "[24. kpc, 24. kpc, 24. kpc]")),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "continuousphotonsource:r_stars", "5. kpc"),
+                "ContinuousPhotonSource:scale length stars", "5. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "continuousphotonsource:h_stars", "0.6 kpc"),
-            params.get_value< double >("continuousphotonsource:B_over_T", 0.2),
+                "ContinuousPhotonSource:scale height stars", "0.6 kpc"),
+            params.get_value< double >(
+                "ContinuousPhotonSource:bulge over total ratio", 0.2),
             log) {}
 
   /**

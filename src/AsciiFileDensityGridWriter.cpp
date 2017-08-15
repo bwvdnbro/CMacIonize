@@ -51,9 +51,9 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(ParameterFile &params,
                                                        Log *log)
     : AsciiFileDensityGridWriter(
-          params.get_value< std::string >("densitygridwriter:prefix",
+          params.get_value< std::string >("DensityGridWriter:prefix",
                                           "snapshot"),
-          params.get_value< std::string >("densitygridwriter:folder", "."),
+          params.get_value< std::string >("DensityGridWriter:folder", "."),
           log) {}
 
 /**

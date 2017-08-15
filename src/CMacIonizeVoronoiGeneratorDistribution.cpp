@@ -36,7 +36,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
     ParameterFile &params)
     : _next_index(0) {
   std::string filename = params.get_value< std::string >(
-      "densitygrid:voronoi_generator_distribution:filename");
+      "DensityGrid:VoronoiGeneratorDistribution:filename");
 
   HDF5Tools::initialize();
 
@@ -46,7 +46,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
 
   // get the simulation box anchor
   CoordinateVector<> box_anchor =
-      params.get_physical_vector< QUANTITY_LENGTH >("densitygrid:box_anchor");
+      params.get_physical_vector< QUANTITY_LENGTH >("DensityGrid:box anchor");
 
   // units
   double unit_length_in_SI = 1.;

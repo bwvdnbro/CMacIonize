@@ -108,17 +108,16 @@ public:
                                                  Log *log = nullptr)
       : PerturbedCartesianVoronoiGeneratorDistribution(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< unsigned int > >(
-                "densitygrid:voronoi_generator_distribution:ncell",
+                "DensityGrid:VoronoiGeneratorDistribution:number of cells",
                 CoordinateVector< unsigned int >(10, 10, 10)),
             params.get_value< int >(
-                "densitygrid:voronoi_generator_distribution:random_seed", 42),
+                "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "densitygrid:voronoi_generator_distribution:amplitude",
-                "0.01 m"),
+                "DensityGrid:VoronoiGeneratorDistribution:amplitude", "0.01 m"),
             log) {}
 
   /**

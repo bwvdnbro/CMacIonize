@@ -65,9 +65,10 @@ public:
   OIAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : OIAMRRefinementScheme(
             params.get_value< double >(
-                "densitygrid:amrrefinementscheme:target_N", 1.e5),
+                "DensityGrid:AMRRefinementScheme:target number of OI particles",
+                1.e5),
             params.get_value< unsigned char >(
-                "densitygrid:amrrefinementscheme:maximum_level", 6),
+                "DensityGrid:AMRRefinementScheme:maximum refinement level", 6),
             log) {}
 
   /**

@@ -126,7 +126,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(std::string role,
     : PlanckPhotonSourceSpectrum(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               role + ":temperature", "40000. K"),
-          params.get_physical_value< QUANTITY_FLUX >(role + ":ionizing_flux",
+          params.get_physical_value< QUANTITY_FLUX >(role + ":ionizing flux",
                                                      "-1. m^-2 s^-1"),
           log) {}
 

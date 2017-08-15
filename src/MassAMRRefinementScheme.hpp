@@ -66,7 +66,8 @@ public:
   MassAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : MassAMRRefinementScheme(
             params.get_value< double >(
-                "densitygrid:amrrefinementscheme:target_npart", 1.),
+                "DensityGrid:AMRRefinementScheme:target number of particles",
+                1.),
             log) {}
 
   /**

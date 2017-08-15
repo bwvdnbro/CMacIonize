@@ -74,19 +74,19 @@ initDensityGrid(const std::string &filename) {
   HDF5Tools::close_file(file);
 
   // make sure AMR grids are processed correctly
-  if (parameters.get_value< std::string >("densitygrid:type") == "AMR") {
+  if (parameters.get_value< std::string >("DensityGrid:type") == "AMR") {
     // this overrides whatever value was in that field
-    parameters.add_value("densitygrid:amrrefinementscheme:type", "CMacIonize");
+    parameters.add_value("DensityGrid:AMRRefinementScheme:type", "CMacIonize");
   }
 
   // make sure Voronoi grids are processed correctly
-  if (parameters.get_value< std::string >("densitygrid:type") == "Voronoi") {
+  if (parameters.get_value< std::string >("DensityGrid:type") == "Voronoi") {
     // this overrides whatever value was in that field
-    parameters.add_value("densitygrid:voronoi_generator_distribution:type",
+    parameters.add_value("DensityGrid:VoronoiGeneratorDistribution:type",
                          "CMacIonize");
-    parameters.add_value("densitygrid:voronoi_generator_distribution:filename",
+    parameters.add_value("DensityGrid:VoronoiGeneratorDistribution:filename",
                          filename);
-    parameters.add_value("densitygrid:num_lloyd", "0");
+    parameters.add_value("DensityGrid:number of Lloyd iterations", "0");
   }
 
   CMacIonizeSnapshotDensityFunction density_function(filename);

@@ -90,11 +90,11 @@ public:
                                              Log *log = nullptr)
       : UniformRegularVoronoiGeneratorDistribution(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
             params.get_value< CoordinateVector< unsigned int > >(
-                "densitygrid:voronoi_generator_distribution:resolution",
+                "DensityGrid:VoronoiGeneratorDistribution:resolution",
                 CoordinateVector< unsigned int >(32)),
             log) {}
 

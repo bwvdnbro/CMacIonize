@@ -1,31 +1,31 @@
-ccdimage:
-  anchor_x: -12.1 kpc
-  anchor_y: -12.1 kpc
+CCDImage:
+  anchor x: -12.1 kpc
+  anchor y: -12.1 kpc
   filename: test_dustsimulation_output
-  image_height: 200
-  image_width: 200
-  sides_x: 24.2 kpc
-  sides_y: 24.2 kpc
+  image height: 200
+  image width: 200
+  sides x: 24.2 kpc
+  sides y: 24.2 kpc
   type: BinaryArray
-  view_phi: 0 degrees
-  view_theta: 89.7 degrees
-continuousphotonsource:
-  B_over_T: 0.2
-  h_stars: 0.6 kpc
-  r_stars: 5. kpc
-densityfunction:
-  h_ISM: 0.22 kpc
-  n_0: 1. cm^-3
-  r_ISM: 6.0 kpc
-densitygrid:
-  box_anchor: [-12. kpc, -12. kpc, -12. kpc]
-  box_sides: [24. kpc, 24. kpc, 24. kpc]
-  ncell: [100, 100, 100]
+  view phi: 0 degrees
+  view theta: 89.7 degrees
+ContinuousPhotonSource:
+  bulge over total ratio: 0.2
+  scale height stars: 0.6 kpc
+  scale length stars: 5. kpc
+DensityFunction:
+  scale height ISM: 0.22 kpc
+  central density: 1. cm^-3
+  scale length ISM: 6.0 kpc
+DensityGrid:
+  box anchor: [-12. kpc, -12. kpc, -12. kpc]
+  box sides: [24. kpc, 24. kpc, 24. kpc]
+  number of cells: [100, 100, 100]
   periodicity: [false, false, false]
 dust:
   band: V
 hydro:
   active: false
 number of photons: 50000
-output_folder: .
-random_seed: 42
+output folder: .
+random seed: 42

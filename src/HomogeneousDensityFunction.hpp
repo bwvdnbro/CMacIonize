@@ -69,9 +69,9 @@ public:
   HomogeneousDensityFunction(ParameterFile &params, Log *log = nullptr)
       : HomogeneousDensityFunction(
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-                "densityfunction:density", "100. cm^-3"),
+                "DensityFunction:density", "100. cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "densityfunction:temperature", "8000. K"),
+                "DensityFunction:temperature", "8000. K"),
             log) {}
 
   /**

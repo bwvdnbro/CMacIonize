@@ -123,15 +123,14 @@ public:
   SPHVoronoiGeneratorDistribution(ParameterFile &params, Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
-            params.get_value< unsigned int >("densitygrid:voronoi_generator_"
-                                             "distribution:number_of_positions",
-                                             1000),
-            params.get_value< std::string >("densitygrid:voronoi_generator_"
-                                            "distribution:file_name",
-                                            "SPH.txt"),
+                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+            params.get_value< unsigned int >(
+                "DensityGrid:VoronoiGeneratorDistribution:number of positions",
+                1000),
+            params.get_value< std::string >(
+                "DensityGrid:VoronoiGeneratorDistribution:filename", "SPH.txt"),
             log) {}
 
   /**

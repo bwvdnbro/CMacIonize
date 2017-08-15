@@ -295,9 +295,9 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
 InterpolatedDensityFunction::InterpolatedDensityFunction(ParameterFile &params,
                                                          Log *log)
     : InterpolatedDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
+          params.get_value< std::string >("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:temperature", "8000. K"),
+              "DensityFunction:temperature", "8000. K"),
           log) {}
 
 /**

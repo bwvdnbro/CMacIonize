@@ -287,10 +287,10 @@ int main(int argc, char **argv) {
     hydro_timestep =
         params.get_physical_value< QUANTITY_TIME >("hydro:timestep", "0.01 s");
     double hydro_total_time =
-        params.get_physical_value< QUANTITY_TIME >("hydro:total_time", "1. s");
+        params.get_physical_value< QUANTITY_TIME >("hydro:total time", "1. s");
     numstep = hydro_total_time / hydro_timestep;
-    hydro_snaptime =
-        params.get_physical_value< QUANTITY_TIME >("hydro:snaptime", "-1. s");
+    hydro_snaptime = params.get_physical_value< QUANTITY_TIME >(
+        "hydro:snapshot time", "-1. s");
     if (hydro_snaptime < 0.) {
       hydro_snaptime = 0.1 * hydro_total_time;
     }
@@ -302,9 +302,9 @@ int main(int argc, char **argv) {
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  int random_seed = params.get_value< int >("random_seed", 42);
+  int random_seed = params.get_value< int >("random seed", 42);
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
-      "photonsourcespectrum", params, log);
+      "PhotonSourceSpectrum", params, log);
 
   if (sourcedistribution != nullptr && spectrum == nullptr) {
     cmac_error("No spectrum provided for the discrete photon sources!");
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
   ContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(params, log);
   PhotonSourceSpectrum *continuousspectrum =
-      PhotonSourceSpectrumFactory::generate("continuousphotonsourcespectrum",
+      PhotonSourceSpectrumFactory::generate("ContinuousPhotonSourceSpectrum",
                                             params, log);
 
   if (continuoussource != nullptr && continuousspectrum == nullptr) {
@@ -339,12 +339,12 @@ int main(int argc, char **argv) {
   DensityGridWriter *writer = DensityGridWriterFactory::generate(params, log);
 
   unsigned int nloop =
-      params.get_value< unsigned int >("max_number_iterations", 10);
+      params.get_value< unsigned int >("number of iterations", 10);
 
   unsigned int numphoton =
       params.get_value< unsigned int >("number of photons", 100);
-  unsigned int numphoton1 =
-      params.get_value< unsigned int >("number of photons init", numphoton);
+  unsigned int numphoton1 = params.get_value< unsigned int >(
+      "number of photons first loop", numphoton);
   double Q = source.get_total_luminosity();
 
   ChargeTransferRates charge_transfer_rates;
@@ -354,16 +354,17 @@ int main(int argc, char **argv) {
       Q, abundances, recombination_rates, charge_transfer_rates);
 
   bool calculate_temperature =
-      params.get_value< bool >("calculate_temperature", true);
+      params.get_value< bool >("calculate temperature", true);
 
   TemperatureCalculator *temperature_calculator = nullptr;
   if (calculate_temperature) {
     // used to calculate both the ionization state and the temperature
     temperature_calculator = new TemperatureCalculator(
-        Q, abundances, params.get_value< double >("pahfac", 1.),
-        params.get_value< double >("crfac", 0.),
-        params.get_value< double >("crlim", 0.75),
-        params.get_physical_value< QUANTITY_LENGTH >("crscale", "1.33333 kpc"),
+        Q, abundances, params.get_value< double >("PAH heating factor", 1.),
+        params.get_value< double >("cosmic ray heating factor", 0.),
+        params.get_value< double >("cosmic ray heating limit", 0.75),
+        params.get_physical_value< QUANTITY_LENGTH >(
+            "cosmic ray heating scale length", "1.33333 kpc"),
         line_cooling_data, recombination_rates, charge_transfer_rates, log);
   }
 
@@ -372,7 +373,7 @@ int main(int argc, char **argv) {
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
     std::string folder = Utilities::get_absolute_path(
-        params.get_value< std::string >("densitygridwriter:folder", "."));
+        params.get_value< std::string >("DensityGridWriter:folder", "."));
     std::ofstream pfile(folder + "/parameters-usedvalues.param");
     params.print_contents(pfile);
     pfile.close();

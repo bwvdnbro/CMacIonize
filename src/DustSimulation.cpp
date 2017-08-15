@@ -74,7 +74,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
 
   CartesianDensityGrid grid(params, log);
 
-  int random_seed = params.get_value< int >("random_seed", 42);
+  int random_seed = params.get_value< int >("random seed", 42);
 
   SpiralGalaxyContinuousPhotonSource continuoussource(params, log);
   MonochromaticPhotonSourceSpectrum continuousspectrum(13.6, 1., log);
@@ -95,7 +95,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
     std::string folder = Utilities::get_absolute_path(
-        params.get_value< std::string >("output_folder", "."));
+        params.get_value< std::string >("output folder", "."));
     std::string pfilename = folder + "/dust-parameters-usedvalues.param";
     std::ofstream pfile(pfilename);
     params.print_contents(pfile);

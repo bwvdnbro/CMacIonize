@@ -73,9 +73,9 @@ public:
   SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
-                "photonsourcedistribution:position", "[0.5 m, 0.5 m, 0.5 m]"),
+                "PhotonSourceDistribution:position", "[0.5 m, 0.5 m, 0.5 m]"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
+                "PhotonSourceDistribution:luminosity", "4.26e49 s^-1"),
             log) {}
 
   /**

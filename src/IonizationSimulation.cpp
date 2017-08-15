@@ -66,11 +66,11 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _mpi_communicator(mpi_communicator), _log(log),
       _work_distributor(_num_thread), _parameter_file(parameterfile),
       _number_of_iterations(_parameter_file.get_value< unsigned int >(
-          "max_number_iterations", 10)),
+          "number of iterations", 10)),
       _number_of_photons(
           _parameter_file.get_value< unsigned int >("number of photons", 100)),
       _number_of_photons_init(_parameter_file.get_value< unsigned int >(
-          "number of photons init", _number_of_photons)),
+          "number of photons first loop", _number_of_photons)),
       _abundances(_parameter_file, _log) {
 
   if (_log) {
@@ -92,7 +92,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _photon_source_distribution =
       PhotonSourceDistributionFactory::generate(_parameter_file, _log);
   _photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
-      "photonsourcespectrum", _parameter_file, _log);
+      "PhotonSourceSpectrum", _parameter_file, _log);
 
   // sanity checks on discrete sources
   if (_photon_source_distribution != nullptr &&
@@ -110,7 +110,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _continuous_photon_source =
       ContinuousPhotonSourceFactory::generate(_parameter_file, _log);
   _continuous_photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
-      "continuousphotonsourcespectrum", _parameter_file, _log);
+      "ContinuousPhotonSourceSpectrum", _parameter_file, _log);
 
   // sanity checks on continuous sources
   if (_continuous_photon_source != nullptr &&
@@ -146,23 +146,23 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _charge_transfer_rates);
 
   bool calculate_temperature =
-      _parameter_file.get_value< bool >("calculate_temperature", true);
+      _parameter_file.get_value< bool >("calculate temperature", true);
 
   _temperature_calculator = nullptr;
   if (calculate_temperature) {
     // used to calculate both the ionization state and the temperature
     _temperature_calculator = new TemperatureCalculator(
         total_luminosity, _abundances,
-        _parameter_file.get_value< double >("pahfac", 1.),
-        _parameter_file.get_value< double >("crfac", 0.),
-        _parameter_file.get_value< double >("crlim", 0.75),
-        _parameter_file.get_physical_value< QUANTITY_LENGTH >("crscale",
-                                                              "1.33333 kpc"),
+        _parameter_file.get_value< double >("PAH heating factor", 1.),
+        _parameter_file.get_value< double >("cosmic ray heating factor", 0.),
+        _parameter_file.get_value< double >("cosmic ray heating limit", 0.75),
+        _parameter_file.get_physical_value< QUANTITY_LENGTH >(
+            "cosmic ray heating scale length", "1.33333 kpc"),
         _line_cooling_data, _recombination_rates, _charge_transfer_rates, _log);
   }
 
   // create ray tracing objects
-  int random_seed = _parameter_file.get_value< int >("random_seed", 42);
+  int random_seed = _parameter_file.get_value< int >("random seed", 42);
   // make sure every thread on every process has another random seed
   if (_mpi_communicator) {
     random_seed += _mpi_communicator->get_rank() * _num_thread;
@@ -176,7 +176,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   if (write_output) {
     std::string folder =
         Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
-            "densitygridwriter:folder", "."));
+            "DensityGridWriter:folder", "."));
     std::ofstream pfile(folder + "/parameters-usedvalues.param");
     _parameter_file.print_contents(pfile);
     pfile.close();

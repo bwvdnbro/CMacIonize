@@ -126,7 +126,7 @@ public:
    */
   BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
       : BlockSyntaxDensityFunction(
-            params.get_value< std::string >("densityfunction:filename"), log) {}
+            params.get_value< std::string >("DensityFunction:filename"), log) {}
 
   /**
    * @brief Function that gives the density for a given cell.

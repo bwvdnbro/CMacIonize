@@ -126,17 +126,18 @@ VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params, Log *log)
     : VoronoiDensityGrid(
           VoronoiGeneratorDistributionFactory::generate(params, log),
           Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                    "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
-          params.get_value< std::string >("densitygrid:grid_type", "Old"),
-          params.get_value< unsigned char >("densitygrid:num_lloyd", 0),
+                    "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+          params.get_value< std::string >("DensityGrid:grid type", "Old"),
+          params.get_value< unsigned char >(
+              "DensityGrid:number of Lloyd iterations", 0),
           params.get_value< CoordinateVector< bool > >(
-              "densitygrid:periodicity", CoordinateVector< bool >(false)),
+              "DensityGrid:periodicity", CoordinateVector< bool >(false)),
           params.get_value< bool >("hydro:active", false),
           params.get_physical_value< QUANTITY_TIME >("hydro:timestep",
                                                      "0.01 s"),
-          params.get_value< double >("hydro:polytropic_index", 5. / 3.), log) {}
+          params.get_value< double >("hydro:polytropic index", 5. / 3.), log) {}
 
 /**
  * @brief Destructor.

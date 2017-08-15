@@ -73,7 +73,7 @@ public:
       : MonochromaticPhotonSourceSpectrum(
             params.get_physical_value< QUANTITY_FREQUENCY >(role + ":frequency",
                                                             "13.6 eV"),
-            params.get_physical_value< QUANTITY_FLUX >(role + ":total_flux",
+            params.get_physical_value< QUANTITY_FLUX >(role + ":total flux",
                                                        "-1. m^-2 s^-1"),
             log) {}
 

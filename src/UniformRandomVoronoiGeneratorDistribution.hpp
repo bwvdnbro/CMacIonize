@@ -83,14 +83,14 @@ public:
                                             Log *log = nullptr)
       : UniformRandomVoronoiGeneratorDistribution(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
-            params.get_value< unsigned int >("densitygrid:voronoi_generator_"
-                                             "distribution:number_of_positions",
-                                             100),
+                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+            params.get_value< unsigned int >(
+                "DensityGrid:VoronoiGeneratorDistribution:number of positions",
+                100),
             params.get_value< int >(
-                "densitygrid:voronoi_generator_distribution:random_seed", 42),
+                "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             log) {}
 
   /**

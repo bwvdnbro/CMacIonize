@@ -74,12 +74,12 @@ public:
    * @param log Log to write logging info to.
    */
   inline Abundances(ParameterFile &params, Log *log = nullptr)
-      : Abundances(params.get_value< double >("abundances:helium", 0.1),
-                   params.get_value< double >("abundances:carbon", 2.2e-4),
-                   params.get_value< double >("abundances:nitrogen", 4.e-5),
-                   params.get_value< double >("abundances:oxygen", 3.3e-4),
-                   params.get_value< double >("abundances:neon", 5.e-5),
-                   params.get_value< double >("abundances:sulphur", 9.e-6),
+      : Abundances(params.get_value< double >("Abundances:helium", 0.1),
+                   params.get_value< double >("Abundances:carbon", 2.2e-4),
+                   params.get_value< double >("Abundances:nitrogen", 4.e-5),
+                   params.get_value< double >("Abundances:oxygen", 3.3e-4),
+                   params.get_value< double >("Abundances:neon", 5.e-5),
+                   params.get_value< double >("Abundances:sulphur", 9.e-6),
                    log) {}
 
   /**

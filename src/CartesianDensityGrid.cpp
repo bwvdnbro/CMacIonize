@@ -116,13 +116,13 @@ CartesianDensityGrid::CartesianDensityGrid(Box<> box,
 CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters, Log *log)
     : CartesianDensityGrid(
           Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
+                    "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
                 parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+                    "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
           parameters.get_value< CoordinateVector< int > >(
-              "densitygrid:ncell", CoordinateVector< int >(64)),
+              "DensityGrid:number of cells", CoordinateVector< int >(64)),
           parameters.get_value< CoordinateVector< bool > >(
-              "densitygrid:periodicity", CoordinateVector< bool >(false)),
+              "DensityGrid:periodicity", CoordinateVector< bool >(false)),
           parameters.get_value< bool >("hydro:active", false), log) {}
 
 /**

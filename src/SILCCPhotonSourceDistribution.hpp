@@ -114,22 +114,22 @@ public:
   SILCCPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SILCCPhotonSourceDistribution(
             params.get_value< unsigned int >(
-                "photonsourcedistribution:num_sources", 24),
+                "PhotonSourceDistribution:number of sources", 24),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:anchor_x", "0. m"),
+                "PhotonSourceDistribution:anchor x", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:sides_x", "1. m"),
+                "PhotonSourceDistribution:sides x", "1. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:anchor_y", "0. m"),
+                "PhotonSourceDistribution:anchor y", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:sides_y", "1. m"),
+                "PhotonSourceDistribution:sides y", "1. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:origin_z", "0. m"),
+                "PhotonSourceDistribution:origin z", "0. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:scaleheight_z", "0.2 m"),
+                "PhotonSourceDistribution:scaleheight z", "0.2 m"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
-            params.get_value< int >("photonsourcedistribution:random_seed", 42),
+                "PhotonSourceDistribution:luminosity", "4.26e49 s^-1"),
+            params.get_value< int >("PhotonSourceDistribution:random seed", 42),
             log) {}
 
   /**

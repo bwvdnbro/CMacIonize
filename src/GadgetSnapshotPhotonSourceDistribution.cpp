@@ -222,27 +222,27 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("photonsourcedistribution:filename"),
+          params.get_value< std::string >("PhotonSourceDistribution:filename"),
           params.get_value< std::string >(
-              "photonsourcedistribution:formation_time_name", "FormationTime"),
+              "PhotonSourceDistribution:formation time name", "FormationTime"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "photonsourcedistribution:fallback_unit_length", "0. m"),
+              "PhotonSourceDistribution:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution:fallback_unit_time", "0. s"),
+              "PhotonSourceDistribution:fallback unit time", "0. s"),
           params.get_physical_value< QUANTITY_MASS >(
-              "photonsourcedistribution:fallback_unit_mass", "0. kg"),
+              "PhotonSourceDistribution:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution:cutoff_age", "5. Myr"),
+              "PhotonSourceDistribution:cutoff age", "5. Myr"),
           params.get_physical_value< QUANTITY_FREQUENCY_PER_MASS >(
-              "photonsourcedistribution:flux_per_mass_unit",
+              "PhotonSourceDistribution:flux per mass unit",
               "4.96e46 s^-1 Msol^-1"),
-          params.get_value< bool >("photonsourcedistribution:use_gas", false),
+          params.get_value< bool >("PhotonSourceDistribution:use gas", false),
           params.get_physical_value< QUANTITY_MASS_RATE >(
-              "photonsourcedistribution:SFR_unit", "0. kg s^-1"),
+              "PhotonSourceDistribution:SFR unit", "0. kg s^-1"),
           params.get_value< bool >(
-              "photonsourcedistribution:comoving_integration_flag", false),
+              "PhotonSourceDistribution:comoving integration flag", false),
           params.get_value< double >(
-              "photonsourcedistribution:hubble_parameter", 0.7),
+              "PhotonSourceDistribution:hubble parameter", 0.7),
           log) {}
 
 /**

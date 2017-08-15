@@ -77,13 +77,14 @@ public:
   SpatialAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : SpatialAMRRefinementScheme(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:amrrefinementscheme:zone_anchor",
+                      "DensityGrid:AMRRefinementScheme:zone anchor",
                       "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:amrrefinementscheme:zone_sides",
+                      "DensityGrid:AMRRefinementScheme:zone sides",
                       "[1. m, 1. m, 1. m]")),
             params.get_value< unsigned int >(
-                "densitygrid:amrrefinementscheme:max_level", 4)) {}
+                "DensityGrid:AMRRefinementScheme:maximum refinement level",
+                4)) {}
 
   /**
    * @brief Check if the given cell should be refined.

@@ -172,23 +172,23 @@ public:
    */
   inline HydroIntegrator(ParameterFile &params)
       : HydroIntegrator(
-            params.get_value< double >("hydro:polytropic_index", 5. / 3.),
-            params.get_value< bool >("hydro:radiative_heating", true),
-            params.get_value< bool >("hydro:radiative_cooling", false),
-            params.get_value< std::string >("hydro:boundary_xlow",
+            params.get_value< double >("hydro:polytropic index", 5. / 3.),
+            params.get_value< bool >("hydro:radiative heating", true),
+            params.get_value< bool >("hydro:radiative cooling", false),
+            params.get_value< std::string >("hydro:boundary xlow",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_xhigh",
+            params.get_value< std::string >("hydro:boundary xhigh",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_ylow",
+            params.get_value< std::string >("hydro:boundary ylow",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_yhigh",
+            params.get_value< std::string >("hydro:boundary yhigh",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zlow",
+            params.get_value< std::string >("hydro:boundary zlow",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zhigh",
+            params.get_value< std::string >("hydro:boundary zhigh",
                                             "reflective"),
             params.get_value< CoordinateVector< bool > >(
-                "densitygrid:periodicity", CoordinateVector< bool >(false))) {}
+                "DensityGrid:periodicity", CoordinateVector< bool >(false))) {}
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.

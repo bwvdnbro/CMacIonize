@@ -51,7 +51,7 @@ public:
   inline static DensityMask *generate(ParameterFile &params,
                                       Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densitymask:type", "None");
+        params.get_value< std::string >("DensityMask:type", "None");
 
     if (log) {
       log->write_info("Requested DensityMask type: ", type);

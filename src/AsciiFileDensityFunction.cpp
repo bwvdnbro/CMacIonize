@@ -110,19 +110,19 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
                                                    Log *log)
     : AsciiFileDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
+          params.get_value< std::string >("DensityFunction:filename"),
           params.get_value< CoordinateVector< int > >(
-              "densityfunction:ncell", CoordinateVector< int >(64)),
+              "DensityFunction:number of cells", CoordinateVector< int >(64)),
           Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densityfunction:box_anchor", "[0. m, 0. m, 0. m]"),
+                    "DensityFunction:box anchor", "[0. m, 0. m, 0. m]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densityfunction:box_sides", "[1. m, 1. m, 1. m]")),
+                    "DensityFunction:box sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:temperature", "8000. K"),
+              "DensityFunction:temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:length_unit", "1. m"),
+              "DensityFunction:length unit", "1. m"),
           params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-              "densityfunction:density_unit", "1. m^-3"),
+              "DensityFunction:density unit", "1. m^-3"),
           log) {}
 
 /**

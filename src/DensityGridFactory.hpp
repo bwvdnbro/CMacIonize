@@ -53,7 +53,7 @@ public:
   inline static DensityGrid *generate(ParameterFile &params,
                                       Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densitygrid:type", "Cartesian");
+        params.get_value< std::string >("DensityGrid:type", "Cartesian");
     if (log) {
       log->write_info("Requested DensityGrid type: ", type);
     }

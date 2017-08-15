@@ -179,7 +179,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(std::string role,
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               role + ":temperature", "40000. K"),
           params.get_physical_value< QUANTITY_ACCELERATION >(
-              role + ":surface_gravity", "25. m s^-2"),
+              role + ":surface gravity", "25. m s^-2"),
           log) {}
 
 /**

@@ -1,18 +1,18 @@
 # density grid
-densitygrid:
+DensityGrid:
   # type: a cartesian density grid
   type: Cartesian
   # anchor of the box: corner with the smallest coordinates
-  box_anchor: [-5. pc, -5. pc, -5. pc]
+  box anchor: [-5. pc, -5. pc, -5. pc]
   # side lengths of the box
-  box_sides: [10. pc, 10. pc, 10. pc]
+  box sides: [10. pc, 10. pc, 10. pc]
   # periodicity of the box
   periodicity: [false, false, false]
   # number of cells in each dimension
-  ncell: [32, 32, 32]
+  number of cells: [32, 32, 32]
 
 # density function that sets up the density field in the box
-densityfunction:
+DensityFunction:
   # type of densityfunction: a constant density throughout the box
   type: Homogeneous
   # value for the constant density
@@ -21,14 +21,14 @@ densityfunction:
   temperature: 8000. K
 
 # assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
-abundances:
+Abundances:
   helium: 0.
 
 # disable temperature calculation
-calculate_temperature: false
+calculate temperature: false
 
 # distribution of photon sources in the box
-photonsourcedistribution:
+PhotonSourceDistribution:
   # type of distribution: a single stellar source
   type: SingleStar
   # position of the single stellar source
@@ -37,7 +37,7 @@ photonsourcedistribution:
   luminosity: 4.26e49 s^-1
 
 # spectrum of the photon sources
-photonsourcespectrum:
+PhotonSourceSpectrum:
   # type: a Planck black body spectrum
   type: Planck
   # temperature of the black body spectrum
@@ -47,22 +47,10 @@ photonsourcespectrum:
 number of photons: 50000
 
 # maximum number of iterations
-max_number_iterations: 4
-
-# iteration convergence: used to control convergence of the neutral fraction
-# calculation
-iterationconvergencechecker:
-  # type of IterationConvergenceChecker: disabled for this code version
-  type: Passive
-
-# photon number convergence: used to control convergence of the photon shooting
-# sub steps during a single iteration of the algorithm
-photonnumberconvergencechecker:
-  # Type of PhotonNumberConvergenceChecker: disabled for this code version
-  type: Passive
+number of iterations: 4
 
 # output options
-densitygridwriter:
+DensityGridWriter:
   # type of output files to write
   type: AsciiFile
   # prefix to add to output files
