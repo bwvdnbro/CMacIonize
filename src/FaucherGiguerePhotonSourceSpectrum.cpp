@@ -65,11 +65,11 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
   if (redshift <= 10.65) {
     double spectrum_freq[261];
     double spectrum_ener[261];
-    unsigned int izlo = redshift / 0.05;
-    unsigned int izhi = izlo + 1;
-    double zlo = izlo * 0.05;
-    double zhi = izhi * 0.05;
-    double zlo_fac = 20. * (zhi - redshift);
+    const unsigned int izlo = redshift / 0.05;
+    const unsigned int izhi = izlo + 1;
+    const double zlo = izlo * 0.05;
+    const double zhi = izhi * 0.05;
+    const double zlo_fac = 20. * (zhi - redshift);
     // open the first file and read in the spectrum
     std::ifstream zlofile(get_filename(zlo));
     std::string line;
@@ -89,7 +89,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     if (zhi <= 10.65) {
       // we do not execute this part if zhi > 10.65, which can only happen if
       // zlo == z == 10.65
-      double zhi_fac = 20. * (redshift - zlo);
+      const double zhi_fac = 20. * (redshift - zlo);
       std::ifstream zhifile(get_filename(zhi));
       // skip the first two comment lines
       getline(zhifile, line);
@@ -109,17 +109,17 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     _cumulative_distribution[0] = 0.;
     for (unsigned int i = 1; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
-      double y1 = _frequencies[i - 1];
-      unsigned int i1 = Utilities::locate(y1, spectrum_freq, 261);
+      const double y1 = _frequencies[i - 1];
+      const unsigned int i1 = Utilities::locate(y1, spectrum_freq, 261);
       double f = (y1 - spectrum_freq[i1]) /
                  (spectrum_freq[i1 + 1] - spectrum_freq[i1]);
-      double e1 =
+      const double e1 =
           spectrum_ener[i1] + f * (spectrum_ener[i1 + 1] - spectrum_ener[i1]);
-      double y2 = _frequencies[i];
-      unsigned int i2 = Utilities::locate(y2, spectrum_freq, 261);
+      const double y2 = _frequencies[i];
+      const unsigned int i2 = Utilities::locate(y2, spectrum_freq, 261);
       f = (y2 - spectrum_freq[i2]) /
           (spectrum_freq[i2 + 1] - spectrum_freq[i2]);
-      double e2 =
+      const double e2 =
           spectrum_ener[i2] + f * (spectrum_ener[i2 + 1] - spectrum_ener[i2]);
       _cumulative_distribution[i] = 0.5 * (e1 / y2 + e2 / y1) * (y2 - y1);
     }
@@ -192,9 +192,9 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
   // since we need to be sure round off does not affect the names we generate,
   // we find the name using integer arithmetics rather than floating points
   unsigned int iz = std::round(z / 0.05) * 5;
-  unsigned int iz100 = iz / 100;
+  const unsigned int iz100 = iz / 100;
   iz -= iz100 * 100;
-  unsigned int iz10 = iz / 10;
+  const unsigned int iz10 = iz / 10;
   iz -= iz10 * 10;
   std::stringstream namestream;
   namestream << FAUCHERGIGUEREDATALOCATION << "fg_uvb_dec11_z_" << iz100 << "."
@@ -225,16 +225,16 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() const {
  * @brief Get a random frequency from the spectrum.
  *
  * @param random_generator RandomGenerator to use.
- * @param temperature Not used for this spectrum.
+ * @param temperature Temperature (in K). Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
 double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  double x = random_generator.get_uniform_random_double();
-  unsigned int inu =
+  const double x = random_generator.get_uniform_random_double();
+  const unsigned int inu =
       Utilities::locate(x, _cumulative_distribution.data(),
                         FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
-  double frequency =
+  const double frequency =
       _frequencies[inu] +
       (_frequencies[inu + 1] - _frequencies[inu]) *
           (x - _cumulative_distribution[inu]) /

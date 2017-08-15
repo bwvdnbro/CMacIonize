@@ -46,8 +46,6 @@ class RecombinationRates;
  *    (http://adsabs.harvard.edu/abs/2001ApJS..134..263W)
  *  - Wiener, J., Zweibel, E. G. & Oh, S. P. 2013, ApJ, 767, 87
  *    (http://adsabs.harvard.edu/abs/2013ApJ...767...87W)
- *  - Arnaud, M. & Rothenflug, R. 1985, A&AS, 60, 425
- *    (http://adsabs.harvard.edu/abs/1985A%26AS...60..425A)
  *  - Katz, N., Weinberg, D. H. & Hernquist, L. 1996, ApJS, 105, 19
  *    (http://adsabs.harvard.edu/abs/1996ApJS..105...19K)
  *  - Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of Gaseous Nebulae

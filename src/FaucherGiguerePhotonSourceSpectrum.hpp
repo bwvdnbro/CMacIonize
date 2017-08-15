@@ -42,6 +42,17 @@ class RandomGenerator;
 /**
  * @brief PhotonSourceSpectrum implementation for the Faucher-Giguere UVB
  * spectrum.
+ *
+ * The spectrum data comes from Faucher-Giguère, C.-A., Lidz, A., Zaldarriaga,
+ * M. & Hernquist, L., 2009, ApJ, 703, 1416
+ * (http://adsabs.harvard.edu/abs/2009ApJ...703.1416F) and was downloaded from
+ * http://galaxies.northwestern.edu/files/2013/09/fg_uvb_dec11.zip.
+ *
+ * The Faucher-Giguère et al. (2009) data contains non-normalized spectra for
+ * all redshifts in the range [0. - 10.65] in increments of 0.05. We precompute
+ * the spectrum for a specific redshift by linearly interpolating on these
+ * spectra for the requested redshift and integrate it out to get the total
+ * ionizing luminosity.
  */
 class FaucherGiguerePhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
