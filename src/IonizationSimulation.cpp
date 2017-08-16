@@ -128,7 +128,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _photon_source = new PhotonSource(
       _photon_source_distribution, _photon_source_spectrum,
       _continuous_photon_source, _continuous_photon_source_spectrum,
-      _abundances, _cross_sections, _log);
+      _abundances, _cross_sections,
+      _parameter_file.get_value< bool >("diffuse field", true), _log);
   const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output

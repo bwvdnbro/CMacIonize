@@ -100,7 +100,7 @@ private:
   const CrossSections &_cross_sections;
 
   /*! @brief ReemissionHandler for diffuse reemission. */
-  const DiffuseReemissionHandler _reemission_handler;
+  DiffuseReemissionHandler *_reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
@@ -113,7 +113,10 @@ public:
                const ContinuousPhotonSource *continuous_source,
                const PhotonSourceSpectrum *continuous_spectrum,
                const Abundances &abundances,
-               const CrossSections &cross_sections, Log *log = nullptr);
+               const CrossSections &cross_sections, bool diffuse_field = true,
+               Log *log = nullptr);
+
+  ~PhotonSource();
 
   /**
    * @brief Get a random direction.

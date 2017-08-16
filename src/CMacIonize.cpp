@@ -333,7 +333,8 @@ int main(int argc, char **argv) {
   Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, cross_sections, log);
+                      continuousspectrum, abundances, cross_sections,
+                      params.get_value< bool >("diffuse field", true), log);
 
   // set up output
   DensityGridWriter *writer = DensityGridWriterFactory::generate(params, log);

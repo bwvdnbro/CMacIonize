@@ -48,6 +48,7 @@
  * source.
  * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
+ * @param diffuse_field Enable diffuse reemission?
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
@@ -55,12 +56,12 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            const ContinuousPhotonSource *continuous_source,
                            const PhotonSourceSpectrum *continuous_spectrum,
                            const Abundances &abundances,
-                           const CrossSections &cross_sections, Log *log)
+                           const CrossSections &cross_sections,
+                           bool diffuse_field, Log *log)
     : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum), _abundances(abundances),
-      _cross_sections(cross_sections), _reemission_handler(cross_sections),
-      _log(log) {
+      _cross_sections(cross_sections), _reemission_handler(nullptr), _log(log) {
 
   double discrete_luminosity = 0.;
   double continuous_luminosity = 0.;
@@ -126,6 +127,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     _continuous_photon_weight = 1.;
   }
 
+  if (diffuse_field) {
+    _reemission_handler = new DiffuseReemissionHandler(_cross_sections);
+  }
+
   if (_log) {
     _log->write_status("Total luminosity of discrete sources: ",
                        discrete_luminosity, " s^-1.");
@@ -136,6 +141,13 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
         "% of the ionizing radiation is emitted by discrete sources.");
   }
 }
+
+/**
+ * @brief Destructor.
+ *
+ * Delete the DiffuseReemissionHandler.
+ */
+PhotonSource::~PhotonSource() { delete _reemission_handler; }
 
 /**
  * @brief Set the cross sections of the given photon with the given energy.
@@ -226,22 +238,27 @@ bool PhotonSource::reemit(Photon &photon,
                           const IonizationVariables &ionization_variables,
                           RandomGenerator &random_generator) const {
 
-  PhotonType type;
-  const double new_frequency =
-      _reemission_handler.reemit(photon, _abundances.get_abundance(ELEMENT_He),
-                                 ionization_variables, random_generator, type);
+  if (_reemission_handler) {
+    PhotonType type;
+    const double new_frequency = _reemission_handler->reemit(
+        photon, _abundances.get_abundance(ELEMENT_He), ionization_variables,
+        random_generator, type);
 
-  photon.set_type(type);
-  if (new_frequency == 0.) {
-    return false;
+    photon.set_type(type);
+    if (new_frequency == 0.) {
+      return false;
+    } else {
+      photon.set_energy(new_frequency);
+
+      CoordinateVector<> direction = get_random_direction(random_generator);
+      photon.set_direction(direction);
+
+      set_cross_sections(photon, new_frequency);
+
+      return true;
+    }
   } else {
-    photon.set_energy(new_frequency);
-
-    CoordinateVector<> direction = get_random_direction(random_generator);
-    photon.set_direction(direction);
-
-    set_cross_sections(photon, new_frequency);
-
-    return true;
+    photon.set_type(PHOTONTYPE_ABSORBED);
+    return false;
   }
 }
