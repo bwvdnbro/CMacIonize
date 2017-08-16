@@ -74,8 +74,6 @@
  *    - snapshot time: Time interval between consecutive snapshot dumps
  *      (default: 0.1*(total time))
  *  - random seed: Seed for the random number generator (default: 42)
- *  - diffuse field: Should diffuse hydrogen and helium reemission be enabled
- *    (default: true)?
  *  - output folder: Folder where all output files will be placed (default: .)
  *  - number of iterations: Number of iterations of the photoionization
  *    algorithm (default: 10)
@@ -358,8 +356,8 @@ int main(int argc, char **argv) {
   Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, cross_sections,
-                      params.get_value< bool >("diffuse field", true), log);
+                      continuousspectrum, abundances, cross_sections, params,
+                      log);
 
   // set up output
   std::string output_folder = Utilities::get_absolute_path(

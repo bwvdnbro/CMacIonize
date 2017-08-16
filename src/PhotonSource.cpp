@@ -143,6 +143,37 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 }
 
 /**
+ * @brief ParameterFile constructor.
+ *
+ * Parameters are:
+ *  - diffuse field: Enable the hydrogen and helium diffuse reemission field
+ *    (default: true)?
+ *
+ * @param distribution PhotonSourceDistribution giving the positions of the
+ * discrete photon sources.
+ * @param discrete_spectrum PhotonSourceSpectrum for the discrete photon
+ * sources.
+ * @param continuous_source IsotropicContinuousPhotonSource.
+ * @param continuous_spectrum PhotonSourceSpectrum for the continuous photon
+ * source.
+ * @param abundances Abundances of the elements in the ISM.
+ * @param cross_sections Cross sections for photoionization.
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
+                           const PhotonSourceSpectrum *discrete_spectrum,
+                           const ContinuousPhotonSource *continuous_source,
+                           const PhotonSourceSpectrum *continuous_spectrum,
+                           const Abundances &abundances,
+                           const CrossSections &cross_sections,
+                           ParameterFile &params, Log *log)
+    : PhotonSource(distribution, discrete_spectrum, continuous_source,
+                   continuous_spectrum, abundances, cross_sections,
+                   params.get_value< bool >("PhotonSource:diffuse field", true),
+                   log) {}
+
+/**
  * @brief Destructor.
  *
  * Delete the DiffuseReemissionHandler.

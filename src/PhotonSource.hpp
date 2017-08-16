@@ -116,6 +116,14 @@ public:
                const CrossSections &cross_sections, bool diffuse_field = true,
                Log *log = nullptr);
 
+  PhotonSource(PhotonSourceDistribution *distribution,
+               const PhotonSourceSpectrum *discrete_spectrum,
+               const ContinuousPhotonSource *continuous_source,
+               const PhotonSourceSpectrum *continuous_spectrum,
+               const Abundances &abundances,
+               const CrossSections &cross_sections, ParameterFile &params,
+               Log *log = nullptr);
+
   ~PhotonSource();
 
   /**

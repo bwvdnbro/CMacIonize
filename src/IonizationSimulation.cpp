@@ -54,8 +54,6 @@
  *  - number of photons first loop: Number of photon packets to use for the
  *    first iteration of the photoionization algorithm (default: (number of
  *    photons))
- *  - diffuse field: Enable diffuse hydrogen and helium reemission (default:
- *    true)
  *  - output folder: Folder where all output files will be placed (default: .)
  *  - random seed: Seed used to initialize the random number generator (default:
  *    42)
@@ -132,8 +130,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _photon_source = new PhotonSource(
       _photon_source_distribution, _photon_source_spectrum,
       _continuous_photon_source, _continuous_photon_source_spectrum,
-      _abundances, _cross_sections,
-      _parameter_file.get_value< bool >("diffuse field", true), _log);
+      _abundances, _cross_sections, _parameter_file, _log);
   const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output
