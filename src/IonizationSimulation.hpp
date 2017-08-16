@@ -47,7 +47,6 @@ class PhotonSourceSpectrum;
 class ContinuousPhotonSource;
 class PhotonSource;
 class DensityGridWriter;
-class IonizationStateCalculator;
 class TemperatureCalculator;
 
 /**
@@ -151,10 +150,6 @@ private:
 
   /*! @brief Object used to write snapshot output. */
   DensityGridWriter *_density_grid_writer;
-
-  /*! @brief Object used to compute the ionization balance at the end of a
-   *  ray tracing step. */
-  IonizationStateCalculator *_ionization_state_calculator;
 
   /*! @brief Object used to compute the combined ionization and temperature
    *  balance at the end of a ray tracing step. */

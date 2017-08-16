@@ -28,6 +28,7 @@
 #define TEMPERATURECALCULATOR_HPP
 
 #include "DensityGrid.hpp"
+#include "IonizationStateCalculator.hpp"
 
 class Abundances;
 class ChargeTransferRates;
@@ -85,14 +86,32 @@ private:
   /*! @brief ChargeTransferRates used to calculate ionic fractions. */
   const ChargeTransferRates &_charge_transfer_rates;
 
+  /*! @brief IonizationStateCalculator used for low iteration numbers. */
+  const IonizationStateCalculator _ionization_state_calculator;
+
+  /*! @brief Should the temperature computation be performed? */
+  const bool _do_temperature_computation;
+
+  /*! @brief Number of iterations of the photoionization algorithm to perform
+   *  before computing the temperature. */
+  const unsigned int _minimum_iteration_number;
+
 public:
-  TemperatureCalculator(double luminosity, const Abundances &abundances,
+  TemperatureCalculator(bool do_temperature_computation,
+                        unsigned int minimum_iteration_number,
+                        double luminosity, const Abundances &abundances,
                         double pahfac, double crfac, double crlim,
                         double crscale,
                         const LineCoolingData &line_cooling_data,
                         const RecombinationRates &recombination_rates,
                         const ChargeTransferRates &charge_transfer_rates,
                         Log *log = nullptr);
+
+  TemperatureCalculator(double luminosity, const Abundances &abundances,
+                        const LineCoolingData &line_cooling_data,
+                        const RecombinationRates &recombination_rates,
+                        const ChargeTransferRates &charge_transfer_rates,
+                        ParameterFile &params, Log *log = nullptr);
 
   static void ioneng(double &h0, double &he0, double &gain, double &loss,
                      double T, DensityGrid::iterator &cell,
@@ -153,7 +172,7 @@ public:
   };
 
   void
-  calculate_temperature(double totweight, DensityGrid &grid,
+  calculate_temperature(unsigned int loop, double totweight, DensityGrid &grid,
                         std::pair< unsigned long, unsigned long > &block) const;
 };
 

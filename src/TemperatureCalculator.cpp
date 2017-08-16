@@ -39,6 +39,9 @@
 /**
  * @brief Constructor.
  *
+ * @param do_temperature_computation Do the temperature computation?
+ * @param minimum_iteration_number Minimum number of iterations of the
+ * photoionization algorithm to perform before computing the temperature.
  * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
  * @param abundances Abundances.
  * @param pahfac PAH heating factor.
@@ -56,6 +59,7 @@
  * @param log Log to write logging info to.
  */
 TemperatureCalculator::TemperatureCalculator(
+    bool do_temperature_computation, unsigned int minimum_iteration_number,
     double luminosity, const Abundances &abundances, double pahfac,
     double crfac, double crlim, double crscale,
     const LineCoolingData &line_cooling_data,
@@ -65,7 +69,11 @@ TemperatureCalculator::TemperatureCalculator(
       _crfac(crfac), _crlim(crlim), _crscale(crscale),
       _line_cooling_data(line_cooling_data),
       _recombination_rates(recombination_rates),
-      _charge_transfer_rates(charge_transfer_rates) {
+      _charge_transfer_rates(charge_transfer_rates),
+      _ionization_state_calculator(luminosity, abundances, recombination_rates,
+                                   charge_transfer_rates),
+      _do_temperature_computation(do_temperature_computation),
+      _minimum_iteration_number(minimum_iteration_number) {
 
   if (log) {
     log->write_status("Set up TemperatureCalculator with total luminosity ",
@@ -74,6 +82,56 @@ TemperatureCalculator::TemperatureCalculator(
                       ", scale height: ", _crscale, " m).");
   }
 }
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * Parameters are:
+ *  - do temperature calculation: Do the temperature calculation (default:
+ *    false)?
+ *  - minimum number of iterations: Minimum number of iterations of the
+ *    photoionization algorithm to perform before computing the temperature
+ *    (default: 3)
+ *  - PAH heating factor: Strength of PAH heating (default: 1.)
+ *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
+ *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
+ *    heating is applied (default: 0.75)
+ *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
+ *    (default: 1.33333 kpc)
+ *
+ * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
+ * @param abundances Abundances.
+ * @param line_cooling_data LineCoolingData use to calculate cooling due to line
+ * emission.
+ * @param recombination_rates RecombinationRates used to calculate ionic
+ * fractions.
+ * @param charge_transfer_rates ChargeTransferRates used to calculate ionic
+ * fractions.
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+TemperatureCalculator::TemperatureCalculator(
+    double luminosity, const Abundances &abundances,
+    const LineCoolingData &line_cooling_data,
+    const RecombinationRates &recombination_rates,
+    const ChargeTransferRates &charge_transfer_rates, ParameterFile &params,
+    Log *log)
+    : TemperatureCalculator(
+          params.get_value< bool >(
+              "TemperatureCalculator:do temperature calculation", false),
+          params.get_value< unsigned int >(
+              "TemperatureCalculator:minimum number of iterations", 3),
+          luminosity, abundances,
+          params.get_value< double >("TemperatureCalculator:PAH heating factor",
+                                     1.),
+          params.get_value< double >(
+              "TemperatureCalculator:cosmic ray heating factor", 0.),
+          params.get_value< double >(
+              "TemperatureCalculator:cosmic ray heating limit", 0.75),
+          params.get_physical_value< QUANTITY_LENGTH >(
+              "TemperatureCalculator:cosmic ray heating scale length",
+              "1.33333 kpc"),
+          line_cooling_data, recombination_rates, charge_transfer_rates, log) {}
 
 /**
  * @brief Function that calculates the cooling and heating rate for a given
@@ -668,29 +726,35 @@ void TemperatureCalculator::calculate_temperature(
  *
  * This is done in parallel.
  *
+ * @param loop Current iteration number of the photoionization algorithm.
  * @param totweight Total weight of all photons that were used.
  * @param grid DensityGrid on which to operate.
  * @param block Block that should be traversed by the local MPI process.
  */
 void TemperatureCalculator::calculate_temperature(
-    double totweight, DensityGrid &grid,
+    unsigned int loop, double totweight, DensityGrid &grid,
     std::pair< unsigned long, unsigned long > &block) const {
 
-  // get the normalization factors for the ionizing intensity and heating
-  // integrals (they depend on the total weight of the photons)
-  double jfac = _luminosity / totweight;
-  // the integral calculation uses the photon frequency (in Hz)
-  // we want to convert this to the photon energy (in Joule)
-  // we do this by multiplying with the Planck constant (in Js)
-  double hfac =
-      jfac * PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+  if (_do_temperature_computation && loop > _minimum_iteration_number) {
+    // get the normalization factors for the ionizing intensity and heating
+    // integrals (they depend on the total weight of the photons)
+    double jfac = _luminosity / totweight;
+    // the integral calculation uses the photon frequency (in Hz)
+    // we want to convert this to the photon energy (in Joule)
+    // we do this by multiplying with the Planck constant (in Js)
+    double hfac = jfac * PhysicalConstants::get_physical_constant(
+                             PHYSICALCONSTANT_PLANCK);
 
-  WorkDistributor<
-      DensityGridTraversalJobMarket< TemperatureCalculatorFunction >,
-      DensityGridTraversalJob< TemperatureCalculatorFunction > >
-      workers;
-  TemperatureCalculatorFunction do_calculation(*this, jfac, hfac);
-  DensityGridTraversalJobMarket< TemperatureCalculatorFunction > jobs(
-      grid, do_calculation, block);
-  workers.do_in_parallel(jobs);
+    WorkDistributor<
+        DensityGridTraversalJobMarket< TemperatureCalculatorFunction >,
+        DensityGridTraversalJob< TemperatureCalculatorFunction > >
+        workers;
+    TemperatureCalculatorFunction do_calculation(*this, jfac, hfac);
+    DensityGridTraversalJobMarket< TemperatureCalculatorFunction > jobs(
+        grid, do_calculation, block);
+    workers.do_in_parallel(jobs);
+  } else {
+    _ionization_state_calculator.calculate_ionization_state(totweight, grid,
+                                                            block);
+  }
 }

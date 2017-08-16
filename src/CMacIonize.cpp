@@ -44,7 +44,6 @@
 #include "HydroIntegrator.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
-#include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
@@ -84,14 +83,6 @@
  *    photoionization algorithm (default: 1e5)
  *  - number of photons first loop: Number of photons to use during the first
  *    iteration of the photoionization algorithm (default: (number of photons))
- *  - calculate temperature: Should the temperature be calculated
- *    (default: false)?
- *  - PAH heating factor: Strength of PAH heating (default: 1.)
- *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
- *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
- *    heating is applied (default: 0.75)
- *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
- *    (default: 1.33333 kpc)
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -387,24 +378,10 @@ int main(int argc, char **argv) {
 
   ChargeTransferRates charge_transfer_rates;
 
-  // used to calculate the ionization state at fixed temperature
-  IonizationStateCalculator ionization_state_calculator(
-      Q, abundances, recombination_rates, charge_transfer_rates);
-
-  bool calculate_temperature =
-      params.get_value< bool >("calculate temperature", false);
-
-  TemperatureCalculator *temperature_calculator = nullptr;
-  if (calculate_temperature) {
-    // used to calculate both the ionization state and the temperature
-    temperature_calculator = new TemperatureCalculator(
-        Q, abundances, params.get_value< double >("PAH heating factor", 1.),
-        params.get_value< double >("cosmic ray heating factor", 0.),
-        params.get_value< double >("cosmic ray heating limit", 0.75),
-        params.get_physical_value< QUANTITY_LENGTH >(
-            "cosmic ray heating scale length", "1.33333 kpc"),
-        line_cooling_data, recombination_rates, charge_transfer_rates, log);
-  }
+  // used to calculate both the ionization state and the temperature
+  TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
+      Q, abundances, line_cooling_data, recombination_rates,
+      charge_transfer_rates, params, log);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -589,12 +566,8 @@ int main(int argc, char **argv) {
       //        >(grid->get_heating_He_handle());
       //      }
 
-      if (calculate_temperature && loop > 3) {
-        temperature_calculator->calculate_temperature(totweight, *grid, block);
-      } else {
-        ionization_state_calculator.calculate_ionization_state(totweight, *grid,
-                                                               block);
-      }
+      temperature_calculator->calculate_temperature(loop, totweight, *grid,
+                                                    block);
 
       // the calculation above will have changed the ionic fractions, and might
       // have changed the temperatures

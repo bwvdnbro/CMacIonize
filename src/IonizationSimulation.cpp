@@ -31,7 +31,6 @@
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
 #include "DiffuseReemissionHandler.hpp"
-#include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
@@ -58,14 +57,6 @@
  *  - diffuse field: Enable diffuse hydrogen and helium reemission (default:
  *    true)
  *  - output folder: Folder where all output files will be placed (default: .)
- *  - calculate temperature: Enable the temperature calculation (default:
- *    false)?
- *  - PAH heating factor: Strength of PAH heating (default: 1.)
- *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
- *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
- *    heating is applied (default: 0.75)
- *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
- *    (default: 1.33333 kpc)
  *  - random seed: Seed used to initialize the random number generator (default:
  *    42)
  *
@@ -124,12 +115,6 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _photon_source_spectrum == nullptr) {
     cmac_error("No spectrum provided for the discrete photon sources!");
   }
-  if (_photon_source_distribution == nullptr &&
-      _photon_source_spectrum != nullptr) {
-    cmac_warning("Discrete photon source spectrum provided, but no discrete "
-                 "photon source distributions. The given spectrum will be "
-                 "ignored.");
-  }
 
   // create the continuous UV sources
   _continuous_photon_source = ContinuousPhotonSourceFactory::generate(
@@ -141,12 +126,6 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   if (_continuous_photon_source != nullptr &&
       _continuous_photon_source_spectrum == nullptr) {
     cmac_error("No spectrum provided for the continuous photon sources!");
-  }
-  if (_continuous_photon_source == nullptr &&
-      _continuous_photon_source_spectrum != nullptr) {
-    cmac_warning("Continuous photon source spectrum provided, but no "
-                 "continuous photon source. The given spectrum will be "
-                 "ignored.");
   }
 
   // create the actual photon source objects that emits the UV photons
@@ -166,28 +145,10 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
         output_folder, _parameter_file, _log);
   }
 
-  // computation objects
-
-  // used to calculate the ionization state at fixed temperature
-  _ionization_state_calculator = new IonizationStateCalculator(
-      total_luminosity, _abundances, _recombination_rates,
-      _charge_transfer_rates);
-
-  bool calculate_temperature =
-      _parameter_file.get_value< bool >("calculate temperature", false);
-
-  _temperature_calculator = nullptr;
-  if (calculate_temperature) {
-    // used to calculate both the ionization state and the temperature
-    _temperature_calculator = new TemperatureCalculator(
-        total_luminosity, _abundances,
-        _parameter_file.get_value< double >("PAH heating factor", 1.),
-        _parameter_file.get_value< double >("cosmic ray heating factor", 0.),
-        _parameter_file.get_value< double >("cosmic ray heating limit", 0.75),
-        _parameter_file.get_physical_value< QUANTITY_LENGTH >(
-            "cosmic ray heating scale length", "1.33333 kpc"),
-        _line_cooling_data, _recombination_rates, _charge_transfer_rates, _log);
-  }
+  // used to calculate both the ionization state and the temperature
+  _temperature_calculator = new TemperatureCalculator(
+      total_luminosity, _abundances, _line_cooling_data, _recombination_rates,
+      _charge_transfer_rates, _parameter_file, _log);
 
   // create ray tracing objects
   int random_seed = _parameter_file.get_value< int >("random seed", 42);
@@ -390,13 +351,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     //        >(grid->get_heating_He_handle());
     //      }
 
-    if (_temperature_calculator && loop > 3) {
-      _temperature_calculator->calculate_temperature(totweight, *_density_grid,
-                                                     block);
-    } else {
-      _ionization_state_calculator->calculate_ionization_state(
-          totweight, *_density_grid, block);
-    }
+    _temperature_calculator->calculate_temperature(loop, totweight,
+                                                   *_density_grid, block);
 
     // the calculation above will have changed the ionic fractions, and might
     // have changed the temperatures
@@ -468,7 +424,6 @@ IonizationSimulation::~IonizationSimulation() {
 
   // computation objects
   delete _temperature_calculator;
-  delete _ionization_state_calculator;
 
   // snapshot output
   delete _density_grid_writer;
