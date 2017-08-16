@@ -51,6 +51,7 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
@@ -277,13 +278,16 @@ int main(int argc, char **argv) {
   VernerCrossSections cross_sections;
   VernerRecombinationRates recombination_rates;
 
+  // initialize the simulation box
+  const SimulationBox simulation_box(params);
+
   HydroIntegrator *hydro_integrator = nullptr;
   double hydro_timestep = 0.;
   unsigned int numstep = 1;
   double hydro_snaptime = 0.;
   unsigned int hydro_lastsnap = 1;
   if (params.get_value< bool >("hydro:active", false)) {
-    hydro_integrator = new HydroIntegrator(params);
+    hydro_integrator = new HydroIntegrator(simulation_box, params);
     hydro_timestep =
         params.get_physical_value< QUANTITY_TIME >("hydro:timestep", "0.01 s");
     double hydro_total_time =
@@ -296,11 +300,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  const Box<> simulation_box =
-      Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:anchor", "[-5. pc, -5. pc, -5. pc]"),
-            params.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:sides", "[10. pc, 10. pc, 10. pc]"));
   DensityGrid *grid = DensityGridFactory::generate(simulation_box, params, log);
 
   // fifth: construct the stellar sources. These should be stored in a
@@ -321,7 +320,8 @@ int main(int argc, char **argv) {
   }
 
   ContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(simulation_box, params, log);
+      ContinuousPhotonSourceFactory::generate(simulation_box.get_box(), params,
+                                              log);
   PhotonSourceSpectrum *continuousspectrum =
       PhotonSourceSpectrumFactory::generate("ContinuousPhotonSourceSpectrum",
                                             params, log);

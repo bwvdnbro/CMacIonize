@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
+#include "SimulationBox.hpp"
 
 #include <cfloat>
 
@@ -168,9 +169,11 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile to read from.
    */
-  inline HydroIntegrator(ParameterFile &params)
+  inline HydroIntegrator(const SimulationBox &simulation_box,
+                         ParameterFile &params)
       : HydroIntegrator(
             params.get_value< double >("hydro:polytropic index", 5. / 3.),
             params.get_value< bool >("hydro:radiative heating", true),
@@ -187,8 +190,7 @@ public:
                                             "reflective"),
             params.get_value< std::string >("hydro:boundary zhigh",
                                             "reflective"),
-            params.get_value< CoordinateVector< bool > >(
-                "DensityGrid:periodicity", CoordinateVector< bool >(false))) {}
+            simulation_box.get_periodicity()) {}
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.

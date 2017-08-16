@@ -36,7 +36,7 @@ DensityFunction:
   scale length ISM: 6.0 kpc
 
 # simulation box dimensions
-simulation box:
+SimulationBox:
   anchor: [-12. kpc, -12. kpc, -12. kpc]
   sides: [24. kpc, 24. kpc, 24. kpc]
 

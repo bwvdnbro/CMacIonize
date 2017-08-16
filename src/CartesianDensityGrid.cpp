@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include "SimulationBox.hpp"
 #include "Timer.hpp"
 #include <sstream>
 
@@ -101,18 +102,17 @@ CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
 /**
  * @brief ParameterFile constructor.
  *
- * @param simulation_box Simulation box (in m).
+ * @param simulation_box SimulationBox.
  * @param parameters ParameterFile to read.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
+CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
                                            ParameterFile &parameters, Log *log)
     : CartesianDensityGrid(
-          simulation_box,
+          simulation_box.get_box(),
           parameters.get_value< CoordinateVector< int > >(
               "DensityGrid:number of cells", CoordinateVector< int >(64)),
-          parameters.get_value< CoordinateVector< bool > >(
-              "DensityGrid:periodicity", CoordinateVector< bool >(false)),
+          simulation_box.get_periodicity(),
           parameters.get_value< bool >("hydro:active", false), log) {}
 
 /**

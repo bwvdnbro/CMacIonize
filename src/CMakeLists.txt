@@ -200,6 +200,7 @@ set(CMACIONIZE_SOURCES
     PlanckPhotonSourceSpectrum.hpp
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
+    SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
     SPHNGSnapshotDensityFunction.hpp

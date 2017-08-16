@@ -35,6 +35,8 @@
 #include "CartesianDensityGrid.hpp"
 #include "VoronoiDensityGrid.hpp"
 
+class SimulationBox;
+
 /**
  * @brief Factory for DensityGrid implementations.
  */
@@ -44,14 +46,14 @@ public:
    * @brief Generate a DensityGrid based on the type chosen in the parameter
    * file.
    *
-   * @param simulation_box Simulation box (in m).
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
    * @param log Log to write logging info to.
    * @return Pointer to a newly created DensityGrid implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  inline static DensityGrid *generate(const Box<> &simulation_box,
+  inline static DensityGrid *generate(const SimulationBox &simulation_box,
                                       ParameterFile &params,
                                       Log *log = nullptr) {
     std::string type =

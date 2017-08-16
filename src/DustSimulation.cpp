@@ -38,6 +38,7 @@
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSource.hpp"
+#include "SimulationBox.hpp"
 #include "SpiralGalaxyContinuousPhotonSource.hpp"
 #include "SpiralGalaxyDensityFunction.hpp"
 #include "Timer.hpp"
@@ -72,17 +73,13 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   // DensityGrid object with geometrical and physical properties
   SpiralGalaxyDensityFunction density_function(params, log);
 
-  const Box<> simulation_box =
-      Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
-            params.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:sides", "[24. kpc, 24. kpc, 24. kpc]"));
+  const SimulationBox simulation_box(params);
   CartesianDensityGrid grid(simulation_box, params, log);
 
   int random_seed = params.get_value< int >("random seed", 42);
 
-  SpiralGalaxyContinuousPhotonSource continuoussource(simulation_box, params,
-                                                      log);
+  SpiralGalaxyContinuousPhotonSource continuoussource(simulation_box.get_box(),
+                                                      params, log);
   MonochromaticPhotonSourceSpectrum continuousspectrum(13.6, 1., log);
 
   Abundances abundances(0., 0., 0., 0., 0., 0., log);

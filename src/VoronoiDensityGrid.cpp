@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "VoronoiDensityGrid.hpp"
+#include "SimulationBox.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 #include "VoronoiGeneratorDistributionFactory.hpp"
 #include "VoronoiGrid.hpp"
@@ -122,21 +123,20 @@ VoronoiDensityGrid::VoronoiDensityGrid(
 /**
  * @brief ParameterFile constructor.
  *
- * @param simulation_box Simulation box (in m).
+ * @param simulation_box SimulationBox.
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-VoronoiDensityGrid::VoronoiDensityGrid(const Box<> &simulation_box,
+VoronoiDensityGrid::VoronoiDensityGrid(const SimulationBox &simulation_box,
                                        ParameterFile &params, Log *log)
     : VoronoiDensityGrid(
-          VoronoiGeneratorDistributionFactory::generate(simulation_box, params,
-                                                        log),
-          simulation_box,
+          VoronoiGeneratorDistributionFactory::generate(
+              simulation_box.get_box(), params, log),
+          simulation_box.get_box(),
           params.get_value< std::string >("DensityGrid:grid type", "Old"),
           params.get_value< unsigned char >(
               "DensityGrid:number of Lloyd iterations", 0),
-          params.get_value< CoordinateVector< bool > >(
-              "DensityGrid:periodicity", CoordinateVector< bool >(false)),
+          simulation_box.get_periodicity(),
           params.get_value< bool >("hydro:active", false),
           params.get_physical_value< QUANTITY_TIME >("hydro:timestep",
                                                      "0.01 s"),

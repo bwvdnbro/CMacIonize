@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 
+class SimulationBox;
 class VoronoiGeneratorDistribution;
 class VoronoiGrid;
 
@@ -78,7 +79,7 @@ public:
       bool hydro = false, double hydro_timestep = 0.,
       double hydro_gamma = 5. / 3., Log *log = nullptr);
 
-  VoronoiDensityGrid(const Box<> &simulation_box, ParameterFile &params,
+  VoronoiDensityGrid(const SimulationBox &simulation_box, ParameterFile &params,
                      Log *log = nullptr);
 
   virtual ~VoronoiDensityGrid();

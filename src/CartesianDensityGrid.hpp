@@ -36,6 +36,7 @@ class Log;
 class ParameterFile;
 class Photon;
 class RecombinationRates;
+class SimulationBox;
 
 /**
  * @brief Cartesian density grid.
@@ -130,8 +131,8 @@ public:
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
-  CartesianDensityGrid(const Box<> &simulation_box, ParameterFile &parameters,
-                       Log *log = nullptr);
+  CartesianDensityGrid(const SimulationBox &simulation_box,
+                       ParameterFile &parameters, Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.

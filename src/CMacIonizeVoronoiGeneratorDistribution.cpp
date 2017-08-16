@@ -47,7 +47,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
 
   // get the simulation box anchor
   CoordinateVector<> box_anchor =
-      params.get_physical_vector< QUANTITY_LENGTH >("simulation box:anchor");
+      params.get_physical_vector< QUANTITY_LENGTH >("SimulationBox:anchor");
 
   // units
   double unit_length_in_SI = 1.;

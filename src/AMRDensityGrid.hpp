@@ -31,6 +31,7 @@
 #include "Abundances.hpp"
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
+#include "SimulationBox.hpp"
 
 #include <algorithm>
 #include <cfloat>
@@ -281,22 +282,21 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
-   * @param simulation_box Simulation box (in m).
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile to read.
    * @param log Log to write log messages to.
    */
-  inline AMRDensityGrid(const Box<> &simulation_box, ParameterFile &params,
-                        Log *log)
-      : AMRDensityGrid(
-            simulation_box,
-            params.get_value< CoordinateVector< int > >(
-                "DensityGrid:number of cells", CoordinateVector< int >(64)),
-            AMRRefinementSchemeFactory::generate(params, log),
-            params.get_value< unsigned char >("DensityGrid:refinement interval",
-                                              5),
-            params.get_value< CoordinateVector< bool > >(
-                "DensityGrid:periodicity", CoordinateVector< bool >(false)),
-            params.get_value< bool >("hydro:active", false), log) {}
+  inline AMRDensityGrid(const SimulationBox &simulation_box,
+                        ParameterFile &params, Log *log)
+      : AMRDensityGrid(simulation_box.get_box(),
+                       params.get_value< CoordinateVector< int > >(
+                           "DensityGrid:unrefined number of cells",
+                           CoordinateVector< int >(64)),
+                       AMRRefinementSchemeFactory::generate(params, log),
+                       params.get_value< unsigned char >(
+                           "DensityGrid:refinement interval", 5),
+                       simulation_box.get_periodicity(),
+                       params.get_value< bool >("hydro:active", false), log) {}
 
   /**
    * @brief Destructor.

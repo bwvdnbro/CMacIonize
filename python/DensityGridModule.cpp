@@ -28,6 +28,7 @@
 #include "DensityGridFactory.hpp"
 #include "HDF5Tools.hpp"
 #include "ParameterFile.hpp"
+#include "SimulationBox.hpp"
 #include <boost/noncopyable.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
@@ -91,11 +92,7 @@ initDensityGrid(const std::string &filename) {
 
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
-  const Box<> simulation_box =
-      Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:anchor", "[0. m, 0. m, 0. m]"),
-            parameters.get_physical_vector< QUANTITY_LENGTH >(
-                "simulation box:sides", "[1. m, 1. m, 1. m]"));
+  const SimulationBox simulation_box(parameters);
   boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
       DensityGridFactory::generate(simulation_box, parameters));
   std::pair< unsigned long, unsigned long > block =

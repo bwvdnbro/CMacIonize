@@ -1,5 +1,5 @@
 # simulation box
-simulation box:
+SimulationBox:
   # anchor of the box: corner with the smallest coordinates
   anchor: [-5. pc, -5. pc, -5. pc]
   # side lengths of the box
