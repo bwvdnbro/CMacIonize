@@ -34,20 +34,26 @@
 /**
  * @brief DensityFunction implementation that returns a spiral galaxy density
  * field.
+ *
+ * We assume a simple double exponential profile of the form
+ * \f[
+ *  n(x, y, z) = n_0 \exp\left(-\frac{\sqrt{x^2+y^2}}{r_{ISM}}\right)
+ *               \exp\left(-\frac{|z|}{h_{ISM}}\right).
+ * \f]
  */
 class SpiralGalaxyDensityFunction : public DensityFunction {
 private:
   /*! @brief Scale length @f$r_{ISM}@f$ of the gas and dust in the ISM
    *  (in m). */
-  const double _rdust;
+  const double _r_ISM;
 
   /*! @brief Scale height @f$h_{ISM}@f$ of the gas and dust in the ISM
    *  (in m). */
-  const double _hdust;
+  const double _h_ISM;
 
   /*! @brief Central density @f$\rho{}_0@f$ of the gas and dust in the ISM
    *  (in kg m^-3). */
-  const double _rho_0;
+  const double _n_0;
 
   /*! @brief Conversion factor from kpc to m (in m). */
   const double _kpc;
@@ -66,15 +72,15 @@ public:
    */
   SpiralGalaxyDensityFunction(double rdust, double hdust, double n_0,
                               Log *log = nullptr)
-      : _rdust(rdust), _hdust(hdust),
+      : _r_ISM(rdust), _h_ISM(hdust),
         /* we multiplied the value in Kenny's code with 1.e-3 to convert g to
          * kg */
-        _rho_0(1.674e-27 * n_0), _kpc(3.086e19) {
+        _n_0(1.674e-27 * n_0), _kpc(3.086e19) {
 
     if (log) {
       log->write_status(
-          "Constructed SpiralGalaxyDensityFunction with scale length ", _rdust,
-          " m, scale height ", _hdust, " m, and a central density of ", _rho_0,
+          "Constructed SpiralGalaxyDensityFunction with scale length ", _r_ISM,
+          " m, scale height ", _h_ISM, " m, and a central density of ", _n_0,
           " kg m^-3.");
     }
   }
@@ -110,13 +116,13 @@ public:
     const CoordinateVector<> &position = cell.get_cell_midpoint();
     const double w2 = position.x() * position.x() + position.y() * position.y();
     const double w = std::sqrt(w2);
-    double rho = 0.;
+    double n = 0.;
     if (w < 15. * _kpc && std::abs(position.z()) < 15. * _kpc) {
-      rho = _rho_0 * std::exp(-w / _rdust) *
-            std::exp(-std::abs(position.z()) / _hdust);
+      n = _n_0 * std::exp(-w / _r_ISM) *
+          std::exp(-std::abs(position.z()) / _h_ISM);
     }
     DensityValues values;
-    values.set_number_density(rho);
+    values.set_number_density(n);
     values.set_ionic_fraction(ION_H_n, 1.);
     values.set_ionic_fraction(ION_He_n, 0.);
     values.set_temperature(0.);
