@@ -39,13 +39,13 @@ DensityFunction:
 SimulationBox:
   anchor: [-12. kpc, -12. kpc, -12. kpc]
   sides: [24. kpc, 24. kpc, 24. kpc]
+  # periodicity flags
+  periodicity: [false, false, false]
 
 # grid parameters: we always use a Cartesian grid
 DensityGrid:
   # number of cells in each dimension
   number of cells: [201, 201, 201]
-  # periodicity flags
-  periodicity: [false, false, false]
 
 # dust parameters: they all depend on a single parameter: the sampled band
 dust:

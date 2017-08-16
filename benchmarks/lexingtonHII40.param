@@ -16,11 +16,11 @@ DensityFunction:
 SimulationBox:
   anchor: [-5. pc, -5. pc, -5. pc]
   sides: [10. pc, 10. pc, 10. pc]
+  periodicity: [false, false, false]
 
 DensityGrid:
   type: Cartesian
   number of cells: [64, 64, 64]
-  periodicity: [false, false, false]
 
 DensityGridWriter:
   type: Gadget

@@ -4,13 +4,13 @@ SimulationBox:
   anchor: [-5. pc, -5. pc, -5. pc]
   # side lengths of the box
   sides: [10. pc, 10. pc, 10. pc]  
+  # periodicity of the box
+  periodicity: [false, false, false]
 
 # density grid
 DensityGrid:
   # type: a cartesian density grid
   type: Cartesian
-  # periodicity of the box
-  periodicity: [false, false, false]
   # number of cells in each dimension
   number of cells: [64, 64, 64]
 
