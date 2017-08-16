@@ -37,6 +37,14 @@
 
 /**
  * @brief ContinuousPhotonSource implementation that represents a spiral galaxy.
+ *
+ * The luminosity profile is a combination of the bulge model of Jaffe, W. 1983,
+ * MNRAS, 202, 995 (http://adsabs.harvard.edu/abs/1983MNRAS.202..995J), and a
+ * double exponential profile.
+ *
+ * We manually computed and inverted the cumulative distributions for both
+ * models to obtain a random position generating function that can be used in
+ * parallel.
  */
 class SpiralGalaxyContinuousPhotonSource : public ContinuousPhotonSource {
 private:
@@ -56,13 +64,13 @@ private:
   const double _rJ;
 
   /*! @brief Scale length @f$r_*@f$ of the stellar disk (in m). */
-  const double _rstars;
+  const double _r_stars;
 
   /*! @brief Scale height @f$h_*@f$ of the stellar disk (in m). */
-  const double _hstars;
+  const double _h_stars;
 
   /*! @brief Fraction of the total luminosity that comes from the bulge. */
-  double _bulge_to_total;
+  double _bulge_to_total_ratio;
 
   /*! @brief Constant used to sample from the bulge. */
   const double _rB_over_rJ_plus_rB;
@@ -71,10 +79,10 @@ private:
   const double _rC_over_rJ_plus_rC;
 
   /*! @brief Cumulative disc luminosity distribution: x coordinates (in m). */
-  std::vector< double > _cumulative_distribution_x;
+  std::vector< double > _cumulative_disc_luminosity_distribution_x;
 
   /*! @brief Cumulative disc luminosity distribution: y coordinates. */
-  std::vector< double > _cumulative_distribution_y;
+  std::vector< double > _cumulative_disc_luminosity_distribution_y;
 
 public:
   /**
@@ -91,8 +99,8 @@ public:
                                      double hstars, double B_over_T,
                                      Log *log = nullptr)
       : _box(box), _kpc(3.086e19), _rC(0.2 * _kpc), _rB(2. * _kpc),
-        _rJ(0.4 * _kpc), _rstars(rstars), _hstars(hstars),
-        _bulge_to_total(B_over_T), _rB_over_rJ_plus_rB(_rB / (_rB + _rJ)),
+        _rJ(0.4 * _kpc), _r_stars(rstars), _h_stars(hstars),
+        _bulge_to_total_ratio(B_over_T), _rB_over_rJ_plus_rB(_rB / (_rB + _rJ)),
         _rC_over_rJ_plus_rC(_rC / (_rC + _rJ)) {
 
     // the total bulge luminosity is 4\pi L_{B,0} r_j^3 (\frac{r_b}{r_j+r_b})
@@ -100,28 +108,29 @@ public:
     // 4 \pi L_{B,0} r_j^3(\frac{r_c}{r_j+r_c})
     // this means that the part of the bulge we sample has a lower luminosity,
     // and the sampled bulge to total needs to be adjusted
-    _bulge_to_total *= (1. - _rC_over_rJ_plus_rC / _rB_over_rJ_plus_rB);
+    _bulge_to_total_ratio *= (1. - _rC_over_rJ_plus_rC / _rB_over_rJ_plus_rB);
 
     // we assume the box is centered on (0., 0., 0.)
     const double rmax = 1.2 * _box.get_anchor().norm();
     const unsigned int nbin = 1000;
-    _cumulative_distribution_x.resize(nbin + 1, 0.);
-    _cumulative_distribution_y.resize(nbin + 1, 0.);
+    _cumulative_disc_luminosity_distribution_x.resize(nbin + 1, 0.);
+    _cumulative_disc_luminosity_distribution_y.resize(nbin + 1, 0.);
     for (unsigned int i = 0; i < nbin; ++i) {
       const double w = i * rmax / nbin;
-      _cumulative_distribution_x[i] = w;
-      const double x = w / _rstars;
-      _cumulative_distribution_y[i] = 1. - (1. + x) * std::exp(-x);
+      _cumulative_disc_luminosity_distribution_x[i] = w;
+      const double x = w / _r_stars;
+      _cumulative_disc_luminosity_distribution_y[i] =
+          1. - (1. + x) * std::exp(-x);
     }
     // we make sure the maximum of our distribution is outside the box, so that
     // positions sampled in that bin always end up being thrown away...
-    _cumulative_distribution_x[nbin] = rmax;
-    _cumulative_distribution_y[nbin] = 1.;
+    _cumulative_disc_luminosity_distribution_x[nbin] = rmax;
+    _cumulative_disc_luminosity_distribution_y[nbin] = 1.;
 
     if (log) {
       log->write_status("Constructed SpiralGalaxyContinuousPhotonSource with a "
                         "disc scale length of ",
-                        _rstars, " m, a disc scale height of ", _hstars,
+                        _r_stars, " m, a disc scale height of ", _h_stars,
                         " m, and a bulge to total ratio of ", B_over_T, ".");
     }
   }
@@ -275,7 +284,7 @@ public:
     while (!_box.inside(position)) {
       // choose if we sample from bulge or disc
       const double x_bulge = random_generator.get_uniform_random_double();
-      if (x_bulge <= _bulge_to_total) {
+      if (x_bulge <= _bulge_to_total_ratio) {
         // sample from bulge
         const double u = random_generator.get_uniform_random_double();
         const double A =
@@ -295,21 +304,23 @@ public:
             2. * random_generator.get_uniform_random_double() - 1.;
         double z;
         if (u1 > 0.) {
-          z = -_hstars * std::log(u1);
+          z = -_h_stars * std::log(u1);
         } else {
-          z = _hstars * std::log(-u1);
+          z = _h_stars * std::log(-u1);
         }
         const double phi =
             2. * M_PI * random_generator.get_uniform_random_double();
         const double u2 = random_generator.get_uniform_random_double();
-        unsigned int i = Utilities::locate(u2, &_cumulative_distribution_y[0],
-                                           _cumulative_distribution_y.size());
-        const double w = _cumulative_distribution_x[i] +
-                         (u2 - _cumulative_distribution_y[i]) /
-                             (_cumulative_distribution_y[i + 1] -
-                              _cumulative_distribution_y[i]) *
-                             (_cumulative_distribution_x[i + 1] -
-                              _cumulative_distribution_x[i]);
+        unsigned int i = Utilities::locate(
+            u2, &_cumulative_disc_luminosity_distribution_y[0],
+            _cumulative_disc_luminosity_distribution_y.size());
+        const double w =
+            _cumulative_disc_luminosity_distribution_x[i] +
+            (u2 - _cumulative_disc_luminosity_distribution_y[i]) /
+                (_cumulative_disc_luminosity_distribution_y[i + 1] -
+                 _cumulative_disc_luminosity_distribution_y[i]) *
+                (_cumulative_disc_luminosity_distribution_x[i + 1] -
+                 _cumulative_disc_luminosity_distribution_x[i]);
         position[0] = w * std::cos(phi);
         position[1] = w * std::sin(phi);
         position[2] = z;
