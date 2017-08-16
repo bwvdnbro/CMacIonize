@@ -52,6 +52,11 @@
 /**
  * @brief Perform a dusty radiative transfer simulation.
  *
+ * This method reads the following parameters from the parameter file:
+ *  - random seed: Seed for the random number generator (default: 42)
+ *  - output folder: Folder where all output files will be placed (default: .)
+ *  - number of photons: Number of photons to use (default: 5e5)
+ *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
  * @param write_output Flag indicating whether this process writes output.
@@ -74,7 +79,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   SpiralGalaxyDensityFunction density_function(params, log);
 
   const SimulationBox simulation_box(params);
-  CartesianDensityGrid grid(simulation_box, params, log);
+  CartesianDensityGrid grid(simulation_box, params, false, log);
 
   int random_seed = params.get_value< int >("random seed", 42);
 
@@ -88,18 +93,20 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
                       abundances, cross_sections, false, log);
 
   DustScattering dust_scattering(params, log);
-  CCDImage dust_image(params, log);
+
+  // set up output
+  std::string output_folder = Utilities::get_absolute_path(
+      params.get_value< std::string >("output folder", "."));
+  CCDImage dust_image(output_folder, params, log);
 
   unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 500000);
+      params.get_value< unsigned int >("number of photons", 5e5);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
-    std::string folder = Utilities::get_absolute_path(
-        params.get_value< std::string >("output folder", "."));
-    std::string pfilename = folder + "/dust-parameters-usedvalues.param";
+    std::string pfilename = output_folder + "/dust-parameters-usedvalues.param";
     std::ofstream pfile(pfilename);
     params.print_contents(pfile);
     pfile.close();

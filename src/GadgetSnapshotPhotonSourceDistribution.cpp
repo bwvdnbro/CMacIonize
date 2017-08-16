@@ -216,6 +216,28 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file to read (required)
+ *  - formation time name: Name of the data field that contains the stellar
+ *    formation time values (default: FormationTime)
+ *  - fallback unit length: Length unit to use if no units can be found in the
+ *    snapshot file (default: 1. m, with warning)
+ *  - fallback unit time: Time unit to use if no units can be found in the
+ *    snapshot file (default: 1. s, with warning)
+ *  - fallback unit mass: Mass unit to use if no units can be found in the
+ *    snapshot file (default: 1. kg, with warning)
+ *  - cutoff age: Upper limit for the age of star particles that emit UV
+ *    radiation (default: 5. Myr)
+ *  - flux per mass unit: Ionizing flux per mass unit for star particles that
+ *    emit UV radiation (default: 4.96e46 s^-1 Msol^-1)
+ *  - use gas: Do gas particles contain stars (default: false)?
+ *  - SFR unit: Unit for SFR values in the snapshot (default: (mass unit)/(time
+ *    unit))
+ *  - comoving integration flag: Was comoving integration active in the original
+ *    simulation (default: false)?
+ *  - hubble parameter: Reduced Hubble parameter used for the original
+ *    simulation (default: 0.7)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging information to.
  */

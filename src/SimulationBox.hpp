@@ -53,6 +53,11 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - anchor: Anchor of the box (default: [-5. pc, -5. pc, -5. pc])
+   *  - sides: Side lengths of the box (default: [10. pc, 10. pc, 10. pc])
+   *  - periodicity: Periodicity flags (default: [false, false, false])
+   *
    * @param parameter_file ParameterFile to read from.
    */
   SimulationBox(ParameterFile &parameter_file)

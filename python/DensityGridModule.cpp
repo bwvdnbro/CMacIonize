@@ -93,8 +93,10 @@ initDensityGrid(const std::string &filename) {
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
   const SimulationBox simulation_box(parameters);
-  boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
-      DensityGridFactory::generate(simulation_box, parameters));
+  boost::shared_ptr< DensityGrid > ptr =
+      boost::shared_ptr< DensityGrid >(DensityGridFactory::generate(
+          simulation_box, parameters,
+          parameters.get_value< bool >("hydro:active", false)));
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, ptr.get()->get_number_of_cells());
   ptr.get()->initialize(block, density_function);

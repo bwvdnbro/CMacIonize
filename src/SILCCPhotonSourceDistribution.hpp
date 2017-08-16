@@ -108,6 +108,20 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of sources: Number of individual sources (default: 24)
+   *  - anchor x: X position of the anchor of the 2D disc (default: -1. kpc)
+   *  - sides x: X side length of the 2D disc (default: 2. kpc)
+   *  - anchor y: Y position of the anchor of the 2D disc (default: -1. kpc)
+   *  - sides y: Y side length of the 2D disc (default: 2. kpc)
+   *  - origin z: Origin of the exponential disc profile in the z direction
+   *    (default: 0. pc)
+   *  - scaleheight z: Vertical scale height of the exponential disc profile
+   *    (default: 63. pc)
+   *  - luminosity: Luminosity of an individual source (default: 3.125e49 s^-1)
+   *  - random seed: Random seed used to initialize the random generator that
+   *    is used to sample the individual positions (default: 42)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
@@ -116,19 +130,19 @@ public:
             params.get_value< unsigned int >(
                 "PhotonSourceDistribution:number of sources", 24),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:anchor x", "0. m"),
+                "PhotonSourceDistribution:anchor x", "-1. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:sides x", "1. m"),
+                "PhotonSourceDistribution:sides x", "2. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:anchor y", "0. m"),
+                "PhotonSourceDistribution:anchor y", "-1. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:sides y", "1. m"),
+                "PhotonSourceDistribution:sides y", "2. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:origin z", "0. m"),
+                "PhotonSourceDistribution:origin z", "0. pc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:scaleheight z", "0.2 m"),
+                "PhotonSourceDistribution:scaleheight z", "63. pc"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "PhotonSourceDistribution:luminosity", "4.26e49 s^-1"),
+                "PhotonSourceDistribution:luminosity", "3.125e49 s^-1"),
             params.get_value< int >("PhotonSourceDistribution:random seed", 42),
             log) {}
 

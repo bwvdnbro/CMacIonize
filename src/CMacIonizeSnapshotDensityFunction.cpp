@@ -219,6 +219,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file to read (required)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */

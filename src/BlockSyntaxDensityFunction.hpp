@@ -121,6 +121,9 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - filename: Name of the file that contains the blocks (required)
+   *
    * @param params ParameterFile to read.
    * @param log Log to write logging info to.
    */

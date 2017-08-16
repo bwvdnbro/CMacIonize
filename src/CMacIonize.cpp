@@ -64,10 +64,37 @@
 #include <string>
 
 /**
- * @brief Entrance point of the program
+ * @brief Entrance point of the program.
  *
- * @param argc Number of command line arguments passed on to the program.
- * @param argv Array containing the command line arguments.
+ * When run in RHD mode, this method reads the following parameters from the
+ * parameter file:
+ *  - hydro:
+ *    - active: Is hydrodynamics enabled (default: false)?
+ *    - timestep: Hydrodynamical time step (default: 0.01 s)
+ *    - total time: Total simulation time (default: 1. s)
+ *    - snapshot time: Time interval between consecutive snapshot dumps
+ *      (default: 0.1*(total time))
+ *  - random seed: Seed for the random number generator (default: 42)
+ *  - diffuse field: Should diffuse hydrogen and helium reemission be enabled
+ *    (default: true)?
+ *  - output folder: Folder where all output files will be placed (default: .)
+ *  - number of iterations: Number of iterations of the photoionization
+ *    algorithm (default: 10)
+ *  - number of photons: Number of photons to use during each iteration of the
+ *    photoionization algorithm (default: 1e5)
+ *  - number of photons first loop: Number of photons to use during the first
+ *    iteration of the photoionization algorithm (default: (number of photons))
+ *  - calculate temperature: Should the temperature be calculated
+ *    (default: false)?
+ *  - PAH heating factor: Strength of PAH heating (default: 1.)
+ *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
+ *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
+ *    heating is applied (default: 0.75)
+ *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
+ *    (default: 1.33333 kpc)
+ *
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
@@ -286,7 +313,8 @@ int main(int argc, char **argv) {
   unsigned int numstep = 1;
   double hydro_snaptime = 0.;
   unsigned int hydro_lastsnap = 1;
-  if (params.get_value< bool >("hydro:active", false)) {
+  const bool hydro_active = params.get_value< bool >("hydro:active", false);
+  if (hydro_active) {
     hydro_integrator = new HydroIntegrator(simulation_box, params);
     hydro_timestep =
         params.get_physical_value< QUANTITY_TIME >("hydro:timestep", "0.01 s");
@@ -300,7 +328,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  DensityGrid *grid = DensityGridFactory::generate(simulation_box, params, log);
+  DensityGrid *grid =
+      DensityGridFactory::generate(simulation_box, params, hydro_active, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -342,13 +371,16 @@ int main(int argc, char **argv) {
                       params.get_value< bool >("diffuse field", true), log);
 
   // set up output
-  DensityGridWriter *writer = DensityGridWriterFactory::generate(params, log);
+  std::string output_folder = Utilities::get_absolute_path(
+      params.get_value< std::string >("output folder", "."));
+  DensityGridWriter *writer =
+      DensityGridWriterFactory::generate(output_folder, params, log);
 
   unsigned int nloop =
       params.get_value< unsigned int >("number of iterations", 10);
 
   unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 100);
+      params.get_value< unsigned int >("number of photons", 1e5);
   unsigned int numphoton1 = params.get_value< unsigned int >(
       "number of photons first loop", numphoton);
   double Q = source.get_total_luminosity();
@@ -360,7 +392,7 @@ int main(int argc, char **argv) {
       Q, abundances, recombination_rates, charge_transfer_rates);
 
   bool calculate_temperature =
-      params.get_value< bool >("calculate temperature", true);
+      params.get_value< bool >("calculate temperature", false);
 
   TemperatureCalculator *temperature_calculator = nullptr;
   if (calculate_temperature) {
@@ -378,13 +410,11 @@ int main(int argc, char **argv) {
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
-    std::string folder = Utilities::get_absolute_path(
-        params.get_value< std::string >("DensityGridWriter:folder", "."));
-    std::ofstream pfile(folder + "/parameters-usedvalues.param");
+    std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
     params.print_contents(pfile);
     pfile.close();
     if (log) {
-      log->write_status("Wrote used parameters to ", folder,
+      log->write_status("Wrote used parameters to ", output_folder,
                         "/parameters-usedvalues.param.");
     }
   }

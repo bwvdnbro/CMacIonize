@@ -706,8 +706,10 @@ public:
    * @brief Set the velocity for the grid movement.
    *
    * This method should only be implemented for moving grids.
+   *
+   * @param gamma Polytropic index of the gas.
    */
-  virtual void set_grid_velocity() {}
+  virtual void set_grid_velocity(double gamma) {}
 
   /**
    * @brief Get the total number of hydrogen atoms contained in the grid.

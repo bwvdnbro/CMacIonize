@@ -83,6 +83,10 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - resolution: Resolution of the regular generator grid (default: [32, 32,
+   *    32])
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

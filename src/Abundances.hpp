@@ -70,6 +70,14 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - helium: Helium abundance (default: 0.1)
+   *  - carbon: Carbon abundance (default: 2.2e-4)
+   *  - nitrogen: Nitrogen abundance (default: 4.e-5)
+   *  - oxygen: Oxygen abundance (default: 3.3e-4)
+   *  - neon: Neon abundance (default: 5.e-5)
+   *  - sulphur: Sulphur abundance (default: 9.e-6)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */

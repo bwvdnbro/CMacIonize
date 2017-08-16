@@ -118,6 +118,10 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of positions: Number of positions in the file (default: 1000)
+   *  - filename: Name of the file (default: SPH.txt)
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

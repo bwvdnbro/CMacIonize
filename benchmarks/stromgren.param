@@ -41,10 +41,10 @@ PhotonSourceDistribution:
 
 # spectrum of the photon sources
 PhotonSourceSpectrum:
-  # type: a Planck black body spectrum
-  type: Planck
-  # temperature of the black body spectrum
-  temperature: 40000. K
+  # type: a monochromatic spectrum
+  type: Monochromatic
+  # frequency of the spectrum
+  frequency: 13.6 eV
 
 # number of photons to use
 number of photons: 1000000

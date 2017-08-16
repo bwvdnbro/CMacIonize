@@ -46,6 +46,17 @@ public:
    * @brief Generate an AMRRefinementScheme implementation with parameters from
    * the given ParameterFile.
    *
+   * Supported types (default: None):
+   *  - CMacIonize: Hack implementation used to recreate grids from a snapshot.
+   *  - Mass: Implementation that refines based on the number of particles in a
+   *    cell.
+   *  - OI: Implementation that refines based on the number of neutral oxygen
+   *    particles in a cell.
+   *  - Opacity: Implementation that refines based on the total opacity of a
+   *    cell.
+   *  - Spatial: Implementation that refines within a predefined sub region of
+   *    the simulation box.
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    * @return Pointer to a new AMRRefinementScheme instance. Memory management

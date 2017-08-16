@@ -115,6 +115,11 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - temperature: Temperature of the black body (default: 4.e4 K)
+ *  - ionizing flux: Total ionizing flux of the spectrum (default: none, and
+ *    error when total flux is requested)
+ *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
@@ -125,7 +130,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(std::string role,
                                                        Log *log)
     : PlanckPhotonSourceSpectrum(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              role + ":temperature", "40000. K"),
+              role + ":temperature", "4.e4 K"),
           params.get_physical_value< QUANTITY_FLUX >(role + ":ionizing flux",
                                                      "-1. m^-2 s^-1"),
           log) {}

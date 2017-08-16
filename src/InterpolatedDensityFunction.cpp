@@ -289,6 +289,11 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the file that contains the data to interpolate on
+ *    (required)
+ *  - temperature: Initial temperature to use (default: 8000. K)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */

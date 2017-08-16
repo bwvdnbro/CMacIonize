@@ -167,6 +167,10 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - temperature: Temperature of the star (default: 4.e4 K)
+ *  - surface gravity: Surface gravity of the star (default: 25. m s^-2)
+ *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
@@ -177,7 +181,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(std::string role,
                                                          Log *log)
     : WMBasicPhotonSourceSpectrum(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              role + ":temperature", "40000. K"),
+              role + ":temperature", "4.e4 K"),
           params.get_physical_value< QUANTITY_ACCELERATION >(
               role + ":surface gravity", "25. m s^-2"),
           log) {}

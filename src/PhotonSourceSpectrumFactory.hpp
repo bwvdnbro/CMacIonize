@@ -45,6 +45,14 @@ public:
    * @brief Generate a PhotonSourceSpectrum based on the type chosen in the
    * parameter file (corresponding to the given role).
    *
+   * Supported types are (default: Planck):
+   *  - FaucherGiguere: Redshift dependent UVB spectrum of Faucher-Giguère et
+   *    al. (2009)
+   *  - Monochromatic: Monochromatic spectrum
+   *  - Planck: Black body spectrum
+   *  - WMBasic: Realistic stellar atmosphere spectrum of Sternberg, Hoffmann &
+   *    Pauldrach (2003)
+   *
    * @param role Role the PhotonSourceSpectrum will assume. Parameters will be
    * read from the corresponding parameter file block.
    * @param params ParameterFile to read from.
@@ -54,7 +62,8 @@ public:
    */
   inline static PhotonSourceSpectrum *
   generate(std::string role, ParameterFile &params, Log *log = nullptr) {
-    std::string type = params.get_value< std::string >(role + ":type", "None");
+    std::string type =
+        params.get_value< std::string >(role + ":type", "Monochromatic");
     if (log) {
       log->write_info("Requested PhotonSourceSpectrum for ", role, ": ", type);
     }

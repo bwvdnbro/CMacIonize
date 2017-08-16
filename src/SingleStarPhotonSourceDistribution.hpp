@@ -67,13 +67,18 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - position: Position of the stellar source (default: [0. pc, 0. pc, 0.
+   *    pc])
+   *  - luminosity: Ionizing luminosity of the source (default: 4.26e49 s^-1)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
   SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
-                "PhotonSourceDistribution:position", "[0.5 m, 0.5 m, 0.5 m]"),
+                "PhotonSourceDistribution:position", "[0. pc, 0. pc, 0. pc]"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
                 "PhotonSourceDistribution:luminosity", "4.26e49 s^-1"),
             log) {}

@@ -45,16 +45,19 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - prefix: Prefix that will be prepended to all snapshot file names (default:
+ *    snapshot)
+ *
+ * @param output_folder Name of the folder where output files should be placed.
  * @param params ParameterFile to read.
  * @param log Log to write logging information to.
  */
-AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(ParameterFile &params,
-                                                       Log *log)
-    : AsciiFileDensityGridWriter(
-          params.get_value< std::string >("DensityGridWriter:prefix",
-                                          "snapshot"),
-          params.get_value< std::string >("DensityGridWriter:folder", "."),
-          log) {}
+AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
+    std::string output_folder, ParameterFile &params, Log *log)
+    : AsciiFileDensityGridWriter(params.get_value< std::string >(
+                                     "DensityGridWriter:prefix", "snapshot"),
+                                 output_folder, log) {}
 
 /**
  * @brief Write a snapshot.

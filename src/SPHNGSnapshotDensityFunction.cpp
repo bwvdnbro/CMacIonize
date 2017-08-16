@@ -383,6 +383,22 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name fo the snapshot file (required)
+ *  - initial temperature: Initial temperature of the gas (default: 8000. K)
+ *  - write statistics: Write statistical information about the number of close
+ *    particle pairs (default: false)?
+ *  - statistics number of bins: Number of bins to use when binning the
+ *    interparticle distances (default: 200)
+ *  - statistics minimum distance: Minimum interparticle distance bin (default:
+ *    1.e-5 m)
+ *  - statistics maximum distance: Maximum interparticle distance bin (default:
+ *    1. kpc)
+ *  - statistics filename: Name of the output file containing the statistics
+ *    (default: ngb_statistics.txt)
+ *  - use new algorithm: Use Maya Petkova's more accurate mapping algorithm
+ *    (default: false)?
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */

@@ -104,6 +104,17 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the ASCII file (required)
+ *  - number of cells: Number of cells in the ASCII file (default: [64, 64, 64])
+ *  - box anchor: Anchor of the box containing the cells (default: [-5. pc, -5.
+ *    pc, -5. pc])
+ *  - box sides: Side lengths of the box containing the cells (default: [10. pc,
+ *    10. pc, 10. pc])
+ *  - temperature: Initial temperature of the ISM (default: 8000. K)
+ *  - length unit: Length unit (default: 1. m)
+ *  - density unit: Density unit (default: 1. m^-3)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging information to.
  */
@@ -114,9 +125,9 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
           params.get_value< CoordinateVector< int > >(
               "DensityFunction:number of cells", CoordinateVector< int >(64)),
           Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityFunction:box anchor", "[0. m, 0. m, 0. m]"),
+                    "DensityFunction:box anchor", "[-5. pc, -5. pc, -5. pc]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityFunction:box sides", "[1. m, 1. m, 1. m]")),
+                    "DensityFunction:box sides", "[10. pc, 10. pc, 10. pc]")),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:temperature", "8000. K"),
           params.get_physical_value< QUANTITY_LENGTH >(

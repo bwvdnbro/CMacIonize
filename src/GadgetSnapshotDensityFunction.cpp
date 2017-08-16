@@ -274,6 +274,25 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file (required)
+ *  - fallback periodic flag: Periodicity flag to use when no periodicity flag
+ *    can be found in the snapshot file (default: false)
+ *  - fallback unit length: Length unit to use if no units can be found in the
+ *    snapshot file (default: 1. m, with warning)
+ *  - fallback unit mass: Mass unit to use if no units can be found in the
+ *    snapshot file (default: 1. kg, with warning)
+ *  - fallback unit temperature: Temperature unit to use if no units can be
+ *    found in the snapshot file (default: 1. K, with warning)
+ *  - use neutral fraction: Use initial neutral fractions from the snapshot file
+ *    (if present; default: false)?
+ *  - fallback initial temperature: Initial temperature to use if no temperature
+ *    values can be found in the snapshot file (default: 8000. K, with warning)
+ *  - comoving integration flag: Was comoving integration used in the original
+ *    simulation (default: false)?
+ *  - hubble parameter: Reduced Hubble parameter used for the original
+ *    simulation (default: 0.7)
+ *
  * @param params ParameterFile to read.
  * @param log Log to write logging information to.
  */

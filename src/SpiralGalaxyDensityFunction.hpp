@@ -82,13 +82,18 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - scale length ISM: Scale length of the gas disc (default: 6. kpc)
+   *  - scale height ISM: Scale height of the gas disc (default: 0.22 kpc)
+   *  - central density: Central density of the gas disc (default: 1. cm^-3)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
   SpiralGalaxyDensityFunction(ParameterFile &params, Log *log = nullptr)
       : SpiralGalaxyDensityFunction(
             params.get_physical_value< QUANTITY_LENGTH >(
-                "DensityFunction:scale length ISM", "6.0 kpc"),
+                "DensityFunction:scale length ISM", "6. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "DensityFunction:scale height ISM", "0.22 kpc"),
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(

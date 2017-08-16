@@ -102,18 +102,22 @@ CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - number of cells: Number of cells in the grid (default: [64, 64, 64])
+ *
  * @param simulation_box SimulationBox.
  * @param parameters ParameterFile to read.
+ * @param hydro Is hydrodynamics enabled?
  * @param log Log to write log messages to.
  */
 CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
-                                           ParameterFile &parameters, Log *log)
+                                           ParameterFile &parameters,
+                                           bool hydro, Log *log)
     : CartesianDensityGrid(
           simulation_box.get_box(),
           parameters.get_value< CoordinateVector< int > >(
               "DensityGrid:number of cells", CoordinateVector< int >(64)),
-          simulation_box.get_periodicity(),
-          parameters.get_value< bool >("hydro:active", false), log) {}
+          simulation_box.get_periodicity(), hydro, log) {}
 
 /**
  * @brief Initialize the cells in the grid.

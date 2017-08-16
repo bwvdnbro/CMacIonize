@@ -155,10 +155,26 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - view theta: @f$\theta{}@f$ angle of the observer w.r.t. the box origin
+   *    (default: 89.7 degrees)
+   *  - view phi: @f$\phi{}@f$ angle of the observer w.r.t. the box origin
+   *    (default: 0. degrees)
+   *  - image width: Width of the image in pixels (default: 200)
+   *  - image height: Height of the image in pixels (default: 200)
+   *  - anchor x: X position of the anchor of the image (default: -12.1 kpc)
+   *  - anchor y: Y position of the anchor of the image (default: -12.1 kpc)
+   *  - sides x: X side length of the image (default: 24.2 kpc)
+   *  - sides y: Y side length of the image (default: 24.2 kpc)
+   *  - type: Image type (PGM/BinaryArray, default: BinaryArray)
+   *  - filename: Image file name (default: galaxy_image)
+   *
+   * @param output_folder Folder where the image is saved.
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  inline CCDImage(ParameterFile &params, Log *log = nullptr)
+  inline CCDImage(std::string output_folder, ParameterFile &params,
+                  Log *log = nullptr)
       : CCDImage(
             params.get_physical_value< QUANTITY_ANGLE >("CCDImage:view theta",
                                                         "89.7 degrees"),
@@ -177,7 +193,7 @@ public:
             params.get_value< std::string >("CCDImage:type", "BinaryArray"),
             params.get_value< std::string >("CCDImage:filename",
                                             "galaxy_image"),
-            params.get_value< std::string >("output folder", "."), log) {}
+            output_folder, log) {}
 
   /**
    * @brief Reset the image contents to zero.

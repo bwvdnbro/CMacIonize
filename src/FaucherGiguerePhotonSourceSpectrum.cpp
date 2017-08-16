@@ -170,6 +170,9 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - redshift: Redshift for which we want to use the UVB spectrum (default: 0.)
+ *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.

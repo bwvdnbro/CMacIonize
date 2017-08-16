@@ -73,6 +73,14 @@ public:
    * @brief Generate a VoronoiGeneratorDistribution based on the parameters in
    * the given ParameterFile.
    *
+   * Supported types are (default: UniformRandom):
+   *  - PerturbedCartesian: Regular Cartesian grid with small random
+   *    displacements
+   *  - UniformRandom: Uniform random generator positions
+   *  - UniformRegular: Regular Cartesian grid
+   *  - SPH: Generator positions based on an input file
+   *  - CMacIonize: Implementation hack to reconstruct a grid from a snapshot
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

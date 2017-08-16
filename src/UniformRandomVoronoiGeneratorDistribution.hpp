@@ -76,6 +76,11 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of positions: Number of positions to generate (default: 100)
+   *  - random seed: Seed used to initialize the random number generator that is
+   *    used to generate random positions (default: 42)
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

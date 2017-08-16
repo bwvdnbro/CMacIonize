@@ -108,6 +108,9 @@ public:
   /**
    * @brief ParameterFile constructor
    *
+   * Parameters are:
+   *  - position: Position of the external stellar source (required)
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

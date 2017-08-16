@@ -42,6 +42,9 @@ public:
    * @brief Generate a DensityMask instance of the type found in the given
    * ParameterFile.
    *
+   * Supported types are (default: None):
+   *  - Fractal: Fractal density mask
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    * @return Pointer to a newly created DensityMask instance (or a null pointer

@@ -50,6 +50,7 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
                                                  unsigned char padding)
     : DensityGridWriter(output_folder, log), _prefix(prefix),
       _padding(padding) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
   if (_log) {
@@ -61,15 +62,21 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - prefix: Prefix to prepend to all snapshot file names (default: snapshot)
+ *  - padding: Number of digits to use in the output file names (default: 3)
+ *
+ * @param output_folder Name of the folder where output files should be placed.
  * @param params ParameterFile to read.
  * @param log Log to write logging information to.
  */
-GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
+GadgetDensityGridWriter::GadgetDensityGridWriter(std::string output_folder,
+                                                 ParameterFile &params,
                                                  Log *log)
     : GadgetDensityGridWriter(
           params.get_value< std::string >("DensityGridWriter:prefix",
                                           "snapshot"),
-          params.get_value< std::string >("DensityGridWriter:folder", "."), log,
+          output_folder, log,
           params.get_value< unsigned char >("DensityGridWriter:padding", 3)) {}
 
 /**

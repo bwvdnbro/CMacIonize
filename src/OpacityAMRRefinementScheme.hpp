@@ -65,6 +65,10 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - target opacity: Desired opacity for a cell (default: 1. m^-1)
+   *  - maximum refinement level: Maximum refinement level allowed (default: 6)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */

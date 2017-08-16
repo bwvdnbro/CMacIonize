@@ -63,6 +63,10 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - density: Constant number density value (default: 100. cm^-3)
+   *  - temperature: Constant initial temperature value (default: 8000. K)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */

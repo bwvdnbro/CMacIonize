@@ -59,6 +59,12 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - target number of OI particles: Desired number of neutral oxygen
+   *    particles in a cell (default: 1.e5)
+   *  - maximum refinement level: Maximum level of refinement allowed (default:
+   *    6)
+   *
    * @param params ParamterFile to read from.
    * @param log Log to write logging info to.
    */

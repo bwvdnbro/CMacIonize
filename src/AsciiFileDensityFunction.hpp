@@ -36,6 +36,10 @@ class ParameterFile;
 
 /**
  * @brief DensityFunction that reads a density grid from an ASCII text file.
+ *
+ * The density grid is assumed to be a regular Cartesian grid. The ASCII file
+ * should contain the coordinates of the Cartesian cell midpoints and should
+ * also list the density within each cell.
  */
 class AsciiFileDensityFunction : public DensityFunction {
 private:

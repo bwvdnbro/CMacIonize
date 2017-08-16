@@ -27,7 +27,6 @@
 #define DENSITYGRIDWRITER_HPP
 
 #include "Log.hpp"
-#include "Utilities.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -57,9 +56,6 @@ public:
   DensityGridWriter(std::string output_folder, Log *log = nullptr)
       : _output_folder(output_folder), _log(log) {
 
-    if (_output_folder != "") {
-      _output_folder = Utilities::get_absolute_path(_output_folder);
-    }
     if (_log) {
       _log->write_status("Output will be written to ", _output_folder, "/");
     }

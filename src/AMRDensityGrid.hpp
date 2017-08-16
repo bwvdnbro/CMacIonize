@@ -282,12 +282,20 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - unrefined number of cells: Number of cells in the initial top level grid
+   *    without refinement (default: [64, 64, 64])
+   *  - refinement interval: Number of ionization computation iterations between
+   *    successive applications of the refinement algorithm (default: 5)
+   *
    * @param simulation_box SimulationBox.
    * @param params ParameterFile to read.
+   * @param hydro Is hydrodynamics enabled?
    * @param log Log to write log messages to.
    */
   inline AMRDensityGrid(const SimulationBox &simulation_box,
-                        ParameterFile &params, Log *log)
+                        ParameterFile &params, bool hydro = false,
+                        Log *log = nullptr)
       : AMRDensityGrid(simulation_box.get_box(),
                        params.get_value< CoordinateVector< int > >(
                            "DensityGrid:unrefined number of cells",
@@ -295,8 +303,7 @@ public:
                        AMRRefinementSchemeFactory::generate(params, log),
                        params.get_value< unsigned char >(
                            "DensityGrid:refinement interval", 5),
-                       simulation_box.get_periodicity(),
-                       params.get_value< bool >("hydro:active", false), log) {}
+                       simulation_box.get_periodicity(), hydro, log) {}
 
   /**
    * @brief Destructor.

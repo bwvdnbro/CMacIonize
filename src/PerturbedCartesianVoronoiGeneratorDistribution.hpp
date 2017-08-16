@@ -105,6 +105,13 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of cells: Number of cells for the basic unperturbed Cartesian
+   *    grid (default: [10, 10, 10])
+   *  - random seed: Random seed used to initialize the random generator that
+   *    generates the random perturbations (default: 42)
+   *  - amplitude: Amplitude of the random displacements (default: 0.01 m)
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

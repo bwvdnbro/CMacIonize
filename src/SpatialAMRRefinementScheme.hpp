@@ -71,6 +71,12 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - zone anchor: Anchor of the refinement zone (default: [0. m, 0. m, 0. m])
+   *  - zone sides: Side lenghts of the refinement zone (default: [1. m, 1. m,
+   *    1. m])
+   *  - maximum refinement level: Maximum allowed refinement level (default: 4)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */

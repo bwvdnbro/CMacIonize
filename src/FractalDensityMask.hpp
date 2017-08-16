@@ -349,15 +349,31 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - box anchor: Anchor of the region where the mask is applied (default:
+   *    [-5. pc, -5. pc, -5. pc])
+   *  - box sides: Side lengths of the region where the mask is applied
+   *    (default: [10. pc, 10. pc, 10. pc])
+   *  - resolution: Resolution of the grid on which the fractal distribution is
+   *    computed (default: [20, 20, 20])
+   *  - number of particles: Number of particles used to sample the fractal
+   *    distribution (default: 1e6)
+   *  - random seed: Random seed used for the random number generator (default:
+   *    42)
+   *  - fractal dimension: Fractal dimension of the distribution (default: 2.6)
+   *  - number of levels: Number of levels to sample (default: 4)
+   *  - fractal fraction: Fraction of the density distribution that should be
+   *    weighted according to the fractal distribution (default: 1.)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
   FractalDensityMask(ParameterFile &params, Log *log = nullptr)
       : FractalDensityMask(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityMask:box anchor", "[0. m, 0. m, 0. m]"),
+                      "DensityMask:box anchor", "[-5. pc, -5. pc, -5. pc]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityMask:box sides", "[1. m, 1. m, 1. m]")),
+                      "DensityMask:box sides", "[10. pc, 10. pc, 10. pc]")),
             params.get_value< CoordinateVector< int > >(
                 "DensityMask:resolution", CoordinateVector< int >(20)),
             params.get_value< unsigned int >("DensityMask:number of particles",

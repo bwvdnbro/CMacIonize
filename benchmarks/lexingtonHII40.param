@@ -24,9 +24,10 @@ DensityGrid:
 
 DensityGridWriter:
   type: Gadget
-  folder: .
   prefix: lexingtonHII40_
   padding: 3
+
+output folder: .
   
 number of iterations: 20
 

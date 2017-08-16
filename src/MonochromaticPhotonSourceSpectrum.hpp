@@ -63,6 +63,12 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - frequency: Constant monochromatic frequency of the spectrum (default:
+   *    13.6 eV)
+   *  - total flux: Total flux of the spectrum (default: none, and error when
+   *    total flux is requested)
+   *
    * @param role Role the spectrum will fulfil in the simulation. Parameters are
    * read from the corresponding block in the parameter file.
    * @param params ParameterFile to read from.

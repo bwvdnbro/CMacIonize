@@ -169,26 +169,46 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - polytropic index: Polytropic index @f$\gamma{}@f$ of the gas (default:
+   *    5. / 3.)
+   *  - radiative heating: Is radiative heating enabled (default: true)?
+   *  - radiative cooling: Is radiative cooling enabled (default: false)?
+   *  - boundary x low: Boundary condition type for the lower x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary x high: Boundary condition type for the upper x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y low: Boundary condition type for the lower y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y high: Boundary condition type for the upper y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z low: Boundary condition type for the lower z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z high: Boundary condition type for the upper z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *
    * @param simulation_box SimulationBox.
    * @param params ParameterFile to read from.
    */
   inline HydroIntegrator(const SimulationBox &simulation_box,
                          ParameterFile &params)
       : HydroIntegrator(
-            params.get_value< double >("hydro:polytropic index", 5. / 3.),
-            params.get_value< bool >("hydro:radiative heating", true),
-            params.get_value< bool >("hydro:radiative cooling", false),
-            params.get_value< std::string >("hydro:boundary xlow",
+            params.get_value< double >("HydroIntegrator:polytropic index",
+                                       5. / 3.),
+            params.get_value< bool >("HydroIntegrator:radiative heating", true),
+            params.get_value< bool >("HydroIntegrator:radiative cooling",
+                                     false),
+            params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary xhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary x high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary ylow",
+            params.get_value< std::string >("HydroIntegrator:boundary y low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary yhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary y high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary zlow",
+            params.get_value< std::string >("HydroIntegrator:boundary z low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary zhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary z high",
                                             "reflective"),
             simulation_box.get_periodicity()) {}
 
@@ -236,7 +256,7 @@ public:
       it.get_hydro_variables().set_conserved_total_energy(total_energy);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 
   /**
@@ -490,7 +510,7 @@ public:
       cmac_assert(ionization_variables.get_temperature() >= 0.);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 };
 

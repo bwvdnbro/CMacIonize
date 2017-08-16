@@ -47,6 +47,28 @@
 /**
  * @brief Constructor.
  *
+ * This method will read the following parameters from the parameter file:
+ *  - number of iterations: Number of iterations of the photoionization
+ *    algorithm to perform (default: 10)
+ *  - number of photons: Number of photon packets to use for each iteration of
+ *    the photoionization algorithm (default: 1e5)
+ *  - number of photons first loop: Number of photon packets to use for the
+ *    first iteration of the photoionization algorithm (default: (number of
+ *    photons))
+ *  - diffuse field: Enable diffuse hydrogen and helium reemission (default:
+ *    true)
+ *  - output folder: Folder where all output files will be placed (default: .)
+ *  - calculate temperature: Enable the temperature calculation (default:
+ *    false)?
+ *  - PAH heating factor: Strength of PAH heating (default: 1.)
+ *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
+ *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
+ *    heating is applied (default: 0.75)
+ *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
+ *    (default: 1.33333 kpc)
+ *  - random seed: Seed used to initialize the random number generator (default:
+ *    42)
+ *
  * @param write_output Should this process write output?
  * @param every_iteration_output Write an output file after every iteration of
  * the algorithm?
@@ -69,7 +91,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _number_of_iterations(_parameter_file.get_value< unsigned int >(
           "number of iterations", 10)),
       _number_of_photons(
-          _parameter_file.get_value< unsigned int >("number of photons", 100)),
+          _parameter_file.get_value< unsigned int >("number of photons", 1e5)),
       _number_of_photons_init(_parameter_file.get_value< unsigned int >(
           "number of photons first loop", _number_of_photons)),
       _abundances(_parameter_file, _log) {
@@ -88,8 +110,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _density_mask = DensityMaskFactory::generate(_parameter_file, _log);
 
   const SimulationBox simulation_box(_parameter_file);
-  _density_grid =
-      DensityGridFactory::generate(simulation_box, _parameter_file, _log);
+  _density_grid = DensityGridFactory::generate(simulation_box, _parameter_file,
+                                               false, _log);
 
   // create the discrete UV sources
   _photon_source_distribution =
@@ -136,10 +158,12 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output
+  std::string output_folder = Utilities::get_absolute_path(
+      _parameter_file.get_value< std::string >("output folder", "."));
   _density_grid_writer = nullptr;
   if (write_output) {
-    _density_grid_writer =
-        DensityGridWriterFactory::generate(_parameter_file, _log);
+    _density_grid_writer = DensityGridWriterFactory::generate(
+        output_folder, _parameter_file, _log);
   }
 
   // computation objects
@@ -150,7 +174,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _charge_transfer_rates);
 
   bool calculate_temperature =
-      _parameter_file.get_value< bool >("calculate temperature", true);
+      _parameter_file.get_value< bool >("calculate temperature", false);
 
   _temperature_calculator = nullptr;
   if (calculate_temperature) {
@@ -178,14 +202,11 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
-    std::string folder =
-        Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
-            "DensityGridWriter:folder", "."));
-    std::ofstream pfile(folder + "/parameters-usedvalues.param");
+    std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
     _parameter_file.print_contents(pfile);
     pfile.close();
     if (_log) {
-      _log->write_status("Wrote used parameters to ", folder,
+      _log->write_status("Wrote used parameters to ", output_folder,
                          "/parameters-usedvalues.param.");
     }
   }

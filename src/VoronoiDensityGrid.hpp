@@ -57,12 +57,6 @@ private:
   /*! @brief Velocity of the grid generators (in m s^-1). */
   std::vector< CoordinateVector<> > _hydro_generator_velocity;
 
-  /*! @brief Time step used in the hydro scheme (in s). */
-  double _hydro_timestep;
-
-  /*! @brief Polytropic index for the ideal gas equation of state. */
-  double _hydro_gamma;
-
   /*! @brief Epsilon displacement factor used to guarantee a point lies inside
    *  a cell. */
   double _epsilon;
@@ -76,18 +70,17 @@ public:
       const Box<> &simulation_box, std::string grid_type = "Old",
       unsigned char num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, double hydro_timestep = 0.,
-      double hydro_gamma = 5. / 3., Log *log = nullptr);
+      bool hydro = false, Log *log = nullptr);
 
   VoronoiDensityGrid(const SimulationBox &simulation_box, ParameterFile &params,
-                     Log *log = nullptr);
+                     bool hydro = false, Log *log = nullptr);
 
   virtual ~VoronoiDensityGrid();
 
   virtual void initialize(std::pair< unsigned long, unsigned long > &block,
                           DensityFunction &density_function);
   virtual void evolve(double timestep);
-  virtual void set_grid_velocity();
+  virtual void set_grid_velocity(double gamma);
 
   virtual CoordinateVector<>
   get_interface_velocity(const iterator left, const iterator right,

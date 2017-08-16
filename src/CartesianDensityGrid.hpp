@@ -132,7 +132,8 @@ public:
       bool hydro = false, Log *log = nullptr);
 
   CartesianDensityGrid(const SimulationBox &simulation_box,
-                       ParameterFile &parameters, Log *log = nullptr);
+                       ParameterFile &parameters, bool hydro = false,
+                       Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.

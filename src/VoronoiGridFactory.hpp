@@ -42,6 +42,11 @@ public:
   /**
    * @brief Generate a VoronoiGrid with the given type.
    *
+   * Supported types are:
+   *  - New: NewVoronoiGrid, using an incremental Delaunay construction
+   *    algorithm
+   *  - Old: OldVoronoiGrid, using the voro++ algorithm
+   *
    * @param type Type of VoronoiGrid to generate.
    * @param positions Generator positions (in m).
    * @param box Simulation box (in m).

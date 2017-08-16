@@ -60,6 +60,10 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - target number of particles: Desired number of particles in a cell
+   *    (default: 1.)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */

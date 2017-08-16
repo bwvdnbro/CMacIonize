@@ -48,6 +48,13 @@ public:
    * @brief Generate a ContinuousPhotonSource instance based on the parameters
    * in the parameter file.
    *
+   * Supported types are (default: None):
+   *  - DistantStar: Infalling radiation from a stellar object outside the
+   *    simulation box
+   *  - Isotropic: Infalling radiation from an external isotropic radiation
+   *    field
+   *  - SpiralGalaxy: Radiation from a diffuse galaxy luminosity model
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.

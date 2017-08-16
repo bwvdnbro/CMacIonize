@@ -164,6 +164,11 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file (required)
+ *  - temperature: Temperature value used to initialize the cells (default: read
+ *    temperature from snapshot file)
+ *
  * @param params ParameterFile to read.
  * @param log Log to write logging info to.
  */

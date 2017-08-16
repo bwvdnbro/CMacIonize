@@ -79,6 +79,27 @@ public:
    * @brief Generate a DensityFunction based on the type chosen in the parameter
    * file.
    *
+   * Supported types are (default: Homogeneous):
+   *  - AsciiFile: Implementation that reads a density grid from an ASCII text
+   *    file
+   *  - BlockSyntax: Implementation that reads a geometrically constructed
+   *    density field from a text file containing block syntax
+   *  - Homogeneous: Constant value density field.
+   *  - Interpolated: Implementation that reads a density field from a text file
+   *    and interpolates on it
+   *  - SPHNGSnapshot: Implementation that reads a density field from a snapshot
+   *    file of the SPH code SPHNG
+   *  - SpiralGalaxy: Implementation that sets up a diffuse galactic density
+   *    field
+   *  - CMacIonizeSnapshot: Implementation that reads a density field from a
+   *    snapshot of another CMacIonize run
+   *  - FLASHSnapshot: Implementation that reads a density field from the AMR
+   *    simulation code FLASH
+   *  - GadgetSnapshot: Implementation that reads a density field from the HDF5
+   *    file format of the SPH simulation code Gadget2 (also supported by SWIFT,
+   *    AREPO, GIZMO and Shadowfax; the CMacIonize snapshot format is a variant
+   *    of this format)
+   *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
    * @param log Log to write logging information to.

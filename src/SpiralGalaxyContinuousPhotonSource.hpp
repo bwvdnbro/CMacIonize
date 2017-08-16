@@ -129,6 +129,12 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - scale length stars: Scale length of the stellar disc (default: 5. kpc)
+   *  - scale height stars: Scale height of the stellar disc (default: 0.6 kpc)
+   *  - bulge over total ratio: Ratio of the bulge luminosity and the total
+   *    luminosity (default: 0.2)
+   *
    * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
