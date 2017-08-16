@@ -41,6 +41,13 @@ class CrossSections;
 
 /**
  * @brief Helium Lyman continuum photoionization spectrum.
+ *
+ * We use the spectrum given by Wood, K., Mathis, J. S. & Ercolano, B. 2004,
+ * MNRAS, 348, 1337 (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W),
+ * equation (8), which uses the same ionization cross sections that are used in
+ * other parts of the program. We pretabulate values in a 2D temperature
+ * frequency space in the range [1,500 K; 15,000 K] (for temperature values
+ * outside this range, extrapolation is safe).
  */
 class HeliumLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
