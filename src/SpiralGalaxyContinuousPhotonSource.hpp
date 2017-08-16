@@ -129,16 +129,14 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  SpiralGalaxyContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
+  SpiralGalaxyContinuousPhotonSource(const Box<> &simulation_box,
+                                     ParameterFile &params, Log *log = nullptr)
       : SpiralGalaxyContinuousPhotonSource(
-            Box<>(
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box anchor", "[-12. kpc, -12. kpc, -12. kpc]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box sides", "[24. kpc, 24. kpc, 24. kpc]")),
+            simulation_box,
             params.get_physical_value< QUANTITY_LENGTH >(
                 "ContinuousPhotonSource:scale length stars", "5. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(

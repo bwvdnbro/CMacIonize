@@ -48,12 +48,14 @@ public:
    * @brief Generate a ContinuousPhotonSource instance based on the parameters
    * in the parameter file.
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    * @return Pointer to a newly created ContinuousPhotonSource instance. Memory
    * management for the pointer needs to be handled by the calling routine.
    */
-  inline static ContinuousPhotonSource *generate(ParameterFile &params,
+  inline static ContinuousPhotonSource *generate(const Box<> &simulation_box,
+                                                 ParameterFile &params,
                                                  Log *log = nullptr) {
     std::string type =
         params.get_value< std::string >("ContinuousPhotonSource:type", "None");
@@ -61,11 +63,12 @@ public:
       log->write_info("Requested ContinuousPhotonSource type: ", type, ".");
     }
     if (type == "DistantStar") {
-      return new DistantStarContinuousPhotonSource(params, log);
+      return new DistantStarContinuousPhotonSource(simulation_box, params, log);
     } else if (type == "Isotropic") {
-      return new IsotropicContinuousPhotonSource(params, log);
+      return new IsotropicContinuousPhotonSource(simulation_box, params, log);
     } else if (type == "SpiralGalaxy") {
-      return new SpiralGalaxyContinuousPhotonSource(params, log);
+      return new SpiralGalaxyContinuousPhotonSource(simulation_box, params,
+                                                    log);
     } else if (type == "None") {
       return nullptr;
     } else {

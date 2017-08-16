@@ -76,7 +76,8 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
 
   int random_seed = params.get_value< int >("random seed", 42);
 
-  SpiralGalaxyContinuousPhotonSource continuoussource(params, log);
+  SpiralGalaxyContinuousPhotonSource continuoussource(grid.get_box(), params,
+                                                      log);
   MonochromaticPhotonSourceSpectrum continuousspectrum(13.6, 1., log);
 
   Abundances abundances(0., 0., 0., 0., 0., 0., log);

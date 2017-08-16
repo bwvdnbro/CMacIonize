@@ -315,8 +315,9 @@ int main(int argc, char **argv) {
                  "ignored.");
   }
 
+  const Box<> simulation_box = grid->get_box();
   ContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(params, log);
+      ContinuousPhotonSourceFactory::generate(simulation_box, params, log);
   PhotonSourceSpectrum *continuousspectrum =
       PhotonSourceSpectrumFactory::generate("ContinuousPhotonSourceSpectrum",
                                             params, log);

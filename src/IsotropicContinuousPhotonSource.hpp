@@ -43,16 +43,18 @@
 class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
-  Box<> _box;
+  const Box<> &_box;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param box Box in which the radiation enters (in m).
+   * @param simulation_box Simulation box (in m).
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(Box<> box, Log *log = nullptr) : _box(box) {
+  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+                                  Log *log = nullptr)
+      : _box(simulation_box) {
 
     if (log) {
       log->write_status(
@@ -66,16 +68,13 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
-   * @param params ParamterFile to read from.
+   * @param simulation_box Simulation box (in m).
+   * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
-      : IsotropicContinuousPhotonSource(
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box anchor"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box sides")),
-            log) {}
+  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+                                  ParameterFile &params, Log *log = nullptr)
+      : IsotropicContinuousPhotonSource(simulation_box, log) {}
 
   /**
    * @brief Virtual destructor.

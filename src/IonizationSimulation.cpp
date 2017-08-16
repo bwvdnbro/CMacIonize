@@ -107,8 +107,9 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   }
 
   // create the continuous UV sources
-  _continuous_photon_source =
-      ContinuousPhotonSourceFactory::generate(_parameter_file, _log);
+  const Box<> simulation_box = _density_grid->get_box();
+  _continuous_photon_source = ContinuousPhotonSourceFactory::generate(
+      simulation_box, _parameter_file, _log);
   _continuous_photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
       "ContinuousPhotonSourceSpectrum", _parameter_file, _log);
 

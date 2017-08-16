@@ -68,7 +68,8 @@ public:
    * @param log Log to write logging info to.
    */
   DistantStarContinuousPhotonSource(CoordinateVector<> position,
-                                    Box<> simulation_box, Log *log = nullptr)
+                                    const Box<> &simulation_box,
+                                    Log *log = nullptr)
       : _position(position), _exposed_faces{0}, _box(simulation_box),
         _bottom_anchor(_box.get_anchor()), _top_anchor(_box.get_top_anchor()) {
     unsigned int num_exposed = 0;
@@ -107,18 +108,16 @@ public:
   /**
    * @brief ParameterFile constructor
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  DistantStarContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
+  DistantStarContinuousPhotonSource(const Box<> &simulation_box,
+                                    ParameterFile &params, Log *log = nullptr)
       : DistantStarContinuousPhotonSource(
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "ContinuousPhotonSource:position"),
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box anchor"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box sides")),
-            log) {}
+            simulation_box, log) {}
 
   /**
    * @brief Virtual destructor.
