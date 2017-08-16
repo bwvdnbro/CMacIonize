@@ -27,11 +27,11 @@ DensityGridWriter:
   prefix: lexingtonHII40_
   padding: 3
 
-output folder: .
-  
-number of iterations: 20
-
-number of photons: 1000000
+IonizationSimulation:
+  output folder: .
+  number of iterations: 20
+  number of photons: 1000000
+  random seed: 42
 
 TemperatureCalculator:
   do temperature calculation: true
@@ -45,5 +45,3 @@ PhotonSourceDistribution:
 PhotonSourceSpectrum:
   type: Planck
   temperature: 40000. K
-
-random seed: 42

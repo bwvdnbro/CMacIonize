@@ -28,7 +28,8 @@ Abundances:
   helium: 0.
 
 # disable temperature calculation
-calculate temperature: false
+TemperatureCalculator:
+  do temperature calculation: false
 
 # distribution of photon sources in the box
 PhotonSourceDistribution:
@@ -46,11 +47,12 @@ PhotonSourceSpectrum:
   # temperature of the black body spectrum
   temperature: 40000. K
 
-# number of photons to use
-number of photons: 50000
+IonizationSimulation:
+  # number of photons to use
+  number of photons: 50000
 
-# maximum number of iterations
-number of iterations: 4
+  # maximum number of iterations
+  number of iterations: 4
 
 # output options
 DensityGridWriter:

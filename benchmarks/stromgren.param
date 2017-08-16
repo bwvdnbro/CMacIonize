@@ -47,11 +47,12 @@ PhotonSourceSpectrum:
   # frequency of the spectrum
   frequency: 13.6 eV
 
-# number of photons to use
-number of photons: 1000000
+IonizationSimulation:
+  # number of photons to use
+  number of photons: 1000000
 
-# maximum number of iterations
-number of iterations: 20
+  # maximum number of iterations
+  number of iterations: 20
 
 # output options
 DensityGridWriter:

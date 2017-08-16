@@ -81,7 +81,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   const SimulationBox simulation_box(params);
   CartesianDensityGrid grid(simulation_box, params, false, log);
 
-  int random_seed = params.get_value< int >("random seed", 42);
+  int random_seed = params.get_value< int >("DustSimulation:random seed", 42);
 
   SpiralGalaxyContinuousPhotonSource continuoussource(simulation_box.get_box(),
                                                       params, log);
@@ -96,11 +96,11 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
 
   // set up output
   std::string output_folder = Utilities::get_absolute_path(
-      params.get_value< std::string >("output folder", "."));
+      params.get_value< std::string >("DustSimulation:output folder", "."));
   CCDImage dust_image(output_folder, params, log);
 
   unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 5e5);
+      params.get_value< unsigned int >("DustSimulation:number of photons", 5e5);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)

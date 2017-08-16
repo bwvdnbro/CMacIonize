@@ -27,6 +27,7 @@ dust:
   band: V
 hydro:
   active: false
-number of photons: 50000
-output folder: .
-random seed: 42
+DustSimulation:
+  number of photons: 50000
+  output folder: .
+  random seed: 42

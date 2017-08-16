@@ -52,11 +52,12 @@ dust:
   # band to which the emitted photons belong
   band: V
 
-# number of photons to use
-number of photons: 500000
+DustSimulation:
+  # number of photons to use
+  number of photons: 500000
 
-# folder where output files are stored
-output folder: .
+  # folder where output files are stored
+  output folder: .
 
-# seed for the random number generator
-random seed: 42
+  # seed for the random number generator
+  random seed: 42
