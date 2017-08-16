@@ -296,7 +296,12 @@ int main(int argc, char **argv) {
     }
   }
 
-  DensityGrid *grid = DensityGridFactory::generate(params, log);
+  const Box<> simulation_box =
+      Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:anchor", "[-5. pc, -5. pc, -5. pc]"),
+            params.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:sides", "[10. pc, 10. pc, 10. pc]"));
+  DensityGrid *grid = DensityGridFactory::generate(simulation_box, params, log);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -315,7 +320,6 @@ int main(int argc, char **argv) {
                  "ignored.");
   }
 
-  const Box<> simulation_box = grid->get_box();
   ContinuousPhotonSource *continuoussource =
       ContinuousPhotonSourceFactory::generate(simulation_box, params, log);
   PhotonSourceSpectrum *continuousspectrum =

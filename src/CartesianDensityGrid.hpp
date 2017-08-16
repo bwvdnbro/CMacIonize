@@ -126,11 +126,12 @@ private:
 
 public:
   CartesianDensityGrid(
-      Box<> box, CoordinateVector< int > ncell,
+      const Box<> &simulation_box, CoordinateVector< int > ncell,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
-  CartesianDensityGrid(ParameterFile &parameters, Log *log = nullptr);
+  CartesianDensityGrid(const Box<> &simulation_box, ParameterFile &parameters,
+                       Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.

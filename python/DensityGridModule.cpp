@@ -91,8 +91,13 @@ initDensityGrid(const std::string &filename) {
 
   CMacIonizeSnapshotDensityFunction density_function(filename);
 
+  const Box<> simulation_box =
+      Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:anchor", "[0. m, 0. m, 0. m]"),
+            parameters.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:sides", "[1. m, 1. m, 1. m]"));
   boost::shared_ptr< DensityGrid > ptr = boost::shared_ptr< DensityGrid >(
-      DensityGridFactory::generate(parameters));
+      DensityGridFactory::generate(simulation_box, parameters));
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, ptr.get()->get_number_of_cells());
   ptr.get()->initialize(block, density_function);

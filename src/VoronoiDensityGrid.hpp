@@ -71,13 +71,15 @@ private:
 
 public:
   VoronoiDensityGrid(
-      VoronoiGeneratorDistribution *position_generator, Box<> box,
-      std::string grid_type = "Old", unsigned char num_lloyd = 0,
+      VoronoiGeneratorDistribution *position_generator,
+      const Box<> &simulation_box, std::string grid_type = "Old",
+      unsigned char num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, double hydro_timestep = 0.,
       double hydro_gamma = 5. / 3., Log *log = nullptr);
 
-  VoronoiDensityGrid(ParameterFile &params, Log *log = nullptr);
+  VoronoiDensityGrid(const Box<> &simulation_box, ParameterFile &params,
+                     Log *log = nullptr);
 
   virtual ~VoronoiDensityGrid();
 

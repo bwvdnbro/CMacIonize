@@ -1,11 +1,14 @@
+# simulation box
+simulation box:
+  # anchor of the box: corner with the smallest coordinates
+  anchor: [-5. pc, -5. pc, -5. pc]
+  # side lengths of the box
+  sides: [10. pc, 10. pc, 10. pc]  
+
 # density grid
 DensityGrid:
   # type: a cartesian density grid
   type: Cartesian
-  # anchor of the box: corner with the smallest coordinates
-  box anchor: [-5. pc, -5. pc, -5. pc]
-  # side lengths of the box
-  box sides: [10. pc, 10. pc, 10. pc]
   # periodicity of the box
   periodicity: [false, false, false]
   # number of cells in each dimension

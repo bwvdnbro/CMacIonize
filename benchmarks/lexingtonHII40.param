@@ -13,10 +13,12 @@ DensityFunction:
   type: BlockSyntax
   filename: lexingtonHII40.yml
 
+simulation box:
+  anchor: [-5. pc, -5. pc, -5. pc]
+  sides: [10. pc, 10. pc, 10. pc]
+
 DensityGrid:
   type: Cartesian
-  box anchor: [-5. pc, -5. pc, -5. pc]
-  box sides: [10. pc, 10. pc, 10. pc]
   number of cells: [64, 64, 64]
   periodicity: [false, false, false]
 

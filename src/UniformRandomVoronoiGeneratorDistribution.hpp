@@ -54,17 +54,17 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param box Box containing hte generators (in m).
+   * @param simulation_box Simulation box (in m).
    * @param number_of_positions Number of random generator positions to
    * generate.
    * @param random_seed Seed for the random number generator.
    * @param log Log to write logging info to.
    */
-  UniformRandomVoronoiGeneratorDistribution(Box<> box,
+  UniformRandomVoronoiGeneratorDistribution(const Box<> &simulation_box,
                                             unsigned int number_of_positions,
                                             int random_seed, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
-        _box(box), _random_generator(random_seed) {
+        _box(simulation_box), _random_generator(random_seed) {
     if (log) {
       log->write_status(
           "Created UniformRandomVoronoiGeneratorDistribution with ",
@@ -76,16 +76,15 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  UniformRandomVoronoiGeneratorDistribution(ParameterFile &params,
+  UniformRandomVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                            ParameterFile &params,
                                             Log *log = nullptr)
       : UniformRandomVoronoiGeneratorDistribution(
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+            simulation_box,
             params.get_value< unsigned int >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 100),

@@ -18,10 +18,11 @@ DensityFunction:
   central density: 1. cm^-3
   scale length ISM: 6.0 kpc
 DensityGrid:
-  box anchor: [-12. kpc, -12. kpc, -12. kpc]
-  box sides: [24. kpc, 24. kpc, 24. kpc]
   number of cells: [100, 100, 100]
   periodicity: [false, false, false]
+simulation box:
+  anchor: [-12. kpc, -12. kpc, -12. kpc]
+  sides: [24. kpc, 24. kpc, 24. kpc]
 dust:
   band: V
 hydro:

@@ -86,7 +86,13 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
   _density_mask = DensityMaskFactory::generate(_parameter_file, _log);
 
-  _density_grid = DensityGridFactory::generate(_parameter_file, _log);
+  const Box<> simulation_box =
+      Box<>(_parameter_file.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:anchor", "[-5. pc, -5. pc, -5. pc]"),
+            _parameter_file.get_physical_vector< QUANTITY_LENGTH >(
+                "simulation box:sides", "[10. pc, 10. pc, 10. pc]"));
+  _density_grid =
+      DensityGridFactory::generate(simulation_box, _parameter_file, _log);
 
   // create the discrete UV sources
   _photon_source_distribution =
@@ -107,7 +113,6 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   }
 
   // create the continuous UV sources
-  const Box<> simulation_box = _density_grid->get_box();
   _continuous_photon_source = ContinuousPhotonSourceFactory::generate(
       simulation_box, _parameter_file, _log);
   _continuous_photon_source_spectrum = PhotonSourceSpectrumFactory::generate(

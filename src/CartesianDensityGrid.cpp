@@ -37,18 +37,18 @@
 /**
  * @brief Constructor
  *
- * @param box Box containing the grid.
+ * @param simulation_box Simulation box (in m).
  * @param ncell Number of cells for each dimension.
  * @param periodic Periodicity flags.
  * @param hydro Hydro flag.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(Box<> box,
+CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
                                            CoordinateVector< int > ncell,
                                            CoordinateVector< bool > periodic,
                                            bool hydro, Log *log)
-    : DensityGrid(box, periodic, hydro, log), _box(box), _periodic(periodic),
-      _ncell(ncell), _log(log) {
+    : DensityGrid(simulation_box, periodic, hydro, log), _box(simulation_box),
+      _periodic(periodic), _ncell(ncell), _log(log) {
 
   if (_log) {
     _log->write_status(
@@ -101,24 +101,14 @@ CartesianDensityGrid::CartesianDensityGrid(Box<> box,
 /**
  * @brief ParameterFile constructor.
  *
- * Constructs a DensityGrid object using parameter values from the parameter
- * file.
- *
- * The default parameters are:
- *   - a box with anchor [0.,0.,0.] and sides [1.,1.,1.].
- *   - 64 cells in every dimension (64^3 in total).
- *   - a helium abundance of 0.1.
- *   - an initial temperature for the gas of 8,000K.
- *
+ * @param simulation_box Simulation box (in m).
  * @param parameters ParameterFile to read.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters, Log *log)
+CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
+                                           ParameterFile &parameters, Log *log)
     : CartesianDensityGrid(
-          Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
-                parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+          simulation_box,
           parameters.get_value< CoordinateVector< int > >(
               "DensityGrid:number of cells", CoordinateVector< int >(64)),
           parameters.get_value< CoordinateVector< bool > >(

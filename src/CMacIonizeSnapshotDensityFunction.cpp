@@ -53,9 +53,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     parameters.add_value(attname, attvalue);
   }
   _box = Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                   "DensityGrid:box anchor"),
+                   "simulation box:anchor"),
                parameters.get_physical_vector< QUANTITY_LENGTH >(
-                   "DensityGrid:box sides"));
+                   "simulation box:sides"));
   _ncell = parameters.get_value< CoordinateVector< int > >(
       "DensityGrid:number of cells", CoordinateVector< int >(-1));
   std::string type = parameters.get_value< std::string >("DensityGrid:type");

@@ -79,7 +79,7 @@
  *
  * @param position_generator VoronoiGeneratorDistribution used to generate
  * generator positions.
- * @param box Box containing the entire grid (in m).
+ * @param simulation_box Simulation box (in m).
  * @param grid_type Type of Voronoi grid to use.
  * @param num_lloyd Number of Lloyd iterations to apply to the grid after it has
  * been constructed for the first time.
@@ -90,15 +90,16 @@
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
-    VoronoiGeneratorDistribution *position_generator, Box<> box,
-    std::string grid_type, unsigned char num_lloyd,
+    VoronoiGeneratorDistribution *position_generator,
+    const Box<> &simulation_box, std::string grid_type, unsigned char num_lloyd,
     CoordinateVector< bool > periodic, bool hydro, double hydro_timestep,
     double hydro_gamma, Log *log)
-    : DensityGrid(box, periodic, hydro, log),
+    : DensityGrid(simulation_box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
       _periodic(periodic), _num_lloyd(num_lloyd),
       _hydro_timestep(hydro_timestep), _hydro_gamma(hydro_gamma),
-      _epsilon(1.e-12 * box.get_sides().norm()), _voronoi_grid_type(grid_type) {
+      _epsilon(1.e-12 * simulation_box.get_sides().norm()),
+      _voronoi_grid_type(grid_type) {
 
   const unsigned long totnumcell =
       _position_generator->get_number_of_positions();
@@ -109,26 +110,28 @@ VoronoiDensityGrid::VoronoiDensityGrid(
 
   if (log) {
     log->write_status("Created VoronoiDensityGrid in a box with anchor [",
-                      box.get_anchor().x(), " m, ", box.get_anchor().y(),
-                      " m, ", box.get_anchor().z(), " m], and sides [",
-                      box.get_sides().x(), " m, ", box.get_sides().y(), " m, ",
-                      box.get_sides().z(), "m].");
+                      simulation_box.get_anchor().x(), " m, ",
+                      simulation_box.get_anchor().y(), " m, ",
+                      simulation_box.get_anchor().z(), " m], and sides [",
+                      simulation_box.get_sides().x(), " m, ",
+                      simulation_box.get_sides().y(), " m, ",
+                      simulation_box.get_sides().z(), "m].");
   }
 }
 
 /**
  * @brief ParameterFile constructor.
  *
+ * @param simulation_box Simulation box (in m).
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-VoronoiDensityGrid::VoronoiDensityGrid(ParameterFile &params, Log *log)
+VoronoiDensityGrid::VoronoiDensityGrid(const Box<> &simulation_box,
+                                       ParameterFile &params, Log *log)
     : VoronoiDensityGrid(
-          VoronoiGeneratorDistributionFactory::generate(params, log),
-          Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+          VoronoiGeneratorDistributionFactory::generate(simulation_box, params,
+                                                        log),
+          simulation_box,
           params.get_value< std::string >("DensityGrid:grid type", "Old"),
           params.get_value< unsigned char >(
               "DensityGrid:number of Lloyd iterations", 0),

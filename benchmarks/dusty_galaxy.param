@@ -35,11 +35,13 @@ DensityFunction:
   # scale lenght of the dusty disc
   scale length ISM: 6.0 kpc
 
+# simulation box dimensions
+simulation box:
+  anchor: [-12. kpc, -12. kpc, -12. kpc]
+  sides: [24. kpc, 24. kpc, 24. kpc]
+
 # grid parameters: we always use a Cartesian grid
 DensityGrid:
-  # dimensions of the simulation box
-  box anchor: [-12. kpc, -12. kpc, -12. kpc]
-  box sides: [24. kpc, 24. kpc, 24. kpc]
   # number of cells in each dimension
   number of cells: [201, 201, 201]
   # periodicity flags

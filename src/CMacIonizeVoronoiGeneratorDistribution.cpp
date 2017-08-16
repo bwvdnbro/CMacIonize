@@ -30,10 +30,11 @@
 /**
  * @brief ParameterFile constructor.
  *
+ * @param simulation_box Simulation box (in m).
  * @param params ParameterFile to read from.
  */
 CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
-    ParameterFile &params)
+    const Box<> &simulation_box, ParameterFile &params)
     : _next_index(0) {
   std::string filename = params.get_value< std::string >(
       "DensityGrid:VoronoiGeneratorDistribution:filename");
@@ -46,7 +47,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
 
   // get the simulation box anchor
   CoordinateVector<> box_anchor =
-      params.get_physical_vector< QUANTITY_LENGTH >("DensityGrid:box anchor");
+      params.get_physical_vector< QUANTITY_LENGTH >("simulation box:anchor");
 
   // units
   double unit_length_in_SI = 1.;

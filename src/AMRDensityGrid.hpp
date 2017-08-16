@@ -210,7 +210,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param box Box containing the grid.
+   * @param simulation_box Simulation box (in m).
    * @param ncell Number of cells in the low resolution grid.
    * @param refinement_scheme Refinement scheme used to refine cells. Memory
    * management for this pointer is taken over by this class.
@@ -221,12 +221,12 @@ public:
    * @param log Log to write logging info to.
    */
   inline AMRDensityGrid(
-      Box<> box, CoordinateVector< int > ncell,
+      const Box<> &simulation_box, CoordinateVector< int > ncell,
       AMRRefinementScheme *refinement_scheme = nullptr,
       unsigned char refinement_interval = 5,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
-      : DensityGrid(box, periodic, hydro, log),
+      : DensityGrid(simulation_box, periodic, hydro, log),
         _refinement_scheme(refinement_scheme),
         _refinement_interval(refinement_interval), _reset_count(0) {
 
@@ -241,7 +241,7 @@ public:
     int power_of_2 = std::min(power_of_2_x, power_of_2_y);
     power_of_2 = std::min(power_of_2, power_of_2_z);
     CoordinateVector< int > nblock = ncell / power_of_2;
-    _grid = AMRGrid< unsigned long >(box, nblock);
+    _grid = AMRGrid< unsigned long >(simulation_box, nblock);
 
     // find out how many cells each block should have at the lowest level
     // this is just the power in power_of_2
@@ -281,15 +281,14 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read.
    * @param log Log to write log messages to.
    */
-  inline AMRDensityGrid(ParameterFile &params, Log *log)
+  inline AMRDensityGrid(const Box<> &simulation_box, ParameterFile &params,
+                        Log *log)
       : AMRDensityGrid(
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box anchor", "[0. m, 0. m, 0. m]"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "DensityGrid:box sides", "[1. m, 1. m, 1. m]")),
+            simulation_box,
             params.get_value< CoordinateVector< int > >(
                 "DensityGrid:number of cells", CoordinateVector< int >(64)),
             AMRRefinementSchemeFactory::generate(params, log),
