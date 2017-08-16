@@ -37,10 +37,18 @@ class RandomGenerator;
 
 /**
  * @brief Dust scattering routines.
+ *
+ * This file is based on:
+ *  - White, R. L. 1979, ApJ, 229, 954
+ *    (http://adsabs.harvard.edu/abs/1979ApJ...229..954W)
+ *  - Code, Arthur D.; Whitney, Barbara A.  1995, ApJ, 441, 400
+ *    (http://adsabs.harvard.edu/abs/1995ApJ...441..400C)
+ *  - Witt, A. N. 1977, ApJS, 35, 1
+ *    (http://adsabs.harvard.edu/abs/1977ApJS...35....1W)
  */
 class DustScattering {
 private:
-  /*! @brief @f$H_G@f$ parameter for scattering. */
+  /*! @brief Henyey-Greenstein parameter @f$H_G@f$ for scattering. */
   const double _scattering_hgg;
 
   /*! @brief @f$H_G^2@f$. */
@@ -77,11 +85,11 @@ private:
   const double _kappa;
 
   /**
-   * @brief Get the @f$H_G@f$ parameter for scattering corresponding to the
-   * given band.
+   * @brief Get the Henyey-Greenstein parameter for scattering corresponding to
+   * the given band.
    *
    * @param band Band ("V" or "K").
-   * @return @f$H_G@f$ parameter for scattering.
+   * @return Henyey-Greenstein parameter for scattering.
    */
   inline static double get_hgg_for_band(std::string band) {
     if (band == "V") {

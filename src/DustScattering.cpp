@@ -50,6 +50,10 @@ void DustScattering::scatter(Photon &photon,
   const double fu = fu_old / fi_old;
   const double fv = fv_old / fi_old;
 
+  // we randomly sample from the Henyey-Greenstein phase function using
+  // Witt (1977), equation (19) to get the cosine of the scattering angle, where
+  // the scattering angle is measured in the plane formed by the old and new
+  // photon path
   const double term =
       _scattering_omg2 /
       (_scattering_omhgg +
@@ -87,19 +91,23 @@ void DustScattering::scatter(Photon &photon,
     const double cosb2 = bmu * bmu;
     const double b = cosb2 - 1.;
 
-    // dustmat
+    // White (1979), equation (3)
     const double p1 = _scattering_omg2 *
                       std::pow(_scattering_opg2 - _scattering_thgg * bmu, -1.5);
-    const double p2 = -_scattering_pl * p1 * (1. - cosb2) / (1. + cosb2);
-    const double p3 = 2. * p1 * bmu / (1. + cosb2);
-    const double phi_temp = std::acos(bmu) * 180. / M_PI;
+    const double opcosb2inv = 1. / (1. + cosb2);
+    // White (1979), equation (4)
+    const double p2 = -_scattering_pl * p1 * (1. - cosb2) * opcosb2inv;
+    // White (1979), equation (5)
+    const double p3 = 2. * p1 * bmu * opcosb2inv;
+    // White (1979), equation (6)
+    const double phi_temp = std::acos(bmu) * 180. * M_1_PI;
     const double f = 3.13 * phi_temp * std::exp(-7. * phi_temp / 180.);
     const double f2 = (phi_temp + _scattering_sc * f) * M_PI / 180.;
     const double c = std::cos(f2);
     const double c2 = c * c;
     const double p4 = -_scattering_pc * p1 * (1. - c2) / (1. + c2);
 
-    const double a = p1;
+    const double a_inv = 1. / p1;
     const double sinbt = std::sqrt(-b);
     const double ri1 = 2. * M_PI * random_generator.get_uniform_random_double();
 
@@ -147,6 +155,7 @@ void DustScattering::scatter(Photon &photon,
       const double sin2cos1 = sin2i2 * cos2i3;
       const double cos2sin1 = cos2i2 * sin2i3;
 
+      // double matrix multiplication: Code & Whitney (1995), equation (2)
       a11 = p1;
       a12 = p2 * cos2i3;
       a13 = p2 * sin2i3;
@@ -206,6 +215,7 @@ void DustScattering::scatter(Photon &photon,
       const double sin2cos1 = sin2i2 * cos2i1;
       const double cos2sin1 = cos2i2 * sin2i1;
 
+      // double matrix multiplication: Code & Whitney (1995), equation (2)
       a11 = p1;
       a12 = p2 * cos2i1;
       a13 = -p2 * sin2i1;
@@ -225,10 +235,10 @@ void DustScattering::scatter(Photon &photon,
       a44 = p3;
     }
 
-    const double si = (a11 * fi + a12 * fq + a13 * fu) / a;
-    const double sq = (a21 * fi + a22 * fq + a23 * fu + a24 * fv) / a;
-    const double su = (a31 * fi + a32 * fq + a33 * fu + a34 * fv) / a;
-    const double sv = (a42 * fq + a43 * fu + a44 * fv) / a;
+    const double si = (a11 * fi + a12 * fq + a13 * fu) * a_inv;
+    const double sq = (a21 * fi + a22 * fq + a23 * fu + a24 * fv) * a_inv;
+    const double su = (a31 * fi + a32 * fq + a33 * fu + a34 * fv) * a_inv;
+    const double sv = (a42 * fq + a43 * fu + a44 * fv) * a_inv;
 
     fi_new = si * weight;
     fq_new = sq * weight;
@@ -310,19 +320,23 @@ double DustScattering::scatter_towards(Photon &photon,
     const double cosb2 = bmu * bmu;
     const double b = cosb2 - 1.;
 
-    // dustmat
+    // White (1979), equation (3)
     const double p1 = _scattering_omg2 *
                       std::pow(_scattering_opg2 - _scattering_thgg * bmu, -1.5);
-    const double p2 = -_scattering_pl * p1 * (1. - cosb2) / (1. + cosb2);
-    const double p3 = 2. * p1 * bmu / (1. + cosb2);
-    const double phi_temp = std::acos(bmu) * 180. / M_PI;
+    const double opcosb2inv = 1. / (1. + cosb2);
+    // White (1979), equation (4)
+    const double p2 = -_scattering_pl * p1 * (1. - cosb2) * opcosb2inv;
+    // White (1979), equation (5)
+    const double p3 = 2. * p1 * bmu * opcosb2inv;
+    // White (1979), equation (6)
+    const double phi_temp = std::acos(bmu) * 180. * M_1_PI;
     const double f = 3.13 * phi_temp * std::exp(-7. * phi_temp / 180.);
     const double f2 = (phi_temp + _scattering_sc * f) * M_PI / 180.;
     const double c = std::cos(f2);
     const double c2 = c * c;
     const double p4 = -_scattering_pc * p1 * (1. - c2) / (1. + c2);
 
-    const double a = p1;
+    const double a_inv = 1. / p1;
     const double sinbt = std::sqrt(-b);
 
     double ri1;
@@ -366,6 +380,7 @@ double DustScattering::scatter_towards(Photon &photon,
       const double sin2cos1 = sin2i2 * cos2i3;
       const double cos2sin1 = cos2i2 * sin2i3;
 
+      // double matrix multiplication: Code & Whitney (1995), equation (2)
       a11 = p1;
       a12 = p2 * cos2i3;
       a13 = p2 * sin2i3;
@@ -412,6 +427,7 @@ double DustScattering::scatter_towards(Photon &photon,
       const double sin2cos1 = sin2i2 * cos2i1;
       const double cos2sin1 = cos2i2 * sin2i1;
 
+      // double matrix multiplication: Code & Whitney (1995), equation (2)
       a11 = p1;
       a12 = p2 * cos2i1;
       a13 = -p2 * sin2i1;
@@ -431,10 +447,10 @@ double DustScattering::scatter_towards(Photon &photon,
       a44 = p3;
     }
 
-    const double si = (a11 * fi + a12 * fq + a13 * fu) / a;
-    const double sq = (a21 * fi + a22 * fq + a23 * fu + a24 * fv) / a;
-    const double su = (a31 * fi + a32 * fq + a33 * fu + a34 * fv) / a;
-    const double sv = (a42 * fq + a43 * fu + a44 * fv) / a;
+    const double si = (a11 * fi + a12 * fq + a13 * fu) * a_inv;
+    const double sq = (a21 * fi + a22 * fq + a23 * fu + a24 * fv) * a_inv;
+    const double su = (a31 * fi + a32 * fq + a33 * fu + a34 * fv) * a_inv;
+    const double sv = (a42 * fq + a43 * fu + a44 * fv) * a_inv;
 
     fi_new = si * weight;
     fq_new = sq * weight;
@@ -446,6 +462,8 @@ double DustScattering::scatter_towards(Photon &photon,
   photon.set_direction_parameters(sint, cost, phi, sinp, cosp);
   photon.set_stokes_parameters(fi_new, fq_new, fu_new, fv_new);
 
+  // the weight of the scattering event is given by the relevant Henyey-
+  // Greenstein phase function, White (1979), equation (3)
   return 0.25 * _scattering_omg2 *
-         std::pow(_scattering_opg2 - _scattering_thgg * calpha, -1.5) / M_PI;
+         std::pow(_scattering_opg2 - _scattering_thgg * calpha, -1.5) * M_1_PI;
 }
