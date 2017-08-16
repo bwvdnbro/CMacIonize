@@ -141,6 +141,7 @@ set(CMACIONIZE_SOURCES
     DustScattering.cpp
     DustSimulation.cpp
     EmissivityCalculator.cpp
+    RadiationHydrodynamicsSimulation.cpp
 
     Abundances.hpp
     AMRRefinementScheme.hpp
@@ -198,6 +199,7 @@ set(CMACIONIZE_SOURCES
     PhotonSourceSpectrumFactory.hpp
     PhysicalConstants.hpp
     PlanckPhotonSourceSpectrum.hpp
+    RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp

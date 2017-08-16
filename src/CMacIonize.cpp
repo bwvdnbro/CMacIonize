@@ -23,64 +23,35 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "Abundances.hpp"
-#include "Box.hpp"
-#include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
 #include "CompilerInfo.hpp"
-#include "Configuration.hpp"
 #include "ConfigurationInfo.hpp"
-#include "ContinuousPhotonSourceFactory.hpp"
-#include "CoordinateVector.hpp"
-#include "DensityFunctionFactory.hpp"
-#include "DensityGridFactory.hpp"
-#include "DensityGridWriterFactory.hpp"
-#include "DensityMaskFactory.hpp"
-#include "DiffuseReemissionHandler.hpp"
 #include "DustSimulation.hpp"
-#include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
-#include "HydroIntegrator.hpp"
-#include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
-#include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
-#include "ParameterFile.hpp"
-#include "PhotonSource.hpp"
-#include "PhotonSourceDistributionFactory.hpp"
-#include "PhotonSourceSpectrumFactory.hpp"
-#include "SimulationBox.hpp"
-#include "TemperatureCalculator.hpp"
+#include "RadiationHydrodynamicsSimulation.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
-#include "VernerCrossSections.hpp"
-#include "VernerRecombinationRates.hpp"
-#include "WorkDistributor.hpp"
-#include "WorkEnvironment.hpp"
 
-#include <iostream>
 #include <string>
 
 /**
  * @brief Entrance point of the program.
  *
- * When run in RHD mode, this method reads the following parameters from the
- * parameter file:
- *  - hydro:
- *    - active: Is hydrodynamics enabled (default: false)?
- *    - timestep: Hydrodynamical time step (default: 0.01 s)
- *    - total time: Total simulation time (default: 1. s)
- *    - snapshot time: Time interval between consecutive snapshot dumps
- *      (default: 0.1*(total time))
- *  - random seed: Seed for the random number generator (default: 42)
- *  - output folder: Folder where all output files will be placed (default: .)
- *  - number of iterations: Number of iterations of the photoionization
- *    algorithm (default: 10)
- *  - number of photons: Number of photons to use during each iteration of the
- *    photoionization algorithm (default: 1e5)
- *  - number of photons first loop: Number of photons to use during the first
- *    iteration of the photoionization algorithm (default: (number of photons))
+ * We first initialize the MPI environment (if active) and start the total
+ * program timer. We then parse the command line arguments and perform some
+ * basic checks and initialization steps. Once this is done, we branch into one
+ * of three possible modes:
+ *  - dusty-radiative-transfer mode: enabled by setting the command line option
+ *    '--dusty-radiative-transfer'. In this mode, we set up a simple spiral
+ *    galaxy model and produce an image with dust exctinction. Used for a first
+ *    year lab project at the University of St Andrews.
+ *  - rhd mode: enabled by setting the command line option '--rhd'. In this mode
+ *    we perform a full radiation hydrodynamics (RHD) simulation.
+ *  - default mode: used if no other mode is chosen. In this mode, the
+ *    photoionization code is run to post-process an existing density field.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -232,17 +203,22 @@ int main(int argc, char **argv) {
     }
   }
 
-  // we wait until this point to call DustSimulation (if necessary), so that all
-  // the checks above are also done for DustSimulation
   if (parser.get_value< bool >("dusty-radiative-transfer")) {
+
     if (comm.get_size() > 1) {
       cmac_error("MPI parallel dusty radiative transfer is not supported!");
     }
     return DustSimulation::do_simulation(parser, write_output, programtimer,
                                          log);
-  }
+  } else if (parser.get_value< bool >("rhd")) {
 
-  if (!parser.get_value< bool >("rhd")) {
+    if (comm.get_size() > 1) {
+      cmac_error("MPI RHD is not supported!");
+    }
+    return RadiationHydrodynamicsSimulation::do_simulation(parser, write_output,
+                                                           programtimer, log);
+  } else {
+
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
         parser.get_value< int >("threads"),
@@ -270,396 +246,6 @@ int main(int argc, char **argv) {
     }
     return 0;
   }
-
-  bool every_iteration_output =
-      parser.get_value< bool >("every-iteration-output");
-
-  // set the maximum number of openmp threads
-  WorkEnvironment::set_max_num_threads(parser.get_value< int >("threads"));
-
-  // second: initialize the parameters that are read in from static files
-  // these files should be configured by CMake and put in a location that is
-  // stored in a CMake configured header
-  LineCoolingData line_cooling_data;
-
-  // third: read in the parameters of the run from a parameter file. This file
-  // should be read by a ParameterFileParser object that acts as a dictionary
-  ParameterFile params(parser.get_value< std::string >("params"));
-
-  // fourth: construct the density grid. This should be stored in a separate
-  // DensityGrid object with geometrical and physical properties
-  DensityFunction *density_function =
-      DensityFunctionFactory::generate(params, log);
-  DensityMask *density_mask = DensityMaskFactory::generate(params, log);
-  VernerCrossSections cross_sections;
-  VernerRecombinationRates recombination_rates;
-
-  // initialize the simulation box
-  const SimulationBox simulation_box(params);
-
-  HydroIntegrator *hydro_integrator = nullptr;
-  double hydro_timestep = 0.;
-  unsigned int numstep = 1;
-  double hydro_snaptime = 0.;
-  unsigned int hydro_lastsnap = 1;
-  const bool hydro_active = params.get_value< bool >("hydro:active", false);
-  if (hydro_active) {
-    hydro_integrator = new HydroIntegrator(simulation_box, params);
-    hydro_timestep =
-        params.get_physical_value< QUANTITY_TIME >("hydro:timestep", "0.01 s");
-    double hydro_total_time =
-        params.get_physical_value< QUANTITY_TIME >("hydro:total time", "1. s");
-    numstep = hydro_total_time / hydro_timestep;
-    hydro_snaptime = params.get_physical_value< QUANTITY_TIME >(
-        "hydro:snapshot time", "-1. s");
-    if (hydro_snaptime < 0.) {
-      hydro_snaptime = 0.1 * hydro_total_time;
-    }
-  }
-
-  DensityGrid *grid =
-      DensityGridFactory::generate(simulation_box, params, hydro_active, log);
-
-  // fifth: construct the stellar sources. These should be stored in a
-  // separate StellarSources object with geometrical and physical properties.
-  PhotonSourceDistribution *sourcedistribution =
-      PhotonSourceDistributionFactory::generate(params, log);
-  int random_seed = params.get_value< int >("random seed", 42);
-  PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
-      "PhotonSourceSpectrum", params, log);
-
-  if (sourcedistribution != nullptr && spectrum == nullptr) {
-    cmac_error("No spectrum provided for the discrete photon sources!");
-  }
-  if (sourcedistribution == nullptr && spectrum != nullptr) {
-    cmac_warning("Discrete photon source spectrum provided, but no discrete "
-                 "photon source distributions. The given spectrum will be "
-                 "ignored.");
-  }
-
-  ContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(simulation_box.get_box(), params,
-                                              log);
-  PhotonSourceSpectrum *continuousspectrum =
-      PhotonSourceSpectrumFactory::generate("ContinuousPhotonSourceSpectrum",
-                                            params, log);
-
-  if (continuoussource != nullptr && continuousspectrum == nullptr) {
-    cmac_error("No spectrum provided for the continuous photon sources!");
-  }
-  if (continuoussource == nullptr && continuousspectrum != nullptr) {
-    cmac_warning("Continuous photon source spectrum provided, but no "
-                 "continuous photon source. The given spectrum will be "
-                 "ignored.");
-  }
-
-  Abundances abundances(params, log);
-
-  PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, cross_sections, params,
-                      log);
-
-  // set up output
-  std::string output_folder = Utilities::get_absolute_path(
-      params.get_value< std::string >("output folder", "."));
-  DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(output_folder, params, log);
-
-  unsigned int nloop =
-      params.get_value< unsigned int >("number of iterations", 10);
-
-  unsigned int numphoton =
-      params.get_value< unsigned int >("number of photons", 1e5);
-  unsigned int numphoton1 = params.get_value< unsigned int >(
-      "number of photons first loop", numphoton);
-  double Q = source.get_total_luminosity();
-
-  ChargeTransferRates charge_transfer_rates;
-
-  // used to calculate both the ionization state and the temperature
-  TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
-      Q, abundances, line_cooling_data, recombination_rates,
-      charge_transfer_rates, params, log);
-
-  // we are done reading the parameter file
-  // now output all parameters (also those for which default values were used)
-  // to a reference parameter file (only rank 0 does this)
-  if (write_output) {
-    std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
-    params.print_contents(pfile);
-    pfile.close();
-    if (log) {
-      log->write_status("Wrote used parameters to ", output_folder,
-                        "/parameters-usedvalues.param.");
-    }
-  }
-
-  if (parser.get_value< bool >("dry-run")) {
-    if (log) {
-      log->write_warning("Dry run requested. Program will now halt.");
-    }
-    return 0;
-  }
-
-  if (log) {
-    log->write_status("Initializing DensityFunction...");
-  }
-  density_function->initialize();
-  if (log) {
-    log->write_status("Done.");
-  }
-
-  // done writing file, now initialize grid
-  std::pair< unsigned long, unsigned long > block =
-      comm.distribute_block(0, grid->get_number_of_cells());
-  grid->initialize(block, *density_function);
-
-  // grid->initialize initialized:
-  // - densities
-  // - temperatures
-  // - ionic fractions
-  // we have to gather these across all processes
-
-  // this is currently BROKEN...
-  //  comm.gather(grid->get_number_density_handle());
-  //  comm.gather(grid->get_temperature_handle());
-  //  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-  //    IonName ion = static_cast< IonName >(i);
-  //    comm.gather(grid->get_ionic_fraction_handle(ion));
-  //  }
-
-  // object used to distribute jobs in a shared memory parallel context
-  WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
-  workdistributor(parser.get_value< int >("threads"));
-  const int worksize = workdistributor.get_worksize();
-  Timer worktimer;
-
-  if (density_mask != nullptr) {
-    log->write_status("Initializing DensityMask...");
-    density_mask->initialize(worksize);
-    log->write_status("Done initializing mask. Applying mask...");
-    density_mask->apply(*grid);
-    log->write_status("Done applying mask.");
-  }
-
-  // make sure every thread on every process has another random seed
-  random_seed += comm.get_rank() * worksize;
-
-  if (log) {
-    log->write_status("Program will use ",
-                      workdistributor.get_worksize_string(),
-                      " for photon shooting.");
-  }
-  IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
-                                                 100, worksize);
-
-  if (hydro_integrator != nullptr) {
-    // initialize the hydro variables (before we write the initial snapshot)
-    hydro_integrator->initialize_hydro_variables(*grid);
-  }
-
-  if (write_output) {
-    writer->write(*grid, 0, params);
-  }
-
-  for (unsigned int istep = 0; istep < numstep; ++istep) {
-    if (log) {
-      log->write_status("Starting hydro step ", istep, ".");
-    }
-
-    // finally: the actual program loop whereby the density grid is ray traced
-    // using photon packets generated by the stellar sources
-    unsigned int loop = 0;
-    while (loop < nloop) {
-
-      if (log) {
-        log->write_status("Starting loop ", loop, ".");
-      }
-
-      //    if (loop == 3 || loop == 9) {
-      //      numphoton *= 10;
-      //    }
-
-      unsigned int lnumphoton = numphoton;
-
-      if (loop == 0) {
-        // overwrite the number of photons for the first loop (might be useful
-        // if more than 1 boundary is periodic, since the initial neutral
-        // fractions are very low)
-        lnumphoton = numphoton1;
-      }
-
-      grid->reset_grid(*density_function);
-      DiffuseReemissionHandler::set_reemission_probabilities(*grid);
-      if (log) {
-        log->write_status("Start shooting ", lnumphoton, " photons...");
-      }
-
-      double typecount[PHOTONTYPE_NUMBER] = {0};
-
-      double totweight = 0.;
-
-      unsigned int local_numphoton = lnumphoton;
-
-      // make sure this process does only part of the total number of photons
-      local_numphoton = comm.distribute(local_numphoton);
-
-      photonshootjobs.set_numphoton(local_numphoton);
-      worktimer.start();
-      workdistributor.do_in_parallel(photonshootjobs);
-      worktimer.stop();
-
-      photonshootjobs.update_counters(totweight, typecount);
-
-      // make sure the total weight and typecount is reduced across all
-      // processes
-      comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
-      comm.reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(typecount);
-
-      if (log) {
-        log->write_status("Done shooting photons.");
-        log->write_status(
-            100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
-            "% of photons were reemitted as non-ionizing photons.");
-        log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                  typecount[PHOTONTYPE_DIFFUSE_HeI]) /
-                              totweight,
-                          "% of photons were scattered.");
-        double escape_fraction =
-            (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
-        // since totweight is updated in chunks, while the counters are updated
-        // per photon, round off might cause totweight to be slightly smaller
-        // than the counter value. This gives (strange looking) negative escape
-        // fractions, which we reset to 0 here.
-        escape_fraction = std::max(0., escape_fraction);
-        log->write_status("Escape fraction: ", escape_fraction, "%.");
-        double escape_fraction_HI =
-            (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
-        log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
-                          "%.");
-        double escape_fraction_HeI =
-            (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
-        log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
-                          "%.");
-      }
-
-      if (log) {
-        log->write_status("Calculating ionization state after shooting ",
-                          lnumphoton, " photons...");
-      }
-
-      // reduce the mean intensity integrals and heating terms across all
-      // processes
-
-      // this code is currently BROKEN...
-      //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      //        IonName ion = static_cast< IonName >(i);
-      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-      //            grid->get_mean_intensity_handle(ion));
-      //      }
-      //      if (calculate_temperature && loop > 3) {
-      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
-      //        >(grid->get_heating_H_handle());
-      //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
-      //        >(grid->get_heating_He_handle());
-      //      }
-
-      temperature_calculator->calculate_temperature(loop, totweight, *grid,
-                                                    block);
-
-      // the calculation above will have changed the ionic fractions, and might
-      // have changed the temperatures
-      // we have to gather these across all processes
-
-      // this is currently BROKEN...
-      //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      //        IonName ion = static_cast< IonName >(i);
-      //        comm.gather(grid->get_ionic_fraction_handle(ion));
-      //      }
-      //      if (calculate_temperature && loop > 3) {
-      //        comm.gather(grid->get_temperature_handle());
-      //      }
-
-      if (log) {
-        log->write_status("Done calculating ionization state.");
-      }
-
-      // calculate emissivities
-      // we disabled this, since we now have the post-processing Python library
-      // for this
-      //    if (loop > 3 && abundances.get_abundance(ELEMENT_He) > 0.) {
-      //      emissivity_calculator.calculate_emissivities(*grid);
-      //    }
-
-      ++loop;
-
-      if (write_output && every_iteration_output && loop < nloop) {
-        writer->write(*grid, loop, params);
-      }
-    }
-
-    if (log && loop == nloop) {
-      log->write_status("Maximum number of iterations (", nloop,
-                        ") reached, stopping.");
-    }
-
-    if (hydro_integrator != nullptr) {
-      hydro_integrator->do_hydro_step(*grid, hydro_timestep);
-
-      // write snapshot
-      if (write_output &&
-          hydro_lastsnap * hydro_snaptime < (istep + 1) * hydro_timestep) {
-        writer->write(*grid, hydro_lastsnap, params,
-                      hydro_lastsnap * hydro_snaptime);
-        ++hydro_lastsnap;
-      }
-    }
-  }
-
-  // write snapshot
-  if (write_output) {
-    if (hydro_integrator == nullptr) {
-      writer->write(*grid, nloop, params);
-    } else {
-      writer->write(*grid, hydro_lastsnap, params,
-                    hydro_lastsnap * hydro_snaptime);
-    }
-  }
-
-  programtimer.stop();
-  if (log) {
-    log->write_status("Total program time: ",
-                      Utilities::human_readable_time(programtimer.value()),
-                      ".");
-    log->write_status("Total photon shooting time: ",
-                      Utilities::human_readable_time(worktimer.value()), ".");
-  }
-
-  if (sourcedistribution != nullptr) {
-    delete sourcedistribution;
-  }
-  if (continuoussource != nullptr) {
-    delete continuoussource;
-  }
-  delete density_function;
-  if (density_mask != nullptr) {
-    delete density_mask;
-  }
-  delete writer;
-  delete grid;
-  if (hydro_integrator != nullptr) {
-    delete hydro_integrator;
-  }
-  delete temperature_calculator;
-  delete continuousspectrum;
-  delete spectrum;
-
-  // we cannot delete the log, since it is still used in the destructor of
-  // objects that are destructed at the return of the main program
-  // this is not really a problem, as the memory is freed up by the OS anyway
-  // delete log;
-
-  return 0;
 }
 
 /**
