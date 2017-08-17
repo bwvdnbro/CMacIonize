@@ -41,13 +41,13 @@
  */
 EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
     : _abundances(abundances) {
-  // these values come from Brown & Mathew, 1970, ApJ, 160, 939
+  // these values come from Brown & Mathews (1970)
   // the hmit and heplt tables correspond to wavelength 3646 in table 1 and
   // wavelength 3680 in table 5 respectively
   // the hplt and hemit tables correspond to the values you get when you
   // linearly interpolate in table 1 to wavelength 3681 and in table 5 to
   // wavelength 3646 respectively
-  // all values are in 1.e-40 erg cm^3s^-1Hz^-1 (except for the ttab values,
+  // all values are in 1.e-40 erg cm^3 s^-1 Hz^-1 (except for the ttab values,
   // which are in K).
   const double ttab[8] = {4.e3, 6.e3, 8.e3, 1.e4, 1.2e4, 1.4e4, 1.6e4, 1.8e4};
   const double hplt[8] = {0.162, 0.584, 1.046, 1.437,
@@ -203,8 +203,10 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     const double T4 = T * 1.e-4;
     // we added correction factors 1.e-12 to convert densities to cm^-3
     // and an extra factor 1.e-1 to convert to J m^-3s^-1
+    // Osterbrock & Ferland (2006), table 4.1
     eval.set_emissivity(EMISSIONLINE_HAlpha,
                         ne * nhp * 2.87 * 1.24e-38 * std::pow(T4, -0.938));
+    // fits to Storey & Hummer (1995) data...
     eval.set_emissivity(EMISSIONLINE_HBeta,
                         ne * nhp * 1.24e-38 * std::pow(T4, -0.878));
     eval.set_emissivity(EMISSIONLINE_HII,
@@ -220,6 +222,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,
                         ne * (nhp * emhpl + nhep * emhepl));
 
+    // the correspondence between emission lines and energy transitions is
+    // detailed in LineCoolingData and is based on Osterbrock & Ferland (2006),
+    // section 3.5
     eval.set_emissivity(EMISSIONLINE_OI_6300, ntot * c6300);
     eval.set_emissivity(EMISSIONLINE_OII_3727, ntot * c3727);
     eval.set_emissivity(EMISSIONLINE_OIII_5007, ntot * c5007);
@@ -233,8 +238,10 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
     eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
     eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
+    // density weighted average temperature of ionized particles
     eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
     eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
+    // average ionized hydrogen and helium density product
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe,
         (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
@@ -249,8 +256,10 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
     eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
     // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
+    // Osterbrock & Ferland (2006), table 4.6 (fit?)
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
                         ne * nhep * 1.69e-38 * std::pow(T4, -1.065));
+    // Verner & Ferland (1996), table 1
     eval.set_emissivity(EMISSIONLINE_Hrec_s,
                         ne * nhp * 7.982e-23 /
                             (std::sqrt(T / 3.148) *
@@ -267,6 +276,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
  * @param grid DensityGrid to operate on.
  */
 void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) const {
+
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     EmissivityValues *emissivities =
         new EmissivityValues(calculate_emissivities(
@@ -284,6 +294,7 @@ void EmissivityCalculator::calculate_emissivities(DensityGrid &grid) const {
  */
 std::vector< EmissivityValues >
 EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
+
   std::vector< EmissivityValues > result(grid.get_number_of_cells());
   unsigned int index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {

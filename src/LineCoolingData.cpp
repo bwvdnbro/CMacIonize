@@ -733,6 +733,8 @@ LineCoolingData::LineCoolingData() {
   /// NIII
   {
     // Blum & Pradhan (1992), table 5, first energy level (in Ry)
+    // ground state: 2P1/2
+    // excited state: 2P3/2
     _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
         0.00159 * Ry_over_k;
     // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition (in s^-1)
@@ -752,6 +754,8 @@ LineCoolingData::LineCoolingData() {
   {
     // Saraph & Tully (1994), table 2, fine structure splitting energy for
     // Z = 10 (in Ry)
+    // ground state: 2P3/2
+    // excited state: 2P1/2
     _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
         0.0071 * Ry_over_k;
     // Kaufman & Sugar (1986), table 7 (in s^-1)
@@ -1341,6 +1345,9 @@ void LineCoolingData::linestr(
 
     if (element == NII) {
 
+      // Osterbrock & Ferland (2006), table 3.12
+      // ground state: 3P0
+      // excited states: 3P1, 3P2, 1D2, 1S0
       c5755 = prefactor * level_populations[4] *
               _transition_probability[NII][TRANSITION_3_to_4] *
               _energy_difference[NII][TRANSITION_3_to_4];
@@ -1353,6 +1360,10 @@ void LineCoolingData::linestr(
 
     } else if (element == OI) {
 
+      // Osterbrock & Ferland (2006), table 3.14
+      // ground state: 3P2
+      // excited states: 3P1, 3P0, 1D2, 1S0
+      // this is the sum of the 6300.3 and 6363.8 angstrom transitions
       c6300_6363 = prefactor * level_populations[3] *
                    (_transition_probability[OI][TRANSITION_0_to_3] *
                         _energy_difference[OI][TRANSITION_0_to_3] +
@@ -1361,18 +1372,24 @@ void LineCoolingData::linestr(
 
     } else if (element == OII) {
 
+      // Osterbrock & Ferland (2006), table 3.13
+      // ground state: 4S3/2
+      // excited states: 2D5/2, 2D3/2, 2P3/2, 2P1/2
+
       c3729 = prefactor * level_populations[1] *
               _transition_probability[OII][TRANSITION_0_to_1] *
               _energy_difference[OII][TRANSITION_0_to_1];
-      c3727 =
-          prefactor * (level_populations[1] *
-                           _transition_probability[OII][TRANSITION_0_to_1] *
-                           _energy_difference[OII][TRANSITION_0_to_1] +
-                       level_populations[2] *
-                           (_transition_probability[OII][TRANSITION_0_to_2] *
-                                _energy_difference[OII][TRANSITION_0_to_2] +
-                            _transition_probability[OII][TRANSITION_1_to_2] *
-                                _energy_difference[OII][TRANSITION_1_to_2]));
+      // this is the sum of the 3726.0 and 3728.8 angstrom transitions
+      // note that Kenny's version wrongly included the 497.1 um transition as
+      // well...
+      c3727 = prefactor * (level_populations[1] *
+                               _transition_probability[OII][TRANSITION_0_to_1] *
+                               _energy_difference[OII][TRANSITION_0_to_1] +
+                           level_populations[2] *
+                               _transition_probability[OII][TRANSITION_0_to_2] *
+                               _energy_difference[OII][TRANSITION_0_to_2]);
+      // this is the sum of the transitions at 7319.9, 7330.7, 7318.8 and 7329.6
+      // angstrom
       coii7325 =
           prefactor * (level_populations[4] *
                            (_transition_probability[OII][TRANSITION_1_to_4] *
@@ -1387,6 +1404,9 @@ void LineCoolingData::linestr(
 
     } else if (element == OIII) {
 
+      // Osterbrock & Ferland (2006), table 3.12
+      // ground state: 3P0
+      // excited states: 3P1, 3P2, 1D2, 1S0
       c4363 = prefactor * level_populations[4] *
               _transition_probability[OIII][TRANSITION_3_to_4] *
               _energy_difference[OIII][TRANSITION_3_to_4];
@@ -1402,6 +1422,9 @@ void LineCoolingData::linestr(
 
     } else if (element == NeIII) {
 
+      // Osterbrock & Ferland (2006), table 3.14
+      // ground state: 3P2
+      // excited states: 3P1, 3P0, 1D2, 1S0
       c3869 = prefactor * level_populations[3] *
               _transition_probability[NeIII][TRANSITION_0_to_3] *
               _energy_difference[NeIII][TRANSITION_0_to_3];
@@ -1411,29 +1434,35 @@ void LineCoolingData::linestr(
 
     } else if (element == SII) {
 
+      // Osterbrock & Ferland (2006), table 3.13
+      // ground state: 4S3/2
+      // excited states: 2D3/2, 2D5/2, 2P1/2, 2P3/2
+      // this is the sum of the 4068.6 and 4076.4 angstrom transitions
       c4072 = prefactor * (level_populations[3] *
                                _transition_probability[SII][TRANSITION_0_to_3] *
                                _energy_difference[SII][TRANSITION_0_to_3] +
                            level_populations[4] *
                                _transition_probability[SII][TRANSITION_0_to_4] *
                                _energy_difference[SII][TRANSITION_0_to_4]);
+      // note that Kenny's version wrongly includes the 314.5 um transition...
       c6717 = prefactor * level_populations[2] *
-              (_transition_probability[SII][TRANSITION_0_to_2] *
-                   _energy_difference[SII][TRANSITION_0_to_2] +
-               _transition_probability[SII][TRANSITION_1_to_2] *
-                   _energy_difference[SII][TRANSITION_1_to_2]);
-      c6725 =
-          prefactor * (level_populations[1] *
-                           _transition_probability[SII][TRANSITION_0_to_1] *
-                           _energy_difference[SII][TRANSITION_0_to_1] +
-                       level_populations[2] *
-                           (_transition_probability[SII][TRANSITION_0_to_2] *
-                                _energy_difference[SII][TRANSITION_0_to_2] +
-                            _transition_probability[SII][TRANSITION_1_to_2] *
-                                _energy_difference[SII][TRANSITION_1_to_2]));
+              _transition_probability[SII][TRANSITION_0_to_2] *
+              _energy_difference[SII][TRANSITION_0_to_2];
+      // this is the sum of the 6716.5 and 6730.8 angstrom transitions
+      // note that Kenny's version wrongly includes the 314.5 um transition...
+      c6725 = prefactor * (level_populations[1] *
+                               _transition_probability[SII][TRANSITION_0_to_1] *
+                               _energy_difference[SII][TRANSITION_0_to_1] +
+                           level_populations[2] *
+                               _transition_probability[SII][TRANSITION_0_to_2] *
+                               _energy_difference[SII][TRANSITION_0_to_2]);
 
     } else if (element == SIII) {
 
+      // Osterbrock & Ferland (2006), table 3.12
+      // ground state: 3P0
+      // excited states: 3P1, 3P2, 1D2, 1S0
+      // this is the sum of the 9531.0 and 9068.9 angstrom transitions
       c9405 = prefactor * level_populations[3] *
               (_transition_probability[SIII][TRANSITION_1_to_3] *
                    _energy_difference[SIII][TRANSITION_1_to_3] +
@@ -1451,6 +1480,11 @@ void LineCoolingData::linestr(
 
     } else if (element == CII) {
 
+      // Osterbrock & Ferland (2006), table 3.9
+      // ground state: 2P1/2
+      // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
+      // this should be the sum of all 4P to 2P transitions
+      // note that Kenny's code wrongly includes some 4P to 4P transitions...
       cii2325 =
           prefactor * (level_populations[2] *
                            (_transition_probability[CII][TRANSITION_0_to_2] *
@@ -1461,37 +1495,30 @@ void LineCoolingData::linestr(
                            (_transition_probability[CII][TRANSITION_0_to_3] *
                                 _energy_difference[CII][TRANSITION_0_to_3] +
                             _transition_probability[CII][TRANSITION_1_to_3] *
-                                _energy_difference[CII][TRANSITION_1_to_3] +
-                            _transition_probability[CII][TRANSITION_2_to_3] *
-                                _energy_difference[CII][TRANSITION_2_to_3]) +
+                                _energy_difference[CII][TRANSITION_1_to_3]) +
                        level_populations[4] *
                            (_transition_probability[CII][TRANSITION_0_to_4] *
                                 _energy_difference[CII][TRANSITION_0_to_4] +
                             _transition_probability[CII][TRANSITION_1_to_4] *
-                                _energy_difference[CII][TRANSITION_1_to_4] +
-                            _transition_probability[CII][TRANSITION_2_to_4] *
-                                _energy_difference[CII][TRANSITION_2_to_4] +
-                            _transition_probability[CII][TRANSITION_3_to_4] *
-                                _energy_difference[CII][TRANSITION_3_to_4]));
+                                _energy_difference[CII][TRANSITION_1_to_4]));
 
     } else if (element == CIII) {
 
+      // Osterbrock & Ferland (2006), table 3.8
+      // ground state: 1S0
+      // excited states: 3P0, 3P1, 3P2, 1P1
+      // this is the sum of all 3P to 1S transitions
+      // note that Kenny's code wrongly includes some 3P to 3P transitions...
       ciii1908 =
           prefactor * (level_populations[1] *
                            _transition_probability[CIII][TRANSITION_0_to_1] *
                            _energy_difference[CIII][TRANSITION_0_to_1] +
                        level_populations[2] *
-                           (_transition_probability[CIII][TRANSITION_0_to_2] *
-                                _energy_difference[CIII][TRANSITION_0_to_2] +
-                            _transition_probability[CIII][TRANSITION_1_to_2] *
-                                _energy_difference[CIII][TRANSITION_1_to_2]) +
+                           _transition_probability[CIII][TRANSITION_0_to_2] *
+                           _energy_difference[CIII][TRANSITION_0_to_2] +
                        level_populations[3] *
-                           (_transition_probability[CIII][TRANSITION_0_to_3] *
-                                _energy_difference[CIII][TRANSITION_0_to_3] +
-                            _transition_probability[CIII][TRANSITION_1_to_3] *
-                                _energy_difference[CIII][TRANSITION_1_to_3] +
-                            _transition_probability[CIII][TRANSITION_2_to_3] *
-                                _energy_difference[CIII][TRANSITION_2_to_3]));
+                           _transition_probability[CIII][TRANSITION_0_to_3] *
+                           _energy_difference[CIII][TRANSITION_0_to_3]);
     }
   }
 
@@ -1509,6 +1536,9 @@ void LineCoolingData::linestr(
 
     if (element == NIII) {
 
+      // Osterbrock & Ferland (2006), table 3.9
+      // ground state: 2P1/2
+      // excited state: 2P3/2
       cniii57 =
           abundances[offset + NIII] * kb *
           _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
@@ -1517,6 +1547,9 @@ void LineCoolingData::linestr(
 
     } else if (element == NeII) {
 
+      // Osterbrock & Ferland (2006), table 3.11
+      // ground state: 2P3/2
+      // excited state: 2P1/2
       cneii12 =
           abundances[offset + NeII] * kb *
           _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *

@@ -36,6 +36,17 @@ class Abundances;
 
 /**
  * @brief Class that calculates emissivities for all cells in a DensityGrid.
+ *
+ * We use data from:
+ *  - Brown, Robert L. & Mathews, William G. 1970, ApJ, 160, 939
+ *    (http://adsabs.harvard.edu/abs/1970ApJ...160..939B)
+ *  - Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of Gaseous Nebulae
+ *    and Active Galactic Nuclei, 2nd edition
+ *    (http://adsabs.harvard.edu/abs/2006agna.book.....O)
+ *  - Storey, P. J. &; Hummer, D. G. 1995, MNRAS, 272, 41
+ *    (http://adsabs.harvard.edu/abs/1995MNRAS.272...41S)
+ *  - Verner, D. A., & Ferland, G. J. 1996, ApJS, 103, 467
+ *    (http://adsabs.harvard.edu/abs/1996ApJS..103..467V)
  */
 class EmissivityCalculator {
   /*! @brief Temperature table for hydrogen and helium continuous emission
