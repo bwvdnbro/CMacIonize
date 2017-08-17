@@ -193,11 +193,11 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     double coii7325 = 0.;
     double csiv10 = 0.;
     double c88mu = 0.;
-    lines.linestr(ionization_variables.get_temperature(), ne, abund, c6300,
-                  c9405, c6312, c33mu, c19mu, c3729, c3727, c7330, c4363, c5007,
-                  c52mu, c88mu, c5755, c6584, c4072, c6717, c6725, c3869,
-                  cniii57, cneii12, cneiii15, cnii122, cii2325, ciii1908,
-                  coii7325, csiv10);
+    std::vector< std::vector< double > > line_strengths = lines.linestr(
+        ionization_variables.get_temperature(), ne, abund, c6300, c9405, c6312,
+        c33mu, c19mu, c3729, c3727, c7330, c4363, c5007, c52mu, c88mu, c5755,
+        c6584, c4072, c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
+        cii2325, ciii1908, coii7325, csiv10);
 
     const double T = ionization_variables.get_temperature();
     const double T4 = T * 1.e-4;
@@ -222,22 +222,135 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,
                         ne * (nhp * emhpl + nhep * emhepl));
 
-    // the correspondence between emission lines and energy transitions is
-    // detailed in LineCoolingData and is based on Osterbrock & Ferland (2006),
-    // section 3.5
-    eval.set_emissivity(EMISSIONLINE_OI_6300, ntot * c6300);
-    eval.set_emissivity(EMISSIONLINE_OII_3727, ntot * c3727);
-    eval.set_emissivity(EMISSIONLINE_OIII_5007, ntot * c5007);
-    eval.set_emissivity(EMISSIONLINE_OIII_4363, ntot * c4363);
-    eval.set_emissivity(EMISSIONLINE_OIII_88mu, ntot * c88mu);
-    eval.set_emissivity(EMISSIONLINE_NII_5755, ntot * c5755);
-    eval.set_emissivity(EMISSIONLINE_NII_6584, ntot * c6584);
-    eval.set_emissivity(EMISSIONLINE_NeIII_3869, ntot * c3869);
-    eval.set_emissivity(EMISSIONLINE_SII_6725, ntot * c6725);
-    eval.set_emissivity(EMISSIONLINE_SII_4072, ntot * c4072);
-    eval.set_emissivity(EMISSIONLINE_SIII_9405, ntot * c9405);
-    eval.set_emissivity(EMISSIONLINE_SIII_6312, ntot * c6312);
-    eval.set_emissivity(EMISSIONLINE_SIII_19mu, ntot * c19mu);
+    // NII
+    // Osterbrock & Ferland (2006), table 3.12
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    eval.set_emissivity(EMISSIONLINE_NII_5755,
+                        ntot * line_strengths[NII][TRANSITION_3_to_4]);
+    eval.set_emissivity(EMISSIONLINE_NII_6584,
+                        ntot * line_strengths[NII][TRANSITION_2_to_3]);
+    eval.set_emissivity(EMISSIONLINE_NII_122mu,
+                        ntot * line_strengths[NII][TRANSITION_1_to_2]);
+
+    // OI
+    // Osterbrock & Ferland (2006), table 3.14
+    // ground state: 3P2
+    // excited states: 3P1, 3P0, 1D2, 1S0
+    // this is the sum of the 6300.3 and 6363.8 angstrom transitions
+    eval.set_emissivity(EMISSIONLINE_OI_6300,
+                        ntot * (line_strengths[OI][TRANSITION_0_to_3] +
+                                line_strengths[OI][TRANSITION_1_to_3]));
+
+    // OII
+    // Osterbrock & Ferland (2006), table 3.13
+    // ground state: 4S3/2
+    // excited states: 2D5/2, 2D3/2, 2P3/2, 2P1/2
+    // this is the sum of the 3726.0 and 3728.8 angstrom transitions
+    // note that Kenny's version wrongly included the 497.1 um transition as
+    // well...
+    eval.set_emissivity(EMISSIONLINE_OII_3727,
+                        ntot * (line_strengths[OII][TRANSITION_0_to_1] +
+                                line_strengths[OII][TRANSITION_0_to_2]));
+    // this is the sum of the transitions at 7319.9, 7330.7, 7318.8 and 7329.6
+    // angstrom
+    eval.set_emissivity(EMISSIONLINE_OII_7325,
+                        ntot * (line_strengths[OII][TRANSITION_1_to_4] +
+                                line_strengths[OII][TRANSITION_2_to_4] +
+                                line_strengths[OII][TRANSITION_1_to_3] +
+                                line_strengths[OII][TRANSITION_2_to_3]));
+
+    // OIII
+    // Osterbrock & Ferland (2006), table 3.12
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    eval.set_emissivity(EMISSIONLINE_OIII_4363,
+                        ntot * line_strengths[OIII][TRANSITION_3_to_4]);
+    eval.set_emissivity(EMISSIONLINE_OIII_5007,
+                        ntot * line_strengths[OIII][TRANSITION_2_to_3]);
+    eval.set_emissivity(EMISSIONLINE_OIII_88mu,
+                        ntot * line_strengths[OIII][TRANSITION_0_to_1]);
+
+    // NeIII
+    // Osterbrock & Ferland (2006), table 3.14
+    // ground state: 3P2
+    // excited states: 3P1, 3P0, 1D2, 1S0
+    eval.set_emissivity(EMISSIONLINE_NeIII_3869,
+                        ntot * line_strengths[NeIII][TRANSITION_0_to_3]);
+    eval.set_emissivity(EMISSIONLINE_NeIII_15mu,
+                        ntot * line_strengths[NeIII][TRANSITION_0_to_1]);
+
+    // SII
+    // Osterbrock & Ferland (2006), table 3.13
+    // ground state: 4S3/2
+    // excited states: 2D3/2, 2D5/2, 2P1/2, 2P3/2
+    // this is the sum of the 4068.6 and 4076.4 angstrom transitions
+    eval.set_emissivity(EMISSIONLINE_SII_4072,
+                        ntot * (line_strengths[SII][TRANSITION_0_to_3] +
+                                line_strengths[SII][TRANSITION_0_to_4]));
+    // this is the sum of the 6716.5 and 6730.8 angstrom transitions
+    // note that Kenny's version wrongly includes the 314.5 um transition...
+    eval.set_emissivity(EMISSIONLINE_SII_6725,
+                        ntot * (line_strengths[SII][TRANSITION_0_to_1] +
+                                line_strengths[SII][TRANSITION_0_to_2]));
+
+    // SIII
+    // Osterbrock & Ferland (2006), table 3.12
+    // ground state: 3P0
+    // excited states: 3P1, 3P2, 1D2, 1S0
+    // this is the sum of the 9531.0 and 9068.9 angstrom transitions
+    eval.set_emissivity(EMISSIONLINE_SIII_9405,
+                        ntot * (line_strengths[SIII][TRANSITION_1_to_3] +
+                                line_strengths[SIII][TRANSITION_2_to_3]));
+    eval.set_emissivity(EMISSIONLINE_SIII_6312,
+                        ntot * line_strengths[SIII][TRANSITION_3_to_4]);
+    eval.set_emissivity(EMISSIONLINE_SIII_19mu,
+                        ntot * line_strengths[SIII][TRANSITION_1_to_2]);
+
+    // CII
+    // Osterbrock & Ferland (2006), table 3.9
+    // ground state: 2P1/2
+    // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
+    // this should be the sum of all 4P to 2P transitions
+    // note that Kenny's code wrongly includes some 4P to 4P transitions...
+    eval.set_emissivity(EMISSIONLINE_CII_2325,
+                        ntot * (line_strengths[CII][TRANSITION_0_to_2] +
+                                line_strengths[CII][TRANSITION_1_to_2] +
+                                line_strengths[CII][TRANSITION_0_to_3] +
+                                line_strengths[CII][TRANSITION_1_to_3] +
+                                line_strengths[CII][TRANSITION_0_to_4] +
+                                line_strengths[CII][TRANSITION_1_to_4]));
+
+    // CIII
+    // Osterbrock & Ferland (2006), table 3.8
+    // ground state: 1S0
+    // excited states: 3P0, 3P1, 3P2, 1P1
+    // this is the sum of all 3P to 1S transitions
+    // note that Kenny's code wrongly includes some 3P to 3P transitions...
+    eval.set_emissivity(EMISSIONLINE_CIII_1908,
+                        ntot * (line_strengths[CIII][TRANSITION_0_to_1] +
+                                line_strengths[CIII][TRANSITION_0_to_2] +
+                                line_strengths[CIII][TRANSITION_0_to_3]));
+
+    // NIII
+    // Osterbrock & Ferland (2006), table 3.9
+    // ground state: 2P1/2
+    // excited state: 2P3/2
+    eval.set_emissivity(
+        EMISSIONLINE_NIII_57mu,
+        ntot * line_strengths[LINECOOLINGDATA_NUMFIVELEVELELEMENTS + NIII][0]);
+
+    // NeII
+    // Osterbrock & Ferland (2006), table 3.11
+    // ground state: 2P3/2
+    // excited state: 2P1/2
+    eval.set_emissivity(
+        EMISSIONLINE_NeII_12mu,
+        ntot * line_strengths[LINECOOLINGDATA_NUMFIVELEVELELEMENTS + NeII][0]);
+
+    // not initialized!!!
+    eval.set_emissivity(EMISSIONLINE_SIV_10mu, 0.);
+
     // density weighted average temperature of ionized particles
     eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
     eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
@@ -247,14 +360,6 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
         (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
             (1. - ionization_variables.get_ionic_fraction(ION_He_n)));
     eval.set_emissivity(EMISSIONLINE_avg_nH_nHe_count, 1.);
-    eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * cneii12);
-    eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * cniii57);
-    eval.set_emissivity(EMISSIONLINE_NeIII_15mu, ntot * cneiii15);
-    eval.set_emissivity(EMISSIONLINE_NII_122mu, ntot * cnii122);
-    eval.set_emissivity(EMISSIONLINE_CII_2325, ntot * cii2325);
-    eval.set_emissivity(EMISSIONLINE_CIII_1908, ntot * ciii1908);
-    eval.set_emissivity(EMISSIONLINE_OII_7325, ntot * coii7325);
-    eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * csiv10);
     // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
     // Osterbrock & Ferland (2006), table 4.6 (fit?)
     eval.set_emissivity(EMISSIONLINE_HeI_5876,

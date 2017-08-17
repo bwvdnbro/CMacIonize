@@ -1307,8 +1307,10 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * line strength in (in J s^-1).
  * @param csiv10 Variable to store the sulphur 10 micrometre (?) emission line
  * strength in (in J s^-1).
+ * @return std::vector containing, for each ion, a std::vector of line strengths
+ * for each transition.
  */
-void LineCoolingData::linestr(
+std::vector< std::vector< double > > LineCoolingData::linestr(
     double temperature, double electron_density, const double *abundances,
     double &c6300_6363, double &c9405, double &c6312, double &c33mu,
     double &c19mu, double &c3729, double &c3727, double &c7330, double &c4363,
@@ -1328,11 +1330,18 @@ void LineCoolingData::linestr(
   const double T4 = temperature * 1.e-4;
   const double Tinv = 1. / temperature;
 
+  // vector to store line strengths in
+  std::vector< std::vector< double > > line_strengths(
+      LINECOOLINGDATA_NUMFIVELEVELELEMENTS +
+      LINECOOLINGDATA_NUMTWOLEVELELEMENTS);
+
   /// 5 level elements
 
   // there are no lines for element 0 (NI), so we skip the iteration for that
   // element
   for (int j = 1; j < 10; ++j) {
+
+    line_strengths[j].resize(NUMBER_OF_TRANSITIONS);
 
     const LineCoolingDataFiveLevelElement element =
         static_cast< LineCoolingDataFiveLevelElement >(j);
@@ -1342,6 +1351,47 @@ void LineCoolingData::linestr(
                               level_populations);
 
     const double prefactor = abundances[j] * kb;
+
+    line_strengths[j][TRANSITION_0_to_1] =
+        prefactor * level_populations[1] *
+        _transition_probability[j][TRANSITION_0_to_1] *
+        _energy_difference[j][TRANSITION_0_to_1];
+    line_strengths[j][TRANSITION_0_to_2] =
+        prefactor * level_populations[2] *
+        _transition_probability[j][TRANSITION_0_to_2] *
+        _energy_difference[j][TRANSITION_0_to_2];
+    line_strengths[j][TRANSITION_1_to_2] =
+        prefactor * level_populations[2] *
+        _transition_probability[j][TRANSITION_1_to_2] *
+        _energy_difference[j][TRANSITION_1_to_2];
+    line_strengths[j][TRANSITION_0_to_3] =
+        prefactor * level_populations[3] *
+        _transition_probability[j][TRANSITION_0_to_3] *
+        _energy_difference[j][TRANSITION_0_to_3];
+    line_strengths[j][TRANSITION_1_to_3] =
+        prefactor * level_populations[3] *
+        _transition_probability[j][TRANSITION_1_to_3] *
+        _energy_difference[j][TRANSITION_1_to_3];
+    line_strengths[j][TRANSITION_2_to_3] =
+        prefactor * level_populations[3] *
+        _transition_probability[j][TRANSITION_2_to_3] *
+        _energy_difference[j][TRANSITION_2_to_3];
+    line_strengths[j][TRANSITION_0_to_4] =
+        prefactor * level_populations[4] *
+        _transition_probability[j][TRANSITION_0_to_4] *
+        _energy_difference[j][TRANSITION_0_to_4];
+    line_strengths[j][TRANSITION_1_to_4] =
+        prefactor * level_populations[4] *
+        _transition_probability[j][TRANSITION_1_to_4] *
+        _energy_difference[j][TRANSITION_1_to_4];
+    line_strengths[j][TRANSITION_2_to_4] =
+        prefactor * level_populations[4] *
+        _transition_probability[j][TRANSITION_2_to_4] *
+        _energy_difference[j][TRANSITION_2_to_4];
+    line_strengths[j][TRANSITION_3_to_4] =
+        prefactor * level_populations[4] *
+        _transition_probability[j][TRANSITION_3_to_4] *
+        _energy_difference[j][TRANSITION_3_to_4];
 
     if (element == NII) {
 
@@ -1528,11 +1578,20 @@ void LineCoolingData::linestr(
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
+    const unsigned int index = offset + i;
+
+    line_strengths[index].resize(1);
+
     const LineCoolingDataTwoLevelElement element =
         static_cast< LineCoolingDataTwoLevelElement >(i);
 
     const double level_population =
         compute_level_population(element, collision_strength_prefactor, Tinv);
+
+    line_strengths[index][0] =
+        abundances[index] * kb * level_population *
+        _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+        _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY];
 
     if (element == NIII) {
 
@@ -1557,4 +1616,6 @@ void LineCoolingData::linestr(
           level_population;
     }
   }
+
+  return line_strengths;
 }
