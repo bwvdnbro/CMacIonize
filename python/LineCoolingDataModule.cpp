@@ -125,10 +125,73 @@ static boost::python::dict python_linestr(LineCoolingData &lines,
            c6717 = 0., c6725 = 0., c3869 = 0., cniii57 = 0., cneii12 = 0.,
            cneiii15 = 0., cnii122 = 0., cii2325 = 0., ciii1908 = 0.,
            coii7325 = 0., csiv10 = 0.;
-    lines.linestr(Ti, nei, abund, c6300, c9405, c6312, c33mu, c19mu, c3729,
-                  c3727, c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
-                  c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
-                  cii2325, ciii1908, coii7325, csiv10);
+    std::vector< std::vector< double > > line_strengths =
+        lines.get_line_strengths(Ti, nei, abund);
+
+    // NII
+    c5755 = line_strengths[NII][TRANSITION_3_to_4];
+    c6584 = line_strengths[NII][TRANSITION_2_to_3];
+    cnii122 = line_strengths[NII][TRANSITION_1_to_2];
+
+    // OI
+    c6300 = line_strengths[OI][TRANSITION_0_to_3] +
+            line_strengths[OI][TRANSITION_1_to_3];
+
+    // OII
+    c3729 = line_strengths[OII][TRANSITION_0_to_1];
+    c3727 = line_strengths[OII][TRANSITION_0_to_1] +
+            line_strengths[OII][TRANSITION_0_to_2];
+    coii7325 = line_strengths[OII][TRANSITION_1_to_4] +
+               line_strengths[OII][TRANSITION_2_to_4] +
+               line_strengths[OII][TRANSITION_1_to_3] +
+               line_strengths[OII][TRANSITION_2_to_3];
+
+    // OIII
+    c4363 = line_strengths[OIII][TRANSITION_3_to_4];
+    c5007 = line_strengths[OIII][TRANSITION_2_to_3];
+    c52mu = line_strengths[OIII][TRANSITION_1_to_2];
+    c88mu = line_strengths[OIII][TRANSITION_0_to_1];
+
+    // NeIII
+    c3869 = line_strengths[NeIII][TRANSITION_0_to_3];
+    cneiii15 = line_strengths[NeIII][TRANSITION_0_to_1];
+
+    // SII
+    c4072 = line_strengths[SII][TRANSITION_0_to_3] +
+            line_strengths[SII][TRANSITION_0_to_4];
+    c6717 = line_strengths[SII][TRANSITION_0_to_2];
+    c6725 = line_strengths[SII][TRANSITION_0_to_1] +
+            line_strengths[SII][TRANSITION_0_to_2];
+
+    // SIII
+    c9405 = line_strengths[SIII][TRANSITION_1_to_3] +
+            line_strengths[SIII][TRANSITION_2_to_3];
+    c6312 = line_strengths[SIII][TRANSITION_3_to_4];
+    c33mu = line_strengths[SIII][TRANSITION_0_to_1];
+    c19mu = line_strengths[SIII][TRANSITION_1_to_2];
+
+    // CII
+    cii2325 = line_strengths[CII][TRANSITION_0_to_2] +
+              line_strengths[CII][TRANSITION_1_to_2] +
+              line_strengths[CII][TRANSITION_0_to_3] +
+              line_strengths[CII][TRANSITION_1_to_3] +
+              line_strengths[CII][TRANSITION_0_to_4] +
+              line_strengths[CII][TRANSITION_1_to_4];
+
+    // CIII
+    ciii1908 = line_strengths[CIII][TRANSITION_0_to_1] +
+               line_strengths[CIII][TRANSITION_0_to_2] +
+               line_strengths[CIII][TRANSITION_0_to_3];
+
+    // NIII
+    cniii57 = line_strengths[NIII][0];
+
+    // NeII
+    cneii12 = line_strengths[NeII][0];
+
+    // not set!!
+    c7330 = 0.;
+    csiv10 = 0.;
 
     result["c6300"][iT] = c6300;
     result["c9405"][iT] = c9405;

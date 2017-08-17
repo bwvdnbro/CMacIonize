@@ -729,25 +729,31 @@ LineCoolingData::LineCoolingData() {
   }
 
   /// two level elements
+  // note that we need to remap the indices of these levels, as the enum values
+  // start counting from LINECOOLINGDATA_NUMFIVELEVELELEMENTS
+  // this is better than needing to do the remapping outside of the class, which
+  // is what would happen otherwise...
 
   /// NIII
   {
     // Blum & Pradhan (1992), table 5, first energy level (in Ry)
     // ground state: 2P1/2
     // excited state: 2P3/2
-    _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
-        0.00159 * Ry_over_k;
+    _two_level_element_data[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_ENERGY_DIFFERENCE] =
+                               0.00159 * Ry_over_k;
     // Galavis, Mendoza & Zeippen (1998), table 4, 1 to 2 transition (in s^-1)
-    _two_level_element_data[NIII][TWOLEVELFIELD_TRANSITION_PROBABILITY] =
-        4.736e-5;
+    _two_level_element_data[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_TRANSITION_PROBABILITY] = 4.736e-5;
     // Blum & Pradhan (1992), table 3, value for 10,000 K, 1 to 2 transition
-    _two_level_element_data[NIII][TWOLEVELFIELD_COLLISION_STRENGTH] = 1.4454;
+    _two_level_element_data[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_COLLISION_STRENGTH] = 1.4454;
     // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
     // P_{3/2}
-    _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
-        0.5;
-    _two_level_element_data[NIII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
-        0.25;
+    _two_level_element_data[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] = 0.5;
+    _two_level_element_data[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] = 0.25;
   }
 
   /// NeII
@@ -756,19 +762,21 @@ LineCoolingData::LineCoolingData() {
     // Z = 10 (in Ry)
     // ground state: 2P3/2
     // excited state: 2P1/2
-    _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] =
-        0.0071 * Ry_over_k;
+    _two_level_element_data[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_ENERGY_DIFFERENCE] =
+                               0.0071 * Ry_over_k;
     // Kaufman & Sugar (1986), table 7 (in s^-1)
-    _two_level_element_data[NeII][TWOLEVELFIELD_TRANSITION_PROBABILITY] =
-        8.55e-3;
+    _two_level_element_data[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_TRANSITION_PROBABILITY] = 8.55e-3;
     // Griffin, Mitnik & Badnell (2001), table 4, value for 10,000 K
-    _two_level_element_data[NeII][TWOLEVELFIELD_COLLISION_STRENGTH] = 0.314;
+    _two_level_element_data[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_COLLISION_STRENGTH] = 0.314;
     // statistical weights: level 0 is a P_{3/2} level, while level 1 is a
     // P_{1/2}
-    _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] =
-        0.25;
-    _two_level_element_data[NeII][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] =
-        0.5;
+    _two_level_element_data[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0] = 0.25;
+    _two_level_element_data[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                           [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1] = 0.5;
   }
 
   /// numerical factors that are precomputed
@@ -1114,18 +1122,18 @@ double LineCoolingData::compute_level_population(
     LineCoolingDataTwoLevelElement element, double collision_strength_prefactor,
     double Tinv) const {
 
+  // note that we need to remap the element index
+  const int i = element - LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   const double ksi =
-      _two_level_element_data[element][TWOLEVELFIELD_ENERGY_DIFFERENCE];
+      _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE];
   const double A =
-      _two_level_element_data[element][TWOLEVELFIELD_TRANSITION_PROBABILITY];
+      _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY];
   const double Gamma =
-      _two_level_element_data[element][TWOLEVELFIELD_COLLISION_STRENGTH];
+      _two_level_element_data[i][TWOLEVELFIELD_COLLISION_STRENGTH];
   const double inv_omega_1 =
-      _two_level_element_data[element]
-                             [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0];
+      _two_level_element_data[i][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0];
   const double inv_omega_2 =
-      _two_level_element_data[element]
-                             [TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1];
+      _two_level_element_data[i][TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1];
   const double Texp = std::exp(-ksi * Tinv);
   return collision_strength_prefactor * Gamma * Texp * inv_omega_1 /
          (A +
@@ -1230,15 +1238,17 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 
   // offset of two level elements in the abundances array
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  for (int i = offset; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+
+    const int index = i - offset;
     const LineCoolingDataTwoLevelElement element =
         static_cast< LineCoolingDataTwoLevelElement >(i);
     const double level_population =
         compute_level_population(element, collision_strength_prefactor, Tinv);
     cooling +=
-        abundances[offset + i] * kb *
-        _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
-        _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
+        abundances[i] * kb *
+        _two_level_element_data[index][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+        _two_level_element_data[index][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
         level_population;
   }
 
@@ -1246,78 +1256,17 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 }
 
 /**
- * @brief Calculate the strength of a number of emission lines for the given
- * temperature, electron density and ion abundances.
- *
- * The matching of lines to transitions is based on tables 3.8-14 in Osterbrock
- * & Ferland (2006) and similar data in the data papers used for transition
- * data.
+ * @brief Calculate the strength of all emission lines for which we have data.
  *
  * @param temperature Temperature (in K).
  * @param electron_density Electron density (in m^-3).
  * @param abundances Ion abundances.
- * @param c6300_6363 Variable to store the oxygen 6300 and 6363 angstrom
- * emission line strengths in (in J s^-1).
- * @param c9405 Variable to store the sulphur 9405 angstrom emission line
- * strength in (in J s^-1).
- * @param c6312 Variable to store the sulphur 6312 angstrom emission line
- * strength in (in J s^-1).
- * @param c33mu Variable that is not used in the output (in J s^-1).
- * @param c19mu Variable to store the sulphur 18.7 micrometre emission line
- * strength in (in J s^-1).
- * @param c3729 Variable to store the oxygen 3729 angstrom emission line
- * strength in (in J s^-1).
- * @param c3727 Variable to store the oxygen 3727 angstrom emission line
- * strength in (in J s^-1).
- * @param c7330 Variable to store the oxygen 7330 angstrom emission line
- * strength in (in J s^-1).
- * @param c4363 Variable to store the oxygen 4363 angstrom emission line
- * strength in (in J s^-1).
- * @param c5007 Variable to store the oxygen 5007 angstrom emission line
- * strength in (in J s^-1).
- * @param c52mu Variable to store the oxygen 52 micrometre emission line
- * strength in (in J s^-1).
- * @param c88mu Variable to store the oxygen 88 micrometre emission line
- * strength in (in J s^-1).
- * @param c5755 Variable to store the nitrogen 5755 angstrom emission line
- * strength in (in J s^-1).
- * @param c6584 Variable to store the nitrogen 6584 angstrom emission line
- * strength in (in J s^-1).
- * @param c4072 Variable to store the sulphur 4072 angstrom emission line
- * strength in (in J s^-1).
- * @param c6717 Variable to store the sulphur 6717 angstrom emission line
- * strength in (in J s^-1).
- * @param c6725 Variable to store the sulphur 6725 angstrom emission line
- * strength in (in J s^-1).
- * @param c3869 Variable to store the neon 3869 angstrom emission line strength
- * in (in J s^-1).
- * @param cniii57 Variable to store the nitrogen 57.3 micrometre emission line
- * strength in (in J s^-1).
- * @param cneii12 Variable to store the neon 12.8 micrometre emission line
- * strength in (in J s^-1).
- * @param cneiii15 Variable to store the neon 15.5 micrometre emission line
- * strength in (in J s^-1).
- * @param cnii122 Variable to store the nitrogen 122 micrometre emission line
- * strength in (in J s^-1).
- * @param cii2325 Variable to store the carbon 2325 angstrom emission line
- * strength in (in J s^-1).
- * @param ciii1908 Variable to store the carbon 1907 + 1909 angstrom emission
- * line strength in (in J s^-1).
- * @param coii7325 Variable to store the oxygen 7320 + 7330 angstrom emission
- * line strength in (in J s^-1).
- * @param csiv10 Variable to store the sulphur 10 micrometre (?) emission line
- * strength in (in J s^-1).
  * @return std::vector containing, for each ion, a std::vector of line strengths
- * for each transition.
+ * for each transition (in J s^-1).
  */
-std::vector< std::vector< double > > LineCoolingData::linestr(
-    double temperature, double electron_density, const double *abundances,
-    double &c6300_6363, double &c9405, double &c6312, double &c33mu,
-    double &c19mu, double &c3729, double &c3727, double &c7330, double &c4363,
-    double &c5007, double &c52mu, double &c88mu, double &c5755, double &c6584,
-    double &c4072, double &c6717, double &c6725, double &c3869, double &cniii57,
-    double &cneii12, double &cneiii15, double &cnii122, double &cii2325,
-    double &ciii1908, double &coii7325, double &csiv10) const {
+std::vector< std::vector< double > >
+LineCoolingData::get_line_strengths(double temperature, double electron_density,
+                                    const double *abundances) const {
 
   /// initialize some variables
 
@@ -1392,195 +1341,17 @@ std::vector< std::vector< double > > LineCoolingData::linestr(
         prefactor * level_populations[4] *
         _transition_probability[j][TRANSITION_3_to_4] *
         _energy_difference[j][TRANSITION_3_to_4];
-
-    if (element == NII) {
-
-      // Osterbrock & Ferland (2006), table 3.12
-      // ground state: 3P0
-      // excited states: 3P1, 3P2, 1D2, 1S0
-      c5755 = prefactor * level_populations[4] *
-              _transition_probability[NII][TRANSITION_3_to_4] *
-              _energy_difference[NII][TRANSITION_3_to_4];
-      c6584 = prefactor * level_populations[3] *
-              _transition_probability[NII][TRANSITION_2_to_3] *
-              _energy_difference[NII][TRANSITION_2_to_3];
-      cnii122 = prefactor * level_populations[2] *
-                _transition_probability[NII][TRANSITION_1_to_2] *
-                _energy_difference[j][TRANSITION_1_to_2];
-
-    } else if (element == OI) {
-
-      // Osterbrock & Ferland (2006), table 3.14
-      // ground state: 3P2
-      // excited states: 3P1, 3P0, 1D2, 1S0
-      // this is the sum of the 6300.3 and 6363.8 angstrom transitions
-      c6300_6363 = prefactor * level_populations[3] *
-                   (_transition_probability[OI][TRANSITION_0_to_3] *
-                        _energy_difference[OI][TRANSITION_0_to_3] +
-                    _transition_probability[OI][TRANSITION_1_to_3] *
-                        _energy_difference[OI][TRANSITION_1_to_3]);
-
-    } else if (element == OII) {
-
-      // Osterbrock & Ferland (2006), table 3.13
-      // ground state: 4S3/2
-      // excited states: 2D5/2, 2D3/2, 2P3/2, 2P1/2
-
-      c3729 = prefactor * level_populations[1] *
-              _transition_probability[OII][TRANSITION_0_to_1] *
-              _energy_difference[OII][TRANSITION_0_to_1];
-      // this is the sum of the 3726.0 and 3728.8 angstrom transitions
-      // note that Kenny's version wrongly included the 497.1 um transition as
-      // well...
-      c3727 = prefactor * (level_populations[1] *
-                               _transition_probability[OII][TRANSITION_0_to_1] *
-                               _energy_difference[OII][TRANSITION_0_to_1] +
-                           level_populations[2] *
-                               _transition_probability[OII][TRANSITION_0_to_2] *
-                               _energy_difference[OII][TRANSITION_0_to_2]);
-      // this is the sum of the transitions at 7319.9, 7330.7, 7318.8 and 7329.6
-      // angstrom
-      coii7325 =
-          prefactor * (level_populations[4] *
-                           (_transition_probability[OII][TRANSITION_1_to_4] *
-                                _energy_difference[OII][TRANSITION_1_to_4] +
-                            _transition_probability[OII][TRANSITION_2_to_4] *
-                                _energy_difference[OII][TRANSITION_2_to_4]) +
-                       level_populations[3] *
-                           (_transition_probability[OII][TRANSITION_1_to_3] *
-                                _energy_difference[OII][TRANSITION_1_to_3] +
-                            _transition_probability[OII][TRANSITION_2_to_3] *
-                                _energy_difference[OII][TRANSITION_2_to_3]));
-
-    } else if (element == OIII) {
-
-      // Osterbrock & Ferland (2006), table 3.12
-      // ground state: 3P0
-      // excited states: 3P1, 3P2, 1D2, 1S0
-      c4363 = prefactor * level_populations[4] *
-              _transition_probability[OIII][TRANSITION_3_to_4] *
-              _energy_difference[OIII][TRANSITION_3_to_4];
-      c5007 = prefactor * level_populations[3] *
-              _transition_probability[OIII][TRANSITION_2_to_3] *
-              _energy_difference[OIII][TRANSITION_2_to_3];
-      c52mu = prefactor * level_populations[2] *
-              _transition_probability[OIII][TRANSITION_1_to_2] *
-              _energy_difference[OIII][TRANSITION_1_to_2];
-      c88mu = prefactor * level_populations[1] *
-              _transition_probability[OIII][TRANSITION_0_to_1] *
-              _energy_difference[OIII][TRANSITION_0_to_1];
-
-    } else if (element == NeIII) {
-
-      // Osterbrock & Ferland (2006), table 3.14
-      // ground state: 3P2
-      // excited states: 3P1, 3P0, 1D2, 1S0
-      c3869 = prefactor * level_populations[3] *
-              _transition_probability[NeIII][TRANSITION_0_to_3] *
-              _energy_difference[NeIII][TRANSITION_0_to_3];
-      cneiii15 = prefactor * level_populations[1] *
-                 _transition_probability[NeIII][TRANSITION_0_to_1] *
-                 _energy_difference[NeIII][TRANSITION_0_to_1];
-
-    } else if (element == SII) {
-
-      // Osterbrock & Ferland (2006), table 3.13
-      // ground state: 4S3/2
-      // excited states: 2D3/2, 2D5/2, 2P1/2, 2P3/2
-      // this is the sum of the 4068.6 and 4076.4 angstrom transitions
-      c4072 = prefactor * (level_populations[3] *
-                               _transition_probability[SII][TRANSITION_0_to_3] *
-                               _energy_difference[SII][TRANSITION_0_to_3] +
-                           level_populations[4] *
-                               _transition_probability[SII][TRANSITION_0_to_4] *
-                               _energy_difference[SII][TRANSITION_0_to_4]);
-      // note that Kenny's version wrongly includes the 314.5 um transition...
-      c6717 = prefactor * level_populations[2] *
-              _transition_probability[SII][TRANSITION_0_to_2] *
-              _energy_difference[SII][TRANSITION_0_to_2];
-      // this is the sum of the 6716.5 and 6730.8 angstrom transitions
-      // note that Kenny's version wrongly includes the 314.5 um transition...
-      c6725 = prefactor * (level_populations[1] *
-                               _transition_probability[SII][TRANSITION_0_to_1] *
-                               _energy_difference[SII][TRANSITION_0_to_1] +
-                           level_populations[2] *
-                               _transition_probability[SII][TRANSITION_0_to_2] *
-                               _energy_difference[SII][TRANSITION_0_to_2]);
-
-    } else if (element == SIII) {
-
-      // Osterbrock & Ferland (2006), table 3.12
-      // ground state: 3P0
-      // excited states: 3P1, 3P2, 1D2, 1S0
-      // this is the sum of the 9531.0 and 9068.9 angstrom transitions
-      c9405 = prefactor * level_populations[3] *
-              (_transition_probability[SIII][TRANSITION_1_to_3] *
-                   _energy_difference[SIII][TRANSITION_1_to_3] +
-               _transition_probability[SIII][TRANSITION_2_to_3] *
-                   _energy_difference[SIII][TRANSITION_2_to_3]);
-      c6312 = prefactor * level_populations[4] *
-              _transition_probability[SIII][TRANSITION_3_to_4] *
-              _energy_difference[SIII][TRANSITION_3_to_4];
-      c33mu = prefactor * level_populations[1] *
-              _transition_probability[SIII][TRANSITION_0_to_1] *
-              _energy_difference[SIII][TRANSITION_0_to_1];
-      c19mu = prefactor * level_populations[2] *
-              _transition_probability[SIII][TRANSITION_1_to_2] *
-              _energy_difference[SIII][TRANSITION_1_to_2];
-
-    } else if (element == CII) {
-
-      // Osterbrock & Ferland (2006), table 3.9
-      // ground state: 2P1/2
-      // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
-      // this should be the sum of all 4P to 2P transitions
-      // note that Kenny's code wrongly includes some 4P to 4P transitions...
-      cii2325 =
-          prefactor * (level_populations[2] *
-                           (_transition_probability[CII][TRANSITION_0_to_2] *
-                                _energy_difference[CII][TRANSITION_0_to_2] +
-                            _transition_probability[CII][TRANSITION_1_to_2] *
-                                _energy_difference[CII][TRANSITION_1_to_2]) +
-                       level_populations[3] *
-                           (_transition_probability[CII][TRANSITION_0_to_3] *
-                                _energy_difference[CII][TRANSITION_0_to_3] +
-                            _transition_probability[CII][TRANSITION_1_to_3] *
-                                _energy_difference[CII][TRANSITION_1_to_3]) +
-                       level_populations[4] *
-                           (_transition_probability[CII][TRANSITION_0_to_4] *
-                                _energy_difference[CII][TRANSITION_0_to_4] +
-                            _transition_probability[CII][TRANSITION_1_to_4] *
-                                _energy_difference[CII][TRANSITION_1_to_4]));
-
-    } else if (element == CIII) {
-
-      // Osterbrock & Ferland (2006), table 3.8
-      // ground state: 1S0
-      // excited states: 3P0, 3P1, 3P2, 1P1
-      // this is the sum of all 3P to 1S transitions
-      // note that Kenny's code wrongly includes some 3P to 3P transitions...
-      ciii1908 =
-          prefactor * (level_populations[1] *
-                           _transition_probability[CIII][TRANSITION_0_to_1] *
-                           _energy_difference[CIII][TRANSITION_0_to_1] +
-                       level_populations[2] *
-                           _transition_probability[CIII][TRANSITION_0_to_2] *
-                           _energy_difference[CIII][TRANSITION_0_to_2] +
-                       level_populations[3] *
-                           _transition_probability[CIII][TRANSITION_0_to_3] *
-                           _energy_difference[CIII][TRANSITION_0_to_3]);
-    }
   }
 
   /// 2 level elements
 
   // offset of two level elements in the abundances array
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  for (int i = offset; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const unsigned int index = offset + i;
+    const int index = i - offset;
 
-    line_strengths[index].resize(1);
+    line_strengths[i].resize(1);
 
     const LineCoolingDataTwoLevelElement element =
         static_cast< LineCoolingDataTwoLevelElement >(i);
@@ -1588,33 +1359,10 @@ std::vector< std::vector< double > > LineCoolingData::linestr(
     const double level_population =
         compute_level_population(element, collision_strength_prefactor, Tinv);
 
-    line_strengths[index][0] =
-        abundances[index] * kb * level_population *
-        _two_level_element_data[i][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
-        _two_level_element_data[i][TWOLEVELFIELD_TRANSITION_PROBABILITY];
-
-    if (element == NIII) {
-
-      // Osterbrock & Ferland (2006), table 3.9
-      // ground state: 2P1/2
-      // excited state: 2P3/2
-      cniii57 =
-          abundances[offset + NIII] * kb *
-          _two_level_element_data[NIII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
-          _two_level_element_data[NIII][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
-          level_population;
-
-    } else if (element == NeII) {
-
-      // Osterbrock & Ferland (2006), table 3.11
-      // ground state: 2P3/2
-      // excited state: 2P1/2
-      cneii12 =
-          abundances[offset + NeII] * kb *
-          _two_level_element_data[NeII][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
-          _two_level_element_data[NeII][TWOLEVELFIELD_TRANSITION_PROBABILITY] *
-          level_population;
-    }
+    line_strengths[i][0] =
+        abundances[i] * kb * level_population *
+        _two_level_element_data[index][TWOLEVELFIELD_ENERGY_DIFFERENCE] *
+        _two_level_element_data[index][TWOLEVELFIELD_TRANSITION_PROBABILITY];
   }
 
   return line_strengths;

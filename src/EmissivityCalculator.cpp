@@ -136,68 +136,40 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     const double ne = nhp + nhep;
 
     double abund[12];
-    abund[0] = abundances.get_abundance(ELEMENT_N) *
-               (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
-                ionization_variables.get_ionic_fraction(ION_N_p1) -
-                ionization_variables.get_ionic_fraction(ION_N_p2));
-    abund[1] = abundances.get_abundance(ELEMENT_N) *
-               ionization_variables.get_ionic_fraction(ION_N_n);
-    abund[2] = abundances.get_abundance(ELEMENT_O) *
-               (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
-                ionization_variables.get_ionic_fraction(ION_O_p1));
-    abund[3] = abundances.get_abundance(ELEMENT_O) *
-               ionization_variables.get_ionic_fraction(ION_O_n);
-    abund[4] = abundances.get_abundance(ELEMENT_O) *
-               ionization_variables.get_ionic_fraction(ION_O_p1);
-    abund[5] = abundances.get_abundance(ELEMENT_Ne) *
-               ionization_variables.get_ionic_fraction(ION_Ne_p1);
-    abund[6] = abundances.get_abundance(ELEMENT_S) *
-               (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
-                ionization_variables.get_ionic_fraction(ION_S_p2) -
-                ionization_variables.get_ionic_fraction(ION_S_p3));
-    abund[7] = abundances.get_abundance(ELEMENT_S) *
-               ionization_variables.get_ionic_fraction(ION_S_p1);
-    abund[8] = abundances.get_abundance(ELEMENT_C) *
-               (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
-                ionization_variables.get_ionic_fraction(ION_C_p2));
-    abund[9] = abundances.get_abundance(ELEMENT_C) *
-               ionization_variables.get_ionic_fraction(ION_C_p1);
-    abund[10] = abundances.get_abundance(ELEMENT_N) *
-                ionization_variables.get_ionic_fraction(ION_N_p1);
-    abund[11] = abundances.get_abundance(ELEMENT_Ne) *
-                ionization_variables.get_ionic_fraction(ION_Ne_n);
+    abund[NI] = abundances.get_abundance(ELEMENT_N) *
+                (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
+                 ionization_variables.get_ionic_fraction(ION_N_p1) -
+                 ionization_variables.get_ionic_fraction(ION_N_p2));
+    abund[NII] = abundances.get_abundance(ELEMENT_N) *
+                 ionization_variables.get_ionic_fraction(ION_N_n);
+    abund[OI] = abundances.get_abundance(ELEMENT_O) *
+                (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
+                 ionization_variables.get_ionic_fraction(ION_O_p1));
+    abund[OII] = abundances.get_abundance(ELEMENT_O) *
+                 ionization_variables.get_ionic_fraction(ION_O_n);
+    abund[OIII] = abundances.get_abundance(ELEMENT_O) *
+                  ionization_variables.get_ionic_fraction(ION_O_p1);
+    abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
+                   ionization_variables.get_ionic_fraction(ION_Ne_p1);
+    abund[SII] = abundances.get_abundance(ELEMENT_S) *
+                 (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
+                  ionization_variables.get_ionic_fraction(ION_S_p2) -
+                  ionization_variables.get_ionic_fraction(ION_S_p3));
+    abund[SIII] = abundances.get_abundance(ELEMENT_S) *
+                  ionization_variables.get_ionic_fraction(ION_S_p1);
+    abund[CII] = abundances.get_abundance(ELEMENT_C) *
+                 (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
+                  ionization_variables.get_ionic_fraction(ION_C_p2));
+    abund[CIII] = abundances.get_abundance(ELEMENT_C) *
+                  ionization_variables.get_ionic_fraction(ION_C_p1);
+    abund[NIII] = abundances.get_abundance(ELEMENT_N) *
+                  ionization_variables.get_ionic_fraction(ION_N_p1);
+    abund[NeII] = abundances.get_abundance(ELEMENT_Ne) *
+                  ionization_variables.get_ionic_fraction(ION_Ne_n);
 
-    double c6300 = 0.;
-    double c9405 = 0.;
-    double c6312 = 0.;
-    double c33mu = 0.;
-    double c19mu = 0.;
-    double c3729 = 0.;
-    double c3727 = 0.;
-    double c7330 = 0.;
-    double c4363 = 0.;
-    double c5007 = 0.;
-    double c52mu = 0.;
-    double c5755 = 0.;
-    double c6584 = 0.;
-    double c4072 = 0.;
-    double c6717 = 0.;
-    double c6725 = 0.;
-    double c3869 = 0.;
-    double cniii57 = 0.;
-    double cneii12 = 0.;
-    double cneiii15 = 0.;
-    double cnii122 = 0.;
-    double cii2325 = 0.;
-    double ciii1908 = 0.;
-    double coii7325 = 0.;
-    double csiv10 = 0.;
-    double c88mu = 0.;
-    std::vector< std::vector< double > > line_strengths = lines.linestr(
-        ionization_variables.get_temperature(), ne, abund, c6300, c9405, c6312,
-        c33mu, c19mu, c3729, c3727, c7330, c4363, c5007, c52mu, c88mu, c5755,
-        c6584, c4072, c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
-        cii2325, ciii1908, coii7325, csiv10);
+    std::vector< std::vector< double > > line_strengths =
+        lines.get_line_strengths(ionization_variables.get_temperature(), ne,
+                                 abund);
 
     const double T = ionization_variables.get_temperature();
     const double T4 = T * 1.e-4;
@@ -336,17 +308,13 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // Osterbrock & Ferland (2006), table 3.9
     // ground state: 2P1/2
     // excited state: 2P3/2
-    eval.set_emissivity(
-        EMISSIONLINE_NIII_57mu,
-        ntot * line_strengths[LINECOOLINGDATA_NUMFIVELEVELELEMENTS + NIII][0]);
+    eval.set_emissivity(EMISSIONLINE_NIII_57mu, ntot * line_strengths[NIII][0]);
 
     // NeII
     // Osterbrock & Ferland (2006), table 3.11
     // ground state: 2P3/2
     // excited state: 2P1/2
-    eval.set_emissivity(
-        EMISSIONLINE_NeII_12mu,
-        ntot * line_strengths[LINECOOLINGDATA_NUMFIVELEVELELEMENTS + NeII][0]);
+    eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * line_strengths[NeII][0]);
 
     // not initialized!!!
     eval.set_emissivity(EMISSIONLINE_SIV_10mu, 0.);

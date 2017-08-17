@@ -64,10 +64,12 @@ enum LineCoolingDataFiveLevelElement {
 
 /**
  * @brief Names of supported two level elements.
+ *
+ * Note that we start counting from the number of five level elements!
  */
 enum LineCoolingDataTwoLevelElement {
   /*! @brief Nitrogen III. */
-  NIII = 0,
+  NIII = LINECOOLINGDATA_NUMFIVELEVELELEMENTS,
   /*! @brief Neon II. */
   NeII,
   /*! @brief Counter. Should always be the last element! */
@@ -216,7 +218,8 @@ private:
   double _inverse_statistical_weight[LINECOOLINGDATA_NUMFIVELEVELELEMENTS][5];
 
   /*! @brief Data values for the two level elements. */
-  double _two_level_element_data[LINECOOLINGDATA_NUMTWOLEVELELEMENTS]
+  double _two_level_element_data[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
+                                 LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
                                 [LINECOOLINGDATA_NUMTWOLEVELFIELDS];
 
   /*! @brief Prefactor for collision strengths: \f$\frac{h^2}{\sqrt{k}
@@ -253,14 +256,8 @@ public:
                      const double *abundances) const;
 
   std::vector< std::vector< double > >
-  linestr(double temperature, double electron_density, const double *abundances,
-          double &c6300, double &c9405, double &c6312, double &c33mu,
-          double &c19mu, double &c3729, double &c3727, double &c7330,
-          double &c4363, double &c5007, double &c52mu, double &c88mu,
-          double &c5755, double &c6584, double &c4072, double &c6717,
-          double &c6725, double &c3869, double &cniii57, double &cneii12,
-          double &cneiii15, double &cnii122, double &cii2325, double &ciii1908,
-          double &coii7325, double &csiv10) const;
+  get_line_strengths(double temperature, double electron_density,
+                     const double *abundances) const;
 };
 
 #endif // LINECOOLINGDATA_HPP

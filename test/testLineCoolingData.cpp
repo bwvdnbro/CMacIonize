@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
   {
     std::ifstream file("linestr_testdata.txt");
     std::string line;
-    while (getline(file, line)) {
+    while (std::getline(file, line)) {
       std::istringstream lstream(line);
 
       double T, ne, abundances[12], c6300f, c9405f, c6312f, c33muf, c19muf,
@@ -183,12 +183,78 @@ int main(int argc, char **argv) {
           cneii12f >> cneiii15f >> cnii122f >> cii2325f >> ciii1908f >>
           coii7325f >> csiv10f;
 
-      data.linestr(T,
-                   UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
-                   abundances, c6300, c9405, c6312, c33mu, c19mu, c3729, c3727,
-                   c7330, c4363, c5007, c52mu, c88mu, c5755, c6584, c4072,
-                   c6717, c6725, c3869, cniii57, cneii12, cneiii15, cnii122,
-                   cii2325, ciii1908, coii7325, csiv10);
+      std::vector< std::vector< double > > line_strengths =
+          data.get_line_strengths(
+              T, UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ne, "cm^-3"),
+              abundances);
+
+      // we compute the same variables as in Kenny's code to have a fair
+      // comparison
+
+      // NII
+      c5755 = line_strengths[NII][TRANSITION_3_to_4];
+      c6584 = line_strengths[NII][TRANSITION_2_to_3];
+      cnii122 = line_strengths[NII][TRANSITION_1_to_2];
+
+      // OI
+      c6300 = line_strengths[OI][TRANSITION_0_to_3] +
+              line_strengths[OI][TRANSITION_1_to_3];
+
+      // OII
+      c3729 = line_strengths[OII][TRANSITION_0_to_1];
+      c3727 = line_strengths[OII][TRANSITION_0_to_1] +
+              line_strengths[OII][TRANSITION_0_to_2];
+      coii7325 = line_strengths[OII][TRANSITION_1_to_4] +
+                 line_strengths[OII][TRANSITION_2_to_4] +
+                 line_strengths[OII][TRANSITION_1_to_3] +
+                 line_strengths[OII][TRANSITION_2_to_3];
+
+      // OIII
+      c4363 = line_strengths[OIII][TRANSITION_3_to_4];
+      c5007 = line_strengths[OIII][TRANSITION_2_to_3];
+      c52mu = line_strengths[OIII][TRANSITION_1_to_2];
+      c88mu = line_strengths[OIII][TRANSITION_0_to_1];
+
+      // NeIII
+      c3869 = line_strengths[NeIII][TRANSITION_0_to_3];
+      cneiii15 = line_strengths[NeIII][TRANSITION_0_to_1];
+
+      // SII
+      c4072 = line_strengths[SII][TRANSITION_0_to_3] +
+              line_strengths[SII][TRANSITION_0_to_4];
+      c6717 = line_strengths[SII][TRANSITION_0_to_2];
+      c6725 = line_strengths[SII][TRANSITION_0_to_1] +
+              line_strengths[SII][TRANSITION_0_to_2];
+
+      // SIII
+      c9405 = line_strengths[SIII][TRANSITION_1_to_3] +
+              line_strengths[SIII][TRANSITION_2_to_3];
+      c6312 = line_strengths[SIII][TRANSITION_3_to_4];
+      c33mu = line_strengths[SIII][TRANSITION_0_to_1];
+      c19mu = line_strengths[SIII][TRANSITION_1_to_2];
+
+      // CII
+      cii2325 = line_strengths[CII][TRANSITION_0_to_2] +
+                line_strengths[CII][TRANSITION_1_to_2] +
+                line_strengths[CII][TRANSITION_0_to_3] +
+                line_strengths[CII][TRANSITION_1_to_3] +
+                line_strengths[CII][TRANSITION_0_to_4] +
+                line_strengths[CII][TRANSITION_1_to_4];
+
+      // CIII
+      ciii1908 = line_strengths[CIII][TRANSITION_0_to_1] +
+                 line_strengths[CIII][TRANSITION_0_to_2] +
+                 line_strengths[CIII][TRANSITION_0_to_3];
+
+      // NIII
+      cniii57 = line_strengths[NIII][0];
+
+      // NeII
+      cneii12 = line_strengths[NeII][0];
+
+      // not set!!
+      c7330 = 0.;
+      csiv10 = 0.;
 
       double tolerance = 1.e-14;
 
