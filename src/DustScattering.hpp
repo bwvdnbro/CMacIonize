@@ -45,6 +45,8 @@ class RandomGenerator;
  *    (http://adsabs.harvard.edu/abs/1995ApJ...441..400C)
  *  - Witt, A. N. 1977, ApJS, 35, 1
  *    (http://adsabs.harvard.edu/abs/1977ApJS...35....1W)
+ *  - Yusef-Zadeh, F., Morris, M. & White, R. L. 1984, ApJ, 278, 186
+ *    (http://adsabs.harvard.edu/abs/1984ApJ...278..186Y)
  */
 class DustScattering {
 private:
