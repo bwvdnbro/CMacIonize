@@ -128,7 +128,8 @@ if __name__ == "__main__":
     imax = len(T[dkey])
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[dkey][imin:imax], data[key][imin:imax],
-                        maxfev = 100000)
+                        maxfev = 1000000,
+                        p0 = (1., 0.1, 10., 1., 100., 1., 0., 1.))
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = \

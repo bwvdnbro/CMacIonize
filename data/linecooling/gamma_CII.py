@@ -39,7 +39,7 @@ import pylab as pl
 # for the fitting curve
 from fitting_curve import fitting_curve, print_fit_variables, \
                           initialize_data_values, append_data_values, \
-                          print_data_values, get_code
+                          print_data_values, get_code, jacobian_fitting_curve
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
@@ -109,7 +109,8 @@ if __name__ == "__main__":
     imax = len(T)
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
-                        maxfev = 100000)
+                        maxfev = 100000,
+                        p0 = (1., 10., 100., 1., 100., 10., 1.))
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )

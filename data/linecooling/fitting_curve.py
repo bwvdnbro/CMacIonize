@@ -37,7 +37,7 @@ import numpy as np
 #
 # The fitting curve has the form
 # \f[
-#   AT^B \left( C + \frac{D}{T} + ET + F \log(T) + GT^H \right).
+#   T^A \left( B + \frac{C}{T} + DT + E \log(T) + FT^G \right).
 # \f]
 #
 # @param T Temperature value (in K).
@@ -48,11 +48,15 @@ import numpy as np
 # @param E Parameter \f$E\f$.
 # @param F Parameter \f$F\f$.
 # @param G Parameter \f$G\f$.
-# @param H Parameter \f$H\f$.
 # @return Value of the fitting curve.
 ##
-def fitting_curve(T, A, B, C, D, E, F, G, H):
-  return A * T**B * (C + D / T + E * T + F * np.log(T) + G * T**H)
+def fitting_curve(T, A, B, C, D, E, F, G):
+  return T**A * (B + C / T + D * T + E * np.log(T) + F * T**G)
+
+def jacobian_fitting_curve(T, A, B, C, D, E, F, G):
+  return (np.log(A) * fitting_curve(T, A, B, C, D, E, F, G),
+          T**A, T**(A - 1.), T**(A + 1.), T**A * np.log(T), T**(A + G),
+          np.log(G) * F * T**(A + G))
 
 ##
 # @brief Print the fit variables to the stdout.
@@ -64,10 +68,9 @@ def fitting_curve(T, A, B, C, D, E, F, G, H):
 # @param E Parameter \f$E\f$.
 # @param F Parameter \f$F\f$.
 # @param G Parameter \f$G\f$.
-# @param H Parameter \f$H\f$.
 ##
-def print_fit_variables(A, B, C, D, E, F, G, H):
-  print "A, B, C, D, E, F, G, H:", A, B, C, D, E, F, G, H
+def print_fit_variables(A, B, C, D, E, F, G):
+  print "A, B, C, D, E, F, G:", A, B, C, D, E, F, G
 
 ##
 # @brief Initialize an empty dictionary to store the fitting variables in.
@@ -75,8 +78,7 @@ def print_fit_variables(A, B, C, D, E, F, G, H):
 # @return Empty dictionary to store the fitting variables.
 ##
 def initialize_data_values():
-  return {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": "",
-          "H": ""}
+  return {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": ""}
 
 ##
 # @brief Append the given fit variables to the given dictionary.
@@ -89,9 +91,8 @@ def initialize_data_values():
 # @param E Parameter \f$E\f$.
 # @param F Parameter \f$F\f$.
 # @param G Parameter \f$G\f$.
-# @param H Parameter \f$H\f$.
 ##
-def append_data_values(data_values, A, B, C, D, E, F, G, H):
+def append_data_values(data_values, A, B, C, D, E, F, G):
   data_values["A"] += "{value},".format(value = A)
   data_values["B"] += "{value},".format(value = B)
   data_values["C"] += "{value},".format(value = C)
@@ -99,7 +100,6 @@ def append_data_values(data_values, A, B, C, D, E, F, G, H):
   data_values["E"] += "{value},".format(value = E)
   data_values["F"] += "{value},".format(value = F)
   data_values["G"] += "{value},".format(value = G)
-  data_values["H"] += "{value},".format(value = H)
 
 ##
 # @brief Print the given dictionary to the stdout.
@@ -121,8 +121,6 @@ def print_data_values(data_values):
   print data_values["F"]
   print "values G:"
   print data_values["G"]
-  print "values H:"
-  print data_values["H"]
 
 ##
 # @brief Get the C++ code string for the given element and transition,
@@ -137,10 +135,9 @@ def print_data_values(data_values):
 # @param E Parameter \f$E\f$.
 # @param F Parameter \f$F\f$.
 # @param G Parameter \f$G\f$.
-# @param H Parameter \f$H\f$.
 # @return C++ code string.
 ##
-def get_code(element, transition, A, B, C, D, E, F, G, H):
+def get_code(element, transition, A, B, C, D, E, F, G):
   code  = "_collision_strength[{element}][{transition}][0] = {value};\n".format(
            element = element, transition = transition, value = A)
   code += "_collision_strength[{element}][{transition}][1] = {value};\n".format(
@@ -155,8 +152,4 @@ def get_code(element, transition, A, B, C, D, E, F, G, H):
            element = element, transition = transition, value = F)
   code += "_collision_strength[{element}][{transition}][6] = {value};\n".format(
            element = element, transition = transition, value = G)
-  code += "_collision_strength[{element}][{transition}][7] = {value};\n".format(
-           element = element, transition = transition, value = H)
-  code += "_collision_strength[{element}][{transition}][0] = {value};\n".format(
-           element = element, transition = transition, value = A)
   return code

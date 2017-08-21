@@ -101,11 +101,12 @@ if __name__ == "__main__":
     # variable
     norm = data[key][5]
     # we start by fitting to the full data set
-    imin = 0
+    imin = 2
     imax = len(T)
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
-                        maxfev = 100000)
+                        maxfev = 1000000,
+                        p0 = (1., 1., 100., 1., 1., 1., 1., 1.))
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
