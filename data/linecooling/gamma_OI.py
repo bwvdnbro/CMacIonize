@@ -44,6 +44,10 @@ import scipy.optimize as opt
 import matplotlib
 matplotlib.use("Agg")
 import pylab as pl
+# for the fitting curve
+from fitting_curve import fitting_curve, print_fit_variables, \
+                          initialize_data_values, append_data_values, \
+                          print_data_values, get_code
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
@@ -62,16 +66,6 @@ transitions = {
 
 # index of the 10,000 K element in the collision strength array
 tKindex = {"ZT": 9, "B": 7}
-
-##
-# @brief Fitting curve.
-#
-# @param T Temperature value (in K).
-# @param A Value of the exponent.
-##
-def fitting_curve(T, A):
-  T4 = T * 1.e-4
-  return norm * T4**A
 
 # main function: computes fits to the data and plots the data and fits for
 # visual comparison
@@ -122,8 +116,7 @@ if __name__ == "__main__":
 
   # initialize the strings for code and value output
   code = ""
-  values_om = ""
-  values_ome = ""
+  data_values = initialize_data_values()
   # do the curve fitting
   for key in sorted(data):
     dkey = transitions[key][1]
@@ -152,19 +145,13 @@ if __name__ == "__main__":
         sum( (data[key][imin:imax] - fitting_curve(T[dkey][imin:imax], *A))**2 )
     # output some info
     print "Transition:", key
-    print "Gamma:", norm
-    print "exponent:", A
+    print_fit_variables(*A)
     print "convergence:", xi2
     print "validity: [", T[dkey][imin], ",", T[dkey][imax-1], "]"
     # write the fitting code for this transition
-    code += "_collision_strength[OI][{transition}] = {value};\n".format(
-      transition = transitions[key][0], value = norm)
-    code += \
-      "_collision_strength_exponent[OI][{transition}] = {value};\n".format(
-        transition = transitions[key][0], value = A[0])
+    code += get_code("CIII", transitions[key][0], *A)
     # add the values to the list strings
-    values_om += "{value},".format(value = norm)
-    values_ome += "{value},".format(value = A[0])
+    append_data_values(data_values, *A)
 
     # plot the data and fit for visual comparison
     Trange = np.logspace(3., 5., 100)
@@ -178,7 +165,4 @@ if __name__ == "__main__":
   print code
   # output the values to put in atom4.dat in Kenny's code (to update the
   # reference values for the unit tests)
-  print "values omega:"
-  print values_om
-  print "values omega exponent:"
-  print values_ome
+  print_data_values(data_values)

@@ -36,6 +36,10 @@ import scipy.optimize as opt
 import matplotlib
 matplotlib.use("Agg")
 import pylab as pl
+# for the fitting curve
+from fitting_curve import fitting_curve, print_fit_variables, \
+                          initialize_data_values, append_data_values, \
+                          print_data_values, get_code
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
@@ -52,16 +56,6 @@ transitions = {
   "G3t4": "TRANSITION_3_to_4"
 }
 
-##
-# @brief Fitting curve.
-#
-# @param T Temperature value (in K).
-# @param A Value of the exponent.
-##
-def fitting_curve(T, A):
-  T4 = T * 1.e-4
-  return norm * T4**A
-
 # main function: computes fits to the data and plots the data and fits for
 # visual comparison
 # the fitted curve coefficients are printed to the stdout
@@ -73,7 +67,7 @@ if __name__ == "__main__":
   T = 10.**logT
 
   # 1S0 to 3P?
-  GStP = np.array([1.04, 1.03, 1.03, 9.96e-1, 9.16e-1, 8.08e-1, 6.92e-1, 
+  GStP = np.array([1.04, 1.03, 1.03, 9.96e-1, 9.16e-1, 8.08e-1, 6.92e-1,
                    5.79e-1, 4.73e-1])
   # 3P? to 1P1
   GPtP = np.array([3.7, 3.54, 3.29, 2.93, 2.5, 2.07, 1.68, 1.38, 1.2])
@@ -102,8 +96,7 @@ if __name__ == "__main__":
 
   # initialize the strings for code and value output
   code = ""
-  values_om = ""
-  values_ome = ""
+  data_values = initialize_data_values()
   # do the curve fitting
   for key in sorted(data):
     # not exactly right, but good enough
@@ -127,19 +120,13 @@ if __name__ == "__main__":
       xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
     # output some info
     print "Transition:", key
-    print "Gamma:", norm
-    print "exponent:", A[0]
+    print_fit_variables(*A)
     print "convergence:", xi2
     print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
-    code += "_collision_strength[CIII][{transition}] = {value};\n".format(
-      transition = transitions[key], value = norm)
-    code += \
-      "_collision_strength_exponent[CIII][{transition}] = {value};\n".format(
-        transition = transitions[key], value = A[0])
+    code += get_code("CIII", transitions[key], *A)
     # add the values to the list strings
-    values_om += "{value},".format(value = norm)
-    values_ome += "{value},".format(value = A[0])
+    append_data_values(data_values, *A)
 
     # plot the data and fit for visual comparison
     Trange = np.logspace(3., 5., 100)
@@ -154,7 +141,4 @@ if __name__ == "__main__":
   print code
   # output the values to put in atom4.dat in Kenny's code (to update the
   # reference values for the unit tests)
-  print "values omega:"
-  print values_om
-  print "values omega exponent:"
-  print values_ome
+  print_data_values(data_values)
