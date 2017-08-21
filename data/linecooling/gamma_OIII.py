@@ -104,19 +104,11 @@ if __name__ == "__main__":
     imin = 0
     imax = len(T)
     # fit the curve
-    A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax])
+    A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
+                        maxfev = 100000)
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
-    # if xi2 is too large: shrink the fitting interval and try again
-    while xi2 > 1.e-5:
-      imin += 1
-      imax -= 1
-      # if the interval becomes too small, we bail out
-      if imax - imin < 2:
-        break
-      A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax])
-      xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
     # output some info
     print "Transition:", key
     print_fit_variables(*A)
