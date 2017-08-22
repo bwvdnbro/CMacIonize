@@ -77,27 +77,6 @@ enum LineCoolingDataTwoLevelElement {
 };
 
 /**
- * @brief Names of the two level element data fields.
- */
-enum LineCoolingDataTwoLevelFields {
-  /*! @brief Energy difference between the ground level and first excited level
-   *  (in K). */
-  TWOLEVELFIELD_ENERGY_DIFFERENCE,
-  /*! @brief Transition probability for deexcitation from the first excited
-   *  level to the ground level (in s^-1). */
-  TWOLEVELFIELD_TRANSITION_PROBABILITY,
-  /*! @brief Velocity-averaged collision strength for the transition from the
-   *  ground level to the first excited level (at 10,000 K). */
-  TWOLEVELFIELD_COLLISION_STRENGTH,
-  /*! @brief Statistical weight of the ground level. */
-  TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_0,
-  /*! @brief Statistical weight of the first excited level. */
-  TWOLEVELFIELD_INVERSE_STATISTICAL_WEIGHT_1,
-  /*! @brief Counter. Should always be the last element! */
-  LINECOOLINGDATA_NUMTWOLEVELFIELDS
-};
-
-/**
  * @brief Convenient names for transitions between levels.
  */
 enum LineCoolingDataTransition {
@@ -195,27 +174,46 @@ enum LineCoolingDataTransition {
  */
 class LineCoolingData {
 private:
-  /*! @brief Collision strength fit parameters. */
-  double _collision_strength[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                            [NUMBER_OF_TRANSITIONS][7];
+  /*! @brief Collision strength fit parameters for the five level elements. */
+  double _five_level_collision_strength[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                       [NUMBER_OF_TRANSITIONS][7];
 
   /*! @brief Transition probabilities for deexcitation between different
-   *  levels. */
-  double _transition_probability[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                [NUMBER_OF_TRANSITIONS];
+   *  levels for the five level elements. */
+  double
+      _five_level_transition_probability[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                        [NUMBER_OF_TRANSITIONS];
 
   /*! @brief Energy differences for the transitions between different levels
-   *  (in K). */
-  double _energy_difference[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                           [NUMBER_OF_TRANSITIONS];
+   *  for the five level elements (in K). */
+  double _five_level_energy_difference[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                      [NUMBER_OF_TRANSITIONS];
 
-  /*! @brief Inverse statistical weights for the different levels. */
-  double _inverse_statistical_weight[LINECOOLINGDATA_NUMFIVELEVELELEMENTS][5];
+  /*! @brief Inverse statistical weights for the different levels for the five
+   *  level elements. */
+  double _five_level_inverse_statistical_weight
+      [LINECOOLINGDATA_NUMFIVELEVELELEMENTS][5];
 
-  /*! @brief Data values for the two level elements. */
-  double _two_level_element_data[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
-                                 LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                [LINECOOLINGDATA_NUMTWOLEVELFIELDS];
+  /*! @brief Collision strength fit parameters for the two level elements. */
+  double _two_level_collision_strength[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
+                                       LINECOOLINGDATA_NUMFIVELEVELELEMENTS][7];
+
+  /*! @brief Transition probabilities for deexcitation between different
+   *  levels for the two level elements. */
+  double
+      _two_level_transition_probability[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
+                                        LINECOOLINGDATA_NUMFIVELEVELELEMENTS];
+
+  /*! @brief Energy differences for the transitions between different levels
+   *  for the two level elements (in K). */
+  double _two_level_energy_difference[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
+                                      LINECOOLINGDATA_NUMFIVELEVELELEMENTS];
+
+  /*! @brief Inverse statistical weights for the different levels for the two
+   *  level elements. */
+  double _two_level_inverse_statistical_weight
+      [LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
+       LINECOOLINGDATA_NUMFIVELEVELELEMENTS][2];
 
   /*! @brief Prefactor for collision strengths: \f$\frac{h^2}{\sqrt{k}
    *  \left(2\pi{}m_e\right)^\frac{3}{2}\f$ (in K^0.5 m^3 s^-1). */
@@ -227,8 +225,8 @@ private:
                                  double level_populations[5]) const;
 
   double compute_level_population(LineCoolingDataTwoLevelElement element,
-                                  double collision_strength_prefactor,
-                                  double Tinv) const;
+                                  double collision_strength_prefactor, double T,
+                                  double Tinv, double logT) const;
 
 public:
   LineCoolingData();
