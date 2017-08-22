@@ -101,16 +101,13 @@ if __name__ == "__main__":
   data_values = initialize_data_values()
   # do the curve fitting
   for key in sorted(data):
-    # we force the curve to go through the value at 10,000 K using a global
-    # variable
-    norm = data[key][4]
-    # we start by fitting to the full data set
-    imin = 0
-    imax = len(T)
+    imin = 1
+    imax = 9
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
-                        maxfev = 100000,
-                        p0 = (1., 10., 100., 1., 100., 10., 1.))
+                        maxfev = 1000000,
+                        p0 = (1, 100., 1., 1., 1., 0., 1.),
+                        jac = jacobian_fitting_curve)
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )

@@ -44,7 +44,7 @@ import pylab as pl
 # for the fitting curve
 from fitting_curve import fitting_curve, print_fit_variables, \
                           initialize_data_values, append_data_values, \
-                          print_data_values, get_code
+                          print_data_values, get_code, jacobian_fitting_curve
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
@@ -139,16 +139,13 @@ if __name__ == "__main__":
   data_values = initialize_data_values()
   # do the curve fitting
   for key in sorted(data):
-    # we force the curve to go through the value at 10,000 K using a global
-    # variable
-    norm = data[key][11]
-    # we start by fitting to the full data set
     imin = 7
     imax = 24
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
                         maxfev = 1000000,
-                        p0 = (1., 1., 1., 1., 10., 1., 1., 1.))
+                        p0 = (1., 1., 1., 1., 10., 1., 1.),
+                        jac = jacobian_fitting_curve)
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
@@ -158,7 +155,7 @@ if __name__ == "__main__":
     print "convergence:", xi2
     print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
-    code += get_code("CIII", transitions[key], *A)
+    code += get_code("NI", transitions[key], *A)
     # add the values to the list strings
     append_data_values(data_values, *A)
 

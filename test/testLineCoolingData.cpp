@@ -79,11 +79,6 @@ int main(int argc, char **argv) {
       const LineCoolingDataTransition transition =
           static_cast< LineCoolingDataTransition >(j);
       cmac_status("Testing element %u, transition %u", i, j);
-      assert_condition(cs_fortran[10 * i + j] ==
-                       data.get_collision_strength(element, transition));
-      assert_condition(
-          cse_fortran[10 * i + j] ==
-          data.get_collision_strength_exponent(element, transition));
       assert_condition(ea_fortran[10 * i + j] ==
                        data.get_transition_probability(element, transition));
       assert_values_equal_rel(en_fortran[10 * i + j],

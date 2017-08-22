@@ -195,14 +195,9 @@ enum LineCoolingDataTransition {
  */
 class LineCoolingData {
 private:
-  /*! @brief Velocity-averaged collision strengths at 10,000 K. */
+  /*! @brief Collision strength fit parameters. */
   double _collision_strength[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                            [NUMBER_OF_TRANSITIONS];
-
-  /*! @brief Exponents for the temperature variation of the collision
-   *  strengths. */
-  double _collision_strength_exponent[LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                     [NUMBER_OF_TRANSITIONS];
+                            [NUMBER_OF_TRANSITIONS][7];
 
   /*! @brief Transition probabilities for deexcitation between different
    *  levels. */
@@ -227,8 +222,8 @@ private:
   double _collision_strength_prefactor;
 
   void compute_level_populations(LineCoolingDataFiveLevelElement element,
-                                 double collision_strength_prefactor,
-                                 double Tinv, double T4,
+                                 double collision_strength_prefactor, double T,
+                                 double Tinv, double logT,
                                  double level_populations[5]) const;
 
   double compute_level_population(LineCoolingDataTwoLevelElement element,
@@ -238,11 +233,6 @@ private:
 public:
   LineCoolingData();
 
-  double get_collision_strength(LineCoolingDataFiveLevelElement element,
-                                LineCoolingDataTransition transition) const;
-  double
-  get_collision_strength_exponent(LineCoolingDataFiveLevelElement element,
-                                  LineCoolingDataTransition transition) const;
   double get_transition_probability(LineCoolingDataFiveLevelElement element,
                                     LineCoolingDataTransition transition) const;
   double get_energy_difference(LineCoolingDataFiveLevelElement element,

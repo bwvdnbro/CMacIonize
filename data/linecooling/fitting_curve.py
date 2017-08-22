@@ -53,10 +53,29 @@ import numpy as np
 def fitting_curve(T, A, B, C, D, E, F, G):
   return T**A * (B + C / T + D * T + E * np.log(T) + F * T**G)
 
+##
+# @brief Jacobian of the fitting curve.
+#
+# @param T Temperature value (in K).
+# @param A Parameter \f$A\f$.
+# @param B Parameter \f$B\f$.
+# @param C Parameter \f$C\f$.
+# @param D Parameter \f$D\f$.
+# @param E Parameter \f$E\f$.
+# @param F Parameter \f$F\f$.
+# @param G Parameter \f$G\f$.
+# @return Value of the Jacobian of the fitting curve.
+##
 def jacobian_fitting_curve(T, A, B, C, D, E, F, G):
-  return (np.log(A) * fitting_curve(T, A, B, C, D, E, F, G),
-          T**A, T**(A - 1.), T**(A + 1.), T**A * np.log(T), T**(A + G),
-          np.log(G) * F * T**(A + G))
+  J = np.zeros((len(T), 7))
+  J[:, 0] = np.log(T) * fitting_curve(T, A, B, C, D, E, F, G)
+  J[:, 1] = T**A
+  J[:, 2] = T**(A - 1.)
+  J[:, 3] = T**(A + 1.)
+  J[:, 4] = T**A * np.log(T)
+  J[:, 5] = T**(A + G)
+  J[:, 6] = np.log(T) * F * T**(A + G)
+  return J
 
 ##
 # @brief Print the fit variables to the stdout.
