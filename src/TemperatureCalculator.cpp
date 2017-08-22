@@ -170,16 +170,20 @@ TemperatureCalculator::TemperatureCalculator(
  * @param crfac Normalization factor for cosmic ray heating.
  * @param crscale Scale height of the cosmic ray heating term (0 for a constant
  * heating term; in m).
- * @param data LineCoolingData used to calculate line cooling.
- * @param rates RecombinationRates used to calculate ionic fractions.
- * @param ctr ChargeTransferRates used to calculate ionic fractions.
+ * @param line_cooling_data LineCoolingData used to calculate line cooling.
+ * @param recombination_rates RecombinationRates used to calculate ionic
+ * fractions.
+ * @param charge_transfer_rates ChargeTransferRates used to calculate ionic
+ * fractions.
  */
 void TemperatureCalculator::ioneng(
     double &h0, double &he0, double &gain, double &loss, double T,
     DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
     const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
-    double pahfac, double crfac, double crscale, const LineCoolingData &data,
-    const RecombinationRates &rates, const ChargeTransferRates &ctr) {
+    double pahfac, double crfac, double crscale,
+    const LineCoolingData &line_cooling_data,
+    const RecombinationRates &recombination_rates,
+    const ChargeTransferRates &charge_transfer_rates) {
 
   /// step 0: initialize some variables
 
@@ -189,36 +193,13 @@ void TemperatureCalculator::ioneng(
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
   // get the recombination rates of all elements at the selected temperature
-  const double alphaH = rates.get_recombination_rate(ION_H_n, T);
-  const double alphaHe = rates.get_recombination_rate(ION_He_n, T);
-  const double alphaC[2] = {rates.get_recombination_rate(ION_C_p1, T),
-                            rates.get_recombination_rate(ION_C_p2, T)};
-  const double alphaN[3] = {rates.get_recombination_rate(ION_N_n, T),
-                            rates.get_recombination_rate(ION_N_p1, T),
-                            rates.get_recombination_rate(ION_N_p2, T)};
-  const double alphaO[2] = {rates.get_recombination_rate(ION_O_n, T),
-                            rates.get_recombination_rate(ION_O_p1, T)};
-  const double alphaNe[2] = {rates.get_recombination_rate(ION_Ne_n, T),
-                             rates.get_recombination_rate(ION_Ne_p1, T)};
-  const double alphaS[3] = {rates.get_recombination_rate(ION_S_p1, T),
-                            rates.get_recombination_rate(ION_S_p2, T),
-                            rates.get_recombination_rate(ION_S_p3, T)};
+  const double alphaH = recombination_rates.get_recombination_rate(ION_H_n, T);
+  const double alphaHe =
+      recombination_rates.get_recombination_rate(ION_He_n, T);
 
   // mean intensity integrals
   const double jH = j[ION_H_n];
   const double jHe = j[ION_He_n];
-  const double jCp1 = j[ION_C_p1];
-  const double jCp2 = j[ION_C_p2];
-  const double jNn = j[ION_N_n];
-  const double jNp1 = j[ION_N_p1];
-  const double jNp2 = j[ION_N_p2];
-  const double jOn = j[ION_O_n];
-  const double jOp1 = j[ION_O_p1];
-  const double jNen = j[ION_Ne_n];
-  const double jNep1 = j[ION_Ne_p1];
-  const double jSp1 = j[ION_S_p1];
-  const double jSp2 = j[ION_S_p2];
-  const double jSp3 = j[ION_S_p3];
 
   // heating integrals
   const double hH = h[HEATINGTERM_H];
@@ -306,108 +287,14 @@ void TemperatureCalculator::ioneng(
 
   // we first compute the ionic fractions of the different ions of the coolants
   // they are then used as input for the line cooling routine
-  // the procedure is always the same: the total density for an element X with
-  // ionization states X0, X+, X2+... is
-  //   n(X) = n(X0) + n(X+) + n(X2+) + ...
-  // the ionization balance for each ion is given by
-  //   n(X+)rec(X+) = n(X0)ion(X+)
-  // or
-  //   n(X) = n(X0)ion(X+)/rec(X+) = n(X0)C(X+)
-  // recombination from X2+ to X0 happens in two stages, so the recombination
-  // rate from X2+ to X0 is the product of the recombination rates from X2+ to
-  // X+ and from X+ to X0
-  // We want the ionic fractions n(X+)/n(X), so
-  //  n(X+)/n(X) = n(X0)C(X+) / (n(X0) + n(X+) + n(X2+) + ...)
-  //             = n(X0)C(X+) / (n(X0) + n(X0)C(X+) + n(X+)C(X2+) + ...)
-  //             = n(X0)C(X+) / (n(X0) + n(X0)C(X+) + n(X0)C(X+)C(X2+) + ...)
-  //             = C(X+) / (1 + C(X+) + C(X+)C(X2+) + ...)
 
   // we precompute the number density of neutral hydrogen and neutral helium
   const double nh0 = n * h0;
   const double nhe0 = n * he0 * AHe;
 
-  // carbon
-  // the charge transfer recombination rates for C+ are negligble
-  const double C21 = jCp1 / (ne * alphaC[0]);
-  const double C32 =
-      jCp2 /
-      (ne * alphaC[1] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_C_p2, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_C_p2, T4));
-  const double C31 = C32 * C21;
-  const double sumC_inv = 1. / (1. + C21 + C31);
-  ionization_variables.set_ionic_fraction(ION_C_p1, C21 * sumC_inv);
-  ionization_variables.set_ionic_fraction(ION_C_p2, C31 * sumC_inv);
-
-  // nitrogen
-  const double N21 =
-      (jNn + nhp * ctr.get_charge_transfer_ionization_rate_H(ION_N_n, T4)) /
-      (ne * alphaN[0] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_N_n, T4));
-  const double N32 =
-      jNp1 /
-      (ne * alphaN[1] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_N_p1, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_N_p1, T4));
-  const double N43 =
-      jNp2 /
-      (ne * alphaN[2] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_N_p2, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_N_p2, T4));
-  const double N31 = N32 * N21;
-  const double N41 = N43 * N31;
-  const double sumN_inv = 1. / (1. + N21 + N31 + N41);
-  ionization_variables.set_ionic_fraction(ION_N_n, N21 * sumN_inv);
-  ionization_variables.set_ionic_fraction(ION_N_p1, N31 * sumN_inv);
-  ionization_variables.set_ionic_fraction(ION_N_p2, N41 * sumN_inv);
-
-  // Oxygen
-  const double O21 =
-      (jOn + nhp * ctr.get_charge_transfer_ionization_rate_H(ION_O_n, T4)) /
-      (ne * alphaO[0] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_O_n, T4));
-  const double O32 =
-      jOp1 /
-      (ne * alphaO[1] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_O_p1, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_O_p1, T4));
-  const double O31 = O32 * O21;
-  const double sumO_inv = 1. / (1. + O21 + O31);
-  ionization_variables.set_ionic_fraction(ION_O_n, O21 * sumO_inv);
-  ionization_variables.set_ionic_fraction(ION_O_p1, O31 * sumO_inv);
-
-  // Neon
-  const double Ne21 = jNen / (ne * alphaNe[0]);
-  const double Ne32 =
-      jNep1 /
-      (ne * alphaNe[1] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_Ne_p1, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_Ne_p1, T4));
-  const double Ne31 = Ne32 * Ne21;
-  const double sumNe_inv = 1. / (1. + Ne21 + Ne31);
-  ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 * sumNe_inv);
-  ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 * sumNe_inv);
-
-  // Sulphur
-  const double S21 =
-      jSp1 / (ne * alphaS[0] +
-              nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_S_p1, T4));
-  const double S32 =
-      jSp2 /
-      (ne * alphaS[1] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_S_p2, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_S_p2, T4));
-  const double S43 =
-      jSp3 /
-      (ne * alphaS[2] +
-       nh0 * ctr.get_charge_transfer_recombination_rate_H(ION_S_p3, T4) +
-       nhe0 * ctr.get_charge_transfer_recombination_rate_He(ION_S_p3, T4));
-  const double S31 = S32 * S21;
-  const double S41 = S43 * S31;
-  const double sumS_inv = 1. / (1. + S21 + S31 + S41);
-  ionization_variables.set_ionic_fraction(ION_S_p1, S21 * sumS_inv);
-  ionization_variables.set_ionic_fraction(ION_S_p2, S31 * sumS_inv);
-  ionization_variables.set_ionic_fraction(ION_S_p3, S41 * sumS_inv);
+  IonizationStateCalculator::compute_ionization_states_metals(
+      &j[2], ne, T, T4, nh0, nhe0, nhp, recombination_rates,
+      charge_transfer_rates, ionization_variables);
 
   /// step 4: cooling
   // the cooling consists of three term:
@@ -449,7 +336,7 @@ void TemperatureCalculator::ioneng(
   abund[11] = abundances.get_abundance(ELEMENT_Ne) *
               ionization_variables.get_ionic_fraction(ION_Ne_n);
 
-  loss = data.get_cooling(T, ne, abund) * n;
+  loss = line_cooling_data.get_cooling(T, ne, abund) * n;
 
   // free-free cooling (bremsstrahlung)
 

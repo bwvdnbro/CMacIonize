@@ -118,9 +118,10 @@ public:
                      const double j[NUMBER_OF_IONNAMES],
                      const Abundances &abundances,
                      const double h[NUMBER_OF_HEATINGTERMS], double pahfac,
-                     double crfac, double crscale, const LineCoolingData &data,
-                     const RecombinationRates &rates,
-                     const ChargeTransferRates &ctr);
+                     double crfac, double crscale,
+                     const LineCoolingData &line_cooling_data,
+                     const RecombinationRates &recombination_rates,
+                     const ChargeTransferRates &charge_transfer_rates);
 
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;

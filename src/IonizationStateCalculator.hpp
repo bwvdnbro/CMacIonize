@@ -65,6 +65,13 @@ public:
   void calculate_ionization_state(double jfac,
                                   DensityGrid::iterator &cell) const;
 
+  static void compute_ionization_states_metals(
+      const double j_metals[NUMBER_OF_IONNAMES - 2], const double ne,
+      const double T, const double T4, const double nh0, const double nhe0,
+      const double nhp, const RecombinationRates &recombination_rates,
+      const ChargeTransferRates &charge_transfer_rates,
+      IonizationVariables &ionization_variables);
+
   static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
                       double nH, double AHe, double T, double &h0, double &he0);
 

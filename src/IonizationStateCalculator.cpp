@@ -99,132 +99,25 @@ void IonizationStateCalculator::calculate_ionization_state(
     const double T4 = T * 1.e-4;
     const double nhp = ntot * (1. - h0);
 
-    // carbon
-    const double C21 = jfac *
-                       ionization_variables.get_mean_intensity(ION_C_p1) / ne /
-                       _recombination_rates.get_recombination_rate(ION_C_p1, T);
-    const double C32 =
-        jfac * ionization_variables.get_mean_intensity(ION_C_p2) /
-        (ne * _recombination_rates.get_recombination_rate(ION_C_p2, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_C_p2, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_C_p2, T4));
-    const double C31 = C32 * C21;
-    const double sumC = C21 + C31;
-    ionization_variables.set_ionic_fraction(ION_C_p1, C21 / (1. + sumC));
-    ionization_variables.set_ionic_fraction(ION_C_p2, C31 / (1. + sumC));
+    const double j_metals[12] = {
+        ionization_variables.get_mean_intensity(ION_C_p1),
+        ionization_variables.get_mean_intensity(ION_C_p2),
+        ionization_variables.get_mean_intensity(ION_N_n),
+        ionization_variables.get_mean_intensity(ION_N_p1),
+        ionization_variables.get_mean_intensity(ION_N_p2),
+        ionization_variables.get_mean_intensity(ION_O_n),
+        ionization_variables.get_mean_intensity(ION_O_p1),
+        ionization_variables.get_mean_intensity(ION_Ne_n),
+        ionization_variables.get_mean_intensity(ION_Ne_p1),
+        ionization_variables.get_mean_intensity(ION_S_p1),
+        ionization_variables.get_mean_intensity(ION_S_p2),
+        ionization_variables.get_mean_intensity(ION_S_p3)};
 
-    // nitrogen
-    const double N21 =
-        (jfac * ionization_variables.get_mean_intensity(ION_N_n) +
-         nhp *
-             _charge_transfer_rates.get_charge_transfer_ionization_rate_H(
-                 ION_N_n, T4)) /
-        (ne * _recombination_rates.get_recombination_rate(ION_N_n, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_N_n, T4));
-    const double N32 =
-        jfac * ionization_variables.get_mean_intensity(ION_N_p1) /
-        (ne * _recombination_rates.get_recombination_rate(ION_N_p1, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_N_p1, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_N_p1, T4));
-    const double N43 =
-        jfac * ionization_variables.get_mean_intensity(ION_N_p2) /
-        (ne * _recombination_rates.get_recombination_rate(ION_N_p2, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_N_p2, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_N_p2, T4));
-    const double N31 = N32 * N21;
-    const double N41 = N43 * N31;
-    const double sumN = N21 + N31 + N41;
-    ionization_variables.set_ionic_fraction(ION_N_n, N21 / (1. + sumN));
-    ionization_variables.set_ionic_fraction(ION_N_p1, N31 / (1. + sumN));
-    ionization_variables.set_ionic_fraction(ION_N_p2, N41 / (1. + sumN));
-
-    // Sulphur
-    const double S21 =
-        jfac * ionization_variables.get_mean_intensity(ION_S_p1) /
-        (ne * _recombination_rates.get_recombination_rate(ION_S_p1, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_S_p1, T4));
-    const double S32 =
-        jfac * ionization_variables.get_mean_intensity(ION_S_p2) /
-        (ne * _recombination_rates.get_recombination_rate(ION_S_p2, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_S_p2, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_S_p2, T4));
-    const double S43 =
-        jfac * ionization_variables.get_mean_intensity(ION_S_p3) /
-        (ne * _recombination_rates.get_recombination_rate(ION_S_p3, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_S_p3, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_S_p3, T4));
-    const double S31 = S32 * S21;
-    const double S41 = S43 * S31;
-    const double sumS = S21 + S31 + S41;
-    ionization_variables.set_ionic_fraction(ION_S_p1, S21 / (1. + sumS));
-    ionization_variables.set_ionic_fraction(ION_S_p2, S31 / (1. + sumS));
-    ionization_variables.set_ionic_fraction(ION_S_p3, S41 / (1. + sumS));
-
-    // Neon
-    const double Ne21 =
-        jfac * ionization_variables.get_mean_intensity(ION_Ne_n) /
-        (ne * _recombination_rates.get_recombination_rate(ION_Ne_n, T));
-    const double Ne32 =
-        jfac * ionization_variables.get_mean_intensity(ION_Ne_p1) /
-        (ne * _recombination_rates.get_recombination_rate(ION_Ne_p1, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_Ne_p1, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_Ne_p1, T4));
-    const double Ne31 = Ne32 * Ne21;
-    const double sumNe = Ne21 + Ne31;
-    ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 / (1. + sumNe));
-    ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 / (1. + sumNe));
-
-    // Oxygen
-    const double O21 =
-        (jfac * ionization_variables.get_mean_intensity(ION_O_n) +
-         nhp *
-             _charge_transfer_rates.get_charge_transfer_ionization_rate_H(
-                 ION_O_n, T4)) /
-        (ne * _recombination_rates.get_recombination_rate(ION_O_n, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_O_n, T4));
-    const double O32 =
-        jfac * ionization_variables.get_mean_intensity(ION_O_p1) /
-        (ne * _recombination_rates.get_recombination_rate(ION_O_p1, T) +
-         ntot * h0 *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-                 ION_O_p1, T4) +
-         ntot * he0 * _abundances.get_abundance(ELEMENT_He) *
-             _charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-                 ION_O_p1, T4));
-    const double O31 = O32 * O21;
-    const double sumO = O21 + O31;
-    ionization_variables.set_ionic_fraction(ION_O_n, O21 / (1. + sumO));
-    ionization_variables.set_ionic_fraction(ION_O_p1, O31 / (1. + sumO));
+    const double nh0 = ntot * h0;
+    const double nhe0 = ntot * he0 * _abundances.get_abundance(ELEMENT_He);
+    compute_ionization_states_metals(
+        j_metals, ne, T, T4, nh0, nhe0, nhp, _recombination_rates,
+        _charge_transfer_rates, ionization_variables);
 
   } else {
     // either we have a vacuum cell, or the mean intensity integral for hydrogen
@@ -264,6 +157,218 @@ void IonizationStateCalculator::calculate_ionization_state(
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
     }
   }
+}
+
+/**
+ * @brief Compute the ionization balance for the metals at the given temperature
+ * (and using the given ionizing luminosity integrals).
+ *
+ *
+ * the procedure is always the same: the total density for an element X with
+ * ionization states \f$X^0, X^+, X^{2+},...\f$ is
+ * \f[
+ *   n(X) = n(X^0) + n(X^+) + n(X^{2+}) + ...,
+ * \f]
+ * while the ionization balance for each ion is given by
+ * \f[
+ *   n(X^+)R(X^+) = n(X^0)I(X^+),
+ * \f]
+ * where \f$R(X^+)\f$ is the recombination rate from level \f$X^+\f$ to level
+ * \f$X^0\f$, and \f$I(X^+)\f$ is the ionization rate from level \f$X^0\f$ to
+ * level \f$X^+\f$.
+ *
+ * This can be rewritten as
+ * \f[
+ *   n(X^+) = \frac{n(X^0)I(X^+)}{R(X^+)} = n(X^0)C(X^+).
+ * \f]
+ * Recombination from \f$X^{2+}\f$ to \f$X^0\f$ happens in two stages, so the
+ * recombination rate from \f$X^{2+}\f$ to \f$X^0\f$ is the product of the
+ * recombination rates from \f$X^{2+}\f$ to \f$X^+\f$ and from \f$X^+\f$ to
+ * \f$X^0\f$.
+ *
+ * We want the ionic fractions \f$\frac{n(X^+)}{n(X)}\f$, so
+ * \f{eqnarray*}{
+ *  \frac{n(X^+)}{n(X)} &=& \frac{n(X^0)C(X^+)}{n(X^0) + n(X^+) + n(X^{2+}) +
+ *                          ...} \\
+ *                      &=& \frac{n(X^0)C(X^+)}{n(X^0) + n(X^0)C(X^+) +
+ *                          n(X^+)C(X^{2+}) + ...} \\
+ *                      &=& \frac{n(X^0)C(X^+)}{n(X^0) + n(X^0)C(X^+) +
+ *                          n(X^0)C(X^+)C(X^{2+}) + ...} \\
+ *                      &=& \frac{C(X^+)}{1 + C(X^+) + C(X^+)C(X^{2+}) + ...}.
+ * \f}
+ *
+ * @param j_metals Ionizing luminosity integrals for the metal ions (in s^-1).
+ * @param ne Number density of electrons (in m^-3).
+ * @param T Temperature (in K).
+ * @param T4 Temperature (in 10^4 K).
+ * @param nh0 Number density of neutral hydrogen (in m^-3).
+ * @param nhe0 Number density of neutral helium (in m^-3).
+ * @param nhp Number density of ionized hydrogen (in m^-3).
+ * @param recombination_rates RecombinationRates.
+ * @param charge_transfer_rates ChargeTransferRates.
+ * @param ionization_variables IonizationStateVariables to operate on.
+ */
+void IonizationStateCalculator::compute_ionization_states_metals(
+    const double j_metals[NUMBER_OF_IONNAMES - 2], const double ne,
+    const double T, const double T4, const double nh0, const double nhe0,
+    const double nhp, const RecombinationRates &recombination_rates,
+    const ChargeTransferRates &charge_transfer_rates,
+    IonizationVariables &ionization_variables) {
+
+  const double jCp1 = j_metals[0];
+  const double jCp2 = j_metals[1];
+  const double jNn = j_metals[2];
+  const double jNp1 = j_metals[3];
+  const double jNp2 = j_metals[4];
+  const double jOn = j_metals[5];
+  const double jOp1 = j_metals[6];
+  const double jNen = j_metals[7];
+  const double jNep1 = j_metals[8];
+  const double jSp1 = j_metals[9];
+  const double jSp2 = j_metals[10];
+  const double jSp3 = j_metals[11];
+
+  const double alphaC[2] = {
+      recombination_rates.get_recombination_rate(ION_C_p1, T),
+      recombination_rates.get_recombination_rate(ION_C_p2, T)};
+  const double alphaN[3] = {
+      recombination_rates.get_recombination_rate(ION_N_n, T),
+      recombination_rates.get_recombination_rate(ION_N_p1, T),
+      recombination_rates.get_recombination_rate(ION_N_p2, T)};
+  const double alphaO[2] = {
+      recombination_rates.get_recombination_rate(ION_O_n, T),
+      recombination_rates.get_recombination_rate(ION_O_p1, T)};
+  const double alphaNe[2] = {
+      recombination_rates.get_recombination_rate(ION_Ne_n, T),
+      recombination_rates.get_recombination_rate(ION_Ne_p1, T)};
+  const double alphaS[3] = {
+      recombination_rates.get_recombination_rate(ION_S_p1, T),
+      recombination_rates.get_recombination_rate(ION_S_p2, T),
+      recombination_rates.get_recombination_rate(ION_S_p3, T)};
+
+  // carbon
+  // the charge transfer recombination rates for C+ are negligble
+  const double C21 = jCp1 / (ne * alphaC[0]);
+  const double C32 =
+      jCp2 /
+      (ne * alphaC[1] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_C_p2, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_C_p2, T4));
+  const double C31 = C32 * C21;
+  const double sumC_inv = 1. / (1. + C21 + C31);
+  ionization_variables.set_ionic_fraction(ION_C_p1, C21 * sumC_inv);
+  ionization_variables.set_ionic_fraction(ION_C_p2, C31 * sumC_inv);
+
+  // nitrogen
+  const double N21 =
+      (jNn +
+       nhp *
+           charge_transfer_rates.get_charge_transfer_ionization_rate_H(ION_N_n,
+                                                                       T4)) /
+      (ne * alphaN[0] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_N_n, T4));
+  const double N32 =
+      jNp1 /
+      (ne * alphaN[1] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_N_p1, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_N_p1, T4));
+  const double N43 =
+      jNp2 /
+      (ne * alphaN[2] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_N_p2, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_N_p2, T4));
+  const double N31 = N32 * N21;
+  const double N41 = N43 * N31;
+  const double sumN_inv = 1. / (1. + N21 + N31 + N41);
+  ionization_variables.set_ionic_fraction(ION_N_n, N21 * sumN_inv);
+  ionization_variables.set_ionic_fraction(ION_N_p1, N31 * sumN_inv);
+  ionization_variables.set_ionic_fraction(ION_N_p2, N41 * sumN_inv);
+
+  // Oxygen
+  const double O21 =
+      (jOn +
+       nhp *
+           charge_transfer_rates.get_charge_transfer_ionization_rate_H(ION_O_n,
+                                                                       T4)) /
+      (ne * alphaO[0] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_O_n, T4));
+  const double O32 =
+      jOp1 /
+      (ne * alphaO[1] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_O_p1, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_O_p1, T4));
+  const double O31 = O32 * O21;
+  const double sumO_inv = 1. / (1. + O21 + O31);
+  ionization_variables.set_ionic_fraction(ION_O_n, O21 * sumO_inv);
+  ionization_variables.set_ionic_fraction(ION_O_p1, O31 * sumO_inv);
+
+  // Neon
+  const double Ne21 = jNen / (ne * alphaNe[0]);
+  const double Ne32 =
+      jNep1 /
+      (ne * alphaNe[1] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_Ne_p1, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_Ne_p1, T4));
+  const double Ne31 = Ne32 * Ne21;
+  const double sumNe_inv = 1. / (1. + Ne21 + Ne31);
+  ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 * sumNe_inv);
+  ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 * sumNe_inv);
+
+  // Sulphur
+  const double S21 =
+      jSp1 /
+      (ne * alphaS[0] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_S_p1, T4));
+  const double S32 =
+      jSp2 /
+      (ne * alphaS[1] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_S_p2, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_S_p2, T4));
+  const double S43 =
+      jSp3 /
+      (ne * alphaS[2] +
+       nh0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+               ION_S_p3, T4) +
+       nhe0 *
+           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+               ION_S_p3, T4));
+  const double S31 = S32 * S21;
+  const double S41 = S43 * S31;
+  const double sumS_inv = 1. / (1. + S21 + S31 + S41);
+  ionization_variables.set_ionic_fraction(ION_S_p1, S21 * sumS_inv);
+  ionization_variables.set_ionic_fraction(ION_S_p2, S31 * sumS_inv);
+  ionization_variables.set_ionic_fraction(ION_S_p3, S41 * sumS_inv);
 }
 
 /**
