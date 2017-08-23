@@ -41,7 +41,7 @@
 template < typename _JobMarket_, typename _Job_ > class Worker {
 private:
   /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
-  int _thread_id;
+  const int _thread_id;
 
 #ifdef HAVE_OUTPUT_CYCLES
   /**

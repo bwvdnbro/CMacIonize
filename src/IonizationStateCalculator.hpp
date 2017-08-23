@@ -72,10 +72,12 @@ public:
       const ChargeTransferRates &charge_transfer_rates,
       IonizationVariables &ionization_variables);
 
-  static void find_H0(double alphaH, double alphaHe, double jH, double jHe,
-                      double nH, double AHe, double T, double &h0, double &he0);
+  static void compute_ionization_states_hydrogen_helium(
+      double alphaH, double alphaHe, double jH, double jHe, double nH,
+      double AHe, double T, double &h0, double &he0);
 
-  static double find_H0_simple(double alphaH, double jH, double nH);
+  static double compute_ionization_state_hydrogen(double alphaH, double jH,
+                                                  double nH);
 
   /**
    * @brief Functor used to calculate the ionization state of a single cell.

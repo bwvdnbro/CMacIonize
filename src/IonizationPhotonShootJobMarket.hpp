@@ -45,14 +45,14 @@ private:
   IonizationPhotonShootJob *_jobs[MAX_NUM_THREADS];
 
   /*! @brief Number of threads used in the calculation. */
-  int _worksize;
+  const int _worksize;
 
   /*! @brief Total number of photons to propagate through the grid. */
   unsigned int _numphoton;
 
   /*! @brief Number of photons to shoot during a single
    *  IonizationPhotonShootJob. */
-  unsigned int _jobsize;
+  const unsigned int _jobsize;
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
@@ -76,6 +76,7 @@ public:
                                         unsigned int numphoton,
                                         unsigned int jobsize, int worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
+
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
@@ -133,6 +134,7 @@ public:
    * @return IonizationPhotonShootJob.
    */
   inline IonizationPhotonShootJob *get_job(int thread_id) {
+
     unsigned int jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {

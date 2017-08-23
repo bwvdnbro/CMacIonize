@@ -62,7 +62,8 @@ public:
   inline static DensityGrid *generate(const SimulationBox &simulation_box,
                                       ParameterFile &params, bool hydro = false,
                                       Log *log = nullptr) {
-    std::string type =
+
+    const std::string type =
         params.get_value< std::string >("DensityGrid:type", "Cartesian");
     if (log) {
       log->write_info("Requested DensityGrid type: ", type);

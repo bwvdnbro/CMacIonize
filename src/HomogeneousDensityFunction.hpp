@@ -37,10 +37,10 @@
 class HomogeneousDensityFunction : public DensityFunction {
 private:
   /*! @brief Single density value for the entire box (in m^-3). */
-  double _density;
+  const double _density;
 
   /*! @brief Single temperature value for the entire box (in K). */
-  double _temperature;
+  const double _temperature;
 
 public:
   /**

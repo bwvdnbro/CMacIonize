@@ -39,7 +39,7 @@
 class MassAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Target number of particles. */
-  double _target_npart;
+  const double _target_npart;
 
 public:
   /**
@@ -50,6 +50,7 @@ public:
    */
   MassAMRRefinementScheme(double target_npart, Log *log = nullptr)
       : _target_npart(target_npart) {
+
     if (log) {
       log->write_status("Constructed MassAMRRefinementScheme with target "
                         "number of particles ",
@@ -83,6 +84,7 @@ public:
    * @return True if the cell should be split into 8 smaller cells.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+
     return cell.get_volume() *
                cell.get_ionization_variables().get_number_density() >
            _target_npart;

@@ -59,16 +59,16 @@ public:
 
 protected:
   /*! @brief Box containing the grid. */
-  Box<> _box;
+  const Box<> _box;
 
   /*! @brief Periodicity flags. */
-  CoordinateVector< bool > _periodic;
+  const CoordinateVector< bool > _periodicity_flags;
 
   /*! @brief Ionization energy of hydrogen (in Hz). */
-  double _ionization_energy_H;
+  const double _ionization_energy_H;
 
   /*! @brief Ionization energy of helium (in Hz). */
-  double _ionization_energy_He;
+  const double _ionization_energy_He;
 
   /*! @brief Ionization calculation variables. */
   std::vector< IonizationVariables > _ionization_variables;
@@ -76,7 +76,7 @@ protected:
   /// hydro
 
   /*! @brief Flag indicating whether hydro is active or not. */
-  bool _hydro;
+  const bool _has_hydro;
 
   /*! @brief Hydrodynamic variables. */
   std::vector< HydroVariables > _hydro_variables;
@@ -177,13 +177,12 @@ public:
   DensityGrid(Box<> box, CoordinateVector< bool > periodic =
                              CoordinateVector< bool >(false),
               bool hydro = false, Log *log = nullptr)
-      : _box(box), _periodic(periodic), _hydro(hydro), _log(log) {
-
-    _ionization_energy_H =
-        UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
-    _ionization_energy_He =
-        UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
-  }
+      : _box(box), _periodicity_flags(periodic),
+        _ionization_energy_H(
+            UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV")),
+        _ionization_energy_He(
+            UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV")),
+        _has_hydro(hydro), _log(log) {}
 
   /**
    * @brief Virtual destructor.
@@ -227,7 +226,7 @@ public:
    */
   virtual void initialize(std::pair< unsigned long, unsigned long > &block,
                           DensityFunction &density_function) {
-    if (_hydro) {
+    if (_has_hydro) {
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
       }
@@ -261,7 +260,7 @@ public:
   inline unsigned int get_number_of_periodic_boundaries() const {
     unsigned int numperiodic = 0;
     for (unsigned int i = 0; i < 3; ++i) {
-      numperiodic += _periodic[i];
+      numperiodic += _periodicity_flags[i];
     }
     return numperiodic;
   }
@@ -287,7 +286,7 @@ public:
    *
    * @return True if hydro is active.
    */
-  inline bool has_hydro() const { return _hydro; }
+  inline bool has_hydro() const { return _has_hydro; }
 
   /**
    * @brief Get the neighbours of the cell with the given index.

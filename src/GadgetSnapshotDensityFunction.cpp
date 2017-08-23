@@ -40,6 +40,7 @@
  * @return Value of the cubic spline kernel.
  */
 double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
+
   const double KC1 = 2.546479089470;
   const double KC2 = 15.278874536822;
   const double KC5 = 5.092958178941;
@@ -85,6 +86,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     bool use_neutral_fraction, double fallback_temperature,
     bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -128,9 +130,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   double unit_temperature_in_SI = fallback_unit_temperature_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_mass_in_cgs =
+    const double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_temperature_in_SI = HDF5Tools::read_attribute< double >(
         units, "Unit temperature in cgs (U_T)");
@@ -176,8 +178,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     unit_mass_in_SI /= hubble_parameter;
   }
 
-  double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
-  double unit_density_in_SI =
+  const double unit_length_in_SI_squared =
+      unit_length_in_SI * unit_length_in_SI;
+  const double unit_density_in_SI =
       unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
 
   // open the group containing the SPH particle data
@@ -247,7 +250,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   if (!periodic) {
     // set box to particle extents + small margin
     CoordinateVector<> sides = maxpos - minpos;
-    CoordinateVector<> anchor = minpos - 0.005 * sides;
+    const CoordinateVector<> anchor = minpos - 0.005 * sides;
     sides *= 1.01;
     box = Box<>(anchor, sides);
   }

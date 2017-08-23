@@ -41,28 +41,28 @@
 class SILCCPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Number of individual sources. */
-  unsigned int _num_sources;
+  const unsigned int _num_sources;
 
   /*! @brief x component of the anchor of the rectangular disk (in m). */
-  double _anchor_x;
+  const double _anchor_x;
 
   /*! @brief y component of the anchor of the rectangular disk (in m). */
-  double _anchor_y;
+  const double _anchor_y;
 
   /*! @brief x side length of the rectangular disk (in m). */
-  double _sides_x;
+  const double _sides_x;
 
   /*! @brief y side length of the rectangular disk (in m). */
-  double _sides_y;
+  const double _sides_y;
 
   /*! @brief Origin of the Gaussian disk height distribution (in m). */
-  double _origin_z;
+  const double _origin_z;
 
   /*! @brief Scale height of the Gaussian disk height distribution (in m). */
-  double _scaleheight_z;
+  const double _scaleheight_z;
 
   /*! @brief Luminosity of a single source (in s^-1). */
-  double _luminosity;
+  const double _luminosity;
 
   /*! @brief RandomGenerator used to generate random numbers. We use a separate
    *  instance for this PhotonSourceDistribution, so that we can change the
@@ -94,6 +94,7 @@ public:
         _sides_x(sides_x), _sides_y(sides_y), _origin_z(origin_z),
         _scaleheight_z(scaleheight_z), _luminosity(luminosity),
         _random_generator(random_seed) {
+
     if (log) {
       log->write_status("Constructed ", _num_sources,
                         " SILCC sources within the rectangle with anchor [",
@@ -166,12 +167,13 @@ public:
    * @return CoordinateVector of a valid and photon source position (in m).
    */
   virtual CoordinateVector<> get_position(unsigned int index) {
-    double x =
+
+    const double x =
         _anchor_x + _random_generator.get_uniform_random_double() * _sides_x;
-    double y =
+    const double y =
         _anchor_y + _random_generator.get_uniform_random_double() * _sides_y;
     // we use the Box-Muller method to sample the Gaussian
-    double z =
+    const double z =
         _scaleheight_z *
             std::sqrt(-2. *
                       std::log(_random_generator.get_uniform_random_double())) *

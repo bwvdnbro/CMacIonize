@@ -115,7 +115,8 @@ int main(int argc, char **argv) {
       Bc[i] = b;
     }
 
-    assert_condition(LineCoolingData::simq(A, B) == 0);
+    assert_condition(LineCoolingData::solve_system_of_linear_equations(A, B) ==
+                     0);
 
     for (unsigned int i = 0; i < 5; ++i) {
       double a = 0.;

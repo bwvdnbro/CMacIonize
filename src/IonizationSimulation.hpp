@@ -79,16 +79,16 @@ private:
       _work_distributor;
 
   /*! @brief Data values for line cooling. */
-  LineCoolingData _line_cooling_data;
+  const LineCoolingData _line_cooling_data;
 
   /*! @brief Cross sections for photoionization. */
-  VernerCrossSections _cross_sections;
+  const VernerCrossSections _cross_sections;
 
   /*! @brief Recombination rates. */
-  VernerRecombinationRates _recombination_rates;
+  const VernerRecombinationRates _recombination_rates;
 
   /*! @brief Charge transfer rates. */
-  ChargeTransferRates _charge_transfer_rates;
+  const ChargeTransferRates _charge_transfer_rates;
 
   /// parameter file
 
@@ -118,7 +118,7 @@ private:
   /// non pointer objects owned by the simulation
 
   /*! @brief Abundances. */
-  Abundances _abundances;
+  const Abundances _abundances;
 
   /// pointer objects owned by the simulation. These have to be deleted in the
   /// destructor.

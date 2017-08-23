@@ -39,10 +39,10 @@
 class SpatialAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Zone where the grid should be refined (in m). */
-  Box<> _refinement_zone;
+  const Box<> _refinement_zone;
 
   /*! @brief Maximum refinement level. */
-  unsigned char _max_level;
+  const unsigned char _max_level;
 
 public:
   /**
@@ -55,6 +55,7 @@ public:
   SpatialAMRRefinementScheme(Box<> refinement_zone, unsigned char max_level,
                              Log *log = nullptr)
       : _refinement_zone(refinement_zone), _max_level(max_level) {
+
     if (log) {
       log->write_status("Constructed SpatialAMRRefinementScheme with a "
                         "refinement zone box with anchor [",
@@ -100,7 +101,8 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    CoordinateVector<> midpoint = cell.get_cell_midpoint();
+
+    const CoordinateVector<> midpoint = cell.get_cell_midpoint();
     for (unsigned int i = 0; i < 3; ++i) {
       if (midpoint[i] < _refinement_zone.get_anchor()[i] ||
           midpoint[i] > _refinement_zone.get_anchor()[i] +

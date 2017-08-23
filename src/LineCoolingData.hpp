@@ -239,7 +239,7 @@ public:
   double get_statistical_weight(LineCoolingDataFiveLevelElement element,
                                 unsigned char level) const;
 
-  static int simq(double A[5][5], double B[5]);
+  static int solve_system_of_linear_equations(double A[5][5], double B[5]);
 
   double
   get_cooling(double temperature, double electron_density,

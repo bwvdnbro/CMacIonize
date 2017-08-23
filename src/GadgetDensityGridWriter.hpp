@@ -38,10 +38,10 @@ class ParameterFile;
 class GadgetDensityGridWriter : public DensityGridWriter {
 private:
   /*! @brief Prefix of the name for the file to write. */
-  std::string _prefix;
+  const std::string _prefix;
 
   /*! @brief Number of digits used for the counter in the filenames. */
-  unsigned char _padding;
+  const unsigned char _padding;
 
 public:
   GadgetDensityGridWriter(std::string prefix,

@@ -37,13 +37,10 @@
 class SingleStarPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Position of the single stellar source (in m). */
-  CoordinateVector<> _position;
+  const CoordinateVector<> _position;
 
   /*! @brief Luminosity of the single stellar source (in s^-1). */
-  double _luminosity;
-
-  /*! @brief Log to write logging information to. */
-  Log *_log;
+  const double _luminosity;
 
 public:
   /**
@@ -55,9 +52,10 @@ public:
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position,
                                      double luminosity, Log *log = nullptr)
-      : _position(position), _luminosity(luminosity), _log(log) {
-    if (_log) {
-      _log->write_status(
+      : _position(position), _luminosity(luminosity) {
+
+    if (log) {
+      log->write_status(
           "Created SingleStarPhotonSourceDistribution at position [",
           _position.x(), " m,", _position.y(), " m,", _position.z(),
           " m], with luminosity ", _luminosity, " s^-1.");

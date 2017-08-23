@@ -64,7 +64,8 @@ public:
   inline static ContinuousPhotonSource *generate(const Box<> &simulation_box,
                                                  ParameterFile &params,
                                                  Log *log = nullptr) {
-    std::string type =
+
+    const std::string type =
         params.get_value< std::string >("ContinuousPhotonSource:type", "None");
     if (log) {
       log->write_info("Requested ContinuousPhotonSource type: ", type, ".");

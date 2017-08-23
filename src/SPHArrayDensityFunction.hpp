@@ -44,7 +44,7 @@ private:
   const double _unit_mass_in_SI;
 
   /*! @brief Periodicity flag. */
-  const bool _periodic;
+  const bool _is_periodic;
 
   /*! @brief Simulation box, only initialized if the box is periodic (if the box
    *  is not periodic, the components of the Box will all be zero). */

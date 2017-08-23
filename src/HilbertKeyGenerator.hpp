@@ -167,6 +167,7 @@ public:
    */
   inline std::vector< uint64_t >
   get_keys(const std::vector< CoordinateVector<> > &positions) const {
+
     const unsigned int positions_size = positions.size();
     std::vector< uint64_t > keys(positions_size, 0);
     for (unsigned int i = 0; i < positions_size; ++i) {

@@ -94,7 +94,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
     CoordinateVector< bool > periodic, bool hydro, Log *log)
     : DensityGrid(simulation_box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
-      _periodic(periodic), _num_lloyd(num_lloyd),
+      _periodicity_flags(periodic), _num_lloyd(num_lloyd),
       _epsilon(1.e-12 * simulation_box.get_sides().norm()),
       _voronoi_grid_type(grid_type) {
 
@@ -171,7 +171,7 @@ void VoronoiDensityGrid::initialize(
     _generator_positions[i] = _position_generator->get_position();
   }
   _voronoi_grid = VoronoiGridFactory::generate(
-      _voronoi_grid_type, _generator_positions, _box, _periodic);
+      _voronoi_grid_type, _generator_positions, _box, _periodicity_flags);
 
   // compute the grid
   _voronoi_grid->compute_grid();
@@ -193,7 +193,7 @@ void VoronoiDensityGrid::initialize(
       }
       delete _voronoi_grid;
       _voronoi_grid = VoronoiGridFactory::generate(
-          _voronoi_grid_type, _generator_positions, _box, _periodic);
+          _voronoi_grid_type, _generator_positions, _box, _periodicity_flags);
       _voronoi_grid->compute_grid();
     }
 
@@ -212,7 +212,7 @@ void VoronoiDensityGrid::initialize(
  * @param timestep Timestep with which to move the generators (in s).
  */
 void VoronoiDensityGrid::evolve(double timestep) {
-  if (_hydro) {
+  if (_has_hydro) {
     // move the cell generators and update the velocities to the new fluid
     // velocities
     if (_log) {
@@ -230,7 +230,7 @@ void VoronoiDensityGrid::evolve(double timestep) {
 
     delete _voronoi_grid;
     _voronoi_grid = VoronoiGridFactory::generate(
-        _voronoi_grid_type, _generator_positions, _box, _periodic);
+        _voronoi_grid_type, _generator_positions, _box, _periodicity_flags);
     _voronoi_grid->compute_grid();
 
     if (_log) {
@@ -245,7 +245,7 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @param gamma Polytropic index of the gas.
  */
 void VoronoiDensityGrid::set_grid_velocity(double gamma) {
-  if (_hydro) {
+  if (_has_hydro) {
     for (auto it = begin(); it != end(); ++it) {
       const unsigned int index = it.get_index();
 

@@ -47,6 +47,11 @@
  */
 class ChargeTransferRates {
 public:
+  /**
+   * @brief Empty constructor.
+   */
+  ChargeTransferRates() {}
+
   double get_charge_transfer_recombination_rate_H(IonName ion,
                                                   double temperature) const;
   double get_charge_transfer_ionization_rate_H(IonName ion,

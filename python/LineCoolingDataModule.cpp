@@ -50,10 +50,9 @@
  * LineCoolingData.linestr(), a numpy.ndarray containing the values for each
  * temperature and electron density.
  */
-static boost::python::dict python_linestr(LineCoolingData &lines,
-                                          boost::python::numeric::array &T,
-                                          boost::python::numeric::array &ne,
-                                          boost::python::list abundances) {
+static boost::python::dict python_get_line_strengths(
+    LineCoolingData &lines, boost::python::numeric::array &T,
+    boost::python::numeric::array &ne, boost::python::list abundances) {
   double abund[12];
   for (unsigned int i = 0; i < 12; ++i) {
     abund[i] = boost::python::extract< double >(abundances[i]);
@@ -234,7 +233,8 @@ BOOST_PYTHON_MODULE(liblinecoolingdata) {
   // we have to kindly ask numpy to initialize its array functionality
   import_array();
 
-  // we tell Boost we want to expose our version of LineCoolingData.linestr()
+  // we tell Boost we want to expose our version of
+  // LineCoolingData.get_line_strengths()
   boost::python::class_< LineCoolingData >("LineCoolingData")
-      .def("linestr", &python_linestr);
+      .def("get_line_strengths", &python_get_line_strengths);
 }

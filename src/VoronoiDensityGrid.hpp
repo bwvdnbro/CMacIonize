@@ -45,7 +45,7 @@ private:
   VoronoiGrid *_voronoi_grid;
 
   /*! @brief Periodicity flags for the simulation box. */
-  CoordinateVector< bool > _periodic;
+  CoordinateVector< bool > _periodicity_flags;
 
   /*! @brief Number of Lloyd iterations to apply to the grid after it has been
    *  constructed for the first time. */

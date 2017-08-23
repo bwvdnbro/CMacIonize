@@ -39,7 +39,7 @@
 class DustPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
-  PhotonSource &_photon_source;
+  const PhotonSource &_photon_source;
 
   /*! @brief DustScattering object that scatters photons off dust. */
   const DustScattering &_dust_scattering;

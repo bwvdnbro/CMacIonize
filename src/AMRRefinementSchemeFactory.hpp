@@ -64,7 +64,8 @@ public:
    */
   inline static AMRRefinementScheme *generate(ParameterFile &params,
                                               Log *log = nullptr) {
-    std::string type = params.get_value< std::string >(
+
+    const std::string type = params.get_value< std::string >(
         "DensityGrid:AMRRefinementScheme:type", "None");
     if (log) {
       log->write_info("Requested AMRRefinementScheme type: ", type);

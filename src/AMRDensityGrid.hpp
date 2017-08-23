@@ -349,7 +349,7 @@ public:
     }
 
     // finalize grid: set neighbour relations
-    _grid.set_ngbs(_periodic);
+    _grid.set_ngbs(_periodicity_flags);
 
     // make sure all values are correctly initialized (also in refined cells)
     // the refinement procedure itself only reads the density from the density
@@ -387,7 +387,7 @@ public:
       }
 
       // reset the ngbs
-      _grid.set_ngbs(_periodic);
+      _grid.set_ngbs(_periodicity_flags);
     }
 
     // make sure all cells are correctly reset (also the new ones, if any)
@@ -575,7 +575,7 @@ public:
     AMRGridCell< unsigned long > *next_cell = cell->get_ngb(ngbposition);
     if (next_cell != nullptr) {
       // calculate periodic boundary corrections (if any)
-      if (_periodic.x()) {
+      if (_periodicity_flags.x()) {
         CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[0] > 0. && nm.x() < cell_bottom_anchor.x()) {
           periodic_correction[0] = -_box.get_sides().x();
@@ -583,7 +583,7 @@ public:
           periodic_correction[0] = _box.get_sides().x();
         }
       }
-      if (_periodic.y()) {
+      if (_periodicity_flags.y()) {
         CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[1] > 0. && nm.y() < cell_bottom_anchor.y()) {
           periodic_correction[1] = -_box.get_sides().y();
@@ -591,7 +591,7 @@ public:
           periodic_correction[1] = _box.get_sides().y();
         }
       }
-      if (_periodic.z()) {
+      if (_periodicity_flags.z()) {
         CoordinateVector<> nm = next_cell->get_geometry().get_anchor();
         if (next_direction[2] > 0. && nm.z() < cell_bottom_anchor.z()) {
           periodic_correction[2] = -_box.get_sides().z();

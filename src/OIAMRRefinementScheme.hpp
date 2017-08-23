@@ -39,10 +39,10 @@ class OIAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Target number of OI particles in a cell; a cell that contains more
    *  than this number will be refined. */
-  double _target_N;
+  const double _target_N;
 
   /*! @brief Maximum allowed refinement level. */
-  unsigned char _max_level;
+  const unsigned char _max_level;
 
 public:
   /**
@@ -85,6 +85,7 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+
     const double volume = cell.get_volume();
     const IonizationVariables &ioniziation_variables =
         cell.get_ionization_variables();

@@ -39,7 +39,7 @@
  *
  * @param abundances Abundances.
  */
-EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
+EmissivityCalculator::EmissivityCalculator(const Abundances &abundances)
     : _abundances(abundances) {
   // these values come from Brown & Mathews (1970)
   // the hmit and heplt tables correspond to wavelength 3646 in table 1 and
@@ -70,44 +70,51 @@ EmissivityCalculator::EmissivityCalculator(Abundances &abundances)
  * the given temperature.
  *
  * @param T Temperature (in K).
- * @param emhpl Hydrogen coefficient 1 (in J m^3s^-1angstrom^-1).
- * @param emhmi Hydrogen coefficient 2 (in J m^3s^-1angstrom^-1).
- * @param emhepl Helium coefficient 1 (in J m^3s^-1angstrom^-1).
- * @param emhemi Helium coefficient 2 (in J m^3s^-1angstrom^-1).
+ * @param emission_hydrogen_high Hydrogen coefficient 1 (in J m^3 s^-1
+ * angstrom^-1).
+ * @param emission_hydrogen_low Hydrogen coefficient 2 (in J m^3 s^-1
+ * angstrom^-1).
+ * @param emission_helium_high Helium coefficient 1 (in J m^3 s^-1 angstrom^-1).
+ * @param emission_helium_low Helium coefficient 2 (in J m^3 s^-1 angstrom^-1).
  */
-void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
-                                 double &emhepl, double &emhemi) const {
+void EmissivityCalculator::get_balmer_jump_emission(
+    double T, double &emission_hydrogen_high, double &emission_hydrogen_low,
+    double &emission_helium_high, double &emission_helium_low) const {
   const double logt = std::log(T);
 
   int i = Utilities::locate(logt, _logttab, 8);
   i = std::max(i, 0);
   i = std::min(i, 6);
 
-  emhpl = _loghplt[i] +
-          (logt - _logttab[i]) * (_loghplt[i + 1] - _loghplt[i]) /
-              (_logttab[i + 1] - _logttab[i]);
-  emhmi = _loghmit[i] +
-          (logt - _logttab[i]) * (_loghmit[i + 1] - _loghmit[i]) /
-              (_logttab[i + 1] - _logttab[i]);
-  emhepl = _logheplt[i] +
-           (logt - _logttab[i]) * (_logheplt[i + 1] - _logheplt[i]) /
-               (_logttab[i + 1] - _logttab[i]);
-  emhemi = _loghemit[i] +
-           (logt - _logttab[i]) * (_loghemit[i + 1] - _loghemit[i]) /
-               (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_high = _loghplt[i] +
+                           (logt - _logttab[i]) *
+                               (_loghplt[i + 1] - _loghplt[i]) /
+                               (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_low = _loghmit[i] +
+                          (logt - _logttab[i]) *
+                              (_loghmit[i + 1] - _loghmit[i]) /
+                              (_logttab[i + 1] - _logttab[i]);
+  emission_helium_high = _logheplt[i] +
+                         (logt - _logttab[i]) *
+                             (_logheplt[i + 1] - _logheplt[i]) /
+                             (_logttab[i + 1] - _logttab[i]);
+  emission_helium_low = _loghemit[i] +
+                        (logt - _logttab[i]) *
+                            (_loghemit[i + 1] - _loghemit[i]) /
+                            (_logttab[i + 1] - _logttab[i]);
 
-  emhpl = std::exp(emhpl);
-  emhmi = std::exp(emhmi);
-  emhepl = std::exp(emhepl);
-  emhemi = std::exp(emhemi);
+  emission_hydrogen_high = std::exp(emission_hydrogen_high);
+  emission_hydrogen_low = std::exp(emission_hydrogen_low);
+  emission_helium_high = std::exp(emission_helium_high);
+  emission_helium_low = std::exp(emission_helium_low);
   // the values above are in 1.e-40 erg cm^3 s^-1 Hz^-1
   // convert to J m^3 s^-1 angstrom^-1
   const double lightspeed =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
-  emhpl *= 1.e-43 * lightspeed / 3681. / 3681.;
-  emhmi *= 1.e-43 * lightspeed / 3643. / 3643.;
-  emhepl *= 1.e-43 * lightspeed / 3681. / 3681.;
-  emhemi *= 1.e-43 * lightspeed / 3643. / 3643.;
+  emission_hydrogen_high *= 1.e-43 * lightspeed / (3681. * 3681.);
+  emission_hydrogen_low *= 1.e-43 * lightspeed / (3643. * 3643.);
+  emission_helium_high *= 1.e-43 * lightspeed / (3681. * 3681.);
+  emission_helium_low *= 1.e-43 * lightspeed / (3643. * 3643.);
 }
 
 /**
@@ -115,12 +122,14 @@ void EmissivityCalculator::bjump(double T, double &emhpl, double &emhmi,
  *
  * @param ionization_variables IonizationVariables of the cell.
  * @param abundances Abundances.
- * @param lines LineCoolingData used to calculate emission line strengths.
+ * @param line_cooling_data LineCoolingData used to calculate emission line
+ * strengths.
  * @return EmissivityValues in the cell.
  */
 EmissivityValues EmissivityCalculator::calculate_emissivities(
-    const IonizationVariables &ionization_variables, Abundances &abundances,
-    const LineCoolingData &lines) const {
+    const IonizationVariables &ionization_variables,
+    const Abundances &abundances,
+    const LineCoolingData &line_cooling_data) const {
   const double h0max = 0.2;
 
   EmissivityValues eval;
@@ -191,8 +200,8 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_S_p1);
 
     std::vector< std::vector< double > > line_strengths =
-        lines.get_line_strengths(ionization_variables.get_temperature(), ne,
-                                 abund);
+        line_cooling_data.get_line_strengths(
+            ionization_variables.get_temperature(), ne, abund);
 
     const double T = ionization_variables.get_temperature();
     const double T4 = T * 1.e-4;
@@ -211,7 +220,8 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     double emhmi = 0.;
     double emhepl = 0.;
     double emhemi = 0.;
-    bjump(ionization_variables.get_temperature(), emhpl, emhmi, emhepl, emhemi);
+    get_balmer_jump_emission(ionization_variables.get_temperature(), emhpl,
+                             emhmi, emhepl, emhemi);
     eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_LOW,
                         ne * (nhp * emhmi + nhep * emhemi));
     eval.set_emissivity(EMISSIONLINE_BALMER_JUMP_HIGH,

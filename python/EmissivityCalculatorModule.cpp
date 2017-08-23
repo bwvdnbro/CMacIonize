@@ -228,7 +228,8 @@ BOOST_PYTHON_MODULE(libemissivitycalculator) {
   // we have to kindly ask numpy to initialize its array functionality
   import_array();
 
-  // we tell Boost we want to expose our version of LineCoolingData.linestr()
+  // we tell Boost we want to expose our version of
+  // LineCoolingData.get_line_strengths()
   boost::python::class_< EmissivityCalculator,
                          boost::shared_ptr< EmissivityCalculator > >(
       "EmissivityCalculator", boost::python::no_init)

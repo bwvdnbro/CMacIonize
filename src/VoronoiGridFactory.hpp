@@ -58,6 +58,7 @@ public:
   generate(std::string type, const std::vector< CoordinateVector<> > &positions,
            const Box<> box, const CoordinateVector< bool > periodic =
                                 CoordinateVector< bool >(false)) {
+
     if (type == "New") {
       return new NewVoronoiGrid(positions, box, periodic);
     } else if (type == "Old") {

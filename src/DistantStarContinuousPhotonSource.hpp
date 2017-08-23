@@ -41,7 +41,7 @@
 class DistantStarContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Position of the distant star (in m). */
-  CoordinateVector<> _position;
+  const CoordinateVector<> _position;
 
   /*! @brief Flags that keep track of which sides of the box are exposed to the
    *  distant star, for each coordinate direction. A negative flag value means
@@ -51,13 +51,13 @@ private:
   char _exposed_faces[3];
 
   /*! @brief Box containing the simulation grid (in m). */
-  Box<> _box;
+  const Box<> _box;
 
   /*! @brief Bottom anchor of the box (in m). */
-  CoordinateVector<> &_bottom_anchor;
+  const CoordinateVector<> &_bottom_anchor;
 
   /*! @brief Top anchor of the box (in m). */
-  CoordinateVector<> _top_anchor;
+  const CoordinateVector<> _top_anchor;
 
 public:
   /**

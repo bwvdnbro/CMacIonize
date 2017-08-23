@@ -64,6 +64,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     double rate_per_mass_unit, bool use_gas, double SFR_unit,
     bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -73,7 +74,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
   // snapshot time
   HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
-  double snaptime = HDF5Tools::read_attribute< double >(header, "Time");
+  const double snaptime = HDF5Tools::read_attribute< double >(header, "Time");
   HDF5Tools::close_group(header);
 
   // units
@@ -82,11 +83,11 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   double unit_mass_in_SI = fallback_unit_mass_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_time_in_cgs =
+    const double unit_time_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
-    double unit_mass_in_cgs =
+    const double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_length_in_SI =
         UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
@@ -186,7 +187,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
     // filter out all stars older than the cutoff age
     for (unsigned int i = 0; i < formtimes.size(); ++i) {
-      double age = (snaptime - formtimes[i]) * unit_time_in_SI;
+      const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
       if (age <= cutoff_age) {
         _positions.push_back(positions[i]);
         _total_luminosity += masses[i] * unit_mass_in_SI * rate_per_mass_unit;

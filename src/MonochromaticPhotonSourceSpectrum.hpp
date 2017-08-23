@@ -53,6 +53,7 @@ public:
   MonochromaticPhotonSourceSpectrum(double frequency, double total_flux = -1,
                                     Log *log = nullptr)
       : _frequency(frequency), _total_flux(total_flux) {
+
     if (log) {
       log->write_status(
           "Created MonochromaticPhotonSourceSpectrum with frequency ",

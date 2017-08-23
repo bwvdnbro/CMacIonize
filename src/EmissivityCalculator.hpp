@@ -70,21 +70,23 @@ class EmissivityCalculator {
   double _loghemit[8];
 
   /*! @brief Abundances. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief LineCoolingData used to calculate line strengths. */
   LineCoolingData _lines;
 
 public:
-  EmissivityCalculator(Abundances &abundances);
+  EmissivityCalculator(const Abundances &abundances);
 
-  void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
-             double &emhemi) const;
+  void get_balmer_jump_emission(double T, double &emission_hydrogen_high,
+                                double &emission_hydrogen_low,
+                                double &emission_helium_high,
+                                double &emission_helium_low) const;
 
   EmissivityValues
   calculate_emissivities(const IonizationVariables &ionization_variables,
-                         Abundances &abundances,
-                         const LineCoolingData &lines) const;
+                         const Abundances &abundances,
+                         const LineCoolingData &line_cooling_data) const;
 
   void calculate_emissivities(DensityGrid &grid) const;
   std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;

@@ -63,9 +63,9 @@ enum HDF5FileMode {
  */
 inline void initialize() {
 #ifdef HDF5_OLD_API
-  herr_t hdf5status = H5Eset_auto(nullptr, nullptr);
+  const herr_t hdf5status = H5Eset_auto(nullptr, nullptr);
 #else
-  herr_t hdf5status = H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
+  const herr_t hdf5status = H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
 #endif
   if (hdf5status < 0) {
     cmac_error("Unable to turn off default HDF5 error handling!");
@@ -81,6 +81,7 @@ inline void initialize() {
  * @return HDF5File handle to the open file that can be used by other methods.
  */
 inline HDF5File open_file(std::string name, int mode) {
+
   hid_t file;
   if (mode == HDF5FILEMODE_READ) {
     file = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -110,7 +111,7 @@ inline HDF5File open_file(std::string name, int mode) {
  * @param file HDF5File handle to an open file.
  */
 inline void close_file(hid_t file) {
-  herr_t hdf5status = H5Fclose(file);
+  const herr_t hdf5status = H5Fclose(file);
   if (hdf5status < 0) {
     cmac_error("Failed to close file!");
   }
@@ -124,7 +125,7 @@ inline void close_file(hid_t file) {
  * @return True if the group exists.
  */
 inline bool group_exists(hid_t file, std::string name) {
-  htri_t check = H5Lexists(file, name.c_str(), H5P_DEFAULT);
+  const htri_t check = H5Lexists(file, name.c_str(), H5P_DEFAULT);
   return check > 0;
 }
 
@@ -137,9 +138,9 @@ inline bool group_exists(hid_t file, std::string name) {
  */
 inline HDF5Group create_group(hid_t file, std::string name) {
 #ifdef HDF5_OLD_API
-  hid_t group = H5Gcreate(file, name.c_str(), -1);
+  const hid_t group = H5Gcreate(file, name.c_str(), -1);
 #else
-  hid_t group =
+  const hid_t group =
       H5Gcreate(file, name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 #endif
 
@@ -159,9 +160,9 @@ inline HDF5Group create_group(hid_t file, std::string name) {
  */
 inline HDF5Group open_group(hid_t file, std::string name) {
 #ifdef HDF5_OLD_API
-  hid_t group = H5Gopen(file, name.c_str());
+  const hid_t group = H5Gopen(file, name.c_str());
 #else
-  hid_t group = H5Gopen(file, name.c_str(), H5P_DEFAULT);
+  const hid_t group = H5Gopen(file, name.c_str(), H5P_DEFAULT);
 #endif
   if (group < 0) {
     cmac_error("Unable to open group \"%s\"", name.c_str());
@@ -176,7 +177,7 @@ inline HDF5Group open_group(hid_t file, std::string name) {
  * @param group HDF5Group handle to an open group.
  */
 inline void close_group(hid_t group) {
-  herr_t hdf5status = H5Gclose(group);
+  const herr_t hdf5status = H5Gclose(group);
   if (hdf5status < 0) {
     cmac_error("Failed to close group!");
   }
@@ -246,9 +247,10 @@ template <> inline hid_t get_datatype_name< unsigned long long >() {
  */
 template < typename _datatype_ >
 inline _datatype_ read_attribute(hid_t group, std::string name) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
   // open attribute
-  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
     cmac_error("Failed to open attribute \"%s\"!", name.c_str());
   }
@@ -279,8 +281,9 @@ inline _datatype_ read_attribute(hid_t group, std::string name) {
 template <>
 inline std::string read_attribute< std::string >(hid_t group,
                                                  std::string name) {
+
   // open attribute
-  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
     cmac_error("Failed to open attribute \"%s\"!", name.c_str());
   }
@@ -291,13 +294,13 @@ inline std::string read_attribute< std::string >(hid_t group,
   if (hdf5status < 0) {
     cmac_error("Failed to retrieve info for attribute \"%s\"!", name.c_str());
   }
-  hsize_t length = info.data_size;
+  const hsize_t length = info.data_size;
 
   // C-string buffer to store the result in.
   char *data = new char[length + 1];
 
   // create C-string datatype
-  hid_t strtype = H5Tcopy(H5T_C_S1);
+  const hid_t strtype = H5Tcopy(H5T_C_S1);
   if (strtype < 0) {
     cmac_error("Failed to create C-string datatype for attribute \"%s\"!",
                name.c_str());
@@ -330,7 +333,7 @@ inline std::string read_attribute< std::string >(hid_t group,
     cmac_error("Failed to close attribute \"%s\"!", name.c_str());
   }
 
-  std::string value(data);
+  const std::string value(data);
 
   delete[] data;
 
@@ -347,9 +350,10 @@ inline std::string read_attribute< std::string >(hid_t group,
 template <>
 inline CoordinateVector<>
 read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
-  hid_t datatype = get_datatype_name< double >();
+
+  const hid_t datatype = get_datatype_name< double >();
   // open attribute
-  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
     cmac_error("Failed to open attribute \"%s\"!", name.c_str());
   }
@@ -392,15 +396,16 @@ read_attribute< CoordinateVector<> >(hid_t group, std::string name) {
 template < typename _datatype_ >
 inline std::vector< _datatype_ > read_vector_attribute(hid_t group,
                                                        std::string name) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
   // open attribute
-  hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t attr = H5Aopen(group, name.c_str(), H5P_DEFAULT);
   if (attr < 0) {
     cmac_error("Failed to open attribute \"%s\"!", name.c_str());
   }
 
   // open attribute dataspace
-  hid_t space = H5Aget_space(attr);
+  const hid_t space = H5Aget_space(attr);
   if (space < 0) {
     cmac_error("Failed to open dataspace of attributes \"%s\"!", name.c_str());
   }
@@ -408,7 +413,7 @@ inline std::vector< _datatype_ > read_vector_attribute(hid_t group,
   // query dataspace size
   hsize_t size[1];
   hsize_t maxsize[1];
-  int ndim = H5Sget_simple_extent_dims(space, size, maxsize);
+  const int ndim = H5Sget_simple_extent_dims(space, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of attribute \"%s\"!", name.c_str());
   }
@@ -486,8 +491,9 @@ read_attribute< std::vector< double > >(hid_t group, std::string name) {
  */
 inline herr_t add_attribute_name(hid_t group, const char *c_name,
                                  const H5A_info_t *info, void *data) {
+
   std::vector< std::string > &names = *((std::vector< std::string > *)data);
-  std::string name(c_name);
+  const std::string name(c_name);
   names.push_back(name);
   return 0;
 }
@@ -499,9 +505,10 @@ inline herr_t add_attribute_name(hid_t group, const char *c_name,
  * @return std::vector containing the names of all attributes in the group.
  */
 inline std::vector< std::string > get_attribute_names(hid_t group) {
+
   std::vector< std::string > names;
-  herr_t hdf5status = H5Aiterate(group, H5_INDEX_NAME, H5_ITER_INC, nullptr,
-                                 add_attribute_name, &names);
+  const herr_t hdf5status = H5Aiterate(group, H5_INDEX_NAME, H5_ITER_INC,
+                                       nullptr, add_attribute_name, &names);
   if (hdf5status < 0) {
     cmac_error("Failed to read attribute names for group!");
   }
@@ -518,9 +525,10 @@ inline std::vector< std::string > get_attribute_names(hid_t group) {
  */
 template < typename _datatype_ >
 inline void write_attribute(hid_t group, std::string name, _datatype_ &value) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
   // create dataspace
-  hid_t attspace = H5Screate(H5S_SCALAR);
+  const hid_t attspace = H5Screate(H5S_SCALAR);
   if (attspace < 0) {
     cmac_error("Failed to create dataspace for attribute \"%s\"!",
                name.c_str());
@@ -528,10 +536,11 @@ inline void write_attribute(hid_t group, std::string name, _datatype_ &value) {
 
 // create attribute
 #ifdef HDF5_OLD_API
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+  const hid_t attr =
+      H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
 #else
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
-                         H5P_DEFAULT);
+  const hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace,
+                               H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (attr < 0) {
     cmac_error("Failed to create attribute \"%s\"!", name.c_str());
@@ -566,8 +575,9 @@ inline void write_attribute(hid_t group, std::string name, _datatype_ &value) {
 template <>
 inline void write_attribute< std::string >(hid_t group, std::string name,
                                            std::string &value) {
+
   // create C-string datatype
-  hid_t strtype = H5Tcopy(H5T_C_S1);
+  const hid_t strtype = H5Tcopy(H5T_C_S1);
   if (strtype < 0) {
     cmac_error("Failed to copy C-string datatype for attribute \"%s\"!",
                name.c_str());
@@ -583,7 +593,7 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
   }
 
   // create dataspace
-  hid_t attspace = H5Screate(H5S_SCALAR);
+  const hid_t attspace = H5Screate(H5S_SCALAR);
   if (attspace < 0) {
     cmac_error("Failed to create dataspace for attribute \"%s\"!",
                name.c_str());
@@ -591,10 +601,11 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
 
 // create attribute
 #ifdef HDF5_OLD_API
-  hid_t attr = H5Acreate(group, name.c_str(), strtype, attspace, H5P_DEFAULT);
+  const hid_t attr =
+      H5Acreate(group, name.c_str(), strtype, attspace, H5P_DEFAULT);
 #else
-  hid_t attr = H5Acreate(group, name.c_str(), strtype, attspace, H5P_DEFAULT,
-                         H5P_DEFAULT);
+  const hid_t attr = H5Acreate(group, name.c_str(), strtype, attspace,
+                               H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (attr < 0) {
     cmac_error("Failed to create attribute \"%s\"!", name.c_str());
@@ -636,10 +647,11 @@ inline void write_attribute< std::string >(hid_t group, std::string name,
 template <>
 inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
                                                   CoordinateVector<> &value) {
-  hid_t datatype = get_datatype_name< double >();
+
+  const hid_t datatype = get_datatype_name< double >();
   // create dataspace
-  hsize_t dims[1] = {3};
-  hid_t attspace = H5Screate_simple(1, dims, nullptr);
+  const hsize_t dims[1] = {3};
+  const hid_t attspace = H5Screate_simple(1, dims, nullptr);
   if (attspace < 0) {
     cmac_error("Failed to create dataspace for attribute \"%s\"!",
                name.c_str());
@@ -647,20 +659,18 @@ inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
 
 // create attribute
 #ifdef HDF5_OLD_API
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+  const hid_t attr =
+      H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
 #else
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
-                         H5P_DEFAULT);
+  const hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace,
+                               H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (attr < 0) {
     cmac_error("Failed to create attribute \"%s\"!", name.c_str());
   }
 
   // write attribute
-  double data[3];
-  data[0] = value.x();
-  data[1] = value.y();
-  data[2] = value.z();
+  double data[3] = {value.x(), value.y(), value.z()};
   herr_t hdf5status = H5Awrite(attr, datatype, data);
   if (hdf5status < 0) {
     cmac_error("Failed to write attribute \"%s\"!", name.c_str());
@@ -694,10 +704,11 @@ inline void write_attribute< CoordinateVector<> >(hid_t group, std::string name,
 template < typename _datatype_ >
 inline void write_vector_attribute(hid_t group, std::string name,
                                    std::vector< _datatype_ > &value) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
   // create dataspace
-  hsize_t dims[1] = {value.size()};
-  hid_t attspace = H5Screate_simple(1, dims, nullptr);
+  const hsize_t dims[1] = {value.size()};
+  const hid_t attspace = H5Screate_simple(1, dims, nullptr);
   if (attspace < 0) {
     cmac_error("Failed to create dataspace for attribute \"%s\"!",
                name.c_str());
@@ -705,10 +716,11 @@ inline void write_vector_attribute(hid_t group, std::string name,
 
 // create attribute
 #ifdef HDF5_OLD_API
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
+  const hid_t attr =
+      H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT);
 #else
-  hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace, H5P_DEFAULT,
-                         H5P_DEFAULT);
+  const hid_t attr = H5Acreate(group, name.c_str(), datatype, attspace,
+                               H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (attr < 0) {
     cmac_error("Failed to create attribute \"%s\"!", name.c_str());
@@ -775,20 +787,21 @@ inline void write_attribute< std::vector< unsigned int > >(
  */
 template < typename _datatype_ >
 inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
   // open dataspace
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to open dataspace of dataset \"%s\"", name.c_str());
   }
@@ -796,7 +809,7 @@ inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
   // query dataspace extents
   hsize_t size[1];
   hsize_t maxsize[1];
-  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -841,20 +854,21 @@ inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
 template <>
 inline std::vector< CoordinateVector<> >
 read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
-  hid_t datatype = get_datatype_name< double >();
+
+  const hid_t datatype = get_datatype_name< double >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
   // open dataspace
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to open dataspace of dataset \"%s\"", name.c_str());
   }
@@ -862,7 +876,7 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
   // query dataspace extents
   hsize_t size[2];
   hsize_t maxsize[2];
-  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -920,6 +934,7 @@ public:
    */
   HDF5DataBlock(std::array< unsigned int, _size_ > dimensions, _datatype_ *data)
       : _size(dimensions) {
+
     unsigned int datasize = 1;
     for (unsigned char i = 0; i < _size_; ++i) {
       datasize *= _size[i];
@@ -939,6 +954,7 @@ public:
    * @param block HDF5DataBlock that is copied into this one.
    */
   void operator=(const HDF5DataBlock &block) {
+
     _size = block._size;
     unsigned int datasize = 1;
     for (unsigned char i = 0; i < _size_; ++i) {
@@ -964,6 +980,7 @@ public:
    * @return Element at that position.
    */
   inline _datatype_ &operator[](std::array< unsigned int, _size_ > index) {
+
     unsigned int dataindex = 0;
     unsigned int product = 1;
     for (unsigned char i = 0; i < _size_; ++i) {
@@ -992,20 +1009,21 @@ public:
 template < typename _datatype_, unsigned char _size_ >
 HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
                                                  std::string name) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
   // open dataspace
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to open dataspace of dataset \"%s\"", name.c_str());
   }
@@ -1013,7 +1031,7 @@ HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
   // query dataspace extents
   hsize_t size[_size_];
   hsize_t maxsize[_size_];
-  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -1044,7 +1062,7 @@ HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
     cmac_error("Failed to close dataset \"%s\"", name.c_str());
   }
 
-  HDF5DataBlock< _datatype_, _size_ > block(dimensions, data);
+  const HDF5DataBlock< _datatype_, _size_ > block(dimensions, data);
 
   delete[] data;
 
@@ -1088,7 +1106,7 @@ public:
    * @return Element belonging to that key.
    */
   inline _datatype_ &operator[](std::string key) {
-    auto it = _map.find(key);
+    const auto it = _map.find(key);
     if (it == _map.end()) {
       cmac_error("Element \"%s\" not found in dictionary!", key.c_str());
     }
@@ -1106,20 +1124,21 @@ public:
 template < typename _datatype_ >
 inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
                                                     std::string name) {
-  hid_t valuetype = get_datatype_name< _datatype_ >();
+
+  const hid_t valuetype = get_datatype_name< _datatype_ >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
   // open dataspace
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to open dataspace of dataset \"%s\"", name.c_str());
   }
@@ -1127,20 +1146,20 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
   // query dataspace extents
   hsize_t size[1];
   hsize_t maxsize[1];
-  int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
 
   // create compound data type
-  hid_t datatype =
+  const hid_t datatype =
       H5Tcreate(H5T_COMPOUND, sizeof(HDF5CompoundKeyValueType< _datatype_ >));
   if (datatype < 0) {
     cmac_error("Failed to create datatype for dataset \"%s\"", name.c_str());
   }
 
   // set the contents of the compound data type
-  hid_t string20 = H5Tcopy(H5T_C_S1);
+  const hid_t string20 = H5Tcopy(H5T_C_S1);
   herr_t hdf5status = H5Tset_size(string20, 20);
   if (hdf5status < 0) {
     cmac_error("Failed to initialize string type for dataset \"%s\"",
@@ -1201,7 +1220,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
       data[i]._name[j] = '\0';
       --j;
     }
-    std::string key(data[i]._name);
+    const std::string key(data[i]._name);
     dictionary[key] = data[i]._value;
   }
 
@@ -1221,22 +1240,23 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
 template < typename _datatype_ >
 inline void write_dataset(hid_t group, std::string name,
                           std::vector< _datatype_ > &values) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
 
-  hsize_t dims[1] = {values.size()};
+  const hid_t datatype = get_datatype_name< _datatype_ >();
+
   // create dataspace
-  hid_t filespace = H5Screate_simple(1, dims, nullptr);
+  const hsize_t dims[1] = {values.size()};
+  const hid_t filespace = H5Screate_simple(1, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
 // create dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset =
+  const hid_t dataset =
       H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
 #else
-  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
@@ -1278,22 +1298,23 @@ inline void write_dataset(hid_t group, std::string name,
 template <>
 inline void write_dataset(hid_t group, std::string name,
                           std::vector< CoordinateVector<> > &values) {
-  hid_t datatype = get_datatype_name< double >();
 
-  hsize_t dims[2] = {values.size(), 3};
+  const hid_t datatype = get_datatype_name< double >();
+
   // create dataspace
-  hid_t filespace = H5Screate_simple(2, dims, nullptr);
+  const hsize_t dims[2] = {values.size(), 3};
+  const hid_t filespace = H5Screate_simple(2, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
 // create dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset =
+  const hid_t dataset =
       H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
 #else
-  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
@@ -1338,22 +1359,23 @@ inline void write_dataset(hid_t group, std::string name,
  */
 template < typename _datatype_ >
 inline void create_dataset(hid_t group, std::string name, unsigned int size) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
 
-  hsize_t dims[1] = {size};
+  const hid_t datatype = get_datatype_name< _datatype_ >();
+
   // create dataspace
-  hid_t filespace = H5Screate_simple(1, dims, nullptr);
+  const hsize_t dims[1] = {size};
+  const hid_t filespace = H5Screate_simple(1, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
 // create dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset =
+  const hid_t dataset =
       H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
 #else
-  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
@@ -1384,22 +1406,23 @@ inline void create_dataset(hid_t group, std::string name, unsigned int size) {
 template <>
 inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
                                                  unsigned int size) {
-  hid_t datatype = get_datatype_name< double >();
 
-  hsize_t dims[2] = {size, 3};
+  const hid_t datatype = get_datatype_name< double >();
+
   // create dataspace
-  hid_t filespace = H5Screate_simple(2, dims, nullptr);
+  const hsize_t dims[2] = {size, 3};
+  const hid_t filespace = H5Screate_simple(2, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
 // create dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset =
+  const hid_t dataset =
       H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
 #else
-  hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
@@ -1430,26 +1453,27 @@ inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
 template < typename _datatype_ >
 inline void append_dataset(hid_t group, std::string name, unsigned int offset,
                            std::vector< _datatype_ > &values) {
-  hid_t datatype = get_datatype_name< _datatype_ >();
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to obtain file space of dataset \"%s\"!", name.c_str());
   }
 
   // select the hyperslab in filespace we want to write to
-  hsize_t dims[1] = {values.size()};
-  hsize_t offs[1] = {offset};
+  const hsize_t dims[1] = {values.size()};
+  const hsize_t offs[1] = {offset};
   herr_t hdf5status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offs,
                                           nullptr, dims, nullptr);
   if (hdf5status < 0) {
@@ -1458,7 +1482,7 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
   }
 
   // create memory space
-  hid_t memspace = H5Screate_simple(1, dims, nullptr);
+  const hid_t memspace = H5Screate_simple(1, dims, nullptr);
   if (memspace < 0) {
     cmac_error("Failed to create memory space to write dataset \"%s\"!",
                name.c_str());
@@ -1511,26 +1535,27 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
 template <>
 inline void append_dataset(hid_t group, std::string name, unsigned int offset,
                            std::vector< CoordinateVector<> > &values) {
-  hid_t datatype = get_datatype_name< double >();
+
+  const hid_t datatype = get_datatype_name< double >();
 
 // open dataset
 #ifdef HDF5_OLD_API
-  hid_t dataset = H5Dopen(group, name.c_str());
+  const hid_t dataset = H5Dopen(group, name.c_str());
 #else
-  hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to open dataset \"%s\"", name.c_str());
   }
 
-  hid_t filespace = H5Dget_space(dataset);
+  const hid_t filespace = H5Dget_space(dataset);
   if (filespace < 0) {
     cmac_error("Failed to obtain file space of dataset \"%s\"!", name.c_str());
   }
 
   // select the hyperslab in filespace we want to write to
-  hsize_t dims[2] = {values.size(), 3};
-  hsize_t offs[2] = {offset, 0};
+  const hsize_t dims[2] = {values.size(), 3};
+  const hsize_t offs[2] = {offset, 0};
   herr_t hdf5status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offs,
                                           nullptr, dims, nullptr);
   if (hdf5status < 0) {
@@ -1539,7 +1564,7 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
   }
 
   // create memory space
-  hid_t memspace = H5Screate_simple(2, dims, nullptr);
+  const hid_t memspace = H5Screate_simple(2, dims, nullptr);
   if (memspace < 0) {
     cmac_error("Failed to create memory space to write dataset \"%s\"!",
                name.c_str());

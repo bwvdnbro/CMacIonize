@@ -90,6 +90,7 @@ public:
    */
   std::pair< CoordinateVector<>, CoordinateVector<> >
   get_random_incoming_direction(RandomGenerator &random_generator) const {
+
     // we randomly sample a focus point in the box
     CoordinateVector<> focus;
     focus[0] =
@@ -103,13 +104,12 @@ public:
         _box.get_sides().z() * random_generator.get_uniform_random_double();
 
     // random incoming direction for the focus point
-    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
-    double sint = 1. - cost * cost;
-    sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
-    double cosp = std::cos(phi);
-    double sinp = std::sin(phi);
-    CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(0., 1. - cost * cost));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
+    const CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
 
     // the direction and the focus point define a line:
     //   line = focus + t * direction.
@@ -117,8 +117,8 @@ public:
     // find the intersection points of this line with the walls of the box
     // the origin of the random photon is the intersection point with negative
     // t value
-    CoordinateVector<> anchor_bottom = _box.get_anchor();
-    CoordinateVector<> anchor_top = _box.get_top_anchor();
+    const CoordinateVector<> anchor_bottom = _box.get_anchor();
+    const CoordinateVector<> anchor_top = _box.get_top_anchor();
 
     // the box has 6 faces, each of which has an intersection point with the
     // line. If the focus point is inside the box (which it should be), then
@@ -155,8 +155,7 @@ public:
       lz = -DBL_MAX;
     }
 
-    double maxl = std::max(lx, ly);
-    maxl = std::max(maxl, lz);
+    const double maxl = std::max(std::max(lx, ly), lz);
 
     CoordinateVector<> position = focus + maxl * direction;
 
@@ -186,6 +185,7 @@ public:
    * @return Total surface area (in m^2).
    */
   inline double get_total_surface_area() const {
+
     return 2. * _box.get_sides().x() * _box.get_sides().y() +
            2. * _box.get_sides().x() * _box.get_sides().z() +
            2. * _box.get_sides().y() * _box.get_sides().z();

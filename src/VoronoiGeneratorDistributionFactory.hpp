@@ -91,7 +91,7 @@ public:
   generate(const Box<> &simulation_box, ParameterFile &params,
            Log *log = nullptr) {
 
-    std::string type = params.get_value< std::string >(
+    const std::string type = params.get_value< std::string >(
         "DensityGrid:VoronoiGeneratorDistribution:type", "UniformRandom");
 
     if (log) {

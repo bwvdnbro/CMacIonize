@@ -38,10 +38,10 @@ class OpacityAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Target opacity for every cell. Cells with higher opacities will
    *  be refined (in m^-1). */
-  double _target_opacity;
+  const double _target_opacity;
 
   /*! @brief Maximum refinement level. */
-  unsigned char _max_level;
+  const unsigned char _max_level;
 
 public:
   /**
@@ -88,6 +88,7 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+
     // we assume an ionizing cross section of 1.e-18 cm^2
     const double xsecH = 1.e-22;
 

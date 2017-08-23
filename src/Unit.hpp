@@ -172,7 +172,7 @@ public:
    * @param unit Unit to compare with.
    * @return True if both units have the same scale exponents.
    */
-  inline bool is_same_quantity(Unit unit) const {
+  inline bool is_same_quantity(const Unit &unit) const {
     return _length == unit._length && _time == unit._time &&
            _mass == unit._mass && _temperature == unit._temperature &&
            _current == unit._current && _angle == unit._angle;
@@ -185,7 +185,7 @@ public:
    * @return True if both units have the same value and represent the same
    * quantity.
    */
-  inline bool operator==(Unit unit) const {
+  inline bool operator==(const Unit &unit) const {
     return _value == unit._value && is_same_quantity(unit);
   }
 

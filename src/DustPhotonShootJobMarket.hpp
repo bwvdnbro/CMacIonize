@@ -47,13 +47,13 @@ private:
   DustPhotonShootJob *_jobs[MAX_NUM_THREADS];
 
   /*! @brief Number of threads used in the calculation. */
-  int _worksize;
+  const int _worksize;
 
   /*! @brief Total number of photons to propagate through the grid. */
   unsigned int _numphoton;
 
   /*! @brief Number of photons to shoot during a single DustPhotonShootJob. */
-  unsigned int _jobsize;
+  const unsigned int _jobsize;
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */

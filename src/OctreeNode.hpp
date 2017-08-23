@@ -91,6 +91,7 @@ public:
   inline void add_position(std::vector< CoordinateVector<> > &positions,
                            unsigned int index, Box<> &box,
                            unsigned int level = 0) {
+
     unsigned char ix, iy, iz;
     if (_index < OCTREE_NOLEAF) {
       // this OctreeNode becomes a node: set its box
@@ -121,7 +122,7 @@ public:
       _index = OCTREE_NOLEAF;
     }
     // find out in which of the 8 subboxes the given index lives
-    CoordinateVector<> &p = positions[index];
+    const CoordinateVector<> &p = positions[index];
     ix = 2 * (p.x() - box.get_anchor().x()) / box.get_sides().x();
     iy = 2 * (p.y() - box.get_anchor().y()) / box.get_sides().y();
     iz = 2 * (p.z() - box.get_anchor().z()) / box.get_sides().z();
@@ -151,6 +152,7 @@ public:
    * this node is not opened.
    */
   inline void collapse(OctreeNode *sibling = nullptr) {
+
     _sibling = sibling;
     if (_index == OCTREE_NOLEAF) {
       unsigned char i = 0;
@@ -222,6 +224,7 @@ public:
    */
   template < typename _operation_ >
   inline double set_variable(std::vector< double > &variables, _operation_ op) {
+
     if (_index < OCTREE_NOLEAF) {
       _variable = variables[_index];
     } else {
@@ -251,6 +254,7 @@ public:
    */
   inline void print(std::ostream &stream,
                     std::vector< CoordinateVector<> > &positions) const {
+
     if (is_leaf()) {
       stream << positions[_index].x() << "\t" << positions[_index].y() << "\t"
              << positions[_index].z() << "\n\n";

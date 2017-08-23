@@ -219,8 +219,8 @@ void TemperatureCalculator::ioneng(
 
   /// step 1: get the ionization equilibrium for hydrogen and helium
 
-  IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, n, AHe, T, h0,
-                                     he0);
+  IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
+      alphaH, alphaHe, jH, jHe, n, AHe, T, h0, he0);
 
   // the ionization equilibrium gives us the electron density (we neglect free
   // electrons coming from ionization of coolants)
@@ -454,8 +454,8 @@ void TemperatureCalculator::calculate_temperature(
     const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
     const double nH = ionization_variables.get_number_density();
     const double AHe = _abundances.get_abundance(ELEMENT_He);
-    IonizationStateCalculator::find_H0(alphaH, alphaHe, jH, jHe, nH, AHe, 8000.,
-                                       h0, he0);
+    IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
+        alphaH, alphaHe, jH, jHe, nH, AHe, 8000., h0, he0);
     if (_crfac > 0. && h0 > _crlim) {
       // assume fully neutral
       ionization_variables.set_temperature(500.);

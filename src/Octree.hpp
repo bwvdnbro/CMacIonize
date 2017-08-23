@@ -46,10 +46,10 @@ private:
   std::vector< CoordinateVector<> > &_positions;
 
   /*! @brief Box containing the tree structure. */
-  Box<> _box;
+  const Box<> _box;
 
   /*! @brief Periodicity flag. */
-  bool _periodic;
+  const bool _is_periodic;
 
   /*! @brief Root node. */
   OctreeNode *_root;
@@ -64,7 +64,8 @@ public:
    */
   inline Octree(std::vector< CoordinateVector<> > &positions, Box<> box,
                 bool periodic = false)
-      : _positions(positions), _box(box), _periodic(periodic) {
+      : _positions(positions), _box(box), _is_periodic(periodic) {
+
     // create the root of the tree
     _root = new OctreeNode(0);
 
@@ -125,12 +126,13 @@ public:
    * of the given centre.
    */
   inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) const {
+
     std::vector< unsigned int > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(_positions[next->get_index()], centre)
                   .norm();
         } else {
@@ -143,7 +145,7 @@ public:
       } else {
         // check opening criterion
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(next->get_box(), centre);
         } else {
           r = next->get_box().get_distance(centre);
@@ -173,12 +175,13 @@ public:
    */
   inline std::vector< unsigned int > get_ngbs_sphere(CoordinateVector<> centre,
                                                      double radius) const {
+
     std::vector< unsigned int > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(_positions[next->get_index()], centre)
                   .norm();
         } else {
@@ -191,7 +194,7 @@ public:
       } else {
         // check opening criterion
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(next->get_box(), centre);
         } else {
           r = next->get_box().get_distance(centre);
@@ -219,15 +222,16 @@ public:
    */
   inline std::vector< unsigned int >
   get_ngbs_list(std::vector< CoordinateVector<> > centre_list) const {
+
     std::vector< unsigned int > ngbs;
     const unsigned int clist_size = centre_list.size();
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
         for (unsigned int i = 0; i < clist_size; i++) {
-          CoordinateVector<> centre = centre_list[i];
+          const CoordinateVector<> centre = centre_list[i];
           double r;
-          if (_periodic) {
+          if (_is_periodic) {
             r = _box.periodic_distance(_positions[next->get_index()], centre)
                     .norm();
           } else {
@@ -243,9 +247,9 @@ public:
         // check opening criterion
         unsigned int centre_num = 0;
         for (unsigned int i = 0; i < clist_size; i++) {
-          CoordinateVector<> centre = centre_list[i];
+          const CoordinateVector<> centre = centre_list[i];
           double r;
-          if (_periodic) {
+          if (_is_periodic) {
             r = _box.periodic_distance(next->get_box(), centre);
           } else {
             r = next->get_box().get_distance(centre);
@@ -272,13 +276,14 @@ public:
    * @return Index of the closest neighbour to that position.
    */
   inline unsigned int get_closest_ngb(const CoordinateVector<> centre) {
+
     double rmin = DBL_MAX;
     unsigned int imin = 0;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(_positions[next->get_index()], centre)
                   .norm();
         } else {
@@ -292,7 +297,7 @@ public:
       } else {
         // check opening criterion
         double r;
-        if (_periodic) {
+        if (_is_periodic) {
           r = _box.periodic_distance(next->get_box(), centre);
         } else {
           r = next->get_box().get_distance(centre);

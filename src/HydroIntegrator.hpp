@@ -57,22 +57,22 @@ enum HydroBoundaryConditionType {
 class HydroIntegrator {
 private:
   /*! @brief Adiabatic index of the gas. */
-  double _gamma;
+  const double _gamma;
 
   /*! @brief Adiabatic index minus one. */
-  double _gm1;
+  const double _gm1;
 
   /*! @brief Flag indicating whether we use radiative heating or not. */
-  bool _do_radiative_heating;
+  const bool _do_radiative_heating;
 
   /*! @brief Flag indicating whether we want radiative cooling or not. */
-  bool _do_radiative_cooling;
+  const bool _do_radiative_cooling;
 
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   RiemannSolver _solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
-  HydroBoundaryConditionType _boundaries[6];
+  const HydroBoundaryConditionType _boundaries[6];
 
   /**
    * @brief Get the HydroBoundaryConditionType corresponding to the given type
@@ -122,17 +122,15 @@ public:
                          std::string boundary_zhigh = "reflective",
                          CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false))
-      : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
-        _do_radiative_cooling(do_radiative_cooling), _solver(gamma) {
-
-    _gm1 = _gamma - 1.;
-
-    _boundaries[0] = get_boundary_type(boundary_xlow);
-    _boundaries[1] = get_boundary_type(boundary_xhigh);
-    _boundaries[2] = get_boundary_type(boundary_ylow);
-    _boundaries[3] = get_boundary_type(boundary_yhigh);
-    _boundaries[4] = get_boundary_type(boundary_zlow);
-    _boundaries[5] = get_boundary_type(boundary_zhigh);
+      : _gamma(gamma), _gm1(_gamma - 1.),
+        _do_radiative_heating(do_radiative_heating),
+        _do_radiative_cooling(do_radiative_cooling), _solver(gamma),
+        _boundaries{get_boundary_type(boundary_xlow),
+                    get_boundary_type(boundary_xhigh),
+                    get_boundary_type(boundary_ylow),
+                    get_boundary_type(boundary_yhigh),
+                    get_boundary_type(boundary_zlow),
+                    get_boundary_type(boundary_zhigh)} {
 
     if (_boundaries[0] == HYDRO_BOUNDARY_PERIODIC) {
       if (_boundaries[1] != HYDRO_BOUNDARY_PERIODIC) {
@@ -218,10 +216,12 @@ public:
    * @param grid DensityGrid to operate on.
    */
   inline void initialize_hydro_variables(DensityGrid &grid) const {
+
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
     const double boltzmann_k =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
       const double number_density =
@@ -266,6 +266,7 @@ public:
    * @param timestep Time step over which to evolve the system.
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
+
 //#define PRINT_TIMESTEP_CRITERION
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;

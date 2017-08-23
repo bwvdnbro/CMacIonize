@@ -37,7 +37,7 @@
 class IonizationPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
-  PhotonSource &_photon_source;
+  const PhotonSource &_photon_source;
 
   /*! @brief RandomGenerator used to generate random uniform numbers. */
   RandomGenerator _random_generator;
@@ -63,8 +63,8 @@ public:
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
    */
-  inline IonizationPhotonShootJob(PhotonSource &photon_source, int random_seed,
-                                  DensityGrid &density_grid)
+  inline IonizationPhotonShootJob(const PhotonSource &photon_source,
+                                  int random_seed, DensityGrid &density_grid)
       : _photon_source(photon_source), _random_generator(random_seed),
         _density_grid(density_grid), _totweight(0.), _typecount{0.},
         _numphoton(0) {}

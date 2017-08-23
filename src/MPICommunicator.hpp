@@ -99,6 +99,7 @@ public:
    * @param argv Command line arguments passed on to the main program.
    */
   inline MPICommunicator(int &argc, char **argv) {
+
 #ifdef HAVE_MPI
     // MPI_Init is known to cause memory leak detections, so we disable the
     // address sanitizer for all allocations made by it
@@ -127,7 +128,7 @@ public:
     // we first try an OpenMP specific check
     char *env = getenv("OMPI_COMM_WORLD_SIZE");
     if (env != nullptr) {
-      int size = atoi(env);
+      const int size = atoi(env);
       if (size > 1) {
         cmac_error("Program is being run in parallel using MPI, but MPI was "
                    "disabled at compile time! Please compile again with MPI "
@@ -142,7 +143,7 @@ public:
 // we are running in MPI mode
 // the method below will only work for POSIX systems
 #ifdef HAVE_POSIX
-      pid_t ppid = getppid();
+      const pid_t ppid = getppid();
       std::stringstream procfilename;
       procfilename << "/proc/" << ppid << "/cmdline";
       std::ifstream procfile(procfilename.str());
@@ -173,7 +174,7 @@ public:
    */
   inline ~MPICommunicator() {
 #ifdef HAVE_MPI
-    int status = MPI_Finalize();
+    const int status = MPI_Finalize();
     if (status != MPI_SUCCESS) {
       cmac_error("Failed to clean up MPI!");
     }
@@ -202,10 +203,11 @@ public:
    * @return Part of the number that is assigned to this process.
    */
   inline unsigned int distribute(unsigned int number) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
-      unsigned int quotient = number / _size;
-      int remainder = number % _size;
+      const unsigned int quotient = number / _size;
+      const int remainder = number % _size;
       // all processes with a rank smaller than the remainder get one element
       // extra (since _rank < remainder evaluates to either 0 or 1)
       return quotient + (_rank < remainder);
@@ -232,11 +234,12 @@ public:
    */
   static inline std::pair< unsigned long, unsigned long >
   distribute_block(int rank, int size, unsigned long begin, unsigned long end) {
-    unsigned long block_size = end - begin;
+
+    const unsigned long block_size = end - begin;
     unsigned long block_begin;
     unsigned long block_end;
-    unsigned long quotient = block_size / size;
-    int remainder = block_size % size;
+    const unsigned long quotient = block_size / size;
+    const int remainder = block_size % size;
     // here is the logic: the start of the local block should be the sum of
     // all blocks on processes with ranks lower than this block
     // these have size quotient + (_rank < remainder), which means they have
@@ -258,6 +261,7 @@ public:
    */
   inline std::pair< unsigned long, unsigned long >
   distribute_block(unsigned long begin, unsigned long end) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
       return distribute_block(_rank, _size, begin, end);
@@ -278,6 +282,7 @@ public:
    * @return MPI_Op corresponding to the given MPIOperatorType.
    */
   inline static MPI_Op get_operator(MPIOperatorType type) {
+
     switch (type) {
     case MPI_SUM_OF_ALL_PROCESSES:
       return MPI_SUM;
@@ -306,6 +311,7 @@ public:
   void reduce(std::vector< _classtype_ > &v,
               _datatype_ (_classtype_::*getter)() const,
               void (_classtype_::*setter)(_datatype_)) const {
+
 #ifdef HAVE_MPI
     // we only communicate if there are multiple processes
     if (_size > 1) {
@@ -313,9 +319,9 @@ public:
       for (unsigned int i = 0; i < v.size(); ++i) {
         sendbuffer[i] = (v[i].*(getter))();
       }
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      MPI_Op otype = get_operator(_operatortype_);
-      int status =
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const MPI_Op otype = get_operator(_operatortype_);
+      const int status =
           MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], sendbuffer.size(), dtype,
                         otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
@@ -361,14 +367,15 @@ public:
               _datatype_ (_classtype_::*getter)(_arguments_...) const,
               void (_classtype_::*setter)(_datatype_, _arguments_...),
               unsigned int size, _arguments_... args) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
       if (size == 0) {
         size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
       }
       std::vector< _datatype_ > sendbuffer(size);
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      MPI_Op otype = get_operator(_operatortype_);
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const MPI_Op otype = get_operator(_operatortype_);
       // we loop over all elements of the iterator
       _iteratortype_ it = begin;
       while (it != end) {
@@ -388,8 +395,8 @@ public:
         // by providing MPI_IN_PLACE as sendbuffer argument, we tell MPI to the
         // an in place reduction, reading and storing from the recvbuffer (which
         // is our sendbuffer).
-        int status = MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], i, dtype,
-                                   otype, MPI_COMM_WORLD);
+        const int status = MPI_Allreduce(MPI_IN_PLACE, &sendbuffer[0], i, dtype,
+                                         otype, MPI_COMM_WORLD);
         if (status != MPI_SUCCESS) {
           cmac_error("Error in MPI_Allreduce!");
         }
@@ -418,11 +425,12 @@ public:
    */
   template < MPIOperatorType _operatortype_, typename _datatype_ >
   void reduce(_datatype_ &value) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      MPI_Op otype = get_operator(_operatortype_);
-      int status =
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const MPI_Op otype = get_operator(_operatortype_);
+      const int status =
           MPI_Allreduce(MPI_IN_PLACE, &value, 1, dtype, otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
@@ -443,12 +451,13 @@ public:
   template < MPIOperatorType _operatortype_, unsigned int _size_,
              typename _datatype_ >
   void reduce(_datatype_ *array) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      MPI_Op otype = get_operator(_operatortype_);
-      int status = MPI_Allreduce(MPI_IN_PLACE, array, _size_, dtype, otype,
-                                 MPI_COMM_WORLD);
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const MPI_Op otype = get_operator(_operatortype_);
+      const int status = MPI_Allreduce(MPI_IN_PLACE, array, _size_, dtype,
+                                       otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
       }
@@ -463,12 +472,14 @@ public:
    */
   template < MPIOperatorType _operatortype_, typename _datatype_ >
   void reduce(std::vector< _datatype_ > &vector) {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      MPI_Op otype = get_operator(_operatortype_);
-      int status = MPI_Allreduce(MPI_IN_PLACE, vector.data(), vector.size(),
-                                 dtype, otype, MPI_COMM_WORLD);
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const MPI_Op otype = get_operator(_operatortype_);
+      const int status =
+          MPI_Allreduce(MPI_IN_PLACE, vector.data(), vector.size(), dtype,
+                        otype, MPI_COMM_WORLD);
       if (status != MPI_SUCCESS) {
         cmac_error("Error in MPI_Allreduce!");
       }
@@ -485,10 +496,11 @@ public:
    */
   template < typename _datatype_ >
   void gather(std::vector< _datatype_ > &vector) const {
+
 #ifdef HAVE_MPI
     if (_size > 1) {
-      MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
-      std::pair< unsigned long, unsigned long > local_block =
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+      const std::pair< unsigned long, unsigned long > local_block =
           distribute_block(0, vector.size());
       // do a complicated communication ring:
       // we do a loop with _size steps; each process sends to process
@@ -505,9 +517,9 @@ public:
         // the +_size in recv_block is not really necessary, but it makes sure
         // the rank is always positive (and would be necessary if _rank was an
         // unsigned integer)
-        int sendrank = (_rank + step) % _size;
-        int recvrank = (_rank + _size - step) % _size;
-        std::pair< unsigned long, unsigned long > recv_block =
+        const int sendrank = (_rank + step) % _size;
+        const int recvrank = (_rank + _size - step) % _size;
+        const std::pair< unsigned long, unsigned long > recv_block =
             distribute_block(recvrank, _size, 0, vector.size());
         MPI_Request request;
         int status = MPI_Isend(&vector[local_block.first],
@@ -542,6 +554,7 @@ public:
    */
   inline void send_message(int destination, MPIMessage *message,
                            MPIMessageBox &message_box) const {
+
 #ifdef HAVE_MPI
     MPITagSizeMessage *announcement = message_box.get_announcement(message);
     int status =
@@ -568,9 +581,10 @@ public:
    */
   inline void send_semi_ready(int destination,
                               MPIMessageBox &message_box) const {
+
 #ifdef HAVE_MPI
     MPITagSizeMessage *announcement = message_box.get_announcement_semi_ready();
-    int status =
+    const int status =
         MPI_Isend(announcement->get_array_handle(), 3, MPI_INT, destination, 0,
                   MPI_COMM_WORLD, announcement->get_request_handle());
     if (status != MPI_SUCCESS) {
@@ -586,9 +600,10 @@ public:
    * @param message_box MessageBox to use.
    */
   inline void send_ready(int destination, MPIMessageBox &message_box) const {
+
 #ifdef HAVE_MPI
     MPITagSizeMessage *announcement = message_box.get_announcement_ready();
-    int status =
+    const int status =
         MPI_Isend(announcement->get_array_handle(), 3, MPI_INT, destination, 0,
                   MPI_COMM_WORLD, announcement->get_request_handle());
     if (status != MPI_SUCCESS) {
@@ -604,6 +619,7 @@ public:
    * message tag.
    */
   inline void check_for_message(MPIMessageBox &message_box) const {
+
 #ifdef HAVE_MPI
     MPI_Status probestatus;
     int flag;
@@ -613,7 +629,7 @@ public:
       cmac_error("Failed to probe for incoming message!");
     }
     if (flag > 0) {
-      int source = probestatus.MPI_SOURCE;
+      const int source = probestatus.MPI_SOURCE;
       MPITagSizeMessage announcement;
       status = MPI_Recv(announcement.get_array_handle(), 3, MPI_INT, source, 0,
                         MPI_COMM_WORLD, MPI_STATUS_IGNORE);

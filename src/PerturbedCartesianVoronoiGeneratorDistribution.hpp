@@ -65,6 +65,7 @@ public:
       const CoordinateVector< unsigned int > resolution, double random_seed,
       double amplitude, Log *log = nullptr)
       : _current_number(0) {
+
     RandomGenerator rg(random_seed);
     _generator_positions.resize(resolution.x() * resolution.y() *
                                 resolution.z());
@@ -145,6 +146,7 @@ public:
    * @return Next generator position (in m).
    */
   virtual CoordinateVector<> get_position() {
+
     cmac_assert(_current_number < _generator_positions.size());
     CoordinateVector<> pos = _generator_positions[_current_number];
     ++_current_number;

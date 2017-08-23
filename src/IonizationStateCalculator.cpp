@@ -81,10 +81,11 @@ void IonizationStateCalculator::calculate_ionization_state(
     // h0find
     double h0, he0 = 0.;
     if (_abundances.get_abundance(ELEMENT_He) != 0.) {
-      find_H0(alphaH, alphaHe, jH, jHe, ntot,
-              _abundances.get_abundance(ELEMENT_He), T, h0, he0);
+      compute_ionization_states_hydrogen_helium(
+          alphaH, alphaHe, jH, jHe, ntot, _abundances.get_abundance(ELEMENT_He),
+          T, h0, he0);
     } else {
-      h0 = find_H0_simple(alphaH, jH, ntot);
+      h0 = compute_ionization_state_hydrogen(alphaH, jH, ntot);
     }
 
     ionization_variables.set_ionic_fraction(ION_H_n, h0);
@@ -496,10 +497,9 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @param h0 Variable to store resulting hydrogen neutral fraction in.
  * @param he0 Variable to store resulting helium neutral fraction in.
  */
-void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
-                                        double jH, double jHe, double nH,
-                                        double AHe, double T, double &h0,
-                                        double &he0) {
+void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
+    double alphaH, double alphaHe, double jH, double jHe, double nH, double AHe,
+    double T, double &h0, double &he0) {
 
   // make sure the input to this function is physical
   cmac_assert(alphaH >= 0.);
@@ -559,7 +559,7 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
     const double pHots = 1. / (1. + 77. * he0old / std::sqrt(T) / h0old);
     // make sure pHots is not NaN
     cmac_assert(pHots == pHots);
-    double ch = ch1 - ch2 * AHe * (1. - he0old) * pHots / (1. - h0old);
+    const double ch = ch1 - ch2 * AHe * (1. - he0old) * pHots / (1. - h0old);
 
     // find the helium neutral fraction
     he0 = 1.;
@@ -613,8 +613,8 @@ void IonizationStateCalculator::find_H0(double alphaH, double alphaHe,
  * @param nH Hydrogen number density (in m^-3).
  * @return Neutral fraction of hydrogen.
  */
-double IonizationStateCalculator::find_H0_simple(double alphaH, double jH,
-                                                 double nH) {
+double IonizationStateCalculator::compute_ionization_state_hydrogen(
+    double alphaH, double jH, double nH) {
   if (jH > 0. && nH > 0.) {
     const double aa = 0.5 * jH / nH / alphaH;
     const double bb = 2. / aa;

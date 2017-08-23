@@ -50,7 +50,7 @@ private:
   Box<> _box;
 
   /*! @brief Periodicity flags. */
-  CoordinateVector< bool > _periodic;
+  CoordinateVector< bool > _periodicity_flags;
 
   /*! @brief Side lengths of a single cell. */
   CoordinateVector<> _cellside;

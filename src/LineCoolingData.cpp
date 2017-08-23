@@ -1451,7 +1451,8 @@ LineCoolingData::get_statistical_weight(LineCoolingDataFiveLevelElement element,
  * @return Exit code: 0 on success. If a non zero value is returned, the values
  * stored in B on exit are meaningless and should not be used.
  */
-int LineCoolingData::simq(double A[5][5], double B[5]) {
+int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
+                                                      double B[5]) {
 
   for (unsigned char j = 0; j < 5; ++j) {
     // find the next row with the largest coefficient
@@ -1646,7 +1647,8 @@ void LineCoolingData::compute_level_populations(
              collision_rate_down[TRANSITION_3_to_4]));
 
   // find level populations
-  const int status = simq(level_matrix, level_populations);
+  const int status =
+      solve_system_of_linear_equations(level_matrix, level_populations);
   if (status != 0) {
     // something went wrong
     cmac_error("Singular matrix in level population computation (element: %i, "

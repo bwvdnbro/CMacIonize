@@ -62,7 +62,8 @@ public:
    */
   inline static PhotonSourceSpectrum *
   generate(std::string role, ParameterFile &params, Log *log = nullptr) {
-    std::string type =
+
+    const std::string type =
         params.get_value< std::string >(role + ":type", "Monochromatic");
     if (log) {
       log->write_info("Requested PhotonSourceSpectrum for ", role, ": ", type);

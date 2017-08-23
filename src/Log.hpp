@@ -55,7 +55,7 @@ enum LogLevel {
 class Log {
 private:
   /*! @brief Log level. */
-  LogLevel _level;
+  const LogLevel _level;
 
   /**
    * @brief Get a time stamp to append to log messages.
@@ -65,8 +65,8 @@ private:
    * @return Time stamp.
    */
   inline static std::string get_timestamp() {
-    std::time_t timestamp = std::time(nullptr);
-    std::tm *time = std::localtime(&timestamp);
+    const std::time_t timestamp = std::time(nullptr);
+    const std::tm *time = std::localtime(&timestamp);
     std::stringstream timestream;
     if (time->tm_hour < 10) {
       timestream << "0";
