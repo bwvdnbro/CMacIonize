@@ -108,82 +108,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Tayal (2000)
     // these fits were made with the script data/linecooling/gamma_NI.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][0] = -0.352170660298;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][1] = 290.570335282;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][2] = -88972.2171524;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][3] = -5864.47392717;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][4] = -34.6307594052;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][5] = 5864.48664195;
-    _five_level_collision_strength[NI][TRANSITION_0_to_1][6] = 0.999999834749;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][0] = 1.04662088312;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][1] =
-        -0.000192854143976;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][2] = 0.0933869336879;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][3] = 62.4700577714;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][4] =
-        2.12972369491e-05;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][5] = -62.4700577752;
-    _five_level_collision_strength[NI][TRANSITION_0_to_2][6] = 0.999999999995;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][0] = -0.143686075261;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][1] = 4.85458860278;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][2] = -1635.9084968;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][3] = -85.5223871776;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][4] = -0.570897281076;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][5] = 85.5225946457;
-    _five_level_collision_strength[NI][TRANSITION_0_to_3][6] = 0.999999813378;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][0] = -0.146192751421;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][1] = 10.0505771787;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][2] = -3382.89322868;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][3] = 3474.60389784;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][4] = -1.1821988914;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][5] = -3474.60346722;
-    _five_level_collision_strength[NI][TRANSITION_0_to_4][6] = 1.00000000954;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][0] = 1.08380124933;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][1] =
-        -0.00824248994995;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][2] = 6.09352690919;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][3] =
-        5.12778710603e-05;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][4] =
-        0.000897416464378;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][5] =
-        -5.14370296385e-05;
-    _five_level_collision_strength[NI][TRANSITION_1_to_2][6] = 0.999765473624;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][0] = 0.825614395297;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][1] = -0.0452768551043;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][2] = 19.6917639859;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][3] = -38.3932561041;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][4] = 0.00508048299418;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][5] = 38.3932550214;
-    _five_level_collision_strength[NI][TRANSITION_1_to_3][6] = 1.00000000216;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][0] = 0.673408607924;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][1] = -1.30037729225;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][2] = 549.88707741;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][3] = -0.0687375130436;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][4] = 0.146264389311;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][5] = 0.0687059692896;
-    _five_level_collision_strength[NI][TRANSITION_1_to_4][6] = 1.00003514965;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][0] = 0.639898658243;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][1] = -0.913913781086;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][2] = 385.259711068;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][3] = -49.3897876926;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][4] = 0.102833403715;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][5] = 49.3897653939;
-    _five_level_collision_strength[NI][TRANSITION_2_to_3][6] = 1.00000003459;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][0] = 0.779047782547;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][1] = -0.129384116204;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][2] = 55.57362588;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][3] = -0.244902789134;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][4] = 0.0145342075843;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][5] = 0.244899675501;
-    _five_level_collision_strength[NI][TRANSITION_2_to_4][6] = 1.00000097316;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][0] = 0.979889001396;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][1] = -0.0250254133594;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][2] = 13.3611860055;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][3] = 120.384831511;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][4] = 0.00278533555664;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][5] = -120.384832094;
-    _five_level_collision_strength[NI][TRANSITION_3_to_4][6] = 0.999999999629;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][0] = 4.350e-04;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][1] = -4.500e-04;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][2] = 2.206e-01;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][3] = 4.958e-05;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][4] = 7.786e-02;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][5] = -1.099e-07;
+    _five_level_collision_strength[NI][TRANSITION_0_to_1][6] = -8.271e-09;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][0] = 2.751e-06;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][1] = -3.007e-04;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][2] = 1.474e-01;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][3] = 3.312e-05;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][4] = 3.882e-01;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][5] = -1.470e-08;
+    _five_level_collision_strength[NI][TRANSITION_0_to_2][6] = -1.106e-09;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][0] = 2.254e-07;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][1] = -3.336e-05;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][2] = 2.277e-02;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][3] = 3.636e-06;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][4] = 8.211e-02;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][5] = -5.171e-09;
+    _five_level_collision_strength[NI][TRANSITION_0_to_3][6] = -3.695e-10;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][0] = 6.567e-06;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][1] = -6.814e-05;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][2] = 4.632e-02;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][3] = 7.429e-06;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][4] = 5.470e-02;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][5] = -1.612e-08;
+    _five_level_collision_strength[NI][TRANSITION_0_to_4][6] = -1.155e-09;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][0] = 7.907e-02;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][1] = -8.603e-03;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][2] = 6.355e+00;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][3] = 9.366e-04;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][4] = 1.259e-01;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][5] = -1.315e-06;
+    _five_level_collision_strength[NI][TRANSITION_1_to_2][6] = -9.950e-08;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][0] = -1.420e-02;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][1] = -8.743e-03;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][2] = 3.581e+00;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][3] = 9.893e-04;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][4] = 8.734e-01;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][5] = -2.580e-07;
+    _five_level_collision_strength[NI][TRANSITION_1_to_3][6] = -1.983e-08;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][0] = -3.258e-01;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][1] = -1.290e+00;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][2] = 5.455e+02;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][3] = 1.451e-01;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][4] = -1.122e+01;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][5] = 2.792e-06;
+    _five_level_collision_strength[NI][TRANSITION_1_to_4][6] = 2.138e-07;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][0] = -3.592e-01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][1] = -9.058e-01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][2] = 3.817e+02;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][3] = 1.019e-01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][4] = -1.055e+01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][5] = 2.096e-06;
+    _five_level_collision_strength[NI][TRANSITION_2_to_3][6] = 1.606e-07;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][0] = -1.910e-01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][1] = -9.570e-02;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][2] = 4.070e+01;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][3] = 1.077e-02;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][4] = -5.010e+00;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][5] = 4.665e-07;
+    _five_level_collision_strength[NI][TRANSITION_2_to_4][6] = 3.574e-08;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][0] = -2.313e-03;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][1] = -2.099e-02;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][2] = 1.122e+01;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][3] = 2.337e-03;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][4] = 2.240e+00;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][5] = -2.197e-07;
+    _five_level_collision_strength[NI][TRANSITION_3_to_4][6] = -1.682e-08;
   }
 
   /// NII
@@ -233,115 +227,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Lennon & Burke (1994)
     // these fits were made with the script data/linecooling/gamma_NII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][0] = 0.651709467718;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][1] = 0.0043840698298;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][2] = 2.05865457437;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][3] =
-        -0.000183596343291;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][4] =
-        -0.000403172016047;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][5] =
-        0.000183636758783;
-    _five_level_collision_strength[NII][TRANSITION_0_to_1][6] = 0.999983437636;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][0] = 0.99721996664;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][1] =
-        -2.63996934679e-06;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][2] = 0.212680283457;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][3] =
-        -0.000299568497993;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][4] =
-        1.36812200274e-06;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][5] =
-        0.000299567319572;
-    _five_level_collision_strength[NII][TRANSITION_0_to_2][6] = 1.00000030796;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][0] = 0.985274169209;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][1] =
-        2.66502677175e-05;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][2] = 0.296461402639;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][3] =
-        0.00018880364217;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][4] =
-        -2.56029417716e-06;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][5] =
-        -0.000188803354544;
-    _five_level_collision_strength[NII][TRANSITION_0_to_3][6] = 1.00000011499;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][0] = 1.00242568631;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][1] =
-        -1.16975224507e-07;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][2] = 0.0306575644987;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][3] =
-        -0.000191065656783;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][4] =
-        2.80204262642e-08;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][5] =
-        0.000191065650186;
-    _five_level_collision_strength[NII][TRANSITION_0_to_4][6] = 1.0000000024;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][0] = 0.898544649079;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][1] =
-        0.000626320672746;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][2] = 1.55901247212;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][3] =
-        -3.57105490335e-07;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][4] =
-        -5.44511032111e-05;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][5] =
-        3.57952429654e-07;
-    _five_level_collision_strength[NII][TRANSITION_1_to_2][6] = 0.99987288108;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][0] = 0.98527416532;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][1] =
-        7.99508259627e-05;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][2] = 0.88938422702;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][3] =
-        -0.000187717979801;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][4] =
-        -7.68088510971e-06;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][5] =
-        0.000187718842681;
-    _five_level_collision_strength[NII][TRANSITION_1_to_3][6] = 0.999999653029;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][0] = 1.00242568648;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][1] =
-        -3.50925761487e-07;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][2] = 0.0919726934133;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][3] =
-        0.000184955818388;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][4] =
-        8.40612886609e-08;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][5] =
-        -0.000184955838179;
-    _five_level_collision_strength[NII][TRANSITION_1_to_4][6] = 0.999999992557;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][0] = 0.985274172887;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][1] =
-        0.000133251302615;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][2] = 1.48230698308;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][3] =
-        0.000192066237152;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][4] =
-        -1.28014668146e-05;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][5] =
-        -0.000192064799027;
-    _five_level_collision_strength[NII][TRANSITION_2_to_3][6] = 1.00000056519;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][0] = 1.00242568736;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][1] =
-        -5.84876871304e-07;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][2] = 0.153287821582;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][3] =
-        -0.000189310275131;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][4] =
-        1.40102211883e-07;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][5] =
-        0.000189310242146;
-    _five_level_collision_strength[NII][TRANSITION_2_to_4][6] = 1.00000001212;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][0] = 1.02226099745;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][1] =
-        -0.000391814027158;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][2] = 1.12144974144;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][3] =
-        -5.21675381019e-05;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][4] =
-        3.93432063927e-05;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][5] =
-        5.21628733234e-05;
-    _five_level_collision_strength[NII][TRANSITION_3_to_4][6] = 1.00000664715;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][0] = -3.483e-01;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][1] = 4.384e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][2] = 2.059e+00;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][3] = -4.032e-04;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][4] = -3.391e-05;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][5] = -1.192e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_1][6] = -8.966e-05;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][0] = -2.779e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][1] = -2.640e-06;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][2] = 2.127e-01;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][3] = 1.368e-06;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][4] = -7.504e-04;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][5] = 1.570e-06;
+    _five_level_collision_strength[NII][TRANSITION_0_to_2][6] = 1.229e-07;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][0] = -1.472e-02;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][1] = 2.665e-05;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][2] = 2.965e-01;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][3] = -2.560e-06;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][4] = 1.796e-07;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][5] = 1.600e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_3][6] = 1.209e-04;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][0] = 2.426e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][1] = -1.170e-07;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][2] = 3.066e-02;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][3] = 2.803e-08;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][4] = 2.259e-09;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][5] = -2.924e-03;
+    _five_level_collision_strength[NII][TRANSITION_0_to_4][6] = -2.031e-04;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][0] = -1.015e-01;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][1] = 6.264e-04;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][2] = 1.559e+00;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][3] = -5.445e-05;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][4] = 1.428e-06;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][5] = 5.929e-04;
+    _five_level_collision_strength[NII][TRANSITION_1_to_2][6] = 3.183e-05;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][0] = -1.472e-02;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][1] = 7.995e-05;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][2] = 8.894e-01;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][3] = -7.680e-06;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][4] = 5.191e-07;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][5] = 1.661e-03;
+    _five_level_collision_strength[NII][TRANSITION_1_to_3][6] = 1.255e-04;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][0] = 2.426e-03;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][1] = -3.510e-07;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][2] = 9.197e-02;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][3] = 8.408e-08;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][4] = 7.197e-09;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][5] = -2.753e-03;
+    _five_level_collision_strength[NII][TRANSITION_1_to_4][6] = -1.912e-04;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][0] = -1.473e-02;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][1] = 1.333e-04;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][2] = 1.482e+00;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][3] = -1.280e-05;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][4] = -1.036e-06;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][5] = -1.390e-03;
+    _five_level_collision_strength[NII][TRANSITION_2_to_3][6] = -1.048e-04;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][0] = 2.425e-03;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][1] = -5.846e-07;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][2] = 1.533e-01;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][3] = 1.401e-07;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][4] = -1.952e-07;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][5] = 1.690e-04;
+    _five_level_collision_strength[NII][TRANSITION_2_to_4][6] = 1.175e-05;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][0] = 2.226e-02;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][1] = -3.918e-04;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][2] = 1.121e+00;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][3] = 3.934e-05;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][4] = 6.245e-06;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][5] = -7.473e-04;
+    _five_level_collision_strength[NII][TRANSITION_3_to_4][6] = -5.553e-05;
   }
 
   /// OI
@@ -394,108 +349,76 @@ LineCoolingData::LineCoolingData() {
     // (this script also outputs the code below)
     // there is only data available for fine structure transitions below
     // 10,000 K, so we need to extrapolate for higher temperatures
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][0] = 0.531891968668;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][1] =
-        0.000174043443031;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][2] =
-        -0.00289046667195;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][3] =
-        6.05503334723e-08;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][4] =
-        1.19694301884e-06;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][5] = 311.969799446;
-    _five_level_collision_strength[OI][TRANSITION_0_to_1][6] = -430.811510152;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][0] = 0.709634874012;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][1] =
-        4.19344490648e-05;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][2] =
-        -9.88929290533e-05;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][3] =
-        2.34148281629e-09;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][4] =
-        -2.03916544987e-06;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][5] = 0.450007261425;
-    _five_level_collision_strength[OI][TRANSITION_0_to_2][6] = -522.886828465;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][0] = 0.577956016286;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][1] =
-        -0.00328947147455;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][2] = 0.552970782258;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][3] =
-        -1.0868651959e-08;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][4] =
-        0.000449847254588;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][5] = -3112.83302323;
-    _five_level_collision_strength[OI][TRANSITION_0_to_3][6] = -426.886279035;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][0] = 0.447157138186;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][1] =
-        -0.00199786430506;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][2] = 0.367624253613;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][3] =
-        -4.72921770139e-09;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][4] =
-        0.000249849906874;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][5] = 362.968742149;
-    _five_level_collision_strength[OI][TRANSITION_0_to_4][6] = -2159.85840959;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][0] = 0.445351360073;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][1] = 0.00019090023886;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][2] =
-        -0.00345127570802;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][3] =
-        5.71292820253e-08;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][4] =
-        -3.18737719028e-05;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][5] = 394.278912444;
-    _five_level_collision_strength[OI][TRANSITION_1_to_2][6] = -19.4605389548;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][0] = 0.577956016302;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][1] =
-        -0.00197368288433;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][2] = 0.331782469279;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][3] =
-        -6.5211911744e-09;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][4] =
-        0.000269908352701;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][5] = -3112.83302714;
-    _five_level_collision_strength[OI][TRANSITION_1_to_3][6] = -426.886279331;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][0] = 0.447157138318;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][1] =
-        -0.00119871858132;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][2] = 0.220574551826;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][3] =
-        -2.83753061784e-09;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][4] =
-        0.000149909943915;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][5] = 364.603929362;
-    _five_level_collision_strength[OI][TRANSITION_1_to_4][6] = -2170.49654928;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][0] = 0.577956016277;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][1] =
-        -0.000657894294987;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][2] = 0.110594156466;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][3] =
-        -2.17373039198e-09;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][4] =
-        8.99694509274e-05;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][5] = -3112.83303105;
-    _five_level_collision_strength[OI][TRANSITION_2_to_3][6] = -426.886279628;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][0] = 0.44715713653;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][1] =
-        -0.000399572868221;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][2] = 0.0735248521538;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][3] =
-        -9.45843552833e-10;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][4] =
-        4.99699822537e-05;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][5] = 286.606313767;
-    _five_level_collision_strength[OI][TRANSITION_2_to_4][6] = -1714.06509463;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][0] = 0.77784636923;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][1] =
-        0.000256767786556;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][2] = -0.0770418161828;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][3] =
-        1.62454220113e-10;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][4] =
-        -1.98264637506e-05;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][5] = 70.2374763213;
-    _five_level_collision_strength[OI][TRANSITION_3_to_4][6] = -1707.98593908;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][0] = -8.839e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][1] = -6.783e-03;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][2] = 7.448e-02;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][3] = 1.578e-03;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][4] = 3.239e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][5] = -2.549e-05;
+    _five_level_collision_strength[OI][TRANSITION_0_to_1][6] = -3.727e-06;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][0] = -7.697e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][1] = -9.788e-04;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][2] = 1.200e-02;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][3] = 2.477e-04;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][4] = 9.490e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][5] = -4.462e-07;
+    _five_level_collision_strength[OI][TRANSITION_0_to_2][6] = -7.755e-08;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][0] = -1.093e+00;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][1] = 1.413e+00;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][2] = -1.373e+02;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][3] = -1.998e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][4] = 9.365e+00;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][5] = 3.197e-05;
+    _five_level_collision_strength[OI][TRANSITION_0_to_3][6] = 2.514e-06;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][0] = -1.219e+00;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][1] = 6.529e-01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][2] = -5.311e+01;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][3] = -9.393e-02;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][4] = 4.506e+00;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][5] = 2.706e-05;
+    _five_level_collision_strength[OI][TRANSITION_0_to_4][6] = 2.088e-06;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][0] = -1.016e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][1] = -6.509e-03;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][2] = 6.884e-02;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][3] = 1.457e-03;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][4] = 1.015e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][5] = -1.947e-05;
+    _five_level_collision_strength[OI][TRANSITION_1_to_2][6] = -2.390e-06;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][0] = -1.093e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][1] = 8.480e-01;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][2] = -8.239e+01;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][3] = -1.199e-01;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][4] = 3.496e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][5] = 5.140e-05;
+    _five_level_collision_strength[OI][TRANSITION_1_to_3][6] = 4.042e-06;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][0] = -1.219e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][1] = 3.917e-01;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][2] = -3.187e+01;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][3] = -5.636e-02;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][4] = 3.302e+00;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][5] = 2.216e-05;
+    _five_level_collision_strength[OI][TRANSITION_1_to_4][6] = 1.709e-06;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][0] = -1.093e+00;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][1] = 2.827e-01;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][2] = -2.746e+01;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][3] = -3.996e-02;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][4] = 2.681e+00;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][5] = 2.234e-05;
+    _five_level_collision_strength[OI][TRANSITION_2_to_3][6] = 1.757e-06;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][0] = -1.219e+00;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][1] = 1.306e-01;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][2] = -1.062e+01;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][3] = -1.879e-02;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][4] = 1.964e+00;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][5] = 1.242e-05;
+    _five_level_collision_strength[OI][TRANSITION_2_to_4][6] = 9.578e-07;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][0] = -1.056e+00;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][1] = -3.587e-01;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][2] = 3.534e+01;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][3] = 4.778e-02;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][4] = 1.295e+00;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][5] = 1.089e-05;
+    _five_level_collision_strength[OI][TRANSITION_3_to_4][6] = 6.545e-07;
   }
 
   /// OII
@@ -545,116 +468,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Kisielius et al. (2009)
     // these fits were made with the script data/linecooling/gamma_OII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][0] = 0.997482865693;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][1] =
-        -6.25129361407e-06;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][2] = 0.85013614096;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][3] =
-        -0.000192875793831;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][4] =
-        7.24338376045e-07;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][5] =
-        0.000192875807718;
-    _five_level_collision_strength[OII][TRANSITION_0_to_1][6] = 0.99999998866;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][0] = 0.988746408499;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][1] =
-        -8.42756442139e-07;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][2] = 0.603631681835;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][3] =
-        -0.000105058004912;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][4] =
-        2.17871753378e-07;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][5] =
-        0.000105057997886;
-    _five_level_collision_strength[OII][TRANSITION_0_to_2][6] = 0.999999999636;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][0] = 1.01835073138;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][1] =
-        -8.27164528694e-06;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][2] = 0.218331491341;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][3] =
-        -0.000190517152037;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][4] =
-        9.09027104327e-07;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][5] =
-        0.000190517050403;
-    _five_level_collision_strength[OII][TRANSITION_0_to_3][6] = 1.0000000379;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][0] = 1.07789473168;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][1] =
-        -1.02597843387e-05;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][2] = 0.0746395510181;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][3] =
-        -0.000184748722689;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][4] =
-        1.04586672193e-06;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][5] =
-        0.000184748595148;
-    _five_level_collision_strength[OII][TRANSITION_0_to_4][6] = 1.00000005113;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][0] = 1.09674389746;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][1] =
-        -0.000170228626507;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][2] = 0.687307627909;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][3] =
-        -0.000224682674283;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][4] =
-        1.70504922064e-05;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][5] =
-        0.000224680734991;
-    _five_level_collision_strength[OII][TRANSITION_1_to_2][6] = 1.00000063846;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][0] = 0.989713168687;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][1] =
-        -7.34069674831e-05;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][2] = 0.884455714824;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][3] =
-        -5.55972760398e-05;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][4] =
-        9.29108980844e-06;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][5] =
-        5.55950017245e-05;
-    _five_level_collision_strength[OII][TRANSITION_1_to_3][6] = 1.00000309792;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][0] = 0.947603573757;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][1] =
-        -6.73041136806e-06;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][2] = 0.466652575724;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][3] =
-        -0.000414534389992;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][4] =
-        1.97530866409e-06;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][5] =
-        0.000414533353556;
-    _five_level_collision_strength[OII][TRANSITION_1_to_4][6] = 1.00000019139;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][0] = 0.965029355403;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][1] =
-        -2.31141091327e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][2] = 0.57711971218;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][3] =
-        1.72396758467e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][4] =
-        3.75814829055e-06;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][5] =
-        -1.72410045449e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_3][6] = 0.99999413037;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][0] = 1.01037890101;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][1] =
-        -3.42480054524e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][2] = 0.299599079452;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][3] =
-        8.65931572433e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][4] =
-        4.00278953831e-06;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][5] =
-        -8.65939756713e-05;
-    _five_level_collision_strength[OII][TRANSITION_2_to_4][6] = 0.999999286977;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][0] = 1.0646553085;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][1] =
-        -3.64347494013e-05;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][2] = 0.183829080779;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][3] =
-        0.000166420572534;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][4] =
-        3.85636161175e-06;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][5] =
-        -0.000166421128586;
-    _five_level_collision_strength[OII][TRANSITION_3_to_4][6] = 0.999999750898;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][0] = -2.523e-03;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][1] = -6.241e-06;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][2] = 8.502e-01;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][3] = 7.233e-07;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][4] = 1.444e-03;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][5] = 9.709e-09;
+    _five_level_collision_strength[OII][TRANSITION_0_to_1][6] = 1.522e-09;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][0] = -1.125e-02;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][1] = -8.446e-07;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][2] = 6.036e-01;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][3] = 2.181e-07;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][4] = -1.635e-04;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][5] = 4.311e-08;
+    _five_level_collision_strength[OII][TRANSITION_0_to_2][6] = -2.238e-10;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][0] = 1.161e-02;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][1] = -4.213e-06;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][2] = 2.279e-01;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][3] = 4.878e-07;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][4] = -1.033e-11;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][5] = 1.000e+00;
+    _five_level_collision_strength[OII][TRANSITION_0_to_3][6] = 2.265e+00;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][0] = 7.789e-02;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][1] = -1.026e-05;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][2] = 7.464e-02;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][3] = 1.046e-06;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][4] = 1.431e-07;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][5] = -8.913e-04;
+    _five_level_collision_strength[OII][TRANSITION_0_to_4][6] = -6.598e-05;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][0] = -8.588e-01;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][1] = -4.648e+00;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][2] = -3.736e+02;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][3] = -1.190e+00;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][4] = -1.466e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][5] = -5.766e+06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_2][6] = -9.308e-01;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][0] = -1.028e-02;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][1] = -7.342e-05;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][2] = 8.844e-01;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][3] = 9.292e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][4] = -3.079e-04;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][5] = 7.387e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_3][6] = 5.594e-07;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][0] = -5.239e-02;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][1] = -6.736e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][2] = 4.666e-01;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][3] = 1.976e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][4] = -8.040e-04;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][5] = 1.289e-06;
+    _five_level_collision_strength[OII][TRANSITION_1_to_4][6] = 9.867e-08;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][0] = -3.494e-02;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][1] = -2.313e-05;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][2] = 5.770e-01;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][3] = 3.760e-06;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][4] = -1.210e-03;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][5] = 1.098e-06;
+    _five_level_collision_strength[OII][TRANSITION_2_to_3][6] = 8.364e-08;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][0] = 1.038e-02;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][1] = -3.425e-05;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][2] = 2.996e-01;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][3] = 4.003e-06;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][4] = -2.143e-04;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][5] = 3.819e-06;
+    _five_level_collision_strength[OII][TRANSITION_2_to_4][6] = 2.881e-07;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][0] = 6.465e-02;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][1] = -3.643e-05;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][2] = 1.838e-01;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][3] = 3.856e-06;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][4] = -1.932e-07;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][5] = 2.875e-03;
+    _five_level_collision_strength[OII][TRANSITION_3_to_4][6] = 2.147e-04;
   }
 
   /// OIII
@@ -704,107 +587,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Lennon & Burke (1994)
     // these fits were made with the script data/linecooling/gamma_OIII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][0] = 0.748234291392;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][1] =
-        0.00232792212453;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][2] = 2.17448230368;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][3] = 0.115352927697;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][4] =
-        -0.000224722336436;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][5] =
-        -0.115352902446;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_1][6] = 1.00000001641;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][0] = 0.711355746813;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][1] =
-        0.00146371349738;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][2] = 1.37408055389;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][3] =
-        0.0723506999835;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][4] =
-        -0.000136510086638;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][5] =
-        -0.0723506857993;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_2][6] = 1.00000001479;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][0] = 0.212048796845;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][1] =
-        -0.0308141863599;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][2] = 50.1955663469;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][3] = 0.115631697056;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][4] =
-        0.00745960829944;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][5] =
-        -0.115633905463;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_3][6] = 0.999998565297;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][0] = 0.473875264246;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][1] =
-        0.000161690904972;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][2] = 1.04668052111;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][3] = 0.596870866366;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][4] =
-        2.35439474228e-05;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][5] =
-        -0.596870889829;
-    _five_level_collision_strength[OIII][TRANSITION_0_to_4][6] = 0.999999996984;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][0] = 0.728575980601;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][1] =
-        0.00630786658198;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][2] = 5.83509344037;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][3] = 0.115352923656;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][4] =
-        -0.000599131478658;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][5] =
-        -0.115352859303;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_2][6] = 1.00000004191;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][0] = 0.212049723828;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][1] =
-        -0.0924411081199;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][2] = 150.585634379;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][3] = 0.271112958338;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][4] =
-        0.0223785612179;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][5] =
-        -0.271119583518;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_3][6] = 0.99999816428;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][0] = 0.473874398853;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][1] =
-        0.000485071869136;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][2] = 3.14006004469;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][3] = 0.207986730789;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][4] =
-        7.06330121882e-05;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][5] =
-        -0.207986801177;
-    _five_level_collision_strength[OIII][TRANSITION_1_to_4][6] = 0.999999974034;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][0] = 0.212049682479;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][1] =
-        -0.154067564151;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][2] = 250.975916712;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][3] =
-        -0.346947242556;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][4] =
-        0.0372974838928;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][5] = 0.346936200866;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_3][6] = 1.0000023908;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][0] = 0.473773531719;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][1] =
-        0.000808267411352;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][2] = 5.23703593485;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][3] = 0.346058699298;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][4] =
-        0.000117951167668;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][5] =
-        -0.346058816732;
-    _five_level_collision_strength[OIII][TRANSITION_2_to_4][6] = 0.999999973963;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][0] = 1.06251713793;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][1] =
-        0.000170026677194;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][2] = 0.176555659107;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][3] = 0.115626390808;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][4] =
-        -1.7736910794e-05;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][5] =
-        -0.115626388216;
-    _five_level_collision_strength[OIII][TRANSITION_3_to_4][6] = 1.00000000168;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][0] = -2.517e-01;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][1] = 2.326e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][2] = 2.174e+00;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][3] = -2.246e-04;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][4] = -4.349e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][5] = -5.803e-06;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_1][6] = -4.351e-07;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][0] = -2.886e-01;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][1] = 1.462e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][2] = 1.373e+00;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][3] = -1.364e-04;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][4] = 6.062e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][5] = 2.338e-06;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_2][6] = 1.764e-07;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][0] = -7.878e-01;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][1] = -3.075e-02;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][2] = 5.015e+01;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][3] = 7.448e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][4] = -3.189e-03;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][5] = 6.917e-04;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_3][6] = 5.198e-05;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][0] = -5.259e-01;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][1] = 1.618e-04;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][2] = 1.045e+00;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][3] = 2.345e-05;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][4] = -7.038e-04;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][5] = 3.326e-05;
+    _five_level_collision_strength[OIII][TRANSITION_0_to_4][6] = 2.552e-06;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][0] = -2.714e-01;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][1] = 6.306e-03;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][2] = 5.834e+00;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][3] = -5.990e-04;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][4] = -5.646e-03;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][5] = -1.140e-05;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_2][6] = -8.562e-07;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][0] = -7.879e-01;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][1] = -9.239e-02;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][2] = 1.505e+02;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][3] = 2.237e-02;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][4] = 1.919e-02;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][5] = -3.453e-04;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_3][6] = -2.593e-05;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][0] = -5.259e-01;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][1] = 4.853e-04;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][2] = 3.136e+00;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][3] = 7.039e-05;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][4] = -1.210e-03;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][5] = 5.806e-05;
+    _five_level_collision_strength[OIII][TRANSITION_1_to_4][6] = 4.455e-06;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][0] = -7.879e-01;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][1] = -1.541e-01;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][2] = 2.510e+02;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][3] = 3.730e-02;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][4] = 6.860e-02;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][5] = -1.610e-04;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_3][6] = -1.209e-05;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][0] = -5.260e-01;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][1] = 8.087e-04;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][2] = 5.229e+00;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][3] = 1.175e-04;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][4] = -1.729e-03;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][5] = 6.777e-05;
+    _five_level_collision_strength[OIII][TRANSITION_2_to_4][6] = 5.200e-06;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][0] = 6.242e-02;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][1] = 1.702e-04;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][2] = 1.766e-01;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][3] = -1.776e-05;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][4] = -2.314e-03;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][5] = -1.121e-06;
+    _five_level_collision_strength[OIII][TRANSITION_3_to_4][6] = -8.415e-08;
   }
 
   /// NeIII
@@ -854,137 +706,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Butler & Zeippen (1994)
     // these fits were made with the script data/linecooling/gamma_NeIII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][0] =
-        0.229212961855;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][1] =
-        0.391241413653;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][2] =
-        -98.8699646747;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][3] =
-        3.33490329495e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][4] =
-        -0.0315920221406;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][5] =
-        -1.79860927224e-34;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][6] = 6.24902182391;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][0] =
-        0.242231485943;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][1] =
-        0.118413569516;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][2] = -28.631450153;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][3] =
-        0.00020164783497;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][4] =
-        -0.0104670084568;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][5] =
-        -0.00020065502745;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][6] = 1.0003625347;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][0] =
-        0.994550005514;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][1] =
-        -9.74857730722e-06;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][2] =
-        0.813407066624;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][3] =
-        1.47512404499e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][4] =
-        7.93314790996e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][5] =
-        -1.47337527572e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][6] = 1.0000982771;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][0] = 1.10193674216;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][1] =
-        -8.06762952432e-06;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][2] =
-        0.0418940659381;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][3] =
-        2.09442315818e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][4] =
-        8.07352815912e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][5] =
-        -2.10320915394e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][6] =
-        0.999691826017;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][0] =
-        0.382687205434;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][1] =
-        0.0454576087822;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][2] =
-        -8.08623902229;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][3] =
-        -7.04290896513e-05;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][4] =
-        -0.00421458041452;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][5] =
-        7.08575087635e-05;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][6] =
-        0.999550531942;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][0] =
-        0.998068711543;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][1] =
-        -8.15415554133e-06;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][2] =
-        0.475826627698;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][3] =
-        -8.84425323564e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][4] =
-        7.00594666413e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][5] =
-        8.85242619285e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][6] =
-        0.999921004822;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][0] =
-        0.355318972635;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][1] =
-        0.0169307413432;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][2] =
-        -0.333065014807;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][3] =
-        -1.00690213878e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][4] =
-        -0.00296274662344;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][5] =
-        0.00214275937489;
-    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][6] =
-        0.190431927829;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][0] =
-        0.978821637591;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][1] =
-        7.06633577309e-06;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][2] =
-        0.178784485715;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][3] =
-        3.77212505483e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][4] =
-        -7.76303145206e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][5] =
-        -3.75278757078e-08;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][6] = 1.00039864915;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][0] =
-        0.369732170405;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][1] =
-        0.00310820609142;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][2] =
-        0.209181124787;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][3] =
-        1.05339202675e-05;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][4] =
-        -0.000293668434264;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][5] =
-        -1.04869546902e-05;
-    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][6] = 1.0003424372;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][0] = 1.05810601642;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][1] =
-        -4.02053295696e-05;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][2] =
-        0.187646793296;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][3] =
-        -1.18487150347e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][4] =
-        4.26737262075e-06;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][5] =
-        1.17809039437e-07;
-    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][6] = 1.0004318279;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][0] = -6.515e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][1] = 1.958e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][2] = -3.645e+01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][3] = -1.812e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][4] = -1.815e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][5] = -1.043e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_1][6] = -7.735e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][0] = -7.577e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][1] = 1.184e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][2] = -2.862e+01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][3] = -1.047e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][4] = -9.100e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][5] = -1.094e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_2][6] = -8.029e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][0] = -5.448e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][1] = -9.752e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][2] = 8.134e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][3] = 7.937e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][4] = 4.823e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][5] = 3.627e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_3][6] = 3.005e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][0] = 1.019e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][1] = -8.068e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][2] = 4.190e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][3] = 8.074e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][4] = 1.758e-08;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][5] = -5.000e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_0_to_4][6] = -3.672e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][0] = -6.173e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][1] = 4.546e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][2] = -8.088e+00;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][3] = -4.215e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][4] = -2.781e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][5] = -1.537e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_2][6] = -1.139e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][0] = -1.932e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][1] = -8.154e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][2] = 4.758e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][3] = 7.006e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][4] = -9.413e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][5] = -8.679e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_3][6] = -7.422e-08;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][0] = 1.161e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][1] = -5.770e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][2] = 2.333e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][3] = 5.826e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][4] = -6.898e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][5] = 1.004e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_1_to_4][6] = 7.445e-09;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][0] = -2.118e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][1] = 7.071e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][2] = 1.788e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][3] = -7.768e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][4] = 1.263e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][5] = 1.534e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_3][6] = 1.191e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][0] = 9.843e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][1] = -1.648e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][2] = 8.827e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][3] = 1.628e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][4] = 1.792e-08;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][5] = -8.454e-04;
+    _five_level_collision_strength[NeIII][TRANSITION_2_to_4][6] = -6.126e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][0] = 5.812e-02;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][1] = -4.021e-05;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][2] = 1.876e-01;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][3] = 4.268e-06;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][4] = 3.941e-03;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][5] = -1.725e-07;
+    _five_level_collision_strength[NeIII][TRANSITION_3_to_4][6] = -1.298e-08;
   }
 
   /// SII
@@ -1034,97 +825,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Tayal & Zatsarinny (2010)
     // these fits were made with the script data/linecooling/gamma_SII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][0] = 1.03641663445;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][1] =
-        -0.000249794248385;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][2] = 2.20349579749;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][3] = -0.120817610429;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][4] =
-        2.39631107845e-05;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][5] = 0.120817607822;
-    _five_level_collision_strength[SII][TRANSITION_0_to_1][6] = 1.00000000161;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][0] = 1.03717217955;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][1] =
-        -0.00039155644199;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][2] = 3.28566942345;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][3] = -0.121147740734;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][4] =
-        3.77925782749e-05;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][5] = 0.121147736484;
-    _five_level_collision_strength[SII][TRANSITION_0_to_2][6] = 1.00000000262;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][0] = 1.00775072872;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][1] =
-        -2.72593102367e-05;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][2] = 0.638728107106;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][3] = -0.123901293284;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][4] =
-        3.54901615379e-06;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][5] = 0.123901291979;
-    _five_level_collision_strength[SII][TRANSITION_0_to_3][6] = 1.00000000081;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][0] = 1.01789525407;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][1] =
-        -7.35398931928e-05;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][2] = 1.19790395953;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][3] = -0.121254946562;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][4] =
-        8.85704384397e-06;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][5] = 0.12125494385;
-    _five_level_collision_strength[SII][TRANSITION_0_to_4][6] = 1.00000000172;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][0] = 1.05197469278;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][1] =
-        -0.00110099988803;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][2] = 5.72662457909;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][3] = -0.12184170716;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][4] =
-        0.000107776630232;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][5] = 0.121841695288;
-    _five_level_collision_strength[SII][TRANSITION_1_to_2][6] = 1.00000000723;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][0] = 0.964511857799;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][1] =
-        -1.30353220838e-05;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][2] = 1.96892680842;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][3] = -0.535678236601;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][4] =
-        2.60395988847e-06;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][5] = 0.535678235452;
-    _five_level_collision_strength[SII][TRANSITION_1_to_3][6] = 1.00000000016;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][0] = 1.05748558757;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][1] =
-        -0.000213382981323;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][2] = 1.64461231866;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][3] = -0.199564473316;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][4] =
-        2.16292515466e-05;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][5] = 0.199564470263;
-    _five_level_collision_strength[SII][TRANSITION_1_to_4][6] = 1.00000000115;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][0] = 1.02405773355;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][1] =
-        -0.000132943341914;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][2] = 1.55838205223;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][3] = -0.282405174182;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][4] =
-        1.3709801875e-05;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][5] = 0.282405171934;
-    _five_level_collision_strength[SII][TRANSITION_2_to_3][6] = 1.0000000006;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][0] = 1.05203411618;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][1] =
-        -0.000370323954089;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][2] = 2.9052960213;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][3] = -0.120622459895;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][4] =
-        3.77620972842e-05;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][5] = 0.120622454552;
-    _five_level_collision_strength[SII][TRANSITION_2_to_4][6] = 1.00000000333;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][0] = 1.04324836606;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][1] =
-        -0.000111829064916;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][2] = 1.28208938549;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][3] =
-        -0.0254376510096;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][4] =
-        1.21897286763e-05;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][5] = 0.0254376483263;
-    _five_level_collision_strength[SII][TRANSITION_3_to_4][6] = 1.00000000807;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][0] = -2.378e-02;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][1] = -3.780e-05;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][2] = 3.350e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][3] = 2.326e-06;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_1][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][0] = -2.591e-02;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][1] = -5.072e-05;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][2] = 5.088e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][3] = 3.003e-06;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_2][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][0] = -4.744e-01;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][1] = 1.594e-02;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][2] = 1.361e+01;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][3] = -1.274e-03;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][0] = -4.730e-01;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][1] = 3.177e-02;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][2] = 2.699e+01;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][3] = -2.544e-03;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_0_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][0] = -8.272e-02;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][1] = 3.140e-05;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][2] = 1.492e+01;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][3] = -5.602e-06;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_2][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][0] = -5.368e-02;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][1] = 8.155e-05;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][2] = 2.216e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][3] = -6.673e-06;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][0] = -2.183e-02;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][1] = 5.571e-05;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][2] = 2.822e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][3] = -4.915e-06;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_1_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][0] = -1.569e-02;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][1] = 2.911e-05;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][2] = 2.012e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][3] = -2.687e-06;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][0] = -3.268e-02;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][1] = 1.339e-04;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][2] = 5.190e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][3] = -1.130e-05;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_2_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][0] = -5.249e-01;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][1] = 6.595e-02;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][2] = 4.606e+01;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][3] = -5.206e-03;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SII][TRANSITION_3_to_4][6] = 0.000e+00;
   }
 
   /// SIII
@@ -1174,115 +944,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Hudson, Ramsbottom & Scott (2012)
     // these fits were made with the script data/linecooling/gamma_SIII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][0] = 0.319834036674;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][1] = 0.473094494664;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][2] = 23.4611409315;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][3] =
-        1.81292268139e-07;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][4] =
-        -0.0391016530041;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][5] =
-        1.02381727611e-08;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_1][6] = -5.38956433778;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][0] = 0.946895106493;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][1] =
-        -0.000253931252088;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][2] = 1.42893199246;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][3] =
-        -0.0143421985165;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][4] =
-        3.36498345396e-05;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][5] =
-        0.0143421876514;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_2][6] = 1.00000005821;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][0] = 1.09296096143;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][1] =
-        -0.000130949694096;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][2] = 0.40981640082;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][3] =
-        -0.00193270090945;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][4] =
-        1.40040822412e-05;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][5] =
-        0.00193269826308;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_3][6] = 1.0000001045;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][0] = 0.268430758822;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][1] =
-        -0.161012416751;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][2] = -1.727282253;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][3] =
-        -7.73439548718e-08;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][4] =
-        -0.0228575861268;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][5] = 0.220495114378;
-    _five_level_collision_strength[SIII][TRANSITION_0_to_4][6] =
-        0.0599587031067;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][0] = 0.945260316234;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][1] =
-        0.00126278546768;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][2] = 6.58127073323;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][3] =
-        0.00656821073797;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][4] =
-        -0.000120335068449;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][5] =
-        -0.00656820056244;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_2][6] = 1.00000011531;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][0] = 1.08018916158;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][1] =
-        -0.000410120544537;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][2] = 1.33349052392;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][3] =
-        0.00139791118784;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][4] =
-        4.41269104115e-05;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][5] =
-        -0.00139791975694;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_3][6] = 0.999999531792;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][0] =
-        -0.00314229593184;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][1] =
-        0.0273739699311;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][2] = -9.08588844556;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][3] =
-        -0.00532056355739;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][4] =
-        0.0278125010909;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][5] =
-        0.00534754896895;
-    _five_level_collision_strength[SIII][TRANSITION_1_to_4][6] = 0.999565574858;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][0] = 1.08428172406;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][1] =
-        -0.000727729853996;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][2] = 2.41274280077;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][3] =
-        -0.00181282426352;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][4] =
-        7.77416341249e-05;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][5] =
-        0.00181280958775;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_3][6] = 1.0000006179;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][0] =
-        -0.454650835236;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][1] = -32.2631830151;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][2] = 2378.98316062;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][3] =
-        0.00245376919637;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][4] = 5.1731551752;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][5] =
-        -2.30897023902e-06;
-    _five_level_collision_strength[SIII][TRANSITION_2_to_4][6] = 1.56838057651;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][0] = 0.383531726856;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][1] =
-        -0.0883803729726;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][2] = 49.4449183698;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][3] =
-        -0.0110688636912;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][4] =
-        0.0149332210578;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][5] =
-        0.0110640993744;
-    _five_level_collision_strength[SIII][TRANSITION_3_to_4][6] = 1.00003260333;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][0] = 8.018e-02;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][1] = -4.930e-05;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][2] = 1.206e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][3] = 3.800e-06;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_1][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][0] = -2.250e-01;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][1] = 1.746e-03;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][2] = 3.814e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][3] = -1.408e-04;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_2][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][0] = -3.470e-02;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][1] = 6.561e-05;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][2] = 8.851e-01;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][3] = -5.617e-06;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][0] = 1.134e-01;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][1] = 3.383e-06;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][2] = 3.649e-02;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][3] = -2.851e-07;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_0_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][0] = -4.587e-03;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][1] = 2.257e-04;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][2] = 4.846e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][3] = -1.949e-05;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_2][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][0] = -4.454e-02;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][1] = 2.365e-04;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][2] = 2.823e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][3] = -2.014e-05;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][0] = 1.665e-01;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][1] = 2.041e-06;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][2] = 6.825e-02;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][3] = -1.900e-07;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_1_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][0] = -3.303e-02;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][1] = 3.185e-04;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][2] = 4.890e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][3] = -2.742e-05;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_3][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][0] = 1.765e-01;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][1] = 2.565e-06;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][2] = 1.041e-01;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][3] = -2.451e-07;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_2_to_4][6] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][0] = -2.273e-01;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][1] = 3.338e-03;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][2] = 2.390e+00;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][3] = -2.696e-04;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][4] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][5] = 0.000e+00;
+    _five_level_collision_strength[SIII][TRANSITION_3_to_4][6] = 0.000e+00;
   }
 
   /// CII
@@ -1332,93 +1063,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Tayal (2008)
     // these fits were made with the script data/linecooling/gamma_CII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][0] = 0.0480505832358;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][1] = -5.10087630511;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][2] = 1436.89664127;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][3] = 1561.94244352;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][4] = 0.742924478556;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][5] = -1561.94264165;
-    _five_level_collision_strength[CII][TRANSITION_0_to_1][6] = 0.999999990311;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][0] = 1.13322434366;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][1] =
-        -2.73646504879e-05;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][2] = 0.104888308389;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][3] = 0.49980900604;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][4] =
-        2.81074173787e-06;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][5] = -0.499809006492;
-    _five_level_collision_strength[CII][TRANSITION_0_to_2][6] = 0.999999999931;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][0] = 1.03908907832;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][1] =
-        -4.40567142559e-05;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][2] = 0.309950968041;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][3] = 0.411097707865;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][4] =
-        4.69915372252e-06;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][5] = -0.411097708841;
-    _five_level_collision_strength[CII][TRANSITION_0_to_3][6] = 0.999999999817;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][0] = 0.940734820256;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][1] =
-        1.37370102592e-05;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][2] = 0.362085513794;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][3] = 0.366342804713;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][4] =
-        -5.16981296168e-07;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][5] = -0.366342805653;
-    _five_level_collision_strength[CII][TRANSITION_0_to_4][6] = 0.999999999794;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][0] = 1.21127092292;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][1] =
-        -9.94067404214e-06;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][2] = 0.0365338010715;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][3] = 0.50013648256;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][4] =
-        1.01657928264e-06;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][5] = -0.500136482722;
-    _five_level_collision_strength[CII][TRANSITION_1_to_2][6] = 0.999999999975;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][0] = 1.15008027301;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][1] =
-        -3.72283249595e-05;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][2] = 0.165574827638;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][3] = 0.49993982796;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][4] =
-        3.81426383305e-06;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][5] = -0.499939828584;
-    _five_level_collision_strength[CII][TRANSITION_1_to_3][6] = 0.999999999905;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][0] = 0.993974665119;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][1] =
-        -0.000117455969969;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][2] = 1.22975481187;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][3] = 0.786974771901;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][4] =
-        1.3263664083e-05;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][5] = -0.786974775449;
-    _five_level_collision_strength[CII][TRANSITION_1_to_4][6] = 0.99999999965;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][0] = 0.8353074866;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][1] =
-        -0.000459275718981;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][2] = 1.96939409603;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][3] = 348.77077441;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][4] =
-        8.00777479566e-05;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][5] = -348.77077445;
-    _five_level_collision_strength[CII][TRANSITION_2_to_3][6] = 0.999999999991;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][0] = 0.516732024641;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][1] =
-        -0.0017944348363;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][2] = 15.5044834402;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][3] = 199.020768398;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][4] =
-        0.00104646848633;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][5] = -199.020769192;
-    _five_level_collision_strength[CII][TRANSITION_2_to_4][6] = 0.999999999688;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][0] = 0.660041604974;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][1] = -0.002364929605;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][2] = 15.6088769634;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][3] = 13186.8831818;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][4] =
-        0.000712740711772;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][5] = -13186.8831823;
-    _five_level_collision_strength[CII][TRANSITION_3_to_4][6] = 0.999999999997;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][0] = -9.519e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][1] = -5.097e+00;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][2] = 1.436e+03;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][3] = 7.424e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][4] = -5.391e+01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][5] = 3.673e-06;
+    _five_level_collision_strength[CII][TRANSITION_0_to_1][6] = 2.806e-07;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][0] = 1.247e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][1] = -2.710e-05;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][2] = 1.110e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][3] = 2.784e-06;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][4] = 1.410e-02;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][5] = -3.198e-08;
+    _five_level_collision_strength[CII][TRANSITION_0_to_2][6] = -2.437e-09;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][0] = 3.496e-07;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][1] = -2.076e-05;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][2] = 3.990e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][3] = 2.426e-06;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][4] = -2.832e+00;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][5] = 2.765e-10;
+    _five_level_collision_strength[CII][TRANSITION_0_to_3][6] = 2.159e-11;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][0] = -2.814e-06;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][1] = -2.407e-05;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][2] = 2.474e-01;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][3] = 2.906e-06;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][4] = 1.393e+00;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][5] = -6.962e-10;
+    _five_level_collision_strength[CII][TRANSITION_0_to_4][6] = -5.438e-11;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][0] = 1.949e-01;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][1] = -9.811e-06;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][2] = 4.074e-02;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][3] = 1.003e-06;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][4] = 7.165e-03;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][5] = -2.276e-08;
+    _five_level_collision_strength[CII][TRANSITION_1_to_2][6] = -1.738e-09;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][0] = 1.449e-01;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][1] = -3.673e-05;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][2] = 1.713e-01;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][3] = 3.763e-06;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][4] = -9.812e-03;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][5] = 6.304e-08;
+    _five_level_collision_strength[CII][TRANSITION_1_to_3][6] = 4.812e-09;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][0] = -2.743e-06;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][1] = -1.291e-04;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][2] = 1.183e+00;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][3] = 1.437e-05;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][4] = 1.598e+00;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][5] = -2.263e-09;
+    _five_level_collision_strength[CII][TRANSITION_1_to_4][6] = -1.753e-10;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][0] = -1.195e-03;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][1] = -2.027e-04;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][2] = 6.479e-01;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][3] = 2.660e-05;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][4] = -7.636e-01;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][5] = 1.257e-08;
+    _five_level_collision_strength[CII][TRANSITION_2_to_3][6] = 9.795e-10;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][0] = -4.787e-01;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][1] = -1.490e-03;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][2] = 1.501e+01;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][3] = 9.750e-04;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][4] = 3.103e+00;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][5] = -2.437e-07;
+    _five_level_collision_strength[CII][TRANSITION_2_to_4][6] = -1.908e-08;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][0] = -2.430e-03;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][1] = -3.839e-04;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][2] = 1.605e+00;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][3] = 5.173e-05;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][4] = -2.446e-01;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][5] = 8.372e-08;
+    _five_level_collision_strength[CII][TRANSITION_3_to_4][6] = 6.553e-09;
   }
 
   /// CIII
@@ -1468,114 +1182,76 @@ LineCoolingData::LineCoolingData() {
     // our own fits to the data of Berrington et al. (1985)
     // these fits were made with the script data/linecooling/gamma_CIII.py
     // (this script also outputs the code below)
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][0] = 0.680381936743;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][1] =
-        0.000595111454514;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][2] = 0.999774036843;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][3] =
-        -0.868336006673;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][4] =
-        -5.24291039737e-05;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][5] = 0.868336008271;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_1][6] = 0.999999999877;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][0] = 0.993110668289;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][1] =
-        2.00775854613e-05;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][2] = 0.341938652078;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][3] =
-        -0.077525729879;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][4] =
-        -1.94419933081e-06;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][5] =
-        0.0775257299714;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_2][6] = 0.999999999919;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][0] = 0.989348686947;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][1] =
-        3.62365756685e-05;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][2] = 0.586929942311;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][3] =
-        -0.0245235186989;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][4] =
-        -3.49480183379e-06;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][5] =
-        0.0245235188626;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_3][6] = 0.999999999548;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][0] = 1.06360193686;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][1] =
-        -3.04483388297e-05;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][2] = 2.23929533724;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][3] =
-        -0.00938462756431;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][4] =
-        2.88405160957e-06;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][5] =
-        0.00938462748276;
-    _five_level_collision_strength[CIII][TRANSITION_0_to_4][6] = 1.00000000057;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][0] = 0.738971130118;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][1] =
-        0.00386367008165;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][2] = 2.49111221111;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][3] =
-        0.00315734011239;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][4] =
-        -0.000340295038591;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][5] =
-        -0.00315733000806;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_2][6] = 1.00000021346;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][0] = 0.867329367873;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][1] =
-        0.00134115573239;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][2] =
-        -0.397414520326;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][3] =
-        -0.114393956811;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][4] =
-        -0.000119702687795;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][5] = 0.11439396073;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_3][6] = 0.999999997705;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][0] = 1.11299784711;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][1] =
-        -1.38231571261e-05;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][2] = 0.17974425361;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][3] =
-        -0.114824292495;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][4] =
-        1.15358738505e-06;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][5] = 0.114824292472;
-    _five_level_collision_strength[CIII][TRANSITION_1_to_4][6] = 1.00000000001;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][0] = 0.83743274479;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][1] =
-        0.00568976058875;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][2] = 0.450792629302;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][3] =
-        0.00290023704999;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][4] =
-        -0.000506695387193;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][5] =
-        -0.00290022076109;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_3][6] = 1.00000037589;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][0] = 1.11290316385;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][1] =
-        -4.1482086006e-05;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][2] = 0.53966645149;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][3] =
-        0.0301543484698;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][4] =
-        3.46165385743e-06;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][5] =
-        -0.0301543485388;
-    _five_level_collision_strength[CIII][TRANSITION_2_to_4][6] = 0.99999999985;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][0] = 1.11294049421;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][1] =
-        -6.91266088737e-05;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][2] = 0.899155762243;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][3] =
-        -0.0189378233178;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][4] =
-        5.76865382713e-06;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][5] =
-        0.0189378232029;
-    _five_level_collision_strength[CIII][TRANSITION_3_to_4][6] = 1.0000000004;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][0] = 1.265e-07;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][1] = 5.762e-06;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][2] = 1.080e-01;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][3] = -5.626e-07;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][4] = 1.412e+00;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][5] = 1.950e-11;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_1][6] = 1.323e-12;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][0] = 3.793e-07;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][1] = 1.727e-05;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][2] = 3.239e-01;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][3] = -1.686e-06;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][4] = 1.095e+00;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][5] = 7.533e-11;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_2][6] = 5.111e-12;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][0] = 3.942e-07;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][1] = 2.877e-05;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][2] = 5.399e-01;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][3] = -2.809e-06;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][4] = 6.095e-01;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][5] = 2.255e-10;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_3][6] = 1.530e-11;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][0] = 8.424e-06;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][1] = 7.004e-05;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][2] = 3.767e+00;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][3] = -5.480e-06;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][4] = -4.018e-01;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][5] = -4.228e-10;
+    _five_level_collision_strength[CIII][TRANSITION_0_to_4][6] = -2.906e-11;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][0] = 5.033e-06;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][1] = 1.611e-04;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][2] = 6.600e-01;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][3] = -1.477e-05;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][4] = 3.546e+00;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][5] = 1.577e-10;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_2][6] = 1.063e-11;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][0] = -6.251e-05;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][1] = 3.034e-04;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][2] = 1.039e-01;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][3] = -2.744e-05;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][4] = 2.856e-01;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][5] = 3.444e-09;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_3][6] = 2.317e-10;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][0] = 1.741e-06;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][1] = -1.148e-05;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][2] = 4.633e-01;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][3] = 7.853e-07;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][4] = -4.244e+00;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][5] = -5.205e-12;
+    _five_level_collision_strength[CIII][TRANSITION_1_to_4][6] = -3.781e-13;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][0] = 1.932e-05;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][1] = 8.772e-04;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][2] = 1.032e+00;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][3] = -7.960e-05;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][4] = 3.735e+00;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][5] = 7.737e-10;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_3][6] = 5.206e-11;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][0] = 3.777e-04;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][1] = -3.470e-05;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][2] = 1.386e+00;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][3] = 2.382e-06;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][4] = 4.838e-02;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][5] = 1.336e-09;
+    _five_level_collision_strength[CIII][TRANSITION_2_to_4][6] = 9.718e-11;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][0] = 7.721e-06;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][1] = -5.752e-05;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][2] = 2.317e+00;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][3] = 3.938e-06;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][4] = 5.449e-01;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][5] = 2.013e-10;
+    _five_level_collision_strength[CIII][TRANSITION_3_to_4][6] = 1.463e-11;
   }
 
   /// two level elements
@@ -1599,19 +1275,19 @@ LineCoolingData::LineCoolingData() {
     // these fits were made with the script data/linecooling/gamma_NIII.py
     // (this script also outputs the code below)
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [0] = 0.967435957744;
+                                 [0] = -3.257e-02;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [1] = -0.000357402119314;
+                                 [1] = -3.573e-04;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [2] = 1.65300449771;
+                                 [2] = 1.653e+00;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [3] = -0.252925097783;
+                                 [3] = 4.822e-05;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [4] = 4.82341381521e-05;
+                                 [4] = -7.529e-06;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [5] = 0.252925075029;
+                                 [5] = 3.018e-03;
     _two_level_collision_strength[NIII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [6] = 1.0000000073;
+                                 [6] = 2.453e-04;
     // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
     // P_{3/2}
     _two_level_inverse_statistical_weight[NIII -
@@ -1638,19 +1314,19 @@ LineCoolingData::LineCoolingData() {
     // these fits were made with the script data/linecooling/gamma_NeII.py
     // (this script also outputs the code below)
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [0] = 1.13422642605;
+                                 [0] = -8.548e-01;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [1] = -1.40326979327e-05;
+                                 [1] = 1.938e-01;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [2] = 0.10995893446;
+                                 [2] = -1.038e+01;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [3] = -0.605108184504;
+                                 [3] = -1.254e-02;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [4] = 1.35720705818e-06;
+                                 [4] = 2.715e-02;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [5] = 0.605108184407;
+                                 [5] = 5.755e-05;
     _two_level_collision_strength[NeII - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [6] = 1.00000000001;
+                                 [6] = 4.171e-06;
     // statistical weights: level 0 is a P_{3/2} level, while level 1 is a
     // P_{1/2}
     _two_level_inverse_statistical_weight[NeII -
@@ -1873,13 +1549,14 @@ void LineCoolingData::compute_level_populations(
   for (int i = 0; i < NUMBER_OF_TRANSITIONS; ++i) {
     const double collision_strength =
         collision_strength_prefactor *
-        std::pow(T, _five_level_collision_strength[element][i][0]) *
+        std::pow(T, 1. + _five_level_collision_strength[element][i][0]) *
         (_five_level_collision_strength[element][i][1] +
          _five_level_collision_strength[element][i][2] * Tinv +
-         _five_level_collision_strength[element][i][3] * T +
-         _five_level_collision_strength[element][i][4] * logT +
-         _five_level_collision_strength[element][i][5] *
-             std::pow(T, _five_level_collision_strength[element][i][6]));
+         _five_level_collision_strength[element][i][3] * logT +
+         _five_level_collision_strength[element][i][4] * T *
+             (1. +
+              (_five_level_collision_strength[element][i][5] - 1.) *
+                  std::pow(T, _five_level_collision_strength[element][i][6])));
     collision_rate_down[i] = collision_strength;
     collision_rate_up[i] =
         collision_strength *
@@ -2002,13 +1679,14 @@ double LineCoolingData::compute_level_population(
   const double A = _two_level_transition_probability[i];
   const double collision_strength =
       collision_strength_prefactor *
-      std::pow(T, _two_level_collision_strength[i][0]) *
+      std::pow(T, 1. + _two_level_collision_strength[i][0]) *
       (_two_level_collision_strength[i][1] +
        _two_level_collision_strength[i][2] * Tinv +
-       _two_level_collision_strength[i][3] * T +
-       _two_level_collision_strength[i][4] * logT +
-       _two_level_collision_strength[i][5] *
-           std::pow(T, _two_level_collision_strength[i][6]));
+       _two_level_collision_strength[i][3] * logT +
+       _two_level_collision_strength[i][4] * T *
+           (1. +
+            (_two_level_collision_strength[i][5] - 1.) *
+                std::pow(T, _two_level_collision_strength[i][6])));
   const double inv_omega_1 = _two_level_inverse_statistical_weight[i][0];
   const double inv_omega_2 = _two_level_inverse_statistical_weight[i][1];
   const double Texp = std::exp(-ksi * Tinv);

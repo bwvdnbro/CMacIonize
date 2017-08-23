@@ -39,7 +39,8 @@ import pylab as pl
 # for the fitting curve
 from fitting_curve import fitting_curve, print_fit_variables, \
                           initialize_data_values, append_data_values, \
-                          print_data_values, get_code, jacobian_fitting_curve
+                          print_data_values, get_code, jacobian_fitting_curve, \
+                          round_parameters
 
 # main function: computes fits to the data and plots the data and fits for
 # visual comparison
@@ -60,7 +61,9 @@ if __name__ == "__main__":
   # fit the curve
   A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[imin:imax],
                       maxfev = 1000000, method = "trf",
+                      p0 = (0., 1., 1., 1., 0.01, 0.01, 0.),
                       jac = jacobian_fitting_curve)
+  A = round_parameters(*A)
   # compute the xi2 difference between the data values (in the fitting
   # interval) and the curve
   xi2 = sum( (data[imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
@@ -78,6 +81,7 @@ if __name__ == "__main__":
   Trange = np.logspace(3., 5., 100)
   pl.plot(T, data, "k.")
   pl.plot(Trange, fitting_curve(Trange, *A), "r-")
+  pl.xlim(0., 1.e5)
   pl.savefig("tmp/NeII_{key}.png".format(key = "G0t1"))
   pl.close()
 

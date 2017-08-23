@@ -142,8 +142,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // we assume that all carbon is either C+, C++, or C+++
     // we only use C+ and C++
     // note that the ionic fraction of C_p1 corresponds to the fraction of
-    // ionized
-    // C+, i.e. the fraction of C++
+    // ionized C+, i.e. the fraction of C++
     abund[CII] = abundances.get_abundance(ELEMENT_C) *
                  (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
                   ionization_variables.get_ionic_fraction(ION_C_p2));

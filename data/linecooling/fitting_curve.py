@@ -1,4 +1,3 @@
-
 #! /usr/bin/python
 
 ################################################################################
@@ -37,7 +36,8 @@ import numpy as np
 #
 # The fitting curve has the form
 # \f[
-#   T^A \left( B + \frac{C}{T} + DT + E \log(T) + FT^G \right).
+#   T^{A+1} \left( B + \frac{C}{T} + D \log(T) +
+#                  E T \left( 1 + (F - 1) T^G \right) \right).
 # \f]
 #
 # @param T Temperature value (in K).
@@ -51,7 +51,8 @@ import numpy as np
 # @return Value of the fitting curve.
 ##
 def fitting_curve(T, A, B, C, D, E, F, G):
-  return T**A * (B + C / T + D * T + E * np.log(T) + F * T**G)
+  return T**(A + 1.) * \
+         (B + C / T + D * np.log(T) + E * T * (1. + (F - 1.) * T**G))
 
 ##
 # @brief Jacobian of the fitting curve.
@@ -69,12 +70,12 @@ def fitting_curve(T, A, B, C, D, E, F, G):
 def jacobian_fitting_curve(T, A, B, C, D, E, F, G):
   J = np.zeros((len(T), 7))
   J[:, 0] = np.log(T) * fitting_curve(T, A, B, C, D, E, F, G)
-  J[:, 1] = T**A
-  J[:, 2] = T**(A - 1.)
-  J[:, 3] = T**(A + 1.)
-  J[:, 4] = T**A * np.log(T)
-  J[:, 5] = T**(A + G)
-  J[:, 6] = np.log(T) * F * T**(A + G)
+  J[:, 1] = T**(A + 1.)
+  J[:, 2] = T**A
+  J[:, 3] = T**(A + 1.) * np.log(T)
+  J[:, 4] = T**(A + 2.) + (F - 1.) * T**(A + G + 2.)
+  J[:, 5] = E * T**(A + G + 2.)
+  J[:, 6] = np.log(T) * E * (F - 1.) * T**(A + G + 2.)
   return J
 
 ##
@@ -97,7 +98,8 @@ def print_fit_variables(A, B, C, D, E, F, G):
 # @return Empty dictionary to store the fitting variables.
 ##
 def initialize_data_values():
-  return {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": ""}
+  return {"A": "", "B": "", "C": "", "D": "", "E": "", "F": "", "G": "",
+          "table": []}
 
 ##
 # @brief Append the given fit variables to the given dictionary.
@@ -112,13 +114,21 @@ def initialize_data_values():
 # @param G Parameter \f$G\f$.
 ##
 def append_data_values(data_values, A, B, C, D, E, F, G):
-  data_values["A"] += "{value},".format(value = A)
-  data_values["B"] += "{value},".format(value = B)
-  data_values["C"] += "{value},".format(value = C)
-  data_values["D"] += "{value},".format(value = D)
-  data_values["E"] += "{value},".format(value = E)
-  data_values["F"] += "{value},".format(value = F)
-  data_values["G"] += "{value},".format(value = G)
+  data_values["A"] += "{value:.3e},".format(value = A)
+  data_values["B"] += "{value:.3e},".format(value = B)
+  data_values["C"] += "{value:.3e},".format(value = C)
+  data_values["D"] += "{value:.3e},".format(value = D)
+  data_values["E"] += "{value:.3e},".format(value = E)
+  data_values["F"] += "{value:.3e},".format(value = F)
+  data_values["G"] += "{value:.3e},".format(value = G)
+  data_values["table"].append({})
+  data_values["table"][-1]["A"] = "{0:.3e}".format(A)
+  data_values["table"][-1]["B"] = "{0:.3e}".format(B)
+  data_values["table"][-1]["C"] = "{0:.3e}".format(C)
+  data_values["table"][-1]["D"] = "{0:.3e}".format(D)
+  data_values["table"][-1]["E"] = "{0:.3e}".format(E)
+  data_values["table"][-1]["F"] = "{0:.3e}".format(F)
+  data_values["table"][-1]["G"] = "{0:.3e}".format(G)
 
 ##
 # @brief Print the given dictionary to the stdout.
@@ -140,6 +150,42 @@ def print_data_values(data_values):
   print data_values["F"]
   print "values G:"
   print data_values["G"]
+  print "table:"
+  print r"""$\begin{matrix}
+a \\
+b \\
+c \\
+d \\
+e \\
+f \\
+g \\
+\end{matrix}$"""
+  for i in range(5):
+    print "&\n\\begin{{tabular}}{{l}}{a} \\\\{b} \\\\{c} \\\\{d} \\\\".format(
+      a = data_values["table"][i]["A"], b = data_values["table"][i]["B"],
+      c = data_values["table"][i]["C"], d = data_values["table"][i]["D"])
+    print "{e} \\\\{f} \\\\{g} \\\\\\end{{tabular}}".format(
+      e = data_values["table"][i]["E"], f = data_values["table"][i]["F"],
+      g = data_values["table"][i]["G"])
+  print r"""\vspace{12pt}
+\\
+&
+$\begin{matrix}
+a \\
+b \\
+c \\
+d \\
+e \\
+f \\
+g \\
+\end{matrix}$"""
+  for i in range(5, 10):
+    print "&\n\\begin{{tabular}}{{l}}{a} \\\\{b} \\\\{c} \\\\{d} \\\\".format(
+      a = data_values["table"][i]["A"], b = data_values["table"][i]["B"],
+      c = data_values["table"][i]["C"], d = data_values["table"][i]["D"])
+    print "{e} \\\\{f} \\\\{g} \\\\\\end{{tabular}}".format(
+      e = data_values["table"][i]["E"], f = data_values["table"][i]["F"],
+      g = data_values["table"][i]["G"])
 
 ##
 # @brief Get the C++ code string for the given element and transition,
@@ -157,18 +203,40 @@ def print_data_values(data_values):
 # @return C++ code string.
 ##
 def get_code(element, transition, A, B, C, D, E, F, G):
-  code  = "_collision_strength[{element}][{transition}][0] = {value};\n".format(
-           element = element, transition = transition, value = A)
-  code += "_collision_strength[{element}][{transition}][1] = {value};\n".format(
-           element = element, transition = transition, value = B)
-  code += "_collision_strength[{element}][{transition}][2] = {value};\n".format(
-           element = element, transition = transition, value = C)
-  code += "_collision_strength[{element}][{transition}][3] = {value};\n".format(
-           element = element, transition = transition, value = D)
-  code += "_collision_strength[{element}][{transition}][4] = {value};\n".format(
-           element = element, transition = transition, value = E)
-  code += "_collision_strength[{element}][{transition}][5] = {value};\n".format(
-           element = element, transition = transition, value = F)
-  code += "_collision_strength[{element}][{transition}][6] = {value};\n".format(
-           element = element, transition = transition, value = G)
+  code  = "_collision_strength[{e}][{t}][0] = {v:.3e};\n".format(
+           e = element, t = transition, v = A)
+  code += "_collision_strength[{e}][{t}][1] = {v:.3e};\n".format(
+           e = element, t = transition, v = B)
+  code += "_collision_strength[{e}][{t}][2] = {v:.3e};\n".format(
+           e = element, t = transition, v = C)
+  code += "_collision_strength[{e}][{t}][3] = {v:.3e};\n".format(
+           e = element, t = transition, v = D)
+  code += "_collision_strength[{e}][{t}][4] = {v:.3e};\n".format(
+           e = element, t = transition, v = E)
+  code += "_collision_strength[{e}][{t}][5] = {v:.3e};\n".format(
+           e = element, t = transition, v = F)
+  code += "_collision_strength[{e}][{t}][6] = {v:.3e};\n".format(
+           e = element, t = transition, v = G)
   return code
+
+##
+# @brief Round the parameter values to 4 significant digits.
+#
+# @param A Parameter \f$A\f$.
+# @param B Parameter \f$B\f$.
+# @param C Parameter \f$C\f$.
+# @param D Parameter \f$D\f$.
+# @param E Parameter \f$E\f$.
+# @param F Parameter \f$F\f$.
+# @param G Parameter \f$G\f$.
+# @return Rounded parameter values.
+##
+def round_parameters(A, B, C, D, E, F, G):
+  A = float("{0:.3e}".format(A))
+  B = float("{0:.3e}".format(B))
+  C = float("{0:.3e}".format(C))
+  D = float("{0:.3e}".format(D))
+  E = float("{0:.3e}".format(E))
+  F = float("{0:.3e}".format(F))
+  G = float("{0:.3e}".format(G))
+  return A, B, C, D, E, F, G

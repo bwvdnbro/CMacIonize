@@ -39,42 +39,22 @@ import pylab as pl
 # for the fitting curve
 from fitting_curve import fitting_curve, print_fit_variables, \
                           initialize_data_values, append_data_values, \
-                          print_data_values, get_code, jacobian_fitting_curve
+                          print_data_values, get_code, jacobian_fitting_curve, \
+                          round_parameters
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
-initial_guess = (1., 1., 100., 1., 1., 0.1, 1.)
 transitions = {
-  "G0t1": ["TRANSITION_0_to_1",
-           (0.348500741382, 0.195852073826, -36.4501581617, 0.,
-            -0.0181252763926, 0., 1.00000001306)],
-  "G0t2": ["TRANSITION_0_to_2",
-           (0.242259790973, 0.118399224056, -28.6257166059, 0.,
-            -0.010466296122, 0., 1.00000000994)],
-  "G0t3": ["TRANSITION_0_to_3",
-           (0.994546627597, -9.74092739212e-06, 0.813424494789, 0.,
-            7.92513938776e-07, 0., 1.00000000001)],
-  "G0t4": ["TRANSITION_0_to_4",
-           (1.10193063883, -8.06658428298e-06, 0.0418955574988, 0.,
-            8.07224313295e-07, 0., 0.999999999982)],
-  "G1t2": ["TRANSITION_1_to_2",
-           (0.382673053848, 0.0454578976384, -8.08652985413, 0.,
-            -0.00421441235504, 0., 0.99999999998)],
-  "G1t3": ["TRANSITION_1_to_3",
-           (0.998072239297, -8.15868142461e-06, 0.475815954012, 0.,
-            7.01067249995e-07, 0., 0.999999999989)],
-  "G1t4": ["TRANSITION_1_to_4",
-           (0.192021167944, 0.0357591526476, -1.80494222891, 0.,
-            -0.00313573333494, 0., 0.999999998745)],
-  "G2t3": ["TRANSITION_2_to_3",
-           (0.9788720275, 7.00840864284e-06, 0.178725598354, 0.,
-            -7.70012994119e-07, 0., 1.0)],
-  "G2t4": ["TRANSITION_2_to_4",
-           (0.370195520847, 0.00309656666641, 0.209609657805, 0.,
-            -0.000292624490616, 0., 1.00000000001)],
-  "G3t4": ["TRANSITION_3_to_4",
-           (1.05817326234, -4.05953358177e-05, 0.187708099593, 0.,
-            4.31174660385e-06, 0., 1.0)]
+  "G0t1": "TRANSITION_0_to_1",
+  "G0t2": "TRANSITION_0_to_2",
+  "G0t3": "TRANSITION_0_to_3",
+  "G0t4": "TRANSITION_0_to_4",
+  "G1t2": "TRANSITION_1_to_2",
+  "G1t3": "TRANSITION_1_to_3",
+  "G1t4": "TRANSITION_1_to_4",
+  "G2t3": "TRANSITION_2_to_3",
+  "G2t4": "TRANSITION_2_to_4",
+  "G3t4": "TRANSITION_3_to_4"
 }
 
 # main function: computes fits to the data and plots the data and fits for
@@ -127,8 +107,9 @@ if __name__ == "__main__":
     # fit the curve
     A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
                         maxfev = 1000000,
-                        p0 = transitions[key][1],
+                        p0 = (0., 1., 10., 1., 0.01, 0.01, 0.),
                         jac = jacobian_fitting_curve)
+    A = round_parameters(*A)
     # compute the xi2 difference between the data values (in the fitting
     # interval) and the curve
     xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
@@ -138,7 +119,7 @@ if __name__ == "__main__":
     print "convergence:", xi2
     print "validity: [", T[imin], ",", T[imax-1], "]"
     # write the fitting code for this transition
-    code += get_code("NeIII", transitions[key][0], *A)
+    code += get_code("NeIII", transitions[key], *A)
     # add the values to the list strings
     append_data_values(data_values, *A)
 
