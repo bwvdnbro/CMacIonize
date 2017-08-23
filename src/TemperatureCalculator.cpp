@@ -304,37 +304,59 @@ void TemperatureCalculator::ioneng(
 
   // coolants
   // get the abundances required by LineCoolingData and feed them to that class
-  double abund[12];
-  abund[0] = abundances.get_abundance(ELEMENT_N) *
-             (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
-              ionization_variables.get_ionic_fraction(ION_N_p1) -
-              ionization_variables.get_ionic_fraction(ION_N_p2));
-  abund[1] = abundances.get_abundance(ELEMENT_N) *
-             ionization_variables.get_ionic_fraction(ION_N_n);
-  abund[2] = abundances.get_abundance(ELEMENT_O) *
-             (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
-              ionization_variables.get_ionic_fraction(ION_O_p1));
-  abund[3] = abundances.get_abundance(ELEMENT_O) *
-             ionization_variables.get_ionic_fraction(ION_O_n);
-  abund[4] = abundances.get_abundance(ELEMENT_O) *
-             ionization_variables.get_ionic_fraction(ION_O_p1);
-  abund[5] = abundances.get_abundance(ELEMENT_Ne) *
-             ionization_variables.get_ionic_fraction(ION_Ne_p1);
-  abund[6] = abundances.get_abundance(ELEMENT_S) *
-             (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
-              ionization_variables.get_ionic_fraction(ION_S_p2) -
-              ionization_variables.get_ionic_fraction(ION_S_p3));
-  abund[7] = abundances.get_abundance(ELEMENT_S) *
-             ionization_variables.get_ionic_fraction(ION_S_p1);
-  abund[8] = abundances.get_abundance(ELEMENT_C) *
-             (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
-              ionization_variables.get_ionic_fraction(ION_C_p2));
-  abund[9] = abundances.get_abundance(ELEMENT_C) *
-             ionization_variables.get_ionic_fraction(ION_C_p1);
-  abund[10] = abundances.get_abundance(ELEMENT_N) *
-              ionization_variables.get_ionic_fraction(ION_N_p1);
-  abund[11] = abundances.get_abundance(ELEMENT_Ne) *
-              ionization_variables.get_ionic_fraction(ION_Ne_n);
+  double abund[LINECOOLINGDATA_NUMELEMENTS];
+
+  // carbon
+  // we assume that all carbon is either C+, C++, or C+++
+  // we only use C+ and C++
+  // note that the ionic fraction of C_p1 corresponds to the fraction of ionized
+  // C+, i.e. the fraction of C++
+  abund[CII] = abundances.get_abundance(ELEMENT_C) *
+               (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
+                ionization_variables.get_ionic_fraction(ION_C_p2));
+  abund[CIII] = abundances.get_abundance(ELEMENT_C) *
+                ionization_variables.get_ionic_fraction(ION_C_p1);
+
+  // nitrogen
+  // we assume all nitrogen is either N0, N+, N++ or N+++
+  // we only use N0, N+ and N++
+  abund[NI] = abundances.get_abundance(ELEMENT_N) *
+              (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
+               ionization_variables.get_ionic_fraction(ION_N_p1) -
+               ionization_variables.get_ionic_fraction(ION_N_p2));
+  abund[NII] = abundances.get_abundance(ELEMENT_N) *
+               ionization_variables.get_ionic_fraction(ION_N_n);
+  abund[NIII] = abundances.get_abundance(ELEMENT_N) *
+                ionization_variables.get_ionic_fraction(ION_N_p1);
+
+  // oxygen
+  // we assume all oxygen is either O0, O+ or O++
+  // we use all of them
+  abund[OI] = abundances.get_abundance(ELEMENT_O) *
+              (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
+               ionization_variables.get_ionic_fraction(ION_O_p1));
+  abund[OII] = abundances.get_abundance(ELEMENT_O) *
+               ionization_variables.get_ionic_fraction(ION_O_n);
+  abund[OIII] = abundances.get_abundance(ELEMENT_O) *
+                ionization_variables.get_ionic_fraction(ION_O_p1);
+
+  // neon
+  // we make no assumptions on the relative abundances of different neon ions
+  // we only use Ne+ and Ne++
+  abund[NeII] = abundances.get_abundance(ELEMENT_Ne) *
+                ionization_variables.get_ionic_fraction(ION_Ne_n);
+  abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
+                 ionization_variables.get_ionic_fraction(ION_Ne_p1);
+
+  // sulphur
+  // we assume all sulphur is either S+, S++, S+++ or S++++
+  // we only use S+ and S++
+  abund[SII] = abundances.get_abundance(ELEMENT_S) *
+               (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
+                ionization_variables.get_ionic_fraction(ION_S_p2) -
+                ionization_variables.get_ionic_fraction(ION_S_p3));
+  abund[SIII] = abundances.get_abundance(ELEMENT_S) *
+                ionization_variables.get_ionic_fraction(ION_S_p1);
 
   loss = line_cooling_data.get_cooling(T, ne, abund) * n;
 

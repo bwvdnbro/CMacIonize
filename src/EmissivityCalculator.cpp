@@ -135,13 +135,36 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
         abundances.get_abundance(ELEMENT_He);
     const double ne = nhp + nhep;
 
-    double abund[12];
+    // get the abundances of the ions used by the line cooling computation
+    double abund[LINECOOLINGDATA_NUMELEMENTS];
+
+    // carbon
+    // we assume that all carbon is either C+, C++, or C+++
+    // we only use C+ and C++
+    // note that the ionic fraction of C_p1 corresponds to the fraction of
+    // ionized
+    // C+, i.e. the fraction of C++
+    abund[CII] = abundances.get_abundance(ELEMENT_C) *
+                 (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
+                  ionization_variables.get_ionic_fraction(ION_C_p2));
+    abund[CIII] = abundances.get_abundance(ELEMENT_C) *
+                  ionization_variables.get_ionic_fraction(ION_C_p1);
+
+    // nitrogen
+    // we assume all nitrogen is either N0, N+, N++ or N+++
+    // we only use N0, N+ and N++
     abund[NI] = abundances.get_abundance(ELEMENT_N) *
                 (1. - ionization_variables.get_ionic_fraction(ION_N_n) -
                  ionization_variables.get_ionic_fraction(ION_N_p1) -
                  ionization_variables.get_ionic_fraction(ION_N_p2));
     abund[NII] = abundances.get_abundance(ELEMENT_N) *
                  ionization_variables.get_ionic_fraction(ION_N_n);
+    abund[NIII] = abundances.get_abundance(ELEMENT_N) *
+                  ionization_variables.get_ionic_fraction(ION_N_p1);
+
+    // oxygen
+    // we assume all oxygen is either O0, O+ or O++
+    // we use all of them
     abund[OI] = abundances.get_abundance(ELEMENT_O) *
                 (1. - ionization_variables.get_ionic_fraction(ION_O_n) -
                  ionization_variables.get_ionic_fraction(ION_O_p1));
@@ -149,23 +172,24 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                  ionization_variables.get_ionic_fraction(ION_O_n);
     abund[OIII] = abundances.get_abundance(ELEMENT_O) *
                   ionization_variables.get_ionic_fraction(ION_O_p1);
+
+    // neon
+    // we make no assumptions on the relative abundances of different neon ions
+    // we only use Ne+ and Ne++
+    abund[NeII] = abundances.get_abundance(ELEMENT_Ne) *
+                  ionization_variables.get_ionic_fraction(ION_Ne_n);
     abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
                    ionization_variables.get_ionic_fraction(ION_Ne_p1);
+
+    // sulphur
+    // we assume all sulphur is either S+, S++, S+++ or S++++
+    // we only use S+ and S++
     abund[SII] = abundances.get_abundance(ELEMENT_S) *
                  (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
                   ionization_variables.get_ionic_fraction(ION_S_p2) -
                   ionization_variables.get_ionic_fraction(ION_S_p3));
     abund[SIII] = abundances.get_abundance(ELEMENT_S) *
                   ionization_variables.get_ionic_fraction(ION_S_p1);
-    abund[CII] = abundances.get_abundance(ELEMENT_C) *
-                 (1. - ionization_variables.get_ionic_fraction(ION_C_p1) -
-                  ionization_variables.get_ionic_fraction(ION_C_p2));
-    abund[CIII] = abundances.get_abundance(ELEMENT_C) *
-                  ionization_variables.get_ionic_fraction(ION_C_p1);
-    abund[NIII] = abundances.get_abundance(ELEMENT_N) *
-                  ionization_variables.get_ionic_fraction(ION_N_p1);
-    abund[NeII] = abundances.get_abundance(ELEMENT_Ne) *
-                  ionization_variables.get_ionic_fraction(ION_Ne_n);
 
     std::vector< std::vector< double > > line_strengths =
         lines.get_line_strengths(ionization_variables.get_temperature(), ne,

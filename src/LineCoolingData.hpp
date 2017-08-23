@@ -73,8 +73,13 @@ enum LineCoolingDataTwoLevelElement {
   /*! @brief Neon II. */
   NeII,
   /*! @brief Counter. Should always be the last element! */
-  LINECOOLINGDATA_NUMTWOLEVELELEMENTS
+  LINECOOLINGDATA_NUMELEMENTS
 };
+
+/*! @brief Number of two level elements, which is defined as the total number of
+ *  elements minus the number of five level elements. */
+#define LINECOOLINGDATA_NUMTWOLEVELELEMENTS                                    \
+  (LINECOOLINGDATA_NUMELEMENTS - LINECOOLINGDATA_NUMFIVELEVELELEMENTS)
 
 /**
  * @brief Convenient names for transitions between levels.
@@ -195,25 +200,21 @@ private:
       [LINECOOLINGDATA_NUMFIVELEVELELEMENTS][5];
 
   /*! @brief Collision strength fit parameters for the two level elements. */
-  double _two_level_collision_strength[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
-                                       LINECOOLINGDATA_NUMFIVELEVELELEMENTS][7];
+  double _two_level_collision_strength[LINECOOLINGDATA_NUMTWOLEVELELEMENTS][7];
 
   /*! @brief Transition probabilities for deexcitation between different
    *  levels for the two level elements. */
-  double
-      _two_level_transition_probability[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
-                                        LINECOOLINGDATA_NUMFIVELEVELELEMENTS];
+  double _two_level_transition_probability[LINECOOLINGDATA_NUMTWOLEVELELEMENTS];
 
   /*! @brief Energy differences for the transitions between different levels
    *  for the two level elements (in K). */
-  double _two_level_energy_difference[LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
-                                      LINECOOLINGDATA_NUMFIVELEVELELEMENTS];
+  double _two_level_energy_difference[LINECOOLINGDATA_NUMTWOLEVELELEMENTS];
 
   /*! @brief Inverse statistical weights for the different levels for the two
    *  level elements. */
-  double _two_level_inverse_statistical_weight
-      [LINECOOLINGDATA_NUMTWOLEVELELEMENTS -
-       LINECOOLINGDATA_NUMFIVELEVELELEMENTS][2];
+  double
+      _two_level_inverse_statistical_weight[LINECOOLINGDATA_NUMTWOLEVELELEMENTS]
+                                           [2];
 
   /*! @brief Prefactor for collision strengths: \f$\frac{h^2}{\sqrt{k}
    *  \left(2\pi{}m_e\right)^\frac{3}{2}\f$ (in K^0.5 m^3 s^-1). */
@@ -240,12 +241,13 @@ public:
 
   static int simq(double A[5][5], double B[5]);
 
-  double get_cooling(double temperature, double electron_density,
-                     const double *abundances) const;
+  double
+  get_cooling(double temperature, double electron_density,
+              const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const;
 
-  std::vector< std::vector< double > >
-  get_line_strengths(double temperature, double electron_density,
-                     const double *abundances) const;
+  std::vector< std::vector< double > > get_line_strengths(
+      double temperature, double electron_density,
+      const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const;
 };
 
 #endif // LINECOOLINGDATA_HPP

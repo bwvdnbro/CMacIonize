@@ -2045,8 +2045,9 @@ double LineCoolingData::compute_level_population(
  * @param abundances Abdunances of coolants.
  * @return Radiative cooling per hydrogen atom (in kg m^2s^-3).
  */
-double LineCoolingData::get_cooling(double temperature, double electron_density,
-                                    const double *abundances) const {
+double LineCoolingData::get_cooling(
+    double temperature, double electron_density,
+    const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const {
 
   if (electron_density == 0.) {
     // we cannot return a 0 cooling rate, because that crashes our iterative
@@ -2117,15 +2118,15 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
 
   // offset of two level elements in the abundances array
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = offset; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int index = i - offset;
+    const int index = i + offset;
     const LineCoolingDataTwoLevelElement element =
-        static_cast< LineCoolingDataTwoLevelElement >(i);
+        static_cast< LineCoolingDataTwoLevelElement >(index);
     const double level_population = compute_level_population(
         element, collision_strength_prefactor, temperature, Tinv, logT);
-    cooling += abundances[i] * kb * _two_level_energy_difference[index] *
-               _two_level_transition_probability[index] * level_population;
+    cooling += abundances[index] * kb * _two_level_energy_difference[i] *
+               _two_level_transition_probability[i] * level_population;
   }
 
   return cooling;
@@ -2140,9 +2141,9 @@ double LineCoolingData::get_cooling(double temperature, double electron_density,
  * @return std::vector containing, for each ion, a std::vector of line strengths
  * for each transition (in J s^-1).
  */
-std::vector< std::vector< double > >
-LineCoolingData::get_line_strengths(double temperature, double electron_density,
-                                    const double *abundances) const {
+std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
+    double temperature, double electron_density,
+    const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const {
 
   /// initialize some variables
 
@@ -2157,8 +2158,7 @@ LineCoolingData::get_line_strengths(double temperature, double electron_density,
 
   // vector to store line strengths in
   std::vector< std::vector< double > > line_strengths(
-      LINECOOLINGDATA_NUMFIVELEVELELEMENTS +
-      LINECOOLINGDATA_NUMTWOLEVELELEMENTS);
+      LINECOOLINGDATA_NUMELEMENTS);
 
   /// 5 level elements
 
@@ -2223,21 +2223,21 @@ LineCoolingData::get_line_strengths(double temperature, double electron_density,
 
   // offset of two level elements in the abundances array
   const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = offset; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int index = i - offset;
+    const int index = i + offset;
 
-    line_strengths[i].resize(1);
+    line_strengths[index].resize(1);
 
     const LineCoolingDataTwoLevelElement element =
-        static_cast< LineCoolingDataTwoLevelElement >(i);
+        static_cast< LineCoolingDataTwoLevelElement >(index);
 
     const double level_population = compute_level_population(
         element, collision_strength_prefactor, temperature, Tinv, logT);
 
-    line_strengths[i][0] = abundances[i] * kb * level_population *
-                           _two_level_energy_difference[index] *
-                           _two_level_transition_probability[index];
+    line_strengths[index][0] = abundances[index] * kb * level_population *
+                               _two_level_energy_difference[i] *
+                               _two_level_transition_probability[i];
   }
 
   return line_strengths;
