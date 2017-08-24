@@ -37,10 +37,6 @@ Abundances:
 TemperatureCalculator:
   do temperature calculation: false
 
-# disable diffuse reemission
-PhotonSource:
-  diffuse field: false
-
 # distribution of photon sources in the box
 PhotonSourceDistribution:
   # type of distribution: a single stellar source
@@ -70,7 +66,7 @@ DensityGridWriter:
   # type of output files to write
   type: Gadget
   # prefix to add to output files
-  prefix: stromgren_
+  prefix: stromgren_diffuse_
   # number of digits to be used in the filename counter
   padding: 3
 

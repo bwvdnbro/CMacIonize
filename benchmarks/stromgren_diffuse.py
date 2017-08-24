@@ -2,8 +2,7 @@
 
 ################################################################################
 # This file is part of CMacIonize
-# Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
-#               2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+# Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
 #
 # CMacIonize is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,10 +19,11 @@
 ################################################################################
 
 ##
-# @file stromgren.py
+# @file stromgren_diffuse.py
 #
-# @brief Read all stromgren_*.hdf5 files in the directory and plot their
-# hydrogen neutral fractions as a function of radius in a file stromgren_*.png.
+# @brief Read all stromgren_diffuse_*.hdf5 files in the directory and plot
+# their hydrogen neutral fractions as a function of radius in a file
+# stromgren_diffuse_*.png.
 #
 # We also plot the analytically calculated Stromgren radius for reference.
 #
@@ -37,12 +37,19 @@ import pylab as pl
 import glob
 
 # calculate the stromgren radius
-# set the values for the parameters to the values used in the parameter file
+# set the parameters to the values used in the parameter file
 alphaH = 4.e-19 # m^3 s^-1
 nH = 1.e8 # m^-3
 Q = 4.26e49 # s^-1
 
-# compute the Stromgren radius
+# this is the value for the reemission probability at 8,000 K
+PR = 0.36392015
+
+# adjust the total luminosity to take into account the extra luminosity due to
+# the reemission
+Q /= (1. - PR)
+
+# compute the analytic Stromgren radius
 Rs = (0.75 * Q / (np.pi * nH**2 * alphaH))**(1. / 3.)
 
 # output distances in pc
@@ -51,7 +58,7 @@ pc = 3.086e16 # m
 Rs /= pc
 
 # loop over all snapshot files in the directory
-for fname in sorted(glob.glob("stromgren_*.hdf5")):
+for fname in sorted(glob.glob("stromgren_diffuse_*.hdf5")):
   # give the user some clue about what is going on
   print "Processing", fname, "..."
   # open the snapshot file
