@@ -34,7 +34,6 @@
 #include "MPIMessageBox.hpp"
 #include "MPIUtilities.hpp"
 
-#include <sstream>
 #include <vector>
 
 #ifdef HAVE_MPI
@@ -42,6 +41,8 @@
 #endif
 
 #ifdef HAVE_POSIX
+#include <fstream>
+#include <sstream>
 #include <unistd.h>
 #endif
 
