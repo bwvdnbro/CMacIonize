@@ -4,6 +4,7 @@ sudo: enabled
 branches:
   only:
     - master
+    - stable
 matrix:
   include:
     - os: linux
