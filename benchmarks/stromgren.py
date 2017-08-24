@@ -33,8 +33,11 @@
 # load some libraries
 import numpy as np
 import h5py
+import scipy.stats as stats
 import pylab as pl
 import glob
+
+pl.rcParams["text.usetex"] = True
 
 # calculate the stromgren radius
 # set the values for the parameters to the values used in the parameter file
@@ -71,10 +74,28 @@ for fname in sorted(glob.glob("stromgren_*.hdf5")):
                    (coords[:,2] - box_center[2])**2)
   radius /= pc
 
+  # bin the neutral fractions
+  max_radius = max(radius)
+  r_bin_edge = np.arange(0., max_radius, 0.02 * max_radius)
+  r_bin = 0.5 * (r_bin_edge[1:] + r_bin_edge[:-1])
+  nfracH_bin, _, _ = \
+    stats.binned_statistic(radius, nfracH, statistic = "mean",
+                           bins = r_bin_edge)
+  nfracH2_bin, _, _ = \
+    stats.binned_statistic(radius, nfracH**2, statistic = "mean",
+                           bins = r_bin_edge)
+  nfracH_sigma_bin = np.sqrt(nfracH2_bin - nfracH_bin**2)
+
   # plot the stromgren radius for reference
-  pl.plot([Rs, Rs], [1.e-7, 1.], "r--", label = "Stromgren radius")
+  pl.plot([Rs, Rs], [1.e-7, 1.], "r--", label = r"Str\"{o}mgren radius")
   # plot neutral fraction as a function of radius
-  pl.semilogy(radius, nfracH, "k.")
+  pl.semilogy(radius, nfracH, ".", color = "grey", markersize = 0.5,
+              alpha = 0.5)
+  # plot the binned neutral fractions with error bar
+  # we need to set the zorder to make sure the error bars are on top of the data
+  # points
+  pl.errorbar(r_bin, nfracH_bin, yerr = nfracH_sigma_bin, fmt = '.',
+              color = 'b', zorder = 3, label = r"{\sc{}CMacIonize}")
   
   # labels, legend and formatting...
   pl.xlabel(r"$r$ (pc)")
