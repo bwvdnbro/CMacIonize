@@ -27,8 +27,6 @@
 #ifndef LINECOOLINGDATA_HPP
 #define LINECOOLINGDATA_HPP
 
-#include "LineCoolingDataLocation.hpp"
-
 #include <string>
 #include <vector>
 
