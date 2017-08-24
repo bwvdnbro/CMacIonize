@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "FixedValueCrossSections.hpp"
 #include "VernerCrossSections.hpp"
 
 /**
@@ -42,6 +43,7 @@ public:
    * parameter file.
    *
    * Supported types are (default: Verner):
+   *  - FixedValue: Implementation that uses user specified cross sections.
    *  - Verner: Implementation that uses the Verner & Yakovlev (1995) and Verner
    *    et al. (1996) cross sections.
    *
@@ -59,7 +61,9 @@ public:
       log->write_info("Requested CrossSections type: ", type);
     }
 
-    if (type == "Verner") {
+    if (type == "FixedValue") {
+      return new FixedValueCrossSections(params);
+    } else if (type == "Verner") {
       return new VernerCrossSections();
     } else {
       cmac_error("Unknown CrossSections type: \"%s\"!", type.c_str());

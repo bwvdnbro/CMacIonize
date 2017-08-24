@@ -30,6 +30,7 @@
 #include "RecombinationRates.hpp"
 
 // implementations
+#include "FixedValueRecombinationRates.hpp"
 #include "VernerRecombinationRates.hpp"
 
 /**
@@ -42,6 +43,7 @@ public:
    * the parameter file.
    *
    * Supported types are (default: Verner):
+   *  - FixedValue: implementation that uses user specified recombination rates.
    *  - Verner: Implementation that uses the Verner & Ferland (1996)
    *    recombination rates.
    *
@@ -60,7 +62,9 @@ public:
       log->write_info("Requested RecombinationRates type: ", type);
     }
 
-    if (type == "Verner") {
+    if (type == "FixedValue") {
+      return new FixedValueRecombinationRates(params);
+    } else if (type == "Verner") {
       return new VernerRecombinationRates();
     } else {
       cmac_error("Unknown RecombinationRates type: \"%s\"!", type.c_str());

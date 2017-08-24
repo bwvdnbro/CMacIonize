@@ -178,6 +178,8 @@ set(CMACIONIZE_SOURCES
     EmissivityValues.hpp
     Error.hpp
     FaucherGiguerePhotonSourceSpectrum.hpp
+    FixedValueCrossSections.hpp
+    FixedValueRecombinationRates.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
