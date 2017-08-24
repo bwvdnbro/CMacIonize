@@ -161,6 +161,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.hpp
     CompilerInfo.hpp
     CrossSections.hpp
+    CrossSectionsFactory.hpp
     DensityFunction.hpp
     DensityFunctionFactory.hpp
     DensityGrid.hpp
@@ -201,6 +202,7 @@ set(CMACIONIZE_SOURCES
     PlanckPhotonSourceSpectrum.hpp
     RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
+    RecombinationRatesFactory.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp

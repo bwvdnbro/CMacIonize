@@ -34,6 +34,11 @@
 class CrossSections {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~CrossSections() {}
+
+  /**
    * @brief Get the photoionization cross section for the given ion at the
    * given photon energy.
    *

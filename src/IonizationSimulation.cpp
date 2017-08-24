@@ -26,6 +26,7 @@
 #include "IonizationSimulation.hpp"
 #include "ChargeTransferRates.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
+#include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
@@ -36,10 +37,9 @@
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
-#include "VernerCrossSections.hpp"
-#include "VernerRecombinationRates.hpp"
 #include "WorkEnvironment.hpp"
 #include <fstream>
 
@@ -95,6 +95,11 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
     }
   }
 
+  // create cross section and recombination rate objects
+  _cross_sections = CrossSectionsFactory::generate(_parameter_file, _log);
+  _recombination_rates =
+      RecombinationRatesFactory::generate(_parameter_file, _log);
+
   // create the density grid and related objects
   _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
   _density_mask = DensityMaskFactory::generate(_parameter_file, _log);
@@ -131,7 +136,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _photon_source = new PhotonSource(
       _photon_source_distribution, _photon_source_spectrum,
       _continuous_photon_source, _continuous_photon_source_spectrum,
-      _abundances, _cross_sections, _parameter_file, _log);
+      _abundances, *_cross_sections, _parameter_file, _log);
   const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output
@@ -146,7 +151,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
 
   // used to calculate both the ionization state and the temperature
   _temperature_calculator = new TemperatureCalculator(
-      total_luminosity, _abundances, _line_cooling_data, _recombination_rates,
+      total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
       _charge_transfer_rates, _parameter_file, _log);
 
   // create ray tracing objects
@@ -443,4 +448,8 @@ IonizationSimulation::~IonizationSimulation() {
   delete _density_grid;
   delete _density_mask;
   delete _density_function;
+
+  // cross sections and recombination rates
+  delete _cross_sections;
+  delete _recombination_rates;
 }

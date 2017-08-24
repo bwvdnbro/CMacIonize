@@ -34,6 +34,7 @@
 #include "ConfigurationInfo.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
+#include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
@@ -51,12 +52,11 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
-#include "VernerCrossSections.hpp"
-#include "VernerRecombinationRates.hpp"
 #include "WorkDistributor.hpp"
 #include "WorkEnvironment.hpp"
 
@@ -112,8 +112,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   DensityFunction *density_function =
       DensityFunctionFactory::generate(params, log);
   DensityMask *density_mask = DensityMaskFactory::generate(params, log);
-  VernerCrossSections cross_sections;
-  VernerRecombinationRates recombination_rates;
+  CrossSections *cross_sections = CrossSectionsFactory::generate(params, log);
+  RecombinationRates *recombination_rates =
+      RecombinationRatesFactory::generate(params, log);
 
   // initialize the simulation box
   const SimulationBox simulation_box(params);
@@ -172,7 +173,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   Abundances abundances(params, log);
 
   PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, cross_sections, params,
+                      continuousspectrum, abundances, *cross_sections, params,
                       log);
 
   // set up output
@@ -196,7 +197,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   // used to calculate both the ionization state and the temperature
   TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
-      Q, abundances, line_cooling_data, recombination_rates,
+      Q, abundances, line_cooling_data, *recombination_rates,
       charge_transfer_rates, params, log);
 
   // we are done reading the parameter file
@@ -460,6 +461,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   delete temperature_calculator;
   delete continuousspectrum;
   delete spectrum;
+
+  delete cross_sections;
+  delete recombination_rates;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program

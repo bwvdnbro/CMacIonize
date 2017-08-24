@@ -32,21 +32,21 @@
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "Timer.hpp"
-#include "VernerCrossSections.hpp"
-#include "VernerRecombinationRates.hpp"
 
 #include <string>
 
+class ContinuousPhotonSource;
+class CrossSections;
 class DensityFunction;
 class DensityGrid;
+class DensityGridWriter;
 class DensityMask;
 class Log;
 class MPICommunicator;
+class PhotonSource;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
-class ContinuousPhotonSource;
-class PhotonSource;
-class DensityGridWriter;
+class RecombinationRates;
 class TemperatureCalculator;
 
 /**
@@ -80,12 +80,6 @@ private:
 
   /*! @brief Data values for line cooling. */
   const LineCoolingData _line_cooling_data;
-
-  /*! @brief Cross sections for photoionization. */
-  const VernerCrossSections _cross_sections;
-
-  /*! @brief Recombination rates. */
-  const VernerRecombinationRates _recombination_rates;
 
   /*! @brief Charge transfer rates. */
   const ChargeTransferRates _charge_transfer_rates;
@@ -122,6 +116,12 @@ private:
 
   /// pointer objects owned by the simulation. These have to be deleted in the
   /// destructor.
+
+  /*! @brief Cross sections for photoionization. */
+  CrossSections *_cross_sections;
+
+  /*! @brief Recombination rates. */
+  RecombinationRates *_recombination_rates;
 
   /*! @brief Density function that sets the density field. */
   DensityFunction *_density_function;
