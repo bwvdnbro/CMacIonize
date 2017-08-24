@@ -30,7 +30,7 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
-#include <sys/time.h> // for timeval
+#include "OperatingSystem.hpp"
 
 /**
   * @brief A simplified interface to the Unix system timer.
@@ -46,19 +46,19 @@
 class Timer {
 private:
   /*! @brief Starting time of the timer */
-  timeval _start;
+  OperatingSystem::TimeValue _start;
 
   /*! @brief Stop time of the timer */
-  timeval _stop;
+  OperatingSystem::TimeValue _stop;
 
   /*! @brief Total time interval registered so far */
-  timeval _diff;
+  OperatingSystem::TimeValue _diff;
 
 public:
   /**
    * @brief Clear the internal timeval difference.
    */
-  inline void reset() { timerclear(&_diff); }
+  inline void reset() { OperatingSystem::clear_time_value(_diff); }
 
   /**
    * @brief Constructor.
@@ -68,13 +68,13 @@ public:
    */
   inline Timer() {
     reset();
-    gettimeofday(&_start, nullptr);
+    OperatingSystem::get_time_value(_start);
   }
 
   /**
    * @brief Record the current system time as starting time.
    */
-  inline void start() { gettimeofday(&_start, nullptr); }
+  inline void start() { OperatingSystem::get_time_value(_start); }
 
   /**
    * @brief Record the current system time as stopping time and add the
@@ -84,11 +84,11 @@ public:
    * (with microsecond precision).
    */
   inline double stop() {
-    gettimeofday(&_stop, NULL);
-    timeval interval_diff;
-    timersub(&_stop, &_start, &interval_diff);
-    timeradd(&_diff, &interval_diff, &_diff);
-    return _diff.tv_sec + 1.e-6 * _diff.tv_usec;
+    OperatingSystem::get_time_value(_stop);
+    OperatingSystem::TimeValue interval_diff;
+    OperatingSystem::subtract_time_values(_stop, _start, interval_diff);
+    OperatingSystem::add_time_values(_diff, interval_diff, _diff);
+    return OperatingSystem::convert_to_seconds(_diff);
   }
 
   /**
@@ -97,7 +97,9 @@ public:
    * @return The current contents of the internal timeval difference in seconds
    * (with microsecond precision).
    */
-  inline double value() const { return _diff.tv_sec + 1.e-6 * _diff.tv_usec; }
+  inline double value() const {
+    return OperatingSystem::convert_to_seconds(_diff);
+  }
 
   /**
    * @brief Get the current value of the timer without affecting it.
@@ -105,17 +107,17 @@ public:
    * @return The time in seconds since the timer was last started.
    */
   inline double interval() {
-    timeval tempstop;
-    gettimeofday(&tempstop, NULL);
-    timeval interval;
-    timersub(&tempstop, &_start, &interval);
-    return interval.tv_sec + 1.e-6 * interval.tv_usec;
+    OperatingSystem::TimeValue tempstop;
+    OperatingSystem::get_time_value(tempstop);
+    OperatingSystem::TimeValue interval;
+    OperatingSystem::subtract_time_values(tempstop, _start, interval);
+    return OperatingSystem::convert_to_seconds(interval);
   }
 
   /**
    * @brief Restart the timer by overwriting the start time.
    */
-  inline void restart() { gettimeofday(&_start, nullptr); }
+  inline void restart() { OperatingSystem::get_time_value(_start); }
 };
 
 #endif // TIMER_HPP

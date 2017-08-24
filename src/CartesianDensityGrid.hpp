@@ -36,6 +36,7 @@ class Log;
 class ParameterFile;
 class Photon;
 class RecombinationRates;
+class SimulationBox;
 
 /**
  * @brief Cartesian density grid.
@@ -49,7 +50,7 @@ private:
   Box<> _box;
 
   /*! @brief Periodicity flags. */
-  CoordinateVector< bool > _periodic;
+  CoordinateVector< bool > _periodicity_flags;
 
   /*! @brief Side lengths of a single cell. */
   CoordinateVector<> _cellside;
@@ -126,20 +127,21 @@ private:
 
 public:
   CartesianDensityGrid(
-      Box<> box, CoordinateVector< int > ncell,
-      DensityFunction &density_function,
+      const Box<> &simulation_box, CoordinateVector< int > ncell,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
-  CartesianDensityGrid(ParameterFile &parameters,
-                       DensityFunction &density_function, Log *log = nullptr);
+  CartesianDensityGrid(const SimulationBox &simulation_box,
+                       ParameterFile &parameters, bool hydro = false,
+                       Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.
    */
   virtual ~CartesianDensityGrid() {}
 
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+                          DensityFunction &density_function);
 
   virtual unsigned int get_number_of_cells() const;
 
@@ -191,6 +193,7 @@ public:
                                            CoordinateVector< char > &next_index,
                                            double &ds) const;
 
+  virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
 
   virtual double get_total_emission(CoordinateVector<> origin,

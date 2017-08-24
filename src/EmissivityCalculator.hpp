@@ -36,6 +36,17 @@ class Abundances;
 
 /**
  * @brief Class that calculates emissivities for all cells in a DensityGrid.
+ *
+ * We use data from:
+ *  - Brown, Robert L. & Mathews, William G. 1970, ApJ, 160, 939
+ *    (http://adsabs.harvard.edu/abs/1970ApJ...160..939B)
+ *  - Osterbrock, D. E. & Ferland, G. J. 2006, Astrophysics of Gaseous Nebulae
+ *    and Active Galactic Nuclei, 2nd edition
+ *    (http://adsabs.harvard.edu/abs/2006agna.book.....O)
+ *  - Storey, P. J. &; Hummer, D. G. 1995, MNRAS, 272, 41
+ *    (http://adsabs.harvard.edu/abs/1995MNRAS.272...41S)
+ *  - Verner, D. A., & Ferland, G. J. 1996, ApJS, 103, 467
+ *    (http://adsabs.harvard.edu/abs/1996ApJS..103..467V)
  */
 class EmissivityCalculator {
   /*! @brief Temperature table for hydrogen and helium continuous emission
@@ -59,21 +70,23 @@ class EmissivityCalculator {
   double _loghemit[8];
 
   /*! @brief Abundances. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief LineCoolingData used to calculate line strengths. */
   LineCoolingData _lines;
 
 public:
-  EmissivityCalculator(Abundances &abundances);
+  EmissivityCalculator(const Abundances &abundances);
 
-  void bjump(double T, double &emhpl, double &emhmi, double &emhepl,
-             double &emhemi) const;
+  void get_balmer_jump_emission(double T, double &emission_hydrogen_high,
+                                double &emission_hydrogen_low,
+                                double &emission_helium_high,
+                                double &emission_helium_low) const;
 
   EmissivityValues
   calculate_emissivities(const IonizationVariables &ionization_variables,
-                         Abundances &abundances,
-                         const LineCoolingData &lines) const;
+                         const Abundances &abundances,
+                         const LineCoolingData &line_cooling_data) const;
 
   void calculate_emissivities(DensityGrid &grid) const;
   std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;

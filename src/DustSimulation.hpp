@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,19 +17,26 @@
  ******************************************************************************/
 
 /**
- * @file LineCoolingDataLocation.hpp
+ * @file DustSimulation.hpp
  *
- * @brief CMake configured file storing the location of the atomic line cooling
- * data file on the system
- *
- * This file should never be edited directly. Instead, edit
- * LineCoolingDataLocation.hpp.in.
+ * @brief Dusty radiative transfer simulation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef LINECOOLINGDATALOCATION_HPP
-#define LINECOOLINGDATALOCATION_HPP
+#ifndef DUSTSIMULATION_HPP
+#define DUSTSIMULATION_HPP
 
-#define LINECOOLINGDATALOCATION "@LINECOOLINGDATALOCATION@"
+class CommandLineParser;
+class Log;
+class Timer;
 
-#endif // LINECOOLINGDATALOCATION_HPP
+/**
+ * @brief Dusty radiative transfer simulation.
+ */
+class DustSimulation {
+public:
+  static int do_simulation(CommandLineParser &parser, bool write_output,
+                           Timer &programtimer, Log *log);
+};
+
+#endif // DUSTSIMULATION_HPP

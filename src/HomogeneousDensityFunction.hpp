@@ -37,10 +37,10 @@
 class HomogeneousDensityFunction : public DensityFunction {
 private:
   /*! @brief Single density value for the entire box (in m^-3). */
-  double _density;
+  const double _density;
 
   /*! @brief Single temperature value for the entire box (in K). */
-  double _temperature;
+  const double _temperature;
 
 public:
   /**
@@ -63,15 +63,19 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - density: Constant number density value (default: 100. cm^-3)
+   *  - temperature: Constant initial temperature value (default: 8000. K)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
   HomogeneousDensityFunction(ParameterFile &params, Log *log = nullptr)
       : HomogeneousDensityFunction(
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-                "densityfunction:density", "100. cm^-3"),
+                "DensityFunction:density", "100. cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "densityfunction:temperature", "8000. K"),
+                "DensityFunction:temperature", "8000. K"),
             log) {}
 
   /**

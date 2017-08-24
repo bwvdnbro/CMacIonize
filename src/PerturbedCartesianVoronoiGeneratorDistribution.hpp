@@ -53,7 +53,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param box Box containing the generators (in m).
+   * @param simulation_box Simulation box (in m).
    * @param resolution Number of cells in each dimensions for the base Cartesian
    * grid.
    * @param random_seed Seed for the random number generator.
@@ -61,24 +61,29 @@ public:
    * @param log Log to write logging info to.
    */
   PerturbedCartesianVoronoiGeneratorDistribution(
-      Box<> box, const CoordinateVector< unsigned int > resolution,
-      double random_seed, double amplitude, Log *log = nullptr)
+      const Box<> &simulation_box,
+      const CoordinateVector< unsigned int > resolution, double random_seed,
+      double amplitude, Log *log = nullptr)
       : _current_number(0) {
+
     RandomGenerator rg(random_seed);
     _generator_positions.resize(resolution.x() * resolution.y() *
                                 resolution.z());
     for (unsigned int ix = 0; ix < resolution.x(); ++ix) {
       const unsigned int index_x = ix * resolution.y() * resolution.z();
-      const double cx = box.get_anchor().x() +
-                        (ix + 0.5) * box.get_sides().x() / resolution.x();
+      const double cx =
+          simulation_box.get_anchor().x() +
+          (ix + 0.5) * simulation_box.get_sides().x() / resolution.x();
       for (unsigned int iy = 0; iy < resolution.y(); ++iy) {
         const unsigned int index_y = index_x + iy * resolution.z();
-        const double cy = box.get_anchor().y() +
-                          (iy + 0.5) * box.get_sides().y() / resolution.y();
+        const double cy =
+            simulation_box.get_anchor().y() +
+            (iy + 0.5) * simulation_box.get_sides().y() / resolution.y();
         for (unsigned int iz = 0; iz < resolution.z(); ++iz) {
           const unsigned int index_z = index_y + iz;
-          const double cz = box.get_anchor().z() +
-                            (iz + 0.5) * box.get_sides().z() / resolution.z();
+          const double cz =
+              simulation_box.get_anchor().z() +
+              (iz + 0.5) * simulation_box.get_sides().z() / resolution.z();
           _generator_positions[index_z][0] =
               cx + amplitude * (2. * rg.get_uniform_random_double() - 1.);
           _generator_positions[index_z][1] =
@@ -101,24 +106,29 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of cells: Number of cells for the basic unperturbed Cartesian
+   *    grid (default: [10, 10, 10])
+   *  - random seed: Random seed used to initialize the random generator that
+   *    generates the random perturbations (default: 42)
+   *  - amplitude: Amplitude of the random displacements (default: 0.01 m)
+   *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  PerturbedCartesianVoronoiGeneratorDistribution(ParameterFile &params,
+  PerturbedCartesianVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                                 ParameterFile &params,
                                                  Log *log = nullptr)
       : PerturbedCartesianVoronoiGeneratorDistribution(
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+            simulation_box,
             params.get_value< CoordinateVector< unsigned int > >(
-                "densitygrid:voronoi_generator_distribution:ncell",
+                "DensityGrid:VoronoiGeneratorDistribution:number of cells",
                 CoordinateVector< unsigned int >(10, 10, 10)),
             params.get_value< int >(
-                "densitygrid:voronoi_generator_distribution:random_seed", 42),
+                "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "densitygrid:voronoi_generator_distribution:amplitude",
-                "0.01 m"),
+                "DensityGrid:VoronoiGeneratorDistribution:amplitude", "0.01 m"),
             log) {}
 
   /**
@@ -136,6 +146,7 @@ public:
    * @return Next generator position (in m).
    */
   virtual CoordinateVector<> get_position() {
+
     cmac_assert(_current_number < _generator_positions.size());
     CoordinateVector<> pos = _generator_positions[_current_number];
     ++_current_number;

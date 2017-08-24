@@ -46,6 +46,7 @@ double get_number_density(double z) { return 1. + z * z; }
 int main(int argc, char **argv) {
   InterpolatedDensityFunction density_function("test_interpolated_density.txt",
                                                4000.);
+  density_function.initialize();
 
   for (unsigned int i = 0; i < 1000; ++i) {
     const CoordinateVector<> p(0.5, 0.5, (i + 0.5) * 0.001);

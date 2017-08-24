@@ -17,41 +17,42 @@
  ******************************************************************************/
 
 /**
- * @file PhotonShootJobMarket.hpp
+ * @file IonizationPhotonShootJobMarket.hpp
  *
- * @brief JobMarket implementation that shoots photons through a DensityGrid.
+ * @brief JobMarket implementation that shoots ionizing photons through a
+ * DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef PHOTONSHOOTJOBMARKET_HPP
-#define PHOTONSHOOTJOBMARKET_HPP
+#ifndef IONIZATIONPHOTONSHOOTJOBMARKET_HPP
+#define IONIZATIONPHOTONSHOOTJOBMARKET_HPP
 
+#include "Configuration.hpp"
+#include "IonizationPhotonShootJob.hpp"
 #include "Lock.hpp"
-#include "PhotonShootJob.hpp"
 
 class PhotonSource;
 class RandomGenerator;
 class DensityGrid;
 
-/*! @brief Maximum number of threads allowed on the system. */
-#define PHOTONSHOOTJOBMARKET_MAXTHREADS 128
-
 /**
- * @brief JobMarket implementation that shoots photons through a DensityGrid.
+ * @brief JobMarket implementation that shoots ionizing photons through a
+ * DensityGrid.
  */
-class PhotonShootJobMarket {
+class IonizationPhotonShootJobMarket {
 private:
-  /*! @brief Per thread PhotonShootJob. */
-  PhotonShootJob *_jobs[PHOTONSHOOTJOBMARKET_MAXTHREADS];
+  /*! @brief Per thread IonizationPhotonShootJob. */
+  IonizationPhotonShootJob *_jobs[MAX_NUM_THREADS];
 
   /*! @brief Number of threads used in the calculation. */
-  int _worksize;
+  const int _worksize;
 
   /*! @brief Total number of photons to propagate through the grid. */
   unsigned int _numphoton;
 
-  /*! @brief Number of photons to shoot during a single PhotonShootJob. */
-  unsigned int _jobsize;
+  /*! @brief Number of photons to shoot during a single
+   *  IonizationPhotonShootJob. */
+  const unsigned int _jobsize;
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
@@ -65,18 +66,22 @@ public:
    * @param random_seed Seed for the RandomGenerator.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Total number of photons to propagate through the grid.
-   * @param jobsize Number of photons to shoot during a single PhotonShootJob.
+   * @param jobsize Number of photons to shoot during a single
+   * IonizationPhotonShootJob.
    * @param worksize Number of threads used in the calculation.
    */
-  inline PhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
-                              DensityGrid &density_grid, unsigned int numphoton,
-                              unsigned int jobsize, int worksize)
+  inline IonizationPhotonShootJobMarket(PhotonSource &photon_source,
+                                        int random_seed,
+                                        DensityGrid &density_grid,
+                                        unsigned int numphoton,
+                                        unsigned int jobsize, int worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
+
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
     for (int i = 0; i < _worksize; ++i) {
-      _jobs[i] =
-          new PhotonShootJob(photon_source, random_seed + i, density_grid);
+      _jobs[i] = new IonizationPhotonShootJob(photon_source, random_seed + i,
+                                              density_grid);
     }
   }
 
@@ -85,7 +90,7 @@ public:
    *
    * Deletes the internal job array.
    */
-  inline ~PhotonShootJobMarket() {
+  inline ~IonizationPhotonShootJobMarket() {
     for (int i = 0; i < _worksize; ++i) {
       delete _jobs[i];
     }
@@ -102,8 +107,8 @@ public:
   /**
    * @brief Set the number of photons.
    *
-   * This routine can be used to reset a PhotonShootJobMarket that was used
-   * before.
+   * This routine can be used to reset an IonizationPhotonShootJobMarket that
+   * was used before.
    *
    * @param numphoton New number of photons.
    */
@@ -122,13 +127,14 @@ public:
   }
 
   /**
-   * @brief Get a PhotonShootJob.
+   * @brief Get an IonizationPhotonShootJob.
    *
    * @param thread_id Rank of the thread that wants to get a job (in a parallel
    * context).
-   * @return PhotonShootJob.
+   * @return IonizationPhotonShootJob.
    */
-  inline PhotonShootJob *get_job(int thread_id) {
+  inline IonizationPhotonShootJob *get_job(int thread_id) {
+
     unsigned int jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
@@ -145,4 +151,4 @@ public:
   }
 };
 
-#endif // PHOTONSHOOTJOBMARKET_HPP
+#endif // IONIZATIONPHOTONSHOOTJOBMARKET_HPP

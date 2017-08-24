@@ -122,9 +122,12 @@ public:
                   positions[i].y() <= maxpos.y());
       cmac_assert(positions[i].z() >= minpos.z() &&
                   positions[i].z() <= maxpos.z());
-      unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
-      unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
-      unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
+      const unsigned int ix =
+          (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
+      const unsigned int iy =
+          (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
+      const unsigned int iz =
+          (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
       _grid[ix][iy][iz].push_back(i);
       _cell_map[i] =
           std::tuple< unsigned int, unsigned int, unsigned int >(ix, iy, iz);
@@ -181,6 +184,7 @@ public:
                   const unsigned int ay, const unsigned int az,
                   const unsigned int sx, const unsigned int sy,
                   const unsigned int sz) {
+
       cmac_assert(ax < sx);
       cmac_assert(ay < sy);
       cmac_assert(az < sz);
@@ -231,6 +235,7 @@ public:
     inline ngbiterator(const PointLocations &locations, unsigned int index)
         : _locations(locations), _anchor(_locations._cell_map[index]),
           _range(0, 0, 0), _level(0) {
+
       const unsigned int ax = std::get< 0 >(_anchor);
       const unsigned int ay = std::get< 1 >(_anchor);
       const unsigned int az = std::get< 2 >(_anchor);
@@ -269,6 +274,7 @@ public:
      * @return std::vector containing the indices of neighbouring points.
      */
     inline const std::vector< unsigned int > &get_neighbours() const {
+
       const unsigned int ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
       const unsigned int iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
       const unsigned int iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
@@ -284,6 +290,7 @@ public:
      * @param level Level index.
      */
     static void increase_indices(int &rx, int &ry, int &rz, int &level) {
+
       if (rz == level) {
         rz = -level;
         if (ry == level) {
@@ -318,6 +325,7 @@ public:
      * @return True if the given range is inside the grid, false otherwise.
      */
     inline bool is_inside(int rx, int ry, int rz) const {
+
       const int ax = std::get< 0 >(_anchor);
       const int ay = std::get< 1 >(_anchor);
       const int az = std::get< 2 >(_anchor);
@@ -335,6 +343,7 @@ public:
      * are still more potential neighbours to be found.
      */
     inline bool increase_range() {
+
       if (_range == _maxrange) {
         return false;
       }
@@ -464,6 +473,7 @@ public:
                   const unsigned int ay, const unsigned int az,
                   const unsigned int sx, const unsigned int sy,
                   const unsigned int sz) {
+
       cmac_assert(ax < sx);
       cmac_assert(ay < sy);
       cmac_assert(az < sz);
@@ -514,6 +524,7 @@ public:
     inline generalngbiterator(const PointLocations &locations,
                               const CoordinateVector<> &position)
         : _locations(locations), _range(0, 0, 0), _level(0) {
+
       unsigned int &ax = std::get< 0 >(_anchor);
       unsigned int &ay = std::get< 1 >(_anchor);
       unsigned int &az = std::get< 2 >(_anchor);
@@ -558,6 +569,7 @@ public:
      * @return std::vector containing the indices of neighbouring points.
      */
     inline const std::vector< unsigned int > &get_neighbours() const {
+
       const unsigned int ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
       const unsigned int iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
       const unsigned int iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
@@ -573,6 +585,7 @@ public:
      * @param level Level index.
      */
     static void increase_indices(int &rx, int &ry, int &rz, int &level) {
+
       if (rz == level) {
         rz = -level;
         if (ry == level) {
@@ -607,6 +620,7 @@ public:
      * @return True if the given range is inside the grid, false otherwise.
      */
     inline bool is_inside(int rx, int ry, int rz) const {
+
       const int ax = std::get< 0 >(_anchor);
       const int ay = std::get< 1 >(_anchor);
       const int az = std::get< 2 >(_anchor);
@@ -624,6 +638,7 @@ public:
      * are still more potential neighbours to be found.
      */
     inline bool increase_range() {
+
       if (_range == _maxrange) {
         return false;
       }
@@ -695,6 +710,7 @@ public:
    */
   inline unsigned int
   get_closest_neighbour(const CoordinateVector<> cpos) const {
+
     cmac_assert_message(cpos.x() >= _grid_anchor.x() &&
                             cpos.x() < _grid_anchor.x() +
                                            _grid.size() * _grid_cell_sides.x(),

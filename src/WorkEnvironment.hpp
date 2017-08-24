@@ -48,21 +48,36 @@ public:
    * This number is used by default by all WorkDistributor instances. A
    * WorkDistributor instance can use a lower number of threads.
    *
+   * If set to a negative or zero value, the number of threads will be set to
+   * the maximum number of threads available on the system.
+   *
    * @param max_num_threads Maximum number of threads to use.
+   * @return Number of threads that will be available for use.
    */
-  inline static void set_max_num_threads(int max_num_threads) {
+  inline static int set_max_num_threads(int max_num_threads) {
+    int num_threads = 1;
 #ifdef HAVE_OPENMP
-    omp_set_num_threads(max_num_threads);
+    if (max_num_threads > 0) {
+      omp_set_num_threads(max_num_threads);
+    }
+
+#pragma omp parallel
+    {
+#pragma omp single
+      { num_threads = omp_get_num_threads(); }
+    }
 #endif
 
 #ifdef HAVE_OUTPUT_CYCLES
     // make sure the jobtimes_*.txt files are empty
-    for (int i = 0; i < max_num_threads; ++i) {
+    for (int i = 0; i < num_threads; ++i) {
       std::stringstream filename;
       filename << "jobtimes_" << i << ".txt";
       std::ofstream file(filename.str(), std::ofstream::trunc);
     }
 #endif
+
+    return num_threads;
   }
 };
 

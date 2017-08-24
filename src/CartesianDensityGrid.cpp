@@ -31,27 +31,25 @@
 #include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RecombinationRates.hpp"
+#include "SimulationBox.hpp"
 #include "Timer.hpp"
 #include <sstream>
-using namespace std;
 
 /**
  * @brief Constructor
  *
- * @param box Box containing the grid.
+ * @param simulation_box Simulation box (in m).
  * @param ncell Number of cells for each dimension.
- * @param density_function DensityFunction that defines the density field.
  * @param periodic Periodicity flags.
  * @param hydro Hydro flag.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(Box<> box,
+CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
                                            CoordinateVector< int > ncell,
-                                           DensityFunction &density_function,
                                            CoordinateVector< bool > periodic,
                                            bool hydro, Log *log)
-    : DensityGrid(density_function, box, periodic, hydro, log), _box(box),
-      _periodic(periodic), _ncell(ncell), _log(log) {
+    : DensityGrid(simulation_box, periodic, hydro, log), _box(simulation_box),
+      _periodicity_flags(periodic), _ncell(ncell), _log(log) {
 
   if (_log) {
     _log->write_status(
@@ -60,17 +58,17 @@ CartesianDensityGrid::CartesianDensityGrid(Box<> box,
         " m, ", _box.get_anchor().y(), " m, ", _box.get_anchor().z(),
         " m] and sides [", _box.get_sides().x(), " m, ", _box.get_sides().y(),
         " m, ", _box.get_sides().z(), " m]...");
-    if (_periodic.x()) {
+    if (_periodicity_flags.x()) {
       _log->write_status("x boundary is periodic.");
     } else {
       _log->write_status("x boundary is not periodic.");
     }
-    if (_periodic.y()) {
+    if (_periodicity_flags.y()) {
       _log->write_status("y boundary is periodic.");
     } else {
       _log->write_status("y boundary is not periodic.");
     }
-    if (_periodic.z()) {
+    if (_periodicity_flags.z()) {
       _log->write_status("z boundary is periodic.");
     } else {
       _log->write_status("z boundary is not periodic.");
@@ -104,44 +102,34 @@ CartesianDensityGrid::CartesianDensityGrid(Box<> box,
 /**
  * @brief ParameterFile constructor.
  *
- * Constructs a DensityGrid object using parameter values from the parameter
- * file.
+ * Parameters are:
+ *  - number of cells: Number of cells in the grid (default: [64, 64, 64])
  *
- * The default parameters are:
- *   - a box with anchor [0.,0.,0.] and sides [1.,1.,1.].
- *   - 64 cells in every dimension (64^3 in total).
- *   - a helium abundance of 0.1.
- *   - an initial temperature for the gas of 8,000K.
- *
+ * @param simulation_box SimulationBox.
  * @param parameters ParameterFile to read.
- * @param density_function DensityFunction used to set the densities in each
- * cell.
+ * @param hydro Is hydrodynamics enabled?
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(ParameterFile &parameters,
-                                           DensityFunction &density_function,
-                                           Log *log)
+CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
+                                           ParameterFile &parameters,
+                                           bool hydro, Log *log)
     : CartesianDensityGrid(
-          Box<>(parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                parameters.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
+          simulation_box.get_box(),
           parameters.get_value< CoordinateVector< int > >(
-              "densitygrid:ncell", CoordinateVector< int >(64)),
-          density_function,
-          parameters.get_value< CoordinateVector< bool > >(
-              "densitygrid:periodicity", CoordinateVector< bool >(false)),
-          parameters.get_value< bool >("hydro:active", false), log) {}
+              "DensityGrid:number of cells", CoordinateVector< int >(64)),
+          simulation_box.get_periodicity(), hydro, log) {}
 
 /**
  * @brief Initialize the cells in the grid.
  *
  * @param block Block that should be initialized by this MPI process.
+ * @param density_function DensityFunction to use.
  */
 void CartesianDensityGrid::initialize(
-    std::pair< unsigned long, unsigned long > &block) {
-  DensityGrid::initialize(block);
-  DensityGrid::initialize(block, _density_function);
+    std::pair< unsigned long, unsigned long > &block,
+    DensityFunction &density_function) {
+  DensityGrid::initialize(block, density_function);
+  DensityGrid::set_densities(block, density_function);
 }
 
 /**
@@ -194,7 +182,7 @@ Box<> CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
 bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
                                      CoordinateVector<> &position) const {
   bool inside = true;
-  if (!_periodic.x()) {
+  if (!_periodicity_flags.x()) {
     inside &= (index.x() >= 0 && index.x() < _ncell.x());
   } else {
     if (index.x() < 0) {
@@ -206,7 +194,7 @@ bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
       position[0] -= _box.get_sides().x();
     }
   }
-  if (!_periodic.y()) {
+  if (!_periodicity_flags.y()) {
     inside &= (index.y() >= 0 && index.y() < _ncell.y());
   } else {
     if (index.y() < 0) {
@@ -218,7 +206,7 @@ bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
       position[1] -= _box.get_sides().y();
     }
   }
-  if (!_periodic.z()) {
+  if (!_periodicity_flags.z()) {
     inside &= (index.z() >= 0 && index.z() < _ncell.z());
   } else {
     if (index.z() < 0) {
@@ -398,6 +386,50 @@ CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
 }
 
 /**
+ * @brief Get the total optical depth traversed by the given Photon until it
+ * reaches the boundaries of the simulation box.
+ *
+ * @param photon Photon.
+ * @return Total optical depth along the photon's path before it reaches the
+ * boundaries of the simulation box.
+ */
+double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
+
+  double optical_depth = 0.;
+
+  CoordinateVector<> photon_origin = photon.get_position();
+  CoordinateVector<> photon_direction = photon.get_direction();
+
+  // find out in which cell the photon is currently hiding
+  CoordinateVector< int > index = get_cell_indices(photon_origin);
+
+  unsigned int ncell = 0;
+  // while the photon is still in the box
+  while (is_inside(index, photon_origin)) {
+    ++ncell;
+    Box<> cell = get_cell(index);
+
+    double ds;
+    CoordinateVector< char > next_index;
+    CoordinateVector<> next_wall = get_wall_intersection(
+        photon_origin, photon_direction, cell, next_index, ds);
+
+    // get the optical depth of the path from the current photon location to the
+    // cell wall, update S
+    DensityGrid::iterator it(get_long_index(index), *this);
+
+    // Helium abundance. Should be a parameter.
+    optical_depth +=
+        get_optical_depth(ds, it.get_ionization_variables(), photon);
+
+    photon_origin = next_wall;
+    index += next_index;
+  }
+
+  return optical_depth;
+}
+
+/**
  * @brief Let the given Photon travel through the density grid until the given
  * optical depth is reached.
  *
@@ -560,7 +592,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
           std::make_tuple(DensityGrid::iterator(get_long_index(ngb_low), *this),
                           midpoint, normal, surface_area[i]));
     } else {
-      if (_periodic[i]) {
+      if (_periodicity_flags[i]) {
         CoordinateVector< int > ngb_low(cellindices);
         ngb_low[i] = _ncell[i] - 1;
         CoordinateVector<> correction;
@@ -595,7 +627,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
           DensityGrid::iterator(get_long_index(ngb_high), *this), midpoint,
           normal, surface_area[i]));
     } else {
-      if (_periodic[i]) {
+      if (_periodicity_flags[i]) {
         CoordinateVector< int > ngb_high(cellindices);
         ngb_high[i] = 0;
         CoordinateVector<> correction;

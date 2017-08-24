@@ -16,6 +16,8 @@
 # along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
+## Project initialization ######################################################
+
 # the most advanced feature we use is the ProcessorCount module, which is only
 # available since CMake 2.8.5
 cmake_minimum_required(VERSION 2.8.5)
@@ -28,6 +30,21 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 project(CMacIonize)
 
+# Enable unit testing using CTest
+enable_testing()
+
+## Macro definitions ###########################################################
+
+# Add minimal cpp file for flag testing
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
+# Macro used to safely add compiler flags (to the C/CXX compiler):
+# we try to add the compiler flag and then compile a minimal cpp file
+# if this succeeds, we keep the flag
+# if it fails, we reset the flags, and throw an error/warning depending on the
+# value of the FATAL parameter
 macro(add_compiler_flag FLAG FATAL)
   set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
@@ -43,7 +60,16 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+# Variable used to count the number of configuration options (CMake does not
+# actually define counters, so instead we just add +1 to a variable and let the
+# CXX preprocessor do the actual addition)
 set(CONFIGURATION_OPTIONS_NUMBER "0")
+
+# Macro used to add a configuration option
+# We set the given variable name to the given value (as a CMake variable), and
+# also add the name and value to two separate lists that will be configured in
+# a cpp file. We count the number of configuration variables by increasing the
+# counter by 1.
 macro(add_configuration_option NAME VALUE)
   set(${NAME} ${VALUE})
   set(CONFIGURATION_OPTIONS_NUMBER "${CONFIGURATION_OPTIONS_NUMBER}+1")
@@ -51,6 +77,27 @@ macro(add_configuration_option NAME VALUE)
   set(CONFIGURATION_OPTIONS_VALUES
       "${CONFIGURATION_OPTIONS_VALUES}\"${VALUE}\",")
 endmacro(add_configuration_option)
+
+## System configuration checks #################################################
+
+# Check if we are compiling on Windows
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS True)
+else(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS False)
+endif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+
+# If we are on Windows, make sure to add the _USE_MATH_DEFINES define to the
+# compilation command
+# And the NOMINMAX define to disable use of the min and max macros defined
+# by windows.h
+# And the _CRT_SECURE_NO_WARNINGS define to disable warnings about unsafe
+# sprintf usages
+if(HAVE_WINDOWS)
+  add_compiler_flag("-D_USE_MATH_DEFINES" REQUIRED)
+  add_compiler_flag("-DNOMINMAX" REQUIRED)
+  add_compiler_flag("-D_CRT_SECURE_NO_WARNINGS" REQUIRED)
+endif(HAVE_WINDOWS)
 
 # Check if we are on a POSIX system. If not, some functionality will not work
 # and we abort the configuration
@@ -81,14 +128,6 @@ message(STATUS
         "This is CMacIonize version ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}")
 set(CMACIONIZE_VERSION_MAJOR ${GIT_VERSION_MAJOR})
 set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
-
-# Enable unit testing using CTest
-enable_testing()
-
-# Add minimal cpp file for flag testing
-execute_process(COMMAND ${CMAKE_COMMAND} -E echo
-                "int main(int argc, char **argv){ return 0; }"
-                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
 
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)
@@ -139,10 +178,6 @@ endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
 # Add a Profile CMAKE_BUILD_TYPE
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
-
-# Tell CMake that headers are in one of the src folders.
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_BINARY_DIR}/src)
 
 # Find HDF5.
 find_package(HDF5)
@@ -306,8 +341,40 @@ else(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
 
+# Try to enable Fortran
+enable_language(Fortran OPTIONAL)
+if(CMAKE_Fortran_COMPILER_WORKS)
+  add_configuration_option(HAVE_FORTRAN True)
+  message(STATUS "Fortran compiler found!")
+else(CMAKE_Fortran_COMPILER_WORKS)
+  add_configuration_option(HAVE_FORTRAN False)
+  message(STATUS "Fortran compiler not found!")
+endif(CMAKE_Fortran_COMPILER_WORKS)
+
+## Code configuration ##########################################################
+
+# Tell CMake that headers are in one of the src folders.
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_BINARY_DIR}/src)
+
+# Tell CMake that C header files are in the includes folder.
+include_directories(${PROJECT_BINARY_DIR}/include)
+
+# Tell CMake that Fortran module files are in the includes folder.
+if(HAVE_FORTRAN)
+  include_directories(${PROJECT_BINARY_DIR}/include)
+endif(HAVE_FORTRAN)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
+
+# Set the path where the generated libraries are stored
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
+# Set the path where the generated Fortran module files are stored.
+if(HAVE_FORTRAN)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
+endif(HAVE_FORTRAN)
 
 # Add the command and target that creates the CompilerInfo.cpp file
 # Note that we need to add the 'dummy_file_that_is_not_created' to the outputs
@@ -321,9 +388,11 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                            -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
                            -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
                            -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+                           -DHAVE_WINDOWS=${HAVE_WINDOWS}
                            -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
                    DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
-                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in)
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_custom_target(CompilerInfo
                   DEPENDS ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp)
@@ -337,10 +406,20 @@ add_subdirectory(test)
 # Enter the folder containing the timing tests
 add_subdirectory(timing)
 
+# Enter the folder containing the c library wrapper
+add_subdirectory(c)
+
 # If we have Python, enter the folder containing the Python modules
 if(HAVE_PYTHON)
   add_subdirectory(python)
 endif(HAVE_PYTHON)
+
+# If we have Fortran, enter the folder containing the Fortran library wrapper
+if(HAVE_FORTRAN)
+  add_subdirectory(fortran)
+endif(HAVE_FORTRAN)
+
+## Benchmark configuration #####################################################
 
 # Copy the benchmark problems
 # Every benchmark has a description file NAME.txt.
@@ -372,6 +451,8 @@ foreach(BENCHMARK ${BENCHMARKS})
   # Copy the description file
   configure_file(${BENCHMARK} ${BENCHMARK_DIR}/${BENCHMARK_NAME}.txt COPYONLY)
 endforeach(BENCHMARK ${BENCHMARKS})
+
+## Documentation configuration #################################################
 
 # Generate documentation
 find_package(Doxygen)

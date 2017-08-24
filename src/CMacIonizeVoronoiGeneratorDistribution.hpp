@@ -27,6 +27,7 @@
 #ifndef CMACIONIZEVORONOIGENERATORDISTRIBUTION_HPP
 #define CMACIONIZEVORONOIGENERATORDISTRIBUTION_HPP
 
+#include "Box.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 
 #include <vector>
@@ -47,7 +48,8 @@ private:
   unsigned int _next_index;
 
 public:
-  CMacIonizeVoronoiGeneratorDistribution(ParameterFile &params);
+  CMacIonizeVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                         ParameterFile &params);
 
   virtual ~CMacIonizeVoronoiGeneratorDistribution();
 

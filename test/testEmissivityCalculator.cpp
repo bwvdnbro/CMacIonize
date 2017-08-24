@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
       lstream >> T >> emhplf >> emhmif >> emheplf >> emhemif;
 
-      calculator.bjump(T, emhpl, emhmi, emhepl, emhemi);
+      calculator.get_balmer_jump_emission(T, emhpl, emhmi, emhepl, emhemi);
 
       assert_values_equal_rel(
           emhpl,

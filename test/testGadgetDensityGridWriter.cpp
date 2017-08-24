@@ -51,15 +51,16 @@ int main(int argc, char **argv) {
     Box<> box(origin, side);
     CoordinateVector< int > ncell(8);
     HomogeneousDensityFunction density_function;
-    CartesianDensityGrid grid(box, ncell, density_function);
+    density_function.initialize();
+    CartesianDensityGrid grid(box, ncell);
     std::pair< unsigned long, unsigned long > block =
         std::make_pair(0, grid.get_number_of_cells());
-    grid.initialize(block);
+    grid.initialize(block, density_function);
 
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);
-    GadgetDensityGridWriter writer("testgrid", grid, ".", &log);
-    writer.write(0, params);
+    GadgetDensityGridWriter writer("testgrid", ".", &log);
+    writer.write(grid, 0, params);
   }
 
   // read file and check contents

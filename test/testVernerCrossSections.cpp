@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
       e = UnitConverter::to_SI< QUANTITY_FREQUENCY >(e * 13.6, "eV");
 
-      double tolerance = 1.e-14;
+      double tolerance = 1.e-9;
 
       assert_values_equal_rel(
           xsecH, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(

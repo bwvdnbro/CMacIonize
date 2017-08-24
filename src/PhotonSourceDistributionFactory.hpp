@@ -72,6 +72,12 @@ public:
    * @brief Generate a PhotonSourceDistribution based on the type chosen in the
    * parameter file.
    *
+   * Supported types are (default: SingleStar):
+   *  - SILCC: Exponential disc patch sources used to post-process the SILCC
+   *    simulations
+   *  - SingleStar: Single stellar source inside the simulation box
+   *  - GadgetSnapshot: Sources from a Gadget2 simulation snapshot
+   *
    * @param params ParameterFile to read from.
    * @param log Log instance to write logging information to.
    * @return Pointer to a newly created PhotonSourceDistribution instance.
@@ -79,8 +85,9 @@ public:
    */
   static PhotonSourceDistribution *generate(ParameterFile &params,
                                             Log *log = nullptr) {
-    std::string type = params.get_value< std::string >(
-        "photonsourcedistribution:type", "SingleStar");
+
+    const std::string type = params.get_value< std::string >(
+        "PhotonSourceDistribution:type", "SingleStar");
     if (log) {
       log->write_info("Requested PhotonSourceDistribution type: ", type, ".");
     }

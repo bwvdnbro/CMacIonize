@@ -28,7 +28,9 @@
 
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
+#include "SimulationBox.hpp"
 
 #include <cfloat>
 
@@ -55,22 +57,22 @@ enum HydroBoundaryConditionType {
 class HydroIntegrator {
 private:
   /*! @brief Adiabatic index of the gas. */
-  double _gamma;
+  const double _gamma;
 
   /*! @brief Adiabatic index minus one. */
-  double _gm1;
+  const double _gm1;
 
   /*! @brief Flag indicating whether we use radiative heating or not. */
-  bool _do_radiative_heating;
+  const bool _do_radiative_heating;
 
   /*! @brief Flag indicating whether we want radiative cooling or not. */
-  bool _do_radiative_cooling;
+  const bool _do_radiative_cooling;
 
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   RiemannSolver _solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
-  HydroBoundaryConditionType _boundaries[6];
+  const HydroBoundaryConditionType _boundaries[6];
 
   /**
    * @brief Get the HydroBoundaryConditionType corresponding to the given type
@@ -120,17 +122,15 @@ public:
                          std::string boundary_zhigh = "reflective",
                          CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false))
-      : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
-        _do_radiative_cooling(do_radiative_cooling), _solver(gamma) {
-
-    _gm1 = _gamma - 1.;
-
-    _boundaries[0] = get_boundary_type(boundary_xlow);
-    _boundaries[1] = get_boundary_type(boundary_xhigh);
-    _boundaries[2] = get_boundary_type(boundary_ylow);
-    _boundaries[3] = get_boundary_type(boundary_yhigh);
-    _boundaries[4] = get_boundary_type(boundary_zlow);
-    _boundaries[5] = get_boundary_type(boundary_zhigh);
+      : _gamma(gamma), _gm1(_gamma - 1.),
+        _do_radiative_heating(do_radiative_heating),
+        _do_radiative_cooling(do_radiative_cooling), _solver(gamma),
+        _boundaries{get_boundary_type(boundary_xlow),
+                    get_boundary_type(boundary_xhigh),
+                    get_boundary_type(boundary_ylow),
+                    get_boundary_type(boundary_yhigh),
+                    get_boundary_type(boundary_zlow),
+                    get_boundary_type(boundary_zhigh)} {
 
     if (_boundaries[0] == HYDRO_BOUNDARY_PERIODIC) {
       if (_boundaries[1] != HYDRO_BOUNDARY_PERIODIC) {
@@ -167,27 +167,48 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - polytropic index: Polytropic index @f$\gamma{}@f$ of the gas (default:
+   *    5. / 3.)
+   *  - radiative heating: Is radiative heating enabled (default: true)?
+   *  - radiative cooling: Is radiative cooling enabled (default: false)?
+   *  - boundary x low: Boundary condition type for the lower x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary x high: Boundary condition type for the upper x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y low: Boundary condition type for the lower y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y high: Boundary condition type for the upper y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z low: Boundary condition type for the lower z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z high: Boundary condition type for the upper z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile to read from.
    */
-  inline HydroIntegrator(ParameterFile &params)
+  inline HydroIntegrator(const SimulationBox &simulation_box,
+                         ParameterFile &params)
       : HydroIntegrator(
-            params.get_value< double >("hydro:polytropic_index", 5. / 3.),
-            params.get_value< bool >("hydro:radiative_heating", true),
-            params.get_value< bool >("hydro:radiative_cooling", false),
-            params.get_value< std::string >("hydro:boundary_xlow",
+            params.get_value< double >("HydroIntegrator:polytropic index",
+                                       5. / 3.),
+            params.get_value< bool >("HydroIntegrator:radiative heating", true),
+            params.get_value< bool >("HydroIntegrator:radiative cooling",
+                                     false),
+            params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_xhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary x high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_ylow",
+            params.get_value< std::string >("HydroIntegrator:boundary y low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_yhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary y high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zlow",
+            params.get_value< std::string >("HydroIntegrator:boundary z low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary z high",
                                             "reflective"),
-            params.get_value< CoordinateVector< bool > >(
-                "densitygrid:periodicity", CoordinateVector< bool >(false))) {}
+            simulation_box.get_periodicity()) {}
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.
@@ -195,8 +216,12 @@ public:
    * @param grid DensityGrid to operate on.
    */
   inline void initialize_hydro_variables(DensityGrid &grid) const {
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
       const double number_density =
@@ -231,7 +256,7 @@ public:
       it.get_hydro_variables().set_conserved_total_energy(total_energy);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 
   /**
@@ -241,6 +266,7 @@ public:
    * @param timestep Time step over which to evolve the system.
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
+
 //#define PRINT_TIMESTEP_CRITERION
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;
@@ -363,9 +389,11 @@ public:
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {
-      const double boltzmann_k = 1.38064852e-23;
+      const double boltzmann_k =
+          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
       // half since we consider the average mass of protons and electrons
-      const double mH = 1.6737236e-27;
+      const double mH = PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_PROTON_MASS);
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const IonizationVariables &ionization_variables =
             it.get_ionization_variables();
@@ -427,8 +455,10 @@ public:
 
     grid.evolve(timestep);
 
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -481,7 +511,7 @@ public:
       cmac_assert(ionization_variables.get_temperature() >= 0.);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 };
 

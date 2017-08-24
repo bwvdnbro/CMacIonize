@@ -50,7 +50,8 @@ def main():
     abundances = [float(ab) for ab in data[2:14]]
     fresults = [float(res) for res in data[14:]]
 
-    results = linecoolingdata.linestr(np.array([T]), np.array([ne]), abundances)
+    results = linecoolingdata.get_line_strengths(np.array([T]), np.array([ne]),
+                                                 abundances)
 
     if len(results) != len(fresults):
       print "Error: expected {a} values, got {b}...".format(a = len(fresults),

@@ -31,7 +31,6 @@
 #include "UnitConverter.hpp"
 #include <cfloat>
 #include <fstream>
-using namespace std;
 
 /**
  * @brief Cubic spline kernel used in Gadget2.
@@ -41,6 +40,7 @@ using namespace std;
  * @return Value of the cubic spline kernel.
  */
 double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
+
   const double KC1 = 2.546479089470;
   const double KC2 = 15.278874536822;
   const double KC5 = 5.092958178941;
@@ -86,6 +86,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     bool use_neutral_fraction, double fallback_temperature,
     bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -129,9 +130,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   double unit_temperature_in_SI = fallback_unit_temperature_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_mass_in_cgs =
+    const double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_temperature_in_SI = HDF5Tools::read_attribute< double >(
         units, "Unit temperature in cgs (U_T)");
@@ -177,8 +178,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     unit_mass_in_SI /= hubble_parameter;
   }
 
-  double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
-  double unit_density_in_SI =
+  const double unit_length_in_SI_squared =
+      unit_length_in_SI * unit_length_in_SI;
+  const double unit_density_in_SI =
       unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
 
   // open the group containing the SPH particle data
@@ -248,12 +250,12 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   if (!periodic) {
     // set box to particle extents + small margin
     CoordinateVector<> sides = maxpos - minpos;
-    CoordinateVector<> anchor = minpos - 0.005 * sides;
+    const CoordinateVector<> anchor = minpos - 0.005 * sides;
     sides *= 1.01;
     box = Box<>(anchor, sides);
   }
   if (_log) {
-    string pstring;
+    std::string pstring;
     if (periodic) {
       pstring = "periodic ";
     }
@@ -275,28 +277,47 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file (required)
+ *  - fallback periodic flag: Periodicity flag to use when no periodicity flag
+ *    can be found in the snapshot file (default: false)
+ *  - fallback unit length: Length unit to use if no units can be found in the
+ *    snapshot file (default: 1. m, with warning)
+ *  - fallback unit mass: Mass unit to use if no units can be found in the
+ *    snapshot file (default: 1. kg, with warning)
+ *  - fallback unit temperature: Temperature unit to use if no units can be
+ *    found in the snapshot file (default: 1. K, with warning)
+ *  - use neutral fraction: Use initial neutral fractions from the snapshot file
+ *    (if present; default: false)?
+ *  - fallback initial temperature: Initial temperature to use if no temperature
+ *    values can be found in the snapshot file (default: 8000. K, with warning)
+ *  - comoving integration flag: Was comoving integration used in the original
+ *    simulation (default: false)?
+ *  - hubble parameter: Reduced Hubble parameter used for the original
+ *    simulation (default: 0.7)
+ *
  * @param params ParameterFile to read.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction:filename"),
-          params.get_value< bool >("densityfunction:fallback_periodic_flag",
+          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_value< bool >("DensityFunction:fallback periodic flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:fallback_unit_length", "0. m"),
+              "DensityFunction:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
-              "densityfunction:fallback_unit_mass", "0. kg"),
+              "DensityFunction:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_unit_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:use_neutral_fraction",
+              "DensityFunction:fallback unit temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:use neutral fraction",
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_initial_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:comoving_integration_flag",
+              "DensityFunction:fallback initial temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:comoving integration flag",
                                    false),
-          params.get_value< double >("densityfunction:hubble_parameter", 0.7),
+          params.get_value< double >("DensityFunction:hubble parameter", 0.7),
           log) {}
 
 /**

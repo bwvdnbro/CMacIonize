@@ -32,8 +32,8 @@
 #include "HeliumTwoPhotonContinuumDataLocation.hpp"
 #include "Utilities.hpp"
 #include <fstream>
+#include <string>
 #include <vector>
-using namespace std;
 
 /**
  * @brief Constructor.
@@ -42,8 +42,13 @@ using namespace std;
  * cumulative distribution used for random sampling.
  */
 HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
-  vector< double > yHe2q;
-  vector< double > AHe2q;
+
+  // allocate memory for the data tables
+  _frequency.resize(HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ, 0.);
+
+  std::vector< double > yHe2q;
+  std::vector< double > AHe2q;
   get_spectrum(yHe2q, AHe2q);
 
   // 13.6 eV in Hz
@@ -56,28 +61,39 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
                         (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
   _cumulative_distribution[0] = 0.;
+  // NOTE that we compute every y1/y2 twice (except the first and last bin edge)
+  // it would be fairly easy to make this more efficient, but since this routine
+  // is only called once at the start of the program, we don't bother
   for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    double y1 = _frequency[i - 1] / nu0;
+    // get the y value for the lower edge of the frequency bin
+    const double y1 = _frequency[i - 1] / nu0;
+    // find the corresponding rate in the energy distribution by linear
+    // interpolatino on the tabulated spectrum
     double AHe2q1 = 0.;
     if (y1 < 1.) {
-      unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
-      double f = (y1 - yHe2q[iHe1]) / (yHe2q[iHe1 + 1] - yHe2q[iHe1]);
+      const unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
+      const double f = (y1 - yHe2q[iHe1]) / (yHe2q[iHe1 + 1] - yHe2q[iHe1]);
       AHe2q1 = AHe2q[iHe1] + f * (AHe2q[iHe1 + 1] - AHe2q[iHe1]);
     }
+    // now do the same for the upper edge of the frequency bin
+    const double y2 = _frequency[i] / nu0;
     double AHe2q2 = 0.;
-    double y2 = _frequency[i] / nu0;
     if (y2 < 1.) {
-      unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
-      double f = (y2 - yHe2q[iHe2]) / (yHe2q[iHe2 + 1] - yHe2q[iHe2]);
+      const unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
+      const double f = (y2 - yHe2q[iHe2]) / (yHe2q[iHe2 + 1] - yHe2q[iHe2]);
       AHe2q2 = AHe2q[iHe2] + f * (AHe2q[iHe2 + 1] - AHe2q[iHe2]);
     }
+    // set the value for the spectrum in the bin using a simple first order
+    // quadrature rule
     _cumulative_distribution[i] =
         0.5 * (AHe2q1 + AHe2q2) * (_frequency[i] - _frequency[i - 1]);
   }
+  // now make the spectrum cumulative...
   for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] =
         _cumulative_distribution[i - 1] + _cumulative_distribution[i];
   }
+  // ...and normalize it (the last entry in the table contains the total sum)
   for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
         _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1];
@@ -95,10 +111,14 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
  * @param AHe2q std::vector to store the A values in.
  */
 void HeliumTwoPhotonContinuumSpectrum::get_spectrum(
-    std::vector< double > &yHe2q, std::vector< double > &AHe2q) {
-  ifstream ifile(HELIUMTWOPHOTONCONTINUUMDATALOCATION);
+    std::vector< double > &yHe2q, std::vector< double > &AHe2q) const {
+
   yHe2q.resize(41);
   AHe2q.resize(41);
+  std::ifstream ifile(HELIUMTWOPHOTONCONTINUUMDATALOCATION);
+  // skip comment line
+  std::string line;
+  std::getline(ifile, line);
   for (unsigned int i = 0; i < 41; ++i) {
     ifile >> yHe2q[i] >> AHe2q[i];
   }
@@ -107,20 +127,26 @@ void HeliumTwoPhotonContinuumSpectrum::get_spectrum(
 /**
  * @brief Get the integral under the curve of the tabulated spectrum.
  *
+ * This is used to normalize the randomly sampled distribution in the unit test.
+ *
  * @param yHe2q y values of the spectrum.
  * @param AHe2q A values of the spectrum.
  * @return Integral under the curve in frequency space.
  */
-double
-HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
-                                               std::vector< double > &AHe2q) {
+double HeliumTwoPhotonContinuumSpectrum::get_integral(
+    std::vector< double > &yHe2q, std::vector< double > &AHe2q) const {
+
+  // we use a simple linear quadrature rule
+  const double miny = 3.289e15 / 4.98e15;
   double integral = 0.;
   for (unsigned int i = 1; i < 41; ++i) {
-    if (yHe2q[i - 1] > 3.289e15 / 4.98e15) {
+    // the spectrum is cut off at miny; we do not take into account the part of
+    // the spectrum below that frequency
+    if (yHe2q[i - 1] > miny) {
       integral += 0.5 * (AHe2q[i - 1] + AHe2q[i]) * (yHe2q[i] - yHe2q[i - 1]);
     } else {
-      if (yHe2q[i] > 3.289e15 / 4.98e15) {
-        integral += AHe2q[i] * (yHe2q[i] - 3.289e15 / 4.98e15);
+      if (yHe2q[i] > miny) {
+        integral += AHe2q[i] * (yHe2q[i] - miny);
       }
     }
   }
@@ -130,16 +156,22 @@ HeliumTwoPhotonContinuumSpectrum::get_integral(std::vector< double > &yHe2q,
 /**
  * @brief Get a random frequency distributed according to the spectrum.
  *
+ * We first sample a random uniform number, and locate the position of that
+ * number in the normalized cumulative distribution table. We then linearly
+ * interpolate within the bin that contains the random number.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
 double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(
-      x, _cumulative_distribution, HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency =
+
+  const double x = random_generator.get_uniform_random_double();
+  const unsigned int inu =
+      Utilities::locate(x, _cumulative_distribution.data(),
+                        HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
+  const double frequency =
       _frequency[inu] +
       (_frequency[inu + 1] - _frequency[inu]) *
           (x - _cumulative_distribution[inu]) /

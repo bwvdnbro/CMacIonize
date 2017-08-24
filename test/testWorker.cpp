@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A_serial[i] == A_ref[i]);
+    assert_values_equal_rel(A_serial[i], A_ref[i], 1.e-15);
   }
 
   int worksize;
@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A_parallel[i] == A_ref[i]);
+    assert_values_equal_rel(A_parallel[i], A_ref[i], 1.e-15);
   }
 
   cmac_status("Serial time: %s, parallel time: %s.",

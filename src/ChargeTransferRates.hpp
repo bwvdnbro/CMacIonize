@@ -19,34 +19,48 @@
 /**
  * @file ChargeTransferRates.hpp
  *
- * @brief Recombination rates from charge transfer from one element to another.
+ * @brief Recombination and ionization rates due to charge transfer reactions
+ * with hydrogen and helium.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #ifndef CHARGETRANSFERRATES_HPP
 #define CHARGETRANSFERRATES_HPP
 
+#include "ElementNames.hpp"
+
 /**
- * @brief  Recombination rates from charge transfer from one element to another.
+ * @brief Recombination and ionization rates due to charge transfer reactions
+ * with hydrogen and helium.
+ *
+ * The rates for hydrogen are based on Kingdon, J. B. & Ferland, G. J. 1996,
+ * ApJS, 106, 205 (http://adsabs.harvard.edu/abs/1996ApJS..106..205K), tables 1
+ * and 3.
+ *
+ * The rates for helium are based on Arnaud, M. & Rothenflug, R. 1985, A&AS, 60,
+ * 425 (http://adsabs.harvard.edu/abs/1985A%26AS...60..425A), table III.
+ *
+ * Note that this class does not store any data, so we could make the member
+ * functions static. However, we might want to use tabulated values at some
+ * point in the future, and then it will be useful that this class is treated as
+ * being non-static in other parts of the program.
  */
 class ChargeTransferRates {
-private:
-  /*! @brief Kingdon & Ferland's CTIon array. */
-  double _CTIon[7][4][30];
-
-  /*! @brief Kingdon & Ferland's CTRecomb array. */
-  double _CTRecomb[6][4][30];
-
 public:
-  ChargeTransferRates();
+  /**
+   * @brief Empty constructor.
+   */
+  ChargeTransferRates() {}
 
-  double get_charge_transfer_recombination_rate(unsigned char stage,
-                                                unsigned char atom,
+  double get_charge_transfer_recombination_rate_H(IonName ion,
+                                                  double temperature) const;
+  double get_charge_transfer_ionization_rate_H(IonName ion,
+                                               double temperature) const;
+
+  double get_charge_transfer_recombination_rate_He(IonName ion,
+                                                   double temperature) const;
+  double get_charge_transfer_ionization_rate_He(IonName ion,
                                                 double temperature) const;
-
-  double get_charge_transfer_ionization_rate(unsigned char stage,
-                                             unsigned char atom,
-                                             double temperature) const;
 };
 
 #endif // CHARGETRANSFERRATES_HPP

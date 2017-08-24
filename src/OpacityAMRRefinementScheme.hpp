@@ -38,10 +38,10 @@ class OpacityAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Target opacity for every cell. Cells with higher opacities will
    *  be refined (in m^-1). */
-  double _target_opacity;
+  const double _target_opacity;
 
   /*! @brief Maximum refinement level. */
-  unsigned char _max_level;
+  const unsigned char _max_level;
 
 public:
   /**
@@ -65,15 +65,19 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - target opacity: Desired opacity for a cell (default: 1. m^-1)
+   *  - maximum refinement level: Maximum refinement level allowed (default: 6)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
   OpacityAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : OpacityAMRRefinementScheme(
             params.get_physical_value< QUANTITY_OPACITY >(
-                "densitygrid:amrrefinementscheme:target_opacity", "1. m^-1"),
+                "DensityGrid:AMRRefinementScheme:target opacity", "1. m^-1"),
             params.get_value< unsigned char >(
-                "densitygrid:amrrefinementscheme:maximum_level", 6),
+                "DensityGrid:AMRRefinementScheme:maximum refinement level", 6),
             log) {}
 
   /**
@@ -84,6 +88,7 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+
     // we assume an ionizing cross section of 1.e-18 cm^2
     const double xsecH = 1.e-22;
 

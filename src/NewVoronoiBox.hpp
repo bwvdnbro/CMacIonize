@@ -51,6 +51,7 @@ private:
   inline CoordinateVector<>
   get_wall_copy(unsigned int index,
                 const CoordinateVector<> &generator_position) const {
+
     switch (index) {
     case NEWVORONOICELL_BOX_LEFT:
       return CoordinateVector<>(2 * _box.get_anchor().x() -
@@ -134,6 +135,7 @@ public:
   inline CoordinateVector<>
   get_position(unsigned int index,
                const CoordinateVector<> &generator_position) const {
+
     if (index >= NEWVORONOICELL_BOX_LEFT) {
       return get_wall_copy(index, generator_position);
     } else {
@@ -149,6 +151,7 @@ public:
    * @return All-encompassing Box.
    */
   inline Box<> get_box() const {
+
     const CoordinateVector<> sides =
         CoordinateVector<>(_tetrahedron[1].x() - _tetrahedron[0].x(),
                            _tetrahedron[2].y() - _tetrahedron[0].y(),

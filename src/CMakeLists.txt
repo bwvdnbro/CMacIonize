@@ -19,14 +19,6 @@
 # Rules for files that need to be configured.
 message(STATUS "Configuring external data files...")
 
-# LineCoolingDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/atom4.dat
-               ${PROJECT_BINARY_DIR}/data/atom4.dat COPYONLY)
-set(LINECOOLINGDATALOCATION ${PROJECT_BINARY_DIR}/data/atom4.dat)
-message(STATUS "LineCoolingDataLocation.hpp: ${LINECOOLINGDATALOCATION}")
-configure_file(${PROJECT_SOURCE_DIR}/src/LineCoolingDataLocation.hpp.in
-               ${PROJECT_BINARY_DIR}/src/LineCoolingDataLocation.hpp @ONLY)
-
 # VernerCrossSectionsDataLocation.hpp
 configure_file(${PROJECT_SOURCE_DIR}/data/verner_A.dat
                ${PROJECT_BINARY_DIR}/data/verner_A.dat COPYONLY)
@@ -53,17 +45,6 @@ message(STATUS
 configure_file(
     ${PROJECT_SOURCE_DIR}/src/VernerRecombinationRatesDataLocation.hpp.in
     ${PROJECT_BINARY_DIR}/src/VernerRecombinationRatesDataLocation.hpp
-               @ONLY)
-
-# ChargeTransferRatesDataLocation.hpp
-configure_file(${PROJECT_SOURCE_DIR}/data/KingdonFerland_ct1data.txt
-               ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt COPYONLY)
-set(CHARGETRANSFERRATESDATALOCATION
-    ${PROJECT_BINARY_DIR}/data/KingdonFerland_ct1data.txt)
-message(STATUS
-      "ChargeTransferRatesDataLocation.hpp: ${CHARGETRANSFERRATESDATALOCATION}")
-configure_file(${PROJECT_SOURCE_DIR}/src/ChargeTransferRatesDataLocation.hpp.in
-               ${PROJECT_BINARY_DIR}/src/ChargeTransferRatesDataLocation.hpp
                @ONLY)
 
 # HeliumTwoPhotonContinuumDataLocation.hpp
@@ -107,23 +88,20 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.cpp.in
 configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
                ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.hpp @ONLY)
 
-set(CMACIONIZE_SOURCES
+set(LIBIONIZATIONSIMULATION_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
-    CMacIonize.cpp
-    CommandLineOption.cpp
-    CommandLineParser.cpp
-    CompilerInfo.cpp.in
-    ConfigurationInfo.cpp.in
     DensityGrid.cpp
-    EmissivityCalculator.cpp
+    DiffuseReemissionHandler.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
-    HydrogenLymanContinuumSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
+    IonizationSimulation.cpp
+    IonizationSimulation.hpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     NewVoronoiCellConstructor.cpp
@@ -140,6 +118,31 @@ set(CMACIONIZE_SOURCES
     VoronoiDensityGrid.cpp
     WMBasicPhotonSourceSpectrum.cpp
 
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
+)
+if(HAVE_HDF5)
+  list(APPEND LIBIONIZATIONSIMULATION_SOURCES
+       ../src/CMacIonizeSnapshotDensityFunction.cpp
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       ../src/FLASHSnapshotDensityFunction.cpp
+       ../src/GadgetDensityGridWriter.cpp
+       ../src/GadgetSnapshotDensityFunction.cpp
+       ../src/GadgetSnapshotPhotonSourceDistribution.cpp
+       )
+endif(HAVE_HDF5)
+
+set(CMACIONIZE_SOURCES
+    CMacIonize.cpp
+    CommandLineOption.cpp
+    CommandLineParser.cpp
+    CompilerInfo.cpp.in
+    ConfigurationInfo.cpp.in
+    DustScattering.cpp
+    DustSimulation.cpp
+    EmissivityCalculator.cpp
+    RadiationHydrodynamicsSimulation.cpp
+
     Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
@@ -148,7 +151,6 @@ set(CMACIONIZE_SOURCES
     Box.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
-    ChargeTransferRatesDataLocation.hpp.in
     CMacIonizeSnapshotDensityFunction.hpp
     CMacIonizeVoronoiGeneratorDistribution.hpp
     Configuration.hpp.in
@@ -169,6 +171,8 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityMaskFactory.hpp
     DensityValues.hpp
+    DustPhotonShootJob.hpp
+    DustPhotonShootJobMarket.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp
@@ -177,28 +181,32 @@ set(CMACIONIZE_SOURCES
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
     InterpolatedDensityFunction.hpp
+    IonizationPhotonShootJob.hpp
+    IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
     LineCoolingData.hpp
-    LineCoolingDataLocation.hpp.in
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp
+    OperatingSystem.hpp
     ParameterFile.hpp
     PerturbedCartesianVoronoiGeneratorDistribution.hpp
     Photon.hpp
-    PhotonShootJob.hpp
-    PhotonShootJobMarket.hpp
     PhotonSource.hpp
     PhotonSourceDistribution.hpp
     PhotonSourceDistributionFactory.hpp
     PhotonSourceSpectrum.hpp
     PhotonSourceSpectrumFactory.hpp
+    PhysicalConstants.hpp
     PlanckPhotonSourceSpectrum.hpp
+    RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
     SILCCPhotonSourceDistribution.hpp
+    SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp
     SpatialAMRRefinementScheme.hpp
     SPHNGSnapshotDensityFunction.hpp
+    SPHVoronoiGeneratorDistribution.hpp
     TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp
@@ -212,9 +220,6 @@ set(CMACIONIZE_SOURCES
     WorkDistributor.hpp
     WorkEnvironment.hpp
     Worker.hpp
-
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
@@ -222,22 +227,48 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
-list(APPEND CMACIONIZE_SOURCES
-    CMacIonizeSnapshotDensityFunction.cpp
-    CMacIonizeVoronoiGeneratorDistribution.cpp
-    FLASHSnapshotDensityFunction.cpp
-    GadgetDensityGridWriter.cpp
-    GadgetSnapshotDensityFunction.cpp
-    GadgetSnapshotPhotonSourceDistribution.cpp
-
-    FLASHSnapshotDensityFunction.hpp
-    GadgetDensityGridWriter.hpp
-    GadgetSnapshotDensityFunction.hpp
-    GadgetSnapshotPhotonSourceDistribution.hpp
-    HDF5Tools.hpp)
+    list(APPEND CMACIONIZE_SOURCES
+        FLASHSnapshotDensityFunction.hpp
+        GadgetDensityGridWriter.hpp
+        GadgetSnapshotDensityFunction.hpp
+        GadgetSnapshotPhotonSourceDistribution.hpp
+        HDF5Tools.hpp)
 endif(HAVE_HDF5)
 
+if(HAVE_WINDOWS)
+    list(APPEND CMACIONIZE_SOURCES
+         Windows.hpp)
+else(HAVE_WINDOWS)
+    list(APPEND CMACIONIZE_SOURCES
+         Unix.hpp)
+endif(HAVE_WINDOWS)
+
+set(LIBCMILIBRARY_SOURCES
+    CMILibrary.cpp
+    SPHArrayDensityFunction.cpp
+    SPHArrayDensityGridWriter.cpp
+
+    CMILibrary.hpp
+)
+
+add_library(IonizationSimulation ${LIBIONIZATIONSIMULATION_SOURCES})
+add_dependencies(IonizationSimulation CompilerInfo)
+
+# link to HDF5, if we have found it
+if(HAVE_HDF5)
+    target_link_libraries(IonizationSimulation ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(IonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)
+
+add_library(CMILibrary ${LIBCMILIBRARY_SOURCES})
+target_link_libraries(CMILibrary IonizationSimulation)
+
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+target_link_libraries(CMacIonize IonizationSimulation)
 add_dependencies(CMacIonize CompilerInfo)
 
 # link to HDF5, if we have found it

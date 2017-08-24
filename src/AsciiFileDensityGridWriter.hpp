@@ -37,14 +37,14 @@ private:
   std::string _prefix;
 
 public:
-  AsciiFileDensityGridWriter(std::string prefix, DensityGrid &grid,
-                             std::string output_folder, Log *log = nullptr);
-
-  AsciiFileDensityGridWriter(ParameterFile &params, DensityGrid &grid,
+  AsciiFileDensityGridWriter(std::string prefix, std::string output_folder,
                              Log *log = nullptr);
 
-  virtual void write(unsigned int iteration, ParameterFile &params,
-                     double time = 0.);
+  AsciiFileDensityGridWriter(std::string output_folder, ParameterFile &params,
+                             Log *log = nullptr);
+
+  virtual void write(DensityGrid &grid, unsigned int iteration,
+                     ParameterFile &params, double time = 0.);
 };
 
 #endif // ASCIIFILEDENSITYGRIDWRITER_HPP

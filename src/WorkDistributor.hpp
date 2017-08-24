@@ -112,7 +112,7 @@ public:
 #ifdef HAVE_OPENMP
 #pragma omp parallel for default(shared)
       for (int i = 0; i < _worksize; ++i) {
-        Worker< _JobMarket_, _Job_ > worker(i);
+        const Worker< _JobMarket_, _Job_ > worker(i);
         worker.do_work(jobs);
       }
 #else

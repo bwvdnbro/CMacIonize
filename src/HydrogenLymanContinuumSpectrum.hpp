@@ -30,6 +30,8 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "RandomGenerator.hpp"
 
+#include <vector>
+
 class CrossSections;
 
 /*! @brief Number of frequencies in the internal table. */
@@ -40,21 +42,27 @@ class CrossSections;
 
 /**
  * @brief Hydrogen Lyman continuum photoionization spectrum.
+ *
+ * We use the spectrum given by Wood, K., Mathis, J. S. & Ercolano, B. 2004,
+ * MNRAS, 348, 1337 (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W),
+ * equation (8), which uses the same ionization cross sections that are used in
+ * other parts of the program. We pretabulate values in a 2D temperature
+ * frequency space in the range [1,500 K; 15,000 K] (for temperature values
+ * outside this range, extrapolation is safe).
  */
 class HydrogenLymanContinuumSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins (in 13.6 eV). */
-  double _frequency[HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< double > _frequency;
 
   /*! @brief Temperature bins (in K). */
-  double _temperature[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP];
+  std::vector< double > _temperature;
 
   /*! @brief Cumulative distribution function. */
-  double _cumulative_distribution[HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP]
-                                 [HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ];
+  std::vector< std::vector< double > > _cumulative_distribution;
 
 public:
-  HydrogenLymanContinuumSpectrum(CrossSections &cross_sections);
+  HydrogenLymanContinuumSpectrum(const CrossSections &cross_sections);
 
   /**
    * @brief Virtual destructor.

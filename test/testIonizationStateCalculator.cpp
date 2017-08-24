@@ -50,11 +50,12 @@ int main(int argc, char **argv) {
   IonizationStateCalculator calculator(1., abundances, rr, ctr);
 
   HomogeneousDensityFunction function(1.);
+  function.initialize();
   Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 1, function);
+  CartesianDensityGrid grid(box, 1);
   std::pair< unsigned long, unsigned long > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, function);
   DensityGrid::iterator cell = grid.begin();
 
   // test find_H0
@@ -167,15 +168,15 @@ int main(int argc, char **argv) {
     // check that find_H0 and find_H0_simple return the same values in the
     // region where they should
     double h0s;
-    IonizationStateCalculator::find_H0(
+    IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
         UnitConverter::to_SI< QUANTITY_REACTION_RATE >(3.12e-13, "cm^3s^-1"),
         0., UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"), 0.,
         UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), 0., T,
         h0, he0);
-    IonizationStateCalculator::find_H0_simple(
+    h0s = IonizationStateCalculator::compute_ionization_state_hydrogen(
         UnitConverter::to_SI< QUANTITY_REACTION_RATE >(3.12e-13, "cm^3s^-1"),
         UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"),
-        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"), T, h0s);
+        UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
     assert_values_equal_tol(h0, h0s, 1.e-4);
   }
 

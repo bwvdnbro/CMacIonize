@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  std::vector< unsigned long > keys = key_generator.get_keys(positions);
+  std::vector< uint64_t > keys = key_generator.get_keys(positions);
   assert_condition(keys.size() == 64);
 
   std::ofstream ofile("test_hilbert_curve.txt");

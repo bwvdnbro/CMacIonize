@@ -64,6 +64,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     double rate_per_mass_unit, bool use_gas, double SFR_unit,
     bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -73,7 +74,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
   // snapshot time
   HDF5Tools::HDF5Group header = HDF5Tools::open_group(file, "/Header");
-  double snaptime = HDF5Tools::read_attribute< double >(header, "Time");
+  const double snaptime = HDF5Tools::read_attribute< double >(header, "Time");
   HDF5Tools::close_group(header);
 
   // units
@@ -82,11 +83,11 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
   double unit_mass_in_SI = fallback_unit_mass_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_time_in_cgs =
+    const double unit_time_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
-    double unit_mass_in_cgs =
+    const double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_length_in_SI =
         UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
@@ -186,7 +187,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
     // filter out all stars older than the cutoff age
     for (unsigned int i = 0; i < formtimes.size(); ++i) {
-      double age = (snaptime - formtimes[i]) * unit_time_in_SI;
+      const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
       if (age <= cutoff_age) {
         _positions.push_back(positions[i]);
         _total_luminosity += masses[i] * unit_mass_in_SI * rate_per_mass_unit;
@@ -216,33 +217,55 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file to read (required)
+ *  - formation time name: Name of the data field that contains the stellar
+ *    formation time values (default: FormationTime)
+ *  - fallback unit length: Length unit to use if no units can be found in the
+ *    snapshot file (default: 1. m, with warning)
+ *  - fallback unit time: Time unit to use if no units can be found in the
+ *    snapshot file (default: 1. s, with warning)
+ *  - fallback unit mass: Mass unit to use if no units can be found in the
+ *    snapshot file (default: 1. kg, with warning)
+ *  - cutoff age: Upper limit for the age of star particles that emit UV
+ *    radiation (default: 5. Myr)
+ *  - flux per mass unit: Ionizing flux per mass unit for star particles that
+ *    emit UV radiation (default: 4.96e46 s^-1 Msol^-1)
+ *  - use gas: Do gas particles contain stars (default: false)?
+ *  - SFR unit: Unit for SFR values in the snapshot (default: (mass unit)/(time
+ *    unit))
+ *  - comoving integration flag: Was comoving integration active in the original
+ *    simulation (default: false)?
+ *  - hubble parameter: Reduced Hubble parameter used for the original
+ *    simulation (default: 0.7)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("photonsourcedistribution:filename"),
+          params.get_value< std::string >("PhotonSourceDistribution:filename"),
           params.get_value< std::string >(
-              "photonsourcedistribution:formation_time_name", "FormationTime"),
+              "PhotonSourceDistribution:formation time name", "FormationTime"),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "photonsourcedistribution:fallback_unit_length", "0. m"),
+              "PhotonSourceDistribution:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution:fallback_unit_time", "0. s"),
+              "PhotonSourceDistribution:fallback unit time", "0. s"),
           params.get_physical_value< QUANTITY_MASS >(
-              "photonsourcedistribution:fallback_unit_mass", "0. kg"),
+              "PhotonSourceDistribution:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TIME >(
-              "photonsourcedistribution:cutoff_age", "5. Myr"),
+              "PhotonSourceDistribution:cutoff age", "5. Myr"),
           params.get_physical_value< QUANTITY_FREQUENCY_PER_MASS >(
-              "photonsourcedistribution:flux_per_mass_unit",
+              "PhotonSourceDistribution:flux per mass unit",
               "4.96e46 s^-1 Msol^-1"),
-          params.get_value< bool >("photonsourcedistribution:use_gas", false),
+          params.get_value< bool >("PhotonSourceDistribution:use gas", false),
           params.get_physical_value< QUANTITY_MASS_RATE >(
-              "photonsourcedistribution:SFR_unit", "0. kg s^-1"),
+              "PhotonSourceDistribution:SFR unit", "0. kg s^-1"),
           params.get_value< bool >(
-              "photonsourcedistribution:comoving_integration_flag", false),
+              "PhotonSourceDistribution:comoving integration flag", false),
           params.get_value< double >(
-              "photonsourcedistribution:hubble_parameter", 0.7),
+              "PhotonSourceDistribution:hubble parameter", 0.7),
           log) {}
 
 /**

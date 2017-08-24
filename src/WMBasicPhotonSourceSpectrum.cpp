@@ -26,6 +26,7 @@
 #include "WMBasicPhotonSourceSpectrum.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
@@ -37,6 +38,9 @@
 
 /**
  * @brief Constructor.
+ *
+ * Reads in the correct model spectrum and resamples it on the 1000 bin internal
+ * frequency grid.
  *
  * @param temperature Effective temperature of the star (in K).
  * @param surface_gravity Surface gravity of the star (in m s^-2).
@@ -78,17 +82,23 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   std::vector< double > file_frequencies(num_frequency);
   std::vector< double > file_eddington_fluxes(num_frequency);
   unsigned int i = 0;
+  const double lightspeed =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
   while (std::getline(file, line)) {
     std::stringstream linestream(line);
     linestream >> file_frequencies[i] >> file_eddington_fluxes[i];
 
     // file contains wavelength (in Angstrom), convert to frequency
-    file_frequencies[i] = 299792458. * 1.e10 / file_frequencies[i];
+    file_frequencies[i] = lightspeed * 1.e10 / file_frequencies[i];
 
     ++i;
     cmac_assert(i <= num_frequency);
   }
   cmac_assert(i == num_frequency);
+
+  // allocate memory for the data tables
+  _frequencies.resize(WMBASICPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(WMBASICPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
 
   // construct the frequency bins
   // 13.6 eV in Hz
@@ -131,10 +141,11 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // _cumulative_distribution (using a zeroth order quadrature)
   // its value is in erg Hz^-1 s^-1 cm^-2 sr^-1
   // we convert to s^-1 cm^-2 sr^-1 by dividing by Planck's constant
-  // (in erg Hz^-1)
+  // (in J s = J Hz^-1) and multiplying with 10^-7
   _total_flux =
+      1.e-7 *
       _cumulative_distribution[WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1] /
-      6.62607e-27;
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // we integrate out over all solid angles
   _total_flux *= 4. * M_PI;
   // and convert from cm^-2 to m^-2
@@ -156,6 +167,10 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - temperature: Temperature of the star (default: 4.e4 K)
+ *  - surface gravity: Surface gravity of the star (default: 25. m s^-2)
+ *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
@@ -166,9 +181,9 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(std::string role,
                                                          Log *log)
     : WMBasicPhotonSourceSpectrum(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              role + ":temperature", "40000. K"),
+              role + ":temperature", "4.e4 K"),
           params.get_physical_value< QUANTITY_ACCELERATION >(
-              role + ":surface_gravity", "25. m s^-2"),
+              role + ":surface gravity", "25. m s^-2"),
           log) {}
 
 /**
@@ -210,6 +225,10 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
 /**
  * @brief Get a random frequency from a stellar model spectrum.
  *
+ * We draw a random uniform number in the range [0, 1] and find the bin in the
+ * tabulated cumulative distribution that contains that number. The sampled
+ * frequency is then the linearly interpolated value corresponding to that bin.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
@@ -217,7 +236,7 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
 double WMBasicPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(x, _cumulative_distribution,
+  unsigned int inu = Utilities::locate(x, _cumulative_distribution.data(),
                                        WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =
       _frequencies[inu] +
@@ -229,6 +248,9 @@ double WMBasicPhotonSourceSpectrum::get_random_frequency(
 
 /**
  * @brief Get the total ionizing flux of the spectrum.
+ *
+ * The total ionizing flux depends on the model spectrum that is used and is
+ * computed in the constructor, after the spectrum has been regridded.
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */

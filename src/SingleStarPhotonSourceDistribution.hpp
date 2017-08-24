@@ -37,13 +37,10 @@
 class SingleStarPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Position of the single stellar source (in m). */
-  CoordinateVector<> _position;
+  const CoordinateVector<> _position;
 
   /*! @brief Luminosity of the single stellar source (in s^-1). */
-  double _luminosity;
-
-  /*! @brief Log to write logging information to. */
-  Log *_log;
+  const double _luminosity;
 
 public:
   /**
@@ -55,9 +52,10 @@ public:
    */
   SingleStarPhotonSourceDistribution(CoordinateVector<> position,
                                      double luminosity, Log *log = nullptr)
-      : _position(position), _luminosity(luminosity), _log(log) {
-    if (_log) {
-      _log->write_status(
+      : _position(position), _luminosity(luminosity) {
+
+    if (log) {
+      log->write_status(
           "Created SingleStarPhotonSourceDistribution at position [",
           _position.x(), " m,", _position.y(), " m,", _position.z(),
           " m], with luminosity ", _luminosity, " s^-1.");
@@ -67,15 +65,20 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - position: Position of the stellar source (default: [0. pc, 0. pc, 0.
+   *    pc])
+   *  - luminosity: Ionizing luminosity of the source (default: 4.26e49 s^-1)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
   SingleStarPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SingleStarPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
-                "photonsourcedistribution:position", "[0.5 m, 0.5 m, 0.5 m]"),
+                "PhotonSourceDistribution:position", "[0. pc, 0. pc, 0. pc]"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
+                "PhotonSourceDistribution:luminosity", "4.26e49 s^-1"),
             log) {}
 
   /**

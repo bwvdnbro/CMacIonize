@@ -58,35 +58,25 @@ public:
   class iterator;
 
 protected:
-  /*! @brief DensityFunction defining the density field. */
-  DensityFunction &_density_function;
-
   /*! @brief Box containing the grid. */
-  Box<> _box;
+  const Box<> _box;
 
   /*! @brief Periodicity flags. */
-  CoordinateVector< bool > _periodic;
+  const CoordinateVector< bool > _periodicity_flags;
 
   /*! @brief Ionization energy of hydrogen (in Hz). */
-  double _ionization_energy_H;
+  const double _ionization_energy_H;
 
   /*! @brief Ionization energy of helium (in Hz). */
-  double _ionization_energy_He;
+  const double _ionization_energy_He;
 
   /*! @brief Ionization calculation variables. */
   std::vector< IonizationVariables > _ionization_variables;
 
-  /*! @brief Mean intensity of hydrogen ionizing radiation during the previous
-   *  sub-step (in m^3 s^-1). */
-  std::vector< double > _mean_intensity_H_old;
-
-  /*! @brief Hydrogen neutral fraction during the previous iteration. */
-  std::vector< double > _neutral_fraction_H_old;
-
   /// hydro
 
   /*! @brief Flag indicating whether hydro is active or not. */
-  bool _hydro;
+  const bool _has_hydro;
 
   /*! @brief Hydrodynamic variables. */
   std::vector< HydroVariables > _hydro_variables;
@@ -169,46 +159,6 @@ protected:
     }
   }
 
-protected:
-  /**
-   * @brief Set the re-emission probabilities for the given cell.
-   *
-   * These quantities are all dimensionless.
-   *
-   * @param ionization_variables IonizationVariables of the cell.
-   */
-  inline static void
-  set_reemission_probabilities(IonizationVariables &ionization_variables) {
-    const double T4 = ionization_variables.get_temperature() * 1.e-4;
-
-    // reemission probabilities
-    const double alpha_1_H = 1.58e-13 * std::pow(T4, -0.53);
-    const double alpha_A_agn = 4.18e-13 * std::pow(T4, -0.7);
-    ionization_variables.set_reemission_probability(
-        REEMISSIONPROBABILITY_HYDROGEN, alpha_1_H / alpha_A_agn);
-
-    const double alpha_1_He = 1.54e-13 * std::pow(T4, -0.486);
-    const double alpha_e_2tS = 2.1e-13 * std::pow(T4, -0.381);
-    const double alpha_e_2sS = 2.06e-14 * std::pow(T4, -0.451);
-    const double alpha_e_2sP = 4.17e-14 * std::pow(T4, -0.695);
-    // We make sure the sum of all probabilities is 1...
-    const double alphaHe = alpha_1_He + alpha_e_2tS + alpha_e_2sS + alpha_e_2sP;
-
-    const double He_LyC = alpha_1_He / alphaHe;
-    const double He_NpEEv = He_LyC + alpha_e_2tS / alphaHe;
-    const double He_TPC = He_NpEEv + alpha_e_2sS / alphaHe;
-    const double He_LyA = He_TPC + alpha_e_2sP / alphaHe;
-    // make cumulative
-    ionization_variables.set_reemission_probability(
-        REEMISSIONPROBABILITY_HELIUM_LYC, He_LyC);
-    ionization_variables.set_reemission_probability(
-        REEMISSIONPROBABILITY_HELIUM_NPEEV, He_NpEEv);
-    ionization_variables.set_reemission_probability(
-        REEMISSIONPROBABILITY_HELIUM_TPC, He_TPC);
-    ionization_variables.set_reemission_probability(
-        REEMISSIONPROBABILITY_HELIUM_LYA, He_LyA);
-  }
-
 public:
   /**
    * @brief Constructor.
@@ -219,24 +169,20 @@ public:
    * computationally expensive part of the initialization to the initialize()
    * routine.
    *
-   * @param density_function DensityFunction that defines the density field.
    * @param box Box containing the grid.
    * @param periodic Periodicity flags.
    * @param hydro Hydro flag.
    * @param log Log to write log messages to.
    */
-  DensityGrid(
-      DensityFunction &density_function, Box<> box,
-      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, Log *log = nullptr)
-      : _density_function(density_function), _box(box), _periodic(periodic),
-        _hydro(hydro), _log(log) {
-
-    _ionization_energy_H =
-        UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV");
-    _ionization_energy_He =
-        UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV");
-  }
+  DensityGrid(Box<> box, CoordinateVector< bool > periodic =
+                             CoordinateVector< bool >(false),
+              bool hydro = false, Log *log = nullptr)
+      : _box(box), _periodicity_flags(periodic),
+        _ionization_energy_H(
+            UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV")),
+        _ionization_energy_He(
+            UnitConverter::to_SI< QUANTITY_FREQUENCY >(24.6, "eV")),
+        _has_hydro(hydro), _log(log) {}
 
   /**
    * @brief Virtual destructor.
@@ -258,8 +204,6 @@ public:
     // we allocate memory for the cells, so that --dry-run can already check the
     // available memory
     _ionization_variables.resize(numcell);
-    _mean_intensity_H_old.resize(numcell);
-    _neutral_fraction_H_old.resize(numcell);
     _emissivities.resize(numcell, nullptr);
 #ifndef USE_LOCKFREE
     _lock.resize(numcell);
@@ -278,16 +222,11 @@ public:
    * constructor.
    *
    * @param block Block that should be initialized by this MPI process.
+   * @param density_function DensityFunction to use.
    */
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block) {
-    if (_log) {
-      _log->write_status("Initializing DensityFunction...");
-    }
-    _density_function.initialize();
-    if (_log) {
-      _log->write_status("Done.");
-    }
-    if (_hydro) {
+  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+                          DensityFunction &density_function) {
+    if (_has_hydro) {
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
       }
@@ -321,7 +260,7 @@ public:
   inline unsigned int get_number_of_periodic_boundaries() const {
     unsigned int numperiodic = 0;
     for (unsigned int i = 0; i < 3; ++i) {
-      numperiodic += _periodic[i];
+      numperiodic += _periodicity_flags[i];
     }
     return numperiodic;
   }
@@ -347,7 +286,7 @@ public:
    *
    * @return True if hydro is active.
    */
-  inline bool has_hydro() const { return _hydro; }
+  inline bool has_hydro() const { return _has_hydro; }
 
   /**
    * @brief Get the neighbours of the cell with the given index.
@@ -387,6 +326,16 @@ public:
    * @return Volume of that cell (in m^3).
    */
   virtual double get_cell_volume(unsigned long index) const = 0;
+
+  /**
+   * @brief Get the total optical depth traversed by the given Photon until it
+   * reaches the boundaries of the simulation box.
+   *
+   * @param photon Photon.
+   * @return Total optical depth along the photon's path before it reaches the
+   * boundaries of the simulation box.
+   */
+  virtual double integrate_optical_depth(const Photon &photon) = 0;
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -469,49 +418,6 @@ public:
     }
 
     /**
-     * @brief Get the neutral fraction of hydrogen during the previous iteration
-     * for the cell the iterator is currently pointing to.
-     *
-     * @return Neutral fraction of hydrogen during the previous iteration.
-     */
-    inline double get_neutral_fraction_H_old() const {
-      return _grid->_neutral_fraction_H_old[_index];
-    }
-
-    /**
-     * @brief Set the neutral fraction of hydrogen during the previous iteration
-     * for the cell the iterator is currently pointing to.
-     *
-     * @param neutral_fraction_H_old Neutral fraction of hydrogen during the
-     * previous iteration.
-     */
-    inline void set_neutral_fraction_H_old(double neutral_fraction_H_old) {
-      _grid->_neutral_fraction_H_old[_index] = neutral_fraction_H_old;
-    }
-
-    /**
-     * @brief Get the mean intensity of hydrogen ionizing radiation during the
-     * previous iteration for the cell the iterator is currently pointing to.
-     *
-     * @return Mean intensity of hydrogen ionizing radiation during the previous
-     * iteration (without normalization factor, in m^3).
-     */
-    inline double get_mean_intensity_H_old() const {
-      return _grid->_mean_intensity_H_old[_index];
-    }
-
-    /**
-     * @brief Set the mean intensity of hydrogen ionizing radiation during the
-     * previous iteration for the cell the iterator is currently pointing to.
-     *
-     * @param mean_intensity_H_old Mean intensity of hydrogen ionizing radiation
-     * during the previous iteration (without normalization factor, in m^3).
-     */
-    inline void set_mean_intensity_H_old(double mean_intensity_H_old) {
-      _grid->_mean_intensity_H_old[_index] = mean_intensity_H_old;
-    }
-
-    /**
      * @brief Reset the mean intensity counters for the cell the iterator is
      * currently pointing to.
      */
@@ -520,7 +426,6 @@ public:
         const IonName ion = static_cast< IonName >(i);
         _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
-      _grid->_mean_intensity_H_old[_index] = 0.;
       for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
         const HeatingTermName name = static_cast< HeatingTermName >(i);
         _grid->_ionization_variables[_index].set_heating(name, 0.);
@@ -768,20 +673,21 @@ public:
         const CoordinateVector<> v = vals.get_velocity();
         it.get_hydro_variables().set_primitives_velocity(v);
       }
-      set_reemission_probabilities(ionization_variables);
     }
   };
 
-  void initialize(std::pair< unsigned long, unsigned long > &block,
-                  DensityFunction &function, int worksize = -1);
+  void set_densities(std::pair< unsigned long, unsigned long > &block,
+                     DensityFunction &function, int worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission
    * probabilities for all cells.
+   *
+   * @param density_function DensityFunction to use to set the density in newly
+   * created cells.
    */
-  virtual void reset_grid() {
+  virtual void reset_grid(DensityFunction &density_function) {
     for (auto it = begin(); it != end(); ++it) {
-      set_reemission_probabilities(it.get_ionization_variables());
       it.reset_mean_intensities();
     }
   }
@@ -799,8 +705,10 @@ public:
    * @brief Set the velocity for the grid movement.
    *
    * This method should only be implemented for moving grids.
+   *
+   * @param gamma Polytropic index of the gas.
    */
-  virtual void set_grid_velocity() {}
+  virtual void set_grid_velocity(double gamma) {}
 
   /**
    * @brief Get the total number of hydrogen atoms contained in the grid.

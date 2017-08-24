@@ -37,26 +37,38 @@
 class MonochromaticPhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency of emitted photons (in Hz). */
-  double _frequency;
+  const double _frequency;
+
+  /*! @brief Total flux of emitted photons (in m^-2 s^-1). */
+  const double _total_flux;
 
 public:
   /**
    * @brief Constructor
    *
    * @param frequency Frequency of emitted photons (in Hz).
+   * @param total_flux Total flux of emitted photons (in m^-2 s^-1).
    * @param log Log to write logging info to.
    */
-  MonochromaticPhotonSourceSpectrum(double frequency, Log *log = nullptr)
-      : _frequency(frequency) {
+  MonochromaticPhotonSourceSpectrum(double frequency, double total_flux = -1,
+                                    Log *log = nullptr)
+      : _frequency(frequency), _total_flux(total_flux) {
+
     if (log) {
       log->write_status(
           "Created MonochromaticPhotonSourceSpectrum with frequency ",
-          _frequency, " Hz.");
+          _frequency, " Hz and total flux ", _total_flux, " m^-2 s^-1.");
     }
   }
 
   /**
    * @brief ParameterFile constructor.
+   *
+   * Parameters are:
+   *  - frequency: Constant monochromatic frequency of the spectrum (default:
+   *    13.6 eV)
+   *  - total flux: Total flux of the spectrum (default: none, and error when
+   *    total flux is requested)
    *
    * @param role Role the spectrum will fulfil in the simulation. Parameters are
    * read from the corresponding block in the parameter file.
@@ -68,6 +80,8 @@ public:
       : MonochromaticPhotonSourceSpectrum(
             params.get_physical_value< QUANTITY_FREQUENCY >(role + ":frequency",
                                                             "13.6 eV"),
+            params.get_physical_value< QUANTITY_FLUX >(role + ":total flux",
+                                                       "-1. m^-2 s^-1"),
             log) {}
 
   /**
@@ -91,8 +105,10 @@ public:
    * @return Total ionizing flux (in m^-2 s^-1).
    */
   virtual double get_total_flux() const {
-    cmac_error("This function should not be used!");
-    return 0.;
+    if (_total_flux < 0.) {
+      cmac_error("This function should not be used!");
+    }
+    return _total_flux;
   }
 };
 

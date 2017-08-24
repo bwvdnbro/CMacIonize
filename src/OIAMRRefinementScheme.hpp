@@ -39,10 +39,10 @@ class OIAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Target number of OI particles in a cell; a cell that contains more
    *  than this number will be refined. */
-  double _target_N;
+  const double _target_N;
 
   /*! @brief Maximum allowed refinement level. */
-  unsigned char _max_level;
+  const unsigned char _max_level;
 
 public:
   /**
@@ -59,15 +59,22 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - target number of OI particles: Desired number of neutral oxygen
+   *    particles in a cell (default: 1.e5)
+   *  - maximum refinement level: Maximum level of refinement allowed (default:
+   *    6)
+   *
    * @param params ParamterFile to read from.
    * @param log Log to write logging info to.
    */
   OIAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : OIAMRRefinementScheme(
             params.get_value< double >(
-                "densitygrid:amrrefinementscheme:target_N", 1.e5),
+                "DensityGrid:AMRRefinementScheme:target number of OI particles",
+                1.e5),
             params.get_value< unsigned char >(
-                "densitygrid:amrrefinementscheme:maximum_level", 6),
+                "DensityGrid:AMRRefinementScheme:maximum refinement level", 6),
             log) {}
 
   /**
@@ -78,6 +85,7 @@ public:
    * @return True if the cell should be refined.
    */
   virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+
     const double volume = cell.get_volume();
     const IonizationVariables &ioniziation_variables =
         cell.get_ionization_variables();

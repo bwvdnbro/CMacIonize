@@ -40,18 +40,17 @@
  * @brief Constructor.
  *
  * @param prefix Prefix for the name of the file to write.
- * @param grid DensityGrid containing the data to write.
  * @param output_folder Name of the folder where output files should be placed.
  * @param log Log to write logging information to.
  * @param padding Number of digits used for the counter in the filenames.
  */
 GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
-                                                 DensityGrid &grid,
                                                  std::string output_folder,
                                                  Log *log,
                                                  unsigned char padding)
-    : DensityGridWriter(grid, output_folder, log), _prefix(prefix),
+    : DensityGridWriter(output_folder, log), _prefix(prefix),
       _padding(padding) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
   if (_log) {
@@ -63,28 +62,33 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string prefix,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - prefix: Prefix to prepend to all snapshot file names (default: snapshot)
+ *  - padding: Number of digits to use in the output file names (default: 3)
+ *
+ * @param output_folder Name of the folder where output files should be placed.
  * @param params ParameterFile to read.
- * @param grid DensityGrid to write out.
  * @param log Log to write logging information to.
  */
-GadgetDensityGridWriter::GadgetDensityGridWriter(ParameterFile &params,
-                                                 DensityGrid &grid, Log *log)
+GadgetDensityGridWriter::GadgetDensityGridWriter(std::string output_folder,
+                                                 ParameterFile &params,
+                                                 Log *log)
     : GadgetDensityGridWriter(
-          params.get_value< std::string >("densitygridwriter:prefix",
+          params.get_value< std::string >("DensityGridWriter:prefix",
                                           "snapshot"),
-          grid,
-          params.get_value< std::string >("densitygridwriter:folder", "."), log,
-          params.get_value< unsigned char >("densitygridwriter:padding", 3)) {}
+          output_folder, log,
+          params.get_value< unsigned char >("DensityGridWriter:padding", 3)) {}
 
 /**
  * @brief Write the file.
  *
+ * @param grid DensityGrid to write out.
  * @param iteration Value of the counter to append to the filename.
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
  */
-void GadgetDensityGridWriter::write(unsigned int iteration,
+void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
                                     ParameterFile &params, double time) {
   std::string filename = Utilities::compose_filename(
       _output_folder, _prefix, "hdf5", iteration, _padding);
@@ -98,7 +102,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
 
   // write header
   HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "Header");
-  Box<> box = _grid.get_box();
+  Box<> box = grid.get_box();
   CoordinateVector<> boxsize = box.get_sides();
   HDF5Tools::write_attribute< CoordinateVector<> >(group, "BoxSize", boxsize);
   int dimension = 3;
@@ -112,7 +116,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
   int numfiles = 1;
   HDF5Tools::write_attribute< int >(group, "NumFilesPerSnapshot", numfiles);
   std::vector< unsigned int > numpart(6, 0);
-  numpart[0] = _grid.get_number_of_cells();
+  numpart[0] = grid.get_number_of_cells();
   std::vector< unsigned int > numpart_high(6, 0);
   HDF5Tools::write_attribute< std::vector< unsigned int > >(
       group, "NumPart_ThisFile", numpart);
@@ -189,7 +193,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     HDF5Tools::create_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), numpart[0]);
   }
-  if (_grid.has_hydro()) {
+  if (grid.has_hydro()) {
     HDF5Tools::create_dataset< double >(group, "Density", numpart[0]);
     HDF5Tools::create_dataset< CoordinateVector<> >(group, "Velocities",
                                                     numpart[0]);
@@ -212,7 +216,7 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
     std::vector< std::vector< double > > nfrac(
         NUMBER_OF_IONNAMES, std::vector< double >(thisblocksize));
     unsigned int index = 0;
-    for (auto it = _grid.begin() + offset; it != _grid.begin() + upper_limit;
+    for (auto it = grid.begin() + offset; it != grid.begin() + upper_limit;
          ++it) {
       coords[index] = it.get_cell_midpoint() - box.get_anchor();
 
@@ -236,14 +240,14 @@ void GadgetDensityGridWriter::write(unsigned int iteration,
           group, "NeutralFraction" + get_ion_name(i), offset, nfrac[i]);
     }
 
-    if (_grid.has_hydro()) {
+    if (grid.has_hydro()) {
       std::vector< double > dens(thisblocksize);
       std::vector< CoordinateVector<> > vels(thisblocksize);
       std::vector< double > pres(thisblocksize);
       std::vector< double > mass(thisblocksize);
       std::vector< double > tote(thisblocksize);
       index = 0;
-      for (auto it = _grid.begin() + offset; it != _grid.begin() + upper_limit;
+      for (auto it = grid.begin() + offset; it != grid.begin() + upper_limit;
            ++it) {
         dens[index] = it.get_hydro_variables().get_primitives_density();
         vels[index] = it.get_hydro_variables().get_primitives_velocity();

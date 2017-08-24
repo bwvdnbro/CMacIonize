@@ -33,7 +33,6 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
-using namespace std;
 
 /**
  * @brief Test implementation of CrossSections.
@@ -121,9 +120,9 @@ int main(int argc, char **argv) {
       mean_direction += weight * photon.get_direction();
       meanenergy += weight * photon.get_energy();
     }
-    assert_condition(abs(mean_direction.x()) < 1.e-3);
-    assert_condition(abs(mean_direction.y()) < 1.e-3);
-    assert_condition(abs(mean_direction.z()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.x()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.y()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.z()) < 1.e-3);
     assert_values_equal_tol(meanenergy, 34., 1.e-2);
   }
 

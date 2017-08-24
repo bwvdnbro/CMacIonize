@@ -28,6 +28,7 @@
 #define UNITCONVERTER_HPP
 
 #include "Error.hpp"
+#include "PhysicalConstants.hpp"
 #include "Unit.hpp"
 
 #include <cmath>
@@ -60,6 +61,7 @@
  */
 enum Quantity {
   QUANTITY_ACCELERATION,
+  QUANTITY_ANGLE,
   QUANTITY_DENSITY,
   QUANTITY_ENERGY,
   QUANTITY_ENERGY_CHANGE_RATE,
@@ -94,52 +96,59 @@ public:
   static inline Unit get_single_unit(std::string name) {
     /// length units
     if (name == "m") {
-      return Unit(1., 1, 0, 0, 0, 0);
+      return Unit(1., 1, 0, 0, 0, 0, 0);
     } else if (name == "cm") {
-      return Unit(0.01, 1, 0, 0, 0, 0);
+      return Unit(0.01, 1, 0, 0, 0, 0, 0);
     } else if (name == "pc") {
-      return Unit(3.086e16, 1, 0, 0, 0, 0);
+      return Unit(3.086e16, 1, 0, 0, 0, 0, 0);
     } else if (name == "kpc") {
-      return Unit(3.086e19, 1, 0, 0, 0, 0);
+      return Unit(3.086e19, 1, 0, 0, 0, 0, 0);
     } else if (name == "angstrom") {
-      return Unit(1.e-10, 1, 0, 0, 0, 0);
+      return Unit(1.e-10, 1, 0, 0, 0, 0, 0);
     } else if (name == "km") {
-      return Unit(1000., 1, 0, 0, 0, 0);
+      return Unit(1000., 1, 0, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
-      return Unit(1., 0, 1, 0, 0, 0);
+      return Unit(1., 0, 1, 0, 0, 0, 0);
     } else if (name == "Gyr") {
-      return Unit(3.154e16, 0, 1, 0, 0, 0);
+      return Unit(3.154e16, 0, 1, 0, 0, 0, 0);
     } else if (name == "Myr") {
-      return Unit(3.154e13, 0, 1, 0, 0, 0);
+      return Unit(3.154e13, 0, 1, 0, 0, 0, 0);
     } else if (name == "yr") {
-      return Unit(3.154e7, 0, 1, 0, 0, 0);
+      return Unit(3.154e7, 0, 1, 0, 0, 0, 0);
       /// mass units
     } else if (name == "kg") {
-      return Unit(1., 0, 0, 1, 0, 0);
+      return Unit(1., 0, 0, 1, 0, 0, 0);
     } else if (name == "g") {
-      return Unit(0.001, 0, 0, 1, 0, 0);
+      return Unit(0.001, 0, 0, 1, 0, 0, 0);
     } else if (name == "Msol") {
-      return Unit(1.98855e30, 0, 0, 1, 0, 0);
+      return Unit(1.98855e30, 0, 0, 1, 0, 0, 0);
       /// temperature units
     } else if (name == "K") {
-      return Unit(1., 0, 0, 0, 1, 0);
+      return Unit(1., 0, 0, 0, 1, 0, 0);
+      /// angle units
+    } else if (name == "radians") {
+      return Unit(1., 0, 0, 0, 0, 0, 1);
+    } else if (name == "degrees") {
+      return Unit(M_PI / 180., 0, 0, 0, 0, 0, 1);
       /// alias units
       /// frequency units
     } else if (name == "Hz") {
-      return Unit(1., 0, -1, 0, 0, 0);
+      return Unit(1., 0, -1, 0, 0, 0, 0);
       /// multi-quantity units
       /// energy units
     } else if (name == "J") {
-      return Unit(1., 2, -2, 1, 0, 0);
+      return Unit(1., 2, -2, 1, 0, 0, 0);
     } else if (name == "erg") {
-      return Unit(1.e-7, 2, -2, 1, 0, 0);
+      return Unit(1.e-7, 2, -2, 1, 0, 0, 0);
     } else if (name == "eV") {
-      return Unit(1.60217662e-19, 2, -2, 1, 0, 0);
+      return Unit(PhysicalConstants::get_physical_constant(
+                      PHYSICALCONSTANT_ELECTRONVOLT),
+                  2, -2, 1, 0, 0, 0);
     } else {
       /// error handler
       cmac_error("Unknown unit: \"%s\"!", name.c_str());
-      return Unit(0., 0, 0, 0, 0, 0);
+      return Unit(0., 0, 0, 0, 0, 0, 0);
     }
   }
 
@@ -153,6 +162,8 @@ public:
     switch (quantity) {
     case QUANTITY_ACCELERATION:
       return "m s^-2";
+    case QUANTITY_ANGLE:
+      return "radians";
     case QUANTITY_DENSITY:
       return "kg m^-3";
     case QUANTITY_ENERGY:
@@ -225,33 +236,35 @@ public:
     // energy to frequency conversion for photons
     Aunits.push_back(QUANTITY_ENERGY);
     Bunits.push_back(QUANTITY_FREQUENCY);
-    A_in_B_fac.push_back(1.5091902e33);
+    A_in_B_fac.push_back(
+        1. / PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK));
     A_in_B_pow.push_back(1);
     // wavelength to frequency conversion for photons
     Aunits.push_back(QUANTITY_LENGTH);
     Bunits.push_back(QUANTITY_FREQUENCY);
-    A_in_B_fac.push_back(299792458.);
+    A_in_B_fac.push_back(
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED));
     A_in_B_pow.push_back(-1);
 
     /// don't change the part below unless you know what you're doing
     // just try every unit combination in the lists
     for (unsigned int i = 0; i < Aunits.size(); ++i) {
-      Unit Aunit = get_SI_unit(Aunits[i]);
-      Unit Bunit = get_SI_unit(Bunits[i]);
+      const Unit Aunit = get_SI_unit(Aunits[i]);
+      const Unit Bunit = get_SI_unit(Bunits[i]);
       if (unit_from.is_same_quantity(Aunit) &&
           unit_to.is_same_quantity(Bunit)) {
-        double fval = 1. * unit_from;
-        double tval = 1. * unit_to;
+        const double fval = 1. * unit_from;
+        const double tval = 1. * unit_to;
         double Sval = value * fval;
         if (A_in_B_pow[i] > 0) {
           int j = 1;
-          double Sfac = Sval;
+          const double Sfac = Sval;
           while (j < A_in_B_pow[i]) {
             ++j;
             Sval *= Sfac;
           }
         } else {
-          double Sfac = Sval;
+          const double Sfac = Sval;
           Sval = 1.;
           int j = 0;
           while (j < std::abs(A_in_B_pow[i])) {
@@ -263,14 +276,14 @@ public:
       }
       if (unit_from.is_same_quantity(Bunit) &&
           unit_to.is_same_quantity(Aunit)) {
-        double fval = 1. * unit_from;
-        double tval = 1. * unit_to;
+        const double fval = 1. * unit_from;
+        const double tval = 1. * unit_to;
         double Sval = value * fval / A_in_B_fac[i];
-        double A_in_B_pow_inv = 1. / A_in_B_pow[i];
+        const double A_in_B_pow_inv = 1. / A_in_B_pow[i];
         if (A_in_B_pow_inv > 0) {
           if (A_in_B_pow_inv == 1.) {
             int j = 1;
-            double Sfac = Sval;
+            const double Sfac = Sval;
             while (j < A_in_B_pow_inv) {
               ++j;
               Sval *= Sfac;
@@ -280,7 +293,7 @@ public:
           }
         } else {
           if (A_in_B_pow_inv == -1.) {
-            double Sfac = Sval;
+            const double Sfac = Sval;
             Sval = 1.;
             int j = 0;
             while (j < std::abs(A_in_B_pow_inv)) {
@@ -343,8 +356,8 @@ public:
              (isdigit(name[pos2]) || name[pos2] == '+' || name[pos2] == '-')) {
         ++pos2;
       }
-      std::string powstr = name.substr(pos1, pos2 - pos1);
-      int power = strtod(powstr.c_str(), nullptr);
+      const std::string powstr = name.substr(pos1, pos2 - pos1);
+      const int power = strtod(powstr.c_str(), nullptr);
       unit ^= power;
       if (pos2 == name.size()) {
         return unit;
@@ -377,8 +390,8 @@ public:
                                       name[pos2] == '+' || name[pos2] == '-')) {
           ++pos2;
         }
-        std::string powstr = name.substr(pos1, pos2 - pos1);
-        int power = strtod(powstr.c_str(), nullptr);
+        const std::string powstr = name.substr(pos1, pos2 - pos1);
+        const int power = strtod(powstr.c_str(), nullptr);
         unit2 ^= power;
       }
       unit *= unit2;
@@ -398,7 +411,7 @@ public:
    */
   template < Quantity _quantity_ >
   static inline double to_SI(double value, std::string unit) {
-    Unit SI_unit = get_SI_unit(_quantity_);
+    const Unit SI_unit = get_SI_unit(_quantity_);
     Unit strange_unit = get_unit(unit);
     if (!SI_unit.is_same_quantity(strange_unit)) {
       return try_conversion(value, strange_unit, SI_unit);
@@ -418,7 +431,7 @@ public:
    */
   template < Quantity _quantity_ >
   static inline double to_unit(double value, std::string unit) {
-    Unit SI_unit = get_SI_unit(_quantity_);
+    const Unit SI_unit = get_SI_unit(_quantity_);
     Unit strange_unit = get_unit(unit);
     if (!SI_unit.is_same_quantity(strange_unit)) {
       return try_conversion(value, SI_unit, strange_unit);
@@ -437,7 +450,7 @@ public:
   static inline double convert(double value, std::string unit_from,
                                std::string unit_to) {
     Unit strange_unit_from = get_unit(unit_from);
-    Unit strange_unit_to = get_unit(unit_to);
+    const Unit strange_unit_to = get_unit(unit_to);
     if (!strange_unit_to.is_same_quantity(strange_unit_from)) {
       return try_conversion(value, strange_unit_from, strange_unit_to);
       cmac_error("Units are not compatible: \"%s\" and \"%s\"!",

@@ -29,6 +29,7 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "OperatingSystem.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -104,6 +105,7 @@ inline void split_string(const std::string &value, std::string &str1,
  */
 template < typename _integer_type_ >
 _integer_type_ string_to_integer(const std::string &value) {
+
   if (value.size() == 0) {
     cmac_error("Cannot extract an integer from an empty string!");
   }
@@ -137,7 +139,7 @@ _integer_type_ string_to_integer(const std::string &value) {
         digits.push_back(value[idx] - '0');
       } else {
         // a-f (A-F) also have successive codes
-        char cval = tolower(value[idx]);
+        const char cval = tolower(value[idx]);
         digits.push_back(10 + cval - 'a');
       }
       ++idx;
@@ -217,7 +219,7 @@ template < typename _datatype_ > _datatype_ convert(const std::string &value);
  */
 template <> inline double convert< double >(const std::string &value) {
   char *str_end;
-  double dvalue = strtod(value.c_str(), &str_end);
+  const double dvalue = strtod(value.c_str(), &str_end);
   if (str_end == value.c_str()) {
     cmac_error("Error converting \"%s\" to a floating point value!",
                value.c_str());
@@ -234,9 +236,10 @@ template <> inline double convert< double >(const std::string &value) {
 template <>
 inline CoordinateVector<>
 convert< CoordinateVector<> >(const std::string &value) {
+
   CoordinateVector<> vvalue;
-  int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0], &vvalue[1],
-                         &vvalue[2]);
+  const int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0],
+                               &vvalue[1], &vvalue[2]);
   if (num_found != 3) {
     cmac_error("Error converting \"%s\" to a floating point CoordinateVector!",
                value.c_str());
@@ -251,7 +254,7 @@ convert< CoordinateVector<> >(const std::string &value) {
  * @return Integer stored in the string.
  */
 template <> inline int convert< int >(const std::string &value) {
-  int ivalue = string_to_integer< int >(value);
+  const int ivalue = string_to_integer< int >(value);
   return ivalue;
 }
 
@@ -263,7 +266,7 @@ template <> inline int convert< int >(const std::string &value) {
  */
 template <>
 inline unsigned int convert< unsigned int >(const std::string &value) {
-  unsigned int ivalue = string_to_integer< unsigned int >(value);
+  const unsigned int ivalue = string_to_integer< unsigned int >(value);
   return ivalue;
 }
 
@@ -275,7 +278,7 @@ inline unsigned int convert< unsigned int >(const std::string &value) {
  */
 template <>
 inline unsigned char convert< unsigned char >(const std::string &value) {
-  unsigned char ivalue = string_to_integer< unsigned char >(value);
+  const unsigned char ivalue = string_to_integer< unsigned char >(value);
   return ivalue;
 }
 
@@ -328,6 +331,7 @@ convert< CoordinateVector< unsigned int > >(const std::string &value) {
  * @return True or false.
  */
 template <> inline bool convert< bool >(const std::string &value) {
+
   std::string value_copy(value);
   // convert to lowercase
   std::transform(value_copy.begin(), value_copy.end(), value_copy.begin(),
@@ -398,7 +402,7 @@ template < typename _datatype_ > std::string to_string(_datatype_ value) {
  */
 template <> inline std::string to_string< unsigned char >(unsigned char value) {
   std::stringstream sstream;
-  unsigned int ivalue = value;
+  const unsigned int ivalue = value;
   sstream << ivalue;
   return sstream.str();
 }
@@ -495,7 +499,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
   while (svalue[idx] == ' ') {
     ++idx;
   }
-  std::string unit = svalue.substr(idx);
+  const std::string unit = svalue.substr(idx);
   return make_pair(value, unit);
 }
 
@@ -570,13 +574,7 @@ inline std::string get_absolute_path(std::string path) {
     path = path.substr(0, path.size() - 1);
   }
 
-  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
-  if (absolute_path_ptr == nullptr) {
-    cmac_error("Unable to resolve path \"%s\"!", path.c_str());
-  }
-  std::string absolute_path(absolute_path_ptr);
-  free(absolute_path_ptr);
-  return absolute_path;
+  return OperatingSystem::absolute_path(path);
 }
 
 /**
@@ -585,8 +583,8 @@ inline std::string get_absolute_path(std::string path) {
  * @return Time stamp.
  */
 inline std::string get_timestamp() {
-  std::time_t timestamp = std::time(nullptr);
-  std::tm *time = std::localtime(&timestamp);
+  const std::time_t timestamp = std::time(nullptr);
+  const std::tm *time = std::localtime(&timestamp);
   std::stringstream timestream;
   if (time->tm_mday < 10) {
     timestream << "0";
@@ -628,7 +626,7 @@ inline std::string human_readable_time(double time) {
   // 2^32 minutes is 8166 years. We can safely assume no internal timer will
   // ever reach that value
   unsigned int minutes = time / 60.;
-  double seconds = time - 60. * minutes;
+  const double seconds = time - 60. * minutes;
   if (minutes > 0) {
     unsigned int hours = minutes / 60;
     if (hours > 0) {
@@ -636,7 +634,7 @@ inline std::string human_readable_time(double time) {
       unsigned int days = hours / 24;
       if (days > 0) {
         hours -= 24 * days;
-        unsigned int years = days / 365;
+        const unsigned int years = days / 365;
         if (years > 0) {
           days -= 365 * years;
           timestream << years << "y ";
@@ -708,7 +706,7 @@ inline bool string_ends_with(const std::string &haystack,
   if (needle.size() > haystack.size()) {
     return false;
   }
-  size_t check = haystack.rfind(needle);
+  const size_t check = haystack.rfind(needle);
   // make sure we only flag needle at the end of the string
   return (check == haystack.size() - needle.size());
 }
@@ -745,6 +743,7 @@ inline std::vector< int > decompose(int number) {
  */
 inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
                                          int numblock) {
+
   std::vector< std::vector< int > > d_ncell(3);
   d_ncell[0] = decompose(ncell.x());
   d_ncell[1] = decompose(ncell.y());
@@ -779,10 +778,11 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
  * @param long_value Long value to convert.
  * @return std::string containing a binary representation of the long value.
  */
-inline std::string as_binary_sequence(unsigned long long_value) {
+inline std::string as_binary_sequence(uint64_t long_value) {
+
   std::stringstream binary_stream;
-  unsigned long mask = 0x8000000000000000;
-  for (unsigned int i = 0; i < 64; ++i) {
+  uint64_t mask = 0x8000000000000000;
+  for (unsigned char i = 0; i < 64; ++i) {
     if (i > 0 && i % 4 == 0) {
       binary_stream << " ";
     }

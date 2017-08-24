@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2017 Maya Petkova (map32@st-andrews.ac.uk)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +24,7 @@
  * SPHNG snapshot file.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef SPHNGSNAPSHOTDENSITYFUNCTION_HPP
 #define SPHNGSNAPSHOTDENSITYFUNCTION_HPP
@@ -45,6 +47,9 @@ class ParameterFile;
  */
 class SPHNGSnapshotDensityFunction : public DensityFunction {
 private:
+  /*! @brief Use the new mapping algorithm? */
+  const bool _use_new_algorithm;
+
   /*! @brief Positions of the SPH particles in the snapshot (in m). */
   std::vector< CoordinateVector<> > _positions;
 
@@ -79,6 +84,12 @@ private:
   Log *_log;
 
   static double kernel(const double q, const double h);
+
+  static double full_integral(double phi, double r0, double R_0, double h);
+
+  static double mass_contribution(const Cell &cell,
+                                  const CoordinateVector<> particle,
+                                  const double h);
 
   /**
    * @brief Skip a block from the given Fortran unformatted binary file.
@@ -230,7 +241,9 @@ public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
                                bool write_stats, unsigned int stats_numbin,
                                double stats_mindist, double stats_maxdist,
-                               std::string stats_filename, Log *log = nullptr);
+                               std::string stats_filename,
+                               bool use_new_algorithm = false,
+                               Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
@@ -281,17 +294,16 @@ SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
  * @brief Fill the given referenced parameter by reading from the given
  * Fortran unformatted binary file.
  *
- * Template specialization for a std::vector of unsigned long integers.
+ * Template specialization for a std::vector of 64-bit unsigned integers.
  *
  * @param ifile Reference to an open Fortran unformatted binary file.
  * @param value Next (and last) value to read from the file.
  */
 template <>
-inline void
-SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned long > >(
-    std::ifstream &ifile, std::vector< unsigned long > &value) {
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< uint64_t > >(
+    std::ifstream &ifile, std::vector< uint64_t > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
-             value.size() * sizeof(unsigned long));
+             value.size() * sizeof(uint64_t));
 }
 
 /**
@@ -359,16 +371,17 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
 /**
  * @brief Get the size of the given template datatype.
  *
- * Template specialization for a std::vector containing unsigned long integers.
+ * Template specialization for a std::vector containing 64-bit unsigned
+ * integers.
  *
  * @param value Reference to a value of the template datatype.
  * @return Size of the template datatype.
  */
 template <>
 inline unsigned int
-SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned long > >(
-    std::vector< unsigned long > &value) {
-  return value.size() * sizeof(unsigned long);
+SPHNGSnapshotDensityFunction::get_size< std::vector< uint64_t > >(
+    std::vector< uint64_t > &value) {
+  return value.size() * sizeof(uint64_t);
 }
 
 /**
