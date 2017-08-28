@@ -54,19 +54,19 @@ class EmissivityCalculator {
   double _logttab[8];
 
   /*! @brief Hydrogen continuous emission coefficient at 3681 angstrom (natural
-   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1). */
+   *  logarithm, in 1.e-40 erg cm^3 s^-1 Hz^-1). */
   double _loghplt[8];
 
   /*! @brief Hydrogen continuous emission coefficient at 3646 angstrom (natural
-   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1). */
+   *  logarithm, in 1.e-40 erg cm^3 s^-1 Hz^-1). */
   double _loghmit[8];
 
   /*! @brief Helium continuous emission coefficient at 3681 angstrom (natural
-   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1).  */
+   *  logarithm, in 1.e-40 erg cm^3 s^-1 Hz^-1).  */
   double _logheplt[8];
 
   /*! @brief Helium continuous emission coefficient at 3646 angstrom (natural
-   *  logarithm, in 1.e-40 erg cm^3s^-1Hz^-1).  */
+   *  logarithm, in 1.e-40 erg cm^3 s^-1 Hz^-1).  */
   double _loghemit[8];
 
   /*! @brief Abundances. */

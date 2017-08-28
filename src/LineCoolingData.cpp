@@ -1337,6 +1337,46 @@ LineCoolingData::LineCoolingData() {
                                          [1] = 0.5;
   }
 
+  const double inverse_angstrom_over_k =
+      1.e10 *
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK) *
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  /// SIV
+  {
+    // all data from Pradhan & Peng (1995)
+    // ground state: 2P1/2
+    // excited state: 2P3/2
+    // in angstrom^-1
+    _two_level_energy_difference[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
+        inverse_angstrom_over_k / 1.05e5;
+    _two_level_transition_probability[SIV -
+                                      LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
+        7.73e-3;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [0] = -1.;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [1] = 6.42;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [2] = 0.;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [3] = 0.;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [4] = 0.;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [5] = 0.;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [6] = 0.;
+    // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
+    // P_{3/2}
+    _two_level_inverse_statistical_weight[SIV -
+                                          LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                         [0] = 0.5;
+    _two_level_inverse_statistical_weight[SIV -
+                                          LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                         [1] = 0.25;
+  }
+
   /// numerical factors that are precomputed
 
   // Boltzmann constant (in J s^-1)

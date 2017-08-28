@@ -70,6 +70,8 @@ enum LineCoolingDataTwoLevelElement {
   NIII = LINECOOLINGDATA_NUMFIVELEVELELEMENTS,
   /*! @brief Neon II. */
   NeII,
+  /*! @brief Sulphur IV. */
+  SIV,
   /*! @brief Counter. Should always be the last element! */
   LINECOOLINGDATA_NUMELEMENTS
 };
