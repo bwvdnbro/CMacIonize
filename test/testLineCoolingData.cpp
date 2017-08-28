@@ -134,10 +134,10 @@ int main(int argc, char **argv) {
     while (getline(file, line)) {
       std::istringstream lstream(line);
 
-      double T, ne, abundances[12], coolf, cool;
+      double T, ne, abundances[13], coolf, cool;
 
       lstream >> T >> ne;
-      for (unsigned int i = 0; i < 12; ++i) {
+      for (unsigned int i = 0; i < 13; ++i) {
         lstream >> abundances[i];
       }
       lstream >> coolf;
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     while (std::getline(file, line)) {
       std::istringstream lstream(line);
 
-      double T, ne, abundances[12], c6300f, c9405f, c6312f, c33muf, c19muf,
+      double T, ne, abundances[13], c6300f, c9405f, c6312f, c33muf, c19muf,
           c3729f, c3727f, c7330f, c4363f, c5007f, c52muf, c88muf, c5755f,
           c6584f, c4072f, c6717f, c6725f, c3869f, cniii57f, cneii12f, cneiii15f,
           cnii122f, cii2325f, ciii1908f, coii7325f, csiv10f,
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
           coii7325 = 0., csiv10 = 0.;
 
       lstream >> T >> ne;
-      for (unsigned int i = 0; i < 12; ++i) {
+      for (unsigned int i = 0; i < 13; ++i) {
         lstream >> abundances[i];
       }
       lstream >> c6300f >> c9405f >> c6312f >> c33muf >> c19muf >> c3729f >>

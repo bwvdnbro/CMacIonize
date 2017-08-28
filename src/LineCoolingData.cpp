@@ -1337,36 +1337,35 @@ LineCoolingData::LineCoolingData() {
                                          [1] = 0.5;
   }
 
-  const double inverse_angstrom_over_k =
-      1.e10 *
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK) *
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) /
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
   /// SIV
   {
-    // all data from Pradhan & Peng (1995)
+    // data from Martin, Zalubas & Musgrove (1990)
     // ground state: 2P1/2
     // excited state: 2P3/2
-    // in angstrom^-1
+    // in cm^-1
     _two_level_energy_difference[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
-        inverse_angstrom_over_k / 1.05e5;
+        951.43 * hc_over_k;
+    // data from Pradhan (1995), table I
     _two_level_transition_probability[SIV -
                                       LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
         7.73e-3;
+    // our own fits to the data of Saraph & Storey (1999), table 5
+    // these fits were made with the script data/linecooling/gamma_SIV.py
+    // (this script also outputs the code below)
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [0] = -1.;
+                                 [0] = -9.667e-01;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [1] = 6.42;
+                                 [1] = -1.721e+01;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [2] = 0.;
+                                 [2] = 2.979e+03;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [3] = 0.;
+                                 [3] = 2.954e+00;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [4] = 0.;
+                                 [4] = -1.593e+01;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [5] = 0.;
+                                 [5] = 9.973e-05;
     _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
-                                 [6] = 0.;
+                                 [6] = 8.092e-06;
     // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
     // P_{3/2}
     _two_level_inverse_statistical_weight[SIV -

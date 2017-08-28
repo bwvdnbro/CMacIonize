@@ -158,8 +158,18 @@ enum LineCoolingDataTransition {
  *    397, 903 (http://adsabs.harvard.edu/abs/2009MNRAS.397..903K) (OII)
  *  - Lennon, D. J. & Burke, V. M. 1994, A&AS, 103, 273
  *    (http://adsabs.harvard.edu/abs/1994A%26AS..103..273L) (NII, OIII)
+ *  - Martin, W. C., Zalubas, R. & Musgrove, A. 1990, JPCRD, 19, 821
+ *    (http://adsabs.harvard.edu/abs/1990JPCRD..19..821M) (SIV)
  *  - Mendoza, C. & Zeippen, C. J. 1982, MNRAS, 199, 1025
  *    (http://adsabs.harvard.edu/abs/1982MNRAS.199.1025M) (SIII)
+ *  - Pradhan, A. 1995, The Analysis of Emission Lines: A Meeting in Honor of
+ *    the 70th Birthdays of D. E. Osterbrock & M. J. Seaton, proceedings of the
+ *    Space Telescope Science Institute Symposium, held in Baltimore, Maryland
+ *    May 16--18, 1994, Eds.: Robert Williams and Mario Livio, Cambridge
+ *    University Press, p. 8.
+ *    (http://adsabs.harvard.edu/abs/1995aelm.conf....8P) (SIV)
+ *  - Saraph, H. E. & Storey, P. J. 1999, A&AS, 134, 369
+ *    (http://adsabs.harvard.edu/abs/1999A%26AS..134..369S) (SIV)
  *  - Saraph, H. E. & Tully, J. A. 1994, A&AS, 107, 29
  *    (http://adsabs.harvard.edu/abs/1994A%26AS..107...29S) (NeII)
  *  - Tayal, S. S. 2000, ADNDT, 76, 191
