@@ -1,0 +1,110 @@
+# set the abundances of all elements other than hydrogen to zero
+Abundances:
+  carbon: 0.
+  helium: 0.
+  neon: 0.
+  nitrogen: 0.
+  oxygen: 0.
+  sulphur: 0.
+
+# set the photoionization cross section for neutral hydrogen and disable the
+# cross sections for all other ions
+CrossSections:
+  type: FixedValue
+  hydrogen_0: 6.3e-18 cm^2
+  helium_0: 0. m^2
+  carbon_1: 0. m^2
+  carbon_2: 0. m^2
+  nitrogen_0: 0. m^2
+  nitrogen_1: 0. m^2
+  nitrogen_2: 0. m^2
+  oxygen_0: 0. m^2
+  oxygen_1: 0. m^2
+  neon_0: 0. m^2
+  neon_1: 0. m^2
+  sulphur_1: 0. m^2
+  sulphur_2: 0. m^2
+  sulphur_3: 0. m^2
+
+DensityFunction:
+  type: BlockSyntax
+  filename: starbench.yml
+
+DensityGrid:
+  type: Cartesian
+  number of cells: [64, 64, 64]
+
+DensityGridWriter:
+  type: Gadget
+  padding: 3
+  prefix: starbench_
+
+# set the hydrodynamical parameters
+HydroIntegrator:
+  # we use an almost isothermal equation of state
+  polytropic index: 1.0001
+  # we use reflective boundary conditions
+  boundary x high: reflective
+  boundary x low: reflective
+  boundary y high: reflective
+  boundary y low: reflective
+  boundary z high: reflective
+  boundary z low: reflective
+  # we only consider radiative heating, no cooling
+  radiative heating: true
+  radiative cooling: false
+
+# disable the diffuse field
+PhotonSource:
+  diffuse field: false
+
+# set up the source
+PhotonSourceDistribution:
+  type: SingleStar
+  luminosity: 1.e+49 Hz
+  position: [0. pc, 0. pc, 0. pc]
+
+# use a monochromatic spectrum
+PhotonSourceSpectrum:
+  type: Monochromatic
+  frequency: 3.28847e+15 Hz
+  total flux: -1 m^-2 s^-1
+
+# RHD parameters
+RadiationHydrodynamicsSimulation:
+  number of iterations: 10
+  number of photons: 100000
+  output folder: .
+  random seed: 42
+  snapshot time: -1 s
+  total time: 0.141 Myr
+  # we take 3200 time steps
+  timestep: 0.0000440625 Myr
+
+# set the recombination rate for ionized hydrogen and disable the rates for all
+# other ions
+RecombinationRates:
+  type: FixedValue
+  hydrogen_1: 2.7e-13 cm^3 s^-1
+  helium_1: 0. m^3 s^-1
+  carbon_2: 0. m^3 s^-1
+  carbon_3: 0. m^3 s^-1
+  nitrogen_1: 0. m^3 s^-1
+  nitrogen_2: 0. m^3 s^-1
+  nitrogen_3: 0. m^3 s^-1
+  oxygen_1: 0. m^3 s^-1
+  oxygen_2: 0. m^3 s^-1
+  neon_1: 0. m^3 s^-1
+  neon_2: 0. m^3 s^-1
+  sulphur_2: 0. m^3 s^-1
+  sulphur_3: 0. m^3 s^-1
+  sulphur_4: 0. m^3 s^-1
+
+SimulationBox:
+  anchor: [-1.256 pc, -1.256 pc, -1.256 pc]
+  periodicity: [false, false, false]
+  sides: [2.512 pc, 2.512 pc, 2.512 pc]
+
+# disable the full temperature calculation
+TemperatureCalculator:
+  do temperature calculation: false
