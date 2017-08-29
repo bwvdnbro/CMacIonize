@@ -61,6 +61,33 @@ public:
 };
 
 /**
+ * @brief PropertyAccessor for TestClass properties.
+ */
+class TestClassPropertyAccessor {
+public:
+  /**
+   * @brief Get the value stored in the TestClass object the given iterator
+   * points to.
+   *
+   * @param it Iterator to a TestClass object.
+   * @return Value stored in that TestClass object.
+   */
+  double get_value(const std::vector< TestClass >::iterator &it) const {
+    return (*it).get_variable();
+  }
+
+  /**
+   * @brief Set the value for the TestClass object the given iterator points to.
+   *
+   * @param it Iterator to a TestClass object.
+   * @param value New value for that TestClass object.
+   */
+  void set_value(std::vector< TestClass >::iterator &it, double value) const {
+    (*it).set_variable(value);
+  }
+};
+
+/**
  * @brief Unit test for MPICommunicator.
  *
  * @param argc Number of command line arguments.
@@ -157,6 +184,28 @@ int main(int argc, char **argv) {
     assert_condition(objects[i].get_variable() == ref);
   }
 
+  // fourth reduction: iterator version with PropertyAccessor and small buffer
+  TestClassPropertyAccessor test_accessor;
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, double >(
+      objects.begin(), objects.end(), test_accessor, 9);
+
+  // every element now should contain the fourth power of the number of
+  // processes
+  ref *= comm.get_size();
+  for (unsigned int i = 0; i < 100; ++i) {
+    assert_condition(objects[i].get_variable() == ref);
+  }
+
+  // fifth reduction: iterator version with PropertyAccessor and large buffer
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, double >(
+      objects.begin(), objects.end(), test_accessor, 0);
+
+  // every element now should contain the fifth power of the number of processes
+  ref *= comm.get_size();
+  for (unsigned int i = 0; i < 100; ++i) {
+    assert_condition(objects[i].get_variable() == ref);
+  }
+
   // start again and this time only send the local part of the vector using
   // gather
   // we use a weird number subset of the total vector size to force special
@@ -201,6 +250,60 @@ int main(int argc, char **argv) {
     std::vector< TestClass >::iterator local_end = global_begin + block.second;
     comm.gather(global_begin, global_end, local_begin, local_end,
                 &TestClass::get_variable, &TestClass::set_variable, 0);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+
+  // now do versions that use a PropertyAccessor instead
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather< double >(global_begin, global_end, local_begin, local_end,
+                          test_accessor, 9);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+  // now do a default size, large buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather< double >(global_begin, global_end, local_begin, local_end,
+                          test_accessor, 0);
 
     // check that we actually received the right elements
     for (int i = 0; i < comm.get_size(); ++i) {

@@ -421,8 +421,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
 
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
-  // expressions come from Black, J. H. 1981, MNRAS, 197, 553
-  // (http://adsabs.harvard.edu/abs/1981MNRAS.197..553B), table 3
+  // expressions come from Black (1981), table 3
   // valid in the range [5,000 K; 50,000 K]
   // NOTE that the expression for helium is different from that in Kenny's code
   // (it is the same as the commented out expression in Kenny's code)
