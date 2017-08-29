@@ -157,8 +157,63 @@ int main(int argc, char **argv) {
     assert_condition(objects[i].get_variable() == ref);
   }
 
-  // we broke the code below and have disabled it for now...
-  return 0;
+  // start again and this time only send the local part of the vector using
+  // gather
+  // we use a weird number subset of the total vector size to force special
+  // behaviour
+  // first do a small buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather(global_begin, global_end, local_begin, local_end,
+                &TestClass::get_variable, &TestClass::set_variable, 9);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+  // now do a default size, large buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather(global_begin, global_end, local_begin, local_end,
+                &TestClass::get_variable, &TestClass::set_variable, 0);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
 
   HomogeneousDensityFunction testfunction(1., 2000.);
   CoordinateVector<> anchor;
@@ -175,6 +230,9 @@ int main(int argc, char **argv) {
   // this part is broken...
   //  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
   //      grid.get_mean_intensity_handle(ION_H_n));
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
+      grid.begin(), grid.end(), &DensityGrid::iterator::get_mean_intensity,
+      &DensityGrid::iterator::set_mean_intensity, 0, ION_H_n);
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     assert_condition(it.get_ionization_variables().get_mean_intensity(

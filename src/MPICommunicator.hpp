@@ -546,6 +546,112 @@ public:
   }
 
   /**
+   * @brief Gather the elements pointed to by the given begin and end iterator,
+   * using the given getter member function to obtain an object data member to
+   * gather, and the given setter member function to set the result of the
+   * gathering.
+   *
+   * This routine also accepts extra arguments that will be passed on to the
+   * getter and setter. The setter function call should accept these arguments
+   * after the value of the reduced variable, like this:
+   * \code{.cpp}
+   *   setter(reduced_value, args)
+   * \endcode
+   *
+   * This routine assumes that the process with the lowest rank holds the lowest
+   * iterator values, and so on. This will be the case if the iterator values
+   * where distributed using distribute_block.
+   *
+   * @param global_begin Iterator to the first element that should be gathered.
+   * @param global_end Iterator to the first element that should not be
+   * gathered, or the end of the list.
+   * @param local_begin Iterator to the first local element that should be send.
+   * @param local_end Iterator to the first local element that should not be
+   * send, or the end of the list.
+   * @param getter Member function of the given template class type that returns
+   * a value of the given template data type that will be gathered across all
+   * processes.
+   * @param setter Member function of the given template class type that takes
+   * a value of the given template data type and stores it in the class type
+   * object after the gathering.
+   * @param size Number of elements to gather in a single MPI communication.
+   * This value sets the memory size of the buffer that is used internally.
+   * @param args Extra arguments passed on to the getter and setter.
+   */
+  template < typename _datatype_, typename _classtype_, typename _iteratortype_,
+             typename... _arguments_ >
+  void gather(_iteratortype_ global_begin, _iteratortype_ global_end,
+              _iteratortype_ local_begin, _iteratortype_ local_end,
+              _datatype_ (_classtype_::*getter)(_arguments_...) const,
+              void (_classtype_::*setter)(_datatype_, _arguments_...),
+              unsigned int size, _arguments_... args) const {
+
+#ifdef HAVE_MPI
+    if (_size > 1) {
+      if (size == 0) {
+        size = MPICOMMUNICATOR_DEFAULT_BUFFERSIZE;
+      }
+      std::vector< _datatype_ > sendbuffer(size);
+      const MPI_Datatype dtype = MPIUtilities::get_datatype< _datatype_ >();
+
+      _iteratortype_ it = global_begin;
+      // we loop over all processes; if the active processor rank irank matches
+      // the local rank, we send. If it does not match, we receive.
+      for (int irank = 0; irank < _size; ++irank) {
+
+        const bool is_local = (irank == _rank);
+
+        // note that we use a single loop for both the local and the other
+        // processes
+        // this way, we can use MPI_Bcast instead of an ordinary send/recv,
+        // which is more efficient for large processor numbers
+        int done = false;
+        if (is_local) {
+          // at this point, we should have reached the local part of the
+          // iterator, check this to make sure
+          cmac_assert(it == local_begin);
+
+          done = (it == local_end);
+        }
+
+        while (!done) {
+          unsigned int i = 0;
+          if (is_local) {
+            // first fill the buffer until there are no more local elements, or
+            // until the buffer is full
+            while (it != local_end && i < size) {
+              sendbuffer[i] = ((*it).*(getter))(args...);
+              ++i;
+              ++it;
+            }
+            done = (it == local_end);
+          }
+
+          // first communicate the number of elemens that we send
+          MPI_Bcast(&i, 1, MPI_UNSIGNED, irank, MPI_COMM_WORLD);
+          // now communicate the elements themselves
+          MPI_Bcast(sendbuffer.data(), i, dtype, irank, MPI_COMM_WORLD);
+          // finally communicate the done flag
+          MPI_Bcast(&done, 1, MPI_INT, irank, MPI_COMM_WORLD);
+
+          if (!is_local) {
+            // now fill the non local buffers with the result of the
+            // communication
+            for (unsigned int j = 0; j < i; ++j) {
+              ((*it).*(setter))(sendbuffer[j], args...);
+              ++it;
+            }
+          }
+        }
+      }
+
+      // check that we did all elements
+      cmac_assert(it == global_end);
+    }
+#endif
+  }
+
+  /**
    * @brief Send the given message to the given process.
    *
    * @param destination MPI process that should receive the message.
