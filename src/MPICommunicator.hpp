@@ -496,14 +496,12 @@ public:
    * @param begin Iterator to the first element that should be reduced.
    * @param end Iterator to the first element that should not be reduced, or the
    * end of the list.
-   * @param property_accessor Object used to get and set element properties.
    * @param size Number of elements to reduce in a single MPI communication.
    * This value sets the memory size of the buffer that is used internally.
    */
   template < MPIOperatorType _operatortype_, typename _datatype_,
              typename _PropertyAccessor_, typename _iteratortype_ >
   void reduce(_iteratortype_ begin, _iteratortype_ end,
-              const _PropertyAccessor_ &property_accessor,
               unsigned int size) const {
 
 #ifdef HAVE_MPI
@@ -524,7 +522,7 @@ public:
         // this loop ends if there are no more elements to reduce, or if the
         // communication buffer size is reached
         while (blockit != end && i < size) {
-          sendbuffer[i] = property_accessor.get_value(blockit);
+          sendbuffer[i] = _PropertyAccessor_::get_value(blockit);
           ++i;
           ++blockit;
         }
@@ -544,7 +542,7 @@ public:
         // the condition here is exactly the same as the first loop, so the same
         // elements will be traversed in the same order
         while (blockit != end && i < size) {
-          property_accessor.set_value(blockit, sendbuffer[i]);
+          _PropertyAccessor_::set_value(blockit, sendbuffer[i]);
           ++i;
           ++blockit;
         }
@@ -732,7 +730,6 @@ public:
    * @param local_begin Iterator to the first local element that should be send.
    * @param local_end Iterator to the first local element that should not be
    * send, or the end of the list.
-   * @param property_accessor PropertyAccessor used to access data values.
    * @param size Number of elements to gather in a single MPI communication.
    * This value sets the memory size of the buffer that is used internally.
    */
@@ -740,7 +737,6 @@ public:
              typename _iteratortype_ >
   void gather(_iteratortype_ global_begin, _iteratortype_ global_end,
               _iteratortype_ local_begin, _iteratortype_ local_end,
-              const _PropertyAccessor_ &property_accessor,
               unsigned int size) const {
 
 #ifdef HAVE_MPI
@@ -777,7 +773,7 @@ public:
             // first fill the buffer until there are no more local elements, or
             // until the buffer is full
             while (it != local_end && i < size) {
-              sendbuffer[i] = property_accessor.get_value(it);
+              sendbuffer[i] = _PropertyAccessor_::get_value(it);
               ++i;
               ++it;
             }
@@ -795,7 +791,7 @@ public:
             // now fill the non local buffers with the result of the
             // communication
             for (unsigned int j = 0; j < i; ++j) {
-              property_accessor.set_value(it, sendbuffer[j]);
+              _PropertyAccessor_::set_value(it, sendbuffer[j]);
               ++it;
             }
           }

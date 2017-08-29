@@ -187,6 +187,7 @@ set(CMACIONIZE_SOURCES
     IonizationPhotonShootJob.hpp
     IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
+    IonizationVariablesPropertyAccessors.hpp
     LineCoolingData.hpp
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
