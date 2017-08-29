@@ -57,6 +57,59 @@ public:
 };
 
 /**
+ * @brief PropertyAccessor for the ionic fractions.
+ */
+template < IonName _ion_ > class IonicFractionPropertyAccessor {
+public:
+  /**
+   * @brief Get the ionic fraction for the template IonName.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @return Ionic fraction for that cell.
+   */
+  inline static double get_value(const DensityGrid::iterator &it) {
+    return it.get_ionization_variables().get_ionic_fraction(_ion_);
+  }
+
+  /**
+   * @brief Set the ionic fraction for the template IonName.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @param ionic_fraction Ionic fraction for that cell.
+   */
+  inline static void set_value(DensityGrid::iterator &it,
+                               double ionic_fraction) {
+    it.get_ionization_variables().set_ionic_fraction(_ion_, ionic_fraction);
+  }
+};
+
+/**
+ * @brief PropertyAccessor for the heating.
+ */
+template < HeatingTermName _heating_term_ > class HeatingPropertyAccessor {
+public:
+  /**
+   * @brief Get the heating for the template HeatingTermName.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @return Heating for that cell (in m^3 s^-1).
+   */
+  inline static double get_value(const DensityGrid::iterator &it) {
+    return it.get_ionization_variables().get_heating(_heating_term_);
+  }
+
+  /**
+   * @brief Set the heating for the template HeatingTermName.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @param heating Heating for that cell (in m^3 s^-1).
+   */
+  inline static void set_value(DensityGrid::iterator &it, double heating) {
+    it.get_ionization_variables().set_heating(_heating_term_, heating);
+  }
+};
+
+/**
  * @brief PropertyAccessor for the temperature.
  */
 class TemperaturePropertyAccessor {
@@ -79,6 +132,33 @@ public:
    */
   inline static void set_value(DensityGrid::iterator &it, double temperature) {
     it.get_ionization_variables().set_temperature(temperature);
+  }
+};
+
+/**
+ * @brief PropertyAccessor for the number density.
+ */
+class NumberDensityPropertyAccessor {
+public:
+  /**
+   * @brief Get the number density value.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @return Number density of that cell (in m^-3).
+   */
+  inline static double get_value(const DensityGrid::iterator &it) {
+    return it.get_ionization_variables().get_number_density();
+  }
+
+  /**
+   * @brief Set the number density value.
+   *
+   * @param it DensityGrid::iterator pointing to a cell.
+   * @param number_density Number density of that cell (in m^-3).
+   */
+  inline static void set_value(DensityGrid::iterator &it,
+                               double number_density) {
+    it.get_ionization_variables().set_number_density(number_density);
   }
 };
 
