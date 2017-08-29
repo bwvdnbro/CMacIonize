@@ -1881,9 +1881,7 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
 
   /// 5 level elements
 
-  // there are no lines for element 0 (NI), so we skip the iteration for that
-  // element
-  for (int j = 1; j < 10; ++j) {
+  for (int j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
 
     line_strengths[j].resize(NUMBER_OF_TRANSITIONS);
 

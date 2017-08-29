@@ -26,6 +26,7 @@
 #include "TemperatureCalculator.hpp"
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
+#include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
 #include "DensityValues.hpp"
@@ -374,7 +375,34 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   abund[SIV] = abundances.get_abundance(ELEMENT_S) *
                ionization_variables.get_ionic_fraction(ION_S_p2);
 
+#ifdef DO_OUTPUT_COOLING
+  loss = 0.;
+  std::vector< std::vector< double > > lines =
+      line_cooling_data.get_line_strengths(T, ne, abund);
+  std::vector< double > cooling(lines.size());
+  for (unsigned int i = 0; i < lines.size(); ++i) {
+    cooling[i] = 0.;
+    for (unsigned int j = 0; j < lines[i].size(); ++j) {
+      cooling[i] += lines[i][j];
+    }
+    cooling[i] *= n;
+    loss += cooling[i];
+  }
+  ionization_variables.set_cooling(ION_C_p1, cooling[CII]);
+  ionization_variables.set_cooling(ION_C_p2, cooling[CIII]);
+  ionization_variables.set_cooling(ION_N_n, cooling[NI]);
+  ionization_variables.set_cooling(ION_N_p1, cooling[NII]);
+  ionization_variables.set_cooling(ION_N_p2, cooling[NIII]);
+  ionization_variables.set_cooling(ION_O_n, cooling[OII]);
+  ionization_variables.set_cooling(ION_O_p1, cooling[OIII]);
+  ionization_variables.set_cooling(ION_Ne_n, cooling[NeII]);
+  ionization_variables.set_cooling(ION_Ne_p1, cooling[NeIII]);
+  ionization_variables.set_cooling(ION_S_p1, cooling[SII]);
+  ionization_variables.set_cooling(ION_S_p2, cooling[SIII]);
+  ionization_variables.set_cooling(ION_S_p3, cooling[SIV]);
+#else
   loss = line_cooling_data.get_cooling(T, ne, abund) * n;
+#endif
 
   // free-free cooling (bremsstrahlung)
 
@@ -401,6 +429,10 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double Lhp =
       2.85e-40 * nenhp * sqrtT * (5.914 - 0.5 * logT + 0.01184 * std::cbrt(T));
   const double Lhep = 1.55e-39 * nenhep * std::pow(T, 0.3647);
+#ifdef DO_OUTPUT_COOLING
+  ionization_variables.set_cooling(ION_H_n, Lhp);
+  ionization_variables.set_cooling(ION_He_n, Lhep);
+#endif
   loss += Lhp + Lhep;
 }
 

@@ -164,6 +164,14 @@ else(LOCKFREE)
   add_configuration_option(USE_LOCKFREE False)
 endif(LOCKFREE)
 
+if(OUTPUT_COOLING)
+  message(STATUS "Enabling output of cooling rates.")
+  add_configuration_option(DO_OUTPUT_COOLING True)
+else(OUTPUT_COOLING)
+  message(STATUS "Cooling rate output disabled.")
+  add_configuration_option(DO_OUTPUT_COOLING False)
+endif(OUTPUT_COOLING)
+
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 
