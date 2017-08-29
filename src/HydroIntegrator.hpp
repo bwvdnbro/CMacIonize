@@ -267,7 +267,7 @@ public:
    */
   inline void do_hydro_step(DensityGrid &grid, double timestep) const {
 
-//#define PRINT_TIMESTEP_CRITERION
+#define PRINT_TIMESTEP_CRITERION
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -282,6 +282,9 @@ public:
       dtmin = std::min(dt, dtmin);
     }
     cmac_status("Minimal time step using criterion: %g (%g)", dtmin, timestep);
+    if (timestep > dtmin) {
+      cmac_error("Timestep too large!");
+    }
 #endif
 
     // if second order scheme: compute gradients for primitive variables

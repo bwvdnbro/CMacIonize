@@ -358,9 +358,10 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // average ionized hydrogen and helium density product
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe,
-        (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
-            (1. - ionization_variables.get_ionic_fraction(ION_He_n)));
-    eval.set_emissivity(EMISSIONLINE_avg_nH_nHe_count, 1.);
+        ne * (1. - ionization_variables.get_ionic_fraction(ION_He_n)));
+    eval.set_emissivity(
+        EMISSIONLINE_avg_nH_nHe_count,
+        ne * (1. - ionization_variables.get_ionic_fraction(ION_H_n)));
     // we converted Kenny's constant from 1.e20 erg/cm^6/s to J/m^6/s
     // Osterbrock & Ferland (2006), table 4.6 (fit?)
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
