@@ -71,6 +71,18 @@ template <> inline MPI_Datatype get_datatype< unsigned int >() {
  * @brief Template function that returns the MPI_Datatype corresponding to the
  * given template data type.
  *
+ * Specialization for an unsigned long integer value.
+ *
+ * @return MPI_UNSIGNED_LONG.
+ */
+template <> inline MPI_Datatype get_datatype< unsigned long >() {
+  return MPI_UNSIGNED_LONG;
+}
+
+/**
+ * @brief Template function that returns the MPI_Datatype corresponding to the
+ * given template data type.
+ *
  * Specialization for a signed integer value.
  *
  * @return MPI_INT.
