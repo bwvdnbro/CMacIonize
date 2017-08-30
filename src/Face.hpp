@@ -36,10 +36,10 @@
 class Face {
 private:
   /*! @brief Midpoint of the face (in m). */
-  const CoordinateVector<> _midpoint;
+  CoordinateVector<> _midpoint;
 
   /*! @brief Vertices of the face (ordered, in m). */
-  const std::vector< CoordinateVector<> > _vertices;
+  std::vector< CoordinateVector<> > _vertices;
 
 public:
   /**
