@@ -33,6 +33,10 @@
 #endif
 
 #ifdef HAVE_OUTPUT_CYCLES
+#include "Error.hpp"
+#include "Timer.hpp"
+
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #endif
@@ -75,6 +79,27 @@ public:
       filename << "jobtimes_" << i << ".txt";
       std::ofstream file(filename.str(), std::ofstream::trunc);
     }
+
+    // calibrate the cycle count
+    Timer timer;
+    unsigned int lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    unsigned long first_count = ((unsigned long)hi << 32) | lo;
+    timer.start();
+
+    // do some useless work that keeps the cpu busy for a while
+    double result = 0.;
+    for (unsigned int i = 0; i < 1000000; ++i) {
+      double x = 0.01 * i + 0.2;
+      result += std::sqrt(x);
+    }
+
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    unsigned long last_count = ((unsigned long)hi << 32) | lo;
+    timer.stop();
+
+    cmac_warning("Time/CPU cycle: %g",
+                 timer.value() / (last_count - first_count));
 #endif
 
     return num_threads;
