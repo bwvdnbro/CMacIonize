@@ -159,10 +159,19 @@ private:
    *  parallel. */
   IonizationPhotonShootJobMarket *_ionization_photon_shoot_job_market;
 
-  /// internal timer
+  /// internal timers
 
   /*! @brief Timer to quantify time spent in ray tracing. */
   Timer _work_timer;
+
+  /*! @brief Timer to quantify time spent in serial parts of the code .*/
+  Timer _serial_timer;
+
+  /*! @brief Timer to quantify time spent in parallel parts of the code .*/
+  Timer _parallel_timer;
+
+  /*! @brief Timer to quantity total time spent in the ionization code .*/
+  Timer _total_timer;
 
 public:
   IonizationSimulation(const bool write_output,

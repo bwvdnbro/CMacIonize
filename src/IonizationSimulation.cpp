@@ -44,6 +44,28 @@
 #include "WorkEnvironment.hpp"
 #include <fstream>
 
+/*! @brief Start the serial and total program time timers at the start of a
+ *  member function call. */
+#define function_start_timers()                                                \
+  _serial_timer.start();                                                       \
+  _total_timer.start();
+
+/*! @brief Stop the serial and total program time timers at the end of a
+ *  member function call. */
+#define function_stop_timers()                                                 \
+  _serial_timer.stop();                                                        \
+  _total_timer.stop();
+
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define start_parallel_timing_block()                                          \
+  _serial_timer.stop();                                                        \
+  _parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define stop_parallel_timing_block()                                           \
+  _parallel_timer.stop();                                                      \
+  _serial_timer.start();
+
 /**
  * @brief Constructor.
  *
@@ -86,6 +108,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
           "IonizationSimulation:number of photons first loop",
           _number_of_photons)),
       _abundances(_parameter_file, _log) {
+
+  function_start_timers();
 
   if (_log) {
     if (_num_thread == 1) {
@@ -177,6 +201,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
                          "/parameters-usedvalues.param.");
     }
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -186,6 +212,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
  * given, the internal DensityFunction is used.
  */
 void IonizationSimulation::initialize(DensityFunction *density_function) {
+
+  function_start_timers();
 
   if (density_function == nullptr) {
     density_function = _density_function;
@@ -208,7 +236,10 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   } else {
     block = std::make_pair(0, _density_grid->get_number_of_cells());
   }
+
+  start_parallel_timing_block();
   _density_grid->initialize(block, *density_function);
+  stop_parallel_timing_block();
 
   // _density_grid->initialize initialized:
   // - densities
@@ -249,6 +280,8 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
       _log->write_status("Done applying mask.");
     }
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -258,6 +291,9 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
  * an internal DensityGridWriter exists, this one will write more output.
  */
 void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
+
+  function_start_timers();
+
   // write the initial state of the grid to an output file
   if (_density_grid_writer) {
     _density_grid_writer->write(*_density_grid, 0, _parameter_file);
@@ -310,7 +346,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     _ionization_photon_shoot_job_market->set_numphoton(local_numphoton);
     _work_timer.start();
+    start_parallel_timing_block();
     _work_distributor.do_in_parallel(*_ionization_photon_shoot_job_market);
+    stop_parallel_timing_block();
     _work_timer.stop();
 
     _ionization_photon_shoot_job_market->update_counters(totweight, typecount);
@@ -409,8 +447,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           _density_grid->begin(), _density_grid->end(), 0);
     }
 
+    start_parallel_timing_block();
     _temperature_calculator->calculate_temperature(loop, totweight,
                                                    *_density_grid, block);
+    stop_parallel_timing_block();
 
     // the calculation above will have changed the ionic fractions, and might
     // have changed the temperatures
@@ -517,6 +557,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
                        Utilities::human_readable_time(_work_timer.value()),
                        ".");
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -525,6 +567,15 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
  * Deallocate memory used by internal variables.
  */
 IonizationSimulation::~IonizationSimulation() {
+
+  if (_log) {
+    _log->write_status("Total serial time: ",
+                       Utilities::human_readable_time(_serial_timer.value()));
+    _log->write_status("Total parallel time: ",
+                       Utilities::human_readable_time(_parallel_timer.value()));
+    _log->write_status("Total overall time: ",
+                       Utilities::human_readable_time(_total_timer.value()));
+  }
 
   // we delete the objects in the opposite order in which they were created
   // note that we do not check for nullptrs, as deleting a nullptr is allowed
