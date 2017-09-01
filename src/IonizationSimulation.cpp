@@ -248,6 +248,7 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   // we have to gather these across all processes
 
   if (_mpi_communicator) {
+    start_parallel_timing_block();
     std::pair< DensityGrid::iterator, DensityGrid::iterator > local_chunk =
         _density_grid->get_chunk(block.first, block.second);
     _mpi_communicator->gather< double, NumberDensityPropertyAccessor >(
@@ -264,6 +265,7 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
         ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
             _density_grid->begin(), _density_grid->end(), local_chunk.first,
             local_chunk.second, 0);
+    stop_parallel_timing_block();
   }
 
   // if necessary, initialize and apply the density mask
@@ -356,9 +358,11 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     // make sure the total weight and typecount is reduced across all
     // processes
     if (_mpi_communicator) {
+      start_parallel_timing_block();
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(
           typecount);
+      stop_parallel_timing_block();
     }
 
     if (_log) {
@@ -395,6 +399,7 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     // reduce the mean intensity integrals and heating terms across all
     // processes
+    start_parallel_timing_block();
 
     if (_mpi_communicator) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
@@ -447,10 +452,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           _density_grid->begin(), _density_grid->end(), 0);
     }
 
-    start_parallel_timing_block();
     _temperature_calculator->calculate_temperature(loop, totweight,
                                                    *_density_grid, block);
-    stop_parallel_timing_block();
 
     // the calculation above will have changed the ionic fractions, and might
     // have changed the temperatures
@@ -517,6 +520,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
     }
+
+    stop_parallel_timing_block();
 
     if (_log) {
       _log->write_status("Done calculating ionization state.");
