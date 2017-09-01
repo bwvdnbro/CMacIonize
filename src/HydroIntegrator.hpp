@@ -32,8 +32,19 @@
 #include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
 #include "SimulationBox.hpp"
+#include "Timer.hpp"
 
 #include <cfloat>
+
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define hydro_start_parallel_timing_block()                                    \
+  serial_timer.stop();                                                         \
+  parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define hydro_stop_parallel_timing_block()                                     \
+  parallel_timer.stop();                                                       \
+  serial_timer.start();
 
 /**
  * @brief Types of boundary conditions implemented for the boundaries of the
@@ -409,15 +420,22 @@ public:
     grid.set_grid_velocity(_gamma);
   }
 
+/*! @brief Print the maximal size of the time step to yield a stable integration
+ *  scheme. */
+#define PRINT_TIMESTEP_CRITERION
+
   /**
    * @brief Do a single hydrodynamical time step.
    *
    * @param grid DensityGrid on which to operate.
    * @param timestep Time step over which to evolve the system.
+   * @param serial_timer Timer that times the time spent in serial parts of the
+   * algorithm.
+   * @param parallel_timer Timer that times the time spent in parallel parts of
+   * the algorithm.
    */
-  inline void do_hydro_step(DensityGrid &grid, double timestep) const {
-
-#define PRINT_TIMESTEP_CRITERION
+  inline void do_hydro_step(DensityGrid &grid, double timestep,
+                            Timer &serial_timer, Timer &parallel_timer) const {
 #ifdef PRINT_TIMESTEP_CRITERION
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -452,7 +470,9 @@ public:
         workers;
     DensityGridTraversalJobMarket< HydroFluxComputation > jobs(
         grid, hydro_flux_computation, block);
+    hydro_start_parallel_timing_block();
     workers.do_in_parallel(jobs);
+    hydro_stop_parallel_timing_block();
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {

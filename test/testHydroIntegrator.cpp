@@ -132,8 +132,9 @@ int main(int argc, char **argv) {
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
 
+    Timer serial_timer, parallel_timer;
     for (unsigned int i = 0; i < 100; ++i) {
-      integrator.do_hydro_step(grid, 0.001);
+      integrator.do_hydro_step(grid, 0.001, serial_timer, parallel_timer);
     }
 
     // write final snapshot
@@ -202,8 +203,9 @@ int main(int argc, char **argv) {
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
 
+    Timer serial_timer, parallel_timer;
     for (unsigned int i = 0; i < 100; ++i) {
-      integrator.do_hydro_step(grid, 0.001);
+      integrator.do_hydro_step(grid, 0.001, serial_timer, parallel_timer);
     }
 
     // write final snapshot

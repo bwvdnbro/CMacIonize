@@ -60,7 +60,7 @@ PhotonSourceSpectrum:
 # Control the Monte Carlo parameters
 IonizationSimulation:
   # number of photons to use
-  number of photons: 1e7
+  number of photons: 1e6
 
   # maximum number of iterations
   number of iterations: 20

@@ -63,6 +63,16 @@
 #include <iostream>
 #include <string>
 
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define start_parallel_timing_block()                                          \
+  serial_timer.stop();                                                         \
+  parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define stop_parallel_timing_block()                                           \
+  parallel_timer.stop();                                                       \
+  serial_timer.start();
+
 /**
  * @brief Perform an RHD simulation.
  *
@@ -91,6 +101,13 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                                                     bool write_output,
                                                     Timer &programtimer,
                                                     Log *log) {
+
+  Timer total_timer;
+  Timer serial_timer;
+  Timer parallel_timer;
+
+  total_timer.start();
+  serial_timer.start();
 
   bool every_iteration_output =
       parser.get_value< bool >("every-iteration-output");
@@ -319,7 +336,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
       photonshootjobs.set_numphoton(local_numphoton);
       worktimer.start();
+      start_parallel_timing_block();
       workdistributor.do_in_parallel(photonshootjobs);
+      stop_parallel_timing_block();
       worktimer.stop();
 
       photonshootjobs.update_counters(totweight, typecount);
@@ -372,8 +391,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       //        >(grid->get_heating_He_handle());
       //      }
 
+      start_parallel_timing_block();
       temperature_calculator->calculate_temperature(loop, totweight, *grid,
                                                     block);
+      stop_parallel_timing_block();
 
       // the calculation above will have changed the ionic fractions, and might
       // have changed the temperatures
@@ -412,7 +433,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
 
     if (hydro_integrator != nullptr) {
-      hydro_integrator->do_hydro_step(*grid, hydro_timestep);
+      hydro_integrator->do_hydro_step(*grid, hydro_timestep, serial_timer,
+                                      parallel_timer);
 
       // write snapshot
       if (write_output &&
@@ -434,8 +456,18 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
   }
 
+  serial_timer.stop();
+  total_timer.stop();
   programtimer.stop();
   if (log) {
+    log->write_status("Total serial time: ",
+                      Utilities::human_readable_time(serial_timer.value()),
+                      ".");
+    log->write_status("Total parallel time: ",
+                      Utilities::human_readable_time(parallel_timer.value()),
+                      ".");
+    log->write_status("Total overall time: ",
+                      Utilities::human_readable_time(total_timer.value()), ".");
     log->write_status("Total program time: ",
                       Utilities::human_readable_time(programtimer.value()),
                       ".");

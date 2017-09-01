@@ -233,6 +233,8 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // excited states: 3P1, 3P2, 1D2, 1S0
     eval.set_emissivity(EMISSIONLINE_NII_5755,
                         ntot * line_strengths[NII][TRANSITION_3_to_4]);
+    eval.set_emissivity(EMISSIONLINE_NII_6548,
+                        ntot * line_strengths[NII][TRANSITION_1_to_3]);
     eval.set_emissivity(EMISSIONLINE_NII_6584,
                         ntot * line_strengths[NII][TRANSITION_2_to_3]);
     eval.set_emissivity(EMISSIONLINE_NII_122mu,
@@ -271,8 +273,12 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // excited states: 3P1, 3P2, 1D2, 1S0
     eval.set_emissivity(EMISSIONLINE_OIII_4363,
                         ntot * line_strengths[OIII][TRANSITION_3_to_4]);
+    eval.set_emissivity(EMISSIONLINE_OIII_4959,
+                        ntot * line_strengths[OIII][TRANSITION_1_to_3]);
     eval.set_emissivity(EMISSIONLINE_OIII_5007,
                         ntot * line_strengths[OIII][TRANSITION_2_to_3]);
+    eval.set_emissivity(EMISSIONLINE_OIII_52mu,
+                        ntot * line_strengths[OIII][TRANSITION_1_to_2]);
     eval.set_emissivity(EMISSIONLINE_OIII_88mu,
                         ntot * line_strengths[OIII][TRANSITION_0_to_1]);
 
@@ -282,6 +288,8 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // excited states: 3P1, 3P0, 1D2, 1S0
     eval.set_emissivity(EMISSIONLINE_NeIII_3869,
                         ntot * line_strengths[NeIII][TRANSITION_0_to_3]);
+    eval.set_emissivity(EMISSIONLINE_NeIII_3968,
+                        ntot * line_strengths[NeIII][TRANSITION_1_to_3]);
     eval.set_emissivity(EMISSIONLINE_NeIII_15mu,
                         ntot * line_strengths[NeIII][TRANSITION_0_to_1]);
 
@@ -311,6 +319,8 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                         ntot * line_strengths[SIII][TRANSITION_3_to_4]);
     eval.set_emissivity(EMISSIONLINE_SIII_19mu,
                         ntot * line_strengths[SIII][TRANSITION_1_to_2]);
+    eval.set_emissivity(EMISSIONLINE_SIII_33mu,
+                        ntot * line_strengths[SIII][TRANSITION_0_to_1]);
 
     // CII
     // Osterbrock & Ferland (2006), table 3.9
