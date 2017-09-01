@@ -191,13 +191,15 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
 
     // sulphur
     // we assume all sulphur is either S+, S++, S+++ or S++++
-    // we only use S+ and S++
+    // we only use S+, S++ and S+++
     abund[SII] = abundances.get_abundance(ELEMENT_S) *
                  (1. - ionization_variables.get_ionic_fraction(ION_S_p1) -
                   ionization_variables.get_ionic_fraction(ION_S_p2) -
                   ionization_variables.get_ionic_fraction(ION_S_p3));
     abund[SIII] = abundances.get_abundance(ELEMENT_S) *
                   ionization_variables.get_ionic_fraction(ION_S_p1);
+    abund[SIV] = abundances.get_abundance(ELEMENT_S) *
+                 ionization_variables.get_ionic_fraction(ION_S_p2);
 
     std::vector< std::vector< double > > line_strengths =
         line_cooling_data.get_line_strengths(
@@ -359,8 +361,11 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // excited state: 2P1/2
     eval.set_emissivity(EMISSIONLINE_NeII_12mu, ntot * line_strengths[NeII][0]);
 
-    // not initialized!!!
-    eval.set_emissivity(EMISSIONLINE_SIV_10mu, 0.);
+    // SIV
+    // Osterbrock & Ferland (2006), table 3.10
+    // ground state: 2P1/2
+    // excited state: 2P3/2
+    eval.set_emissivity(EMISSIONLINE_SIV_10mu, ntot * line_strengths[SIV][0]);
 
     // density weighted average temperature of ionized particles
     eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);

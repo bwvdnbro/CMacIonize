@@ -53,8 +53,8 @@
 static boost::python::dict python_get_line_strengths(
     LineCoolingData &lines, boost::python::numeric::array &T,
     boost::python::numeric::array &ne, boost::python::list abundances) {
-  double abund[12];
-  for (unsigned int i = 0; i < 12; ++i) {
+  double abund[LINECOOLINGDATA_NUMELEMENTS];
+  for (unsigned int i = 0; i < LINECOOLINGDATA_NUMELEMENTS; ++i) {
     abund[i] = boost::python::extract< double >(abundances[i]);
   }
 
