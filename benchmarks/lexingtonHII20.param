@@ -30,7 +30,7 @@ DensityGridWriter:
 IonizationSimulation:
   output folder: .
   number of iterations: 20
-  number of photons: 1000000
+  number of photons: 1e8
   random seed: 42
 
 TemperatureCalculator:
