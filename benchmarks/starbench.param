@@ -78,8 +78,9 @@ RadiationHydrodynamicsSimulation:
   random seed: 42
   snapshot time: -1 s
   total time: 0.141 Myr
-  # we take 1600 time steps
-  timestep: 0.000088125 Myr
+  # we take 2048 time steps
+  minimum timestep: 0.000088125 Myr
+  maximum timestep: 0.000088125 Myr
 
 # set the recombination rate for ionized hydrogen and disable the rates for all
 # other ions

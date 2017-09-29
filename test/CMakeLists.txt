@@ -1052,6 +1052,15 @@ configure_file(${PROJECT_SOURCE_DIR}/test/probset_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/probset_testdata.txt
                COPYONLY)
 
+## Unit test for TimeLine
+set(TESTTIMELINE_SOURCES
+    testTimeLine.cpp
+
+    ../src/TimeLine.hpp
+)
+add_unit_test(NAME testTimeLine
+              SOURCES ${TESTTIMELINE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

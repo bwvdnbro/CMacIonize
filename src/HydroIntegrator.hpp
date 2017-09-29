@@ -420,23 +420,15 @@ public:
     grid.set_grid_velocity(_gamma);
   }
 
-/*! @brief Print the maximal size of the time step to yield a stable integration
- *  scheme. */
-#define PRINT_TIMESTEP_CRITERION
-
   /**
-   * @brief Do a single hydrodynamical time step.
+   * @brief Get the maximal system time step that will lead to a stable
+   * integration.
    *
    * @param grid DensityGrid on which to operate.
-   * @param timestep Time step over which to evolve the system.
-   * @param serial_timer Timer that times the time spent in serial parts of the
-   * algorithm.
-   * @param parallel_timer Timer that times the time spent in parallel parts of
-   * the algorithm.
+   * @return Maximal system time step that yields a stable integration (in s).
    */
-  inline void do_hydro_step(DensityGrid &grid, double timestep,
-                            Timer &serial_timer, Timer &parallel_timer) const {
-#ifdef PRINT_TIMESTEP_CRITERION
+  inline double get_maximal_timestep(DensityGrid &grid) const {
+
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double rho = it.get_hydro_variables().get_primitives_density();
@@ -449,11 +441,21 @@ public:
       const double dt = 0.2 * R / (cs + v);
       dtmin = std::min(dt, dtmin);
     }
-    cmac_status("Minimal time step using criterion: %g (%g)", dtmin, timestep);
-    if (timestep > dtmin) {
-      cmac_error("Timestep too large!");
-    }
-#endif
+    return dtmin;
+  }
+
+  /**
+   * @brief Do a single hydrodynamical time step.
+   *
+   * @param grid DensityGrid on which to operate.
+   * @param timestep Time step over which to evolve the system (in s).
+   * @param serial_timer Timer that times the time spent in serial parts of the
+   * algorithm.
+   * @param parallel_timer Timer that times the time spent in parallel parts of
+   * the algorithm.
+   */
+  inline void do_hydro_step(DensityGrid &grid, double timestep,
+                            Timer &serial_timer, Timer &parallel_timer) const {
 
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
@@ -478,41 +480,26 @@ public:
     if (_do_radiative_heating || _do_radiative_cooling) {
       const double boltzmann_k =
           PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
-      // half since we consider the average mass of protons and electrons
       const double mH = PhysicalConstants::get_physical_constant(
           PHYSICALCONSTANT_PROTON_MASS);
+
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const IonizationVariables &ionization_variables =
             it.get_ionization_variables();
 
         const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
-        if (_do_radiative_heating && xH < 0.25) {
-          // assume the gas is ionized; add a heating term equal to the energy
-          // difference
-          const double Tgas = 1.e4;
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
-              it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          // minus sign, as delta_total_energy represents a sum of fluxes, which
-          // are defined as an outflux
+        const double Tgas = 1.e4 * (1. - xH) + 1.e2 * xH;
+        const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+        const double uold = it.get_hydro_variables().get_primitives_pressure() /
+                            _gm1 /
+                            it.get_hydro_variables().get_primitives_density();
+        const double du = ugas - uold;
+        const double dE = it.get_hydro_variables().get_conserved_mass() * du;
+        if (_do_radiative_heating && dE > 0.) {
           it.get_hydro_variables().delta_conserved(4) -= dE;
         }
-        if (_do_radiative_cooling && xH >= 0.25) {
-          // assume the gas is neutral; subtract a cooling term equal to the
-          // energy difference
-          const double Tgas = 1.e2;
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
-              it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          // minus sign, as delta_total_energy represents a sum of fluxes, which
-          // are defined as an outflux
+        if (_do_radiative_cooling && dE < 0.) {
           it.get_hydro_variables().delta_conserved(4) -= dE;
         }
       }
