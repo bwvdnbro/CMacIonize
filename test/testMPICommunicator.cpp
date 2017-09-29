@@ -26,6 +26,7 @@
 #include "Assert.hpp"
 #include "CartesianDensityGrid.hpp"
 #include "HomogeneousDensityFunction.hpp"
+#include "IonizationVariablesPropertyAccessors.hpp"
 #include "MPICommunicator.hpp"
 #include <vector>
 
@@ -58,6 +59,33 @@ public:
    * @param variable New value for the variable.
    */
   void set_variable(double variable) { _variable = variable; }
+};
+
+/**
+ * @brief PropertyAccessor for TestClass properties.
+ */
+class TestClassPropertyAccessor {
+public:
+  /**
+   * @brief Get the value stored in the TestClass object the given iterator
+   * points to.
+   *
+   * @param it Iterator to a TestClass object.
+   * @return Value stored in that TestClass object.
+   */
+  static double get_value(const std::vector< TestClass >::iterator &it) {
+    return (*it).get_variable();
+  }
+
+  /**
+   * @brief Set the value for the TestClass object the given iterator points to.
+   *
+   * @param it Iterator to a TestClass object.
+   * @param value New value for that TestClass object.
+   */
+  static void set_value(std::vector< TestClass >::iterator &it, double value) {
+    (*it).set_variable(value);
+  }
 };
 
 /**
@@ -157,24 +185,162 @@ int main(int argc, char **argv) {
     assert_condition(objects[i].get_variable() == ref);
   }
 
-  // we broke the code below and have disabled it for now...
-  return 0;
+  // fourth reduction: iterator version with PropertyAccessor and small buffer
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, double, TestClassPropertyAccessor >(
+      objects.begin(), objects.end(), 9);
+
+  // every element now should contain the fourth power of the number of
+  // processes
+  ref *= comm.get_size();
+  for (unsigned int i = 0; i < 100; ++i) {
+    assert_condition(objects[i].get_variable() == ref);
+  }
+
+  // fifth reduction: iterator version with PropertyAccessor and large buffer
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, double, TestClassPropertyAccessor >(
+      objects.begin(), objects.end(), 0);
+
+  // every element now should contain the fifth power of the number of processes
+  ref *= comm.get_size();
+  for (unsigned int i = 0; i < 100; ++i) {
+    assert_condition(objects[i].get_variable() == ref);
+  }
+
+  // start again and this time only send the local part of the vector using
+  // gather
+  // we use a weird number subset of the total vector size to force special
+  // behaviour
+  // first do a small buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather(global_begin, global_end, local_begin, local_end,
+                &TestClass::get_variable, &TestClass::set_variable, 9);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+  // now do a default size, large buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather(global_begin, global_end, local_begin, local_end,
+                &TestClass::get_variable, &TestClass::set_variable, 0);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+
+  // now do versions that use a PropertyAccessor instead
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather< double, TestClassPropertyAccessor >(global_begin, global_end,
+                                                     local_begin, local_end, 9);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
+  // now do a default size, large buffer version
+  {
+    for (unsigned int i = 0; i < 100; ++i) {
+      objects[i].set_variable(comm.get_rank());
+    }
+    std::pair< unsigned long, unsigned long > block =
+        comm.distribute_block(0, 51);
+    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    std::vector< TestClass >::iterator global_begin = objects.begin();
+    std::vector< TestClass >::iterator global_end = global_begin + 51;
+    std::vector< TestClass >::iterator local_begin = global_begin + block.first;
+    std::vector< TestClass >::iterator local_end = global_begin + block.second;
+    comm.gather< double, TestClassPropertyAccessor >(global_begin, global_end,
+                                                     local_begin, local_end, 0);
+
+    // check that we actually received the right elements
+    for (int i = 0; i < comm.get_size(); ++i) {
+      std::pair< unsigned long, unsigned long > iblock =
+          comm.distribute_block(i, comm.get_size(), 0, 51);
+      for (unsigned long j = iblock.first; j < iblock.second; ++j) {
+        assert_condition(objects[j].get_variable() == i);
+      }
+    }
+    for (unsigned int i = 51; i < 100; ++i) {
+      assert_condition(objects[i].get_variable() == comm.get_rank());
+    }
+  }
 
   HomogeneousDensityFunction testfunction(1., 2000.);
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 8);
-  block = std::make_pair(0, grid.get_number_of_cells());
+  block = comm.distribute_block(0, grid.get_number_of_cells());
+  auto local_chunk = grid.get_chunk(block.first, block.second);
   grid.initialize(block, testfunction);
+
+  comm.gather< double, TemperaturePropertyAccessor >(
+      grid.begin(), grid.end(), local_chunk.first, local_chunk.second, 0);
+
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    assert_condition(it.get_ionization_variables().get_temperature() == 2000.);
+  }
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     it.get_ionization_variables().increase_mean_intensity(ION_H_n, 1.);
   }
 
-  // this part is broken...
-  //  comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-  //      grid.get_mean_intensity_handle(ION_H_n));
+  comm.reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+               MeanIntensityPropertyAccessor< ION_H_n > >(grid.begin(),
+                                                          grid.end(), 0);
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     assert_condition(it.get_ionization_variables().get_mean_intensity(

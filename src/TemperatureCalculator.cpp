@@ -26,6 +26,7 @@
 #include "TemperatureCalculator.hpp"
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
+#include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
 #include "DensityValues.hpp"
@@ -44,6 +45,10 @@
  * photoionization algorithm to perform before computing the temperature.
  * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
  * @param abundances Abundances.
+ * @param epsilon_convergence Maximum allowed relative difference between
+ * cooling and heating for a converged temperature solution in a cell.
+ * @param maximum_number_of_iterations Maximum number of iterations for the
+ * temperature computation.
  * @param pahfac PAH heating factor.
  * @param crfac Cosmic ray heating factor.
  * @param crlim Upper limit on the neutral fraction below which cosmic ray
@@ -60,9 +65,9 @@
  */
 TemperatureCalculator::TemperatureCalculator(
     bool do_temperature_computation, unsigned int minimum_iteration_number,
-    double luminosity, const Abundances &abundances, double pahfac,
-    double crfac, double crlim, double crscale,
-    const LineCoolingData &line_cooling_data,
+    double luminosity, const Abundances &abundances, double epsilon_convergence,
+    unsigned int maximum_number_of_iterations, double pahfac, double crfac,
+    double crlim, double crscale, const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates, Log *log)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
@@ -73,6 +78,8 @@ TemperatureCalculator::TemperatureCalculator(
       _ionization_state_calculator(luminosity, abundances, recombination_rates,
                                    charge_transfer_rates),
       _do_temperature_computation(do_temperature_computation),
+      _epsilon_convergence(epsilon_convergence),
+      _maximum_number_of_iterations(maximum_number_of_iterations),
       _minimum_iteration_number(minimum_iteration_number) {
 
   if (log) {
@@ -89,6 +96,10 @@ TemperatureCalculator::TemperatureCalculator(
  * Parameters are:
  *  - do temperature calculation: Do the temperature calculation (default:
  *    false)?
+ *  - epsilon convergence: Maximum allowed relative difference between cooling
+ *    and heating for a convered temperature solution in a cell (default: 1.e-3)
+ *  - maximum number of iterations: Maximum number of iterations for the
+ *    temperature computation (default: 100)
  *  - minimum number of iterations: Minimum number of iterations of the
  *    photoionization algorithm to perform before computing the temperature
  *    (default: 3)
@@ -122,6 +133,10 @@ TemperatureCalculator::TemperatureCalculator(
           params.get_value< unsigned int >(
               "TemperatureCalculator:minimum number of iterations", 3),
           luminosity, abundances,
+          params.get_value< double >(
+              "TemperatureCalculator:epsilon convergence", 1.e-3),
+          params.get_value< unsigned int >(
+              "TemperatureCalculator:maximum number of iterations", 100),
           params.get_value< double >("TemperatureCalculator:PAH heating factor",
                                      1.),
           params.get_value< double >(
@@ -176,7 +191,7 @@ TemperatureCalculator::TemperatureCalculator(
  * @param charge_transfer_rates ChargeTransferRates used to calculate ionic
  * fractions.
  */
-void TemperatureCalculator::ioneng(
+void TemperatureCalculator::compute_cooling_and_heating_balance(
     double &h0, double &he0, double &gain, double &loss, double T,
     DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
     const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
@@ -357,8 +372,37 @@ void TemperatureCalculator::ioneng(
                 ionization_variables.get_ionic_fraction(ION_S_p3));
   abund[SIII] = abundances.get_abundance(ELEMENT_S) *
                 ionization_variables.get_ionic_fraction(ION_S_p1);
+  abund[SIV] = abundances.get_abundance(ELEMENT_S) *
+               ionization_variables.get_ionic_fraction(ION_S_p2);
 
+#ifdef DO_OUTPUT_COOLING
+  loss = 0.;
+  std::vector< std::vector< double > > lines =
+      line_cooling_data.get_line_strengths(T, ne, abund);
+  std::vector< double > cooling(lines.size());
+  for (unsigned int i = 0; i < lines.size(); ++i) {
+    cooling[i] = 0.;
+    for (unsigned int j = 0; j < lines[i].size(); ++j) {
+      cooling[i] += lines[i][j];
+    }
+    cooling[i] *= n;
+    loss += cooling[i];
+  }
+  ionization_variables.set_cooling(ION_C_p1, cooling[CII]);
+  ionization_variables.set_cooling(ION_C_p2, cooling[CIII]);
+  ionization_variables.set_cooling(ION_N_n, cooling[NI]);
+  ionization_variables.set_cooling(ION_N_p1, cooling[NII]);
+  ionization_variables.set_cooling(ION_N_p2, cooling[NIII]);
+  ionization_variables.set_cooling(ION_O_n, cooling[OII]);
+  ionization_variables.set_cooling(ION_O_p1, cooling[OIII]);
+  ionization_variables.set_cooling(ION_Ne_n, cooling[NeII]);
+  ionization_variables.set_cooling(ION_Ne_p1, cooling[NeIII]);
+  ionization_variables.set_cooling(ION_S_p1, cooling[SII]);
+  ionization_variables.set_cooling(ION_S_p2, cooling[SIII]);
+  ionization_variables.set_cooling(ION_S_p3, cooling[SIV]);
+#else
   loss = line_cooling_data.get_cooling(T, ne, abund) * n;
+#endif
 
   // free-free cooling (bremsstrahlung)
 
@@ -377,14 +421,17 @@ void TemperatureCalculator::ioneng(
 
   // we multiplied Kenny's value with 1.e-12 to convert the densities into m^-3
   // we then multiplied with 0.1 to convert them to J m^-3s^-1
-  // expressions come from Black, J. H. 1981, MNRAS, 197, 553
-  // (http://adsabs.harvard.edu/abs/1981MNRAS.197..553B), table 3
+  // expressions come from Black (1981), table 3
   // valid in the range [5,000 K; 50,000 K]
   // NOTE that the expression for helium is different from that in Kenny's code
   // (it is the same as the commented out expression in Kenny's code)
   const double Lhp =
       2.85e-40 * nenhp * sqrtT * (5.914 - 0.5 * logT + 0.01184 * std::cbrt(T));
   const double Lhep = 1.55e-39 * nenhep * std::pow(T, 0.3647);
+#ifdef DO_OUTPUT_COOLING
+  ionization_variables.set_cooling(ION_H_n, Lhp);
+  ionization_variables.set_cooling(ION_He_n, Lhep);
+#endif
   loss += Lhp + Lhep;
 }
 
@@ -404,11 +451,6 @@ void TemperatureCalculator::ioneng(
 void TemperatureCalculator::calculate_temperature(
     double jfac, double hfac, DensityGrid::iterator &cell) const {
 
-  // parameters that control the iteration
-  // could potentially be made into real parameters for better control
-  const double eps = 1.e-3;
-  const unsigned int max_iterations = 100;
-
   IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
   // if the ionizing intensity is 0, the gas is trivially neutral and all
@@ -425,14 +467,14 @@ void TemperatureCalculator::calculate_temperature(
     ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_N_n, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_O_n, 0.);
     ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
     ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
@@ -465,14 +507,14 @@ void TemperatureCalculator::calculate_temperature(
       ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-      ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_N_n, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-      ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_O_n, 0.);
       ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-      ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+      ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
       ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
       ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
@@ -513,26 +555,30 @@ void TemperatureCalculator::calculate_temperature(
   double loss0 = 0.;
   h0 = 0.;
   he0 = 0.;
-  while (std::abs(gain0 - loss0) > eps * gain0 && niter < max_iterations) {
+  while (std::abs(gain0 - loss0) > _epsilon_convergence * gain0 &&
+         niter < _maximum_number_of_iterations) {
     ++niter;
     const double T1 = 1.1 * T0;
     // ioneng
     double h01, he01, gain1, loss1;
-    ioneng(h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac,
-           _crfac, _crscale, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    compute_cooling_and_heating_balance(
+        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, _crfac,
+        _crscale, _line_cooling_data, _recombination_rates,
+        _charge_transfer_rates);
 
     const double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
-    ioneng(h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac,
-           _crfac, _crscale, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    compute_cooling_and_heating_balance(
+        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, _crfac,
+        _crscale, _line_cooling_data, _recombination_rates,
+        _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
-    ioneng(h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
-           _crscale, _line_cooling_data, _recombination_rates,
-           _charge_transfer_rates);
+    compute_cooling_and_heating_balance(
+        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
+        _crscale, _line_cooling_data, _recombination_rates,
+        _charge_transfer_rates);
 
     const double logtt = std::log(T1 / T2);
     const double expgain = std::log(gain1 / gain2) / logtt;
@@ -560,10 +606,11 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
   }
-  if (niter == max_iterations) {
-    cmac_warning("Maximum number of iterations reached (temperature: %g, "
+  if (niter == _maximum_number_of_iterations) {
+    cmac_warning("Maximum number of iterations (%u) reached (temperature: %g, "
                  "relative difference cooling/heating: %g, aim: %g)!",
-                 T0, std::abs(loss0 - gain0) / gain0, eps);
+                 niter, T0, std::abs(loss0 - gain0) / gain0,
+                 _epsilon_convergence);
   }
 
   // cap the temperature at 30,000 K, since helium charge transfer rates are
@@ -592,14 +639,14 @@ void TemperatureCalculator::calculate_temperature(
     ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_N_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_N_n, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_O_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_O_n, 0.);
     ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
 
-    ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
+    ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
     ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
 
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.);

@@ -26,22 +26,45 @@
 #include "IonizationSimulation.hpp"
 #include "ChargeTransferRates.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
+#include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
 #include "DiffuseReemissionHandler.hpp"
+#include "IonizationVariablesPropertyAccessors.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
-#include "VernerCrossSections.hpp"
-#include "VernerRecombinationRates.hpp"
 #include "WorkEnvironment.hpp"
 #include <fstream>
+
+/*! @brief Start the serial and total program time timers at the start of a
+ *  member function call. */
+#define function_start_timers()                                                \
+  _serial_timer.start();                                                       \
+  _total_timer.start();
+
+/*! @brief Stop the serial and total program time timers at the end of a
+ *  member function call. */
+#define function_stop_timers()                                                 \
+  _serial_timer.stop();                                                        \
+  _total_timer.stop();
+
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define start_parallel_timing_block()                                          \
+  _serial_timer.stop();                                                        \
+  _parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define stop_parallel_timing_block()                                           \
+  _parallel_timer.stop();                                                      \
+  _serial_timer.start();
 
 /**
  * @brief Constructor.
@@ -86,6 +109,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
           _number_of_photons)),
       _abundances(_parameter_file, _log) {
 
+  function_start_timers();
+
   if (_log) {
     if (_num_thread == 1) {
       _log->write_status("IonizationSimulation will use 1 thread.");
@@ -94,6 +119,11 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
                          " threads.");
     }
   }
+
+  // create cross section and recombination rate objects
+  _cross_sections = CrossSectionsFactory::generate(_parameter_file, _log);
+  _recombination_rates =
+      RecombinationRatesFactory::generate(_parameter_file, _log);
 
   // create the density grid and related objects
   _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
@@ -131,7 +161,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _photon_source = new PhotonSource(
       _photon_source_distribution, _photon_source_spectrum,
       _continuous_photon_source, _continuous_photon_source_spectrum,
-      _abundances, _cross_sections, _parameter_file, _log);
+      _abundances, *_cross_sections, _parameter_file, _log);
   const double total_luminosity = _photon_source->get_total_luminosity();
 
   // set up output
@@ -146,7 +176,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
 
   // used to calculate both the ionization state and the temperature
   _temperature_calculator = new TemperatureCalculator(
-      total_luminosity, _abundances, _line_cooling_data, _recombination_rates,
+      total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
       _charge_transfer_rates, _parameter_file, _log);
 
   // create ray tracing objects
@@ -171,6 +201,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
                          "/parameters-usedvalues.param.");
     }
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -180,6 +212,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
  * given, the internal DensityFunction is used.
  */
 void IonizationSimulation::initialize(DensityFunction *density_function) {
+
+  function_start_timers();
 
   if (density_function == nullptr) {
     density_function = _density_function;
@@ -202,21 +236,37 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   } else {
     block = std::make_pair(0, _density_grid->get_number_of_cells());
   }
-  _density_grid->initialize(block, *density_function);
 
-  // grid->initialize initialized:
+  start_parallel_timing_block();
+  _density_grid->initialize(block, *density_function);
+  stop_parallel_timing_block();
+
+  // _density_grid->initialize initialized:
   // - densities
   // - temperatures
-  // - ionic fractions
+  // - neutral fractions of hydrogen and helium
   // we have to gather these across all processes
 
-  // this is currently BROKEN...
-  //  comm.gather(grid->get_number_density_handle());
-  //  comm.gather(grid->get_temperature_handle());
-  //  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-  //    IonName ion = static_cast< IonName >(i);
-  //    comm.gather(grid->get_ionic_fraction_handle(ion));
-  //  }
+  if (_mpi_communicator) {
+    start_parallel_timing_block();
+    std::pair< DensityGrid::iterator, DensityGrid::iterator > local_chunk =
+        _density_grid->get_chunk(block.first, block.second);
+    _mpi_communicator->gather< double, NumberDensityPropertyAccessor >(
+        _density_grid->begin(), _density_grid->end(), local_chunk.first,
+        local_chunk.second, 0);
+    _mpi_communicator->gather< double, TemperaturePropertyAccessor >(
+        _density_grid->begin(), _density_grid->end(), local_chunk.first,
+        local_chunk.second, 0);
+    _mpi_communicator
+        ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
+            _density_grid->begin(), _density_grid->end(), local_chunk.first,
+            local_chunk.second, 0);
+    _mpi_communicator
+        ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
+            _density_grid->begin(), _density_grid->end(), local_chunk.first,
+            local_chunk.second, 0);
+    stop_parallel_timing_block();
+  }
 
   // if necessary, initialize and apply the density mask
   if (_density_mask != nullptr) {
@@ -232,6 +282,8 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
       _log->write_status("Done applying mask.");
     }
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -241,6 +293,9 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
  * an internal DensityGridWriter exists, this one will write more output.
  */
 void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
+
+  function_start_timers();
+
   // write the initial state of the grid to an output file
   if (_density_grid_writer) {
     _density_grid_writer->write(*_density_grid, 0, _parameter_file);
@@ -253,6 +308,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
   } else {
     block = std::make_pair(0, _density_grid->get_number_of_cells());
   }
+  std::pair< DensityGrid::iterator, DensityGrid::iterator > local_chunk =
+      _density_grid->get_chunk(block.first, block.second);
+
   // finally: the actual program loop whereby the density grid is ray traced
   // using photon packets generated by the stellar sources
   unsigned int loop = 0;
@@ -290,7 +348,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     _ionization_photon_shoot_job_market->set_numphoton(local_numphoton);
     _work_timer.start();
+    start_parallel_timing_block();
     _work_distributor.do_in_parallel(*_ionization_photon_shoot_job_market);
+    stop_parallel_timing_block();
     _work_timer.stop();
 
     _ionization_photon_shoot_job_market->update_counters(totweight, typecount);
@@ -298,9 +358,11 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     // make sure the total weight and typecount is reduced across all
     // processes
     if (_mpi_communicator) {
+      start_parallel_timing_block();
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES >(totweight);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, PHOTONTYPE_NUMBER >(
           typecount);
+      stop_parallel_timing_block();
     }
 
     if (_log) {
@@ -337,19 +399,58 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     // reduce the mean intensity integrals and heating terms across all
     // processes
+    start_parallel_timing_block();
 
-    // this code is currently BROKEN...
-    //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    //        IonName ion = static_cast< IonName >(i);
-    //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(
-    //            grid->get_mean_intensity_handle(ion));
-    //      }
-    //      if (calculate_temperature && loop > 3) {
-    //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
-    //        >(grid->get_heating_H_handle());
-    //        comm.reduce< MPI_SUM_OF_ALL_PROCESSES
-    //        >(grid->get_heating_He_handle());
-    //      }
+    if (_mpi_communicator) {
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_H_n > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_He_n > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_C_p1 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_C_p2 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_N_n > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_N_p1 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_N_p2 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_O_n > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_O_p1 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_Ne_n > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_Ne_p1 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_S_p1 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_S_p2 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 MeanIntensityPropertyAccessor< ION_S_p3 > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 HeatingPropertyAccessor< HEATINGTERM_H > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+      _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
+                                 HeatingPropertyAccessor< HEATINGTERM_He > >(
+          _density_grid->begin(), _density_grid->end(), 0);
+    }
 
     _temperature_calculator->calculate_temperature(loop, totweight,
                                                    *_density_grid, block);
@@ -358,14 +459,69 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     // have changed the temperatures
     // we have to gather these across all processes
 
-    // this is currently BROKEN...
-    //      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    //        IonName ion = static_cast< IonName >(i);
-    //        comm.gather(grid->get_ionic_fraction_handle(ion));
-    //      }
-    //      if (calculate_temperature && loop > 3) {
-    //        comm.gather(grid->get_temperature_handle());
-    //      }
+    if (_mpi_communicator) {
+      _mpi_communicator->gather< double, TemperaturePropertyAccessor >(
+          _density_grid->begin(), _density_grid->end(), local_chunk.first,
+          local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_C_p1 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_C_p2 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_N_n > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_N_p1 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_N_p2 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_O_n > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_O_p1 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_Ne_n > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_Ne_p1 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_S_p1 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_S_p2 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+      _mpi_communicator
+          ->gather< double, IonicFractionPropertyAccessor< ION_S_p3 > >(
+              _density_grid->begin(), _density_grid->end(), local_chunk.first,
+              local_chunk.second, 0);
+    }
+
+    stop_parallel_timing_block();
 
     if (_log) {
       _log->write_status("Done calculating ionization state.");
@@ -406,6 +562,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
                        Utilities::human_readable_time(_work_timer.value()),
                        ".");
   }
+
+  function_stop_timers();
 }
 
 /**
@@ -414,6 +572,15 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
  * Deallocate memory used by internal variables.
  */
 IonizationSimulation::~IonizationSimulation() {
+
+  if (_log) {
+    _log->write_status("Total serial time: ",
+                       Utilities::human_readable_time(_serial_timer.value()));
+    _log->write_status("Total parallel time: ",
+                       Utilities::human_readable_time(_parallel_timer.value()));
+    _log->write_status("Total overall time: ",
+                       Utilities::human_readable_time(_total_timer.value()));
+  }
 
   // we delete the objects in the opposite order in which they were created
   // note that we do not check for nullptrs, as deleting a nullptr is allowed
@@ -443,4 +610,8 @@ IonizationSimulation::~IonizationSimulation() {
   delete _density_grid;
   delete _density_mask;
   delete _density_function;
+
+  // cross sections and recombination rates
+  delete _cross_sections;
+  delete _recombination_rates;
 }

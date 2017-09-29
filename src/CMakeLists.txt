@@ -161,6 +161,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.hpp
     CompilerInfo.hpp
     CrossSections.hpp
+    CrossSectionsFactory.hpp
     DensityFunction.hpp
     DensityFunctionFactory.hpp
     DensityGrid.hpp
@@ -177,6 +178,8 @@ set(CMACIONIZE_SOURCES
     EmissivityValues.hpp
     Error.hpp
     FaucherGiguerePhotonSourceSpectrum.hpp
+    FixedValueCrossSections.hpp
+    FixedValueRecombinationRates.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
@@ -184,6 +187,7 @@ set(CMACIONIZE_SOURCES
     IonizationPhotonShootJob.hpp
     IonizationPhotonShootJobMarket.hpp
     IonizationStateCalculator.hpp
+    IonizationVariablesPropertyAccessors.hpp
     LineCoolingData.hpp
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
@@ -201,6 +205,7 @@ set(CMACIONIZE_SOURCES
     PlanckPhotonSourceSpectrum.hpp
     RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
+    RecombinationRatesFactory.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp

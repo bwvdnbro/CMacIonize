@@ -64,10 +64,6 @@ int main(int argc, char **argv) {
   bool write_log = (comm.get_rank() == 0);
   bool write_output = (comm.get_rank() == 0);
 
-  if (comm.get_size() > 1) {
-    cmac_error("MPI parallelization is currently broken...");
-  }
-
   Timer programtimer;
 
   // first thing we should do: parse the command line arguments
@@ -213,7 +209,7 @@ int main(int argc, char **argv) {
   } else if (parser.get_value< bool >("rhd")) {
 
     if (comm.get_size() > 1) {
-      cmac_error("MPI RHD is not supported!");
+      cmac_error("MPI RHD is not (yet) supported!");
     }
     return RadiationHydrodynamicsSimulation::do_simulation(parser, write_output,
                                                            programtimer, log);
@@ -235,14 +231,15 @@ int main(int argc, char **argv) {
     simulation.run();
 
     programtimer.stop();
+
+    unsigned long memory_usage = OperatingSystem::get_peak_memory_usage();
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(memory_usage);
     if (log) {
       log->write_status("Total program time: ",
                         Utilities::human_readable_time(programtimer.value()),
                         ".");
       log->write_status("Peak memory usage: ",
-                        Utilities::human_readable_bytes(
-                            OperatingSystem::get_peak_memory_usage()),
-                        ".");
+                        Utilities::human_readable_bytes(memory_usage), ".");
     }
     return 0;
   }

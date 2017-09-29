@@ -433,6 +433,38 @@ public:
     }
 
     /**
+     * @brief Dereference operator.
+     *
+     * Needed to work with the fancy MPI communication functions.
+     *
+     * @return Simply returns a reference to this iterator.
+     */
+    inline iterator &operator*() { return *this; }
+
+    /**
+     * @brief Get the mean intensity for the given ion for the cell the iterator
+     * is currently pointing to.
+     *
+     * @param ion IonName.
+     * @return Mean intensity (in m^3).
+     */
+    inline double get_mean_intensity(IonName ion) const {
+      return _grid->_ionization_variables[_index].get_mean_intensity(ion);
+    }
+
+    /**
+     * @brief Set the mean intensity for the given ion for the cell the iterator
+     * is currently pointing to.
+     *
+     * @param mean_intensity New mean intensity value (in m^3).
+     * @param ion IonName.
+     */
+    inline void set_mean_intensity(double mean_intensity, IonName ion) {
+      _grid->_ionization_variables[_index].set_mean_intensity(ion,
+                                                              mean_intensity);
+    }
+
+    /**
      * @brief Get read only access to the ionization variables stored in this
      * cell.
      *

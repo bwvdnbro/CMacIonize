@@ -150,6 +150,17 @@ if __name__ == "__main__":
     pl.savefig("tmp/OI_{key}.png".format(key = key))
     pl.close()
 
+    # save the plot values in separate files
+    dfile = open("tmp/OI_{key}_data.txt".format(key = key), "w")
+    for i in range(len(T[dkey])):
+      dfile.write("{T}\t{data}\n".format(T = T[dkey][i], data = data[key][i]))
+    dfile.close()
+    ffile = open("tmp/OI_{key}_fit.txt".format(key = key), "w")
+    for i in range(len(Trange)):
+      ffile.write("{T}\t{fit}\n".format(T = Trange[i],
+                                        fit = fitting_curve(Trange[i], *A)))
+    ffile.close()
+
   # output the code to put into the LineCoolingData constructor
   print "code:"
   print code

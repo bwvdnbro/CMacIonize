@@ -255,11 +255,6 @@ int main(int argc, char **argv) {
                                                               "erg cm^-3 s^-1"),
           tolerance);
       assert_values_equal_rel(
-          values.get_emissivity(EMISSIONLINE_SIV_10mu),
-          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[27] * 1.e-20,
-                                                              "erg cm^-3 s^-1"),
-          tolerance);
-      assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HeI_5876),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[28] * 1.e-20,
                                                               "erg cm^-3 s^-1"),

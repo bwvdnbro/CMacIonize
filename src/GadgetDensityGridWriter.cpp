@@ -192,6 +192,10 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
   for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     HDF5Tools::create_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), numpart[0]);
+#ifdef DO_OUTPUT_COOLING
+    HDF5Tools::create_dataset< double >(group, "Cooling" + get_ion_name(i),
+                                        numpart[0]);
+#endif
   }
   if (grid.has_hydro()) {
     HDF5Tools::create_dataset< double >(group, "Density", numpart[0]);
@@ -215,6 +219,10 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
     std::vector< double > temp(thisblocksize);
     std::vector< std::vector< double > > nfrac(
         NUMBER_OF_IONNAMES, std::vector< double >(thisblocksize));
+#ifdef DO_OUTPUT_COOLING
+    std::vector< std::vector< double > > cooling(
+        NUMBER_OF_IONNAMES, std::vector< double >(thisblocksize));
+#endif
     unsigned int index = 0;
     for (auto it = grid.begin() + offset; it != grid.begin() + upper_limit;
          ++it) {
@@ -228,6 +236,9 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         const IonName ion = static_cast< IonName >(i);
         nfrac[i][index] = ionization_variables.get_ionic_fraction(ion);
+#ifdef DO_OUTPUT_COOLING
+        cooling[i][index] = ionization_variables.get_cooling(ion);
+#endif
       }
       ++index;
     }
@@ -238,6 +249,10 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
     for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       HDF5Tools::append_dataset< double >(
           group, "NeutralFraction" + get_ion_name(i), offset, nfrac[i]);
+#ifdef DO_OUTPUT_COOLING
+      HDF5Tools::append_dataset< double >(group, "Cooling" + get_ion_name(i),
+                                          offset, cooling[i]);
+#endif
     }
 
     if (grid.has_hydro()) {

@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
-  TemperatureCalculator calculator(true, 3, 1., abundances, 1., 0., 1., 0.,
-                                   data, rates, ctr);
+  TemperatureCalculator calculator(true, 3, 1., abundances, 1.e-3, 100, 1., 0.,
+                                   1., 0., data, rates, ctr);
 
   HomogeneousDensityFunction function(1.);
   function.initialize();
@@ -98,8 +98,9 @@ int main(int argc, char **argv) {
       ionization_variables.set_temperature(T);
 
       double gain, loss, h0, he0;
-      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, j, abundances,
-                                    h, 1., 0., 0.75, data, rates, ctr);
+      TemperatureCalculator::compute_cooling_and_heating_balance(
+          h0, he0, gain, loss, T, cell, j, abundances, h, 1., 0., 0.75, data,
+          rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 
@@ -171,13 +172,6 @@ int main(int argc, char **argv) {
       // in Kenny's code, neutral fractions could sometimes be larger than 1
       // we have introduced a maximum
       h0f = std::min(1., h0f);
-
-      // if the gas is neutral, the neutral fractions of ground state ions are 1
-      if (h0f == 1.) {
-        nf = 1.;
-        of = 1.;
-        nef = 1.;
-      }
 
       // set the cell values
       cell.reset_mean_intensities();
@@ -262,8 +256,6 @@ int main(int argc, char **argv) {
       // scheme to find the temperature, small round off tends to accumulate and
       // cause quite large relative differences
       double tolerance = 1.e-4;
-
-      cmac_status("h0: %g (%g), T: %g (%g)", h0, h0f, Tnew, Tnewf);
 
       assert_values_equal_rel(h0, h0f, tolerance);
 

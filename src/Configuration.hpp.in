@@ -63,6 +63,11 @@
  *  (which might or might not speed up the code). */
 #cmakedefine USE_LOCKFREE
 
+/*! @brief If defined, the cooling for the various metals will be part of the
+ *  output. Note that this increases the memory footprint of the program and
+ *  will slightly slow down the temperature calculation. */
+#cmakedefine DO_OUTPUT_COOLING
+
 /*! @brief Maximum number of shared memory threads that can be used on this
  *  system. */
 // clang-format off

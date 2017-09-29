@@ -1337,6 +1337,45 @@ LineCoolingData::LineCoolingData() {
                                          [1] = 0.5;
   }
 
+  /// SIV
+  {
+    // data from Martin, Zalubas & Musgrove (1990)
+    // ground state: 2P1/2
+    // excited state: 2P3/2
+    // in cm^-1
+    _two_level_energy_difference[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
+        951.43 * hc_over_k;
+    // data from Pradhan (1995), table I
+    _two_level_transition_probability[SIV -
+                                      LINECOOLINGDATA_NUMFIVELEVELELEMENTS] =
+        7.73e-3;
+    // our own fits to the data of Saraph & Storey (1999), table 5
+    // these fits were made with the script data/linecooling/gamma_SIV.py
+    // (this script also outputs the code below)
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [0] = -9.667e-01;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [1] = -1.721e+01;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [2] = 2.979e+03;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [3] = 2.954e+00;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [4] = -1.593e+01;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [5] = 9.973e-05;
+    _two_level_collision_strength[SIV - LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                 [6] = 8.092e-06;
+    // statistical weights: level 0 is a P_{1/2} level, while level 1 is a
+    // P_{3/2}
+    _two_level_inverse_statistical_weight[SIV -
+                                          LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                         [0] = 0.5;
+    _two_level_inverse_statistical_weight[SIV -
+                                          LINECOOLINGDATA_NUMFIVELEVELELEMENTS]
+                                         [1] = 0.25;
+  }
+
   /// numerical factors that are precomputed
 
   // Boltzmann constant (in J s^-1)
@@ -1842,9 +1881,7 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
 
   /// 5 level elements
 
-  // there are no lines for element 0 (NI), so we skip the iteration for that
-  // element
-  for (int j = 1; j < 10; ++j) {
+  for (int j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
 
     line_strengths[j].resize(NUMBER_OF_TRANSITIONS);
 

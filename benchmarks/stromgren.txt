@@ -4,10 +4,6 @@ This benchmark consists of a homogeneous density field with a single stellar
 source at the centre. The radiation from the star will ionize a spherical
 region surrounding the star, the size of which can be analytically found.
 
-The actual size of the ionized region in the simulation results will be slightly
-larger than the analytical value due to the diffuse field (which is ingored in
-the analytic derivation).
-
 The test can be run using the provided parameter file (stromgren.param). To
 analyze the results, use the Python script (stromgren.py).
 

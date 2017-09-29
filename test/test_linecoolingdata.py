@@ -47,8 +47,8 @@ def main():
     T = float(data[0])
     # convert to m^-3
     ne = float(data[1])*1.e6
-    abundances = [float(ab) for ab in data[2:14]]
-    fresults = [float(res) for res in data[14:]]
+    abundances = [float(ab) for ab in data[2:15]]
+    fresults = [float(res) for res in data[15:]]
 
     results = linecoolingdata.get_line_strengths(np.array([T]), np.array([ne]),
                                                  abundances)

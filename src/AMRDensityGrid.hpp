@@ -287,6 +287,7 @@ public:
    *    without refinement (default: [64, 64, 64])
    *  - refinement interval: Number of ionization computation iterations between
    *    successive applications of the refinement algorithm (default: 5)
+   *  - AMRRefinementScheme: Type of AMRRefinementScheme to use (default: None)
    *
    * @param simulation_box SimulationBox.
    * @param params ParameterFile to read.

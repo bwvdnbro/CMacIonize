@@ -124,6 +124,8 @@ VoronoiDensityGrid::VoronoiDensityGrid(
  *    default: Old)
  *  - number of Lloyd iterations: Number of Lloyd iterations to apply to the
  *    initial grid to make it more regular (default: 0)
+ *  - VoronoiGeneratorDistribution: type of VoronoiGeneratorDistribution to use
+ *    (default: UniformRandom)
  *
  * @param simulation_box SimulationBox.
  * @param params ParameterFile to read from.

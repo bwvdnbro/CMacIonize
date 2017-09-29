@@ -92,20 +92,26 @@ private:
   /*! @brief Should the temperature computation be performed? */
   const bool _do_temperature_computation;
 
+  /*! @brief Maximum allowed relative difference between cooling and heating
+   *  for a converged temperature solution in a cell. */
+  const double _epsilon_convergence;
+
+  /*! @brief Maximum number of iterations for the temperature computation. */
+  const double _maximum_number_of_iterations;
+
   /*! @brief Number of iterations of the photoionization algorithm to perform
    *  before computing the temperature. */
   const unsigned int _minimum_iteration_number;
 
 public:
-  TemperatureCalculator(bool do_temperature_computation,
-                        unsigned int minimum_iteration_number,
-                        double luminosity, const Abundances &abundances,
-                        double pahfac, double crfac, double crlim,
-                        double crscale,
-                        const LineCoolingData &line_cooling_data,
-                        const RecombinationRates &recombination_rates,
-                        const ChargeTransferRates &charge_transfer_rates,
-                        Log *log = nullptr);
+  TemperatureCalculator(
+      bool do_temperature_computation, unsigned int minimum_iteration_number,
+      double luminosity, const Abundances &abundances,
+      double epsilon_convergence, unsigned int maximum_number_of_iterations,
+      double pahfac, double crfac, double crlim, double crscale,
+      const LineCoolingData &line_cooling_data,
+      const RecombinationRates &recombination_rates,
+      const ChargeTransferRates &charge_transfer_rates, Log *log = nullptr);
 
   TemperatureCalculator(double luminosity, const Abundances &abundances,
                         const LineCoolingData &line_cooling_data,
@@ -113,15 +119,14 @@ public:
                         const ChargeTransferRates &charge_transfer_rates,
                         ParameterFile &params, Log *log = nullptr);
 
-  static void ioneng(double &h0, double &he0, double &gain, double &loss,
-                     double T, DensityGrid::iterator &cell,
-                     const double j[NUMBER_OF_IONNAMES],
-                     const Abundances &abundances,
-                     const double h[NUMBER_OF_HEATINGTERMS], double pahfac,
-                     double crfac, double crscale,
-                     const LineCoolingData &line_cooling_data,
-                     const RecombinationRates &recombination_rates,
-                     const ChargeTransferRates &charge_transfer_rates);
+  static void compute_cooling_and_heating_balance(
+      double &h0, double &he0, double &gain, double &loss, double T,
+      DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
+      const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
+      double pahfac, double crfac, double crscale,
+      const LineCoolingData &line_cooling_data,
+      const RecombinationRates &recombination_rates,
+      const ChargeTransferRates &charge_transfer_rates);
 
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;
