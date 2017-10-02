@@ -163,8 +163,9 @@ private:
     for (k = 0, m = 0; k < 12; ++k) {
       x = xdbl[k];
       y2 = ydbl[k] - 268435456.0;
-      if (y2 > x)
+      if (y2 > x) {
         y2 -= (1.0 / 16777216.0);
+      }
       y1 = (x - y2) * 16777216.0;
 
       xflt[m++] = (float)y1;
