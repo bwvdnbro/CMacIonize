@@ -616,7 +616,7 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
 double IonizationStateCalculator::compute_ionization_state_hydrogen(
     double alphaH, double jH, double nH) {
   if (jH > 0. && nH > 0.) {
-    const double aa = 0.5 * jH / nH / alphaH;
+    const double aa = 0.5 * jH / (nH * alphaH);
     const double bb = 2. / aa;
     const double cc = std::sqrt(bb + 1.);
     return 1. + aa * (1. - cc);
