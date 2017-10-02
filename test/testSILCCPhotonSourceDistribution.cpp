@@ -52,11 +52,11 @@ int main(int argc, char **argv) {
   }
   mean_x /= distribution.get_number_of_sources();
   std_z = std::sqrt(std_z / distribution.get_number_of_sources());
-  assert_values_equal(mean_x.x(), 0.5);
-  assert_values_equal(mean_x.y(), 0.5);
+  assert_values_equal_rel(mean_x.x(), 0.5, 2.e-4);
+  assert_values_equal_rel(mean_x.y(), 0.5, 2.e-4);
   assert_values_equal(mean_x.z(), 0.);
-  assert_values_equal(std_z, 0.2);
-  assert_values_equal(tot_weight, 1.);
+  assert_values_equal_rel(std_z, 0.2, 2.e-4);
+  assert_values_equal_rel(tot_weight, 1., 2.e-4);
 
   return 0;
 }

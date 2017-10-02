@@ -27,37 +27,28 @@
 #define RANDOMGENERATOR_HPP
 
 /**
- * @brief Own implementation of the GSL ranlxs2 random generator.
+ * @brief Own implementation of the GSL ranlxd2 random generator.
  *
- * Based on http://git.savannah.gnu.org/cgit/gsl.git/tree/rng/ranlxs.c.
+ * Based on http://git.savannah.gnu.org/cgit/gsl.git/tree/rng/ranlxd.c.
  */
 class RandomGenerator {
 private:
-  /*! @brief ranlxs2 state variables. */
+  /*! @brief ranlxd2 state variables. */
   double _xdbl[12];
 
-  /*! @brief ranlxs2 state variables. */
-  double _ydbl[12];
-
-  /*! @brief ranlxs2 state variables. */
+  /*! @brief ranlxd2 state variables. */
   double _carry;
 
-  /*! @brief ranlxs2 state variables. */
-  float _xflt[24];
-
-  /*! @brief ranlxs2 state variables. */
+  /*! @brief ranlxd2 state variables. */
   unsigned int _ir;
 
-  /*! @brief ranlxs2 state variables. */
+  /*! @brief ranlxd2 state variables. */
   unsigned int _jr;
 
-  /*! @brief ranlxs2 state variables. */
-  unsigned int _is;
+  /*! @brief ranlxd2 state variables. */
+  unsigned int _ir_old;
 
-  /*! @brief ranlxs2 state variables. */
-  unsigned int _is_old;
-
-  /*! @brief ranlxs2 state variables. */
+  /*! @brief ranlxd2 state variables. */
   unsigned int _pr;
 
   /**
@@ -85,12 +76,10 @@ private:
    * @brief Increment the internal state of the generator.
    */
   inline void increment_state() {
-    int k, kmax, m;
-    double x, y1, y2, y3;
+    int k, kmax;
+    double y1, y2, y3;
 
-    float *xflt = _xflt;
     double *xdbl = _xdbl;
-    double *ydbl = _ydbl;
     double carry = _carry;
     unsigned int ir = _ir;
     unsigned int jr = _jr;
@@ -148,33 +137,12 @@ private:
         carry = 0;
       }
       xdbl[ir] = y2;
-      ydbl[ir] = y2 + 268435456.0;
       ir = (ir + 1) % 12;
       jr = (jr + 1) % 12;
     }
 
-    ydbl[ir] = xdbl[ir] + 268435456.0;
-
-    for (k = (ir + 1) % 12; k > 0;) {
-      ydbl[k] = xdbl[k] + 268435456.0;
-      k = (k + 1) % 12;
-    }
-
-    for (k = 0, m = 0; k < 12; ++k) {
-      x = xdbl[k];
-      y2 = ydbl[k] - 268435456.0;
-      if (y2 > x) {
-        y2 -= (1.0 / 16777216.0);
-      }
-      y1 = (x - y2) * 16777216.0;
-
-      xflt[m++] = (float)y1;
-      xflt[m++] = (float)y2;
-    }
-
     _ir = ir;
-    _is = 2 * ir;
-    _is_old = 2 * ir;
+    _ir_old = ir;
     _jr = jr;
     _carry = carry;
   }
@@ -209,7 +177,7 @@ public:
       x = 0;
 
       for (m = 1; m <= 48; ++m) {
-        y = (double)xbit[ibit];
+        y = (double)((xbit[ibit] + 1) % 2);
         x += x + y;
         xbit[ibit] = (xbit[ibit] + xbit[jbit]) % 2;
         ibit = (ibit + 1) % 31;
@@ -219,10 +187,9 @@ public:
     }
 
     _carry = 0;
-    _ir = 0;
+    _ir = 11;
     _jr = 7;
-    _is = 23;
-    _is_old = 0;
+    _ir_old = 0;
     // we implement the ranlxs2 generator
     _pr = 397;
   }
@@ -243,22 +210,22 @@ public:
    * @return Random double precision floating point value.
    */
   inline double get_uniform_random_double() {
-    _is = (_is + 1) % 24;
+    _ir = (_ir + 1) % 12;
 
-    if (_is == _is_old) {
+    if (_ir == _ir_old) {
       increment_state();
     }
 
-    return _xflt[_is];
+    return _xdbl[_ir];
   }
 
   /**
    * @brief Get a random integer value.
    *
-   * @return Random integer value in the range [0, 2^24].
+   * @return Random integer value in the range [0, 2^31].
    */
   inline int get_random_integer() {
-    return get_uniform_random_double() * 16777216.0;
+    return get_uniform_random_double() * 2147483648.0;
   }
 };
 
