@@ -118,8 +118,8 @@ int main(int argc, char **argv) {
     assert_condition(density.size() == 100);
     assert_values_equal(density[0], 0.12052436);
 
-    std::vector< unsigned long long > ids =
-        HDF5Tools::read_dataset< unsigned long long >(group, "ParticleIDs");
+    std::vector< uint64_t > ids =
+        HDF5Tools::read_dataset< uint64_t >(group, "ParticleIDs");
 
     assert_condition(ids.size() == 100);
     assert_condition(ids[0] == 47);
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
         group, "Vector attribute", vatest);
 
     std::vector< double > dvtest(100);
-    std::vector< unsigned long long > ivtest(100);
+    std::vector< uint64_t > ivtest(100);
     std::vector< CoordinateVector<> > vvtest(100);
     for (unsigned int i = 0; i < 100; ++i) {
       dvtest[i] = -0.05 * i;
@@ -197,8 +197,7 @@ int main(int argc, char **argv) {
     }
 
     HDF5Tools::write_dataset< double >(group, "Test doubles", dvtest);
-    HDF5Tools::write_dataset< unsigned long long >(group, "Test integers",
-                                                   ivtest);
+    HDF5Tools::write_dataset< uint64_t >(group, "Test integers", ivtest);
     HDF5Tools::write_dataset< CoordinateVector<> >(
         group, "Test CoordinateVectors", vvtest);
 
@@ -260,8 +259,8 @@ int main(int argc, char **argv) {
     std::vector< double > dvtest2 =
         HDF5Tools::read_dataset< double >(group, "Test doubles");
     assert_condition(dvtest2.size() == 100);
-    std::vector< unsigned long long > ivtest2 =
-        HDF5Tools::read_dataset< unsigned long long >(group, "Test integers");
+    std::vector< uint64_t > ivtest2 =
+        HDF5Tools::read_dataset< uint64_t >(group, "Test integers");
     assert_condition(ivtest2.size() == 100);
     std::vector< CoordinateVector<> > vvtest2 =
         HDF5Tools::read_dataset< CoordinateVector<> >(group,

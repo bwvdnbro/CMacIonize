@@ -106,26 +106,26 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
     dsize >>= 1;
   }
   // add them to the grid
-  for (uint32_t i = 0; i < extents.size()[0]; ++i) {
+  for (size_t i = 0; i < extents.size()[0]; ++i) {
     if (nodetypes[i] == 1) {
       CoordinateVector<> anchor;
-      std::array< uint32_t, 3 > ix0 = {{i, 0, 0}};
+      std::array< size_t, 3 > ix0 = {{i, 0, 0}};
       anchor[0] = extents[ix0] * unit_length_in_SI;
-      std::array< uint32_t, 3 > iy0 = {{i, 1, 0}};
+      std::array< size_t, 3 > iy0 = {{i, 1, 0}};
       anchor[1] = extents[iy0] * unit_length_in_SI;
-      std::array< uint32_t, 3 > iz0 = {{i, 2, 0}};
+      std::array< size_t, 3 > iz0 = {{i, 2, 0}};
       anchor[2] = extents[iz0] * unit_length_in_SI;
       CoordinateVector<> top_anchor;
-      std::array< uint32_t, 3 > ix1 = {{i, 0, 1}};
+      std::array< size_t, 3 > ix1 = {{i, 0, 1}};
       top_anchor[0] = extents[ix1] * unit_length_in_SI;
-      std::array< uint32_t, 3 > iy1 = {{i, 1, 1}};
+      std::array< size_t, 3 > iy1 = {{i, 1, 1}};
       top_anchor[1] = extents[iy1] * unit_length_in_SI;
-      std::array< uint32_t, 3 > iz1 = {{i, 2, 1}};
+      std::array< size_t, 3 > iz1 = {{i, 2, 1}};
       top_anchor[2] = extents[iz1] * unit_length_in_SI;
       CoordinateVector<> sides = top_anchor - anchor;
-      for (uint32_t ix = 0; ix < densities.size()[1]; ++ix) {
-        for (uint32_t iy = 0; iy < densities.size()[2]; ++iy) {
-          for (uint32_t iz = 0; iz < densities.size()[3]; ++iz) {
+      for (size_t ix = 0; ix < densities.size()[1]; ++ix) {
+        for (size_t iy = 0; iy < densities.size()[2]; ++iy) {
+          for (size_t iz = 0; iz < densities.size()[3]; ++iz) {
             CoordinateVector<> centre;
             centre[0] =
                 anchor.x() + (ix + 0.5) * sides.x() / densities.size()[1];
@@ -134,7 +134,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
             centre[2] =
                 anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
             // this is the ordering as it is in the file
-            std::array< uint32_t, 4 > irho = {{i, iz, iy, ix}};
+            std::array< size_t, 4 > irho = {{i, iz, iy, ix}};
             double rho = densities[irho];
             // each block contains level^3 cells, hence levels[i] + level
             // (but levels[i] is 1 larger than in our definition, Fortran counts

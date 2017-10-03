@@ -57,7 +57,7 @@ private:
   /// simulation wide parameters
 
   /*! @brief Number of shared memory parallel threads available for use. */
-  const int _num_thread;
+  const int_fast32_t _num_thread;
 
   /*! @brief Should the simulation write a snapshot file for every iteration of
    *  the algorithm? */
@@ -93,17 +93,17 @@ private:
   /// file
 
   /*! @brief Number of iterations of the ray tracing loop. */
-  const unsigned int _number_of_iterations;
+  const uint_fast32_t _number_of_iterations;
 
   /*! @brief Number of photons used in every iteration of the ray tracing
    *  loop. */
-  const unsigned int _number_of_photons;
+  const uint_fast64_t _number_of_photons;
 
   /*! @brief Number of photons used during the first iteration of the ray
    *  tracing loop (this number is usually set to a lower value because the
    *  initial neutral fractions are set to very low values, making the grid very
    *  transparent). */
-  const unsigned int _number_of_photons_init;
+  const uint_fast64_t _number_of_photons_init;
 
   /// objects owned by the simulation that require parameters
   /// these have to be declared and initialized after the parameter file has
@@ -175,7 +175,8 @@ private:
 
 public:
   IonizationSimulation(const bool write_output,
-                       const bool every_iteration_output, const int num_thread,
+                       const bool every_iteration_output,
+                       const int_fast32_t num_thread,
                        const std::string parameterfile,
                        MPICommunicator *mpi_communicator = nullptr,
                        Log *log = nullptr);

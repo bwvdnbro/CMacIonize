@@ -465,7 +465,7 @@ public:
     HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
                                                 timestep);
 
-    std::pair< unsigned long, unsigned long > block =
+    std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     WorkDistributor< DensityGridTraversalJobMarket< HydroFluxComputation >,
                      DensityGridTraversalJob< HydroFluxComputation > >

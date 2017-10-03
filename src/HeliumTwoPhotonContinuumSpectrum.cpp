@@ -55,7 +55,7 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
   const double min_frequency = 3.288465385e15;
   const double max_frequency = 1.6 * min_frequency;
   const double nu0 = 4.98e15;
-  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +
                     i * (max_frequency - min_frequency) /
                         (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
@@ -64,14 +64,14 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
   // NOTE that we compute every y1/y2 twice (except the first and last bin edge)
   // it would be fairly easy to make this more efficient, but since this routine
   // is only called once at the start of the program, we don't bother
-  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     // get the y value for the lower edge of the frequency bin
     const double y1 = _frequency[i - 1] / nu0;
     // find the corresponding rate in the energy distribution by linear
     // interpolatino on the tabulated spectrum
     double AHe2q1 = 0.;
     if (y1 < 1.) {
-      const unsigned int iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
+      const uint_fast32_t iHe1 = Utilities::locate(y1, &yHe2q[0], 41);
       const double f = (y1 - yHe2q[iHe1]) / (yHe2q[iHe1 + 1] - yHe2q[iHe1]);
       AHe2q1 = AHe2q[iHe1] + f * (AHe2q[iHe1 + 1] - AHe2q[iHe1]);
     }
@@ -79,7 +79,7 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
     const double y2 = _frequency[i] / nu0;
     double AHe2q2 = 0.;
     if (y2 < 1.) {
-      const unsigned int iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
+      const uint_fast32_t iHe2 = Utilities::locate(y2, &yHe2q[0], 41);
       const double f = (y2 - yHe2q[iHe2]) / (yHe2q[iHe2 + 1] - yHe2q[iHe2]);
       AHe2q2 = AHe2q[iHe2] + f * (AHe2q[iHe2 + 1] - AHe2q[iHe2]);
     }
@@ -89,12 +89,12 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
         0.5 * (AHe2q1 + AHe2q2) * (_frequency[i] - _frequency[i - 1]);
   }
   // now make the spectrum cumulative...
-  for (unsigned int i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] =
         _cumulative_distribution[i - 1] + _cumulative_distribution[i];
   }
   // ...and normalize it (the last entry in the table contains the total sum)
-  for (unsigned int i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
         _cumulative_distribution[HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1];
   }
@@ -119,7 +119,7 @@ void HeliumTwoPhotonContinuumSpectrum::get_spectrum(
   // skip comment line
   std::string line;
   std::getline(ifile, line);
-  for (unsigned int i = 0; i < 41; ++i) {
+  for (uint_fast8_t i = 0; i < 41; ++i) {
     ifile >> yHe2q[i] >> AHe2q[i];
   }
 }
@@ -139,7 +139,7 @@ double HeliumTwoPhotonContinuumSpectrum::get_integral(
   // we use a simple linear quadrature rule
   const double miny = 3.289e15 / 4.98e15;
   double integral = 0.;
-  for (unsigned int i = 1; i < 41; ++i) {
+  for (uint_fast8_t i = 1; i < 41; ++i) {
     // the spectrum is cut off at miny; we do not take into account the part of
     // the spectrum below that frequency
     if (yHe2q[i - 1] > miny) {
@@ -168,7 +168,7 @@ double HeliumTwoPhotonContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
 
   const double x = random_generator.get_uniform_random_double();
-  const unsigned int inu =
+  const uint_fast32_t inu =
       Utilities::locate(x, _cumulative_distribution.data(),
                         HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ);
   const double frequency =

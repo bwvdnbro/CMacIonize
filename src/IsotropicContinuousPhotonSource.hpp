@@ -160,7 +160,7 @@ public:
     CoordinateVector<> position = focus + maxl * direction;
 
     // make sure the photon is inside the box
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       // we cannot simply take the top anchor of the box as upper limit, since
       // the top anchor itself strictly speaking lies outside the box (lower
       // limits are inclusive, upper limits exclusive due to the way we

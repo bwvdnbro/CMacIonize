@@ -57,7 +57,7 @@ public:
    * @param index Index (0-4).
    * @return Read only access to the corresponding primitive variable component.
    */
-  inline const double &primitives(unsigned char index) const {
+  inline const double &primitives(uint_fast8_t index) const {
     return _primitives[index];
   }
 
@@ -69,7 +69,7 @@ public:
    * @return Read/write access to the corresponding primitive variable
    * component.
    */
-  inline double &primitives(unsigned char index) { return _primitives[index]; }
+  inline double &primitives(uint_fast8_t index) { return _primitives[index]; }
 
   /**
    * @brief Get the fluid density.
@@ -130,7 +130,7 @@ public:
    * @param index Index (0-4).
    * @return Read only access to the corresponding conserved variable component.
    */
-  inline const double &conserved(unsigned char index) const {
+  inline const double &conserved(uint_fast8_t index) const {
     return _conserved[index];
   }
 
@@ -142,7 +142,7 @@ public:
    * @return Read/write access to the corresponding conserved variable
    * component.
    */
-  inline double &conserved(unsigned char index) { return _conserved[index]; }
+  inline double &conserved(uint_fast8_t index) { return _conserved[index]; }
 
   /**
    * @brief Get the fluid mass.
@@ -202,7 +202,7 @@ public:
    * @return Read only access to the corresponding component of the conserved
    * variable differences.
    */
-  inline const double &delta_conserved(unsigned char index) const {
+  inline const double &delta_conserved(uint_fast8_t index) const {
     return _delta_conserved[index];
   }
 
@@ -214,7 +214,7 @@ public:
    * @return Read/write access to the corresponding component of the conserved
    * variable differences.
    */
-  inline double &delta_conserved(unsigned char index) {
+  inline double &delta_conserved(uint_fast8_t index) {
     return _delta_conserved[index];
   }
 };

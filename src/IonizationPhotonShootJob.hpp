@@ -52,7 +52,7 @@ private:
   double _typecount[PHOTONTYPE_NUMBER];
 
   /*! @brief Number of photons to propagate through the DensityGrid. */
-  unsigned int _numphoton;
+  uint_fast64_t _numphoton;
 
 public:
   /**
@@ -64,7 +64,8 @@ public:
    * @param density_grid DensityGrid through which photons are propagated.
    */
   inline IonizationPhotonShootJob(const PhotonSource &photon_source,
-                                  int random_seed, DensityGrid &density_grid)
+                                  int_fast32_t random_seed,
+                                  DensityGrid &density_grid)
       : _photon_source(photon_source), _random_generator(random_seed),
         _density_grid(density_grid), _totweight(0.), _typecount{0.},
         _numphoton(0) {}
@@ -74,7 +75,7 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(uint_fast64_t numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Update the given weight counters and reset the internal counters.
@@ -85,7 +86,7 @@ public:
   inline void update_counters(double &totweight, double *typecount) {
     totweight += _totweight;
     _totweight = 0.;
-    for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       typecount[i] += _typecount[i];
       _typecount[i] = 0.;
     }
@@ -114,7 +115,7 @@ public:
    * the whole procedure until the photon is absorbed or leaves the system.
    */
   inline void execute() {
-    for (unsigned int i = 0; i < _numphoton; ++i) {
+    for (uint_fast64_t i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
       // if a fraction of light alpha is absorbed when the light traverses a
       // small path with length dl in the material, then the spatial change of

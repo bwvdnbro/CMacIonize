@@ -382,7 +382,7 @@ void IonizationStateCalculator::compute_ionization_states_metals(
  */
 void IonizationStateCalculator::calculate_ionization_state(
     double totweight, DensityGrid &grid,
-    std::pair< unsigned long, unsigned long > &block) const {
+    std::pair< cellsize_t, cellsize_t > &block) const {
 
   // compute the normalization factor for the mean intensity integrals, which
   // depends on the total weight of all photons, and on the volume of each cell
@@ -545,7 +545,7 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
   }
   // again, by using this value we make sure we have at least one iteration
   he0 = 0.;
-  unsigned int niter = 0;
+  uint_fast8_t niter = 0;
   while (std::abs(h0 - h0old) > 1.e-4 * h0old &&
          std::abs(he0 - he0old) > 1.e-4 * he0old) {
     ++niter;
