@@ -47,6 +47,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
     double temperature, double length_unit_in_SI, double density_unit_in_SI,
     Log *log)
     : _ncell(ncell), _box(box), _temperature(temperature), _log(log) {
+
   _grid = new double **[_ncell.x()];
   for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
     _grid[i] = new double *[_ncell.y()];
@@ -169,7 +170,7 @@ DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
 
-  int ix, iy, iz;
+  uint_fast32_t ix, iy, iz;
   ix = (position.x() - _box.get_anchor().x()) / _box.get_sides().x() *
        _ncell.x();
   iy = (position.y() - _box.get_anchor().y()) / _box.get_sides().y() *
@@ -190,6 +191,7 @@ DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
  * @return Total number of hydrogen atoms.
  */
 double AsciiFileDensityFunction::get_total_hydrogen_number() const {
+
   double side_x, side_y, side_z, cellvolume;
   side_x = _box.get_sides().x() / _ncell.x();
   side_y = _box.get_sides().y() / _ncell.y();

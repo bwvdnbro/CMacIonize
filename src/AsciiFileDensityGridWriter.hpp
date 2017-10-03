@@ -43,7 +43,7 @@ public:
   AsciiFileDensityGridWriter(std::string output_folder, ParameterFile &params,
                              Log *log = nullptr);
 
-  virtual void write(DensityGrid &grid, unsigned int iteration,
+  virtual void write(DensityGrid &grid, uint_fast32_t iteration,
                      ParameterFile &params, double time = 0.);
 };
 

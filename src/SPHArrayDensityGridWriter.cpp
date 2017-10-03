@@ -103,7 +103,8 @@ void SPHArrayDensityGridWriter::fill_array(float *nH) {
  * written to the file.
  * @param time Simulation time (in s).
  */
-void SPHArrayDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
+void SPHArrayDensityGridWriter::write(DensityGrid &grid,
+                                      uint_fast32_t iteration,
                                       ParameterFile &params, double time) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     const CoordinateVector<> p = it.get_cell_midpoint();

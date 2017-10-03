@@ -88,7 +88,7 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string output_folder,
  * written to the file.
  * @param time Simulation time (in s).
  */
-void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
+void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                                     ParameterFile &params, double time) {
   std::string filename = Utilities::compose_filename(
       _output_folder, _prefix, "hdf5", iteration, _padding);
@@ -159,7 +159,9 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, unsigned int iteration,
   group = HDF5Tools::create_group(file, "RuntimePars");
   std::string timestamp = Utilities::get_timestamp();
   HDF5Tools::write_attribute< std::string >(group, "Creation time", timestamp);
-  HDF5Tools::write_attribute< unsigned int >(group, "Iteration", iteration);
+  unsigned int uint32_iteration = iteration;
+  HDF5Tools::write_attribute< unsigned int >(group, "Iteration",
+                                             uint32_iteration);
   HDF5Tools::close_group(group);
 
   // write units, we use SI units everywhere
