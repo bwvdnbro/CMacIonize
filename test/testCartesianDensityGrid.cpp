@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
   }
 
   // check different scenarios for the wall intersection algorithm
-  CoordinateVector< char > next_index;
+  CoordinateVector< int_fast8_t > next_index;
   double ds;
   {
     // positive x direction

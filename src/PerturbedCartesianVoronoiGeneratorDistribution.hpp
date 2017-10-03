@@ -136,7 +136,7 @@ public:
    *
    * @return Number of generated positions.
    */
-  virtual unsigned int get_number_of_positions() const {
+  virtual generatornumber_t get_number_of_positions() const {
     return _generator_positions.size();
   }
 

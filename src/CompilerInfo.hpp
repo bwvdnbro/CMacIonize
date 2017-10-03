@@ -45,22 +45,22 @@ private:
   /// Compilation time info
 
   /*! @brief Day of the month this version of the executable was compiled. */
-  static const unsigned int _compilation_time_day;
+  static const uint_fast32_t _compilation_time_day;
 
   /*! @brief Month this version of the executable was compiled. */
-  static const unsigned int _compilation_time_month;
+  static const uint_fast32_t _compilation_time_month;
 
   /*! @brief Year this version of the executable was compiled. */
-  static const unsigned int _compilation_time_year;
+  static const uint_fast32_t _compilation_time_year;
 
   /*! @brief Hour this version of the executable was compiled. */
-  static const unsigned int _compilation_time_hour;
+  static const uint_fast32_t _compilation_time_hour;
 
   /*! @brief Minute this version of the executable was compiled. */
-  static const unsigned int _compilation_time_minutes;
+  static const uint_fast32_t _compilation_time_minutes;
 
   /*! @brief Second this version of the executable was compiled. */
-  static const unsigned int _compilation_time_seconds;
+  static const uint_fast32_t _compilation_time_seconds;
 
   /// Compiler info
 
@@ -255,7 +255,7 @@ public:
   class iterator {
   private:
     /*! @brief Field the iterator points to. */
-    int _field;
+    int_fast32_t _field;
 
   public:
     /**

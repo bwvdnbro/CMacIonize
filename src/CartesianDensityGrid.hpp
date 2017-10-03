@@ -192,11 +192,11 @@ public:
     return get_cell_volume(get_indices(long_index));
   }
 
-  CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
-                                           CoordinateVector<> &photon_direction,
-                                           Box<> &cell,
-                                           CoordinateVector< char > &next_index,
-                                           double &ds) const;
+  CoordinateVector<>
+  get_wall_intersection(CoordinateVector<> &photon_origin,
+                        CoordinateVector<> &photon_direction, Box<> &cell,
+                        CoordinateVector< int_fast8_t > &next_index,
+                        double &ds) const;
 
   virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
@@ -223,7 +223,7 @@ public:
 
   virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                                    CoordinateVector<>, double > >
-  get_neighbours(unsigned long index);
+  get_neighbours(cellsize_t index);
 
   virtual std::vector< Face > get_faces(unsigned long index) const;
 };

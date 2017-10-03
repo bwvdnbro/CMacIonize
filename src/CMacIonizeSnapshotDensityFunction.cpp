@@ -39,6 +39,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     std::string filename, Log *log)
     : _cartesian_grid(nullptr), _amr_grid(nullptr),
       _voronoi_pointlocations(nullptr) {
+
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
 
@@ -89,7 +90,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   std::vector< double > cell_temperatures =
       HDF5Tools::read_dataset< double >(group, "Temperature");
   std::vector< std::vector< double > > neutral_fractions(NUMBER_OF_IONNAMES);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     neutral_fractions[i] = HDF5Tools::read_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i));
   }
@@ -98,7 +99,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   HDF5Tools::close_file(file);
 
   // unit conversion
-  for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+  for (size_t i = 0; i < cell_midpoints.size(); ++i) {
     cell_midpoints[i][0] *= unit_length_in_SI;
     cell_midpoints[i][1] *= unit_length_in_SI;
     cell_midpoints[i][2] *= unit_length_in_SI;
@@ -124,15 +125,15 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       }
     }
 
-    for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+    for (size_t i = 0; i < cell_midpoints.size(); ++i) {
       CoordinateVector<> p = cell_midpoints[i];
       // the anchor of the box is always [0., 0., 0.] in the snapshot file
-      int ix = _ncell.x() * p.x() / _box.get_sides().x();
-      int iy = _ncell.y() * p.y() / _box.get_sides().y();
-      int iz = _ncell.z() * p.z() / _box.get_sides().z();
+      uint_fast32_t ix = _ncell.x() * p.x() / _box.get_sides().x();
+      uint_fast32_t iy = _ncell.y() * p.y() / _box.get_sides().y();
+      uint_fast32_t iz = _ncell.z() * p.z() / _box.get_sides().z();
       _cartesian_grid[ix][iy][iz].set_number_density(cell_densities[i]);
       _cartesian_grid[ix][iy][iz].set_temperature(cell_temperatures[i]);
-      for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
         IonName ion = static_cast< IonName >(j);
         _cartesian_grid[ix][iy][iz].set_ionic_fraction(ion,
                                                        neutral_fractions[j][i]);
@@ -169,10 +170,10 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     _amr_grid = new AMRGrid< DensityValues >(_box, nblock);
     _amr_grid->create_all_cells(level);
     // now try to fill the cells
-    for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+    for (size_t i = 0; i < cell_midpoints.size(); ++i) {
       CoordinateVector<> p = cell_midpoints[i];
       p += _box.get_anchor();
-      unsigned long key = _amr_grid->get_key(p);
+      amrkey_t key = _amr_grid->get_key(p);
       AMRGridCell< DensityValues > *cell = &(*_amr_grid)[key];
       CoordinateVector<> cell_midpoint = cell->get_midpoint();
       // now check if the cell midpoint equals p. If not, we have to refine the
@@ -192,7 +193,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       DensityValues &values = cell->value();
       values.set_number_density(cell_densities[i]);
       values.set_temperature(cell_temperatures[i]);
-      for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
         IonName ion = static_cast< IonName >(j);
         values.set_ionic_fraction(ion, neutral_fractions[j][i]);
       }
@@ -200,11 +201,11 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   } else if (type == "Voronoi") {
     _voronoi_generators.resize(cell_midpoints.size());
     _voronoi_densityvalues.resize(cell_midpoints.size());
-    for (unsigned int i = 0; i < cell_midpoints.size(); ++i) {
+    for (size_t i = 0; i < cell_midpoints.size(); ++i) {
       _voronoi_generators[i] = cell_midpoints[i] + _box.get_anchor();
       _voronoi_densityvalues[i].set_number_density(cell_densities[i]);
       _voronoi_densityvalues[i].set_temperature(cell_temperatures[i]);
-      for (int j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
         IonName ion = static_cast< IonName >(j);
         _voronoi_densityvalues[i].set_ionic_fraction(ion,
                                                      neutral_fractions[j][i]);
@@ -267,16 +268,19 @@ operator()(const Cell &cell) const {
 
   if (_cartesian_grid) {
     // get the indices of the cell containing the position
-    const int ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
-                   _box.get_sides().x();
-    const int iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
-                   _box.get_sides().y();
-    const int iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
-                   _box.get_sides().z();
+    const uint_fast32_t ix = _ncell.x() *
+                             (position.x() - _box.get_anchor().x()) /
+                             _box.get_sides().x();
+    const uint_fast32_t iy = _ncell.y() *
+                             (position.y() - _box.get_anchor().y()) /
+                             _box.get_sides().y();
+    const uint_fast32_t iz = _ncell.z() *
+                             (position.z() - _box.get_anchor().z()) /
+                             _box.get_sides().z();
 
     return _cartesian_grid[ix][iy][iz];
   } else if (_amr_grid) {
-    const unsigned long key = _amr_grid->get_key(position);
+    const amrkey_t key = _amr_grid->get_key(position);
     const AMRGridCell< DensityValues > &amr_cell = (*_amr_grid)[key];
     DensityValues values = amr_cell.value();
     // we make sure cells are refined to the correct level
@@ -291,7 +295,7 @@ operator()(const Cell &cell) const {
     }
     return values;
   } else if (_voronoi_pointlocations) {
-    const unsigned int index =
+    const uint_fast32_t index =
         _voronoi_pointlocations->get_closest_neighbour(position);
     return _voronoi_densityvalues[index];
   } else {

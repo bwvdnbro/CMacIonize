@@ -76,7 +76,7 @@ public:
    *
    * @return 100.
    */
-  virtual unsigned int get_number_of_positions() const { return 100; }
+  virtual generatornumber_t get_number_of_positions() const { return 100; }
 
   /**
    * @brief Get a generator position.

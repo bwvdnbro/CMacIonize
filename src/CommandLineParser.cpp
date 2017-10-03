@@ -101,6 +101,7 @@ void CommandLineParser::print_description(std::ostream &stream) const {
  * @param argv Command line arguments.
  */
 void CommandLineParser::parse_arguments(int argc, char **argv) {
+
   // we discard the first argument, as this is simply the program name
   int i = 1;
   while (i < argc) {
@@ -134,7 +135,7 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
     }
     // we now have the option and the (possibly empty) argument
     // find an option in the list that corresponds to it:
-    unsigned int j = 0;
+    size_t j = 0;
     while (j < _options.size() && !_options[j].matches(option)) {
       ++j;
     }

@@ -58,6 +58,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // initialize the MPI communicator and make sure only process 0 writes to the
   // log and output files
   MPICommunicator comm(argc, argv);
@@ -232,7 +233,7 @@ int main(int argc, char **argv) {
 
     programtimer.stop();
 
-    unsigned long memory_usage = OperatingSystem::get_peak_memory_usage();
+    size_t memory_usage = OperatingSystem::get_peak_memory_usage();
     comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(memory_usage);
     if (log) {
       log->write_status("Total program time: ",

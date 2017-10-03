@@ -36,6 +36,7 @@
 CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
     const Box<> &simulation_box, ParameterFile &params)
     : _next_index(0) {
+
   std::string filename = params.get_value< std::string >(
       "DensityGrid:VoronoiGeneratorDistribution:filename");
 
@@ -72,7 +73,7 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
   HDF5Tools::close_file(file);
 
   // unit conversion
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
+  for (size_t i = 0; i < _positions.size(); ++i) {
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
@@ -91,7 +92,7 @@ CMacIonizeVoronoiGeneratorDistribution::
  *
  * @return Number of unique positions returned by this distribution.
  */
-unsigned int
+generatornumber_t
 CMacIonizeVoronoiGeneratorDistribution::get_number_of_positions() const {
   return _positions.size();
 }
@@ -102,9 +103,10 @@ CMacIonizeVoronoiGeneratorDistribution::get_number_of_positions() const {
  * @return Generator position (in m).
  */
 CoordinateVector<> CMacIonizeVoronoiGeneratorDistribution::get_position() {
+
   cmac_assert(_next_index < _positions.size());
 
-  const unsigned int next_index = _next_index;
+  const generatornumber_t next_index = _next_index;
   ++_next_index;
   return _positions[next_index];
 }

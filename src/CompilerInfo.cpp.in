@@ -34,17 +34,17 @@ const char CompilerInfo::_git_build_string[] = "@GIT_BUILD_STRING@";
 
 /// Compilation time info
 
-const unsigned int CompilerInfo::_compilation_time_day =
+const uint_fast32_t CompilerInfo::_compilation_time_day =
     atoi("@COMPILATION_TIME_DAY@");
-const unsigned int CompilerInfo::_compilation_time_month =
+const uint_fast32_t CompilerInfo::_compilation_time_month =
     atoi("@COMPILATION_TIME_MONTH@");
-const unsigned int CompilerInfo::_compilation_time_year =
+const uint_fast32_t CompilerInfo::_compilation_time_year =
     atoi("@COMPILATION_TIME_YEAR@");
-const unsigned int CompilerInfo::_compilation_time_hour =
+const uint_fast32_t CompilerInfo::_compilation_time_hour =
     atoi("@COMPILATION_TIME_HOUR@");
-const unsigned int CompilerInfo::_compilation_time_minutes =
+const uint_fast32_t CompilerInfo::_compilation_time_minutes =
     atoi("@COMPILATION_TIME_MINUTES@");
-const unsigned int CompilerInfo::_compilation_time_seconds =
+const uint_fast32_t CompilerInfo::_compilation_time_seconds =
     atoi("@COMPILATION_TIME_SECONDS@");
 
 // Compiler info

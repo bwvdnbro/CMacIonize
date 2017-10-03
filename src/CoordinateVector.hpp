@@ -177,7 +177,7 @@ public:
    * @param i Index which we want to access.
    * @return Reference to the requested component.
    */
-  inline _datatype_ &operator[](unsigned int i) { return _c[i]; }
+  inline _datatype_ &operator[](uint_fast8_t i) { return _c[i]; }
 
   /**
    * @brief Index operator. Get a const reference to the component at the given
@@ -186,7 +186,7 @@ public:
    * @param i Index which we want to access.
    * @return Const reference to the requested component.
    */
-  inline const _datatype_ &operator[](unsigned int i) const { return _c[i]; }
+  inline const _datatype_ &operator[](uint_fast8_t i) const { return _c[i]; }
 
   /**
    * @brief Compare this CoordinateVector with another CoordinateVector.

@@ -27,6 +27,7 @@
 #define CMILIBRARY_HPP
 
 #include <cstddef>
+#include <cstdint>
 
 class IonizationSimulation;
 class SPHArrayDensityFunction;

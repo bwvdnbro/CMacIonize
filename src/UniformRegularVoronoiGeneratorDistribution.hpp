@@ -111,7 +111,7 @@ public:
    *
    * @return Number of generators in the grid.
    */
-  virtual unsigned int get_number_of_positions() const {
+  virtual generatornumber_t get_number_of_positions() const {
     return _resolution.x() * _resolution.y() * _resolution.z();
   }
 

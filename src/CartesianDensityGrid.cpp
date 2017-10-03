@@ -74,7 +74,7 @@ CartesianDensityGrid::CartesianDensityGrid(
     }
   }
 
-  const unsigned long totnumcell = _ncell.x() * _ncell.y() * _ncell.z();
+  const cellsize_t totnumcell = _ncell.x() * _ncell.y() * _ncell.z();
   allocate_memory(totnumcell);
 
   double cellside_x = _box.get_sides().x() / _ncell.x();
@@ -274,7 +274,8 @@ bool CartesianDensityGrid::is_inside_non_periodic(
  */
 CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
     CoordinateVector<> &photon_origin, CoordinateVector<> &photon_direction,
-    Box<> &cell, CoordinateVector< char > &next_index, double &ds) const {
+    Box<> &cell, CoordinateVector< int_fast8_t > &next_index,
+    double &ds) const {
   CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
   CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
@@ -412,7 +413,7 @@ double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
     Box<> cell = get_cell(index);
 
     double ds;
-    CoordinateVector< char > next_index;
+    CoordinateVector< int_fast8_t > next_index;
     CoordinateVector<> next_wall = get_wall_intersection(
         photon_origin, photon_direction, cell, next_index, ds);
 
@@ -459,7 +460,7 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
     Box<> cell = get_cell(index);
 
     double ds;
-    CoordinateVector< char > next_index;
+    CoordinateVector< int_fast8_t > next_index;
     CoordinateVector<> next_wall = get_wall_intersection(
         photon_origin, photon_direction, cell, next_index, ds);
 
@@ -541,7 +542,7 @@ double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
     Box<> cell = get_cell(index);
 
     double ds;
-    CoordinateVector< char > next_index;
+    CoordinateVector< int_fast8_t > next_index;
     CoordinateVector<> next_wall =
         get_wall_intersection(origin, direction, cell, next_index, ds);
 
@@ -566,7 +567,7 @@ double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
  */
 std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                          CoordinateVector<>, double > >
-CartesianDensityGrid::get_neighbours(unsigned long index) {
+CartesianDensityGrid::get_neighbours(cellsize_t index) {
   std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                            CoordinateVector<>, double > >
       ngbs;
@@ -662,7 +663,8 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
  * @param index Index of a cell.
  * @return Faces of the cell.
  */
-std::vector< Face > CartesianDensityGrid::get_faces(unsigned long index) const {
+std::vector< Face > CartesianDensityGrid::get_faces(cellsize_t index) const {
+
   const double sidelength[3] = {_box.get_sides().x() / _ncell.x(),
                                 _box.get_sides().y() / _ncell.y(),
                                 _box.get_sides().z() / _ncell.z()};
