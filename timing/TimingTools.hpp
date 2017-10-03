@@ -33,6 +33,7 @@
 #include "WorkEnvironment.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -74,10 +75,12 @@
       "Set the maximum number of threads available on the system.",            \
       COMMANDLINEOPTION_INTARGUMENT, "1");                                     \
   timingtools_command_line_parser.parse_arguments(argc, argv);                 \
-  const unsigned int timingtools_num_sample =                                  \
-      timingtools_command_line_parser.get_value< int >("number_of_samples");   \
-  const unsigned int timingtools_num_threads =                                 \
-      timingtools_command_line_parser.get_value< int >("number_of_threads");   \
+  const uint_fast32_t timingtools_num_sample =                                 \
+      timingtools_command_line_parser.get_value< int_fast32_t >(               \
+          "number_of_samples");                                                \
+  const uint_fast32_t timingtools_num_threads =                                \
+      timingtools_command_line_parser.get_value< int_fast32_t >(               \
+          "number_of_threads");                                                \
   (void)timingtools_num_sample;                                                \
   (void)timingtools_num_threads;
 
@@ -109,13 +112,13 @@
  */
 #define timingtools_end_timing_block(name)                                     \
   double timingtools_average_time = 0.;                                        \
-  for (unsigned char timingtools_index = 0;                                    \
+  for (uint_fast8_t timingtools_index = 0;                                     \
        timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     timingtools_average_time += timingtools_times_array[timingtools_index];    \
   }                                                                            \
   timingtools_average_time /= timingtools_num_sample;                          \
   double timingtools_standard_deviation = 0.;                                  \
-  for (unsigned char timingtools_index = 0;                                    \
+  for (uint_fast8_t timingtools_index = 0;                                     \
        timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     const double timingtools_time_diff =                                       \
         timingtools_times_array[timingtools_index] - timingtools_average_time; \
@@ -164,14 +167,14 @@
                                                     0.);                       \
     std::vector< double > timingtools_scaling_standard_deviation(              \
         timingtools_num_threads, 0.);                                          \
-    for (unsigned char timingtools_current_num_threads = 0;                    \
+    for (uint_fast8_t timingtools_current_num_threads = 0;                     \
          timingtools_current_num_threads < timingtools_num_threads;            \
          ++timingtools_current_num_threads) {                                  \
       WorkEnvironment::set_max_num_threads(timingtools_current_num_threads +   \
                                            1);                                 \
       std::vector< double > timingtools_times_array(timingtools_num_sample,    \
                                                     0.);                       \
-      for (unsigned char timingtools_index = 0;                                \
+      for (uint_fast8_t timingtools_index = 0;                                 \
            timingtools_index < timingtools_num_sample; ++timingtools_index)
 
 /**
@@ -183,14 +186,14 @@
  * @param filename Name of the file to write scaling statistics to.
  */
 #define timingtools_end_scaling_block(name, filename)                          \
-  for (unsigned char timingtools_index = 0;                                    \
+  for (uint_fast8_t timingtools_index = 0;                                     \
        timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     timingtools_scaling_array[timingtools_current_num_threads] +=              \
         timingtools_times_array[timingtools_index];                            \
   }                                                                            \
   timingtools_scaling_array[timingtools_current_num_threads] /=                \
       timingtools_num_sample;                                                  \
-  for (unsigned char timingtools_index = 0;                                    \
+  for (uint_fast8_t timingtools_index = 0;                                     \
        timingtools_index < timingtools_num_sample; ++timingtools_index) {      \
     const double timingtools_time_diff =                                       \
         timingtools_times_array[timingtools_index] -                           \
@@ -221,7 +224,7 @@
   timingtools_ofile                                                            \
       << "# number_of_threads\ttotal_time\tstandard_deviation\n";              \
   timingtools_ofile << "# dimensionless\t(s)\t(s)\n";                          \
-  for (unsigned char timingtools_current_num_threads = 0;                      \
+  for (uint_fast8_t timingtools_current_num_threads = 0;                       \
        timingtools_current_num_threads < timingtools_num_threads;              \
        ++timingtools_current_num_threads) {                                    \
     timingtools_print(                                                         \
