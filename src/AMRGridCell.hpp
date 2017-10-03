@@ -98,7 +98,7 @@ private:
   Box<> _box;
 
   /*! @brief Depth level of the cell. */
-  unsigned char _level;
+  uint_fast8_t _level;
 
 public:
   /**
@@ -109,7 +109,7 @@ public:
    * @param parent Pointer to the parent cell (if this cell is not a top level
    * cell).
    */
-  inline AMRGridCell(Box<> box, unsigned char level, AMRGridCell *parent)
+  inline AMRGridCell(Box<> box, uint_fast8_t level, AMRGridCell *parent)
       : _values(nullptr), _children{nullptr}, _parent(parent), _ngbs{nullptr},
         _box(box), _level(level) {}
 
@@ -126,7 +126,7 @@ public:
     if (_values != nullptr) {
       delete _values;
     }
-    for (unsigned int i = 0; i < 8; ++i) {
+    for (uint_fast8_t i = 0; i < 8; ++i) {
       if (_children[i] != nullptr) {
         delete _children[i];
       }
@@ -147,7 +147,7 @@ public:
     if (key == 1) {
       return *this;
     } else {
-      unsigned char cell = key & 7;
+      uint_fast8_t cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
         cmac_error("Cell does not exist!");
@@ -197,17 +197,17 @@ public:
    * @param box Box specifying the geometry of the cell.
    * @return Key of the lowest level cell containing the position.
    */
-  inline unsigned int get_key(unsigned char level, CoordinateVector<> position,
-                              Box<> &box) const {
+  inline uint_fast32_t get_key(uint_fast8_t level, CoordinateVector<> position,
+                               Box<> &box) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we live
-      unsigned char ix =
+      uint_fast8_t ix =
           2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
-      unsigned char iy =
+      uint_fast8_t iy =
           2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
-      unsigned char iz =
+      uint_fast8_t iz =
           2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
-      unsigned char cell = 4 * ix + 2 * iy + iz;
+      uint_fast8_t cell = 4 * ix + 2 * iy + iz;
       if (_children[cell] == nullptr) {
         cmac_error("Cell does not exist (%g m, %g m, %g m)!", position.x(),
                    position.y(), position.z());
@@ -216,7 +216,7 @@ public:
       box.get_anchor()[0] += ix * box.get_sides().x();
       box.get_anchor()[1] += iy * box.get_sides().y();
       box.get_anchor()[2] += iz * box.get_sides().z();
-      unsigned int key = cell << (3 * level);
+      uint_fast32_t key = cell << (3 * level);
       return key + _children[cell]->get_key(level + 1, position, box);
     } else {
       // cell is lowest level, add level bit to key
@@ -233,14 +233,14 @@ public:
    * @param position CoordinateVector<> of a position inside the cell box.
    * @param box Box specifying the geometrical extents of the cell.
    */
-  inline void create_cell(unsigned char current_level, unsigned char level,
+  inline void create_cell(uint_fast8_t current_level, uint_fast8_t level,
                           CoordinateVector<> position, Box<> &box) {
     if (current_level == level) {
       // ready: create DensityValues
       _values = new _CellContents_();
     } else {
       // find out in which child the position lives
-      unsigned char ix, iy, iz;
+      uint_fast8_t ix, iy, iz;
       ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
@@ -270,8 +270,7 @@ public:
    * @param current_level Level we are currently at.
    * @param level Desired level.
    */
-  inline void create_all_cells(unsigned char current_level,
-                               unsigned char level) {
+  inline void create_all_cells(uint_fast8_t current_level, uint_fast8_t level) {
     if (current_level == level) {
       _values = new _CellContents_();
     } else {
@@ -281,11 +280,11 @@ public:
         _values = nullptr;
       }
       // create children
-      for (unsigned int i = 0; i < 8; ++i) {
+      for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] == nullptr) {
-          unsigned char ix = (i & 4) >> 2;
-          unsigned char iy = (i & 2) >> 1;
-          unsigned char iz = i & 1;
+          uint_fast8_t ix = (i & 4) >> 2;
+          uint_fast8_t iy = (i & 2) >> 1;
+          uint_fast8_t iz = i & 1;
           Box<> box_copy(_box);
           box_copy.get_sides() *= 0.5;
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
@@ -305,7 +304,7 @@ public:
    * @param key Key pointing to an existing cell.
    * @return Key of the first newly created child cell.
    */
-  inline unsigned int refine(unsigned int &key) {
+  inline uint_fast32_t refine(uint_fast32_t &key) {
     if (key == 1) {
       // remove contents
       if (_values != nullptr) {
@@ -313,11 +312,11 @@ public:
         _values = nullptr;
       }
       // create children
-      for (unsigned int i = 0; i < 8; ++i) {
+      for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] == nullptr) {
-          unsigned char ix = (i & 4) >> 2;
-          unsigned char iy = (i & 2) >> 1;
-          unsigned char iz = i & 1;
+          uint_fast8_t ix = (i & 4) >> 2;
+          uint_fast8_t iy = (i & 2) >> 1;
+          uint_fast8_t iz = i & 1;
           Box<> box_copy(_box);
           box_copy.get_sides() *= 0.5;
           box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
@@ -330,12 +329,12 @@ public:
       }
       return 8;
     } else {
-      unsigned int cell = key & 7;
+      uint_fast32_t cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
         cmac_error("Cell does not exist!");
       }
-      unsigned int newcell = _children[cell]->refine(key);
+      uint_fast32_t newcell = _children[cell]->refine(key);
       return (newcell << 3) + cell;
     }
   }
@@ -346,17 +345,17 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline _CellContents_ &create_cell(unsigned int &key) {
+  inline _CellContents_ &create_cell(uint_fast32_t &key) {
     if (key == 1) {
       _values = new _CellContents_();
       return *_values;
     } else {
-      unsigned char cell = key & 7;
+      uint_fast8_t cell = key & 7;
       key >>= 3;
       if (_children[cell] == nullptr) {
-        unsigned char ix = (cell & 4) >> 2;
-        unsigned char iy = (cell & 2) >> 1;
-        unsigned char iz = cell & 1;
+        uint_fast8_t ix = (cell & 4) >> 2;
+        uint_fast8_t iy = (cell & 2) >> 1;
+        uint_fast8_t iz = cell & 1;
         Box<> box_copy(_box);
         box_copy.get_sides() *= 0.5;
         box_copy.get_anchor()[0] += ix * box_copy.get_sides().x();
@@ -382,7 +381,7 @@ public:
       return *_values;
     } else {
       // find out in which child the position lives
-      unsigned char ix, iy, iz;
+      uint_fast8_t ix, iy, iz;
       ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
@@ -404,7 +403,7 @@ public:
    *
    * @return Depth level of the cell.
    */
-  inline unsigned char get_level() const { return _level; }
+  inline uint_fast8_t get_level() const { return _level; }
 
   /**
    * @brief Get the first key in this cell, assuming a Morton ordering.
@@ -415,7 +414,7 @@ public:
    * @param level Level we are currently at.
    * @return First key in the cell, in Morton order.
    */
-  inline unsigned int get_first_key(unsigned char level) const {
+  inline uint_fast32_t get_first_key(uint_fast8_t level) const {
     if (_values == nullptr) {
       if (_children[0] == nullptr) {
         cmac_error("Cell does not exist!");
@@ -433,16 +432,16 @@ public:
    * @param level Level we are currently at.
    * @return Next key in the cell, in Morton order.
    */
-  inline unsigned int get_next_key(unsigned int key,
-                                   unsigned char level) const {
+  inline uint_fast32_t get_next_key(uint_fast32_t key,
+                                    uint_fast8_t level) const {
     if (_values == nullptr) {
       // cell has children, find out in which child we are
-      unsigned int cell = (key >> (3 * level)) & 7;
+      uint_fast32_t cell = (key >> (3 * level)) & 7;
       // get the child next key
       if (_children[cell] == nullptr) {
         cmac_error("Cell does not exist!");
       }
-      unsigned int next_key = _children[cell]->get_next_key(key, level + 1);
+      uint_fast32_t next_key = _children[cell]->get_next_key(key, level + 1);
       // if the child has no next key, we have to look at the next child
       if (next_key == AMRGRIDCELL_MAXKEY) {
         if (cell == 7) {
@@ -471,11 +470,11 @@ public:
    *
    * @return Number of lowest level cells in this cell.
    */
-  inline unsigned long get_number_of_cells() const {
+  inline size_t get_number_of_cells() const {
     if (_values == nullptr) {
       // cell has children, go deeper
-      unsigned long ncell = 0;
-      for (unsigned int i = 0; i < 8; ++i) {
+      size_t ncell = 0;
+      for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] != nullptr) {
           ncell += _children[i]->get_number_of_cells();
         }
@@ -525,7 +524,7 @@ public:
     bool ix = position.x() > _box.get_anchor().x() + 0.5 * _box.get_sides().x();
     bool iy = position.y() > _box.get_anchor().y() + 0.5 * _box.get_sides().y();
     bool iz = position.z() > _box.get_anchor().z() + 0.5 * _box.get_sides().z();
-    unsigned char child = 4 * ix + 2 * iy + iz;
+    uint_fast8_t child = 4 * ix + 2 * iy + iz;
     if (_children[child] == nullptr) {
       cmac_error("Cell does not exist!");
     }
@@ -718,9 +717,9 @@ public:
     // print children (only for cells that are refined)
     if (_values == nullptr) {
       CoordinateVector<> sides = 0.5 * box.get_sides();
-      for (unsigned int ix = 0; ix < 2; ++ix) {
-        for (unsigned int iy = 0; iy < 2; ++iy) {
-          for (unsigned int iz = 0; iz < 2; ++iz) {
+      for (uint_fast8_t ix = 0; ix < 2; ++ix) {
+        for (uint_fast8_t iy = 0; iy < 2; ++iy) {
+          for (uint_fast8_t iz = 0; iz < 2; ++iz) {
             if (_children[4 * ix + 2 * iy + iz] != nullptr) {
               CoordinateVector<> anchor;
               anchor[0] = box.get_anchor().x() + ix * sides.x();

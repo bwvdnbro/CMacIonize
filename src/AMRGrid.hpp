@@ -93,7 +93,7 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Cell part of the key (without block information).
    */
-  inline static unsigned int get_cell_key(uint64_t key) {
+  inline static uint_fast32_t get_cell_key(amrkey_t key) {
     // 0xffffffff = 2^32,  we want this to be a 64 bit number, so we have to
     // add some extra 0s
     return (key & 0x00000000ffffffff);
@@ -221,9 +221,9 @@ public:
    * @param position CoordinateVector specifying a position in the cell.
    * @return Key that can be used to access the cell directly.
    */
-  inline uint64_t get_key(unsigned char level, CoordinateVector<> position) {
+  inline amrkey_t get_key(uint_fast8_t level, CoordinateVector<> position) {
     // find out in which block the position lives
-    unsigned int ix, iy, iz;
+    uint_fast32_t ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
          _box.get_sides().x();
     iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
@@ -231,7 +231,7 @@ public:
     iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
          _box.get_sides().z();
     // encode the block part of the key:
-    unsigned int block = (ix << 20) + (iy << 10) + iz;
+    uint_fast32_t block = (ix << 20) + (iy << 10) + iz;
     // find out what the cell part of the key is
     // get the box of the block
     CoordinateVector<> sides;
@@ -243,8 +243,8 @@ public:
     anchor[1] = _box.get_anchor().y() + iy * sides.y();
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box<> box(anchor, sides);
-    unsigned int cell = 0;
-    for (unsigned char ilevel = 0; ilevel < level; ++ilevel) {
+    uint_fast32_t cell = 0;
+    for (uint_fast8_t ilevel = 0; ilevel < level; ++ilevel) {
       ix = 2 * (position.x() - box.get_anchor().x()) / box.get_sides().x();
       iy = 2 * (position.y() - box.get_anchor().y()) / box.get_sides().y();
       iz = 2 * (position.z() - box.get_anchor().z()) / box.get_sides().z();
@@ -256,7 +256,7 @@ public:
     }
     // the highest bit is reserved to indicate the end of the cell key
     cell += 1 << (3 * level);
-    uint64_t key = block;
+    amrkey_t key = block;
     key = (key << 32) + cell;
     return key;
   }
@@ -271,9 +271,9 @@ public:
    * @param position CoordinateVector specifying a position.
    * @return Key of the lowest level cell containing that position.
    */
-  inline uint64_t get_key(CoordinateVector<> position) const {
+  inline amrkey_t get_key(CoordinateVector<> position) const {
     // find out in which block the position lives
-    unsigned int ix, iy, iz;
+    uint_fast32_t ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
          _box.get_sides().x();
     iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
@@ -281,7 +281,7 @@ public:
     iz = _ncell.z() * (position.z() - _box.get_anchor().z()) /
          _box.get_sides().z();
     // encode the block part of the key:
-    unsigned int block = (ix << 20) + (iy << 10) + iz;
+    uint_fast32_t block = (ix << 20) + (iy << 10) + iz;
     // find out what the cell part of the key is
     // get the box of the block
     CoordinateVector<> sides;
@@ -294,8 +294,8 @@ public:
     anchor[2] = _box.get_anchor().z() + iz * sides.z();
     Box<> box(anchor, sides);
     // recursively get the key until we have reached the lowest level
-    unsigned int cell = _top_level[ix][iy][iz]->get_key(0, position, box);
-    uint64_t key = block;
+    uint_fast32_t cell = _top_level[ix][iy][iz]->get_key(0, position, box);
+    amrkey_t key = block;
     key = (key << 32) + cell;
     return key;
   }
@@ -310,9 +310,9 @@ public:
    * power of 2 subdivision, the level goes up by 1.
    * @param position CoordinateVector<> of a position inside the bounding box.
    */
-  inline void create_cell(unsigned char level, CoordinateVector<> position) {
+  inline void create_cell(uint_fast8_t level, CoordinateVector<> position) {
     // find out in which block the position lives
-    unsigned int ix, iy, iz;
+    uint_fast32_t ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
          _box.get_sides().x();
     iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
@@ -337,7 +337,7 @@ public:
    *
    * @param level Deepest level to create.
    */
-  inline void create_all_cells(unsigned char level) {
+  inline void create_all_cells(uint_fast8_t level) {
     for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
       for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
         for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
@@ -356,9 +356,9 @@ public:
    * @param key Key pointing to an existing cell in the grid.
    * @return Key of the first newly created child cell.
    */
-  inline uint64_t refine_cell(uint64_t key) {
-    unsigned int cell = get_cell_key(key);
-    unsigned int newcell = get_block(key).refine(cell);
+  inline amrkey_t refine_cell(amrkey_t key) {
+    uint_fast32_t cell = get_cell_key(key);
+    uint_fast32_t newcell = get_block(key).refine(cell);
     return (key & 0xffffffff00000000) + newcell;
   }
 
@@ -368,8 +368,8 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of the cell.
    */
-  inline _CellContents_ &create_cell(uint64_t key) {
-    unsigned int cell = get_cell_key(key);
+  inline _CellContents_ &create_cell(amrkey_t key) {
+    uint_fast32_t cell = get_cell_key(key);
     return get_block(key).create_cell(cell);
   }
 
@@ -382,7 +382,7 @@ public:
    */
   inline _CellContents_ &get_cell(CoordinateVector<> position) const {
     // find out in which block the position lives
-    unsigned int ix, iy, iz;
+    uint_fast32_t ix, iy, iz;
     ix = _ncell.x() * (position.x() - _box.get_anchor().x()) /
          _box.get_sides().x();
     iy = _ncell.y() * (position.y() - _box.get_anchor().y()) /
@@ -409,14 +409,14 @@ public:
    *
    * @return Maximal value of a key.
    */
-  inline static uint64_t get_max_key() { return AMRGRID_MAXKEY; }
+  inline static amrkey_t get_max_key() { return AMRGRID_MAXKEY; }
 
   /**
    * @brief Get the first key in the grid, assuming a Morton orering.
    *
    * @return First key in the grid, in Morton order.
    */
-  inline uint64_t get_first_key() const {
+  inline amrkey_t get_first_key() const {
     // no need to encode block information, since this is simply 0
     return _top_level[0][0][0]->get_first_key(0);
   }
@@ -451,8 +451,8 @@ public:
       }
       next_cell = _top_level[ix][iy][iz]->get_first_key(0);
     }
-    unsigned int block_key = (ix << 20) + (iy << 10) + iz;
-    uint64_t next_key = block_key;
+    uint_fast32_t block_key = (ix << 20) + (iy << 10) + iz;
+    amrkey_t next_key = block_key;
     next_key = (next_key << 32) + next_cell;
     return next_key;
   }
@@ -531,8 +531,8 @@ public:
    *
    * @return Number of lowest level cells in the grid.
    */
-  inline unsigned long get_number_of_cells() const {
-    unsigned long ncell = 0;
+  inline size_t get_number_of_cells() const {
+    size_t ncell = 0;
     for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
       for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
         for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
