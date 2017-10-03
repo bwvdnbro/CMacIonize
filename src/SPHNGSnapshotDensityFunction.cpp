@@ -89,7 +89,7 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::string filename, double initial_temperature, bool write_stats,
-    unsigned int stats_numbin, double stats_mindist, double stats_maxdist,
+    uint_fast32_t stats_numbin, double stats_mindist, double stats_maxdist,
     std::string stats_filename, bool use_new_algorithm, Log *log)
     : _use_new_algorithm(use_new_algorithm), _octree(nullptr),
       _initial_temperature(initial_temperature), _stats_numbin(stats_numbin),
@@ -409,7 +409,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:write statistics", false),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "DensityFunction:statistics number of bins", 200),
           params.get_physical_value< QUANTITY_LENGTH >(
               "DensityFunction:statistics minimum distance", "1.e-5 m"),

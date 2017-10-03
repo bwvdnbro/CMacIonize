@@ -64,9 +64,9 @@
  * @param log Log to write logging info to.
  */
 TemperatureCalculator::TemperatureCalculator(
-    bool do_temperature_computation, unsigned int minimum_iteration_number,
+    bool do_temperature_computation, uint_fast32_t minimum_iteration_number,
     double luminosity, const Abundances &abundances, double epsilon_convergence,
-    unsigned int maximum_number_of_iterations, double pahfac, double crfac,
+    uint_fast32_t maximum_number_of_iterations, double pahfac, double crfac,
     double crlim, double crscale, const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates, Log *log)
@@ -130,12 +130,12 @@ TemperatureCalculator::TemperatureCalculator(
     : TemperatureCalculator(
           params.get_value< bool >(
               "TemperatureCalculator:do temperature calculation", false),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "TemperatureCalculator:minimum number of iterations", 3),
           luminosity, abundances,
           params.get_value< double >(
               "TemperatureCalculator:epsilon convergence", 1.e-3),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "TemperatureCalculator:maximum number of iterations", 100),
           params.get_value< double >("TemperatureCalculator:PAH heating factor",
                                      1.),

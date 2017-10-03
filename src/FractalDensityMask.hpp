@@ -52,24 +52,24 @@ private:
   const Box<> _box;
 
   /*! @brief Resolution of the grid containing the distribution. */
-  const CoordinateVector< int > _resolution;
+  const CoordinateVector< uint_fast32_t > _resolution;
 
   /*! @brief Number of particles per level. */
-  const unsigned int _N;
+  const uint_fast32_t _N;
 
   /*! @brief Fractal length scale. */
   const double _L;
 
   /*! @brief Total number of levels. */
-  const unsigned int _num_level;
+  const uint_fast8_t _num_level;
 
   /*! @brief First level random number seeds (to guarantee the same fractal
    *  structure for a given seed, independent of the number of threads used to
    *  construct it). */
-  std::vector< int > _first_level_seeds;
+  std::vector< int_fast32_t > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
-  std::vector< std::vector< std::vector< unsigned long > > > _distribution;
+  std::vector< std::vector< std::vector< uint_fast64_t > > > _distribution;
 
   /*! @brief Fractal fraction: maximal fraction of the number density in a cell
    *  that is affected by the mask. */
@@ -311,10 +311,10 @@ public:
    * @param log Log to write logging info to.
    */
   FractalDensityMask(const Box<> &box,
-                     const CoordinateVector< int > &resolution,
-                     unsigned int numpart, int seed, double fractal_dimension,
-                     unsigned int num_level, double fractal_fraction,
-                     Log *log = nullptr)
+                     const CoordinateVector< uint_fast32_t > &resolution,
+                     uint_fast32_t numpart, int_fast32_t seed,
+                     double fractal_dimension, uint_fast8_t num_level,
+                     double fractal_fraction, Log *log = nullptr)
       : _box(box), _resolution(resolution),
         // we will use equal values for the number of points (N) per level
         _N(std::ceil(std::pow(numpart, 1. / num_level))),
@@ -326,9 +326,9 @@ public:
 
     // allocate the grid
     _distribution.resize(resolution.x());
-    for (int ix = 0; ix < _resolution.x(); ++ix) {
+    for (uint_fast32_t ix = 0; ix < _resolution.x(); ++ix) {
       _distribution[ix].resize(resolution.y());
-      for (int iy = 0; iy < _resolution.y(); ++iy) {
+      for (uint_fast32_t iy = 0; iy < _resolution.y(); ++iy) {
         _distribution[ix][iy].resize(_resolution.z(), 0);
       }
     }
@@ -338,7 +338,7 @@ public:
     // thread is used to construct which block, and in which order
     _first_level_seeds.resize(_N, 0);
     RandomGenerator random_generator(seed);
-    for (unsigned int i = 0; i < _N; ++i) {
+    for (uint_fast32_t i = 0; i < _N; ++i) {
       _first_level_seeds[i] = random_generator.get_random_integer();
     }
 
@@ -377,13 +377,14 @@ public:
                       "DensityMask:box anchor", "[-5. pc, -5. pc, -5. pc]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
                       "DensityMask:box sides", "[10. pc, 10. pc, 10. pc]")),
-            params.get_value< CoordinateVector< int > >(
-                "DensityMask:resolution", CoordinateVector< int >(20)),
-            params.get_value< unsigned int >("DensityMask:number of particles",
-                                             1e6),
-            params.get_value< int >("DensityMask:random seed", 42),
+            params.get_value< CoordinateVector< uint_fast32_t > >(
+                "DensityMask:resolution",
+                CoordinateVector< uint_fast32_t >(20)),
+            params.get_value< uint_fast32_t >("DensityMask:number of particles",
+                                              1e6),
+            params.get_value< int_fast32_t >("DensityMask:random seed", 42),
             params.get_value< double >("DensityMask:fractal dimension", 2.6),
-            params.get_value< unsigned int >("DensityMask:number of levels", 4),
+            params.get_value< uint_fast8_t >("DensityMask:number of levels", 4),
             params.get_value< double >("DensityMask:fractal fraction", 1.),
             log) {}
 

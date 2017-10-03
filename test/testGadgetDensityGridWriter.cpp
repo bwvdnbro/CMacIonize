@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
     Box<> box(origin, side);
-    CoordinateVector< int > ncell(8);
+    CoordinateVector< int_fast32_t > ncell(8);
     HomogeneousDensityFunction density_function;
     density_function.initialize();
     CartesianDensityGrid grid(box, ncell);

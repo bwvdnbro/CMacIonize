@@ -41,7 +41,7 @@
 class SILCCPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Number of individual sources. */
-  const unsigned int _num_sources;
+  const photonsourcenumber_t _num_sources;
 
   /*! @brief x component of the anchor of the rectangular disk (in m). */
   const double _anchor_x;
@@ -85,11 +85,10 @@ public:
    * @param random_seed Seed used for the random generator.
    * @param log Log to write logging info to.
    */
-  SILCCPhotonSourceDistribution(unsigned int num_sources, double anchor_x,
-                                double sides_x, double anchor_y, double sides_y,
-                                double origin_z, double scaleheight_z,
-                                double luminosity, int random_seed = 42,
-                                Log *log = nullptr)
+  SILCCPhotonSourceDistribution(
+      photonsourcenumber_t num_sources, double anchor_x, double sides_x,
+      double anchor_y, double sides_y, double origin_z, double scaleheight_z,
+      double luminosity, int_fast32_t random_seed = 42, Log *log = nullptr)
       : _num_sources(num_sources), _anchor_x(anchor_x), _anchor_y(anchor_y),
         _sides_x(sides_x), _sides_y(sides_y), _origin_z(origin_z),
         _scaleheight_z(scaleheight_z), _luminosity(luminosity),
@@ -128,7 +127,7 @@ public:
    */
   SILCCPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SILCCPhotonSourceDistribution(
-            params.get_value< unsigned int >(
+            params.get_value< photonsourcenumber_t >(
                 "PhotonSourceDistribution:number of sources", 24),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "PhotonSourceDistribution:anchor x", "-1. kpc"),
@@ -144,7 +143,8 @@ public:
                 "PhotonSourceDistribution:scaleheight z", "63. pc"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
                 "PhotonSourceDistribution:luminosity", "3.125e49 s^-1"),
-            params.get_value< int >("PhotonSourceDistribution:random seed", 42),
+            params.get_value< int_fast32_t >(
+                "PhotonSourceDistribution:random seed", 42),
             log) {}
 
   /**
@@ -157,7 +157,9 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() const { return _num_sources; }
+  virtual photonsourcenumber_t get_number_of_sources() const {
+    return _num_sources;
+  }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -166,7 +168,7 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of a valid and photon source position (in m).
    */
-  virtual CoordinateVector<> get_position(unsigned int index) {
+  virtual CoordinateVector<> get_position(photonsourcenumber_t index) {
 
     const double x =
         _anchor_x + _random_generator.get_uniform_random_double() * _sides_x;
@@ -191,7 +193,7 @@ public:
    * @return Reciprocal of the number of sources, as every source has the same
    * weight.
    */
-  virtual double get_weight(unsigned int index) const {
+  virtual double get_weight(photonsourcenumber_t index) const {
     return 1. / _num_sources;
   }
 

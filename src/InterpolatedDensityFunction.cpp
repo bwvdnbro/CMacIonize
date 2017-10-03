@@ -85,9 +85,12 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   YAMLDictionary yaml_dictionary(yaml_stream);
 
   // get the number of x, y and z points
-  const unsigned int num_x = yaml_dictionary.get_value< unsigned int >("num_x");
-  const unsigned int num_y = yaml_dictionary.get_value< unsigned int >("num_y");
-  const unsigned int num_z = yaml_dictionary.get_value< unsigned int >("num_z");
+  const uint_fast32_t num_x =
+      yaml_dictionary.get_value< uint_fast32_t >("num_x");
+  const uint_fast32_t num_y =
+      yaml_dictionary.get_value< uint_fast32_t >("num_y");
+  const uint_fast32_t num_z =
+      yaml_dictionary.get_value< uint_fast32_t >("num_z");
   // get the extents of the box in x, y and z
   _x_bounds.first =
       yaml_dictionary.get_physical_value< QUANTITY_LENGTH >("xmin");
@@ -102,8 +105,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   _z_bounds.second =
       yaml_dictionary.get_physical_value< QUANTITY_LENGTH >("zmax");
   // get the number of columns
-  const unsigned int num_column =
-      yaml_dictionary.get_value< unsigned int >("num_column");
+  const uint_fast32_t num_column =
+      yaml_dictionary.get_value< uint_fast32_t >("num_column");
   // get the column names and units
   std::map< std::string, unsigned int > name_to_column;
   std::vector< std::string > units(num_column);

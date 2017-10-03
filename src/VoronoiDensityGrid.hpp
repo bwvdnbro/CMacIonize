@@ -49,7 +49,7 @@ private:
 
   /*! @brief Number of Lloyd iterations to apply to the grid after it has been
    *  constructed for the first time. */
-  unsigned char _num_lloyd;
+  uint_fast8_t _num_lloyd;
 
   /*! @brief Generator positions (in m). */
   std::vector< CoordinateVector<> > _generator_positions;
@@ -68,7 +68,7 @@ public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
       const Box<> &simulation_box, std::string grid_type = "Old",
-      unsigned char num_lloyd = 0,
+      uint_fast8_t num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
@@ -86,7 +86,7 @@ public:
   get_interface_velocity(const iterator left, const iterator right,
                          const CoordinateVector<> interface_midpoint) const;
 
-  virtual unsigned int get_number_of_cells() const;
+  virtual cellsize_t get_number_of_cells() const;
   virtual unsigned long get_cell_index(CoordinateVector<> position) const;
   virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const;
   virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,

@@ -105,9 +105,9 @@ private:
 
 public:
   TemperatureCalculator(
-      bool do_temperature_computation, unsigned int minimum_iteration_number,
+      bool do_temperature_computation, uint_fast32_t minimum_iteration_number,
       double luminosity, const Abundances &abundances,
-      double epsilon_convergence, unsigned int maximum_number_of_iterations,
+      double epsilon_convergence, uint_fast32_t maximum_number_of_iterations,
       double pahfac, double crfac, double crlim, double crscale,
       const LineCoolingData &line_cooling_data,
       const RecombinationRates &recombination_rates,

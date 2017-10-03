@@ -123,7 +123,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       parser.get_value< bool >("every-iteration-output");
 
   // set the maximum number of openmp threads
-  WorkEnvironment::set_max_num_threads(parser.get_value< int >("threads"));
+  WorkEnvironment::set_max_num_threads(
+      parser.get_value< int_fast32_t >("threads"));
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -181,7 +182,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   // separate StellarSources object with geometrical and physical properties.
   PhotonSourceDistribution *sourcedistribution =
       PhotonSourceDistributionFactory::generate(params, log);
-  int random_seed = params.get_value< int >(
+  int_fast32_t random_seed = params.get_value< int_fast32_t >(
       "RadiationHydrodynamicsSimulation:random seed", 42);
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
       "PhotonSourceSpectrum", params, log);
@@ -224,12 +225,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   DensityGridWriter *writer =
       DensityGridWriterFactory::generate(output_folder, params, log);
 
-  unsigned int nloop = params.get_value< unsigned int >(
+  uint_fast32_t nloop = params.get_value< uint_fast32_t >(
       "RadiationHydrodynamicsSimulation:number of iterations", 10);
 
-  unsigned int numphoton = params.get_value< unsigned int >(
+  uint_fast32_t numphoton = params.get_value< uint_fast32_t >(
       "RadiationHydrodynamicsSimulation:number of photons", 1e5);
-  unsigned int numphoton1 = params.get_value< unsigned int >(
+  uint_fast32_t numphoton1 = params.get_value< uint_fast32_t >(
       "RadiationHydrodynamicsSimulation:number of photons first loop",
       numphoton);
   double Q = source.get_total_luminosity();
@@ -276,7 +277,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
-  workdistributor(parser.get_value< int >("threads"));
+      workdistributor(parser.get_value< int_fast32_t >("threads"));
   const int worksize = workdistributor.get_worksize();
   Timer worktimer;
 

@@ -27,6 +27,7 @@
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include <cinttypes>
 
 /**
  * @brief Constructor.
@@ -55,8 +56,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   _box = Box<>(
       parameters.get_physical_vector< QUANTITY_LENGTH >("SimulationBox:anchor"),
       parameters.get_physical_vector< QUANTITY_LENGTH >("SimulationBox:sides"));
-  _ncell = parameters.get_value< CoordinateVector< int > >(
-      "DensityGrid:number of cells", CoordinateVector< int >(-1));
+  _ncell = parameters.get_value< CoordinateVector< uint_fast32_t > >(
+      "DensityGrid:number of cells", CoordinateVector< uint_fast32_t >(-1));
   std::string type = parameters.get_value< std::string >("DensityGrid:type");
   HDF5Tools::close_group(group);
 
@@ -113,11 +114,11 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
 
   if (type == "Cartesian") {
     _cartesian_grid = new DensityValues **[_ncell.x()];
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
       _cartesian_grid[ix] = new DensityValues *[_ncell.y()];
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
         _cartesian_grid[ix][iy] = new DensityValues[_ncell.z()];
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           _cartesian_grid[ix][iy][iz].set_number_density(-1.);
         }
       }
@@ -138,26 +139,28 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       }
     }
 
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           if (_cartesian_grid[ix][iy][iz].get_number_density() < 0.) {
-            cmac_error("No values found for cell (%i, %i, %i)!", ix, iy, iz);
+            cmac_error("No values found for cell (%" PRIuFAST32 ", %" PRIuFAST32
+                       ", %" PRIuFAST32 ")!",
+                       ix, iy, iz);
           }
         }
       }
     }
   } else if (type == "AMR") {
     // find the smallest number of blocks that fits the requested top level grid
-    int power_of_2_x = get_power_of_two(_ncell.x());
-    int power_of_2_y = get_power_of_two(_ncell.y());
-    int power_of_2_z = get_power_of_two(_ncell.z());
-    int power_of_2 = std::min(power_of_2_x, power_of_2_y);
+    uint_fast32_t power_of_2_x = get_power_of_two(_ncell.x());
+    uint_fast32_t power_of_2_y = get_power_of_two(_ncell.y());
+    uint_fast32_t power_of_2_z = get_power_of_two(_ncell.z());
+    uint_fast32_t power_of_2 = std::min(power_of_2_x, power_of_2_y);
     power_of_2 = std::min(power_of_2, power_of_2_z);
-    CoordinateVector< int > nblock = _ncell / power_of_2;
+    CoordinateVector< uint_fast32_t > nblock = _ncell / power_of_2;
     // find out how many cells each block should have at the lowest level
     // this is just the power in power_of_2
-    unsigned char level = 0;
+    uint_fast8_t level = 0;
     while (power_of_2 > 1) {
       power_of_2 >>= 1;
       ++level;
@@ -237,8 +240,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
  */
 CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
   if (_cartesian_grid) {
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
         delete[] _cartesian_grid[ix][iy];
       }
       delete[] _cartesian_grid[ix];

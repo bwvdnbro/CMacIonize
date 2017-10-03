@@ -44,20 +44,20 @@
 class AMRDensityGrid : public DensityGrid {
 private:
   /*! @brief AMRGrid used as grid. */
-  AMRGrid< unsigned long > _grid;
+  AMRGrid< cellsize_t > _grid;
 
   /*! @brief Convenient cell list used for faster cell indexing. */
-  std::vector< AMRGridCell< unsigned long > * > _cells;
+  std::vector< AMRGridCell< cellsize_t > * > _cells;
 
   /*! @brief AMRRefinementScheme used to refine cells. */
   AMRRefinementScheme *_refinement_scheme;
 
   /*! @brief Refinement interval: number of grid resets before the grid is
       refined for the first time. */
-  unsigned char _refinement_interval;
+  uint_fast32_t _refinement_interval;
 
   /*! @brief Number of times the reset() method was called. */
-  unsigned char _reset_count;
+  uint_fast32_t _reset_count;
 
   /**
    * @brief Get the largest odd factor of the given number.
@@ -68,7 +68,7 @@ private:
    * @param number Number to decompose.
    * @return Largest odd factor of the number.
    */
-  inline static int get_largest_odd_factor(int number) {
+  inline static uint_fast32_t get_largest_odd_factor(uint_fast32_t number) {
     while ((number % 2) == 0) {
       number >>= 1;
     }
@@ -84,7 +84,7 @@ private:
    * @param number Number to decompose.
    * @return Largest power of two factor.
    */
-  inline static int get_power_of_two(int number) {
+  inline static uint_fast32_t get_power_of_two(uint_fast32_t number) {
     return number / get_largest_odd_factor(number);
   }
 
@@ -99,25 +99,24 @@ private:
    * refined cells.
    */
   inline void refine_cell(AMRRefinementScheme &refinement_scheme,
-                          unsigned long index,
-                          DensityFunction &density_function) {
-    AMRGridCell< unsigned long > &cell = *_cells[index];
+                          cellsize_t index, DensityFunction &density_function) {
+    AMRGridCell< cellsize_t > &cell = *_cells[index];
     DensityGrid::iterator it(index, *this);
-    unsigned char level = cell.get_level();
+    uint_fast8_t level = cell.get_level();
 
     if (refinement_scheme.refine(level, it)) {
 
       // make a local copy of the contents of the cell
       // the contents of the new cells is initialized to these values
       double old_ionic_fractions[NUMBER_OF_IONNAMES];
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         const IonName ion = static_cast< IonName >(i);
         old_ionic_fractions[i] =
             _ionization_variables[index].get_ionic_fraction(ion);
       }
       double old_temperature = _ionization_variables[index].get_temperature();
       double old_reemission_probability[NUMBER_OF_REEMISSIONPROBABILITIES];
-      for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
         const ReemissionProbabilityName name =
             static_cast< ReemissionProbabilityName >(i);
         old_reemission_probability[i] =
@@ -128,9 +127,9 @@ private:
       // nor the Lock, since that has to be unique
 
       cell.create_all_cells(level, level + 1);
-      for (unsigned int ic = 0; ic < 8; ++ic) {
+      for (uint_fast32_t ic = 0; ic < 8; ++ic) {
         AMRChildPosition child = static_cast< AMRChildPosition >(ic);
-        AMRGridCell< unsigned long > *childcell = cell.get_child(child);
+        AMRGridCell< cellsize_t > *childcell = cell.get_child(child);
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
         if (ic == 0) {
@@ -143,23 +142,23 @@ private:
 
           _ionization_variables[index].set_number_density(
               funcvalue.get_number_density());
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             const IonName ion = static_cast< IonName >(i);
             _ionization_variables[index].set_ionic_fraction(
                 ion, old_ionic_fractions[i]);
           }
           _ionization_variables[index].set_temperature(old_temperature);
-          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
             const ReemissionProbabilityName name =
                 static_cast< ReemissionProbabilityName >(i);
             _ionization_variables[index].set_reemission_probability(
                 name, old_reemission_probability[i]);
           }
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             const IonName ion = static_cast< IonName >(i);
             _ionization_variables[index].set_mean_intensity(ion, 0.);
           }
-          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
             const HeatingTermName heating_term =
                 static_cast< HeatingTermName >(i);
             _ionization_variables[index].set_heating(heating_term, 0.);
@@ -178,24 +177,24 @@ private:
 
           _ionization_variables.back().set_number_density(
               funcvalue.get_number_density());
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             const IonName ion = static_cast< IonName >(i);
             _ionization_variables.back().set_ionic_fraction(
                 ion, old_ionic_fractions[i]);
           }
           _ionization_variables.back().set_temperature(old_temperature);
-          for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
             const ReemissionProbabilityName name =
                 static_cast< ReemissionProbabilityName >(i);
             _ionization_variables.back().set_reemission_probability(
                 name, old_reemission_probability[i]);
           }
           // not really necessary, as values will be initialized to zero...
-          for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
             const IonName ion = static_cast< IonName >(i);
             _ionization_variables.back().set_mean_intensity(ion, 0.);
           }
-          for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+          for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
             const HeatingTermName heating_term =
                 static_cast< HeatingTermName >(i);
             _ionization_variables.back().set_heating(heating_term, 0.);
@@ -222,9 +221,9 @@ public:
    * @param log Log to write logging info to.
    */
   inline AMRDensityGrid(
-      const Box<> &simulation_box, CoordinateVector< int > ncell,
+      const Box<> &simulation_box, CoordinateVector< uint_fast32_t > ncell,
       AMRRefinementScheme *refinement_scheme = nullptr,
-      unsigned char refinement_interval = 5,
+      uint_fast8_t refinement_interval = 5,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr)
       : DensityGrid(simulation_box, periodic, hydro, log),
@@ -236,17 +235,17 @@ public:
     // for all three dimensions, this is the factor you get when you divide the
     // requested number of cells in that dimensions by the smallest common power
     // of two of all three dimensions.
-    int power_of_2_x = get_power_of_two(ncell.x());
-    int power_of_2_y = get_power_of_two(ncell.y());
-    int power_of_2_z = get_power_of_two(ncell.z());
-    int power_of_2 = std::min(power_of_2_x, power_of_2_y);
+    uint_fast32_t power_of_2_x = get_power_of_two(ncell.x());
+    uint_fast32_t power_of_2_y = get_power_of_two(ncell.y());
+    uint_fast32_t power_of_2_z = get_power_of_two(ncell.z());
+    uint_fast32_t power_of_2 = std::min(power_of_2_x, power_of_2_y);
     power_of_2 = std::min(power_of_2, power_of_2_z);
-    CoordinateVector< int > nblock = ncell / power_of_2;
-    _grid = AMRGrid< unsigned long >(simulation_box, nblock);
+    CoordinateVector< uint_fast32_t > nblock = ncell / power_of_2;
+    _grid = AMRGrid< cellsize_t >(simulation_box, nblock);
 
     // find out how many cells each block should have at the lowest level
     // this is just the power in power_of_2
-    unsigned char level = 0;
+    uint_fast8_t level = 0;
     while (power_of_2 > 1) {
       power_of_2 >>= 1;
       ++level;
@@ -256,8 +255,8 @@ public:
     // construct the cell list and set the contents of the cells to the correct
     // index values
     _cells.resize(_grid.get_number_of_cells());
-    unsigned int index = 0;
-    uint64_t key = _grid.get_first_key();
+    uint_fast32_t index = 0;
+    amrkey_t key = _grid.get_first_key();
     while (key != _grid.get_max_key()) {
       _cells[index] = &_grid[key];
       _cells[index]->value() = index;
@@ -268,7 +267,7 @@ public:
     allocate_memory(_grid.get_number_of_cells());
 
     if (_log) {
-      int levelint = level;
+      int_fast32_t levelint = level;
       _log->write_status("Created AMRGrid with ", nblock.x(), "x", nblock.y(),
                          "x", nblock.z(), " top level blocks, going ", levelint,
                          " levels deep, in a box with origin [",
@@ -298,11 +297,11 @@ public:
                         ParameterFile &params, bool hydro = false,
                         Log *log = nullptr)
       : AMRDensityGrid(simulation_box.get_box(),
-                       params.get_value< CoordinateVector< int > >(
+                       params.get_value< CoordinateVector< uint_fast32_t > >(
                            "DensityGrid:unrefined number of cells",
-                           CoordinateVector< int >(64)),
+                           CoordinateVector< uint_fast32_t >(64)),
                        AMRRefinementSchemeFactory::generate(params, log),
-                       params.get_value< unsigned char >(
+                       params.get_value< uint_fast8_t >(
                            "DensityGrid:refinement interval", 5),
                        simulation_box.get_periodicity(), hydro, log) {}
 
@@ -323,7 +322,7 @@ public:
    * @param block Block that should be initialized by this MPI process.
    * @param density_function DensityFunction to use.
    */
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+  virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
                           DensityFunction &density_function) {
     DensityGrid::initialize(block, density_function);
     DensityGrid::set_densities(block, density_function);
@@ -338,8 +337,8 @@ public:
       // we only refine the cells that were already in the grid
       // the new cells that are added during refinement are recursively refined
       // within the refinement routine
-      const unsigned int cell2size = _cells.size();
-      for (unsigned int i = 0; i < cell2size; ++i) {
+      const size_t cell2size = _cells.size();
+      for (size_t i = 0; i < cell2size; ++i) {
         refine_cell(*_refinement_scheme, i, density_function);
       }
 
@@ -377,8 +376,8 @@ public:
     // newly added refined cells are recursively refined within the refinement
     // routine
     if (_refinement_scheme != nullptr && _reset_count >= _refinement_interval) {
-      const unsigned int cells2size = _cells.size();
-      for (unsigned int i = 0; i < cells2size; ++i) {
+      const size_t cells2size = _cells.size();
+      for (size_t i = 0; i < cells2size; ++i) {
         refine_cell(*_refinement_scheme, i, density_function);
       }
 
@@ -403,7 +402,7 @@ public:
    *
    * @return Number of lowest level AMR cells.
    */
-  virtual unsigned int get_number_of_cells() const { return _cells.size(); }
+  virtual cellsize_t get_number_of_cells() const { return _cells.size(); }
 
   /**
    * @brief Get the index of the cell containing the given position.
@@ -411,7 +410,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual unsigned long get_cell_index(CoordinateVector<> position) const {
+  virtual cellsize_t get_cell_index(CoordinateVector<> position) const {
     return _grid.get_cell(position);
   }
 
@@ -421,7 +420,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const {
+  virtual CoordinateVector<> get_cell_midpoint(cellsize_t index) const {
     return _cells[index]->get_midpoint();
   }
 
@@ -431,7 +430,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) const {
+  virtual double get_cell_volume(cellsize_t index) const {
     return _cells[index]->get_volume();
   }
 
@@ -459,12 +458,12 @@ public:
   inline CoordinateVector<>
   get_wall_intersection(CoordinateVector<> &photon_origin,
                         CoordinateVector<> &photon_direction, Box<> &box,
-                        AMRGridCell< unsigned long > *&cell, double &ds,
+                        AMRGridCell< cellsize_t > *&cell, double &ds,
                         CoordinateVector<> &periodic_correction) {
     CoordinateVector<> cell_bottom_anchor = box.get_anchor();
     CoordinateVector<> cell_top_anchor = box.get_top_anchor();
 
-    CoordinateVector< char > next_direction;
+    CoordinateVector< int_fast8_t > next_direction;
 
     // find out which cell wall the photon is going to hit next
     CoordinateVector<> next_x;
@@ -573,7 +572,7 @@ public:
     // ds contains the squared norm, take the square root
     ds = sqrt(ds);
 
-    AMRGridCell< unsigned long > *next_cell = cell->get_ngb(ngbposition);
+    AMRGridCell< cellsize_t > *next_cell = cell->get_ngb(ngbposition);
     if (next_cell != nullptr) {
       // calculate periodic boundary corrections (if any)
       if (_periodicity_flags.x()) {
@@ -637,8 +636,8 @@ public:
     CoordinateVector<> photon_origin = photon.get_position();
     CoordinateVector<> photon_direction = photon.get_direction();
 
-    unsigned long index = get_cell_index(photon_origin);
-    AMRGridCell< unsigned long > *current_cell = _cells[index];
+    cellsize_t index = get_cell_index(photon_origin);
+    AMRGridCell< cellsize_t > *current_cell = _cells[index];
 
     // while the photon has not exceeded the optical depth and is still in the
     // box
@@ -647,7 +646,7 @@ public:
       Box<> cell = current_cell->get_geometry();
 
       double ds = 0.;
-      AMRGridCell< unsigned long > *old_cell = current_cell;
+      AMRGridCell< cellsize_t > *old_cell = current_cell;
       CoordinateVector<> periodic_correction;
       CoordinateVector<> next_wall =
           get_wall_intersection(photon_origin, photon_direction, cell,
@@ -705,14 +704,14 @@ public:
                                     EmissionLine line) {
     double S = 0.;
 
-    unsigned long index = get_cell_index(origin);
-    AMRGridCell< unsigned long > *current_cell = _cells[index];
+    cellsize_t index = get_cell_index(origin);
+    AMRGridCell< cellsize_t > *current_cell = _cells[index];
 
     while (current_cell != nullptr) {
       Box<> cell = current_cell->get_geometry();
 
       double ds = 0.;
-      AMRGridCell< unsigned long > *old_cell = current_cell;
+      AMRGridCell< cellsize_t > *old_cell = current_cell;
       CoordinateVector<> periodic_correction;
       CoordinateVector<> next_wall = get_wall_intersection(
           origin, direction, cell, current_cell, ds, periodic_correction);
@@ -740,8 +739,7 @@ public:
    * @param index Index to increment.
    * @param increment Increment (default = 1).
    */
-  virtual void increase_index(unsigned long &index,
-                              unsigned long increment = 1) {
+  virtual void increase_index(cellsize_t &index, cellsize_t increment = 1) {
     index += increment;
   }
 
@@ -767,7 +765,7 @@ public:
    */
   virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                                    CoordinateVector<>, double > >
-  get_neighbours(unsigned long index) {
+  get_neighbours(cellsize_t index) {
     std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                              CoordinateVector<>, double > >
         ngbs;
@@ -781,7 +779,7 @@ public:
    * @param index Index of a cell.
    * @return Empty vector, as this function is not implemented yet.
    */
-  virtual std::vector< Face > get_faces(unsigned long index) const {
+  virtual std::vector< Face > get_faces(cellsize_t index) const {
     return std::vector< Face >();
   }
 

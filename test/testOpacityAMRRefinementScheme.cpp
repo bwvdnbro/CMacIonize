@@ -37,7 +37,7 @@
  */
 int main(int argc, char **argv) {
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-  CoordinateVector< int > ncell(8);
+  CoordinateVector< uint_fast32_t > ncell(8);
   HomogeneousDensityFunction density_function(1.);
   density_function.initialize();
   AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1., 4);

@@ -143,7 +143,7 @@ public:
    * @param key Key linking to a unique cell in the hierarchy.
    * @return Contents of that cell.
    */
-  inline AMRGridCell &operator[](unsigned int &key) {
+  inline AMRGridCell &operator[](uint_fast32_t &key) {
     if (key == 1) {
       return *this;
     } else {

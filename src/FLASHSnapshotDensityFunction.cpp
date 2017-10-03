@@ -72,7 +72,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   // find out the number of blocks in each dimension
   HDF5Tools::HDF5Dictionary< int > integer_runtime_pars =
       HDF5Tools::read_dictionary< int >(file, "integer runtime parameters");
-  CoordinateVector< int > nblock;
+  CoordinateVector< uint_fast32_t > nblock;
   nblock[0] = integer_runtime_pars["nblockx"];
   nblock[1] = integer_runtime_pars["nblocky"];
   nblock[2] = integer_runtime_pars["nblockz"];

@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     UniformRegularVoronoiGeneratorDistribution *test_positions =
         new UniformRegularVoronoiGeneratorDistribution(
-            box, CoordinateVector< unsigned int >(5));
+            box, CoordinateVector< uint_fast32_t >(5));
     VoronoiDensityGrid grid(test_positions, box, "Old", 0, false, false,
                             nullptr);
     std::pair< unsigned long, unsigned long > block =

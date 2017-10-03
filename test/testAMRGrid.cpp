@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   // create an empty grid
   AMRGrid< double > grid(
       Box<>(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
-      CoordinateVector< int >(2, 1, 1));
+      CoordinateVector< uint_fast32_t >(2, 1, 1));
 
   /// basic functionality
 

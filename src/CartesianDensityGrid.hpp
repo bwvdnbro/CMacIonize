@@ -58,8 +58,11 @@ private:
   /*! @brief Maximal cell side among the three dimensions. */
   double _cellside_max;
 
-  /*! @brief Number of cells per dimension. */
-  CoordinateVector< int > _ncell;
+  /*! @brief Number of cells per dimension.
+   *
+   * Note that we do not store these as unsigned integer values, as we need to
+   * be able to store negative index values. */
+  CoordinateVector< int_fast32_t > _ncell;
 
   /*! @brief Log to write log messages to. */
   Log *_log;
@@ -70,8 +73,9 @@ private:
    * @param index Index to convert.
    * @return Single long index.
    */
-  inline unsigned long get_long_index(CoordinateVector< int > index) const {
-    unsigned long long_index = index.x();
+  inline cellsize_t
+  get_long_index(CoordinateVector< int_fast32_t > index) const {
+    cellsize_t long_index = index.x();
     long_index *= _ncell.y() * _ncell.z();
     long_index += index.y() * _ncell.z();
     long_index += index.z();
@@ -84,15 +88,16 @@ private:
    * @param long_index Single long index.
    * @return Three component index.
    */
-  inline CoordinateVector< int > get_indices(unsigned long long_index) const {
-    unsigned long index_x = long_index / (_ncell.y() * _ncell.z());
+  inline CoordinateVector< int_fast32_t >
+  get_indices(cellsize_t long_index) const {
+    cellsize_t index_x = long_index / (_ncell.y() * _ncell.z());
     long_index -= index_x * _ncell.y() * _ncell.z();
-    unsigned long index_y = long_index / _ncell.z();
+    cellsize_t index_y = long_index / _ncell.z();
     long_index -= index_y * _ncell.z();
-    return CoordinateVector< int >(index_x, index_y, long_index);
+    return CoordinateVector< int_fast32_t >(index_x, index_y, long_index);
   }
 
-  Box<> get_cell(CoordinateVector< int > index) const;
+  Box<> get_cell(CoordinateVector< int_fast32_t > index) const;
 
   /**
    * @brief Get the midpoint of the given cell.
@@ -101,7 +106,7 @@ private:
    * @return Midpoint of that cell (in m).
    */
   inline CoordinateVector<>
-  get_cell_midpoint(CoordinateVector< int > index) const {
+  get_cell_midpoint(CoordinateVector< int_fast32_t > index) const {
     Box<> box = get_cell(index);
     CoordinateVector<> midpoint = box.get_anchor() + 0.5 * box.get_sides();
     return midpoint;
@@ -114,20 +119,21 @@ private:
    * @return Volume of any cell in the grid, since all cells have the same
    * volume (in m^3).
    */
-  double get_cell_volume(CoordinateVector< int > index) const {
+  double get_cell_volume(CoordinateVector< int_fast32_t > index) const {
     return _cellside.x() * _cellside.y() * _cellside.z();
   }
 
-  CoordinateVector< int > get_cell_indices(CoordinateVector<> position) const;
+  CoordinateVector< int_fast32_t >
+  get_cell_indices(CoordinateVector<> position) const;
 
-  bool is_inside(CoordinateVector< int > &index,
+  bool is_inside(CoordinateVector< int_fast32_t > &index,
                  CoordinateVector<> &position) const;
-  bool is_inside_non_periodic(CoordinateVector< int > &index,
+  bool is_inside_non_periodic(CoordinateVector< int_fast32_t > &index,
                               CoordinateVector<> &position) const;
 
 public:
   CartesianDensityGrid(
-      const Box<> &simulation_box, CoordinateVector< int > ncell,
+      const Box<> &simulation_box, CoordinateVector< int_fast32_t > ncell,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
@@ -140,10 +146,10 @@ public:
    */
   virtual ~CartesianDensityGrid() {}
 
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+  virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
                           DensityFunction &density_function);
 
-  virtual unsigned int get_number_of_cells() const;
+  virtual cellsize_t get_number_of_cells() const;
 
   /**
    * @brief Get the long index of the cell containing the given position.
@@ -151,8 +157,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Long index of the cell containing that position.
    */
-  virtual inline unsigned long
-  get_cell_index(CoordinateVector<> position) const {
+  virtual inline cellsize_t get_cell_index(CoordinateVector<> position) const {
     return get_long_index(get_cell_indices(position));
   }
 
@@ -162,7 +167,7 @@ public:
    * @param index Long index.
    * @return Box specifying the geometry of the cell.
    */
-  inline Box<> get_cell(unsigned long index) const {
+  inline Box<> get_cell(cellsize_t index) const {
     return get_cell(get_indices(index));
   }
 
@@ -173,7 +178,7 @@ public:
    * @return Midpoint of that cell (in m).
    */
   virtual inline CoordinateVector<>
-  get_cell_midpoint(unsigned long long_index) const {
+  get_cell_midpoint(cellsize_t long_index) const {
     return get_cell_midpoint(get_indices(long_index));
   }
 
@@ -183,7 +188,7 @@ public:
    * @param long_index Long index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long long_index) const {
+  virtual double get_cell_volume(cellsize_t long_index) const {
     return get_cell_volume(get_indices(long_index));
   }
 

@@ -70,8 +70,8 @@ CommandLineOption::get_default_value_description(int argument,
     return Utilities::to_string< bool >(
         Utilities::convert< bool >(default_value));
   case COMMANDLINEOPTION_INTARGUMENT:
-    return Utilities::to_string< int >(
-        Utilities::convert< int >(default_value));
+    return Utilities::to_string< int_fast32_t >(
+        Utilities::convert< int_fast32_t >(default_value));
   case COMMANDLINEOPTION_DOUBLEARGUMENT:
     return Utilities::to_string< double >(
         Utilities::convert< double >(default_value));
@@ -209,10 +209,11 @@ std::string CommandLineOption::parse_argument(std::string argument) const {
   }
   case COMMANDLINEOPTION_INTARGUMENT: {
     if (argument.size()) {
-      return Utilities::to_string< int >(Utilities::convert< int >(argument));
+      return Utilities::to_string< int_fast32_t >(
+          Utilities::convert< int_fast32_t >(argument));
     } else {
-      return Utilities::to_string< int >(
-          Utilities::convert< int >(_default_value));
+      return Utilities::to_string< int_fast32_t >(
+          Utilities::convert< int_fast32_t >(_default_value));
     }
   }
   case COMMANDLINEOPTION_DOUBLEARGUMENT: {

@@ -35,6 +35,9 @@
 /*! @brief The maximal value a key can take. */
 #define AMRGRID_MAXKEY 0xffffffffffffffff
 
+/*! @brief Size of a key variable. Has to be exactly 64 bits. */
+typedef uint64_t amrkey_t;
+
 /**
  * @brief Hierarchical AMR grid.
  */
@@ -44,7 +47,7 @@ private:
   Box<> _box;
 
   /*! @brief Number of top level blocks in the grid. */
-  CoordinateVector< int > _ncell;
+  CoordinateVector< uint_fast32_t > _ncell;
 
   /*! @brief Top level blocks of the grid. */
   AMRGridCell< _CellContents_ > ****_top_level;
@@ -58,12 +61,14 @@ private:
    * @param iz Variable to store the z index in.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(uint64_t key, int &ix,
-                                                  int &iy, int &iz) const {
+  inline AMRGridCell< _CellContents_ > &get_block(amrkey_t key,
+                                                  uint_fast32_t &ix,
+                                                  uint_fast32_t &iy,
+                                                  uint_fast32_t &iz) const {
     // the key consists of two parts: a part (first 32 bits) that encodes the
     // top level block information, and a part (last 32 bits) that encodes the
     // cell information within the block
-    unsigned int block = key >> 32;
+    uint_fast32_t block = key >> 32;
     // the block info consists of 3 10-bit keys, for the x, y, and z dimension
     ix = (block & 0x3ff00000) >> 20;
     iy = (block & 0x000ffc00) >> 10;
@@ -77,8 +82,8 @@ private:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Block containing that cell.
    */
-  inline AMRGridCell< _CellContents_ > &get_block(uint64_t key) const {
-    int ix, iy, iz;
+  inline AMRGridCell< _CellContents_ > &get_block(amrkey_t key) const {
+    uint_fast32_t ix, iy, iz;
     return get_block(key, ix, iy, iz);
   }
 
@@ -117,18 +122,18 @@ public:
    * @param ncell Number of blocks in each dimension. The actual number of cells
    * in a given dimensions is limited to this number times a power of 2.
    */
-  inline AMRGrid(const Box<> &box, CoordinateVector< int > ncell)
+  inline AMRGrid(const Box<> &box, CoordinateVector< uint_fast32_t > ncell)
       : _box(box), _ncell(ncell) {
     CoordinateVector<> sides;
     sides[0] = _box.get_sides().x() / _ncell.x();
     sides[1] = _box.get_sides().y() / _ncell.y();
     sides[2] = _box.get_sides().z() / _ncell.z();
     _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
-    for (int i = 0; i < _ncell.x(); ++i) {
+    for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
-      for (int j = 0; j < _ncell.y(); ++j) {
+      for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
         _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
-        for (int k = 0; k < _ncell.z(); ++k) {
+        for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
           CoordinateVector<> anchor;
           anchor[0] = _box.get_anchor().x() + i * sides.x();
           anchor[1] = _box.get_anchor().y() + j * sides.y();
@@ -160,11 +165,11 @@ public:
     sides[1] = _box.get_sides().y() / _ncell.y();
     sides[2] = _box.get_sides().z() / _ncell.z();
     _top_level = new AMRGridCell< _CellContents_ > ***[_ncell.x()];
-    for (int i = 0; i < _ncell.x(); ++i) {
+    for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
       _top_level[i] = new AMRGridCell< _CellContents_ > **[_ncell.y()];
-      for (int j = 0; j < _ncell.y(); ++j) {
+      for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
         _top_level[i][j] = new AMRGridCell< _CellContents_ > *[_ncell.z()];
-        for (int k = 0; k < _ncell.z(); ++k) {
+        for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
           CoordinateVector<> anchor;
           anchor[0] = _box.get_anchor().x() + i * sides.x();
           anchor[1] = _box.get_anchor().y() + j * sides.y();
@@ -185,9 +190,9 @@ public:
    * level cells.
    */
   inline ~AMRGrid() {
-    for (int i = 0; i < _ncell.x(); ++i) {
-      for (int j = 0; j < _ncell.y(); ++j) {
-        for (int k = 0; k < _ncell.z(); ++k) {
+    for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
+      for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
+        for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
           delete _top_level[i][j][k];
         }
         delete[] _top_level[i][j];
@@ -203,8 +208,8 @@ public:
    * @param key Key linking to a unique cell in the AMR hierarchy.
    * @return Contents of that cell.
    */
-  inline AMRGridCell< _CellContents_ > &operator[](uint64_t key) const {
-    unsigned int cell = get_cell_key(key);
+  inline AMRGridCell< _CellContents_ > &operator[](amrkey_t key) const {
+    uint_fast32_t cell = get_cell_key(key);
     return get_block(key)[cell];
   }
 
@@ -333,9 +338,9 @@ public:
    * @param level Deepest level to create.
    */
   inline void create_all_cells(unsigned char level) {
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           _top_level[ix][iy][iz]->create_all_cells(0, level);
         }
       }
@@ -423,11 +428,11 @@ public:
    * @param key Key pointing to a cell in the AMR structure.
    * @return Key pointing to the next grid, in Morton order.
    */
-  inline uint64_t get_next_key(uint64_t key) const {
-    int ix, iy, iz;
+  inline amrkey_t get_next_key(amrkey_t key) const {
+    uint_fast32_t ix, iy, iz;
     AMRGridCell< _CellContents_ > &block = get_block(key, ix, iy, iz);
-    unsigned int cell = get_cell_key(key);
-    unsigned int next_cell = block.get_next_key(cell, 0);
+    uint_fast32_t cell = get_cell_key(key);
+    uint_fast32_t next_cell = block.get_next_key(cell, 0);
     if (next_cell == AMRGRIDCELL_MAXKEY) {
       // no valid next key in this block
       // try the next block
@@ -460,9 +465,9 @@ public:
    * periodic boundaries.
    */
   inline void set_ngbs(CoordinateVector< bool > periodic) {
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           AMRGridCell< _CellContents_ > *left = nullptr;
           if (ix > 0) {
             left = _top_level[ix - 1][iy][iz];
@@ -528,9 +533,9 @@ public:
    */
   inline unsigned long get_number_of_cells() const {
     unsigned long ncell = 0;
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           ncell += _top_level[ix][iy][iz]->get_number_of_cells();
         }
       }
@@ -548,9 +553,9 @@ public:
     sides[0] = _box.get_sides().x() / _ncell.x();
     sides[1] = _box.get_sides().y() / _ncell.y();
     sides[2] = _box.get_sides().z() / _ncell.z();
-    for (int ix = 0; ix < _ncell.x(); ++ix) {
-      for (int iy = 0; iy < _ncell.y(); ++iy) {
-        for (int iz = 0; iz < _ncell.z(); ++iz) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
           CoordinateVector<> anchor;
           anchor[0] = _box.get_anchor().x() + ix * sides.x();
           anchor[1] = _box.get_anchor().y() + iy * sides.y();

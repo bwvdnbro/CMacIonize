@@ -44,13 +44,13 @@ private:
   const Box<> _box;
 
   /*! @brief Resolution of the generator grid. */
-  CoordinateVector< unsigned int > _resolution;
+  CoordinateVector< uint_fast32_t > _resolution;
 
   /*! @brief Side lengths of a single cube of the regular grid (in m). */
   CoordinateVector<> _sidelength;
 
   /*! @brief Indices of the next generator to return. */
-  CoordinateVector< unsigned int > _next_index;
+  CoordinateVector< uint_fast32_t > _next_index;
 
 public:
   /**
@@ -61,7 +61,7 @@ public:
    * @param log Log to write logging info to.
    */
   UniformRegularVoronoiGeneratorDistribution(
-      const Box<> &simulation_box, CoordinateVector< unsigned int > resolution,
+      const Box<> &simulation_box, CoordinateVector< uint_fast32_t > resolution,
       Log *log = nullptr)
       : _box(simulation_box), _resolution(resolution) {
 
@@ -96,9 +96,9 @@ public:
                                              Log *log = nullptr)
       : UniformRegularVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< CoordinateVector< unsigned int > >(
+            params.get_value< CoordinateVector< uint_fast32_t > >(
                 "DensityGrid:VoronoiGeneratorDistribution:resolution",
-                CoordinateVector< unsigned int >(32)),
+                CoordinateVector< uint_fast32_t >(32)),
             log) {}
 
   /**

@@ -273,7 +273,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
  *
  * @return Number of sources.
  */
-unsigned int
+photonsourcenumber_t
 GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() const {
   return _positions.size();
 }
@@ -289,8 +289,8 @@ GadgetSnapshotPhotonSourceDistribution::get_number_of_sources() const {
  * get_number_of_sources().
  * @return Position of the given source (in m).
  */
-CoordinateVector<>
-GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {
+CoordinateVector<> GadgetSnapshotPhotonSourceDistribution::get_position(
+    photonsourcenumber_t index) {
   return _positions[index];
 }
 
@@ -303,8 +303,8 @@ GadgetSnapshotPhotonSourceDistribution::get_position(unsigned int index) {
  * get_number_of_sources().
  * @return Weight of the given source.
  */
-double
-GadgetSnapshotPhotonSourceDistribution::get_weight(unsigned int index) const {
+double GadgetSnapshotPhotonSourceDistribution::get_weight(
+    photonsourcenumber_t index) const {
   return 1. / _positions.size();
 }
 

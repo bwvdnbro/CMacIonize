@@ -68,7 +68,8 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
                                   Timer &programtimer, Log *log = nullptr) {
 
   // set the maximum number of openmp threads
-  WorkEnvironment::set_max_num_threads(parser.get_value< int >("threads"));
+  WorkEnvironment::set_max_num_threads(
+      parser.get_value< int_fast32_t >("threads"));
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
@@ -81,7 +82,8 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   const SimulationBox simulation_box(params);
   CartesianDensityGrid grid(simulation_box, params, false, log);
 
-  int random_seed = params.get_value< int >("DustSimulation:random seed", 42);
+  int_fast32_t random_seed =
+      params.get_value< int_fast32_t >("DustSimulation:random seed", 42);
 
   SpiralGalaxyContinuousPhotonSource continuoussource(simulation_box.get_box(),
                                                       params, log);
@@ -99,8 +101,8 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
       params.get_value< std::string >("DustSimulation:output folder", "."));
   CCDImage dust_image(output_folder, params, log);
 
-  unsigned int numphoton =
-      params.get_value< unsigned int >("DustSimulation:number of photons", 5e5);
+  uint_fast32_t numphoton = params.get_value< uint_fast32_t >(
+      "DustSimulation:number of photons", 5e5);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -137,7 +139,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< DustPhotonShootJobMarket, DustPhotonShootJob >
-  dust_workdistributor(parser.get_value< int >("threads"));
+      dust_workdistributor(parser.get_value< int_fast32_t >("threads"));
   const int worksize = dust_workdistributor.get_worksize();
   Timer worktimer;
 

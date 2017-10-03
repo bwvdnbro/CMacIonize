@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
 
   CommandLineParser parser("testCommandLineParser");
 
-  parser.add_option< int >("test", 't',
-                           "A parameter to test the CommandLineParser.", 42);
+  parser.add_option< int_fast32_t >(
+      "test", 't', "A parameter to test the CommandLineParser.", 42);
   parser.add_required_option< std::string >(
       "more", 'm', "A parameter taking a string argument.");
   parser.add_option< double >(
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 
   parser.parse_arguments(test_argc, test_argv);
 
-  assert_condition(parser.get_value< int >("test") == 42);
+  assert_condition(parser.get_value< int_fast32_t >("test") == 42);
   assert_condition(parser.get_value< std::string >("more") == "andmore");
   assert_condition(parser.get_value< double >("less") == 2.1);
   assert_condition(parser.get_value< std::string >("complicated") ==

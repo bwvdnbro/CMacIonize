@@ -373,7 +373,8 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
  * the coordinates are expressed (m).
  */
 static boost::python::dict get_coordinates(DensityGrid &grid) {
-  npy_intp size[2] = {grid.get_number_of_cells(), 3};
+  long int gridsize = grid.get_number_of_cells();
+  npy_intp size[2] = {gridsize, 3};
   PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
   boost::python::handle<> handle(narr);
   boost::python::numeric::array arr(handle);

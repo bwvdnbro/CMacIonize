@@ -61,8 +61,9 @@ public:
    * @param log Log to write logging info to.
    */
   UniformRandomVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                            unsigned int number_of_positions,
-                                            int random_seed, Log *log = nullptr)
+                                            uint_fast32_t number_of_positions,
+                                            int_fast32_t random_seed,
+                                            Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(simulation_box), _random_generator(random_seed) {
     if (log) {
@@ -90,10 +91,10 @@ public:
                                             Log *log = nullptr)
       : UniformRandomVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< unsigned int >(
+            params.get_value< uint_fast32_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 100),
-            params.get_value< int >(
+            params.get_value< int_fast32_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             log) {}
 

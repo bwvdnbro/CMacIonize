@@ -62,7 +62,7 @@ public:
    */
   PerturbedCartesianVoronoiGeneratorDistribution(
       const Box<> &simulation_box,
-      const CoordinateVector< unsigned int > resolution, double random_seed,
+      const CoordinateVector< uint_fast32_t > resolution, double random_seed,
       double amplitude, Log *log = nullptr)
       : _current_number(0) {
 
@@ -122,10 +122,10 @@ public:
                                                  Log *log = nullptr)
       : PerturbedCartesianVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< CoordinateVector< unsigned int > >(
+            params.get_value< CoordinateVector< uint_fast32_t > >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of cells",
-                CoordinateVector< unsigned int >(10, 10, 10)),
-            params.get_value< int >(
+                CoordinateVector< uint_fast32_t >(10, 10, 10)),
+            params.get_value< int_fast32_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "DensityGrid:VoronoiGeneratorDistribution:amplitude", "0.01 m"),

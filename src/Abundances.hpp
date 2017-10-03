@@ -96,7 +96,7 @@ public:
    * @param abundances Abundances to copy into this instance.
    */
   inline Abundances(Abundances &abundances) {
-    for (int i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
       _abundances[i] = abundances._abundances[i];
     }
   }

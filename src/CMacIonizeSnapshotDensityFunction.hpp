@@ -43,7 +43,7 @@ private:
   Box<> _box;
 
   /*! @brief Number of cells in each dimension. */
-  CoordinateVector< int > _ncell;
+  CoordinateVector< uint_fast32_t > _ncell;
 
   /*! @brief Cartesian density grid (if applicable). */
   DensityValues ***_cartesian_grid;

@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
     HydroIntegrator integrator(5. / 3., false, false);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-    CoordinateVector< int > ncell(100, 1, 1);
+    CoordinateVector< int_fast32_t > ncell(100, 1, 1);
     SodShockDensityFunction density_function;
     density_function.initialize();
     CoordinateVector< bool > periodic(false, true, true);

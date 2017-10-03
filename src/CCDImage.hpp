@@ -72,7 +72,7 @@ private:
   std::vector< double > _image_U;
 
   /*! @brief Resolution of the image. */
-  const unsigned int _resolution[2];
+  const uint_fast32_t _resolution[2];
 
   /*! @brief Lower left corner of the image box (in kpc). */
   const double _anchor[2];
@@ -120,8 +120,8 @@ public:
    * @param output_folder Folder where the image is saved.
    * @param log Log to write logging info to.
    */
-  inline CCDImage(double theta, double phi, unsigned int resolution_x,
-                  unsigned int resolution_y, double anchor_x, double anchor_y,
+  inline CCDImage(double theta, double phi, uint_fast32_t resolution_x,
+                  uint_fast32_t resolution_y, double anchor_x, double anchor_y,
                   double sides_x, double sides_y, std::string type,
                   std::string filename, std::string output_folder,
                   Log *log = nullptr)
@@ -136,7 +136,7 @@ public:
         _filename(Utilities::get_absolute_path(output_folder) + "/" +
                   filename) {
 
-    const unsigned int npixel = _resolution[0] * _resolution[1];
+    const uint_fast32_t npixel = _resolution[0] * _resolution[1];
     _image_total.resize(npixel, 0.);
     _image_Q.resize(npixel, 0.);
     _image_U.resize(npixel, 0.);
@@ -180,8 +180,8 @@ public:
                                                         "89.7 degrees"),
             params.get_physical_value< QUANTITY_ANGLE >("CCDImage:view phi",
                                                         "0. degrees"),
-            params.get_value< unsigned int >("CCDImage:image width", 200),
-            params.get_value< unsigned int >("CCDImage:image height", 200),
+            params.get_value< uint_fast32_t >("CCDImage:image width", 200),
+            params.get_value< uint_fast32_t >("CCDImage:image height", 200),
             params.get_physical_value< QUANTITY_LENGTH >("CCDImage:anchor x",
                                                          "-12.1 kpc"),
             params.get_physical_value< QUANTITY_LENGTH >("CCDImage:anchor y",
@@ -199,7 +199,7 @@ public:
    * @brief Reset the image contents to zero.
    */
   inline void reset() {
-    for (unsigned int i = 0; i < _image_total.size(); ++i) {
+    for (size_t i = 0; i < _image_total.size(); ++i) {
       _image_total[i] = 0.;
       _image_Q[i] = 0.;
       _image_U[i] = 0.;
@@ -253,8 +253,8 @@ public:
       xphoton -= _anchor[0];
       yphoton -= _anchor[1];
       if (xphoton < _sides[0] && yphoton < _sides[1]) {
-        const unsigned int ix = (_resolution[0] * xphoton / _sides[0]);
-        const unsigned int iy = (_resolution[1] * yphoton / _sides[1]);
+        const uint_fast32_t ix = (_resolution[0] * xphoton / _sides[0]);
+        const uint_fast32_t iy = (_resolution[1] * yphoton / _sides[1]);
 
         _image_total[ix * _resolution[1] + iy] += weight_total;
         _image_Q[ix * _resolution[1] + iy] += weight_Q;
@@ -280,7 +280,7 @@ public:
     cmac_assert(_direction == image._direction);
     cmac_assert(_image_total.size() == image._image_total.size());
 
-    for (unsigned int i = 0; i < _image_total.size(); ++i) {
+    for (size_t i = 0; i < _image_total.size(); ++i) {
       _image_total[i] += image._image_total[i];
       _image_Q[i] += image._image_Q[i];
       _image_U[i] += image._image_U[i];
@@ -306,7 +306,7 @@ public:
 
       double min_value = _image_total[0];
       double max_value = _image_total[0];
-      for (unsigned int i = 1; i < _image_total.size(); ++i) {
+      for (size_t i = 1; i < _image_total.size(); ++i) {
         min_value = std::min(min_value, _image_total[i]);
         max_value = std::max(max_value, _image_total[i]);
       }
@@ -316,14 +316,14 @@ public:
       image_file << "P2\n"
                  << _resolution[0] << " " << _resolution[1] << "\n"
                  << CCDIMAGE_NUM_LEVELS << "\n";
-      for (unsigned int iy = 0; iy < _resolution[1]; ++iy) {
-        unsigned int pixelvalue = 0;
+      for (uint_fast32_t iy = 0; iy < _resolution[1]; ++iy) {
+        uint_fast32_t pixelvalue = 0;
         if (max_value > 0.) {
           pixelvalue = std::round(CCDIMAGE_NUM_LEVELS *
                                   (_image_total[iy] - min_value) / max_value);
         }
         image_file << pixelvalue;
-        for (unsigned int ix = 1; ix < _resolution[0]; ++ix) {
+        for (uint_fast32_t ix = 1; ix < _resolution[0]; ++ix) {
           pixelvalue = 0;
           if (max_value > 0.) {
             pixelvalue = std::round(
@@ -344,7 +344,7 @@ public:
       }
 
       std::vector< double > image_copy = _image_total;
-      for (unsigned int i = 0; i < image_copy.size(); ++i) {
+      for (size_t i = 0; i < image_copy.size(); ++i) {
         image_copy[i] *= normalization;
       }
 

@@ -253,8 +253,9 @@ convert< CoordinateVector<> >(const std::string &value) {
  * @param value std::string value.
  * @return Integer stored in the string.
  */
-template <> inline int convert< int >(const std::string &value) {
-  const int ivalue = string_to_integer< int >(value);
+template <>
+inline int_fast32_t convert< int_fast32_t >(const std::string &value) {
+  const int_fast32_t ivalue = string_to_integer< int_fast32_t >(value);
   return ivalue;
 }
 
@@ -265,8 +266,8 @@ template <> inline int convert< int >(const std::string &value) {
  * @return Unsigned integer stored in the string.
  */
 template <>
-inline unsigned int convert< unsigned int >(const std::string &value) {
-  const unsigned int ivalue = string_to_integer< unsigned int >(value);
+inline uint_fast32_t convert< uint_fast32_t >(const std::string &value) {
+  const uint_fast32_t ivalue = string_to_integer< uint_fast32_t >(value);
   return ivalue;
 }
 
@@ -277,8 +278,8 @@ inline unsigned int convert< unsigned int >(const std::string &value) {
  * @return Unsigned char stored in the string.
  */
 template <>
-inline unsigned char convert< unsigned char >(const std::string &value) {
-  const unsigned char ivalue = string_to_integer< unsigned char >(value);
+inline unsigned char convert< uint_fast8_t >(const std::string &value) {
+  const uint_fast8_t ivalue = string_to_integer< uint_fast8_t >(value);
   return ivalue;
 }
 
@@ -289,14 +290,14 @@ inline unsigned char convert< unsigned char >(const std::string &value) {
  * @return CoordinateVector containing the components found.
  */
 template <>
-inline CoordinateVector< int >
-convert< CoordinateVector< int > >(const std::string &value) {
-  CoordinateVector< int > vvalue;
+inline CoordinateVector< int_fast32_t >
+convert< CoordinateVector< int_fast32_t > >(const std::string &value) {
+  CoordinateVector< int_fast32_t > vvalue;
   std::string x, y, z;
   split_string(value, x, y, z);
-  vvalue[0] = convert< int >(x);
-  vvalue[1] = convert< int >(y);
-  vvalue[2] = convert< int >(z);
+  vvalue[0] = convert< int_fast32_t >(x);
+  vvalue[1] = convert< int_fast32_t >(y);
+  vvalue[2] = convert< int_fast32_t >(z);
   return vvalue;
 }
 
@@ -307,14 +308,14 @@ convert< CoordinateVector< int > >(const std::string &value) {
  * @return CoordinateVector containing the components found.
  */
 template <>
-inline CoordinateVector< unsigned int >
-convert< CoordinateVector< unsigned int > >(const std::string &value) {
-  CoordinateVector< unsigned int > vvalue;
+inline CoordinateVector< uint_fast32_t >
+convert< CoordinateVector< uint_fast32_t > >(const std::string &value) {
+  CoordinateVector< uint_fast32_t > vvalue;
   std::string x, y, z;
   split_string(value, x, y, z);
-  vvalue[0] = convert< unsigned int >(x);
-  vvalue[1] = convert< unsigned int >(y);
-  vvalue[2] = convert< unsigned int >(z);
+  vvalue[0] = convert< uint_fast32_t >(x);
+  vvalue[1] = convert< uint_fast32_t >(y);
+  vvalue[2] = convert< uint_fast32_t >(z);
   return vvalue;
 }
 
@@ -400,7 +401,7 @@ template < typename _datatype_ > std::string to_string(_datatype_ value) {
  * @param value Value to convert.
  * @return std::string.
  */
-template <> inline std::string to_string< unsigned char >(unsigned char value) {
+template <> inline std::string to_string< uint_fast8_t >(uint_fast8_t value) {
   std::stringstream sstream;
   const unsigned int ivalue = value;
   sstream << ivalue;
@@ -442,8 +443,8 @@ to_string< CoordinateVector<> >(const CoordinateVector<> value) {
  * @return std::string containing the 3 components of the CoordinateVector.
  */
 template <>
-inline std::string
-to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
+inline std::string to_string< CoordinateVector< int_fast32_t > >(
+    const CoordinateVector< int_fast32_t > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
@@ -456,8 +457,8 @@ to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
  * @return std::string containing the 3 components of the CoordinateVector.
  */
 template <>
-inline std::string to_string< CoordinateVector< unsigned int > >(
-    const CoordinateVector< unsigned int > value) {
+inline std::string to_string< CoordinateVector< uint_fast32_t > >(
+    const CoordinateVector< uint_fast32_t > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();

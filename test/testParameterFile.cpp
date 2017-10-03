@@ -49,11 +49,11 @@ int main(int argc, char **argv) {
 
   ParameterFile params("test.param");
 
-  assert_condition(params.get_value< int >("test_integer1") == 42);
-  assert_condition(params.get_value< int >("test_integer2") == 42);
-  assert_condition(params.get_value< int >("test_integer3") == 42);
-  assert_condition(params.get_value< int >("test_integer4") == 1e6);
-  assert_condition(params.get_value< int >("test_integer5") == 1e6);
+  assert_condition(params.get_value< int_fast32_t >("test_integer1") == 42);
+  assert_condition(params.get_value< int_fast32_t >("test_integer2") == 42);
+  assert_condition(params.get_value< int_fast32_t >("test_integer3") == 42);
+  assert_condition(params.get_value< int_fast32_t >("test_integer4") == 1e6);
+  assert_condition(params.get_value< int_fast32_t >("test_integer5") == 1e6);
   assert_condition(params.get_value< double >("test_float") == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >("test_unit") ==
                    3.086e16);
@@ -67,8 +67,8 @@ int main(int argc, char **argv) {
   assert_condition(params.get_value< bool >("test_bool8") == false);
   assert_condition(params.get_value< std::string >("test_string") ==
                    "This is a test string.");
-  assert_condition(params.get_value< int >("test_group:test_group_member") ==
-                   42);
+  assert_condition(
+      params.get_value< int_fast32_t >("test_group:test_group_member") == 42);
   assert_condition(params.get_value< std::string >(
                        "test_comments_group:test_comments_value") ==
                    "test comments string");
@@ -79,8 +79,9 @@ int main(int argc, char **argv) {
   assert_condition(cvtest.y() == 0.2);
   assert_condition(cvtest.z() == 0.3);
 
-  CoordinateVector< int > cvtest2 =
-      params.get_value< CoordinateVector< int > >("test_coordinatevector_int");
+  CoordinateVector< int_fast32_t > cvtest2 =
+      params.get_value< CoordinateVector< int_fast32_t > >(
+          "test_coordinatevector_int");
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 40);
@@ -100,11 +101,11 @@ int main(int argc, char **argv) {
   assert_condition(cvtest_unit.z() == 2.4e19);
 
   assert_condition(
-      params.get_value< int >(
+      params.get_value< int_fast32_t >(
           "test_group2:test_group_group:test_group_group_member") == 42);
 
   // default values
-  assert_condition(params.get_value< int >("not_in_file1", 42) == 42);
+  assert_condition(params.get_value< int_fast32_t >("not_in_file1", 42) == 42);
   assert_condition(params.get_value< double >("not_in_file2", 3.14) == 3.14);
   assert_condition(params.get_physical_value< QUANTITY_LENGTH >(
                        "unit_not_in_file", "1. pc") == 3.086e16);
@@ -118,8 +119,8 @@ int main(int argc, char **argv) {
   assert_condition(cvtest.y() == 0.2);
   assert_condition(cvtest.z() == 0.3);
 
-  cvtest2 = params.get_value< CoordinateVector< int > >(
-      "not_in_file5", CoordinateVector< int >(42, 42, 42));
+  cvtest2 = params.get_value< CoordinateVector< int_fast32_t > >(
+      "not_in_file5", CoordinateVector< int_fast32_t >(42, 42, 42));
   assert_condition(cvtest2.x() == 42);
   assert_condition(cvtest2.y() == 42);
   assert_condition(cvtest2.z() == 42);

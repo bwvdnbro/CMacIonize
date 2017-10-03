@@ -44,10 +44,9 @@
  * @param hydro Hydro flag.
  * @param log Log to write log messages to.
  */
-CartesianDensityGrid::CartesianDensityGrid(const Box<> &simulation_box,
-                                           CoordinateVector< int > ncell,
-                                           CoordinateVector< bool > periodic,
-                                           bool hydro, Log *log)
+CartesianDensityGrid::CartesianDensityGrid(
+    const Box<> &simulation_box, CoordinateVector< int_fast32_t > ncell,
+    CoordinateVector< bool > periodic, bool hydro, Log *log)
     : DensityGrid(simulation_box, periodic, hydro, log), _box(simulation_box),
       _periodicity_flags(periodic), _ncell(ncell), _log(log) {
 
@@ -115,8 +114,9 @@ CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
                                            bool hydro, Log *log)
     : CartesianDensityGrid(
           simulation_box.get_box(),
-          parameters.get_value< CoordinateVector< int > >(
-              "DensityGrid:number of cells", CoordinateVector< int >(64)),
+          parameters.get_value< CoordinateVector< int_fast32_t > >(
+              "DensityGrid:number of cells",
+              CoordinateVector< int_fast32_t >(64)),
           simulation_box.get_periodicity(), hydro, log) {}
 
 /**
@@ -126,7 +126,7 @@ CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
  * @param density_function DensityFunction to use.
  */
 void CartesianDensityGrid::initialize(
-    std::pair< unsigned long, unsigned long > &block,
+    std::pair< cellsize_t, cellsize_t > &block,
     DensityFunction &density_function) {
   DensityGrid::initialize(block, density_function);
   DensityGrid::set_densities(block, density_function);
@@ -137,7 +137,7 @@ void CartesianDensityGrid::initialize(
  *
  * @return Total number of cells.
  */
-unsigned int CartesianDensityGrid::get_number_of_cells() const {
+cellsize_t CartesianDensityGrid::get_number_of_cells() const {
   return _ncell.x() * _ncell.y() * _ncell.z();
 }
 
@@ -148,12 +148,12 @@ unsigned int CartesianDensityGrid::get_number_of_cells() const {
  * @return CoordinateVector<unsigned int> containing the three indices of the
  * cell.
  */
-CoordinateVector< int >
+CoordinateVector< int_fast32_t >
 CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) const {
-  int ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
-  int iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
-  int iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
-  return CoordinateVector< int >(ix, iy, iz);
+  int_fast32_t ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
+  int_fast32_t iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
+  int_fast32_t iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
+  return CoordinateVector< int_fast32_t >(ix, iy, iz);
 }
 
 /**
@@ -163,7 +163,8 @@ CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) const {
  * @return Box containing the bottom front left corner and the upper back right
  * corner of the cell (in m).
  */
-Box<> CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
+Box<> CartesianDensityGrid::get_cell(
+    CoordinateVector< int_fast32_t > index) const {
   double cell_xmin = _box.get_anchor().x() + _cellside.x() * index.x();
   double cell_ymin = _box.get_anchor().y() + _cellside.y() * index.y();
   double cell_zmin = _box.get_anchor().z() + _cellside.z() * index.z();
@@ -179,7 +180,7 @@ Box<> CartesianDensityGrid::get_cell(CoordinateVector< int > index) const {
  * @param position Current position of the photon.
  * @return True if the indices are valid, false otherwise.
  */
-bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
+bool CartesianDensityGrid::is_inside(CoordinateVector< int_fast32_t > &index,
                                      CoordinateVector<> &position) const {
   bool inside = true;
   if (!_periodicity_flags.x()) {
@@ -231,7 +232,8 @@ bool CartesianDensityGrid::is_inside(CoordinateVector< int > &index,
  * @return True if the indices are valid, false otherwise.
  */
 bool CartesianDensityGrid::is_inside_non_periodic(
-    CoordinateVector< int > &index, CoordinateVector<> &position) const {
+    CoordinateVector< int_fast32_t > &index,
+    CoordinateVector<> &position) const {
   bool inside = true;
   inside &= (index.x() >= 0 && index.x() < _ncell.x());
   inside &= (index.y() >= 0 && index.y() < _ncell.y());
@@ -401,7 +403,7 @@ double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
   CoordinateVector<> photon_direction = photon.get_direction();
 
   // find out in which cell the photon is currently hiding
-  CoordinateVector< int > index = get_cell_indices(photon_origin);
+  CoordinateVector< int_fast32_t > index = get_cell_indices(photon_origin);
 
   unsigned int ncell = 0;
   // while the photon is still in the box
@@ -447,9 +449,9 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
   CoordinateVector<> photon_direction = photon.get_direction();
 
   // find out in which cell the photon is currently hiding
-  CoordinateVector< int > index = get_cell_indices(photon_origin);
+  CoordinateVector< int_fast32_t > index = get_cell_indices(photon_origin);
 
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   DensityGrid::iterator last_cell = end();
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside(index, photon_origin) && optical_depth > 0.) {
@@ -530,9 +532,9 @@ double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
   double S = 0.;
 
   // find out in which cell the origin lies
-  CoordinateVector< int > index = get_cell_indices(origin);
+  CoordinateVector< int_fast32_t > index = get_cell_indices(origin);
 
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   // while the photon has not exceeded the optical depth and is still in the box
   while (is_inside_non_periodic(index, origin)) {
     ++ncell;
@@ -577,11 +579,11 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
   surface_area[0] = sidelength[1] * sidelength[2];
   surface_area[1] = sidelength[0] * sidelength[2];
   surface_area[2] = sidelength[0] * sidelength[1];
-  CoordinateVector< int > cellindices = get_indices(index);
+  CoordinateVector< int_fast32_t > cellindices = get_indices(index);
   CoordinateVector<> cell_midpoint = get_cell_midpoint(cellindices);
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (uint_fast32_t i = 0; i < 3; ++i) {
     if (cellindices[i] > 0) {
-      CoordinateVector< int > ngb_low(cellindices);
+      CoordinateVector< int_fast32_t > ngb_low(cellindices);
       ngb_low[i] -= 1;
       CoordinateVector<> correction;
       correction[i] -= 0.5 * sidelength[i];
@@ -593,7 +595,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
                           midpoint, normal, surface_area[i]));
     } else {
       if (_periodicity_flags[i]) {
-        CoordinateVector< int > ngb_low(cellindices);
+        CoordinateVector< int_fast32_t > ngb_low(cellindices);
         ngb_low[i] = _ncell[i] - 1;
         CoordinateVector<> correction;
         correction[i] -= 0.5 * sidelength[i];
@@ -616,7 +618,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
     }
 
     if (cellindices[i] < _ncell[i] - 1) {
-      CoordinateVector< int > ngb_high(cellindices);
+      CoordinateVector< int_fast32_t > ngb_high(cellindices);
       ngb_high[i] += 1;
       CoordinateVector<> correction;
       correction[i] += 0.5 * sidelength[i];
@@ -628,7 +630,7 @@ CartesianDensityGrid::get_neighbours(unsigned long index) {
           normal, surface_area[i]));
     } else {
       if (_periodicity_flags[i]) {
-        CoordinateVector< int > ngb_high(cellindices);
+        CoordinateVector< int_fast32_t > ngb_high(cellindices);
         ngb_high[i] = 0;
         CoordinateVector<> correction;
         correction[i] += 0.5 * sidelength[i];
@@ -664,7 +666,7 @@ std::vector< Face > CartesianDensityGrid::get_faces(unsigned long index) const {
   const double sidelength[3] = {_box.get_sides().x() / _ncell.x(),
                                 _box.get_sides().y() / _ncell.y(),
                                 _box.get_sides().z() / _ncell.z()};
-  const CoordinateVector< int > cellindices = get_indices(index);
+  const CoordinateVector< int_fast32_t > cellindices = get_indices(index);
   const CoordinateVector<> cell_midpoint = get_cell_midpoint(cellindices);
 
   std::vector< Face > faces;

@@ -90,7 +90,7 @@
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
-    const Box<> &simulation_box, std::string grid_type, unsigned char num_lloyd,
+    const Box<> &simulation_box, std::string grid_type, uint_fast8_t num_lloyd,
     CoordinateVector< bool > periodic, bool hydro, Log *log)
     : DensityGrid(simulation_box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
@@ -140,7 +140,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(const SimulationBox &simulation_box,
               simulation_box.get_box(), params, log),
           simulation_box.get_box(),
           params.get_value< std::string >("DensityGrid:grid type", "Old"),
-          params.get_value< unsigned char >(
+          params.get_value< uint_fast8_t >(
               "DensityGrid:number of Lloyd iterations", 0),
           simulation_box.get_periodicity(), hydro, log) {}
 
@@ -313,7 +313,7 @@ CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
  *
  * @return Number of cells in the grid.
  */
-unsigned int VoronoiDensityGrid::get_number_of_cells() const {
+cellsize_t VoronoiDensityGrid::get_number_of_cells() const {
   return _position_generator->get_number_of_positions();
 }
 

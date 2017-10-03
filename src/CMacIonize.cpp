@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
 
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
-        parser.get_value< int >("threads"),
+        parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"), &comm, log);
 
     if (parser.get_value< bool >("dry-run")) {

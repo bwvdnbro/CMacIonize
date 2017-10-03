@@ -50,6 +50,10 @@
 #include <cmath>
 #include <tuple>
 
+/*! @brief Size of the variables storing cell indices; this should be big enough
+ *  to store at least the number of cells. */
+typedef size_t cellsize_t;
+
 /**
  * @brief General interface for density grids.
  */
@@ -243,7 +247,7 @@ public:
    *
    * @return Number of cells in the grid.
    */
-  virtual unsigned int get_number_of_cells() const = 0;
+  virtual cellsize_t get_number_of_cells() const = 0;
 
   /**
    * @brief Get the Box containing the grid.

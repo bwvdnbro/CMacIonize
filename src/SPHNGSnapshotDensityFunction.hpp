@@ -69,7 +69,7 @@ private:
   double _initial_temperature;
 
   /*! @brief Number of bins to use when writing particle statistics. */
-  unsigned int _stats_numbin;
+  uint_fast32_t _stats_numbin;
 
   /*! @brief Minimum distance to use for particle statistics. */
   double _stats_mindist;
@@ -239,7 +239,7 @@ private:
 
 public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               bool write_stats, unsigned int stats_numbin,
+                               bool write_stats, uint_fast32_t stats_numbin,
                                double stats_mindist, double stats_maxdist,
                                std::string stats_filename,
                                bool use_new_algorithm = false,
