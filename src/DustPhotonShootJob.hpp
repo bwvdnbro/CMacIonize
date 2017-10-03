@@ -54,7 +54,7 @@ private:
   CCDImage _image;
 
   /*! @brief Number of photons to propagate through the DensityGrid. */
-  unsigned int _numphoton;
+  uint_fast64_t _numphoton;
 
 public:
   /**
@@ -70,7 +70,7 @@ public:
    */
   inline DustPhotonShootJob(PhotonSource &photon_source,
                             const DustScattering &dust_scattering,
-                            int random_seed, DensityGrid &density_grid,
+                            int_fast32_t random_seed, DensityGrid &density_grid,
                             const CCDImage &image)
       : _photon_source(photon_source), _dust_scattering(dust_scattering),
         _random_generator(random_seed), _density_grid(density_grid),
@@ -81,7 +81,7 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(uint_fast64_t numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Update the given CCDImage.
@@ -108,7 +108,7 @@ public:
     // parameter
     const double band_albedo = _dust_scattering.get_albedo();
 
-    for (unsigned int i = 0; i < _numphoton; ++i) {
+    for (uint_fast64_t i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
       // overwrite direction: we need the direction components to speed things
       // up in other parts of the algorithm

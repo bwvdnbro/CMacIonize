@@ -398,7 +398,7 @@ public:
    *
    * @param worksize Number of threads to use.
    */
-  virtual void initialize(int worksize = -1) {
+  virtual void initialize(int_fast32_t worksize = -1) {
 
     WorkDistributor< FractalDensityMaskConstructionJobMarket,
                      FractalDensityMaskConstructionJob >

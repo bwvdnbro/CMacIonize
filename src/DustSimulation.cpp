@@ -101,7 +101,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
       params.get_value< std::string >("DustSimulation:output folder", "."));
   CCDImage dust_image(output_folder, params, log);
 
-  uint_fast32_t numphoton = params.get_value< uint_fast32_t >(
+  uint_fast64_t numphoton = params.get_value< uint_fast64_t >(
       "DustSimulation:number of photons", 5e5);
 
   // we are done reading the parameter file
@@ -133,14 +133,14 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   }
 
   // done writing file, now initialize grid
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< DustPhotonShootJobMarket, DustPhotonShootJob >
       dust_workdistributor(parser.get_value< int_fast32_t >("threads"));
-  const int worksize = dust_workdistributor.get_worksize();
+  const int_fast32_t worksize = dust_workdistributor.get_worksize();
   Timer worktimer;
 
   if (log) {

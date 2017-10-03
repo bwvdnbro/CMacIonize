@@ -127,6 +127,7 @@ protected:
    */
   inline void update_integrals(double ds, DensityGrid::iterator &cell,
                                const Photon &photon) const {
+
     IonizationVariables &ionization_variables = cell.get_ionization_variables();
     if (ionization_variables.get_number_density() > 0.) {
       // we tried speeding things up by using lock-free addition, but it turns
@@ -151,7 +152,7 @@ protected:
 #ifndef USE_LOCKFREE
       cell.lock();
 #endif
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         ionization_variables.increase_mean_intensity(ion, dmean_intensity[i]);
       }
@@ -198,7 +199,7 @@ public:
    *
    * @param numcell Number of cells that will be stored in the grid.
    */
-  inline void allocate_memory(unsigned long numcell) {
+  inline void allocate_memory(cellsize_t numcell) {
     if (_log) {
       _log->write_status(
           "Allocating memory for ", numcell, " cells (",
@@ -228,13 +229,13 @@ public:
    * @param block Block that should be initialized by this MPI process.
    * @param density_function DensityFunction to use.
    */
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+  virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
                           DensityFunction &density_function) {
     if (_has_hydro) {
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
       }
-      const unsigned int numcell = get_number_of_cells();
+      const cellsize_t numcell = get_number_of_cells();
       _hydro_variables.resize(numcell);
       if (_log) {
         _log->write_status("Done.");
@@ -261,9 +262,9 @@ public:
    *
    * @return Number of periodic boundaries of this grid (between 0 and 3).
    */
-  inline unsigned int get_number_of_periodic_boundaries() const {
-    unsigned int numperiodic = 0;
-    for (unsigned int i = 0; i < 3; ++i) {
+  inline uint_fast8_t get_number_of_periodic_boundaries() const {
+    uint_fast8_t numperiodic = 0;
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       numperiodic += _periodicity_flags[i];
     }
     return numperiodic;
@@ -275,7 +276,7 @@ public:
    * @param position CoordinateVector<> specifying a position (in m).
    * @return Index of the cell containing that position.
    */
-  virtual unsigned long get_cell_index(CoordinateVector<> position) const = 0;
+  virtual cellsize_t get_cell_index(CoordinateVector<> position) const = 0;
 
   /**
    * @brief Get the midpoint of the cell with the given index.
@@ -283,7 +284,7 @@ public:
    * @param index Index of a cell.
    * @return Midpoint of that cell (in m).
    */
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const = 0;
+  virtual CoordinateVector<> get_cell_midpoint(cellsize_t index) const = 0;
 
   /**
    * @brief Check if hydro is active.
@@ -302,7 +303,7 @@ public:
    */
   virtual std::vector<
       std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
-  get_neighbours(unsigned long index) = 0;
+  get_neighbours(cellsize_t index) = 0;
 
   /**
    * @brief Get the faces of the cell with the given index.
@@ -310,7 +311,7 @@ public:
    * @param index Index of a cell.
    * @return Faces of the cell.
    */
-  virtual std::vector< Face > get_faces(unsigned long index) const = 0;
+  virtual std::vector< Face > get_faces(cellsize_t index) const = 0;
 
   /**
    * @brief Get an iterator to the cell containing the given position.
@@ -329,7 +330,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_cell_volume(unsigned long index) const = 0;
+  virtual double get_cell_volume(cellsize_t index) const = 0;
 
   /**
    * @brief Get the total optical depth traversed by the given Photon until it
@@ -376,8 +377,7 @@ public:
    * @param index Index to increase.
    * @param increment Increment (default = 1).
    */
-  virtual void increase_index(unsigned long &index,
-                              unsigned long increment = 1) {
+  virtual void increase_index(cellsize_t &index, cellsize_t increment = 1) {
     index += increment;
   }
 
@@ -387,7 +387,7 @@ public:
   class iterator : public Cell {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */
-    unsigned long _index;
+    cellsize_t _index;
 
     /*! @brief Pointer to the DensityGrid over which we iterate (we cannot use a
      *  reference, since then things like it = it would not work). */
@@ -400,7 +400,7 @@ public:
      * @param index Index of the cell the iterator is currently pointing to.
      * @param grid DensityGrid over which we iterate.
      */
-    inline iterator(unsigned long index, DensityGrid &grid)
+    inline iterator(cellsize_t index, DensityGrid &grid)
         : _index(index), _grid(&grid) {}
 
     /**
@@ -426,11 +426,11 @@ public:
      * currently pointing to.
      */
     inline void reset_mean_intensities() {
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         const IonName ion = static_cast< IonName >(i);
         _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
-      for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
         const HeatingTermName name = static_cast< HeatingTermName >(i);
         _grid->_ionization_variables[_index].set_heating(name, 0.);
       }
@@ -578,7 +578,7 @@ public:
      * @param increment Increment to add.
      * @return Reference to the incremented iterator.
      */
-    inline iterator &operator+=(unsigned long increment) {
+    inline iterator &operator+=(cellsize_t increment) {
       _grid->increase_index(_index, increment);
       return *this;
     }
@@ -589,7 +589,7 @@ public:
      * @param increment Increment to add to the iterator.
      * @return Incremented iterator.
      */
-    inline iterator operator+(unsigned long increment) {
+    inline iterator operator+(cellsize_t increment) {
       iterator it(*this);
       it += increment;
       return it;
@@ -600,7 +600,7 @@ public:
      *
      * @return Index of the current cell.
      */
-    inline unsigned long get_index() const { return _index; }
+    inline cellsize_t get_index() const { return _index; }
 
     /**
      * @brief Compare iterators.
@@ -662,8 +662,8 @@ public:
    * @param end End index.
    * @return std::pair of iterators pointing to the begin and end of the chunk.
    */
-  inline std::pair< iterator, iterator > get_chunk(unsigned long begin,
-                                                   unsigned long end) {
+  inline std::pair< iterator, iterator > get_chunk(cellsize_t begin,
+                                                   cellsize_t end) {
     return std::make_pair(iterator(begin, *this), iterator(end, *this));
   }
 
@@ -696,11 +696,12 @@ public:
      * @param it DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(iterator it) {
+
       DensityValues vals = _function(it);
       IonizationVariables &ionization_variables = it.get_ionization_variables();
       ionization_variables.set_number_density(vals.get_number_density());
       ionization_variables.set_temperature(vals.get_temperature());
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
         IonName ion = static_cast< IonName >(i);
         ionization_variables.set_ionic_fraction(ion,
                                                 vals.get_ionic_fraction(ion));
@@ -712,8 +713,8 @@ public:
     }
   };
 
-  void set_densities(std::pair< unsigned long, unsigned long > &block,
-                     DensityFunction &function, int worksize = -1);
+  void set_densities(std::pair< cellsize_t, cellsize_t > &block,
+                     DensityFunction &function, int_fast32_t worksize = -1);
 
   /**
    * @brief Reset the mean intensity counters and update the reemission
