@@ -278,7 +278,7 @@ DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
   const CoordinateVector<> position = cell.get_cell_midpoint();
 
   double density = 0.;
-  const std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
+  const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
   const unsigned int numngbs = ngbs.size();
   for (unsigned int i = 0; i < numngbs; ++i) {
     const unsigned int index = ngbs[i];

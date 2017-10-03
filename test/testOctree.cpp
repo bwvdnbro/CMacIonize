@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
     }
     cmac_status("Number of ngbs (brute force): %lu.", ngbs_brute_force.size());
 
-    std::vector< unsigned int > ngbs_tree = tree.get_ngbs(centre);
+    std::vector< uint_fast32_t > ngbs_tree = tree.get_ngbs(centre);
     cmac_status("Number of ngbs (tree): %lu.", ngbs_tree.size());
 
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
     }
     cmac_status("Number of ngbs (brute force): %lu.", ngbs_brute_force.size());
 
-    std::vector< unsigned int > ngbs_tree = tree.get_ngbs(centre);
+    std::vector< uint_fast32_t > ngbs_tree = tree.get_ngbs(centre);
     cmac_status("Number of ngbs (tree): %lu.", ngbs_tree.size());
 
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());

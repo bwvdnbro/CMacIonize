@@ -41,12 +41,12 @@ private:
   const std::string _prefix;
 
   /*! @brief Number of digits used for the counter in the filenames. */
-  const unsigned char _padding;
+  const uint_fast8_t _padding;
 
 public:
   GadgetDensityGridWriter(std::string prefix,
                           std::string output_folder = std::string("."),
-                          Log *log = nullptr, unsigned char padding = 3);
+                          Log *log = nullptr, uint_fast8_t padding = 3);
   GadgetDensityGridWriter(std::string output_folder, ParameterFile &params,
                           Log *log = nullptr);
 

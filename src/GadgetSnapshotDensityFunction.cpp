@@ -99,8 +99,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     HDF5Tools::HDF5Group runtimepars =
         HDF5Tools::open_group(file, "/RuntimePars");
     // read the PeriodicBoundariesOn flag
-    periodic = HDF5Tools::read_attribute< int >(runtimepars,
-                                                "PeriodicBoundariesOn") != 0;
+    periodic = HDF5Tools::read_attribute< int32_t >(
+                   runtimepars, "PeriodicBoundariesOn") != 0;
     // close the group
     HDF5Tools::close_group(runtimepars);
   } else {
@@ -222,7 +222,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   // unit conversion + treebox data collection
   CoordinateVector<> minpos(DBL_MAX);
   CoordinateVector<> maxpos(-DBL_MAX);
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
+  for (size_t i = 0; i < _positions.size(); ++i) {
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
@@ -348,10 +348,10 @@ operator()(const Cell &cell) const {
   if (_neutral_fractions.size() > 0) {
     neutral_fraction = 0.;
   }
-  const std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
-  const unsigned int numngbs = ngbs.size();
-  for (unsigned int i = 0; i < numngbs; ++i) {
-    const unsigned int index = ngbs[i];
+  const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+  const size_t numngbs = ngbs.size();
+  for (size_t i = 0; i < numngbs; ++i) {
+    const uint_fast32_t index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();
@@ -387,7 +387,7 @@ operator()(const Cell &cell) const {
  */
 double GadgetSnapshotDensityFunction::get_total_hydrogen_number() const {
   double mtot = 0.;
-  for (unsigned int i = 0; i < _masses.size(); ++i) {
+  for (size_t i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];
   }
   return mtot / 1.6737236e-27;

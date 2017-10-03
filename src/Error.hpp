@@ -28,6 +28,7 @@
 
 #include "Configuration.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 
@@ -39,8 +40,8 @@
   {                                                                            \
     char buffer[10000];                                                        \
     sprintf(buffer, s, ##__VA_ARGS__);                                         \
-    int pos = 0;                                                               \
-    int linepos = 0;                                                           \
+    uint_fast32_t pos = 0;                                                     \
+    uint_fast32_t linepos = 0;                                                 \
     /* we scan the string char by char. If a tab is encountered, it is */      \
     /* replaced with four spaces. If a newline is found, we print */           \
     /* immediately. If a space is found, we need to figure out the position */ \
@@ -55,7 +56,7 @@
         if (buffer[pos] == ' ' || buffer[pos] == '\t') {                       \
           int old_linepos = linepos;                                           \
           if (buffer[pos] == '\t') {                                           \
-            for (unsigned int j = 0; j < 4; ++j) {                             \
+            for (uint_fast8_t j = 0; j < 4; ++j) {                             \
               line[linepos] = ' ';                                             \
               ++linepos;                                                       \
             }                                                                  \
@@ -64,7 +65,7 @@
             ++linepos;                                                         \
           }                                                                    \
           /* find the end of the next word */                                  \
-          int nextpos = 1;                                                     \
+          uint_fast32_t nextpos = 1;                                           \
           while (buffer[pos + nextpos] != '\t' &&                              \
                  buffer[pos + nextpos] != ' ' &&                               \
                  buffer[pos + nextpos] != '\n' &&                              \

@@ -125,9 +125,10 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre.
    */
-  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) const {
+  inline std::vector< uint_fast32_t >
+  get_ngbs(CoordinateVector<> centre) const {
 
-    std::vector< unsigned int > ngbs;
+    std::vector< uint_fast32_t > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {

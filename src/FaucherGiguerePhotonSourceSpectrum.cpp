@@ -53,7 +53,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   const double max_frequency = 4. * min_frequency;
-  for (unsigned int i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
+  for (uint_fast32_t i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
        ++i) {
     _frequencies[i] = min_frequency +
                       i * (max_frequency - min_frequency) /
@@ -77,7 +77,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     getline(zlofile, line);
     getline(zlofile, line);
     // now read the spectrum
-    for (unsigned int i = 0; i < 261; ++i) {
+    for (uint_fast16_t i = 0; i < 261; ++i) {
       getline(zlofile, line);
       std::istringstream linestream(line);
       double nu, e;
@@ -95,7 +95,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
       getline(zhifile, line);
       getline(zhifile, line);
       // now read the spectrum
-      for (unsigned int i = 0; i < 261; ++i) {
+      for (uint_fast16_t i = 0; i < 261; ++i) {
         getline(zlofile, line);
         std::istringstream linestream(line);
         double nu, e;
@@ -107,16 +107,16 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     // we now have the interpolated full spectrum
     // create the spectrum in our bin range of interest by linear interpolation
     _cumulative_distribution[0] = 0.;
-    for (unsigned int i = 1; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
+    for (uint_fast32_t i = 1; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
       const double y1 = _frequencies[i - 1];
-      const unsigned int i1 = Utilities::locate(y1, spectrum_freq, 261);
+      const uint_fast16_t i1 = Utilities::locate(y1, spectrum_freq, 261);
       double f = (y1 - spectrum_freq[i1]) /
                  (spectrum_freq[i1 + 1] - spectrum_freq[i1]);
       const double e1 =
           spectrum_ener[i1] + f * (spectrum_ener[i1 + 1] - spectrum_ener[i1]);
       const double y2 = _frequencies[i];
-      const unsigned int i2 = Utilities::locate(y2, spectrum_freq, 261);
+      const uint_fast16_t i2 = Utilities::locate(y2, spectrum_freq, 261);
       f = (y2 - spectrum_freq[i2]) /
           (spectrum_freq[i2 + 1] - spectrum_freq[i2]);
       const double e2 =
@@ -126,7 +126,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     // _cumulative_distribution now contains the actual ionizing spectrum
     // make it cumulative (and at the same time get the total ionizing
     // luminosity)
-    for (unsigned int i = 1; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
+    for (uint_fast32_t i = 1; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
       _cumulative_distribution[i] += _cumulative_distribution[i - 1];
     }
@@ -145,7 +145,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     // and convert from cm^-2 to m^-2
     _total_flux *= 1.e4;
     // normalize the spectrum
-    for (unsigned int i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
+    for (uint_fast32_t i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
       _cumulative_distribution[i] /=
           _cumulative_distribution[FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ -
@@ -153,7 +153,7 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
     }
   } else {
     // no UVB. We set the cumulative distribution and the total luminosity to 0
-    for (unsigned int i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
+    for (uint_fast32_t i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
          ++i) {
       _cumulative_distribution[i] = 0.;
     }
@@ -194,10 +194,10 @@ std::string FaucherGiguerePhotonSourceSpectrum::get_filename(double z) {
   // due to the strange way Faucher-Giguere's file names are formatted, and
   // since we need to be sure round off does not affect the names we generate,
   // we find the name using integer arithmetics rather than floating points
-  unsigned int iz = std::round(z / 0.05) * 5;
-  const unsigned int iz100 = iz / 100;
+  uint_fast32_t iz = std::round(z / 0.05) * 5;
+  const uint_fast32_t iz100 = iz / 100;
   iz -= iz100 * 100;
-  const unsigned int iz10 = iz / 10;
+  const uint_fast32_t iz10 = iz / 10;
   iz -= iz10 * 10;
   std::stringstream namestream;
   namestream << FAUCHERGIGUEREDATALOCATION << "fg_uvb_dec11_z_" << iz100 << "."
@@ -233,8 +233,9 @@ double FaucherGiguerePhotonSourceSpectrum::get_total_flux() const {
  */
 double FaucherGiguerePhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
+
   const double x = random_generator.get_uniform_random_double();
-  const unsigned int inu =
+  const uint_fast32_t inu =
       Utilities::locate(x, _cumulative_distribution.data(),
                         FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ);
   const double frequency =

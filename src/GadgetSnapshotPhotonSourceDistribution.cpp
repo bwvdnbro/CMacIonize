@@ -155,7 +155,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     }
 
     // filter out all particles with zero star formation rate
-    for (unsigned int i = 0; i < positions.size(); ++i) {
+    for (size_t i = 0; i < positions.size(); ++i) {
       if (sfrs[i] > 0.) {
         _positions.push_back(positions[i]);
         // by multiplying the star formation rate with the cutoff age, we get
@@ -186,7 +186,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     HDF5Tools::close_file(file);
 
     // filter out all stars older than the cutoff age
-    for (unsigned int i = 0; i < formtimes.size(); ++i) {
+    for (size_t i = 0; i < formtimes.size(); ++i) {
       const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
       if (age <= cutoff_age) {
         _positions.push_back(positions[i]);
@@ -195,7 +195,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     }
 
     // unit conversion
-    for (unsigned int i = 0; i < _positions.size(); ++i) {
+    for (size_t i = 0; i < _positions.size(); ++i) {
       _positions[i][0] *= unit_length_in_SI;
       _positions[i][1] *= unit_length_in_SI;
       _positions[i][2] *= unit_length_in_SI;

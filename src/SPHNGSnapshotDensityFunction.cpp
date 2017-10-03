@@ -456,7 +456,7 @@ void SPHNGSnapshotDensityFunction::initialize() {
         _log->write_info("Got statistics for ", i, " of ", _positions.size(),
                          " particles.");
       }
-      std::vector< unsigned int > ngbs = _octree->get_ngbs(_positions[i]);
+      std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(_positions[i]);
       const unsigned int numngbs = ngbs.size();
       totnumngb += numngbs;
       for (unsigned int j = 0; j < numngbs; ++j) {
@@ -944,7 +944,7 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density = 0.;
-    std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
+    std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
     const unsigned int numngbs = ngbs.size();
     for (unsigned int i = 0; i < numngbs; ++i) {
       const unsigned int index = ngbs[i];
