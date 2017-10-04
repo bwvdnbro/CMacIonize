@@ -719,9 +719,10 @@ inline bool string_ends_with(const std::string &haystack,
  * @param number Number to decompose.
  * @return std::vector containing the prime integer components.
  */
-inline std::vector< int > decompose(int number) {
-  std::vector< int > components;
-  int divisor = 2;
+template < typename _integer_type_ >
+inline std::vector< _integer_type_ > decompose(_integer_type_ number) {
+  std::vector< _integer_type_ > components;
+  _integer_type_ divisor = 2;
   while (divisor <= number && number > 1) {
     if (number % divisor == 0) {
       number /= divisor;
@@ -743,17 +744,18 @@ inline std::vector< int > decompose(int number) {
  * @param numblock Number of blocks to subdivide in.
  * @return Resolution of a single block.
  */
-inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
-                                         int numblock) {
+template < typename _integer_type_, typename _size_type_ >
+inline CoordinateVector< _integer_type_ >
+subdivide(CoordinateVector< _integer_type_ > ncell, _size_type_ numblock) {
 
-  std::vector< std::vector< int > > d_ncell(3);
+  std::vector< std::vector< _integer_type_ > > d_ncell(3);
   d_ncell[0] = decompose(ncell.x());
   d_ncell[1] = decompose(ncell.y());
   d_ncell[2] = decompose(ncell.z());
 
   // remove large factors until we reach at least the requested number of blocks
-  int factor = 1;
-  unsigned int idim = 0;
+  _size_type_ factor = 1;
+  uint_fast8_t idim = 0;
   while (factor < numblock) {
     factor *= d_ncell[idim].back();
     d_ncell[idim].pop_back();
@@ -764,9 +766,9 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
   }
 
   // collapse the remaining factors to get the block size
-  CoordinateVector< int > block(1);
-  for (unsigned int i = 0; i < 3; ++i) {
-    for (unsigned int j = 0; j < d_ncell[i].size(); ++j) {
+  CoordinateVector< _integer_type_ > block(1);
+  for (uint_fast8_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < d_ncell[i].size(); ++j) {
       block[i] *= d_ncell[i][j];
     }
   }

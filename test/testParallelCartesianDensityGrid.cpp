@@ -40,9 +40,9 @@ int main(int argc, char **argv) {
   // and only works because we have defined the single value constructor for
   // CoordinateVector<>
   Box<> box(0., 1.);
-  CoordinateVector< int > numcell(32, 32, 32);
-  unsigned int numdomain = 64;
-  std::pair< int, int > domain = std::make_pair(0, 64);
+  CoordinateVector< int_fast32_t > numcell(32, 32, 32);
+  uint_fast32_t numdomain = 64;
+  std::pair< int_fast32_t, int_fast32_t > domain = std::make_pair(0, 64);
 
   ParallelCartesianDensityGrid grid(box, numcell, numdomain, domain);
 

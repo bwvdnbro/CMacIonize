@@ -73,7 +73,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   // set up the frequency bins and calculate the Planck luminosities
   std::vector< double > frequency(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
   std::vector< double > luminosity(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
-  for (unsigned int i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     frequency[i] =
         1. +
         i * (max_frequency - 1.) / (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
@@ -85,7 +85,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
 
   // convert the Planck luminosities to a cumulative distribution
   _cumulative_distribution[0] = 0.;
-  for (unsigned int i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] = _cumulative_distribution[i - 1] +
                                   0.5 * (luminosity[i] / frequency[i] +
                                          luminosity[i - 1] / frequency[i - 1]) *
@@ -95,7 +95,7 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   // normalize the cumulative distribution and calculate the logarithms
   _log_cumulative_distribution[0] = -10.;
   _log_frequency[0] = 0.;
-  for (unsigned int i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
         _cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1];
     _log_cumulative_distribution[i] = std::log10(_cumulative_distribution[i]);
@@ -150,8 +150,8 @@ double PlanckPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
   double x = random_generator.get_uniform_random_double();
 
-  unsigned int ix = Utilities::locate(x, _cumulative_distribution.data(),
-                                      PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
+  uint_fast32_t ix = Utilities::locate(x, _cumulative_distribution.data(),
+                                       PLANCKPHOTONSOURCESPECTRUM_NUMFREQ);
   double log_random_frequency =
       (std::log10(x) - _log_cumulative_distribution[ix]) /
           (_log_cumulative_distribution[ix + 1] -

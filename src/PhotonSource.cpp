@@ -68,7 +68,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
     _discrete_probabilities.resize(distribution->get_number_of_sources());
-    for (unsigned int i = 0; i < _discrete_positions.size(); ++i) {
+    for (size_t i = 0; i < _discrete_positions.size(); ++i) {
       _discrete_positions[i] = distribution->get_position(i);
       if (i > 0) {
         _discrete_probabilities[i] =
@@ -187,7 +187,8 @@ PhotonSource::~PhotonSource() { delete _reemission_handler; }
  * @param energy Energy of the photon (in Hz).
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     const IonName ion = static_cast< IonName >(i);
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
@@ -216,7 +217,7 @@ PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
     cmac_assert(_discrete_probabilities.back() == 1.);
     // discrete photon
     x = random_generator.get_uniform_random_double();
-    unsigned int i = 0;
+    size_t i = 0;
     while (x > _discrete_probabilities[i]) {
       ++i;
       cmac_assert(i < _discrete_probabilities.size());

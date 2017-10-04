@@ -42,13 +42,14 @@ int main(int argc, char **argv) {
   {
     // create a reference to the static function, this makes the lines below
     // shorter
-    void (&func)(int &, int &, int &, int &) =
+    void (&func)(int_fast32_t &, int_fast32_t &, int_fast32_t &,
+                 int_fast32_t &) =
         PointLocations::ngbiterator::increase_indices;
     // start from the middle box
-    int rx = 0;
-    int ry = 0;
-    int rz = 0;
-    int level = 0;
+    int_fast32_t rx = 0;
+    int_fast32_t ry = 0;
+    int_fast32_t rz = 0;
+    int_fast32_t level = 0;
     // now do a full cycle of the next shell and check every step of the cycle
     func(rx, ry, rz, level);
     assert_condition(rx == -1 && ry == -1 && rz == -1 && level == 1);
@@ -108,7 +109,7 @@ int main(int argc, char **argv) {
 
   /// Test PointLocations::ngbiterator::set_max_range
   {
-    int mx, my, mz, mlevel;
+    int_fast32_t mx, my, mz, mlevel;
     PointLocations::ngbiterator::set_max_range(mx, my, mz, mlevel, 6, 9, 9, 10,
                                                10, 10);
     assert_condition(mx == 3 && my == 0 && mz == -9 && mlevel == 9);

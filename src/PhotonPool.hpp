@@ -49,7 +49,7 @@ public:
    * @param num_bucket Number of buckets in the pool.
    * @param max_size Maximum size of a single PhotonBatch in a bucket.
    */
-  PhotonPool(unsigned int num_bucket, unsigned int max_size)
+  PhotonPool(uint_fast32_t num_bucket, uint_fast32_t max_size)
       : _buckets(num_bucket, max_size) {}
 
   /**
@@ -58,7 +58,7 @@ public:
    * @param bucket_index Index of a PhotonBucket.
    * @param photon Photon to add.
    */
-  void add_photon(unsigned int bucket_index, Photon photon) {
+  void add_photon(uint_fast32_t bucket_index, Photon photon) {
     _buckets[bucket_index].add_photon(photon);
   }
 
@@ -69,7 +69,7 @@ public:
    * @return Pointer to a PhotonBatch that can be processed. Memory management
    * for this pointer should be done by the calling process.
    */
-  PhotonBatch *get_batch(unsigned int bucket_index) {
+  PhotonBatch *get_batch(uint_fast32_t bucket_index) {
     return _buckets[bucket_index].get_batch();
   }
 };
