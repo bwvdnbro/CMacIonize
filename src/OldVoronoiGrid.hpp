@@ -72,9 +72,9 @@ private:
    *  plane. */
   double _epsilon;
 
-  unsigned int add_cell(CoordinateVector<> generator_position);
+  uint_fast32_t add_cell(CoordinateVector<> generator_position);
 
-  void compute_cell(unsigned int index);
+  void compute_cell(uint_fast32_t index);
 
   /**
    * @brief Job that constructs part of the Voronoi grid.
@@ -85,10 +85,10 @@ private:
     OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that this job will construct. */
-    const unsigned int _first_index;
+    const uint_fast32_t _first_index;
 
     /*! @brief Index of the beyond last cell that this job will construct. */
-    const unsigned int _last_index;
+    const uint_fast32_t _last_index;
 
   public:
     /**
@@ -100,8 +100,8 @@ private:
      * construct.
      */
     inline OldVoronoiGridConstructionJob(OldVoronoiGrid &grid,
-                                         unsigned int first_index,
-                                         unsigned int last_index)
+                                         uint_fast32_t first_index,
+                                         uint_fast32_t last_index)
         : _grid(grid), _first_index(first_index), _last_index(last_index) {}
 
     /**
@@ -116,7 +116,7 @@ private:
      * @brief Construct the Voronoi cell for each index in the job range.
      */
     inline void execute() {
-      for (unsigned int i = _first_index; i < _last_index; ++i) {
+      for (uint_fast32_t i = _first_index; i < _last_index; ++i) {
         _grid.compute_cell(i);
       }
     }
@@ -138,10 +138,10 @@ private:
     OldVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that still needs to be constructed. */
-    unsigned int _current_index;
+    uint_fast32_t _current_index;
 
     /*! @brief Number of cells constructed by a single job. */
-    const unsigned int _jobsize;
+    const uint_fast32_t _jobsize;
 
     /*! @brief Lock used to ensure safe access to the internal index. */
     Lock _lock;
@@ -154,7 +154,7 @@ private:
      * @param jobsize Number of cell constructed by a single job.
      */
     inline OldVoronoiGridConstructionJobMarket(OldVoronoiGrid &grid,
-                                               unsigned int jobsize)
+                                               uint_fast32_t jobsize)
         : _grid(grid), _current_index(0), _jobsize(jobsize) {}
 
     /**
@@ -163,7 +163,7 @@ private:
      *
      * @param worksize Number of parallel threads that will be used.
      */
-    inline void set_worksize(int worksize) {}
+    inline void set_worksize(int_fast32_t worksize) {}
 
     /**
      * @brief Get a VoronoiGridConstructionJob.
@@ -171,20 +171,20 @@ private:
      * @param thread_id Id of the thread that calls this function.
      * @return Pointer to a unique and thread safe VoronoiGridConstructionJob.
      */
-    inline OldVoronoiGridConstructionJob *get_job(int thread_id) {
-      const unsigned int cellsize = _grid._cells.size();
+    inline OldVoronoiGridConstructionJob *get_job(int_fast32_t thread_id) {
+      const size_t cellsize = _grid._cells.size();
       if (_current_index == cellsize) {
         return nullptr;
       }
-      unsigned int first_index;
-      unsigned int jobsize;
+      uint_fast32_t first_index;
+      uint_fast32_t jobsize;
       _lock.lock();
       first_index = _current_index;
       jobsize = std::min(_jobsize, cellsize - _current_index);
       _current_index += jobsize;
       _lock.unlock();
       if (first_index < cellsize) {
-        const unsigned int last_index = first_index + jobsize;
+        const uint_fast32_t last_index = first_index + jobsize;
         return new OldVoronoiGridConstructionJob(_grid, first_index,
                                                  last_index);
       } else {
@@ -204,25 +204,25 @@ public:
 
   /// grid computation methods
 
-  virtual void compute_grid(int worksize = -1);
+  virtual void compute_grid(int_fast32_t worksize = -1);
 
   /// cell/grid property access
 
-  virtual double get_volume(unsigned int index) const;
-  virtual CoordinateVector<> get_centroid(unsigned int index) const;
-  virtual CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  virtual std::vector< VoronoiFace > get_faces(unsigned int index) const;
-  virtual std::vector< Face > get_geometrical_faces(unsigned int index) const;
+  virtual double get_volume(uint_fast32_t index) const;
+  virtual CoordinateVector<> get_centroid(uint_fast32_t index) const;
+  virtual CoordinateVector<> get_wall_normal(int_fast32_t wallindex) const;
+  virtual std::vector< VoronoiFace > get_faces(uint_fast32_t index) const;
+  virtual std::vector< Face > get_geometrical_faces(uint_fast32_t index) const;
 
   /// grid navigation
 
-  virtual unsigned int get_index(const CoordinateVector<> &position) const;
+  virtual uint_fast32_t get_index(const CoordinateVector<> &position) const;
   virtual bool is_inside(CoordinateVector<> position) const;
-  virtual bool is_real_neighbour(unsigned int index) const;
+  virtual bool is_real_neighbour(uint_fast32_t index) const;
 
   /// printing
 
-  void print_cell(unsigned int index, std::ostream &stream);
+  void print_cell(uint_fast32_t index, std::ostream &stream);
   void print_grid(std::ostream &stream);
 };
 

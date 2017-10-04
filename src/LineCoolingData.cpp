@@ -1429,7 +1429,7 @@ double LineCoolingData::get_energy_difference(
  */
 double
 LineCoolingData::get_statistical_weight(LineCoolingDataFiveLevelElement element,
-                                        unsigned char level) const {
+                                        uint_fast8_t level) const {
   return 1. / _five_level_inverse_statistical_weight[element][level];
 }
 
@@ -1493,11 +1493,11 @@ LineCoolingData::get_statistical_weight(LineCoolingDataFiveLevelElement element,
 int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
                                                       double B[5]) {
 
-  for (unsigned char j = 0; j < 5; ++j) {
+  for (uint_fast8_t j = 0; j < 5; ++j) {
     // find the next row with the largest coefficient
-    unsigned char imax = 0;
+    uint_fast8_t imax = 0;
     double Amax = 0.;
-    for (unsigned char i = j; i < 5; ++i) {
+    for (uint_fast8_t i = j; i < 5; ++i) {
       if (std::abs(A[i][j]) > std::abs(Amax)) {
         Amax = A[i][j];
         imax = i;
@@ -1511,7 +1511,7 @@ int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
     // imax now contains the index of the row with the largest coefficient
     // interchange rows if necessary to make sure that the row with the largest
     // coefficient is the next row to eliminate with
-    for (unsigned char k = 0; k < 5; ++k) {
+    for (uint_fast8_t k = 0; k < 5; ++k) {
       if (imax != j) {
         const double save = A[j][k];
         A[j][k] = A[imax][k];
@@ -1531,8 +1531,8 @@ int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
     // save computations)
     if (j < 4) {
       // we are not finished yet: use row j to eliminate all rows below row j
-      for (unsigned char i = j + 1; i < 5; ++i) {
-        for (unsigned char k = j + 1; k < 5; ++k) {
+      for (uint_fast8_t i = j + 1; i < 5; ++i) {
+        for (uint_fast8_t k = j + 1; k < 5; ++k) {
           A[i][k] -= A[i][j] * A[j][k];
         }
         B[i] -= A[i][j] * B[j];
@@ -1547,8 +1547,8 @@ int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
   //  0   0   0   0   1  B4
   // In other words: B[4] contains the value of the last variable
   // use it to recursively solve for the others
-  for (unsigned char i = 0; i < 4; ++i) {
-    for (unsigned char j = 0; j < i + 1; ++j) {
+  for (uint_fast8_t i = 0; i < 4; ++i) {
+    for (uint_fast8_t j = 0; j < i + 1; ++j) {
       B[3 - i] -= B[4 - j] * A[3 - i][4 - j];
     }
   }
@@ -1575,7 +1575,7 @@ void LineCoolingData::compute_level_populations(
   double level_matrix[5][5];
   // initialize the level populations and the first row of the coefficient
   // matrix
-  for (unsigned char i = 0; i < 5; ++i) {
+  for (uint_fast8_t i = 0; i < 5; ++i) {
     level_matrix[0][i] = 1.;
     level_populations[i] = 0.;
   }
@@ -1586,7 +1586,7 @@ void LineCoolingData::compute_level_populations(
   // precompute the collision rates for the given temperature
   double collision_rate_down[NUMBER_OF_TRANSITIONS];
   double collision_rate_up[NUMBER_OF_TRANSITIONS];
-  for (int i = 0; i < NUMBER_OF_TRANSITIONS; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_TRANSITIONS; ++i) {
     const double collision_strength =
         collision_strength_prefactor *
         std::pow(T, 1. + _five_level_collision_strength[element][i][0]) *
@@ -1686,7 +1686,7 @@ void LineCoolingData::compute_level_populations(
              collision_rate_down[TRANSITION_3_to_4]));
 
   // find level populations
-  const int status =
+  const int_fast32_t status =
       solve_system_of_linear_equations(level_matrix, level_populations);
   if (status != 0) {
     // something went wrong
@@ -1715,7 +1715,7 @@ double LineCoolingData::compute_level_population(
     double T, double Tinv, double logT) const {
 
   // note that we need to remap the element index
-  const int i = element - LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+  const int_fast32_t i = element - LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   const double ksi = _two_level_energy_difference[i];
   const double A = _two_level_transition_probability[i];
   const double collision_strength =
@@ -1790,7 +1790,7 @@ double LineCoolingData::get_cooling(
   /// five level elements
 
   double cooling = 0.;
-  for (int j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
+  for (int_fast32_t j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
 
     const LineCoolingDataFiveLevelElement element =
         static_cast< LineCoolingDataFiveLevelElement >(j);
@@ -1836,10 +1836,10 @@ double LineCoolingData::get_cooling(
   /// 2 level atoms
 
   // offset of two level elements in the abundances array
-  const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  const int_fast32_t offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+  for (int_fast32_t i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int index = i + offset;
+    const int_fast32_t index = i + offset;
     const LineCoolingDataTwoLevelElement element =
         static_cast< LineCoolingDataTwoLevelElement >(index);
     const double level_population = compute_level_population(
@@ -1881,7 +1881,7 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
 
   /// 5 level elements
 
-  for (int j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
+  for (int_fast32_t j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
 
     line_strengths[j].resize(NUMBER_OF_TRANSITIONS);
 
@@ -1939,10 +1939,10 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
   /// 2 level elements
 
   // offset of two level elements in the abundances array
-  const int offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
-  for (int i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
+  const int_fast32_t offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+  for (int_fast32_t i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int index = i + offset;
+    const int_fast32_t index = i + offset;
 
     line_strengths[index].resize(1);
 

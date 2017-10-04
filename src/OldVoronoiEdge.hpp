@@ -26,19 +26,21 @@
 #ifndef OLDVORONOIEDGE_HPP
 #define OLDVORONOIEDGE_HPP
 
+#include <cstdint>
+
 /**
  * @brief Edge of the old Voronoi grid.
  */
 class OldVoronoiEdge {
 private:
   /*! @brief Index of the vertex on the other side of the edge. */
-  int _endpoint;
+  int_least32_t _endpoint;
 
   /*! @brief Index of the edge in the edge list of the endpoint vertex. */
-  unsigned char _endpoint_index;
+  uint_least8_t _endpoint_index;
 
   /*! @brief Neighbour linked to this vertex-edge pair. */
-  unsigned int _neighbour;
+  uint_least32_t _neighbour;
 
 public:
   /**
@@ -51,21 +53,21 @@ public:
    *
    * @return Index of the vertex on the other side.
    */
-  inline int get_endpoint() const { return _endpoint; }
+  inline int_fast32_t get_endpoint() const { return _endpoint; }
 
   /**
    * @brief Set the index of the vertex on the other side of the edge.
    *
    * @param endpoint Index of the vertex on the other side.
    */
-  inline void set_endpoint(int endpoint) { _endpoint = endpoint; }
+  inline void set_endpoint(int_fast32_t endpoint) { _endpoint = endpoint; }
 
   /**
    * @brief Get the index of the edge in the edge list of the endpoint vertex.
    *
    * @return Index of the edge in the edge list of the endpoint vertex.
    */
-  inline unsigned char get_endpoint_index() const { return _endpoint_index; }
+  inline uint_fast8_t get_endpoint_index() const { return _endpoint_index; }
 
   /**
    * @brief Set the index of the edge in the edge list of the endpoint vertex.
@@ -73,7 +75,7 @@ public:
    * @param endpoint_index Index of the edge in the edge list of the endpoint
    * vertex.
    */
-  inline void set_endpoint_index(unsigned char endpoint_index) {
+  inline void set_endpoint_index(uint_fast8_t endpoint_index) {
     _endpoint_index = endpoint_index;
   }
 
@@ -82,14 +84,14 @@ public:
    *
    * @return Neighbour linked to this vertex-edge pair.
    */
-  inline unsigned int get_neighbour() const { return _neighbour; }
+  inline uint_fast32_t get_neighbour() const { return _neighbour; }
 
   /**
    * @brief Set the neighbour linked to this vertex-edge pair.
    *
    * @param neighbour Neighbour linked to this vertex-edge pair.
    */
-  inline void set_neighbour(unsigned int neighbour) { _neighbour = neighbour; }
+  inline void set_neighbour(uint_fast32_t neighbour) { _neighbour = neighbour; }
 };
 
 #endif // OLDVORONOIEDGE_HPP

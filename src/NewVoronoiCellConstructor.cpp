@@ -110,7 +110,7 @@ NewVoronoiCellConstructor::NewVoronoiCellConstructor()
  * the simulation box.
  */
 void NewVoronoiCellConstructor::setup(
-    unsigned int generator, const std::vector< CoordinateVector<> > &positions,
+    uint_fast32_t generator, const std::vector< CoordinateVector<> > &positions,
     const NewVoronoiBox &box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
     const NewVoronoiBox &rescaled_box, bool reflective_boundaries) {
@@ -166,7 +166,7 @@ void NewVoronoiCellConstructor::setup(
  * @param real_positions Generator positions (real representation, in m).
  */
 void NewVoronoiCellConstructor::intersect(
-    unsigned int ngb, const NewVoronoiBox &rescaled_box,
+    uint_fast32_t ngb, const NewVoronoiBox &rescaled_box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
     const NewVoronoiBox &real_voronoi_box,
     const std::vector< CoordinateVector<> > &real_positions) {
@@ -179,23 +179,23 @@ void NewVoronoiCellConstructor::intersect(
   }
 
   // find the tetrahedron/a that contains the new point
-  unsigned int tetrahedra[UCHAR_MAX];
-  const unsigned char number_of_tetrahedra =
+  uint_fast32_t tetrahedra[UCHAR_MAX];
+  const uint_fast8_t number_of_tetrahedra =
       find_tetrahedron(ngb, rescaled_box, rescaled_positions, tetrahedra);
 
   // add the new vertex
-  const unsigned int vertex_index = add_new_vertex(ngb);
+  const uint_fast32_t vertex_index = add_new_vertex(ngb);
 
-  unsigned int next_check = 0;
+  uint_fast32_t next_check = 0;
   bool queue[NEWVORONOICELL_QUEUE_SIZE];
-  for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+  for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     queue[i] = false;
   }
-  unsigned int queue_size = _tetrahedra_size;
+  uint_fast32_t queue_size = _tetrahedra_size;
   cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
   if (number_of_tetrahedra == 1) {
     // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
-    unsigned int tn[4];
+    uint_fast32_t tn[4];
     one_to_four_flip(vertex_index, tetrahedra[0], tn);
 
     add_to_queue(tn[0], queue, queue_size);
@@ -213,7 +213,7 @@ void NewVoronoiCellConstructor::intersect(
 
   } else if (number_of_tetrahedra == 2) {
     // point on face: replace the 2 tetrahedra with 6 new ones
-    unsigned int tn[6];
+    uint_fast32_t tn[6];
     two_to_six_flip(vertex_index, tetrahedra, tn);
 
     add_to_queue(tn[0], queue, queue_size);
@@ -237,11 +237,11 @@ void NewVoronoiCellConstructor::intersect(
 
   } else if (number_of_tetrahedra > 2) {
     // point on edge: replace the N tetrahedra with 2N new ones
-    unsigned int tn[2 * UCHAR_MAX];
+    uint_fast32_t tn[2 * UCHAR_MAX];
     n_to_2n_flip(vertex_index, tetrahedra, number_of_tetrahedra, tn);
 
     next_check = tn[0];
-    for (unsigned int i = 0; i < 2 * number_of_tetrahedra; ++i) {
+    for (uint_fast16_t i = 0; i < 2 * number_of_tetrahedra; ++i) {
       newvoronoicell_test_orientation(tn[i], rescaled_box, rescaled_positions);
       add_to_queue(tn[i], queue, queue_size);
       next_check = std::min(next_check, tn[i]);
@@ -272,7 +272,7 @@ void NewVoronoiCellConstructor::intersect(
     // update _max_r2
     _max_r2 = 0.;
     _max_tetrahedron = 0;
-    for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+    for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
       if (_tetrahedra[i].is_active()) {
         if (_tetrahedra[i].get_vertex(0) == 0 ||
             _tetrahedra[i].get_vertex(1) == 0 ||
@@ -326,13 +326,13 @@ NewVoronoiCell NewVoronoiCellConstructor::get_cell(
     const std::vector< CoordinateVector<> > &positions) const {
 
   std::vector< CoordinateVector<> > real_positions(_vertices_size);
-  for (unsigned int i = 0; i < _vertices_size; ++i) {
+  for (uint_fast32_t i = 0; i < _vertices_size; ++i) {
     real_positions[i] = get_position(_vertices[i], box, positions);
   }
 
   std::vector< CoordinateVector<> > cell_vertices(_tetrahedra_size + 1);
   cell_vertices[0] = real_positions[0];
-  for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+  for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     if (_tetrahedra[i].is_active()) {
       cell_vertices[i + 1] =
           _tetrahedra[i].get_midpoint_circumsphere(real_positions);
@@ -343,42 +343,42 @@ NewVoronoiCell NewVoronoiCellConstructor::get_cell(
   // of it. If so, we add new connections for every other vertex of the
   // tetrahedron that has not been processed before
   // To check the latter, we need an additional flag vector
-  std::vector< std::vector< unsigned int > > connections;
+  std::vector< std::vector< uint_fast32_t > > connections;
   std::vector< bool > processed(_vertices_size, false);
-  std::vector< unsigned int > connection_vertices;
-  for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+  std::vector< uint_fast32_t > connection_vertices;
+  for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     if (_tetrahedra[i].is_active()) {
-      const unsigned int vertices[4]{
+      const uint_fast32_t vertices[4]{
           _tetrahedra[i].get_vertex(0), _tetrahedra[i].get_vertex(1),
           _tetrahedra[i].get_vertex(2), _tetrahedra[i].get_vertex(3)};
-      unsigned char j = 0;
+      uint_fast8_t j = 0;
       while (j < 4 && vertices[j] != 0) {
         ++j;
       }
       if (j < 4) {
         // generator 0 is one of the vertices: add connections for every edge
-        for (unsigned char k = 0; k < 3; ++k) {
-          const unsigned char other_j = (j + k + 1) % 4;
-          const unsigned int other_vertex = vertices[other_j];
+        for (uint_fast8_t k = 0; k < 3; ++k) {
+          const uint_fast8_t other_j = (j + k + 1) % 4;
+          const uint_fast32_t other_vertex = vertices[other_j];
           if (!processed[other_vertex]) {
-            connections.push_back(std::vector< unsigned int >());
+            connections.push_back(std::vector< uint_fast32_t >());
             connection_vertices.push_back(other_vertex);
             // add the current tetrahedron as first connection
             connections.back().push_back(i);
             // now we need to find the next tetrahedron, taking into account the
             // ordering of the tetrahedra around the axis
-            unsigned char third_j = (other_j + 1) % 4;
+            uint_fast8_t third_j = (other_j + 1) % 4;
             if (third_j == j) {
               third_j = (third_j + 1) % 4;
             }
             // 'third_j' now definitely contains the index of a vertex that is
             // not 'j' or 'other_j'
-            unsigned int ngb = _tetrahedra[i].get_neighbour(third_j);
+            uint_fast32_t ngb = _tetrahedra[i].get_neighbour(third_j);
             cmac_assert_message(ngb < _tetrahedra_size, "ngb: %#010x", ngb);
-            unsigned int prev_ngb = i;
+            uint_fast32_t prev_ngb = i;
             while (ngb != i) {
               connections.back().push_back(ngb);
-              unsigned int ngb_vertices[4];
+              uint_fast32_t ngb_vertices[4];
               ngb_vertices[0] = _tetrahedra[ngb].get_vertex(0);
               ngb_vertices[1] = _tetrahedra[ngb].get_vertex(1);
               ngb_vertices[2] = _tetrahedra[ngb].get_vertex(2);
@@ -406,13 +406,13 @@ NewVoronoiCell NewVoronoiCellConstructor::get_cell(
   double volume = 0.;
   CoordinateVector<> centroid;
   std::vector< VoronoiFace > faces;
-  for (unsigned int i = 0; i < connections.size(); ++i) {
+  for (size_t i = 0; i < connections.size(); ++i) {
     double area = 0.;
     CoordinateVector<> midpoint;
     std::vector< CoordinateVector<> > vertices;
     vertices.push_back(cell_vertices[connections[i][0] + 1]);
     vertices.push_back(cell_vertices[connections[i][1] + 1]);
-    for (unsigned int j = 2; j < connections[i].size(); ++j) {
+    for (size_t j = 2; j < connections[i].size(); ++j) {
       vertices.push_back(cell_vertices[connections[i][j] + 1]);
       const NewVoronoiTetrahedron tetrahedron(0, connections[i][0] + 1,
                                               connections[i][j] + 1,
@@ -456,24 +456,25 @@ NewVoronoiCell NewVoronoiCellConstructor::get_cell(
  * @return Number of tetrahedra that contain the given point; this is the same
  * as the number of valid elements stored in the indices array.
  */
-unsigned char NewVoronoiCellConstructor::find_tetrahedron(
-    unsigned int point_index, const NewVoronoiBox &rescaled_box,
+uint_fast8_t NewVoronoiCellConstructor::find_tetrahedron(
+    uint_fast32_t point_index, const NewVoronoiBox &rescaled_box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
-    unsigned int *indices) const {
+    uint_fast32_t *indices) const {
+
   // start with an arbitrary tetrahedron, the last one is usually a good choice
-  unsigned int tetrahedron = _tetrahedra_size - 1;
+  uint_fast32_t tetrahedron = _tetrahedra_size - 1;
   // unless the last one was deleted of course, in which case we start with the
   // first available tetrahedron
   while (!_tetrahedra[tetrahedron].is_active()) {
     --tetrahedron;
   }
-  unsigned char test = 0;
+  uint_fast8_t test = 0;
   while (test == 0) {
     // get the vertices of the current tetrahedron guess
-    const unsigned int v0 = _tetrahedra[tetrahedron].get_vertex(0);
-    const unsigned int v1 = _tetrahedra[tetrahedron].get_vertex(1);
-    const unsigned int v2 = _tetrahedra[tetrahedron].get_vertex(2);
-    const unsigned int v3 = _tetrahedra[tetrahedron].get_vertex(3);
+    const uint_fast32_t v0 = _tetrahedra[tetrahedron].get_vertex(0);
+    const uint_fast32_t v1 = _tetrahedra[tetrahedron].get_vertex(1);
+    const uint_fast32_t v2 = _tetrahedra[tetrahedron].get_vertex(2);
+    const uint_fast32_t v3 = _tetrahedra[tetrahedron].get_vertex(3);
 
     // get the actual positions of the vertices (and of the test point)
     const CoordinateVector<> pr0 =
@@ -498,7 +499,7 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
     // direction
     // however, if that tetrahedron does not exist, we continue testing until
     // we find a neighbour that does exist
-    const char abce =
+    const int_fast8_t abce =
         ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr2, pr4);
     if (abce > 0) {
       // point is outside the tetrahedron, next tetrahedron to check is the one
@@ -509,7 +510,7 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
       }
     }
 
-    const char acde =
+    const int_fast8_t acde =
         ExactGeometricTests::orient3d_adaptive(pr0, pr2, pr3, pr4);
     if (acde > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(1);
@@ -518,7 +519,7 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
       }
     }
 
-    const char adbe =
+    const int_fast8_t adbe =
         ExactGeometricTests::orient3d_adaptive(pr0, pr3, pr1, pr4);
     if (adbe > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(2);
@@ -527,7 +528,7 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
       }
     }
 
-    const char bdce =
+    const int_fast8_t bdce =
         ExactGeometricTests::orient3d_adaptive(pr1, pr3, pr2, pr4);
     if (bdce > 0) {
       tetrahedron = _tetrahedra[tetrahedron].get_neighbour(0);
@@ -560,22 +561,22 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
     // this edge can be shared by an unknown number of tetrahedra, of which we
     // already have three
     // we try to find the other ones by rotating around the relevant axis
-    const unsigned char non_axis0 =
+    const uint_fast8_t non_axis0 =
         _tetrahedra[indices[0]].get_index(indices[1]);
-    const unsigned char non_axis1 =
+    const uint_fast8_t non_axis1 =
         _tetrahedra[indices[0]].get_index(indices[2]);
-    unsigned char axis0 = (non_axis0 + 1) % 4;
+    uint_fast8_t axis0 = (non_axis0 + 1) % 4;
     if (axis0 == non_axis1) {
       axis0 = (axis0 + 1) % 4;
     }
-    const unsigned char axis1 = 6 - non_axis0 - non_axis1 - axis0;
+    const uint_fast8_t axis1 = 6 - non_axis0 - non_axis1 - axis0;
     cmac_assert(axis0 != axis1 && axis0 != non_axis0 && axis0 != non_axis1 &&
                 axis1 != non_axis0 && axis1 != non_axis1 &&
                 non_axis0 != non_axis1);
 
     // a0 and a1 are the axis points that are shared by all the tetrahedra
-    const unsigned int a0 = _tetrahedra[indices[0]].get_vertex(axis0);
-    const unsigned int a1 = _tetrahedra[indices[0]].get_vertex(axis1);
+    const uint_fast32_t a0 = _tetrahedra[indices[0]].get_vertex(axis0);
+    const uint_fast32_t a1 = _tetrahedra[indices[0]].get_vertex(axis1);
 
     // we now walk around the axis. We start from tetrahedron 'indices[2]' and
     // try to find the next tetrahedron in line: the tetrahedron opposite the
@@ -583,12 +584,11 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
     // axis points
     // note that since we want to end with tetrahedron 'indices[1]', we need to
     // make sure that one was is also last in the list
-    unsigned char next_vertex =
-        _tetrahedra[indices[0]].get_ngb_index(non_axis1);
-    unsigned int next = indices[2];
+    uint_fast8_t next_vertex = _tetrahedra[indices[0]].get_ngb_index(non_axis1);
+    uint_fast32_t next = indices[2];
     // we use a trick to make sure 'indices[2]' is not added twice to 'indices'
     test -= 2;
-    const unsigned int last_tetrahedron = indices[1];
+    const uint_fast32_t last_tetrahedron = indices[1];
     while (next != last_tetrahedron) {
       indices[test] = next;
       ++test;
@@ -605,7 +605,7 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
       cmac_assert(_tetrahedra[next].get_vertex(next_vertex) != a0 &&
                   _tetrahedra[next].get_vertex(next_vertex) != a1);
 
-      const unsigned char cur_vertex = next_vertex;
+      const uint_fast8_t cur_vertex = next_vertex;
       next_vertex = _tetrahedra[next].get_ngb_index(cur_vertex);
       next = _tetrahedra[next].get_neighbour(cur_vertex);
     }
@@ -640,9 +640,9 @@ unsigned char NewVoronoiCellConstructor::find_tetrahedron(
  * @param tetrahedron Tetrahedron to replace.
  * @param tn Array to store the indices of the newly created tetrahedra in.
  */
-void NewVoronoiCellConstructor::one_to_four_flip(unsigned int new_vertex,
-                                                 unsigned int tetrahedron,
-                                                 unsigned int tn[4]) {
+void NewVoronoiCellConstructor::one_to_four_flip(uint_fast32_t new_vertex,
+                                                 uint_fast32_t tetrahedron,
+                                                 uint_fast32_t tn[4]) {
 
   newvoronoicell_print_case("1 to 4 flip");
 
@@ -650,19 +650,19 @@ void NewVoronoiCellConstructor::one_to_four_flip(unsigned int new_vertex,
   newvoronoicell_print_tetrahedron(tetrahedron, "tetrahedron");
 
   // gather the relevant information from the tetrahedron
-  const unsigned int vert[5] = {_tetrahedra[tetrahedron].get_vertex(0),
-                                _tetrahedra[tetrahedron].get_vertex(1),
-                                _tetrahedra[tetrahedron].get_vertex(2),
-                                _tetrahedra[tetrahedron].get_vertex(3),
-                                new_vertex};
-  const unsigned int ngbs[4] = {_tetrahedra[tetrahedron].get_neighbour(0),
-                                _tetrahedra[tetrahedron].get_neighbour(1),
-                                _tetrahedra[tetrahedron].get_neighbour(2),
-                                _tetrahedra[tetrahedron].get_neighbour(3)};
-  const unsigned char ngbi[4] = {_tetrahedra[tetrahedron].get_ngb_index(0),
-                                 _tetrahedra[tetrahedron].get_ngb_index(1),
-                                 _tetrahedra[tetrahedron].get_ngb_index(2),
-                                 _tetrahedra[tetrahedron].get_ngb_index(3)};
+  const uint_fast32_t vert[5] = {_tetrahedra[tetrahedron].get_vertex(0),
+                                 _tetrahedra[tetrahedron].get_vertex(1),
+                                 _tetrahedra[tetrahedron].get_vertex(2),
+                                 _tetrahedra[tetrahedron].get_vertex(3),
+                                 new_vertex};
+  const uint_fast32_t ngbs[4] = {_tetrahedra[tetrahedron].get_neighbour(0),
+                                 _tetrahedra[tetrahedron].get_neighbour(1),
+                                 _tetrahedra[tetrahedron].get_neighbour(2),
+                                 _tetrahedra[tetrahedron].get_neighbour(3)};
+  const uint_fast8_t ngbi[4] = {_tetrahedra[tetrahedron].get_ngb_index(0),
+                                _tetrahedra[tetrahedron].get_ngb_index(1),
+                                _tetrahedra[tetrahedron].get_ngb_index(2),
+                                _tetrahedra[tetrahedron].get_ngb_index(3)};
 
   // create new tetrahedra: we overwrite the one we replace, and create 3 new
   // ones
@@ -719,9 +719,9 @@ void NewVoronoiCellConstructor::one_to_four_flip(unsigned int new_vertex,
  * @param tetrahedra Tetrahedra to replace.
  * @param tn Array to store the indices of the newly created tetrahedra in.
  */
-void NewVoronoiCellConstructor::two_to_six_flip(unsigned int new_vertex,
-                                                unsigned int tetrahedra[2],
-                                                unsigned int tn[6]) {
+void NewVoronoiCellConstructor::two_to_six_flip(uint_fast32_t new_vertex,
+                                                uint_fast32_t tetrahedra[2],
+                                                uint_fast32_t tn[6]) {
 
   newvoronoicell_print_case("2 to 6 flip");
 
@@ -730,11 +730,11 @@ void NewVoronoiCellConstructor::two_to_six_flip(unsigned int new_vertex,
   newvoronoicell_print_tetrahedron(tetrahedra[1], "tetrahedra[1]");
 
   // find the indices of the vertices of the common triangle in both tetrahedra
-  unsigned char triangle[2][3];
-  unsigned char numtriangle = 0;
-  for (unsigned char i = 0; i < 4; ++i) {
-    unsigned char t0 = i;
-    unsigned char t1 = 0;
+  uint_fast8_t triangle[2][3];
+  uint_fast8_t numtriangle = 0;
+  for (uint_fast8_t i = 0; i < 4; ++i) {
+    uint_fast8_t t0 = i;
+    uint_fast8_t t1 = 0;
     while (t1 < 4 &&
            _tetrahedra[tetrahedra[0]].get_vertex(t0) !=
                _tetrahedra[tetrahedra[1]].get_vertex(t1)) {
@@ -747,11 +747,11 @@ void NewVoronoiCellConstructor::two_to_six_flip(unsigned int new_vertex,
     }
   }
 
-  const unsigned char top0 =
+  const uint_fast8_t top0 =
       6 - triangle[0][0] - triangle[0][1] - triangle[0][2];
   if (!positive_permutation(triangle[0][0], triangle[0][1], top0,
                             triangle[0][2])) {
-    unsigned char tmp = triangle[0][0];
+    uint_fast8_t tmp = triangle[0][0];
     triangle[0][0] = triangle[0][1];
     triangle[0][1] = tmp;
 
@@ -760,32 +760,33 @@ void NewVoronoiCellConstructor::two_to_six_flip(unsigned int new_vertex,
     triangle[1][1] = tmp;
   }
 
-  const unsigned char v0_0 = triangle[0][0];
-  const unsigned char v1_0 = triangle[0][1];
-  const unsigned char v2_0 = top0;
-  const unsigned char v3_0 = triangle[0][2];
+  const uint_fast8_t v0_0 = triangle[0][0];
+  const uint_fast8_t v1_0 = triangle[0][1];
+  const uint_fast8_t v2_0 = top0;
+  const uint_fast8_t v3_0 = triangle[0][2];
 
-  const unsigned char v0_1 = triangle[1][0];
-  const unsigned char v1_1 = triangle[1][1];
-  const unsigned char v3_1 = triangle[1][2];
-  const unsigned char v4_1 = _tetrahedra[tetrahedra[0]].get_ngb_index(v2_0);
+  const uint_fast8_t v0_1 = triangle[1][0];
+  const uint_fast8_t v1_1 = triangle[1][1];
+  const uint_fast8_t v3_1 = triangle[1][2];
+  const uint_fast8_t v4_1 = _tetrahedra[tetrahedra[0]].get_ngb_index(v2_0);
 
   // now set some variables to the names in the documentation figure
-  const unsigned int vert[6] = {_tetrahedra[tetrahedra[0]].get_vertex(v0_0),
-                                _tetrahedra[tetrahedra[0]].get_vertex(v1_0),
-                                _tetrahedra[tetrahedra[0]].get_vertex(v2_0),
-                                _tetrahedra[tetrahedra[0]].get_vertex(v3_0),
-                                _tetrahedra[tetrahedra[1]].get_vertex(v4_1),
-                                new_vertex};
+  const uint_fast32_t vert[6] = {_tetrahedra[tetrahedra[0]].get_vertex(v0_0),
+                                 _tetrahedra[tetrahedra[0]].get_vertex(v1_0),
+                                 _tetrahedra[tetrahedra[0]].get_vertex(v2_0),
+                                 _tetrahedra[tetrahedra[0]].get_vertex(v3_0),
+                                 _tetrahedra[tetrahedra[1]].get_vertex(v4_1),
+                                 new_vertex};
 
-  const unsigned int ngbs[6] = {_tetrahedra[tetrahedra[0]].get_neighbour(v0_0),
-                                _tetrahedra[tetrahedra[1]].get_neighbour(v0_1),
-                                _tetrahedra[tetrahedra[1]].get_neighbour(v1_1),
-                                _tetrahedra[tetrahedra[0]].get_neighbour(v1_0),
-                                _tetrahedra[tetrahedra[0]].get_neighbour(v3_0),
-                                _tetrahedra[tetrahedra[1]].get_neighbour(v3_1)};
+  const uint_fast32_t ngbs[6] = {
+      _tetrahedra[tetrahedra[0]].get_neighbour(v0_0),
+      _tetrahedra[tetrahedra[1]].get_neighbour(v0_1),
+      _tetrahedra[tetrahedra[1]].get_neighbour(v1_1),
+      _tetrahedra[tetrahedra[0]].get_neighbour(v1_0),
+      _tetrahedra[tetrahedra[0]].get_neighbour(v3_0),
+      _tetrahedra[tetrahedra[1]].get_neighbour(v3_1)};
 
-  const unsigned int ngbi[6] = {_tetrahedra[tetrahedra[0]].get_ngb_index(v0_0),
+  const uint_fast8_t ngbi[6] = {_tetrahedra[tetrahedra[0]].get_ngb_index(v0_0),
                                 _tetrahedra[tetrahedra[1]].get_ngb_index(v0_1),
                                 _tetrahedra[tetrahedra[1]].get_ngb_index(v1_1),
                                 _tetrahedra[tetrahedra[0]].get_ngb_index(v1_0),
@@ -877,27 +878,27 @@ void NewVoronoiCellConstructor::two_to_six_flip(unsigned int new_vertex,
  * tetrahedra in the given array).
  * @param tn Array to store the indices of the newly created tetrahedra in.
  */
-void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
-                                             unsigned int *tetrahedra,
-                                             unsigned char n,
-                                             unsigned int tn[2 * UCHAR_MAX]) {
+void NewVoronoiCellConstructor::n_to_2n_flip(uint_fast32_t new_vertex,
+                                             uint_fast32_t *tetrahedra,
+                                             uint_fast8_t n,
+                                             uint_fast32_t tn[2 * UCHAR_MAX]) {
 
   newvoronoicell_print_case("n to 2n flip (n = %u)", n);
 
   newvoronoicell_print_case("entry:");
-  for (unsigned char j = 0; j < n; ++j) {
+  for (uint_fast8_t j = 0; j < n; ++j) {
     newvoronoicell_print_tetrahedron(tetrahedra[j], "tetrahedra[%u]", j);
   }
 
   // find the indices of the common axis in all tetrahedra
-  unsigned char axis[UCHAR_MAX][2];
-  unsigned char t1_in_t0 = 0;
-  unsigned char num_axis = 0;
-  for (unsigned char i = 0; i < 4; ++i) {
-    unsigned char tj[UCHAR_MAX];
+  uint_fast8_t axis[UCHAR_MAX][2];
+  uint_fast8_t t1_in_t0 = 0;
+  uint_fast8_t num_axis = 0;
+  for (uint_fast8_t i = 0; i < 4; ++i) {
+    uint_fast8_t tj[UCHAR_MAX];
     tj[0] = i;
     bool is_axis = true;
-    for (unsigned char j = 1; j < n; ++j) {
+    for (uint_fast8_t j = 1; j < n; ++j) {
       tj[j] = 0;
       while (tj[j] < 4 &&
              _tetrahedra[tetrahedra[0]].get_vertex(tj[0]) !=
@@ -907,7 +908,7 @@ void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
       is_axis &= (tj[j] < 4);
     }
     if (is_axis) {
-      for (unsigned char j = 0; j < n; ++j) {
+      for (uint_fast8_t j = 0; j < n; ++j) {
         axis[j][num_axis] = tj[j];
       }
       ++num_axis;
@@ -918,20 +919,20 @@ void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
     }
   }
 
-  const unsigned char tnm1_in_t0 = 6 - axis[0][0] - axis[0][1] - t1_in_t0;
+  const uint_fast8_t tnm1_in_t0 = 6 - axis[0][0] - axis[0][1] - t1_in_t0;
   if (!positive_permutation(tnm1_in_t0, axis[0][0], t1_in_t0, axis[0][1])) {
-    for (unsigned char j = 0; j < n; ++j) {
-      const unsigned char tmp = axis[j][0];
+    for (uint_fast8_t j = 0; j < n; ++j) {
+      const uint_fast8_t tmp = axis[j][0];
       axis[j][0] = axis[j][1];
       axis[j][1] = tmp;
     }
   }
 
   // set some variables to the values in the documentation figure
-  unsigned int vert[UCHAR_MAX + 2], ngbs[2 * UCHAR_MAX], ngbi[2 * UCHAR_MAX];
-  unsigned char vnext = t1_in_t0;
-  for (unsigned char j = 0; j < n; ++j) {
-    const unsigned char vother = 6 - axis[j][0] - axis[j][1] - vnext;
+  uint_fast32_t vert[UCHAR_MAX + 2], ngbs[2 * UCHAR_MAX], ngbi[2 * UCHAR_MAX];
+  uint_fast8_t vnext = t1_in_t0;
+  for (uint_fast8_t j = 0; j < n; ++j) {
+    const uint_fast8_t vother = 6 - axis[j][0] - axis[j][1] - vnext;
     vert[j] = _tetrahedra[tetrahedra[j]].get_vertex(vother);
     vnext = _tetrahedra[tetrahedra[j]].get_ngb_index(vother);
     ngbs[2 * j] = _tetrahedra[tetrahedra[j]].get_neighbour(axis[j][0]);
@@ -944,12 +945,12 @@ void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
   vert[n + 2] = new_vertex;
 
   // create n new tetrahedra
-  for (unsigned char j = 0; j < n; ++j) {
+  for (uint_fast8_t j = 0; j < n; ++j) {
     tn[j] = tetrahedra[j];
   }
   create_new_tetrahedra(&tn[n], n);
 
-  for (unsigned char j = 0; j < n; ++j) {
+  for (uint_fast8_t j = 0; j < n; ++j) {
     _tetrahedra[tn[2 * j]] = NewVoronoiTetrahedron(
         vert[j], vert[n + 2], vert[(j + 1) % n], vert[n], tn[2 * ((j + 1) % n)],
         ngbs[2 * j], tn[2 * ((j + n - 1) % n)], tn[2 * j + 1], 2, ngbi[2 * j],
@@ -969,7 +970,7 @@ void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
   }
 
   newvoronoicell_print_case("exit:");
-  for (unsigned int j = 0; j < 2 * n; ++j) {
+  for (uint_fast32_t j = 0; j < 2 * n; ++j) {
     newvoronoicell_print_tetrahedron(tn[j], "tn[%u]", j);
   }
 }
@@ -1005,11 +1006,11 @@ void NewVoronoiCellConstructor::n_to_2n_flip(unsigned int new_vertex,
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
-void NewVoronoiCellConstructor::two_to_three_flip(unsigned int tetrahedron0,
-                                                  unsigned int tetrahedron1,
-                                                  unsigned char top0,
-                                                  unsigned char top1,
-                                                  unsigned int tn[3]) {
+void NewVoronoiCellConstructor::two_to_three_flip(uint_fast32_t tetrahedron0,
+                                                  uint_fast32_t tetrahedron1,
+                                                  uint_fast8_t top0,
+                                                  uint_fast8_t top1,
+                                                  uint_fast32_t tn[3]) {
 
   newvoronoicell_print_case("2 to 3 flip");
 
@@ -1019,8 +1020,8 @@ void NewVoronoiCellConstructor::two_to_three_flip(unsigned int tetrahedron0,
 
   // get the indices of the common triangle of the tetrahedra, and make sure we
   // know which index in tetrahedron0 matches which index in tetrahedron1
-  unsigned char triangle[2][3];
-  for (unsigned char i = 0; i < 3; ++i) {
+  uint_fast8_t triangle[2][3];
+  for (uint_fast8_t i = 0; i < 3; ++i) {
     triangle[0][i] = (top0 + i + 1) % 4;
     triangle[1][i] = 0;
     while (_tetrahedra[tetrahedron0].get_vertex(triangle[0][i]) !=
@@ -1036,7 +1037,7 @@ void NewVoronoiCellConstructor::two_to_three_flip(unsigned int tetrahedron0,
   // works)
   if (!positive_permutation(triangle[0][1], triangle[0][2], top0,
                             triangle[0][0])) {
-    unsigned char tmp = triangle[0][1];
+    uint_fast8_t tmp = triangle[0][1];
     triangle[0][1] = triangle[0][2];
     triangle[0][2] = tmp;
 
@@ -1045,31 +1046,31 @@ void NewVoronoiCellConstructor::two_to_three_flip(unsigned int tetrahedron0,
     triangle[1][2] = tmp;
   }
 
-  const unsigned char v0_0 = triangle[0][1];
-  const unsigned char v1_0 = triangle[0][2];
-  const unsigned char v2_0 = top0;
-  const unsigned char v3_0 = triangle[0][0];
+  const uint_fast8_t v0_0 = triangle[0][1];
+  const uint_fast8_t v1_0 = triangle[0][2];
+  const uint_fast8_t v2_0 = top0;
+  const uint_fast8_t v3_0 = triangle[0][0];
 
-  const unsigned char v0_1 = triangle[1][1];
-  const unsigned char v1_1 = triangle[1][2];
-  const unsigned char v3_1 = triangle[1][0];
-  const unsigned char v4_1 = top1;
+  const uint_fast8_t v0_1 = triangle[1][1];
+  const uint_fast8_t v1_1 = triangle[1][2];
+  const uint_fast8_t v3_1 = triangle[1][0];
+  const uint_fast8_t v4_1 = top1;
 
   // set some variables to the names used in the documentation figure
-  const unsigned int vert[5] = {_tetrahedra[tetrahedron0].get_vertex(v0_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v1_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v2_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v3_0),
-                                _tetrahedra[tetrahedron1].get_vertex(v4_1)};
+  const uint_fast32_t vert[5] = {_tetrahedra[tetrahedron0].get_vertex(v0_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v1_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v2_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v3_0),
+                                 _tetrahedra[tetrahedron1].get_vertex(v4_1)};
 
-  const unsigned int ngbs[6] = {_tetrahedra[tetrahedron0].get_neighbour(v0_0),
-                                _tetrahedra[tetrahedron1].get_neighbour(v0_1),
-                                _tetrahedra[tetrahedron1].get_neighbour(v1_1),
-                                _tetrahedra[tetrahedron0].get_neighbour(v1_0),
-                                _tetrahedra[tetrahedron0].get_neighbour(v3_0),
-                                _tetrahedra[tetrahedron1].get_neighbour(v3_1)};
+  const uint_fast32_t ngbs[6] = {_tetrahedra[tetrahedron0].get_neighbour(v0_0),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v0_1),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v1_1),
+                                 _tetrahedra[tetrahedron0].get_neighbour(v1_0),
+                                 _tetrahedra[tetrahedron0].get_neighbour(v3_0),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v3_1)};
 
-  const unsigned int ngbi[6] = {_tetrahedra[tetrahedron0].get_ngb_index(v0_0),
+  const uint_fast8_t ngbi[6] = {_tetrahedra[tetrahedron0].get_ngb_index(v0_0),
                                 _tetrahedra[tetrahedron1].get_ngb_index(v0_1),
                                 _tetrahedra[tetrahedron1].get_ngb_index(v1_1),
                                 _tetrahedra[tetrahedron0].get_ngb_index(v1_0),
@@ -1161,11 +1162,11 @@ void NewVoronoiCellConstructor::two_to_three_flip(unsigned int tetrahedron0,
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
-void NewVoronoiCellConstructor::four_to_four_flip(unsigned int tetrahedron0,
-                                                  unsigned int tetrahedron1,
-                                                  unsigned int tetrahedron2,
-                                                  unsigned int tetrahedron3,
-                                                  unsigned int tn[4]) {
+void NewVoronoiCellConstructor::four_to_four_flip(uint_fast32_t tetrahedron0,
+                                                  uint_fast32_t tetrahedron1,
+                                                  uint_fast32_t tetrahedron2,
+                                                  uint_fast32_t tetrahedron3,
+                                                  uint_fast32_t tn[4]) {
 
   newvoronoicell_print_case("4 to 4 flip");
 
@@ -1177,10 +1178,10 @@ void NewVoronoiCellConstructor::four_to_four_flip(unsigned int tetrahedron0,
 
   // the four tetrahedra share an axis, find the indices of the axis points
   // in the four tetrahedra
-  unsigned char axis[4][4];
-  unsigned char num_axis = 0;
-  for (unsigned char i = 0; i < 4; ++i) {
-    unsigned char t0, t1, t2, t3;
+  uint_fast8_t axis[4][4];
+  uint_fast8_t num_axis = 0;
+  for (uint_fast8_t i = 0; i < 4; ++i) {
+    uint_fast8_t t0, t1, t2, t3;
     t0 = i;
     t1 = 0;
     while (t1 < 4 &&
@@ -1218,7 +1219,7 @@ void NewVoronoiCellConstructor::four_to_four_flip(unsigned int tetrahedron0,
   // 'v[0][0]' is the index of vertex 0 in the figure in the first tetrahedron
   // (v0v1v2v3), and so on
   if (!positive_permutation(axis[0][0], axis[0][1], axis[0][2], axis[0][3])) {
-    unsigned char tmp = axis[0][0];
+    uint_fast8_t tmp = axis[0][0];
     axis[0][0] = axis[0][1];
     axis[0][1] = tmp;
 
@@ -1236,49 +1237,49 @@ void NewVoronoiCellConstructor::four_to_four_flip(unsigned int tetrahedron0,
   }
 
   // t0 = (v0v1v2v3)
-  const unsigned char v0_0 = axis[0][0];
-  const unsigned char v1_0 = axis[0][1];
-  const unsigned char v2_0 = axis[0][2];
-  const unsigned char v3_0 = axis[0][3];
+  const uint_fast8_t v0_0 = axis[0][0];
+  const uint_fast8_t v1_0 = axis[0][1];
+  const uint_fast8_t v2_0 = axis[0][2];
+  const uint_fast8_t v3_0 = axis[0][3];
 
   // t1 = (v0v1v3v4)
-  const unsigned char v0_1 = axis[1][0];
-  const unsigned char v1_1 = axis[1][1];
-  const unsigned char v4_1 = _tetrahedra[tetrahedron0].get_ngb_index(v2_0);
+  const uint_fast8_t v0_1 = axis[1][0];
+  const uint_fast8_t v1_1 = axis[1][1];
+  const uint_fast8_t v4_1 = _tetrahedra[tetrahedron0].get_ngb_index(v2_0);
 
   // t2 = (v0v1v5v2)
-  const unsigned char v0_2 = axis[2][0];
-  const unsigned char v1_2 = axis[2][1];
-  const unsigned char v5_2 = _tetrahedra[tetrahedron0].get_ngb_index(v3_0);
+  const uint_fast8_t v0_2 = axis[2][0];
+  const uint_fast8_t v1_2 = axis[2][1];
+  const uint_fast8_t v5_2 = _tetrahedra[tetrahedron0].get_ngb_index(v3_0);
 
   // t3 = (v0v5v1v4)
-  const unsigned char v0_3 = axis[3][0];
-  const unsigned char v1_3 = axis[3][1];
+  const uint_fast8_t v0_3 = axis[3][0];
+  const uint_fast8_t v1_3 = axis[3][1];
 
-  const unsigned int vert[6] = {_tetrahedra[tetrahedron0].get_vertex(v0_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v1_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v2_0),
-                                _tetrahedra[tetrahedron0].get_vertex(v3_0),
-                                _tetrahedra[tetrahedron1].get_vertex(v4_1),
-                                _tetrahedra[tetrahedron2].get_vertex(v5_2)};
+  const uint_fast32_t vert[6] = {_tetrahedra[tetrahedron0].get_vertex(v0_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v1_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v2_0),
+                                 _tetrahedra[tetrahedron0].get_vertex(v3_0),
+                                 _tetrahedra[tetrahedron1].get_vertex(v4_1),
+                                 _tetrahedra[tetrahedron2].get_vertex(v5_2)};
 
-  const unsigned int ngbs[8] = {_tetrahedra[tetrahedron0].get_neighbour(v0_0),
-                                _tetrahedra[tetrahedron1].get_neighbour(v0_1),
-                                _tetrahedra[tetrahedron1].get_neighbour(v1_1),
-                                _tetrahedra[tetrahedron0].get_neighbour(v1_0),
-                                _tetrahedra[tetrahedron2].get_neighbour(v0_2),
-                                _tetrahedra[tetrahedron3].get_neighbour(v0_3),
-                                _tetrahedra[tetrahedron3].get_neighbour(v1_3),
-                                _tetrahedra[tetrahedron2].get_neighbour(v1_2)};
+  const uint_fast32_t ngbs[8] = {_tetrahedra[tetrahedron0].get_neighbour(v0_0),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v0_1),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v1_1),
+                                 _tetrahedra[tetrahedron0].get_neighbour(v1_0),
+                                 _tetrahedra[tetrahedron2].get_neighbour(v0_2),
+                                 _tetrahedra[tetrahedron3].get_neighbour(v0_3),
+                                 _tetrahedra[tetrahedron3].get_neighbour(v1_3),
+                                 _tetrahedra[tetrahedron2].get_neighbour(v1_2)};
 
-  const unsigned char ngbi[8] = {_tetrahedra[tetrahedron0].get_ngb_index(v0_0),
-                                 _tetrahedra[tetrahedron1].get_ngb_index(v0_1),
-                                 _tetrahedra[tetrahedron1].get_ngb_index(v1_1),
-                                 _tetrahedra[tetrahedron0].get_ngb_index(v1_0),
-                                 _tetrahedra[tetrahedron2].get_ngb_index(v0_2),
-                                 _tetrahedra[tetrahedron3].get_ngb_index(v0_3),
-                                 _tetrahedra[tetrahedron3].get_ngb_index(v1_3),
-                                 _tetrahedra[tetrahedron2].get_ngb_index(v1_2)};
+  const uint_fast8_t ngbi[8] = {_tetrahedra[tetrahedron0].get_ngb_index(v0_0),
+                                _tetrahedra[tetrahedron1].get_ngb_index(v0_1),
+                                _tetrahedra[tetrahedron1].get_ngb_index(v1_1),
+                                _tetrahedra[tetrahedron0].get_ngb_index(v1_0),
+                                _tetrahedra[tetrahedron2].get_ngb_index(v0_2),
+                                _tetrahedra[tetrahedron3].get_ngb_index(v0_3),
+                                _tetrahedra[tetrahedron3].get_ngb_index(v1_3),
+                                _tetrahedra[tetrahedron2].get_ngb_index(v1_2)};
 
   tn[0] = tetrahedron0;
   tn[1] = tetrahedron1;
@@ -1377,10 +1378,10 @@ void NewVoronoiCellConstructor::four_to_four_flip(unsigned int tetrahedron0,
  * @return First tetrahedron in the stack that needs to be tested after the
  * flip.
  */
-void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
-                                                  unsigned int tetrahedron1,
-                                                  unsigned int tetrahedron2,
-                                                  unsigned int tn[2]) {
+void NewVoronoiCellConstructor::three_to_two_flip(uint_fast32_t tetrahedron0,
+                                                  uint_fast32_t tetrahedron1,
+                                                  uint_fast32_t tetrahedron2,
+                                                  uint_fast32_t tn[2]) {
 
   newvoronoicell_print_case("3 to 2 flip");
 
@@ -1390,17 +1391,17 @@ void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
   newvoronoicell_print_tetrahedron(tetrahedron2, "tetrahedron2");
 
   // get the common axis of the three tetrahedra
-  unsigned char axis[3][4];
-  unsigned char num_axis = 0;
-  for (unsigned char i = 0; i < 4; ++i) {
-    unsigned char t0 = i;
-    unsigned char t1 = 0;
+  uint_fast8_t axis[3][4];
+  uint_fast8_t num_axis = 0;
+  for (uint_fast8_t i = 0; i < 4; ++i) {
+    uint_fast8_t t0 = i;
+    uint_fast8_t t1 = 0;
     while (t1 < 4 &&
            _tetrahedra[tetrahedron0].get_vertex(t0) !=
                _tetrahedra[tetrahedron1].get_vertex(t1)) {
       ++t1;
     }
-    unsigned char t2 = 0;
+    uint_fast8_t t2 = 0;
     while (t2 < 4 &&
            _tetrahedra[tetrahedron0].get_vertex(t0) !=
                _tetrahedra[tetrahedron2].get_vertex(t2)) {
@@ -1420,7 +1421,7 @@ void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
   axis[0][3] = 6 - axis[0][0] - axis[0][1] - axis[0][2];
 
   if (!positive_permutation(axis[0][2], axis[0][3], axis[0][0], axis[0][1])) {
-    unsigned char tmp = axis[0][0];
+    uint_fast8_t tmp = axis[0][0];
     axis[0][0] = axis[0][1];
     axis[0][1] = tmp;
 
@@ -1433,20 +1434,20 @@ void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
     axis[2][1] = tmp;
   }
 
-  const unsigned char v0_0 = axis[0][2];
-  const unsigned char v1_0 = axis[0][3];
-  const unsigned char v2_0 = axis[0][0];
-  const unsigned char v4_0 = axis[0][1];
+  const uint_fast8_t v0_0 = axis[0][2];
+  const uint_fast8_t v1_0 = axis[0][3];
+  const uint_fast8_t v2_0 = axis[0][0];
+  const uint_fast8_t v4_0 = axis[0][1];
 
-  const unsigned char v2_1 = axis[1][0];
-  const unsigned char v3_1 = _tetrahedra[tetrahedron0].get_ngb_index(v1_0);
-  const unsigned char v4_1 = axis[1][1];
+  const uint_fast8_t v2_1 = axis[1][0];
+  const uint_fast8_t v3_1 = _tetrahedra[tetrahedron0].get_ngb_index(v1_0);
+  const uint_fast8_t v4_1 = axis[1][1];
 
-  const unsigned char v2_2 = axis[2][0];
-  const unsigned char v4_2 = axis[2][1];
+  const uint_fast8_t v2_2 = axis[2][0];
+  const uint_fast8_t v4_2 = axis[2][1];
 
   // set some variables to the names used in the documentation figure
-  const unsigned int vert[5] = {
+  const uint_fast32_t vert[5] = {
       _tetrahedra[tetrahedron0].get_vertex(v0_0),
       _tetrahedra[tetrahedron0].get_vertex(v1_0),
       _tetrahedra[tetrahedron0].get_vertex(v2_0),
@@ -1454,14 +1455,14 @@ void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
       _tetrahedra[tetrahedron0].get_vertex(v4_0),
   };
 
-  const unsigned int ngbs[6] = {_tetrahedra[tetrahedron2].get_neighbour(v4_2),
-                                _tetrahedra[tetrahedron2].get_neighbour(v2_2),
-                                _tetrahedra[tetrahedron1].get_neighbour(v2_1),
-                                _tetrahedra[tetrahedron1].get_neighbour(v4_1),
-                                _tetrahedra[tetrahedron0].get_neighbour(v4_0),
-                                _tetrahedra[tetrahedron0].get_neighbour(v2_0)};
+  const uint_fast32_t ngbs[6] = {_tetrahedra[tetrahedron2].get_neighbour(v4_2),
+                                 _tetrahedra[tetrahedron2].get_neighbour(v2_2),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v2_1),
+                                 _tetrahedra[tetrahedron1].get_neighbour(v4_1),
+                                 _tetrahedra[tetrahedron0].get_neighbour(v4_0),
+                                 _tetrahedra[tetrahedron0].get_neighbour(v2_0)};
 
-  const unsigned int ngbi[6] = {_tetrahedra[tetrahedron2].get_ngb_index(v4_2),
+  const uint_fast8_t ngbi[6] = {_tetrahedra[tetrahedron2].get_ngb_index(v4_2),
                                 _tetrahedra[tetrahedron2].get_ngb_index(v2_2),
                                 _tetrahedra[tetrahedron1].get_ngb_index(v2_1),
                                 _tetrahedra[tetrahedron1].get_ngb_index(v4_1),
@@ -1524,20 +1525,20 @@ void NewVoronoiCellConstructor::three_to_two_flip(unsigned int tetrahedron0,
  * @return Lowest index tetrahedron that needs to be checked for validity after
  * this function returns.
  */
-unsigned int NewVoronoiCellConstructor::check_tetrahedron(
-    unsigned int tetrahedron, unsigned int new_vertex,
+uint_fast32_t NewVoronoiCellConstructor::check_tetrahedron(
+    uint_fast32_t tetrahedron, uint_fast32_t new_vertex,
     const NewVoronoiBox &rescaled_box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
-    bool queue[NEWVORONOICELL_QUEUE_SIZE], unsigned int &queue_size) {
+    bool queue[NEWVORONOICELL_QUEUE_SIZE], uint_fast32_t &queue_size) {
 
-  unsigned int next_check = tetrahedron + 1;
+  uint_fast32_t next_check = tetrahedron + 1;
 
-  const unsigned int v0 = _tetrahedra[tetrahedron].get_vertex(0);
-  const unsigned int v1 = _tetrahedra[tetrahedron].get_vertex(1);
-  const unsigned int v2 = _tetrahedra[tetrahedron].get_vertex(2);
-  const unsigned int v3 = _tetrahedra[tetrahedron].get_vertex(3);
+  const uint_fast32_t v0 = _tetrahedra[tetrahedron].get_vertex(0);
+  const uint_fast32_t v1 = _tetrahedra[tetrahedron].get_vertex(1);
+  const uint_fast32_t v2 = _tetrahedra[tetrahedron].get_vertex(2);
+  const uint_fast32_t v3 = _tetrahedra[tetrahedron].get_vertex(3);
 
-  unsigned int top;
+  uint_fast8_t top;
   if (new_vertex == v0) {
     top = 0;
   } else if (new_vertex == v1) {
@@ -1550,10 +1551,10 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
     top = 3;
   }
 
-  const unsigned int ngb = _tetrahedra[tetrahedron].get_neighbour(top);
+  const uint_fast32_t ngb = _tetrahedra[tetrahedron].get_neighbour(top);
   if (ngb < NEWVORONOICELL_MAX_INDEX) {
-    const unsigned char ngb_index = _tetrahedra[tetrahedron].get_ngb_index(top);
-    const unsigned int v4 = _tetrahedra[ngb].get_vertex(ngb_index);
+    const uint_fast8_t ngb_index = _tetrahedra[tetrahedron].get_ngb_index(top);
+    const uint_fast32_t v4 = _tetrahedra[ngb].get_vertex(ngb_index);
 
     const CoordinateVector<> pr0 =
         get_position(_vertices[v0], rescaled_box, rescaled_positions);
@@ -1572,7 +1573,7 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
         pr0.y(), pr0.z(), pr1.x(), pr1.y(), pr1.z(), pr2.x(), pr2.y(), pr2.z(),
         pr3.x(), pr3.y(), pr3.z());
 
-    const char test =
+    const int_fast8_t test =
         ExactGeometricTests::insphere_adaptive(pr0, pr1, pr2, pr3, pr4);
     if (test < 0) {
       newvoronoicell_print_case("Invalid tetrahedron!");
@@ -1583,7 +1584,7 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
       // is inside the two tetrahedra or not
       // which test we need to use depends on the index of 'new_vertex' in
       // 'tetrahedron'
-      char tests[4] = {-1, -1, -1, -1};
+      int_fast8_t tests[4] = {-1, -1, -1, -1};
       if (top != 3) {
         tests[0] = ExactGeometricTests::orient3d_adaptive(pr0, pr1, pr2, pr4);
       }
@@ -1596,14 +1597,14 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
       if (top != 0) {
         tests[3] = ExactGeometricTests::orient3d_adaptive(pr4, pr1, pr2, pr3);
       }
-      unsigned char i = 0;
+      uint_fast8_t i = 0;
       while (i < 4 && tests[i] < 0) {
         ++i;
       }
       if (i == 4) {
         // inside: need to do a 2 to 3 flip
 
-        unsigned int tn[3];
+        uint_fast32_t tn[3];
         two_to_three_flip(tetrahedron, ngb, top, ngb_index, tn);
 
         add_to_queue(tn[0], queue, queue_size);
@@ -1634,23 +1635,23 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
 
         // the non_axis point is simply the vertex not present in the relevant
         // orientation test
-        const unsigned char non_axis = 3 - i;
+        const uint_fast8_t non_axis = 3 - i;
         // get the neighbour
-        const unsigned int other_ngb =
+        const uint_fast32_t other_ngb =
             _tetrahedra[tetrahedron].get_neighbour(non_axis);
 
         // get the index of 'new_vertex' in 'other_ngb', as the neighbour
         // opposite that vertex is the other neighbour we need to check
-        unsigned char ingb = 0;
+        uint_fast8_t ingb = 0;
         while (ingb < 4 &&
                _tetrahedra[other_ngb].get_vertex(ingb) != new_vertex) {
           ++ingb;
         }
         cmac_assert(ingb < 4);
 
-        const unsigned int second_ngb =
+        const uint_fast32_t second_ngb =
             _tetrahedra[other_ngb].get_neighbour(ingb);
-        const unsigned char second_ngb_index =
+        const uint_fast8_t second_ngb_index =
             _tetrahedra[ngb].is_neighbour(second_ngb);
         if (second_ngb_index < 4) {
           // 4 to 4 flip possible!
@@ -1658,7 +1659,7 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
           // mind the order: the new axis is shared by tetrahedron and ngb, and
           // they are the first and third tetrahedron passed on to the flip
           // routine (per convention)
-          unsigned int tn[4];
+          uint_fast32_t tn[4];
           four_to_four_flip(tetrahedron, other_ngb, ngb, second_ngb, tn);
 
           add_to_queue(tn[0], queue, queue_size);
@@ -1697,18 +1698,18 @@ unsigned int NewVoronoiCellConstructor::check_tetrahedron(
 
         // the non_axis point is simply the vertex not present in the relevant
         // orientation test
-        const unsigned char non_axis = 3 - i;
+        const uint_fast8_t non_axis = 3 - i;
         // get the neighbour
-        const unsigned int other_ngb =
+        const uint_fast32_t other_ngb =
             _tetrahedra[tetrahedron].get_neighbour(non_axis);
 
         // now try to find that neighbour in 'ngb'
-        const unsigned char other_ngb_index =
+        const uint_fast8_t other_ngb_index =
             _tetrahedra[ngb].is_neighbour(other_ngb);
         if (other_ngb_index < 4) {
           // 3 to 2 flip possible!
 
-          unsigned int tn[2];
+          uint_fast32_t tn[2];
           three_to_two_flip(tetrahedron, ngb, other_ngb, tn);
 
           // disable checking for the spot that was freed up
@@ -1747,21 +1748,21 @@ void NewVoronoiCellConstructor::check_empty_circumsphere(
     const NewVoronoiBox &box,
     const std::vector< CoordinateVector<> > &positions) const {
 
-  for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+  for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     if (_tetrahedra[i].is_active()) {
-      const unsigned int v0 = _tetrahedra[i].get_vertex(0);
-      const unsigned int v1 = _tetrahedra[i].get_vertex(1);
-      const unsigned int v2 = _tetrahedra[i].get_vertex(2);
-      const unsigned int v3 = _tetrahedra[i].get_vertex(3);
+      const uint_fast32_t v0 = _tetrahedra[i].get_vertex(0);
+      const uint_fast32_t v1 = _tetrahedra[i].get_vertex(1);
+      const uint_fast32_t v2 = _tetrahedra[i].get_vertex(2);
+      const uint_fast32_t v3 = _tetrahedra[i].get_vertex(3);
       const CoordinateVector<> p0 = get_position(_vertices[v0], box, positions);
       const CoordinateVector<> p1 = get_position(_vertices[v1], box, positions);
       const CoordinateVector<> p2 = get_position(_vertices[v2], box, positions);
       const CoordinateVector<> p3 = get_position(_vertices[v3], box, positions);
-      for (unsigned int j = 0; j < _vertices_size; ++j) {
+      for (uint_fast32_t j = 0; j < _vertices_size; ++j) {
         if (j != v0 && j != v1 && j != v2 && j != v3) {
           const CoordinateVector<> p4 =
               get_position(_vertices[j], box, positions);
-          const char abcde =
+          const int_fast8_t abcde =
               ExactGeometricTests::insphere_exact(p0, p1, p2, p3, p4);
           if (abcde < 0) {
             cmac_error("Wrong tetrahedron!");

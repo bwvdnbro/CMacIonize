@@ -29,6 +29,7 @@
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
 
+#include <cinttypes>
 #include <ostream>
 #include <vector>
 
@@ -51,7 +52,7 @@ private:
   OctreeNode *_child;
 
   /*! @brief Index of the underlying position, if this node is a leaf. */
-  unsigned int _index;
+  uint_least32_t _index;
 
   /*! @brief Geometrical box corresponding to this node. */
   Box<> _box;
@@ -66,7 +67,7 @@ public:
    * @param index Index of the underlying position; every OctreeNode starts as
    * a leaf.
    */
-  inline OctreeNode(unsigned int index) : _children{nullptr}, _index(index) {}
+  inline OctreeNode(uint_fast32_t index) : _children{nullptr}, _index(index) {}
 
   /**
    * @brief Destructor.
@@ -74,7 +75,7 @@ public:
    * Each node deletes its own children.
    */
   inline ~OctreeNode() {
-    for (unsigned char i = 0; i < 8; ++i) {
+    for (uint_fast8_t i = 0; i < 8; ++i) {
       delete _children[i];
     }
   }
@@ -89,10 +90,10 @@ public:
    * particle check.
    */
   inline void add_position(std::vector< CoordinateVector<> > &positions,
-                           unsigned int index, Box<> &box,
-                           unsigned int level = 0) {
+                           uint_fast32_t index, Box<> &box,
+                           uint_fast8_t level = 0) {
 
-    unsigned char ix, iy, iz;
+    uint_fast8_t ix, iy, iz;
     if (_index < OCTREE_NOLEAF) {
       // this OctreeNode becomes a node: set its box
       _box = box;
@@ -105,11 +106,13 @@ public:
         // check if the old and new position are the same
         CoordinateVector<> &np = positions[index];
         if (p.x() == np.x() && p.y() == np.y() && p.z() == np.z()) {
-          static unsigned int numpairs = 0;
+          static uint_fast32_t numpairs = 0;
           ++numpairs;
-          cmac_warning("Particles have exactly the same position (indices: %u "
-                       "%u, %u occurences)!",
-                       _index, index, numpairs);
+          cmac_warning(
+              "Particles have exactly the same position (indices: %" PRIuLEAST32
+              " "
+              "%" PRIuFAST32 ", %" PRIuFAST32 " occurences)!",
+              _index, index, numpairs);
           // move the particle in the direction of the centre of the node over
           // a small distance
           np[0] += (ix - 0.5) * 1.e-5 * box.get_sides().x();
@@ -155,13 +158,13 @@ public:
 
     _sibling = sibling;
     if (_index == OCTREE_NOLEAF) {
-      unsigned char i = 0;
+      uint_fast8_t i = 0;
       while (_children[i] == nullptr) {
         ++i;
       }
       _child = _children[i];
       // find next child
-      unsigned char j = i + 1;
+      uint_fast8_t j = i + 1;
       while (j < 8) {
         while (j < 8 && _children[j] == nullptr) {
           ++j;
@@ -209,7 +212,7 @@ public:
    *
    * @return Index of the leaf.
    */
-  inline unsigned int get_index() const { return _index; }
+  inline uint_fast32_t get_index() const { return _index; }
 
   /**
    * @brief Set the auxiliary variable based on the given list of variables and
@@ -260,7 +263,7 @@ public:
              << positions[_index].z() << "\n\n";
     } else {
       // print children
-      for (unsigned int i = 0; i < 8; ++i) {
+      for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] != nullptr) {
           _children[i]->print(stream, positions);
         }

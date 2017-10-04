@@ -68,7 +68,7 @@ private:
   /*! @brief PointLocations object used to speed up neighbour searching. */
   PointLocations _point_locations;
 
-  NewVoronoiCell compute_cell(unsigned int index,
+  NewVoronoiCell compute_cell(uint_fast32_t index,
                               NewVoronoiCellConstructor &constructor) const;
 
   /**
@@ -80,10 +80,10 @@ private:
     NewVoronoiGrid &_grid;
 
     /*! @brief Index of the first cell that this job will construct. */
-    unsigned int _first_index;
+    uint_fast32_t _first_index;
 
     /*! @brief Index of the beyond last cell that this job will construct. */
-    unsigned int _last_index;
+    uint_fast32_t _last_index;
 
     /*! @brief NewVoronoiCellConstructor object used by this thread. */
     NewVoronoiCellConstructor _constructor;
@@ -105,8 +105,8 @@ private:
      * @param last_index Index of the beyond last cell that this job will
      * construct.
      */
-    inline void update_indices(unsigned int first_index,
-                               unsigned int last_index) {
+    inline void update_indices(uint_fast32_t first_index,
+                               uint_fast32_t last_index) {
       _first_index = first_index;
       _last_index = last_index;
     }
@@ -123,7 +123,7 @@ private:
      * @brief Construct the Voronoi cell for each index in the job range.
      */
     inline void execute() {
-      for (unsigned int i = _first_index; i < _last_index; ++i) {
+      for (uint_fast32_t i = _first_index; i < _last_index; ++i) {
         _grid._cells[i] = _grid.compute_cell(i, _constructor);
       }
     }
@@ -148,10 +148,10 @@ private:
     NewVoronoiGridConstructionJob *_jobs[MAX_NUM_THREADS];
 
     /*! @brief Index of the first cell that still needs to be constructed. */
-    unsigned int _current_index;
+    uint_fast32_t _current_index;
 
     /*! @brief Number of cells constructed by a single job. */
-    const unsigned int _jobsize;
+    const uint_fast32_t _jobsize;
 
     /*! @brief Lock used to ensure safe access to the internal index. */
     Lock _lock;
@@ -164,10 +164,10 @@ private:
      * @param jobsize Number of cell constructed by a single job.
      */
     inline NewVoronoiGridConstructionJobMarket(NewVoronoiGrid &grid,
-                                               unsigned int jobsize)
+                                               uint_fast32_t jobsize)
         : _grid(grid), _current_index(0), _jobsize(jobsize) {
 
-      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
+      for (uint_fast32_t i = 0; i < MAX_NUM_THREADS; ++i) {
         _jobs[i] = nullptr;
       }
     }
@@ -178,7 +178,7 @@ private:
      * Free up memory used by NewVoronoiGridConstructionJobs.
      */
     inline ~NewVoronoiGridConstructionJobMarket() {
-      for (unsigned int i = 0; i < MAX_NUM_THREADS; ++i) {
+      for (uint_fast32_t i = 0; i < MAX_NUM_THREADS; ++i) {
         delete _jobs[i];
       }
     }
@@ -189,8 +189,8 @@ private:
      *
      * @param worksize Number of parallel threads that will be used.
      */
-    inline void set_worksize(int worksize) {
-      for (int i = 0; i < worksize; ++i) {
+    inline void set_worksize(int_fast32_t worksize) {
+      for (int_fast32_t i = 0; i < worksize; ++i) {
         _jobs[i] = new NewVoronoiGridConstructionJob(_grid);
       }
     }
@@ -202,20 +202,20 @@ private:
      * @return Pointer to a unique and thread safe
      * NewVoronoiGridConstructionJob.
      */
-    inline NewVoronoiGridConstructionJob *get_job(int thread_id) {
-      const unsigned int cellsize = _grid._cells.size();
+    inline NewVoronoiGridConstructionJob *get_job(int_fast32_t thread_id) {
+      const size_t cellsize = _grid._cells.size();
       if (_current_index == cellsize) {
         return nullptr;
       }
-      unsigned int first_index;
-      unsigned int jobsize;
+      uint_fast32_t first_index;
+      uint_fast32_t jobsize;
       _lock.lock();
       first_index = _current_index;
       jobsize = std::min(_jobsize, cellsize - _current_index);
       _current_index += jobsize;
       _lock.unlock();
       if (first_index < cellsize) {
-        const unsigned int last_index = first_index + jobsize;
+        const uint_fast32_t last_index = first_index + jobsize;
         _jobs[thread_id]->update_indices(first_index, last_index);
         return _jobs[thread_id];
       } else {
@@ -234,21 +234,21 @@ public:
 
   /// grid computation methods
 
-  virtual void compute_grid(int worksize = -1);
+  virtual void compute_grid(int_fast32_t worksize = -1);
 
   /// cell/grid property access
 
-  virtual double get_volume(unsigned int index) const;
-  virtual CoordinateVector<> get_centroid(unsigned int index) const;
-  virtual CoordinateVector<> get_wall_normal(unsigned int wallindex) const;
-  virtual std::vector< VoronoiFace > get_faces(unsigned int index) const;
-  virtual std::vector< Face > get_geometrical_faces(unsigned int index) const;
+  virtual double get_volume(uint_fast32_t index) const;
+  virtual CoordinateVector<> get_centroid(uint_fast32_t index) const;
+  virtual CoordinateVector<> get_wall_normal(int_fast32_t wallindex) const;
+  virtual std::vector< VoronoiFace > get_faces(uint_fast32_t index) const;
+  virtual std::vector< Face > get_geometrical_faces(uint_fast32_t index) const;
 
   /// grid navigation
 
-  virtual unsigned int get_index(const CoordinateVector<> &position) const;
+  virtual uint_fast32_t get_index(const CoordinateVector<> &position) const;
   virtual bool is_inside(CoordinateVector<> position) const;
-  virtual bool is_real_neighbour(unsigned int index) const;
+  virtual bool is_real_neighbour(uint_fast32_t index) const;
 };
 
 #endif // NEWVORONOIGRID_HPP

@@ -247,7 +247,7 @@ public:
   double get_energy_difference(LineCoolingDataFiveLevelElement element,
                                LineCoolingDataTransition transition) const;
   double get_statistical_weight(LineCoolingDataFiveLevelElement element,
-                                unsigned char level) const;
+                                uint_fast8_t level) const;
 
   static int solve_system_of_linear_equations(double A[5][5], double B[5]);
 

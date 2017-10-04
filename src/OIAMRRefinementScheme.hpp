@@ -42,7 +42,7 @@ private:
   const double _target_N;
 
   /*! @brief Maximum allowed refinement level. */
-  const unsigned char _max_level;
+  const uint_least8_t _max_level;
 
 public:
   /**
@@ -52,7 +52,7 @@ public:
    * @param max_level Maximum allowed refinement level.
    * @param log Log to write logging info to.
    */
-  OIAMRRefinementScheme(double target_N, unsigned char max_level,
+  OIAMRRefinementScheme(double target_N, uint_fast8_t max_level,
                         Log *log = nullptr)
       : _target_N(target_N), _max_level(max_level) {}
 
@@ -73,7 +73,7 @@ public:
             params.get_value< double >(
                 "DensityGrid:AMRRefinementScheme:target number of OI particles",
                 1.e5),
-            params.get_value< unsigned char >(
+            params.get_value< uint_fast8_t >(
                 "DensityGrid:AMRRefinementScheme:maximum refinement level", 6),
             log) {}
 
@@ -84,7 +84,7 @@ public:
    * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+  virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
 
     const double volume = cell.get_volume();
     const IonizationVariables &ioniziation_variables =

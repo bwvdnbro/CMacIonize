@@ -54,7 +54,7 @@ enum NewVoronoiCellTestName {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCellConstructor::setup_test(int test) {
+void NewVoronoiCellConstructor::setup_test(int_fast32_t test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
@@ -249,7 +249,7 @@ void NewVoronoiCellConstructor::setup_test(int test) {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCellConstructor::check_test(int test) {
+void NewVoronoiCellConstructor::check_test(int_fast32_t test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
 
@@ -687,7 +687,7 @@ int main(int argc, char **argv) {
     cell.setup(0, rescaled_positions, rescaled_box, rescaled_positions,
                rescaled_box, false);
 
-    unsigned int tetrahedra[4];
+    uint_fast32_t tetrahedra[4];
     assert_condition(cell.find_tetrahedron(1, rescaled_box, rescaled_positions,
                                            tetrahedra) == 1);
     assert_condition(tetrahedra[0] == 1);
@@ -793,7 +793,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
-    unsigned int tn[4];
+    uint_fast32_t tn[4];
     cell.one_to_four_flip(4, 0, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 5);
@@ -809,8 +809,8 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
-    unsigned int tetrahedra[2] = {0, 1};
-    unsigned int tn[6];
+    uint_fast32_t tetrahedra[2] = {0, 1};
+    uint_fast32_t tn[6];
     cell.two_to_six_flip(5, tetrahedra, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -828,8 +828,8 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
-    unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
-    unsigned int tn[2 * UCHAR_MAX];
+    uint_fast32_t tetrahedra[5] = {0, 1, 2, 3, 4};
+    uint_fast32_t tn[2 * UCHAR_MAX];
     cell.n_to_2n_flip(7, tetrahedra, 5, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -851,7 +851,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
-    unsigned int tn[3];
+    uint_fast32_t tn[3];
     cell.two_to_three_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -866,7 +866,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
-    unsigned int tn[2];
+    uint_fast32_t tn[2];
     cell.three_to_two_flip(0, 1, 2, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -880,7 +880,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
-    unsigned int tn[4];
+    uint_fast32_t tn[4];
     cell.four_to_four_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);

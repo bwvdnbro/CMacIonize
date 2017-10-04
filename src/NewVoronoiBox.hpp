@@ -29,6 +29,8 @@
 #include "Box.hpp"
 #include "NewVoronoiVariables.hpp"
 
+#include <cinttypes>
+
 /**
  * @brief Special type of Box used to store a NewVoronoiGrid.
  */
@@ -49,7 +51,7 @@ private:
    * @return Reflective copy of the generator.
    */
   inline CoordinateVector<>
-  get_wall_copy(unsigned int index,
+  get_wall_copy(int_fast32_t index,
                 const CoordinateVector<> &generator_position) const {
 
     switch (index) {
@@ -83,7 +85,7 @@ private:
           2 * (_box.get_anchor().z() + _box.get_sides().z()) -
               generator_position.z());
     }
-    cmac_error("Unknown box wall index: %u!", index);
+    cmac_error("Unknown box wall index: %" PRIiFAST32 "!", index);
     return CoordinateVector<>();
   }
 
@@ -133,7 +135,7 @@ public:
    * @return Value for that component.
    */
   inline CoordinateVector<>
-  get_position(unsigned int index,
+  get_position(uint_fast32_t index,
                const CoordinateVector<> &generator_position) const {
 
     if (index >= NEWVORONOICELL_BOX_LEFT) {

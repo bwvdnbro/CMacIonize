@@ -913,7 +913,7 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // Find the neighbours that are contained inside of a sphere of centre the
     // cell midpoint
     // and radius given by the distance to the furthest vertex.
-    std::vector< unsigned int > ngbs =
+    std::vector< uint_fast32_t > ngbs =
         _octree->get_ngbs_sphere(position, radius);
     const unsigned int numngbs = ngbs.size();
 

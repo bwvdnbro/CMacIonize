@@ -28,6 +28,7 @@
 #include "HomogeneousDensityFunction.hpp"
 #include "IonizationVariablesPropertyAccessors.hpp"
 #include "MPICommunicator.hpp"
+#include <cinttypes>
 #include <vector>
 
 /**
@@ -98,7 +99,8 @@ public:
 int main(int argc, char **argv) {
   MPICommunicator comm(argc, argv);
 
-  cmac_status("This is process %i of %i.", comm.get_rank(), comm.get_size());
+  cmac_status("This is process %" PRIuFAST32 " of %" PRIuFAST32 ".",
+              comm.get_rank(), comm.get_size());
 
   double dvalue = 42.;
   comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(dvalue);
@@ -243,7 +245,8 @@ int main(int argc, char **argv) {
     }
     std::pair< unsigned long, unsigned long > block =
         comm.distribute_block(0, 51);
-    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    cmac_status("%" PRIuFAST32 ": %lu %lu", comm.get_rank(), block.first,
+                block.second);
     std::vector< TestClass >::iterator global_begin = objects.begin();
     std::vector< TestClass >::iterator global_end = global_begin + 51;
     std::vector< TestClass >::iterator local_begin = global_begin + block.first;
@@ -297,7 +300,8 @@ int main(int argc, char **argv) {
     }
     std::pair< unsigned long, unsigned long > block =
         comm.distribute_block(0, 51);
-    cmac_status("%i: %lu %lu", comm.get_rank(), block.first, block.second);
+    cmac_status("%" PRIuFAST32 ": %lu %lu", comm.get_rank(), block.first,
+                block.second);
     std::vector< TestClass >::iterator global_begin = objects.begin();
     std::vector< TestClass >::iterator global_end = global_begin + 51;
     std::vector< TestClass >::iterator local_begin = global_begin + block.first;

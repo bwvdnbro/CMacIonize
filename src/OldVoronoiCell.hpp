@@ -142,7 +142,8 @@ private:
    * @param edge Index of an edge of that vertex.
    * @return Endpoint of the edge.
    */
-  inline int get_edge_endpoint(int vertex, unsigned char edge) const {
+  inline int_fast32_t get_edge_endpoint(int_fast32_t vertex,
+                                        uint_fast8_t edge) const {
     return _edges[vertex][edge].get_endpoint();
   }
 
@@ -154,7 +155,8 @@ private:
    * @param edge Index of an edge of that vertex.
    * @param endpoint New endpoint for the edge.
    */
-  inline void set_edge_endpoint(int vertex, unsigned char edge, int endpoint) {
+  inline void set_edge_endpoint(int_fast32_t vertex, uint_fast8_t edge,
+                                int_fast32_t endpoint) {
     _edges[vertex][edge].set_endpoint(endpoint);
   }
 
@@ -166,8 +168,8 @@ private:
    * @return Endpoint index of the edge, i.e. the index of that same edge in the
    * edge list of the vertex on the other side of the edge.
    */
-  inline unsigned char get_edge_endpoint_index(int vertex,
-                                               unsigned char edge) const {
+  inline uint_fast8_t get_edge_endpoint_index(int_fast32_t vertex,
+                                              uint_fast8_t edge) const {
     return _edges[vertex][edge].get_endpoint_index();
   }
 
@@ -179,8 +181,8 @@ private:
    * @param edge Index of an edge of that vertex.
    * @param endpoint_index New endpoint index for the edge.
    */
-  inline void set_edge_endpoint_index(int vertex, unsigned char edge,
-                                      unsigned char endpoint_index) {
+  inline void set_edge_endpoint_index(int_fast32_t vertex, uint_fast8_t edge,
+                                      uint_fast8_t endpoint_index) {
     _edges[vertex][edge].set_endpoint_index(endpoint_index);
   }
 
@@ -191,7 +193,8 @@ private:
    * @param edge Index of an edge of that vertex.
    * @return Neighbour of the edge.
    */
-  inline unsigned int get_edge_neighbour(int vertex, unsigned char edge) const {
+  inline uint_fast32_t get_edge_neighbour(int_fast32_t vertex,
+                                          uint_fast8_t edge) const {
     return _edges[vertex][edge].get_neighbour();
   }
 
@@ -203,8 +206,8 @@ private:
    * @param edge Index of an edge of that vertex.
    * @param neighbour New neighbour for the edge.
    */
-  inline void set_edge_neighbour(int vertex, unsigned char edge,
-                                 unsigned int neighbour) {
+  inline void set_edge_neighbour(int_fast32_t vertex, uint_fast8_t edge,
+                                 uint_fast32_t neighbour) {
     _edges[vertex][edge].set_neighbour(neighbour);
   }
 
@@ -216,7 +219,7 @@ private:
    * @param face Index of a face.
    * @return Surface area of that face (in m^2).
    */
-  inline double get_face_surface_area(unsigned int face) const {
+  inline double get_face_surface_area(uint_fast32_t face) const {
     return _faces[face].get_surface_area();
   }
 
@@ -226,7 +229,7 @@ private:
    * @param face Index of a face.
    * @param increment Increment for the surface area of that face (in m^2).
    */
-  inline void increase_face_surface_area(unsigned int face, double increment) {
+  inline void increase_face_surface_area(uint_fast32_t face, double increment) {
     _faces[face].set_surface_area(_faces[face].get_surface_area() + increment);
   }
 
@@ -236,7 +239,7 @@ private:
    * @param face Index of a face.
    * @return Midpoint of that face (in m).
    */
-  inline CoordinateVector<> get_face_midpoint(unsigned int face) const {
+  inline CoordinateVector<> get_face_midpoint(uint_fast32_t face) const {
     return _faces[face].get_midpoint();
   }
 
@@ -246,7 +249,7 @@ private:
    * @param face Index of a face.
    * @param midpoint New value for the midpoint of that face (in m).
    */
-  inline void set_face_midpoint(unsigned int face,
+  inline void set_face_midpoint(uint_fast32_t face,
                                 CoordinateVector<> midpoint) {
     _faces[face].set_midpoint(midpoint);
   }
@@ -257,7 +260,7 @@ private:
    * @param face Index of a face.
    * @param increment Increment for the midpoint of that face (in m).
    */
-  inline void increase_face_midpoint(unsigned int face,
+  inline void increase_face_midpoint(uint_fast32_t face,
                                      CoordinateVector<> increment) {
     _faces[face].set_midpoint(_faces[face].get_midpoint() + increment);
   }
@@ -275,17 +278,20 @@ public:
   const std::vector< VoronoiFace > &get_faces() const;
 
   /// cell specific geometric functions
-  int intersect(CoordinateVector<> relative_position, unsigned int ngb_index,
-                double epsilon, int *find_edge_and_exit = nullptr);
+  int_fast8_t intersect(CoordinateVector<> relative_position,
+                        uint_fast32_t ngb_index, double epsilon,
+                        int_fast32_t *find_edge_and_exit = nullptr);
   double get_max_radius_squared() const;
   void finalize();
 
   /// cell specific utility functions
-  void delete_connections(unsigned int vertex_index,
+  void delete_connections(uint_fast32_t vertex_index,
                           std::vector< bool > &delete_stack);
   void delete_vertices(std::vector< bool > &delete_stack);
-  void delete_order_2_vertex(int vertex, std::vector< int > &stack);
-  void delete_order_1_vertex(int vertex, std::vector< int > &stack);
+  void delete_order_2_vertex(int_fast32_t vertex,
+                             std::vector< int_fast32_t > &stack);
+  void delete_order_1_vertex(int_fast32_t vertex,
+                             std::vector< int_fast32_t > &stack);
 
   /// static geometric functions
   static double volume_tetrahedron(CoordinateVector<> v1, CoordinateVector<> v2,
@@ -304,10 +310,9 @@ public:
                                               CoordinateVector<> v2,
                                               CoordinateVector<> v3);
 
-  static std::pair< int, double > test_vertex(CoordinateVector<> vertex,
-                                              CoordinateVector<> plane_vector,
-                                              double plane_distance_squared,
-                                              double epsilon);
+  static std::pair< int_fast8_t, double >
+  test_vertex(CoordinateVector<> vertex, CoordinateVector<> plane_vector,
+              double plane_distance_squared, double epsilon);
 
   /// static face getters
 
@@ -337,13 +342,13 @@ public:
    * @param face Face.
    * @return Neighbour.
    */
-  inline static unsigned int get_face_neighbour(const VoronoiFace &face) {
+  inline static uint_fast32_t get_face_neighbour(const VoronoiFace &face) {
     return face.get_neighbour();
   }
 
   /// functions for unit testing
-  void setup_variables_for_test(int testcase);
-  void check_variables_after_test(int testcase);
+  void setup_variables_for_test(int_fast32_t testcase);
+  void check_variables_after_test(int_fast32_t testcase);
   void print_cell(std::ostream &stream, bool show_structure = false);
 };
 
