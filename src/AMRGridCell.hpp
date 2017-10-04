@@ -98,7 +98,7 @@ private:
   Box<> _box;
 
   /*! @brief Depth level of the cell. */
-  uint_fast8_t _level;
+  uint_least8_t _level;
 
 public:
   /**

@@ -72,7 +72,7 @@ private:
   std::vector< double > _image_U;
 
   /*! @brief Resolution of the image. */
-  const uint_fast32_t _resolution[2];
+  const uint_least32_t _resolution[2];
 
   /*! @brief Lower left corner of the image box (in kpc). */
   const double _anchor[2];
@@ -131,8 +131,10 @@ public:
             _direction_parameters[0] * _direction_parameters[4],
             _direction_parameters[0] * _direction_parameters[3],
             _direction_parameters[1])),
-        _resolution{resolution_x, resolution_y}, _anchor{anchor_x, anchor_y},
-        _sides{sides_x, sides_y}, _type(get_type(type)),
+        _resolution{static_cast< uint_least32_t >(resolution_x),
+                    static_cast< uint_least32_t >(resolution_y)},
+        _anchor{anchor_x, anchor_y}, _sides{sides_x, sides_y},
+        _type(get_type(type)),
         _filename(Utilities::get_absolute_path(output_folder) + "/" +
                   filename) {
 

@@ -60,7 +60,7 @@ private:
   std::string _description;
 
   /*! @brief Type of argument for the command line option (if any). */
-  int _argument;
+  CommandLineOptionArgumentType _argument;
 
   /*! @brief Default value of the argument of the command line option (if any).
    */

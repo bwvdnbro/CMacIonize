@@ -99,11 +99,9 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
                                      std::string description,
                                      int_fast32_t argument,
                                      std::string default_value, bool required)
-    : _name(name), _description(description), _default_value(default_value),
-      _required(required) {
-  _abbreviation = abbreviation;
-  _argument = argument;
-}
+    : _name(name), _abbreviation(abbreviation), _description(description),
+      _argument(static_cast< CommandLineOptionArgumentType >(argument)),
+      _default_value(default_value), _required(required) {}
 
 /**
  * @brief Print the command line option as it should be used on the command

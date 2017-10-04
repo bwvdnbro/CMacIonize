@@ -54,10 +54,10 @@ private:
 
   /*! @brief Refinement interval: number of grid resets before the grid is
       refined for the first time. */
-  uint_fast32_t _refinement_interval;
+  uint_least32_t _refinement_interval;
 
   /*! @brief Number of times the reset() method was called. */
-  uint_fast32_t _reset_count;
+  uint_least32_t _reset_count;
 
   /**
    * @brief Get the largest odd factor of the given number.

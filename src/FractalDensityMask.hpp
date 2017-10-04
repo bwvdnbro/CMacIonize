@@ -69,7 +69,7 @@ private:
   std::vector< int_fast32_t > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
-  std::vector< std::vector< std::vector< uint_fast64_t > > > _distribution;
+  std::vector< std::vector< std::vector< uint_least64_t > > > _distribution;
 
   /*! @brief Fractal fraction: maximal fraction of the number density in a cell
    *  that is affected by the mask. */
