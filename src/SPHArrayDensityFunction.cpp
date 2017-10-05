@@ -279,9 +279,9 @@ DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
 
   double density = 0.;
   const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
-  const unsigned int numngbs = ngbs.size();
-  for (unsigned int i = 0; i < numngbs; ++i) {
-    const unsigned int index = ngbs[i];
+  const size_t numngbs = ngbs.size();
+  for (size_t i = 0; i < numngbs; ++i) {
+    const size_t index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();

@@ -35,6 +35,7 @@
 #include "PhysicalConstants.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+#include <cinttypes>
 #include <cmath>
 
 /**
@@ -380,9 +381,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   std::vector< std::vector< double > > lines =
       line_cooling_data.get_line_strengths(T, ne, abund);
   std::vector< double > cooling(lines.size());
-  for (unsigned int i = 0; i < lines.size(); ++i) {
+  for (size_t i = 0; i < lines.size(); ++i) {
     cooling[i] = 0.;
-    for (unsigned int j = 0; j < lines[i].size(); ++j) {
+    for (size_t j = 0; j < lines[i].size(); ++j) {
       cooling[i] += lines[i][j];
     }
     cooling[i] *= n;
@@ -532,14 +533,14 @@ void TemperatureCalculator::calculate_temperature(
 
   // normalize the mean intensity integrals
   double j[NUMBER_OF_IONNAMES];
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     IonName ion = static_cast< IonName >(i);
     j[i] = jfac * ionization_variables.get_mean_intensity(ion);
   }
 
   // normalize the heating integrals
   double h[NUMBER_OF_HEATINGTERMS];
-  for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
     HeatingTermName heating_term = static_cast< HeatingTermName >(i);
     h[i] = hfac * ionization_variables.get_heating(heating_term);
   }
@@ -550,7 +551,7 @@ void TemperatureCalculator::calculate_temperature(
   // guess, until the difference between cooling and heating drops below a
   // threshold value
   // we enforce upper and lower limits on the temperature of 10^10 and 500 K
-  unsigned int niter = 0;
+  uint_fast32_t niter = 0;
   double gain0 = 1.;
   double loss0 = 0.;
   h0 = 0.;
@@ -607,7 +608,8 @@ void TemperatureCalculator::calculate_temperature(
     }
   }
   if (niter == _maximum_number_of_iterations) {
-    cmac_warning("Maximum number of iterations (%u) reached (temperature: %g, "
+    cmac_warning("Maximum number of iterations (%" PRIuFAST32
+                 ") reached (temperature: %g, "
                  "relative difference cooling/heating: %g, aim: %g)!",
                  niter, T0, std::abs(loss0 - gain0) / gain0,
                  _epsilon_convergence);
@@ -688,8 +690,8 @@ void TemperatureCalculator::calculate_temperature(
  * @param block Block that should be traversed by the local MPI process.
  */
 void TemperatureCalculator::calculate_temperature(
-    unsigned int loop, double totweight, DensityGrid &grid,
-    std::pair< unsigned long, unsigned long > &block) const {
+    uint_fast32_t loop, double totweight, DensityGrid &grid,
+    std::pair< cellsize_t, cellsize_t > &block) const {
 
   if (_do_temperature_computation && loop > _minimum_iteration_number) {
     // get the normalization factors for the ionizing intensity and heating

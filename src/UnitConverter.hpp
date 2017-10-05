@@ -230,7 +230,7 @@ public:
     std::vector< Quantity > Aunits;
     std::vector< Quantity > Bunits;
     std::vector< double > A_in_B_fac;
-    std::vector< int > A_in_B_pow;
+    std::vector< int_fast32_t > A_in_B_pow;
 
     /// add new quantity conversions below
     // energy to frequency conversion for photons
@@ -248,7 +248,7 @@ public:
 
     /// don't change the part below unless you know what you're doing
     // just try every unit combination in the lists
-    for (unsigned int i = 0; i < Aunits.size(); ++i) {
+    for (size_t i = 0; i < Aunits.size(); ++i) {
       const Unit Aunit = get_SI_unit(Aunits[i]);
       const Unit Bunit = get_SI_unit(Bunits[i]);
       if (unit_from.is_same_quantity(Aunit) &&
@@ -257,7 +257,7 @@ public:
         const double tval = 1. * unit_to;
         double Sval = value * fval;
         if (A_in_B_pow[i] > 0) {
-          int j = 1;
+          int_fast32_t j = 1;
           const double Sfac = Sval;
           while (j < A_in_B_pow[i]) {
             ++j;
@@ -282,7 +282,7 @@ public:
         const double A_in_B_pow_inv = 1. / A_in_B_pow[i];
         if (A_in_B_pow_inv > 0) {
           if (A_in_B_pow_inv == 1.) {
-            int j = 1;
+            int_fast32_t j = 1;
             const double Sfac = Sval;
             while (j < A_in_B_pow_inv) {
               ++j;
@@ -295,7 +295,7 @@ public:
           if (A_in_B_pow_inv == -1.) {
             const double Sfac = Sval;
             Sval = 1.;
-            int j = 0;
+            int_fast32_t j = 0;
             while (j < std::abs(A_in_B_pow_inv)) {
               ++j;
               Sval /= Sfac;
@@ -357,7 +357,7 @@ public:
         ++pos2;
       }
       const std::string powstr = name.substr(pos1, pos2 - pos1);
-      const int power = strtod(powstr.c_str(), nullptr);
+      const int_fast32_t power = strtod(powstr.c_str(), nullptr);
       unit ^= power;
       if (pos2 == name.size()) {
         return unit;
@@ -391,7 +391,7 @@ public:
           ++pos2;
         }
         const std::string powstr = name.substr(pos1, pos2 - pos1);
-        const int power = strtod(powstr.c_str(), nullptr);
+        const int_fast32_t power = strtod(powstr.c_str(), nullptr);
         unit2 ^= power;
       }
       unit *= unit2;

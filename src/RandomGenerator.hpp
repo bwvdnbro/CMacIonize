@@ -26,6 +26,8 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
+#include <cstdint>
+
 /**
  * @brief Own implementation of the GSL ranlxd2 random generator.
  *
@@ -40,16 +42,16 @@ private:
   double _carry;
 
   /*! @brief ranlxd2 state variables. */
-  unsigned int _ir;
+  uint_fast32_t _ir;
 
   /*! @brief ranlxd2 state variables. */
-  unsigned int _jr;
+  uint_fast32_t _jr;
 
   /*! @brief ranlxd2 state variables. */
-  unsigned int _ir_old;
+  uint_fast32_t _ir_old;
 
   /*! @brief ranlxd2 state variables. */
-  unsigned int _pr;
+  uint_fast32_t _pr;
 
   /**
    * @brief GSL RANLUX_STEP macro.
@@ -62,8 +64,8 @@ private:
    * @param i3 Index in the xdbl array.
    */
   static inline void ranlux_step(double *xdbl, double &x1, double &x2,
-                                 unsigned int i1, unsigned int i2,
-                                 unsigned int i3) {
+                                 uint_fast32_t i1, uint_fast32_t i2,
+                                 uint_fast32_t i3) {
     x1 = xdbl[i1] - xdbl[i2];
     if (x2 < 0) {
       x1 -= (1.0 / 281474976710656.0);
@@ -76,13 +78,13 @@ private:
    * @brief Increment the internal state of the generator.
    */
   inline void increment_state() {
-    int k, kmax;
+    int_fast32_t k, kmax;
     double y1, y2, y3;
 
     double *xdbl = _xdbl;
     double carry = _carry;
-    unsigned int ir = _ir;
-    unsigned int jr = _jr;
+    uint_fast32_t ir = _ir;
+    uint_fast32_t jr = _jr;
 
     for (k = 0; ir > 0; ++k) {
       y1 = xdbl[jr] - xdbl[ir];
@@ -153,8 +155,8 @@ public:
    *
    * @param seed New seed.
    */
-  inline void set_seed(int seed) {
-    int ibit, jbit, i, k, m, xbit[31];
+  inline void set_seed(int_fast32_t seed) {
+    int_fast32_t ibit, jbit, i, k, m, xbit[31];
     double x, y;
 
     if (seed == 0) {
@@ -199,7 +201,7 @@ public:
    *
    * @param seed Initial seed for the random number generator.
    */
-  inline RandomGenerator(int seed = 42) { set_seed(seed); }
+  inline RandomGenerator(int_fast32_t seed = 42) { set_seed(seed); }
 
   /**
    * @brief Get a uniform random double precision floating point value in the
@@ -224,7 +226,7 @@ public:
    *
    * @return Random integer value in the range [0, 2^31].
    */
-  inline int get_random_integer() {
+  inline int_fast32_t get_random_integer() {
     return get_uniform_random_double() * 2147483648.0;
   }
 };

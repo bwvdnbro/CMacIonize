@@ -69,7 +69,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   std::getline(file, line);
   std::stringstream linestream(line);
   std::string header_string_1, header_string_2;
-  unsigned int num_frequency;
+  uint_fast32_t num_frequency;
   linestream >> header_string_1 >> header_string_2 >> num_frequency;
   // skip an empty line after the first header block, the second header block
   // (which consists of two lines), and another empty line
@@ -81,7 +81,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // read the data from the remainder of the file
   std::vector< double > file_frequencies(num_frequency);
   std::vector< double > file_eddington_fluxes(num_frequency);
-  unsigned int i = 0;
+  uint_fast32_t i = 0;
   const double lightspeed =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
   while (std::getline(file, line)) {
@@ -104,7 +104,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   const double max_frequency = 4. * min_frequency;
-  for (unsigned int i = 0; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequencies[i] = min_frequency +
                       i * (max_frequency - min_frequency) /
                           (WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
@@ -112,16 +112,16 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
 
   // create the spectrum in the bin range of interest
   _cumulative_distribution[0] = 0.;
-  for (unsigned int i = 1; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     double y1 = _frequencies[i - 1];
-    unsigned int i1 =
+    uint_fast32_t i1 =
         Utilities::locate(y1, &file_frequencies[0], num_frequency);
     double f = (y1 - file_frequencies[i1]) /
                (file_frequencies[i1 + 1] - file_frequencies[i1]);
     double e1 = file_eddington_fluxes[i1] +
                 f * (file_eddington_fluxes[i1 + 1] - file_eddington_fluxes[i1]);
     double y2 = _frequencies[i];
-    unsigned int i2 =
+    uint_fast32_t i2 =
         Utilities::locate(y2, &file_frequencies[0], num_frequency);
     f = (y2 - file_frequencies[i2]) /
         (file_frequencies[i2 + 1] - file_frequencies[i2]);
@@ -133,7 +133,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // _cumulative_distribution now contains the actual ionizing spectrum
   // make it cumulative (and at the same time get the total ionizing
   // luminosity)
-  for (unsigned int i = 1; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] += _cumulative_distribution[i - 1];
   }
 
@@ -151,7 +151,7 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   // and convert from cm^-2 to m^-2
   _total_flux *= 1.e4;
   // normalize the spectrum
-  for (unsigned int i = 0; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
         _cumulative_distribution[WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1];
   }
@@ -235,9 +235,10 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
  */
 double WMBasicPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
+
   double x = random_generator.get_uniform_random_double();
-  unsigned int inu = Utilities::locate(x, _cumulative_distribution.data(),
-                                       WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
+  uint_fast32_t inu = Utilities::locate(x, _cumulative_distribution.data(),
+                                        WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
   double frequency =
       _frequencies[inu] +
       (_frequencies[inu + 1] - _frequencies[inu]) *

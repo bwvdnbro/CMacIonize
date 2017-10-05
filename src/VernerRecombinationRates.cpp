@@ -49,11 +49,11 @@ VernerRecombinationRates::VernerRecombinationRates() {
   {
     // skip comment line
     getline(file, line);
-    for (unsigned int i = 0; i < 2; ++i) {
-      for (unsigned int j = 0; j < 30; ++j) {
+    for (uint_fast8_t i = 0; i < 2; ++i) {
+      for (uint_fast8_t j = 0; j < 30; ++j) {
         getline(file, line);
         std::stringstream lstream(line);
-        for (unsigned int k = 0; k < 30; ++k) {
+        for (uint_fast8_t k = 0; k < 30; ++k) {
           lstream >> _rrec[i][j][k];
         }
       }
@@ -64,11 +64,11 @@ VernerRecombinationRates::VernerRecombinationRates() {
   {
     // skip comment line
     getline(file, line);
-    for (unsigned int i = 0; i < 4; ++i) {
-      for (unsigned int j = 0; j < 30; ++j) {
+    for (uint_fast8_t i = 0; i < 4; ++i) {
+      for (uint_fast8_t j = 0; j < 30; ++j) {
         getline(file, line);
         std::stringstream lstream(line);
-        for (unsigned int k = 0; k < 30; ++k) {
+        for (uint_fast8_t k = 0; k < 30; ++k) {
           lstream >> _rnew[i][j][k];
         }
       }
@@ -79,10 +79,10 @@ VernerRecombinationRates::VernerRecombinationRates() {
   {
     // skip comment line
     getline(file, line);
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       getline(file, line);
       std::stringstream lstream(line);
-      for (unsigned int j = 0; j < 13; ++j) {
+      for (uint_fast8_t j = 0; j < 13; ++j) {
         lstream >> _fe[i][j];
       }
     }
@@ -90,8 +90,8 @@ VernerRecombinationRates::VernerRecombinationRates() {
 
   // invert _rnew[2] and _rnew[3] values, as they are only used in divisions
   // and multiplying is much more efficient than dividing
-  for (unsigned char i = 0; i < 30; ++i) {
-    for (unsigned char j = 0; j < 30; ++j) {
+  for (uint_fast8_t i = 0; i < 30; ++i) {
+    for (uint_fast8_t j = 0; j < 30; ++j) {
       if (_rnew[2][i][j] != 0.) {
         _rnew[2][i][j] = 1. / _rnew[2][i][j];
       }
@@ -113,9 +113,10 @@ VernerRecombinationRates::VernerRecombinationRates() {
  * @param T Temperature (in K).
  * @return Recombination rate (in cm^3s^-1).
  */
-double VernerRecombinationRates::get_recombination_rate_verner(unsigned char iz,
-                                                               unsigned char in,
+double VernerRecombinationRates::get_recombination_rate_verner(uint_fast8_t iz,
+                                                               uint_fast8_t in,
                                                                double T) const {
+
   double r = 0.;
 
   if (iz < 1 || iz > 30) {

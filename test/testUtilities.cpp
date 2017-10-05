@@ -100,16 +100,16 @@ int main(int argc, char **argv) {
   uint64_t test_value = 0xf300;
   assert_condition(Utilities::as_binary_sequence(test_value) ==
                    "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 "
-                   "0000 1111 0011 0000 0000")
+                   "0000 1111 0011 0000 0000");
 
-      std::vector< unsigned int >
-          test_vector(5);
+  std::vector< unsigned int > test_vector(5);
   test_vector[0] = 3;
   test_vector[1] = 2;
   test_vector[2] = 4;
   test_vector[3] = 0;
   test_vector[4] = 1;
-  std::vector< unsigned int > idx_test_vector = Utilities::argsort(test_vector);
+  std::vector< uint_fast32_t > idx_test_vector =
+      Utilities::argsort(test_vector);
   assert_condition(idx_test_vector[0] == 3);
   assert_condition(idx_test_vector[1] == 4);
   assert_condition(idx_test_vector[2] == 1);

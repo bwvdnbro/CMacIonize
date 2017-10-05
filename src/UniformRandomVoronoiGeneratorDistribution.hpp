@@ -39,10 +39,10 @@ class UniformRandomVoronoiGeneratorDistribution
     : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Number of random generator positions to generate. */
-  const unsigned int _number_of_positions;
+  const generatornumber_t _number_of_positions;
 
   /*! @brief Number of positions already generated. */
-  unsigned int _current_number;
+  generatornumber_t _current_number;
 
   /*! @brief Box containing the generators (in m). */
   const Box<> _box;
@@ -60,12 +60,12 @@ public:
    * @param random_seed Seed for the random number generator.
    * @param log Log to write logging info to.
    */
-  UniformRandomVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                            uint_fast32_t number_of_positions,
-                                            int_fast32_t random_seed,
-                                            Log *log = nullptr)
+  UniformRandomVoronoiGeneratorDistribution(
+      const Box<> &simulation_box, generatornumber_t number_of_positions,
+      int_fast32_t random_seed, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(simulation_box), _random_generator(random_seed) {
+
     if (log) {
       log->write_status(
           "Created UniformRandomVoronoiGeneratorDistribution with ",
@@ -91,7 +91,7 @@ public:
                                             Log *log = nullptr)
       : UniformRandomVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< uint_fast32_t >(
+            params.get_value< generatornumber_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 100),
             params.get_value< int_fast32_t >(
@@ -113,6 +113,7 @@ public:
    * @return Uniform random generator position (in m).
    */
   virtual CoordinateVector<> get_position() {
+
     ++_current_number;
     cmac_assert(_current_number <= _number_of_positions);
     CoordinateVector<> pos;

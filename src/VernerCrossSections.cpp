@@ -60,13 +60,13 @@ VernerCrossSections::VernerCrossSections() {
     if (lineA[0] != '#') {
       std::istringstream lstream(lineA);
 
-      unsigned int Z, N, n, l;
+      uint_fast32_t Z, N, n, l;
       double E_th, E_0, sigma_0, y_a, P, y_w;
 
       lstream >> Z >> N >> n >> l >> E_th >> E_0 >> sigma_0 >> y_a >> P >> y_w;
 
-      const unsigned int iZ = Z - 1;
-      const unsigned int iN = N - 1;
+      const uint_fast32_t iZ = Z - 1;
+      const uint_fast32_t iN = N - 1;
 
       // n and l need to be combined to get the shell number
       if (n < 3) {
@@ -80,7 +80,7 @@ VernerCrossSections::VernerCrossSections() {
         }
       }
 
-      const unsigned int in = n - 1;
+      const uint_fast32_t in = n - 1;
       if (Z > _data_A.size()) {
         _data_A.resize(Z);
       }
@@ -107,14 +107,14 @@ VernerCrossSections::VernerCrossSections() {
     if (lineB[0] != '#') {
       std::istringstream lstream(lineB);
 
-      unsigned int Z, N;
+      uint_fast32_t Z, N;
       double E_th, E_max, E_0, sigma_0, y_a, P, y_w, y_0, y_1;
 
       lstream >> Z >> N >> E_th >> E_max >> E_0 >> sigma_0 >> y_a >> P >> y_w >>
           y_0 >> y_1;
 
-      const unsigned int iZ = Z - 1;
-      const unsigned int iN = N - 1;
+      const uint_fast32_t iZ = Z - 1;
+      const uint_fast32_t iN = N - 1;
       if (Z > _data_B.size()) {
         _data_B.resize(Z);
       }
@@ -138,11 +138,11 @@ VernerCrossSections::VernerCrossSections() {
     if (lineC[0] != '#') {
       std::istringstream lstream(lineC);
 
-      unsigned int N, Ninn, Ntot;
+      uint_fast32_t N, Ninn, Ntot;
 
       lstream >> N >> Ninn >> Ntot;
 
-      const unsigned int iN = N - 1;
+      const uint_fast32_t iN = N - 1;
       if (N > _data_C.size()) {
         _data_C.resize(N);
       }
@@ -163,17 +163,17 @@ VernerCrossSections::VernerCrossSections() {
  * @param e Photon energy (in Hz).
  * @return Photoionization cross section (in m^2).
  */
-double VernerCrossSections::get_cross_section_verner(unsigned char nz,
-                                                     unsigned char ne,
-                                                     unsigned char is,
+double VernerCrossSections::get_cross_section_verner(uint_fast8_t nz,
+                                                     uint_fast8_t ne,
+                                                     uint_fast8_t is,
                                                      double e) const {
 
   cmac_assert(nz > 0 && nz <= 30);
   cmac_assert(ne > 0 && ne <= nz);
 
-  const unsigned int iZ = nz - 1;
-  const unsigned int iN = ne - 1;
-  const unsigned int in = is - 1;
+  const uint_fast32_t iZ = nz - 1;
+  const uint_fast32_t iN = ne - 1;
+  const uint_fast32_t in = is - 1;
 
   // if the energy is lower than the ionization threshold energy, the cross
   // section is trivially 0
@@ -185,7 +185,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
   //  - the fit in the range from E_th to E_inn, the inner shell photoionization
   //    cross section jump (_data_B)
   //  - the fit to the inner shell cross sections (_data_A)
-  unsigned int nout = _data_C[iN][VERNERDATA_C_Ntot];
+  uint_fast32_t nout = _data_C[iN][VERNERDATA_C_Ntot];
   if (nz == ne && nz > 18) {
     nout = 7;
   }
@@ -197,7 +197,7 @@ double VernerCrossSections::get_cross_section_verner(unsigned char nz,
     return 0.;
   }
 
-  const unsigned int nint = _data_C[iN][VERNERDATA_C_Ninn];
+  const uint_fast32_t nint = _data_C[iN][VERNERDATA_C_Ninn];
   double einn;
   if (nz == 15 || nz == 17 || nz == 19 || (nz > 20 && nz != 26)) {
     einn = 0.;

@@ -101,7 +101,7 @@ private:
 
   /*! @brief Number of iterations of the photoionization algorithm to perform
    *  before computing the temperature. */
-  const unsigned int _minimum_iteration_number;
+  const uint_fast32_t _minimum_iteration_number;
 
 public:
   TemperatureCalculator(
@@ -177,9 +177,9 @@ public:
     }
   };
 
-  void
-  calculate_temperature(unsigned int loop, double totweight, DensityGrid &grid,
-                        std::pair< unsigned long, unsigned long > &block) const;
+  void calculate_temperature(uint_fast32_t loop, double totweight,
+                             DensityGrid &grid,
+                             std::pair< cellsize_t, cellsize_t > &block) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

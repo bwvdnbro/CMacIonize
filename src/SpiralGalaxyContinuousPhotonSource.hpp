@@ -112,10 +112,10 @@ public:
 
     // we assume the box is centered on (0., 0., 0.)
     const double rmax = 1.2 * _box.get_anchor().norm();
-    const unsigned int nbin = 1000;
+    const uint_fast32_t nbin = 1000;
     _cumulative_disc_luminosity_distribution_x.resize(nbin + 1, 0.);
     _cumulative_disc_luminosity_distribution_y.resize(nbin + 1, 0.);
-    for (unsigned int i = 0; i < nbin; ++i) {
+    for (uint_fast32_t i = 0; i < nbin; ++i) {
       const double w = i * rmax / nbin;
       _cumulative_disc_luminosity_distribution_x[i] = w;
       const double x = w / _r_stars;
@@ -311,7 +311,7 @@ public:
         const double phi =
             2. * M_PI * random_generator.get_uniform_random_double();
         const double u2 = random_generator.get_uniform_random_double();
-        unsigned int i = Utilities::locate(
+        uint_fast32_t i = Utilities::locate(
             u2, &_cumulative_disc_luminosity_distribution_y[0],
             _cumulative_disc_luminosity_distribution_y.size());
         const double w =

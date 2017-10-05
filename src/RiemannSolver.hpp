@@ -583,9 +583,10 @@ private:
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int sample_right_vacuum(double rhoL, double uL, double PL, double aL,
-                                 double &rhosol, double &usol, double &Psol,
-                                 double dxdt = 0.) const {
+  inline int_fast32_t sample_right_vacuum(double rhoL, double uL, double PL,
+                                          double aL, double &rhosol,
+                                          double &usol, double &Psol,
+                                          double dxdt = 0.) const {
     if (uL - aL < dxdt) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -628,9 +629,10 @@ private:
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int sample_left_vacuum(double rhoR, double uR, double PR, double aR,
-                                double &rhosol, double &usol, double &Psol,
-                                double dxdt = 0.) const {
+  inline int_fast32_t sample_left_vacuum(double rhoR, double uR, double PR,
+                                         double aR, double &rhosol,
+                                         double &usol, double &Psol,
+                                         double dxdt = 0.) const {
     if (dxdt < uR + aR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -678,11 +680,11 @@ private:
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int sample_vacuum_generation(double rhoL, double uL, double PL,
-                                      double aL, double rhoR, double uR,
-                                      double PR, double aR, double &rhosol,
-                                      double &usol, double &Psol,
-                                      double dxdt) const {
+  inline int_fast32_t
+  sample_vacuum_generation(double rhoL, double uL, double PL, double aL,
+                           double rhoR, double uR, double PR, double aR,
+                           double &rhosol, double &usol, double &Psol,
+                           double dxdt) const {
     // get the speeds of the left and right rarefaction waves
     const double SR = uR - _tdgm1 * aR;
     const double SL = uL + _tdgm1 * aL;
@@ -752,10 +754,10 @@ private:
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int solve_vacuum(double rhoL, double uL, double PL, double aL,
-                          double rhoR, double uR, double PR, double aR,
-                          double &rhosol, double &usol, double &Psol,
-                          double dxdt = 0.) const {
+  inline int_fast32_t solve_vacuum(double rhoL, double uL, double PL, double aL,
+                                   double rhoR, double uR, double PR, double aR,
+                                   double &rhosol, double &usol, double &Psol,
+                                   double dxdt = 0.) const {
     // if both states are vacuum, the solution is also vacuum
     if (rhoL == 0. && rhoR == 0.) {
       rhosol = 0.;
@@ -810,9 +812,9 @@ public:
    * @return Flag signaling whether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int solve(double rhoL, double uL, double PL, double rhoR, double uR,
-                   double PR, double &rhosol, double &usol, double &Psol,
-                   double dxdt = 0.) const {
+  inline int_fast32_t solve(double rhoL, double uL, double PL, double rhoR,
+                            double uR, double PR, double &rhosol, double &usol,
+                            double &Psol, double dxdt = 0.) const {
 
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {

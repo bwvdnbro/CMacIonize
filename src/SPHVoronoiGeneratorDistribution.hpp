@@ -44,10 +44,10 @@
 class SPHVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Number of generator positions to generate. */
-  const unsigned int _number_of_positions;
+  const generatornumber_t _number_of_positions;
 
   /*! @brief Number of positions already generated. */
-  unsigned int _current_number;
+  generatornumber_t _current_number;
 
   /*! @brief Box containing the generators (in m). */
   const Box<> _box;
@@ -69,7 +69,7 @@ public:
    * @param log Log to write logging info to.
    */
   SPHVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                  uint_fast32_t number_of_positions,
+                                  generatornumber_t number_of_positions,
                                   std::string filename, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(simulation_box), _filename(filename) {
@@ -131,7 +131,7 @@ public:
                                   ParameterFile &params, Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< uint_fast32_t >(
+            params.get_value< generatornumber_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 1000),
             params.get_value< std::string >(

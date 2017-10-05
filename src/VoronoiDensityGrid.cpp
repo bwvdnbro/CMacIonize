@@ -63,7 +63,7 @@
   std::ofstream ofile(VORONOIDENSITYGRID_PRINT_GENERATORS);                    \
   ofile << "# " << Utilities::get_timestamp() << "\n";                         \
   for (auto it = begin(); it != end(); ++it) {                                 \
-    const unsigned int index = it.get_index();                                 \
+    const uint_fast32_t index = it.get_index();                                \
     const CoordinateVector<> p = _generator_positions[index];                  \
     ofile << index << "\t" << p.x() << "\t" << p.y() << "\t" << p.z() << "\t"  \
           << _hydro_timestep * _hydro_generator_velocity[0][index] << "\t"     \
@@ -98,7 +98,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
       _epsilon(1.e-12 * simulation_box.get_sides().norm()),
       _voronoi_grid_type(grid_type) {
 
-  const unsigned long totnumcell =
+  const generatornumber_t totnumcell =
       _position_generator->get_number_of_positions();
 
   allocate_memory(totnumcell);
@@ -160,16 +160,17 @@ VoronoiDensityGrid::~VoronoiDensityGrid() {
  * @param block Block that should be initialized by this MPI process.
  * @param density_function DensityFunction to use.
  */
-void VoronoiDensityGrid::initialize(
-    std::pair< unsigned long, unsigned long > &block,
-    DensityFunction &density_function) {
+void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
+                                    DensityFunction &density_function) {
+
   // set up the cells
   if (_log) {
     _log->write_status("Initializing Voronoi grid...");
   }
-  const unsigned int numcell = _position_generator->get_number_of_positions();
+  const generatornumber_t numcell =
+      _position_generator->get_number_of_positions();
   _generator_positions.resize(numcell);
-  for (unsigned int i = 0; i < numcell; ++i) {
+  for (generatornumber_t i = 0; i < numcell; ++i) {
     _generator_positions[i] = _position_generator->get_position();
   }
   _voronoi_grid = VoronoiGridFactory::generate(
@@ -189,8 +190,8 @@ void VoronoiDensityGrid::initialize(
       _log->write_status("Applying ", _num_lloyd, " Lloyd iterations...");
     }
 
-    for (unsigned char illoyd = 0; illoyd < _num_lloyd; ++illoyd) {
-      for (unsigned int i = 0; i < numcell; ++i) {
+    for (uint_fast8_t illoyd = 0; illoyd < _num_lloyd; ++illoyd) {
+      for (generatornumber_t i = 0; i < numcell; ++i) {
         _generator_positions[i] = _voronoi_grid->get_centroid(i);
       }
       delete _voronoi_grid;
@@ -214,6 +215,7 @@ void VoronoiDensityGrid::initialize(
  * @param timestep Timestep with which to move the generators (in s).
  */
 void VoronoiDensityGrid::evolve(double timestep) {
+
   if (_has_hydro) {
     // move the cell generators and update the velocities to the new fluid
     // velocities
@@ -222,7 +224,7 @@ void VoronoiDensityGrid::evolve(double timestep) {
     }
 
     for (auto it = begin(); it != end(); ++it) {
-      const unsigned int index = it.get_index();
+      const uint_fast32_t index = it.get_index();
 
       const CoordinateVector<> vgrid = _hydro_generator_velocity[index];
       _generator_positions[index] += timestep * vgrid;
@@ -247,9 +249,10 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @param gamma Polytropic index of the gas.
  */
 void VoronoiDensityGrid::set_grid_velocity(double gamma) {
+
   if (_has_hydro) {
     for (auto it = begin(); it != end(); ++it) {
-      const unsigned int index = it.get_index();
+      const uint_fast32_t index = it.get_index();
 
       const HydroVariables &hydro_vars = it.get_hydro_variables();
 
@@ -287,8 +290,9 @@ void VoronoiDensityGrid::set_grid_velocity(double gamma) {
 CoordinateVector<> VoronoiDensityGrid::get_interface_velocity(
     const iterator left, const iterator right,
     const CoordinateVector<> interface_midpoint) const {
-  const unsigned int ileft = left.get_index();
-  const unsigned int iright = right.get_index();
+
+  const uint_fast32_t ileft = left.get_index();
+  const uint_fast32_t iright = right.get_index();
   CoordinateVector<> vframe(0.);
   if (_voronoi_grid->is_real_neighbour(iright)) {
     const CoordinateVector<> rRL =
@@ -323,7 +327,7 @@ cellsize_t VoronoiDensityGrid::get_number_of_cells() const {
  * @param position Position (in m).
  * @return Index of the cell that contains the position.
  */
-unsigned long
+cellsize_t
 VoronoiDensityGrid::get_cell_index(CoordinateVector<> position) const {
   return _voronoi_grid->get_index(position);
 }
@@ -335,7 +339,7 @@ VoronoiDensityGrid::get_cell_index(CoordinateVector<> position) const {
  * @return Position of the midpoint of that cell (in m).
  */
 CoordinateVector<>
-VoronoiDensityGrid::get_cell_midpoint(unsigned long index) const {
+VoronoiDensityGrid::get_cell_midpoint(cellsize_t index) const {
   return _generator_positions[index];
 }
 
@@ -347,7 +351,7 @@ VoronoiDensityGrid::get_cell_midpoint(unsigned long index) const {
  */
 std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                          CoordinateVector<>, double > >
-VoronoiDensityGrid::get_neighbours(unsigned long index) {
+VoronoiDensityGrid::get_neighbours(cellsize_t index) {
 
   std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
                            CoordinateVector<>, double > >
@@ -356,7 +360,7 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
   auto faces = _voronoi_grid->get_faces(index);
   for (auto it = faces.begin(); it != faces.end(); ++it) {
     const VoronoiFace &face = *it;
-    const unsigned int ngb = face.get_neighbour();
+    const uint_fast32_t ngb = face.get_neighbour();
     const double area = face.get_surface_area();
     const CoordinateVector<> midpoint = face.get_midpoint();
     CoordinateVector<> normal;
@@ -382,7 +386,7 @@ VoronoiDensityGrid::get_neighbours(unsigned long index) {
  * @param index Index of a cell.
  * @return Faces of the cell.
  */
-std::vector< Face > VoronoiDensityGrid::get_faces(unsigned long index) const {
+std::vector< Face > VoronoiDensityGrid::get_faces(cellsize_t index) const {
   return _voronoi_grid->get_geometrical_faces(index);
 }
 
@@ -392,7 +396,7 @@ std::vector< Face > VoronoiDensityGrid::get_faces(unsigned long index) const {
  * @param index Index of a cell.
  * @return Volume of that cell (in m^3).
  */
-double VoronoiDensityGrid::get_cell_volume(unsigned long index) const {
+double VoronoiDensityGrid::get_cell_volume(cellsize_t index) const {
   return _voronoi_grid->get_volume(index);
 }
 
@@ -429,18 +433,18 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
   // move the photon a tiny bit to make sure it is inside the cell
   photon_origin += _epsilon * photon_direction;
 
-  unsigned int index = _voronoi_grid->get_index(photon_origin);
+  uint_fast32_t index = _voronoi_grid->get_index(photon_origin);
   while (_voronoi_grid->is_real_neighbour(index) && optical_depth > 0.) {
     CoordinateVector<> ipos = _generator_positions[index];
-    unsigned int next_index = 0;
-    unsigned int loopcount = 0;
+    uint_fast32_t next_index = 0;
+    uint_fast32_t loopcount = 0;
     double mins = -1.;
     while (mins <= 0.) {
       mins = -1;
       auto faces = _voronoi_grid->get_faces(index);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
         const VoronoiFace &face = *it;
-        const unsigned int ngb = face.get_neighbour();
+        const uint_fast32_t ngb = face.get_neighbour();
         CoordinateVector<> normal;
         if (_voronoi_grid->is_real_neighbour(ngb)) {
           normal = _generator_positions[ngb] - ipos;
@@ -532,18 +536,18 @@ double VoronoiDensityGrid::get_total_emission(CoordinateVector<> origin,
   // move the ray a tiny bit to make sure it is inside the cell
   origin += _epsilon * direction;
 
-  unsigned int index = _voronoi_grid->get_index(origin);
+  uint_fast32_t index = _voronoi_grid->get_index(origin);
   while (_voronoi_grid->is_real_neighbour(index)) {
     CoordinateVector<> ipos = _generator_positions[index];
-    unsigned int next_index = 0;
-    unsigned int loopcount = 0;
+    uint_fast32_t next_index = 0;
+    uint_fast32_t loopcount = 0;
     double mins = -1.;
     while (mins <= 0.) {
       mins = -1;
       auto faces = _voronoi_grid->get_faces(index);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
         const VoronoiFace &face = *it;
-        const unsigned int ngb = face.get_neighbour();
+        const uint_fast32_t ngb = face.get_neighbour();
         CoordinateVector<> normal;
         if (_voronoi_grid->is_real_neighbour(ngb)) {
           normal = _generator_positions[ngb] - ipos;

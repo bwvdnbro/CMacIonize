@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   assert_condition(keys.size() == 64);
 
   std::ofstream ofile("test_hilbert_curve.txt");
-  std::vector< unsigned int > indices = Utilities::argsort(keys);
+  std::vector< uint_fast32_t > indices = Utilities::argsort(keys);
   CoordinateVector<> prev_p(-0.125, 0.125, 0.125);
   for (unsigned int i = 0; i < 64; ++i) {
     const CoordinateVector<> &cur_p = positions[indices[i]];

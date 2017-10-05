@@ -48,6 +48,10 @@ namespace Utilities {
 /**
  * @brief Get a random double precision floating point value in between 0 and 1.
  *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
+ *
  * @return Random uniform double precision floating point value.
  */
 inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
@@ -55,6 +59,10 @@ inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
 /**
  * @brief Get a random double precision position in a box with origin (0, 0, 0)
  * and a unit side length.
+ *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
  *
  * @return Random uniform double precision position.
  */
@@ -65,11 +73,15 @@ inline CoordinateVector<> random_position() {
 /**
  * @brief Get a random integer value within the given range.
  *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
+ *
  * @param min_value Minimum value (inclusive).
  * @param max_value Maximum value (exclusive).
  * @return Uniform random value in the range [min_value, max_value[.
  */
-inline unsigned int random_int(int min_value, int max_value) {
+inline int_fast32_t random_int(int_fast32_t min_value, int_fast32_t max_value) {
   return min_value + random_double() * (max_value - min_value);
 }
 
@@ -110,7 +122,7 @@ _integer_type_ string_to_integer(const std::string &value) {
     cmac_error("Cannot extract an integer from an empty string!");
   }
 
-  unsigned int idx = 0;
+  size_t idx = 0;
   // strip trailing whitespace
   while (idx < value.size() && value[idx] == ' ') {
     ++idx;
@@ -151,7 +163,7 @@ _integer_type_ string_to_integer(const std::string &value) {
         sizeof(_integer_type_) * 8 - std::is_signed< _integer_type_ >::value) {
       cmac_error("Integer value too large: \"%s\"!", value.c_str());
     }
-    unsigned int base = 1;
+    uint_fast32_t base = 1;
     // we use a reverse iterator, since the least significant digit comes last
     for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
       ivalue += base * (*it);
@@ -165,7 +177,7 @@ _integer_type_ string_to_integer(const std::string &value) {
       digits.push_back(value[idx] - '0');
       ++idx;
     }
-    unsigned int base = 1;
+    uint_fast32_t base = 1;
     // we use a reverse iterator, since the least significant digit comes last
     for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
       ivalue += base * (*it);
@@ -182,15 +194,15 @@ _integer_type_ string_to_integer(const std::string &value) {
         digits.push_back(value[idx] - '0');
         ++idx;
       }
-      unsigned int exponent = 0;
-      unsigned int base = 1;
+      uint_fast32_t exponent = 0;
+      uint_fast32_t base = 1;
       // we use a reverse iterator, since the least significant digit comes last
       for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
         exponent += base * (*it);
         base *= 10;
       }
       _integer_type_ extra_part = 1;
-      for (unsigned int i = 0; i < exponent; ++i) {
+      for (uint_fast32_t i = 0; i < exponent; ++i) {
         extra_part *= 10;
       }
       ivalue *= extra_part;
@@ -238,8 +250,8 @@ inline CoordinateVector<>
 convert< CoordinateVector<> >(const std::string &value) {
 
   CoordinateVector<> vvalue;
-  const int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0],
-                               &vvalue[1], &vvalue[2]);
+  const int_fast32_t num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]",
+                                        &vvalue[0], &vvalue[1], &vvalue[2]);
   if (num_found != 3) {
     cmac_error("Error converting \"%s\" to a floating point CoordinateVector!",
                value.c_str());
@@ -249,6 +261,11 @@ convert< CoordinateVector<> >(const std::string &value) {
 
 /**
  * @brief Convert the given string to an integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string value.
  * @return Integer stored in the string.
@@ -260,6 +277,11 @@ template <> inline long int convert< long int >(const std::string &value) {
 
 /**
  * @brief Convert the given string to an unsigned long integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string value.
  * @return Unsigned long integer stored in the string.
@@ -275,6 +297,11 @@ convert< unsigned long int >(const std::string &value) {
 /**
  * @brief Convert the given string to an unsigned char value.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value std::string value.
  * @return Unsigned char stored in the string.
  */
@@ -286,6 +313,11 @@ inline unsigned char convert< unsigned char >(const std::string &value) {
 
 /**
  * @brief Convert the given string to an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string to convert.
  * @return CoordinateVector containing the components found.
@@ -304,6 +336,11 @@ convert< CoordinateVector< long int > >(const std::string &value) {
 
 /**
  * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string to convert.
  * @return CoordinateVector containing the components found.
@@ -339,7 +376,7 @@ template <> inline bool convert< bool >(const std::string &value) {
   std::transform(value_copy.begin(), value_copy.end(), value_copy.begin(),
                  ::tolower);
   // strip trailing whitespace
-  unsigned int i = 0;
+  uint_fast32_t i = 0;
   while (value_copy[i] == ' ') {
     ++i;
   }
@@ -399,6 +436,11 @@ template < typename _datatype_ > std::string to_string(_datatype_ value) {
  * otherwise it is outputted as the character it is supposed to represent, which
  * yields garbage.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value Value to convert.
  * @return std::string.
  */
@@ -440,6 +482,11 @@ to_string< CoordinateVector<> >(const CoordinateVector<> value) {
 /**
  * @brief to_string specialization for an integer CoordinateVector.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value Integer CoordinateVector.
  * @return std::string containing the 3 components of the CoordinateVector.
  */
@@ -453,6 +500,11 @@ inline std::string to_string< CoordinateVector< long int > >(
 
 /**
  * @brief to_string specialization for an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value Unsigned integer CoordinateVector.
  * @return std::string containing the 3 components of the CoordinateVector.
@@ -518,11 +570,12 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
  * @return Index of the last element in the ordered array that is smaller than
  * the given value, i.e. value is in between xarr[index] and xarr[index+1].
  */
-inline unsigned int locate(double x, const double *xarr, unsigned int length) {
-  unsigned int jl = 0;
-  unsigned int ju = length;
+inline uint_fast32_t locate(double x, const double *xarr,
+                            uint_fast32_t length) {
+  uint_fast32_t jl = 0;
+  uint_fast32_t ju = length;
   while (ju - jl > 1) {
-    unsigned int jm = (ju + jl) / 2;
+    uint_fast32_t jm = (ju + jl) >> 1;
     if (x > xarr[jm]) {
       jl = jm;
     } else {
@@ -550,8 +603,8 @@ inline unsigned int locate(double x, const double *xarr, unsigned int length) {
 inline std::string compose_filename(const std::string &folder,
                                     const std::string &prefix,
                                     const std::string &extension,
-                                    unsigned int counter,
-                                    unsigned int padding) {
+                                    uint_fast32_t counter,
+                                    uint_fast32_t padding) {
   std::stringstream namestring;
   if (!folder.empty()) {
     namestring << folder << "/";
@@ -627,16 +680,16 @@ inline std::string human_readable_time(double time) {
   std::stringstream timestream;
   // 2^32 minutes is 8166 years. We can safely assume no internal timer will
   // ever reach that value
-  unsigned int minutes = time / 60.;
+  uint_fast32_t minutes = time / 60.;
   const double seconds = time - 60. * minutes;
   if (minutes > 0) {
-    unsigned int hours = minutes / 60;
+    uint_fast32_t hours = minutes / 60;
     if (hours > 0) {
       minutes -= 60 * hours;
-      unsigned int days = hours / 24;
+      uint_fast32_t days = hours / 24;
       if (days > 0) {
         hours -= 24 * days;
-        const unsigned int years = days / 365;
+        const uint_fast32_t years = days / 365;
         if (years > 0) {
           days -= 365 * years;
           timestream << years << "y ";
@@ -657,7 +710,7 @@ inline std::string human_readable_time(double time) {
  * @param exponent Exponent @f$e@f$.
  * @return Name for @f$2^{10e}@f$ bytes: (@f$2^{10}@f$ bytes = KB, ...).
  */
-inline std::string byte_unit(unsigned char exponent) {
+inline std::string byte_unit(uint_fast8_t exponent) {
   switch (exponent) {
   case 0:
     return "bytes";
@@ -682,8 +735,8 @@ inline std::string byte_unit(unsigned char exponent) {
  * @return std::string containing the given number of bytes in "bytes", "KB",
  * "MB", "GB"...
  */
-inline std::string human_readable_bytes(unsigned long bytes) {
-  unsigned char sizecount = 0;
+inline std::string human_readable_bytes(size_t bytes) {
+  uint_fast8_t sizecount = 0;
   double bytefloat = bytes;
   while ((bytes >> 10) > 0) {
     bytes >>= 10;
@@ -786,7 +839,7 @@ inline std::string as_binary_sequence(uint64_t long_value) {
 
   std::stringstream binary_stream;
   uint64_t mask = 0x8000000000000000;
-  for (unsigned char i = 0; i < 64; ++i) {
+  for (uint_fast8_t i = 0; i < 64; ++i) {
     if (i > 0 && i % 4 == 0) {
       binary_stream << " ";
     }
@@ -805,9 +858,10 @@ inline std::string as_binary_sequence(uint64_t long_value) {
  * std::vector in an order that would sort the std::vector.
  */
 template < typename _datatype_ >
-std::vector< unsigned int > argsort(const std::vector< _datatype_ > &values) {
-  std::vector< unsigned int > idx(values.size());
-  for (unsigned int i = 0; i < values.size(); ++i) {
+std::vector< uint_fast32_t > argsort(const std::vector< _datatype_ > &values) {
+
+  std::vector< uint_fast32_t > idx(values.size());
+  for (size_t i = 0; i < values.size(); ++i) {
     idx[i] = i;
   }
   std::sort(idx.begin(), idx.end(), [&values](size_t i1, size_t i2) {

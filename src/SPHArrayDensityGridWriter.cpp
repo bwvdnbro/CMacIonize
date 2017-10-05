@@ -76,7 +76,7 @@ void SPHArrayDensityGridWriter::reset(const size_t numpart, Octree *octree) {
  * @param nH Array to fill.
  */
 void SPHArrayDensityGridWriter::fill_array(double *nH) {
-  for (unsigned int i = 0; i < _neutral_fractions.size(); ++i) {
+  for (size_t i = 0; i < _neutral_fractions.size(); ++i) {
     nH[i] = _neutral_fractions[i];
   }
 }
@@ -89,7 +89,7 @@ void SPHArrayDensityGridWriter::fill_array(double *nH) {
  * @param nH Array to fill.
  */
 void SPHArrayDensityGridWriter::fill_array(float *nH) {
-  for (unsigned int i = 0; i < _neutral_fractions.size(); ++i) {
+  for (size_t i = 0; i < _neutral_fractions.size(); ++i) {
     nH[i] = _neutral_fractions[i];
   }
 }
@@ -108,7 +108,7 @@ void SPHArrayDensityGridWriter::write(DensityGrid &grid,
                                       ParameterFile &params, double time) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     const CoordinateVector<> p = it.get_cell_midpoint();
-    unsigned int closest = _octree->get_closest_ngb(p);
+    uint_fast32_t closest = _octree->get_closest_ngb(p);
     _neutral_fractions[closest] =
         it.get_ionization_variables().get_ionic_fraction(ION_H_n);
   }
