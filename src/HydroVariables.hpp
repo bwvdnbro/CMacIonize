@@ -42,6 +42,9 @@ private:
   /*! @brief Conserved variable changes. */
   double _delta_conserved[5];
 
+  /*! @brief Gradients for the primitive variables. */
+  CoordinateVector<> _primitive_gradients[5];
+
 public:
   /**
    * @brief (Empty) constructor.
@@ -216,6 +219,31 @@ public:
    */
   inline double &delta_conserved(uint_fast8_t index) {
     return _delta_conserved[index];
+  }
+
+  /**
+   * @brief Get read only access to the given component of the primitive
+   * variable gradients.
+   *
+   * @param index Index (0-4).
+   * @return Read only access to the corresponding component of the primitive
+   * variable gradients.
+   */
+  inline const CoordinateVector<> &
+  primitive_gradients(uint_fast8_t index) const {
+    return _primitive_gradients[index];
+  }
+
+  /**
+   * @brief Get read/write access to the given component of the primitive
+   * variable gradients.
+   *
+   * @param index Index (0-4).
+   * @return Read/write access to the corresponding component of the primitive
+   * variable gradients.
+   */
+  inline CoordinateVector<> &primitive_gradients(uint_fast8_t index) {
+    return _primitive_gradients[index];
   }
 };
 

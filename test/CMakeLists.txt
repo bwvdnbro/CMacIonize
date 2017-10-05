@@ -1062,6 +1062,18 @@ set(TESTTIMELINE_SOURCES
 add_unit_test(NAME testTimeLine
               SOURCES ${TESTTIMELINE_SOURCES})
 
+## Unit test for GradientCalculator
+set(TESTGRADIENTCALCULATOR_SOURCES
+    testGradientCalculator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/GradientCalculator.hpp
+    ../src/HydroBoundaryConditions.hpp
+)
+add_unit_test(NAME testGradientCalculator
+              SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

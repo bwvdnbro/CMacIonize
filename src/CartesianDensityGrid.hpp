@@ -68,21 +68,6 @@ private:
   Log *_log;
 
   /**
-   * @brief Convert the given three component index into a single long index.
-   *
-   * @param index Index to convert.
-   * @return Single long index.
-   */
-  inline cellsize_t
-  get_long_index(CoordinateVector< int_fast32_t > index) const {
-    cellsize_t long_index = index.x();
-    long_index *= _ncell.y() * _ncell.z();
-    long_index += index.y() * _ncell.z();
-    long_index += index.z();
-    return long_index;
-  }
-
-  /**
    * @brief Convert the given long index into a three component index.
    *
    * @param long_index Single long index.
@@ -150,6 +135,21 @@ public:
                           DensityFunction &density_function);
 
   virtual cellsize_t get_number_of_cells() const;
+
+  /**
+   * @brief Convert the given three component index into a single long index.
+   *
+   * @param index Index to convert.
+   * @return Single long index.
+   */
+  inline cellsize_t
+  get_long_index(CoordinateVector< int_fast32_t > index) const {
+    cellsize_t long_index = index.x();
+    long_index *= _ncell.y() * _ncell.z();
+    long_index += index.y() * _ncell.z();
+    long_index += index.z();
+    return long_index;
+  }
 
   /**
    * @brief Get the long index of the cell containing the given position.

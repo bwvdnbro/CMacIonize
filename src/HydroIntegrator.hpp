@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
@@ -45,23 +46,6 @@
 #define hydro_stop_parallel_timing_block()                                     \
   parallel_timer.stop();                                                       \
   serial_timer.start();
-
-/**
- * @brief Types of boundary conditions implemented for the boundaries of the
- * box.
- */
-enum HydroBoundaryConditionType {
-  /*! @brief A periodic boundary (only works if the grid is also periodic). */
-  HYDRO_BOUNDARY_PERIODIC = 0,
-  /*! @brief Reflective boundaries (elastic collisions are assumed at the
-   *  boundaries). */
-  HYDRO_BOUNDARY_REFLECTIVE,
-  /*! @brief Inflow boundaries (material is assumed to flow in or out of the box
-   *  at the same rate it flows near the boundary). */
-  HYDRO_BOUNDARY_INFLOW,
-  /*! @brief Invalid boundaries selected. */
-  HYDRO_BOUNDARY_INVALID
-};
 
 /**
  * @brief Class that performs the hydrodynamical integration.
