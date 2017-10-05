@@ -45,10 +45,10 @@ int main(int argc, char **argv) {
   std::vector< double > m(1000, 0.);
   const double box_anchor[3] = {-5. * pc, -5. * pc, -5. * pc};
   const double box_sides[3] = {10. * pc, 10. * pc, 10. * pc};
-  for (unsigned char ix = 0; ix < 10; ++ix) {
-    for (unsigned char iy = 0; iy < 10; ++iy) {
-      for (unsigned char iz = 0; iz < 10; ++iz) {
-        const unsigned int i = ix * 100 + iy * 10 + iz;
+  for (uint_fast8_t ix = 0; ix < 10; ++ix) {
+    for (uint_fast8_t iy = 0; iy < 10; ++iy) {
+      for (uint_fast8_t iz = 0; iz < 10; ++iz) {
+        const uint_fast32_t i = ix * 100 + iy * 10 + iz;
         x[i] = box_anchor[0] + 0.1 * (ix + 0.5) * box_sides[0];
         y[i] = box_anchor[1] + 0.1 * (iy + 0.5) * box_sides[1];
         z[i] = box_anchor[2] + 0.1 * (iz + 0.5) * box_sides[2];
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
   // write an output file for visual checking
   std::ofstream ofile("test_CMI_library.txt");
-  for (unsigned int i = 0; i < 1000; ++i) {
+  for (uint_fast32_t i = 0; i < 1000; ++i) {
     ofile << x[i] << "\t" << y[i] << "\t" << z[i] << "\t" << nH[i] << "\n";
   }
   ofile.close();

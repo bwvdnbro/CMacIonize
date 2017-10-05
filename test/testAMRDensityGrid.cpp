@@ -68,7 +68,7 @@ public:
    * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the density is larger than 1.
    */
-  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+  virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
     return cell.get_ionization_variables().get_number_density() > 1. &&
            level < 6;
   }
@@ -82,10 +82,10 @@ public:
    * @return True if the cells can be replaced by a single cell on a coarser
    * level.
    */
-  virtual bool coarsen(unsigned char level,
+  virtual bool coarsen(uint_fast8_t level,
                        const DensityGrid::iterator *cells) const {
     double avg_density = 0.;
-    for (unsigned int i = 0; i < 8; ++i) {
+    for (uint_fast8_t i = 0; i < 8; ++i) {
       avg_density += cells[i].get_ionization_variables().get_number_density();
     }
     avg_density *= 0.125;
@@ -101,13 +101,14 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   TestDensityFunction density_function;
   density_function.initialize();
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
   AMRDensityGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
                       scheme, 5, false, false, &log);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
   // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
   // the 32768 bit is set to indicate its level: 5
-  unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
+  amrkey_t key = grid.get_cell_index(CoordinateVector<>(0.01));
   assert_condition(key == 0);
 
   // pick the first cell to check the volume and midpoint calculation
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
   assert_condition(midpoint.y() == 0.015625);
   assert_condition(midpoint.z() == 0.015625);
 
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     ++ncell;
   }

@@ -61,21 +61,22 @@ static boost::python::dict python_get_line_strengths(
   // retrieve numpy.ndarray shape info and check if it is what we expect
   boost::python::tuple Tshape =
       boost::python::extract< boost::python::tuple >(T.attr("shape"));
-  const unsigned int Tdim = boost::python::len(Tshape);
+  const uint_fast32_t Tdim = boost::python::len(Tshape);
   if (Tdim != 1) {
-    cmac_error("Expected a 1D array, but got a %uD array!", Tdim);
+    cmac_error("Expected a 1D array, but got a %" PRIuFAST32 "D array!", Tdim);
   }
   boost::python::tuple neshape =
       boost::python::extract< boost::python::tuple >(ne.attr("shape"));
-  const unsigned int nedim = boost::python::len(neshape);
+  const uint_fast32_t nedim = boost::python::len(neshape);
   if (nedim != 1) {
-    cmac_error("Expected a 1D-array, but got a %uD array!", nedim);
+    cmac_error("Expected a 1D-array, but got a %" PRIuFAST32 "D array!", nedim);
   }
-  const unsigned int numT = boost::python::extract< unsigned int >(Tshape[0]);
-  const unsigned int numne = boost::python::extract< unsigned int >(neshape[0]);
+  const uint_fast32_t numT = boost::python::extract< unsigned int >(Tshape[0]);
+  const uint_fast32_t numne =
+      boost::python::extract< unsigned int >(neshape[0]);
   if (numT != numne) {
     cmac_error("Temperature and electron density arrays have different sizes "
-               "(len(T) = %u, len(ne) = %u)!",
+               "(len(T) = %" PRIuFAST32 ", len(ne) = %" PRIuFAST32 ")!",
                numT, numne);
   }
 
@@ -114,7 +115,7 @@ static boost::python::dict python_get_line_strengths(
   result["coii7325"] = arr.copy();
   result["csiv10"] = arr.copy();
 
-  for (unsigned int iT = 0; iT < numT; ++iT) {
+  for (uint_fast32_t iT = 0; iT < numT; ++iT) {
     double Ti = boost::python::extract< double >(T[iT]);
     double nei = boost::python::extract< double >(ne[iT]);
 

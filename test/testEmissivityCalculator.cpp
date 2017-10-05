@@ -40,6 +40,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   LineCoolingData lines;
   EmissivityCalculator calculator(abundances);
@@ -97,7 +98,7 @@ int main(int argc, char **argv) {
           ifracN >> ifracNp1 >> ifracNp2 >> ifracO >> ifracOp1 >> ifracNe >>
           ifracNep1 >> ifracSp1 >> ifracSp2 >> ifracSp3;
 
-      for (unsigned int i = 0; i < 30; ++i) {
+      for (uint_fast8_t i = 0; i < 30; ++i) {
         lstream >> em[i];
       }
 

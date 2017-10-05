@@ -42,6 +42,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   ChargeTransferRates rates;
 
   // table that links atom and stage indices to IonNames
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
 
       std::istringstream linestream(line);
 
-      unsigned int stage, atom;
+      uint_fast32_t stage, atom;
       double temperature, recombination_rate, ionization_rate;
 
       linestream >> stage >> atom >> temperature >> recombination_rate >>

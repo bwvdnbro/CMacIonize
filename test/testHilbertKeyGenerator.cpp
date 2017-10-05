@@ -36,13 +36,14 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   HilbertKeyGenerator key_generator(box);
 
   std::vector< CoordinateVector<> > positions(64);
-  for (unsigned char ix = 0; ix < 4; ++ix) {
-    for (unsigned char iy = 0; iy < 4; ++iy) {
-      for (unsigned char iz = 0; iz < 4; ++iz) {
+  for (uint_fast8_t ix = 0; ix < 4; ++ix) {
+    for (uint_fast8_t iy = 0; iy < 4; ++iy) {
+      for (uint_fast8_t iz = 0; iz < 4; ++iz) {
         positions[16 * ix + 4 * iy + iz] = CoordinateVector<>(
             0.25 * (ix + 0.5), 0.25 * (iy + 0.5), 0.25 * (iz + 0.5));
       }
@@ -55,7 +56,7 @@ int main(int argc, char **argv) {
   std::ofstream ofile("test_hilbert_curve.txt");
   std::vector< uint_fast32_t > indices = Utilities::argsort(keys);
   CoordinateVector<> prev_p(-0.125, 0.125, 0.125);
-  for (unsigned int i = 0; i < 64; ++i) {
+  for (uint_fast8_t i = 0; i < 64; ++i) {
     const CoordinateVector<> &cur_p = positions[indices[i]];
     ofile << cur_p.x() << "\t" << cur_p.y() << "\t" << cur_p.z();
     ofile << "\t" << std::hex << keys[indices[i]];

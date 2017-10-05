@@ -64,7 +64,7 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
   boost::python::numeric::array arr(handle);
 
   boost::python::dict result;
-  for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
     EmissionLine line = static_cast< EmissionLine >(i);
     result[EmissivityValues::get_name(line)] = arr.copy();
   }
@@ -72,8 +72,8 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
   std::vector< EmissivityValues > emissivities =
       calculator.get_emissivities(grid);
 
-  for (unsigned int i = 0; i < emissivities.size(); ++i) {
-    for (int j = 0; j < NUMBER_OF_EMISSIONLINES; ++j) {
+  for (size_t i = 0; i < emissivities.size(); ++i) {
+    for (int_fast32_t j = 0; j < NUMBER_OF_EMISSIONLINES; ++j) {
       EmissionLine line = static_cast< EmissionLine >(j);
       result[EmissivityValues::get_name(line)][i] =
           emissivities[i].get_emissivity(line);
@@ -150,6 +150,7 @@ static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
                                              DensityGrid &grid, char direction,
                                              std::string line,
                                              boost::python::tuple shape) {
+
   // make sure the grid has emissivity values
   calculator.calculate_emissivities(grid);
 
@@ -161,8 +162,8 @@ static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
 
   Box<> box = grid.get_box();
 
-  for (unsigned int i = 0; i < size[0]; ++i) {
-    for (unsigned int j = 0; j < size[1]; ++j) {
+  for (int_fast32_t i = 0; i < size[0]; ++i) {
+    for (int_fast32_t j = 0; j < size[1]; ++j) {
       CoordinateVector<> start;
       CoordinateVector<> dir;
       if (direction == 'x') {
@@ -208,6 +209,7 @@ static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
  */
 static boost::shared_ptr< Abundances >
 initAbundances(boost::python::dict abundances) {
+
   double AHe = boost::python::extract< double >(abundances["helium"]);
   double AC = boost::python::extract< double >(abundances["carbon"]);
   double AN = boost::python::extract< double >(abundances["nitrogen"]);

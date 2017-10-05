@@ -45,6 +45,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   LineCoolingData data;
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
   function.initialize();
   Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
   CartesianDensityGrid grid(box, 1);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, function);
   DensityGrid::iterator cell = grid.begin();

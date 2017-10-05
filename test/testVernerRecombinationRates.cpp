@@ -38,6 +38,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   VernerRecombinationRates recombination_rates;
 
   std::ifstream file("verner_rec_testdata.txt");

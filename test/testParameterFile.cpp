@@ -37,6 +37,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// YAMLDictionary test
   {
     std::string test_string = "test_value_1: 42.\n"

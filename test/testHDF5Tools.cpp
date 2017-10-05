@@ -36,6 +36,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   HDF5Tools::initialize();
 
   // read test: we need this to work first, since the write test can only be
@@ -64,8 +65,8 @@ int main(int argc, char **argv) {
 
     assert_values_equal(cfl, 0.1);
 
-    unsigned int dimension =
-        HDF5Tools::read_attribute< unsigned int >(group, "Dimension");
+    uint_fast32_t dimension =
+        HDF5Tools::read_attribute< uint32_t >(group, "Dimension");
 
     assert_condition(dimension == 3);
 
@@ -85,9 +86,9 @@ int main(int argc, char **argv) {
     assert_condition(box.y() == 1.);
     assert_condition(box.z() == 1.);
 
-    std::vector< unsigned int > numpart =
-        HDF5Tools::read_attribute< std::vector< unsigned int > >(
-            group, "NumPart_Total");
+    std::vector< uint32_t > numpart =
+        HDF5Tools::read_attribute< std::vector< uint32_t > >(group,
+                                                             "NumPart_Total");
 
     assert_condition(numpart.size() == 6);
     assert_condition(numpart[0] == 100);
@@ -133,9 +134,9 @@ int main(int argc, char **argv) {
     assert_values_equal(coordinates[0].z(), 0.10086706479716455);
 
     // test the HDF5DataBlock
-    int data[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    HDF5Tools::HDF5DataBlock< int, 4 > block({{2, 2, 2, 2}}, data);
-    int element = block[{{1, 1, 0, 0}}];
+    int32_t data[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    HDF5Tools::HDF5DataBlock< int32_t, 4 > block({{2, 2, 2, 2}}, data);
+    int_fast32_t element = block[{{1, 1, 0, 0}}];
     assert_condition(element == 13);
 
     HDF5Tools::HDF5DataBlock< double, 2 > coordinateblock =
@@ -155,8 +156,8 @@ int main(int argc, char **argv) {
         HDF5Tools::read_dictionary< double >(file, "compound_double");
     assert_condition(ddictionary["answer"] == 42.42);
 
-    HDF5Tools::HDF5Dictionary< int > idictionary =
-        HDF5Tools::read_dictionary< int >(file, "compound_integer");
+    HDF5Tools::HDF5Dictionary< int32_t > idictionary =
+        HDF5Tools::read_dictionary< int32_t >(file, "compound_integer");
     assert_condition(idictionary["answer"] == 42);
 
     HDF5Tools::close_file(file);
@@ -174,8 +175,8 @@ int main(int argc, char **argv) {
     // write attributes of various types
     double dtest = 3.14;
     HDF5Tools::write_attribute< double >(group, "Double attribute", dtest);
-    int itest = 42;
-    HDF5Tools::write_attribute< int >(group, "Integer attribute", itest);
+    int32_t itest = 42;
+    HDF5Tools::write_attribute< int32_t >(group, "Integer attribute", itest);
     std::string stest = "String value";
     HDF5Tools::write_attribute< std::string >(group, "String attribute", stest);
     CoordinateVector<> vtest(1., 2., 3.);
@@ -188,7 +189,7 @@ int main(int argc, char **argv) {
     std::vector< double > dvtest(100);
     std::vector< uint64_t > ivtest(100);
     std::vector< CoordinateVector<> > vvtest(100);
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       dvtest[i] = -0.05 * i;
       ivtest[i] = 2 * i;
       vvtest[i][0] = 0.1 * i;
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
 
     // block test
     std::vector< double > part1(50), part2(50);
-    for (unsigned int i = 0; i < 50; ++i) {
+    for (uint_fast8_t i = 0; i < 50; ++i) {
       part1[i] = i * 0.1;
       part2[i] = i * 0.1;
     }
@@ -212,7 +213,7 @@ int main(int argc, char **argv) {
     HDF5Tools::append_dataset(group, "BlockTest", 50, part2);
 
     std::vector< CoordinateVector<> > vpart1(50), vpart2(50);
-    for (unsigned int i = 0; i < 50; ++i) {
+    for (uint_fast8_t i = 0; i < 50; ++i) {
       vpart1[i][0] = i * 0.1;
       vpart1[i][1] = i * 0.2;
       vpart1[i][2] = i * 0.3;
@@ -238,7 +239,8 @@ int main(int argc, char **argv) {
     double dtest2 =
         HDF5Tools::read_attribute< double >(group, "Double attribute");
     assert_condition(dtest2 == dtest);
-    int itest2 = HDF5Tools::read_attribute< int >(group, "Integer attribute");
+    int_fast32_t itest2 =
+        HDF5Tools::read_attribute< int32_t >(group, "Integer attribute");
     assert_condition(itest2 == itest);
     std::string stest2 =
         HDF5Tools::read_attribute< std::string >(group, "String attribute");
@@ -252,7 +254,7 @@ int main(int argc, char **argv) {
         HDF5Tools::read_attribute< std::vector< double > >(group,
                                                            "Vector attribute");
     assert_condition(vatest.size() == vatest2.size());
-    for (unsigned int i = 0; i < vatest.size(); ++i) {
+    for (size_t i = 0; i < vatest.size(); ++i) {
       assert_condition(vatest[i] == vatest2[i]);
     }
 
@@ -266,7 +268,7 @@ int main(int argc, char **argv) {
         HDF5Tools::read_dataset< CoordinateVector<> >(group,
                                                       "Test CoordinateVectors");
     assert_condition(vvtest2.size() == 100);
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       assert_condition(dvtest2[i] == dvtest[i]);
       assert_condition(ivtest2[i] == ivtest[i]);
       assert_condition(vvtest2[i].x() == vvtest[i].x());
@@ -276,8 +278,8 @@ int main(int argc, char **argv) {
 
     std::vector< double > blocktest =
         HDF5Tools::read_dataset< double >(group, "BlockTest");
-    for (unsigned int i = 0; i < 100; ++i) {
-      unsigned int icorr = i;
+    for (uint_fast8_t i = 0; i < 100; ++i) {
+      uint_fast8_t icorr = i;
       if (i >= 50) {
         icorr -= 50;
       }
@@ -286,8 +288,8 @@ int main(int argc, char **argv) {
 
     std::vector< CoordinateVector<> > vblocktest =
         HDF5Tools::read_dataset< CoordinateVector<> >(group, "VectorBlockTest");
-    for (unsigned int i = 0; i < 100; ++i) {
-      unsigned int icorr = i;
+    for (uint_fast8_t i = 0; i < 100; ++i) {
+      uint_fast8_t icorr = i;
       if (i >= 50) {
         icorr -= 50;
       }

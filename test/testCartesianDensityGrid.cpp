@@ -40,6 +40,7 @@
  * @return Exit value: 0 on success.
  */
 int main(int argc, char **argv) {
+
   HomogeneousDensityFunction testfunction(1., 2000.);
   testfunction.initialize();
   CoordinateVector<> anchor;
@@ -53,7 +54,7 @@ int main(int argc, char **argv) {
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
   CartesianDensityGrid grid(box, 64);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, testfunction);
 
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
   assert_values_equal(2000., grid.get_average_temperature());
 
   CoordinateVector<> photon_origin(0.51, 0.51, 0.51);
-  unsigned long index = grid.get_cell_index(photon_origin);
+  cellsize_t index = grid.get_cell_index(photon_origin);
 
   assert_condition(index == 32 * 64 * 64 + 32 * 64 + 32);
 
@@ -82,11 +83,11 @@ int main(int argc, char **argv) {
 
   auto ngbs = grid.get_neighbours(index);
   assert_condition(ngbs.size() == 6);
-  unsigned long ngbindexexp =
+  cellsize_t ngbindexexp =
       DensityGrid::iterator(
           grid.get_cell_index(CoordinateVector<>(0.49, 0.51, 0.51)), grid)
           .get_index();
-  unsigned long ngbindex = std::get< 0 >(ngbs[0]).get_index();
+  cellsize_t ngbindex = std::get< 0 >(ngbs[0]).get_index();
   assert_condition(ngbindex == ngbindexexp);
   CoordinateVector<> midpoint = std::get< 1 >(ngbs[0]);
   assert_condition(midpoint.x() == 0.5);

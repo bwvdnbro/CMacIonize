@@ -35,6 +35,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   MPICommunicator comm(argc, argv);
   TerminalLog log(LOGLEVEL_STATUS);
   IonizationSimulation simulation(

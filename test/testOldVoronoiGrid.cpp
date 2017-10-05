@@ -311,6 +311,7 @@ enum {
  * @param testcase ID of a testcase.
  */
 void OldVoronoiCell::setup_variables_for_test(int_fast32_t testcase) {
+
   switch (testcase) {
 
   case VORONOITEST_PATH_1_0: {
@@ -1576,9 +1577,9 @@ int main(int argc, char **argv) {
 
   /// test Voronoi grid
   {
-    const unsigned int numcell = 1000;
+    const uint_fast32_t numcell = 1000;
     std::vector< CoordinateVector<> > positions(numcell);
-    for (unsigned int i = 0; i < numcell; ++i) {
+    for (uint_fast32_t i = 0; i < numcell; ++i) {
       positions[i] = Utilities::random_position();
     }
     OldVoronoiGrid grid(positions,
@@ -1592,7 +1593,7 @@ int main(int argc, char **argv) {
 
     const double tolerance = 1.e-11;
     double total_volume = 0.;
-    for (unsigned int i = 0; i < numcell; ++i) {
+    for (uint_fast32_t i = 0; i < numcell; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
       assert_condition(cell_volume < 1.);
@@ -1602,7 +1603,7 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
+        const uint_fast32_t ngb = OldVoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < OLDVORONOI_MAX_INDEX) {
           const double area = OldVoronoiCell::get_face_surface_area(*it);
@@ -1634,14 +1635,14 @@ int main(int argc, char **argv) {
     const double box_anchor = 0.;
     const double box_side = 2.e15;
     const double box_volume = box_side * box_side * box_side;
-    const unsigned int numcell_1D = 10;
-    const unsigned int numcell_2D = numcell_1D * numcell_1D;
-    const unsigned int numcell_3D = numcell_1D * numcell_2D;
+    const uint_fast32_t numcell_1D = 10;
+    const uint_fast32_t numcell_2D = numcell_1D * numcell_1D;
+    const uint_fast32_t numcell_3D = numcell_1D * numcell_2D;
     const double dx = box_side / numcell_1D;
     std::vector< CoordinateVector<> > positions(numcell_3D);
-    for (unsigned int ix = 0; ix < numcell_1D; ++ix) {
-      for (unsigned int iy = 0; iy < numcell_1D; ++iy) {
-        for (unsigned int iz = 0; iz < numcell_1D; ++iz) {
+    for (uint_fast32_t ix = 0; ix < numcell_1D; ++ix) {
+      for (uint_fast32_t iy = 0; iy < numcell_1D; ++iy) {
+        for (uint_fast32_t iz = 0; iz < numcell_1D; ++iz) {
           positions[ix * numcell_2D + iy * numcell_1D + iz] =
               CoordinateVector<>((ix + 0.5) * dx + box_anchor,
                                  (iy + 0.5) * dx + box_anchor,
@@ -1663,7 +1664,7 @@ int main(int argc, char **argv) {
 
     const double tolerance = 1.e-10;
     double total_volume = 0.;
-    for (unsigned int i = 0; i < numcell_3D; ++i) {
+    for (uint_fast32_t i = 0; i < numcell_3D; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
       assert_condition(cell_volume < box_volume);
@@ -1673,7 +1674,7 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
+        const uint_fast32_t ngb = OldVoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < OLDVORONOI_MAX_INDEX) {
           const double area = OldVoronoiCell::get_face_surface_area(*it);

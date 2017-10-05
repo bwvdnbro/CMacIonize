@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "TimeLine.hpp"
+#include <cinttypes>
 
 /**
  * @brief Unit test for the TimeLine class.
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
     cmac_status("Basic time line test...");
     TimeLine timeline(0., 1., 0.01, 0.1);
     double actual_timestep, current_time;
-    unsigned int numstep = 1;
+    uint_fast32_t numstep = 1;
     while (timeline.advance(0.02, actual_timestep, current_time)) {
       cmac_status("Step: %g %g.", actual_timestep, current_time);
       assert_condition(actual_timestep == 0.015625);
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
     cmac_status("Step: %g %g.", actual_timestep, current_time);
     assert_condition(actual_timestep == 0.015625);
     assert_condition(current_time == 1.);
-    cmac_status("Took %u steps.", numstep);
+    cmac_status("Took %" PRIuFAST32 " steps.", numstep);
     assert_condition(numstep == 64);
     cmac_status("Done.");
   }
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
     cmac_status("Advanced time line test with offset...");
     TimeLine timeline(0.77, 1.77, 0.01, 0.1);
     double actual_timestep, current_time;
-    unsigned int numstep = 1;
+    uint_fast32_t numstep = 1;
     while (timeline.advance(0.02, actual_timestep, current_time)) {
       cmac_status("Step: %g %g.", actual_timestep, current_time);
       assert_condition(actual_timestep == 0.015625);
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
     cmac_status("Step: %g %g.", actual_timestep, current_time);
     assert_condition(actual_timestep == 0.015625);
     assert_condition(current_time == 1.77);
-    cmac_status("Took %u steps.", numstep);
+    cmac_status("Took %" PRIuFAST32 " steps.", numstep);
     assert_condition(numstep == 64);
     cmac_status("Done.");
   }
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
     TimeLine timeline(0., 1., 0.005, 0.1);
     double actual_timestep;
     double current_time = 0.;
-    unsigned int numstep = 1;
+    uint_fast32_t numstep = 1;
     while (timeline.advance(0.02 + 0.015 * std::sin(2. * M_PI * current_time),
                             actual_timestep, current_time)) {
       cmac_status("Step: %g %g.", actual_timestep, current_time);
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
     }
     cmac_status("Step: %g %g.", actual_timestep, current_time);
     assert_condition(current_time == 1.);
-    cmac_status("Took %u steps.", numstep);
+    cmac_status("Took %" PRIuFAST32 " steps.", numstep);
     assert_condition(numstep == 107);
     cmac_status("Done.");
   }

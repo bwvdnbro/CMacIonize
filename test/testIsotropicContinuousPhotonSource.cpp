@@ -44,6 +44,7 @@
  */
 CoordinateVector<> get_sphere_position(CoordinateVector<> f,
                                        CoordinateVector<> d) {
+
   const double R = 2.;
   double R2 = R * R;
   double ddotf = d.x() * f.x() + d.y() * f.y() + d.z() * f.z();
@@ -75,23 +76,24 @@ CoordinateVector<> get_sphere_position(CoordinateVector<> f,
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Box<> box(CoordinateVector<>(-0.5), CoordinateVector<>(1.));
   RandomGenerator random_generator(44);
   IsotropicContinuousPhotonSource source(box);
 
   // to see the angular dependence, this number should be a factor 100 larger
   // but then the unit test takes too long to complete
-  const unsigned int numphoton = 1000000;
+  const uint_fast32_t numphoton = 1000000;
 
-  unsigned int bins[6][101];
-  for (unsigned int i = 0; i < 6; ++i) {
-    for (unsigned int j = 0; j < 101; ++j) {
+  uint_fast32_t bins[6][101];
+  for (uint_fast8_t i = 0; i < 6; ++i) {
+    for (uint_fast8_t j = 0; j < 101; ++j) {
       bins[i][j] = 0;
     }
   }
   double sbins[NUMANGLEBIN][NUMDIRBIN + 1];
-  for (unsigned int i = 0; i < NUMANGLEBIN; ++i) {
-    for (unsigned int j = 0; j < NUMDIRBIN + 1; ++j) {
+  for (uint_fast32_t i = 0; i < NUMANGLEBIN; ++i) {
+    for (uint_fast32_t j = 0; j < NUMDIRBIN + 1; ++j) {
       sbins[i][j] = 0.;
     }
   }
@@ -100,7 +102,7 @@ int main(int argc, char **argv) {
 
   CoordinateVector<> average_position;
   CoordinateVector<> average_direction;
-  for (unsigned int i = 0; i < numphoton; ++i) {
+  for (uint_fast32_t i = 0; i < numphoton; ++i) {
     std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
         source.get_random_incoming_direction(random_generator);
     average_position += posdir.first;
@@ -119,7 +121,8 @@ int main(int argc, char **argv) {
       // phi lies in the range [-pi, pi]
       // find the index of phi in the NUMANGLEBIN bins, starting with bin
       // [ -pi-0.5*(2.*pi)/NUMANGLEBIN, -pi+0.5*(2.*pi)/NUMANGLEBIN [
-      int ibin = 0.5 * NUMANGLEBIN * (phi + M_PI + M_PI / NUMANGLEBIN) / M_PI;
+      int_fast32_t ibin =
+          0.5 * NUMANGLEBIN * (phi + M_PI + M_PI / NUMANGLEBIN) / M_PI;
       assert_condition(ibin >= 0);
       assert_condition(ibin <= NUMANGLEBIN);
       // rebin to correct for offset
@@ -147,12 +150,12 @@ int main(int argc, char **argv) {
       sbins[ibin][jbin] += 1.;
     }
 
-    for (unsigned int ip = 0; ip < 3; ++ip) {
-      unsigned int ibin = 100 * (posdir.first[ip] + 0.5);
+    for (uint_fast8_t ip = 0; ip < 3; ++ip) {
+      uint_fast32_t ibin = 100 * (posdir.first[ip] + 0.5);
       ++bins[ip][ibin];
     }
-    for (unsigned int id = 0; id < 3; ++id) {
-      unsigned int ibin = 50 * (posdir.second[id] + 1.);
+    for (uint_fast8_t id = 0; id < 3; ++id) {
+      uint_fast32_t ibin = 50 * (posdir.second[id] + 1.);
       ++bins[id + 3][ibin];
     }
   }
@@ -160,30 +163,30 @@ int main(int argc, char **argv) {
   average_direction /= numphoton;
 
   std::ofstream ofile("isotropic_bins.txt");
-  unsigned int binsum[6] = {0};
-  for (unsigned int i = 0; i < 101; ++i) {
+  uint_fast32_t binsum[6] = {0};
+  for (uint_fast8_t i = 0; i < 101; ++i) {
     ofile << i;
-    for (unsigned int j = 0; j < 6; ++j) {
+    for (uint_fast8_t j = 0; j < 6; ++j) {
       ofile << "\t" << bins[j][i];
       binsum[j] += bins[j][i];
     }
     ofile << "\n";
   }
 
-  for (unsigned int i = 0; i < NUMANGLEBIN; ++i) {
+  for (uint_fast32_t i = 0; i < NUMANGLEBIN; ++i) {
     assert_condition(sbins[i][NUMDIRBIN] == 0);
-    for (unsigned int j = 0; j < NUMDIRBIN; ++j) {
+    for (uint_fast32_t j = 0; j < NUMDIRBIN; ++j) {
       sbins[i][NUMDIRBIN] += sbins[i][j];
     }
     sbins[i][NUMDIRBIN] = 1. / sbins[i][NUMDIRBIN];
-    for (unsigned int j = 0; j < NUMDIRBIN; ++j) {
+    for (uint_fast32_t j = 0; j < NUMDIRBIN; ++j) {
       sbins[i][j] *= sbins[i][NUMDIRBIN];
     }
   }
 
-  for (unsigned int i = 0; i < NUMDIRBIN + 1; ++i) {
+  for (uint_fast32_t i = 0; i < NUMDIRBIN + 1; ++i) {
     sfile << i;
-    for (unsigned int j = 0; j < NUMANGLEBIN; ++j) {
+    for (uint_fast32_t j = 0; j < NUMANGLEBIN; ++j) {
       sfile << "\t" << sbins[j][i];
     }
     sfile << "\n";

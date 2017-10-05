@@ -138,12 +138,12 @@ int main(int argc, char **argv) {
 
   /// Test a normal search (where the search sphere is smaller than the box)
   {
-    const unsigned int numpoint = 10000;
-    const unsigned int center = 2;
+    const uint_fast32_t numpoint = 10000;
+    const uint_fast32_t center = 2;
     const double radius = 0.1;
     const double radius2 = radius * radius;
     std::vector< CoordinateVector<> > positions(numpoint);
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       positions[i] = Utilities::random_position();
     }
 
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 
     Timer smart_timer;
     smart_timer.start();
-    unsigned int smart_ngb_count = 0;
+    uint_fast32_t smart_ngb_count = 0;
     auto it = locations.get_neighbours(center);
     auto ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
@@ -180,8 +180,8 @@ int main(int argc, char **argv) {
 
     Timer bf_timer;
     bf_timer.start();
-    unsigned int bf_ngb_count = 0;
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    uint_fast32_t bf_ngb_count = 0;
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       if (i != center) {
         const CoordinateVector<> &ngbpos = positions[i];
         if ((ngbpos - cpos).norm2() < radius2) {
@@ -199,21 +199,21 @@ int main(int argc, char **argv) {
   /// Test a limit search whereby the search radius is so large all positions
   /// should be covered
   {
-    const unsigned int numpoint = 10000;
+    const uint_fast32_t numpoint = 10000;
     const double radius = 2.;
     const double radius2 = radius * radius;
     std::vector< CoordinateVector<> > positions(numpoint);
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       positions[i] = Utilities::random_position();
     }
 
     PointLocations locations(positions, 10);
 
-    for (unsigned int center = 0; center < numpoint; ++center) {
+    for (uint_fast32_t center = 0; center < numpoint; ++center) {
       const CoordinateVector<> &cpos = positions[center];
 
-      unsigned int ngb_count = 0;
-      unsigned int num_block = 1;
+      uint_fast32_t ngb_count = 0;
+      uint_fast32_t num_block = 1;
       auto it = locations.get_neighbours(center);
       auto ngbs = it.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
@@ -251,9 +251,9 @@ int main(int argc, char **argv) {
   /// Test a closest neighbour search, for an arbitrary point that is not in the
   /// positions list
   {
-    const unsigned int numpoint = 10000;
+    const uint_fast32_t numpoint = 10000;
     std::vector< CoordinateVector<> > positions(numpoint);
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       positions[i] = Utilities::random_position();
     }
 
@@ -263,15 +263,15 @@ int main(int argc, char **argv) {
 
     Timer smart_timer;
     smart_timer.start();
-    unsigned int smart_index = locations.get_closest_neighbour(cpos);
+    uint_fast32_t smart_index = locations.get_closest_neighbour(cpos);
     smart_timer.stop();
     cmac_status("Grid search time: %g s", smart_timer.value());
 
     Timer bf_timer;
     bf_timer.start();
     double minr2 = 2.;
-    unsigned int bf_index = 0;
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    uint_fast32_t bf_index = 0;
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       const CoordinateVector<> &ipos = positions[i];
       const double ir2 = (cpos - ipos).norm2();
       if (ir2 < minr2) {
@@ -289,22 +289,22 @@ int main(int argc, char **argv) {
   /// Test a number of closest neighbour searches for arbitrary positions
   /// (without timing)
   {
-    const unsigned int numpoint = 10000;
+    const uint_fast32_t numpoint = 10000;
     std::vector< CoordinateVector<> > positions(numpoint);
-    for (unsigned int i = 0; i < numpoint; ++i) {
+    for (uint_fast32_t i = 0; i < numpoint; ++i) {
       positions[i] = Utilities::random_position();
     }
 
     PointLocations locations(positions, 10);
 
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i_loop = 0; i_loop < 100; ++i_loop) {
       const CoordinateVector<> cpos = Utilities::random_position();
 
-      unsigned int smart_index = locations.get_closest_neighbour(cpos);
+      uint_fast32_t smart_index = locations.get_closest_neighbour(cpos);
 
       double minr2 = 2.;
-      unsigned int bf_index = 0;
-      for (unsigned int i = 0; i < numpoint; ++i) {
+      uint_fast32_t bf_index = 0;
+      for (uint_fast32_t i = 0; i < numpoint; ++i) {
         const CoordinateVector<> &ipos = positions[i];
         const double ir2 = (cpos - ipos).norm2();
         if (ir2 < minr2) {

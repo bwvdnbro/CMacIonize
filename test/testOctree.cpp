@@ -40,6 +40,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // first test the Box-CoordinateVector distance function
   Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
   {
@@ -108,10 +109,10 @@ int main(int argc, char **argv) {
     assert_condition(box.periodic_distance(boxCaseH, vecCaseH) == 0.125);
   }
 
-  unsigned int numpos = 100;
+  uint_fast32_t numpos = 100;
   std::vector< CoordinateVector<> > positions(numpos);
   std::vector< double > hs(numpos);
-  for (unsigned int i = 0; i < numpos; ++i) {
+  for (uint_fast32_t i = 0; i < numpos; ++i) {
     positions[i] = Utilities::random_position();
     hs[i] = 0.5 * Utilities::random_double();
   }
@@ -122,8 +123,8 @@ int main(int argc, char **argv) {
     tree.set_auxiliaries(hs, Octree::max< double >);
 
     CoordinateVector<> centre(0.5);
-    std::vector< unsigned int > ngbs_brute_force;
-    for (unsigned int i = 0; i < numpos; ++i) {
+    std::vector< uint_fast32_t > ngbs_brute_force;
+    for (uint_fast32_t i = 0; i < numpos; ++i) {
       double r = (positions[i] - centre).norm();
       if (r < hs[i]) {
         ngbs_brute_force.push_back(i);
@@ -137,7 +138,7 @@ int main(int argc, char **argv) {
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());
     std::sort(ngbs_brute_force.begin(), ngbs_brute_force.end());
     std::sort(ngbs_tree.begin(), ngbs_tree.end());
-    for (unsigned int i = 0; i < ngbs_tree.size(); ++i) {
+    for (size_t i = 0; i < ngbs_tree.size(); ++i) {
       assert_condition(ngbs_brute_force[i] == ngbs_tree[i]);
     }
   }
@@ -148,8 +149,8 @@ int main(int argc, char **argv) {
     tree.set_auxiliaries(hs, Octree::max< double >);
 
     CoordinateVector<> centre(0.1);
-    std::vector< unsigned int > ngbs_brute_force;
-    for (unsigned int i = 0; i < numpos; ++i) {
+    std::vector< uint_fast32_t > ngbs_brute_force;
+    for (uint_fast32_t i = 0; i < numpos; ++i) {
       double r = box.periodic_distance(positions[i], centre).norm();
       if (r < hs[i]) {
         ngbs_brute_force.push_back(i);
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());
     std::sort(ngbs_brute_force.begin(), ngbs_brute_force.end());
     std::sort(ngbs_tree.begin(), ngbs_tree.end());
-    for (unsigned int i = 0; i < ngbs_tree.size(); ++i) {
+    for (size_t i = 0; i < ngbs_tree.size(); ++i) {
       assert_condition(ngbs_brute_force[i] == ngbs_tree[i]);
     }
   }

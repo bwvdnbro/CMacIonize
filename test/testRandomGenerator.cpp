@@ -34,14 +34,15 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// Basic test
   {
     RandomGenerator generator(42);
 
     double mean_random = 0.;
-    unsigned int num = 1000000;
+    uint_fast32_t num = 1000000;
     double weight = 1. / num;
-    for (unsigned int i = 0; i < num; ++i) {
+    for (uint_fast32_t i = 0; i < num; ++i) {
       mean_random += weight * generator.get_uniform_random_double();
     }
     assert_values_equal_tol(mean_random, 0.5, 1.e-3);

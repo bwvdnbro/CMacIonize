@@ -35,6 +35,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   const double kpc = 3.086e19;
   SpiralGalaxyDensityFunction density_function(6.0 * kpc, 0.22 * kpc, 1.e6, 0);
   density_function.initialize();
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
   // smart enough to notice this, and automatically converts 64 to the required
   // CoordinateVector<unsigned char> argument.
   CartesianDensityGrid grid(box, 64);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 

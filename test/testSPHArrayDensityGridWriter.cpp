@@ -56,17 +56,18 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CartesianDensityGrid grid(box, 10);
   TestDensityFunction density_function;
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
   std::vector< CoordinateVector<> > sph_positions(1000);
-  for (unsigned int ix = 0; ix < 10; ++ix) {
-    for (unsigned int iy = 0; iy < 10; ++iy) {
-      for (unsigned int iz = 0; iz < 10; ++iz) {
+  for (uint_fast8_t ix = 0; ix < 10; ++ix) {
+    for (uint_fast8_t iy = 0; iy < 10; ++iy) {
+      for (uint_fast8_t iz = 0; iz < 10; ++iz) {
         sph_positions[ix * 100 + iy * 10 + iz][0] = (ix + 0.5) * 0.1;
         sph_positions[ix * 100 + iy * 10 + iz][1] = (iy + 0.5) * 0.1;
         sph_positions[ix * 100 + iy * 10 + iz][2] = (iz + 0.5) * 0.1;
@@ -82,7 +83,7 @@ int main(int argc, char **argv) {
   std::vector< double > neutral_fractions(1000, -1.);
   density_grid_writer.fill_array(neutral_fractions.data());
 
-  for (unsigned int i = 0; i < 1000; ++i) {
+  for (uint_fast32_t i = 0; i < 1000; ++i) {
     const CoordinateVector<> p = sph_positions[i];
     if ((p - CoordinateVector<>(0.5)).norm() < 0.2) {
       assert_condition(neutral_fractions[i] == 1.);

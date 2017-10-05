@@ -34,6 +34,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   SILCCPhotonSourceDistribution distribution(10000000, 0., 1., 0., 1., 0., 0.2,
                                              4.26e49);
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> mean_x;
   double std_z = 0.;
   double tot_weight = 0.;
-  for (unsigned int i = 0; i < distribution.get_number_of_sources(); ++i) {
+  for (uint_fast32_t i = 0; i < distribution.get_number_of_sources(); ++i) {
     CoordinateVector<> pos = distribution.get_position(i);
     mean_x += pos;
     // we assume here that the mean is 0 (as it should be).

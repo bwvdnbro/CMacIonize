@@ -37,6 +37,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // create an empty grid
   AMRGrid< double > grid(
       Box<>(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
@@ -126,7 +127,7 @@ int main(int argc, char **argv) {
 
   // check Morton iteration
   key = grid.get_first_key();
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   // we need a way to make sure all cells are traversed (exactly once)
   // to this end, we calculate the sum of all keys
   uint64_t keysum = 0;
@@ -249,7 +250,7 @@ int main(int argc, char **argv) {
                           // 952 = 1 110 111 000
                           // 945 = 1 110 110 001
                           {1016, 760, 732, 888, 874, 952, 945}};
-  for (unsigned int i = 0; i < 8; ++i) {
+  for (uint_fast8_t i = 0; i < 8; ++i) {
     cmac_status("Testing cell %lu", tests[i][0]);
 
     cmac_status("%g should be %lu",

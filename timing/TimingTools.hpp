@@ -100,7 +100,7 @@
   {                                                                            \
     timingtools_print("Starting timing %s...", name);                          \
     std::vector< double > timingtools_times_array(timingtools_num_sample, 0.); \
-    for (unsigned char timingtools_index = 0;                                  \
+    for (uint_fast8_t timingtools_index = 0;                                   \
          timingtools_index < timingtools_num_sample; ++timingtools_index)
 
 /**
