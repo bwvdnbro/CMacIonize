@@ -62,8 +62,6 @@ private:
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
-  static double cubic_spline_kernel(double u, double h);
-
 public:
   SPHArrayDensityFunction(const double unit_length_in_SI,
                           const double unit_mass_in_SI);

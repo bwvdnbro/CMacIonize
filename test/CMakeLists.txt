@@ -165,6 +165,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/CartesianDensityGrid.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
+    ../src/CubicSplineKernel.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityValues.hpp

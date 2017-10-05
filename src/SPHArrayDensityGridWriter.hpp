@@ -43,8 +43,6 @@ private:
   /*! @brief Octree that contains the SPH particles. */
   Octree *_octree;
 
-  static double cubic_spline_kernel(double u, double h);
-
 public:
   SPHArrayDensityGridWriter();
 

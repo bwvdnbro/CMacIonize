@@ -24,30 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "SPHArrayDensityFunction.hpp"
+#include "CubicSplineKernel.hpp"
 #include <cfloat>
-
-/**
- * @brief Cubic spline kernel used in Gadget2.
- *
- * @param u Distance in units of the smoothing length.
- * @param h Smoothing length.
- * @return Value of the cubic spline kernel.
- */
-double SPHArrayDensityFunction::cubic_spline_kernel(double u, double h) {
-  const double KC1 = 2.546479089470;
-  const double KC2 = 15.278874536822;
-  const double KC5 = 5.092958178941;
-  if (u < 1.) {
-    if (u < 0.5) {
-      return (KC1 + KC2 * (u - 1.) * u * u) / (h * h * h);
-    } else {
-      return KC5 * (1. - u) * (1. - u) * (1. - u) / (h * h * h);
-    }
-  } else {
-    // the cubic spline kernel has compact support
-    return 0.;
-  }
-}
 
 /**
  * @brief Constructor.
@@ -291,7 +269,7 @@ DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
     const double h = _smoothing_lengths[index];
     const double u = r / h;
     const double m = _masses[index];
-    const double splineval = m * cubic_spline_kernel(u, h);
+    const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
     density += splineval;
   }
 
