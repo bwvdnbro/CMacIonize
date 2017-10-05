@@ -46,7 +46,7 @@ void cmi_init(const char *parameter_file, const int num_thread,
               const double unit_length_in_SI, const double unit_mass_in_SI) {
 
   global_ionization_simulation = new IonizationSimulation(
-      false, false, num_thread, parameter_file, nullptr, nullptr);
+      false, false, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function =
       new SPHArrayDensityFunction(unit_length_in_SI, unit_mass_in_SI);
   global_density_grid_writer = new SPHArrayDensityGridWriter();
@@ -72,7 +72,7 @@ void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
                           const double *box_anchor, const double *box_sides) {
 
   global_ionization_simulation = new IonizationSimulation(
-      true, false, num_thread, parameter_file, nullptr, nullptr);
+      false, false, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function = new SPHArrayDensityFunction(
       unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
   global_density_grid_writer = new SPHArrayDensityGridWriter();
@@ -98,7 +98,7 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
                           const float *box_sides) {
 
   global_ionization_simulation = new IonizationSimulation(
-      false, false, num_thread, parameter_file, nullptr, nullptr);
+      false, false, false, num_thread, parameter_file, nullptr, nullptr);
   global_density_function = new SPHArrayDensityFunction(
       unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
   global_density_grid_writer = new SPHArrayDensityGridWriter();

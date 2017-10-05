@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   MPICommunicator comm(argc, argv);
   TerminalLog log(LOGLEVEL_STATUS);
   IonizationSimulation simulation(
-      true, false, -1, "test_ionizationsimulation.param", &comm, &log);
+      true, false, false, -1, "test_ionizationsimulation.param", &comm, &log);
   simulation.initialize();
   simulation.run();
 

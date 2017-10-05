@@ -84,6 +84,8 @@
  * @param write_output Should this process write output?
  * @param every_iteration_output Write an output file after every iteration of
  * the algorithm?
+ * @param output_statistics Should the simulation output statistical information
+ * about the photons?
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile Name of the parameter file to use.
  * @param mpi_communicator MPICommunicator to use for distributed memory
@@ -92,12 +94,14 @@
  */
 IonizationSimulation::IonizationSimulation(const bool write_output,
                                            const bool every_iteration_output,
+                                           const bool output_statistics,
                                            const int_fast32_t num_thread,
                                            const std::string parameterfile,
                                            MPICommunicator *mpi_communicator,
                                            Log *log)
     : _num_thread(WorkEnvironment::set_max_num_threads(num_thread)),
       _every_iteration_output(every_iteration_output),
+      _output_statistics(output_statistics),
       _mpi_communicator(mpi_communicator), _log(log),
       _work_distributor(_num_thread), _parameter_file(parameterfile),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
@@ -367,29 +371,32 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     if (_log) {
       _log->write_status("Done shooting photons.");
-      _log->write_status(
-          100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
-          "% of photons were reemitted as non-ionizing photons.");
-      _log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                 typecount[PHOTONTYPE_DIFFUSE_HeI]) /
-                             totweight,
-                         "% of photons were scattered.");
-      double escape_fraction =
-          (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
-      // since totweight is updated in chunks, while the counters are updated
-      // per photon, round off might cause totweight to be slightly smaller
-      // than the counter value. This gives (strange looking) negative escape
-      // fractions, which we reset to 0 here.
-      escape_fraction = std::max(0., escape_fraction);
-      _log->write_status("Escape fraction: ", escape_fraction, "%.");
-      double escape_fraction_HI =
-          (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
-      _log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
-                         "%.");
-      double escape_fraction_HeI =
-          (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
-      _log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
-                         "%.");
+
+      if (_output_statistics) {
+        _log->write_status(
+            100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
+            "% of photons were reemitted as non-ionizing photons.");
+        _log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                                   typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+                               totweight,
+                           "% of photons were scattered.");
+        double escape_fraction =
+            (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
+        // since totweight is updated in chunks, while the counters are updated
+        // per photon, round off might cause totweight to be slightly smaller
+        // than the counter value. This gives (strange looking) negative escape
+        // fractions, which we reset to 0 here.
+        escape_fraction = std::max(0., escape_fraction);
+        _log->write_status("Escape fraction: ", escape_fraction, "%.");
+        const double escape_fraction_HI =
+            (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
+        _log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
+                           "%.");
+        const double escape_fraction_HeI =
+            (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
+        _log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
+                           "%.");
+      }
     }
 
     if (_log) {

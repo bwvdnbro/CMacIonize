@@ -339,10 +339,14 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       nloop_step = 0;
     }
 
+    if (log && nloop_step > 0) {
+      log->write_status("Starting radiation step...");
+    }
+
     while (loop < nloop_step) {
 
       if (log) {
-        log->write_status("Starting loop ", loop, ".");
+        log->write_status("Loop ", loop, " of ", nloop_step, ".");
       }
 
       uint_fast64_t lnumphoton = numphoton;
@@ -356,9 +360,6 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
       grid->reset_grid(*density_function);
       DiffuseReemissionHandler::set_reemission_probabilities(*grid);
-      if (log) {
-        log->write_status("Start shooting ", lnumphoton, " photons...");
-      }
 
       double typecount[PHOTONTYPE_NUMBER] = {0};
 
@@ -375,46 +376,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
       photonshootjobs.update_counters(totweight, typecount);
 
-      if (log) {
-        log->write_status("Done shooting photons.");
-        log->write_status(
-            100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
-            "% of photons were reemitted as non-ionizing photons.");
-        log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                  typecount[PHOTONTYPE_DIFFUSE_HeI]) /
-                              totweight,
-                          "% of photons were scattered.");
-        double escape_fraction =
-            (100. * (totweight - typecount[PHOTONTYPE_ABSORBED])) / totweight;
-        // since totweight is updated in chunks, while the counters are updated
-        // per photon, round off might cause totweight to be slightly smaller
-        // than the counter value. This gives (strange looking) negative escape
-        // fractions, which we reset to 0 here.
-        escape_fraction = std::max(0., escape_fraction);
-        log->write_status("Escape fraction: ", escape_fraction, "%.");
-        double escape_fraction_HI =
-            (100. * typecount[PHOTONTYPE_DIFFUSE_HI]) / totweight;
-        log->write_status("Diffuse HI escape fraction: ", escape_fraction_HI,
-                          "%.");
-        double escape_fraction_HeI =
-            (100. * typecount[PHOTONTYPE_DIFFUSE_HeI]) / totweight;
-        log->write_status("Diffuse HeI escape fraction: ", escape_fraction_HeI,
-                          "%.");
-      }
-
-      if (log) {
-        log->write_status("Calculating ionization state after shooting ",
-                          lnumphoton, " photons...");
-      }
-
       start_parallel_timing_block();
       temperature_calculator->calculate_temperature(loop, totweight, *grid,
                                                     block);
       stop_parallel_timing_block();
-
-      if (log) {
-        log->write_status("Done calculating ionization state.");
-      }
 
       ++loop;
 
@@ -423,9 +388,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       }
     }
 
-    if (log && loop == nloop_step) {
-      log->write_status("Maximum number of iterations (", nloop_step,
-                        ") reached, stopping.");
+    if (log) {
+      log->write_status("Done with radiation step.");
     }
 
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,

@@ -115,6 +115,9 @@ int main(int argc, char **argv) {
   parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
                               "instead of an ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("output_statistics", 's',
+                    "Output statistical information about the photons.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -218,6 +221,7 @@ int main(int argc, char **argv) {
 
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
+        parser.get_value< bool >("output_statistics"),
         parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"), &comm, log);
 

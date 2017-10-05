@@ -63,6 +63,10 @@ private:
    *  the algorithm? */
   const bool _every_iteration_output;
 
+  /*! @brief Should the simulation output statistical information about the
+   *  photons? */
+  const bool _output_statistics;
+
   /// objects provided to the constructor, they are not owned by the simulation
 
   /*! @brief MPI communicator object. */
@@ -176,6 +180,7 @@ private:
 public:
   IonizationSimulation(const bool write_output,
                        const bool every_iteration_output,
+                       const bool output_statistics,
                        const int_fast32_t num_thread,
                        const std::string parameterfile,
                        MPICommunicator *mpi_communicator = nullptr,
