@@ -152,6 +152,38 @@ public:
       cell.get_hydro_variables().primitive_gradients(i) *= alpha;
     }
   }
+
+  /**
+   * @brief Functor that does the gradient computation for a single cell.
+   */
+  class GradientComputation {
+  private:
+    /*! @brief Boundary condition flags. */
+    const HydroBoundaryConditionType *_boundaries;
+
+    /*! @brief Iterator to the end of the DensityGrid. */
+    const DensityGrid::iterator &_grid_end;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param boundaries Boundary condition flags.
+     * @param grid_end Iterator to the end of the DensityGrid.
+     */
+    inline GradientComputation(const HydroBoundaryConditionType *boundaries,
+                               const DensityGrid::iterator &grid_end)
+        : _boundaries(boundaries), _grid_end(grid_end) {}
+
+    /**
+     * @brief Perform the gradient computation for a single cell of the grid.
+     *
+     * @param cell DensityGrid::iterator pointing to a grid cell.
+     */
+    inline void operator()(DensityGrid::iterator &cell) {
+      compute_gradient(cell, _grid_end, _boundaries);
+    }
+  };
 };
 
 #endif // GRADIENTCALCULATOR_HPP

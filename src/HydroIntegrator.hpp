@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "GradientCalculator.hpp"
 #include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
@@ -441,16 +442,29 @@ public:
   inline void do_hydro_step(DensityGrid &grid, double timestep,
                             Timer &serial_timer, Timer &parallel_timer) const {
 
+    const DensityGrid::iterator grid_end = grid.end();
+    std::pair< cellsize_t, cellsize_t > block =
+        std::make_pair(0, grid.get_number_of_cells());
+
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
+    GradientCalculator::GradientComputation gradient_computation(_boundaries,
+                                                                 grid_end);
+    WorkDistributor<
+        DensityGridTraversalJobMarket<
+            GradientCalculator::GradientComputation >,
+        DensityGridTraversalJob< GradientCalculator::GradientComputation > >
+        gradient_workers;
+    DensityGridTraversalJobMarket< GradientCalculator::GradientComputation >
+        gradient_jobs(grid, gradient_computation, block);
+    hydro_start_parallel_timing_block();
+    gradient_workers.do_in_parallel(gradient_jobs);
+    hydro_stop_parallel_timing_block();
 
     // do the flux computation (in parallel)
-    const DensityGrid::iterator grid_end = grid.end();
     HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
                                                 timestep);
 
-    std::pair< cellsize_t, cellsize_t > block =
-        std::make_pair(0, grid.get_number_of_cells());
     WorkDistributor< DensityGridTraversalJobMarket< HydroFluxComputation >,
                      DensityGridTraversalJob< HydroFluxComputation > >
         workers;
