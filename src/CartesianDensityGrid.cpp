@@ -613,8 +613,8 @@ CartesianDensityGrid::get_neighbours(cellsize_t index) {
         CoordinateVector<> midpoint = cell_midpoint + correction;
         CoordinateVector<> normal;
         normal[i] = -1.;
-        ngbs.push_back(std::make_tuple(DensityGrid::iterator(index, *this),
-                                       midpoint, normal, surface_area[i]));
+        ngbs.push_back(
+            std::make_tuple(end(), midpoint, normal, surface_area[i]));
       }
     }
 
@@ -648,8 +648,8 @@ CartesianDensityGrid::get_neighbours(cellsize_t index) {
         CoordinateVector<> midpoint = cell_midpoint + correction;
         CoordinateVector<> normal;
         normal[i] = 1.;
-        ngbs.push_back(std::make_tuple(DensityGrid::iterator(index, *this),
-                                       midpoint, normal, surface_area[i]));
+        ngbs.push_back(
+            std::make_tuple(end(), midpoint, normal, surface_area[i]));
       }
     }
   }

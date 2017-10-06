@@ -49,6 +49,7 @@ public:
   compute_gradient(DensityGrid::iterator &cell,
                    const DensityGrid::iterator &grid_end,
                    const HydroBoundaryConditionType *boundaries) {
+
     // get the cell variables
     const double WL[5] = {cell.get_hydro_variables().primitives(0),
                           cell.get_hydro_variables().primitives(1),
@@ -59,6 +60,8 @@ public:
 
     // first loop over the neighbours: compute gradients
     auto ngbs = cell.get_neighbours();
+    double phi_ngb_max[5] = {-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX};
+    double phi_ngb_min[5] = {DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX};
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       // get the neighbour variables
       DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
@@ -100,18 +103,31 @@ public:
           WR[3] = -WR[3];
         }
         WR[4] = WL[4];
-        // position_R?
+
+        position_R = position_L;
+        if (normal[0] != 0.) {
+          // x wall
+          position_R[0] += 2. * (midpoint.x() - position_L.x());
+        } else if (normal[1] != 0.) {
+          // y wall
+          position_R[1] += 2. * (midpoint.y() - position_L.y());
+        } else if (normal[2] != 0.) {
+          // z wall
+          position_R[2] += 2. * (midpoint.z() - position_L.z());
+        }
       }
 
       const CoordinateVector<> halfpoint = 0.5 * (position_L + position_R);
-      const CoordinateVector<> rLR = position_R - position_L;
+      const CoordinateVector<> rLR = position_L - position_R;
       const CoordinateVector<> cLR = midpoint - halfpoint;
       const double rLR_inv = 1. / rLR.norm();
       const double fac = surface_area * rLR_inv;
 
       for (uint_fast8_t i = 0; i < 5; ++i) {
+        phi_ngb_max[i] = std::max(phi_ngb_max[i], WR[i]);
+        phi_ngb_min[i] = std::min(phi_ngb_min[i], WR[i]);
         for (uint_fast8_t j = 0; j < 3; ++j) {
-          cell.get_hydro_variables().primitive_gradients(i)[j] =
+          cell.get_hydro_variables().primitive_gradients(i)[j] +=
               fac * ((WR[i] - WL[i]) * cLR[j] - 0.5 * (WR[i] + WL[i]) * rLR[j]);
         }
       }
@@ -125,58 +141,15 @@ public:
       }
     }
 
-    double phi_ngb_max[5] = {-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX};
-    double phi_ngb_min[5] = {DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX};
     double phi_ext_max[5] = {-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX};
     double phi_ext_min[5] = {DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX};
     // second loop over the neighbours: slope limit
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       // get the neighbour variables
-      DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
       const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
-      const CoordinateVector<> normal = std::get< 2 >(*ngbit);
-
-      double WR[5];
-      CoordinateVector<> position_R;
-      if (ngb != grid_end) {
-        WR[0] = ngb.get_hydro_variables().primitives(0);
-        WR[1] = ngb.get_hydro_variables().primitives(1);
-        WR[2] = ngb.get_hydro_variables().primitives(2);
-        WR[3] = ngb.get_hydro_variables().primitives(3);
-        WR[4] = ngb.get_hydro_variables().primitives(4);
-        position_R = ngb.get_cell_midpoint();
-      } else {
-        // apply boundary conditions
-        WR[0] = WL[0];
-        WR[1] = WL[1];
-        if (normal[0] < 0. && boundaries[0] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[1] = -WR[1];
-        }
-        if (normal[0] > 0. && boundaries[1] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[1] = -WR[1];
-        }
-        WR[2] = WL[2];
-        if (normal[1] < 0. && boundaries[2] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[2] = -WR[2];
-        }
-        if (normal[1] > 0. && boundaries[3] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[2] = -WR[2];
-        }
-        WR[3] = WL[3];
-        if (normal[2] < 0. && boundaries[4] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[3] = -WR[3];
-        }
-        if (normal[2] > 0. && boundaries[5] == HYDRO_BOUNDARY_REFLECTIVE) {
-          WR[3] = -WR[3];
-        }
-        WR[4] = WL[4];
-        // position_R?
-      }
 
       const CoordinateVector<> deltaLR = midpoint - position_L;
       for (uint_fast8_t i = 0; i < 5; ++i) {
-        phi_ngb_max[i] = std::max(phi_ngb_max[i], WR[i]);
-        phi_ngb_min[i] = std::min(phi_ngb_min[i], WR[i]);
         const double phi_ext = CoordinateVector<>::dot_product(
             cell.get_hydro_variables().primitive_gradients(i), deltaLR);
         phi_ext_max[i] = std::max(phi_ext_max[i], phi_ext);

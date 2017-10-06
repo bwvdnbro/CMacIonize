@@ -41,19 +41,19 @@ int main(int argc, char **argv) {
   CoordinateVector< int_fast32_t > ncell(10, 10, 10);
   HomogeneousDensityFunction density_function;
   density_function.initialize();
-  CoordinateVector< bool > periodic(false, true, true);
+  CoordinateVector< bool > periodic(false, false, false);
   CartesianDensityGrid grid(box, ncell, periodic, true);
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
-  const CoordinateVector< int_fast32_t > index_center(4, 4, 4);
-  const CoordinateVector< int_fast32_t > index_left(3, 4, 4);
-  const CoordinateVector< int_fast32_t > index_right(5, 4, 4);
-  const CoordinateVector< int_fast32_t > index_front(4, 3, 4);
-  const CoordinateVector< int_fast32_t > index_back(4, 5, 4);
-  const CoordinateVector< int_fast32_t > index_bottom(4, 4, 3);
-  const CoordinateVector< int_fast32_t > index_top(4, 4, 5);
+  CoordinateVector< int_fast32_t > index_center(4, 4, 4);
+  CoordinateVector< int_fast32_t > index_left(3, 4, 4);
+  CoordinateVector< int_fast32_t > index_right(5, 4, 4);
+  CoordinateVector< int_fast32_t > index_front(4, 3, 4);
+  CoordinateVector< int_fast32_t > index_back(4, 5, 4);
+  CoordinateVector< int_fast32_t > index_bottom(4, 4, 3);
+  CoordinateVector< int_fast32_t > index_top(4, 4, 5);
   DensityGrid::iterator it_center(grid.get_long_index(index_center), grid);
   DensityGrid::iterator it_left(grid.get_long_index(index_left), grid);
   DensityGrid::iterator it_right(grid.get_long_index(index_right), grid);
@@ -62,23 +62,58 @@ int main(int argc, char **argv) {
   DensityGrid::iterator it_bottom(grid.get_long_index(index_bottom), grid);
   DensityGrid::iterator it_top(grid.get_long_index(index_top), grid);
 
+  // we set up a linear gradient in x for the density
+  // the gradient for the pressure is also in x and has to be slope limited
   it_center.get_hydro_variables().set_primitives_density(1.);
+  it_center.get_hydro_variables().set_primitives_pressure(1.);
   it_left.get_hydro_variables().set_primitives_density(1.5);
+  it_left.get_hydro_variables().set_primitives_pressure(2.);
   it_right.get_hydro_variables().set_primitives_density(0.5);
+  it_right.get_hydro_variables().set_primitives_pressure(0.5);
   it_front.get_hydro_variables().set_primitives_density(1.);
+  it_front.get_hydro_variables().set_primitives_pressure(1.);
   it_back.get_hydro_variables().set_primitives_density(1.);
+  it_back.get_hydro_variables().set_primitives_pressure(1.);
   it_bottom.get_hydro_variables().set_primitives_density(1.);
+  it_bottom.get_hydro_variables().set_primitives_pressure(1.);
   it_top.get_hydro_variables().set_primitives_density(1.);
+  it_top.get_hydro_variables().set_primitives_pressure(1.);
 
   HydroBoundaryConditionType boundaries[6] = {
       HYDRO_BOUNDARY_INFLOW, HYDRO_BOUNDARY_INFLOW, HYDRO_BOUNDARY_INFLOW,
       HYDRO_BOUNDARY_INFLOW, HYDRO_BOUNDARY_INFLOW, HYDRO_BOUNDARY_INFLOW};
   GradientCalculator::compute_gradient(it_center, grid.end(), boundaries);
 
-  const CoordinateVector<> gradrho =
+  CoordinateVector<> gradrho =
       it_center.get_hydro_variables().primitive_gradients(0);
-  cmac_status("grad rho: %g %g %g", gradrho[0], gradrho[1], gradrho[2]);
-  assert_condition(gradrho[0] == -0.5);
+  assert_values_equal_rel(gradrho[0], -5., 1.e-16);
+  assert_condition(gradrho[1] == 0.);
+  assert_condition(gradrho[2] == 0.);
+  const CoordinateVector<> gradP =
+      it_center.get_hydro_variables().primitive_gradients(4);
+  assert_values_equal_rel(gradP[0], -5., 1.e-16);
+  assert_condition(gradP[1] == 0.);
+  assert_condition(gradP[2] == 0.);
+
+  // check the boundary treatment
+  index_center = CoordinateVector< int_fast32_t >(0, 0, 9);
+  index_right = CoordinateVector< int_fast32_t >(1, 0, 9);
+  index_back = CoordinateVector< int_fast32_t >(0, 1, 9);
+  index_bottom = CoordinateVector< int_fast32_t >(0, 0, 8);
+  it_center = DensityGrid::iterator(grid.get_long_index(index_center), grid);
+  it_right = DensityGrid::iterator(grid.get_long_index(index_right), grid);
+  it_back = DensityGrid::iterator(grid.get_long_index(index_back), grid);
+  it_bottom = DensityGrid::iterator(grid.get_long_index(index_bottom), grid);
+
+  it_center.get_hydro_variables().set_primitives_density(1.);
+  it_right.get_hydro_variables().set_primitives_density(2.);
+  it_back.get_hydro_variables().set_primitives_density(1.);
+  it_bottom.get_hydro_variables().set_primitives_density(2.);
+
+  GradientCalculator::compute_gradient(it_center, grid.end(), boundaries);
+
+  gradrho = it_center.get_hydro_variables().primitive_gradients(0);
+  assert_condition(gradrho[0] == 0.);
   assert_condition(gradrho[1] == 0.);
   assert_condition(gradrho[2] == 0.);
 
