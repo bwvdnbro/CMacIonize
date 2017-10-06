@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   CoordinateVector< int_fast32_t > ncell(10, 10, 10);
   HomogeneousDensityFunction density_function;
   density_function.initialize();
-  CoordinateVector< bool > periodic(false, false, false);
+  CoordinateVector< bool > periodic(false, true, false);
   CartesianDensityGrid grid(box, ncell, periodic, true);
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
@@ -98,15 +98,18 @@ int main(int argc, char **argv) {
   // check the boundary treatment
   index_center = CoordinateVector< int_fast32_t >(0, 0, 9);
   index_right = CoordinateVector< int_fast32_t >(1, 0, 9);
+  index_front = CoordinateVector< int_fast32_t >(0, 9, 9);
   index_back = CoordinateVector< int_fast32_t >(0, 1, 9);
   index_bottom = CoordinateVector< int_fast32_t >(0, 0, 8);
   it_center = DensityGrid::iterator(grid.get_long_index(index_center), grid);
   it_right = DensityGrid::iterator(grid.get_long_index(index_right), grid);
+  it_front = DensityGrid::iterator(grid.get_long_index(index_front), grid);
   it_back = DensityGrid::iterator(grid.get_long_index(index_back), grid);
   it_bottom = DensityGrid::iterator(grid.get_long_index(index_bottom), grid);
 
   it_center.get_hydro_variables().set_primitives_density(1.);
   it_right.get_hydro_variables().set_primitives_density(2.);
+  it_front.get_hydro_variables().set_primitives_density(1.);
   it_back.get_hydro_variables().set_primitives_density(1.);
   it_bottom.get_hydro_variables().set_primitives_density(2.);
 

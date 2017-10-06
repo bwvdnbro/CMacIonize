@@ -221,8 +221,9 @@ public:
     return iterator(_ncell.x() * _ncell.y() * _ncell.z(), *this);
   }
 
-  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                                   CoordinateVector<>, double > >
+  virtual std::vector<
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                  CoordinateVector<> > >
   get_neighbours(cellsize_t index);
 
   virtual std::vector< Face > get_faces(unsigned long index) const;

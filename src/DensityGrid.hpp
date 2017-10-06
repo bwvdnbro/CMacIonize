@@ -299,10 +299,12 @@ public:
    * @param index Index of a cell.
    * @return std::vector containing iterators to the neighbours, together with
    * the midpoint, surface normal and surface area of the boundary face between
-   * the cell and this neighbour.
+   * the cell and this neighbour, and the relative position of the neighbour
+   * w.r.t. the cell.
    */
   virtual std::vector<
-      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                  CoordinateVector<> > >
   get_neighbours(cellsize_t index) = 0;
 
   /**
@@ -515,7 +517,8 @@ public:
      * @return std::vector containing iterators to the neighbours of the cell.
      */
     inline std::vector<
-        std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double > >
+        std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                    CoordinateVector<> > >
     get_neighbours() const {
       return _grid->get_neighbours(_index);
     }

@@ -350,11 +350,11 @@ VoronoiDensityGrid::get_cell_midpoint(cellsize_t index) const {
  * @return std::vector containing the neighbours of the cell.
  */
 std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                         CoordinateVector<>, double > >
+                         CoordinateVector<>, double, CoordinateVector<> > >
 VoronoiDensityGrid::get_neighbours(cellsize_t index) {
 
   std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                           CoordinateVector<>, double > >
+                           CoordinateVector<>, double, CoordinateVector<> > >
       ngbs;
 
   auto faces = _voronoi_grid->get_faces(index);
@@ -366,14 +366,16 @@ VoronoiDensityGrid::get_neighbours(cellsize_t index) {
     CoordinateVector<> normal;
     if (_voronoi_grid->is_real_neighbour(ngb)) {
       // normal neighbour
-      normal = _generator_positions[ngb] - _generator_positions[index];
-      normal /= normal.norm();
+      const CoordinateVector<> rel_pos =
+          _generator_positions[ngb] - _generator_positions[index];
+      normal = rel_pos / rel_pos.norm();
       ngbs.push_back(std::make_tuple(DensityGrid::iterator(ngb, *this),
-                                     midpoint, normal, area));
+                                     midpoint, normal, area, rel_pos));
     } else {
       // wall neighbour
       normal = _voronoi_grid->get_wall_normal(ngb);
-      ngbs.push_back(std::make_tuple(end(), midpoint, normal, area));
+      CoordinateVector<> rel_pos;
+      ngbs.push_back(std::make_tuple(end(), midpoint, normal, area, rel_pos));
     }
   }
 

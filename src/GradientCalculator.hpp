@@ -68,16 +68,15 @@ public:
       const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
       const CoordinateVector<> normal = std::get< 2 >(*ngbit);
       const double surface_area = std::get< 3 >(*ngbit);
+      const CoordinateVector<> position_R = position_L + std::get< 4 >(*ngbit);
 
       double WR[5];
-      CoordinateVector<> position_R;
       if (ngb != grid_end) {
         WR[0] = ngb.get_hydro_variables().primitives(0);
         WR[1] = ngb.get_hydro_variables().primitives(1);
         WR[2] = ngb.get_hydro_variables().primitives(2);
         WR[3] = ngb.get_hydro_variables().primitives(3);
         WR[4] = ngb.get_hydro_variables().primitives(4);
-        position_R = ngb.get_cell_midpoint();
       } else {
         // apply boundary conditions
         WR[0] = WL[0];
@@ -103,18 +102,6 @@ public:
           WR[3] = -WR[3];
         }
         WR[4] = WL[4];
-
-        position_R = position_L;
-        if (normal[0] != 0.) {
-          // x wall
-          position_R[0] += 2. * (midpoint.x() - position_L.x());
-        } else if (normal[1] != 0.) {
-          // y wall
-          position_R[1] += 2. * (midpoint.y() - position_L.y());
-        } else if (normal[2] != 0.) {
-          // z wall
-          position_R[2] += 2. * (midpoint.z() - position_L.z());
-        }
       }
 
       const CoordinateVector<> halfpoint = 0.5 * (position_L + position_R);

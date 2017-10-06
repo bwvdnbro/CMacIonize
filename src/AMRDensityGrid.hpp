@@ -763,12 +763,16 @@ public:
    * @param index Index of a cell.
    * @return std::vector containing the neighbours of the cell.
    */
-  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                                   CoordinateVector<>, double > >
+  virtual std::vector<
+      std::tuple< DensityGrid::iterator, CoordinateVector<>, CoordinateVector<>,
+                  double, CoordinateVector<> > >
   get_neighbours(cellsize_t index) {
+
     std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                             CoordinateVector<>, double > >
+                             CoordinateVector<>, double, CoordinateVector<> > >
         ngbs;
+
+    cmac_error("Not implemented yet!");
 
     return ngbs;
   }

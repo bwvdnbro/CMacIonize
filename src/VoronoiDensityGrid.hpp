@@ -89,8 +89,9 @@ public:
   virtual cellsize_t get_number_of_cells() const;
   virtual cellsize_t get_cell_index(CoordinateVector<> position) const;
   virtual CoordinateVector<> get_cell_midpoint(cellsize_t index) const;
-  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                                   CoordinateVector<>, double > >
+  virtual std::vector<
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                  CoordinateVector<> > >
   get_neighbours(cellsize_t index);
   virtual std::vector< Face > get_faces(cellsize_t index) const;
   virtual double get_cell_volume(cellsize_t index) const;
