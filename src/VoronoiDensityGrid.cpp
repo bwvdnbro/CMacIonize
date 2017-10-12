@@ -501,7 +501,7 @@ DensityGrid::iterator VoronoiDensityGrid::interact(Photon &photon,
 
     cmac_assert_message(!_voronoi_grid->is_real_neighbour(index) ||
                             _voronoi_grid->is_inside(photon_origin),
-                        "index: %u, mins: %g, position: %g %g %g, "
+                        "index: %" PRIuFAST32 ", mins: %g, position: %g %g %g, "
                         "photon direction: %g %g %g",
                         index, mins, photon_origin[0], photon_origin[1],
                         photon_origin[2], photon_direction[0],

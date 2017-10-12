@@ -46,7 +46,8 @@
  */
 #ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
 #define newvoronoigrid_check_cell(cell_constructor)                            \
-  cell.check_empty_circumsphere(_real_rescaled_box, _real_rescaled_positions)
+  cell_constructor.check_empty_circumsphere(_real_rescaled_box,                \
+                                            _real_rescaled_positions)
 #else
 #define newvoronoigrid_check_cell(cell_constructor)
 #endif
@@ -93,7 +94,7 @@ NewVoronoiGrid::compute_cell(uint_fast32_t index,
     if (j != index) {
       constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
                             _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(cell_constructor);
+      newvoronoigrid_check_cell(constructor);
     }
   }
   while (it.increase_range() &&
@@ -103,7 +104,7 @@ NewVoronoiGrid::compute_cell(uint_fast32_t index,
       const uint_fast32_t j = *ngbit;
       constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
                             _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(cell_constructor);
+      newvoronoigrid_check_cell(constructor);
     }
   }
 

@@ -226,8 +226,7 @@ public:
    * @return True if the tetrahedron is positively oriented.
    */
   inline bool has_positive_orientation(
-      const NewVoronoiTetrahedron &tetrahedron,
-      const std::vector< uint_fast32_t > &vertices,
+      const NewVoronoiTetrahedron &tetrahedron, const uint_least32_t *vertices,
       const NewVoronoiBox &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions) const {
 

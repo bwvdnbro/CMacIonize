@@ -53,8 +53,11 @@
  */
 #ifdef NEWVORONOICELL_PRINT_CASES
 #define newvoronoicell_print_tetrahedron(tetrahedron, s, ...)                  \
-  cmac_warning(s ": %u %u %u %u (%u %u %u %u, %u %u %u %u)", ##__VA_ARGS__,    \
-               _tetrahedra[tetrahedron].get_vertex(0),                         \
+  cmac_warning(s ": %" PRIuFAST32 " %" PRIuFAST32 " %" PRIuFAST32              \
+                 " %" PRIuFAST32 " (%" PRIuFAST32 " %" PRIuFAST32              \
+                 " %" PRIuFAST32 " %" PRIuFAST32 ", %" PRIuFAST8               \
+                 " %" PRIuFAST8 " %" PRIuFAST8 " %" PRIuFAST8 ")",             \
+               ##__VA_ARGS__, _tetrahedra[tetrahedron].get_vertex(0),          \
                _tetrahedra[tetrahedron].get_vertex(1),                         \
                _tetrahedra[tetrahedron].get_vertex(2),                         \
                _tetrahedra[tetrahedron].get_vertex(3),                         \
@@ -374,7 +377,8 @@ NewVoronoiCell NewVoronoiCellConstructor::get_cell(
             // 'third_j' now definitely contains the index of a vertex that is
             // not 'j' or 'other_j'
             uint_fast32_t ngb = _tetrahedra[i].get_neighbour(third_j);
-            cmac_assert_message(ngb < _tetrahedra_size, "ngb: %#010x", ngb);
+            cmac_assert_message(ngb < _tetrahedra_size, "ngb: %" PRIuFAST32,
+                                ngb);
             uint_fast32_t prev_ngb = i;
             while (ngb != i) {
               connections.back().push_back(ngb);
@@ -883,11 +887,12 @@ void NewVoronoiCellConstructor::n_to_2n_flip(uint_fast32_t new_vertex,
                                              uint_fast8_t n,
                                              uint_fast32_t tn[2 * UCHAR_MAX]) {
 
-  newvoronoicell_print_case("n to 2n flip (n = %u)", n);
+  newvoronoicell_print_case("n to 2n flip (n = %" PRIuFAST8 ")", n);
 
   newvoronoicell_print_case("entry:");
   for (uint_fast8_t j = 0; j < n; ++j) {
-    newvoronoicell_print_tetrahedron(tetrahedra[j], "tetrahedra[%u]", j);
+    newvoronoicell_print_tetrahedron(tetrahedra[j],
+                                     "tetrahedra[%" PRIuFAST8 "]", j);
   }
 
   // find the indices of the common axis in all tetrahedra
@@ -970,8 +975,8 @@ void NewVoronoiCellConstructor::n_to_2n_flip(uint_fast32_t new_vertex,
   }
 
   newvoronoicell_print_case("exit:");
-  for (uint_fast32_t j = 0; j < 2 * n; ++j) {
-    newvoronoicell_print_tetrahedron(tn[j], "tn[%u]", j);
+  for (uint_fast16_t j = 0; j < 2 * n; ++j) {
+    newvoronoicell_print_tetrahedron(tn[j], "tn[%" PRIuFAST16 "]", j);
   }
 }
 
@@ -1546,8 +1551,10 @@ uint_fast32_t NewVoronoiCellConstructor::check_tetrahedron(
   } else if (new_vertex == v2) {
     top = 2;
   } else {
-    cmac_assert_message(new_vertex == v3, "v: %u %u %u %u (new: %u)", v0, v1,
-                        v2, v3, new_vertex);
+    cmac_assert_message(new_vertex == v3,
+                        "v: %" PRIuFAST32 " %" PRIuFAST32 " %" PRIuFAST32
+                        " %" PRIuFAST32 " (new: %" PRIuFAST32 ")",
+                        v0, v1, v2, v3, new_vertex);
     top = 3;
   }
 
