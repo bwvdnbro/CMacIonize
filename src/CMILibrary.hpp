@@ -26,6 +26,9 @@
 #ifndef CMILIBRARY_HPP
 #define CMILIBRARY_HPP
 
+/*! @brief Allow the CMI library to print messsages to the terminal. */
+//#define CMILIBRARY_TALK
+
 #include <cstddef>
 #include <cstdint>
 
@@ -37,6 +40,13 @@ extern IonizationSimulation *global_ionization_simulation;
 
 /*! @brief Global SPHArrayInterface object used by the library. */
 extern SPHArrayInterface *global_interface;
+
+#ifdef CMILIBRARY_TALK
+class Log;
+
+/*! @brief Global Log object used by the library. */
+extern Log *global_log;
+#endif
 
 extern "C" {
 void cmi_init(const char *parameter_file, const int num_thread,
