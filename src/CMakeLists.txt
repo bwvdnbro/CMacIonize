@@ -251,8 +251,7 @@ endif(HAVE_WINDOWS)
 
 set(LIBCMILIBRARY_SOURCES
     CMILibrary.cpp
-    SPHArrayDensityFunction.cpp
-    SPHArrayDensityGridWriter.cpp
+    SPHArrayInterface.cpp
 
     CMILibrary.hpp
 )

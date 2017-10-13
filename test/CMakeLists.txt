@@ -983,19 +983,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
                COPYONLY)
 
-## Unit test for SPHArrayDensityFunction
-set(TESTSPHARRAYDENSITYFUNCTION_SOURCES
-    testSPHArrayDensityFunction.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/SPHArrayDensityFunction.cpp
-    ../src/SPHArrayDensityFunction.hpp
-)
-add_unit_test(NAME testSPHArrayDensityFunction
-              SOURCES ${TESTSPHARRAYDENSITYFUNCTION_SOURCES})
-
 ## Unit test for CMILibrary
 set(TESTCMILIBRARY_SOURCES
     testCMILibrary.cpp
@@ -1006,18 +993,6 @@ add_unit_test(NAME testCMILibrary
 configure_file(${PROJECT_SOURCE_DIR}/test/test_CMI_library.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_CMI_library.param
                COPYONLY)
-
-## Unit test for SPHArrayDensityGridWriter
-set(TESTSPHARRAYDENSITYGRIDWRITER_SOURCES
-    testSPHArrayDensityGridWriter.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/SPHArrayDensityGridWriter.cpp
-    ../src/SPHArrayDensityGridWriter.hpp
-)
-add_unit_test(NAME testSPHArrayDensityGridWriter
-              SOURCES ${TESTSPHARRAYDENSITYGRIDWRITER_SOURCES})
 
 ## Unit test for CMIFortranLibrary
 if(HAVE_FORTRAN)
@@ -1089,6 +1064,19 @@ set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
 )
 add_unit_test(NAME testMaskedPhotonSourceSpectrum
               SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
+
+## Unit test for SPHArrayInterface
+set(TESTSPHARRAYINTERFACE_SOURCES
+    testSPHArrayInterface.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SPHArrayInterface.cpp
+    ../src/SPHArrayInterface.hpp
+)
+add_unit_test(NAME testSPHArrayInterface
+              SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

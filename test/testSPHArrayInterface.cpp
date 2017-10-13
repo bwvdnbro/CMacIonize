@@ -17,20 +17,44 @@
  ******************************************************************************/
 
 /**
- * @file testSPHArrayDensityFunction.cpp
+ * @file testSPHArrayInterface.cpp
  *
- * @brief Unit test for the SPHArrayDensityFunction class.
+ * @brief Unit test for the SPHArrayInterface class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "AsciiFileDensityGridWriter.hpp"
 #include "Assert.hpp"
 #include "CartesianDensityGrid.hpp"
-#include "SPHArrayDensityFunction.hpp"
+#include "Octree.hpp"
+#include "SPHArrayInterface.hpp"
 #include "Utilities.hpp"
 
 /**
- * @brief Unit test for the SPHArrayDensityFunction class.
+ * @brief Test DensityFunction.
+ */
+class TestDensityFunction : public DensityFunction {
+public:
+  /**
+   * @brief Get the neutral fraction for the given cell.
+   *
+   * @param cell Cell.
+   * @return Neutral fraction.
+   */
+  virtual DensityValues operator()(const Cell &cell) const {
+    const CoordinateVector<> p = cell.get_cell_midpoint();
+    DensityValues values;
+    if ((p - CoordinateVector<>(0.5)).norm() < 0.2) {
+      values.set_ionic_fraction(ION_H_n, 1.);
+    } else {
+      values.set_ionic_fraction(ION_H_n, 0.);
+    }
+    return values;
+  }
+};
+
+/**
+ * @brief Unit test for the SPHArrayInterface class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -43,7 +67,9 @@ int main(int argc, char **argv) {
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   ParameterFile params;
-  SPHArrayDensityFunction density_function(1., 1.);
+  SPHArrayInterface interface(1., 1.);
+
+  /// DensityFunction functionality
 
   /// double precision arrays
   {
@@ -60,11 +86,10 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
-                           1000);
-    density_function.initialize();
+    interface.reset(x.data(), y.data(), z.data(), h.data(), m.data(), 1000);
+    interface.initialize();
 
-    grid.initialize(block, density_function);
+    grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.25878e26,
@@ -89,11 +114,10 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
-                           1000);
-    density_function.initialize();
+    interface.reset(x.data(), y.data(), z.data(), h.data(), m.data(), 1000);
+    interface.initialize();
 
-    grid.initialize(block, density_function);
+    grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.19135e26,
@@ -118,11 +142,10 @@ int main(int argc, char **argv) {
       m[i] = 0.001;
     }
 
-    density_function.reset(x.data(), y.data(), z.data(), h.data(), m.data(),
-                           1000);
-    density_function.initialize();
+    interface.reset(x.data(), y.data(), z.data(), h.data(), m.data(), 1000);
+    interface.initialize();
 
-    grid.initialize(block, density_function);
+    grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
     assert_values_equal_rel(grid.get_total_hydrogen_number(), 5.23194e26,
@@ -130,6 +153,51 @@ int main(int argc, char **argv) {
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_float",
                                       ".");
     writer.write(grid, 0, params);
+  }
+
+  /// DensityGridWriter functionality
+  {
+    Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
+    CartesianDensityGrid grid(box, 10);
+    TestDensityFunction density_function;
+    std::pair< cellsize_t, cellsize_t > block =
+        std::make_pair(0, grid.get_number_of_cells());
+    grid.initialize(block, density_function);
+
+    std::vector< double > x(1000, 0.);
+    std::vector< double > y(1000, 0.);
+    std::vector< double > z(1000, 0.);
+    std::vector< float > h(1000, 0.);
+    std::vector< float > m(1000, 0.);
+    for (uint_fast8_t ix = 0; ix < 10; ++ix) {
+      for (uint_fast8_t iy = 0; iy < 10; ++iy) {
+        for (uint_fast8_t iz = 0; iz < 10; ++iz) {
+          const uint_fast32_t i = ix * 100 + iy * 10 + iz;
+          x[i] = (ix + 0.5) * 0.1;
+          y[i] = (iy + 0.5) * 0.1;
+          z[i] = (iz + 0.5) * 0.1;
+          h[i] = 0.2;
+          m[i] = 0.001;
+        }
+      }
+    }
+    interface.reset(x.data(), y.data(), z.data(), h.data(), m.data(), 1000);
+    interface.initialize();
+
+    ParameterFile params;
+    interface.write(grid, 0, params, 0.);
+
+    std::vector< double > neutral_fractions(1000, -1.);
+    interface.fill_array(neutral_fractions.data());
+
+    for (uint_fast32_t i = 0; i < 1000; ++i) {
+      const CoordinateVector<> p(x[i], y[i], z[i]);
+      if ((p - CoordinateVector<>(0.5)).norm() < 0.2) {
+        assert_condition(neutral_fractions[i] == 1.);
+      } else {
+        assert_condition(neutral_fractions[i] == 0.);
+      }
+    }
   }
 
   return 0;

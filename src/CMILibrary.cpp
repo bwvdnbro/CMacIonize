@@ -25,12 +25,10 @@
  */
 #include "CMILibrary.hpp"
 #include "IonizationSimulation.hpp"
-#include "SPHArrayDensityFunction.hpp"
-#include "SPHArrayDensityGridWriter.hpp"
+#include "SPHArrayInterface.hpp"
 
 IonizationSimulation *global_ionization_simulation = nullptr;
-SPHArrayDensityFunction *global_density_function = nullptr;
-SPHArrayDensityGridWriter *global_density_grid_writer = nullptr;
+SPHArrayInterface *global_interface = nullptr;
 
 /**
  * @brief Initialize the CMI library.
@@ -47,9 +45,7 @@ void cmi_init(const char *parameter_file, const int num_thread,
 
   global_ionization_simulation = new IonizationSimulation(
       false, false, false, num_thread, parameter_file, nullptr, nullptr);
-  global_density_function =
-      new SPHArrayDensityFunction(unit_length_in_SI, unit_mass_in_SI);
-  global_density_grid_writer = new SPHArrayDensityGridWriter();
+  global_interface = new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI);
 }
 
 /**
@@ -73,9 +69,8 @@ void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
 
   global_ionization_simulation = new IonizationSimulation(
       false, false, false, num_thread, parameter_file, nullptr, nullptr);
-  global_density_function = new SPHArrayDensityFunction(
-      unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
-  global_density_grid_writer = new SPHArrayDensityGridWriter();
+  global_interface = new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI,
+                                           box_anchor, box_sides);
 }
 
 /**
@@ -99,9 +94,8 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
 
   global_ionization_simulation = new IonizationSimulation(
       false, false, false, num_thread, parameter_file, nullptr, nullptr);
-  global_density_function = new SPHArrayDensityFunction(
-      unit_length_in_SI, unit_mass_in_SI, box_anchor, box_sides);
-  global_density_grid_writer = new SPHArrayDensityGridWriter();
+  global_interface = new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI,
+                                           box_anchor, box_sides);
 }
 
 /**
@@ -109,8 +103,7 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
  */
 void cmi_destroy() {
   delete global_ionization_simulation;
-  delete global_density_function;
-  delete global_density_grid_writer;
+  delete global_interface;
 }
 
 /**
@@ -132,11 +125,10 @@ void cmi_compute_neutral_fraction_dp(const double *x, const double *y,
                                      const double *m, double *nH,
                                      const size_t N) {
 
-  global_density_function->reset(x, y, z, h, m, N);
-  global_ionization_simulation->initialize(global_density_function);
-  global_density_grid_writer->reset(N, global_density_function->get_octree());
-  global_ionization_simulation->run(global_density_grid_writer);
-  global_density_grid_writer->fill_array(nH);
+  global_interface->reset(x, y, z, h, m, N);
+  global_ionization_simulation->initialize(global_interface);
+  global_ionization_simulation->run(global_interface);
+  global_interface->fill_array(nH);
 }
 
 /**
@@ -158,11 +150,10 @@ void cmi_compute_neutral_fraction_mp(const double *x, const double *y,
                                      const float *m, float *nH,
                                      const size_t N) {
 
-  global_density_function->reset(x, y, z, h, m, N);
-  global_ionization_simulation->initialize(global_density_function);
-  global_density_grid_writer->reset(N, global_density_function->get_octree());
-  global_ionization_simulation->run(global_density_grid_writer);
-  global_density_grid_writer->fill_array(nH);
+  global_interface->reset(x, y, z, h, m, N);
+  global_ionization_simulation->initialize(global_interface);
+  global_ionization_simulation->run(global_interface);
+  global_interface->fill_array(nH);
 }
 
 /**
@@ -184,9 +175,8 @@ void cmi_compute_neutral_fraction_sp(const float *x, const float *y,
                                      const float *m, float *nH,
                                      const size_t N) {
 
-  global_density_function->reset(x, y, z, h, m, N);
-  global_ionization_simulation->initialize(global_density_function);
-  global_density_grid_writer->reset(N, global_density_function->get_octree());
-  global_ionization_simulation->run(global_density_grid_writer);
-  global_density_grid_writer->fill_array(nH);
+  global_interface->reset(x, y, z, h, m, N);
+  global_ionization_simulation->initialize(global_interface);
+  global_ionization_simulation->run(global_interface);
+  global_interface->fill_array(nH);
 }

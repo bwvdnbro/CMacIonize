@@ -17,25 +17,27 @@
  ******************************************************************************/
 
 /**
- * @file SPHArrayDensityFunction.hpp
+ * @file SPHArrayInterface.hpp
  *
- * @brief DensityFunction that is based on an SPH density field that is provided
- * from external data arrays.
+ * @brief DensityFunction and DensityGridWriter implementations that are coupled
+ * to an underlying SPH simulation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef SPHARRAYDENSITYFUNCTION_HPP
-#define SPHARRAYDENSITYFUNCTION_HPP
+#ifndef SPHARRAYINTERFACE_HPP
+#define SPHARRAYINTERFACE_HPP
 
 #include "Box.hpp"
 #include "DensityFunction.hpp"
+#include "DensityGridWriter.hpp"
 #include "Octree.hpp"
 
 /**
- * @brief DensityFunction that is based on an SPH density field that is provided
- * from external data arrays.
+ * @brief DensityFunction and DensityGridWriter implementations that are coupled
+ * to an underlying SPH simulation.
+ *
  */
-class SPHArrayDensityFunction : public DensityFunction {
+class SPHArrayInterface : public DensityFunction, public DensityGridWriter {
 private:
   /*! @brief Length unit used in the input arrays (in m). */
   const double _unit_length_in_SI;
@@ -59,19 +61,24 @@ private:
   /*! @brief Smoothing lengths of the SPH particles in the snapshot (in m). */
   std::vector< double > _smoothing_lengths;
 
+  /*! @brief Neutral fractions on the positions of the SPH particles. */
+  std::vector< double > _neutral_fractions;
+
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
 public:
-  SPHArrayDensityFunction(const double unit_length_in_SI,
-                          const double unit_mass_in_SI);
-  SPHArrayDensityFunction(const double unit_length_in_SI,
-                          const double unit_mass_in_SI,
-                          const double *box_anchor, const double *box_sides);
-  SPHArrayDensityFunction(const double unit_length_in_SI,
-                          const double unit_mass_in_SI, const float *box_anchor,
-                          const float *box_sides);
-  ~SPHArrayDensityFunction();
+  SPHArrayInterface(const double unit_length_in_SI,
+                    const double unit_mass_in_SI);
+  SPHArrayInterface(const double unit_length_in_SI,
+                    const double unit_mass_in_SI, const double *box_anchor,
+                    const double *box_sides);
+  SPHArrayInterface(const double unit_length_in_SI,
+                    const double unit_mass_in_SI, const float *box_anchor,
+                    const float *box_sides);
+  ~SPHArrayInterface();
+
+  // DensityFunction functionality
 
   void reset(const double *x, const double *y, const double *z, const double *h,
              const double *m, const size_t npart);
@@ -84,6 +91,14 @@ public:
 
   virtual void initialize();
   virtual DensityValues operator()(const Cell &cell) const;
+
+  // DensityGridWriter functionality
+
+  void fill_array(double *nH);
+  void fill_array(float *nH);
+
+  virtual void write(DensityGrid &grid, uint_fast32_t iteration,
+                     ParameterFile &params, double time);
 };
 
-#endif // SPHARRAYDENSITYFUNCTION_HPP
+#endif // SPHARRAYINTERFACE_HPP
