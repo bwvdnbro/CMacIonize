@@ -30,6 +30,9 @@
 #include "ParameterFile.hpp"
 #include "PhotonSourceSpectrumMask.hpp"
 
+// implementations
+#include "LinearPhotonSourceSpectrumMask.hpp"
+
 /**
  * @brief Factory for PhotonSourceSpectrumMask implementations.
  */
@@ -51,15 +54,14 @@ public:
   generate(std::string role, ParameterFile &params, Log *log = nullptr) {
 
     std::string type = params.get_value< std::string >(
-        role + ":PhotonSourceSpectrumMask:type", "None");
+        role + ":PhotonSourceSpectrumMask:type", "Linear");
     if (log) {
       log->write_status("Requested PhotonSourceSpectrumMask for ", role, ": ",
                         type);
     }
 
-    if (type == "None") {
-      cmac_error("No types implemented yet!");
-      return nullptr;
+    if (type == "Linear") {
+      return new LinearPhotonSourceSpectrumMask();
     } else {
       cmac_error("Unknown PhotonSourceSpectrumMask type: \"%s\"!",
                  type.c_str());

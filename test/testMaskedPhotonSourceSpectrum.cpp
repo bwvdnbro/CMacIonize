@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "LinearPhotonSourceSpectrumMask.hpp"
 #include "MaskedPhotonSourceSpectrum.hpp"
 #include "PhotonSourceSpectrumMask.hpp"
 #include "RandomGenerator.hpp"
@@ -66,32 +67,6 @@ public:
 };
 
 /**
- * @brief Test mask.
- */
-class TestPhotonSourceSpectrumMask : public PhotonSourceSpectrumMask {
-public:
-  /**
-   * @brief Virtual destructor.
-   */
-  virtual ~TestPhotonSourceSpectrumMask() {}
-
-  /**
-   * @brief Get the fraction of the spectrum at the given frequency that should
-   * be retained in the masked spectrum.
-   *
-   * @param frequency Frequency of the bin (in Hz).
-   * @return Fraction of the spectrum that should be retained.
-   */
-  virtual double get_bin_fraction(double frequency) const {
-
-    const double min_frequency = 3.289e15;
-    const double max_frequency = 4. * min_frequency;
-    const double frequency_range = max_frequency - min_frequency;
-    return 1. - (frequency - min_frequency) / frequency_range;
-  }
-};
-
-/**
  * @brief Unit test for the MaskedPhotonSourceSpectrum class.
  *
  * @param argc Number of command line arguments.
@@ -101,7 +76,7 @@ public:
 int main(int argc, char **argv) {
 
   PhotonSourceSpectrum *test_spectrum = new TestPhotonSourceSpectrum();
-  PhotonSourceSpectrumMask *test_mask = new TestPhotonSourceSpectrumMask();
+  PhotonSourceSpectrumMask *test_mask = new LinearPhotonSourceSpectrumMask();
   MaskedPhotonSourceSpectrum masked_spectrum(test_spectrum, test_mask, 1000,
                                              1e7);
 

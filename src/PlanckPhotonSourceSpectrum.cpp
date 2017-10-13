@@ -170,9 +170,5 @@ double PlanckPhotonSourceSpectrum::get_random_frequency(
  * @return Total ionizing flux (in m^-2 s^-1).
  */
 double PlanckPhotonSourceSpectrum::get_total_flux() const {
-  if (_ionizing_flux < 0.) {
-    cmac_error("PlanckPhotonSourceSpectrum is used as external spectrum, but "
-               "no ionizing flux was provided in the parameter file!");
-  }
   return _ionizing_flux;
 }

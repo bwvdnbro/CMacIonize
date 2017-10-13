@@ -32,6 +32,7 @@
 
 // implementations
 #include "FaucherGiguerePhotonSourceSpectrum.hpp"
+#include "MaskedPhotonSourceSpectrum.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
@@ -59,6 +60,8 @@ public:
 
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
+    } else if (type == "Masked") {
+      return new MaskedPhotonSourceSpectrum(role, params, log);
     } else if (type == "Monochromatic") {
       return new MonochromaticPhotonSourceSpectrum(role, params, log);
     } else if (type == "Planck") {

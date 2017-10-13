@@ -1078,10 +1078,14 @@ add_unit_test(NAME testGradientCalculator
 set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     testMaskedPhotonSourceSpectrum.cpp
 
+    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/LinearPhotonSourceSpectrumMask.hpp
     ../src/MaskedPhotonSourceSpectrum.cpp
     ../src/MaskedPhotonSourceSpectrum.hpp
     ../src/PhotonSourceSpectrumMask.hpp
     ../src/PhotonSourceSpectrumMaskFactory.hpp
+    ../src/PlanckPhotonSourceSpectrum.cpp
+    ../src/WMBasicPhotonSourceSpectrum.cpp
 )
 add_unit_test(NAME testMaskedPhotonSourceSpectrum
               SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})

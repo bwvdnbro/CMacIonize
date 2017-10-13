@@ -108,7 +108,7 @@ MaskedPhotonSourceSpectrum::MaskedPhotonSourceSpectrum(std::string role,
           PhotonSourceSpectrumMaskFactory::generate(role, params, log),
           params.get_value< uint_fast16_t >(role + ":mask number of bins",
                                             1000),
-          params.get_value< uint_fast32_t >(role + "mask number of samples",
+          params.get_value< uint_fast32_t >(role + ":mask number of samples",
                                             1e7)) {}
 
 /**
