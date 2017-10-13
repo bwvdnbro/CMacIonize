@@ -130,10 +130,10 @@ int main(int argc, char **argv) {
         ngbs_brute_force.push_back(i);
       }
     }
-    cmac_status("Number of ngbs (brute force): %lu.", ngbs_brute_force.size());
+    cmac_status("Number of ngbs (brute force): %zd.", ngbs_brute_force.size());
 
     std::vector< uint_fast32_t > ngbs_tree = tree.get_ngbs(centre);
-    cmac_status("Number of ngbs (tree): %lu.", ngbs_tree.size());
+    cmac_status("Number of ngbs (tree): %zd.", ngbs_tree.size());
 
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());
     std::sort(ngbs_brute_force.begin(), ngbs_brute_force.end());
@@ -156,10 +156,10 @@ int main(int argc, char **argv) {
         ngbs_brute_force.push_back(i);
       }
     }
-    cmac_status("Number of ngbs (brute force): %lu.", ngbs_brute_force.size());
+    cmac_status("Number of ngbs (brute force): %zd.", ngbs_brute_force.size());
 
     std::vector< uint_fast32_t > ngbs_tree = tree.get_ngbs(centre);
-    cmac_status("Number of ngbs (tree): %lu.", ngbs_tree.size());
+    cmac_status("Number of ngbs (tree): %zd.", ngbs_tree.size());
 
     assert_condition(ngbs_brute_force.size() == ngbs_tree.size());
     std::sort(ngbs_brute_force.begin(), ngbs_brute_force.end());

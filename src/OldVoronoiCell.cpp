@@ -1590,7 +1590,7 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
       } else if (_edges[v].size() == 1) {
         delete_order_1_vertex(v, low_order_stack);
       } else {
-        cmac_error("Order %lu vertex! This should not happen!",
+        cmac_error("Order %zd vertex! This should not happen!",
                    _edges[v].size());
       }
     }

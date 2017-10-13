@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
       objects[i].set_variable(comm.get_rank());
     }
     std::pair< size_t, size_t > block = comm.distribute_block(0, 51);
-    cmac_status("%" PRIiFAST32 ": %lu %lu", comm.get_rank(), block.first,
+    cmac_status("%" PRIiFAST32 ": %zd %zd", comm.get_rank(), block.first,
                 block.second);
     std::vector< TestClass >::iterator global_begin = objects.begin();
     std::vector< TestClass >::iterator global_end = global_begin + 51;
@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
       objects[i].set_variable(comm.get_rank());
     }
     std::pair< size_t, size_t > block = comm.distribute_block(0, 51);
-    cmac_status("%" PRIiFAST32 ": %lu %lu", comm.get_rank(), block.first,
+    cmac_status("%" PRIiFAST32 ": %zd %zd", comm.get_rank(), block.first,
                 block.second);
     std::vector< TestClass >::iterator global_begin = objects.begin();
     std::vector< TestClass >::iterator global_end = global_begin + 51;
