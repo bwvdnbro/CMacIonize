@@ -236,10 +236,10 @@ std::string WMBasicPhotonSourceSpectrum::get_filename(double temperature,
 double WMBasicPhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
 
-  double x = random_generator.get_uniform_random_double();
-  uint_fast32_t inu = Utilities::locate(x, _cumulative_distribution.data(),
-                                        WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
-  double frequency =
+  const double x = random_generator.get_uniform_random_double();
+  const uint_fast32_t inu = Utilities::locate(
+      x, _cumulative_distribution.data(), WMBASICPHOTONSOURCESPECTRUM_NUMFREQ);
+  const double frequency =
       _frequencies[inu] +
       (_frequencies[inu + 1] - _frequencies[inu]) *
           (x - _cumulative_distribution[inu]) /

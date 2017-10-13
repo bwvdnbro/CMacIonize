@@ -1074,6 +1074,18 @@ set(TESTGRADIENTCALCULATOR_SOURCES
 add_unit_test(NAME testGradientCalculator
               SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
 
+## Unit test for MaskedPhotonSourceSpectrum
+set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
+    testMaskedPhotonSourceSpectrum.cpp
+
+    ../src/MaskedPhotonSourceSpectrum.cpp
+    ../src/MaskedPhotonSourceSpectrum.hpp
+    ../src/PhotonSourceSpectrumMask.hpp
+    ../src/PhotonSourceSpectrumMaskFactory.hpp
+)
+add_unit_test(NAME testMaskedPhotonSourceSpectrum
+              SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
