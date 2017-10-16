@@ -144,7 +144,8 @@ private:
 
       // use an atomic operation to add the point, to make this method thread
       // safe
-      Atomic::add(_distribution[ix][iy][iz], 1ul);
+      const uint_least64_t add = 1;
+      Atomic::add(_distribution[ix][iy][iz], add);
       cmac_assert(_distribution[ix][iy][iz] < 0xffffffffffffffff);
     }
   }
