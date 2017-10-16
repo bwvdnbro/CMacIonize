@@ -295,6 +295,39 @@ convert< unsigned long int >(const std::string &value) {
 }
 
 /**
+ * @brief Convert the given string to an integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Integer stored in the string.
+ */
+template <> inline int convert< int >(const std::string &value) {
+  const int ivalue = string_to_integer< int >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned long integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned long integer stored in the string.
+ */
+template <>
+inline unsigned int convert< unsigned int >(const std::string &value) {
+  const unsigned int ivalue = string_to_integer< unsigned int >(value);
+  return ivalue;
+}
+
+/**
  * @brief Convert the given string to an unsigned char value.
  *
  * @note We need to specialize for basic integer types and not for the cstdint
@@ -308,6 +341,42 @@ convert< unsigned long int >(const std::string &value) {
 template <>
 inline unsigned char convert< unsigned char >(const std::string &value) {
   const unsigned char ivalue = string_to_integer< unsigned char >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned short value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned short stored in the string.
+ */
+template <>
+inline unsigned short convert< unsigned short >(const std::string &value) {
+  const unsigned short ivalue = string_to_integer< unsigned short >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned long long value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned long long stored in the string.
+ */
+template <>
+inline unsigned long long
+convert< unsigned long long >(const std::string &value) {
+  const unsigned long long ivalue =
+      string_to_integer< unsigned long long >(value);
   return ivalue;
 }
 
@@ -354,6 +423,52 @@ convert< CoordinateVector< unsigned long int > >(const std::string &value) {
   vvalue[0] = convert< unsigned long int >(x);
   vvalue[1] = convert< unsigned long int >(y);
   vvalue[2] = convert< unsigned long int >(z);
+  return vvalue;
+}
+
+/**
+ * @brief Convert the given string to an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< int >
+convert< CoordinateVector< int > >(const std::string &value) {
+  CoordinateVector< int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< int >(x);
+  vvalue[1] = convert< int >(y);
+  vvalue[2] = convert< int >(z);
+  return vvalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< unsigned int >
+convert< CoordinateVector< unsigned int > >(const std::string &value) {
+  CoordinateVector< unsigned int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< unsigned int >(x);
+  vvalue[1] = convert< unsigned int >(y);
+  vvalue[2] = convert< unsigned int >(z);
   return vvalue;
 }
 

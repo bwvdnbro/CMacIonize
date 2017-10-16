@@ -172,7 +172,7 @@ private:
      * @return Pointer to a unique and thread safe VoronoiGridConstructionJob.
      */
     inline OldVoronoiGridConstructionJob *get_job(int_fast32_t thread_id) {
-      const size_t cellsize = _grid._cells.size();
+      const uint_fast32_t cellsize = _grid._cells.size();
       if (_current_index == cellsize) {
         return nullptr;
       }
