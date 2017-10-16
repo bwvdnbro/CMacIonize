@@ -537,6 +537,25 @@ inline std::string to_string< CoordinateVector< unsigned int > >(
 }
 
 /**
+ * @brief to_string specialization for an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value Integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string
+to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
  * @brief to_string specialization for a boolean CoordinateVector.
  *
  * @param value Boolean CoordinateVector.
