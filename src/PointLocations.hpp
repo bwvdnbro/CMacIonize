@@ -69,7 +69,7 @@ public:
                                                 CoordinateVector<>(-1.)))
       : _positions(positions) {
 
-    const size_t positions_size = positions.size();
+    const uint_fast32_t positions_size = positions.size();
 
     CoordinateVector<> minpos;
     CoordinateVector<> maxpos;
