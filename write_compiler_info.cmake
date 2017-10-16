@@ -84,22 +84,22 @@ string(REGEX REPLACE ".*Seconds: ([0-9]*).*" "\\1" COMPILATION_TIME_SECONDS
        ${FULL_DATE})
 
 # Gather OS information
-execute_process(COMMAND uname --operating-system
+execute_process(COMMAND uname -o
                 OUTPUT_VARIABLE OS_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND uname --kernel-name
+execute_process(COMMAND uname -s
                 OUTPUT_VARIABLE OS_KERNEL_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND uname --kernel-release
+execute_process(COMMAND uname -r
                 OUTPUT_VARIABLE OS_KERNEL_RELEASE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND uname --kernel-version
+execute_process(COMMAND uname -v
                 OUTPUT_VARIABLE OS_KERNEL_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND uname --machine
+execute_process(COMMAND uname -p
                 OUTPUT_VARIABLE OS_HARDWARE_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND uname --nodename
+execute_process(COMMAND uname -n
                 OUTPUT_VARIABLE OS_HOST_NAME
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
