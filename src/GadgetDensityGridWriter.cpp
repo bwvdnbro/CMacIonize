@@ -192,14 +192,27 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                                                   numpart[0]);
   HDF5Tools::create_dataset< double >(group, "NumberDensity", numpart[0]);
   HDF5Tools::create_dataset< double >(group, "Temperature", numpart[0]);
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     HDF5Tools::create_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i), numpart[0]);
 #ifdef DO_OUTPUT_COOLING
     HDF5Tools::create_dataset< double >(group, "Cooling" + get_ion_name(i),
                                         numpart[0]);
 #endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+    HDF5Tools::create_dataset< double >(
+        group, "PhotoIonizationRate" + get_ion_name(i), numpart[0]);
+#endif
   }
+#ifdef DO_OUTPUT_HEATING
+  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+    // note that the use of get_ion_name() is a hack that only works because the
+    // first two ion names happen to be the same as the first two heating term
+    // names
+    HDF5Tools::create_dataset< double >(group, "HeatingRate" + get_ion_name(i),
+                                        numpart[0]);
+  }
+#endif
   if (grid.has_hydro()) {
     HDF5Tools::create_dataset< double >(group, "Density", numpart[0]);
     HDF5Tools::create_dataset< CoordinateVector<> >(group, "Velocities",
@@ -227,6 +240,14 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
     std::vector< std::vector< double > > cooling(
         NUMBER_OF_IONNAMES, std::vector< double >(thisblocksize));
 #endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+    std::vector< std::vector< double > > photoionization_rate(
+        NUMBER_OF_IONNAMES, std::vector< double >(thisblocksize));
+#endif
+#ifdef DO_OUTPUT_HEATING
+    std::vector< std::vector< double > > heating(
+        NUMBER_OF_HEATINGTERMS, std::vector< double >(thisblocksize));
+#endif
     size_t index = 0;
     for (auto it = grid.begin() + offset; it != grid.begin() + upper_limit;
          ++it) {
@@ -243,7 +264,17 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
 #ifdef DO_OUTPUT_COOLING
         cooling[i][index] = ionization_variables.get_cooling(ion);
 #endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+        photoionization_rate[i][index] =
+            ionization_variables.get_mean_intensity(ion);
+#endif
       }
+#ifdef DO_OUTPUT_HEATING
+      for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+        const HeatingTermName heating_term = static_cast< HeatingTermName >(i);
+        heating[i][index] = ionization_variables.get_heating(heating_term);
+      }
+#endif
       ++index;
     }
     HDF5Tools::append_dataset< CoordinateVector<> >(group, "Coordinates",
@@ -257,7 +288,18 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
       HDF5Tools::append_dataset< double >(group, "Cooling" + get_ion_name(i),
                                           offset, cooling[i]);
 #endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+      HDF5Tools::append_dataset< double >(group, "PhotoIonizationRate" +
+                                                     get_ion_name(i),
+                                          offset, photoionization_rate[i]);
+#endif
     }
+#ifdef DO_OUTPUT_HEATING
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      HDF5Tools::append_dataset< double >(
+          group, "HeatingRate" + get_ion_name(i), offset, heating[i]);
+    }
+#endif
 
     if (grid.has_hydro()) {
       std::vector< double > dens(thisblocksize);

@@ -68,6 +68,13 @@
  *  will slightly slow down the temperature calculation. */
 #cmakedefine DO_OUTPUT_COOLING
 
+/*! @brief If defined, the heating rates will be part of the output. */
+#cmakedefine DO_OUTPUT_HEATING
+
+/*! @brief If defined, the photoionization rates for the different ions will be
+ *  part of the output. */
+#cmakedefine DO_OUTPUT_PHOTOIONIZATION_RATES
+
 /*! @brief Maximum number of shared memory threads that can be used on this
  *  system. */
 // clang-format off

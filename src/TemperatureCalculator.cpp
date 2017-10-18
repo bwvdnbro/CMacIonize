@@ -676,6 +676,22 @@ void TemperatureCalculator::calculate_temperature(
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
   }
+
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+  // set the mean intensity values to the actual physical values
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    ionization_variables.set_mean_intensity(ion, j[i]);
+  }
+#endif
+
+#ifdef DO_OUTPUT_HEATING
+  // set the heating term values to the actual physical values
+  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
+    ionization_variables.set_heating(heating_term, h[i]);
+  }
+#endif
 }
 
 /**

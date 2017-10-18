@@ -158,6 +158,12 @@ void IonizationStateCalculator::calculate_ionization_state(
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
     }
   }
+
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+  // set the mean intensity values to the values in correct physical units
+  ionization_variables.set_mean_intensity(ION_H_n, jH);
+  ionization_variables.set_mean_intensity(ION_He_n, jHe);
+#endif
 }
 
 /**
