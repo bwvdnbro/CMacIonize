@@ -434,6 +434,10 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   ionization_variables.set_cooling(ION_He_n, Lhep);
 #endif
   loss += Lhp + Lhep;
+
+  // make sure losses are losses and gains are gains
+  loss = std::max(loss, 0.);
+  gain = std::max(gain, 0.);
 }
 
 /**
@@ -581,10 +585,27 @@ void TemperatureCalculator::calculate_temperature(
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
+    // funny detail: this value is actually constant :p
     const double logtt = std::log(T1 / T2);
-    const double expgain = std::log(gain1 / gain2) / logtt;
-    const double exploss = std::log(loss1 / loss2) / logtt;
-    T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
+    double expgain;
+    if (gain2 > 0.) {
+      expgain = std::log(gain1 / gain2);
+    } else {
+      expgain = -99.;
+    }
+    double exploss;
+    if (loss2 > 0.) {
+      exploss = std::log(loss1 / loss2);
+    } else {
+      exploss = -99.;
+    }
+    const double expdiff = expgain - exploss;
+    if (gain0 > 0. && expdiff != 0.) {
+      T0 *= std::pow(loss0 / gain0, logtt / expdiff);
+    } else {
+      // revert to linear temperature change
+      T0 -= (gain0 - loss0);
+    }
 
     if (T0 < 4000.) {
       // gas is neutral, temperature is 500 K
