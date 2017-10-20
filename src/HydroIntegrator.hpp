@@ -36,6 +36,9 @@
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
+/*! @brief Uncomment this to switch of second order integration. */
+#define NO_SECOND_ORDER
+
 #include <cfloat>
 
 /*! @brief Stop the serial time timer and start the parallel time timer. */
@@ -111,6 +114,65 @@ private:
     /*! @brief Integration time step (in s). */
     const double _timestep;
 
+    /**
+     * @brief Per face slope limiter for a single quantity.
+     *
+     * Based on the slope limiter described in one of the appendices of Hopkins'
+     * GIZMO paper.
+     *
+     * @param phimid0 Reconstructed value of the quantity at the interface.
+     * @param phiL Value at the left of the interface.
+     * @param phiR Value at the right of the interface.
+     * @param dnrm_over_r Ratio of the distance between the left cell midpoint
+     * to the face midpoint and the distances between left and right cell
+     * midpoint.
+     * @return Limited value of the quantity at the interface.
+     */
+    inline static double limit(const double phimid0, const double phiL,
+                               const double phiR, const double dnrm_over_r) {
+
+      const static double psi1 = 0.5;
+      const static double psi2 = 0.25;
+
+      const double delta1 = psi1 * std::abs(phiL - phiR);
+      const double delta2 = psi2 * std::abs(phiL - phiR);
+
+      const double phimin = std::min(phiL, phiR);
+      const double phimax = std::max(phiL, phiR);
+
+      const double phibar = phiL + dnrm_over_r * (phiR - phiL);
+
+      // if sign(phimax+delta1) == sign(phimax)
+      double phiplus;
+      if ((phimax + delta1) * phimax > 0.) {
+        phiplus = phimax + delta1;
+      } else {
+        const double absphimax = std::abs(phimax);
+        phiplus = phimax * absphimax / (absphimax + delta1);
+      }
+
+      // if sign(phimin-delta1) == sign(phimin)
+      double phiminus;
+      if ((phimin - delta1) * phimin > 0.) {
+        phiminus = phimin - delta1;
+      } else {
+        const double absphimin = std::abs(phimin);
+        phiminus = phimin * absphimin / (absphimin + delta1);
+      }
+
+      double phimid;
+      if (phiL == phiR) {
+        phimid = phiL;
+      } else {
+        if (phiL < phiR) {
+          phimid = std::max(phiminus, std::min(phibar + delta2, phimid0));
+        } else {
+          phimid = std::min(phiplus, std::max(phibar - delta2, phimid0));
+        }
+      }
+      return phimid;
+    }
+
   public:
     /**
      * @brief Constructor.
@@ -134,10 +196,20 @@ private:
      */
     inline void operator()(DensityGrid::iterator &cell) {
 
+      const CoordinateVector<> posL = cell.get_cell_midpoint();
       const double rhoL = cell.get_hydro_variables().get_primitives_density();
       const CoordinateVector<> uL =
           cell.get_hydro_variables().get_primitives_velocity();
       const double PL = cell.get_hydro_variables().get_primitives_pressure();
+
+      const CoordinateVector<> gradrhoL =
+          cell.get_hydro_variables().primitive_gradients(0);
+      const CoordinateVector< CoordinateVector<> > graduL(
+          cell.get_hydro_variables().primitive_gradients(1),
+          cell.get_hydro_variables().primitive_gradients(2),
+          cell.get_hydro_variables().primitive_gradients(3));
+      const CoordinateVector<> gradPL =
+          cell.get_hydro_variables().primitive_gradients(4);
       auto ngbs = cell.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
         DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
@@ -145,52 +217,93 @@ private:
         const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
         const CoordinateVector<> normal = std::get< 2 >(*ngbit);
         const double surface_area = std::get< 3 >(*ngbit);
+        const CoordinateVector<> posR = posL + std::get< 4 >(*ngbit);
 
         // get the right state
         double rhoR;
         CoordinateVector<> uR;
         double PR;
+        CoordinateVector<> gradrhoR;
+        CoordinateVector< CoordinateVector<> > graduR;
+        CoordinateVector<> gradPR;
         CoordinateVector<> vframe;
         if (ngb != _grid_end) {
           rhoR = ngb.get_hydro_variables().get_primitives_density();
           uR = ngb.get_hydro_variables().get_primitives_velocity();
           PR = ngb.get_hydro_variables().get_primitives_pressure();
+          gradrhoR = ngb.get_hydro_variables().primitive_gradients(0);
+          graduR[0] = ngb.get_hydro_variables().primitive_gradients(1);
+          graduR[1] = ngb.get_hydro_variables().primitive_gradients(2);
+          graduR[2] = ngb.get_hydro_variables().primitive_gradients(3);
+          gradPR = ngb.get_hydro_variables().primitive_gradients(4);
           vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
         } else {
           // apply boundary conditions
           rhoR = rhoL;
           uR = uL;
-          if (normal[0] < 0. &&
-              _hydro_integrator._boundaries[0] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[0] = -uR[0];
-          }
-          if (normal[0] > 0. &&
-              _hydro_integrator._boundaries[1] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[0] = -uR[0];
-          }
-          if (normal[1] < 0. &&
-              _hydro_integrator._boundaries[2] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[1] = -uR[1];
-          }
-          if (normal[1] > 0. &&
-              _hydro_integrator._boundaries[3] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[1] = -uR[1];
-          }
-          if (normal[2] < 0. &&
-              _hydro_integrator._boundaries[4] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[2] = -uR[2];
-          }
-          if (normal[2] > 0. &&
-              _hydro_integrator._boundaries[5] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[2] = -uR[2];
-          }
           PR = PL;
+          gradrhoR = gradrhoL;
+          graduR = graduL;
+          gradPR = gradPL;
+          for (uint_fast8_t i = 0; i < 3; ++i) {
+            if ((normal[i] < 0. &&
+                 _hydro_integrator._boundaries[2 * i] ==
+                     HYDRO_BOUNDARY_REFLECTIVE) ||
+                (normal[i] > 0. &&
+                 _hydro_integrator._boundaries[2 * i + 1] ==
+                     HYDRO_BOUNDARY_REFLECTIVE)) {
+              uR[i] = -uR[i];
+              gradrhoR[i] = -gradrhoR[i];
+              // we only invert the gradient components not orthogonal to the
+              // face; the component orthogonal to the face has the same
+              // gradient
+              graduR[(i + 1) % 3][i] = -graduR[(i + 1) % 3][i];
+              graduR[(i + 2) % 3][i] = -graduR[(i + 2) % 3][i];
+              gradPR[i] = -gradPR[i];
+            }
+          }
         }
+
+        // do the second order spatial gradient extrapolation
+        const CoordinateVector<> dL = midpoint - posL;
+        double rhoL_prime =
+            rhoL + CoordinateVector<>::dot_product(gradrhoL, dL);
+        CoordinateVector<> uL_prime(
+            uL[0] + CoordinateVector<>::dot_product(graduL[0], dL),
+            uL[1] + CoordinateVector<>::dot_product(graduL[1], dL),
+            uL[2] + CoordinateVector<>::dot_product(graduL[2], dL));
+        double PL_prime = PL + CoordinateVector<>::dot_product(gradPL, dL);
+
+        const CoordinateVector<> dR = midpoint - posR;
+        double rhoR_prime =
+            rhoR + CoordinateVector<>::dot_product(gradrhoR, dR);
+        CoordinateVector<> uR_prime(
+            uR[0] + CoordinateVector<>::dot_product(graduR[0], dR),
+            uR[1] + CoordinateVector<>::dot_product(graduR[1], dR),
+            uR[2] + CoordinateVector<>::dot_product(graduR[2], dR));
+        double PR_prime = PR + CoordinateVector<>::dot_product(gradPR, dR);
+
+        // apply the per face slope limiter
+        const double rinv = 1. / (posL - posR).norm();
+        const double dL_over_r = dL.norm() * rinv;
+        const double dR_over_r = dR.norm() * rinv;
+
+        rhoL_prime = limit(rhoL_prime, rhoL, rhoR, dL_over_r);
+        uL_prime[0] = limit(uL_prime[0], uL[0], uR[0], dL_over_r);
+        uL_prime[1] = limit(uL_prime[1], uL[1], uR[1], dL_over_r);
+        uL_prime[2] = limit(uL_prime[2], uL[2], uR[2], dL_over_r);
+        PL_prime = limit(PL_prime, PL, PR, dL_over_r);
+
+        rhoR_prime = limit(rhoR_prime, rhoR, rhoL, dR_over_r);
+        uR_prime[0] = limit(uR_prime[0], uR[0], uL[0], dR_over_r);
+        uR_prime[1] = limit(uR_prime[1], uR[1], uL[1], dR_over_r);
+        uR_prime[2] = limit(uR_prime[2], uR[2], uL[2], dR_over_r);
+        PR_prime = limit(PR_prime, PR, PL, dR_over_r);
 
         // boost the velocities to the interface frame (and use new variables,
         // as we still want to use the old value of uL for other neighbours)
-        const CoordinateVector<> uLframe = uL - vframe;
-        const CoordinateVector<> uRframe = uR - vframe;
+        const CoordinateVector<> uLframe = uL_prime - vframe;
+        const CoordinateVector<> uRframe = uR_prime - vframe;
 
         // project the velocities onto the surface normal
         const double vL = CoordinateVector<>::dot_product(uLframe, normal);
@@ -199,7 +312,8 @@ private:
         // solve the Riemann problem
         double rhosol, vsol, Psol;
         const int flag = _hydro_integrator._solver.solve(
-            rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+            rhoL_prime, vL, PL_prime, rhoR_prime, vR, PR_prime, rhosol, vsol,
+            Psol);
 
         // if the solution was vacuum, there is no flux
         if (flag != 0) {
@@ -446,6 +560,7 @@ public:
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
 
+#ifndef NO_SECOND_ORDER
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
     GradientCalculator::GradientComputation gradient_computation(_boundaries,
@@ -460,6 +575,50 @@ public:
     hydro_start_parallel_timing_block();
     gradient_workers.do_in_parallel(gradient_jobs);
     hydro_stop_parallel_timing_block();
+#endif
+
+    // do the second order time prediction step
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      const double halfdt = 0.5 * timestep;
+
+      // get primitive variables
+      const double rho = it.get_hydro_variables().get_primitives_density();
+      const CoordinateVector<> u =
+          it.get_hydro_variables().get_primitives_velocity();
+      const double P = it.get_hydro_variables().get_primitives_pressure();
+
+      // get primitive gradients
+      const CoordinateVector<> drho =
+          it.get_hydro_variables().primitive_gradients(0);
+      const CoordinateVector<> dux =
+          it.get_hydro_variables().primitive_gradients(1);
+      const CoordinateVector<> duy =
+          it.get_hydro_variables().primitive_gradients(2);
+      const CoordinateVector<> duz =
+          it.get_hydro_variables().primitive_gradients(3);
+      const CoordinateVector<> dP =
+          it.get_hydro_variables().primitive_gradients(4);
+
+      // compute updated variables
+      const double divv = dux.x() + duy.y() + duz.z();
+      const double rho_inv = 1. / rho;
+      const double rho_new =
+          rho -
+          halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
+      const double ux_new = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
+      const double uy_new = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
+      const double uz_new = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
+      const double P_new =
+          P -
+          halfdt * (_gamma * P * divv + CoordinateVector<>::dot_product(u, dP));
+
+      // update variables
+      it.get_hydro_variables().primitives(0) = rho_new;
+      it.get_hydro_variables().primitives(1) = ux_new;
+      it.get_hydro_variables().primitives(2) = uy_new;
+      it.get_hydro_variables().primitives(3) = uz_new;
+      it.get_hydro_variables().primitives(4) = P_new;
+    }
 
     // do the flux computation (in parallel)
     HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
