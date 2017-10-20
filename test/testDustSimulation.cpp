@@ -45,6 +45,7 @@
  * @param command_line String to parse.
  */
 void generate_arguments(int &argc, char **&argv, std::string command_line) {
+
   // parse the arguments and store them in a vector
   std::istringstream command_stream(command_line);
   std::string argument;
@@ -67,7 +68,7 @@ void generate_arguments(int &argc, char **&argv, std::string command_line) {
   argc = commands.size() + 1;
   argv = new char *[argc];
   argv[0] = new char[1];
-  for (int i = 0; i < argc - 1; ++i) {
+  for (int_fast32_t i = 0; i < argc - 1; ++i) {
     argv[i + 1] = new char[commands[i].size() + 1];
     strcpy(argv[i + 1], commands[i].c_str());
   }
@@ -80,7 +81,8 @@ void generate_arguments(int &argc, char **&argv, std::string command_line) {
  * @param argv Command line arguments.
  */
 void delete_arguments(int &argc, char **&argv) {
-  for (int i = 0; i < argc; ++i) {
+
+  for (int_fast32_t i = 0; i < argc; ++i) {
     delete[] argv[i];
   }
   delete[] argv;

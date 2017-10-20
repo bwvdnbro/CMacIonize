@@ -60,19 +60,20 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
   // set up the frequency bins
-  for (unsigned int i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +
                     i * (max_frequency - min_frequency) /
                         (HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
 
   // set up the temperature bins and precompute the spectrum
-  for (unsigned int iT = 0; iT < HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
+  for (uint_fast32_t iT = 0; iT < HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP;
+       ++iT) {
     _cumulative_distribution[iT][0] = 0.;
     _temperature[iT] =
         1500. + (iT + 0.5) * 13500. / HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP;
     // precompute the spectrum for this temperature
-    for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    for (uint_fast32_t inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       // first do the lower edge of the frequency interval
       double xsecH =
@@ -104,14 +105,14 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
     }
 
     // make cumulative
-    for (unsigned int inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    for (uint_fast32_t inu = 1; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
           _cumulative_distribution[iT][inu];
     }
     // normalize
-    for (unsigned int inu = 0; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    for (uint_fast32_t inu = 0; inu < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       _cumulative_distribution[iT][inu] /=
           _cumulative_distribution[iT]
@@ -135,13 +136,13 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
 double HydrogenLymanContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
 
-  const unsigned int iT = Utilities::locate(
+  const uint_fast32_t iT = Utilities::locate(
       temperature, _temperature.data(), HYDROGENLYMANCONTINUUMSPECTRUM_NUMTEMP);
   const double x = random_generator.get_uniform_random_double();
-  const unsigned int inu1 =
+  const uint_fast32_t inu1 =
       Utilities::locate(x, _cumulative_distribution[iT].data(),
                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  const unsigned int inu2 =
+  const uint_fast32_t inu2 =
       Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
   const double frequency = _frequency[inu1] +

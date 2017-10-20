@@ -94,7 +94,8 @@ public:
                 double energy)
       : _position(position), _direction(direction), _energy(energy),
         _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY), _weight(1.) {
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cross_sections[i] = 0.;
     }
     _stokes_parameters[0] = 1.;

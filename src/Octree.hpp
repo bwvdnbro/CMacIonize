@@ -69,8 +69,8 @@ public:
     // create the root of the tree
     _root = new OctreeNode(0);
 
-    const auto possize = _positions.size();
-    for (unsigned int i = 1; i < possize; ++i) {
+    const size_t possize = _positions.size();
+    for (size_t i = 1; i < possize; ++i) {
       Box<> box(_box);
       _root->add_position(_positions, i, box);
     }
@@ -125,9 +125,10 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre.
    */
-  inline std::vector< unsigned int > get_ngbs(CoordinateVector<> centre) const {
+  inline std::vector< uint_fast32_t >
+  get_ngbs(CoordinateVector<> centre) const {
 
-    std::vector< unsigned int > ngbs;
+    std::vector< uint_fast32_t > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
@@ -173,10 +174,10 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given center.
    */
-  inline std::vector< unsigned int > get_ngbs_sphere(CoordinateVector<> centre,
-                                                     double radius) const {
+  inline std::vector< uint_fast32_t > get_ngbs_sphere(CoordinateVector<> centre,
+                                                      double radius) const {
 
-    std::vector< unsigned int > ngbs;
+    std::vector< uint_fast32_t > ngbs;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
@@ -220,15 +221,15 @@ public:
    * @return Indicies of the positions in the internal list that are neighbours
    * of the given centre list.
    */
-  inline std::vector< unsigned int >
+  inline std::vector< uint_fast32_t >
   get_ngbs_list(std::vector< CoordinateVector<> > centre_list) const {
 
-    std::vector< unsigned int > ngbs;
-    const unsigned int clist_size = centre_list.size();
+    std::vector< uint_fast32_t > ngbs;
+    const size_t clist_size = centre_list.size();
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {
-        for (unsigned int i = 0; i < clist_size; i++) {
+        for (size_t i = 0; i < clist_size; ++i) {
           const CoordinateVector<> centre = centre_list[i];
           double r;
           if (_is_periodic) {
@@ -245,8 +246,8 @@ public:
         next = next->get_sibling();
       } else {
         // check opening criterion
-        unsigned int centre_num = 0;
-        for (unsigned int i = 0; i < clist_size; i++) {
+        uint_fast32_t centre_num = 0;
+        for (size_t i = 0; i < clist_size; ++i) {
           const CoordinateVector<> centre = centre_list[i];
           double r;
           if (_is_periodic) {
@@ -275,10 +276,10 @@ public:
    * @param centre Position that is at the centre of the search radius.
    * @return Index of the closest neighbour to that position.
    */
-  inline unsigned int get_closest_ngb(const CoordinateVector<> centre) {
+  inline uint_fast32_t get_closest_ngb(const CoordinateVector<> centre) {
 
     double rmin = DBL_MAX;
-    unsigned int imin = 0;
+    uint_fast32_t imin = 0;
     OctreeNode *next = _root->get_child();
     while (next != nullptr) {
       if (next->is_leaf()) {

@@ -172,6 +172,22 @@ else(OUTPUT_COOLING)
   add_configuration_option(DO_OUTPUT_COOLING False)
 endif(OUTPUT_COOLING)
 
+if(OUTPUT_HEATING)
+  message(STATUS "Enabling output of heating rates.")
+  add_configuration_option(DO_OUTPUT_HEATING True)
+else(OUTPUT_HEATING)
+  message(STATUS "Heating rate output disabled.")
+  add_configuration_option(DO_OUTPUT_HEATING False)
+endif(OUTPUT_HEATING)
+
+if(OUTPUT_PHOTOIONIZATION_RATES)
+  message(STATUS "Enabling output of photoionization rates.")
+  add_configuration_option(DO_OUTPUT_PHOTOIONIZATION_RATES True)
+else(OUTPUT_PHOTOIONIZATION_RATES)
+  message(STATUS "Photoionization rate output disabled.")
+  add_configuration_option(DO_OUTPUT_PHOTOIONIZATION_RATES False)
+endif(OUTPUT_PHOTOIONIZATION_RATES)
+
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 

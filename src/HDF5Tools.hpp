@@ -31,6 +31,7 @@
 #include "Error.hpp"
 
 #include <array>
+#include <cinttypes>
 #include <hdf5.h>
 #include <map>
 #include <string>
@@ -80,7 +81,7 @@ inline void initialize() {
  * values are HDF5FILEMODE_READ for reading and HDF5FILEMODE_WRITE for writing.
  * @return HDF5File handle to the open file that can be used by other methods.
  */
-inline HDF5File open_file(std::string name, int mode) {
+inline HDF5File open_file(std::string name, int_fast32_t mode) {
 
   hid_t file;
   if (mode == HDF5FILEMODE_READ) {
@@ -99,7 +100,7 @@ inline HDF5File open_file(std::string name, int mode) {
       cmac_error("Unable to open file \"%s\"", name.c_str());
     }
   } else {
-    cmac_error("Unknown file mode: %i", mode);
+    cmac_error("Unknown file mode: %" PRIuFAST32, mode);
   }
 
   return file;
@@ -218,8 +219,17 @@ template <> inline hid_t get_datatype_name< float >() {
  *
  * @return H5T_NATIVE_UINT32.
  */
-template <> inline hid_t get_datatype_name< unsigned int >() {
+template <> inline hid_t get_datatype_name< uint32_t >() {
   return H5T_NATIVE_UINT32;
+}
+
+/**
+ * @brief get_datatype_name specialization for a 64 bit unsigned integer.
+ *
+ * @return H5T_NATIVE_UINT64.
+ */
+template <> inline hid_t get_datatype_name< uint64_t >() {
+  return H5T_NATIVE_UINT64;
 }
 
 /**
@@ -227,15 +237,8 @@ template <> inline hid_t get_datatype_name< unsigned int >() {
  *
  * @return H5T_NATIVE_INT32.
  */
-template <> inline hid_t get_datatype_name< int >() { return H5T_NATIVE_INT32; }
-
-/**
- * @brief get_datatype_name specialization for a 64 bit unsigned integer.
- *
- * @return H5T_NATIVE_UINT64.
- */
-template <> inline hid_t get_datatype_name< unsigned long long >() {
-  return H5T_NATIVE_UINT64;
+template <> inline hid_t get_datatype_name< int32_t >() {
+  return H5T_NATIVE_INT32;
 }
 
 /**
@@ -413,7 +416,7 @@ inline std::vector< _datatype_ > read_vector_attribute(hid_t group,
   // query dataspace size
   hsize_t size[1];
   hsize_t maxsize[1];
-  const int ndim = H5Sget_simple_extent_dims(space, size, maxsize);
+  const int_fast32_t ndim = H5Sget_simple_extent_dims(space, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of attribute \"%s\"!", name.c_str());
   }
@@ -460,9 +463,9 @@ inline std::vector< _datatype_ > read_vector_attribute(hid_t group,
  * @return std::vector<unsigned int> containing the values of the attribute.
  */
 template <>
-inline std::vector< unsigned int >
-read_attribute< std::vector< unsigned int > >(hid_t group, std::string name) {
-  return read_vector_attribute< unsigned int >(group, name);
+inline std::vector< uint32_t >
+read_attribute< std::vector< uint32_t > >(hid_t group, std::string name) {
+  return read_vector_attribute< uint32_t >(group, name);
 }
 
 /**
@@ -728,7 +731,7 @@ inline void write_vector_attribute(hid_t group, std::string name,
 
   // write attribute
   _datatype_ *data = new _datatype_[value.size()];
-  for (unsigned int i = 0; i < value.size(); ++i) {
+  for (size_t i = 0; i < value.size(); ++i) {
     data[i] = value[i];
   }
   herr_t hdf5status = H5Awrite(attr, datatype, data);
@@ -773,8 +776,9 @@ write_attribute< std::vector< double > >(hid_t group, std::string name,
  * @param value std::vector<double> containing the values to write.
  */
 template <>
-inline void write_attribute< std::vector< unsigned int > >(
-    hid_t group, std::string name, std::vector< unsigned int > &value) {
+inline void
+write_attribute< std::vector< uint32_t > >(hid_t group, std::string name,
+                                           std::vector< uint32_t > &value) {
   write_vector_attribute(group, name, value);
 }
 
@@ -809,7 +813,7 @@ inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
   // query dataspace extents
   hsize_t size[1];
   hsize_t maxsize[1];
-  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int_fast32_t ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -876,7 +880,7 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
   // query dataspace extents
   hsize_t size[2];
   hsize_t maxsize[2];
-  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int_fast32_t ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -916,10 +920,10 @@ read_dataset< CoordinateVector<> >(hid_t group, std::string name) {
 /**
  * @brief Multidimensional data block.
  */
-template < typename _datatype_, unsigned char _size_ > class HDF5DataBlock {
+template < typename _datatype_, uint_fast8_t _size_ > class HDF5DataBlock {
 private:
   /*! @brief Size of the multidimensional array. */
-  std::array< unsigned int, _size_ > _size;
+  std::array< size_t, _size_ > _size;
 
   /*! @brief Data. */
   _datatype_ *_data;
@@ -932,15 +936,15 @@ public:
    * @param data Data for the block, should be an array with total size equal to
    * the product of the given dimensions.
    */
-  HDF5DataBlock(std::array< unsigned int, _size_ > dimensions, _datatype_ *data)
+  HDF5DataBlock(std::array< size_t, _size_ > dimensions, _datatype_ *data)
       : _size(dimensions) {
 
-    unsigned int datasize = 1;
-    for (unsigned char i = 0; i < _size_; ++i) {
+    size_t datasize = 1;
+    for (uint_fast8_t i = 0; i < _size_; ++i) {
       datasize *= _size[i];
     }
     _data = new _datatype_[datasize];
-    for (unsigned int i = 0; i < datasize; ++i) {
+    for (size_t i = 0; i < datasize; ++i) {
       _data[i] = data[i];
     }
   }
@@ -956,12 +960,12 @@ public:
   void operator=(const HDF5DataBlock &block) {
 
     _size = block._size;
-    unsigned int datasize = 1;
-    for (unsigned char i = 0; i < _size_; ++i) {
+    size_t datasize = 1;
+    for (uint_fast8_t i = 0; i < _size_; ++i) {
       datasize *= _size[i];
     }
     _data = new _datatype_[datasize];
-    for (unsigned int i = 0; i < datasize; ++i) {
+    for (size_t i = 0; i < datasize; ++i) {
       _data[i] = block._data[i];
     }
   }
@@ -979,11 +983,11 @@ public:
    * @param index Multidimensional index.
    * @return Element at that position.
    */
-  inline _datatype_ &operator[](std::array< unsigned int, _size_ > index) {
+  inline _datatype_ &operator[](std::array< size_t, _size_ > index) {
 
-    unsigned int dataindex = 0;
-    unsigned int product = 1;
-    for (unsigned char i = 0; i < _size_; ++i) {
+    size_t dataindex = 0;
+    size_t product = 1;
+    for (uint_fast8_t i = 0; i < _size_; ++i) {
       dataindex += index[_size_ - 1 - i] * product;
       product *= _size[_size_ - 1 - i];
     }
@@ -995,7 +999,7 @@ public:
    *
    * @return Size of the array.
    */
-  inline std::array< unsigned int, _size_ > size() { return _size; }
+  inline std::array< size_t, _size_ > size() { return _size; }
 };
 
 /**
@@ -1006,7 +1010,7 @@ public:
  * @param name Name of the dataset to read.
  * @return HDF5DataBlock containing the contents of the dataset.
  */
-template < typename _datatype_, unsigned char _size_ >
+template < typename _datatype_, uint_fast8_t _size_ >
 HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
                                                  std::string name) {
 
@@ -1031,15 +1035,15 @@ HDF5DataBlock< _datatype_, _size_ > read_dataset(hid_t group,
   // query dataspace extents
   hsize_t size[_size_];
   hsize_t maxsize[_size_];
-  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int_fast32_t ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
 
   // read dataset
-  std::array< unsigned int, _size_ > dimensions;
-  unsigned int dprod = 1;
-  for (unsigned char i = 0; i < _size_; ++i) {
+  std::array< size_t, _size_ > dimensions;
+  size_t dprod = 1;
+  for (uint_fast8_t i = 0; i < _size_; ++i) {
     dimensions[i] = size[i];
     dprod *= size[i];
   }
@@ -1146,7 +1150,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
   // query dataspace extents
   hsize_t size[1];
   hsize_t maxsize[1];
-  const int ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
+  const int_fast32_t ndim = H5Sget_simple_extent_dims(filespace, size, maxsize);
   if (ndim < 0) {
     cmac_error("Unable to query extent of dataset \"%s\"", name.c_str());
   }
@@ -1215,7 +1219,7 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
   std::map< std::string, _datatype_ > dictionary;
   for (hsize_t i = 0; i < size[0]; ++i) {
     // strip spaces at the end of the string
-    unsigned int j = 18;
+    uint_fast8_t j = 18;
     while (data[i]._name[j] == ' ') {
       data[i]._name[j] = '\0';
       --j;
@@ -1264,7 +1268,7 @@ inline void write_dataset(hid_t group, std::string name,
 
   // write dataset
   _datatype_ *data = new _datatype_[values.size()];
-  for (unsigned int i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     data[i] = values[i];
   }
   herr_t hdf5status =
@@ -1322,7 +1326,7 @@ inline void write_dataset(hid_t group, std::string name,
 
   // write dataset
   double *data = new double[3 * values.size()];
-  for (unsigned int i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     data[3 * i] = values[i].x();
     data[3 * i + 1] = values[i].y();
     data[3 * i + 2] = values[i].z();
@@ -1358,7 +1362,7 @@ inline void write_dataset(hid_t group, std::string name,
  * @param size Size of the dataset.
  */
 template < typename _datatype_ >
-inline void create_dataset(hid_t group, std::string name, unsigned int size) {
+inline void create_dataset(hid_t group, std::string name, hsize_t size) {
 
   const hid_t datatype = get_datatype_name< _datatype_ >();
 
@@ -1405,7 +1409,7 @@ inline void create_dataset(hid_t group, std::string name, unsigned int size) {
  */
 template <>
 inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
-                                                 unsigned int size) {
+                                                 hsize_t size) {
 
   const hid_t datatype = get_datatype_name< double >();
 
@@ -1451,7 +1455,7 @@ inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
  * @param values std::vector containing the data to append.
  */
 template < typename _datatype_ >
-inline void append_dataset(hid_t group, std::string name, unsigned int offset,
+inline void append_dataset(hid_t group, std::string name, hsize_t offset,
                            std::vector< _datatype_ > &values) {
 
   const hid_t datatype = get_datatype_name< _datatype_ >();
@@ -1490,7 +1494,7 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
 
   // write dataset
   _datatype_ *data = new _datatype_[values.size()];
-  for (unsigned int i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     data[i] = values[i];
   }
   hdf5status =
@@ -1533,7 +1537,7 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
  * @param values std::vector containing the data to append.
  */
 template <>
-inline void append_dataset(hid_t group, std::string name, unsigned int offset,
+inline void append_dataset(hid_t group, std::string name, hsize_t offset,
                            std::vector< CoordinateVector<> > &values) {
 
   const hid_t datatype = get_datatype_name< double >();
@@ -1572,7 +1576,7 @@ inline void append_dataset(hid_t group, std::string name, unsigned int offset,
 
   // write dataset
   double *data = new double[3 * values.size()];
-  for (unsigned int i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     data[3 * i] = values[i].x();
     data[3 * i + 1] = values[i].y();
     data[3 * i + 2] = values[i].z();

@@ -53,6 +53,7 @@ public:
   HomogeneousDensityFunction(double density = 1., double temperature = 8000.,
                              Log *log = nullptr)
       : _density(density), _temperature(temperature) {
+
     if (log) {
       log->write_status(
           "Created HomogeneousDensityFunction with constant density ", _density,

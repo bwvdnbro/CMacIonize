@@ -89,7 +89,7 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     std::string filename, double initial_temperature, bool write_stats,
-    unsigned int stats_numbin, double stats_mindist, double stats_maxdist,
+    uint_fast32_t stats_numbin, double stats_mindist, double stats_maxdist,
     std::string stats_filename, bool use_new_algorithm, Log *log)
     : _use_new_algorithm(use_new_algorithm), _octree(nullptr),
       _initial_temperature(initial_temperature), _stats_numbin(stats_numbin),
@@ -121,10 +121,10 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // the third, fourth and fifth block contain a dictionary of particle numbers
   // the code below reads it
   // since we currently don't use these values, we skip these 3 blocks instead
-  std::map< std::string, unsigned int > numbers =
-      read_dict< unsigned int >(file, tagged);
+  std::map< std::string, uint32_t > numbers =
+      read_dict< uint32_t >(file, tagged);
   if (!tagged) {
-    unsigned int numnumbers = numbers.size();
+    size_t numnumbers = numbers.size();
     numbers["nparttot"] = numbers["tag"];
     if (numnumbers == 6) {
       numbers["nblocks"] = 1;
@@ -132,8 +132,8 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
       numbers["nblocks"] = numbers["tag6"];
     }
   }
-  unsigned int numpart = numbers["nparttot"];
-  unsigned int numblock = numbers["nblocks"];
+  uint_fast32_t numpart = numbers["nparttot"];
+  uint_fast32_t numblock = numbers["nblocks"];
   //  skip_block(file);
   //  if (tagged) {
   //    skip_block(file);
@@ -151,7 +151,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // the next three blocks are a dictionary containing the highest unique index
   // in the snapshot. If the first block contains 0, then the next 2 blocks are
   // absent.
-  int number;
+  int32_t number;
   read_block(file, number);
 
   if (number == 1) {
@@ -214,20 +214,20 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   //  all_iunique.reserve(numpart);
 
   // read blocks
-  for (unsigned int iblock = 0; iblock < numblock; ++iblock) {
+  for (uint_fast32_t iblock = 0; iblock < numblock; ++iblock) {
     uint64_t npart;
-    std::vector< unsigned int > nums(8);
+    std::vector< uint32_t > nums(8);
     read_block(file, npart, nums);
 
     uint64_t nptmass;
-    std::vector< unsigned int > numssink(8);
+    std::vector< uint32_t > numssink(8);
     read_block(file, nptmass, numssink);
 
     if (tagged) {
       skip_block(file);
     }
 
-    std::vector< int > isteps(npart);
+    std::vector< int32_t > isteps(npart);
     read_block(file, isteps);
 
     if (nums[0] >= 2) {
@@ -249,7 +249,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
       cmac_error("Wrong tag: \"%s\" (expected \"iphase\")!", tag.c_str());
     }
 
-    std::vector< char > iphase(npart);
+    std::vector< int8_t > iphase(npart);
     read_block(file, iphase);
 
     //    std::vector<uint64_t> iunique(npart);
@@ -296,7 +296,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     read_block(file, h);
 
     // skip velocity, thermal energy and density blocks
-    for (unsigned int i = 0; i < 5; ++i) {
+    for (uint_fast8_t i = 0; i < 5; ++i) {
       if (tagged) {
         skip_block(file);
       }
@@ -304,7 +304,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
 
     // skip igrad related blocks
-    for (unsigned int i = 0; i < nums[6] - 1; ++i) {
+    for (uint_fast32_t i = 0; i < nums[6] - 1; ++i) {
       if (tagged) {
         skip_block(file);
       }
@@ -312,14 +312,14 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
 
     // skip sink particle data
-    for (unsigned int i = 0; i < 10; ++i) {
+    for (uint_fast8_t i = 0; i < 10; ++i) {
       if (tagged) {
         skip_block(file);
       }
       skip_block(file);
     }
 
-    for (unsigned int i = 0; i < npart; ++i) {
+    for (uint_fast32_t i = 0; i < npart; ++i) {
       if (iphase[i] == 0) {
         CoordinateVector<> rawunitsposition(x[i], y[i], z[i]);
         rawunitsbox.get_anchor() =
@@ -409,7 +409,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:write statistics", false),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "DensityFunction:statistics number of bins", 200),
           params.get_physical_value< QUANTITY_LENGTH >(
               "DensityFunction:statistics minimum distance", "1.e-5 m"),
@@ -434,6 +434,7 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
  * finding.
  */
 void SPHNGSnapshotDensityFunction::initialize() {
+
   _octree = new Octree(_positions, _partbox, false);
   _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
 
@@ -441,7 +442,7 @@ void SPHNGSnapshotDensityFunction::initialize() {
     if (_log) {
       _log->write_status("Obtaining particle neighbour statistics...");
     }
-    const unsigned int numbin = _stats_numbin;
+    const uint_fast32_t numbin = _stats_numbin;
     const double mindist = _stats_mindist;
     const double maxdist = _stats_maxdist;
     const double logmindist = std::log10(mindist);
@@ -451,20 +452,20 @@ void SPHNGSnapshotDensityFunction::initialize() {
     double totnumngb = 0.;
     double numsmall = 0.;
     double numlarge = 0.;
-    for (unsigned int i = 0; i < _positions.size(); ++i) {
+    for (size_t i = 0; i < _positions.size(); ++i) {
       if (_log && i % (_positions.size() / 10) == 0) {
         _log->write_info("Got statistics for ", i, " of ", _positions.size(),
                          " particles.");
       }
-      std::vector< unsigned int > ngbs = _octree->get_ngbs(_positions[i]);
-      const unsigned int numngbs = ngbs.size();
+      std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(_positions[i]);
+      const size_t numngbs = ngbs.size();
       totnumngb += numngbs;
-      for (unsigned int j = 0; j < numngbs; ++j) {
-        unsigned int index = ngbs[j];
+      for (size_t j = 0; j < numngbs; ++j) {
+        uint_fast32_t index = ngbs[j];
         if (index != i) {
           double r = (_positions[i] - _positions[index]).norm();
           if (r >= mindist) {
-            unsigned int ibin =
+            uint_fast32_t ibin =
                 (std::log10(r) - logmindist) / logddist * numbin;
             if (ibin < numbin) {
               ngbstats[ibin] += 1.;
@@ -486,7 +487,7 @@ void SPHNGSnapshotDensityFunction::initialize() {
              << "% of the particles was closer together, "
              << (numlarge / totnumngb) * 100. << "% was further apart.\n";
     statfile << "#\n# r\tfraction\n";
-    for (unsigned int i = 0; i < numbin; ++i) {
+    for (uint_fast32_t i = 0; i < numbin; ++i) {
       double r = std::pow(10., i * logddist / numbin + logmindist);
       statfile << r << "\t" << ngbstats[i] / totnumngb << "\n";
     }
@@ -503,7 +504,7 @@ void SPHNGSnapshotDensityFunction::initialize() {
  * @return CoordinateVector<> containing the position of that particle (in m).
  */
 CoordinateVector<>
-SPHNGSnapshotDensityFunction::get_position(unsigned int index) {
+SPHNGSnapshotDensityFunction::get_position(uint_fast32_t index) {
   return _positions[index];
 }
 
@@ -513,7 +514,7 @@ SPHNGSnapshotDensityFunction::get_position(unsigned int index) {
  * @param index Index of a particle.
  * @return Mass of the particle (in kg).
  */
-double SPHNGSnapshotDensityFunction::get_mass(unsigned int index) {
+double SPHNGSnapshotDensityFunction::get_mass(uint_fast32_t index) {
   return _masses[index];
 }
 
@@ -523,7 +524,7 @@ double SPHNGSnapshotDensityFunction::get_mass(unsigned int index) {
  * @param index Index of a particle.
  * @return Smoothing length of the particle (in m).
  */
-double SPHNGSnapshotDensityFunction::get_smoothing_length(unsigned int index) {
+double SPHNGSnapshotDensityFunction::get_smoothing_length(uint_fast32_t index) {
   return _smoothing_lengths[index];
 }
 
@@ -731,6 +732,7 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
 double SPHNGSnapshotDensityFunction::mass_contribution(
     const Cell &cell, const CoordinateVector<> particle, const double h) {
+
   double M, Msum;
 
   Msum = 0.;
@@ -739,7 +741,7 @@ double SPHNGSnapshotDensityFunction::mass_contribution(
   std::vector< Face > face_vector = cell.get_faces();
 
   // Loop over each face of a cell.
-  for (unsigned int i = 0; i < face_vector.size(); i++) {
+  for (size_t i = 0; i < face_vector.size(); i++) {
 
     CoordinateVector<> vert_position1;
     CoordinateVector<> projected_particle;
@@ -901,7 +903,7 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // Find the vertex that is furthest away from the cell midpoint.
     std::vector< Face > face_vector = cell.get_faces();
     double radius = 0.0;
-    for (unsigned int i = 0; i < face_vector.size(); i++) {
+    for (size_t i = 0; i < face_vector.size(); i++) {
       for (Face::Vertices j = face_vector[i].first_vertex();
            j != face_vector[i].last_vertex(); ++j) {
         double distance = j.get_position().norm();
@@ -913,16 +915,16 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // Find the neighbours that are contained inside of a sphere of centre the
     // cell midpoint
     // and radius given by the distance to the furthest vertex.
-    std::vector< unsigned int > ngbs =
+    std::vector< uint_fast32_t > ngbs =
         _octree->get_ngbs_sphere(position, radius);
-    const unsigned int numngbs = ngbs.size();
+    const size_t numngbs = ngbs.size();
 
     double density = 0.;
 
     // Loop over all the neighbouring particles and calculate their mass
     // contributions.
-    for (unsigned int i = 0; i < numngbs; i++) {
-      const unsigned int index = ngbs[i];
+    for (size_t i = 0; i < numngbs; i++) {
+      const uint_fast32_t index = ngbs[i];
       const double h = _smoothing_lengths[index];
       const CoordinateVector<> particle = _positions[index];
       density += mass_contribution(cell, particle, h) * _masses[index];
@@ -944,10 +946,10 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density = 0.;
-    std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
-    const unsigned int numngbs = ngbs.size();
-    for (unsigned int i = 0; i < numngbs; ++i) {
-      const unsigned int index = ngbs[i];
+    std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+    const size_t numngbs = ngbs.size();
+    for (size_t i = 0; i < numngbs; ++i) {
+      const uint_fast32_t index = ngbs[i];
       const double r = (position - _positions[index]).norm();
       const double h = _smoothing_lengths[index];
       const double q = r / h;

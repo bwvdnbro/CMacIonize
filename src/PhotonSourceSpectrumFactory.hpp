@@ -32,6 +32,7 @@
 
 // implementations
 #include "FaucherGiguerePhotonSourceSpectrum.hpp"
+#include "MaskedPhotonSourceSpectrum.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
@@ -41,6 +42,40 @@
  */
 class PhotonSourceSpectrumFactory {
 public:
+  /**
+   * @brief Generate a PhotonSourceSpectrum based on the given type.
+   *
+   * @param type Type of PhotonSourceSpectrum to generate.
+   * @param role Role the PhotonSourceSpectrum will assume. Parameters will be
+   * read from the corresponding parameter file block.
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created PhotonSourceSpectrum instance. Memory
+   * management for the pointer needs to be done by the calling routine.
+   */
+  inline static PhotonSourceSpectrum *generate_from_type(std::string type,
+                                                         std::string role,
+                                                         ParameterFile &params,
+                                                         Log *log = nullptr) {
+
+    if (type == "FaucherGiguere") {
+      return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
+    } else if (type == "Masked") {
+      return new MaskedPhotonSourceSpectrum(role, params, log);
+    } else if (type == "Monochromatic") {
+      return new MonochromaticPhotonSourceSpectrum(role, params, log);
+    } else if (type == "Planck") {
+      return new PlanckPhotonSourceSpectrum(role, params, log);
+    } else if (type == "WMBasic") {
+      return new WMBasicPhotonSourceSpectrum(role, params, log);
+    } else if (type == "None") {
+      return nullptr;
+    } else {
+      cmac_error("Unknown PhotonSourceSpectrum type: \"%s\".", type.c_str());
+      return nullptr;
+    }
+  }
+
   /**
    * @brief Generate a PhotonSourceSpectrum based on the type chosen in the
    * parameter file (corresponding to the given role).
@@ -68,20 +103,7 @@ public:
     if (log) {
       log->write_info("Requested PhotonSourceSpectrum for ", role, ": ", type);
     }
-    if (type == "FaucherGiguere") {
-      return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
-    } else if (type == "Monochromatic") {
-      return new MonochromaticPhotonSourceSpectrum(role, params, log);
-    } else if (type == "Planck") {
-      return new PlanckPhotonSourceSpectrum(role, params, log);
-    } else if (type == "WMBasic") {
-      return new WMBasicPhotonSourceSpectrum(role, params, log);
-    } else if (type == "None") {
-      return nullptr;
-    } else {
-      cmac_error("Unknown PhotonSourceSpectrum type: \"%s\".", type.c_str());
-      return nullptr;
-    }
+    return generate_from_type(type, role, params, log);
   }
 };
 

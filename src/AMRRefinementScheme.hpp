@@ -50,7 +50,7 @@ public:
    * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
+  virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
     return false;
   }
 
@@ -63,7 +63,7 @@ public:
    * @return True if the cells can be replaced by a single cell on a coarser
    * level.
    */
-  virtual bool coarsen(unsigned char level,
+  virtual bool coarsen(uint_fast8_t level,
                        const DensityGrid::iterator *cells) const {
     return false;
   }

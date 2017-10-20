@@ -45,14 +45,14 @@ private:
   IonizationPhotonShootJob *_jobs[MAX_NUM_THREADS];
 
   /*! @brief Number of threads used in the calculation. */
-  const int _worksize;
+  const int_fast32_t _worksize;
 
   /*! @brief Total number of photons to propagate through the grid. */
-  unsigned int _numphoton;
+  uint_fast64_t _numphoton;
 
   /*! @brief Number of photons to shoot during a single
    *  IonizationPhotonShootJob. */
-  const unsigned int _jobsize;
+  const uint_fast64_t _jobsize;
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
@@ -71,15 +71,16 @@ public:
    * @param worksize Number of threads used in the calculation.
    */
   inline IonizationPhotonShootJobMarket(PhotonSource &photon_source,
-                                        int random_seed,
+                                        int_fast32_t random_seed,
                                         DensityGrid &density_grid,
-                                        unsigned int numphoton,
-                                        unsigned int jobsize, int worksize)
+                                        uint_fast64_t numphoton,
+                                        uint_fast64_t jobsize,
+                                        int_fast32_t worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
 
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
-    for (int i = 0; i < _worksize; ++i) {
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
       _jobs[i] = new IonizationPhotonShootJob(photon_source, random_seed + i,
                                               density_grid);
     }
@@ -91,7 +92,7 @@ public:
    * Deletes the internal job array.
    */
   inline ~IonizationPhotonShootJobMarket() {
-    for (int i = 0; i < _worksize; ++i) {
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
       delete _jobs[i];
     }
   }
@@ -102,7 +103,7 @@ public:
    *
    * @param worksize Number of parallel threads that will be used.
    */
-  inline void set_worksize(int worksize) {}
+  inline void set_worksize(int_fast32_t worksize) {}
 
   /**
    * @brief Set the number of photons.
@@ -112,7 +113,7 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(uint_fast64_t numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Update the given weight counters.
@@ -121,7 +122,7 @@ public:
    * @param typecount Total weights per photon type.
    */
   inline void update_counters(double &totweight, double *typecount) {
-    for (int i = 0; i < _worksize; ++i) {
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
       _jobs[i]->update_counters(totweight, typecount);
     }
   }
@@ -133,9 +134,9 @@ public:
    * context).
    * @return IonizationPhotonShootJob.
    */
-  inline IonizationPhotonShootJob *get_job(int thread_id) {
+  inline IonizationPhotonShootJob *get_job(int_fast32_t thread_id) {
 
-    unsigned int jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
+    uint_fast64_t jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
       jobsize = _numphoton;

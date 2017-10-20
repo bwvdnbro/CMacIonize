@@ -45,6 +45,7 @@
 void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
               double rhoR, double uR, double PR, double rhoexp, double uexp,
               double Pexp) {
+
   double rhosol, usol, Psol;
   solver.solve(rhoL, uL, PL, rhoR, uR, PR, rhosol, usol, Psol);
   assert_values_equal_rel(rhosol, rhoexp, 1.e-4);
@@ -75,8 +76,9 @@ void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
 void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
                    double rhoR, double uR, double PR, double t,
                    std::string filename) {
+
   std::ofstream ofile(filename);
-  for (unsigned int i = 0; i < 1000; ++i) {
+  for (uint_fast32_t i = 0; i < 1000; ++i) {
     double x = (i + 0.5) * 0.001 - 0.5;
     double dxdt = x / t;
     double rhosol, usol, Psol;
@@ -100,6 +102,7 @@ void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   RiemannSolver solver(5. / 3.);
 
   // Toro tests

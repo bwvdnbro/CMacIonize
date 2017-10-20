@@ -25,36 +25,13 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "GadgetSnapshotDensityFunction.hpp"
+#include "CubicSplineKernel.hpp"
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "UnitConverter.hpp"
 #include <cfloat>
 #include <fstream>
-
-/**
- * @brief Cubic spline kernel used in Gadget2.
- *
- * @param u Distance in units of the smoothing length.
- * @param h Smoothing length.
- * @return Value of the cubic spline kernel.
- */
-double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
-
-  const double KC1 = 2.546479089470;
-  const double KC2 = 15.278874536822;
-  const double KC5 = 5.092958178941;
-  if (u < 1.) {
-    if (u < 0.5) {
-      return (KC1 + KC2 * (u - 1.) * u * u) / (h * h * h);
-    } else {
-      return KC5 * (1. - u) * (1. - u) * (1. - u) / (h * h * h);
-    }
-  } else {
-    // the cubic spline kernel has compact support
-    return 0.;
-  }
-}
 
 /**
  * @brief Constructor.
@@ -99,8 +76,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     HDF5Tools::HDF5Group runtimepars =
         HDF5Tools::open_group(file, "/RuntimePars");
     // read the PeriodicBoundariesOn flag
-    periodic = HDF5Tools::read_attribute< int >(runtimepars,
-                                                "PeriodicBoundariesOn") != 0;
+    periodic = HDF5Tools::read_attribute< int32_t >(
+                   runtimepars, "PeriodicBoundariesOn") != 0;
     // close the group
     HDF5Tools::close_group(runtimepars);
   } else {
@@ -222,7 +199,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   // unit conversion + treebox data collection
   CoordinateVector<> minpos(DBL_MAX);
   CoordinateVector<> maxpos(-DBL_MAX);
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
+  for (size_t i = 0; i < _positions.size(); ++i) {
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
@@ -348,10 +325,10 @@ operator()(const Cell &cell) const {
   if (_neutral_fractions.size() > 0) {
     neutral_fraction = 0.;
   }
-  const std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
-  const unsigned int numngbs = ngbs.size();
-  for (unsigned int i = 0; i < numngbs; ++i) {
-    const unsigned int index = ngbs[i];
+  const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+  const size_t numngbs = ngbs.size();
+  for (size_t i = 0; i < numngbs; ++i) {
+    const uint_fast32_t index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();
@@ -361,7 +338,7 @@ operator()(const Cell &cell) const {
     const double h = _smoothing_lengths[index];
     const double u = r / h;
     const double m = _masses[index];
-    const double splineval = m * cubic_spline_kernel(u, h);
+    const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
     density += splineval;
     temperature += splineval * _temperatures[index] / _densities[index];
     if (neutral_fraction >= 0.) {
@@ -387,7 +364,7 @@ operator()(const Cell &cell) const {
  */
 double GadgetSnapshotDensityFunction::get_total_hydrogen_number() const {
   double mtot = 0.;
-  for (unsigned int i = 0; i < _masses.size(); ++i) {
+  for (size_t i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];
   }
   return mtot / 1.6737236e-27;

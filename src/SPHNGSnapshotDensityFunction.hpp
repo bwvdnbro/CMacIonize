@@ -32,6 +32,7 @@
 #include "Box.hpp"
 #include "DensityFunction.hpp"
 
+#include <cinttypes>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -69,7 +70,7 @@ private:
   double _initial_temperature;
 
   /*! @brief Number of bins to use when writing particle statistics. */
-  unsigned int _stats_numbin;
+  uint_fast32_t _stats_numbin;
 
   /*! @brief Minimum distance to use for particle statistics. */
   double _stats_mindist;
@@ -97,10 +98,10 @@ private:
    * @param ifile Reference to an open Fortran unformatted binary file.
    */
   inline static void skip_block(std::ifstream &ifile) {
-    unsigned int length1, length2;
-    ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+    uint32_t length1, length2;
+    ifile.read(reinterpret_cast< char * >(&length1), sizeof(uint32_t));
     ifile.seekg(length1, std::ios_base::cur);
-    ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+    ifile.read(reinterpret_cast< char * >(&length2), sizeof(uint32_t));
     if (length1 != length2) {
       cmac_error("Wrong block size!");
     }
@@ -113,7 +114,7 @@ private:
    * @return Size of the template datatype.
    */
   template < typename _datatype_ >
-  inline static unsigned int get_size(_datatype_ &value) {
+  inline static uint_fast32_t get_size(_datatype_ &value) {
     return sizeof(_datatype_);
   }
 
@@ -125,8 +126,8 @@ private:
    * @return Total size of all values in the list.
    */
   template < typename _datatype_, typename... _arguments_ >
-  inline static unsigned int get_size(_datatype_ &value,
-                                      _arguments_ &... args) {
+  inline static uint_fast32_t get_size(_datatype_ &value,
+                                       _arguments_ &... args) {
     return sizeof(_datatype_) + get_size(args...);
   }
 
@@ -170,16 +171,16 @@ private:
    */
   template < typename... _arguments_ >
   inline static void read_block(std::ifstream &ifile, _arguments_ &... args) {
-    unsigned int length1, length2;
-    ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
-    unsigned int blocksize = get_size(args...);
+    uint32_t length1, length2;
+    ifile.read(reinterpret_cast< char * >(&length1), sizeof(uint32_t));
+    uint_fast32_t blocksize = get_size(args...);
     if (length1 != blocksize) {
       cmac_error("Wrong number of variables passed on to read_block()! Block "
-                 "size is %u, but size of variables is %u.",
+                 "size is %u, but size of variables is %" PRIuFAST32 ".",
                  length1, blocksize);
     }
     read_value(ifile, args...);
-    ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+    ifile.read(reinterpret_cast< char * >(&length2), sizeof(uint32_t));
     if (length1 != length2) {
       cmac_error("Wrong block size!");
     }
@@ -206,23 +207,23 @@ private:
   template < typename _datatype_ >
   inline std::map< std::string, _datatype_ > read_dict(std::ifstream &ifile,
                                                        bool tagged = true) {
-    unsigned int size;
+    uint32_t size;
     read_block(ifile, size);
     std::vector< std::string > tags(size);
     if (tagged) {
       read_block(ifile, tags);
     } else {
-      for (unsigned int i = 0; i < size; ++i) {
+      for (uint_fast32_t i = 0; i < size; ++i) {
         tags[i] = "tag";
       }
     }
     std::vector< _datatype_ > vals(size);
     read_block(ifile, vals);
     std::map< std::string, _datatype_ > dict;
-    for (unsigned int i = 0; i < size; ++i) {
+    for (uint_fast32_t i = 0; i < size; ++i) {
       // check for duplicates and add numbers to duplicate tag names
       if (dict.count(tags[i]) == 1) {
-        unsigned int count = 1;
+        uint_fast32_t count = 1;
         std::stringstream newtag;
         newtag << tags[i] << count;
         while (dict.count(newtag.str()) == 1) {
@@ -239,7 +240,7 @@ private:
 
 public:
   SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               bool write_stats, unsigned int stats_numbin,
+                               bool write_stats, uint_fast32_t stats_numbin,
                                double stats_mindist, double stats_maxdist,
                                std::string stats_filename,
                                bool use_new_algorithm = false,
@@ -251,9 +252,9 @@ public:
 
   virtual void initialize();
 
-  CoordinateVector<> get_position(unsigned int index);
-  double get_mass(unsigned int index);
-  double get_smoothing_length(unsigned int index);
+  CoordinateVector<> get_position(uint_fast32_t index);
+  double get_mass(uint_fast32_t index);
+  double get_smoothing_length(uint_fast32_t index);
 
   virtual DensityValues operator()(const Cell &cell) const;
 };
@@ -268,9 +269,10 @@ public:
  * @param value Next (and last) value to read from the file.
  */
 template <>
-inline void SPHNGSnapshotDensityFunction::read_value< std::vector< int > >(
-    std::ifstream &ifile, std::vector< int > &value) {
-  ifile.read(reinterpret_cast< char * >(&value[0]), value.size() * sizeof(int));
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< int32_t > >(
+    std::ifstream &ifile, std::vector< int32_t > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]),
+             value.size() * sizeof(int32_t));
 }
 
 /**
@@ -283,11 +285,10 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< int > >(
  * @param value Next (and last) value to read from the file.
  */
 template <>
-inline void
-SPHNGSnapshotDensityFunction::read_value< std::vector< unsigned int > >(
-    std::ifstream &ifile, std::vector< unsigned int > &value) {
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< uint32_t > >(
+    std::ifstream &ifile, std::vector< uint32_t > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]),
-             value.size() * sizeof(unsigned int));
+             value.size() * sizeof(uint32_t));
 }
 
 /**
@@ -316,9 +317,9 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< uint64_t > >(
  * @param value Next (and last) value to read from the file.
  */
 template <>
-inline void SPHNGSnapshotDensityFunction::read_value< std::vector< char > >(
-    std::ifstream &ifile, std::vector< char > &value) {
-  ifile.read(&value[0], value.size());
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< int8_t > >(
+    std::ifstream &ifile, std::vector< int8_t > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]), value.size());
 }
 
 /**
@@ -347,10 +348,10 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< double > >(
  * @return Size of the template datatype.
  */
 template <>
-inline unsigned int
-SPHNGSnapshotDensityFunction::get_size< std::vector< int > >(
-    std::vector< int > &value) {
-  return value.size() * sizeof(int);
+inline uint_fast32_t
+SPHNGSnapshotDensityFunction::get_size< std::vector< int32_t > >(
+    std::vector< int32_t > &value) {
+  return value.size() * sizeof(int32_t);
 }
 
 /**
@@ -362,10 +363,10 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< int > >(
  * @return Size of the template datatype.
  */
 template <>
-inline unsigned int
-SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
-    std::vector< unsigned int > &value) {
-  return value.size() * sizeof(unsigned int);
+inline uint_fast32_t
+SPHNGSnapshotDensityFunction::get_size< std::vector< uint32_t > >(
+    std::vector< uint32_t > &value) {
+  return value.size() * sizeof(uint32_t);
 }
 
 /**
@@ -378,7 +379,7 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< unsigned int > >(
  * @return Size of the template datatype.
  */
 template <>
-inline unsigned int
+inline uint_fast32_t
 SPHNGSnapshotDensityFunction::get_size< std::vector< uint64_t > >(
     std::vector< uint64_t > &value) {
   return value.size() * sizeof(uint64_t);
@@ -393,10 +394,10 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< uint64_t > >(
  * @return Size of the template datatype.
  */
 template <>
-inline unsigned int
-SPHNGSnapshotDensityFunction::get_size< std::vector< char > >(
-    std::vector< char > &value) {
-  return value.size() * sizeof(char);
+inline uint_fast32_t
+SPHNGSnapshotDensityFunction::get_size< std::vector< int8_t > >(
+    std::vector< int8_t > &value) {
+  return value.size() * sizeof(int8_t);
 }
 
 /**
@@ -409,7 +410,7 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< char > >(
  * @return Size of the template datatype.
  */
 template <>
-inline unsigned int
+inline uint_fast32_t
 SPHNGSnapshotDensityFunction::get_size< std::vector< double > >(
     std::vector< double > &value) {
   return value.size() * sizeof(double);
@@ -427,12 +428,12 @@ SPHNGSnapshotDensityFunction::get_size< std::vector< double > >(
 template <>
 inline void SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
                                                      std::string &value) {
-  unsigned int length1, length2;
-  ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+  uint32_t length1, length2;
+  ifile.read(reinterpret_cast< char * >(&length1), sizeof(uint32_t));
 
   char *cstr = new char[length1 + 1];
   ifile.read(cstr, length1);
-  unsigned int i = length1;
+  uint_fast32_t i = length1;
   // add string termination character
   cstr[i] = '\0';
   // strip trailing whitespace
@@ -445,7 +446,7 @@ inline void SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
   // free the temporary buffer
   delete[] cstr;
 
-  ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+  ifile.read(reinterpret_cast< char * >(&length2), sizeof(uint32_t));
   if (length1 != length2) {
     cmac_error("Wrong block size!");
   }
@@ -468,8 +469,8 @@ template <>
 inline void
 SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
                                          std::vector< std::string > &value) {
-  unsigned int length1, length2;
-  ifile.read(reinterpret_cast< char * >(&length1), sizeof(unsigned int));
+  uint32_t length1, length2;
+  ifile.read(reinterpret_cast< char * >(&length1), sizeof(uint32_t));
 
   if (length1 % 16 != 0) {
     cmac_error("Block has the wrong size to contain a list of tags!");
@@ -482,10 +483,10 @@ SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
   char *cstr = new char[17];
   // add string termination character
   cstr[16] = '\0';
-  for (unsigned int i = 0; i < value.size(); ++i) {
+  for (size_t i = 0; i < value.size(); ++i) {
     ifile.read(cstr, 16);
     // strip trailing whitespace
-    unsigned int j = 16;
+    uint_fast8_t j = 16;
     while (j > 0 && cstr[j - 1] == ' ') {
       --j;
       cstr[j] = '\0';
@@ -496,7 +497,7 @@ SPHNGSnapshotDensityFunction::read_block(std::ifstream &ifile,
   // free the temporary buffer
   delete[] cstr;
 
-  ifile.read(reinterpret_cast< char * >(&length2), sizeof(unsigned int));
+  ifile.read(reinterpret_cast< char * >(&length2), sizeof(uint32_t));
   if (length1 != length2) {
     cmac_error("Wrong block size!");
   }

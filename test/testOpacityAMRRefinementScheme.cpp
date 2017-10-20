@@ -36,14 +36,15 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-  CoordinateVector< int > ncell(8);
+  CoordinateVector< uint_fast32_t > ncell(8);
   HomogeneousDensityFunction density_function(1.);
   density_function.initialize();
   AMRRefinementScheme *scheme = new OpacityAMRRefinementScheme(1., 4);
 
   AMRDensityGrid grid(box, ncell, scheme, 1);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 

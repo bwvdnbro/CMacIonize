@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   CCDImage image(0., 0., 1000, 1000, 0., 0., 1., 1., "PGM", "test_ccdimage",
                  ".");
 
-  for (unsigned int i = 0; i < 1000000; ++i) {
+  for (uint_fast32_t i = 0; i < 1000000; ++i) {
     const double r =
         0.5 * std::sqrt(random_generator.get_uniform_random_double());
     const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
   CCDImage image2(0., 0., 1000, 1000, 0., 0., 1., 1., "PGM", "test_ccdimage",
                   ".");
-  for (unsigned int i = 0; i < 100000; ++i) {
+  for (uint_fast32_t i = 0; i < 100000; ++i) {
     const double r =
         0.2 * std::sqrt(random_generator.get_uniform_random_double());
     const double cost = 2. * random_generator.get_uniform_random_double() - 1.;

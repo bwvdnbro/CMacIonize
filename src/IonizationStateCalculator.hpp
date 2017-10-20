@@ -114,9 +114,9 @@ public:
     }
   };
 
-  void calculate_ionization_state(
-      double totweight, DensityGrid &grid,
-      std::pair< unsigned long, unsigned long > &block) const;
+  void
+  calculate_ionization_state(double totweight, DensityGrid &grid,
+                             std::pair< cellsize_t, cellsize_t > &block) const;
 };
 
 #endif // IONIZATIONSTATECALCULATOR_HPP

@@ -34,7 +34,8 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  CoordinateVector< int > ncell(8);
+
+  CoordinateVector< uint_fast32_t > ncell(8);
   Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
   AsciiFileDensityFunction densityfunction("testgrid.txt", ncell, box, 2000.);
   densityfunction.initialize();

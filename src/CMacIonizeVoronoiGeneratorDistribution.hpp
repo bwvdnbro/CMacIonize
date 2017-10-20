@@ -45,7 +45,7 @@ private:
   std::vector< CoordinateVector<> > _positions;
 
   /*! @brief Index of the next position to return. */
-  unsigned int _next_index;
+  generatornumber_t _next_index;
 
 public:
   CMacIonizeVoronoiGeneratorDistribution(const Box<> &simulation_box,
@@ -53,7 +53,7 @@ public:
 
   virtual ~CMacIonizeVoronoiGeneratorDistribution();
 
-  virtual unsigned int get_number_of_positions() const;
+  virtual generatornumber_t get_number_of_positions() const;
 
   virtual CoordinateVector<> get_position();
 };

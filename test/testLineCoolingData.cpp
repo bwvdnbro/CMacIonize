@@ -43,15 +43,16 @@
  */
 void read_fortran_file(double *cs, double *cse, double *ea, double *en,
                        double *sw) {
+
   std::ifstream file("linecool_fortran_data.txt");
-  for (unsigned int i = 0; i < 10; ++i) {
-    for (unsigned int j = 0; j < 10; ++j) {
+  for (uint_fast8_t i = 0; i < 10; ++i) {
+    for (uint_fast8_t j = 0; j < 10; ++j) {
       file >> cs[10 * i + j];
       file >> cse[10 * i + j];
       file >> ea[10 * i + j];
       file >> en[10 * i + j];
     }
-    for (unsigned int j = 0; j < 5; ++j) {
+    for (uint_fast8_t j = 0; j < 5; ++j) {
       file >> sw[5 * i + j];
     }
   }
@@ -72,8 +73,8 @@ int main(int argc, char **argv) {
                     sw_fortran);
 
   LineCoolingData data;
-  for (unsigned char i = 0; i < 10; ++i) {
-    for (unsigned char j = 0; j < 10; ++j) {
+  for (uint_fast8_t i = 0; i < 10; ++i) {
+    for (uint_fast8_t j = 0; j < 10; ++j) {
       const LineCoolingDataFiveLevelElement element =
           static_cast< LineCoolingDataFiveLevelElement >(i);
       const LineCoolingDataTransition transition =
@@ -85,7 +86,7 @@ int main(int argc, char **argv) {
                               data.get_energy_difference(element, transition),
                               1.e-13);
     }
-    for (unsigned char j = 0; j < 5; ++j) {
+    for (uint_fast8_t j = 0; j < 5; ++j) {
       const LineCoolingDataFiveLevelElement element =
           static_cast< LineCoolingDataFiveLevelElement >(i);
       assert_condition(sw_fortran[5 * i + j] ==
@@ -99,10 +100,10 @@ int main(int argc, char **argv) {
   // since A and B are changed by simq, we store all initial values in Ac and Bc
   // as well (note that B will contain X after simq exits)
   // we then need to check if Ac x B = Bc
-  for (unsigned int loop = 0; loop < 10000; ++loop) {
+  for (uint_fast32_t loop = 0; loop < 10000; ++loop) {
     double A[5][5], Ac[5][5], B[5], Bc[5];
-    for (unsigned int i = 0; i < 5; ++i) {
-      for (unsigned int j = 0; j < 5; ++j) {
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      for (uint_fast8_t j = 0; j < 5; ++j) {
         double a = Utilities::random_double();
         if (i == j) {
           a = 1.;
@@ -118,9 +119,9 @@ int main(int argc, char **argv) {
     assert_condition(LineCoolingData::solve_system_of_linear_equations(A, B) ==
                      0);
 
-    for (unsigned int i = 0; i < 5; ++i) {
+    for (uint_fast8_t i = 0; i < 5; ++i) {
       double a = 0.;
-      for (unsigned int j = 0; j < 5; ++j) {
+      for (uint_fast8_t j = 0; j < 5; ++j) {
         a += Ac[i][j] * B[j];
       }
       assert_values_equal_tol(a, Bc[i], 1.e-11);
@@ -137,7 +138,7 @@ int main(int argc, char **argv) {
       double T, ne, abundances[13], coolf, cool;
 
       lstream >> T >> ne;
-      for (unsigned int i = 0; i < 13; ++i) {
+      for (uint_fast8_t i = 0; i < 13; ++i) {
         lstream >> abundances[i];
       }
       lstream >> coolf;
@@ -170,7 +171,7 @@ int main(int argc, char **argv) {
           coii7325 = 0., csiv10 = 0.;
 
       lstream >> T >> ne;
-      for (unsigned int i = 0; i < 13; ++i) {
+      for (uint_fast8_t i = 0; i < 13; ++i) {
         lstream >> abundances[i];
       }
       lstream >> c6300f >> c9405f >> c6312f >> c33muf >> c19muf >> c3729f >>

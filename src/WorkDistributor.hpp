@@ -33,6 +33,7 @@
 #include "Configuration.hpp"
 #include "Error.hpp"
 #include "Worker.hpp"
+#include <cinttypes>
 #include <sstream>
 #include <string>
 
@@ -47,7 +48,7 @@
 template < typename _JobMarket_, typename _Job_ > class WorkDistributor {
 private:
   /*! @brief Number of workers that can be run in parallel. */
-  int _worksize;
+  int_fast32_t _worksize;
 
 public:
   /**
@@ -57,7 +58,7 @@ public:
    * the system value of OMP_NUM_THREADS is used. If OpenMP is not supported,
    * a single thread is used.
    */
-  inline WorkDistributor(int worksize = -1) {
+  inline WorkDistributor(int_fast32_t worksize = -1) {
 #ifdef HAVE_OPENMP
 #pragma omp parallel
     {
@@ -71,7 +72,8 @@ public:
     }
     if (_worksize > MAX_NUM_THREADS) {
       cmac_error("More shared memory threads requested than allowed by the "
-                 "configuration file (%i requested, MAX_NUM_THREADS = %i)!",
+                 "configuration file (%" PRIiFAST32
+                 " requested, MAX_NUM_THREADS = %i)!",
                  _worksize, MAX_NUM_THREADS);
     }
 #else
@@ -85,7 +87,7 @@ public:
    *
    * @return Number of workers used.
    */
-  inline int get_worksize() const { return _worksize; }
+  inline int_fast32_t get_worksize() const { return _worksize; }
 
   /**
    * @brief Get a std::string with the number of threads used.
@@ -107,11 +109,12 @@ public:
    * @param jobs JobMarket to execute.
    */
   inline void do_in_parallel(_JobMarket_ &jobs) const {
+
     jobs.set_worksize(_worksize);
     if (_worksize > 1) {
 #ifdef HAVE_OPENMP
 #pragma omp parallel for default(shared)
-      for (int i = 0; i < _worksize; ++i) {
+      for (int_fast32_t i = 0; i < _worksize; ++i) {
         const Worker< _JobMarket_, _Job_ > worker(i);
         worker.do_work(jobs);
       }

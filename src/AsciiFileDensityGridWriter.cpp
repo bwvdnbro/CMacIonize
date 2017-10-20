@@ -69,8 +69,9 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
  * @param time Simulation time (in s).
  */
 void AsciiFileDensityGridWriter::write(DensityGrid &grid,
-                                       unsigned int iteration,
+                                       uint_fast32_t iteration,
                                        ParameterFile &params, double time) {
+
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
   std::ofstream file(filename);

@@ -40,7 +40,7 @@ private:
   std::vector< PhotonBatch > _batches;
 
   /*! @brief Maximum size of a single PhotonBatch. */
-  unsigned int _max_size;
+  uint_least32_t _max_size;
 
   /*! @brief Lock used to ensure thread safe access to the internal PhotonBatch
    *  list. */
@@ -52,7 +52,7 @@ public:
    *
    * @param max_size Maximum size of a single PhotonBatch.
    */
-  PhotonBucket(unsigned int max_size) : _max_size(max_size) {}
+  PhotonBucket(uint_fast32_t max_size) : _max_size(max_size) {}
 
   /**
    * @brief Add the given Photon to the bucket.

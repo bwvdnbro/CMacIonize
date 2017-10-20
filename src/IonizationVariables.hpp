@@ -103,18 +103,18 @@ public:
    * @brief (Empty) constructor.
    */
   inline IonizationVariables() : _number_density(0.), _temperature(0.) {
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
     }
-    for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
       _reemission_probabilities[i] = 0.;
     }
-    for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
       _heating[i] = 0.;
     }
 #ifdef DO_OUTPUT_COOLING
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cooling[i] = 0.;
     }
 #endif

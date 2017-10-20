@@ -49,7 +49,7 @@ private:
 
   /*! @brief Number of Lloyd iterations to apply to the grid after it has been
    *  constructed for the first time. */
-  unsigned char _num_lloyd;
+  uint_fast8_t _num_lloyd;
 
   /*! @brief Generator positions (in m). */
   std::vector< CoordinateVector<> > _generator_positions;
@@ -68,7 +68,7 @@ public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
       const Box<> &simulation_box, std::string grid_type = "Old",
-      unsigned char num_lloyd = 0,
+      uint_fast8_t num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
       bool hydro = false, Log *log = nullptr);
 
@@ -77,7 +77,7 @@ public:
 
   virtual ~VoronoiDensityGrid();
 
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block,
+  virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
                           DensityFunction &density_function);
   virtual void evolve(double timestep);
   virtual void set_grid_velocity(double gamma);
@@ -86,14 +86,15 @@ public:
   get_interface_velocity(const iterator left, const iterator right,
                          const CoordinateVector<> interface_midpoint) const;
 
-  virtual unsigned int get_number_of_cells() const;
-  virtual unsigned long get_cell_index(CoordinateVector<> position) const;
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const;
-  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                                   CoordinateVector<>, double > >
-  get_neighbours(unsigned long index);
-  virtual std::vector< Face > get_faces(unsigned long index) const;
-  virtual double get_cell_volume(unsigned long index) const;
+  virtual cellsize_t get_number_of_cells() const;
+  virtual cellsize_t get_cell_index(CoordinateVector<> position) const;
+  virtual CoordinateVector<> get_cell_midpoint(cellsize_t index) const;
+  virtual std::vector<
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                  CoordinateVector<> > >
+  get_neighbours(cellsize_t index);
+  virtual std::vector< Face > get_faces(cellsize_t index) const;
+  virtual double get_cell_volume(cellsize_t index) const;
   virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
   virtual double get_total_emission(CoordinateVector<> origin,

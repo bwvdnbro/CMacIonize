@@ -35,31 +35,33 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   const double kpc = 3.086e19;
   const CoordinateVector<> box_anchor(-12. * kpc);
   const CoordinateVector<> box_sides(24. * kpc);
   const Box<> box(box_anchor, box_sides);
-  const CoordinateVector< unsigned int > ncell(64);
+  const CoordinateVector< uint_fast32_t > ncell(64);
   SpiralGalaxyContinuousPhotonSource source(box, 5. * kpc, 0.6 * kpc, 0.2);
   RandomGenerator random_generator(42);
 
   CCDImage image(0.5 * M_PI, 0., 200, 200, -12. * kpc, -12. * kpc, 24. * kpc,
                  24. * kpc, "BinaryArray",
                  "test_spiralgalaxycontinuousphotonsource_image", ".");
-  const unsigned int ntot = ncell.x() * ncell.y() * ncell.z();
+  const uint_fast32_t ntot = ncell.x() * ncell.y() * ncell.z();
   std::vector< double > dens(ntot, 0.);
-  for (unsigned int i = 0; i < 500000; ++i) {
+  for (uint_fast32_t i = 0; i < 500000; ++i) {
     auto photon = source.get_random_incoming_direction(random_generator);
     const CoordinateVector<> p = photon.first;
     image.add_photon(p, 1., 0., 0.);
-    const unsigned int ix =
+    const uint_fast32_t ix =
         ncell.x() * (p.x() - box_anchor.x()) / box_sides.x();
-    const unsigned int iy =
+    const uint_fast32_t iy =
         ncell.y() * (p.y() - box_anchor.y()) / box_sides.y();
-    const unsigned int iz =
+    const uint_fast32_t iz =
         ncell.z() * (p.z() - box_anchor.z()) / box_sides.z();
 
-    const unsigned int index = ix * ncell.y() * ncell.z() + iy * ncell.z() + iz;
+    const uint_fast32_t index =
+        ix * ncell.y() * ncell.z() + iy * ncell.z() + iz;
     dens[index] += 1.;
   }
 
@@ -67,10 +69,10 @@ int main(int argc, char **argv) {
 
   std::ofstream ofile("test_spiralgalaxycontinuousphotonsource.txt");
   ofile << "#x (m)\ty (m)\tz (m)\tnumber of photons\n";
-  for (unsigned int i = 0; i < ntot; ++i) {
-    const unsigned int ix = i / ncell.y() / ncell.z();
-    const unsigned int iy = (i - ix * ncell.y() * ncell.z()) / ncell.z();
-    const unsigned int iz = i - ix * ncell.y() * ncell.z() - iy * ncell.z();
+  for (uint_fast32_t i = 0; i < ntot; ++i) {
+    const uint_fast32_t ix = i / ncell.y() / ncell.z();
+    const uint_fast32_t iy = (i - ix * ncell.y() * ncell.z()) / ncell.z();
+    const uint_fast32_t iz = i - ix * ncell.y() * ncell.z() - iy * ncell.z();
     const CoordinateVector<> p(
         box_anchor.x() + (ix + 0.5) * box_sides.x() / ncell.x(),
         box_anchor.y() + (iy + 0.5) * box_sides.y() / ncell.y(),

@@ -77,7 +77,7 @@ public:
    * @param depth Relative depth of the current node.
    * @return Maximal depth among all leaves of this node.
    */
-  inline unsigned int get_max_depth(unsigned int depth = 0) const {
+  inline unsigned int get_max_depth(uint_fast32_t depth = 0) const {
     if (_left_child == nullptr) {
       cmac_assert(_right_child == nullptr);
       return depth;
@@ -98,6 +98,7 @@ public:
    * @param value Value to store in the leaves of the tree.
    */
   inline void add_point(_keytype_ key, _valuetype_ value) {
+
     if (key < _key) {
       if (_left_child == nullptr) {
         cmac_assert(_right_child == nullptr);
@@ -223,6 +224,7 @@ public:
    */
   inline void get_range(_keytype_ key_low, _keytype_ key_high,
                         std::vector< _valuetype_ > &range) const {
+
     if (_left_child == nullptr) {
       cmac_assert(_right_child == nullptr);
       if (_key >= key_low && _key <= key_high) {
@@ -303,7 +305,7 @@ public:
    *
    * @return Maximal depth of the tree.
    */
-  inline unsigned int get_max_depth() const {
+  inline uint_fast32_t get_max_depth() const {
     if (_root != nullptr) {
       return _root->get_max_depth();
     } else {

@@ -34,6 +34,7 @@
 #include "RandomGenerator.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 
+#include <cinttypes>
 #include <fstream>
 
 /**
@@ -43,10 +44,10 @@
 class SPHVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Number of generator positions to generate. */
-  const unsigned int _number_of_positions;
+  const generatornumber_t _number_of_positions;
 
   /*! @brief Number of positions already generated. */
-  unsigned int _current_number;
+  generatornumber_t _current_number;
 
   /*! @brief Box containing the generators (in m). */
   const Box<> _box;
@@ -68,7 +69,7 @@ public:
    * @param log Log to write logging info to.
    */
   SPHVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                  unsigned int number_of_positions,
+                                  generatornumber_t number_of_positions,
                                   std::string filename, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
         _box(simulation_box), _filename(filename) {
@@ -80,7 +81,7 @@ public:
       cmac_error("Could not open file \"%s\"!", filename.c_str());
     }
 
-    unsigned int index_i = 0;
+    uint_fast32_t index_i = 0;
     std::string line;
     while (getline(file, line)) {
       if (index_i == number_of_positions) {
@@ -102,9 +103,9 @@ public:
     }
 
     if (index_i < number_of_positions) {
-      cmac_error(
-          "The file %s has fewer generator positions (%d) than needed (%d).\n",
-          filename.c_str(), index_i, number_of_positions);
+      cmac_error("The file %s has fewer generator positions (%" PRIuFAST32
+                 ") than needed (%" PRIuFAST32 ").\n",
+                 filename.c_str(), index_i, number_of_positions);
     }
 
     file.close();
@@ -130,7 +131,7 @@ public:
                                   ParameterFile &params, Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< unsigned int >(
+            params.get_value< generatornumber_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 1000),
             params.get_value< std::string >(
@@ -142,7 +143,7 @@ public:
    *
    * @return Number of generated positions.
    */
-  virtual unsigned int get_number_of_positions() const {
+  virtual generatornumber_t get_number_of_positions() const {
     return _number_of_positions;
   }
 

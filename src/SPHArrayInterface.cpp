@@ -17,37 +17,16 @@
  ******************************************************************************/
 
 /**
- * @file SPHArrayDensityFunction.cpp
+ * @file SPHArrayInterface.cpp
  *
- * @brief SPHArrayDensityFunction implementation.
+ * @brief SPHArrayInterface implementation.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "SPHArrayDensityFunction.hpp"
+#include "SPHArrayInterface.hpp"
+#include "CubicSplineKernel.hpp"
+#include "DensityGrid.hpp"
 #include <cfloat>
-
-/**
- * @brief Cubic spline kernel used in Gadget2.
- *
- * @param u Distance in units of the smoothing length.
- * @param h Smoothing length.
- * @return Value of the cubic spline kernel.
- */
-double SPHArrayDensityFunction::cubic_spline_kernel(double u, double h) {
-  const double KC1 = 2.546479089470;
-  const double KC2 = 15.278874536822;
-  const double KC5 = 5.092958178941;
-  if (u < 1.) {
-    if (u < 0.5) {
-      return (KC1 + KC2 * (u - 1.) * u * u) / (h * h * h);
-    } else {
-      return KC5 * (1. - u) * (1. - u) * (1. - u) / (h * h * h);
-    }
-  } else {
-    // the cubic spline kernel has compact support
-    return 0.;
-  }
-}
 
 /**
  * @brief Constructor.
@@ -57,10 +36,11 @@ double SPHArrayDensityFunction::cubic_spline_kernel(double u, double h) {
  * @param unit_length_in_SI Length unit used in the input arrays (in m).
  * @param unit_mass_in_SI Mass unit used in the input arrays (in kg).
  */
-SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
-                                                 const double unit_mass_in_SI)
-    : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _is_periodic(false), _octree(nullptr) {}
+SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
+                                     const double unit_mass_in_SI)
+    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
+      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(false), _octree(nullptr) {
+}
 
 /**
  * @brief Constructor.
@@ -74,12 +54,12 @@ SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  */
-SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
-                                                 const double unit_mass_in_SI,
-                                                 const double *box_anchor,
-                                                 const double *box_sides)
-    : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _is_periodic(true), _octree(nullptr) {
+SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
+                                     const double unit_mass_in_SI,
+                                     const double *box_anchor,
+                                     const double *box_sides)
+    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
+      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -101,12 +81,12 @@ SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  */
-SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
-                                                 const double unit_mass_in_SI,
-                                                 const float *box_anchor,
-                                                 const float *box_sides)
-    : _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
-      _is_periodic(true), _octree(nullptr) {
+SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
+                                     const double unit_mass_in_SI,
+                                     const float *box_anchor,
+                                     const float *box_sides)
+    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
+      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -121,7 +101,7 @@ SPHArrayDensityFunction::SPHArrayDensityFunction(const double unit_length_in_SI,
  *
  * Frees up memory used by the internal Octree.
  */
-SPHArrayDensityFunction::~SPHArrayDensityFunction() { delete _octree; }
+SPHArrayInterface::~SPHArrayInterface() { delete _octree; }
 
 /**
  * @brief Reset the internal data values.
@@ -133,15 +113,16 @@ SPHArrayDensityFunction::~SPHArrayDensityFunction() { delete _octree; }
  * @param m Array containing masses (in the given mass unit).
  * @param npart Number of elements in each of the arrays.
  */
-void SPHArrayDensityFunction::reset(const double *x, const double *y,
-                                    const double *z, const double *h,
-                                    const double *m, const size_t npart) {
+void SPHArrayInterface::reset(const double *x, const double *y, const double *z,
+                              const double *h, const double *m,
+                              const size_t npart) {
 
   delete _octree;
 
   _positions.resize(npart);
   _smoothing_lengths.resize(npart, 0.);
   _masses.resize(npart, 0.);
+  _neutral_fractions.resize(npart, 0.);
   for (size_t i = 0; i < npart; ++i) {
     _positions[i][0] = x[i] * _unit_length_in_SI;
     _positions[i][1] = y[i] * _unit_length_in_SI;
@@ -176,15 +157,16 @@ void SPHArrayDensityFunction::reset(const double *x, const double *y,
  * @param m Array containing masses (in the given mass unit).
  * @param npart Number of elements in each of the arrays.
  */
-void SPHArrayDensityFunction::reset(const double *x, const double *y,
-                                    const double *z, const float *h,
-                                    const float *m, const size_t npart) {
+void SPHArrayInterface::reset(const double *x, const double *y, const double *z,
+                              const float *h, const float *m,
+                              const size_t npart) {
 
   delete _octree;
 
   _positions.resize(npart);
   _smoothing_lengths.resize(npart, 0.);
   _masses.resize(npart, 0.);
+  _neutral_fractions.resize(npart, 0.);
   for (size_t i = 0; i < npart; ++i) {
     _positions[i][0] = x[i] * _unit_length_in_SI;
     _positions[i][1] = y[i] * _unit_length_in_SI;
@@ -219,15 +201,16 @@ void SPHArrayDensityFunction::reset(const double *x, const double *y,
  * @param m Array containing masses (in the given mass unit).
  * @param npart Number of elements in each of the arrays.
  */
-void SPHArrayDensityFunction::reset(const float *x, const float *y,
-                                    const float *z, const float *h,
-                                    const float *m, const size_t npart) {
+void SPHArrayInterface::reset(const float *x, const float *y, const float *z,
+                              const float *h, const float *m,
+                              const size_t npart) {
 
   delete _octree;
 
   _positions.resize(npart);
   _smoothing_lengths.resize(npart, 0.);
   _masses.resize(npart, 0.);
+  _neutral_fractions.resize(npart, 0.);
   for (size_t i = 0; i < npart; ++i) {
     _positions[i][0] = x[i] * _unit_length_in_SI;
     _positions[i][1] = y[i] * _unit_length_in_SI;
@@ -255,12 +238,12 @@ void SPHArrayDensityFunction::reset(const float *x, const float *y,
  *
  * @return Pointer to the internal Octree.
  */
-Octree *SPHArrayDensityFunction::get_octree() { return _octree; }
+Octree *SPHArrayInterface::get_octree() { return _octree; }
 
 /**
  * @brief Initialize the internal Octree.
  */
-void SPHArrayDensityFunction::initialize() {
+void SPHArrayInterface::initialize() {
   _octree = new Octree(_positions, _box, _is_periodic);
   _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
 }
@@ -271,17 +254,17 @@ void SPHArrayDensityFunction::initialize() {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
+DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
 
   DensityValues values;
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
 
   double density = 0.;
-  const std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
-  const unsigned int numngbs = ngbs.size();
-  for (unsigned int i = 0; i < numngbs; ++i) {
-    const unsigned int index = ngbs[i];
+  const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+  const size_t numngbs = ngbs.size();
+  for (size_t i = 0; i < numngbs; ++i) {
+    const size_t index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();
@@ -291,7 +274,7 @@ DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
     const double h = _smoothing_lengths[index];
     const double u = r / h;
     const double m = _masses[index];
-    const double splineval = m * cubic_spline_kernel(u, h);
+    const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
     density += splineval;
   }
 
@@ -300,4 +283,49 @@ DensityValues SPHArrayDensityFunction::operator()(const Cell &cell) const {
   values.set_ionic_fraction(ION_H_n, 1.e-6);
   values.set_ionic_fraction(ION_He_n, 1.e-6);
   return values;
+}
+
+/**
+ * @brief Fill the given array with the remapped neutral fractions.
+ *
+ * Double precision version.
+ *
+ * @param nH Array to fill.
+ */
+void SPHArrayInterface::fill_array(double *nH) {
+  for (size_t i = 0; i < _neutral_fractions.size(); ++i) {
+    nH[i] = _neutral_fractions[i];
+  }
+}
+
+/**
+ * @brief Fill the given array with the remapped neutral fractions.
+ *
+ * Single precision version.
+ *
+ * @param nH Array to fill.
+ */
+void SPHArrayInterface::fill_array(float *nH) {
+  for (size_t i = 0; i < _neutral_fractions.size(); ++i) {
+    nH[i] = _neutral_fractions[i];
+  }
+}
+
+/**
+ * @brief Map the state of the grid back to the SPH particle distribution.
+ *
+ * @param grid DensityGrid to write out.
+ * @param iteration Iteration number to use in the snapshot file name(s).
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
+ * @param time Simulation time (in s).
+ */
+void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
+                              ParameterFile &params, double time) {
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    const CoordinateVector<> p = it.get_cell_midpoint();
+    uint_fast32_t closest = _octree->get_closest_ngb(p);
+    _neutral_fractions[closest] =
+        it.get_ionization_variables().get_ionic_fraction(ION_H_n);
+  }
 }

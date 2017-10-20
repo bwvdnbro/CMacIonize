@@ -42,6 +42,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // write file
   {
     // we pick a box with origin not 0, just to make sure coordinates are
@@ -49,11 +50,11 @@ int main(int argc, char **argv) {
     CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
     Box<> box(origin, side);
-    CoordinateVector< int > ncell(8);
+    CoordinateVector< int_fast32_t > ncell(8);
     HomogeneousDensityFunction density_function;
     density_function.initialize();
     CartesianDensityGrid grid(box, ncell);
-    std::pair< unsigned long, unsigned long > block =
+    std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
@@ -76,11 +77,12 @@ int main(int argc, char **argv) {
     assert_condition(boxsize.y() == 1.);
     assert_condition(boxsize.z() == 1.);
 
-    int dimension = HDF5Tools::read_attribute< int >(group, "Dimension");
+    int32_t dimension =
+        HDF5Tools::read_attribute< int32_t >(group, "Dimension");
     assert_condition(dimension == 3);
 
-    std::vector< unsigned int > flag_entropy =
-        HDF5Tools::read_attribute< std::vector< unsigned int > >(
+    std::vector< uint32_t > flag_entropy =
+        HDF5Tools::read_attribute< std::vector< uint32_t > >(
             group, "Flag_Entropy_ICs");
     assert_condition(flag_entropy[0] == 0);
     assert_condition(flag_entropy[1] == 0);
@@ -98,8 +100,8 @@ int main(int argc, char **argv) {
     assert_condition(masstable[4] == 0);
     assert_condition(masstable[5] == 0);
 
-    std::vector< unsigned int > numpart_file =
-        HDF5Tools::read_attribute< std::vector< unsigned int > >(
+    std::vector< uint32_t > numpart_file =
+        HDF5Tools::read_attribute< std::vector< uint32_t > >(
             group, "NumPart_ThisFile");
     assert_condition(numpart_file[0] == 512);
     assert_condition(numpart_file[1] == 0);
@@ -108,9 +110,9 @@ int main(int argc, char **argv) {
     assert_condition(numpart_file[4] == 0);
     assert_condition(numpart_file[5] == 0);
 
-    std::vector< unsigned int > numpart_tot =
-        HDF5Tools::read_attribute< std::vector< unsigned int > >(
-            group, "NumPart_Total");
+    std::vector< uint32_t > numpart_tot =
+        HDF5Tools::read_attribute< std::vector< uint32_t > >(group,
+                                                             "NumPart_Total");
     assert_condition(numpart_tot[0] == 512);
     assert_condition(numpart_tot[1] == 0);
     assert_condition(numpart_tot[2] == 0);
@@ -118,8 +120,8 @@ int main(int argc, char **argv) {
     assert_condition(numpart_tot[4] == 0);
     assert_condition(numpart_tot[5] == 0);
 
-    std::vector< unsigned int > numpart_high =
-        HDF5Tools::read_attribute< std::vector< unsigned int > >(
+    std::vector< uint32_t > numpart_high =
+        HDF5Tools::read_attribute< std::vector< uint32_t > >(
             group, "NumPart_Total_HighWord");
     assert_condition(numpart_high[0] == 0);
     assert_condition(numpart_high[1] == 0);
@@ -165,10 +167,10 @@ int main(int argc, char **argv) {
         HDF5Tools::read_dataset< double >(group, "NumberDensity");
     std::vector< double > temperature =
         HDF5Tools::read_dataset< double >(group, "Temperature");
-    unsigned int index = 0;
-    for (unsigned int i = 0; i < 8; ++i) {
-      for (unsigned int j = 0; j < 8; ++j) {
-        for (unsigned int k = 0; k < 8; ++k) {
+    uint_fast32_t index = 0;
+    for (uint_fast8_t i = 0; i < 8; ++i) {
+      for (uint_fast8_t j = 0; j < 8; ++j) {
+        for (uint_fast8_t k = 0; k < 8; ++k) {
           // the cells happen to be outputted in this way, with the x index
           // being the inner loop index...
           assert_condition(coords[index].x() == (i + 0.5) * 0.125);

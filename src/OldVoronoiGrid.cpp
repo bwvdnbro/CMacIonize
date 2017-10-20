@@ -28,6 +28,7 @@
 #include "OldVoronoiCell.hpp"
 #include "PointLocations.hpp"
 #include "WorkDistributor.hpp"
+#include <cinttypes>
 
 /*! @brief If defined, outputs the grid generators to a file with the given
  *  name. */
@@ -54,7 +55,7 @@
 #define oldvoronoigrid_output_generators()                                     \
   std::ofstream ofile(OLDVORONOIGRID_OUTPUT_GENERATORS);                       \
   ofile << std::setprecision(20);                                              \
-  for (unsigned int i = 0; i < _generator_positions.size(); ++i) {             \
+  for (size_t i = 0; i < _generator_positions.size(); ++i) {                   \
     ofile << _generator_positions[i].x() << "\t"                               \
           << _generator_positions[i].y() << "\t"                               \
           << _generator_positions[i].z() << "\n";                              \
@@ -71,7 +72,7 @@
 #ifdef OLDVORONOIGRID_REMAP
 #define oldvoronoigrid_remap()                                                 \
   double length_factor = 0.;                                                   \
-  for (unsigned int i = 0; i < 3; ++i) {                                       \
+  for (uint_fast8_t i = 0; i < 3; ++i) {                                       \
     length_factor = std::max(length_factor, _box.get_sides()[i]);              \
   }                                                                            \
   _epsilon = OLDVORONOI_TOLERANCE;                                             \
@@ -90,7 +91,7 @@
 #ifdef OLDVORONOIGRID_CHECK_TOTAL_VOLUME
 #define oldvoronoigrid_check_volume()                                          \
   double total_volume = 0.;                                                    \
-  for (unsigned int i = 0; i < _cells.size(); ++i) {                           \
+  for (size_t i = 0; i < _cells.size(); ++i) {                                 \
     total_volume += _cells[i]->get_volume();                                   \
   }                                                                            \
   cmac_assert_message(std::abs(total_volume - _internal_box.get_volume()) <    \
@@ -121,11 +122,11 @@ OldVoronoiGrid::OldVoronoiGrid(
     cmac_error("Periodic Voronoi grids are not (yet) supported!");
   }
 
-  const unsigned int numcell = positions.size();
+  const size_t numcell = positions.size();
 
   _cells.reserve(numcell);
 
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (uint_fast8_t i = 0; i < 3; ++i) {
     if (_periodic[i]) {
       _box.get_anchor()[i] -= 0.5 * _box.get_sides()[i];
       _box.get_sides()[i] *= 2.;
@@ -139,7 +140,7 @@ OldVoronoiGrid::OldVoronoiGrid(
 
   oldvoronoigrid_remap();
 
-  for (unsigned int i = 0; i < numcell; ++i) {
+  for (size_t i = 0; i < numcell; ++i) {
     add_cell(positions[i]);
   }
 
@@ -152,7 +153,7 @@ OldVoronoiGrid::OldVoronoiGrid(
  * Free cell memory.
  */
 OldVoronoiGrid::~OldVoronoiGrid() {
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
+  for (size_t i = 0; i < _cells.size(); ++i) {
     delete _cells[i];
   }
   delete _pointlocations;
@@ -166,13 +167,14 @@ OldVoronoiGrid::~OldVoronoiGrid() {
  * @return Index of the new cell in the internal list. This index can later be
  * used to query cell properties.
  */
-unsigned int OldVoronoiGrid::add_cell(CoordinateVector<> generator_position) {
+uint_fast32_t OldVoronoiGrid::add_cell(CoordinateVector<> generator_position) {
+
   if (_cells.size() + 1 == OLDVORONOI_MAX_INDEX) {
     cmac_error("Too many Voronoi cells!");
   }
 
   // convert the generator position to internal units
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (uint_fast8_t i = 0; i < 3; ++i) {
     generator_position[i] = _internal_box.get_anchor()[i] +
                             (generator_position[i] - _box.get_anchor()[i]) *
                                 _internal_box.get_sides()[i] /
@@ -189,11 +191,12 @@ unsigned int OldVoronoiGrid::add_cell(CoordinateVector<> generator_position) {
  *
  * @param index Index of the cell that should be constructed.
  */
-void OldVoronoiGrid::compute_cell(unsigned int index) {
+void OldVoronoiGrid::compute_cell(uint_fast32_t index) {
+
   auto it = _pointlocations->get_neighbours(index);
   auto ngbs = it.get_neighbours();
   for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-    const unsigned int j = *ngbit;
+    const uint_fast32_t j = *ngbit;
     if (j != index) {
       _cells[index]->intersect(
           _generator_positions[j] - _generator_positions[index], j, _epsilon);
@@ -203,7 +206,7 @@ void OldVoronoiGrid::compute_cell(unsigned int index) {
          it.get_max_radius2() < 4. * _cells[index]->get_max_radius_squared()) {
     ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      const unsigned int j = *ngbit;
+      const uint_fast32_t j = *ngbit;
       _cells[index]->intersect(
           _generator_positions[j] - _generator_positions[index], j, _epsilon);
     }
@@ -217,7 +220,8 @@ void OldVoronoiGrid::compute_cell(unsigned int index) {
  *
  * @param worksize Number of parallel threads to use.
  */
-void OldVoronoiGrid::compute_grid(int worksize) {
+void OldVoronoiGrid::compute_grid(int_fast32_t worksize) {
+
   oldvoronoigrid_output_generators();
 
   WorkDistributor< OldVoronoiGridConstructionJobMarket,
@@ -235,7 +239,7 @@ void OldVoronoiGrid::compute_grid(int worksize) {
  * @param index Index of a cell in the grid.
  * @return Volume of that cell (in m^3).
  */
-double OldVoronoiGrid::get_volume(unsigned int index) const {
+double OldVoronoiGrid::get_volume(uint_fast32_t index) const {
   return _volume_factor * _cells[index]->get_volume();
 }
 
@@ -245,11 +249,11 @@ double OldVoronoiGrid::get_volume(unsigned int index) const {
  * @param index Index of a cell in the grid.
  * @return Centroid of that cell (in m).
  */
-CoordinateVector<> OldVoronoiGrid::get_centroid(unsigned int index) const {
+CoordinateVector<> OldVoronoiGrid::get_centroid(uint_fast32_t index) const {
   //  return _cells[index]->get_centroid();
   CoordinateVector<> centroid = _cells[index]->get_centroid();
   // unit conversion
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (uint_fast8_t i = 0; i < 3; ++i) {
     centroid[i] = _box.get_anchor()[i] +
                   (centroid[i] - _internal_box.get_anchor()[i]) *
                       _box.get_sides()[i] / _internal_box.get_sides()[i];
@@ -264,7 +268,8 @@ CoordinateVector<> OldVoronoiGrid::get_centroid(unsigned int index) const {
  * @return Normal vector to the given wall.
  */
 CoordinateVector<>
-OldVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
+OldVoronoiGrid::get_wall_normal(int_fast32_t wallindex) const {
+
   cmac_assert(wallindex >= OLDVORONOI_MAX_INDEX);
 
   switch (wallindex) {
@@ -282,7 +287,7 @@ OldVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
     return CoordinateVector<>(0., 0., 1.);
   }
 
-  cmac_error("Not a valid wall index: %u!", wallindex);
+  cmac_error("Not a valid wall index: %" PRIiFAST32 "!", wallindex);
   return CoordinateVector<>();
 }
 
@@ -294,13 +299,15 @@ OldVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-std::vector< VoronoiFace > OldVoronoiGrid::get_faces(unsigned int index) const {
+std::vector< VoronoiFace >
+OldVoronoiGrid::get_faces(uint_fast32_t index) const {
+
   std::vector< VoronoiFace > faces = _cells[index]->get_faces();
   // unit conversion
-  for (unsigned int i = 0; i < faces.size(); ++i) {
+  for (size_t i = 0; i < faces.size(); ++i) {
     faces[i].set_surface_area(_area_factor * faces[i].get_surface_area());
     CoordinateVector<> midpoint = faces[i].get_midpoint();
-    for (unsigned int j = 0; j < 3; ++j) {
+    for (uint_fast8_t j = 0; j < 3; ++j) {
       midpoint[j] = _box.get_anchor()[j] +
                     (midpoint[j] - _internal_box.get_anchor()[j]) *
                         _box.get_sides()[j] / _internal_box.get_sides()[j];
@@ -317,20 +324,21 @@ std::vector< VoronoiFace > OldVoronoiGrid::get_faces(unsigned int index) const {
  * @return Faces of that cell.
  */
 std::vector< Face >
-OldVoronoiGrid::get_geometrical_faces(unsigned int index) const {
+OldVoronoiGrid::get_geometrical_faces(uint_fast32_t index) const {
+
   const std::vector< VoronoiFace > faces = _cells[index]->get_faces();
   std::vector< Face > geometrical_faces;
-  for (unsigned int i = 0; i < faces.size(); ++i) {
+  for (size_t i = 0; i < faces.size(); ++i) {
     CoordinateVector<> midpoint = faces[i].get_midpoint();
     std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
     // unit conversion
-    for (unsigned int j = 0; j < 3; ++j) {
+    for (uint_fast8_t j = 0; j < 3; ++j) {
       midpoint[j] = _box.get_anchor()[j] +
                     (midpoint[j] - _internal_box.get_anchor()[j]) *
                         _box.get_sides()[j] / _internal_box.get_sides()[j];
     }
-    for (unsigned int j = 0; j < vertices.size(); ++j) {
-      for (unsigned int k = 0; k < 3; ++k) {
+    for (size_t j = 0; j < vertices.size(); ++j) {
+      for (uint_fast8_t k = 0; k < 3; ++k) {
         vertices[j][k] = _box.get_anchor()[k] +
                          (vertices[j][k] - _internal_box.get_anchor()[k]) *
                              _box.get_sides()[k] / _internal_box.get_sides()[k];
@@ -347,11 +355,12 @@ OldVoronoiGrid::get_geometrical_faces(unsigned int index) const {
  * @param position Position (in m).
  * @return Index of the cell containing that position.
  */
-unsigned int
+uint_fast32_t
 OldVoronoiGrid::get_index(const CoordinateVector<> &position) const {
+
   CoordinateVector<> pos(position);
   // unit conversion
-  for (unsigned int i = 0; i < 3; ++i) {
+  for (uint_fast8_t i = 0; i < 3; ++i) {
     pos[i] = _internal_box.get_anchor()[i] +
              (pos[i] - _box.get_anchor()[i]) * _internal_box.get_sides()[i] /
                  _box.get_sides()[i];
@@ -376,7 +385,7 @@ bool OldVoronoiGrid::is_inside(CoordinateVector<> position) const {
  * @param index Index to check.
  * @return True if the given index corresponds to a real neighbouring cell.
  */
-bool OldVoronoiGrid::is_real_neighbour(unsigned int index) const {
+bool OldVoronoiGrid::is_real_neighbour(uint_fast32_t index) const {
   return index < OLDVORONOI_MAX_INDEX;
 }
 
@@ -387,7 +396,7 @@ bool OldVoronoiGrid::is_real_neighbour(unsigned int index) const {
  * @param index Index of a cell.
  * @param stream std::ostream to write to.
  */
-void OldVoronoiGrid::print_cell(unsigned int index, std::ostream &stream) {
+void OldVoronoiGrid::print_cell(uint_fast32_t index, std::ostream &stream) {
   _cells[index]->print_cell(stream);
 }
 
@@ -398,7 +407,7 @@ void OldVoronoiGrid::print_cell(unsigned int index, std::ostream &stream) {
  * @param stream std::ostream to write to.
  */
 void OldVoronoiGrid::print_grid(std::ostream &stream) {
-  for (unsigned int i = 0; i < _cells.size(); ++i) {
+  for (size_t i = 0; i < _cells.size(); ++i) {
     _cells[i]->print_cell(stream);
   }
 }

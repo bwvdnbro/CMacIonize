@@ -47,13 +47,13 @@ private:
   CoordinateVector<> _block_sides;
 
   /*! @brief Number of sub regions in each dimension. */
-  CoordinateVector< int > _num_blocks;
+  CoordinateVector< int_least32_t > _num_blocks;
 
   /*! @brief Range of sub regions local to this process. */
-  std::pair< int, int > _domain;
+  std::pair< int_least32_t, int_least32_t > _domain;
 
   /*! @brief Total number of cells in the grid. */
-  unsigned int _numcell;
+  uint_least32_t _numcell;
 
   /*! @brief ParallelCartesianDensitySubGrids that make up the actual underlying
    *  grid. */
@@ -68,14 +68,15 @@ public:
    * @param numdomain Total number of subgrids.
    * @param domain Part of the domain stored on the local process.
    */
-  ParallelCartesianDensityGrid(Box<> box, CoordinateVector< int > numcell,
-                               unsigned int numdomain,
-                               std::pair< int, int > domain)
+  ParallelCartesianDensityGrid(Box<> box,
+                               CoordinateVector< int_fast32_t > numcell,
+                               uint_fast32_t numdomain,
+                               std::pair< uint_fast32_t, uint_fast32_t > domain)
       : _box_anchor(box.get_anchor()), _domain(domain),
         _numcell(numcell.x() * numcell.y() * numcell.z()) {
 
     // get the number of cells in a single block
-    CoordinateVector< int > block_resolution =
+    CoordinateVector< int_fast32_t > block_resolution =
         Utilities::subdivide(numcell, numdomain);
 
     // get the number of blocks in each dimension
@@ -92,11 +93,11 @@ public:
     // create the blocks
     // allocate memory
     _subgrids.reserve(_num_blocks.x() * _num_blocks.y() * _num_blocks.z());
-    for (int ix = 0; ix < _num_blocks.x(); ++ix) {
-      for (int iy = 0; iy < _num_blocks.y(); ++iy) {
-        for (int iz = 0; iz < _num_blocks.z(); ++iz) {
-          int index = ix * _num_blocks.y() * _num_blocks.z() +
-                      iy * _num_blocks.z() + iz;
+    for (int_fast32_t ix = 0; ix < _num_blocks.x(); ++ix) {
+      for (int_fast32_t iy = 0; iy < _num_blocks.y(); ++iy) {
+        for (int_fast32_t iz = 0; iz < _num_blocks.z(); ++iz) {
+          int_fast32_t index = ix * _num_blocks.y() * _num_blocks.z() +
+                               iy * _num_blocks.z() + iz;
           // only allocate a real sub region for blocks in the local domain
           if (index >= _domain.first && index < _domain.second) {
             CoordinateVector<> blockanchor = box.get_anchor();
@@ -116,46 +117,48 @@ public:
     }
 
     // set neighbour relations
-    for (int ix = 0; ix < _num_blocks.x(); ++ix) {
-      for (int iy = 0; iy < _num_blocks.y(); ++iy) {
-        for (int iz = 0; iz < _num_blocks.z(); ++iz) {
-          int index = ix * _num_blocks.y() * _num_blocks.z() +
-                      iy * _num_blocks.z() + iz;
+    for (int_fast32_t ix = 0; ix < _num_blocks.x(); ++ix) {
+      for (int_fast32_t iy = 0; iy < _num_blocks.y(); ++iy) {
+        for (int_fast32_t iz = 0; iz < _num_blocks.z(); ++iz) {
+          int_fast32_t index = ix * _num_blocks.y() * _num_blocks.z() +
+                               iy * _num_blocks.z() + iz;
           if (index >= _domain.first && index < _domain.second) {
             ParallelCartesianDensitySubGrid *block =
                 reinterpret_cast< ParallelCartesianDensitySubGrid * >(
                     _subgrids[index]);
             block->set_index(index);
             if (ix > 0) {
-              int ngbindex = (ix - 1) * _num_blocks.y() * _num_blocks.z() +
-                             iy * _num_blocks.z() + iz;
+              int_fast32_t ngbindex =
+                  (ix - 1) * _num_blocks.y() * _num_blocks.z() +
+                  iy * _num_blocks.z() + iz;
               block->set_neighbour(0, ngbindex);
             }
             if (ix < _num_blocks.x() - 1) {
-              int ngbindex = (ix + 1) * _num_blocks.y() * _num_blocks.z() +
-                             iy * _num_blocks.z() + iz;
+              int_fast32_t ngbindex =
+                  (ix + 1) * _num_blocks.y() * _num_blocks.z() +
+                  iy * _num_blocks.z() + iz;
               block->set_neighbour(1, ngbindex);
             }
 
             if (iy > 0) {
-              int ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
-                             (iy - 1) * _num_blocks.z() + iz;
+              int_fast32_t ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
+                                      (iy - 1) * _num_blocks.z() + iz;
               block->set_neighbour(2, ngbindex);
             }
             if (iy < _num_blocks.y() - 1) {
-              int ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
-                             (iy + 1) * _num_blocks.z() + iz;
+              int_fast32_t ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
+                                      (iy + 1) * _num_blocks.z() + iz;
               block->set_neighbour(3, ngbindex);
             }
 
             if (iz > 0) {
-              int ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
-                             iy * _num_blocks.z() + iz - 1;
+              int_fast32_t ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
+                                      iy * _num_blocks.z() + iz - 1;
               block->set_neighbour(4, ngbindex);
             }
             if (iz < _num_blocks.z() - 1) {
-              int ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
-                             iy * _num_blocks.z() + iz + 1;
+              int_fast32_t ngbindex = ix * _num_blocks.y() * _num_blocks.z() +
+                                      iy * _num_blocks.z() + iz + 1;
               block->set_neighbour(5, ngbindex);
             }
           }
@@ -170,7 +173,7 @@ public:
    * Free memory occupied by the blocks.
    */
   ~ParallelCartesianDensityGrid() {
-    for (unsigned int i = 0; i < _subgrids.size(); ++i) {
+    for (size_t i = 0; i < _subgrids.size(); ++i) {
       delete _subgrids[i];
     }
   }
@@ -180,7 +183,7 @@ public:
    *
    * @return Total number of cells in the grid.
    */
-  unsigned int get_number_of_cells() const { return _numcell; }
+  uint_fast32_t get_number_of_cells() const { return _numcell; }
 
   /**
    * @brief Add a Photon to the photon pool of the sub region that contains it.
@@ -189,15 +192,16 @@ public:
    */
   void add_photon(Photon *photon) {
     // find out in which sub region the photon resides
-    CoordinateVector< int > block_index;
+    CoordinateVector< int_fast32_t > block_index;
     block_index[0] =
         (photon->get_position().x() - _box_anchor.x()) / _block_sides.x();
     block_index[1] =
         (photon->get_position().y() - _box_anchor.y()) / _block_sides.y();
     block_index[2] =
         (photon->get_position().z() - _box_anchor.z()) / _block_sides.z();
-    int long_index = block_index.x() * _num_blocks.y() * _num_blocks.z() +
-                     block_index.y() * _num_blocks.z() + block_index.z();
+    int_fast32_t long_index =
+        block_index.x() * _num_blocks.y() * _num_blocks.z() +
+        block_index.y() * _num_blocks.z() + block_index.z();
     _subgrids[long_index]->add_photon(photon);
   }
 
@@ -208,7 +212,7 @@ public:
    * @param index Index of a sub region.
    * @param photon Photon to add.
    */
-  void add_photon(int index, Photon *photon) {
+  void add_photon(int_fast32_t index, Photon *photon) {
     _subgrids[index]->add_photon(photon);
   }
 
@@ -221,7 +225,7 @@ public:
     ParallelCartesianDensityGrid &_grid;
 
     /*! @brief Index of the sub region the iterator is currently pointing to. */
-    int _index;
+    int_fast32_t _index;
 
   public:
     /**
@@ -231,7 +235,7 @@ public:
      * @param index Index of the sub region the iterator is currently pointing
      * to.
      */
-    iterator(ParallelCartesianDensityGrid &grid, int index)
+    iterator(ParallelCartesianDensityGrid &grid, int_fast32_t index)
         : _grid(grid), _index(index) {}
 
     /**
@@ -248,7 +252,7 @@ public:
      *
      * @return Offset.
      */
-    inline unsigned int offset() const {
+    inline uint_fast32_t offset() const {
       return _index * _grid._subgrids[_index]->get_number_of_cells();
     }
 

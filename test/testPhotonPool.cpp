@@ -36,19 +36,20 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// test PhotonBatch
   {
     PhotonBatch batch(100);
 
     // check if we can add photons to the batch until it is full
     Photon photon(CoordinateVector<>(), CoordinateVector<>(), 0.);
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       assert_condition(batch.add_photon(photon) == true);
     }
     assert_condition(batch.add_photon(photon) == false);
 
     // check if the iterator visits all photons (and set some values)
-    int numphoton = 0;
+    int_fast32_t numphoton = 0;
     for (auto it = batch.begin(); it != batch.end(); ++it) {
       it.set_new_index(numphoton);
       ++numphoton;
@@ -68,14 +69,14 @@ int main(int argc, char **argv) {
     PhotonBucket bucket(100);
 
     Photon photon(CoordinateVector<>(), CoordinateVector<>(), 0.);
-    for (unsigned int i = 0; i < 150; ++i) {
+    for (uint_fast8_t i = 0; i < 150; ++i) {
       bucket.add_photon(photon);
     }
 
     // check if the bucket contains exactly two batches, with respectively
     // 100 and 50 photons
-    unsigned int numbucket = 0;
-    std::vector< unsigned int > numphoton;
+    uint_fast32_t numbucket = 0;
+    std::vector< uint_fast32_t > numphoton;
     PhotonBatch *batch = bucket.get_batch();
     while (batch != nullptr) {
       numphoton.push_back(0);
@@ -96,14 +97,14 @@ int main(int argc, char **argv) {
     PhotonPool pool(1, 100);
 
     Photon photon(CoordinateVector<>(), CoordinateVector<>(), 0.);
-    for (unsigned int i = 0; i < 150; ++i) {
+    for (uint_fast8_t i = 0; i < 150; ++i) {
       pool.add_photon(0, photon);
     }
 
     // check if the pool contains exactly two batches, with respectively
     // 100 and 50 photons
-    unsigned int numbucket = 0;
-    std::vector< unsigned int > numphoton;
+    uint_fast32_t numbucket = 0;
+    std::vector< uint_fast32_t > numphoton;
     PhotonBatch *batch = pool.get_batch(0);
     while (batch != nullptr) {
       numphoton.push_back(0);

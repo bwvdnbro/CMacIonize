@@ -27,6 +27,8 @@
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
+#include <cstdint>
+
 #ifdef HAVE_OUTPUT_CYCLES
 #include <fstream>
 #include <sstream>
@@ -41,7 +43,7 @@
 template < typename _JobMarket_, typename _Job_ > class Worker {
 private:
   /*! @brief Rank of the thread that runs the Worker (in a parallel context). */
-  const int _thread_id;
+  const int_fast32_t _thread_id;
 
 #ifdef HAVE_OUTPUT_CYCLES
   /**
@@ -51,10 +53,10 @@ private:
    *
    * @return CPU cycle number.
    */
-  inline static unsigned long get_cycle() {
+  inline static uint_fast64_t get_cycle() {
     unsigned int lo, hi;
     __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
-    return ((unsigned long)hi << 32) | lo;
+    return ((uint_fast64_t)hi << 32) | lo;
   }
 #endif
 
@@ -65,7 +67,7 @@ public:
    * @param thread_id Rank of the thread that runs the Worker (in a parallel
    * context).
    */
-  Worker(int thread_id = 0) : _thread_id(thread_id) {}
+  Worker(int_fast32_t thread_id = 0) : _thread_id(thread_id) {}
 
   /**
    * @brief Execute all jobs on the JobMarket.
@@ -73,6 +75,7 @@ public:
    * @param jobs JobMarket that spawns jobs.
    */
   inline void do_work(_JobMarket_ &jobs) const {
+
 #ifdef HAVE_OUTPUT_CYCLES
     std::stringstream ofname;
     ofname << "jobtimes_" << _thread_id << ".txt";
@@ -80,15 +83,20 @@ public:
     // same thread write to the same file
     std::ofstream ofile(ofname.str(), std::ofstream::out | std::ofstream::app);
 #endif
+
     _Job_ *job;
     while ((job = jobs.get_job(_thread_id))) {
+
 #ifdef HAVE_OUTPUT_CYCLES
       ofile << job->get_tag() << "\t" << get_cycle() << "\t";
 #endif
+
       job->execute();
+
 #ifdef HAVE_OUTPUT_CYCLES
       ofile << get_cycle() << "\n";
 #endif
+
       if (job->do_cleanup()) {
         // free memory of the job
         delete job;

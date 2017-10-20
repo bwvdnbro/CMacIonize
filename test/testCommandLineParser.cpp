@@ -45,6 +45,7 @@
  * @param command_line String to parse.
  */
 void generate_arguments(int &argc, char **&argv, std::string command_line) {
+
   // parse the arguments and store them in a vector
   std::istringstream command_stream(command_line);
   std::string argument;
@@ -67,7 +68,7 @@ void generate_arguments(int &argc, char **&argv, std::string command_line) {
   argc = commands.size() + 1;
   argv = new char *[argc];
   argv[0] = new char[1];
-  for (int i = 0; i < argc - 1; ++i) {
+  for (int_fast32_t i = 0; i < argc - 1; ++i) {
     argv[i + 1] = new char[commands[i].size() + 1];
     strcpy(argv[i + 1], commands[i].c_str());
   }
@@ -80,7 +81,8 @@ void generate_arguments(int &argc, char **&argv, std::string command_line) {
  * @param argv Command line arguments.
  */
 void delete_arguments(int &argc, char **&argv) {
-  for (int i = 0; i < argc; ++i) {
+
+  for (int_fast32_t i = 0; i < argc; ++i) {
     delete[] argv[i];
   }
   delete[] argv;
@@ -95,6 +97,7 @@ void delete_arguments(int &argc, char **&argv) {
  * @return Exit code: 0 on success
  */
 int main(int argc, char **argv) {
+
   // generate command line arguments
   int test_argc;
   char **test_argv;
@@ -105,8 +108,8 @@ int main(int argc, char **argv) {
 
   CommandLineParser parser("testCommandLineParser");
 
-  parser.add_option< int >("test", 't',
-                           "A parameter to test the CommandLineParser.", 42);
+  parser.add_option< int_fast32_t >(
+      "test", 't', "A parameter to test the CommandLineParser.", 42);
   parser.add_required_option< std::string >(
       "more", 'm', "A parameter taking a string argument.");
   parser.add_option< double >(
@@ -125,7 +128,7 @@ int main(int argc, char **argv) {
 
   parser.parse_arguments(test_argc, test_argv);
 
-  assert_condition(parser.get_value< int >("test") == 42);
+  assert_condition(parser.get_value< int_fast32_t >("test") == 42);
   assert_condition(parser.get_value< std::string >("more") == "andmore");
   assert_condition(parser.get_value< double >("less") == 2.1);
   assert_condition(parser.get_value< std::string >("complicated") ==

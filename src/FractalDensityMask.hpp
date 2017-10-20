@@ -52,24 +52,24 @@ private:
   const Box<> _box;
 
   /*! @brief Resolution of the grid containing the distribution. */
-  const CoordinateVector< int > _resolution;
+  const CoordinateVector< uint_fast32_t > _resolution;
 
   /*! @brief Number of particles per level. */
-  const unsigned int _N;
+  const uint_fast32_t _N;
 
   /*! @brief Fractal length scale. */
   const double _L;
 
   /*! @brief Total number of levels. */
-  const unsigned int _num_level;
+  const uint_fast8_t _num_level;
 
   /*! @brief First level random number seeds (to guarantee the same fractal
    *  structure for a given seed, independent of the number of threads used to
    *  construct it). */
-  std::vector< int > _first_level_seeds;
+  std::vector< int_fast32_t > _first_level_seeds;
 
   /*! @brief Grid containing the distribution. */
-  std::vector< std::vector< std::vector< unsigned long > > > _distribution;
+  std::vector< std::vector< std::vector< uint_least64_t > > > _distribution;
 
   /*! @brief Fractal fraction: maximal fraction of the number density in a cell
    *  that is affected by the mask. */
@@ -87,7 +87,7 @@ private:
   void make_fractal_grid(
       RandomGenerator &random_generator,
       CoordinateVector<> current_position = CoordinateVector<>(0.),
-      unsigned int current_level = 1) {
+      uint_fast8_t current_level = 1) {
 
     CoordinateVector<> x_level = current_position;
     x_level[0] += 2. * (random_generator.get_uniform_random_double() - 0.5) /
@@ -98,7 +98,7 @@ private:
                   std::pow(_L, current_level);
 
     if (current_level < _num_level) {
-      for (unsigned int i = 0; i < _N; ++i) {
+      for (uint_fast32_t i = 0; i < _N; ++i) {
         make_fractal_grid(random_generator, x_level, current_level + 1);
       }
     } else {
@@ -138,13 +138,14 @@ private:
 
       // map the coordinates to grid indices and add a point to the
       // corresponding cell
-      const unsigned int ix = x_level.x() * _distribution.size();
-      const unsigned int iy = x_level.y() * _distribution[ix].size();
-      const unsigned int iz = x_level.z() * _distribution[ix][iy].size();
+      const uint_fast32_t ix = x_level.x() * _distribution.size();
+      const uint_fast32_t iy = x_level.y() * _distribution[ix].size();
+      const uint_fast32_t iz = x_level.z() * _distribution[ix][iy].size();
 
       // use an atomic operation to add the point, to make this method thread
       // safe
-      Atomic::add(_distribution[ix][iy][iz], 1ul);
+      const uint_least64_t add = 1;
+      Atomic::add(_distribution[ix][iy][iz], add);
       cmac_assert(_distribution[ix][iy][iz] < 0xffffffffffffffff);
     }
   }
@@ -179,7 +180,7 @@ private:
      * @param index Index of the next first level block that will be constructed
      * by this job.
      */
-    inline void set_index(unsigned int index) {
+    inline void set_index(uint_fast32_t index) {
       _random_generator.set_seed(_mask._first_level_seeds[index]);
     }
 
@@ -213,10 +214,10 @@ private:
     std::vector< FractalDensityMaskConstructionJob * > _jobs;
 
     /*! @brief Current index on the first level. */
-    unsigned int _current_index;
+    uint_fast32_t _current_index;
 
     /*! @brief Total number of particles on the first level. */
-    const unsigned int _num_part;
+    const uint_fast32_t _num_part;
 
     /*! @brief Lock used to ensure safe access to the internal index counter. */
     Lock _lock;
@@ -229,11 +230,11 @@ private:
      * @param worksize Number of threads to use.
      */
     inline FractalDensityMaskConstructionJobMarket(FractalDensityMask &mask,
-                                                   int worksize)
+                                                   int_fast32_t worksize)
         : _current_index(0), _num_part(mask._N) {
 
       _jobs.reserve(worksize);
-      for (int i = 0; i < worksize; ++i) {
+      for (int_fast32_t i = 0; i < worksize; ++i) {
         _jobs.push_back(new FractalDensityMaskConstructionJob(mask));
       }
     }
@@ -244,7 +245,7 @@ private:
      *
      * @param worksize Number of parallel threads that will be used.
      */
-    inline void set_worksize(int worksize) {}
+    inline void set_worksize(int_fast32_t worksize) {}
 
     /**
      * @brief Destructor.
@@ -252,7 +253,7 @@ private:
      * Clean up memory used by jobs.
      */
     inline ~FractalDensityMaskConstructionJobMarket() {
-      for (unsigned int i = 0; i < _jobs.size(); ++i) {
+      for (size_t i = 0; i < _jobs.size(); ++i) {
         delete _jobs[i];
       }
     }
@@ -265,13 +266,13 @@ private:
      * @return Pointer to a FractalDensityMaskConstructionJob, or a null pointer
      * if no more jobs are available.
      */
-    inline FractalDensityMaskConstructionJob *get_job(int thread_id) {
+    inline FractalDensityMaskConstructionJob *get_job(int_fast32_t thread_id) {
 
       if (_current_index == _num_part) {
         return nullptr;
       }
       bool has_job = false;
-      unsigned int current_index = 0;
+      uint_fast32_t current_index = 0;
       // we can only change _current_index if the lock is locked
       // similarly, we can only take decision based on the value of
       // _current_index while the lock is locked (because otherwise another
@@ -311,10 +312,10 @@ public:
    * @param log Log to write logging info to.
    */
   FractalDensityMask(const Box<> &box,
-                     const CoordinateVector< int > &resolution,
-                     unsigned int numpart, int seed, double fractal_dimension,
-                     unsigned int num_level, double fractal_fraction,
-                     Log *log = nullptr)
+                     const CoordinateVector< uint_fast32_t > &resolution,
+                     uint_fast32_t numpart, int_fast32_t seed,
+                     double fractal_dimension, uint_fast8_t num_level,
+                     double fractal_fraction, Log *log = nullptr)
       : _box(box), _resolution(resolution),
         // we will use equal values for the number of points (N) per level
         _N(std::ceil(std::pow(numpart, 1. / num_level))),
@@ -326,9 +327,9 @@ public:
 
     // allocate the grid
     _distribution.resize(resolution.x());
-    for (int ix = 0; ix < _resolution.x(); ++ix) {
+    for (uint_fast32_t ix = 0; ix < _resolution.x(); ++ix) {
       _distribution[ix].resize(resolution.y());
-      for (int iy = 0; iy < _resolution.y(); ++iy) {
+      for (uint_fast32_t iy = 0; iy < _resolution.y(); ++iy) {
         _distribution[ix][iy].resize(_resolution.z(), 0);
       }
     }
@@ -338,7 +339,7 @@ public:
     // thread is used to construct which block, and in which order
     _first_level_seeds.resize(_N, 0);
     RandomGenerator random_generator(seed);
-    for (unsigned int i = 0; i < _N; ++i) {
+    for (uint_fast32_t i = 0; i < _N; ++i) {
       _first_level_seeds[i] = random_generator.get_random_integer();
     }
 
@@ -377,13 +378,14 @@ public:
                       "DensityMask:box anchor", "[-5. pc, -5. pc, -5. pc]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
                       "DensityMask:box sides", "[10. pc, 10. pc, 10. pc]")),
-            params.get_value< CoordinateVector< int > >(
-                "DensityMask:resolution", CoordinateVector< int >(20)),
-            params.get_value< unsigned int >("DensityMask:number of particles",
-                                             1e6),
-            params.get_value< int >("DensityMask:random seed", 42),
+            params.get_value< CoordinateVector< uint_fast32_t > >(
+                "DensityMask:resolution",
+                CoordinateVector< uint_fast32_t >(20)),
+            params.get_value< uint_fast32_t >("DensityMask:number of particles",
+                                              1e6),
+            params.get_value< int_fast32_t >("DensityMask:random seed", 42),
             params.get_value< double >("DensityMask:fractal dimension", 2.6),
-            params.get_value< unsigned int >("DensityMask:number of levels", 4),
+            params.get_value< uint_fast8_t >("DensityMask:number of levels", 4),
             params.get_value< double >("DensityMask:fractal fraction", 1.),
             log) {}
 
@@ -397,7 +399,7 @@ public:
    *
    * @param worksize Number of threads to use.
    */
-  virtual void initialize(int worksize = -1) {
+  virtual void initialize(int_fast32_t worksize = -1) {
 
     WorkDistributor< FractalDensityMaskConstructionJobMarket,
                      FractalDensityMaskConstructionJob >
@@ -432,12 +434,12 @@ public:
         const double ncell = it.get_ionization_variables().get_number_density();
         const double Ncell = ncell * it.get_volume();
         Ntot += Ncell;
-        const unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
-                                _box.get_sides().x() * _resolution.x();
-        const unsigned int iy = (midpoint.y() - _box.get_anchor().y()) /
-                                _box.get_sides().y() * _resolution.y();
-        const unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
-                                _box.get_sides().z() * _resolution.z();
+        const uint_fast32_t ix = (midpoint.x() - _box.get_anchor().x()) /
+                                 _box.get_sides().x() * _resolution.x();
+        const uint_fast32_t iy = (midpoint.y() - _box.get_anchor().y()) /
+                                 _box.get_sides().y() * _resolution.y();
+        const uint_fast32_t iz = (midpoint.z() - _box.get_anchor().z()) /
+                                 _box.get_sides().z() * _resolution.z();
         Nsmooth += smooth_fraction * Ncell;
         Nfractal += _fractal_fraction * Ncell * _distribution[ix][iy][iz];
       }
@@ -449,12 +451,12 @@ public:
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const CoordinateVector<> midpoint = it.get_cell_midpoint();
       if (_box.inside(midpoint)) {
-        const unsigned int ix = (midpoint.x() - _box.get_anchor().x()) /
-                                _box.get_sides().x() * _resolution.x();
-        const unsigned int iy = (midpoint.y() - _box.get_anchor().y()) /
-                                _box.get_sides().y() * _resolution.y();
-        const unsigned int iz = (midpoint.z() - _box.get_anchor().z()) /
-                                _box.get_sides().z() * _resolution.z();
+        const uint_fast32_t ix = (midpoint.x() - _box.get_anchor().x()) /
+                                 _box.get_sides().x() * _resolution.x();
+        const uint_fast32_t iy = (midpoint.y() - _box.get_anchor().y()) /
+                                 _box.get_sides().y() * _resolution.y();
+        const uint_fast32_t iz = (midpoint.z() - _box.get_anchor().z()) /
+                                 _box.get_sides().z() * _resolution.z();
         const double ncell = it.get_ionization_variables().get_number_density();
         const double nsmooth = smooth_fraction * ncell;
         const double nfractal = _fractal_fraction * fractal_norm * ncell *

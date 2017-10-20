@@ -58,6 +58,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // initialize the MPI communicator and make sure only process 0 writes to the
   // log and output files
   MPICommunicator comm(argc, argv);
@@ -113,6 +114,9 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
                               "instead of an ionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("output_statistics", 's',
+                    "Output statistical information about the photons.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.parse_arguments(argc, argv);
 
@@ -217,7 +221,8 @@ int main(int argc, char **argv) {
 
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
-        parser.get_value< int >("threads"),
+        parser.get_value< bool >("output_statistics"),
+        parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"), &comm, log);
 
     if (parser.get_value< bool >("dry-run")) {
@@ -232,7 +237,7 @@ int main(int argc, char **argv) {
 
     programtimer.stop();
 
-    unsigned long memory_usage = OperatingSystem::get_peak_memory_usage();
+    size_t memory_usage = OperatingSystem::get_peak_memory_usage();
     comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(memory_usage);
     if (log) {
       log->write_status("Total program time: ",

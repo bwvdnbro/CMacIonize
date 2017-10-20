@@ -46,22 +46,22 @@ private:
   double _value;
 
   /*! @brief Length scale exponent. */
-  int _length;
+  int_fast32_t _length;
 
   /*! @brief Time scale exponent. */
-  int _time;
+  int_fast32_t _time;
 
   /*! @brief Mass scale exponent. */
-  int _mass;
+  int_fast32_t _mass;
 
   /*! @brief Temperature scale exponent. */
-  int _temperature;
+  int_fast32_t _temperature;
 
   /*! @brief Current scale exponent. */
-  int _current;
+  int_fast32_t _current;
 
   /*! @brief 1D angular scale exponent. */
-  int _angle;
+  int_fast32_t _angle;
 
 public:
   /**
@@ -75,8 +75,9 @@ public:
    * @param current Current scale exponent.
    * @param angle 1D angular scale exponent.
    */
-  inline Unit(double value, int length, int time, int mass, int temperature,
-              int current, int angle)
+  inline Unit(double value, int_fast32_t length, int_fast32_t time,
+              int_fast32_t mass, int_fast32_t temperature, int_fast32_t current,
+              int_fast32_t angle)
       : _value(value), _length(length), _time(time), _mass(mass),
         _temperature(temperature), _current(current), _angle(angle) {}
 
@@ -120,16 +121,16 @@ public:
    * @param power Exponent of the power.
    * @return Reference to the resulting Unit.
    */
-  inline Unit &operator^=(int power) {
+  inline Unit &operator^=(int_fast32_t power) {
     if (power > 0) {
-      int i = 1;
+      int_fast32_t i = 1;
       double value = _value;
       while (i < power) {
         _value *= value;
         ++i;
       }
     } else {
-      int i = 0;
+      int_fast32_t i = 0;
       double value = _value;
       _value = 1.;
       while (i < -power) {

@@ -35,6 +35,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // test constructors
   {
     // empty constructor
@@ -129,17 +130,18 @@ int main(int argc, char **argv) {
 
   // test dot product
   {
-    CoordinateVector< int > a(1, 2, 3);
-    CoordinateVector< int > b(3, 2, 1);
-    assert_condition(CoordinateVector< int >::dot_product(a, b) == 10);
+    CoordinateVector< int_fast32_t > a(1, 2, 3);
+    CoordinateVector< int_fast32_t > b(3, 2, 1);
+    assert_condition(CoordinateVector< int_fast32_t >::dot_product(a, b) == 10);
   }
 
   // test cross product
   {
-    CoordinateVector< int > a(1, 2, 3);
-    CoordinateVector< int > b(3, 2, 1);
-    CoordinateVector< int > c = CoordinateVector< int >::cross_product(a, b);
-    assert_condition(c == CoordinateVector< int >(-4, 8, -4));
+    CoordinateVector< int_fast32_t > a(1, 2, 3);
+    CoordinateVector< int_fast32_t > b(3, 2, 1);
+    CoordinateVector< int_fast32_t > c =
+        CoordinateVector< int_fast32_t >::cross_product(a, b);
+    assert_condition(c == CoordinateVector< int_fast32_t >(-4, 8, -4));
   }
 
   return 0;

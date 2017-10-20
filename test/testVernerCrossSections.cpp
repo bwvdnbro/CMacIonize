@@ -40,6 +40,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   VernerCrossSections cross_sections;
 
   std::ifstream file("verner_testdata.txt");

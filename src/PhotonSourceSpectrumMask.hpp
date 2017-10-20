@@ -17,44 +17,33 @@
  ******************************************************************************/
 
 /**
- * @file SPHArrayDensityGridWriter.hpp
+ * @file PhotonSourceSpectrumMask.hpp
  *
- * @brief DensityGridWriter implementation that maps back to an SPH particle
- * data array.
+ * @brief General interface for PhotonSourceSpectrum masks.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef SPHARRAYDENSITYGRIDWRITER_HPP
-#define SPHARRAYDENSITYGRIDWRITER_HPP
-
-#include "DensityGridWriter.hpp"
-
-class Octree;
+#ifndef PHOTONSOURCESPECTRUMMASK_HPP
+#define PHOTONSOURCESPECTRUMMASK_HPP
 
 /**
- * @brief DensityGridWriter implementation that maps back to an SPH particle
- * data array.
+ * @brief General interface for PhotonSourceSpectrum masks.
  */
-class SPHArrayDensityGridWriter : public DensityGridWriter {
-private:
-  /*! @brief Neutral fractions on the positions of the SPH particles. */
-  std::vector< double > _neutral_fractions;
-
-  /*! @brief Octree that contains the SPH particles. */
-  Octree *_octree;
-
-  static double cubic_spline_kernel(double u, double h);
-
+class PhotonSourceSpectrumMask {
 public:
-  SPHArrayDensityGridWriter();
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~PhotonSourceSpectrumMask() {}
 
-  void reset(const size_t numpart, Octree *octree);
-
-  void fill_array(double *nH);
-  void fill_array(float *nH);
-
-  virtual void write(DensityGrid &grid, unsigned int iteration,
-                     ParameterFile &params, double time);
+  /**
+   * @brief Get the fraction of the spectrum at the given frequency that should
+   * be retained in the masked spectrum.
+   *
+   * @param frequency Frequency of the bin (in Hz).
+   * @return Fraction of the spectrum that should be retained.
+   */
+  virtual double get_bin_fraction(double frequency) const = 0;
 };
 
-#endif // SPHARRAYDENSITYGRIDWRITER_HPP
+#endif // PHOTONSOURCESPECTRUMMASK_HPP

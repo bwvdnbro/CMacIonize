@@ -46,7 +46,8 @@
  */
 #ifdef NEWVORONOIGRID_CHECK_DELAUNAY_CONDITION
 #define newvoronoigrid_check_cell(cell_constructor)                            \
-  cell.check_empty_circumsphere(_real_rescaled_box, _real_rescaled_positions)
+  cell_constructor.check_empty_circumsphere(_real_rescaled_box,                \
+                                            _real_rescaled_positions)
 #else
 #define newvoronoigrid_check_cell(cell_constructor)
 #endif
@@ -58,7 +59,7 @@
 #ifdef NEWVORONOIGRID_CHECK_TOTAL_VOLUME
 #define newvoronoigrid_check_volume()                                          \
   double total_volume = 0.;                                                    \
-  for (unsigned int i = 0; i < _cells.size(); ++i) {                           \
+  for (size_t i = 0; i < _cells.size(); ++i) {                                 \
     total_volume += _cells[i].get_volume();                                    \
   }                                                                            \
   cmac_assert_message(std::abs(total_volume - _box.get_volume()) <             \
@@ -80,7 +81,7 @@
  * @return NewVoronoiCell.
  */
 NewVoronoiCell
-NewVoronoiGrid::compute_cell(unsigned int index,
+NewVoronoiGrid::compute_cell(uint_fast32_t index,
                              NewVoronoiCellConstructor &constructor) const {
 
   constructor.setup(index, _real_generator_positions, _real_voronoi_box,
@@ -89,21 +90,21 @@ NewVoronoiGrid::compute_cell(unsigned int index,
   auto it = _point_locations.get_neighbours(index);
   auto ngbs = it.get_neighbours();
   for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-    const unsigned int j = *ngbit;
+    const uint_fast32_t j = *ngbit;
     if (j != index) {
       constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
                             _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(cell_constructor);
+      newvoronoigrid_check_cell(constructor);
     }
   }
   while (it.increase_range() &&
          it.get_max_radius2() < constructor.get_max_radius_squared()) {
     ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-      const unsigned int j = *ngbit;
+      const uint_fast32_t j = *ngbit;
       constructor.intersect(j, _real_rescaled_box, _real_rescaled_positions,
                             _real_voronoi_box, _real_generator_positions);
-      newvoronoigrid_check_cell(cell_constructor);
+      newvoronoigrid_check_cell(constructor);
     }
   }
 
@@ -178,9 +179,9 @@ NewVoronoiGrid::NewVoronoiGrid(
                                box_top_anchor_y - box_bottom_anchor_y,
                                box_top_anchor_z - box_bottom_anchor_z)));
 
-  const unsigned int psize = positions.size();
+  const size_t psize = positions.size();
   _real_rescaled_positions.resize(psize);
-  for (unsigned int i = 0; i < psize; ++i) {
+  for (size_t i = 0; i < psize; ++i) {
     const double x = 1. + (positions[i].x() - min_anchor.x()) / max_anchor.x();
     const double y = 1. + (positions[i].y() - min_anchor.y()) / max_anchor.y();
     const double z = 1. + (positions[i].z() - min_anchor.z()) / max_anchor.z();
@@ -199,9 +200,9 @@ NewVoronoiGrid::~NewVoronoiGrid() {}
  * @param worksize Number of shared memory threads to use during the grid
  * construction.
  */
-void NewVoronoiGrid::compute_grid(int worksize) {
+void NewVoronoiGrid::compute_grid(int_fast32_t worksize) {
 
-  const unsigned int psize = _real_generator_positions.size();
+  const size_t psize = _real_generator_positions.size();
   _cells.resize(psize);
 
   WorkDistributor< NewVoronoiGridConstructionJobMarket,
@@ -219,7 +220,7 @@ void NewVoronoiGrid::compute_grid(int worksize) {
  * @param index Index of a cell in the grid.
  * @return Volume of the cell (in m^3).
  */
-double NewVoronoiGrid::get_volume(unsigned int index) const {
+double NewVoronoiGrid::get_volume(uint_fast32_t index) const {
   return _cells[index].get_volume();
 }
 
@@ -229,7 +230,7 @@ double NewVoronoiGrid::get_volume(unsigned int index) const {
  * @param index Index of a cell in the grid.
  * @return Centroid of that cell (in m).
  */
-CoordinateVector<> NewVoronoiGrid::get_centroid(unsigned int index) const {
+CoordinateVector<> NewVoronoiGrid::get_centroid(uint_fast32_t index) const {
   return _cells[index].get_centroid();
 }
 
@@ -240,7 +241,7 @@ CoordinateVector<> NewVoronoiGrid::get_centroid(unsigned int index) const {
  * @return Normal vector to the given wall.
  */
 CoordinateVector<>
-NewVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
+NewVoronoiGrid::get_wall_normal(int_fast32_t wallindex) const {
   cmac_assert(wallindex >= NEWVORONOICELL_MAX_INDEX);
 
   switch (wallindex) {
@@ -258,7 +259,7 @@ NewVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
     return CoordinateVector<>(0., 0., 1.);
   }
 
-  cmac_error("Not a valid wall index: %u!", wallindex);
+  cmac_error("Not a valid wall index: %" PRIiFAST32 "!", wallindex);
   return CoordinateVector<>();
 }
 
@@ -270,7 +271,8 @@ NewVoronoiGrid::get_wall_normal(unsigned int wallindex) const {
  * midpoint (in m), and the index of the neighbouring cell that generated the
  * face.
  */
-std::vector< VoronoiFace > NewVoronoiGrid::get_faces(unsigned int index) const {
+std::vector< VoronoiFace >
+NewVoronoiGrid::get_faces(uint_fast32_t index) const {
   return _cells[index].get_faces();
 }
 
@@ -281,10 +283,10 @@ std::vector< VoronoiFace > NewVoronoiGrid::get_faces(unsigned int index) const {
  * @return Faces of that cell.
  */
 std::vector< Face >
-NewVoronoiGrid::get_geometrical_faces(unsigned int index) const {
+NewVoronoiGrid::get_geometrical_faces(uint_fast32_t index) const {
   const std::vector< VoronoiFace > faces = _cells[index].get_faces();
   std::vector< Face > geometrical_faces;
-  for (unsigned int i = 0; i < faces.size(); ++i) {
+  for (size_t i = 0; i < faces.size(); ++i) {
     const CoordinateVector<> midpoint = faces[i].get_midpoint();
     const std::vector< CoordinateVector<> > vertices = faces[i].get_vertices();
     geometrical_faces.push_back(Face(midpoint, vertices));
@@ -298,7 +300,7 @@ NewVoronoiGrid::get_geometrical_faces(unsigned int index) const {
  * @param position Arbitrary position (in m).
  * @return Index of the cell that contains that position.
  */
-unsigned int
+uint_fast32_t
 NewVoronoiGrid::get_index(const CoordinateVector<> &position) const {
   return _point_locations.get_closest_neighbour(position);
 }
@@ -320,6 +322,6 @@ bool NewVoronoiGrid::is_inside(CoordinateVector<> position) const {
  * @param index Index to check.
  * @return True if the given index corresponds to a real neighbouring cell.
  */
-bool NewVoronoiGrid::is_real_neighbour(unsigned int index) const {
+bool NewVoronoiGrid::is_real_neighbour(uint_fast32_t index) const {
   return index < NEWVORONOICELL_MAX_INDEX;
 }

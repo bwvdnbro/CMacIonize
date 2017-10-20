@@ -27,6 +27,7 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include <cinttypes>
 #include <fstream>
 #include <sstream>
 
@@ -42,18 +43,19 @@
  * @param log Log to write logging info to.
  */
 AsciiFileDensityFunction::AsciiFileDensityFunction(
-    std::string filename, CoordinateVector< int > ncell, Box<> box,
+    std::string filename, CoordinateVector< uint_fast32_t > ncell, Box<> box,
     double temperature, double length_unit_in_SI, double density_unit_in_SI,
     Log *log)
     : _ncell(ncell), _box(box), _temperature(temperature), _log(log) {
+
   _grid = new double **[_ncell.x()];
-  for (int i = 0; i < _ncell.x(); ++i) {
+  for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
     _grid[i] = new double *[_ncell.y()];
-    for (int j = 0; j < _ncell.y(); ++j) {
+    for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
       _grid[i][j] = new double[_ncell.z()];
       // initialize all cells with negative values
       // this way, we can check after reading if all cells got a file value
-      for (int k = 0; k < _ncell.z(); ++k) {
+      for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
         _grid[i][j][k] = -1.;
       }
     }
@@ -76,7 +78,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
       z *= length_unit_in_SI;
       rho *= density_unit_in_SI;
       // get the cell indices
-      int ix, iy, iz;
+      uint_fast32_t ix, iy, iz;
       ix = (x - _box.get_anchor().x()) / _box.get_sides().x() * _ncell.x();
       iy = (y - _box.get_anchor().y()) / _box.get_sides().y() * _ncell.y();
       iz = (z - _box.get_anchor().z()) / _box.get_sides().z() * _ncell.z();
@@ -85,11 +87,13 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
   }
 
   // check that all cells received a value
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
+  for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
+    for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
+      for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
         if (_grid[i][j][k] < 0.) {
-          cmac_error("No value found for cell [%i, %i, %i]!", i, j, k);
+          cmac_error("No value found for cell [%" PRIuFAST32 ", %" PRIuFAST32
+                     ", %" PRIuFAST32 "]!",
+                     i, j, k);
         }
       }
     }
@@ -122,8 +126,9 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
                                                    Log *log)
     : AsciiFileDensityFunction(
           params.get_value< std::string >("DensityFunction:filename"),
-          params.get_value< CoordinateVector< int > >(
-              "DensityFunction:number of cells", CoordinateVector< int >(64)),
+          params.get_value< CoordinateVector< uint_fast32_t > >(
+              "DensityFunction:number of cells",
+              CoordinateVector< uint_fast32_t >(64)),
           Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
                     "DensityFunction:box anchor", "[-5. pc, -5. pc, -5. pc]"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
@@ -142,8 +147,8 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
  * Free memory used by the internal density grid.
  */
 AsciiFileDensityFunction::~AsciiFileDensityFunction() {
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
+  for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
+    for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
       delete[] _grid[i][j];
     }
     delete[] _grid[i];
@@ -165,7 +170,7 @@ DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
 
-  int ix, iy, iz;
+  uint_fast32_t ix, iy, iz;
   ix = (position.x() - _box.get_anchor().x()) / _box.get_sides().x() *
        _ncell.x();
   iy = (position.y() - _box.get_anchor().y()) / _box.get_sides().y() *
@@ -186,15 +191,16 @@ DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
  * @return Total number of hydrogen atoms.
  */
 double AsciiFileDensityFunction::get_total_hydrogen_number() const {
+
   double side_x, side_y, side_z, cellvolume;
   side_x = _box.get_sides().x() / _ncell.x();
   side_y = _box.get_sides().y() / _ncell.y();
   side_z = _box.get_sides().z() / _ncell.z();
   cellvolume = side_x * side_y * side_z;
   double mtot = 0.;
-  for (int i = 0; i < _ncell.x(); ++i) {
-    for (int j = 0; j < _ncell.y(); ++j) {
-      for (int k = 0; k < _ncell.z(); ++k) {
+  for (uint_fast32_t i = 0; i < _ncell.x(); ++i) {
+    for (uint_fast32_t j = 0; j < _ncell.y(); ++j) {
+      for (uint_fast32_t k = 0; k < _ncell.z(); ++k) {
         mtot += _grid[i][j][k] * cellvolume;
       }
     }

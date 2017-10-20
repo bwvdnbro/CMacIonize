@@ -49,22 +49,22 @@
 class NewVoronoiCellConstructor {
 private:
   /*! @brief Vertices. */
-  unsigned int _vertices[NEWVORONOICELL_VERTEX_SIZE];
+  uint_least32_t _vertices[NEWVORONOICELL_VERTEX_SIZE];
 
   /*! @brief Vertices size. */
-  unsigned int _vertices_size;
+  uint_least32_t _vertices_size;
 
   /*! @brief Tetrahedra connections. */
   NewVoronoiTetrahedron _tetrahedra[NEWVORONOICELL_TETRAHEDRA_SIZE];
 
   /*! @brief Size of the tetrahedra array. */
-  unsigned int _tetrahedra_size;
+  uint_least32_t _tetrahedra_size;
 
   /*! @brief Free indices in the tetrahedra vector. */
-  unsigned int _free_tetrahedra[NEWVORONOICELL_FREE_SIZE];
+  uint_least32_t _free_tetrahedra[NEWVORONOICELL_FREE_SIZE];
 
   /*! @brief Size of the free tetrahedra array. */
-  unsigned int _free_size;
+  uint_least16_t _free_size;
 
   /*! @brief Maximum distance squared between the central generator and an
    *  arbitrary other generator that could still change the cell structure. */
@@ -72,7 +72,7 @@ private:
 
   /*! @brief Tetrahedron that has the largest maximum distance squared. We only
    *  need to update _max_r2 if this tetrahedron changes. */
-  unsigned int _max_tetrahedron;
+  uint_least32_t _max_tetrahedron;
 
   /**
    * @brief Create the given template amount of new tetrahedra and store the
@@ -83,10 +83,10 @@ private:
    *
    * @param indices Array to fill with the indices of the new tetrahedra.
    */
-  template < unsigned char _number_ >
-  inline void create_new_tetrahedra(unsigned int *indices) {
-    unsigned int new_size = _tetrahedra_size;
-    for (unsigned char i = 0; i < _number_; ++i) {
+  template < uint_fast8_t _number_ >
+  inline void create_new_tetrahedra(uint_fast32_t *indices) {
+    uint_fast32_t new_size = _tetrahedra_size;
+    for (uint_fast8_t i = 0; i < _number_; ++i) {
       if (_free_size > 0) {
         indices[i] = _free_tetrahedra[_free_size - 1];
         --_free_size;
@@ -109,10 +109,10 @@ private:
    * @param indices Array to fill with the indices of the new tetrahedra.
    * @param number Number of new tetrahedra to generate.
    */
-  inline void create_new_tetrahedra(unsigned int *indices,
-                                    unsigned int number) {
-    unsigned int new_size = _tetrahedra_size;
-    for (unsigned char i = 0; i < number; ++i) {
+  inline void create_new_tetrahedra(uint_fast32_t *indices,
+                                    uint_fast32_t number) {
+    uint_fast32_t new_size = _tetrahedra_size;
+    for (uint_fast8_t i = 0; i < number; ++i) {
       if (_free_size > 0) {
         indices[i] = _free_tetrahedra[_free_size - 1];
         --_free_size;
@@ -131,8 +131,8 @@ private:
    * @param vertex New vertex.
    * @return Index of the new vertex in the internal vertex array.
    */
-  inline unsigned int add_new_vertex(unsigned int vertex) {
-    const unsigned int new_index = _vertices_size;
+  inline uint_fast32_t add_new_vertex(uint_fast32_t vertex) {
+    const uint_fast32_t new_index = _vertices_size;
     _vertices[new_index] = vertex;
     ++_vertices_size;
     cmac_assert(_vertices_size < NEWVORONOICELL_VERTEX_SIZE);
@@ -144,13 +144,13 @@ public:
   NewVoronoiCellConstructor();
 
   /// cell specific geometric functions
-  void setup(unsigned int generator,
+  void setup(uint_fast32_t generator,
              const std::vector< CoordinateVector<> > &positions,
              const NewVoronoiBox &box,
              const std::vector< CoordinateVector<> > &rescaled_positions,
              const NewVoronoiBox &rescaled_box,
              bool reflective_boundaries = false);
-  void intersect(unsigned int ngb, const NewVoronoiBox &rescaled_box,
+  void intersect(uint_fast32_t ngb, const NewVoronoiBox &rescaled_box,
                  const std::vector< CoordinateVector<> > &rescaled_positions,
                  const NewVoronoiBox &real_voronoi_box,
                  const std::vector< CoordinateVector<> > &real_positions);
@@ -164,32 +164,32 @@ public:
 
   /// helper functions (should be private, but we make them public to expose
   /// them to the unit tests)
-  unsigned char
-  find_tetrahedron(unsigned int point_index, const NewVoronoiBox &rescaled_box,
+  uint_fast8_t
+  find_tetrahedron(uint_fast32_t point_index, const NewVoronoiBox &rescaled_box,
                    const std::vector< CoordinateVector<> > &rescaled_positions,
-                   unsigned int *indices) const;
+                   uint_fast32_t *indices) const;
 
-  void one_to_four_flip(unsigned int new_vertex, unsigned int tetrahedron,
-                        unsigned int tn[4]);
-  void two_to_six_flip(unsigned int new_vertex, unsigned int tetrahedra[2],
-                       unsigned int tn[6]);
-  void n_to_2n_flip(unsigned int new_vertex, unsigned int *tetrahedra,
-                    unsigned char n, unsigned int tn[2 * UCHAR_MAX]);
+  void one_to_four_flip(uint_fast32_t new_vertex, uint_fast32_t tetrahedron,
+                        uint_fast32_t tn[]);
+  void two_to_six_flip(uint_fast32_t new_vertex, uint_fast32_t tetrahedra[],
+                       uint_fast32_t tn[]);
+  void n_to_2n_flip(uint_fast32_t new_vertex, uint_fast32_t *tetrahedra,
+                    uint_fast8_t n, uint_fast32_t tn[]);
 
-  void two_to_three_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
-                         unsigned char top0, unsigned char top1,
-                         unsigned int tn[3]);
-  void four_to_four_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
-                         unsigned int tetrahedron2, unsigned int tetrahedron3,
-                         unsigned int tn[4]);
-  void three_to_two_flip(unsigned int tetrahedron0, unsigned int tetrahedron1,
-                         unsigned int tetrahedron2, unsigned int tn[2]);
+  void two_to_three_flip(uint_fast32_t tetrahedron0, uint_fast32_t tetrahedron1,
+                         uint_fast8_t top0, uint_fast8_t top1,
+                         uint_fast32_t tn[]);
+  void four_to_four_flip(uint_fast32_t tetrahedron0, uint_fast32_t tetrahedron1,
+                         uint_fast32_t tetrahedron2, uint_fast32_t tetrahedron3,
+                         uint_fast32_t tn[]);
+  void three_to_two_flip(uint_fast32_t tetrahedron0, uint_fast32_t tetrahedron1,
+                         uint_fast32_t tetrahedron2, uint_fast32_t tn[]);
 
-  unsigned int
-  check_tetrahedron(unsigned int tetrahedron, unsigned int new_vertex,
+  uint_fast32_t
+  check_tetrahedron(uint_fast32_t tetrahedron, uint_fast32_t new_vertex,
                     const NewVoronoiBox &rescaled_box,
                     const std::vector< CoordinateVector<> > &rescaled_positions,
-                    bool queue[], unsigned int &queue_size);
+                    bool queue[], uint_fast32_t &queue_size);
 
   /// inline/template helper functions
 
@@ -202,7 +202,7 @@ public:
    * @return Position.
    */
   inline CoordinateVector<>
-  get_position(unsigned int index, const NewVoronoiBox &box,
+  get_position(uint_fast32_t index, const NewVoronoiBox &box,
                const std::vector< CoordinateVector<> > &positions) const {
     if (index < NEWVORONOICELL_MAX_INDEX) {
       cmac_assert(index < positions.size());
@@ -226,15 +226,14 @@ public:
    * @return True if the tetrahedron is positively oriented.
    */
   inline bool has_positive_orientation(
-      const NewVoronoiTetrahedron &tetrahedron,
-      const std::vector< unsigned int > &vertices,
+      const NewVoronoiTetrahedron &tetrahedron, const uint_least32_t *vertices,
       const NewVoronoiBox &rescaled_box,
       const std::vector< CoordinateVector<> > &rescaled_positions) const {
 
-    const unsigned int v[4] = {vertices[tetrahedron.get_vertex(0)],
-                               vertices[tetrahedron.get_vertex(1)],
-                               vertices[tetrahedron.get_vertex(2)],
-                               vertices[tetrahedron.get_vertex(3)]};
+    const uint_fast32_t v[4] = {vertices[tetrahedron.get_vertex(0)],
+                                vertices[tetrahedron.get_vertex(1)],
+                                vertices[tetrahedron.get_vertex(2)],
+                                vertices[tetrahedron.get_vertex(3)]};
 
     const CoordinateVector<> pr[4] = {
         get_position(v[0], rescaled_box, rescaled_positions),
@@ -256,12 +255,12 @@ public:
   inline void
   print_tetrahedra(std::ostream &stream, const NewVoronoiBox &box,
                    const std::vector< CoordinateVector<> > &positions) {
-    for (unsigned int i = 0; i < _tetrahedra_size; ++i) {
+    for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
       if (_tetrahedra[i].get_vertex(0) < NEWVORONOICELL_MAX_INDEX) {
-        for (unsigned char j = 0; j < 4; ++j) {
-          const unsigned int v0 = _tetrahedra[i].get_vertex(j);
-          for (unsigned char k = j + 1; k < 4; ++k) {
-            const unsigned int v1 = _tetrahedra[i].get_vertex(k);
+        for (uint_fast8_t j = 0; j < 4; ++j) {
+          const uint_fast32_t v0 = _tetrahedra[i].get_vertex(j);
+          for (uint_fast8_t k = j + 1; k < 4; ++k) {
+            const uint_fast32_t v1 = _tetrahedra[i].get_vertex(k);
             const CoordinateVector<> p0 =
                 get_position(_vertices[v0], box, positions);
             const CoordinateVector<> p1 =
@@ -287,8 +286,8 @@ public:
    * @param d Fourth index.
    * @return True if abcd is a positively oriented permutation of 0123.
    */
-  inline static bool positive_permutation(unsigned char a, unsigned char b,
-                                          unsigned char c, unsigned char d) {
+  inline static bool positive_permutation(uint_fast8_t a, uint_fast8_t b,
+                                          uint_fast8_t c, uint_fast8_t d) {
     if ((a + 1) % 4 == b) {
       return c % 2 == 0;
     } else if ((a + 2) % 4 == b) {
@@ -309,7 +308,7 @@ public:
    * @param v Array to complete. The first two elements should already contain
    * elements of abcd.
    */
-  inline static void get_positive_permutation(unsigned char v[4]) {
+  inline static void get_positive_permutation(uint_fast8_t v[4]) {
 
     // get the index of the other elements not yet present in the array
     v[2] = (v[0] + 1) % 4;
@@ -318,7 +317,7 @@ public:
     // now check if our indices form a positive or a negative permutation and
     // set the remaining array elements accordingly
     if (!positive_permutation(v[0], v[1], v[2], v[3])) {
-      const unsigned char tmp = v[2];
+      const uint_fast8_t tmp = v[2];
       v[2] = v[3];
       v[3] = tmp;
     }
@@ -331,9 +330,9 @@ public:
    * @param queue Queue to add to.
    * @param queue_size Size of the queue.
    */
-  inline static void add_to_queue(unsigned int tetrahedron,
+  inline static void add_to_queue(uint_fast32_t tetrahedron,
                                   bool queue[NEWVORONOICELL_QUEUE_SIZE],
-                                  unsigned int &queue_size) {
+                                  uint_fast32_t &queue_size) {
     queue[tetrahedron] = true;
     queue_size = std::max(queue_size, tetrahedron + 1);
     cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
@@ -341,8 +340,8 @@ public:
 
   /// unit testing routines
 
-  void setup_test(int test);
-  void check_test(int test);
+  void setup_test(int_fast32_t test);
+  void check_test(int_fast32_t test);
 };
 
 #endif // NEWVORONOICELLCONSTRUCTOR_HPP

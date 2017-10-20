@@ -85,11 +85,11 @@ public:
      */
     struct {
       /*! @brief Mantissa @f$m@f$. */
-      unsigned long long mantissa : 52;
+      uint64_t mantissa : 52;
       /*! @brief Exponent @f$e@f$. */
-      unsigned long exponent : 11;
+      uint64_t exponent : 11;
       /*! @brief Sign @f$s@f$. */
-      unsigned long sign : 1;
+      uint64_t sign : 1;
     } parts;
   } binary_double;
 
@@ -100,7 +100,7 @@ public:
    * @param value Double precision floating point value.
    * @return 52 bit mantissa of that same value.
    */
-  inline static unsigned long get_mantissa(double value) {
+  inline static uint64_t get_mantissa(double value) {
     binary_double dvalue;
     dvalue.dvalue = value;
     return dvalue.parts.mantissa;

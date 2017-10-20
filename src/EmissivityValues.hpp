@@ -87,7 +87,7 @@ public:
    * @brief (Empty) constructor.
    */
   inline EmissivityValues() {
-    for (int i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
       _emissivities[i] = 0.;
     }
   }

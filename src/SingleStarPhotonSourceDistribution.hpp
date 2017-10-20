@@ -86,7 +86,7 @@ public:
    *
    * @return 1, as this distribution contains a single stellar source
    */
-  virtual unsigned int get_number_of_sources() const { return 1; }
+  virtual photonsourcenumber_t get_number_of_sources() const { return 1; }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -95,7 +95,7 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of the single stellar source position (in m).
    */
-  virtual CoordinateVector<> get_position(unsigned int index) {
+  virtual CoordinateVector<> get_position(photonsourcenumber_t index) {
     return _position;
   };
 
@@ -106,7 +106,7 @@ public:
    * get_number_of_sources().
    * @return Weight of the single photon source: 1.
    */
-  virtual double get_weight(unsigned int index) const { return 1.; }
+  virtual double get_weight(photonsourcenumber_t index) const { return 1.; }
 
   /**
    * @brief Get the luminosity of the single source.

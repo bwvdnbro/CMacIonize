@@ -47,7 +47,7 @@ private:
   std::vector< CoordinateVector<> > _generator_positions;
 
   /*! @brief Index of the next position that will be returned. */
-  unsigned int _current_number;
+  uint_fast32_t _current_number;
 
 public:
   /**
@@ -62,25 +62,25 @@ public:
    */
   PerturbedCartesianVoronoiGeneratorDistribution(
       const Box<> &simulation_box,
-      const CoordinateVector< unsigned int > resolution, double random_seed,
+      const CoordinateVector< uint_fast32_t > resolution, double random_seed,
       double amplitude, Log *log = nullptr)
       : _current_number(0) {
 
     RandomGenerator rg(random_seed);
     _generator_positions.resize(resolution.x() * resolution.y() *
                                 resolution.z());
-    for (unsigned int ix = 0; ix < resolution.x(); ++ix) {
-      const unsigned int index_x = ix * resolution.y() * resolution.z();
+    for (uint_fast32_t ix = 0; ix < resolution.x(); ++ix) {
+      const uint_fast32_t index_x = ix * resolution.y() * resolution.z();
       const double cx =
           simulation_box.get_anchor().x() +
           (ix + 0.5) * simulation_box.get_sides().x() / resolution.x();
-      for (unsigned int iy = 0; iy < resolution.y(); ++iy) {
-        const unsigned int index_y = index_x + iy * resolution.z();
+      for (uint_fast32_t iy = 0; iy < resolution.y(); ++iy) {
+        const uint_fast32_t index_y = index_x + iy * resolution.z();
         const double cy =
             simulation_box.get_anchor().y() +
             (iy + 0.5) * simulation_box.get_sides().y() / resolution.y();
-        for (unsigned int iz = 0; iz < resolution.z(); ++iz) {
-          const unsigned int index_z = index_y + iz;
+        for (uint_fast32_t iz = 0; iz < resolution.z(); ++iz) {
+          const uint_fast32_t index_z = index_y + iz;
           const double cz =
               simulation_box.get_anchor().z() +
               (iz + 0.5) * simulation_box.get_sides().z() / resolution.z();
@@ -122,10 +122,10 @@ public:
                                                  Log *log = nullptr)
       : PerturbedCartesianVoronoiGeneratorDistribution(
             simulation_box,
-            params.get_value< CoordinateVector< unsigned int > >(
+            params.get_value< CoordinateVector< uint_fast32_t > >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of cells",
-                CoordinateVector< unsigned int >(10, 10, 10)),
-            params.get_value< int >(
+                CoordinateVector< uint_fast32_t >(10, 10, 10)),
+            params.get_value< int_fast32_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "DensityGrid:VoronoiGeneratorDistribution:amplitude", "0.01 m"),
@@ -136,7 +136,7 @@ public:
    *
    * @return Number of generated positions.
    */
-  virtual unsigned int get_number_of_positions() const {
+  virtual generatornumber_t get_number_of_positions() const {
     return _generator_positions.size();
   }
 

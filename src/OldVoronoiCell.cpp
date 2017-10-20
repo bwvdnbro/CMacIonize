@@ -265,9 +265,9 @@ const std::vector< VoronoiFace > &OldVoronoiCell::get_faces() const {
  * given neighbour, 1 otherwise. If find_edge_and_exit is set to true, other
  * status codes are possible.
  */
-int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
-                              unsigned int ngb_index, double epsilon,
-                              int *find_edge_and_exit) {
+int_fast8_t OldVoronoiCell::intersect(CoordinateVector<> relative_position,
+                                      uint_fast32_t ngb_index, double epsilon,
+                                      int_fast32_t *find_edge_and_exit) {
   // make sure the intersecting point has a different position than the cell
   // generator
   cmac_assert(relative_position.norm2() != 0.);
@@ -285,8 +285,8 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
   // plane, we need to use a different algorithm. This event is recorded in a
   // dedicated flag variable.
 
-  int up, lp;
-  unsigned char us, ls;
+  int_fast32_t up, lp;
+  uint_fast8_t us, ls;
 
   // initialize these to please the compiler
   ls = 0;
@@ -295,9 +295,9 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
 
   // test the first vertex
   up = 0;
-  std::pair< int, double > u =
+  std::pair< int_fast32_t, double > u =
       test_vertex(_vertices[up], plane_vector, plane_distance_squared, epsilon);
-  std::pair< int, double > l;
+  std::pair< int_fast32_t, double > l;
   // if we find a vertex on (or very close to) the plane, we set the flag that
   // tells us we need to use a more complicated algorithm
   bool complicated_setup = (u.first == 0);
@@ -496,14 +496,14 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
   // 'complicated_setup' flag is set and we have the index of a vertex on or
   // very close to the plane, in 'up'
 
-  int qp, cp, rp;
-  unsigned char qs, cs;
-  std::pair< int, double > q;
+  int_fast32_t qp, cp, rp;
+  uint_fast8_t qs, cs;
+  std::pair< int_fast32_t, double > q;
   std::vector< bool > delete_stack(_vertices.size(), false);
   // flag only used by complicated setup
   bool double_edge = false;
   // flags only used by complicated setup
-  std::vector< int > visitflags(_vertices.size(), 0);
+  std::vector< int_fast32_t > visitflags(_vertices.size(), 0);
 
   // now create the first new vertex
   // note that we need to check the 'complicated_setup' flag again (even if we
@@ -511,7 +511,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
   // finding routine.
   if (complicated_setup) {
     // do the complicated setup
-    unsigned int k, new_index;
+    uint_fast32_t k, new_index;
 
     // somewhere along the way above, we found a vertex very close or on the
     // midplane. The index of that vertex is stored in 'up'. All other variables
@@ -524,18 +524,18 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
     // done. If it is on the plane (or very close to it), we need to check the
     // edges of that vertex as well.
     // we hence need to use a stack for this test.
-    std::vector< int > stack;
+    std::vector< int_fast32_t > stack;
     // and this stack initially only contains 'up'
     stack.push_back(up);
     l.first = 0;
     // we now test every vertex in the stack (note that the stack grows during
     // the loop)
-    unsigned int j = 0;
+    uint_fast32_t j = 0;
     while (j < stack.size() && l.first != -1) {
       // pick the current element of the stack
       up = stack[j];
       // test all its edges
-      for (unsigned int i = 0; i < _edges[up].size(); ++i) {
+      for (size_t i = 0; i < _edges[up].size(); ++i) {
         lp = get_edge_endpoint(up, i);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
                         epsilon);
@@ -549,7 +549,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
         if (l.first == 0) {
           // edge is in the plane: add the other endpoint to the stack (if it is
           // not already on the stack)
-          unsigned int k = 0;
+          k = 0;
           while (k < stack.size() && stack[k] != lp) {
             ++k;
           }
@@ -600,7 +600,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       // we store the result of the first test in 'rp' for reference, as we will
       // need this later on to detect a vertex with an edge on the plane
       rp = l.first;
-      unsigned int i = 1;
+      uint_fast32_t i = 1;
       lp = get_edge_endpoint(up, i);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
                       epsilon);
@@ -619,7 +619,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       // we found an edge below the plane, and have stored its index in 'i'
       // now start with edge 'i+1' and try to find the first edge above, on, or
       // very close to the plane, and store its index in 'j'
-      unsigned int j = i + 1;
+      uint_fast32_t j = i + 1;
       while (j < _edges[up].size() && l.first == -1) {
         lp = get_edge_endpoint(up, j);
         l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
@@ -714,7 +714,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
 
       // we first do a backwards search to try and find the last edge NOT BELOW
       // the plane
-      unsigned int i = _edges[up].size() - 1;
+      uint_fast32_t i = _edges[up].size() - 1;
       lp = get_edge_endpoint(up, i);
       l = test_vertex(_vertices[lp], plane_vector, plane_distance_squared,
                       epsilon);
@@ -736,7 +736,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       // now we do a forward search and try to find the first edge NOT BELOW the
       // plane (there is really no good reason to store it in 'qp' rather than
       // 'lp', so this code could probably be cleaned up a bit)
-      unsigned int j = 1;
+      uint_fast32_t j = 1;
       qp = get_edge_endpoint(up, j);
       q = test_vertex(_vertices[qp], plane_vector, plane_distance_squared,
                       epsilon);
@@ -872,7 +872,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
     q = u;
     // 'i' is just a temporary variable, as we cannot set 'up' before we have
     // used it to set 'us'
-    int i = get_edge_endpoint(up, us);
+    int_fast32_t i = get_edge_endpoint(up, us);
     us = get_edge_endpoint_index(up, us);
     up = i;
 
@@ -898,7 +898,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
     cmac_assert(lower_fraction >= 0. && lower_fraction <= 1.);
 
     // create a new order 3 vertex
-    unsigned int new_index = _vertices.size();
+    uint_fast32_t new_index = _vertices.size();
     _vertices.push_back(upper_fraction * _vertices[lp] +
                         lower_fraction * _vertices[up]);
     _edges.resize(_edges.size() + 1);
@@ -1003,7 +1003,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       // edges below the plane
       // the offset of 'k' is determined by whether or not the previous vertex
       // had a double edge
-      unsigned int k = 2;
+      uint_fast32_t k = 2;
       if (double_edge) {
         k = 1;
       }
@@ -1018,7 +1018,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
 
       // keep track of the first value of 'qs': the edge that brought us to this
       // vertex
-      unsigned char iqs = qs;
+      uint_fast8_t iqs = qs;
       // now move on to the next edge and try to find an edge NOT BELOW the
       // plane (we know from our edge ordering convention that if 'qp' has edges
       // below the plane, then the next edge has to be one of them)
@@ -1049,7 +1049,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
 
       // find out if 'qp' was already visited before (and hence replaced with a
       // new vertex)
-      int j = visitflags[qp];
+      int_fast32_t j = visitflags[qp];
 #ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
       if (j > 0) {
         cmac_error(
@@ -1082,7 +1082,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
         if (j > 0) {
           k += _edges[j].size();
           if (l.first == 0) {
-            int i = visitflags[lp];
+            int_fast32_t i = visitflags[lp];
             if (i > 0) {
               if (get_edge_endpoint(i, _edges[i].size() - 1) == j) {
                 new_double_edge = true;
@@ -1104,7 +1104,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
           }
         } else {
           if (l.first == 0) {
-            int i = visitflags[lp];
+            int_fast32_t i = visitflags[lp];
             if (i == cp) {
               new_double_edge = true;
               --k;
@@ -1126,7 +1126,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       //      }
       //#endif
 
-      unsigned int i;
+      uint_fast32_t i;
       if (j > 0) {
         i = _edges[j].size();
         if (k != _edges[j].size()) {
@@ -1136,7 +1136,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
       } else {
 
         // create a new order 'k' vertex
-        unsigned int new_index = _vertices.size();
+        uint_fast32_t new_index = _vertices.size();
         _vertices.push_back(_vertices[qp]);
         _edges.resize(_edges.size() + 1);
 
@@ -1256,7 +1256,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
         cmac_assert(lower_fraction >= 0. && lower_fraction <= 1.);
 
         // create a new order 3 vertex
-        unsigned int new_index = _vertices.size();
+        uint_fast32_t new_index = _vertices.size();
         _vertices.push_back(upper_fraction * _vertices[lp] +
                             lower_fraction * _vertices[qp]);
         _edges.resize(_edges.size() + 1);
@@ -1363,7 +1363,7 @@ int OldVoronoiCell::intersect(CoordinateVector<> relative_position,
  */
 double OldVoronoiCell::get_max_radius_squared() const {
   double r2 = 0.;
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+  for (size_t i = 0; i < _vertices.size(); ++i) {
     r2 = std::max(r2, _vertices[i].norm2());
   }
   return r2;
@@ -1416,18 +1416,18 @@ void OldVoronoiCell::finalize() {
   _volume = 0.;
 
   CoordinateVector<> v1, v2, v3, v4;
-  int k, m;
-  unsigned char l, n;
+  int_fast32_t k, m;
+  uint_fast8_t l, n;
   double tvol, tarea;
   CoordinateVector<> tcentroid, tmidpoint;
   // always use the first vertex of the cell as first vertex of the tetrahedra
   v1 = _vertices[0];
   // loop over all vertices
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+  for (size_t i = 0; i < _vertices.size(); ++i) {
     // this is vertex 2
     v2 = _vertices[i];
     // loop over the edges of vertex 2
-    for (unsigned int j = 0; j < _edges[i].size(); ++j) {
+    for (size_t j = 0; j < _edges[i].size(); ++j) {
       k = get_edge_endpoint(i, j);
 
       // we only want to continue if this edge has not yet been processed
@@ -1465,7 +1465,7 @@ void OldVoronoiCell::finalize() {
         cmac_assert(m >= 0);
 
         // loop over all edges of this face until we are back at vertex 2
-        while (m != static_cast< int >(i)) {
+        while (m != static_cast< int_fast32_t >(i)) {
           // get the next edge of the face
           n = get_edge_endpoint_index(k, l) + 1;
           // wrap if necessary
@@ -1535,16 +1535,17 @@ void OldVoronoiCell::finalize() {
  * @param delete_stack std::vector containing a deletion flag for each vertex in
  * the internal vertex list. If the flag is true, the vertex will be deleted.
  */
-void OldVoronoiCell::delete_connections(unsigned int vertex_index,
+void OldVoronoiCell::delete_connections(uint_fast32_t vertex_index,
                                         std::vector< bool > &delete_stack) {
-  for (unsigned int edge_index = 0; edge_index < _edges[vertex_index].size();
+
+  for (size_t edge_index = 0; edge_index < _edges[vertex_index].size();
        ++edge_index) {
-    int edge = get_edge_endpoint(vertex_index, edge_index);
+    int_fast32_t edge = get_edge_endpoint(vertex_index, edge_index);
     if (edge >= 0) {
       delete_stack[edge] = true;
       // disconnect the vertex
       set_edge_endpoint(vertex_index, edge_index, -1);
-      unsigned char other_edge_index =
+      uint_fast8_t other_edge_index =
           get_edge_endpoint_index(vertex_index, edge_index);
       set_edge_endpoint(edge, other_edge_index, -1);
       // now delete all connections of the endpoint
@@ -1560,27 +1561,28 @@ void OldVoronoiCell::delete_connections(unsigned int vertex_index,
  * the internal vertex list. If the flag is true, the vertex will be deleted.
  */
 void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
+
   cmac_assert(delete_stack.size() == _vertices.size());
   cmac_assert(delete_stack.size() == _edges.size());
 
   // add all vertices still connected to vertices that will be deleted to the
   // delete stack
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+  for (size_t i = 0; i < _vertices.size(); ++i) {
     if (delete_stack[i]) {
       delete_connections(i, delete_stack);
     }
   }
 
   // now check for low order vertices, and collapse them
-  std::vector< int > low_order_stack;
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+  std::vector< int_fast32_t > low_order_stack;
+  for (size_t i = 0; i < _vertices.size(); ++i) {
     if (get_edge_endpoint(i, 0) >= 0 && _edges[i].size() < 3) {
       low_order_stack.push_back(i);
     }
   }
 
   while (low_order_stack.size() > 0) {
-    int v = low_order_stack.back();
+    int_fast32_t v = low_order_stack.back();
     low_order_stack.pop_back();
     if (get_edge_endpoint(v, 0) >= 0) {
       if (_edges[v].size() == 2) {
@@ -1588,7 +1590,7 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
       } else if (_edges[v].size() == 1) {
         delete_order_1_vertex(v, low_order_stack);
       } else {
-        cmac_error("Order %lu vertex! This should not happen!",
+        cmac_error("Order %zd vertex! This should not happen!",
                    _edges[v].size());
       }
     }
@@ -1596,8 +1598,8 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   }
 
   // count the new number of vertices
-  unsigned int new_num_vert = 0;
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
+  uint_fast32_t new_num_vert = 0;
+  for (size_t i = 0; i < _vertices.size(); ++i) {
     // '!delete_stack[i]' is 1 if 'delete_stack[i] == false'
     new_num_vert += !delete_stack[i];
     cmac_assert(delete_stack[i] || _edges[i].size() > 2);
@@ -1607,8 +1609,8 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
   // 'new_vertex_index' is the index for the next new vertex to create in the
   // new lists
   // since next_vertex >= new_vertex_index, we can copy the vertices in place
-  unsigned int next_vertex = 0;
-  unsigned int new_vertex_index = 0;
+  uint_fast32_t next_vertex = 0;
+  uint_fast32_t new_vertex_index = 0;
   // find the first vertex that is not deleted
   while (next_vertex < _vertices.size() && delete_stack[next_vertex]) {
     ++next_vertex;
@@ -1625,12 +1627,12 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
     _edges[new_vertex_index] = _edges[next_vertex];
 
     // update the vertices that are connected to this vertex
-    for (unsigned char i = 0; i < _edges[next_vertex].size(); ++i) {
-      int m = get_edge_endpoint(next_vertex, i);
+    for (size_t i = 0; i < _edges[next_vertex].size(); ++i) {
+      int_fast32_t m = get_edge_endpoint(next_vertex, i);
       // we should never encounter edges that have been deleted, as their
       // vertices should be flagged in the delete stack
       cmac_assert(m >= 0);
-      unsigned char n = get_edge_endpoint_index(next_vertex, i);
+      uint_fast8_t n = get_edge_endpoint_index(next_vertex, i);
       // m can either be a new vertex that was already copied, or an old vertex
       // that still needs to be copied
       // it doesn't matter if we update old vertices, as the new values will
@@ -1666,8 +1668,8 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
 
 #ifdef OLDVORONOICELL_CHECK_DEGENERATE_CASES
   // check that no two vertices are exactly the same
-  for (unsigned int i = 0; i < _vertices.size(); ++i) {
-    for (unsigned int j = i + 1; j < _vertices.size(); ++j) {
+  for (size_t i = 0; i < _vertices.size(); ++i) {
+    for (size_t j = i + 1; j < _vertices.size(); ++j) {
       cmac_assert_message(_vertices[i] != _vertices[j],
                           "%u (%g %g %g) - %u (%g %g %g)", i, _vertices[i].x(),
                           _vertices[i].y(), _vertices[i].z(), j,
@@ -1685,14 +1687,14 @@ void OldVoronoiCell::delete_vertices(std::vector< bool > &delete_stack) {
  * @param vertex Vertex to delete.
  * @param stack Stack to add new low order vertices to.
  */
-void OldVoronoiCell::delete_order_2_vertex(int vertex,
-                                           std::vector< int > &stack) {
-  int j = get_edge_endpoint(vertex, 0);
-  int k = get_edge_endpoint(vertex, 1);
-  unsigned char a = get_edge_endpoint_index(vertex, 0);
-  unsigned char b = get_edge_endpoint_index(vertex, 1);
+void OldVoronoiCell::delete_order_2_vertex(int_fast32_t vertex,
+                                           std::vector< int_fast32_t > &stack) {
+  int_fast32_t j = get_edge_endpoint(vertex, 0);
+  int_fast32_t k = get_edge_endpoint(vertex, 1);
+  uint_fast8_t a = get_edge_endpoint_index(vertex, 0);
+  uint_fast8_t b = get_edge_endpoint_index(vertex, 1);
   // see if we can find 'k' in the edge list of 'j'
-  unsigned char l = 0;
+  uint_fast8_t l = 0;
   while (l < _edges[j].size() && get_edge_endpoint(j, l) != k) {
     ++l;
   }
@@ -1707,9 +1709,9 @@ void OldVoronoiCell::delete_order_2_vertex(int vertex,
   } else {
     // there is already an edge from 'j' to 'k'
     // remove the edges from 'j' to 'v' and from 'k' to 'v'
-    for (unsigned char i = a; i < _edges[j].size() - 1; ++i) {
-      int c = get_edge_endpoint(j, i + 1);
-      unsigned char d = get_edge_endpoint_index(j, i + 1);
+    for (size_t i = a; i < _edges[j].size() - 1; ++i) {
+      int_fast32_t c = get_edge_endpoint(j, i + 1);
+      uint_fast8_t d = get_edge_endpoint_index(j, i + 1);
       set_edge_endpoint(j, i, c);
       set_edge_endpoint_index(j, i, d);
       set_edge_endpoint_index(c, d, i);
@@ -1721,9 +1723,9 @@ void OldVoronoiCell::delete_order_2_vertex(int vertex,
     if (_edges[j].size() == 2) {
       stack.push_back(j);
     }
-    for (unsigned char i = b; i < _edges[k].size() - 1; ++i) {
-      int c = get_edge_endpoint(k, i + 1);
-      unsigned char d = get_edge_endpoint_index(k, i + 1);
+    for (size_t i = b; i < _edges[k].size() - 1; ++i) {
+      int_fast32_t c = get_edge_endpoint(k, i + 1);
+      uint_fast8_t d = get_edge_endpoint_index(k, i + 1);
       set_edge_endpoint(k, i, c);
       set_edge_endpoint_index(k, i, d);
       set_edge_endpoint_index(c, d, i);
@@ -1744,13 +1746,13 @@ void OldVoronoiCell::delete_order_2_vertex(int vertex,
  * @param vertex Vertex to delete.
  * @param stack Stack to add new low order vertices to.
  */
-void OldVoronoiCell::delete_order_1_vertex(int vertex,
-                                           std::vector< int > &stack) {
-  int j = get_edge_endpoint(vertex, 0);
-  unsigned char a = get_edge_endpoint_index(vertex, 0);
-  for (unsigned char i = a; i < _edges[j].size() - 1; ++i) {
-    int c = get_edge_endpoint(j, i + 1);
-    unsigned char d = get_edge_endpoint_index(j, i + 1);
+void OldVoronoiCell::delete_order_1_vertex(int_fast32_t vertex,
+                                           std::vector< int_fast32_t > &stack) {
+  int_fast32_t j = get_edge_endpoint(vertex, 0);
+  uint_fast8_t a = get_edge_endpoint_index(vertex, 0);
+  for (size_t i = a; i < _edges[j].size() - 1; ++i) {
+    int_fast32_t c = get_edge_endpoint(j, i + 1);
+    uint_fast8_t d = get_edge_endpoint_index(j, i + 1);
     set_edge_endpoint(j, i, c);
     set_edge_endpoint_index(j, i, d);
     set_edge_endpoint_index(c, d, i);
@@ -1778,6 +1780,7 @@ double OldVoronoiCell::volume_tetrahedron(CoordinateVector<> v1,
                                           CoordinateVector<> v2,
                                           CoordinateVector<> v3,
                                           CoordinateVector<> v4) {
+
   // if two or more vertices have the same position, the volume of the
   // tetrahedron is zero, so this poses no real problem
   // we only added these assertions to check that our algorithm does not call
@@ -1813,6 +1816,7 @@ CoordinateVector<> OldVoronoiCell::centroid_tetrahedron(CoordinateVector<> v1,
                                                         CoordinateVector<> v2,
                                                         CoordinateVector<> v3,
                                                         CoordinateVector<> v4) {
+
   // if two or more vertices have the same position, the volume of the
   // tetrahedron is zero, so this centroid will be ignored by our cell centroid
   // calculation
@@ -1840,6 +1844,7 @@ CoordinateVector<> OldVoronoiCell::centroid_tetrahedron(CoordinateVector<> v1,
 double OldVoronoiCell::surface_area_triangle(CoordinateVector<> v1,
                                              CoordinateVector<> v2,
                                              CoordinateVector<> v3) {
+
   // if two or more vertices have the same position, the surface area of the
   // triangle is zero, which is not really a problem
   // we only added these assertions to check that our algorithm does not call
@@ -1867,6 +1872,7 @@ double OldVoronoiCell::surface_area_triangle(CoordinateVector<> v1,
 CoordinateVector<> OldVoronoiCell::midpoint_triangle(CoordinateVector<> v1,
                                                      CoordinateVector<> v2,
                                                      CoordinateVector<> v3) {
+
   // if two or more vertices have the same position, the surface area of the
   // triangle is zero, and the triangle midpoint will be ignored in our cell
   // face midpoint calculation
@@ -1896,10 +1902,11 @@ CoordinateVector<> OldVoronoiCell::midpoint_triangle(CoordinateVector<> v1,
  * squared distance between the closest point on the plane and the cell
  * generator.
  */
-std::pair< int, double >
+std::pair< int_fast8_t, double >
 OldVoronoiCell::test_vertex(CoordinateVector<> vertex,
                             CoordinateVector<> plane_vector,
                             double plane_distance_squared, double epsilon) {
+
   // let's make sure we have passed on correct arguments
   cmac_assert(plane_vector.norm2() == plane_distance_squared);
   // strictly speaking okay, but we don't want this for our intersection
@@ -1929,14 +1936,15 @@ OldVoronoiCell::test_vertex(CoordinateVector<> vertex,
  * structure of the cell.
  */
 void OldVoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
+
   stream << _generator_position.x() << "\t" << _generator_position.y() << "\t"
          << _generator_position.z() << "\n\n";
-  for (unsigned int i = 0; i < _faces.size(); ++i) {
+  for (size_t i = 0; i < _faces.size(); ++i) {
     const std::vector< CoordinateVector<> > &vertices =
         _faces[i].get_vertices();
-    const unsigned int vsize = vertices.size();
-    for (unsigned int j = 0; j < vsize; ++j) {
-      const unsigned int jnext = (j + 1) % vsize;
+    const size_t vsize = vertices.size();
+    for (size_t j = 0; j < vsize; ++j) {
+      const size_t jnext = (j + 1) % vsize;
       const CoordinateVector<> &a = vertices[j];
       const CoordinateVector<> &b = vertices[jnext];
       stream << a.x() << "\t" << a.y() << "\t" << a.z() << "\n";
@@ -1950,14 +1958,14 @@ void OldVoronoiCell::print_cell(std::ostream &stream, bool show_structure) {
                  "VoronoiCell::finalize was called!");
     }
     stream << "vertices:\n";
-    for (unsigned int i = 0; i < _vertices.size(); ++i) {
+    for (size_t i = 0; i < _vertices.size(); ++i) {
       CoordinateVector<> p = _vertices[i] + _generator_position;
       stream << i << ": " << p.x() << "\t" << p.y() << "\t" << p.z() << "\n";
     }
     stream << "\nedges:\n";
-    for (unsigned int i = 0; i < _edges.size(); ++i) {
+    for (size_t i = 0; i < _edges.size(); ++i) {
       stream << i << " (" << _edges[i].size() << "):\n";
-      for (unsigned int j = 0; j < _edges[i].size(); ++j) {
+      for (size_t j = 0; j < _edges[i].size(); ++j) {
         stream << _edges[i][j].get_endpoint() << " ("
                << +_edges[i][j].get_endpoint_index() << ")\t";
       }

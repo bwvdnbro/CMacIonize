@@ -37,6 +37,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// tagged file
   {
     cmac_status("Start reading tagged file...");
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
-    unsigned int index = 0;
+    uint_fast32_t index = 0;
     while (getline(file, line)) {
       std::istringstream lstream(line);
 
@@ -85,7 +86,7 @@ int main(int argc, char **argv) {
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
-    unsigned int index = 0;
+    uint_fast32_t index = 0;
     while (getline(file, line)) {
       std::istringstream lstream(line);
 

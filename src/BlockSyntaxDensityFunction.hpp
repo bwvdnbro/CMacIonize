@@ -33,6 +33,7 @@
 #include "ParameterFile.hpp"
 #include "YAMLDictionary.hpp"
 
+#include <cinttypes>
 #include <fstream>
 #include <sstream>
 
@@ -80,8 +81,9 @@ public:
 
     YAMLDictionary blockfile(file);
 
-    const int numblock = blockfile.get_value< int >("number of blocks");
-    for (int i = 0; i < numblock; ++i) {
+    const uint_fast32_t numblock =
+        blockfile.get_value< uint_fast32_t >("number of blocks");
+    for (uint_fast32_t i = 0; i < numblock; ++i) {
       std::stringstream blockname;
       blockname << "block[" << i << "]:";
       CoordinateVector<> origin =
@@ -102,11 +104,12 @@ public:
               blockname.str() + "initial velocity",
               "[0. m s^-1, 0. m s^-1, 0. m s^-1]");
       if (density < 0.) {
-        cmac_error("Negative density (%g) given for block %i!", density, i);
+        cmac_error("Negative density (%g) given for block %" PRIuFAST32 "!",
+                   density, i);
       }
       if (temperature < 0.) {
-        cmac_error("Negative temperature (%g) given for block %i!", temperature,
-                   i);
+        cmac_error("Negative temperature (%g) given for block %" PRIuFAST32 "!",
+                   temperature, i);
       }
       _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
                                          temperature, velocity));
@@ -149,7 +152,7 @@ public:
     double density = -1.;
     double temperature = -1.;
     CoordinateVector<> velocity;
-    for (unsigned int i = 0; i < _blocks.size(); ++i) {
+    for (size_t i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
         density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();

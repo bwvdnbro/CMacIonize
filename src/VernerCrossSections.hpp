@@ -95,8 +95,8 @@ private:
 public:
   VernerCrossSections();
 
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e) const;
+  double get_cross_section_verner(uint_fast8_t nz, uint_fast8_t ne,
+                                  uint_fast8_t is, double e) const;
 
   virtual double get_cross_section(IonName ion, double energy) const;
 };

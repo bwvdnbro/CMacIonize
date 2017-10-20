@@ -27,6 +27,7 @@
 #include "Assert.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include <cinttypes>
 #include <fstream>
 
 /**
@@ -37,10 +38,11 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // create an empty grid
   AMRGrid< double > grid(
       Box<>(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
-      CoordinateVector< int >(2, 1, 1));
+      CoordinateVector< uint_fast32_t >(2, 1, 1));
 
   /// basic functionality
 
@@ -126,7 +128,7 @@ int main(int argc, char **argv) {
 
   // check Morton iteration
   key = grid.get_first_key();
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   // we need a way to make sure all cells are traversed (exactly once)
   // to this end, we calculate the sum of all keys
   uint64_t keysum = 0;
@@ -185,135 +187,135 @@ int main(int argc, char **argv) {
   assert_condition(grid[512].get_ngb(AMRNGBPOSITION_TOP)->value() == 576.);
 
   // now a couple arbitrary ones in the middle of the first block
-  uint64_t tests[8][7] = {// 568 = 1 000 111 000
-                          // 792 = 1 100 011 000
-                          // 824 = 1 100 111 000
-                          // 680 = 1 010 101 000
-                          // 696 = 1 010 111 000
-                          // 624 = 1 001 110 000
-                          // 632 = 1 001 111 000
-                          {568, 792, 824, 680, 696, 624, 632},
-                          // 632 = 1 001 111 000
-                          // 856 = 1 101 011 000
-                          // 888 = 1 101 111 000
-                          // 744 = 1 011 101 000
-                          // 760 = 1 011 111 000
-                          // 568 = 1 000 111 000
-                          // 561 = 1 000 110 001
-                          {632, 856, 888, 744, 760, 568, 561},
-                          // 696 = 1 010 111 000
-                          // 920 = 1 110 011 000
-                          // 952 = 1 110 111 000
-                          // 568 = 1 000 111 000
-                          // 554 = 1 000 101 010
-                          // 752 = 1 011 110 000
-                          // 760 = 1 011 111 000
-                          {696, 920, 952, 568, 554, 752, 760},
-                          // 760 = 1 011 111 000
-                          // 984 = 1 111 011 000
-                          // 1016 = 1 111 111 000
-                          // 632 = 1 001 111 000
-                          // 618 = 1 001 101 010
-                          // 696 = 1 010 111 000
-                          // 689 = 1 010 110 001
-                          {760, 984, 1016, 632, 618, 696, 689},
-                          // 824 = 1 100 111 000
-                          // 568 = 1 000 111 000
-                          // 540 = 1 000 011 100
-                          // 936 = 1 110 101 000
-                          // 952 = 1 110 111 000
-                          // 880 = 1 101 110 000
-                          // 888 = 1 101 111 000
-                          {824, 568, 540, 936, 952, 880, 888},
-                          // 888 = 1 101 111 000
-                          // 632 = 1 001 111 000
-                          // 604 = 1 001 011 100
-                          // 1000 = 1 111 101 000
-                          // 1016 = 1 111 111 000
-                          // 824 = 1 100 111 000
-                          // 817 = 1 100 110 001
-                          {888, 632, 604, 1000, 1016, 824, 817},
-                          // 952 = 1 110 111 000
-                          // 696 = 1 010 111 000
-                          // 668 = 1 010 011 100
-                          // 824 = 1 100 111 000
-                          // 810 = 1 100 101 010
-                          // 1008 = 1 111 110 000
-                          // 1016 = 1 111 111 000
-                          {952, 696, 668, 824, 810, 1008, 1016},
-                          // 1016 = 1 111 111 000
-                          // 760 = 1 011 111 000
-                          // 732 = 1 011 011 100
-                          // 888 = 1 101 111 000
-                          // 874 = 1 101 101 010
-                          // 952 = 1 110 111 000
-                          // 945 = 1 110 110 001
-                          {1016, 760, 732, 888, 874, 952, 945}};
-  for (unsigned int i = 0; i < 8; ++i) {
-    cmac_status("Testing cell %lu", tests[i][0]);
+  uint_fast64_t tests[8][7] = {// 568 = 1 000 111 000
+                               // 792 = 1 100 011 000
+                               // 824 = 1 100 111 000
+                               // 680 = 1 010 101 000
+                               // 696 = 1 010 111 000
+                               // 624 = 1 001 110 000
+                               // 632 = 1 001 111 000
+                               {568, 792, 824, 680, 696, 624, 632},
+                               // 632 = 1 001 111 000
+                               // 856 = 1 101 011 000
+                               // 888 = 1 101 111 000
+                               // 744 = 1 011 101 000
+                               // 760 = 1 011 111 000
+                               // 568 = 1 000 111 000
+                               // 561 = 1 000 110 001
+                               {632, 856, 888, 744, 760, 568, 561},
+                               // 696 = 1 010 111 000
+                               // 920 = 1 110 011 000
+                               // 952 = 1 110 111 000
+                               // 568 = 1 000 111 000
+                               // 554 = 1 000 101 010
+                               // 752 = 1 011 110 000
+                               // 760 = 1 011 111 000
+                               {696, 920, 952, 568, 554, 752, 760},
+                               // 760 = 1 011 111 000
+                               // 984 = 1 111 011 000
+                               // 1016 = 1 111 111 000
+                               // 632 = 1 001 111 000
+                               // 618 = 1 001 101 010
+                               // 696 = 1 010 111 000
+                               // 689 = 1 010 110 001
+                               {760, 984, 1016, 632, 618, 696, 689},
+                               // 824 = 1 100 111 000
+                               // 568 = 1 000 111 000
+                               // 540 = 1 000 011 100
+                               // 936 = 1 110 101 000
+                               // 952 = 1 110 111 000
+                               // 880 = 1 101 110 000
+                               // 888 = 1 101 111 000
+                               {824, 568, 540, 936, 952, 880, 888},
+                               // 888 = 1 101 111 000
+                               // 632 = 1 001 111 000
+                               // 604 = 1 001 011 100
+                               // 1000 = 1 111 101 000
+                               // 1016 = 1 111 111 000
+                               // 824 = 1 100 111 000
+                               // 817 = 1 100 110 001
+                               {888, 632, 604, 1000, 1016, 824, 817},
+                               // 952 = 1 110 111 000
+                               // 696 = 1 010 111 000
+                               // 668 = 1 010 011 100
+                               // 824 = 1 100 111 000
+                               // 810 = 1 100 101 010
+                               // 1008 = 1 111 110 000
+                               // 1016 = 1 111 111 000
+                               {952, 696, 668, 824, 810, 1008, 1016},
+                               // 1016 = 1 111 111 000
+                               // 760 = 1 011 111 000
+                               // 732 = 1 011 011 100
+                               // 888 = 1 101 111 000
+                               // 874 = 1 101 101 010
+                               // 952 = 1 110 111 000
+                               // 945 = 1 110 110 001
+                               {1016, 760, 732, 888, 874, 952, 945}};
+  for (uint_fast8_t i = 0; i < 8; ++i) {
+    cmac_status("Testing cell %" PRIuFAST64, tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
                 tests[i][1]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][1]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
                 tests[i][2]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][2]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
                 tests[i][3]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][3]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value(),
                 tests[i][4]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][4]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
                 tests[i][5]);
     assert_condition(
         grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][5]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][0]);
 
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value(),
                 tests[i][6]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][6]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
                 tests[i][0]);
     assert_condition(

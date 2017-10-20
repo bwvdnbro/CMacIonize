@@ -75,7 +75,7 @@ public:
    * written to the file.
    * @param time Simulation time (in s).
    */
-  virtual void write(DensityGrid &grid, unsigned int iteration,
+  virtual void write(DensityGrid &grid, uint_fast32_t iteration,
                      ParameterFile &params, double time = 0.) = 0;
 };
 

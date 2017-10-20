@@ -68,7 +68,7 @@ public:
 class OneDVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Index of the last returned generator position. */
-  unsigned int _last_index;
+  generatornumber_t _last_index;
 
 public:
   /**
@@ -76,7 +76,7 @@ public:
    *
    * @return 100.
    */
-  virtual unsigned int get_number_of_positions() const { return 100; }
+  virtual generatornumber_t get_number_of_positions() const { return 100; }
 
   /**
    * @brief Get a generator position.
@@ -99,17 +99,18 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// Cartesian grid
   {
     HydroIntegrator integrator(5. / 3., false, false);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-    CoordinateVector< int > ncell(100, 1, 1);
+    CoordinateVector< int_fast32_t > ncell(100, 1, 1);
     SodShockDensityFunction density_function;
     density_function.initialize();
     CoordinateVector< bool > periodic(false, true, true);
     CartesianDensityGrid grid(box, ncell, periodic, true);
-    std::pair< unsigned long, unsigned long > block =
+    std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
@@ -133,7 +134,7 @@ int main(int argc, char **argv) {
     }
 
     Timer serial_timer, parallel_timer;
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       integrator.do_hydro_step(grid, 0.001, serial_timer, parallel_timer);
     }
 
@@ -159,7 +160,7 @@ int main(int argc, char **argv) {
       std::ofstream snapfile("hydro_ref_1.txt");
       const RiemannSolver solver(5. / 3.);
       const double t = 0.1;
-      for (unsigned int i = 0; i < 1000; ++i) {
+      for (uint_fast32_t i = 0; i < 1000; ++i) {
         const double x = (i + 0.5) * 0.001;
         double rhosol, usol, Psol;
         solver.solve(1., 0., 1., 0.125, 0., 0.1, rhosol, usol, Psol,
@@ -180,7 +181,7 @@ int main(int argc, char **argv) {
     OneDVoronoiGeneratorDistribution *generators =
         new OneDVoronoiGeneratorDistribution();
     VoronoiDensityGrid grid(generators, box, "Old", 0, periodic, true);
-    std::pair< unsigned long, unsigned long > block =
+    std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
@@ -204,7 +205,7 @@ int main(int argc, char **argv) {
     }
 
     Timer serial_timer, parallel_timer;
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       integrator.do_hydro_step(grid, 0.001, serial_timer, parallel_timer);
     }
 

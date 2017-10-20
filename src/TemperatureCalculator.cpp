@@ -35,6 +35,7 @@
 #include "PhysicalConstants.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+#include <cinttypes>
 #include <cmath>
 
 /**
@@ -64,9 +65,9 @@
  * @param log Log to write logging info to.
  */
 TemperatureCalculator::TemperatureCalculator(
-    bool do_temperature_computation, unsigned int minimum_iteration_number,
+    bool do_temperature_computation, uint_fast32_t minimum_iteration_number,
     double luminosity, const Abundances &abundances, double epsilon_convergence,
-    unsigned int maximum_number_of_iterations, double pahfac, double crfac,
+    uint_fast32_t maximum_number_of_iterations, double pahfac, double crfac,
     double crlim, double crscale, const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates, Log *log)
@@ -130,12 +131,12 @@ TemperatureCalculator::TemperatureCalculator(
     : TemperatureCalculator(
           params.get_value< bool >(
               "TemperatureCalculator:do temperature calculation", false),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "TemperatureCalculator:minimum number of iterations", 3),
           luminosity, abundances,
           params.get_value< double >(
               "TemperatureCalculator:epsilon convergence", 1.e-3),
-          params.get_value< unsigned int >(
+          params.get_value< uint_fast32_t >(
               "TemperatureCalculator:maximum number of iterations", 100),
           params.get_value< double >("TemperatureCalculator:PAH heating factor",
                                      1.),
@@ -380,9 +381,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   std::vector< std::vector< double > > lines =
       line_cooling_data.get_line_strengths(T, ne, abund);
   std::vector< double > cooling(lines.size());
-  for (unsigned int i = 0; i < lines.size(); ++i) {
+  for (size_t i = 0; i < lines.size(); ++i) {
     cooling[i] = 0.;
-    for (unsigned int j = 0; j < lines[i].size(); ++j) {
+    for (size_t j = 0; j < lines[i].size(); ++j) {
       cooling[i] += lines[i][j];
     }
     cooling[i] *= n;
@@ -433,6 +434,10 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   ionization_variables.set_cooling(ION_He_n, Lhep);
 #endif
   loss += Lhp + Lhep;
+
+  // make sure losses are losses and gains are gains
+  loss = std::max(loss, 0.);
+  gain = std::max(gain, 0.);
 }
 
 /**
@@ -443,6 +448,55 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
  * energy change becomes negligible. For every temperature guess, we can compute
  * the ionization balance of hydrogen and helium and the coolants, which is then
  * used to obtain cooling and heating rates.
+ *
+ * To find the equilibrium temperature \f$T\f$, we solve the equation
+ * \f[
+ *   \frac{{\rm{}d}T}{{\rm{}d}t} = H(T) - L(T) = 0,
+ * \f]
+ * with \f$H(T)\f$ and \f$L(T)\f$ the heating and cooling respectively. The
+ * problem of finding the equilibrium temperature hence boils down to finding
+ * the root of the function
+ * \f[
+ *   f(T) = H(T) - L(T).
+ * \f]
+ *
+ * Since \f$H(T)\f$ and \f$L(T)\f$ are very complex functions of \f$T\f$, we
+ * don't have information about the derivatives of \f$f(T)\f$, and we need to
+ * find the roots using a secant method (see
+ * https://en.wikipedia.org/wiki/Secant_method): if \f$T_1 < T_0 < T_2\f$ are
+ * three different temperature values, then a good next guess \f$T'\f$ for the
+ * equilibrium temperature is
+ * \f[
+ *   T' = T_0 - f(T_0) \frac{T_2 - T_1}{f(T_2) - f(T_1)}.
+ * \f]
+ * There are a few issues however with this equation. First of all, \f$H(T)\f$
+ * and \f$L(T)\f$ are non linear functions, so convergence of the linear secant
+ * method will be slow. Therefore, it would be better if we could use a
+ * logarithmic method. Furthermore, the cooling and heating functions we have
+ * give the cooling and heating as an energy change rate rather than a
+ * temperature change rate. Which means that we have to take into account an
+ * extra conversion constant from energy to temperature.
+ *
+ * Both issues are solved if we rewrite the secant method as
+ * \f[
+ *   \log{T'} = \log{T_0} -
+ *              f'(T_0) \frac{\log{T_2} - \log{T_1}}{f'(T_2) - f'(T_1)},
+ * \f]
+ * with
+ * \f[
+ *   f'(T) = \log{H(T)} - \log{L(T)} = \log{\left(\frac{H(T)}{L(T)}\right)}.
+ * \f]
+ *
+ * This can be rewritten as the more practical equation
+ * \f[
+ *   T' = T_0 \left(\frac{L(T_0)}{H(T_0)}\right)^{
+ *          \frac{\log{\left(\frac{T_1}{T_2}\right)}}
+ *               {\log{\left(\frac{H(T_1)}{H(T_2)}\right)} -
+ *                \log{\left(\frac{L(T_1)}{L(T_2)}\right)}}}.
+ * \f]
+ * This equation will cause problems if one of the heating or cooling terms
+ * is zero or negative. We therefore make sure that our heating/cooling is never
+ * negative, and add extra code to handle a zero heating/cooling term.
  *
  * @param jfac Normalization factor for the mean intensity integrals.
  * @param hfac Normalization factor for the heating integrals.
@@ -532,14 +586,14 @@ void TemperatureCalculator::calculate_temperature(
 
   // normalize the mean intensity integrals
   double j[NUMBER_OF_IONNAMES];
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     IonName ion = static_cast< IonName >(i);
     j[i] = jfac * ionization_variables.get_mean_intensity(ion);
   }
 
   // normalize the heating integrals
   double h[NUMBER_OF_HEATINGTERMS];
-  for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
     HeatingTermName heating_term = static_cast< HeatingTermName >(i);
     h[i] = hfac * ionization_variables.get_heating(heating_term);
   }
@@ -550,7 +604,7 @@ void TemperatureCalculator::calculate_temperature(
   // guess, until the difference between cooling and heating drops below a
   // threshold value
   // we enforce upper and lower limits on the temperature of 10^10 and 500 K
-  unsigned int niter = 0;
+  uint_fast32_t niter = 0;
   double gain0 = 1.;
   double loss0 = 0.;
   h0 = 0.;
@@ -580,10 +634,52 @@ void TemperatureCalculator::calculate_temperature(
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
-    const double logtt = std::log(T1 / T2);
-    const double expgain = std::log(gain1 / gain2) / logtt;
-    const double exploss = std::log(loss1 / loss2) / logtt;
-    T0 *= std::pow(loss0 / gain0, 1. / (expgain - exploss));
+    // funny detail: this value is actually constant :p
+    static const double logtt = std::log(1.1 / 0.9);
+    double expgain;
+    if (gain2 > 0.) {
+      if (gain1 > 0.) {
+        expgain = std::log(gain1 / gain2);
+      } else {
+        // expgain = std::log(0.) = std::log(very small number) = -99.
+        expgain = -99.;
+      }
+    } else {
+      if (gain1 > 0.) {
+        // expgain = -std::log(gain2 / gain1) = -std::log(0.) =
+        // -std::log(very small number) = 99.
+        expgain = 99.;
+      } else {
+        // expgain = std::log(0. / 0.) = (assume) = std::log(1.) = 0.
+        expgain = 0.;
+      }
+    }
+    double exploss;
+    if (loss2 > 0.) {
+      if (loss1 > 0.) {
+        exploss = std::log(loss1 / loss2);
+      } else {
+        // exploss = std::log(0.) = std::log(very small number) = -99.
+        exploss = -99.;
+      }
+    } else {
+      if (loss1 > 0.) {
+        // exploss = -std::log(loss2 / loss1) = -std::log(0.) =
+        // -std::log(very small number) = 99.
+        exploss = 99.;
+      } else {
+        // exploss = std::log(0. / 0.) = (assume) = std::log(1.) = 0.
+        exploss = 0.;
+      }
+    }
+    const double expdiff = expgain - exploss;
+    if (gain0 > 0. && expdiff != 0.) {
+      T0 *= std::pow(loss0 / gain0, logtt / expdiff);
+    } else {
+      // cooling and heating are behaving very weirdly
+      // try again with a different temperature
+      T0 = T1;
+    }
 
     if (T0 < 4000.) {
       // gas is neutral, temperature is 500 K
@@ -607,7 +703,8 @@ void TemperatureCalculator::calculate_temperature(
     }
   }
   if (niter == _maximum_number_of_iterations) {
-    cmac_warning("Maximum number of iterations (%u) reached (temperature: %g, "
+    cmac_warning("Maximum number of iterations (%" PRIuFAST32
+                 ") reached (temperature: %g, "
                  "relative difference cooling/heating: %g, aim: %g)!",
                  niter, T0, std::abs(loss0 - gain0) / gain0,
                  _epsilon_convergence);
@@ -674,6 +771,22 @@ void TemperatureCalculator::calculate_temperature(
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
   }
+
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+  // set the mean intensity values to the actual physical values
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    IonName ion = static_cast< IonName >(i);
+    ionization_variables.set_mean_intensity(ion, j[i]);
+  }
+#endif
+
+#ifdef DO_OUTPUT_HEATING
+  // set the heating term values to the actual physical values
+  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
+    ionization_variables.set_heating(heating_term, h[i]);
+  }
+#endif
 }
 
 /**
@@ -688,8 +801,8 @@ void TemperatureCalculator::calculate_temperature(
  * @param block Block that should be traversed by the local MPI process.
  */
 void TemperatureCalculator::calculate_temperature(
-    unsigned int loop, double totweight, DensityGrid &grid,
-    std::pair< unsigned long, unsigned long > &block) const {
+    uint_fast32_t loop, double totweight, DensityGrid &grid,
+    std::pair< cellsize_t, cellsize_t > &block) const {
 
   if (_do_temperature_computation && loop > _minimum_iteration_number) {
     // get the normalization factors for the ionizing intensity and heating

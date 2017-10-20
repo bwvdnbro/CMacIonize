@@ -54,7 +54,7 @@ enum NewVoronoiCellTestName {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCellConstructor::setup_test(int test) {
+void NewVoronoiCellConstructor::setup_test(int_fast32_t test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
     // the exact positions of the vertices are irrelevant for this test, so we
@@ -62,9 +62,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 5;
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int t[1] = {0};
-    const unsigned int ngb[4] = {1, 2, 3, 4};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t t[1] = {0};
+    const uint_fast32_t ngb[4] = {1, 2, 3, 4};
 
     // we need 1 tetrahedron + 4 dummy neighbours to check the neighbour
     // handling
@@ -82,9 +82,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 6;
 
     // convenient names used in documentation figure
-    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
-    const unsigned int t[2] = {0, 1};
-    const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
+    const uint_fast32_t v[6] = {0, 1, 2, 3, 4, 5};
+    const uint_fast32_t t[2] = {0, 1};
+    const uint_fast32_t ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
@@ -105,9 +105,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 8;
 
     // convenient names used in documentation figure
-    const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    const unsigned int t[5] = {0, 1, 2, 3, 4};
-    const unsigned int ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    const uint_fast32_t v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    const uint_fast32_t t[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
     // we need 5 tetrahedra + 10 dummy neighbours to check the neighbour
     // handling
@@ -133,9 +133,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 5;
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int t[2] = {0, 1};
-    const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t t[2] = {0, 1};
+    const uint_fast32_t ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // we need 2 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 8;
@@ -154,9 +154,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 5;
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int t[3] = {0, 1, 2};
-    const unsigned int ngb[6] = {3, 4, 5, 6, 7, 8};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t t[3] = {0, 1, 2};
+    const uint_fast32_t ngb[6] = {3, 4, 5, 6, 7, 8};
 
     // we need 3 tetrahedra + 6 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 9;
@@ -177,9 +177,9 @@ void NewVoronoiCellConstructor::setup_test(int test) {
     _vertices_size = 6;
 
     // convenient names used in documentation figure
-    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
-    const unsigned int t[4] = {0, 1, 2, 3};
-    const unsigned int ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
+    const uint_fast32_t v[6] = {0, 1, 2, 3, 4, 5};
+    const uint_fast32_t t[4] = {0, 1, 2, 3};
+    const uint_fast32_t ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
 
     // we need 4 tetrahedra + 8 dummy neighbours to check the neighbour handling
     _tetrahedra_size = 12;
@@ -249,7 +249,7 @@ void NewVoronoiCellConstructor::setup_test(int test) {
  *
  * @param test NewVoronoiCellTestName.
  */
-void NewVoronoiCellConstructor::check_test(int test) {
+void NewVoronoiCellConstructor::check_test(int_fast32_t test) {
   switch (test) {
   case NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP: {
 
@@ -257,9 +257,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_tetrahedra_size == 8);
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int tn[4] = {0, 5, 6, 7};
-    const unsigned int ngb[4] = {1, 2, 3, 4};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t tn[4] = {0, 5, 6, 7};
+    const uint_fast32_t ngb[4] = {1, 2, 3, 4};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[1], v[2], v[4], tn[3], tn[2], tn[1],
@@ -286,9 +286,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_tetrahedra_size == 12);
 
     // convenient names used in documentation figure
-    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
-    const unsigned int tn[6] = {0, 1, 8, 9, 10, 11};
-    const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
+    const uint_fast32_t v[6] = {0, 1, 2, 3, 4, 5};
+    const uint_fast32_t tn[6] = {0, 1, 8, 9, 10, 11};
+    const uint_fast32_t ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[1], v[2], v[5], tn[2], tn[1], tn[3],
@@ -325,9 +325,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_tetrahedra_size == 20);
 
     // convenient names used in documentation figure
-    const unsigned int v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    const unsigned int tn[10] = {0, 1, 2, 3, 4, 15, 16, 17, 18, 19};
-    const unsigned int ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    const uint_fast32_t v[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    const uint_fast32_t tn[10] = {0, 1, 2, 3, 4, 15, 16, 17, 18, 19};
+    const uint_fast32_t ngb[10] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[7], v[1], v[5], tn[2], ngb[0],
@@ -378,9 +378,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_tetrahedra_size == 9);
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int tn[3] = {0, 1, 8};
-    const unsigned int ngb[6] = {2, 3, 4, 5, 6, 7};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t tn[3] = {0, 1, 8};
+    const uint_fast32_t ngb[6] = {2, 3, 4, 5, 6, 7};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[1], v[2], v[4], tn[2], tn[1],
@@ -409,9 +409,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_free_tetrahedra[0] == 2);
 
     // convenient names used in documentation figure
-    const unsigned int v[5] = {0, 1, 2, 3, 4};
-    const unsigned int tn[2] = {0, 1};
-    const unsigned int ngb[6] = {3, 4, 5, 6, 7, 8};
+    const uint_fast32_t v[5] = {0, 1, 2, 3, 4};
+    const uint_fast32_t tn[2] = {0, 1};
+    const uint_fast32_t ngb[6] = {3, 4, 5, 6, 7, 8};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[1], v[2], v[3], ngb[0], ngb[3],
@@ -434,9 +434,9 @@ void NewVoronoiCellConstructor::check_test(int test) {
     assert_condition(_tetrahedra_size == 12);
 
     // convenient names used in documentation figure
-    const unsigned int v[6] = {0, 1, 2, 3, 4, 5};
-    const unsigned int tn[4] = {0, 1, 2, 3};
-    const unsigned int ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
+    const uint_fast32_t v[6] = {0, 1, 2, 3, 4, 5};
+    const uint_fast32_t tn[4] = {0, 1, 2, 3};
+    const uint_fast32_t ngb[8] = {4, 5, 6, 7, 8, 9, 10, 11};
 
     // check the individual tetrahedra
     assert_tetrahedron_right(tn[0], v[0], v[3], v[5], v[2], tn[1], ngb[7],
@@ -527,6 +527,7 @@ inline static CoordinateVector<> get_rescaled_coordinates(
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// test VoronoiTetrahedron
   {
     std::vector< CoordinateVector<> > positions(4);
@@ -687,7 +688,7 @@ int main(int argc, char **argv) {
     cell.setup(0, rescaled_positions, rescaled_box, rescaled_positions,
                rescaled_box, false);
 
-    unsigned int tetrahedra[4];
+    uint_fast32_t tetrahedra[4];
     assert_condition(cell.find_tetrahedron(1, rescaled_box, rescaled_positions,
                                            tetrahedra) == 1);
     assert_condition(tetrahedra[0] == 1);
@@ -793,7 +794,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_ONE_TO_FOUR_FLIP);
-    unsigned int tn[4];
+    uint_fast32_t tn[4];
     cell.one_to_four_flip(4, 0, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 5);
@@ -809,8 +810,8 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_SIX_FLIP);
-    unsigned int tetrahedra[2] = {0, 1};
-    unsigned int tn[6];
+    uint_fast32_t tetrahedra[2] = {0, 1};
+    uint_fast32_t tn[6];
     cell.two_to_six_flip(5, tetrahedra, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -828,8 +829,8 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_N_TO_2N_FLIP);
-    unsigned int tetrahedra[5] = {0, 1, 2, 3, 4};
-    unsigned int tn[2 * UCHAR_MAX];
+    uint_fast32_t tetrahedra[5] = {0, 1, 2, 3, 4};
+    uint_fast32_t tn[2 * UCHAR_MAX];
     cell.n_to_2n_flip(7, tetrahedra, 5, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -851,7 +852,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_TWO_TO_THREE_FLIP);
-    unsigned int tn[3];
+    uint_fast32_t tn[3];
     cell.two_to_three_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -866,7 +867,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_THREE_TO_TWO_FLIP);
-    unsigned int tn[2];
+    uint_fast32_t tn[2];
     cell.three_to_two_flip(0, 1, 2, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -880,7 +881,7 @@ int main(int argc, char **argv) {
     NewVoronoiCellConstructor cell;
 
     cell.setup_test(NEWVORONOICELL_TEST_FOUR_TO_FOUR_FLIP);
-    unsigned int tn[4];
+    uint_fast32_t tn[4];
     cell.four_to_four_flip(0, 1, 2, 3, tn);
     assert_condition(tn[0] == 0);
     assert_condition(tn[1] == 1);
@@ -1036,7 +1037,7 @@ int main(int argc, char **argv) {
     cell.setup(0, real_positions, real_voronoi_box, real_positions,
                real_voronoi_box, false);
 
-    for (unsigned int i = 1; i < 3; ++i) {
+    for (uint_fast8_t i = 1; i < 3; ++i) {
       cell.intersect(i, real_voronoi_box, real_positions, real_voronoi_box,
                      real_positions);
       cell.check_empty_circumsphere(real_voronoi_box, real_positions);
@@ -1206,9 +1207,9 @@ int main(int argc, char **argv) {
 
   /// test NewVoronoiGrid construction: random generators
   {
-    const unsigned int ncell = 100;
+    const uint_fast32_t ncell = 100;
     std::vector< CoordinateVector<> > positions(ncell);
-    for (unsigned int i = 0; i < ncell; ++i) {
+    for (uint_fast32_t i = 0; i < ncell; ++i) {
       positions[i] = Utilities::random_position();
     }
 
@@ -1227,13 +1228,13 @@ int main(int argc, char **argv) {
 
   /// test NewVoronoiGrid construction: regular generators
   {
-    const unsigned int ncell_1D = 5;
-    const unsigned int ncell_2D = ncell_1D * ncell_1D;
-    const unsigned int ncell_3D = ncell_2D * ncell_1D;
+    const uint_fast32_t ncell_1D = 5;
+    const uint_fast32_t ncell_2D = ncell_1D * ncell_1D;
+    const uint_fast32_t ncell_3D = ncell_2D * ncell_1D;
     std::vector< CoordinateVector<> > positions(ncell_3D);
-    for (unsigned int ix = 0; ix < ncell_1D; ++ix) {
-      for (unsigned int iy = 0; iy < ncell_1D; ++iy) {
-        for (unsigned int iz = 0; iz < ncell_1D; ++iz) {
+    for (uint_fast32_t ix = 0; ix < ncell_1D; ++ix) {
+      for (uint_fast32_t iy = 0; iy < ncell_1D; ++iy) {
+        for (uint_fast32_t iz = 0; iz < ncell_1D; ++iz) {
           positions[ncell_2D * ix + ncell_1D * iy + iz] =
               CoordinateVector<>((ix + 0.5) / ncell_1D, (iy + 0.5) / ncell_1D,
                                  (iz + 0.5) / ncell_1D);

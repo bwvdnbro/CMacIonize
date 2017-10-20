@@ -37,13 +37,13 @@
 class NewVoronoiTetrahedron {
 private:
   /*! @brief Vertex indices. */
-  unsigned int _v[4];
+  uint_least32_t _v[4];
 
   /*! @brief Neighbour indices. */
-  unsigned int _neighbours[4];
+  uint_least32_t _neighbours[4];
 
   /*! @brief Indices of this tetrahedron in the neighbours. */
-  unsigned char _ngb_index[4];
+  uint_least8_t _ngb_index[4];
 
 public:
   /**
@@ -81,16 +81,16 @@ public:
    * @param ngb3_index Index of this tetrahedron in the neighbour list of the
    * fourth neighbour.
    */
-  inline NewVoronoiTetrahedron(unsigned int v0, unsigned int v1,
-                               unsigned int v2, unsigned int v3,
-                               unsigned int ngb0 = NEWVORONOICELL_MAX_INDEX,
-                               unsigned int ngb1 = NEWVORONOICELL_MAX_INDEX,
-                               unsigned int ngb2 = NEWVORONOICELL_MAX_INDEX,
-                               unsigned int ngb3 = NEWVORONOICELL_MAX_INDEX,
-                               unsigned int ngb0_index = 4,
-                               unsigned int ngb1_index = 4,
-                               unsigned int ngb2_index = 4,
-                               unsigned int ngb3_index = 4) {
+  inline NewVoronoiTetrahedron(uint_fast32_t v0, uint_fast32_t v1,
+                               uint_fast32_t v2, uint_fast32_t v3,
+                               uint_fast32_t ngb0 = NEWVORONOICELL_MAX_INDEX,
+                               uint_fast32_t ngb1 = NEWVORONOICELL_MAX_INDEX,
+                               uint_fast32_t ngb2 = NEWVORONOICELL_MAX_INDEX,
+                               uint_fast32_t ngb3 = NEWVORONOICELL_MAX_INDEX,
+                               uint_fast8_t ngb0_index = 4,
+                               uint_fast8_t ngb1_index = 4,
+                               uint_fast8_t ngb2_index = 4,
+                               uint_fast8_t ngb3_index = 4) {
     _v[0] = v0;
     _v[1] = v1;
     _v[2] = v2;
@@ -210,6 +210,7 @@ public:
    */
   inline double
   get_volume(const std::vector< CoordinateVector<> > &positions) const {
+
     const CoordinateVector<> a = positions[_v[1]] - positions[_v[0]];
     const CoordinateVector<> b = positions[_v[2]] - positions[_v[0]];
     const CoordinateVector<> c = positions[_v[3]] - positions[_v[0]];
@@ -224,7 +225,7 @@ public:
    * @param index Index.
    * @return Corresponding vertex.
    */
-  inline unsigned int get_vertex(unsigned char index) const {
+  inline uint_fast32_t get_vertex(uint_fast8_t index) const {
     return _v[index];
   }
 
@@ -235,7 +236,7 @@ public:
    * @param index Index.
    * @return Neighbouring tetrahedron index.
    */
-  inline unsigned int get_neighbour(unsigned char index) const {
+  inline uint_fast32_t get_neighbour(uint_fast8_t index) const {
     return _neighbours[index];
   }
 
@@ -246,7 +247,7 @@ public:
    * @param index Neighbour index.
    * @return Index of this tetrahedron in the neighbour list of that neighbour.
    */
-  inline unsigned char get_ngb_index(unsigned char index) const {
+  inline uint_fast8_t get_ngb_index(uint_fast8_t index) const {
     return _ngb_index[index];
   }
 
@@ -257,8 +258,8 @@ public:
    * @param neighbour Neighbour index.
    * @return Index of that neighbour in the neighbour list of this tetrahedron.
    */
-  inline unsigned char get_index(unsigned int neighbour) const {
-    unsigned char i = 0;
+  inline uint_fast8_t get_index(uint_fast32_t neighbour) const {
+    uint_fast8_t i = 0;
     while (i < 4 && _neighbours[i] != neighbour) {
       ++i;
     }
@@ -276,8 +277,8 @@ public:
    * @param neighbour Neighbour index.
    * @return Index of the neighbour if it is found, 4 otherwise.
    */
-  inline unsigned char is_neighbour(unsigned int neighbour) const {
-    unsigned char i = 0;
+  inline uint_fast8_t is_neighbour(uint_fast32_t neighbour) const {
+    uint_fast8_t i = 0;
     while (i < 4 && _neighbours[i] != neighbour) {
       ++i;
     }
@@ -291,8 +292,8 @@ public:
    * @param neighbour New neighbour value.
    * @param ngb_index New neighbour index value.
    */
-  inline void swap_neighbour(unsigned char index, unsigned int neighbour,
-                             unsigned char ngb_index) {
+  inline void swap_neighbour(uint_fast8_t index, uint_fast32_t neighbour,
+                             uint_fast8_t ngb_index) {
     _neighbours[index] = neighbour;
     _ngb_index[index] = ngb_index;
   }

@@ -104,6 +104,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     IonizationSimulation.hpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
+    MaskedPhotonSourceSpectrum.cpp
     NewVoronoiCellConstructor.cpp
     NewVoronoiGrid.cpp
     OldVoronoiCell.cpp
@@ -250,8 +251,7 @@ endif(HAVE_WINDOWS)
 
 set(LIBCMILIBRARY_SOURCES
     CMILibrary.cpp
-    SPHArrayDensityFunction.cpp
-    SPHArrayDensityGridWriter.cpp
+    SPHArrayInterface.cpp
 
     CMILibrary.hpp
 )

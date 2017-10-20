@@ -32,7 +32,7 @@
  * @param argument Type of command line option argument.
  * @return std::string that describes the argument.
  */
-std::string CommandLineOption::get_argument_description(int argument) {
+std::string CommandLineOption::get_argument_description(int_fast32_t argument) {
   switch (argument) {
   case COMMANDLINEOPTION_NOARGUMENT:
     return "This command line option takes no arguments";
@@ -60,7 +60,7 @@ std::string CommandLineOption::get_argument_description(int argument) {
  * @return String version of the parsed default value.
  */
 std::string
-CommandLineOption::get_default_value_description(int argument,
+CommandLineOption::get_default_value_description(int_fast32_t argument,
                                                  std::string default_value) {
   if (!default_value.size()) {
     return "";
@@ -70,8 +70,8 @@ CommandLineOption::get_default_value_description(int argument,
     return Utilities::to_string< bool >(
         Utilities::convert< bool >(default_value));
   case COMMANDLINEOPTION_INTARGUMENT:
-    return Utilities::to_string< int >(
-        Utilities::convert< int >(default_value));
+    return Utilities::to_string< int_fast32_t >(
+        Utilities::convert< int_fast32_t >(default_value));
   case COMMANDLINEOPTION_DOUBLEARGUMENT:
     return Utilities::to_string< double >(
         Utilities::convert< double >(default_value));
@@ -96,13 +96,12 @@ CommandLineOption::get_default_value_description(int argument,
  * @param required Flag indicating if the option is required or optional.
  */
 CommandLineOption::CommandLineOption(std::string name, char abbreviation,
-                                     std::string description, int argument,
+                                     std::string description,
+                                     int_fast32_t argument,
                                      std::string default_value, bool required)
-    : _name(name), _description(description), _default_value(default_value),
-      _required(required) {
-  _abbreviation = abbreviation;
-  _argument = argument;
-}
+    : _name(name), _abbreviation(abbreviation), _description(description),
+      _argument(static_cast< CommandLineOptionArgumentType >(argument)),
+      _default_value(default_value), _required(required) {}
 
 /**
  * @brief Print the command line option as it should be used on the command
@@ -113,6 +112,7 @@ CommandLineOption::CommandLineOption(std::string name, char abbreviation,
  * @param stream std::ostream to write to.
  */
 void CommandLineOption::print_usage(std::ostream &stream) const {
+
   std::string uppercase_name(_name);
   transform(_name.begin(), _name.end(), uppercase_name.begin(), ::toupper);
   if (get_default_value_description(_argument, _default_value).size()) {
@@ -136,6 +136,7 @@ void CommandLineOption::print_usage(std::ostream &stream) const {
  * @param stream std::ostream to write to.
  */
 void CommandLineOption::print_description(std::ostream &stream) const {
+
   stream << "--" << _name << " (-" << _abbreviation << ")\n";
   stream << _description << "\n";
   stream << get_argument_description(_argument);
@@ -201,6 +202,7 @@ bool CommandLineOption::matches(std::string option) const {
  * @return Parsed command line argument that is stored in the dictionary.
  */
 std::string CommandLineOption::parse_argument(std::string argument) const {
+
   switch (_argument) {
   case COMMANDLINEOPTION_NOARGUMENT: {
     // that we are here means the command line option is present, and hence its
@@ -209,10 +211,11 @@ std::string CommandLineOption::parse_argument(std::string argument) const {
   }
   case COMMANDLINEOPTION_INTARGUMENT: {
     if (argument.size()) {
-      return Utilities::to_string< int >(Utilities::convert< int >(argument));
+      return Utilities::to_string< int_fast32_t >(
+          Utilities::convert< int_fast32_t >(argument));
     } else {
-      return Utilities::to_string< int >(
-          Utilities::convert< int >(_default_value));
+      return Utilities::to_string< int_fast32_t >(
+          Utilities::convert< int_fast32_t >(_default_value));
     }
   }
   case COMMANDLINEOPTION_DOUBLEARGUMENT: {

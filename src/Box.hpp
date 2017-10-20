@@ -111,8 +111,9 @@ public:
   inline CoordinateVector< _datatype_ >
   periodic_distance(CoordinateVector< _datatype_ > a,
                     CoordinateVector< _datatype_ > b) const {
+
     CoordinateVector< _datatype_ > c = a - b;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       if (2 * c[i] < -_sides[i]) {
         c[i] += _sides[i];
       }
@@ -133,8 +134,9 @@ public:
    */
   inline _datatype_ periodic_distance(Box< _datatype_ > b,
                                       CoordinateVector< _datatype_ > v) const {
+
     CoordinateVector< _datatype_ > dx;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       // very basic: in 1D, a coordinate is either smaller, inside, or larger
       if (v[i] < b._anchor[i]) {
         // smaller
@@ -160,8 +162,9 @@ public:
    * the position.
    */
   inline _datatype_ get_distance(CoordinateVector< _datatype_ > v) const {
+
     CoordinateVector< _datatype_ > dx;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       if (v[i] >= _anchor[i]) {
         if (v[i] > _anchor[i] + _sides[i]) {
           dx[i] = v[i] - _anchor[i] - _sides[i];

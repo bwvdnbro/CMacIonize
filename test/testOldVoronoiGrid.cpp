@@ -28,6 +28,7 @@
 #include "OldVoronoiGrid.hpp"
 #include "Utilities.hpp"
 
+#include <cinttypes>
 #include <fstream>
 
 /**
@@ -309,7 +310,8 @@ enum {
  *
  * @param testcase ID of a testcase.
  */
-void OldVoronoiCell::setup_variables_for_test(int testcase) {
+void OldVoronoiCell::setup_variables_for_test(int_fast32_t testcase) {
+
   switch (testcase) {
 
   case VORONOITEST_PATH_1_0: {
@@ -842,7 +844,7 @@ void OldVoronoiCell::setup_variables_for_test(int testcase) {
  *
  * @param testcase ID of a testcase.
  */
-void OldVoronoiCell::check_variables_after_test(int testcase) {
+void OldVoronoiCell::check_variables_after_test(int_fast32_t testcase) {
 
   switch (testcase) {
   case VORONOITEST_VERTEX_DELETION: {
@@ -1179,10 +1181,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_0);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.0: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 0);
     assert_condition(varcheck[1] == 0);
@@ -1195,10 +1198,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_1);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.1: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 0);
     assert_condition(varcheck[1] == 1);
@@ -1211,10 +1215,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_2);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.2: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 0);
     assert_condition(varcheck[1] == 1);
@@ -1227,9 +1232,9 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_3);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.3: %i", status);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.3: %" PRIiFAST8, status);
     assert_condition(status == -1);
   }
 
@@ -1238,10 +1243,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_0);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.0: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.0: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 0);
@@ -1254,10 +1260,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_1);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.1: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.1: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 1);
@@ -1270,10 +1277,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_2);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.2: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.2: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 1);
@@ -1286,10 +1294,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_3);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.3: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.3: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 1);
@@ -1302,10 +1311,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_4);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.4: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.4: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 2);
@@ -1318,10 +1328,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_5);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.5: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.5: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 2);
@@ -1334,9 +1345,9 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_4_6);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.4.6: %i", status);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.4.6: %" PRIiFAST8, status);
     assert_condition(status == -1);
   }
 
@@ -1345,9 +1356,10 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_1_5);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 1.5: %i (%i)", status, varcheck[0]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 1.5: %" PRIiFAST8 " (%" PRIiFAST32 ")", status,
+                 varcheck[0]);
     assert_condition(status == 2);
     assert_condition(varcheck[0] == 1);
   }
@@ -1357,10 +1369,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_0);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.0: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.0: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 1);
     assert_condition(varcheck[1] == 0);
@@ -1373,10 +1386,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_1);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.1: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.1: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 2);
     assert_condition(varcheck[1] == 0);
@@ -1389,10 +1403,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_2);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.2: %i (%i %i %i %i)", status, varcheck[0], varcheck[1],
-                 varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.2: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 2);
     assert_condition(varcheck[1] == 0);
@@ -1405,9 +1420,9 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_3);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.3: %i", status);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.3: %" PRIiFAST8, status);
     assert_condition(status == 0);
   }
 
@@ -1416,10 +1431,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_0);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.0: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.0: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 2);
     assert_condition(varcheck[1] == 0);
@@ -1432,10 +1448,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_1);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.1: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.1: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 3);
     assert_condition(varcheck[1] == 0);
@@ -1448,10 +1465,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_2);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.2: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.2: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 3);
     assert_condition(varcheck[1] == 0);
@@ -1464,10 +1482,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_3);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.3: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.3: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 2);
     assert_condition(varcheck[1] == 0);
@@ -1480,10 +1499,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_4);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.4: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.4: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 3);
     assert_condition(varcheck[1] == 0);
@@ -1496,10 +1516,11 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_5);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.5: %i (%i %i %i %i)", status, varcheck[0],
-                 varcheck[1], varcheck[2], varcheck[3]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.5: %" PRIiFAST8 " (%" PRIiFAST32 " %" PRIiFAST32
+                 " %" PRIiFAST32 " %" PRIiFAST32 ")",
+                 status, varcheck[0], varcheck[1], varcheck[2], varcheck[3]);
     assert_condition(status == 1);
     assert_condition(varcheck[0] == 3);
     assert_condition(varcheck[1] == 0);
@@ -1512,9 +1533,9 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_4_6);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.4.6: %i", status);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.4.6: %" PRIiFAST8, status);
     assert_condition(status == 0);
   }
 
@@ -1523,9 +1544,10 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell;
     cell.setup_variables_for_test(VORONOITEST_PATH_2_5);
     CoordinateVector<> dx(1., 0., 0.);
-    int varcheck[4];
-    int status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
-    cmac_warning("Path 2.5: %i (%i)", status, varcheck[0]);
+    int_fast32_t varcheck[4];
+    int_fast8_t status = cell.intersect(dx, 0, OLDVORONOI_TOLERANCE, varcheck);
+    cmac_warning("Path 2.5: %" PRIiFAST8 " (%" PRIiFAST32 ")", status,
+                 varcheck[0]);
     assert_condition(status == 2);
     assert_condition(varcheck[0] == 1);
   }
@@ -1546,8 +1568,8 @@ int main(int argc, char **argv) {
     OldVoronoiCell cell(CoordinateVector<>(0.5, 0.5, 0.5),
                         Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)));
     cell.check_variables_after_test(VORONOITEST_CONSTRUCTOR);
-    int status = cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0,
-                                OLDVORONOI_TOLERANCE);
+    int_fast8_t status = cell.intersect(CoordinateVector<>(0.5, -0.5, 0.), 0,
+                                        OLDVORONOI_TOLERANCE);
     assert_condition(status == 1);
     cell.check_variables_after_test(VORONOITEST_INTERSECTION);
     cmac_warning("Intersection test succeeded!");
@@ -1555,9 +1577,9 @@ int main(int argc, char **argv) {
 
   /// test Voronoi grid
   {
-    const unsigned int numcell = 1000;
+    const uint_fast32_t numcell = 1000;
     std::vector< CoordinateVector<> > positions(numcell);
-    for (unsigned int i = 0; i < numcell; ++i) {
+    for (uint_fast32_t i = 0; i < numcell; ++i) {
       positions[i] = Utilities::random_position();
     }
     OldVoronoiGrid grid(positions,
@@ -1571,7 +1593,7 @@ int main(int argc, char **argv) {
 
     const double tolerance = 1.e-11;
     double total_volume = 0.;
-    for (unsigned int i = 0; i < numcell; ++i) {
+    for (uint_fast32_t i = 0; i < numcell; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
       assert_condition(cell_volume < 1.);
@@ -1581,7 +1603,7 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
+        const uint_fast32_t ngb = OldVoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < OLDVORONOI_MAX_INDEX) {
           const double area = OldVoronoiCell::get_face_surface_area(*it);
@@ -1613,14 +1635,14 @@ int main(int argc, char **argv) {
     const double box_anchor = 0.;
     const double box_side = 2.e15;
     const double box_volume = box_side * box_side * box_side;
-    const unsigned int numcell_1D = 10;
-    const unsigned int numcell_2D = numcell_1D * numcell_1D;
-    const unsigned int numcell_3D = numcell_1D * numcell_2D;
+    const uint_fast32_t numcell_1D = 10;
+    const uint_fast32_t numcell_2D = numcell_1D * numcell_1D;
+    const uint_fast32_t numcell_3D = numcell_1D * numcell_2D;
     const double dx = box_side / numcell_1D;
     std::vector< CoordinateVector<> > positions(numcell_3D);
-    for (unsigned int ix = 0; ix < numcell_1D; ++ix) {
-      for (unsigned int iy = 0; iy < numcell_1D; ++iy) {
-        for (unsigned int iz = 0; iz < numcell_1D; ++iz) {
+    for (uint_fast32_t ix = 0; ix < numcell_1D; ++ix) {
+      for (uint_fast32_t iy = 0; iy < numcell_1D; ++iy) {
+        for (uint_fast32_t iz = 0; iz < numcell_1D; ++iz) {
           positions[ix * numcell_2D + iy * numcell_1D + iz] =
               CoordinateVector<>((ix + 0.5) * dx + box_anchor,
                                  (iy + 0.5) * dx + box_anchor,
@@ -1642,7 +1664,7 @@ int main(int argc, char **argv) {
 
     const double tolerance = 1.e-10;
     double total_volume = 0.;
-    for (unsigned int i = 0; i < numcell_3D; ++i) {
+    for (uint_fast32_t i = 0; i < numcell_3D; ++i) {
       double cell_volume = grid.get_volume(i);
       // no single cell should fill the entire volume
       assert_condition(cell_volume < box_volume);
@@ -1652,7 +1674,7 @@ int main(int argc, char **argv) {
       // well
       const auto faces = grid.get_faces(i);
       for (auto it = faces.begin(); it != faces.end(); ++it) {
-        const unsigned int ngb = OldVoronoiCell::get_face_neighbour(*it);
+        const uint_fast32_t ngb = OldVoronoiCell::get_face_neighbour(*it);
         // some faces have the walls of the box as neighbour, we ignore these
         if (ngb < OLDVORONOI_MAX_INDEX) {
           const double area = OldVoronoiCell::get_face_surface_area(*it);

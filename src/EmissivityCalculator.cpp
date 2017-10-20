@@ -56,7 +56,7 @@ EmissivityCalculator::EmissivityCalculator(const Abundances &abundances)
   const double heplt[8] = {0.189, 0.622, 1.076, 1.45, 1.74, 1.963, 2.14, 2.27};
   const double hemit[8] = {15.7, 9.23, 6.71, 5.49, 4.83, 4.41, 4.135, 3.94};
 
-  for (unsigned int i = 0; i < 8; ++i) {
+  for (uint_fast8_t i = 0; i < 8; ++i) {
     _logttab[i] = std::log(ttab[i]);
     _loghplt[i] = std::log(hplt[i]);
     _loghmit[i] = std::log(hmit[i]);
@@ -80,11 +80,12 @@ EmissivityCalculator::EmissivityCalculator(const Abundances &abundances)
 void EmissivityCalculator::get_balmer_jump_emission(
     double T, double &emission_hydrogen_high, double &emission_hydrogen_low,
     double &emission_helium_high, double &emission_helium_low) const {
+
   const double logt = std::log(T);
 
-  int i = Utilities::locate(logt, _logttab, 8);
-  i = std::max(i, 0);
-  i = std::min(i, 6);
+  int_fast32_t i = Utilities::locate(logt, _logttab, 8);
+  i = std::max(i, int_fast32_t(0));
+  i = std::min(i, int_fast32_t(6));
 
   emission_hydrogen_high = _loghplt[i] +
                            (logt - _logttab[i]) *
@@ -130,6 +131,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     const IonizationVariables &ionization_variables,
     const Abundances &abundances,
     const LineCoolingData &line_cooling_data) const {
+
   const double h0max = 0.2;
 
   EmissivityValues eval;
@@ -418,7 +420,7 @@ std::vector< EmissivityValues >
 EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
 
   std::vector< EmissivityValues > result(grid.get_number_of_cells());
-  unsigned int index = 0;
+  size_t index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     result[index] = calculate_emissivities(it.get_ionization_variables(),
                                            _abundances, _lines);

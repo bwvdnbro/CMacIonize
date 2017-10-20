@@ -83,7 +83,7 @@ public:
    */
   inline bool is_inside(CoordinateVector<> position) const {
     double r = 0.;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
       if (_exponent < 10.) {
         r += std::pow(x, _exponent);

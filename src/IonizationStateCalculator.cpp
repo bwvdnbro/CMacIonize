@@ -158,6 +158,12 @@ void IonizationStateCalculator::calculate_ionization_state(
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
     }
   }
+
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+  // set the mean intensity values to the values in correct physical units
+  ionization_variables.set_mean_intensity(ION_H_n, jH);
+  ionization_variables.set_mean_intensity(ION_He_n, jHe);
+#endif
 }
 
 /**
@@ -382,7 +388,7 @@ void IonizationStateCalculator::compute_ionization_states_metals(
  */
 void IonizationStateCalculator::calculate_ionization_state(
     double totweight, DensityGrid &grid,
-    std::pair< unsigned long, unsigned long > &block) const {
+    std::pair< cellsize_t, cellsize_t > &block) const {
 
   // compute the normalization factor for the mean intensity integrals, which
   // depends on the total weight of all photons, and on the volume of each cell
@@ -545,7 +551,7 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
   }
   // again, by using this value we make sure we have at least one iteration
   he0 = 0.;
-  unsigned int niter = 0;
+  uint_fast8_t niter = 0;
   while (std::abs(h0 - h0old) > 1.e-4 * h0old &&
          std::abs(he0 - he0old) > 1.e-4 * he0old) {
     ++niter;
@@ -616,7 +622,7 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
 double IonizationStateCalculator::compute_ionization_state_hydrogen(
     double alphaH, double jH, double nH) {
   if (jH > 0. && nH > 0.) {
-    const double aa = 0.5 * jH / nH / alphaH;
+    const double aa = 0.5 * jH / (nH * alphaH);
     const double bb = 2. / aa;
     const double cc = std::sqrt(bb + 1.);
     return 1. + aa * (1. - cc);

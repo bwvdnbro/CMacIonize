@@ -152,10 +152,9 @@ inline void CommandLineParser::add_option< double >(std::string long_name,
  * @param default_value Default value, as an integer.
  */
 template <>
-inline void CommandLineParser::add_option< int >(std::string long_name,
-                                                 char short_name,
-                                                 std::string description,
-                                                 int default_value) {
+inline void CommandLineParser::add_option< int_fast32_t >(
+    std::string long_name, char short_name, std::string description,
+    int_fast32_t default_value) {
   std::stringstream sstream;
   sstream << default_value;
   add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT,
@@ -233,7 +232,7 @@ inline void CommandLineParser::add_required_option< double >(
  * message.
  */
 template <>
-inline void CommandLineParser::add_required_option< int >(
+inline void CommandLineParser::add_required_option< int_fast32_t >(
     std::string long_name, char short_name, std::string description) {
   add_option(long_name, short_name, description, COMMANDLINEOPTION_INTARGUMENT,
              "", true);
@@ -298,9 +297,10 @@ inline double CommandLineParser::get_value< double >(std::string option) const {
  * @return Value of the command line option argument.
  */
 template <>
-inline int CommandLineParser::get_value< int >(std::string option) const {
+inline int_fast32_t
+CommandLineParser::get_value< int_fast32_t >(std::string option) const {
   std::string svalue = get_value< std::string >(option);
-  return Utilities::convert< int >(svalue);
+  return Utilities::convert< int_fast32_t >(svalue);
 }
 
 /**

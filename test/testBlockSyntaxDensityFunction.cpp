@@ -35,6 +35,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
   density_function.initialize();
 
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> sides(1., 1., 1.);
   Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 64);
-  std::pair< unsigned long, unsigned long > block =
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
   assert_values_equal_rel(grid.get_total_hydrogen_number(),

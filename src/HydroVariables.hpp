@@ -42,6 +42,9 @@ private:
   /*! @brief Conserved variable changes. */
   double _delta_conserved[5];
 
+  /*! @brief Gradients for the primitive variables. */
+  CoordinateVector<> _primitive_gradients[5];
+
 public:
   /**
    * @brief (Empty) constructor.
@@ -57,7 +60,7 @@ public:
    * @param index Index (0-4).
    * @return Read only access to the corresponding primitive variable component.
    */
-  inline const double &primitives(unsigned char index) const {
+  inline const double &primitives(uint_fast8_t index) const {
     return _primitives[index];
   }
 
@@ -69,7 +72,7 @@ public:
    * @return Read/write access to the corresponding primitive variable
    * component.
    */
-  inline double &primitives(unsigned char index) { return _primitives[index]; }
+  inline double &primitives(uint_fast8_t index) { return _primitives[index]; }
 
   /**
    * @brief Get the fluid density.
@@ -130,7 +133,7 @@ public:
    * @param index Index (0-4).
    * @return Read only access to the corresponding conserved variable component.
    */
-  inline const double &conserved(unsigned char index) const {
+  inline const double &conserved(uint_fast8_t index) const {
     return _conserved[index];
   }
 
@@ -142,7 +145,7 @@ public:
    * @return Read/write access to the corresponding conserved variable
    * component.
    */
-  inline double &conserved(unsigned char index) { return _conserved[index]; }
+  inline double &conserved(uint_fast8_t index) { return _conserved[index]; }
 
   /**
    * @brief Get the fluid mass.
@@ -202,7 +205,7 @@ public:
    * @return Read only access to the corresponding component of the conserved
    * variable differences.
    */
-  inline const double &delta_conserved(unsigned char index) const {
+  inline const double &delta_conserved(uint_fast8_t index) const {
     return _delta_conserved[index];
   }
 
@@ -214,8 +217,33 @@ public:
    * @return Read/write access to the corresponding component of the conserved
    * variable differences.
    */
-  inline double &delta_conserved(unsigned char index) {
+  inline double &delta_conserved(uint_fast8_t index) {
     return _delta_conserved[index];
+  }
+
+  /**
+   * @brief Get read only access to the given component of the primitive
+   * variable gradients.
+   *
+   * @param index Index (0-4).
+   * @return Read only access to the corresponding component of the primitive
+   * variable gradients.
+   */
+  inline const CoordinateVector<> &
+  primitive_gradients(uint_fast8_t index) const {
+    return _primitive_gradients[index];
+  }
+
+  /**
+   * @brief Get read/write access to the given component of the primitive
+   * variable gradients.
+   *
+   * @param index Index (0-4).
+   * @return Read/write access to the corresponding component of the primitive
+   * variable gradients.
+   */
+  inline CoordinateVector<> &primitive_gradients(uint_fast8_t index) {
+    return _primitive_gradients[index];
   }
 };
 
