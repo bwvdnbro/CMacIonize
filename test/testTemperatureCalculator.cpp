@@ -315,14 +315,14 @@ int main(int argc, char **argv) {
     }
   }
 
-  /// test with CR feedback
+  /// test with (crazy) CR feedback: test error handling
   {
     LineCoolingData data;
     VernerRecombinationRates rates;
     ChargeTransferRates ctr;
     Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
     TemperatureCalculator calculator(true, 3, 1., abundances, 1.e-3, 100, 1.,
-                                     0.00001, 0.75, 4.11e19, data, rates, ctr);
+                                     1., 0.75, 4.11e19, data, rates, ctr);
 
     DiscDensityFunction function;
     function.initialize();
