@@ -37,7 +37,7 @@
 #include "Timer.hpp"
 
 /*! @brief Uncomment this to switch of second order integration. */
-#define NO_SECOND_ORDER
+//#define NO_SECOND_ORDER
 
 #include <cfloat>
 
