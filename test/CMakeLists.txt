@@ -1045,9 +1045,23 @@ set(TESTGRADIENTCALCULATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/GradientCalculator.hpp
     ../src/HydroBoundaryConditions.hpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/VoronoiDensityGrid.cpp
 )
-add_unit_test(NAME testGradientCalculator
-              SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTGRADIENTCALCULATOR_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testGradientCalculator
+                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testGradientCalculator
+                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+endif(HAVE_HDF5)
 
 ## Unit test for MaskedPhotonSourceSpectrum
 set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES

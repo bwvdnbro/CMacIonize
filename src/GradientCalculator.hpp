@@ -146,9 +146,12 @@ public:
 
     // slope limiting
     for (uint_fast8_t i = 0; i < 5; ++i) {
-      const double alpha = std::min(
-          1., 0.5 * std::min((phi_ngb_max[i] - WL[i]) / phi_ext_max[i],
-                             (phi_ngb_min[i] - WL[i]) / phi_ext_min[i]));
+      double alpha = 0.;
+      if (phi_ext_max[i] != 0. && phi_ext_min[i] != 0.) {
+        alpha = std::min(
+            1., 0.5 * std::min((phi_ngb_max[i] - WL[i]) / phi_ext_max[i],
+                               (phi_ngb_min[i] - WL[i]) / phi_ext_min[i]));
+      }
       cell.get_hydro_variables().primitive_gradients(i) *= alpha;
     }
   }
