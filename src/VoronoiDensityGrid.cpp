@@ -249,7 +249,6 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @param gamma Polytropic index of the gas.
  */
 void VoronoiDensityGrid::set_grid_velocity(double gamma) {
-
   if (_has_hydro) {
     for (auto it = begin(); it != end(); ++it) {
       const uint_fast32_t index = it.get_index();
@@ -375,6 +374,15 @@ VoronoiDensityGrid::get_neighbours(cellsize_t index) {
       // wall neighbour
       normal = _voronoi_grid->get_wall_normal(ngb);
       CoordinateVector<> rel_pos;
+      for (uint_fast8_t i = 0; i < 3; ++i) {
+        if (normal[i] > 0.) {
+          rel_pos[i] = 2. * (_box.get_anchor()[i] + _box.get_sides()[i] -
+                             _generator_positions[index][i]);
+        } else if (normal[i] < 0.) {
+          rel_pos[i] =
+              2. * (_box.get_anchor()[i] - _generator_positions[index][i]);
+        }
+      }
       ngbs.push_back(std::make_tuple(end(), midpoint, normal, area, rel_pos));
     }
   }
