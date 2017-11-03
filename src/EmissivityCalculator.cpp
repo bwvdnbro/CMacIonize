@@ -389,6 +389,52 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                             (std::sqrt(T / 3.148) *
                              std::pow(1. + std::sqrt(T / 3.148), 0.252) *
                              std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
+
+    // HST WFC2 filters
+    // wavelength ranges were based on data found on
+    // http://www.stsci.edu/hst/wfpc2/documents/handbook/IHB_17.html
+    // F439W: effective wavelength: 4283 A, width: 464.4 A
+    //        range: [4051 A, 4515 A]
+    // lines that contribute: OIII: 4 --> 3
+    //                        SIII: 4 --> 0, 3 --> 0
+    eval.set_emissivity(EMISSIONLINE_WFC2_F439W,
+                        ntot * (line_strengths[OIII][TRANSITION_3_to_4] +
+                                line_strengths[SIII][TRANSITION_0_to_3] +
+                                line_strengths[SIII][TRANSITION_0_to_4]));
+    // F555W: effective wavelength: 5202 A, width: 1222.6 A
+    //        range: [4591 A, 5813 A]
+    // lines that contribute: NI: 2 --> 0, 1 --> 0
+    //                        NII: 4 --> 3
+    //                        OI: 4 --> 3
+    //                        OIII: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        HBeta
+    eval.set_emissivity(EMISSIONLINE_WFC2_F555W,
+                        eval.get_emissivity(EMISSIONLINE_HBeta) +
+                            ntot * (line_strengths[NI][TRANSITION_0_to_1] +
+                                    line_strengths[NI][TRANSITION_0_to_2] +
+                                    line_strengths[NII][TRANSITION_3_to_4] +
+                                    line_strengths[OI][TRANSITION_3_to_4] +
+                                    line_strengths[OIII][TRANSITION_0_to_3] +
+                                    line_strengths[OIII][TRANSITION_1_to_3] +
+                                    line_strengths[OIII][TRANSITION_2_to_3]));
+    // F675W: effective wavelength: 6714 A, width: 889.5 A
+    //        range: [6269 A, 7159 A]
+    // lines that contribute: NII: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        OI: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        SII: 2 --> 0, 1 --> 0
+    //                        SIII: 4 --> 3
+    //                        HAlpha
+    eval.set_emissivity(EMISSIONLINE_WFC2_F675W,
+                        eval.get_emissivity(EMISSIONLINE_HAlpha) +
+                            ntot * (line_strengths[NII][TRANSITION_0_to_3] +
+                                    line_strengths[NII][TRANSITION_1_to_3] +
+                                    line_strengths[NII][TRANSITION_2_to_3] +
+                                    line_strengths[OI][TRANSITION_0_to_3] +
+                                    line_strengths[OI][TRANSITION_1_to_3] +
+                                    line_strengths[OI][TRANSITION_2_to_3] +
+                                    line_strengths[SII][TRANSITION_0_to_1] +
+                                    line_strengths[SII][TRANSITION_0_to_2] +
+                                    line_strengths[SIII][TRANSITION_3_to_4]));
   }
 
   return eval;

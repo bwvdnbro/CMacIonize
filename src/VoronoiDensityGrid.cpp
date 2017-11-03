@@ -365,8 +365,17 @@ VoronoiDensityGrid::get_neighbours(cellsize_t index) {
     CoordinateVector<> normal;
     if (_voronoi_grid->is_real_neighbour(ngb)) {
       // normal neighbour
-      const CoordinateVector<> rel_pos =
+      CoordinateVector<> rel_pos =
           _generator_positions[ngb] - _generator_positions[index];
+      // the code below should never be called, as we do not support periodic
+      // Voronoi grids yet
+      for (uint_fast8_t i = 0; i < 3; ++i) {
+        if (rel_pos[i] > 0.5 * _box.get_sides()[i]) {
+          rel_pos[i] -= _box.get_sides()[i];
+        } else if (rel_pos[i] <= -0.5 * _box.get_sides()[i]) {
+          rel_pos[i] += _box.get_sides()[i];
+        }
+      }
       normal = rel_pos / rel_pos.norm();
       ngbs.push_back(std::make_tuple(DensityGrid::iterator(ngb, *this),
                                      midpoint, normal, area, rel_pos));
