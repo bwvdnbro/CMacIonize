@@ -71,6 +71,9 @@ enum EmissionLine {
   EMISSIONLINE_SIV_10mu,
   EMISSIONLINE_HeI_5876,
   EMISSIONLINE_Hrec_s,
+  EMISSIONLINE_WFC2_F439W,
+  EMISSIONLINE_WFC2_F555W,
+  EMISSIONLINE_WFC2_F675W,
   NUMBER_OF_EMISSIONLINES
 };
 
@@ -194,6 +197,12 @@ public:
       return "HeI_5876";
     case EMISSIONLINE_Hrec_s:
       return "Hrec_s";
+    case EMISSIONLINE_WFC2_F439W:
+      return "WFC2_F439W";
+    case EMISSIONLINE_WFC2_F555W:
+      return "WFC2_F555W";
+    case EMISSIONLINE_WFC2_F675W:
+      return "WFC2_F675W";
     default:
       cmac_error("Unknown EmissionLine: %i!", line);
       return "";
