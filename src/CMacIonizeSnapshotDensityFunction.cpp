@@ -278,6 +278,10 @@ operator()(const Cell &cell) const {
                              (position.z() - _box.get_anchor().z()) /
                              _box.get_sides().z();
 
+    cmac_assert_message(ix < _ncell.x(), "%" PRIuFAST32, ix);
+    cmac_assert_message(iy < _ncell.y(), "%" PRIuFAST32, iy);
+    cmac_assert_message(iz < _ncell.z(), "%" PRIuFAST32, iz);
+
     return _cartesian_grid[ix][iy][iz];
   } else if (_amr_grid) {
     const amrkey_t key = _amr_grid->get_key(position);
