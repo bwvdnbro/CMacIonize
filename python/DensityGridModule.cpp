@@ -169,6 +169,10 @@ static double get_single_variable(DensityGrid::iterator &cell,
     return cell.get_emissivities()->get_emissivity(EMISSIONLINE_HAlpha);
   } else if (name == "HBeta") {
     return cell.get_emissivities()->get_emissivity(EMISSIONLINE_HBeta);
+  } else if (name == "NII_6584") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_NII_6548);
+  } else if (name == "OIII_5700") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_OIII_5007);
   } else if (name == "Temperature") {
     return cell.get_ionization_variables().get_temperature();
   } else {
@@ -202,6 +206,10 @@ static std::string get_variable_unit(std::string name) {
   } else if (name == "HAlpha") {
     return "no idea";
   } else if (name == "HBeta") {
+    return "no idea";
+  } else if (name == "NII_6584") {
+    return "no idea";
+  } else if (name == "OIII_5700") {
     return "no idea";
   } else if (name == "Temperature") {
     return "K";
