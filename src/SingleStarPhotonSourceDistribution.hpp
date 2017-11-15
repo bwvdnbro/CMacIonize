@@ -57,7 +57,7 @@ public:
     if (log) {
       log->write_status(
           "Created SingleStarPhotonSourceDistribution at position [",
-          _position.x(), " m,", _position.y(), " m,", _position.z(),
+          _position.x(), " m, ", _position.y(), " m, ", _position.z(),
           " m], with luminosity ", _luminosity, " s^-1.");
     }
   }
