@@ -52,11 +52,11 @@ private:
   /*! @brief Periodicity flags. */
   CoordinateVector< bool > _periodicity_flags;
 
-  /*! @brief Side lengths of a single cell. */
+  /*! @brief Side lengths of a single cell (in m). */
   CoordinateVector<> _cellside;
 
-  /*! @brief Maximal cell side among the three dimensions. */
-  double _cellside_max;
+  /*! @brief Inverse side lengths of a single cell. */
+  CoordinateVector<> _inverse_cellside;
 
   /*! @brief Number of cells per dimension.
    *
@@ -192,11 +192,11 @@ public:
     return get_cell_volume(get_indices(long_index));
   }
 
-  CoordinateVector<>
-  get_wall_intersection(CoordinateVector<> &photon_origin,
-                        CoordinateVector<> &photon_direction, Box<> &cell,
-                        CoordinateVector< int_fast8_t > &next_index,
-                        double &ds) const;
+  static CoordinateVector<> get_wall_intersection(
+      const CoordinateVector<> &photon_origin,
+      const CoordinateVector<> &photon_direction,
+      const CoordinateVector<> &inverse_photon_direction, const Box<> &cell,
+      CoordinateVector< int_fast8_t > &next_index, double &ds);
 
   virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
