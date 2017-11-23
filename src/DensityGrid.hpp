@@ -138,22 +138,20 @@ protected:
       // the same time), we first calculate all terms that need to be added, and
       // then lock the cell and do all additions as fast as possible
       double dmean_intensity[NUMBER_OF_IONNAMES];
+      const double dsw = ds * photon.get_weight();
       for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        dmean_intensity[i] =
-            ds * photon.get_weight() * photon.get_cross_section(ion);
+        const IonName ion = static_cast< IonName >(i);
+        dmean_intensity[i] = dsw * photon.get_cross_section(ion);
       }
-      double dheating_H = ds * photon.get_weight() *
-                          photon.get_cross_section(ION_H_n) *
-                          (photon.get_energy() - _ionization_energy_H);
-      double dheating_He = ds * photon.get_weight() *
-                           photon.get_cross_section(ION_He_n) *
-                           (photon.get_energy() - _ionization_energy_He);
+      const double dheating_H = dmean_intensity[ION_H_n] *
+                                (photon.get_energy() - _ionization_energy_H);
+      const double dheating_He = dmean_intensity[ION_He_n] *
+                                 (photon.get_energy() - _ionization_energy_He);
 #ifndef USE_LOCKFREE
       cell.lock();
 #endif
       for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
+        const IonName ion = static_cast< IonName >(i);
         ionization_variables.increase_mean_intensity(ion, dmean_intensity[i]);
       }
       ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
