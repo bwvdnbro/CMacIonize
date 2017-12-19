@@ -154,7 +154,7 @@ MaskedPhotonSourceSpectrum::get_spectrum() const {
   std::vector< double > spectrum = _cumulative_distribution;
   // retrieve original (non cumulative, non normalized) spectrum
   const uint_fast16_t number_of_bins = _frequency_bins.size();
-  for (uint_fast16_t i = number_of_bins; i > 0; --i) {
+  for (uint_fast16_t i = number_of_bins; i > 1; --i) {
     spectrum[i - 1] -= spectrum[i - 2];
     spectrum[i - 1] *= _ionizing_flux;
   }
