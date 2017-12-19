@@ -48,6 +48,12 @@ macro(add_unit_test)
              COMMAND ${TESTCOMMAND})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+
+    # create a custom target for this test alone
+    add_custom_target(check_${TEST_NAME}
+                      COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                              -R ${TEST_NAME}
+                      DEPENDS ${TEST_NAME})
 endmacro(add_unit_test)
 
 ### Actual unit test generation ################################################
