@@ -188,6 +188,14 @@ else(OUTPUT_PHOTOIONIZATION_RATES)
   add_configuration_option(DO_OUTPUT_PHOTOIONIZATION_RATES False)
 endif(OUTPUT_PHOTOIONIZATION_RATES)
 
+if(OUTPUT_COSMIC_RAY_FACTORS)
+  message(STATUS "Enabling output of cosmic ray factors.")
+  add_configuration_option(DO_OUTPUT_COSMIC_RAY_FACTORS True)
+else(OUTPUT_COSMIC_RAY_FACTORS)
+  message(STATUS "Cosmic ray factor output disabled.")
+  add_configuration_option(DO_OUTPUT_COSMIC_RAY_FACTORS False)
+endif(OUTPUT_COSMIC_RAY_FACTORS)
+
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
 

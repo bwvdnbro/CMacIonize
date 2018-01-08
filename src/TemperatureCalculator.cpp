@@ -598,6 +598,11 @@ void TemperatureCalculator::calculate_temperature(
     h[i] = hfac * ionization_variables.get_heating(heating_term);
   }
 
+  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
+  if (crfac < 0.) {
+    crfac = _crfac;
+  }
+
   // iteratively find the equilibrium temperature by starting from a guess and
   // computing the ionization equilibrium and cooling and heating for that guess
   // based on the net cooling and heating we can then find a new temperature
@@ -616,7 +621,7 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     compute_cooling_and_heating_balance(
-        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, _crfac,
+        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
@@ -624,13 +629,13 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h02, he02, gain2, loss2;
     compute_cooling_and_heating_balance(
-        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, _crfac,
+        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     compute_cooling_and_heating_balance(
-        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
+        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
