@@ -707,6 +707,7 @@ public:
         ionization_variables.set_ionic_fraction(ion,
                                                 vals.get_ionic_fraction(ion));
       }
+      ionization_variables.set_cosmic_ray_factor(vals.get_cosmic_ray_factor());
       if (_hydro) {
         const CoordinateVector<> v = vals.get_velocity();
         it.get_hydro_variables().set_primitives_velocity(v);

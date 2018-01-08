@@ -213,6 +213,9 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                                         numpart[0]);
   }
 #endif
+#ifdef DO_OUTPUT_COSMIC_RAY_FACTORS
+  HDF5Tools::create_dataset< double >(group, "CosmicRayFactor", numpart[0]);
+#endif
   if (grid.has_hydro()) {
     HDF5Tools::create_dataset< double >(group, "Density", numpart[0]);
     HDF5Tools::create_dataset< CoordinateVector<> >(group, "Velocities",
@@ -248,6 +251,9 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
     std::vector< std::vector< double > > heating(
         NUMBER_OF_HEATINGTERMS, std::vector< double >(thisblocksize));
 #endif
+#ifdef DO_OUTPUT_COSMIC_RAY_FACTORS
+    std::vector< double > crfactor(thisblocksize);
+#endif
     size_t index = 0;
     for (auto it = grid.begin() + offset; it != grid.begin() + upper_limit;
          ++it) {
@@ -275,6 +281,9 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
         heating[i][index] = ionization_variables.get_heating(heating_term);
       }
 #endif
+#ifdef DO_OUTPUT_COSMIC_RAY_FACTORS
+      crfactor[index] = ionization_variables.get_cosmic_ray_factor();
+#endif
       ++index;
     }
     HDF5Tools::append_dataset< CoordinateVector<> >(group, "Coordinates",
@@ -299,6 +308,10 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
       HDF5Tools::append_dataset< double >(
           group, "HeatingRate" + get_ion_name(i), offset, heating[i]);
     }
+#endif
+#ifdef DO_OUTPUT_COSMIC_RAY_FACTORS
+    HDF5Tools::append_dataset< double >(group, "CosmicRayFactor", offset,
+                                        crfactor);
 #endif
 
     if (grid.has_hydro()) {

@@ -49,11 +49,22 @@ private:
   /*! @brief Fluid velocity (in m s^-1). */
   CoordinateVector<> _velocity;
 
+  /*! @brief Magnetic field strength (in kg A^-1 s^-2). */
+  CoordinateVector<> _magnetic_field;
+
+  /*! @brief Cosmic ray energy (in m^2 s^-2). */
+  double _cosmic_ray_energy;
+
+  /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
+  double _cosmic_ray_factor;
+
 public:
   /**
    * @brief Empty constructor.
    */
-  inline DensityValues() : _number_density(0.), _temperature(0.) {
+  inline DensityValues()
+      : _number_density(0.), _temperature(0.), _cosmic_ray_energy(0.),
+        _cosmic_ray_factor(-1.) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fraction[i] = 0.;
     }
@@ -97,6 +108,33 @@ public:
   }
 
   /**
+   * @brief Set the magnetic field.
+   *
+   * @param magnetic_field Magnetic field (in kg A^-1 s^-2).
+   */
+  inline void set_magnetic_field(CoordinateVector<> magnetic_field) {
+    _magnetic_field = magnetic_field;
+  }
+
+  /**
+   * @brief Set the cosmic ray energy.
+   *
+   * @param cosmic_ray_energy Cosmic ray energy (in m^2 s^-2).
+   */
+  inline void set_cosmic_ray_energy(double cosmic_ray_energy) {
+    _cosmic_ray_energy = cosmic_ray_energy;
+  }
+
+  /**
+   * @brief Set the cosmic ray factor.
+   *
+   * @param cosmic_ray_factor Cosmic ray factor (in kg m A^-1 s^-4).
+   */
+  inline void set_cosmic_ray_factor(double cosmic_ray_factor) {
+    _cosmic_ray_factor = cosmic_ray_factor;
+  }
+
+  /**
    * @brief Get the number density of hydrogen.
    *
    * @return Number density (in m^-3).
@@ -126,6 +164,29 @@ public:
    * @return Fluid velocity (in m s^-1).
    */
   inline CoordinateVector<> get_velocity() const { return _velocity; }
+
+  /**
+   * @brief Get the magnetic field.
+   *
+   * @return Magnetic field (in kg A^-1 s^-2).
+   */
+  inline CoordinateVector<> get_magnetic_field() const {
+    return _magnetic_field;
+  }
+
+  /**
+   * @brief Get the cosmic ray energy.
+   *
+   * @return Cosmic ray energy (in m^2 s^-2).
+   */
+  inline double get_cosmic_ray_energy() const { return _cosmic_ray_energy; }
+
+  /**
+   * @brief Get the cosmic ray factor.
+   *
+   * @return Cosmic ray factor (in kg m A^-1 s^-4).
+   */
+  inline double get_cosmic_ray_factor() const { return _cosmic_ray_factor; }
 };
 
 #endif // DENSITYVALUES_HPP
