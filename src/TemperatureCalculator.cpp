@@ -538,10 +538,15 @@ void TemperatureCalculator::calculate_temperature(
     return;
   }
 
+  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
+  if (crfac < 0.) {
+    crfac = _crfac;
+  }
+
   // if cosmic ray heating is active, check if the gas is ionized enough
   // if it is not, we just assume the gas is neutral and do not apply heating
   double h0, he0;
-  if (_crfac > 0.) {
+  if (crfac > 0.) {
     const double alphaH =
         _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
     const double alphaHe =
@@ -552,7 +557,7 @@ void TemperatureCalculator::calculate_temperature(
     const double AHe = _abundances.get_abundance(ELEMENT_He);
     IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
         alphaH, alphaHe, jH, jHe, nH, AHe, 8000., h0, he0);
-    if (_crfac > 0. && h0 > _crlim) {
+    if (crfac > 0. && h0 > _crlim) {
       // assume fully neutral
       ionization_variables.set_temperature(500.);
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
@@ -596,11 +601,6 @@ void TemperatureCalculator::calculate_temperature(
   for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
     HeatingTermName heating_term = static_cast< HeatingTermName >(i);
     h[i] = hfac * ionization_variables.get_heating(heating_term);
-  }
-
-  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
-  if (crfac < 0.) {
-    crfac = _crfac;
   }
 
   // iteratively find the equilibrium temperature by starting from a guess and
