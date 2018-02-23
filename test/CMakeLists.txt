@@ -1110,6 +1110,15 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_lambertw_input.txt
                ${PROJECT_BINARY_DIR}/rundir/test/test_lambertw_input.txt
                COPYONLY)
 
+## Unit test for BondiProfile
+set(TESTBONDIPROFILE_SOURCES
+    testBondiProfile.cpp
+
+    ../src/BondiProfile.hpp
+)
+add_unit_test(NAME testBondiProfile
+              SOURCES ${TESTBONDIPROFILE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

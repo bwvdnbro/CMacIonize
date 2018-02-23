@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2018 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,22 +17,18 @@
  ******************************************************************************/
 
 /**
- * @file testLambertW.cpp
+ * @file testBondiProfile.cpp
  *
- * @brief Unit test for the Lambert W function.
+ * @brief Unit test for the Bondi profile.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "Assert.hpp"
-#include "LambertW.hpp"
+#include "BondiProfile.hpp"
 #include <cinttypes>
-#include <cmath>
 #include <fstream>
-#include <sstream>
-#include <string>
 
 /**
- * @brief Unit test for the Lambert W function.
+ * @brief Unit test for the Bondi profile.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -40,30 +36,14 @@
  */
 int main(int argc, char **argv) {
 
-  std::ifstream ifile("test_lambertw_input.txt");
-  std::string line;
-  // skip two comment lines
-  std::getline(ifile, line);
-  std::getline(ifile, line);
-  double xref[1000], w0ref[1000], wm1ref[1000];
-  uint_fast32_t i = 0;
-  while (std::getline(ifile, line)) {
-    std::stringstream lstream(line);
-    lstream >> xref[i] >> w0ref[i] >> wm1ref[i];
-    ++i;
-  }
-  assert_condition(i == 1000);
+  BondiProfile profile(3.6e31, 1.e-16, 2.e3);
 
-  std::ofstream ofile("test_lambertw_output.txt");
+  std::ofstream ofile("test_bondi.txt");
   for (uint_fast32_t i = 0; i < 1000; ++i) {
-    const double x = (-1. + i * 0.001) / M_E;
-    const double w0 = LambertW::lambert_w(x, 0);
-    const double wm1 = LambertW::lambert_w(x, -1);
-    assert_values_equal_rel(x, xref[i], 1.e-11);
-    assert_values_equal_rel(w0, w0ref[i], 1.e-7);
-    assert_values_equal_rel(wm1, wm1ref[i], 1.e-8);
-    ofile << x << "\t" << w0 << "\t" << wm1 << "\t" << w0ref[i] << "\t"
-          << wm1ref[i] << "\n";
+    const double x = 2.e12 + (i + 0.5) * 1.e10;
+    double rho, v;
+    profile.get_hydrodynamic_variables(x, rho, v);
+    ofile << x << "\t" << rho << "\t" << v << "\n";
   }
 
   return 0;
