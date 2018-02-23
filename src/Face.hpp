@@ -36,10 +36,10 @@
 class Face {
 private:
   /*! @brief Midpoint of the face (in m). */
-  const CoordinateVector<> _midpoint;
+  CoordinateVector<> _midpoint;
 
   /*! @brief Vertices of the face (ordered, in m). */
-  const std::vector< CoordinateVector<> > _vertices;
+  std::vector< CoordinateVector<> > _vertices;
 
 public:
   /**
@@ -68,7 +68,7 @@ public:
     const Face &_face;
 
     /*! @brief Vertex the iterator is currently pointing to. */
-    unsigned int _index;
+    size_t _index;
 
   public:
     /**
@@ -77,7 +77,7 @@ public:
      * @param face Underlying Face object.
      * @param index Vertex the iterator is currently pointing to.
      */
-    inline Vertices(const Face &face, unsigned int index)
+    inline Vertices(const Face &face, size_t index)
         : _face(face), _index(index) {}
 
     /**

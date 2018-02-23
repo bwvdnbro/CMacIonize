@@ -41,29 +41,29 @@ class UniformRegularVoronoiGeneratorDistribution
     : public VoronoiGeneratorDistribution {
 private:
   /*! @brief Box containing the generators (in m). */
-  Box<> _box;
+  const Box<> _box;
 
   /*! @brief Resolution of the generator grid. */
-  CoordinateVector< unsigned int > _resolution;
+  CoordinateVector< uint_fast32_t > _resolution;
 
   /*! @brief Side lengths of a single cube of the regular grid (in m). */
   CoordinateVector<> _sidelength;
 
   /*! @brief Indices of the next generator to return. */
-  CoordinateVector< unsigned int > _next_index;
+  CoordinateVector< uint_fast32_t > _next_index;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param box Box containing the generators (in m).
+   * @param simulation_box Simulation box (in m).
    * @param resolution Resolution of the generator grid.
    * @param log Log to write logging info to.
    */
   UniformRegularVoronoiGeneratorDistribution(
-      Box<> box, CoordinateVector< unsigned int > resolution,
+      const Box<> &simulation_box, CoordinateVector< uint_fast32_t > resolution,
       Log *log = nullptr)
-      : _box(box), _resolution(resolution) {
+      : _box(simulation_box), _resolution(resolution) {
 
     _sidelength[0] = _box.get_sides().x() / _resolution.x();
     _sidelength[1] = _box.get_sides().y() / _resolution.y();
@@ -83,19 +83,22 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - resolution: Resolution of the regular generator grid (default: [32, 32,
+   *    32])
+   *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  UniformRegularVoronoiGeneratorDistribution(ParameterFile &params,
+  UniformRegularVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                             ParameterFile &params,
                                              Log *log = nullptr)
       : UniformRegularVoronoiGeneratorDistribution(
-            Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_anchor", "[0. m, 0. m, 0. m]"),
-                  params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:box_sides", "[1. m, 1. m, 1. m]")),
-            params.get_value< CoordinateVector< unsigned int > >(
-                "densitygrid:voronoi_generator_distribution:resolution",
-                CoordinateVector< unsigned int >(32)),
+            simulation_box,
+            params.get_value< CoordinateVector< uint_fast32_t > >(
+                "DensityGrid:VoronoiGeneratorDistribution:resolution",
+                CoordinateVector< uint_fast32_t >(32)),
             log) {}
 
   /**
@@ -108,7 +111,7 @@ public:
    *
    * @return Number of generators in the grid.
    */
-  virtual unsigned int get_number_of_positions() const {
+  virtual generatornumber_t get_number_of_positions() const {
     return _resolution.x() * _resolution.y() * _resolution.z();
   }
 

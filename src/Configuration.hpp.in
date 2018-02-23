@@ -56,13 +56,27 @@
 /*! @brief If defined, this system is a POSIX system. */
 #cmakedefine HAVE_POSIX
 
+/*! @brief If defined, this is a Windows system. */
+#cmakedefine HAVE_WINDOWS
+
 /*! @brief If defined, lock free operations will be used to update cell counters
  *  (which might or might not speed up the code). */
 #cmakedefine USE_LOCKFREE
 
-/*! @brief Maximum number of shared memory threads that can be used on the
- *  system. This variable should be configured at compile time, but for now we
- *  just hardcode its value. */
+/*! @brief If defined, the cooling for the various metals will be part of the
+ *  output. Note that this increases the memory footprint of the program and
+ *  will slightly slow down the temperature calculation. */
+#cmakedefine DO_OUTPUT_COOLING
+
+/*! @brief If defined, the heating rates will be part of the output. */
+#cmakedefine DO_OUTPUT_HEATING
+
+/*! @brief If defined, the photoionization rates for the different ions will be
+ *  part of the output. */
+#cmakedefine DO_OUTPUT_PHOTOIONIZATION_RATES
+
+/*! @brief Maximum number of shared memory threads that can be used on this
+ *  system. */
 // clang-format off
 #define MAX_NUM_THREADS @MAX_NUM_THREADS@
 // clang-format on

@@ -60,7 +60,7 @@ private:
   inline static bool is_comment_line(std::string &line) {
     // search for the first non-whitespace character
     // if it is a '#', the line contains only comments
-    unsigned int i = 0;
+    size_t i = 0;
     while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) {
       ++i;
     }
@@ -81,7 +81,7 @@ private:
    */
   inline static bool is_empty_line(std::string &line) {
     // find the first non-whitespace character
-    unsigned int i = 0;
+    size_t i = 0;
     while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) {
       ++i;
     }
@@ -107,8 +107,8 @@ private:
    * @return 0 if the line is not indented, the number of whitespace characters
    * before the actual contents of the line otherwise.
    */
-  inline static unsigned int is_indented_line(std::string &line) {
-    unsigned int i = 0;
+  inline static uint_fast32_t is_indented_line(std::string &line) {
+    uint_fast32_t i = 0;
     while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) {
       ++i;
     }
@@ -175,7 +175,7 @@ public:
   inline YAMLDictionary(std::istream &stream) {
     std::string line;
     std::vector< std::string > groupname;
-    std::vector< unsigned int > levels;
+    std::vector< uint_fast32_t > levels;
     while (getline(stream, line)) {
       if (!is_comment_line(line) && !is_empty_line(line)) {
         strip_comments_line(line);
@@ -186,7 +186,7 @@ public:
         value = keyvaluepair.second;
 
         // get indentation level
-        unsigned int indentation = is_indented_line(line);
+        uint_fast32_t indentation = is_indented_line(line);
         if (indentation > 0) {
           // line is indented: check if it is more indented than the previous
           // line
@@ -289,20 +289,20 @@ public:
       std::string indent = "";
       if (keygroups.size() > groupname.size()) {
         // Find the first value that is different
-        unsigned int i = 0;
+        size_t i = 0;
         while (i < groupname.size() && groupname[i] == keygroups[i]) {
           ++i;
         }
         // indent as long as we are in the same group
-        for (unsigned int j = 0; j < i; ++j) {
+        for (size_t j = 0; j < i; ++j) {
           indent += "  ";
         }
         // remove unequal elements
-        for (unsigned int j = i; j < groupname.size(); ++j) {
+        for (size_t j = i; j < groupname.size(); ++j) {
           groupname.pop_back();
         }
         // add and print new group names
-        for (unsigned int j = i; j < keygroups.size(); ++j) {
+        for (size_t j = i; j < keygroups.size(); ++j) {
           groupname.push_back(keygroups[j]);
           stream << indent << keygroups[j] << ":\n";
           indent += "  ";
@@ -314,20 +314,20 @@ public:
         }
         // both lists now have equal length. Find the first value that is
         // different
-        unsigned int i = 0;
+        size_t i = 0;
         while (i < keygroups.size() && groupname[i] == keygroups[i]) {
           ++i;
         }
         // indent as long as we are in the same group
-        for (unsigned int j = 0; j < i; ++j) {
+        for (size_t j = 0; j < i; ++j) {
           indent += "  ";
         }
         // remove elements from groupname
-        for (unsigned int j = i; j < keygroups.size(); ++j) {
+        for (size_t j = i; j < keygroups.size(); ++j) {
           groupname.pop_back();
         }
         // add and print new group names
-        for (unsigned int j = i; j < keygroups.size(); ++j) {
+        for (size_t j = i; j < keygroups.size(); ++j) {
           groupname.push_back(keygroups[j]);
           stream << indent << keygroups[j] << ":\n";
           indent += "  ";
@@ -446,6 +446,7 @@ public:
    * @return Value of that key, in SI units.
    */
   template < Quantity _quantity_ > double get_physical_value(std::string key) {
+
     std::string svalue = get_value< std::string >(key);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
     double dvalue =
@@ -463,12 +464,13 @@ public:
    */
   template < Quantity _quantity_ >
   CoordinateVector<> get_physical_vector(std::string key) {
+
     std::string svalue = get_value< std::string >(key);
     std::string parts[3];
     Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
     CoordinateVector<> vvalue;
     std::string used_value = "[";
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
@@ -498,6 +500,7 @@ public:
    */
   template < Quantity _quantity_ >
   double get_physical_value(std::string key, std::string default_value) {
+
     std::string svalue = get_value< std::string >(key, default_value);
     std::pair< double, std::string > valunit = Utilities::split_value(svalue);
     double dvalue =
@@ -518,12 +521,13 @@ public:
   template < Quantity _quantity_ >
   CoordinateVector<> get_physical_vector(std::string key,
                                          std::string default_value) {
+
     std::string svalue = get_value< std::string >(key, default_value);
     std::string parts[3];
     Utilities::split_string(svalue, parts[0], parts[1], parts[2]);
     CoordinateVector<> vvalue;
     std::string used_value = "[";
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       std::pair< double, std::string > valunit =
           Utilities::split_value(parts[i]);
       vvalue[i] =
@@ -552,7 +556,8 @@ public:
  */
 template <>
 inline std::string YAMLDictionary::get_value< std::string >(std::string key) {
-  unsigned int count = _dictionary.count(key);
+
+  uint_fast32_t count = _dictionary.count(key);
   if (count == 0) {
     cmac_error("Parameter \"%s\" not found!", key.c_str());
   }
@@ -578,6 +583,7 @@ template <>
 inline std::string
 YAMLDictionary::get_value< std::string >(std::string key,
                                          std::string default_value) {
+
   std::map< std::string, std::string >::iterator it = _dictionary.find(key);
   std::string svalue;
   // the second condition covers the case where we request a parameter twice

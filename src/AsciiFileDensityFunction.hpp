@@ -36,6 +36,10 @@ class ParameterFile;
 
 /**
  * @brief DensityFunction that reads a density grid from an ASCII text file.
+ *
+ * The density grid is assumed to be a regular Cartesian grid. The ASCII file
+ * should contain the coordinates of the Cartesian cell midpoints and should
+ * also list the density within each cell.
  */
 class AsciiFileDensityFunction : public DensityFunction {
 private:
@@ -43,7 +47,7 @@ private:
   double ***_grid;
 
   /*! @brief Dimensions of the grid. */
-  CoordinateVector< int > _ncell;
+  CoordinateVector< uint_fast32_t > _ncell;
 
   /*! @brief Box containing the grid. */
   Box<> _box;
@@ -55,9 +59,9 @@ private:
   Log *_log;
 
 public:
-  AsciiFileDensityFunction(std::string filename, CoordinateVector< int > ncell,
-                           Box<> box, double temperature,
-                           double length_unit_in_SI = 1.,
+  AsciiFileDensityFunction(std::string filename,
+                           CoordinateVector< uint_fast32_t > ncell, Box<> box,
+                           double temperature, double length_unit_in_SI = 1.,
                            double density_unit_in_SI = 1., Log *log = nullptr);
   AsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
   ~AsciiFileDensityFunction();

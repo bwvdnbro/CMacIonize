@@ -28,6 +28,7 @@
 
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -63,7 +64,7 @@ private:
   std::vector< CoordinateVector<> > _discrete_positions;
 
   /*! @brief Spectrum of the discrete photon sources. */
-  PhotonSourceSpectrum *_discrete_spectrum;
+  const PhotonSourceSpectrum *_discrete_spectrum;
 
   /*! @brief Weight of discrete photons. */
   double _discrete_photon_weight;
@@ -75,10 +76,10 @@ private:
   /// continuous sources
 
   /*! @brief ContinuousPhotonSource instance used. */
-  ContinuousPhotonSource *_continuous_source;
+  const ContinuousPhotonSource *_continuous_source;
 
   /*! @brief Spectrum of the continuous sources. */
-  PhotonSourceSpectrum *_continuous_spectrum;
+  const PhotonSourceSpectrum *_continuous_spectrum;
 
   /*! @brief Weight of continuous photons. */
   double _continuous_photon_weight;
@@ -93,19 +94,13 @@ private:
   double _total_luminosity;
 
   /*! @brief Abundances of the elements in the ISM. */
-  Abundances &_abundances;
+  const Abundances &_abundances;
 
   /*! @brief Cross sections for photoionization. */
-  CrossSections &_cross_sections;
+  const CrossSections &_cross_sections;
 
-  /*! @brief Hydrogen Lyman continuum spectrum, used for re-emission. */
-  HydrogenLymanContinuumSpectrum _HLyc_spectrum;
-
-  /*! @brief Helium Lyman continuum spectrum, used for re-emission. */
-  HeliumLymanContinuumSpectrum _HeLyc_spectrum;
-
-  /*! @brief Helium 2-photon continuum spectrum, used for re-emission. */
-  HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
+  /*! @brief ReemissionHandler for diffuse reemission. */
+  DiffuseReemissionHandler *_reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
@@ -114,11 +109,22 @@ private:
 
 public:
   PhotonSource(PhotonSourceDistribution *distribution,
-               PhotonSourceSpectrum *discrete_spectrum,
-               ContinuousPhotonSource *continuous_source,
-               PhotonSourceSpectrum *continuous_spectrum,
-               Abundances &abundances, CrossSections &cross_sections,
+               const PhotonSourceSpectrum *discrete_spectrum,
+               const ContinuousPhotonSource *continuous_source,
+               const PhotonSourceSpectrum *continuous_spectrum,
+               const Abundances &abundances,
+               const CrossSections &cross_sections, bool diffuse_field = true,
                Log *log = nullptr);
+
+  PhotonSource(PhotonSourceDistribution *distribution,
+               const PhotonSourceSpectrum *discrete_spectrum,
+               const ContinuousPhotonSource *continuous_source,
+               const PhotonSourceSpectrum *continuous_spectrum,
+               const Abundances &abundances,
+               const CrossSections &cross_sections, ParameterFile &params,
+               Log *log = nullptr);
+
+  ~PhotonSource();
 
   /**
    * @brief Get a random direction.
@@ -129,12 +135,11 @@ public:
    */
   inline static CoordinateVector<>
   get_random_direction(RandomGenerator &random_generator) {
-    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
-    double sint = 1. - cost * cost;
-    sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
-    double cosp = std::cos(phi);
-    double sinp = std::sin(phi);
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
     return CoordinateVector<>(sint * cosp, sint * sinp, cost);
   }
 

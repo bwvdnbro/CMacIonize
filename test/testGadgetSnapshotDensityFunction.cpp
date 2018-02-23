@@ -29,7 +29,6 @@
 #include "Error.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
 #include "TerminalLog.hpp"
-using namespace std;
 
 /**
  * @brief Unit test for the GadgetSnapshotDensityFunction class.
@@ -39,19 +38,21 @@ using namespace std;
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // before we can test this, we need to make sure we can open and read a
   // Gadget2 snapshot file.
   TerminalLog tlog(LOGLEVEL_INFO);
   GadgetSnapshotDensityFunction density("test.hdf5", false, 0., 0., 0., false,
                                         0., false, 0., &tlog);
+  density.initialize();
 
   CoordinateVector<> anchor;
   CoordinateVector<> sides(1., 1., 1.);
   Box<> box(anchor, sides);
-  CartesianDensityGrid grid(box, 32, density);
-  std::pair< unsigned long, unsigned long > block =
+  CartesianDensityGrid grid(box, 32);
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density);
   assert_values_equal(grid.get_total_hydrogen_number(),
                       density.get_total_hydrogen_number());
   assert_values_equal(grid.get_average_temperature(), 0.);

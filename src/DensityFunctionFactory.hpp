@@ -38,6 +38,7 @@
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
+#include "SpiralGalaxyDensityFunction.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
@@ -78,6 +79,27 @@ public:
    * @brief Generate a DensityFunction based on the type chosen in the parameter
    * file.
    *
+   * Supported types are (default: Homogeneous):
+   *  - AsciiFile: Implementation that reads a density grid from an ASCII text
+   *    file
+   *  - BlockSyntax: Implementation that reads a geometrically constructed
+   *    density field from a text file containing block syntax
+   *  - Homogeneous: Constant value density field.
+   *  - Interpolated: Implementation that reads a density field from a text file
+   *    and interpolates on it
+   *  - SPHNGSnapshot: Implementation that reads a density field from a snapshot
+   *    file of the SPH code SPHNG
+   *  - SpiralGalaxy: Implementation that sets up a diffuse galactic density
+   *    field
+   *  - CMacIonizeSnapshot: Implementation that reads a density field from a
+   *    snapshot of another CMacIonize run
+   *  - FLASHSnapshot: Implementation that reads a density field from the AMR
+   *    simulation code FLASH
+   *  - GadgetSnapshot: Implementation that reads a density field from the HDF5
+   *    file format of the SPH simulation code Gadget2 (also supported by SWIFT,
+   *    AREPO, GIZMO and Shadowfax; the CMacIonize snapshot format is a variant
+   *    of this format)
+   *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
    * @param log Log to write logging information to.
@@ -86,7 +108,7 @@ public:
    */
   static DensityFunction *generate(ParameterFile &params, Log *log = nullptr) {
     std::string type =
-        params.get_value< std::string >("densityfunction:type", "Homogeneous");
+        params.get_value< std::string >("DensityFunction:type", "Homogeneous");
     if (log) {
       log->write_info("Requested DensityFunction type: ", type);
     }
@@ -106,6 +128,8 @@ public:
       return new InterpolatedDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
+    } else if (type == "SpiralGalaxy") {
+      return new SpiralGalaxyDensityFunction(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonizeSnapshot") {
       return new CMacIonizeSnapshotDensityFunction(params, log);
@@ -114,6 +138,8 @@ public:
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotDensityFunction(params, log);
 #endif
+    } else if (type == "None") {
+      return nullptr;
     } else {
       cmac_error("Unknown DensityFunction type: \"%s\".", type.c_str());
       return nullptr;

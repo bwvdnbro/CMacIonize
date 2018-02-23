@@ -44,8 +44,9 @@
  */
 template < Quantity _quantity_ >
 void check_quantity(std::vector< std::string > unitnames,
-                    std::vector< int > unitlogic) {
-  for (unsigned int i = 0; i < unitnames.size(); ++i) {
+                    std::vector< int_fast32_t > unitlogic) {
+
+  for (size_t i = 0; i < unitnames.size(); ++i) {
     assert_condition(UnitConverter::convert(1., unitnames[i], unitnames[i]) ==
                      1.);
     assert_condition(UnitConverter::to_unit< _quantity_ >(
@@ -83,15 +84,16 @@ void check_quantity(std::vector< std::string > unitnames,
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   {
     Unit unit = UnitConverter::get_unit(" m");
-    Unit unit2(1., 1, 0, 0, 0, 0);
+    Unit unit2(1., 1, 0, 0, 0, 0, 0);
     assert_condition(unit == unit2);
   }
 
   {
     Unit unit = UnitConverter::get_unit("K kg^3 s^-1m ");
-    Unit unit2(1., 1, -1, 3, 1, 0);
+    Unit unit2(1., 1, -1, 3, 1, 0, 0);
     assert_condition(unit == unit2);
   }
   {
@@ -111,17 +113,30 @@ int main(int argc, char **argv) {
   /// ACCELERATION
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m s^-2");
     unitlogic.push_back(0);
 
     check_quantity< QUANTITY_ACCELERATION >(unitnames, unitlogic);
   }
 
+  /// ANGLE
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+    unitnames.push_back("radians");
+    unitlogic.push_back(0);
+    unitnames.push_back("degrees");
+    // 1 degree is less than 1 radian
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_ANGLE >(unitnames, unitlogic);
+  }
+
   /// DENSITY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("kg m^-3");
     unitlogic.push_back(0);
     unitnames.push_back("g cm^-3");
@@ -134,7 +149,7 @@ int main(int argc, char **argv) {
   /// ENERGY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("J");
     unitlogic.push_back(0);
     unitnames.push_back("eV");
@@ -148,7 +163,7 @@ int main(int argc, char **argv) {
   /// ENERGY CHANGE RATE
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("kg m^-1s^-3");
     unitlogic.push_back(0);
     unitnames.push_back("J m^-3s^-1");
@@ -165,7 +180,7 @@ int main(int argc, char **argv) {
   /// ENERGY_RATE
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("kg m^2s^-3");
     unitlogic.push_back(0);
     unitnames.push_back("J s^-1");
@@ -181,7 +196,7 @@ int main(int argc, char **argv) {
   /// FLUX
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m^-2s^-1");
     unitlogic.push_back(0);
     unitnames.push_back("cm^-2s^-1");
@@ -195,7 +210,7 @@ int main(int argc, char **argv) {
   /// FREQUENCY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("s^-1");
     unitlogic.push_back(0);
     unitnames.push_back("Hz");
@@ -211,7 +226,7 @@ int main(int argc, char **argv) {
   /// FREQUENCY PER MASS
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("s^-1 kg^-1");
     unitlogic.push_back(0);
     unitnames.push_back("s^-1 Msol^-1");
@@ -225,7 +240,7 @@ int main(int argc, char **argv) {
   /// LENGTH
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m");
     unitlogic.push_back(0);
     unitnames.push_back("cm");
@@ -247,7 +262,7 @@ int main(int argc, char **argv) {
   /// MASS
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("kg");
     unitlogic.push_back(0);
     unitnames.push_back("g");
@@ -263,7 +278,7 @@ int main(int argc, char **argv) {
   /// MASS RATE
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("kg s^-1");
     unitlogic.push_back(0);
     unitnames.push_back("Msol yr^-1");
@@ -277,7 +292,7 @@ int main(int argc, char **argv) {
   /// NUMBER DENSITY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m^-3");
     unitlogic.push_back(0);
     unitnames.push_back("cm^-3");
@@ -291,7 +306,7 @@ int main(int argc, char **argv) {
   /// OPACITY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m^-1");
     unitlogic.push_back(0);
 
@@ -301,7 +316,7 @@ int main(int argc, char **argv) {
   /// REACTION RATE
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m^3s^-1");
     unitlogic.push_back(0);
     unitnames.push_back("cm^3s^-1");
@@ -314,7 +329,7 @@ int main(int argc, char **argv) {
   /// SURFACE AREA
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m^2");
     unitlogic.push_back(0);
     unitnames.push_back("cm^2");
@@ -327,7 +342,7 @@ int main(int argc, char **argv) {
   /// TEMPERATURE
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("K");
     unitlogic.push_back(0);
 
@@ -337,7 +352,7 @@ int main(int argc, char **argv) {
   /// TIME
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("s");
     unitlogic.push_back(0);
     unitnames.push_back("Gyr");
@@ -353,7 +368,7 @@ int main(int argc, char **argv) {
   /// VELOCITY
   {
     std::vector< std::string > unitnames;
-    std::vector< int > unitlogic;
+    std::vector< int_fast32_t > unitlogic;
     unitnames.push_back("m s^-1");
     unitlogic.push_back(0);
     unitnames.push_back("km s^-1");

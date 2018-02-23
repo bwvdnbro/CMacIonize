@@ -39,10 +39,10 @@
 class SpatialAMRRefinementScheme : public AMRRefinementScheme {
 private:
   /*! @brief Zone where the grid should be refined (in m). */
-  Box<> _refinement_zone;
+  const Box<> _refinement_zone;
 
   /*! @brief Maximum refinement level. */
-  unsigned char _max_level;
+  const uint_fast8_t _max_level;
 
 public:
   /**
@@ -52,9 +52,10 @@ public:
    * @param max_level Maximum refinement level.
    * @param log Log to write logging info to.
    */
-  SpatialAMRRefinementScheme(Box<> refinement_zone, unsigned char max_level,
+  SpatialAMRRefinementScheme(Box<> refinement_zone, uint_fast8_t max_level,
                              Log *log = nullptr)
       : _refinement_zone(refinement_zone), _max_level(max_level) {
+
     if (log) {
       log->write_status("Constructed SpatialAMRRefinementScheme with a "
                         "refinement zone box with anchor [",
@@ -71,19 +72,26 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - zone anchor: Anchor of the refinement zone (default: [0. m, 0. m, 0. m])
+   *  - zone sides: Side lenghts of the refinement zone (default: [1. m, 1. m,
+   *    1. m])
+   *  - maximum refinement level: Maximum allowed refinement level (default: 4)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
   SpatialAMRRefinementScheme(ParameterFile &params, Log *log = nullptr)
       : SpatialAMRRefinementScheme(
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:amrrefinementscheme:zone_anchor",
+                      "DensityGrid:AMRRefinementScheme:zone anchor",
                       "[0. m, 0. m, 0. m]"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
-                      "densitygrid:amrrefinementscheme:zone_sides",
+                      "DensityGrid:AMRRefinementScheme:zone sides",
                       "[1. m, 1. m, 1. m]")),
-            params.get_value< unsigned int >(
-                "densitygrid:amrrefinementscheme:max_level", 4)) {}
+            params.get_value< uint_fast8_t >(
+                "DensityGrid:AMRRefinementScheme:maximum refinement level",
+                4)) {}
 
   /**
    * @brief Check if the given cell should be refined.
@@ -92,9 +100,10 @@ public:
    * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the cell should be refined.
    */
-  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    CoordinateVector<> midpoint = cell.get_cell_midpoint();
-    for (unsigned int i = 0; i < 3; ++i) {
+  virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
+
+    const CoordinateVector<> midpoint = cell.get_cell_midpoint();
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       if (midpoint[i] < _refinement_zone.get_anchor()[i] ||
           midpoint[i] > _refinement_zone.get_anchor()[i] +
                             _refinement_zone.get_sides()[i]) {

@@ -34,6 +34,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   TerminalLog tlog(LOGLEVEL_INFO, "This is a TerminalLog\n");
 
   tlog.write_info("Info message.");

@@ -34,11 +34,11 @@
  * @brief Enum used to identify the columns in verner_A.txt.
  */
 enum VernerDataA {
-  VERNERDATA_A_l = 0,
+  VERNERDATA_A_Plconst = 0,
   VERNERDATA_A_E_th,
-  VERNERDATA_A_E_0,
+  VERNERDATA_A_E_0_inv,
   VERNERDATA_A_sigma_0,
-  VERNERDATA_A_y_a,
+  VERNERDATA_A_one_over_y_a,
   VERNERDATA_A_P,
   VERNERDATA_A_y_w_squared,
   /*! @brief Counter. Should always be the last element. */
@@ -49,9 +49,9 @@ enum VernerDataA {
  * @brief Enum used to identify the columns in verner_B.txt.
  */
 enum VernerDataB {
-  VERNERDATA_B_E_0 = 0,
+  VERNERDATA_B_E_0_inv = 0,
   VERNERDATA_B_sigma_0,
-  VERNERDATA_B_y_a,
+  VERNERDATA_B_one_over_y_a,
   VERNERDATA_B_P,
   VERNERDATA_B_y_w_squared,
   VERNERDATA_B_y_0,
@@ -72,6 +72,13 @@ enum VernerDataC {
 
 /**
  * @brief CrossSections implementation for Verner's cross sections.
+ *
+ * The data used are based on Verner, D. A. & Yakovlev, D. S. 1995, A&AS, 109,
+ * 125 (http://adsabs.harvard.edu/abs/1995A%26AS..109..125V), and Verner, D. A.,
+ * Ferland, G. J., Korista, K. T. & Yakovlev, D. G. 1996, ApJ, 465, 487
+ * (http://adsabs.harvard.edu/abs/1996ApJ...465..487V). The fitting routine used
+ * is identical to the one in Verner's phfit2, which was retrieved from
+ * ftp://gradj.pa.uky.edu//dima//photo//phfit2.f.
  */
 class VernerCrossSections : public CrossSections {
 private:
@@ -88,8 +95,8 @@ private:
 public:
   VernerCrossSections();
 
-  double get_cross_section_verner(unsigned char nz, unsigned char ne,
-                                  unsigned char is, double e) const;
+  double get_cross_section_verner(uint_fast8_t nz, uint_fast8_t ne,
+                                  uint_fast8_t is, double e) const;
 
   virtual double get_cross_section(IonName ion, double energy) const;
 };

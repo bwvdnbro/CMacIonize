@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file PhotonShootJob.hpp
+ * @file IonizationPhotonShootJob.hpp
  *
- * @brief Job implementation that shoots photons through a DensityGrid.
+ * @brief Job implementation that shoots ionizing photons through a DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef PHOTONSHOOTJOB_HPP
-#define PHOTONSHOOTJOB_HPP
+#ifndef IONIZATIONPHOTONSHOOTJOB_HPP
+#define IONIZATIONPHOTONSHOOTJOB_HPP
 
 #include "DensityGrid.hpp"
 #include "Photon.hpp"
@@ -32,12 +32,12 @@
 #include "RandomGenerator.hpp"
 
 /**
- * @brief Job implementation that shoots photons through a DensityGrid.
+ * @brief Job implementation that shoots ionizing photons through a DensityGrid.
  */
-class PhotonShootJob {
+class IonizationPhotonShootJob {
 private:
   /*! @brief PhotonSource that emits photons. */
-  PhotonSource &_photon_source;
+  const PhotonSource &_photon_source;
 
   /*! @brief RandomGenerator used to generate random uniform numbers. */
   RandomGenerator _random_generator;
@@ -52,7 +52,7 @@ private:
   double _typecount[PHOTONTYPE_NUMBER];
 
   /*! @brief Number of photons to propagate through the DensityGrid. */
-  unsigned int _numphoton;
+  uint_fast64_t _numphoton;
 
 public:
   /**
@@ -63,8 +63,9 @@ public:
    * thread.
    * @param density_grid DensityGrid through which photons are propagated.
    */
-  inline PhotonShootJob(PhotonSource &photon_source, int random_seed,
-                        DensityGrid &density_grid)
+  inline IonizationPhotonShootJob(const PhotonSource &photon_source,
+                                  int_fast32_t random_seed,
+                                  DensityGrid &density_grid)
       : _photon_source(photon_source), _random_generator(random_seed),
         _density_grid(density_grid), _totweight(0.), _typecount{0.},
         _numphoton(0) {}
@@ -74,7 +75,7 @@ public:
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(uint_fast64_t numphoton) { _numphoton = numphoton; }
 
   /**
    * @brief Update the given weight counters and reset the internal counters.
@@ -85,7 +86,7 @@ public:
   inline void update_counters(double &totweight, double *typecount) {
     totweight += _totweight;
     _totweight = 0.;
-    for (int i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       typecount[i] += _typecount[i];
       _typecount[i] = 0.;
     }
@@ -94,16 +95,43 @@ public:
   /**
    * @brief Should the Job be deleted by the Worker when it is finished?
    *
-   * @return False, since the Job is reused and managed by PhotonShootJobMarket.
+   * @return False, since the Job is reused and managed by the
+   * IonizationPhotonShootJobMarket.
    */
   inline bool do_cleanup() const { return false; }
 
   /**
    * @brief Shoot _numphoton photons from _photon_source through _density_grid.
+   *
+   * For each photon, we first randomly generate the photon. We then draw a
+   * random optical depth using the distribution function of Steinacker, J.,
+   * Baes, M. & Gordon, K. D. 2013, Annu. Rev. Astro. Astrophys., 51, 63
+   * (http://adsabs.harvard.edu/abs/2013ARA%26A..51...63S), equation (25). We
+   * propagate the photon through the grid until that optical depth is reached,
+   * or until the photon leaves the system (adding ionizing luminosity to all
+   * cells covered by the path of the photon through the grid). If the photon
+   * is still inside the simulation box, we randomly decide whether we need to
+   * reemit it or not. If so, we again draw a random optical depth and repeat
+   * the whole procedure until the photon is absorbed or leaves the system.
    */
   inline void execute() {
-    for (unsigned int i = 0; i < _numphoton; ++i) {
+    for (uint_fast64_t i = 0; i < _numphoton; ++i) {
       Photon photon = _photon_source.get_random_photon(_random_generator);
+      // if a fraction of light alpha is absorbed when the light traverses a
+      // small path with length dl in the material, then the spatial change of
+      // the number of photons is given by
+      //  dN_p / dl = alpha * N_p
+      // we can rewrite this as
+      //  dN_p / N_p = alpha * dl
+      // which can be integrated to
+      //  N_p = N_p0 * exp(-tau)
+      // where tau = \int_0^L alpha dl
+      // This shows that the optical depth distribution for a photon is
+      // exponentially distributed. To draw a random optical depth, we can start
+      // from a uniform random number ksi, and invert the cumulative
+      // distribution:
+      //  tau = -ln(ksi)
+      // See Steinacker, Baes & Gordon (2013), equation (25)
       double tau = -std::log(_random_generator.get_uniform_random_double());
       DensityGrid::iterator it = _density_grid.interact(photon, tau);
       while (it != _density_grid.end() &&
@@ -120,9 +148,9 @@ public:
   /**
    * @brief Get a name tag for this job.
    *
-   * @return "photonshootjob".
+   * @return "ionizationphotonshootjob".
    */
-  inline std::string get_tag() const { return "photonshootjob"; }
+  inline std::string get_tag() const { return "ionizationphotonshootjob"; }
 };
 
-#endif // PHOTONSHOOTJOB_HPP
+#endif // IONIZATIONPHOTONSHOOTJOB_HPP

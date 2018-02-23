@@ -27,27 +27,26 @@
 #define HYDROINTEGRATOR_HPP
 
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
+#include "GradientCalculator.hpp"
+#include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
+#include "PhysicalConstants.hpp"
 #include "RiemannSolver.hpp"
+#include "SimulationBox.hpp"
+#include "Timer.hpp"
 
 #include <cfloat>
 
-/**
- * @brief Types of boundary conditions implemented for the boundaries of the
- * box.
- */
-enum HydroBoundaryConditionType {
-  /*! @brief A periodic boundary (only works if the grid is also periodic). */
-  HYDRO_BOUNDARY_PERIODIC = 0,
-  /*! @brief Reflective boundaries (elastic collisions are assumed at the
-   *  boundaries). */
-  HYDRO_BOUNDARY_REFLECTIVE,
-  /*! @brief Inflow boundaries (material is assumed to flow in or out of the box
-   *  at the same rate it flows near the boundary). */
-  HYDRO_BOUNDARY_INFLOW,
-  /*! @brief Invalid boundaries selected. */
-  HYDRO_BOUNDARY_INVALID
-};
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define hydro_start_parallel_timing_block()                                    \
+  serial_timer.stop();                                                         \
+  parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define hydro_stop_parallel_timing_block()                                     \
+  parallel_timer.stop();                                                       \
+  serial_timer.start();
 
 /**
  * @brief Class that performs the hydrodynamical integration.
@@ -55,22 +54,25 @@ enum HydroBoundaryConditionType {
 class HydroIntegrator {
 private:
   /*! @brief Adiabatic index of the gas. */
-  double _gamma;
+  const double _gamma;
 
   /*! @brief Adiabatic index minus one. */
-  double _gm1;
+  const double _gm1;
+
+  /*! @brief Inverse of adiabatic index minus one. */
+  const double _gm1_inv;
 
   /*! @brief Flag indicating whether we use radiative heating or not. */
-  bool _do_radiative_heating;
+  const bool _do_radiative_heating;
 
   /*! @brief Flag indicating whether we want radiative cooling or not. */
-  bool _do_radiative_cooling;
+  const bool _do_radiative_cooling;
 
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
-  RiemannSolver _solver;
+  const RiemannSolver _solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
-  HydroBoundaryConditionType _boundaries[6];
+  const HydroBoundaryConditionType _boundaries[6];
 
   /**
    * @brief Get the HydroBoundaryConditionType corresponding to the given type
@@ -91,6 +93,152 @@ private:
       return HYDRO_BOUNDARY_INVALID;
     }
   }
+
+  /**
+   * @brief Functor that does the flux computation for a single cell.
+   */
+  class HydroFluxComputation {
+  private:
+    /*! @brief Reference to the underlying HydroIntegrator. */
+    const HydroIntegrator &_hydro_integrator;
+
+    /*! @brief Reference to the grid. */
+    const DensityGrid &_grid;
+
+    /*! @brief Iterator to the end of the grid. */
+    const DensityGrid::iterator &_grid_end;
+
+    /*! @brief Integration time step (in s). */
+    const double _timestep;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param hydro_integrator Reference to the underlying HydroIntegrator.
+     * @param grid Reference to the DensityGrid.
+     * @param grid_end Iterator to the end of the grid.
+     * @param timestep Integration time step (in s).
+     */
+    inline HydroFluxComputation(const HydroIntegrator &hydro_integrator,
+                                const DensityGrid &grid,
+                                const DensityGrid::iterator &grid_end,
+                                double timestep)
+        : _hydro_integrator(hydro_integrator), _grid(grid), _grid_end(grid_end),
+          _timestep(timestep) {}
+
+    /**
+     * @brief Do the flux computation for a single cell of the grid.
+     *
+     * @param cell DensityGrid::iterator pointing to a grid cell.
+     */
+    inline void operator()(DensityGrid::iterator &cell) {
+
+      const double rhoL = cell.get_hydro_variables().get_primitives_density();
+      const CoordinateVector<> uL =
+          cell.get_hydro_variables().get_primitives_velocity();
+      const double PL = cell.get_hydro_variables().get_primitives_pressure();
+      auto ngbs = cell.get_neighbours();
+      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+        DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
+        // the midpoint is only used if we use a second order scheme
+        const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
+        const CoordinateVector<> normal = std::get< 2 >(*ngbit);
+        const double surface_area = std::get< 3 >(*ngbit);
+
+        // get the right state
+        double rhoR;
+        CoordinateVector<> uR;
+        double PR;
+        CoordinateVector<> vframe;
+        if (ngb != _grid_end) {
+          rhoR = ngb.get_hydro_variables().get_primitives_density();
+          uR = ngb.get_hydro_variables().get_primitives_velocity();
+          PR = ngb.get_hydro_variables().get_primitives_pressure();
+          vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
+        } else {
+          // apply boundary conditions
+          rhoR = rhoL;
+          uR = uL;
+          if (normal[0] < 0. &&
+              _hydro_integrator._boundaries[0] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[0] = -uR[0];
+          }
+          if (normal[0] > 0. &&
+              _hydro_integrator._boundaries[1] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[0] = -uR[0];
+          }
+          if (normal[1] < 0. &&
+              _hydro_integrator._boundaries[2] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[1] = -uR[1];
+          }
+          if (normal[1] > 0. &&
+              _hydro_integrator._boundaries[3] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[1] = -uR[1];
+          }
+          if (normal[2] < 0. &&
+              _hydro_integrator._boundaries[4] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[2] = -uR[2];
+          }
+          if (normal[2] > 0. &&
+              _hydro_integrator._boundaries[5] == HYDRO_BOUNDARY_REFLECTIVE) {
+            uR[2] = -uR[2];
+          }
+          PR = PL;
+        }
+
+        // boost the velocities to the interface frame (and use new variables,
+        // as we still want to use the old value of uL for other neighbours)
+        const CoordinateVector<> uLframe = uL - vframe;
+        const CoordinateVector<> uRframe = uR - vframe;
+
+        // project the velocities onto the surface normal
+        const double vL = CoordinateVector<>::dot_product(uLframe, normal);
+        const double vR = CoordinateVector<>::dot_product(uRframe, normal);
+
+        // solve the Riemann problem
+        double rhosol, vsol, Psol;
+        const int flag = _hydro_integrator._solver.solve(
+            rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+
+        // if the solution was vacuum, there is no flux
+        if (flag != 0) {
+          // deproject the velocity
+          CoordinateVector<> usol;
+          if (flag == -1) {
+            vsol -= vL;
+            usol = uLframe + vsol * normal;
+          } else {
+            vsol -= vR;
+            usol = uRframe + vsol * normal;
+          }
+
+          // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
+          double rhoesol =
+              0.5 * rhosol * usol.norm2() + Psol * _hydro_integrator._gm1_inv;
+          vsol = CoordinateVector<>::dot_product(usol, normal);
+
+          // get the fluxes
+          const double mflux = rhosol * vsol * surface_area * _timestep;
+          CoordinateVector<> pflux = rhosol * vsol * usol + Psol * normal;
+          pflux *= surface_area * _timestep;
+          double eflux = (rhoesol + Psol) * vsol * surface_area * _timestep;
+
+          // de-boost fluxes to fixed reference frame
+          const double vframe2 = vframe.norm2();
+          eflux += CoordinateVector<>::dot_product(vframe, pflux) +
+                   0.5 * vframe2 * mflux;
+          pflux += mflux * vframe;
+
+          cell.get_hydro_variables().delta_conserved(0) += mflux;
+          cell.get_hydro_variables().delta_conserved(1) += pflux.x();
+          cell.get_hydro_variables().delta_conserved(2) += pflux.y();
+          cell.get_hydro_variables().delta_conserved(3) += pflux.z();
+          cell.get_hydro_variables().delta_conserved(4) += eflux;
+        }
+      }
+    }
+  };
 
 public:
   /**
@@ -120,17 +268,15 @@ public:
                          std::string boundary_zhigh = "reflective",
                          CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false))
-      : _gamma(gamma), _do_radiative_heating(do_radiative_heating),
-        _do_radiative_cooling(do_radiative_cooling), _solver(gamma) {
-
-    _gm1 = _gamma - 1.;
-
-    _boundaries[0] = get_boundary_type(boundary_xlow);
-    _boundaries[1] = get_boundary_type(boundary_xhigh);
-    _boundaries[2] = get_boundary_type(boundary_ylow);
-    _boundaries[3] = get_boundary_type(boundary_yhigh);
-    _boundaries[4] = get_boundary_type(boundary_zlow);
-    _boundaries[5] = get_boundary_type(boundary_zhigh);
+      : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
+        _do_radiative_heating(do_radiative_heating),
+        _do_radiative_cooling(do_radiative_cooling), _solver(gamma),
+        _boundaries{get_boundary_type(boundary_xlow),
+                    get_boundary_type(boundary_xhigh),
+                    get_boundary_type(boundary_ylow),
+                    get_boundary_type(boundary_yhigh),
+                    get_boundary_type(boundary_zlow),
+                    get_boundary_type(boundary_zhigh)} {
 
     if (_boundaries[0] == HYDRO_BOUNDARY_PERIODIC) {
       if (_boundaries[1] != HYDRO_BOUNDARY_PERIODIC) {
@@ -167,27 +313,48 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - polytropic index: Polytropic index @f$\gamma{}@f$ of the gas (default:
+   *    5. / 3.)
+   *  - radiative heating: Is radiative heating enabled (default: true)?
+   *  - radiative cooling: Is radiative cooling enabled (default: false)?
+   *  - boundary x low: Boundary condition type for the lower x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary x high: Boundary condition type for the upper x boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y low: Boundary condition type for the lower y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary y high: Boundary condition type for the upper y boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z low: Boundary condition type for the lower z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *  - boundary z high: Boundary condition type for the upper z boundary
+   *    (periodic/reflective/inflow, default: reflective)
+   *
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile to read from.
    */
-  inline HydroIntegrator(ParameterFile &params)
+  inline HydroIntegrator(const SimulationBox &simulation_box,
+                         ParameterFile &params)
       : HydroIntegrator(
-            params.get_value< double >("hydro:polytropic_index", 5. / 3.),
-            params.get_value< bool >("hydro:radiative_heating", true),
-            params.get_value< bool >("hydro:radiative_cooling", false),
-            params.get_value< std::string >("hydro:boundary_xlow",
+            params.get_value< double >("HydroIntegrator:polytropic index",
+                                       5. / 3.),
+            params.get_value< bool >("HydroIntegrator:radiative heating", true),
+            params.get_value< bool >("HydroIntegrator:radiative cooling",
+                                     false),
+            params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_xhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary x high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_ylow",
+            params.get_value< std::string >("HydroIntegrator:boundary y low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_yhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary y high",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zlow",
+            params.get_value< std::string >("HydroIntegrator:boundary z low",
                                             "reflective"),
-            params.get_value< std::string >("hydro:boundary_zhigh",
+            params.get_value< std::string >("HydroIntegrator:boundary z high",
                                             "reflective"),
-            params.get_value< CoordinateVector< bool > >(
-                "densitygrid:periodicity", CoordinateVector< bool >(false))) {}
+            simulation_box.get_periodicity()) {}
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.
@@ -195,8 +362,12 @@ public:
    * @param grid DensityGrid to operate on.
    */
   inline void initialize_hydro_variables(DensityGrid &grid) const {
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
       const double number_density =
@@ -231,18 +402,18 @@ public:
       it.get_hydro_variables().set_conserved_total_energy(total_energy);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 
   /**
-   * @brief Do a single hydrodynamical time step.
+   * @brief Get the maximal system time step that will lead to a stable
+   * integration.
    *
    * @param grid DensityGrid on which to operate.
-   * @param timestep Time step over which to evolve the system.
+   * @return Maximal system time step that yields a stable integration (in s).
    */
-  inline void do_hydro_step(DensityGrid &grid, double timestep) const {
-//#define PRINT_TIMESTEP_CRITERION
-#ifdef PRINT_TIMESTEP_CRITERION
+  inline double get_maximal_timestep(DensityGrid &grid) const {
+
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double rho = it.get_hydro_variables().get_primitives_density();
@@ -255,149 +426,78 @@ public:
       const double dt = 0.2 * R / (cs + v);
       dtmin = std::min(dt, dtmin);
     }
-    cmac_status("Minimal time step using criterion: %g (%g)", dtmin, timestep);
-#endif
+    return dtmin;
+  }
+
+  /**
+   * @brief Do a single hydrodynamical time step.
+   *
+   * @param grid DensityGrid on which to operate.
+   * @param timestep Time step over which to evolve the system (in s).
+   * @param serial_timer Timer that times the time spent in serial parts of the
+   * algorithm.
+   * @param parallel_timer Timer that times the time spent in parallel parts of
+   * the algorithm.
+   */
+  inline void do_hydro_step(DensityGrid &grid, double timestep,
+                            Timer &serial_timer, Timer &parallel_timer) const {
+
+    const DensityGrid::iterator grid_end = grid.end();
+    std::pair< cellsize_t, cellsize_t > block =
+        std::make_pair(0, grid.get_number_of_cells());
 
     // if second order scheme: compute gradients for primitive variables
     // skip this for the moment
+    GradientCalculator::GradientComputation gradient_computation(_boundaries,
+                                                                 grid_end);
+    WorkDistributor<
+        DensityGridTraversalJobMarket<
+            GradientCalculator::GradientComputation >,
+        DensityGridTraversalJob< GradientCalculator::GradientComputation > >
+        gradient_workers;
+    DensityGridTraversalJobMarket< GradientCalculator::GradientComputation >
+        gradient_jobs(grid, gradient_computation, block);
+    hydro_start_parallel_timing_block();
+    gradient_workers.do_in_parallel(gradient_jobs);
+    hydro_stop_parallel_timing_block();
 
-    // exchange fluxes across cell boundaries
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double rhoL = it.get_hydro_variables().get_primitives_density();
-      const CoordinateVector<> uL =
-          it.get_hydro_variables().get_primitives_velocity();
-      const double PL = it.get_hydro_variables().get_primitives_pressure();
-      auto ngbs = it.get_neighbours();
-      for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
-        DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
-        // the midpoint is only used if we use a second order scheme
-        const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
-        const CoordinateVector<> normal = std::get< 2 >(*ngbit);
-        const double surface_area = std::get< 3 >(*ngbit);
+    // do the flux computation (in parallel)
+    HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
+                                                timestep);
 
-        // get the right state
-        double rhoR;
-        CoordinateVector<> uR;
-        double PR;
-        CoordinateVector<> vframe;
-        if (ngb != grid.end()) {
-          rhoR = ngb.get_hydro_variables().get_primitives_density();
-          uR = ngb.get_hydro_variables().get_primitives_velocity();
-          PR = ngb.get_hydro_variables().get_primitives_pressure();
-          vframe = grid.get_interface_velocity(it, ngb, midpoint);
-        } else {
-          // apply boundary conditions
-          rhoR = rhoL;
-          uR = uL;
-          if (normal[0] < 0. && _boundaries[0] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[0] = -uR[0];
-          }
-          if (normal[0] > 0. && _boundaries[1] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[0] = -uR[0];
-          }
-          if (normal[1] < 0. && _boundaries[2] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[1] = -uR[1];
-          }
-          if (normal[1] > 0. && _boundaries[3] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[1] = -uR[1];
-          }
-          if (normal[2] < 0. && _boundaries[4] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[2] = -uR[2];
-          }
-          if (normal[2] > 0. && _boundaries[5] == HYDRO_BOUNDARY_REFLECTIVE) {
-            uR[2] = -uR[2];
-          }
-          PR = PL;
-        }
-
-        // boost the velocities to the interface frame (and use new variables,
-        // as we still want to use the old value of uL for other neighbours)
-        const CoordinateVector<> uLframe = uL - vframe;
-        const CoordinateVector<> uRframe = uR - vframe;
-
-        // project the velocities onto the surface normal
-        const double vL = CoordinateVector<>::dot_product(uLframe, normal);
-        const double vR = CoordinateVector<>::dot_product(uRframe, normal);
-
-        // solve the Riemann problem
-        double rhosol, vsol, Psol;
-        const int flag =
-            _solver.solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
-
-        // if the solution was vacuum, there is no flux
-        if (flag != 0) {
-          // deproject the velocity
-          CoordinateVector<> usol;
-          if (flag == -1) {
-            vsol -= vL;
-            usol = uLframe + vsol * normal;
-          } else {
-            vsol -= vR;
-            usol = uRframe + vsol * normal;
-          }
-
-          // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol = 0.5 * rhosol * usol.norm2() + Psol / _gm1;
-          vsol = CoordinateVector<>::dot_product(usol, normal);
-
-          // get the fluxes
-          const double mflux = rhosol * vsol * surface_area * timestep;
-          CoordinateVector<> pflux = rhosol * vsol * usol + Psol * normal;
-          pflux *= surface_area * timestep;
-          double eflux = (rhoesol + Psol) * vsol * surface_area * timestep;
-
-          // de-boost fluxes to fixed reference frame
-          const double vframe2 = vframe.norm2();
-          eflux += CoordinateVector<>::dot_product(vframe, pflux) +
-                   0.5 * vframe2 * mflux;
-          pflux += mflux * vframe;
-
-          it.get_hydro_variables().delta_conserved(0) += mflux;
-          it.get_hydro_variables().delta_conserved(1) += pflux.x();
-          it.get_hydro_variables().delta_conserved(2) += pflux.y();
-          it.get_hydro_variables().delta_conserved(3) += pflux.z();
-          it.get_hydro_variables().delta_conserved(4) += eflux;
-        }
-      }
-    }
+    WorkDistributor< DensityGridTraversalJobMarket< HydroFluxComputation >,
+                     DensityGridTraversalJob< HydroFluxComputation > >
+        workers;
+    DensityGridTraversalJobMarket< HydroFluxComputation > jobs(
+        grid, hydro_flux_computation, block);
+    hydro_start_parallel_timing_block();
+    workers.do_in_parallel(jobs);
+    hydro_stop_parallel_timing_block();
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {
-      const double boltzmann_k = 1.38064852e-23;
-      // half since we consider the average mass of protons and electrons
-      const double mH = 1.6737236e-27;
+      const double boltzmann_k =
+          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+      const double mH = PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_PROTON_MASS);
+
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const IonizationVariables &ionization_variables =
             it.get_ionization_variables();
 
         const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
-        if (_do_radiative_heating && xH < 0.25) {
-          // assume the gas is ionized; add a heating term equal to the energy
-          // difference
-          const double Tgas = 1.e4;
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
-              it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          // minus sign, as delta_total_energy represents a sum of fluxes, which
-          // are defined as an outflux
+        const double Tgas = 1.e4 * (1. - xH) + 1.e2 * xH;
+        const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+        const double uold = it.get_hydro_variables().get_primitives_pressure() /
+                            _gm1 /
+                            it.get_hydro_variables().get_primitives_density();
+        const double du = ugas - uold;
+        const double dE = it.get_hydro_variables().get_conserved_mass() * du;
+        if (_do_radiative_heating && dE > 0.) {
           it.get_hydro_variables().delta_conserved(4) -= dE;
         }
-        if (_do_radiative_cooling && xH >= 0.25) {
-          // assume the gas is neutral; subtract a cooling term equal to the
-          // energy difference
-          const double Tgas = 1.e2;
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
-              it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          // minus sign, as delta_total_energy represents a sum of fluxes, which
-          // are defined as an outflux
+        if (_do_radiative_cooling && dE < 0.) {
           it.get_hydro_variables().delta_conserved(4) -= dE;
         }
       }
@@ -427,8 +527,10 @@ public:
 
     grid.evolve(timestep);
 
-    const double hydrogen_mass = 1.6737236e-27;
-    const double boltzmann_k = 1.38064852e-23;
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -481,7 +583,7 @@ public:
       cmac_assert(ionization_variables.get_temperature() >= 0.);
     }
 
-    grid.set_grid_velocity();
+    grid.set_grid_velocity(_gamma);
   }
 };
 

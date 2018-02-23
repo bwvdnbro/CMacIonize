@@ -70,17 +70,25 @@ public:
    * @brief Generate a DensityGridWriter based on the type chosen in the
    * parameter file.
    *
+   * Supported types are (default: Gadget):
+   *  - AsciiFile: ASCII text file dump
+   *  - Gadget: Variant of the HDF5 format used by the SPH simulation code
+   *    Gadget2 (and also by SWIFT, AREPO, GIZMO and Shadowfax)
+   *
+   * @param output_folder Name of the folder where output files should be
+   * placed.
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
-   * @param grid DensityGridInterface to write out.
    * @param log Log to write logging information to.
    * @return Pointer to a newly created DensityGridWriter implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  static DensityGridWriter *generate(ParameterFile &params, DensityGrid &grid,
+  static DensityGridWriter *generate(std::string output_folder,
+                                     ParameterFile &params,
                                      Log *log = nullptr) {
-    std::string type =
-        params.get_value< std::string >("densitygridwriter:type", "Gadget");
+
+    const std::string type =
+        params.get_value< std::string >("DensityGridWriter:type", "Gadget");
     if (log) {
       log->write_info("Requested DensityGridWriter type: ", type);
     }
@@ -88,10 +96,10 @@ public:
     check_hdf5(type, log);
 #endif
     if (type == "AsciiFile") {
-      return new AsciiFileDensityGridWriter(params, grid, log);
+      return new AsciiFileDensityGridWriter(output_folder, params, log);
 #ifdef HAVE_HDF5
     } else if (type == "Gadget") {
-      return new GadgetDensityGridWriter(params, grid, log);
+      return new GadgetDensityGridWriter(output_folder, params, log);
 #endif
     } else {
       cmac_error("Unknown DensityGridWriter type: \"%s\".", type.c_str());

@@ -32,6 +32,7 @@
 
 // implementations
 #include "FaucherGiguerePhotonSourceSpectrum.hpp"
+#include "MaskedPhotonSourceSpectrum.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
@@ -42,9 +43,9 @@
 class PhotonSourceSpectrumFactory {
 public:
   /**
-   * @brief Generate a PhotonSourceSpectrum based on the type chosen in the
-   * parameter file (corresponding to the given role).
+   * @brief Generate a PhotonSourceSpectrum based on the given type.
    *
+   * @param type Type of PhotonSourceSpectrum to generate.
    * @param role Role the PhotonSourceSpectrum will assume. Parameters will be
    * read from the corresponding parameter file block.
    * @param params ParameterFile to read from.
@@ -52,14 +53,15 @@ public:
    * @return Pointer to a newly created PhotonSourceSpectrum instance. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  inline static PhotonSourceSpectrum *
-  generate(std::string role, ParameterFile &params, Log *log = nullptr) {
-    std::string type = params.get_value< std::string >(role + ":type", "None");
-    if (log) {
-      log->write_info("Requested PhotonSourceSpectrum for ", role, ": ", type);
-    }
+  inline static PhotonSourceSpectrum *generate_from_type(std::string type,
+                                                         std::string role,
+                                                         ParameterFile &params,
+                                                         Log *log = nullptr) {
+
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
+    } else if (type == "Masked") {
+      return new MaskedPhotonSourceSpectrum(role, params, log);
     } else if (type == "Monochromatic") {
       return new MonochromaticPhotonSourceSpectrum(role, params, log);
     } else if (type == "Planck") {
@@ -72,6 +74,36 @@ public:
       cmac_error("Unknown PhotonSourceSpectrum type: \"%s\".", type.c_str());
       return nullptr;
     }
+  }
+
+  /**
+   * @brief Generate a PhotonSourceSpectrum based on the type chosen in the
+   * parameter file (corresponding to the given role).
+   *
+   * Supported types are (default: Planck):
+   *  - FaucherGiguere: Redshift dependent UVB spectrum of Faucher-Giguère et
+   *    al. (2009)
+   *  - Monochromatic: Monochromatic spectrum
+   *  - Planck: Black body spectrum
+   *  - WMBasic: Realistic stellar atmosphere spectrum of Sternberg, Hoffmann &
+   *    Pauldrach (2003)
+   *
+   * @param role Role the PhotonSourceSpectrum will assume. Parameters will be
+   * read from the corresponding parameter file block.
+   * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created PhotonSourceSpectrum instance. Memory
+   * management for the pointer needs to be done by the calling routine.
+   */
+  inline static PhotonSourceSpectrum *
+  generate(std::string role, ParameterFile &params, Log *log = nullptr) {
+
+    const std::string type =
+        params.get_value< std::string >(role + ":type", "Monochromatic");
+    if (log) {
+      log->write_info("Requested PhotonSourceSpectrum for ", role, ": ", type);
+    }
+    return generate_from_type(type, role, params, log);
   }
 };
 

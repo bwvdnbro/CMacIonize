@@ -39,9 +39,9 @@ int main(int argc, char **argv) {
   timingtools_init("timeRiemannSolver", argc, argv);
 
   // set up the test arrays
-  const unsigned int num_test = 100000;
+  const uint_fast32_t num_test = 100000;
   std::vector< double > rho(num_test), u(num_test), P(num_test);
-  for (unsigned int i = 0; i < num_test; ++i) {
+  for (uint_fast32_t i = 0; i < num_test; ++i) {
     // densities in the range [0.125, 1.[
     rho[i] = 0.125 + Utilities::random_double() * 0.875;
     // velocities in the range [-1., 1.[
@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
 
   timingtools_start_timing_block("RiemannSolver") {
     timingtools_start_timing();
-    for (unsigned int i = 0; i < num_test; ++i) {
-      const unsigned int iplus = (i + 1) % num_test;
+    for (uint_fast32_t i = 0; i < num_test; ++i) {
+      const uint_fast32_t iplus = (i + 1) % num_test;
       solver.solve(rho[i], u[i], P[i], rho[iplus], u[iplus], P[iplus], rhosol,
                    usol, Psol);
     }

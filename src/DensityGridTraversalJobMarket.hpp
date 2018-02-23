@@ -50,7 +50,7 @@ private:
   DensityGrid &_grid;
 
   /*! @brief Block that is traversed by the local MPI process. */
-  std::pair< unsigned long, unsigned long > _block;
+  std::pair< cellsize_t, cellsize_t > _block;
 
   /*! @brief Lock used to ensure safe access to the internal counters. */
   Lock _lock;
@@ -67,8 +67,9 @@ public:
    */
   inline DensityGridTraversalJobMarket(
       DensityGrid &grid, _function_ &function,
-      std::pair< unsigned long, unsigned long > &block)
+      std::pair< cellsize_t, cellsize_t > &block)
       : _fraction_done(0.), _function(function), _grid(grid), _block(block) {
+
     // make sure the second element of _block contains the size and not the end
     // index
     _block.second -= _block.first;
@@ -80,7 +81,7 @@ public:
    *
    * @param worksize Number of parallel threads that will be used.
    */
-  inline void set_worksize(int worksize) {}
+  inline void set_worksize(int_fast32_t worksize) {}
 
   /**
    * @brief Get a DensityGridTraversalJob.
@@ -89,7 +90,9 @@ public:
    * @return Pointer to a unique and thread safe DensityGridTraversalJob
    * instance.
    */
-  inline DensityGridTraversalJob< _function_ > *get_job(int thread_id) {
+  inline DensityGridTraversalJob< _function_ > *
+  get_job(int_fast32_t thread_id) {
+
     if (_fraction_done == 1.) {
       return nullptr;
     }
@@ -101,12 +104,12 @@ public:
     }
     double begin_fraction = _fraction_done;
     double end_fraction =
-        _fraction_done + std::max(0.05 * (1. - _fraction_done), 0.01);
+        _fraction_done + std::max(0.05 * (1. - _fraction_done), 0.001);
     end_fraction = std::min(end_fraction, 1.);
     _fraction_done = end_fraction;
     _lock.unlock();
-    unsigned long begin = _block.first + begin_fraction * _block.second;
-    unsigned long end = _block.first + end_fraction * _block.second;
+    cellsize_t begin = _block.first + begin_fraction * _block.second;
+    cellsize_t end = _block.first + end_fraction * _block.second;
     std::pair< DensityGrid::iterator, DensityGrid::iterator > chunk =
         _grid.get_chunk(begin, end);
     DensityGridTraversalJob< _function_ > *job =

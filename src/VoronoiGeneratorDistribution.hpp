@@ -29,6 +29,9 @@
 
 #include "CoordinateVector.hpp"
 
+/*! @brief Size of a variable storing a Voronoi generator distribution size. */
+typedef uint_fast32_t generatornumber_t;
+
 /**
  * @brief General interface for distributions that return generator positions
  * used to create a Voronoi grid.
@@ -45,7 +48,7 @@ public:
    *
    * @return Number of positions returned.
    */
-  virtual unsigned int get_number_of_positions() const = 0;
+  virtual generatornumber_t get_number_of_positions() const = 0;
 
   /**
    * @brief Get the next position returned by this object.

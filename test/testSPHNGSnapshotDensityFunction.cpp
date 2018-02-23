@@ -37,15 +37,17 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// tagged file
   {
     cmac_status("Start reading tagged file...");
     SPHNGSnapshotDensityFunction density_function("SPHNGtest.dat", 8000., false,
                                                   0, 0., 0., "");
+    density_function.initialize();
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
-    unsigned int index = 0;
+    uint_fast32_t index = 0;
     while (getline(file, line)) {
       std::istringstream lstream(line);
 
@@ -80,10 +82,11 @@ int main(int argc, char **argv) {
     cmac_status("Start reading untagged file...");
     SPHNGSnapshotDensityFunction density_function("SPHNGtest_notags.dat", 8000.,
                                                   false, 0, 0., 0., "");
+    density_function.initialize();
 
     std::ifstream file("SPHNG_data.txt");
     std::string line;
-    unsigned int index = 0;
+    uint_fast32_t index = 0;
     while (getline(file, line)) {
       std::istringstream lstream(line);
 

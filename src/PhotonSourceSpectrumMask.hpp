@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,19 +17,33 @@
  ******************************************************************************/
 
 /**
- * @file LineCoolingDataLocation.hpp
+ * @file PhotonSourceSpectrumMask.hpp
  *
- * @brief CMake configured file storing the location of the atomic line cooling
- * data file on the system
- *
- * This file should never be edited directly. Instead, edit
- * LineCoolingDataLocation.hpp.in.
+ * @brief General interface for PhotonSourceSpectrum masks.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef LINECOOLINGDATALOCATION_HPP
-#define LINECOOLINGDATALOCATION_HPP
+#ifndef PHOTONSOURCESPECTRUMMASK_HPP
+#define PHOTONSOURCESPECTRUMMASK_HPP
 
-#define LINECOOLINGDATALOCATION "@LINECOOLINGDATALOCATION@"
+/**
+ * @brief General interface for PhotonSourceSpectrum masks.
+ */
+class PhotonSourceSpectrumMask {
+public:
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~PhotonSourceSpectrumMask() {}
 
-#endif // LINECOOLINGDATALOCATION_HPP
+  /**
+   * @brief Get the fraction of the spectrum at the given frequency that should
+   * be retained in the masked spectrum.
+   *
+   * @param frequency Frequency of the bin (in Hz).
+   * @return Fraction of the spectrum that should be retained.
+   */
+  virtual double get_bin_fraction(double frequency) const = 0;
+};
+
+#endif // PHOTONSOURCESPECTRUMMASK_HPP

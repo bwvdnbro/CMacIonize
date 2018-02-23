@@ -41,28 +41,28 @@
 class SILCCPhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Number of individual sources. */
-  unsigned int _num_sources;
+  const photonsourcenumber_t _num_sources;
 
   /*! @brief x component of the anchor of the rectangular disk (in m). */
-  double _anchor_x;
+  const double _anchor_x;
 
   /*! @brief y component of the anchor of the rectangular disk (in m). */
-  double _anchor_y;
+  const double _anchor_y;
 
   /*! @brief x side length of the rectangular disk (in m). */
-  double _sides_x;
+  const double _sides_x;
 
   /*! @brief y side length of the rectangular disk (in m). */
-  double _sides_y;
+  const double _sides_y;
 
   /*! @brief Origin of the Gaussian disk height distribution (in m). */
-  double _origin_z;
+  const double _origin_z;
 
   /*! @brief Scale height of the Gaussian disk height distribution (in m). */
-  double _scaleheight_z;
+  const double _scaleheight_z;
 
   /*! @brief Luminosity of a single source (in s^-1). */
-  double _luminosity;
+  const double _luminosity;
 
   /*! @brief RandomGenerator used to generate random numbers. We use a separate
    *  instance for this PhotonSourceDistribution, so that we can change the
@@ -85,15 +85,15 @@ public:
    * @param random_seed Seed used for the random generator.
    * @param log Log to write logging info to.
    */
-  SILCCPhotonSourceDistribution(unsigned int num_sources, double anchor_x,
-                                double sides_x, double anchor_y, double sides_y,
-                                double origin_z, double scaleheight_z,
-                                double luminosity, int random_seed = 42,
-                                Log *log = nullptr)
+  SILCCPhotonSourceDistribution(
+      photonsourcenumber_t num_sources, double anchor_x, double sides_x,
+      double anchor_y, double sides_y, double origin_z, double scaleheight_z,
+      double luminosity, int_fast32_t random_seed = 42, Log *log = nullptr)
       : _num_sources(num_sources), _anchor_x(anchor_x), _anchor_y(anchor_y),
         _sides_x(sides_x), _sides_y(sides_y), _origin_z(origin_z),
         _scaleheight_z(scaleheight_z), _luminosity(luminosity),
         _random_generator(random_seed) {
+
     if (log) {
       log->write_status("Constructed ", _num_sources,
                         " SILCC sources within the rectangle with anchor [",
@@ -108,28 +108,43 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - number of sources: Number of individual sources (default: 24)
+   *  - anchor x: X position of the anchor of the 2D disc (default: -1. kpc)
+   *  - sides x: X side length of the 2D disc (default: 2. kpc)
+   *  - anchor y: Y position of the anchor of the 2D disc (default: -1. kpc)
+   *  - sides y: Y side length of the 2D disc (default: 2. kpc)
+   *  - origin z: Origin of the exponential disc profile in the z direction
+   *    (default: 0. pc)
+   *  - scaleheight z: Vertical scale height of the exponential disc profile
+   *    (default: 63. pc)
+   *  - luminosity: Luminosity of an individual source (default: 3.125e49 s^-1)
+   *  - random seed: Random seed used to initialize the random generator that
+   *    is used to sample the individual positions (default: 42)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
   SILCCPhotonSourceDistribution(ParameterFile &params, Log *log = nullptr)
       : SILCCPhotonSourceDistribution(
-            params.get_value< unsigned int >(
-                "photonsourcedistribution:num_sources", 24),
+            params.get_value< photonsourcenumber_t >(
+                "PhotonSourceDistribution:number of sources", 24),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:anchor_x", "0. m"),
+                "PhotonSourceDistribution:anchor x", "-1. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:sides_x", "1. m"),
+                "PhotonSourceDistribution:sides x", "2. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:anchor_y", "0. m"),
+                "PhotonSourceDistribution:anchor y", "-1. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:sides_y", "1. m"),
+                "PhotonSourceDistribution:sides y", "2. kpc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:origin_z", "0. m"),
+                "PhotonSourceDistribution:origin z", "0. pc"),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "photonsourcedistribution:scaleheight_z", "0.2 m"),
+                "PhotonSourceDistribution:scaleheight z", "63. pc"),
             params.get_physical_value< QUANTITY_FREQUENCY >(
-                "photonsourcedistribution:luminosity", "4.26e49 s^-1"),
-            params.get_value< int >("photonsourcedistribution:random_seed", 42),
+                "PhotonSourceDistribution:luminosity", "3.125e49 s^-1"),
+            params.get_value< int_fast32_t >(
+                "PhotonSourceDistribution:random seed", 42),
             log) {}
 
   /**
@@ -142,7 +157,9 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() const { return _num_sources; }
+  virtual photonsourcenumber_t get_number_of_sources() const {
+    return _num_sources;
+  }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -151,13 +168,14 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of a valid and photon source position (in m).
    */
-  virtual CoordinateVector<> get_position(unsigned int index) {
-    double x =
+  virtual CoordinateVector<> get_position(photonsourcenumber_t index) {
+
+    const double x =
         _anchor_x + _random_generator.get_uniform_random_double() * _sides_x;
-    double y =
+    const double y =
         _anchor_y + _random_generator.get_uniform_random_double() * _sides_y;
     // we use the Box-Muller method to sample the Gaussian
-    double z =
+    const double z =
         _scaleheight_z *
             std::sqrt(-2. *
                       std::log(_random_generator.get_uniform_random_double())) *
@@ -175,7 +193,7 @@ public:
    * @return Reciprocal of the number of sources, as every source has the same
    * weight.
    */
-  virtual double get_weight(unsigned int index) const {
+  virtual double get_weight(photonsourcenumber_t index) const {
     return 1. / _num_sources;
   }
 

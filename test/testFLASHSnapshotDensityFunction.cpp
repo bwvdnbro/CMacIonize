@@ -45,11 +45,13 @@ double expected_density(CoordinateVector<> x) {
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  FLASHSnapshotDensityFunction density("FLASHtest.hdf5");
 
-  unsigned int np = 128;
+  FLASHSnapshotDensityFunction density("FLASHtest.hdf5");
+  density.initialize();
+
+  const uint_fast32_t np = 128;
   double xi2 = 0.;
-  for (unsigned int i = 0; i < np; ++i) {
+  for (uint_fast32_t i = 0; i < np; ++i) {
     CoordinateVector<> p((i + 0.5) * 0.02 / np, (i + 0.5) * 0.01 / np,
                          (i + 0.5) * 0.01 / np);
     DummyCell cell(p.x(), p.y(), p.z());

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,19 +17,31 @@
  ******************************************************************************/
 
 /**
- * @file ChargeTransferRatesDataLocation.hpp
+ * @file testIonizationSimulation.cpp
  *
- * @brief CMake configured file storing the location of the charge transfer
- * recombination rates data file on the local system.
- *
- * This file should never be edited directly. Instead, edit
- * ChargeTransferRatesDataLocation.hpp.in.
+ * @brief Unit test for the IonizationSimulation class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef CHARGETRANSFERRATESDATALOCATION_HPP
-#define CHARGETRANSFERRATESDATALOCATION_HPP
+#include "IonizationSimulation.hpp"
+#include "MPICommunicator.hpp"
+#include "TerminalLog.hpp"
 
-#define CHARGETRANSFERRATESDATALOCATION "@CHARGETRANSFERRATESDATALOCATION@"
+/**
+ * @brief Unit test for the IonizationSimulation class.
+ *
+ * @param argc Number of command line arguments.
+ * @param argv Command line arguments.
+ * @return Exit code: 0 on success.
+ */
+int main(int argc, char **argv) {
 
-#endif // CHARGETRANSFERRATESDATALOCATION_HPP
+  MPICommunicator comm(argc, argv);
+  TerminalLog log(LOGLEVEL_STATUS);
+  IonizationSimulation simulation(
+      true, false, false, -1, "test_ionizationsimulation.param", &comm, &log);
+  simulation.initialize();
+  simulation.run();
+
+  return 0;
+}

@@ -41,12 +41,12 @@ int main(int argc, char **argv) {
   {
     timingtools_print_header("Random grid test.");
 
-    const unsigned int numpositions = 1000;
+    const uint_fast32_t numpositions = 1000;
 
     // set up the generator positions
     std::vector< CoordinateVector<> > positions(numpositions);
 
-    for (unsigned int i = 0; i < numpositions; ++i) {
+    for (uint_fast32_t i = 0; i < numpositions; ++i) {
       positions[i] = Utilities::random_position();
     }
 
@@ -65,9 +65,9 @@ int main(int argc, char **argv) {
 
   /// Test 2: scaling test for regular (degenerate) generator positions
   {
-    const unsigned int numpositions_1D = 10;
-    const unsigned int numpositions_2D = numpositions_1D * numpositions_1D;
-    const unsigned int numpositions_3D = numpositions_1D * numpositions_2D;
+    const uint_fast32_t numpositions_1D = 10;
+    const uint_fast32_t numpositions_2D = numpositions_1D * numpositions_1D;
+    const uint_fast32_t numpositions_3D = numpositions_1D * numpositions_2D;
 
     timingtools_print_header("Regular grid test");
 
@@ -75,9 +75,9 @@ int main(int argc, char **argv) {
     std::vector< CoordinateVector<> > positions(numpositions_3D);
 
     const double dx = 1. / numpositions_1D;
-    for (unsigned int ix = 0; ix < numpositions_1D; ++ix) {
-      for (unsigned int iy = 0; iy < numpositions_1D; ++iy) {
-        for (unsigned int iz = 0; iz < numpositions_1D; ++iz) {
+    for (uint_fast32_t ix = 0; ix < numpositions_1D; ++ix) {
+      for (uint_fast32_t iy = 0; iy < numpositions_1D; ++iy) {
+        for (uint_fast32_t iz = 0; iz < numpositions_1D; ++iz) {
           positions[ix * numpositions_2D + iy * numpositions_1D + iz] =
               CoordinateVector<>((ix + 0.5) * dx, (iy + 0.5) * dx,
                                  (iz + 0.5) * dx);

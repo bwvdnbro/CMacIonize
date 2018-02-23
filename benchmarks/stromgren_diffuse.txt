@@ -1,0 +1,16 @@
+Stromgren benchmark: diffuse field version
+
+This benchmark consists of a homogeneous density field with a single stellar
+source at the centre. The radiation from the star will ionize a spherical
+region surrounding the star, the size of which can be analytically found.
+
+This version of the test also includes diffuse reemission from the ionized
+region.
+
+The test can be run using the provided parameter file
+(stromgren_diffuse.param). To analyze the results, use the Python script
+(stromgren_diffuse.py).
+
+List of files necessary for this benchmark test:
+input:stromgren_diffuse.param
+input:stromgren_diffuse.py

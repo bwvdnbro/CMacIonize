@@ -42,6 +42,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
                                                            double temperature,
                                                            Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -70,9 +71,9 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   Box<> box(anchor, sides);
 
   // find out the number of blocks in each dimension
-  HDF5Tools::HDF5Dictionary< int > integer_runtime_pars =
-      HDF5Tools::read_dictionary< int >(file, "integer runtime parameters");
-  CoordinateVector< int > nblock;
+  HDF5Tools::HDF5Dictionary< int32_t > integer_runtime_pars =
+      HDF5Tools::read_dictionary< int32_t >(file, "integer runtime parameters");
+  CoordinateVector< uint_fast32_t > nblock;
   nblock[0] = integer_runtime_pars["nblockx"];
   nblock[1] = integer_runtime_pars["nblocky"];
   nblock[2] = integer_runtime_pars["nblockz"];
@@ -92,39 +93,39 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
   HDF5Tools::HDF5DataBlock< double, 4 > temperatures =
       HDF5Tools::read_dataset< double, 4 >(file, "temp");
   // read the refinement levels
-  std::vector< int > levels =
-      HDF5Tools::read_dataset< int >(file, "refine level");
+  std::vector< int32_t > levels =
+      HDF5Tools::read_dataset< int32_t >(file, "refine level");
   // read the node types
-  std::vector< int > nodetypes =
-      HDF5Tools::read_dataset< int >(file, "node type");
+  std::vector< int32_t > nodetypes =
+      HDF5Tools::read_dataset< int32_t >(file, "node type");
   // determine the level of each block
-  unsigned int level = 0;
-  unsigned int dsize = densities.size()[1];
+  uint_fast8_t level = 0;
+  uint_fast32_t dsize = densities.size()[1];
   while (dsize > 1) {
     ++level;
     dsize >>= 1;
   }
   // add them to the grid
-  for (unsigned int i = 0; i < extents.size()[0]; ++i) {
+  for (size_t i = 0; i < extents.size()[0]; ++i) {
     if (nodetypes[i] == 1) {
       CoordinateVector<> anchor;
-      std::array< unsigned int, 3 > ix0 = {{i, 0, 0}};
+      std::array< size_t, 3 > ix0 = {{i, 0, 0}};
       anchor[0] = extents[ix0] * unit_length_in_SI;
-      std::array< unsigned int, 3 > iy0 = {{i, 1, 0}};
+      std::array< size_t, 3 > iy0 = {{i, 1, 0}};
       anchor[1] = extents[iy0] * unit_length_in_SI;
-      std::array< unsigned int, 3 > iz0 = {{i, 2, 0}};
+      std::array< size_t, 3 > iz0 = {{i, 2, 0}};
       anchor[2] = extents[iz0] * unit_length_in_SI;
       CoordinateVector<> top_anchor;
-      std::array< unsigned int, 3 > ix1 = {{i, 0, 1}};
+      std::array< size_t, 3 > ix1 = {{i, 0, 1}};
       top_anchor[0] = extents[ix1] * unit_length_in_SI;
-      std::array< unsigned int, 3 > iy1 = {{i, 1, 1}};
+      std::array< size_t, 3 > iy1 = {{i, 1, 1}};
       top_anchor[1] = extents[iy1] * unit_length_in_SI;
-      std::array< unsigned int, 3 > iz1 = {{i, 2, 1}};
+      std::array< size_t, 3 > iz1 = {{i, 2, 1}};
       top_anchor[2] = extents[iz1] * unit_length_in_SI;
       CoordinateVector<> sides = top_anchor - anchor;
-      for (unsigned int ix = 0; ix < densities.size()[1]; ++ix) {
-        for (unsigned int iy = 0; iy < densities.size()[2]; ++iy) {
-          for (unsigned int iz = 0; iz < densities.size()[3]; ++iz) {
+      for (size_t ix = 0; ix < densities.size()[1]; ++ix) {
+        for (size_t iy = 0; iy < densities.size()[2]; ++iy) {
+          for (size_t iz = 0; iz < densities.size()[3]; ++iz) {
             CoordinateVector<> centre;
             centre[0] =
                 anchor.x() + (ix + 0.5) * sides.x() / densities.size()[1];
@@ -133,12 +134,12 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
             centre[2] =
                 anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
             // this is the ordering as it is in the file
-            std::array< unsigned int, 4 > irho = {{i, iz, iy, ix}};
+            std::array< size_t, 4 > irho = {{i, iz, iy, ix}};
             double rho = densities[irho];
             // each block contains level^3 cells, hence levels[i] + level
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)
-            unsigned long key = _grid.get_key(levels[i] + level - 1, centre);
+            amrkey_t key = _grid.get_key(levels[i] + level - 1, centre);
             DensityValues &vals = _grid.create_cell(key);
             vals.set_number_density(rho * unit_density_in_SI);
             if (temperature <= 0.) {
@@ -164,15 +165,20 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file (required)
+ *  - temperature: Temperature value used to initialize the cells (default: read
+ *    temperature from snapshot file)
+ *
  * @param params ParameterFile to read.
  * @param log Log to write logging info to.
  */
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : FLASHSnapshotDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
+          params.get_value< std::string >("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:temperature", "-1. K"),
+              "DensityFunction:temperature", "-1. K"),
           log) {}
 
 /**

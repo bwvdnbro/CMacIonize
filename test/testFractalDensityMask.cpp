@@ -37,13 +37,15 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   HomogeneousDensityFunction density_function(1.);
+  density_function.initialize();
 
-  CartesianDensityGrid grid(box, 50, density_function);
-  std::pair< unsigned long, unsigned long > block =
+  CartesianDensityGrid grid(box, 50);
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density_function);
 
   FractalDensityMask fractal_mask(box, 20, 1e6, 42, 2.6, 4, 0.5);
   fractal_mask.initialize();
@@ -55,15 +57,15 @@ int main(int argc, char **argv) {
   // just moves them around in the box to create a fractal structure
   assert_values_equal_rel(Ntot_old, grid.get_total_hydrogen_number(), 1.e-13);
 
-  AsciiFileDensityGridWriter writer("test_fractal_distribution", grid, ".");
+  AsciiFileDensityGridWriter writer("test_fractal_distribution", ".");
 
   ParameterFile params;
-  writer.write(0, params);
+  writer.write(grid, 0, params);
 
   // now check that the parallel version creates the exact same mask as the
   // serial version for the same seed
-  CartesianDensityGrid grid_serial(box, 50, density_function);
-  grid_serial.initialize(block);
+  CartesianDensityGrid grid_serial(box, 50);
+  grid_serial.initialize(block, density_function);
   FractalDensityMask fractal_mask_serial(box, 20, 1e6, 42, 2.6, 4, 0.5);
   fractal_mask_serial.initialize(1);
   fractal_mask_serial.apply(grid_serial);

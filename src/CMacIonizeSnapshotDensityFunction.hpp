@@ -43,7 +43,7 @@ private:
   Box<> _box;
 
   /*! @brief Number of cells in each dimension. */
-  CoordinateVector< int > _ncell;
+  CoordinateVector< uint_fast32_t > _ncell;
 
   /*! @brief Cartesian density grid (if applicable). */
   DensityValues ***_cartesian_grid;
@@ -70,7 +70,7 @@ private:
    * @param number Number to decompose.
    * @return Largest odd factor of the number.
    */
-  inline static int get_largest_odd_factor(int number) {
+  inline static uint_fast32_t get_largest_odd_factor(uint_fast32_t number) {
     while ((number % 2) == 0) {
       number >>= 1;
     }
@@ -86,7 +86,7 @@ private:
    * @param number Number to decompose.
    * @return Largest power of two factor.
    */
-  inline static int get_power_of_two(int number) {
+  inline static uint_fast32_t get_power_of_two(uint_fast32_t number) {
     return number / get_largest_odd_factor(number);
   }
 

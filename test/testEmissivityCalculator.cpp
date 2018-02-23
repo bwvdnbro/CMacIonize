@@ -40,6 +40,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   LineCoolingData lines;
   EmissivityCalculator calculator(abundances);
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
 
       lstream >> T >> emhplf >> emhmif >> emheplf >> emhemif;
 
-      calculator.bjump(T, emhpl, emhmi, emhepl, emhemi);
+      calculator.get_balmer_jump_emission(T, emhpl, emhmi, emhepl, emhemi);
 
       assert_values_equal_rel(
           emhpl,
@@ -97,7 +98,7 @@ int main(int argc, char **argv) {
           ifracN >> ifracNp1 >> ifracNp2 >> ifracO >> ifracOp1 >> ifracNe >>
           ifracNep1 >> ifracSp1 >> ifracSp2 >> ifracSp3;
 
-      for (unsigned int i = 0; i < 30; ++i) {
+      for (uint_fast8_t i = 0; i < 30; ++i) {
         lstream >> em[i];
       }
 
@@ -252,11 +253,6 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OII_7325),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[26] * 1.e-20,
-                                                              "erg cm^-3 s^-1"),
-          tolerance);
-      assert_values_equal_rel(
-          values.get_emissivity(EMISSIONLINE_SIV_10mu),
-          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[27] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
           tolerance);
       assert_values_equal_rel(

@@ -29,7 +29,7 @@ macro(add_unit_test)
     set(multiValueArgs SOURCES LIBS)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
                                "${multiValueArgs}" ${ARGN})
-    message(STATUS "generating " ${TEST_NAME})
+    message(STATUS "generating ${TEST_NAME}")
     add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_SOURCES})
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                           ${PROJECT_BINARY_DIR}/rundir/test)
@@ -64,7 +64,6 @@ set(TESTLINECOOLINGDATA_SOURCES
     ../src/Error.hpp
     ../src/LineCoolingData.cpp
     ../src/LineCoolingData.hpp
-    ../src/LineCoolingDataLocation.hpp.in
 )
 # Call the macro that creates the unit test
 add_unit_test(NAME testLineCoolingData
@@ -166,6 +165,7 @@ set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     ../src/CartesianDensityGrid.hpp
     ../src/ChargeTransferRates.cpp
     ../src/CoordinateVector.hpp
+    ../src/CubicSplineKernel.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
     ../src/DensityValues.hpp
@@ -208,6 +208,7 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityValues.hpp
+    ../src/DiffuseReemissionHandler.cpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -356,6 +357,7 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 add_unit_test(NAME testGadgetDensityGridWriter
               SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}
               LIBS ${HDF5_LIBRARIES})
+add_dependencies(testGadgetDensityGridWriter CompilerInfo)
 endif(HAVE_HDF5)
 
 ## Unit test for GadgetSnapshotPhotonSourceDistribution
@@ -363,6 +365,7 @@ if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
     testGadgetSnapshotPhotonSourceDistribution.cpp
 
+    ../src/DiffuseReemissionHandler.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -911,6 +914,169 @@ set(TESTHILBERTKEYGENERATOR_SOURCES
 )
 add_unit_test(NAME testHilbertKeyGenerator
               SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
+
+## Unit test for SpiralGalaxyDensityFunction
+set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES
+    testSpiralGalaxyDensityFunction.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/ParameterFile.cpp
+    ../src/SpiralGalaxyDensityFunction.hpp
+)
+add_unit_test(NAME testSpiralGalaxyDensityFunction
+              SOURCES ${TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES})
+
+## Unit test for SpiralGalaxyContinuousPhotonSource
+set(TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES
+    testSpiralGalaxyContinuousPhotonSource.cpp
+
+    ../src/SpiralGalaxyContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testSpiralGalaxyContinuousPhotonSource
+              SOURCES ${TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES})
+
+## Unit test for CCDImage
+set(TESTCCDIMAGE_SOURCES
+    testCCDImage.cpp
+
+    ../src/CCDImage.hpp
+)
+add_unit_test(NAME testCCDImage
+              SOURCES ${TESTCCDIMAGE_SOURCES})
+
+## Unit test for DustSimulation
+set(TESTDUSTSIMULATION_SOURCES
+    testDustSimulation.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/CommandLineOption.cpp
+    ../src/CommandLineParser.cpp
+    ../src/DensityGrid.cpp
+    ../src/DiffuseReemissionHandler.cpp
+    ../src/DustScattering.cpp
+    ../src/DustScattering.hpp
+    ../src/DustSimulation.cpp
+    ../src/DustSimulation.hpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/ParameterFile.cpp
+    ../src/PhotonSource.cpp
+    ../src/VernerCrossSections.cpp
+)
+add_unit_test(NAME testDustSimulation
+              SOURCES ${TESTDUSTSIMULATION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_dustsimulation.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_dustsimulation.param
+               COPYONLY)
+
+## Unit test for IonizationSimulation
+set(TESTIONIZATIONSIMULATION_SOURCES
+    testIonizationSimulation.cpp
+)
+add_unit_test(NAME testIonizationSimulation
+              SOURCES ${TESTIONIZATIONSIMULATION_SOURCES}
+              LIBS IonizationSimulation)
+configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
+               COPYONLY)
+
+## Unit test for CMILibrary
+set(TESTCMILIBRARY_SOURCES
+    testCMILibrary.cpp
+)
+add_unit_test(NAME testCMILibrary
+              SOURCES ${TESTCMILIBRARY_SOURCES}
+              LIBS CMILibrary)
+configure_file(${PROJECT_SOURCE_DIR}/test/test_CMI_library.param
+               ${PROJECT_BINARY_DIR}/rundir/test/test_CMI_library.param
+               COPYONLY)
+
+## Unit test for CMIFortranLibrary
+if(HAVE_FORTRAN)
+  set(TESTCMIFORTRANLIBRARY_SOURCES
+      testCMIFortranLibrary.f90
+  )
+  add_unit_test(NAME testCMIFortranLibrary
+                SOURCES ${TESTCMIFORTRANLIBRARY_SOURCES}
+                LIBS CMIFortranLibrary)
+endif(HAVE_FORTRAN)
+
+## Unit test for cmi_c_library
+set(TESTCMICLIBRARY_SOURCES
+    testCMICLibrary.c
+)
+add_unit_test(NAME testCMICLibrary
+              SOURCES ${TESTCMICLIBRARY_SOURCES}
+              LIBS CMILibrary)
+
+## Unit test for DiffuseReemissionHandler
+set(TESTDIFFUSEREEMISSIONHANDLER_SOURCES
+    testDiffuseReemissionHandler.cpp
+
+    ../src/DiffuseReemissionHandler.cpp
+    ../src/DiffuseReemissionHandler.hpp
+    ../src/HeliumLymanContinuumSpectrum.cpp
+    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
+    ../src/HydrogenLymanContinuumSpectrum.cpp
+)
+add_unit_test(NAME testDiffuseReemissionHandler
+              SOURCES ${TESTDIFFUSEREEMISSIONHANDLER_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/probset_testdata.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/probset_testdata.txt
+               COPYONLY)
+
+## Unit test for TimeLine
+set(TESTTIMELINE_SOURCES
+    testTimeLine.cpp
+
+    ../src/TimeLine.hpp
+)
+add_unit_test(NAME testTimeLine
+              SOURCES ${TESTTIMELINE_SOURCES})
+
+## Unit test for GradientCalculator
+set(TESTGRADIENTCALCULATOR_SOURCES
+    testGradientCalculator.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/GradientCalculator.hpp
+    ../src/HydroBoundaryConditions.hpp
+)
+add_unit_test(NAME testGradientCalculator
+              SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+
+## Unit test for MaskedPhotonSourceSpectrum
+set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
+    testMaskedPhotonSourceSpectrum.cpp
+
+    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/LinearPhotonSourceSpectrumMask.hpp
+    ../src/MaskedPhotonSourceSpectrum.cpp
+    ../src/MaskedPhotonSourceSpectrum.hpp
+    ../src/PhotonSourceSpectrumMask.hpp
+    ../src/PhotonSourceSpectrumMaskFactory.hpp
+    ../src/PlanckPhotonSourceSpectrum.cpp
+    ../src/WMBasicPhotonSourceSpectrum.cpp
+)
+add_unit_test(NAME testMaskedPhotonSourceSpectrum
+              SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
+
+## Unit test for SPHArrayInterface
+set(TESTSPHARRAYINTERFACE_SOURCES
+    testSPHArrayInterface.cpp
+
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SPHArrayInterface.cpp
+    ../src/SPHArrayInterface.hpp
+)
+add_unit_test(NAME testSPHArrayInterface
+              SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

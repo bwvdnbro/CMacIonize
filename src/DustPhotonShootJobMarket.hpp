@@ -17,41 +17,43 @@
  ******************************************************************************/
 
 /**
- * @file PhotonShootJobMarket.hpp
+ * @file DustPhotonShootJobMarket.hpp
  *
- * @brief JobMarket implementation that shoots photons through a DensityGrid.
+ * @brief JobMarket implementation that shoots photons through a dusty
+ * DensityGrid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef PHOTONSHOOTJOBMARKET_HPP
-#define PHOTONSHOOTJOBMARKET_HPP
+#ifndef DUSTPHOTONSHOOTJOBMARKET_HPP
+#define DUSTPHOTONSHOOTJOBMARKET_HPP
 
+#include "Configuration.hpp"
+#include "DustPhotonShootJob.hpp"
 #include "Lock.hpp"
-#include "PhotonShootJob.hpp"
 
+class CCDImage;
+class DensityGrid;
+class DustScattering;
 class PhotonSource;
 class RandomGenerator;
-class DensityGrid;
-
-/*! @brief Maximum number of threads allowed on the system. */
-#define PHOTONSHOOTJOBMARKET_MAXTHREADS 128
 
 /**
- * @brief JobMarket implementation that shoots photons through a DensityGrid.
+ * @brief JobMarket implementation that shoots photons through a dusty
+ * DensityGrid.
  */
-class PhotonShootJobMarket {
+class DustPhotonShootJobMarket {
 private:
-  /*! @brief Per thread PhotonShootJob. */
-  PhotonShootJob *_jobs[PHOTONSHOOTJOBMARKET_MAXTHREADS];
+  /*! @brief Per thread DustPhotonShootJob. */
+  DustPhotonShootJob *_jobs[MAX_NUM_THREADS];
 
   /*! @brief Number of threads used in the calculation. */
-  int _worksize;
+  const int_fast32_t _worksize;
 
   /*! @brief Total number of photons to propagate through the grid. */
-  unsigned int _numphoton;
+  uint_fast64_t _numphoton;
 
-  /*! @brief Number of photons to shoot during a single PhotonShootJob. */
-  unsigned int _jobsize;
+  /*! @brief Number of photons to shoot during a single DustPhotonShootJob. */
+  const uint_fast64_t _jobsize;
 
   /*! @brief Lock used to ensure safe access to the internal photon number
    *  counters. */
@@ -62,21 +64,31 @@ public:
    * @brief Constructor.
    *
    * @param photon_source PhotonSource that emits photons.
+   * @param dust_scattering DustScattering object used to compute scattering off
+   * dust.
    * @param random_seed Seed for the RandomGenerator.
    * @param density_grid DensityGrid through which photons are propagated.
    * @param numphoton Total number of photons to propagate through the grid.
-   * @param jobsize Number of photons to shoot during a single PhotonShootJob.
+   * @param image CCDImage to construct (threads will update a copy of this
+   * image).
+   * @param jobsize Number of photons to shoot during a single
+   * DustPhotonShootJob.
    * @param worksize Number of threads used in the calculation.
    */
-  inline PhotonShootJobMarket(PhotonSource &photon_source, int random_seed,
-                              DensityGrid &density_grid, unsigned int numphoton,
-                              unsigned int jobsize, int worksize)
+  inline DustPhotonShootJobMarket(PhotonSource &photon_source,
+                                  const DustScattering &dust_scattering,
+                                  int_fast32_t random_seed,
+                                  DensityGrid &density_grid,
+                                  uint_fast64_t numphoton,
+                                  const CCDImage &image, uint_fast64_t jobsize,
+                                  int_fast32_t worksize)
       : _worksize(worksize), _numphoton(numphoton), _jobsize(jobsize) {
+
     // create a separate RandomGenerator for each thread.
     // create a single PhotonShootJob for each thread.
-    for (int i = 0; i < _worksize; ++i) {
-      _jobs[i] =
-          new PhotonShootJob(photon_source, random_seed + i, density_grid);
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
+      _jobs[i] = new DustPhotonShootJob(photon_source, dust_scattering,
+                                        random_seed + i, density_grid, image);
     }
   }
 
@@ -85,8 +97,8 @@ public:
    *
    * Deletes the internal job array.
    */
-  inline ~PhotonShootJobMarket() {
-    for (int i = 0; i < _worksize; ++i) {
+  inline ~DustPhotonShootJobMarket() {
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
       delete _jobs[i];
     }
   }
@@ -97,39 +109,38 @@ public:
    *
    * @param worksize Number of parallel threads that will be used.
    */
-  inline void set_worksize(int worksize) {}
+  inline void set_worksize(int_fast32_t worksize) {}
 
   /**
    * @brief Set the number of photons.
    *
-   * This routine can be used to reset a PhotonShootJobMarket that was used
+   * This routine can be used to reset a DustPhotonShootJobMarket that was used
    * before.
    *
    * @param numphoton New number of photons.
    */
-  inline void set_numphoton(unsigned int numphoton) { _numphoton = numphoton; }
+  inline void set_numphoton(uint_fast64_t numphoton) { _numphoton = numphoton; }
 
   /**
-   * @brief Update the given weight counters.
+   * @brief Update the given CCDImage.
    *
-   * @param totweight Total weight of all photons.
-   * @param typecount Total weights per photon type.
+   * @param image CCDImage to update.
    */
-  inline void update_counters(double &totweight, double *typecount) {
-    for (int i = 0; i < _worksize; ++i) {
-      _jobs[i]->update_counters(totweight, typecount);
+  inline void update_image(CCDImage &image) {
+    for (int_fast32_t i = 0; i < _worksize; ++i) {
+      _jobs[i]->update_image(image);
     }
   }
 
   /**
-   * @brief Get a PhotonShootJob.
+   * @brief Get a DustPhotonShootJob.
    *
    * @param thread_id Rank of the thread that wants to get a job (in a parallel
    * context).
-   * @return PhotonShootJob.
+   * @return DustPhotonShootJob.
    */
-  inline PhotonShootJob *get_job(int thread_id) {
-    unsigned int jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
+  inline DustPhotonShootJob *get_job(int_fast32_t thread_id) {
+    uint_fast64_t jobsize = std::max(_numphoton / (10 * _worksize), _jobsize);
     _lock.lock();
     if (jobsize >= _numphoton) {
       jobsize = _numphoton;
@@ -145,4 +156,4 @@ public:
   }
 };
 
-#endif // PHOTONSHOOTJOBMARKET_HPP
+#endif // DUSTPHOTONSHOOTJOBMARKET_HPP

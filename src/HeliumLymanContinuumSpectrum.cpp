@@ -31,6 +31,7 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "CrossSections.hpp"
 #include "ElementNames.hpp"
+#include "PhysicalConstants.hpp"
 #include "Utilities.hpp"
 #include <cmath>
 
@@ -42,52 +43,81 @@
  * @param cross_sections Photoionization cross sections.
  */
 HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
-    CrossSections &cross_sections) {
+    const CrossSections &cross_sections) {
+
+  // allocate memory for the data tables
+  _frequency.resize(HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.);
+  _temperature.resize(HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP, 0.);
+  _cumulative_distribution.resize(
+      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP,
+      std::vector< double >(HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ, 0.));
+
+  // some constants
   // 24.6 eV in Hz (1.81 x 13.6 eV)
   const double min_frequency = 1.81 * 3.288465385e15;
   // 54.4 eV in Hz
   const double max_frequency = 4. * 3.288465385e15;
   // Planck constant (in J s)
-  const double planck_constant = 6.626e-34;
+  const double planck_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // Boltzmann constant (in J s^-1)
-  const double boltzmann_constant = 1.38e-23;
+  const double boltzmann_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+
   // set up the frequency bins
-  for (unsigned int i = 0; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
     _frequency[i] = min_frequency +
                     i * (max_frequency - min_frequency) /
                         (HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
-  for (unsigned int iT = 0; iT < HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
+
+  // set up the temperature bins and precompute the spectrum
+  for (uint_fast32_t iT = 0; iT < HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP; ++iT) {
     _cumulative_distribution[iT][0] = 0.;
     _temperature[iT] =
         1500. + (iT + 0.5) * 13500. / HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP;
-    for (unsigned int inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    // precompute the spectrum for this temperature
+    for (uint_fast32_t inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
+      // first do the lower edge of the frequency interval
       double xsecHe =
           cross_sections.get_cross_section(ION_He_n, _frequency[inu - 1]);
-      double jHeIi1 =
+      // Wood, Mathis & Ercolano (2004), equation (8)
+      // note that we ignore all constant prefactors, since we normalize the
+      // spectrum afterwards
+      // note that the temperature prefactor is also constant within a
+      // temperature table and since we normalize temperature tables, we can
+      // also ignore it here
+      const double jHeIi1 =
           _frequency[inu - 1] * _frequency[inu - 1] * _frequency[inu - 1] *
           xsecHe *
           std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
+      // now do the upper edge of the interval
       xsecHe = cross_sections.get_cross_section(ION_He_n, _frequency[inu]);
-      double jHeIi2 =
+      const double jHeIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecHe *
           std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
+      // the spectrum in the bin is computed using a simple linear quadrature
+      // rule
+      // we convert the energy spectrum to a number spectrum by dividing by the
+      // frequency
       _cumulative_distribution[iT][inu] =
           0.5 * (jHeIi1 / _frequency[inu] + jHeIi2 / _frequency[inu - 1]) *
           (_frequency[inu] - _frequency[inu - 1]);
     }
+
     // make cumulative
-    for (unsigned int inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    for (uint_fast32_t inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       _cumulative_distribution[iT][inu] =
           _cumulative_distribution[iT][inu - 1] +
           _cumulative_distribution[iT][inu];
     }
+
     // normalize
-    for (unsigned int inu = 0; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
+    for (uint_fast32_t inu = 0; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       _cumulative_distribution[iT][inu] /=
           _cumulative_distribution[iT]
@@ -99,23 +129,31 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
 /**
  * @brief Sample a random frequency from the spectrum.
  *
+ * We first locate the given temperature value in the temperature table. Then we
+ * generate a random uniform number and locate it in the two cumulative
+ * distributions that border the temperature value. The sampled frequency is
+ * then given by linear interpolation on the temperature and frequency tables.
+ *
  * @param random_generator RandomGenerator to use.
  * @param temperature Temperature of the cell that reemits the photon (in K).
  * @return Random frequency (in Hz).
  */
 double HeliumLymanContinuumSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
-  unsigned int iT = Utilities::locate(temperature, _temperature,
-                                      HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
-  double x = random_generator.get_uniform_random_double();
-  unsigned int inu1 = Utilities::locate(x, _cumulative_distribution[iT],
-                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  unsigned int inu2 = Utilities::locate(x, _cumulative_distribution[iT + 1],
-                                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  double frequency = _frequency[inu1] +
-                     (temperature - _temperature[iT]) *
-                         (_frequency[inu2] - _frequency[inu1]) /
-                         (_temperature[iT + 1] - _temperature[iT]);
+
+  const uint_fast32_t iT = Utilities::locate(
+      temperature, _temperature.data(), HELIUMLYMANCONTINUUMSPECTRUM_NUMTEMP);
+  const double x = random_generator.get_uniform_random_double();
+  const uint_fast32_t inu1 =
+      Utilities::locate(x, _cumulative_distribution[iT].data(),
+                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  const uint_fast32_t inu2 =
+      Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
+                        HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
+  const double frequency = _frequency[inu1] +
+                           (temperature - _temperature[iT]) *
+                               (_frequency[inu2] - _frequency[inu1]) /
+                               (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 

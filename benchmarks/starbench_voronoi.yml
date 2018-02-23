@@ -1,0 +1,8 @@
+number of blocks: 1
+
+block[0]:
+  origin: [0. pc, 0. pc, 0. pc]
+  sides: [2.512 pc, 2.512 pc, 2.512 pc]
+  type: cube
+  number density: 3113. cm^-3
+  initial temperature: 100. K

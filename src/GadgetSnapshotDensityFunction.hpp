@@ -72,8 +72,6 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  static double cubic_spline_kernel(double u, double h);
-
 public:
   GadgetSnapshotDensityFunction(std::string name,
                                 bool fallback_periodic = false,

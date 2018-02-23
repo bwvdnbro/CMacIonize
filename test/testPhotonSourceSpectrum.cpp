@@ -31,6 +31,7 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
+#include "PhysicalConstants.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
@@ -38,7 +39,6 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-using namespace std;
 
 /**
  * @brief Get the Planck black body luminosity for a given frequency.
@@ -47,13 +47,16 @@ using namespace std;
  * @return Planck luminosity.
  */
 double planck_luminosity(double frequency) {
-  double min_frequency = 3.289e15;
-  double planck_constant = 6.626e-27;
-  double boltzmann_constant = 1.38e-16;
-  double temperature_star = 40000.;
+
+  const double min_frequency = 3.289e15;
+  const double planck_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+  const double boltzmann_constant =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+  const double temperature_star = 40000.;
   return frequency * frequency /
-         (exp(planck_constant * frequency * min_frequency /
-              (boltzmann_constant * temperature_star)) -
+         (std::exp(planck_constant * frequency * min_frequency /
+                   (boltzmann_constant * temperature_star)) -
           1.);
 }
 
@@ -68,11 +71,12 @@ double planck_luminosity(double frequency) {
  */
 double HLyc_luminosity(CrossSections &cross_sections, double T,
                        double frequency) {
-  double xsecH = cross_sections.get_cross_section(
+
+  const double xsecH = cross_sections.get_cross_section(
       ION_H_n,
       UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
   return 1.e22 * frequency * frequency * xsecH *
-         exp(-157919.667 * (frequency - 1.) / T);
+         std::exp(-157919.667 * (frequency - 1.) / T);
 }
 
 /**
@@ -86,11 +90,12 @@ double HLyc_luminosity(CrossSections &cross_sections, double T,
  */
 double HeLyc_luminosity(CrossSections &cross_sections, double T,
                         double frequency) {
-  double xsecHe = cross_sections.get_cross_section(
+
+  const double xsecHe = cross_sections.get_cross_section(
       ION_He_n,
       UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
   return 1.e22 * frequency * frequency * xsecHe *
-         exp(-157919.667 * (frequency - 1.81) / T);
+         std::exp(-157919.667 * (frequency - 1.81) / T);
 }
 
 /**
@@ -101,12 +106,13 @@ double HeLyc_luminosity(CrossSections &cross_sections, double T,
  * @param frequency Frequency value.
  * @return Helium 2-photon continuum luminosity.
  */
-double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
-                        double frequency) {
-  double y = frequency * 3.289e15 / 4.98e15;
+double He2pc_luminosity(std::vector< double > &yHe2q,
+                        std::vector< double > &AHe2q, double frequency) {
+
+  const double y = frequency * 3.289e15 / 4.98e15;
   if (y < 1.) {
-    unsigned int i = Utilities::locate(y, &yHe2q[0], 41);
-    double f = (y - yHe2q[i]) / (yHe2q[i + 1] - yHe2q[i]);
+    const uint_fast32_t i = Utilities::locate(y, yHe2q.data(), 41);
+    const double f = (y - yHe2q[i]) / (yHe2q[i + 1] - yHe2q[i]);
     return AHe2q[i] + f * (AHe2q[i + 1] - AHe2q[i]);
   } else {
     return 0.;
@@ -122,7 +128,8 @@ double He2pc_luminosity(vector< double > &yHe2q, vector< double > &AHe2q,
  * @return Energy at that frequency (in 10^-21 erg s^-1 cm^-2 Hz^-1 sr^-1).
  */
 double FGspectrum(double *nuarr, double *earr, double nu) {
-  unsigned int inu = 0;
+
+  uint_fast32_t inu = 0;
   while (nu > nuarr[inu]) {
     ++inu;
   }
@@ -140,6 +147,7 @@ double FGspectrum(double *nuarr, double *earr, double nu) {
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   RandomGenerator random_generator;
 
   // PlanckPhotonSourceSpectrum
@@ -147,16 +155,16 @@ int main(int argc, char **argv) {
     std::ofstream file("planckphotonsource.txt");
     PlanckPhotonSourceSpectrum spectrum(40000.);
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
+    uint_fast32_t counts[100];
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      uint_fast32_t index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
 
@@ -164,7 +172,7 @@ int main(int argc, char **argv) {
     if (counts[0]) {
       enorm /= counts[0];
     }
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.03;
       double tval = planck_luminosity(nu);
       double bval = counts[i] * enorm;
@@ -187,16 +195,16 @@ int main(int argc, char **argv) {
     HydrogenLymanContinuumSpectrum spectrum(cross_sections);
     const double T = 8888.;
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
+    uint_fast32_t counts[100];
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator, T) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      uint_fast32_t index = (rand_freq - 1.) * 100. / 3.;
       ++counts[index];
     }
 
@@ -204,7 +212,7 @@ int main(int argc, char **argv) {
     if (counts[1]) {
       enorm /= counts[1];
     }
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.03;
       double tval = HLyc_luminosity(cross_sections, T, nu);
       double bval = counts[i] * enorm;
@@ -224,16 +232,16 @@ int main(int argc, char **argv) {
     HeliumLymanContinuumSpectrum spectrum(cross_sections);
     const double T = 8888.;
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
+    uint_fast32_t counts[100];
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator, T) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.81) * 100. / (4. - 1.81);
+      uint_fast32_t index = (rand_freq - 1.81) * 100. / (4. - 1.81);
       ++counts[index];
     }
 
@@ -242,7 +250,7 @@ int main(int argc, char **argv) {
     if (counts[0]) {
       enorm /= counts[0];
     }
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       double nu = 1.81 + (i + 0.5) * (4. - 1.81) / 100.;
       double tval = HeLyc_luminosity(cross_sections, T, nu);
       double bval = counts[i] * enorm;
@@ -259,25 +267,25 @@ int main(int argc, char **argv) {
   {
     std::ofstream file("heliumtwophotoncontinuum.txt");
     HeliumTwoPhotonContinuumSpectrum spectrum;
-    vector< double > yHe2q;
-    vector< double > AHe2q;
+    std::vector< double > yHe2q;
+    std::vector< double > AHe2q;
     spectrum.get_spectrum(yHe2q, AHe2q);
 
-    unsigned int counts[100];
-    for (unsigned int i = 0; i < 100; ++i) {
+    uint_fast32_t counts[100];
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.) * 100. / 0.6;
+      uint_fast32_t index = (rand_freq - 1.) * 100. / 0.6;
       ++counts[index];
     }
 
     double enorm = spectrum.get_integral(yHe2q, AHe2q) / numsample / 0.006;
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.006;
       double tval = He2pc_luminosity(yHe2q, AHe2q, nu);
       double bval = counts[i] * enorm;
@@ -293,12 +301,12 @@ int main(int argc, char **argv) {
   // FaucherGiguerePhotonSourceSpectrum
   {
     // check that all redshifts are correctly mapped to files
-    for (unsigned int i = 0; i < 214; ++i) {
-      unsigned int iz = i * 5;
+    for (uint_fast8_t i = 0; i < 214; ++i) {
+      uint_fast32_t iz = i * 5;
       double z = iz * 0.01;
-      unsigned int iz100 = iz / 100;
+      uint_fast32_t iz100 = iz / 100;
       iz -= 100 * iz100;
-      unsigned int iz10 = iz / 10;
+      uint_fast32_t iz10 = iz / 10;
       iz -= 10 * iz10;
       std::stringstream namestream;
       namestream << FAUCHERGIGUEREDATALOCATION << "fg_uvb_dec11_z_" << iz100
@@ -318,7 +326,7 @@ int main(int argc, char **argv) {
     getline(ifile, line);
     getline(ifile, line);
     double nuarr[261], earr[261];
-    for (unsigned int i = 0; i < 261; ++i) {
+    for (uint_fast32_t i = 0; i < 261; ++i) {
       getline(ifile, line);
       std::istringstream lstream(line);
       lstream >> nuarr[i] >> earr[i];
@@ -327,16 +335,16 @@ int main(int argc, char **argv) {
     std::ofstream file("fauchergiguere.txt");
     FaucherGiguerePhotonSourceSpectrum spectrum(7.);
 
-    unsigned int counts[101];
-    for (unsigned int i = 0; i < 101; ++i) {
+    uint_fast32_t counts[101];
+    for (uint_fast8_t i = 0; i < 101; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.) * 100. / 3.;
+      uint_fast32_t index = (rand_freq - 1.) * 100. / 3.;
       // we dump frequencies outside the range in the last bin and ignore it
       if (index > 100) {
         index = 100;
@@ -345,7 +353,7 @@ int main(int argc, char **argv) {
     }
 
     double enorm = FGspectrum(nuarr, earr, 1.015) / counts[0];
-    for (unsigned int i = 0; i < 100; ++i) {
+    for (uint_fast8_t i = 0; i < 100; ++i) {
       double nu = 1. + (i + 0.5) * 0.03;
       double tval = FGspectrum(nuarr, earr, nu);
       double bval = counts[i] * enorm;

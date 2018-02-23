@@ -118,7 +118,7 @@ private:
   std::vector< std::vector< std::vector< double > > > _number_densities;
 
   /*! @brief Initial temperature (in K). */
-  double _temperature;
+  const double _temperature;
 
 public:
   InterpolatedDensityFunction(std::string filename, double temperature,

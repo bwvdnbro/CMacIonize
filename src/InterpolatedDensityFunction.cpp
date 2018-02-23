@@ -85,9 +85,12 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   YAMLDictionary yaml_dictionary(yaml_stream);
 
   // get the number of x, y and z points
-  unsigned int num_x = yaml_dictionary.get_value< unsigned int >("num_x");
-  unsigned int num_y = yaml_dictionary.get_value< unsigned int >("num_y");
-  unsigned int num_z = yaml_dictionary.get_value< unsigned int >("num_z");
+  const uint_fast32_t num_x =
+      yaml_dictionary.get_value< uint_fast32_t >("num_x");
+  const uint_fast32_t num_y =
+      yaml_dictionary.get_value< uint_fast32_t >("num_y");
+  const uint_fast32_t num_z =
+      yaml_dictionary.get_value< uint_fast32_t >("num_z");
   // get the extents of the box in x, y and z
   _x_bounds.first =
       yaml_dictionary.get_physical_value< QUANTITY_LENGTH >("xmin");
@@ -102,18 +105,18 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   _z_bounds.second =
       yaml_dictionary.get_physical_value< QUANTITY_LENGTH >("zmax");
   // get the number of columns
-  unsigned int num_column =
-      yaml_dictionary.get_value< unsigned int >("num_column");
+  const uint_fast32_t num_column =
+      yaml_dictionary.get_value< uint_fast32_t >("num_column");
   // get the column names and units
-  std::map< std::string, unsigned int > name_to_column;
+  std::map< std::string, uint_fast32_t > name_to_column;
   std::vector< std::string > units(num_column);
-  for (unsigned int i = 0; i < num_column; ++i) {
+  for (uint_fast32_t i = 0; i < num_column; ++i) {
     std::stringstream column_name_stream;
     column_name_stream << "column_" << i << "_";
-    std::string column_name = column_name_stream.str();
-    std::string name =
+    const std::string column_name = column_name_stream.str();
+    const std::string name =
         yaml_dictionary.get_value< std::string >(column_name + "variable");
-    std::string unit =
+    const std::string unit =
         yaml_dictionary.get_value< std::string >(column_name + "unit");
     name_to_column[name] = i;
     units[i] = unit;
@@ -133,10 +136,10 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   if (_z_bounds.first > _z_bounds.second) {
     cmac_error("Minimal Z value larger than maximal Z value!");
   }
-  unsigned int x_column = 0;
-  unsigned int y_column = 0;
-  unsigned int z_column = 0;
-  unsigned int num_variable = 1;
+  uint_fast32_t x_column = 0;
+  uint_fast32_t y_column = 0;
+  uint_fast32_t z_column = 0;
+  uint_fast32_t num_variable = 1;
   if (num_x != 0) {
     if (name_to_column.count("x") == 0) {
       cmac_error("No column found containing x values!");
@@ -161,7 +164,7 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   }
   if (num_y > 1) {
     _y_coords.resize(num_y);
-    for (unsigned int ix = 0; ix < _number_densities.size(); ++ix) {
+    for (size_t ix = 0; ix < _number_densities.size(); ++ix) {
       _number_densities[ix].resize(num_y);
     }
     num_variable *= num_y;
@@ -169,7 +172,7 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
     _y_coords.resize(2);
     _y_coords[0] = _y_bounds.first;
     _y_coords[1] = _y_bounds.second;
-    for (unsigned int ix = 0; ix < _number_densities.size(); ++ix) {
+    for (size_t ix = 0; ix < _number_densities.size(); ++ix) {
       _number_densities[ix].resize(2);
     }
   }
@@ -181,8 +184,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   }
   if (num_z > 1) {
     _z_coords.resize(num_z);
-    for (unsigned int ix = 0; ix < _number_densities.size(); ++ix) {
-      for (unsigned int iy = 0; iy < _number_densities[ix].size(); ++iy) {
+    for (size_t ix = 0; ix < _number_densities.size(); ++ix) {
+      for (size_t iy = 0; iy < _number_densities[ix].size(); ++iy) {
         _number_densities[ix][iy].resize(num_z);
       }
     }
@@ -191,8 +194,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
     _z_coords.resize(2);
     _z_coords[0] = _z_bounds.first;
     _z_coords[1] = _z_bounds.second;
-    for (unsigned int ix = 0; ix < _number_densities.size(); ++ix) {
-      for (unsigned int iy = 0; iy < _number_densities[ix].size(); ++iy) {
+    for (size_t ix = 0; ix < _number_densities.size(); ++ix) {
+      for (size_t iy = 0; iy < _number_densities[ix].size(); ++iy) {
         _number_densities[ix][iy].resize(2);
       }
     }
@@ -200,22 +203,22 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   if (name_to_column.count("number density") == 0) {
     cmac_error("No column found containing number density values!");
   }
-  unsigned int number_density_column = name_to_column["number density"];
+  const uint_fast32_t number_density_column = name_to_column["number density"];
 
-  unsigned int ix = 0;
-  unsigned int iy = 0;
-  unsigned int iz = 0;
-  unsigned int i = 0;
+  size_t ix = 0;
+  size_t iy = 0;
+  size_t iz = 0;
+  size_t i = 0;
   while (std::getline(file, line)) {
     std::stringstream lstream(line);
     std::vector< double > row(num_column);
-    for (unsigned int j = 0; j < num_column; ++j) {
+    for (uint_fast32_t j = 0; j < num_column; ++j) {
       lstream >> row[j];
     }
 
     if (num_x != 0) {
-      double next_x = UnitConverter::to_SI< QUANTITY_LENGTH >(row[x_column],
-                                                              units[x_column]);
+      const double next_x = UnitConverter::to_SI< QUANTITY_LENGTH >(
+          row[x_column], units[x_column]);
       cmac_assert(next_x >= _x_bounds.first && next_x <= _x_bounds.second);
       if (i > 0 && next_x != _x_coords[ix]) {
         ++ix;
@@ -224,8 +227,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
       _x_coords[ix] = next_x;
     }
     if (num_y != 0) {
-      double next_y = UnitConverter::to_SI< QUANTITY_LENGTH >(row[y_column],
-                                                              units[y_column]);
+      const double next_y = UnitConverter::to_SI< QUANTITY_LENGTH >(
+          row[y_column], units[y_column]);
       cmac_assert(next_y >= _y_bounds.first && next_y <= _y_bounds.second);
       if (i > 0 && next_y != _y_coords[iy]) {
         ++iy;
@@ -234,8 +237,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
       _y_coords[iy] = next_y;
     }
     if (num_z != 0) {
-      double next_z = UnitConverter::to_SI< QUANTITY_LENGTH >(row[z_column],
-                                                              units[z_column]);
+      const double next_z = UnitConverter::to_SI< QUANTITY_LENGTH >(
+          row[z_column], units[z_column]);
       cmac_assert(next_z >= _z_bounds.first && next_z <= _z_bounds.second);
       if (i > 0 && next_z != _z_coords[iz]) {
         ++iz;
@@ -256,8 +259,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   // now copy the arrays to complete the missing data
   if (num_x < 2) {
     cmac_assert(ix == 0);
-    for (unsigned int iy = 0; iy < _y_coords.size(); ++iy) {
-      for (unsigned int iz = 0; iz < _z_coords.size(); ++iz) {
+    for (size_t iy = 0; iy < _y_coords.size(); ++iy) {
+      for (size_t iz = 0; iz < _z_coords.size(); ++iz) {
         _number_densities[1][iy][iz] = _number_densities[0][iy][iz];
       }
     }
@@ -266,8 +269,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   }
   if (num_y < 2) {
     cmac_assert(iy == 0);
-    for (unsigned int ix = 0; ix < _x_coords.size(); ++ix) {
-      for (unsigned int iz = 0; iz < _z_coords.size(); ++iz) {
+    for (size_t ix = 0; ix < _x_coords.size(); ++ix) {
+      for (size_t iz = 0; iz < _z_coords.size(); ++iz) {
         _number_densities[ix][1][iz] = _number_densities[ix][0][iz];
       }
     }
@@ -276,8 +279,8 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
   }
   if (num_z < 2) {
     cmac_assert(iz == 0);
-    for (unsigned int ix = 0; ix < _x_coords.size(); ++ix) {
-      for (unsigned int iy = 0; iy < _y_coords.size(); ++iy) {
+    for (size_t ix = 0; ix < _x_coords.size(); ++ix) {
+      for (size_t iy = 0; iy < _y_coords.size(); ++iy) {
         _number_densities[ix][iy][1] = _number_densities[ix][iy][0];
       }
     }
@@ -289,15 +292,20 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(std::string filename,
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the file that contains the data to interpolate on
+ *    (required)
+ *  - temperature: Initial temperature to use (default: 8000. K)
+ *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
 InterpolatedDensityFunction::InterpolatedDensityFunction(ParameterFile &params,
                                                          Log *log)
     : InterpolatedDensityFunction(
-          params.get_value< std::string >("densityfunction:filename"),
+          params.get_value< std::string >("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:temperature", "8000. K"),
+              "DensityFunction:temperature", "8000. K"),
           log) {}
 
 /**
@@ -317,38 +325,38 @@ DensityValues InterpolatedDensityFunction::operator()(const Cell &cell) const {
   cmac_assert(position.z() >= _z_bounds.first &&
               position.z() <= _z_bounds.second);
 
-  unsigned int ix =
+  const size_t ix =
       Utilities::locate(position.x(), &_x_coords[0], _x_coords.size());
-  unsigned int iy =
+  const size_t iy =
       Utilities::locate(position.y(), &_y_coords[0], _y_coords.size());
-  unsigned int iz =
+  const size_t iz =
       Utilities::locate(position.z(), &_z_coords[0], _z_coords.size());
 
   // equations from https://en.wikipedia.org/wiki/Trilinear_interpolation
 
-  double xd =
+  const double xd =
       (position.x() - _x_coords[ix]) / (_x_coords[ix + 1] - _x_coords[ix]);
-  double omxd = 1. - xd;
-  double yd =
+  const double omxd = 1. - xd;
+  const double yd =
       (position.y() - _y_coords[iy]) / (_y_coords[iy + 1] - _y_coords[iy]);
-  double omyd = 1. - yd;
-  double zd =
+  const double omyd = 1. - yd;
+  const double zd =
       (position.z() - _z_coords[iz]) / (_z_coords[iz + 1] - _z_coords[iz]);
-  double omzd = 1. - zd;
+  const double omzd = 1. - zd;
 
-  double c00 = _number_densities[ix][iy][iz] * omxd +
-               _number_densities[ix + 1][iy][iz] * xd;
-  double c01 = _number_densities[ix][iy][iz + 1] * omxd +
-               _number_densities[ix + 1][iy][iz + 1] * xd;
-  double c10 = _number_densities[ix][iy + 1][iz] * omxd +
-               _number_densities[ix + 1][iy + 1][iz] * xd;
-  double c11 = _number_densities[ix][iy + 1][iz + 1] * omxd +
-               _number_densities[ix + 1][iy + 1][iz + 1] * xd;
+  const double c00 = _number_densities[ix][iy][iz] * omxd +
+                     _number_densities[ix + 1][iy][iz] * xd;
+  const double c01 = _number_densities[ix][iy][iz + 1] * omxd +
+                     _number_densities[ix + 1][iy][iz + 1] * xd;
+  const double c10 = _number_densities[ix][iy + 1][iz] * omxd +
+                     _number_densities[ix + 1][iy + 1][iz] * xd;
+  const double c11 = _number_densities[ix][iy + 1][iz + 1] * omxd +
+                     _number_densities[ix + 1][iy + 1][iz + 1] * xd;
 
-  double c0 = c00 * omyd + c10 * yd;
-  double c1 = c01 * omyd + c11 * yd;
+  const double c0 = c00 * omyd + c10 * yd;
+  const double c1 = c01 * omyd + c11 * yd;
 
-  double number_density = c0 * omzd + c1 * zd;
+  const double number_density = c0 * omzd + c1 * zd;
 
   DensityValues values;
   values.set_number_density(number_density);

@@ -46,7 +46,7 @@ public:
    * @param worksize Number of shared memory threads to use during the grid
    * construction.
    */
-  virtual void compute_grid(int worksize = -1) = 0;
+  virtual void compute_grid(int_fast32_t worksize = -1) = 0;
 
   /**
    * @brief Get the volume of the Voronoi cell with the given index.
@@ -54,7 +54,7 @@ public:
    * @param index Index of a cell.
    * @return Volume of that cell (in m^3).
    */
-  virtual double get_volume(unsigned int index) const = 0;
+  virtual double get_volume(uint_fast32_t index) const = 0;
 
   /**
    * @brief Get the centroid of the Voronoi cell with the given index.
@@ -62,7 +62,7 @@ public:
    * @param index Index of a cell.
    * @return Centroid of that cell (in m).
    */
-  virtual CoordinateVector<> get_centroid(unsigned int index) const = 0;
+  virtual CoordinateVector<> get_centroid(uint_fast32_t index) const = 0;
 
   /**
    * @brief Get the surface normal of the wall with the given index.
@@ -70,7 +70,7 @@ public:
    * @param wallindex Index of a wall of the simulation box.
    * @return Surface normal of the wall.
    */
-  virtual CoordinateVector<> get_wall_normal(unsigned int wallindex) const = 0;
+  virtual CoordinateVector<> get_wall_normal(int_fast32_t wallindex) const = 0;
 
   /**
    * @brief Get the faces of the Voronoi cell with the given index.
@@ -78,7 +78,7 @@ public:
    * @param index Index of a cell.
    * @return Faces of that cell.
    */
-  virtual std::vector< VoronoiFace > get_faces(unsigned int index) const = 0;
+  virtual std::vector< VoronoiFace > get_faces(uint_fast32_t index) const = 0;
 
   /**
    * @brief Get the geometrical faces of the Voronoi cell with the given index.
@@ -87,7 +87,7 @@ public:
    * @return Geometrical faces of that cell.
    */
   virtual std::vector< Face >
-  get_geometrical_faces(unsigned int index) const = 0;
+  get_geometrical_faces(uint_fast32_t index) const = 0;
 
   /**
    * @brief Get the index of the Voronoi cell that contains the given position.
@@ -95,7 +95,7 @@ public:
    * @param position Arbitrary position (in m).
    * @return Index of the cell that contains that position.
    */
-  virtual unsigned int get_index(const CoordinateVector<> &position) const = 0;
+  virtual uint_fast32_t get_index(const CoordinateVector<> &position) const = 0;
 
   /**
    * @brief Check if the given position is inside the simulation box of the
@@ -113,7 +113,7 @@ public:
    * @param index Index to check.
    * @return True if the given index corresponds to a real neighbouring cell.
    */
-  virtual bool is_real_neighbour(unsigned int index) const = 0;
+  virtual bool is_real_neighbour(uint_fast32_t index) const = 0;
 };
 
 #endif // VORONOIGRID_HPP

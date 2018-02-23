@@ -4,6 +4,7 @@ sudo: enabled
 branches:
   only:
     - master
+    - stable
 matrix:
   include:
     - os: linux
@@ -34,6 +35,7 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-dev
   - sudo apt-get install -y python-numpy
+  - sudo apt-get install -y python-h5py
   - sudo apt-get install -y libboost-dev libboost-python-dev
   - eval "${MATRIX_EVAL}"
 script:

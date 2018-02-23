@@ -35,24 +35,26 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // this test is a bit tricky, since it will only fail if two threads access
   // the sum variable at the same time, which does not always happen (it will
   // of course also only fail if Atomic is badly implemented)
   // to increase our chances of having a collision (two threads accessing sum at
   // the same time) we run the test a couple of times
-  for (unsigned int i = 0; i < 100; ++i) {
-    int sum = 0;
-    int nthread = 0;
+  for (uint_fast8_t i_loop = 0; i_loop < 100; ++i_loop) {
+    double sum = 0.;
+    int_fast32_t nthread = 0;
 #pragma omp parallel shared(sum, nthread)
     {
-      Atomic::add(sum, omp_get_thread_num());
+      double this_thread = omp_get_thread_num();
+      Atomic::add(sum, this_thread);
 #pragma omp single
       { nthread = omp_get_num_threads(); }
     }
 
     if (nthread > 1) {
-      int reference = 0;
-      for (int i = 0; i < nthread; ++i) {
+      double reference = 0;
+      for (int_fast32_t i = 0; i < nthread; ++i) {
         reference += i;
       }
 
@@ -63,9 +65,9 @@ int main(int argc, char **argv) {
   }
 
   // double precision atomic addition test
-  for (unsigned int i = 0; i < 100; ++i) {
+  for (uint_fast8_t i_loop = 0; i_loop < 100; ++i_loop) {
     double sum = 0.;
-    int nthread = 0.;
+    int_fast32_t nthread = 0.;
 #pragma omp parallel shared(sum, nthread)
     {
       double this_thread = omp_get_thread_num();
@@ -76,7 +78,7 @@ int main(int argc, char **argv) {
 
     if (nthread > 1) {
       double reference = 0.;
-      for (int i = 0; i < nthread; ++i) {
+      for (int_fast32_t i = 0; i < nthread; ++i) {
         reference += i;
       }
 

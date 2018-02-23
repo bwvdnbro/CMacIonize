@@ -93,21 +93,31 @@ private:
   /*! @brief Heating integrals (without normalization factor, in m^3 s^-1). */
   double _heating[NUMBER_OF_HEATINGTERMS];
 
+#ifdef DO_OUTPUT_COOLING
+  /*! @brief Cooling rates per element (in J s^-1). */
+  double _cooling[NUMBER_OF_IONNAMES];
+#endif
+
 public:
   /**
    * @brief (Empty) constructor.
    */
   inline IonizationVariables() : _number_density(0.), _temperature(0.) {
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
     }
-    for (int i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
       _reemission_probabilities[i] = 0.;
     }
-    for (int i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
       _heating[i] = 0.;
     }
+#ifdef DO_OUTPUT_COOLING
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _cooling[i] = 0.;
+    }
+#endif
   }
 
   /**
@@ -256,6 +266,26 @@ public:
     _heating[name] += increment;
 #endif
   }
+
+#ifdef DO_OUTPUT_COOLING
+  /**
+   * @brief Get the cooling rate for the ion with the given name.
+   *
+   * @param ion IonName.
+   * @return Cooling rate (in J s^-1).
+   */
+  inline double get_cooling(IonName ion) const { return _cooling[ion]; }
+
+  /**
+   * @brief Set the cooling rate for the ion with the given name.
+   *
+   * @param ion IonName.
+   * @param cooling Cooling rate (in J s^-1).
+   */
+  inline void set_cooling(IonName ion, double cooling) {
+    _cooling[ion] = cooling;
+  }
+#endif
 };
 
 #endif // IONIZATIONVARIABLES_HPP

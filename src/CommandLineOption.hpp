@@ -60,7 +60,7 @@ private:
   std::string _description;
 
   /*! @brief Type of argument for the command line option (if any). */
-  int _argument;
+  CommandLineOptionArgumentType _argument;
 
   /*! @brief Default value of the argument of the command line option (if any).
    */
@@ -69,14 +69,14 @@ private:
   /*! @brief Flag indicating if the option is required or optional. */
   bool _required;
 
-  static std::string get_argument_description(int argument);
-  static std::string get_default_value_description(int argument,
+  static std::string get_argument_description(int_fast32_t argument);
+  static std::string get_default_value_description(int_fast32_t argument,
                                                    std::string default_value);
 
 public:
   CommandLineOption(std::string name, char abbreviation,
                     std::string description,
-                    int argument = COMMANDLINEOPTION_NOARGUMENT,
+                    int_fast32_t argument = COMMANDLINEOPTION_NOARGUMENT,
                     std::string default_value = "", bool required = true);
 
   void print_usage(std::ostream &stream) const;

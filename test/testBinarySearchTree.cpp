@@ -37,12 +37,13 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
-  BinarySearchTree< unsigned int, unsigned int > btree;
 
-  const unsigned int numpoint = 20;
+  BinarySearchTree< uint_fast32_t, uint_fast32_t > btree;
+
+  const uint_fast32_t numpoint = 20;
   std::cout << "Array:\n";
-  std::vector< unsigned int > array(numpoint);
-  for (unsigned int i = 0; i < numpoint; ++i) {
+  std::vector< uint_fast32_t > array(numpoint);
+  for (uint_fast32_t i = 0; i < numpoint; ++i) {
     array[i] = Utilities::random_int(0, 200);
     std::cout << i << ": " << array[i] << "\n";
     btree.add_point(array[i], i);
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
 
   assert_condition(btree.get_max_depth() == 5);
 
-  std::vector< unsigned int > range = btree.get_range(102, 143);
+  std::vector< uint_fast32_t > range = btree.get_range(102, 143);
   assert_condition(range.size() == 6);
   assert_condition(range[0] == 13);
   assert_condition(range[1] == 9);
