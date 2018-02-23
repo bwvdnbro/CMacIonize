@@ -36,11 +36,16 @@
  */
 int main(int argc, char **argv) {
 
-  BondiProfile profile(3.6e31, 1.e-16, 2.e3);
+  const double msol =
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_SOLAR_MASS);
+  const double au = PhysicalConstants::get_physical_constant(
+      PHYSICALCONSTANT_ASTRONOMICAL_UNIT);
+
+  BondiProfile profile(18. * msol, 1.e-16, 2.031e3);
 
   std::ofstream ofile("test_bondi.txt");
   for (uint_fast32_t i = 0; i < 1000; ++i) {
-    const double x = 2.e12 + (i + 0.5) * 1.e10;
+    const double x = 10. * au + (i + 0.5) * au;
     double rho, v;
     profile.get_hydrodynamic_variables(x, rho, v);
     ofile << x << "\t" << rho << "\t" << v << "\n";
