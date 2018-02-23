@@ -1098,6 +1098,18 @@ set(TESTSPHARRAYINTERFACE_SOURCES
 add_unit_test(NAME testSPHArrayInterface
               SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
 
+## Unit test for LambertW
+set(TESTLAMBERTW_SOURCES
+    testLambertW.cpp
+
+    ../src/LambertW.hpp
+)
+add_unit_test(NAME testLambertW
+              SOURCES ${TESTLAMBERTW_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_lambertw_input.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/test_lambertw_input.txt
+               COPYONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
