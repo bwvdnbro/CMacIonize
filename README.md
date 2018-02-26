@@ -1,6 +1,10 @@
 # CMacIonize
 C++ version of Kenny Wood's ionization code.
 
+ - [Obtaining and compiling the code](#compilation)
+ - [Code dependencies](#dependencies)
+ - [Support](#support)
+
 ## Compilation
 
 First, clone the repository using
@@ -79,3 +83,9 @@ by the unit tests, require Python, and the `numpy`, `matplotlib` and `h5py`
 libraries. However, all files that are necessary for the unit tests are also
 included in the repository (even if the scripts to generate them are), so
 it is still possible to compile and run the code without Python.
+
+## Support
+
+If you have any issues obtaining, compiling or running the code, please consult the [wiki](https://github.com/bwvdnbro/CMacIonize/wiki) or let us know (bert.vandenbroucke@gmail.com). Try to use github issue were applicable to
+ - [submit bug reports](https://github.com/bwvdnbro/CMacIonize/issues/new?template=bug.md)
+ - [request new code features](https://github.com/bwvdnbro/CMacIonize/issues/new?template=enhancement.md)
