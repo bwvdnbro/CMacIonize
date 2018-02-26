@@ -42,6 +42,8 @@ It is important to clearly distinguish between the two, as bug reports evidently
 
 ### Bug reports
 
+To report a new bug, please try to use the relevant issue template, `bug`, and use https://github.com/bwvdnbro/CMacIonize/issues/new?template=bug.md.
+
 In order to efficiently solve bugs, please try to provide us with as much information as possible to solve the bug:
  - a minimal example that causes the bug (e.g. the parameter file of the run that causes the bug)
  - information about the system you are running on
@@ -51,6 +53,8 @@ If you are unable to provide a minimal example (because e.g. the simulation you 
 If you encounter a bug, please reconfigure the code with `-DACTIVATE_ASSERTIONS=True` and rerun. This will activate a range of run time checks that might help track down the origin of the bug.
 
 ### Requests for new features
+
+To request a new feature, please try to use the relevant issue template, `enhancement`, and use https://github.com/bwvdnbro/CMacIonize/issues/new?template=enhancement.md.
 
 Try to be as detailed as possible about your request:
  - tell us why you need the new feature, so that we can assign a priority to its implementation
