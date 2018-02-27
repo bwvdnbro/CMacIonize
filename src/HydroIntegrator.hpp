@@ -604,12 +604,19 @@ public:
       const double rho_new =
           rho -
           halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
-      const double ux_new = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
-      const double uy_new = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
-      const double uz_new = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
+      double ux_new = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
+      double uy_new = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
+      double uz_new = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
       const double P_new =
           P -
           halfdt * (_gamma * P * divv + CoordinateVector<>::dot_product(u, dP));
+
+      // add gravitational contribution
+      const CoordinateVector<> a =
+          it.get_hydro_variables().get_gravitational_acceleration();
+      ux_new += halfdt * a.x();
+      uy_new += halfdt * a.y();
+      uz_new += halfdt * a.z();
 
       // update variables
       it.get_hydro_variables().primitives(0) = rho_new;
@@ -674,6 +681,18 @@ public:
           it.get_hydro_variables().delta_conserved(3);
       it.get_hydro_variables().conserved(4) -=
           it.get_hydro_variables().delta_conserved(4);
+
+      // add gravity
+      const CoordinateVector<> a =
+          it.get_hydro_variables().get_gravitational_acceleration();
+      const double m = it.get_hydro_variables().get_conserved_mass();
+      const CoordinateVector<> p =
+          it.get_hydro_variables().get_conserved_momentum();
+      it.get_hydro_variables().conserved(1) += timestep * m * a.x();
+      it.get_hydro_variables().conserved(2) += timestep * m * a.y();
+      it.get_hydro_variables().conserved(3) += timestep * m * a.z();
+      it.get_hydro_variables().conserved(4) +=
+          timestep * CoordinateVector<>::dot_product(p, a);
 
       // reset time differences
       it.get_hydro_variables().delta_conserved(0) = 0.;

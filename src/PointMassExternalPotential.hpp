@@ -60,7 +60,7 @@ public:
    * We accept the following parameters:
    *  - position: Position of the external point mass
    *    (default: [0. m, 0. m, 0. m])
-   *  - mass: Mass of the external point mass
+   *  - mass: Mass of the external point mass (default: 1. kg)
    *
    * @param params ParameterFile to read from.
    */
