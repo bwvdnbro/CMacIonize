@@ -53,6 +53,7 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "PointMassExternalPotential.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
@@ -102,6 +103,8 @@
  *    iteration of the photoionization algorithm (default: (number of photons))
  *  - use mask: Use a mask to keep the hydrodynamics fixed in part of the box?
  *    (default: false)
+ *  - use potential: Use an external point mass potential as extra gravitational
+ *    force (default: false)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -158,7 +161,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   double hydro_minimum_timestep = params.get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:minimum timestep", "-1. s");
   if (hydro_minimum_timestep < 0.) {
-    hydro_minimum_timestep = 0.01 * hydro_total_time;
+    hydro_minimum_timestep = 1.e-10 * hydro_total_time;
   }
 
   double hydro_maximum_timestep = params.get_physical_value< QUANTITY_TIME >(
@@ -251,6 +254,14 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       "RadiationHydrodynamicsSimulation:use mask", false);
   if (use_mask) {
     mask = new HydroMask(params);
+  }
+
+  // optional external point mass potential
+  PointMassExternalPotential *potential = nullptr;
+  const bool use_potential = params.get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use potential", false);
+  if (use_potential) {
+    potential = new PointMassExternalPotential(params);
   }
 
   // we are done reading the parameter file
@@ -403,6 +414,15 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       log->write_status("Done with radiation step.");
     }
 
+    // update the gravitational accelerations if applicable
+    if (use_potential) {
+      for (auto it = grid->begin(); it != grid->end(); ++it) {
+        const CoordinateVector<> a =
+            potential->get_acceleration(it.get_cell_midpoint());
+        it.get_hydro_variables().set_gravitational_acceleration(a);
+      }
+    }
+
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
                                     parallel_timer);
 
@@ -445,6 +465,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (use_potential) {
+    delete potential;
+  }
   if (use_mask) {
     delete mask;
   }
