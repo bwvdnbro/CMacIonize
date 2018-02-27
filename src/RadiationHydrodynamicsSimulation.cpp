@@ -44,6 +44,7 @@
 #include "EmissivityCalculator.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
+#include "HydroMask.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
 #include "LineCoolingData.hpp"
@@ -99,6 +100,8 @@
  *    photoionization algorithm (default: 1e5)
  *  - number of photons first loop: Number of photons to use during the first
  *    iteration of the photoionization algorithm (default: (number of photons))
+ *  - use mask: Use a mask to keep the hydrodynamics fixed in part of the box?
+ *    (default: false)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -241,6 +244,14 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
       Q, abundances, line_cooling_data, *recombination_rates,
       charge_transfer_rates, params, log);
+
+  // optional mask to fix the hydrodynamics in some parts of the box
+  HydroMask *mask = nullptr;
+  const bool use_mask = params.get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use mask", false);
+  if (use_mask) {
+    mask = new HydroMask(params);
+  }
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -395,6 +406,11 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
                                     parallel_timer);
 
+    // apply the mask if applicable
+    if (use_mask) {
+      mask->apply_mask(*grid);
+    }
+
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written
     // outside the integration loop
@@ -429,6 +445,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (use_mask) {
+    delete mask;
+  }
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;
   }
