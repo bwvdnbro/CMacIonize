@@ -1130,6 +1130,15 @@ set(TESTHYDROMASK_SOURCES
 add_unit_test(NAME testHydroMask
               SOURCES ${TESTHYDROMASK_SOURCES})
 
+## Unit test for PointMassExternalPotential
+set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
+    testPointMassExternalPotential.cpp
+
+    ../src/PointMassExternalPotential.hpp
+)
+add_unit_test(NAME testPointMassExternalPotential
+              SOURCES ${TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
