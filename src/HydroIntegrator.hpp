@@ -36,7 +36,7 @@
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
-/*! @brief Uncomment this to switch of second order integration. */
+/*! @brief Uncomment this to switch off second order integration. */
 //#define NO_SECOND_ORDER
 
 #include <cfloat>
@@ -574,6 +574,7 @@ public:
     hydro_start_parallel_timing_block();
     gradient_workers.do_in_parallel(gradient_jobs);
     hydro_stop_parallel_timing_block();
+#endif
 
     // do the second order time prediction step
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -617,7 +618,6 @@ public:
       it.get_hydro_variables().primitives(3) = uz_new;
       it.get_hydro_variables().primitives(4) = P_new;
     }
-#endif
 
     // do the flux computation (in parallel)
     HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
