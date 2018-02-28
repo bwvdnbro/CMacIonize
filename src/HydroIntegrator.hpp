@@ -26,6 +26,7 @@
 #ifndef HYDROINTEGRATOR_HPP
 #define HYDROINTEGRATOR_HPP
 
+#include "BondiProfile.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
 #include "GradientCalculator.hpp"
@@ -77,6 +78,9 @@ private:
   /*! @brief Boundary conditions to apply to each boundary. */
   const HydroBoundaryConditionType _boundaries[6];
 
+  /*! @brief Bondi profile used for Bondi boundary conditions. */
+  const BondiProfile *_bondi_profile;
+
   /**
    * @brief Get the HydroBoundaryConditionType corresponding to the given type
    * string.
@@ -91,6 +95,8 @@ private:
       return HYDRO_BOUNDARY_REFLECTIVE;
     } else if (type == "inflow") {
       return HYDRO_BOUNDARY_INFLOW;
+    } else if (type == "bondi") {
+      return HYDRO_BOUNDARY_BONDI;
     } else {
       cmac_error("Unknown boundary condition type: %s!", type.c_str());
       return HYDRO_BOUNDARY_INVALID;
@@ -237,6 +243,15 @@ private:
           graduR[2] = ngb.get_hydro_variables().primitive_gradients(3);
           gradPR = ngb.get_hydro_variables().primitive_gradients(4);
           vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
+        } else if (_hydro_integrator._boundaries[0] == HYDRO_BOUNDARY_BONDI) {
+          const double r = posR.norm();
+          double vR;
+          _hydro_integrator._bondi_profile->get_hydrodynamic_variables(r, rhoR,
+                                                                       vR, PR);
+          uR[0] = vR * posR.x() / r;
+          uR[1] = vR * posR.y() / r;
+          uR[2] = vR * posR.z() / r;
+          // we assume the gradients are just zero
         } else {
           // apply boundary conditions
           rhoR = rhoL;
@@ -371,6 +386,8 @@ public:
    * @param boundary_zhigh Type of boundary for the upper z boundary.
    * @param box_periodicity Periodicity flags for the grid box (used to check
    * the validity of the boundary condition types).
+   * @param bondi_profile BondiProfile object used for Bondi inflow boundary
+   * conditions.
    */
   inline HydroIntegrator(double gamma, bool do_radiative_heating,
                          bool do_radiative_cooling,
@@ -381,7 +398,8 @@ public:
                          std::string boundary_zlow = "reflective",
                          std::string boundary_zhigh = "reflective",
                          CoordinateVector< bool > box_periodicity =
-                             CoordinateVector< bool >(false))
+                             CoordinateVector< bool >(false),
+                         const BondiProfile *bondi_profile = nullptr)
       : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
         _do_radiative_heating(do_radiative_heating),
         _do_radiative_cooling(do_radiative_cooling), _solver(gamma),
@@ -390,7 +408,8 @@ public:
                     get_boundary_type(boundary_ylow),
                     get_boundary_type(boundary_yhigh),
                     get_boundary_type(boundary_zlow),
-                    get_boundary_type(boundary_zhigh)} {
+                    get_boundary_type(boundary_zhigh)},
+        _bondi_profile(bondi_profile) {
 
     if (_boundaries[0] == HYDRO_BOUNDARY_PERIODIC) {
       if (_boundaries[1] != HYDRO_BOUNDARY_PERIODIC) {
@@ -421,6 +440,11 @@ public:
         cmac_error("Periodic boundaries in z only work if the grid box is also "
                    "periodic in z!");
       }
+    }
+
+    if (_boundaries[0] == HYDRO_BOUNDARY_BONDI && _bondi_profile == nullptr) {
+      cmac_error(
+          "Bondi inflow boundaries only work if a Bondi profile is given.");
     }
   }
 
@@ -468,7 +492,18 @@ public:
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary z high",
                                             "reflective"),
-            simulation_box.get_periodicity()) {}
+            simulation_box.get_periodicity(), new BondiProfile(params)) {}
+
+  /**
+   * @brief Destructor.
+   *
+   * Clean up the Bondi profile.
+   */
+  inline ~HydroIntegrator() {
+    if (_bondi_profile != nullptr) {
+      delete _bondi_profile;
+    }
+  }
 
   /**
    * @brief Initialize the hydro variables for the given DensityGrid.

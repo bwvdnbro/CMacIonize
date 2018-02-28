@@ -29,6 +29,7 @@
 #define BONDIPROFILE_HPP
 
 #include "LambertW.hpp"
+#include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 
 /**
@@ -96,14 +97,35 @@ public:
         _bondi_density(bondi_density), _sound_speed(sound_speed) {}
 
   /**
+   * @brief ParameterFile constructor.
+   *
+   * This method reads the following parameters from the file:
+   *  - central mass: Mass of the central point mass (default: 18. Msol)
+   *  - Bondi density: density at the Bondi radius (default: 1.e-19 g cm^-3)
+   *  - sound speed: sound speed and velocity at the Bondi radius
+   *    (default: 2.031 km s^-1)
+   *
+   * @param params ParameterFile to read from.
+   */
+  inline BondiProfile(ParameterFile &params)
+      : BondiProfile(params.get_physical_value< QUANTITY_MASS >(
+                         "BondiProfile:central mass", "18. Msol"),
+                     params.get_physical_value< QUANTITY_DENSITY >(
+                         "BondiProfile:Bondi density", "1.e-19 g cm^-3"),
+                     params.get_physical_value< QUANTITY_VELOCITY >(
+                         "BondiProfile:sound speed", "2.031 km s^-1")) {}
+
+  /**
    * @brief Get the density and velocity for the given radius.
    *
    * @param radius Radius (in m).
    * @param density Density (in kg m^-3).
    * @param velocity Velocity (in m s^-1).
+   * @param pressure Pressure (in kg m^-2 s^-2).
    */
   inline void get_hydrodynamic_variables(const double radius, double &density,
-                                         double &velocity) const {
+                                         double &velocity,
+                                         double &pressure) const {
 
     const double rB = _bondi_radius / radius;
     const double rB2 = rB * rB;
@@ -116,6 +138,7 @@ public:
     }
     density = rB2 * _bondi_density / v_cs;
     velocity = -v_cs * _sound_speed;
+    pressure = _sound_speed * _sound_speed * density;
   }
 };
 

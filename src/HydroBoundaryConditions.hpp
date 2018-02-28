@@ -39,6 +39,8 @@ enum HydroBoundaryConditionType {
   /*! @brief Inflow boundaries (material is assumed to flow in or out of the box
    *  at the same rate it flows near the boundary). */
   HYDRO_BOUNDARY_INFLOW,
+  /*! @brief Bondi inflow boundary conditions. */
+  HYDRO_BOUNDARY_BONDI,
   /*! @brief Invalid boundaries selected. */
   HYDRO_BOUNDARY_INVALID
 };

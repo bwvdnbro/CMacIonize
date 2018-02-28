@@ -107,6 +107,8 @@ public:
       return Unit(1.e-10, 1, 0, 0, 0, 0, 0);
     } else if (name == "km") {
       return Unit(1000., 1, 0, 0, 0, 0, 0);
+    } else if (name == "au") {
+      return Unit(149597870700., 1, 0, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
       return Unit(1., 0, 1, 0, 0, 0, 0);
