@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
   std::ofstream ofile("test_bondi.txt");
   for (uint_fast32_t i = 0; i < 1000; ++i) {
     const double x = 10. * au + (i + 0.5) * au;
-    double rho, v;
-    profile.get_hydrodynamic_variables(x, rho, v);
-    ofile << x << "\t" << rho << "\t" << v << "\n";
+    double rho, v, P;
+    profile.get_hydrodynamic_variables(x, rho, v, P);
+    ofile << x << "\t" << rho << "\t" << v << "\t" << P << "\n";
   }
 
   return 0;

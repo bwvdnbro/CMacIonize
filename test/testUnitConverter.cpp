@@ -255,6 +255,9 @@ int main(int argc, char **argv) {
     unitnames.push_back("angstrom");
     // an angstrom is orders of magnitude smaller than a metre
     unitlogic.push_back(-1);
+    unitnames.push_back("au");
+    // an astronomical unit is larger than a metre
+    unitlogic.push_back(1);
 
     check_quantity< QUANTITY_LENGTH >(unitnames, unitlogic);
   }
