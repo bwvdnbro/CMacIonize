@@ -68,6 +68,50 @@
  * \f[
  *   \rho{}_B = \rho{}_\infty{} {\rm{}e}^\frac{3}{2}.
  * \f]
+ *
+ * We also consider a variant of this profile for which the isothermal equation
+ * of state is changed to
+ * \f[
+ *   P(r) = \begin{cases}
+ *     P_c c_s^2 \rho{} & r < R_I, \\
+ *     c_s^2 \rho{} & R_I \leq{} r,
+ *   \end{cases}
+ * \f]
+ * with \f$R_I\f$ and \f$P_c\f$ two additional parameters, respectively
+ * interpreted as the ionisation radius at which the behaviour changes, and the
+ * pressure contrast between the two regions.
+ *
+ * For this more general equation of state a steady state solution is possible
+ * if \f$R_I < R_B\f$, in which case the solution is given by
+ * \f[
+ *   \rho{}(r) = \begin{cases}
+ *     \frac{\rho{}_I R_I^2 v_I}{r^2 v(r)} & r < R_I, \\
+ *     -\frac{\rho{}_B R_B^2 c_s}{r^2 v(r)} & R_I \leq{} r,
+ *   \end{cases}
+ * \f]
+ * \f[
+ *   v(r) = -c_s \begin{cases}
+ *     \sqrt{P_c} \sqrt{-W_{-1} \left( -\left( \frac{R_I}{r} \right)^4
+ *       \frac{v_I^2}{P_c c_s^2} {\rm{}e}^{4\frac{R_B}{P_c R_I} -
+ *       4\frac{R_B}{P_c r} - \frac{v_I^2}{P_c c_s^2}} \right)} & r < R_I \\
+ *     \sqrt{-W_{-1}\left( -\left( \frac{R_B}{r} \right)^4
+ *                         {\rm{}e}^{3 - 4\frac{R_B}{r}} \right)}
+ *     & R_I \leq{} r \leq{} R_B, \\
+ *     \sqrt{-W_{0}\left( -\left( \frac{R_B}{r} \right)^4
+ *                        {\rm{}e}^{3 - 4\frac{R_B}{r}} \right)}
+ *     & r > R_B,
+ *   \end{cases}
+ * \f]
+ * with \f$\rho{}_I = \Gamma{} \rho{}(R_I)\f$ and
+ * \f$v_I = \frac{v(R_I)}{\Gamma{}}\f$,
+ * \f[
+ *   \Gamma{} = \frac{1}{2} \left( \frac{v^2(R_I)}{P_c c_s^2} + \frac{1}{P_c} -
+ *              \sqrt{\left( \frac{v^2(R_I)}{P_c c_s^2} +
+ *                           \frac{1}{P_c} \right)^2 -
+ *                    4\frac{v^2(R_I)}{P_c c_s^2}} \right),
+ * \f]
+ * and \f$\rho{}(R_I)\f$ and \f$v(R_I)\f$ the original profile evaluated at
+ * \f$R_I\f$.
  */
 class BondiProfile {
 private:
@@ -80,6 +124,18 @@ private:
   /*! @brief Isothermal sound speed \f$c_s\f$ (in m s^-1). */
   const double _sound_speed;
 
+  /*! @brief Ionisation radius \f$R_I\f$ (in m). */
+  const double _ionisation_radius;
+
+  /*! @brief Pressure contrast \f$P_c\f$. */
+  const double _pressure_contrast;
+
+  /*! @brief Ionised density at the ionisation radius (in kg m^-3). */
+  double _rho_I;
+
+  /*! @brief Ionised velocity at the ionisation radius (in m s^-1). */
+  double _v_I;
+
 public:
   /**
    * @brief Constructor.
@@ -88,32 +144,71 @@ public:
    * @param bondi_density Density at the Bondi radius \f$\rho{}_B\f$
    * (in kg m^-3).
    * @param sound_speed Isothermal sound speed \f$c_s\f$ (in m s^-1).
+   * @param ionisation_radius Ionisation radius \f$R_I\f$ (in m).
+   * @param pressure_contrast Pressure contrast \f$P_c\f$.
    */
   inline BondiProfile(const double central_mass, const double bondi_density,
-                      const double sound_speed)
+                      const double sound_speed,
+                      const double ionisation_radius = 0.,
+                      const double pressure_contrast = 0.)
       : _bondi_radius(0.5 * PhysicalConstants::get_physical_constant(
                                 PHYSICALCONSTANT_NEWTON_CONSTANT) *
                       central_mass / (sound_speed * sound_speed)),
-        _bondi_density(bondi_density), _sound_speed(sound_speed) {}
+        _bondi_density(bondi_density), _sound_speed(sound_speed),
+        _ionisation_radius(ionisation_radius),
+        _pressure_contrast(pressure_contrast) {
+
+    if (_ionisation_radius > 0. && _pressure_contrast > 0.) {
+      const double rBI = _bondi_radius / _ionisation_radius;
+      const double rBI2 = rBI * rBI;
+      const double lambertarg = -rBI2 * rBI2 * std::exp(3. - 4. * rBI);
+      double v_RI = std::sqrt(-LambertW::lambert_w(lambertarg, -1));
+      const double rho_RI = rBI2 * _bondi_density / v_RI;
+      v_RI *= -_sound_speed;
+
+      const double vRI2_Pccs2 =
+          v_RI * v_RI / (_pressure_contrast * _sound_speed * _sound_speed);
+      const double Pc_inv = 1. / _pressure_contrast;
+      const double vRI2_Pccs2_plus_Pc_inv = vRI2_Pccs2 + Pc_inv;
+      const double Gamma =
+          0.5 * (vRI2_Pccs2_plus_Pc_inv -
+                 std::sqrt(vRI2_Pccs2_plus_Pc_inv * vRI2_Pccs2_plus_Pc_inv -
+                           4. * vRI2_Pccs2));
+
+      _rho_I = Gamma * rho_RI;
+      _v_I = v_RI / Gamma;
+    } else {
+      _rho_I = 0.;
+      _v_I = 0.;
+    }
+  }
 
   /**
    * @brief ParameterFile constructor.
    *
    * This method reads the following parameters from the file:
    *  - central mass: Mass of the central point mass (default: 18. Msol)
-   *  - Bondi density: density at the Bondi radius (default: 1.e-19 g cm^-3)
-   *  - sound speed: sound speed and velocity at the Bondi radius
+   *  - Bondi density: Density at the Bondi radius (default: 1.e-19 g cm^-3)
+   *  - sound speed: Sound speed and velocity at the Bondi radius
    *    (default: 2.031 km s^-1)
+   *  - ionisation radius: Ionisation radius (default: 0. m)
+   *  - pressure contrast: Pressure contrast between ionised and neutral region
+   *    (default: 32.)
    *
    * @param params ParameterFile to read from.
    */
   inline BondiProfile(ParameterFile &params)
-      : BondiProfile(params.get_physical_value< QUANTITY_MASS >(
-                         "BondiProfile:central mass", "18. Msol"),
-                     params.get_physical_value< QUANTITY_DENSITY >(
-                         "BondiProfile:Bondi density", "1.e-19 g cm^-3"),
-                     params.get_physical_value< QUANTITY_VELOCITY >(
-                         "BondiProfile:sound speed", "2.031 km s^-1")) {}
+      : BondiProfile(
+            params.get_physical_value< QUANTITY_MASS >(
+                "BondiProfile:central mass", "18. Msol"),
+            params.get_physical_value< QUANTITY_DENSITY >(
+                "BondiProfile:Bondi density", "1.e-19 g cm^-3"),
+            params.get_physical_value< QUANTITY_VELOCITY >(
+                "BondiProfile:sound speed", "2.031 km s^-1"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "BondiProfile:ionisation radius", "0. m"),
+            params.get_value< double >("BondiProfile:pressure contrast", 32.)) {
+  }
 
   /**
    * @brief Get the density and velocity for the given radius.
@@ -128,17 +223,45 @@ public:
                                          double &pressure) const {
 
     const double rB = _bondi_radius / radius;
-    const double rB2 = rB * rB;
-    const double lambertarg = -rB2 * rB2 * std::exp(3. - 4. * rB);
-    double v_cs;
-    if (radius > _bondi_radius) {
-      v_cs = std::sqrt(-LambertW::lambert_w(lambertarg, 0));
+    // only apply the profile for large enough radii, as the solution diverges
+    // for very small radii
+    if (rB < 400.) {
+      const double rB2 = rB * rB;
+      const double lambertarg = -rB2 * rB2 * std::exp(3. - 4. * rB);
+      double v_cs;
+      if (radius > _bondi_radius) {
+        v_cs = std::sqrt(-LambertW::lambert_w(lambertarg, 0));
+      } else {
+        if (radius < _ionisation_radius) {
+          const double RIr = _ionisation_radius / radius;
+          const double RIr2 = RIr * RIr;
+          const double vI2_Pccs2 =
+              _v_I * _v_I / (_pressure_contrast * _sound_speed * _sound_speed);
+          const double lambertarg2 =
+              -RIr2 * RIr2 * vI2_Pccs2 *
+              std::exp(4. * _bondi_radius / _pressure_contrast *
+                           (1. / _ionisation_radius - 1. / radius) -
+                       vI2_Pccs2);
+          v_cs = std::sqrt(-_pressure_contrast *
+                           LambertW::lambert_w(lambertarg2, -1));
+        } else {
+          v_cs = std::sqrt(-LambertW::lambert_w(lambertarg, -1));
+        }
+      }
+
+      velocity = -v_cs * _sound_speed;
+      if (radius < _ionisation_radius) {
+        density = _rho_I * _ionisation_radius * _ionisation_radius * _v_I /
+                  (radius * radius * velocity);
+      } else {
+        density = rB2 * _bondi_density / v_cs;
+      }
+      pressure = _sound_speed * _sound_speed * density;
     } else {
-      v_cs = std::sqrt(-LambertW::lambert_w(lambertarg, -1));
+      density = _bondi_density;
+      velocity = -_sound_speed;
+      pressure = _sound_speed * _sound_speed * density;
     }
-    density = rB2 * _bondi_density / v_cs;
-    velocity = -v_cs * _sound_speed;
-    pressure = _sound_speed * _sound_speed * density;
   }
 };
 

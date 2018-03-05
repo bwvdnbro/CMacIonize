@@ -35,6 +35,7 @@
 // non library dependent implementations
 #include "AsciiFileDensityFunction.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
+#include "BondiProfileDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
@@ -122,6 +123,8 @@ public:
       return new AsciiFileDensityFunction(params, log);
     } else if (type == "BlockSyntax") {
       return new BlockSyntaxDensityFunction(params, log);
+    } else if (type == "BondiProfile") {
+      return new BondiProfileDensityFunction(params);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
     } else if (type == "Interpolated") {

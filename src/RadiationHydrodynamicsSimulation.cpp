@@ -322,6 +322,11 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   // initialize the hydro variables (before we write the initial snapshot)
   hydro_integrator->initialize_hydro_variables(*grid);
 
+  // apply the mask if applicable
+  if (use_mask) {
+    mask->apply_mask(*grid);
+  }
+
   if (write_output) {
     writer->write(*grid, 0, params);
   }
