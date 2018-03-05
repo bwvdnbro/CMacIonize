@@ -253,10 +253,11 @@ public:
       if (radius < _ionisation_radius) {
         density = _rho_I * _ionisation_radius * _ionisation_radius * _v_I /
                   (radius * radius * velocity);
+        pressure = _sound_speed * _sound_speed * _pressure_contrast * density;
       } else {
         density = rB2 * _bondi_density / v_cs;
+        pressure = _sound_speed * _sound_speed * density;
       }
-      pressure = _sound_speed * _sound_speed * density;
     } else {
       density = _bondi_density;
       velocity = -_sound_speed;
