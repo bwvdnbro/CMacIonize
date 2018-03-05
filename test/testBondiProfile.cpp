@@ -44,11 +44,22 @@ int main(int argc, char **argv) {
   BondiProfile profile(18. * msol, 1.e-16, 2.031e3);
 
   std::ofstream ofile("test_bondi.txt");
+  ofile << "#x\trho\tv\tP\n";
   for (uint_fast32_t i = 0; i < 1000; ++i) {
     const double x = 10. * au + (i + 0.5) * au;
     double rho, v, P;
     profile.get_hydrodynamic_variables(x, rho, v, P);
     ofile << x << "\t" << rho << "\t" << v << "\t" << P << "\n";
+  }
+
+  BondiProfile profile_ionised(18. * msol, 1.e-16, 2.031e3, 30. * au, 32.);
+  std::ofstream ofile2("test_bondi_ionised.txt");
+  ofile2 << "#x\trho\tv\tP\n";
+  for (uint_fast32_t i = 0; i < 1000; ++i) {
+    const double x = 10. * au + (i + 0.5) * au;
+    double rho, v, P;
+    profile_ionised.get_hydrodynamic_variables(x, rho, v, P);
+    ofile2 << x << "\t" << rho << "\t" << v << "\t" << P << "\n";
   }
 
   return 0;
