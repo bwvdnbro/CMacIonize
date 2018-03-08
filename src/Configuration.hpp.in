@@ -75,6 +75,10 @@
  *  part of the output. */
 #cmakedefine DO_OUTPUT_PHOTOIONIZATION_RATES
 
+/*! @brief If defined, the cosmic ray factors for each cell will be part of the
+ *  output. */
+#cmakedefine DO_OUTPUT_COSMIC_RAY_FACTORS
+
 /*! @brief Maximum number of shared memory threads that can be used on this
  *  system. */
 // clang-format off

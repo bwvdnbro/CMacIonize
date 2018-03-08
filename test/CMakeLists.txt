@@ -1098,6 +1098,47 @@ set(TESTSPHARRAYINTERFACE_SOURCES
 add_unit_test(NAME testSPHArrayInterface
               SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
 
+## Unit test for LambertW
+set(TESTLAMBERTW_SOURCES
+    testLambertW.cpp
+
+    ../src/LambertW.hpp
+)
+add_unit_test(NAME testLambertW
+              SOURCES ${TESTLAMBERTW_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_lambertw_input.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/test_lambertw_input.txt
+               COPYONLY)
+
+## Unit test for BondiProfile
+set(TESTBONDIPROFILE_SOURCES
+    testBondiProfile.cpp
+
+    ../src/BondiProfile.hpp
+)
+add_unit_test(NAME testBondiProfile
+              SOURCES ${TESTBONDIPROFILE_SOURCES})
+
+## Unit test for HydroMask
+set(TESTHYDROMASK_SOURCES
+    testHydroMask.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/HydroMask.hpp
+)
+add_unit_test(NAME testHydroMask
+              SOURCES ${TESTHYDROMASK_SOURCES})
+
+## Unit test for PointMassExternalPotential
+set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
+    testPointMassExternalPotential.cpp
+
+    ../src/PointMassExternalPotential.hpp
+)
+add_unit_test(NAME testPointMassExternalPotential
+              SOURCES ${TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

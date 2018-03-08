@@ -98,11 +98,15 @@ private:
   double _cooling[NUMBER_OF_IONNAMES];
 #endif
 
+  /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
+  double _cosmic_ray_factor;
+
 public:
   /**
    * @brief (Empty) constructor.
    */
-  inline IonizationVariables() : _number_density(0.), _temperature(0.) {
+  inline IonizationVariables()
+      : _number_density(0.), _temperature(0.), _cosmic_ray_factor(-1.) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
@@ -286,6 +290,22 @@ public:
     _cooling[ion] = cooling;
   }
 #endif
+
+  /**
+   * @brief Get the cosmic ray heating factor.
+   *
+   * @return Cosmic ray heating factor (in kg m A^-1 s^-4).
+   */
+  inline double get_cosmic_ray_factor() const { return _cosmic_ray_factor; }
+
+  /**
+   * @brief Set the cosmic ray heating factor.
+   *
+   * @param cosmic_ray_factor Cosmic ray heating factor (in kg m A^-1 s^-4).
+   */
+  inline void set_cosmic_ray_factor(double cosmic_ray_factor) {
+    _cosmic_ray_factor = cosmic_ray_factor;
+  }
 };
 
 #endif // IONIZATIONVARIABLES_HPP

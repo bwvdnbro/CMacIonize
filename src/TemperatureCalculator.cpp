@@ -538,10 +538,15 @@ void TemperatureCalculator::calculate_temperature(
     return;
   }
 
+  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
+  if (crfac < 0.) {
+    crfac = _crfac;
+  }
+
   // if cosmic ray heating is active, check if the gas is ionized enough
   // if it is not, we just assume the gas is neutral and do not apply heating
   double h0, he0;
-  if (_crfac > 0.) {
+  if (crfac > 0.) {
     const double alphaH =
         _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
     const double alphaHe =
@@ -552,7 +557,7 @@ void TemperatureCalculator::calculate_temperature(
     const double AHe = _abundances.get_abundance(ELEMENT_He);
     IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
         alphaH, alphaHe, jH, jHe, nH, AHe, 8000., h0, he0);
-    if (_crfac > 0. && h0 > _crlim) {
+    if (crfac > 0. && h0 > _crlim) {
       // assume fully neutral
       ionization_variables.set_temperature(500.);
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
@@ -616,7 +621,7 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     compute_cooling_and_heating_balance(
-        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, _crfac,
+        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
@@ -624,13 +629,13 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h02, he02, gain2, loss2;
     compute_cooling_and_heating_balance(
-        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, _crfac,
+        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     compute_cooling_and_heating_balance(
-        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
+        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 

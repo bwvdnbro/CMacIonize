@@ -175,6 +175,21 @@ public:
     values.set_velocity(velocity);
     return values;
   }
+
+  /**
+   * @brief Check if the given position is inside the range of the blocks.
+   *
+   * @param position Position (in m).
+   * @return True if the position is inside the range of the blocks (and a call
+   * to operator() will be successful).
+   */
+  inline bool inside(const CoordinateVector<> position) const {
+    size_t i = 0;
+    while (i < _blocks.size() && !_blocks[i].is_inside(position)) {
+      ++i;
+    }
+    return i < _blocks.size();
+  }
 };
 
 #endif // BLOCKSYNTAXDENSITYFUNCTION_HPP

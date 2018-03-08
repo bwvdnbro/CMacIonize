@@ -45,6 +45,9 @@ private:
   /*! @brief Gradients for the primitive variables. */
   CoordinateVector<> _primitive_gradients[5];
 
+  /*! @brief Gravitational acceleration (in m s^-2). */
+  CoordinateVector<> _gravitational_acceleration;
+
 public:
   /**
    * @brief (Empty) constructor.
@@ -244,6 +247,25 @@ public:
    */
   inline CoordinateVector<> &primitive_gradients(uint_fast8_t index) {
     return _primitive_gradients[index];
+  }
+
+  /**
+   * @brief Get the gravitational acceleration.
+   *
+   * @return Gravitational acceleration (in m s^-2).
+   */
+  inline const CoordinateVector<> get_gravitational_acceleration() const {
+    return _gravitational_acceleration;
+  }
+
+  /**
+   * @brief Set the gravitational acceleration.
+   *
+   * @param gravitational_acceleration Gravitational acceleration (in m s^-2).
+   */
+  inline void set_gravitational_acceleration(
+      const CoordinateVector<> gravitational_acceleration) {
+    _gravitational_acceleration = gravitational_acceleration;
   }
 };
 

@@ -150,6 +150,7 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
     Box.hpp
+    BondiProfileDensityFunction.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
     CMacIonizeSnapshotDensityFunction.hpp

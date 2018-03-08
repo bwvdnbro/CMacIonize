@@ -36,12 +36,13 @@
  *
  * @param filename Name of the snapshot file to read.
  * @param temperature Initial temperature for the ISM (in K).
+ * @param read_cosmic_ray_heating Read the variables for cosmic ray heating?
  * @param log Log to write logging info to.
  */
-FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
-                                                           double temperature,
-                                                           Log *log)
-    : _log(log) {
+FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
+    std::string filename, double temperature, bool read_cosmic_ray_heating,
+    Log *log)
+    : _read_cosmic_ray_heating(read_cosmic_ray_heating), _log(log) {
 
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -154,6 +155,74 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(std::string filename,
     }
   }
 
+  if (_read_cosmic_ray_heating) {
+    // units
+    // 1 Gauss = 1e-4 Tesla
+    double unit_magnetic_field_in_SI = 1.e-4;
+    // 1 erg g^-1 = 1e-4 J kg^-1
+    double unit_cosmic_ray_energy_in_SI = 1.e-4;
+
+    // read the magnetic field
+    HDF5Tools::HDF5DataBlock< double, 4 > magnetic_field_x =
+        HDF5Tools::read_dataset< double, 4 >(file, "magx");
+    HDF5Tools::HDF5DataBlock< double, 4 > magnetic_field_y =
+        HDF5Tools::read_dataset< double, 4 >(file, "magy");
+    HDF5Tools::HDF5DataBlock< double, 4 > magnetic_field_z =
+        HDF5Tools::read_dataset< double, 4 >(file, "magz");
+    // read the cosmic ray energy
+    HDF5Tools::HDF5DataBlock< double, 4 > cosmic_ray_energy =
+        HDF5Tools::read_dataset< double, 4 >(file, "encr");
+    for (size_t i = 0; i < extents.size()[0]; ++i) {
+      if (nodetypes[i] == 1) {
+        CoordinateVector<> anchor;
+        std::array< size_t, 3 > ix0 = {{i, 0, 0}};
+        anchor[0] = extents[ix0] * unit_length_in_SI;
+        std::array< size_t, 3 > iy0 = {{i, 1, 0}};
+        anchor[1] = extents[iy0] * unit_length_in_SI;
+        std::array< size_t, 3 > iz0 = {{i, 2, 0}};
+        anchor[2] = extents[iz0] * unit_length_in_SI;
+        CoordinateVector<> top_anchor;
+        std::array< size_t, 3 > ix1 = {{i, 0, 1}};
+        top_anchor[0] = extents[ix1] * unit_length_in_SI;
+        std::array< size_t, 3 > iy1 = {{i, 1, 1}};
+        top_anchor[1] = extents[iy1] * unit_length_in_SI;
+        std::array< size_t, 3 > iz1 = {{i, 2, 1}};
+        top_anchor[2] = extents[iz1] * unit_length_in_SI;
+        CoordinateVector<> sides = top_anchor - anchor;
+        for (size_t ix = 0; ix < densities.size()[1]; ++ix) {
+          for (size_t iy = 0; iy < densities.size()[2]; ++iy) {
+            for (size_t iz = 0; iz < densities.size()[3]; ++iz) {
+              CoordinateVector<> centre;
+              centre[0] =
+                  anchor.x() + (ix + 0.5) * sides.x() / densities.size()[1];
+              centre[1] =
+                  anchor.y() + (iy + 0.5) * sides.y() / densities.size()[2];
+              centre[2] =
+                  anchor.z() + (iz + 0.5) * sides.z() / densities.size()[3];
+              // this is the ordering as it is in the file
+              std::array< size_t, 4 > irho = {{i, iz, iy, ix}};
+              // each block contains level^3 cells, hence levels[i] + level
+              // (but levels[i] is 1 larger than in our definition, Fortran
+              // counts
+              // from 1)
+              amrkey_t key = _grid.get_key(levels[i] + level - 1, centre);
+              DensityValues &vals = _grid[key].value();
+              vals.set_magnetic_field(
+                  CoordinateVector<>(magnetic_field_x[irho],
+                                     magnetic_field_y[irho],
+                                     magnetic_field_z[irho]) *
+                  unit_magnetic_field_in_SI);
+              vals.set_cosmic_ray_energy(cosmic_ray_energy[irho] *
+                                         unit_cosmic_ray_energy_in_SI);
+            }
+          }
+        }
+      }
+    }
+    // make sure the neighbour information for the grid is set
+    _grid.set_ngbs(CoordinateVector< bool >(true, true, false));
+  }
+
   HDF5Tools::close_file(file);
 
   if (_log) {
@@ -179,6 +248,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
           params.get_value< std::string >("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:temperature", "-1. K"),
+          params.get_value< bool >("DensityFunction:read cosmic ray heating",
+                                   false),
           log) {}
 
 /**
@@ -198,5 +269,56 @@ DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) const {
   values.set_temperature(vals.get_temperature());
   values.set_ionic_fraction(ION_H_n, 1.e-6);
   values.set_ionic_fraction(ION_He_n, 1.e-6);
+
+  if (_read_cosmic_ray_heating) {
+    amrkey_t key = _grid.get_key(position);
+    AMRGridCell< DensityValues > &cell = _grid[key];
+    AMRGridCell< DensityValues > *cell_left = cell.get_ngb(AMRNGBPOSITION_LEFT);
+    while (!cell_left->is_single_cell()) {
+      cell_left = cell_left->get_child(position);
+    }
+    AMRGridCell< DensityValues > *cell_right =
+        cell.get_ngb(AMRNGBPOSITION_RIGHT);
+    while (!cell_right->is_single_cell()) {
+      cell_right = cell_right->get_child(position);
+    }
+    AMRGridCell< DensityValues > *cell_front =
+        cell.get_ngb(AMRNGBPOSITION_FRONT);
+    while (!cell_front->is_single_cell()) {
+      cell_front = cell_front->get_child(position);
+    }
+    AMRGridCell< DensityValues > *cell_back = cell.get_ngb(AMRNGBPOSITION_BACK);
+    while (!cell_back->is_single_cell()) {
+      cell_back = cell_back->get_child(position);
+    }
+    AMRGridCell< DensityValues > *cell_bottom =
+        cell.get_ngb(AMRNGBPOSITION_BOTTOM);
+    while (!cell_bottom->is_single_cell()) {
+      cell_bottom = cell_bottom->get_child(position);
+    }
+    AMRGridCell< DensityValues > *cell_top = cell.get_ngb(AMRNGBPOSITION_TOP);
+    while (!cell_top->is_single_cell()) {
+      cell_top = cell_top->get_child(position);
+    }
+    CoordinateVector<> gradPc;
+    gradPc[0] =
+        (cell_left->value().get_cosmic_ray_energy() -
+         cell_right->value().get_cosmic_ray_energy()) /
+        (cell_left->get_midpoint().x() - cell_right->get_midpoint().x());
+    gradPc[1] =
+        (cell_front->value().get_cosmic_ray_energy() -
+         cell_back->value().get_cosmic_ray_energy()) /
+        (cell_front->get_midpoint().y() - cell_back->get_midpoint().y());
+    gradPc[2] =
+        (cell_bottom->value().get_cosmic_ray_energy() -
+         cell_top->value().get_cosmic_ray_energy()) /
+        (cell_bottom->get_midpoint().z() - cell_top->get_midpoint().z());
+    CoordinateVector<> B = cell.value().get_magnetic_field();
+    values.set_cosmic_ray_factor(
+        std::abs(CoordinateVector<>::dot_product(B, gradPc)));
+  } else {
+    values.set_cosmic_ray_factor(-1.);
+  }
+
   return values;
 }
