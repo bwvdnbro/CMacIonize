@@ -72,6 +72,12 @@ private:
   /*! @brief Flag indicating whether we want radiative cooling or not. */
   const bool _do_radiative_cooling;
 
+  /*! @brief Assumed temperature for neutral gas (in K). */
+  const double _neutral_temperature;
+
+  /*! @brief Assumed temperature for ionised gas (in K). */
+  const double _ionised_temperature;
+
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
   const RiemannSolver _solver;
 
@@ -378,6 +384,8 @@ public:
    * heating or not.
    * @param do_radiative_cooling Flag indicating whether to use radiative
    * cooling or not.
+   * @param neutral_temperature Assumed temperature for neutral gas (in K).
+   * @param ionised_temperature Assumed temperature for ionised gas (in K).
    * @param boundary_xlow Type of boundary for the lower x boundary.
    * @param boundary_xhigh Type of boundary for the upper x boundary.
    * @param boundary_ylow Type of boundary for the lower y boundary.
@@ -391,6 +399,8 @@ public:
    */
   inline HydroIntegrator(double gamma, bool do_radiative_heating,
                          bool do_radiative_cooling,
+                         double neutral_temperature = 100.,
+                         double ionised_temperature = 1.e4,
                          std::string boundary_xlow = "reflective",
                          std::string boundary_xhigh = "reflective",
                          std::string boundary_ylow = "reflective",
@@ -402,7 +412,9 @@ public:
                          const BondiProfile *bondi_profile = nullptr)
       : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
         _do_radiative_heating(do_radiative_heating),
-        _do_radiative_cooling(do_radiative_cooling), _solver(gamma),
+        _do_radiative_cooling(do_radiative_cooling),
+        _neutral_temperature(neutral_temperature),
+        _ionised_temperature(ionised_temperature), _solver(gamma),
         _boundaries{get_boundary_type(boundary_xlow),
                     get_boundary_type(boundary_xhigh),
                     get_boundary_type(boundary_ylow),
@@ -456,6 +468,10 @@ public:
    *    5. / 3.)
    *  - radiative heating: Is radiative heating enabled (default: true)?
    *  - radiative cooling: Is radiative cooling enabled (default: false)?
+   *  - neutral temperature: Assumed temperature for neutral gas
+   *    (default: 100. K)
+   *  - ionised temperature: Assumed temperature for ionised gas
+   *    (default: 1.e4 K)
    *  - boundary x low: Boundary condition type for the lower x boundary
    *    (periodic/reflective/inflow, default: reflective)
    *  - boundary x high: Boundary condition type for the upper x boundary
@@ -480,6 +496,10 @@ public:
             params.get_value< bool >("HydroIntegrator:radiative heating", true),
             params.get_value< bool >("HydroIntegrator:radiative cooling",
                                      false),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "HydroIntegrator:neutral temperature", "100. K"),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "HydroIntegrator:ionised temperature", "1.e4 K"),
             params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary x high",
@@ -529,7 +549,7 @@ public:
           it.get_hydro_variables().get_primitives_velocity();
       // we assume a completely neutral or completely ionized gas
       double pressure = density * boltzmann_k * temperature / hydrogen_mass;
-      if (temperature >= 1.e4) {
+      if (temperature >= _ionised_temperature) {
         // ionized gas has a lower mean molecular mass
         pressure *= 2.;
       }
@@ -687,7 +707,8 @@ public:
 
         const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
-        const double Tgas = 1.e4 * (1. - xH) + 1.e2 * xH;
+        const double Tgas =
+            _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
         const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
         const double uold = it.get_hydro_variables().get_primitives_pressure() /
                             _gm1 /
