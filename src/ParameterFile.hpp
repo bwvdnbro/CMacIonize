@@ -138,6 +138,67 @@ public:
   }
 
   /**
+   * @brief Compute the checksum for the given filename value corresponding to
+   * the given key, and check it against a reference value (if present).
+   *
+   * @param key Corresponding key in the parameter list.
+   * @param filename Filename value for that key.
+   */
+  void do_filename_checksum(std::string key, std::string filename) {
+    /// ENTER MD5 CHECKSUM CODE HERE
+    std::string checksum = filename;
+    std::string checksum_key = key + " checksum";
+    std::string old_checksum =
+        _yaml_dictionary.get_value< std::string >(checksum_key, "NONE");
+    if (old_checksum == "NONE") {
+      _yaml_dictionary.add_value(checksum_key, checksum);
+    } else {
+      if (checksum != old_checksum) {
+        cmac_warning("Checksum does not match for file \"%s\"!",
+                     filename.c_str());
+      }
+    }
+  }
+
+  /**
+   * @brief get_value() version for a filename.
+   *
+   * First, the filename value is read as any other string. After that, the
+   * filename is parsed with an MD5 checksum algorithm, and an additional field
+   * "<key> checksum" is added to the parameters. If this field already exists,
+   * the existing value is checked against the MD5 checksum, and a warning is
+   * thrown if they do not match.
+   *
+   * @param key Key in the dictionary that relates to a filename.
+   * @return Filename value.
+   */
+  std::string get_filename(std::string key) {
+    const std::string filename = _yaml_dictionary.get_value< std::string >(key);
+    do_filename_checksum(key, filename);
+    return filename;
+  }
+
+  /**
+   * @brief get_value() version for a filename.
+   *
+   * First, the filename value is read as any other string. After that, the
+   * filename is parsed with an MD5 checksum algorithm, and an additional field
+   * "<key> checksum" is added to the parameters. If this field already exists,
+   * the existing value is checked against the MD5 checksum, and a warning is
+   * thrown if they do not match.
+   *
+   * @param key Key in the dictionary that relates to a filename.
+   * @param default_value Default value for the filename.
+   * @return Filename value.
+   */
+  std::string get_filename(std::string key, std::string default_value) {
+    const std::string filename =
+        _yaml_dictionary.get_value< std::string >(key, default_value);
+    do_filename_checksum(key, filename);
+    return filename;
+  }
+
+  /**
    * @brief Wrapper around std::map::iterator.
    */
   class iterator {
