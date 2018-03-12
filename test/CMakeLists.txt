@@ -1139,6 +1139,15 @@ set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
 add_unit_test(NAME testPointMassExternalPotential
               SOURCES ${TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES})
 
+## Unit test for MD5Sum
+set(TESTMD5SUM_SOURCES
+    testMD5Sum.cpp
+
+    ../src/MD5Sum.hpp
+)
+add_unit_test(NAME testMD5Sum
+              SOURCES ${TESTMD5SUM_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
