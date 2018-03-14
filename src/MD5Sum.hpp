@@ -111,8 +111,8 @@ inline std::string get_checksum(std::string filename) {
     message.push_back(0);
   }
 
-  // add original length of message as 64 bits to end
-  unsigned long size = filename.size();
+  // add original length of message in bits as 64 bits to end
+  unsigned long size = filename.size() << 3;
   for (unsigned int i = 0; i < 8; ++i) {
     const unsigned char shift = (7 - i) * 8;
     const unsigned int sizeshift = (size >> shift) & 255;
