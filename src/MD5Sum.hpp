@@ -41,17 +41,6 @@
 namespace MD5Sum {
 
 /**
- * @brief MD5 left rotation definition, as on the MD5 Wikipedia page.
- *
- * @param x Operand.
- * @param c Rotation parameter.
- * @return Left rotation result.
- */
-inline unsigned int leftrotate(unsigned int x, unsigned int c) {
-  return (x << c) || (x >> (32 - c));
-}
-
-/**
  * @brief Convert the given 32-bit unsigned integer to hexadecimal notation.
  *
  * @param x Unsigned integer to convert.
@@ -130,39 +119,39 @@ inline std::string get_checksum(std::string filename) {
     message.push_back(sizeshift);
   }
 
-  cmac_status("message size: %lu", message.size());
-  cmac_status("message:");
-
-  for (unsigned int i = 0; i < message.size(); ++i) {
-    const unsigned char high = (message[i] >> 4) & 15;
-    const unsigned char low = message[i] & 15;
-    char chigh, clow;
-    if (high < 10) {
-      chigh = '0' + high;
-    } else {
-      chigh = 'a' + (high - 10);
-    }
-    if (low < 10) {
-      clow = '0' + low;
-    } else {
-      clow = 'a' + (low - 10);
-    }
-    std::cout << chigh << clow;
-  }
-  std::cout << std::endl;
+  //  cmac_status("message size: %lu", message.size());
+  //  cmac_status("message:");
+  //  for (unsigned int i = 0; i < message.size(); ++i) {
+  //    const unsigned char high = (message[i] >> 4) & 15;
+  //    const unsigned char low = message[i] & 15;
+  //    char chigh, clow;
+  //    if (high < 10) {
+  //      chigh = '0' + high;
+  //    } else {
+  //      chigh = 'a' + (high - 10);
+  //    }
+  //    if (low < 10) {
+  //      clow = '0' + low;
+  //    } else {
+  //      clow = 'a' + (low - 10);
+  //    }
+  //    std::cout << chigh << clow;
+  //  }
+  //  std::cout << std::endl;
 
   // now process the message
 
   for (unsigned int ichunk = 0; ichunk < message.size(); ichunk += 64) {
     unsigned int M[16];
     for (unsigned int j = 0; j < 16; ++j) {
-      M[j] = message[ichunk * 64 + 4 * j];
+      M[j] = message[ichunk * 64 + 4 * j + 3];
       M[j] <<= 8;
-      M[j] += message[ichunk * 64 + 4 * j + 1];
+      M[j] |= message[ichunk * 64 + 4 * j + 2];
       M[j] <<= 8;
-      M[j] += message[ichunk * 64 + 4 * j + 2];
+      M[j] |= message[ichunk * 64 + 4 * j + 1];
       M[j] <<= 8;
-      M[j] += message[ichunk * 64 + 4 * j + 3];
+      M[j] |= message[ichunk * 64 + 4 * j + 0];
+      //      cmac_status("M[%u] = %s", j, tohex(M[j]).c_str());
     }
 
     unsigned int A = a0;
@@ -172,24 +161,29 @@ inline std::string get_checksum(std::string filename) {
 
     for (unsigned int i = 0; i < 64; ++i) {
       unsigned int F, g;
-      if (i < 16) {
+      switch (i >> 4) {
+      case 0:
         F = (B & C) | ((~B) & D);
         g = i;
-      } else if (i < 32) {
+        break;
+      case 1:
         F = (D & B) | ((~D) & C);
         g = (5 * i + 1) % 16;
-      } else if (i < 48) {
+        break;
+      case 2:
         F = B ^ C ^ D;
         g = (3 * i + 5) % 16;
-      } else if (i < 64) {
+        break;
+      case 3:
         F = C ^ (B | (~D));
         g = (7 * i) % 16;
+        break;
       }
-      F += A + K[i] + M[g];
+      F = F + A + K[i] + M[g];
       A = D;
       D = C;
       C = B;
-      B += leftrotate(F, s[i]);
+      B = B + ((F << s[i]) | (F >> (32 - s[i])));
     }
     a0 += A;
     b0 += B;
