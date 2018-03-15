@@ -64,13 +64,16 @@ private:
   /*! @brief Type of Voronoi grid to use. */
   std::string _voronoi_grid_type;
 
+  /*! @brief Use a co-moving Voronoi grid? */
+  bool _comoving;
+
 public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
       const Box<> &simulation_box, std::string grid_type = "Old",
       uint_fast8_t num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, Log *log = nullptr);
+      bool hydro = false, bool comoving = true, Log *log = nullptr);
 
   VoronoiDensityGrid(const SimulationBox &simulation_box, ParameterFile &params,
                      bool hydro = false, Log *log = nullptr);
