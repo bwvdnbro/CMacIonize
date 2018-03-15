@@ -245,7 +245,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
 FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : FLASHSnapshotDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_filename("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:temperature", "-1. K"),
           params.get_value< bool >("DensityFunction:read cosmic ray heating",

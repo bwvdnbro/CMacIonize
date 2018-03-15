@@ -405,7 +405,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : SPHNGSnapshotDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_filename("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:write statistics", false),
