@@ -142,6 +142,11 @@ int main(int argc, char **argv) {
                        "test_group2:test_group_group:test_group_str_member",
                        "hello!") == "hello!");
 
+  assert_condition(params.get_filename("test_filename", "test.param") ==
+                   "test.param");
+  assert_condition(params.get_value< std::string >("test_filename checksum") ==
+                   "5430d38453a81cac10ee4b159f7908bf");
+
   params.print_contents(std::cout);
 
   return 0;

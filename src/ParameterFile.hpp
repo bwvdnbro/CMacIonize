@@ -26,6 +26,7 @@
 #ifndef PARAMETERFILE_HPP
 #define PARAMETERFILE_HPP
 
+#include "MD5Sum.hpp"
 #include "YAMLDictionary.hpp"
 
 /**
@@ -145,8 +146,7 @@ public:
    * @param filename Filename value for that key.
    */
   void do_filename_checksum(std::string key, std::string filename) {
-    /// ENTER MD5 CHECKSUM CODE HERE
-    std::string checksum = filename;
+    std::string checksum = MD5Sum::get_file_checksum(filename);
     std::string checksum_key = key + " checksum";
     std::string old_checksum =
         _yaml_dictionary.get_value< std::string >(checksum_key, "NONE");
