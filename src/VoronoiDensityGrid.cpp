@@ -86,17 +86,18 @@
  * been constructed for the first time.
  * @param periodic Periodicity flags.
  * @param hydro Flag signaling if hydro is active or not.
+ * @param comoving Use a co-moving Voronoi grid?
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
     const Box<> &simulation_box, std::string grid_type, uint_fast8_t num_lloyd,
-    CoordinateVector< bool > periodic, bool hydro, Log *log)
+    CoordinateVector< bool > periodic, bool hydro, bool comoving, Log *log)
     : DensityGrid(simulation_box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
       _periodicity_flags(periodic), _num_lloyd(num_lloyd),
       _epsilon(1.e-12 * simulation_box.get_sides().norm()),
-      _voronoi_grid_type(grid_type) {
+      _voronoi_grid_type(grid_type), _comoving(comoving) {
 
   const generatornumber_t totnumcell =
       _position_generator->get_number_of_positions();
@@ -126,6 +127,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
  *    initial grid to make it more regular (default: 0)
  *  - VoronoiGeneratorDistribution: type of VoronoiGeneratorDistribution to use
  *    (default: UniformRandom)
+ *  - comoving: Use a co-moving Voronoi grid (hydro only, default: true)?
  *
  * @param simulation_box SimulationBox.
  * @param params ParameterFile to read from.
@@ -142,7 +144,8 @@ VoronoiDensityGrid::VoronoiDensityGrid(const SimulationBox &simulation_box,
           params.get_value< std::string >("DensityGrid:grid type", "Old"),
           params.get_value< uint_fast8_t >(
               "DensityGrid:number of Lloyd iterations", 0),
-          simulation_box.get_periodicity(), hydro, log) {}
+          simulation_box.get_periodicity(), hydro,
+          params.get_value< bool >("DensityGrid:comoving", true), log) {}
 
 /**
  * @brief Destructor.
@@ -216,7 +219,7 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
  */
 void VoronoiDensityGrid::evolve(double timestep) {
 
-  if (_has_hydro) {
+  if (_has_hydro && _comoving) {
     // move the cell generators and update the velocities to the new fluid
     // velocities
     if (_log) {
@@ -249,7 +252,7 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @param gamma Polytropic index of the gas.
  */
 void VoronoiDensityGrid::set_grid_velocity(double gamma) {
-  if (_has_hydro) {
+  if (_has_hydro && _comoving) {
     for (auto it = begin(); it != end(); ++it) {
       const uint_fast32_t index = it.get_index();
 
