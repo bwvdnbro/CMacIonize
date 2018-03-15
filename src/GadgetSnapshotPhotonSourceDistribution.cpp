@@ -245,7 +245,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     ParameterFile &params, Log *log)
     : GadgetSnapshotPhotonSourceDistribution(
-          params.get_value< std::string >("PhotonSourceDistribution:filename"),
+          params.get_filename("PhotonSourceDistribution:filename"),
           params.get_value< std::string >(
               "PhotonSourceDistribution:formation time name", "FormationTime"),
           params.get_physical_value< QUANTITY_LENGTH >(

@@ -125,7 +125,7 @@ AsciiFileDensityFunction::AsciiFileDensityFunction(
 AsciiFileDensityFunction::AsciiFileDensityFunction(ParameterFile &params,
                                                    Log *log)
     : AsciiFileDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_filename("DensityFunction:filename"),
           params.get_value< CoordinateVector< uint_fast32_t > >(
               "DensityFunction:number of cells",
               CoordinateVector< uint_fast32_t >(64)),

@@ -232,7 +232,7 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
 CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : CMacIonizeSnapshotDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"), log) {}
+          params.get_filename("DensityFunction:filename"), log) {}
 
 /**
  * @brief Destructor.
