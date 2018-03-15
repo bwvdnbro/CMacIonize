@@ -365,6 +365,7 @@ public:
    */
   inline void add_value(std::string key, std::string value) {
     _dictionary[key] = value;
+    _used_values[key] = value;
   }
 
   /**

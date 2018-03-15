@@ -154,8 +154,9 @@ public:
       _yaml_dictionary.add_value(checksum_key, checksum);
     } else {
       if (checksum != old_checksum) {
-        cmac_warning("Checksum does not match for file \"%s\"!",
-                     filename.c_str());
+        cmac_warning(
+            "Checksum does not match for file \"%s\" (expected: %s, got: %s)!",
+            filename.c_str(), old_checksum.c_str(), checksum.c_str());
       }
     }
   }
