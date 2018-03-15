@@ -117,4 +117,13 @@ inline size_t OperatingSystem::get_peak_memory_usage() {
   return static_cast< size_t >(info.PeakWorkingSetSize);
 }
 
+/**
+ * @brief Install signal handlers that are called when specific signal
+ * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ */
+inline void OperatingSystem::install_signal_handlers() {
+
+  cmac_warning("Signal handlers are not supported yet for Windows!");
+}
+
 #endif // WINDOWS_HPP

@@ -208,6 +208,7 @@ set(CMACIONIZE_SOURCES
     RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
     RecombinationRatesFactory.hpp
+    Signals.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp

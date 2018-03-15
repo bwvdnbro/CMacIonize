@@ -27,7 +27,9 @@
 #define UNIX_HPP
 
 #include "OperatingSystem.hpp"
+#include "Signals.hpp"
 
+#include <csignal>
 #include <sys/resource.h>
 #include <sys/time.h>
 
@@ -107,6 +109,29 @@ inline size_t OperatingSystem::get_peak_memory_usage() {
   getrusage(RUSAGE_SELF, &resource_usage);
   return static_cast< size_t >(resource_usage.ru_maxrss) *
          static_cast< size_t >(1024);
+}
+
+/**
+ * @brief Unix signal handler for SIGINT (interrupt signal).
+ *
+ * @param signal Signal that caused the signal handler call.
+ */
+inline void unix_signal_interrupt_handler(int signal) {
+  Signals::signal_interrupt_handler();
+}
+
+/**
+ * @brief Install signal handlers that are called when specific signal
+ * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ */
+inline void OperatingSystem::install_signal_handlers() {
+
+  struct sigaction signal_handler;
+  signal_handler.sa_handler = unix_signal_interrupt_handler;
+  sigemptyset(&signal_handler.sa_mask);
+  signal_handler.sa_flags = 0;
+
+  sigaction(SIGINT, &signal_handler, nullptr);
 }
 
 #endif // UNIX_HPP
