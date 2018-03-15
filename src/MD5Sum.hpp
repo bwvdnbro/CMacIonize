@@ -288,6 +288,9 @@ inline std::string get_checksum(std::string message) {
  */
 inline std::string get_file_checksum(std::string filename) {
   std::ifstream filestream(filename);
+  if (!filestream.is_open()) {
+    cmac_error("Unable to open file \"%s\"!", filename.c_str());
+  }
   return get_checksum(filestream);
 }
 }
