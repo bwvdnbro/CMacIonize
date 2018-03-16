@@ -133,7 +133,7 @@ inline BOOL WINAPI windows_signal_interrupt_handler(DWORD signal) {
     break;
   default:
     // do nothing
-	  return FALSE;
+    return FALSE;
   }
   return TRUE;
 }
