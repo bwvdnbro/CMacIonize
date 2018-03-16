@@ -27,7 +27,9 @@
 #define WINDOWS_HPP
 
 #include "OperatingSystem.hpp"
+#include "Signals.hpp"
 
+#include <csignal>
 #include <windows.h>
 
 // needed for memory info functionality
@@ -118,12 +120,31 @@ inline size_t OperatingSystem::get_peak_memory_usage() {
 }
 
 /**
+ * @brief Windows signal handler for SIGINT (interrupt signal).
+ *
+ * @param signal Event that caused the signal handler call.
+ * @return TRUE, since this handler deals with the signal.
+ */
+inline BOOL WINAPI windows_signal_interrupt_handler(DWORD signal) {
+
+  switch (signal) {
+  case CTRL_C_EVENT:
+    Signals::signal_interrupt_handler();
+    break;
+  default:
+    // do nothing
+  }
+  return TRUE;
+}
+
+/**
  * @brief Install signal handlers that are called when specific signal
  * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
  */
 inline void OperatingSystem::install_signal_handlers() {
 
-  cmac_warning("Signal handlers are not supported yet for Windows!");
+  SetConsoleCtrlHandler((PHANDLER_ROUTINE)windows_signal_interrupt_handler,
+                        TRUE);
 }
 
 #endif // WINDOWS_HPP
