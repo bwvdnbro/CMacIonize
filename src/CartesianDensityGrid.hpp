@@ -226,7 +226,7 @@ public:
                   CoordinateVector<> > >
   get_neighbours(cellsize_t index);
 
-  virtual std::vector< Face > get_faces(unsigned long index) const;
+  virtual std::vector< Face > get_faces(size_t index) const;
 };
 
 #endif // CARTESIANDENSITYGRID_HPP
