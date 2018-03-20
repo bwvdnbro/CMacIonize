@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
   const double gamma = 5. / 3.;
 
-  HydroIntegrator integrator(gamma, false, false);
+  HydroIntegrator integrator(gamma, false, false, 0.2);
   integrator.initialize_hydro_variables(grid);
 
   HydroMask hydro_mask("blocksyntaxtest.yml", gamma);
