@@ -72,6 +72,9 @@ private:
   /*! @brief Flag indicating whether we want radiative cooling or not. */
   const bool _do_radiative_cooling;
 
+  /*! @brief Courant-Friedrichs-Lewy time stepping constant. */
+  const double _CFL_constant;
+
   /*! @brief Assumed temperature for neutral gas (in K). */
   const double _neutral_temperature;
 
@@ -349,8 +352,15 @@ private:
           }
 
           // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol =
-              0.5 * rhosol * usol.norm2() + Psol * _hydro_integrator._gm1_inv;
+          double rhoesol;
+          if (_hydro_integrator._gamma > 1.) {
+            rhoesol =
+                0.5 * rhosol * usol.norm2() + Psol * _hydro_integrator._gm1_inv;
+          } else {
+            // this flux will be ignored, but we make sure it has a sensible
+            // value
+            rhoesol = 0.5 * rhosol * usol.norm2();
+          }
           vsol = CoordinateVector<>::dot_product(usol, normal);
 
           // get the fluxes
@@ -384,6 +394,7 @@ public:
    * heating or not.
    * @param do_radiative_cooling Flag indicating whether to use radiative
    * cooling or not.
+   * @param CFL_constant Courant-Friedrichs-Lewy constant for time stepping.
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
    * @param boundary_xlow Type of boundary for the lower x boundary.
@@ -398,7 +409,7 @@ public:
    * conditions.
    */
   inline HydroIntegrator(double gamma, bool do_radiative_heating,
-                         bool do_radiative_cooling,
+                         bool do_radiative_cooling, double CFL_constant,
                          double neutral_temperature = 100.,
                          double ionised_temperature = 1.e4,
                          std::string boundary_xlow = "reflective",
@@ -413,7 +424,7 @@ public:
       : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
         _do_radiative_heating(do_radiative_heating),
         _do_radiative_cooling(do_radiative_cooling),
-        _neutral_temperature(neutral_temperature),
+        _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature), _solver(gamma),
         _boundaries{get_boundary_type(boundary_xlow),
                     get_boundary_type(boundary_xhigh),
@@ -468,6 +479,8 @@ public:
    *    5. / 3.)
    *  - radiative heating: Is radiative heating enabled (default: true)?
    *  - radiative cooling: Is radiative cooling enabled (default: false)?
+   *  - CFL constant: Courant-Friedrichs-Lewy constant for time stepping
+   *    (default: 0.2)
    *  - neutral temperature: Assumed temperature for neutral gas
    *    (default: 100. K)
    *  - ionised temperature: Assumed temperature for ionised gas
@@ -496,6 +509,7 @@ public:
             params.get_value< bool >("HydroIntegrator:radiative heating", true),
             params.get_value< bool >("HydroIntegrator:radiative cooling",
                                      false),
+            params.get_value< double >("HydroIntegerator:CFL constant", 0.2),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
@@ -561,14 +575,21 @@ public:
 
       const double mass = density * volume;
       const CoordinateVector<> momentum = mass * velocity;
-      const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
-      // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-      const double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
 
       // set conserved variables
       it.get_hydro_variables().set_conserved_mass(mass);
       it.get_hydro_variables().set_conserved_momentum(momentum);
-      it.get_hydro_variables().set_conserved_total_energy(total_energy);
+
+      const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
+      if (_gamma > 1.) {
+        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
+        const double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
+        it.get_hydro_variables().set_conserved_total_energy(total_energy);
+      } else {
+        // energy is ignored, but we make sure it has a value to avoid problems
+        // later on
+        it.get_hydro_variables().set_conserved_total_energy(ekin);
+      }
     }
 
     grid.set_grid_velocity(_gamma);
@@ -592,10 +613,10 @@ public:
           it.get_hydro_variables().get_primitives_velocity().norm();
       const double V = it.get_volume();
       const double R = std::cbrt(0.75 * V / M_PI);
-      const double dt = 0.2 * R / (cs + v);
+      const double dt = R / (cs + v);
       dtmin = std::min(dt, dtmin);
     }
-    return dtmin;
+    return _CFL_constant * dtmin;
   }
 
   /**
@@ -709,17 +730,20 @@ public:
         const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
         const double Tgas =
             _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
-        const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
-        const double uold = it.get_hydro_variables().get_primitives_pressure() /
-                            _gm1 /
-                            it.get_hydro_variables().get_primitives_density();
-        const double du = ugas - uold;
-        const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-        if (_do_radiative_heating && dE > 0.) {
-          it.get_hydro_variables().delta_conserved(4) -= dE;
-        }
-        if (_do_radiative_cooling && dE < 0.) {
-          it.get_hydro_variables().delta_conserved(4) -= dE;
+        it.get_ionization_variables().set_temperature(Tgas);
+        if (_gamma > 1.) {
+          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          const double uold =
+              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
+              it.get_hydro_variables().get_primitives_density();
+          const double du = ugas - uold;
+          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
+          if (_do_radiative_heating && dE > 0.) {
+            it.get_hydro_variables().delta_conserved(4) -= dE;
+          }
+          if (_do_radiative_cooling && dE < 0.) {
+            it.get_hydro_variables().delta_conserved(4) -= dE;
+          }
         }
       }
     }
@@ -774,6 +798,13 @@ public:
       const double total_energy =
           it.get_hydro_variables().get_conserved_total_energy();
 
+      IonizationVariables &ionization_variables = it.get_ionization_variables();
+
+      const double mean_molecular_mass =
+          ionization_variables.get_ionic_fraction(ION_H_n) * hydrogen_mass +
+          0.5 * (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
+              hydrogen_mass;
+
       double density, pressure;
       CoordinateVector<> velocity;
       if (mass <= 0.) {
@@ -784,15 +815,24 @@ public:
         density = 0.;
         velocity = CoordinateVector<>(0.);
         pressure = 0.;
+        ionization_variables.set_temperature(0.);
       } else {
         density = mass / volume;
         velocity = momentum / mass;
-        // E = V*(rho*u + 0.5*rho*v^2) = (V*P/(gamma-1) + 0.5*m*v^2)
-        // P = (E - 0.5*m*v^2)*(gamma-1)/V
-        pressure = _gm1 *
-                   (total_energy -
-                    0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
-                   volume;
+        if (_gamma > 1.) {
+          // E = V*(rho*u + 0.5*rho*v^2) = (V*P/(gamma-1) + 0.5*m*v^2)
+          // P = (E - 0.5*m*v^2)*(gamma-1)/V
+          pressure =
+              _gm1 *
+              (total_energy -
+               0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
+              volume;
+          ionization_variables.set_temperature(mean_molecular_mass * pressure /
+                                               boltzmann_k / density);
+        } else {
+          const double temperature = ionization_variables.get_temperature();
+          pressure = boltzmann_k * density * temperature / mean_molecular_mass;
+        }
       }
 
       cmac_assert(density >= 0.);
@@ -802,15 +842,7 @@ public:
       it.get_hydro_variables().set_primitives_velocity(velocity);
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
-      IonizationVariables &ionization_variables = it.get_ionization_variables();
-
       ionization_variables.set_number_density(density / hydrogen_mass);
-      const double mean_molecular_mass =
-          ionization_variables.get_ionic_fraction(ION_H_n) * hydrogen_mass +
-          0.5 * (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
-              hydrogen_mass;
-      ionization_variables.set_temperature(mean_molecular_mass * pressure /
-                                           boltzmann_k / density);
 
       cmac_assert(ionization_variables.get_number_density() >= 0.);
       cmac_assert(ionization_variables.get_temperature() >= 0.);

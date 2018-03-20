@@ -783,16 +783,23 @@ public:
   /**
    * @brief Constructor.
    *
+   * Note that we limit the adiabatic index to a value of 1.00000001. If an
+   * adiabatic index of 1 is requested (isothermal gas), we handle the equation
+   * of state elsewhere and assume this small value to make sure all derived
+   * quantities are well defined.
+   *
    * @param gamma Adiabatic index @f$\gamma{}@f$.
    */
   RiemannSolver(double gamma)
-      : _gamma(gamma), _gp1d2g(0.5 * (gamma + 1.) / gamma),
-        _gm1d2g(0.5 * (gamma - 1.) / gamma),
-        _gm1dgp1((gamma - 1) / (gamma + 1.)), _tdgp1(2. / (gamma + 1.)),
-        _tdgm1(2. / (gamma - 1.)), _gm1d2(0.5 * (gamma - 1.)),
-        _tgdgm1(2. * gamma / (gamma - 1.)), _ginv(1. / gamma) {
-    if (_gamma <= 1.) {
-      cmac_error("The adiabatic index needs to be larger than 1!")
+      : _gamma(std::max(gamma, 1.00000001)),
+        _gp1d2g(0.5 * (_gamma + 1.) / _gamma),
+        _gm1d2g(0.5 * (_gamma - 1.) / _gamma),
+        _gm1dgp1((_gamma - 1) / (_gamma + 1.)), _tdgp1(2. / (_gamma + 1.)),
+        _tdgm1(2. / (_gamma - 1.)), _gm1d2(0.5 * (_gamma - 1.)),
+        _tgdgm1(2. * _gamma / (_gamma - 1.)), _ginv(1. / _gamma) {
+
+    if (gamma < 1.) {
+      cmac_error("The adiabatic index needs to be 1 or larger!")
     }
   }
 
