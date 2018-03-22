@@ -86,12 +86,16 @@ public:
 
     const CoordinateVector<> position = cell.get_cell_midpoint() - _center;
     const double radius = position.norm();
-    double density, vR, pressure;
-    _bondi_profile.get_hydrodynamic_variables(radius, density, vR, pressure);
+    double density, vR, pressure, neutral_fraction;
+    _bondi_profile.get_hydrodynamic_variables(radius, density, vR, pressure,
+                                              neutral_fraction);
 
     const double number_density = density / hydrogen_mass;
-    const double temperature =
-        hydrogen_mass * pressure / (boltzmann_k * density);
+    double temperature = hydrogen_mass * pressure / (boltzmann_k * density);
+    if (neutral_fraction < 0.5) {
+      // ionised gas has a lower mean molecular mass
+      temperature *= 0.5;
+    }
 
     DensityValues values;
     values.set_number_density(number_density);
