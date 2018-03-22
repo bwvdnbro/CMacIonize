@@ -217,10 +217,11 @@ public:
    * @param density Density (in kg m^-3).
    * @param velocity Velocity (in m s^-1).
    * @param pressure Pressure (in kg m^-2 s^-2).
+   * @param neutral_fraction Neutral fraction.
    */
   inline void get_hydrodynamic_variables(const double radius, double &density,
-                                         double &velocity,
-                                         double &pressure) const {
+                                         double &velocity, double &pressure,
+                                         double &neutral_fraction) const {
 
     const double rB = _bondi_radius / radius;
     // only apply the profile for large enough radii, as the solution diverges
@@ -254,14 +255,17 @@ public:
         density = _rho_I * _ionisation_radius * _ionisation_radius * _v_I /
                   (radius * radius * velocity);
         pressure = _sound_speed * _sound_speed * _pressure_contrast * density;
+        neutral_fraction = 0.;
       } else {
         density = rB2 * _bondi_density / v_cs;
         pressure = _sound_speed * _sound_speed * density;
+        neutral_fraction = 1.;
       }
     } else {
       density = _bondi_density;
       velocity = -_sound_speed;
       pressure = _sound_speed * _sound_speed * density;
+      neutral_fraction = 1.;
     }
   }
 };
