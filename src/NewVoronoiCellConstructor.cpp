@@ -94,7 +94,9 @@
  * @brief Empty constructor.
  */
 NewVoronoiCellConstructor::NewVoronoiCellConstructor()
-    : _vertices_size(0), _tetrahedra_size(0), _free_size(0), _max_r2(0.),
+    : _vertices(NEWVORONOICELL_VERTEX_SIZE), _vertices_size(0),
+      _tetrahedra(NEWVORONOICELL_TETRAHEDRA_SIZE), _tetrahedra_size(0),
+      _free_tetrahedra(NEWVORONOICELL_FREE_SIZE), _free_size(0), _max_r2(0.),
       _max_tetrahedron(0) {}
 
 /**
@@ -190,12 +192,15 @@ void NewVoronoiCellConstructor::intersect(
   const uint_fast32_t vertex_index = add_new_vertex(ngb);
 
   uint_fast32_t next_check = 0;
-  bool queue[NEWVORONOICELL_QUEUE_SIZE];
+  std::vector< bool > queue((_tetrahedra_size / NEWVORONOICELL_QUEUE_SIZE + 1) *
+                            NEWVORONOICELL_QUEUE_SIZE);
   for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     queue[i] = false;
   }
   uint_fast32_t queue_size = _tetrahedra_size;
-  cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
+  if (queue_size == queue.size()) {
+    queue.resize(queue_size + NEWVORONOICELL_QUEUE_SIZE);
+  }
   if (number_of_tetrahedra == 1) {
     // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
     uint_fast32_t tn[4];
@@ -1478,6 +1483,10 @@ void NewVoronoiCellConstructor::three_to_two_flip(uint_fast32_t tetrahedron0,
   // two other ones
   _free_tetrahedra[_free_size] = tetrahedron2;
   ++_free_size;
+  if (_free_size == _free_tetrahedra.size()) {
+    _free_tetrahedra.resize(_free_size + NEWVORONOICELL_FREE_SIZE);
+  }
+
   // make sure we know this tetrahedron is inactive
   _tetrahedra[tetrahedron2].deactivate();
 
@@ -1534,7 +1543,7 @@ uint_fast32_t NewVoronoiCellConstructor::check_tetrahedron(
     uint_fast32_t tetrahedron, uint_fast32_t new_vertex,
     const NewVoronoiBox &rescaled_box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
-    bool queue[NEWVORONOICELL_QUEUE_SIZE], uint_fast32_t &queue_size) {
+    std::vector< bool > &queue, uint_fast32_t &queue_size) {
 
   uint_fast32_t next_check = tetrahedron + 1;
 
