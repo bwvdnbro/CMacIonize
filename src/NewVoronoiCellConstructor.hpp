@@ -49,19 +49,19 @@
 class NewVoronoiCellConstructor {
 private:
   /*! @brief Vertices. */
-  uint_least32_t _vertices[NEWVORONOICELL_VERTEX_SIZE];
+  std::vector< uint_least32_t > _vertices;
 
   /*! @brief Vertices size. */
   uint_least32_t _vertices_size;
 
   /*! @brief Tetrahedra connections. */
-  NewVoronoiTetrahedron _tetrahedra[NEWVORONOICELL_TETRAHEDRA_SIZE];
+  std::vector< NewVoronoiTetrahedron > _tetrahedra;
 
   /*! @brief Size of the tetrahedra array. */
   uint_least32_t _tetrahedra_size;
 
   /*! @brief Free indices in the tetrahedra vector. */
-  uint_least32_t _free_tetrahedra[NEWVORONOICELL_FREE_SIZE];
+  std::vector< uint_least32_t > _free_tetrahedra;
 
   /*! @brief Size of the free tetrahedra array. */
   uint_least16_t _free_size;
@@ -96,7 +96,10 @@ private:
       }
     }
     _tetrahedra_size = new_size;
-    cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
+
+    if (_tetrahedra_size == _tetrahedra.size()) {
+      _tetrahedra.resize(_tetrahedra_size + NEWVORONOICELL_TETRAHEDRA_SIZE);
+    }
   }
 
   /**
@@ -122,7 +125,10 @@ private:
       }
     }
     _tetrahedra_size = new_size;
-    cmac_assert(_tetrahedra_size < NEWVORONOICELL_TETRAHEDRA_SIZE);
+
+    if (_tetrahedra_size == _tetrahedra.size()) {
+      _tetrahedra.resize(_tetrahedra_size + NEWVORONOICELL_TETRAHEDRA_SIZE);
+    }
   }
 
   /**
@@ -135,7 +141,10 @@ private:
     const uint_fast32_t new_index = _vertices_size;
     _vertices[new_index] = vertex;
     ++_vertices_size;
-    cmac_assert(_vertices_size < NEWVORONOICELL_VERTEX_SIZE);
+
+    if (_vertices_size == _vertices.size()) {
+      _vertices.resize(_vertices_size + NEWVORONOICELL_VERTEX_SIZE);
+    }
 
     return new_index;
   }
@@ -189,7 +198,7 @@ public:
   check_tetrahedron(uint_fast32_t tetrahedron, uint_fast32_t new_vertex,
                     const NewVoronoiBox &rescaled_box,
                     const std::vector< CoordinateVector<> > &rescaled_positions,
-                    bool queue[], uint_fast32_t &queue_size);
+                    std::vector< bool > &queue, uint_fast32_t &queue_size);
 
   /// inline/template helper functions
 
@@ -331,11 +340,14 @@ public:
    * @param queue_size Size of the queue.
    */
   inline static void add_to_queue(uint_fast32_t tetrahedron,
-                                  bool queue[NEWVORONOICELL_QUEUE_SIZE],
+                                  std::vector< bool > &queue,
                                   uint_fast32_t &queue_size) {
     queue[tetrahedron] = true;
     queue_size = std::max(queue_size, tetrahedron + 1);
-    cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
+
+    if (queue_size == queue.size()) {
+      queue.resize(queue_size + NEWVORONOICELL_QUEUE_SIZE);
+    }
   }
 
   /// unit testing routines
