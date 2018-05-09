@@ -405,8 +405,6 @@ public:
    * @brief Convert the given value with the given unit to the equivalent value
    * in SI units.
    *
-   * This function needs to be specialized for all quantities.
-   *
    * @param value Value in obscure non SI unit.
    * @param unit Name of the obscure non SI unit.
    * @return Value in generally accepted SI units.
@@ -425,8 +423,6 @@ public:
    * @brief Convert the given value in SI units to the equivalent value in the
    * given non SI unit.
    *
-   * This function needs to be specialized for all quantities.
-   *
    * @param value Value in SI units.
    * @param unit Name of an obscure non SI unit.
    * @return Value in that obscure non SI unit.
@@ -439,6 +435,28 @@ public:
       return try_conversion(value, SI_unit, strange_unit);
     }
     return value / strange_unit;
+  }
+
+  /**
+   * @brief Convert the given value in SI units to a string in the given units.
+   *
+   * @param value Value in SI units.
+   * @param unit Name of an obscure non SI unit.
+   * @return Human readable string in the given (non SI) unit.
+   */
+  template < Quantity _quantity_ >
+  static inline std::string to_unit_string(double value, std::string unit) {
+    const Unit SI_unit = get_SI_unit(_quantity_);
+    Unit strange_unit = get_unit(unit);
+    double strange_value;
+    if (!SI_unit.is_same_quantity(strange_unit)) {
+      strange_value = try_conversion(value, SI_unit, strange_unit);
+    } else {
+      strange_value = value / strange_unit;
+    }
+    std::stringstream unit_string;
+    unit_string << strange_value << " " << unit;
+    return unit_string.str();
   }
 
   /**

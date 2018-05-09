@@ -42,17 +42,24 @@ private:
   /*! @brief Single temperature value for the entire box (in K). */
   const double _temperature;
 
+  /*! @brief Initial hydrogen neutral fraction for the entire box. */
+  const double _neutral_fraction_H;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param density Single density value for the entire box (in m^-3).
    * @param temperature Single temperature value for the entire box (in K).
+   * @param neutral_fraction_H Single hydrogen neutral fraction value for the
+   * entire box.
    * @param log Log to write logging information to.
    */
   HomogeneousDensityFunction(double density = 1., double temperature = 8000.,
+                             double neutral_fraction_H = 1.e-6,
                              Log *log = nullptr)
-      : _density(density), _temperature(temperature) {
+      : _density(density), _temperature(temperature),
+        _neutral_fraction_H(neutral_fraction_H) {
 
     if (log) {
       log->write_status(
@@ -67,6 +74,8 @@ public:
    * Parameters are:
    *  - density: Constant number density value (default: 100. cm^-3)
    *  - temperature: Constant initial temperature value (default: 8000. K)
+   *  - neutral fraction H: Contant initial neutral fraction value
+   *    (default: 1.e-6)
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
@@ -77,6 +86,8 @@ public:
                 "DensityFunction:density", "100. cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "DensityFunction:temperature", "8000. K"),
+            params.get_value< double >("DensityFunction:neutral fraction H",
+                                       1.e-6),
             log) {}
 
   /**
@@ -89,7 +100,7 @@ public:
     DensityValues values;
     values.set_number_density(_density);
     values.set_temperature(_temperature);
-    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, _neutral_fraction_H);
     values.set_ionic_fraction(ION_He_n, 1.e-6);
     return values;
   }

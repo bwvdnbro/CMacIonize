@@ -1,0 +1,77 @@
+# Set up a homogeneous density profile
+DensityFunction:
+  type: Homogeneous
+  density: 5.9786375e6 cm^-3
+  # The temperature and neutral fraction should match the sound speed in the
+  # Bondi profile below
+  temperature: 500. K
+  neutral fraction H: 1.
+
+# Set up a Cartesian grid with 64^3 cells
+DensityGrid:
+  type: Cartesian
+  number of cells: [64, 64, 64]
+
+# Gadget type snapshots with the prefix "bondi_" and a three digit counter
+DensityGridWriter:
+  type: Gadget
+  padding: 3
+  prefix: bondi_
+
+# Set the hydrodynamical parameters
+HydroIntegrator:
+  # We use an isothermal equation of state
+  polytropic index: 1.
+  # We use Bondi boundary conditions: constant inflow based on the Bondi profile
+  # below
+  boundary x high: bondi
+  boundary x low: bondi
+  boundary y high: bondi
+  boundary y low: bondi
+  boundary z high: bondi
+  boundary z low: bondi
+  # We disable radiation: this is a hydro only test
+  radiative heating: false
+  radiative cooling: false
+
+# Bondi parameters. We need to make sure the mass matches the external potential
+# mass and the sound speed matches the initial condition neutral fraction and
+# temperature
+BondiProfile:
+  central mass: 18. Msol
+  Bondi density: 1.e-19 g cm^-3
+  sound speed: 2.031 km s^-1
+  # Disable ionisation: we are interested in the classic Bondi profile
+  ionisation radius: 0. au
+  pressure contrast: 0.
+
+# Set up a mask for the central region of the box where the Bondi profile is
+# divergent
+HydroMask:
+  filename: bondi.yml
+
+# RHD simulation parameters
+RadiationHydrodynamicsSimulation:
+  # Disable radiation
+  number of iterations: 0
+  output folder: .
+  # We just require one snapshot
+  snapshot time: 20. yr
+  total time: 20. yr
+  # Make sure we use the potential and mask
+  use mask: true
+  use potential: true
+
+# Set up a big simulation box
+SimulationBox:
+  anchor: [-50. au, -50. au, -50. au]
+  sides: [100. au, 100. au, 100. au]
+
+# Make sure this matches the Bondi mass parameter
+ExternalPotential:
+  mass: 18. Msol
+  position: [0. m, 0. m, 0. m]
+
+# Disable the default ContinuousPhotonSourceSpectrum to suppress a warning
+ContinuousPhotonSourceSpectrum:
+  type: None

@@ -77,6 +77,24 @@
   serial_timer.start();
 
 /**
+ * @brief Add RHD simulation specific command line options to the command line
+ * parser.
+ *
+ * The following parameters are added:
+ *  - output-time-unit (no abbreviation, optional, string argument): unit used
+ *    for time values that are written to the Log.
+ *
+ * @param parser CommandLineParser that has not yet parsed the command line
+ * options.
+ */
+void RadiationHydrodynamicsSimulation::add_command_line_parameters(
+    CommandLineParser &parser) {
+  parser.add_option("output-time-unit", 0,
+                    "Unit for time stat output to the terminal.",
+                    COMMANDLINEOPTION_STRINGARGUMENT, "s");
+}
+
+/**
  * @brief Perform an RHD simulation.
  *
  * This method reads the following parameters from the parameter file:
@@ -131,6 +149,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   // set the maximum number of openmp threads
   WorkEnvironment::set_max_num_threads(
       parser.get_value< int_fast32_t >("threads"));
+
+  // set the unit for time stats terminal output
+  std::string output_time_unit =
+      parser.get_value< std::string >("output-time-unit");
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -349,8 +371,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     ++num_step;
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
-                        (current_time - actual_timestep), " s, dt = ",
-                        actual_timestep, " s.");
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            current_time - actual_timestep, output_time_unit),
+                        ", dt = ",
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            actual_timestep, output_time_unit),
+                        ".");
     }
 
     // finally: the actual program loop whereby the density grid is ray traced
