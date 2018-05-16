@@ -36,6 +36,7 @@
 #include "AsciiFileDensityFunction.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
 #include "BondiProfileDensityFunction.hpp"
+#include "DiscICDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
@@ -85,6 +86,7 @@ public:
    *    file
    *  - BlockSyntax: Implementation that reads a geometrically constructed
    *    density field from a text file containing block syntax
+   *  - DiscIC: Constant value density field with a tangential velocity profile
    *  - Homogeneous: Constant value density field.
    *  - Interpolated: Implementation that reads a density field from a text file
    *    and interpolates on it
@@ -125,6 +127,8 @@ public:
       return new BlockSyntaxDensityFunction(params, log);
     } else if (type == "BondiProfile") {
       return new BondiProfileDensityFunction(params);
+    } else if (type == "DiscIC") {
+      return new DiscICDensityFunction(params, log);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
     } else if (type == "Interpolated") {

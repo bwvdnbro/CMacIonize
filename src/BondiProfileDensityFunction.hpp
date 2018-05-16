@@ -39,9 +39,6 @@ private:
   /*! @brief Underlying Bondi profile. */
   const BondiProfile _bondi_profile;
 
-  /*! @brief Center of the Bondi profile (in m). */
-  const CoordinateVector<> _center;
-
 public:
   /**
    * @brief ParameterFile constructor.
@@ -67,9 +64,9 @@ public:
                        params.get_physical_value< QUANTITY_LENGTH >(
                            "DensityFunction:ionisation radius", "0. m"),
                        params.get_value< double >(
-                           "DensityFunction:pressure contrast", 32.)),
-        _center(params.get_physical_vector< QUANTITY_LENGTH >(
-            "DensityFunction:center", "[0. m, 0. m, 0. m]")) {}
+                           "DensityFunction:pressure contrast", 32.),
+                       params.get_physical_vector< QUANTITY_LENGTH >(
+                           "DensityFunction:center", "[0. m, 0. m, 0. m]")) {}
 
   /**
    * @brief Function that gives the density for a given cell.
@@ -84,11 +81,11 @@ public:
     const double boltzmann_k =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
-    const CoordinateVector<> position = cell.get_cell_midpoint() - _center;
-    const double radius = position.norm();
-    double density, vR, pressure, neutral_fraction;
-    _bondi_profile.get_hydrodynamic_variables(radius, density, vR, pressure,
-                                              neutral_fraction);
+    const CoordinateVector<> position = cell.get_cell_midpoint();
+    double density, pressure, neutral_fraction;
+    CoordinateVector<> velocity;
+    _bondi_profile.get_hydrodynamic_variables(position, density, velocity,
+                                              pressure, neutral_fraction);
 
     const double number_density = density / hydrogen_mass;
     double temperature = hydrogen_mass * pressure / (boltzmann_k * density);
@@ -102,7 +99,7 @@ public:
     values.set_temperature(temperature);
     values.set_ionic_fraction(ION_H_n, 1.e-6);
     values.set_ionic_fraction(ION_He_n, 1.e-6);
-    values.set_velocity((vR / radius) * position);
+    values.set_velocity(velocity);
 
     return values;
   }

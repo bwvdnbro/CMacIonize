@@ -253,13 +253,9 @@ private:
           gradPR = ngb.get_hydro_variables().primitive_gradients(4);
           vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
         } else if (_hydro_integrator._boundaries[0] == HYDRO_BOUNDARY_BONDI) {
-          const double r = posR.norm();
-          double vR, nfrac;
+          double nfrac;
           _hydro_integrator._bondi_profile->get_hydrodynamic_variables(
-              r, rhoR, vR, PR, nfrac);
-          uR[0] = vR * posR.x() / r;
-          uR[1] = vR * posR.y() / r;
-          uR[2] = vR * posR.z() / r;
+              posR, rhoR, uR, PR, nfrac);
           // we assume the gradients are just zero
         } else {
           // apply boundary conditions
