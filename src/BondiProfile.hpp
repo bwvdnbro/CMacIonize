@@ -136,6 +136,17 @@ private:
   /*! @brief Ionised velocity at the ionisation radius (in m s^-1). */
   double _v_I;
 
+  /*! @brief Location of the center of the Bondi profile (in m). */
+  const CoordinateVector<> _center;
+
+  /*! @brief Characteristic radius of the superimposed velocity profile
+   *  (in m). */
+  const double _vprof_radius;
+
+  /*! @brief Characteristic velocity of the superimposed velocity profile
+   *  (in m s^-1). */
+  const double _vprof_velocity;
+
 public:
   /**
    * @brief Constructor.
@@ -146,17 +157,26 @@ public:
    * @param sound_speed Isothermal sound speed \f$c_s\f$ (in m s^-1).
    * @param ionisation_radius Ionisation radius \f$R_I\f$ (in m).
    * @param pressure_contrast Pressure contrast \f$P_c\f$.
+   * @param center Location of the center of the Bondi profile (in m).
+   * @param vprof_radius Characteristic radius of the superimposed velocity
+   * profile (in m).
+   * @param vprof_velocity Characteristic velocity of the superimposed velocity
+   * profile (in m s^-1).
    */
   inline BondiProfile(const double central_mass, const double bondi_density,
                       const double sound_speed,
                       const double ionisation_radius = 0.,
-                      const double pressure_contrast = 0.)
+                      const double pressure_contrast = 0.,
+                      const CoordinateVector<> center = CoordinateVector<>(0.),
+                      const double vprof_radius = 0.,
+                      const double vprof_velocity = 0.)
       : _bondi_radius(0.5 * PhysicalConstants::get_physical_constant(
                                 PHYSICALCONSTANT_NEWTON_CONSTANT) *
                       central_mass / (sound_speed * sound_speed)),
         _bondi_density(bondi_density), _sound_speed(sound_speed),
         _ionisation_radius(ionisation_radius),
-        _pressure_contrast(pressure_contrast) {
+        _pressure_contrast(pressure_contrast), _center(center),
+        _vprof_radius(vprof_radius), _vprof_velocity(vprof_velocity) {
 
     if (_ionisation_radius > 0. && _pressure_contrast > 0.) {
       const double rBI = _bondi_radius / _ionisation_radius;
@@ -194,6 +214,12 @@ public:
    *  - ionisation radius: Ionisation radius (default: 0. m)
    *  - pressure contrast: Pressure contrast between ionised and neutral region
    *    (default: 32.)
+   *  - center: Location of the center of the Bondi profile
+   *    (default: [0. m, 0. m, 0. m])
+   *  - vprof radius: Characteristic radius of the superimposed velocity profile
+   *    (default: 0. m)
+   *  - vprof velocity: Characteristic velocity of the superimposed velocity
+   *    profile (default: 0. m s^-1)
    *
    * @param params ParameterFile to read from.
    */
@@ -207,23 +233,35 @@ public:
                 "BondiProfile:sound speed", "2.031 km s^-1"),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "BondiProfile:ionisation radius", "0. m"),
-            params.get_value< double >("BondiProfile:pressure contrast", 32.)) {
-  }
+            params.get_value< double >("BondiProfile:pressure contrast", 32.),
+            params.get_physical_vector< QUANTITY_LENGTH >("BondiProfile:center",
+                                                          "[0. m, 0. m, 0. m]"),
+            params.get_physical_value< QUANTITY_LENGTH >(
+                "BondiProfile:vprof radius", "0. m"),
+            params.get_physical_value< QUANTITY_VELOCITY >(
+                "BondiProfile:vprof velocity", "0. m s^-1")) {}
 
   /**
    * @brief Get the density and velocity for the given radius.
    *
-   * @param radius Radius (in m).
+   * @param position Position (in m).
    * @param density Density (in kg m^-3).
    * @param velocity Velocity (in m s^-1).
    * @param pressure Pressure (in kg m^-2 s^-2).
    * @param neutral_fraction Neutral fraction.
    */
-  inline void get_hydrodynamic_variables(const double radius, double &density,
-                                         double &velocity, double &pressure,
+  inline void get_hydrodynamic_variables(const CoordinateVector<> position,
+                                         double &density,
+                                         CoordinateVector<> &velocity,
+                                         double &pressure,
                                          double &neutral_fraction) const {
 
-    const double rB = _bondi_radius / radius;
+    const CoordinateVector<> relpos = position - _center;
+    const double radius = relpos.norm();
+    const double inverse_radius = 1. / radius;
+
+    double vB;
+    const double rB = _bondi_radius * inverse_radius;
     // only apply the profile for large enough radii, as the solution diverges
     // for very small radii
     if (rB < 400.) {
@@ -234,14 +272,14 @@ public:
         v_cs = std::sqrt(-LambertW::lambert_w(lambertarg, 0));
       } else {
         if (radius < _ionisation_radius) {
-          const double RIr = _ionisation_radius / radius;
+          const double RIr = _ionisation_radius * inverse_radius;
           const double RIr2 = RIr * RIr;
           const double vI2_Pccs2 =
               _v_I * _v_I / (_pressure_contrast * _sound_speed * _sound_speed);
           const double lambertarg2 =
               -RIr2 * RIr2 * vI2_Pccs2 *
               std::exp(4. * _bondi_radius / _pressure_contrast *
-                           (1. / _ionisation_radius - 1. / radius) -
+                           (1. / _ionisation_radius - inverse_radius) -
                        vI2_Pccs2);
           v_cs = std::sqrt(-_pressure_contrast *
                            LambertW::lambert_w(lambertarg2, -1));
@@ -250,10 +288,10 @@ public:
         }
       }
 
-      velocity = -v_cs * _sound_speed;
+      vB = -v_cs * _sound_speed;
       if (radius < _ionisation_radius) {
         density = _rho_I * _ionisation_radius * _ionisation_radius * _v_I /
-                  (radius * radius * velocity);
+                  (radius * radius * vB);
         pressure = _sound_speed * _sound_speed * _pressure_contrast * density;
         neutral_fraction = 0.;
       } else {
@@ -263,9 +301,21 @@ public:
       }
     } else {
       density = _bondi_density;
-      velocity = -_sound_speed;
+      vB = -_sound_speed;
       pressure = _sound_speed * _sound_speed * density;
       neutral_fraction = 1.;
+    }
+
+    // convert vB to a velocity vector
+    velocity = vB * inverse_radius * position;
+
+    // now add the tangential velocity profile
+    if (_vprof_radius > 0. && _vprof_velocity > 0.) {
+      const double Rinv2 =
+          1. / (relpos.x() * relpos.x() + relpos.y() * relpos.y());
+      const double vphi = _vprof_velocity * _vprof_radius * Rinv2;
+      velocity[0] -= relpos.y() * vphi;
+      velocity[1] += relpos.x() * vphi;
     }
   }
 };
