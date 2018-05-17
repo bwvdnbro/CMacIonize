@@ -265,7 +265,7 @@ public:
     // only apply the profile for large enough radii, as the solution diverges
     // for very small radii
     // the cutoff here was found by trial and error
-    if (rB < 187.) {
+    if (rB < 184.5) {
       const double rB2 = rB * rB;
       const double lambertarg = -rB2 * rB2 * std::exp(3. - 4. * rB);
       double v_cs;
