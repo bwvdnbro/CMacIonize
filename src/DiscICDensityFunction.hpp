@@ -128,12 +128,11 @@ public:
     // get the cell position
     const CoordinateVector<> p = cell.get_cell_midpoint();
     // get the inverse cylindrical radius
-    const double Rinv = 1. / std::sqrt(p.x() * p.x() + p.y() * p.y());
+    const double Rinv2 = 1. / (p.x() * p.x() + p.y() * p.y());
     // get the velocity
-    const double vphi = _v_C * _r_C * Rinv;
+    const double vphi = _v_C * _r_C * Rinv2;
 
-    const CoordinateVector<> velocity(-vphi * p.y() * Rinv, vphi * p.x() * Rinv,
-                                      0.);
+    const CoordinateVector<> velocity(-vphi * p.y(), vphi * p.x(), 0.);
     values.set_velocity(velocity);
 
     return values;

@@ -264,7 +264,8 @@ public:
     const double rB = _bondi_radius * inverse_radius;
     // only apply the profile for large enough radii, as the solution diverges
     // for very small radii
-    if (rB < 400.) {
+    // the cutoff here was found by trial and error
+    if (rB < 187.) {
       const double rB2 = rB * rB;
       const double lambertarg = -rB2 * rB2 * std::exp(3. - 4. * rB);
       double v_cs;
