@@ -66,22 +66,27 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   double unit_length_in_SI = 1.;
   double unit_density_in_SI = 1.;
   double unit_temperature_in_SI = 1.;
+  double unit_velocity_in_SI = 1.;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_temperature_in_cgs = HDF5Tools::read_attribute< double >(
+    const double unit_temperature_in_cgs = HDF5Tools::read_attribute< double >(
         units, "Unit temperature in cgs (U_T)");
+    const double unit_time_in_cgs =
+        HDF5Tools::read_attribute< double >(units, "Unit time in cgs (U_t)");
     unit_length_in_SI =
         UnitConverter::to_SI< QUANTITY_LENGTH >(unit_length_in_cgs, "cm");
     unit_density_in_SI =
         1. / unit_length_in_SI / unit_length_in_SI / unit_length_in_SI;
     // K is K
     unit_temperature_in_SI = unit_temperature_in_cgs;
+    // seconds are seconds
+    unit_velocity_in_SI = unit_length_in_SI / unit_time_in_cgs;
     HDF5Tools::close_group(units);
   }
 
-  // read cell midpoints, densities, and temperatures
+  // read cell midpoints, number densities and temperatures
   group = HDF5Tools::open_group(file, "/PartType0");
   std::vector< CoordinateVector<> > cell_midpoints =
       HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
@@ -94,6 +99,14 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     neutral_fractions[i] = HDF5Tools::read_dataset< double >(
         group, "NeutralFraction" + get_ion_name(i));
   }
+
+  // velocities (if they exist)
+  std::vector< CoordinateVector<> > cell_velocities;
+  if (HDF5Tools::group_exists(group, "Velocities")) {
+    cell_velocities =
+        HDF5Tools::read_dataset< CoordinateVector<> >(group, "Velocities");
+  }
+
   HDF5Tools::close_group(group);
 
   HDF5Tools::close_file(file);
@@ -105,6 +118,11 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     cell_midpoints[i][2] *= unit_length_in_SI;
     cell_densities[i] *= unit_density_in_SI;
     cell_temperatures[i] *= unit_temperature_in_SI;
+    if (cell_velocities.size() > 0) {
+      cell_velocities[i][0] *= unit_velocity_in_SI;
+      cell_velocities[i][1] *= unit_velocity_in_SI;
+      cell_velocities[i][2] *= unit_velocity_in_SI;
+    }
   }
 
   if (log) {
@@ -137,6 +155,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         IonName ion = static_cast< IonName >(j);
         _cartesian_grid[ix][iy][iz].set_ionic_fraction(ion,
                                                        neutral_fractions[j][i]);
+      }
+      if (cell_velocities.size() > 0) {
+        _cartesian_grid[ix][iy][iz].set_velocity(cell_velocities[i]);
       }
     }
 
@@ -197,6 +218,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         IonName ion = static_cast< IonName >(j);
         values.set_ionic_fraction(ion, neutral_fractions[j][i]);
       }
+      if (cell_velocities.size() > 0) {
+        values.set_velocity(cell_velocities[i]);
+      }
     }
   } else if (type == "Voronoi") {
     _voronoi_generators.resize(cell_midpoints.size());
@@ -209,6 +233,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
         IonName ion = static_cast< IonName >(j);
         _voronoi_densityvalues[i].set_ionic_fraction(ion,
                                                      neutral_fractions[j][i]);
+      }
+      if (cell_velocities.size() > 0) {
+        _voronoi_densityvalues[i].set_velocity(cell_velocities[i]);
       }
     }
     _voronoi_pointlocations =
