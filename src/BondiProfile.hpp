@@ -312,11 +312,11 @@ public:
 
     // now add the tangential velocity profile
     if (_vprof_radius > 0. && _vprof_velocity > 0.) {
-      const double Rinv2 =
-          1. / (relpos.x() * relpos.x() + relpos.y() * relpos.y());
-      const double vphi = _vprof_velocity * _vprof_radius * Rinv2;
-      velocity[0] -= relpos.y() * vphi;
-      velocity[1] += relpos.x() * vphi;
+      const double Rinv =
+          1. / std::sqrt(relpos.x() * relpos.x() + relpos.y() * relpos.y());
+      const double vphi = _vprof_velocity * _vprof_radius * inverse_radius;
+      velocity[0] -= relpos.y() * vphi * Rinv;
+      velocity[1] += relpos.x() * vphi * Rinv;
     }
   }
 };
