@@ -95,8 +95,16 @@ public:
       std::string type =
           blockfile.get_value< std::string >(blockname.str() + "type");
       double exponent = get_exponent(type);
-      double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-          blockname.str() + "number density");
+      double density;
+      if (blockfile.has_value(blockname.str() + "number density")) {
+        density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
+            blockname.str() + "number density");
+      } else {
+        density = blockfile.get_physical_value< QUANTITY_DENSITY >(
+            blockname.str() + "density");
+        density /= PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_PROTON_MASS);
+      }
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
       CoordinateVector<> velocity =
