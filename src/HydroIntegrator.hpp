@@ -252,11 +252,6 @@ private:
           graduR[2] = ngb.get_hydro_variables().primitive_gradients(3);
           gradPR = ngb.get_hydro_variables().primitive_gradients(4);
           vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
-        } else if (_hydro_integrator._boundaries[0] == HYDRO_BOUNDARY_BONDI) {
-          double nfrac;
-          _hydro_integrator._bondi_profile->get_hydrodynamic_variables(
-              posR, rhoR, uR, PR, nfrac);
-          // we assume the gradients are just zero
         } else {
           // apply boundary conditions
           rhoR = rhoL;
@@ -280,6 +275,21 @@ private:
               graduR[(i + 1) % 3][i] = -graduR[(i + 1) % 3][i];
               graduR[(i + 2) % 3][i] = -graduR[(i + 2) % 3][i];
               gradPR[i] = -gradPR[i];
+            } else if ((normal[i] < 0. &&
+                        _hydro_integrator._boundaries[2 * i] ==
+                            HYDRO_BOUNDARY_BONDI) ||
+                       (normal[i] > 0. &&
+                        _hydro_integrator._boundaries[2 * i + 1] ==
+                            HYDRO_BOUNDARY_BONDI)) {
+              double nfrac;
+              _hydro_integrator._bondi_profile->get_hydrodynamic_variables(
+                  posR, rhoR, uR, PR, nfrac);
+              // we assume the gradients are just zero
+              gradrhoR = CoordinateVector<>(0.);
+              graduR[0] = CoordinateVector<>(0.);
+              graduR[1] = CoordinateVector<>(0.);
+              graduR[2] = CoordinateVector<>(0.);
+              gradPR = CoordinateVector<>(0.);
             }
           }
         }
