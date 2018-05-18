@@ -543,6 +543,17 @@ public:
     _used_values[key] = used_value;
     return vvalue;
   }
+
+  /**
+   * @brief Check if the given key exists in the dictionary.
+   *
+   * @param key Key in the dictionary.
+   * @return True if that key exists.
+   */
+  inline bool has_value(std::string key) {
+    uint_fast32_t count = _dictionary.count(key);
+    return count > 0;
+  }
 };
 
 /**

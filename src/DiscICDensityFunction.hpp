@@ -37,7 +37,7 @@
  */
 class DiscICDensityFunction : public DensityFunction {
 private:
-  /*! @brief Single density value for the entire box (in m^-3). */
+  /*! @brief Single density value for the entire box (in kg m^-3). */
   const double _density;
 
   /*! @brief Single temperature value for the entire box (in K). */
@@ -58,7 +58,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param density Single density value for the entire box (in m^-3).
+   * @param density Single density value for the entire box (in kg m^-3).
    * @param temperature Single temperature value for the entire box (in K).
    * @param neutral_fraction_H Single hydrogen neutral fraction value for the
    * entire box.
@@ -83,7 +83,7 @@ public:
    * @brief ParameterFile constructor.
    *
    * Parameters are:
-   *  - density: Constant number density value (default: 100. cm^-3)
+   *  - density: Constant number density value (default: 1.e-19 g cm^-3)
    *  - temperature: Constant initial temperature value (default: 8000. K)
    *  - neutral fraction H: Contant initial neutral fraction value
    *    (default: 1.e-6)
@@ -97,8 +97,8 @@ public:
    */
   DiscICDensityFunction(ParameterFile &params, Log *log = nullptr)
       : DiscICDensityFunction(
-            params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-                "DensityFunction:density", "100. cm^-3"),
+            params.get_physical_value< QUANTITY_DENSITY >(
+                "DensityFunction:density", "1.e-19 g cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "DensityFunction:temperature", "8000. K"),
             params.get_value< double >("DensityFunction:neutral fraction H",
@@ -119,7 +119,11 @@ public:
 
     DensityValues values;
 
-    values.set_number_density(_density);
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double number_density = _density / hydrogen_mass;
+
+    values.set_number_density(number_density);
     values.set_temperature(_temperature);
     values.set_ionic_fraction(ION_H_n, _neutral_fraction_H);
     values.set_ionic_fraction(ION_He_n, 1.e-6);
@@ -128,11 +132,13 @@ public:
     // get the cell position
     const CoordinateVector<> p = cell.get_cell_midpoint();
     // get the inverse cylindrical radius
-    const double Rinv2 = 1. / (p.x() * p.x() + p.y() * p.y());
+    const double Rinv = 1. / std::sqrt(p.x() * p.x() + p.y() * p.y());
+    const double rinv = 1. / p.norm();
     // get the velocity
-    const double vphi = _v_C * _r_C * Rinv2;
+    const double vphi = _v_C * _r_C * rinv;
 
-    const CoordinateVector<> velocity(-vphi * p.y(), vphi * p.x(), 0.);
+    const CoordinateVector<> velocity(-vphi * p.y() * Rinv, vphi * p.x() * Rinv,
+                                      0.);
     values.set_velocity(velocity);
 
     return values;
