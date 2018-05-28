@@ -180,6 +180,7 @@ set(CMACIONIZE_SOURCES
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp
+    ExternalPotentialFactory.hpp
     FaucherGiguerePhotonSourceSpectrum.hpp
     FixedValueCrossSections.hpp
     FixedValueRecombinationRates.hpp

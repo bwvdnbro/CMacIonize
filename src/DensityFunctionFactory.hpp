@@ -37,6 +37,7 @@
 #include "BlockSyntaxDensityFunction.hpp"
 #include "BondiProfileDensityFunction.hpp"
 #include "DiscICDensityFunction.hpp"
+#include "DiscPatchDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
@@ -86,7 +87,9 @@ public:
    *    file
    *  - BlockSyntax: Implementation that reads a geometrically constructed
    *    density field from a text file containing block syntax
+   *  - BondiProfile: Bondi accretion profile.
    *  - DiscIC: Constant value density field with a tangential velocity profile
+   *  - DiscPatch: Hydrostatic disc patch (Creasey, Theuns & Bower, 2013).
    *  - Homogeneous: Constant value density field.
    *  - Interpolated: Implementation that reads a density field from a text file
    *    and interpolates on it
@@ -129,6 +132,8 @@ public:
       return new BondiProfileDensityFunction(params);
     } else if (type == "DiscIC") {
       return new DiscICDensityFunction(params, log);
+    } else if (type == "DiscPatch") {
+      return new DiscPatchDensityFunction(params);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
     } else if (type == "Interpolated") {

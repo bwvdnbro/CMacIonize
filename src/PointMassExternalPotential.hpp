@@ -27,13 +27,14 @@
 #define POINTMASSEXTERNALPOTENTIAL_HPP
 
 #include "CoordinateVector.hpp"
+#include "ExternalPotential.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 
 /**
  * @brief Point mass external potential.
  */
-class PointMassExternalPotential {
+class PointMassExternalPotential : public ExternalPotential {
 private:
   /*! @brief Position of the point mass (in m). */
   const CoordinateVector<> _position;
@@ -72,13 +73,18 @@ public:
                                                        "1. kg")) {}
 
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~PointMassExternalPotential() {}
+
+  /**
    * @brief Get the acceleration caused by the external point mass on a mass at
    * the given position.
    *
    * @param position Position (in m).
    * @return Acceleration (in m s^-2).
    */
-  inline CoordinateVector<>
+  virtual CoordinateVector<>
   get_acceleration(const CoordinateVector<> position) const {
     const CoordinateVector<> dx = position - _position;
     const double r2 = dx.norm2();
