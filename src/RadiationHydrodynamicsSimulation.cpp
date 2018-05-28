@@ -42,6 +42,7 @@
 #include "DiffuseReemissionHandler.hpp"
 #include "DustSimulation.hpp"
 #include "EmissivityCalculator.hpp"
+#include "ExternalPotentialFactory.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
 #include "HydroMask.hpp"
@@ -53,7 +54,6 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
-#include "PointMassExternalPotential.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
@@ -279,11 +279,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   }
 
   // optional external point mass potential
-  PointMassExternalPotential *potential = nullptr;
-  const bool use_potential = params.get_value< bool >(
-      "RadiationHydrodynamicsSimulation:use potential", false);
-  if (use_potential) {
-    potential = new PointMassExternalPotential(params);
+  ExternalPotential *potential =
+      ExternalPotentialFactory::generate(params, log);
+  if (params.get_value< bool >("RadiationHydrodynamicsSimulation:use potential",
+                               false) &&
+      potential == nullptr) {
+    cmac_error("No external potential provided!");
   }
 
   // we are done reading the parameter file
@@ -446,7 +447,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
 
     // update the gravitational accelerations if applicable
-    if (use_potential) {
+    if (potential != nullptr) {
       for (auto it = grid->begin(); it != grid->end(); ++it) {
         const CoordinateVector<> a =
             potential->get_acceleration(it.get_cell_midpoint());
@@ -496,7 +497,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
-  if (use_potential) {
+  if (potential != nullptr) {
     delete potential;
   }
   if (use_mask) {
