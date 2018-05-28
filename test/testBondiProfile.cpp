@@ -46,21 +46,23 @@ int main(int argc, char **argv) {
   std::ofstream ofile("test_bondi.txt");
   ofile << "#x\trho\tv\tP\n";
   for (uint_fast32_t i = 0; i < 1000; ++i) {
-    const double x = 10. * au + (i + 0.5) * au;
-    double rho, v, P, nfrac;
+    const CoordinateVector<> x(10. * au + (i + 0.5) * au, 0., 0.);
+    double rho, P, nfrac;
+    CoordinateVector<> v;
     profile.get_hydrodynamic_variables(x, rho, v, P, nfrac);
-    ofile << x << "\t" << rho << "\t" << v << "\t" << P << "\n";
+    ofile << x.x() << "\t" << rho << "\t" << v.x() << "\t" << P << "\n";
   }
 
   BondiProfile profile_ionised(18. * msol, 1.e-16, 2.031e3, 30. * au, 32.);
   std::ofstream ofile2("test_bondi_ionised.txt");
   ofile2 << "#x\trho\tv\tP\tnfrac\n";
   for (uint_fast32_t i = 0; i < 1000; ++i) {
-    const double x = 10. * au + (i + 0.5) * au;
-    double rho, v, P, nfrac;
+    const CoordinateVector<> x(10. * au + (i + 0.5) * au, 0., 0.);
+    double rho, P, nfrac;
+    CoordinateVector<> v;
     profile_ionised.get_hydrodynamic_variables(x, rho, v, P, nfrac);
-    ofile2 << x << "\t" << rho << "\t" << v << "\t" << P << "\t" << nfrac
-           << "\n";
+    ofile2 << x.x() << "\t" << rho << "\t" << v.x() << "\t" << P << "\t"
+           << nfrac << "\n";
   }
 
   return 0;

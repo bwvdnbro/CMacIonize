@@ -282,7 +282,11 @@ private:
     fc = fa;
     bool mflag = true;
 
-    while (!(fb == 0.) && (std::abs(a - b) > 5.e-9 * (a + b))) {
+    uint_fast32_t itcount = 0;
+    // we bail after 1e4 iterations; whatever the value then should be good
+    // enough
+    while (itcount < 1e4 && !(fb == 0.) &&
+           (std::abs(a - b) > 5.e-9 * (a + b))) {
       if ((fa != fc) && (fb != fc)) {
         // Inverse quadratic interpolation
         const double famfbinv = 1. / (fa - fb);
@@ -328,6 +332,8 @@ private:
         fa = fb;
         fb = tmp;
       }
+
+      ++itcount;
     }
     return b;
   }

@@ -174,6 +174,7 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityMaskFactory.hpp
     DensityValues.hpp
+    DiscICDensityFunction.hpp
     DustPhotonShootJob.hpp
     DustPhotonShootJobMarket.hpp
     EmissivityCalculator.hpp

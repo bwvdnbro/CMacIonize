@@ -39,8 +39,8 @@ private:
   /*! @brief Underlying Bondi profile. */
   const BondiProfile _bondi_profile;
 
-  /*! @brief Center of the Bondi profile (in m). */
-  const CoordinateVector<> _center;
+  /*! @brief Initial neutral fraction of hydrogen. */
+  const double _neutral_fraction;
 
 public:
   /**
@@ -54,6 +54,11 @@ public:
    *  - pressure contrast: Pressure contrast between ionised and neutral region
    *    (default: 32.)
    *  - center: Position of the central point mass (default: [0. m, 0. m, 0. m])
+   *  - vprof radius: Characteristic radius of the superimposed velocity profile
+   *    (default: 0. m)
+   *  - vprof velocity: Characteristic velocity of the superimposed velocity
+   *    profile (default: 0. m s^-1)
+   *  - neutral fraction: Initial neutral fraction of hydrogen (default: 1.)
    *
    * @param params ParameterFile to read from.
    */
@@ -67,9 +72,15 @@ public:
                        params.get_physical_value< QUANTITY_LENGTH >(
                            "DensityFunction:ionisation radius", "0. m"),
                        params.get_value< double >(
-                           "DensityFunction:pressure contrast", 32.)),
-        _center(params.get_physical_vector< QUANTITY_LENGTH >(
-            "DensityFunction:center", "[0. m, 0. m, 0. m]")) {}
+                           "DensityFunction:pressure contrast", 32.),
+                       params.get_physical_vector< QUANTITY_LENGTH >(
+                           "DensityFunction:center", "[0. m, 0. m, 0. m]"),
+                       params.get_physical_value< QUANTITY_LENGTH >(
+                           "DensityFunction:vprof radius", "0. m"),
+                       params.get_physical_value< QUANTITY_VELOCITY >(
+                           "DensityFunction:vprof velocity", "0. m s^-1")),
+        _neutral_fraction(params.get_value< double >(
+            "DensityFunction:neutral fraction", 1.)) {}
 
   /**
    * @brief Function that gives the density for a given cell.
@@ -84,11 +95,11 @@ public:
     const double boltzmann_k =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
-    const CoordinateVector<> position = cell.get_cell_midpoint() - _center;
-    const double radius = position.norm();
-    double density, vR, pressure, neutral_fraction;
-    _bondi_profile.get_hydrodynamic_variables(radius, density, vR, pressure,
-                                              neutral_fraction);
+    const CoordinateVector<> position = cell.get_cell_midpoint();
+    double density, pressure, neutral_fraction;
+    CoordinateVector<> velocity;
+    _bondi_profile.get_hydrodynamic_variables(position, density, velocity,
+                                              pressure, neutral_fraction);
 
     const double number_density = density / hydrogen_mass;
     double temperature = hydrogen_mass * pressure / (boltzmann_k * density);
@@ -100,9 +111,9 @@ public:
     DensityValues values;
     values.set_number_density(number_density);
     values.set_temperature(temperature);
-    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, _neutral_fraction);
     values.set_ionic_fraction(ION_He_n, 1.e-6);
-    values.set_velocity((vR / radius) * position);
+    values.set_velocity(velocity);
 
     return values;
   }
