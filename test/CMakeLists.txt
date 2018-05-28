@@ -1134,6 +1134,7 @@ add_unit_test(NAME testHydroMask
 set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
     testPointMassExternalPotential.cpp
 
+    ../src/ExternalPotential.hpp
     ../src/PointMassExternalPotential.hpp
 )
 add_unit_test(NAME testPointMassExternalPotential
@@ -1147,6 +1148,16 @@ set(TESTMD5SUM_SOURCES
 )
 add_unit_test(NAME testMD5Sum
               SOURCES ${TESTMD5SUM_SOURCES})
+
+## Unit test for DiscPatchExternalPotential
+set(TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES
+    testDiscPatchExternalPotential.cpp
+
+    ../src/DiscPatchDensityFunction.hpp
+    ../src/DiscPatchExternalPotential.hpp
+)
+add_unit_test(NAME testDiscPatchExternalPotential
+              SOURCES ${TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

@@ -69,6 +69,7 @@ SimulationBox:
 
 # Make sure this matches the Bondi mass parameter
 ExternalPotential:
+  type: PointMass
   mass: 18. Msol
   position: [0. m, 0. m, 0. m]
 

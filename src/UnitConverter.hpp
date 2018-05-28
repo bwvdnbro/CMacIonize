@@ -76,6 +76,7 @@ enum Quantity {
   QUANTITY_OPACITY,
   QUANTITY_REACTION_RATE,
   QUANTITY_SURFACE_AREA,
+  QUANTITY_SURFACE_DENSITY,
   QUANTITY_TEMPERATURE,
   QUANTITY_TIME,
   QUANTITY_VELOCITY
@@ -194,6 +195,8 @@ public:
       return "m^3 s^-1";
     case QUANTITY_SURFACE_AREA:
       return "m^2";
+    case QUANTITY_SURFACE_DENSITY:
+      return "kg m^-2";
     case QUANTITY_TEMPERATURE:
       return "K";
     case QUANTITY_TIME:
