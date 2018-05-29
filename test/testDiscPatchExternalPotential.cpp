@@ -41,15 +41,14 @@ int main(int argc, char **argv) {
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_SOLAR_MASS);
   const double pc = UnitConverter::to_SI< QUANTITY_LENGTH >(1., "pc");
   const double surface_density = 12. * Msol / (pc * pc);
-  const double scale_height = pc;
-  DiscPatchExternalPotential potential(0., scale_height, surface_density);
-  DiscPatchDensityFunction density_function(0., scale_height, surface_density,
-                                            1.e4, 1.);
+  DiscPatchExternalPotential potential(0., surface_density, 0.1, 1.e4, 1.e-6);
+  DiscPatchDensityFunction density_function(0., surface_density, 0.1, 1.e4,
+                                            1.e-6);
 
   std::ofstream ofile("test_discpatchexternalpotential.txt");
   ofile << "#z\taz\n";
   for (uint_fast32_t i = 0; i < 100; ++i) {
-    const DummyCell cell(0., 0., -2. * pc + (i + 0.5) * 0.04 * pc);
+    const DummyCell cell(0., 0., -200. * pc + (i + 0.5) * 4. * pc);
     const CoordinateVector<> p = cell.get_cell_midpoint();
     const DensityValues densval = density_function(cell);
     const double a = potential.get_acceleration(p)[2];

@@ -55,22 +55,47 @@ private:
   /*! @brief Constant initial neutral fraction for hydrogen. */
   const double _neutral_fraction;
 
+  /**
+   * @brief Get the mean particle mass corresponding to the given neutral
+   * fraction.
+   *
+   * @param neutral_fraction Neutral fraction of hydrogen.
+   * @return Mean particle mass (in kg).
+   */
+  static inline double get_mean_particle_mass(const double neutral_fraction) {
+    if (neutral_fraction > 0.5) {
+      return PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_PROTON_MASS);
+    } else {
+      return 0.5 * PhysicalConstants::get_physical_constant(
+                       PHYSICALCONSTANT_PROTON_MASS);
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
    *
    * @param disc_z Vertical position of the disc (in m).
-   * @param scale_height Vertical scale height of the disc (in m).
    * @param surface_density Surface density of the disc (in kg m^-2).
+   * @param gas_fraction Fraction of the total mass content of the disc that is
+   * in gas.
    * @param temperature Constant initial temperature (in K).
    * @param neutral_fraction Constant initial neutral fraction for hydrogen.
    */
   inline DiscPatchDensityFunction(const double disc_z,
-                                  const double scale_height,
                                   const double surface_density,
+                                  const double gas_fraction,
                                   const double temperature,
                                   const double neutral_fraction)
-      : _disc_z(disc_z), _b_inv(1. / scale_height),
+      : _disc_z(disc_z),
+        _b_inv(get_mean_particle_mass(neutral_fraction) * M_PI *
+               PhysicalConstants::get_physical_constant(
+                   PHYSICALCONSTANT_NEWTON_CONSTANT) *
+               surface_density /
+               (gas_fraction * PhysicalConstants::get_physical_constant(
+                                   PHYSICALCONSTANT_BOLTZMANN) *
+                temperature)),
         _density_norm(0.5 * surface_density * _b_inv /
                       PhysicalConstants::get_physical_constant(
                           PHYSICALCONSTANT_PROTON_MASS)),
@@ -82,8 +107,9 @@ public:
    * We accept the following parameters (defaults based on Creasey, Theuns &
    * Bower, 2013):
    *  - disc z: Vertical position of the disc (default: 0. pc)
-   *  - scale height: Vertical scale height of the disc (default: 1. pc)
    *  - surface density: Surface density of the disc (default: 12. Msol pc^-2)
+   *  - gas fraction: Fraction of the total mass content of the disc that is in
+   *    gas (default: 0.1)
    *  - temperature: Constant initial temperature (default: 1.e4 K)
    *  - neutral fraction: Constant initial neutral fraction for hydrogen
    *    (default: 1.e-6)
@@ -94,10 +120,9 @@ public:
       : DiscPatchDensityFunction(
             params.get_physical_value< QUANTITY_LENGTH >(
                 "DensityFunction:disc z", "0. m"),
-            params.get_physical_value< QUANTITY_LENGTH >(
-                "DensityFunction:scale height", "1. pc"),
             params.get_physical_value< QUANTITY_SURFACE_DENSITY >(
                 "DensityFunction:surface density", "12. Msol pc^-2"),
+            params.get_value< double >("ExternalPotential:gas fraction", 0.1),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "DensityFunction:temperature", "1.e4 K"),
             params.get_value< double >("DensityFunction:neutral fraction",
