@@ -43,12 +43,8 @@ private:
    *  index of the gas. */
   const double _gm1inv;
 
-  /*! @brief Characteristic radius of the superimposed velocity profile
-   *  (in m). */
-  const double _vprof_radius;
-
-  /*! @brief Characteristic velocity of the superimposed velocity profile
-   *  (in m s^-1). */
+  /*! @brief Characteristic velocity parameter of the velocity profile
+   *  (in m^1.5 s^-1). */
   const double _vprof_velocity;
 
 public:
@@ -57,16 +53,14 @@ public:
    *
    * @param filename Name of the YAML file that contains the mask information.
    * @param gamma Polytropic index \f$\gamma{}\f$ of the gas.
-   * @param vprof_radius Characteristic radius of the superimposed velocity
-   * profile (in m).
-   * @param vprof_velocity Characteristic velocity of the superimposed velocity
-   * profile (in m s^-1).
+   * @param vprof_mass Characteristic mass of the velocity profile (in kg).
    */
   inline HydroMask(std::string filename, const double gamma,
-                   const double vprof_radius = 0.,
-                   const double vprof_velocity = 0.)
+                   const double vprof_mass = 0.)
       : _density_function(filename), _gm1inv(1. / (gamma - 1.)),
-        _vprof_radius(vprof_radius), _vprof_velocity(vprof_velocity) {}
+        _vprof_velocity(std::sqrt(PhysicalConstants::get_physical_constant(
+                                      PHYSICALCONSTANT_NEWTON_CONSTANT) *
+                                  vprof_mass)) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -76,10 +70,7 @@ public:
    *    default, needs to be present)
    *  - polytropic index: Polytropic index of the gas within the mask region
    *    (default: 5. / 3.)
-   *  - vprof radius: Characteristic radius of the superimposed velocity profile
-   *    (default: 0. m)
-   *  - vprof velocity: Characteristic velocity of the superimposed velocity
-   *    profile (default: 0. m s^-1)
+   *  - vprof mass: Characteristic mass of the velocity profile (default: 0. kg)
    *
    * @param params ParameterFile to read.
    */
@@ -87,10 +78,8 @@ public:
       : HydroMask(
             params.get_value< std::string >("HydroMask:filename"),
             params.get_value< double >("HydroMask:polytropic index", 5. / 3.),
-            params.get_physical_value< QUANTITY_LENGTH >(
-                "HydroMask:vprof radius", "0. m"),
-            params.get_physical_value< QUANTITY_VELOCITY >(
-                "HydroMask:vprof velocity", "0. m s^-1")) {}
+            params.get_physical_value< QUANTITY_MASS >("HydroMask:vprof mass",
+                                                       "0. kg")) {}
 
   /**
    * @brief Apply the mask to the given DensityGrid.
@@ -128,11 +117,11 @@ public:
         }
 
         // now add the tangential velocity profile
-        if (_vprof_radius > 0. && _vprof_velocity > 0.) {
+        if (_vprof_velocity > 0.) {
           const double Rinv = 1. / std::sqrt(position.x() * position.x() +
                                              position.y() * position.y());
-          const double rinv = 1. / position.norm();
-          const double vphi = _vprof_velocity * _vprof_radius * rinv;
+          const double rinvsqrt = std::sqrt(1. / position.norm());
+          const double vphi = _vprof_velocity * rinvsqrt;
           velocity[0] -= position.y() * vphi * Rinv;
           velocity[1] += position.x() * vphi * Rinv;
         }
