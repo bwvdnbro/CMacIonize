@@ -37,76 +37,102 @@
  */
 class DiscICDensityFunction : public DensityFunction {
 private:
-  /*! @brief Single density value for the entire box (in kg m^-3). */
-  const double _density;
+  /*! @brief Characteristic radius for the profile to the power 1.5
+   *  (in m^1.5). */
+  const double _r_C_32;
 
-  /*! @brief Single temperature value for the entire box (in K). */
+  /*! @brief Characteristic number density for the profile (in m^-3). */
+  const double _n_C;
+
+  /*! @brief Characteristic velocity parameter for the profile
+   *  (in m^1.5 s^-1). */
+  const double _v_C;
+
+  /*! @brief Initial temperature value for the entire box (in K). */
   const double _temperature;
 
   /*! @brief Initial hydrogen neutral fraction for the entire box. */
   const double _neutral_fraction_H;
 
-  /*! @brief Characteristic radius for the \f$\frac{1}{r}\f$ velocity profile
-   *  (in m). */
-  const double _r_C;
+  /**
+   * @brief Get the argument to the power 1.5.
+   *
+   * @param x Argument.
+   * @return Argument to the power 1.5.
+   */
+  static inline double get_power_3_2(const double x) {
+    const double xsqrt = std::sqrt(x);
+    return xsqrt * x;
+  }
 
-  /*! @brief Characteristic velocity for the \f$\frac{1}{r}\f$ velocity
-   *  profile (in m s^-1). */
-  const double _v_C;
+  /**
+   * @brief Get the mean particle mass corresponding to the given neutral
+   * fraction.
+   *
+   * @param neutral_fraction Neutral fraction of hydrogen.
+   * @return Mean particle mass (in kg).
+   */
+  static inline double get_mean_particle_mass(const double neutral_fraction) {
+    if (neutral_fraction > 0.5) {
+      return PhysicalConstants::get_physical_constant(
+          PHYSICALCONSTANT_PROTON_MASS);
+    } else {
+      return 0.5 * PhysicalConstants::get_physical_constant(
+                       PHYSICALCONSTANT_PROTON_MASS);
+    }
+  }
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param density Single density value for the entire box (in kg m^-3).
-   * @param temperature Single temperature value for the entire box (in K).
-   * @param neutral_fraction_H Single hydrogen neutral fraction value for the
+   * @param r_C Characteristic radius for the profile (in m).
+   * @param rho_C Characteristic density for the profile (in kg m^-3).
+   * @param mass Central mass of the profile (in kg).
+   * @param temperature Initial temperature value for the entire box (in K).
+   * @param neutral_fraction_H Initial hydrogen neutral fraction value for the
    * entire box.
-   * @param r_C Characteristic radius for the velocity profile (in m).
-   * @param v_C Characteristic velocity for the velocity profile (in m s^-1).
    * @param log Log to write logging information to.
    */
-  DiscICDensityFunction(double density = 1., double temperature = 8000.,
-                        double neutral_fraction_H = 1.e-6, double r_C = 1.,
-                        double v_C = 1., Log *log = nullptr)
-      : _density(density), _temperature(temperature),
-        _neutral_fraction_H(neutral_fraction_H), _r_C(r_C), _v_C(v_C) {
-
-    if (log) {
-      log->write_status(
-          "Created HomogeneousDensityFunction with constant density ", _density,
-          " m^-3 and constant temperature ", _temperature, " K.");
-    }
-  }
+  DiscICDensityFunction(const double r_C = 1., const double rho_C = 1.,
+                        const double mass = 1.,
+                        const double temperature = 8000.,
+                        const double neutral_fraction_H = 1.e-6,
+                        Log *log = nullptr)
+      : _r_C_32(get_power_3_2(r_C)),
+        _n_C(rho_C / get_mean_particle_mass(neutral_fraction_H)),
+        _v_C(std::sqrt(PhysicalConstants::get_physical_constant(
+                           PHYSICALCONSTANT_NEWTON_CONSTANT) *
+                       mass)),
+        _temperature(temperature), _neutral_fraction_H(neutral_fraction_H) {}
 
   /**
    * @brief ParameterFile constructor.
    *
    * Parameters are:
-   *  - density: Constant number density value (default: 1.e-19 g cm^-3)
-   *  - temperature: Constant initial temperature value (default: 8000. K)
-   *  - neutral fraction H: Contant initial neutral fraction value
-   *    (default: 1.e-6)
-   *  - characteristic radius: radial parameter for the velocity profile
-   *    (default: 1. m)
-   *  - characteristic velocity: velocity parameter for the velocity profile
-   *    (default: 1. m s^-1)
+   *  - characteristic radius: radial parameter for the profile
+   *    (default: 0.03 pc)
+   *  - characteristic density: density parameter for the profile
+   *    (default: 3.1e3 g cm^-3)
+   *  - mass: Central mass of the profile (default: 20. Msol)
+   *  - temperature: Constant initial temperature value (default: 500. K)
+   *  - neutral fraction H: Contant initial neutral fraction value (default: 1.)
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
   DiscICDensityFunction(ParameterFile &params, Log *log = nullptr)
       : DiscICDensityFunction(
-            params.get_physical_value< QUANTITY_DENSITY >(
-                "DensityFunction:density", "1.e-19 g cm^-3"),
-            params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "DensityFunction:temperature", "8000. K"),
-            params.get_value< double >("DensityFunction:neutral fraction H",
-                                       1.e-6),
             params.get_physical_value< QUANTITY_LENGTH >(
-                "DensityFunction:characteristic radius", "1. m"),
-            params.get_physical_value< QUANTITY_VELOCITY >(
-                "DensityFunction:characteristic velocity", "1. m s^-1"),
+                "DensityFunction:characteristic radius", "0.03 pc"),
+            params.get_physical_value< QUANTITY_DENSITY >(
+                "DensityFunction:characteristic density", "3.1e3 g cm^-3"),
+            params.get_physical_value< QUANTITY_MASS >("DensityFunction:mass",
+                                                       "20. Msol"),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "DensityFunction:temperature", "500. K"),
+            params.get_value< double >("DensityFunction:neutral fraction H",
+                                       1.),
             log) {}
 
   /**
@@ -117,29 +143,25 @@ public:
    */
   virtual DensityValues operator()(const Cell &cell) const {
 
+    // get the cell position
+    const CoordinateVector<> p = cell.get_cell_midpoint();
+    // get the inverse radius and its square root
+    const double rinv = 1. / p.norm();
+    const double rinvsqrt = std::sqrt(rinv);
+    // get the inverse cylindrical radius
+    const double Rinv = 1. / std::sqrt(p.x() * p.x() + p.y() * p.y());
+
+    const double number_density = _n_C * _r_C_32 * rinv * rinvsqrt;
+    const double vnorm = _v_C * rinvsqrt * Rinv;
+    const CoordinateVector<> velocity(-p.y() * vnorm, p.x() * vnorm, 0.);
+
     DensityValues values;
 
-    const double hydrogen_mass =
-        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
-    const double number_density = _density / hydrogen_mass;
-
     values.set_number_density(number_density);
+    values.set_velocity(velocity);
     values.set_temperature(_temperature);
     values.set_ionic_fraction(ION_H_n, _neutral_fraction_H);
     values.set_ionic_fraction(ION_He_n, 1.e-6);
-
-    /// velocity field
-    // get the cell position
-    const CoordinateVector<> p = cell.get_cell_midpoint();
-    // get the inverse cylindrical radius
-    const double Rinv = 1. / std::sqrt(p.x() * p.x() + p.y() * p.y());
-    const double rinv = 1. / p.norm();
-    // get the velocity
-    const double vphi = _v_C * _r_C * rinv;
-
-    const CoordinateVector<> velocity(-vphi * p.y() * Rinv, vphi * p.x() * Rinv,
-                                      0.);
-    values.set_velocity(velocity);
 
     return values;
   }
