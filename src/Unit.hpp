@@ -122,7 +122,7 @@ public:
    * @return Reference to the resulting Unit.
    */
   inline Unit &operator^=(int_fast32_t power) {
-    if (power > 0) {
+    if (power >= 0) {
       int_fast32_t i = 1;
       double value = _value;
       while (i < power) {

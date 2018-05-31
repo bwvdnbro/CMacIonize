@@ -359,7 +359,7 @@ public:
         ++pos2;
       }
       const std::string powstr = name.substr(pos1, pos2 - pos1);
-      const int_fast32_t power = strtod(powstr.c_str(), nullptr);
+      const int_fast32_t power = std::stoi(powstr.c_str());
       unit ^= power;
       if (pos2 == name.size()) {
         return unit;
@@ -393,7 +393,7 @@ public:
           ++pos2;
         }
         const std::string powstr = name.substr(pos1, pos2 - pos1);
-        const int_fast32_t power = strtod(powstr.c_str(), nullptr);
+        const int_fast32_t power = std::stoi(powstr.c_str());
         unit2 ^= power;
       }
       unit *= unit2;
