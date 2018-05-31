@@ -337,6 +337,11 @@ else(Boost_FOUND)
   add_configuration_option(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
 
+# Check if we need to enable architecture specific CPU instructions
+if(ACTIVATE_ARCH_NATIVE)
+  add_compiler_flag("-march=native" OPTIONAL)
+endif(ACTIVATE_ARCH_NATIVE)
+
 # Check if we need to activate fast math
 if(ACTIVATE_FAST_MATH)
   message(STATUS "Activating Fast Math...")
