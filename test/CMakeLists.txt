@@ -344,6 +344,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
+    ../src/DensityGridWriterFields.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp

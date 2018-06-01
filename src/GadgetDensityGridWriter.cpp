@@ -201,7 +201,7 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
 #endif
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     HDF5Tools::create_dataset< double >(
-        group, "PhotoIonizationRate" + get_ion_name(i), numpart[0]);
+        group, "PhotoionizationRate" + get_ion_name(i), numpart[0]);
 #endif
   }
 #ifdef DO_OUTPUT_HEATING
