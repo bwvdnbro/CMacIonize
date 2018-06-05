@@ -41,9 +41,15 @@ enum DensityGridField {
   DENSITYGRIDFIELD_NUMBER_DENSITY,
   DENSITYGRIDFIELD_TEMPERATURE,
   DENSITYGRIDFIELD_NEUTRAL_FRACTION,
+#ifdef DO_OUTPUT_COOLING
   DENSITYGRIDFIELD_COOLING,
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   DENSITYGRIDFIELD_PHOTOIONIZATION_RATE,
+#endif
+#ifdef DO_OUTPUT_HEATING
   DENSITYGRIDFIELD_HEATING_RATE,
+#endif
   DENSITYGRIDFIELD_COSMIC_RAY_FACTOR,
   DENSITYGRIDFIELD_DENSITY,
   DENSITYGRIDFIELD_VELOCITIES,
@@ -85,12 +91,18 @@ public:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+#ifdef DO_OUTPUT_COOLING
     case DENSITYGRIDFIELD_COOLING:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+#endif
+#ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+#endif
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
     case DENSITYGRIDFIELD_DENSITY:
@@ -125,12 +137,18 @@ public:
       return "Temperature";
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       return "NeutralFraction";
+#ifdef DO_OUTPUT_COOLING
     case DENSITYGRIDFIELD_COOLING:
       return "Cooling";
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
       return "PhotoionizationRate";
+#endif
+#ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
       return "HeatingRate";
+#endif
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
       return "CosmicRayFactor";
     case DENSITYGRIDFIELD_DENSITY:
@@ -150,6 +168,56 @@ public:
   }
 
   /**
+   * @brief Default output flag for the given field.
+   *
+   * @param field_name DensityGridField.
+   * @param hydro Flag specifying if hydro is active or not.
+   * @return Whether or not the field is present by default.
+   */
+  inline static uint_fast32_t default_flag(const int_fast32_t field_name,
+                                           const bool hydro) {
+    switch (field_name) {
+    case DENSITYGRIDFIELD_COORDINATES:
+      return true;
+    case DENSITYGRIDFIELD_NUMBER_DENSITY:
+      // only output if hydro is not active
+      return !hydro;
+    case DENSITYGRIDFIELD_TEMPERATURE:
+      return false;
+    case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
+      // only output hydrogen neutral fraction
+      return true;
+#ifdef DO_OUTPUT_COOLING
+    case DENSITYGRIDFIELD_COOLING:
+      return false;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+    case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
+      return false;
+#endif
+#ifdef DO_OUTPUT_HEATING
+    case DENSITYGRIDFIELD_HEATING_RATE:
+      return false;
+#endif
+    case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
+      return false;
+    case DENSITYGRIDFIELD_DENSITY:
+      return hydro;
+    case DENSITYGRIDFIELD_VELOCITIES:
+      return hydro;
+    case DENSITYGRIDFIELD_PRESSURE:
+      return hydro;
+    case DENSITYGRIDFIELD_MASS:
+      return false;
+    case DENSITYGRIDFIELD_TOTAL_ENERGY:
+      return false;
+    default:
+      cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
+      return false;
+    }
+  }
+
+  /**
    * @brief Is the given DensityGridField an ion property?
    *
    * @param field_name DensityGridField.
@@ -165,12 +233,18 @@ public:
       return false;
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       return true;
+#ifdef DO_OUTPUT_COOLING
     case DENSITYGRIDFIELD_COOLING:
       return true;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
       return true;
+#endif
+#ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
       return false;
+#endif
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
       return false;
     case DENSITYGRIDFIELD_DENSITY:
@@ -205,12 +279,18 @@ public:
       return false;
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       return false;
+#ifdef DO_OUTPUT_COOLING
     case DENSITYGRIDFIELD_COOLING:
       return false;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
       return false;
+#endif
+#ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
       return true;
+#endif
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
       return false;
     case DENSITYGRIDFIELD_DENSITY:
@@ -223,6 +303,52 @@ public:
       return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
+    default:
+      cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
+      return false;
+    }
+  }
+
+  /**
+   * @brief Is the given DensityGridField a hydro property?
+   *
+   * @param field_name DensityGridField.
+   * @return True if the given field is a hydro only property.
+   */
+  inline static bool is_hydro_property(const int_fast32_t field_name) {
+    switch (field_name) {
+    case DENSITYGRIDFIELD_COORDINATES:
+      return false;
+    case DENSITYGRIDFIELD_NUMBER_DENSITY:
+      return false;
+    case DENSITYGRIDFIELD_TEMPERATURE:
+      return false;
+    case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
+      return false;
+#ifdef DO_OUTPUT_COOLING
+    case DENSITYGRIDFIELD_COOLING:
+      return false;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+    case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
+      return false;
+#endif
+#ifdef DO_OUTPUT_HEATING
+    case DENSITYGRIDFIELD_HEATING_RATE:
+      return false;
+#endif
+    case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
+      return false;
+    case DENSITYGRIDFIELD_DENSITY:
+      return true;
+    case DENSITYGRIDFIELD_VELOCITIES:
+      return true;
+    case DENSITYGRIDFIELD_PRESSURE:
+      return true;
+    case DENSITYGRIDFIELD_MASS:
+      return true;
+    case DENSITYGRIDFIELD_TOTAL_ENERGY:
+      return true;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -299,15 +425,14 @@ public:
     switch (field_name) {
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       return it.get_ionization_variables().get_ionic_fraction(ion_name);
-    case DENSITYGRIDFIELD_COOLING:
 #ifdef DO_OUTPUT_COOLING
+    case DENSITYGRIDFIELD_COOLING:
       return it.get_ionization_variables().get_cooling(ion_name);
-#else
-      cmac_error("Code was not configured with cooling output support!");
-      return 0.;
 #endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
       return it.get_ionization_variables().get_mean_intensity(ion_name);
+#endif
     default:
       cmac_error("Not a scalar ion DensityGridField: %" PRIiFAST32, field_name);
       return 0.;
@@ -328,8 +453,10 @@ public:
                                   const int_fast32_t heating_property_name,
                                   const DensityGrid::iterator &it) {
     switch (field_name) {
+#ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
       return it.get_ionization_variables().get_heating(heating_property_name);
+#endif
     default:
       cmac_error("Not a scalar heating property DensityGridField: %" PRIiFAST32,
                  field_name);
@@ -341,7 +468,27 @@ private:
   /*! @brief Field flag for each DensityGridField. For fields with multiple
    *  variables this flag encodes the variables that should be written to the
    *  output. */
-  uint_least8_t _field_flag[DENSITYGRIDFIELD_NUMBER];
+  uint_least32_t _field_flag[DENSITYGRIDFIELD_NUMBER];
+
+  /*! @brief Number of active fields of each type. */
+  uint_least8_t _field_count[DENSITYGRIDFIELDTYPE_NUMBER];
+
+  /**
+   * @brief Return the number of 1 bits in the given sequence.
+   *
+   * Note that some cpus have built in instructions for this. We do not
+   * particularly care about speed, so we just use a naive loop.
+   *
+   * @param sequence 32-bit sequence.
+   * @return Number of 1 bits.
+   */
+  inline static uint_fast8_t bit_count(const uint_fast32_t sequence) {
+    uint_fast8_t count = 0;
+    for (uint_fast8_t i = 0; i < 32; ++i) {
+      count += (sequence >> i) & 1;
+    }
+    return count;
+  }
 
 public:
   /**
@@ -351,54 +498,148 @@ public:
    */
   inline DensityGridWriterFields(const bool hydro) {
 
-    _field_flag[DENSITYGRIDFIELD_COORDINATES] = 1;
-    _field_flag[DENSITYGRIDFIELD_NUMBER_DENSITY] = 1;
-    _field_flag[DENSITYGRIDFIELD_TEMPERATURE] = 0;
-    _field_flag[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 1;
-    _field_flag[DENSITYGRIDFIELD_COOLING] = 0;
-    _field_flag[DENSITYGRIDFIELD_PHOTOIONIZATION_RATE] = 0;
-    _field_flag[DENSITYGRIDFIELD_HEATING_RATE] = 0;
-    _field_flag[DENSITYGRIDFIELD_COSMIC_RAY_FACTOR] = 0;
-    _field_flag[DENSITYGRIDFIELD_DENSITY] = hydro;
-    _field_flag[DENSITYGRIDFIELD_VELOCITIES] = hydro;
-    _field_flag[DENSITYGRIDFIELD_PRESSURE] = hydro;
-    _field_flag[DENSITYGRIDFIELD_MASS] = 0;
-    _field_flag[DENSITYGRIDFIELD_TOTAL_ENERGY] = 0;
+    for (int_fast32_t type = 0; type < DENSITYGRIDFIELDTYPE_NUMBER; ++type) {
+      _field_count[type] = 0;
+    }
+
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
+         ++property) {
+      _field_flag[property] = default_flag(property, hydro);
+      _field_count[get_type(property)] += bit_count(_field_flag[property]);
+    }
+  }
+
+  /**
+   * @brief Test constructor.
+   *
+   * Set up a DensityGridWriterFields instance with hand selected output fields.
+   *
+   * @param flags Field flags.
+   */
+  inline DensityGridWriterFields(
+      const uint_fast32_t flags[DENSITYGRIDFIELD_NUMBER]) {
+
+    for (int_fast32_t type = 0; type < DENSITYGRIDFIELDTYPE_NUMBER; ++type) {
+      _field_count[type] = 0;
+    }
+
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
+         ++property) {
+      _field_flag[property] = flags[property];
+      _field_count[get_type(property)] += bit_count(_field_flag[property]);
+    }
+  }
+
+  /**
+   * @brief Copy constructor.
+   *
+   * @param copy DensityGridWriterFields instance to copy from.
+   */
+  inline DensityGridWriterFields(const DensityGridWriterFields &copy) {
+
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
+         ++property) {
+      _field_flag[property] = copy._field_flag[property];
+    }
+
+    for (int_fast32_t type = 0; type < DENSITYGRIDFIELDTYPE_NUMBER; ++type) {
+      _field_count[type] = copy._field_count[type];
+    }
   }
 
   /**
    * @brief ParameterFile constructor.
    *
    * @param params ParameterFile to read from.
+   * @param hydro Flag specifying whether or not hydro is active.
    */
-  inline DensityGridWriterFields(ParameterFile &params) {
+  inline DensityGridWriterFields(ParameterFile &params, const bool hydro) {
 
-    for (uint_fast32_t property = 0; property < DENSITYGRIDFIELDTYPE_NUMBER;
+    for (int_fast32_t type = 0; type < DENSITYGRIDFIELDTYPE_NUMBER; ++type) {
+      _field_count[type] = 0;
+    }
+
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
          ++property) {
-      const std::string prop_name = get_name(property);
-      if (is_ion_property(property)) {
-        _field_flag[property] = 0;
-        for (uint_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-          const std::string name = prop_name + get_ion_name(ion);
-          _field_flag[property] += params.get_value< uint_fast32_t >(
-                                       "DensityGridWriterFields:" + name, false)
-                                   << ion;
+      if (hydro || !is_hydro_property(property)) {
+        const std::string prop_name = get_name(property);
+        if (is_ion_property(property)) {
+          _field_flag[property] = 0;
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+            const std::string name = prop_name + get_ion_name(ion);
+            _field_flag[property] +=
+                params.get_value< uint_fast32_t >(
+                    "DensityGridWriterFields:" + name,
+                    default_flag(property, hydro) & (1u << ion))
+                << ion;
+          }
+        } else if (is_heating_property(property)) {
+          _field_flag[property] = 0;
+          for (int_fast32_t heating = 0; heating < NUMBER_OF_HEATINGTERMS;
+               ++heating) {
+            const std::string name = prop_name + get_ion_name(heating);
+            _field_flag[property] +=
+                params.get_value< uint_fast32_t >(
+                    "DensityGridWriterFields:" + name,
+                    default_flag(property, hydro) & (1u << heating))
+                << heating;
+          }
+        } else {
+          // normal single variable property
+          _field_flag[property] = params.get_value< uint_fast32_t >(
+              "DensityGridWriterFields:" + prop_name,
+              default_flag(property, hydro));
         }
-      } else if (is_heating_property(property)) {
-        _field_flag[property] = 0;
-        for (uint_fast32_t heating = 0; heating < NUMBER_OF_HEATINGTERMS;
-             ++heating) {
-          const std::string name = prop_name + get_ion_name(heating);
-          _field_flag[property] += params.get_value< uint_fast32_t >(
-                                       "DensityGridWriterFields:" + name, false)
-                                   << heating;
-        }
+        _field_count[get_type(property)] += bit_count(_field_flag[property]);
       } else {
-        // normal single variable property
-        _field_flag[property] = params.get_value< bool >(
-            "DensityGridWriterFields:" + prop_name, false);
+        _field_flag[property] = false;
       }
     }
+  }
+
+  /**
+   * @brief Check if the given field should be output.
+   *
+   * @param field_name DensityGridField.
+   * @return True if the field should be output.
+   */
+  inline bool field_present(const int_fast32_t field_name) const {
+    return _field_flag[field_name] > 0;
+  }
+
+  /**
+   * @brief Check if the given ion for the given field should be output.
+   *
+   * @param field_name DensityGridField.
+   * @param ion IonName.
+   * @return True if the given ion for the given field should be output.
+   */
+  inline bool ion_present(const int_fast32_t field_name,
+                          const int_fast32_t ion) const {
+    return (_field_flag[field_name] >> ion) > 0;
+  }
+
+  /**
+   * @brief Check if the given heating term for the given field should be
+   * output.
+   *
+   * @param field_name DensityGridField.
+   * @param heating HeatingTermName.
+   * @return True if the given ion for the given field should be output.
+   */
+  inline bool heatingterm_present(const int_fast32_t field_name,
+                                  const int_fast32_t heating) const {
+    return (_field_flag[field_name] >> heating) > 0;
+  }
+
+  /**
+   * @brief Get the number of fields of the given type that should be output.
+   *
+   * @param type DensityGridFieldType.
+   * @return Number of fields of the given type that should be output.
+   */
+  inline uint_fast32_t get_field_count(const int_fast32_t type) const {
+    return _field_count[type];
   }
 };
 

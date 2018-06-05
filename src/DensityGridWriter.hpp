@@ -43,6 +43,13 @@ protected:
   /*! @brief Name of the folder where output files should be placed. */
   std::string _output_folder;
 
+  /*! @brief Flag specifying whether or not hydro is active. */
+  const bool _hydro;
+
+  /*! @brief DensityGridWriterFields containing information about which
+   *  output fields are active. */
+  const DensityGridWriterFields _fields;
+
   /*! @brief Log to write logging information to. */
   Log *_log;
 
@@ -52,10 +59,15 @@ public:
    *
    * @param output_folder Name of the folder where output files should be
    * placed.
+   * @param hydro Flag specifying whether or not hydro is active.
+   * @param fields DensityGridWriterFields containing information about which
+   * output fields are active.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(std::string output_folder, Log *log = nullptr)
-      : _output_folder(output_folder), _log(log) {
+  DensityGridWriter(std::string output_folder, const bool hydro,
+                    const DensityGridWriterFields fields, Log *log)
+      : _output_folder(output_folder), _hydro(hydro), _fields(fields),
+        _log(log) {
 
     if (_log) {
       _log->write_status("Output will be written to ", _output_folder, "/");
