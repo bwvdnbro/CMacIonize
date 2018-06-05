@@ -28,6 +28,7 @@
 
 #include "Error.hpp"
 
+#include <cinttypes>
 #include <string>
 
 /**
@@ -101,7 +102,7 @@ public:
    * @param line Valid EmissionLine.
    * @return Emissivity of that line (in J m^-3s^-1).
    */
-  inline double get_emissivity(EmissionLine line) const {
+  inline double get_emissivity(int_fast32_t line) const {
     return _emissivities[line];
   }
 
@@ -111,7 +112,7 @@ public:
    * @param line Valid EmissionLine.
    * @param emissivity Emissivity of that line (in J m^-3s^-1).
    */
-  inline void set_emissivity(EmissionLine line, double emissivity) {
+  inline void set_emissivity(int_fast32_t line, double emissivity) {
     _emissivities[line] = emissivity;
   }
 
@@ -121,7 +122,7 @@ public:
    * @param line Valid EmissionLine.
    * @return std::string containing the name of the EmissionLine.
    */
-  static inline std::string get_name(EmissionLine line) {
+  static inline std::string get_name(int_fast32_t line) {
     switch (line) {
     case EMISSIONLINE_HAlpha:
       return "Halpha";
@@ -204,7 +205,7 @@ public:
     case EMISSIONLINE_WFC2_F675W:
       return "WFC2_F675W";
     default:
-      cmac_error("Unknown EmissionLine: %i!", line);
+      cmac_error("Unknown EmissionLine: %" PRIiFAST32 "!", line);
       return "";
     }
   }

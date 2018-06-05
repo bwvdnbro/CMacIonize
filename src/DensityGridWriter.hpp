@@ -26,6 +26,7 @@
 #ifndef DENSITYGRIDWRITER_HPP
 #define DENSITYGRIDWRITER_HPP
 
+#include "DensityGridWriterFields.hpp"
 #include "Log.hpp"
 
 #include <cstdlib>

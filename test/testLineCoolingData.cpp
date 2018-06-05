@@ -27,6 +27,7 @@
 #include "LineCoolingData.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
+#include <cinttypes>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -73,23 +74,18 @@ int main(int argc, char **argv) {
                     sw_fortran);
 
   LineCoolingData data;
-  for (uint_fast8_t i = 0; i < 10; ++i) {
-    for (uint_fast8_t j = 0; j < 10; ++j) {
-      const LineCoolingDataFiveLevelElement element =
-          static_cast< LineCoolingDataFiveLevelElement >(i);
-      const LineCoolingDataTransition transition =
-          static_cast< LineCoolingDataTransition >(j);
-      cmac_status("Testing element %u, transition %u", i, j);
-      assert_condition(ea_fortran[10 * i + j] ==
+  for (uint_fast8_t element = 0; element < 10; ++element) {
+    for (uint_fast8_t transition = 0; transition < 10; ++transition) {
+      cmac_status("Testing element %" PRIuFAST8 ", transition %" PRIuFAST8,
+                  element, transition);
+      assert_condition(ea_fortran[10 * element + transition] ==
                        data.get_transition_probability(element, transition));
-      assert_values_equal_rel(en_fortran[10 * i + j],
+      assert_values_equal_rel(en_fortran[10 * element + transition],
                               data.get_energy_difference(element, transition),
                               1.e-13);
     }
     for (uint_fast8_t j = 0; j < 5; ++j) {
-      const LineCoolingDataFiveLevelElement element =
-          static_cast< LineCoolingDataFiveLevelElement >(i);
-      assert_condition(sw_fortran[5 * i + j] ==
+      assert_condition(sw_fortran[5 * element + j] ==
                        data.get_statistical_weight(element, j));
     }
   }

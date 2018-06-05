@@ -109,17 +109,15 @@ private:
       // make a local copy of the contents of the cell
       // the contents of the new cells is initialized to these values
       double old_ionic_fractions[NUMBER_OF_IONNAMES];
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
-        old_ionic_fractions[i] =
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        old_ionic_fractions[ion] =
             _ionization_variables[index].get_ionic_fraction(ion);
       }
       double old_temperature = _ionization_variables[index].get_temperature();
       double old_reemission_probability[NUMBER_OF_REEMISSIONPROBABILITIES];
-      for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
-        const ReemissionProbabilityName name =
-            static_cast< ReemissionProbabilityName >(i);
-        old_reemission_probability[i] =
+      for (int_fast32_t name = 0; name < NUMBER_OF_REEMISSIONPROBABILITIES;
+           ++name) {
+        old_reemission_probability[name] =
             _ionization_variables[index].get_reemission_probability(name);
       }
       // we will not copy the heating terms for the same reasons
@@ -127,12 +125,11 @@ private:
       // nor the Lock, since that has to be unique
 
       cell.create_all_cells(level, level + 1);
-      for (uint_fast32_t ic = 0; ic < 8; ++ic) {
-        AMRChildPosition child = static_cast< AMRChildPosition >(ic);
+      for (uint_fast32_t child = 0; child < 8; ++child) {
         AMRGridCell< cellsize_t > *childcell = cell.get_child(child);
         // the first child replaces the old cell
         // the other children are added to the end of the internal lists
-        if (ic == 0) {
+        if (child == 0) {
           _emissivities[index] = nullptr;
           _cells[index] = childcell;
           childcell->value() = index;
@@ -142,25 +139,21 @@ private:
 
           _ionization_variables[index].set_number_density(
               funcvalue.get_number_density());
-          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            const IonName ion = static_cast< IonName >(i);
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             _ionization_variables[index].set_ionic_fraction(
-                ion, old_ionic_fractions[i]);
+                ion, old_ionic_fractions[ion]);
           }
           _ionization_variables[index].set_temperature(old_temperature);
-          for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
-            const ReemissionProbabilityName name =
-                static_cast< ReemissionProbabilityName >(i);
+          for (int_fast32_t name = 0; name < NUMBER_OF_REEMISSIONPROBABILITIES;
+               ++name) {
             _ionization_variables[index].set_reemission_probability(
-                name, old_reemission_probability[i]);
+                name, old_reemission_probability[name]);
           }
-          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            const IonName ion = static_cast< IonName >(i);
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             _ionization_variables[index].set_mean_intensity(ion, 0.);
           }
-          for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-            const HeatingTermName heating_term =
-                static_cast< HeatingTermName >(i);
+          for (int_fast32_t heating_term = 0;
+               heating_term < NUMBER_OF_HEATINGTERMS; ++heating_term) {
             _ionization_variables[index].set_heating(heating_term, 0.);
           }
         } else {
@@ -177,26 +170,22 @@ private:
 
           _ionization_variables.back().set_number_density(
               funcvalue.get_number_density());
-          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            const IonName ion = static_cast< IonName >(i);
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             _ionization_variables.back().set_ionic_fraction(
-                ion, old_ionic_fractions[i]);
+                ion, old_ionic_fractions[ion]);
           }
           _ionization_variables.back().set_temperature(old_temperature);
-          for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
-            const ReemissionProbabilityName name =
-                static_cast< ReemissionProbabilityName >(i);
+          for (int_fast32_t name = 0; name < NUMBER_OF_REEMISSIONPROBABILITIES;
+               ++name) {
             _ionization_variables.back().set_reemission_probability(
-                name, old_reemission_probability[i]);
+                name, old_reemission_probability[name]);
           }
           // not really necessary, as values will be initialized to zero...
-          for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-            const IonName ion = static_cast< IonName >(i);
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             _ionization_variables.back().set_mean_intensity(ion, 0.);
           }
-          for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-            const HeatingTermName heating_term =
-                static_cast< HeatingTermName >(i);
+          for (int_fast32_t heating_term = 0;
+               heating_term < NUMBER_OF_HEATINGTERMS; ++heating_term) {
             _ionization_variables.back().set_heating(heating_term, 0.);
           }
         }

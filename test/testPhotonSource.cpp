@@ -47,7 +47,7 @@ public:
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(IonName ion, double energy) const {
+  virtual double get_cross_section(int_fast32_t ion, double energy) const {
     return 1.;
   }
 };

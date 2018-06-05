@@ -230,24 +230,23 @@ private:
    *  \left(2\pi{}m_e\right)^\frac{3}{2}\f$ (in K^0.5 m^3 s^-1). */
   double _collision_strength_prefactor;
 
-  void compute_level_populations(LineCoolingDataFiveLevelElement element,
+  void compute_level_populations(int_fast32_t element,
                                  double collision_strength_prefactor, double T,
                                  double Tinv, double logT,
                                  double level_populations[5]) const;
 
-  double compute_level_population(LineCoolingDataTwoLevelElement element,
+  double compute_level_population(int_fast32_t element,
                                   double collision_strength_prefactor, double T,
                                   double Tinv, double logT) const;
 
 public:
   LineCoolingData();
 
-  double get_transition_probability(LineCoolingDataFiveLevelElement element,
-                                    LineCoolingDataTransition transition) const;
-  double get_energy_difference(LineCoolingDataFiveLevelElement element,
-                               LineCoolingDataTransition transition) const;
-  double get_statistical_weight(LineCoolingDataFiveLevelElement element,
-                                uint_fast8_t level) const;
+  double get_transition_probability(int_fast32_t element,
+                                    int_fast32_t transition) const;
+  double get_energy_difference(int_fast32_t element,
+                               int_fast32_t transition) const;
+  double get_statistical_weight(int_fast32_t element, uint_fast8_t level) const;
 
   static int solve_system_of_linear_equations(double A[5][5], double B[5]);
 

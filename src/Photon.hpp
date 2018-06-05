@@ -146,7 +146,7 @@ public:
    * @param ion IonName of a valid ion.
    * @return Ionization cross section (in m^2).
    */
-  inline double get_cross_section(IonName ion) const {
+  inline double get_cross_section(int_fast32_t ion) const {
     return _cross_sections[ion];
   }
 
@@ -200,7 +200,7 @@ public:
    * @param ion IonName of a valid ion.
    * @param cross_section Ionization cross section (in m^2).
    */
-  inline void set_cross_section(IonName ion, double cross_section) {
+  inline void set_cross_section(int_fast32_t ion, double cross_section) {
     _cross_sections[ion] = cross_section;
   }
 
