@@ -162,7 +162,7 @@ public:
    * @param ion IonName.
    * @return Ionic fraction of that ion.
    */
-  inline double get_ionic_fraction(IonName ion) const {
+  inline double get_ionic_fraction(int_fast32_t ion) const {
     return _ionic_fractions[ion];
   }
 
@@ -172,7 +172,7 @@ public:
    * @param ion IonName.
    * @param ionic_fraction New ionic fraction for that ion.
    */
-  inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
+  inline void set_ionic_fraction(int_fast32_t ion, double ionic_fraction) {
     _ionic_fractions[ion] = ionic_fraction;
   }
 
@@ -183,7 +183,7 @@ public:
    * @return Mean intensity integral for that ion (without normalization factor,
    * in m^3).
    */
-  inline double get_mean_intensity(IonName ion) const {
+  inline double get_mean_intensity(int_fast32_t ion) const {
     return _mean_intensity[ion];
   }
 
@@ -194,7 +194,7 @@ public:
    * @param mean_intensity New value for the mean intensity integral for that
    * ion (without normalization factor, in m^3).
    */
-  inline void set_mean_intensity(IonName ion, double mean_intensity) {
+  inline void set_mean_intensity(int_fast32_t ion, double mean_intensity) {
     _mean_intensity[ion] = mean_intensity;
   }
 
@@ -205,7 +205,7 @@ public:
    * @param ion IonName.
    * @param increment Increment (without normalization factor, in m^3).
    */
-  inline void increase_mean_intensity(IonName ion, double increment) {
+  inline void increase_mean_intensity(int_fast32_t ion, double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_mean_intensity[ion], increment);
 #else
@@ -219,8 +219,7 @@ public:
    * @param name ReemissionProbabilityName.
    * @return Probability for reemission in that specific channel.
    */
-  inline double
-  get_reemission_probability(ReemissionProbabilityName name) const {
+  inline double get_reemission_probability(int_fast32_t name) const {
     return _reemission_probabilities[name];
   }
 
@@ -231,7 +230,7 @@ public:
    * @param reemission_probability New reemission probability for that specific
    * channel.
    */
-  inline void set_reemission_probability(ReemissionProbabilityName name,
+  inline void set_reemission_probability(int_fast32_t name,
                                          double reemission_probability) {
     _reemission_probabilities[name] = reemission_probability;
   }
@@ -242,9 +241,7 @@ public:
    * @param name HeatingTermName.
    * @return Heating term (without normalization factor, in m^3 s^-1).
    */
-  inline double get_heating(HeatingTermName name) const {
-    return _heating[name];
-  }
+  inline double get_heating(int_fast32_t name) const { return _heating[name]; }
 
   /**
    * @brief Set the heating term with the given name.
@@ -253,7 +250,7 @@ public:
    * @param heating New value for the heating term (without normalization
    * factor, in m^3 s^-1).
    */
-  inline void set_heating(HeatingTermName name, double heating) {
+  inline void set_heating(int_fast32_t name, double heating) {
     _heating[name] = heating;
   }
 
@@ -263,7 +260,7 @@ public:
    * @param name HeatingTermName.
    * @param increment Increment (without normalization factor, in m^3 s^-1).
    */
-  inline void increase_heating(HeatingTermName name, double increment) {
+  inline void increase_heating(int_fast32_t name, double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_heating[name], increment);
 #else
@@ -278,7 +275,7 @@ public:
    * @param ion IonName.
    * @return Cooling rate (in J s^-1).
    */
-  inline double get_cooling(IonName ion) const { return _cooling[ion]; }
+  inline double get_cooling(int_fast32_t ion) const { return _cooling[ion]; }
 
   /**
    * @brief Set the cooling rate for the ion with the given name.
@@ -286,7 +283,7 @@ public:
    * @param ion IonName.
    * @param cooling Cooling rate (in J s^-1).
    */
-  inline void set_cooling(IonName ion, double cooling) {
+  inline void set_cooling(int_fast32_t ion, double cooling) {
     _cooling[ion] = cooling;
   }
 #endif

@@ -591,16 +591,15 @@ void TemperatureCalculator::calculate_temperature(
 
   // normalize the mean intensity integrals
   double j[NUMBER_OF_IONNAMES];
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    j[i] = jfac * ionization_variables.get_mean_intensity(ion);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    j[ion] = jfac * ionization_variables.get_mean_intensity(ion);
   }
 
   // normalize the heating integrals
   double h[NUMBER_OF_HEATINGTERMS];
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    h[i] = hfac * ionization_variables.get_heating(heating_term);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    h[heating_term] = hfac * ionization_variables.get_heating(heating_term);
   }
 
   // iteratively find the equilibrium temperature by starting from a guess and
@@ -779,17 +778,16 @@ void TemperatureCalculator::calculate_temperature(
 
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   // set the mean intensity values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    ionization_variables.set_mean_intensity(ion, j[i]);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    ionization_variables.set_mean_intensity(ion, j[ion]);
   }
 #endif
 
 #ifdef DO_OUTPUT_HEATING
   // set the heating term values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    ionization_variables.set_heating(heating_term, h[i]);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    ionization_variables.set_heating(heating_term, h[heating_term]);
   }
 #endif
 }

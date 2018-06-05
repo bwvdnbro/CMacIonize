@@ -264,9 +264,8 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
 
       ndens[index] = ionization_variables.get_number_density();
       temp[index] = ionization_variables.get_temperature();
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
-        nfrac[i][index] = ionization_variables.get_ionic_fraction(ion);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        nfrac[ion][index] = ionization_variables.get_ionic_fraction(ion);
 #ifdef DO_OUTPUT_COOLING
         cooling[i][index] = ionization_variables.get_cooling(ion);
 #endif
@@ -276,9 +275,10 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
 #endif
       }
 #ifdef DO_OUTPUT_HEATING
-      for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-        const HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-        heating[i][index] = ionization_variables.get_heating(heating_term);
+      for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+           ++heating_term) {
+        heating[heating_term][index] =
+            ionization_variables.get_heating(heating_term);
       }
 #endif
 #ifdef DO_OUTPUT_COSMIC_RAY_FACTORS

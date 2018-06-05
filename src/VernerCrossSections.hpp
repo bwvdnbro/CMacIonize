@@ -98,7 +98,7 @@ public:
   double get_cross_section_verner(uint_fast8_t nz, uint_fast8_t ne,
                                   uint_fast8_t is, double e) const;
 
-  virtual double get_cross_section(IonName ion, double energy) const;
+  virtual double get_cross_section(int_fast32_t ion, double energy) const;
 };
 
 #endif // CROSSSECTIONS_HPP

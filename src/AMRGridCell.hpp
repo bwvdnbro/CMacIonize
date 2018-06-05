@@ -499,7 +499,7 @@ public:
    * @param position AMRChildPosition.
    * @return AMRGridCell at that position.
    */
-  inline AMRGridCell *get_child(AMRChildPosition position) const {
+  inline AMRGridCell *get_child(int_fast32_t position) const {
     return _children[position];
   }
 

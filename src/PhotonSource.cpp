@@ -188,8 +188,7 @@ PhotonSource::~PhotonSource() { delete _reemission_handler; }
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
 
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    const IonName ion = static_cast< IonName >(i);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }

@@ -64,8 +64,7 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
   boost::python::numeric::array arr(handle);
 
   boost::python::dict result;
-  for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-    EmissionLine line = static_cast< EmissionLine >(i);
+  for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
     result[EmissivityValues::get_name(line)] = arr.copy();
   }
 
@@ -73,8 +72,7 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
       calculator.get_emissivities(grid);
 
   for (size_t i = 0; i < emissivities.size(); ++i) {
-    for (int_fast32_t j = 0; j < NUMBER_OF_EMISSIONLINES; ++j) {
-      EmissionLine line = static_cast< EmissionLine >(j);
+    for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
       result[EmissivityValues::get_name(line)][i] =
           emissivities[i].get_emissivity(line);
     }
