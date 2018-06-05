@@ -151,10 +151,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       uint_fast32_t iz = _ncell.z() * p.z() / _box.get_sides().z();
       _cartesian_grid[ix][iy][iz].set_number_density(cell_densities[i]);
       _cartesian_grid[ix][iy][iz].set_temperature(cell_temperatures[i]);
-      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
-        IonName ion = static_cast< IonName >(j);
-        _cartesian_grid[ix][iy][iz].set_ionic_fraction(ion,
-                                                       neutral_fractions[j][i]);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        _cartesian_grid[ix][iy]
+                       [iz].set_ionic_fraction(ion, neutral_fractions[ion][i]);
       }
       if (cell_velocities.size() > 0) {
         _cartesian_grid[ix][iy][iz].set_velocity(cell_velocities[i]);
@@ -214,9 +213,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       DensityValues &values = cell->value();
       values.set_number_density(cell_densities[i]);
       values.set_temperature(cell_temperatures[i]);
-      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
-        IonName ion = static_cast< IonName >(j);
-        values.set_ionic_fraction(ion, neutral_fractions[j][i]);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        values.set_ionic_fraction(ion, neutral_fractions[ion][i]);
       }
       if (cell_velocities.size() > 0) {
         values.set_velocity(cell_velocities[i]);
@@ -229,10 +227,9 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       _voronoi_generators[i] = cell_midpoints[i] + _box.get_anchor();
       _voronoi_densityvalues[i].set_number_density(cell_densities[i]);
       _voronoi_densityvalues[i].set_temperature(cell_temperatures[i]);
-      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
-        IonName ion = static_cast< IonName >(j);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         _voronoi_densityvalues[i].set_ionic_fraction(ion,
-                                                     neutral_fractions[j][i]);
+                                                     neutral_fractions[ion][i]);
       }
       if (cell_velocities.size() > 0) {
         _voronoi_densityvalues[i].set_velocity(cell_velocities[i]);

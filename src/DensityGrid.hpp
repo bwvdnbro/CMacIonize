@@ -139,9 +139,8 @@ protected:
       // then lock the cell and do all additions as fast as possible
       double dmean_intensity[NUMBER_OF_IONNAMES];
       const double dsw = ds * photon.get_weight();
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
-        dmean_intensity[i] = dsw * photon.get_cross_section(ion);
+      for (int ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        dmean_intensity[ion] = dsw * photon.get_cross_section(ion);
       }
       const double dheating_H = dmean_intensity[ION_H_n] *
                                 (photon.get_energy() - _ionization_energy_H);
@@ -150,9 +149,8 @@ protected:
 #ifndef USE_LOCKFREE
       cell.lock();
 #endif
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
-        ionization_variables.increase_mean_intensity(ion, dmean_intensity[i]);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        ionization_variables.increase_mean_intensity(ion, dmean_intensity[ion]);
       }
       ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
       ionization_variables.increase_heating(HEATINGTERM_He, dheating_He);
@@ -426,12 +424,10 @@ public:
      * currently pointing to.
      */
     inline void reset_mean_intensities() {
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
-      for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-        const HeatingTermName name = static_cast< HeatingTermName >(i);
+      for (int_fast32_t name = 0; name < NUMBER_OF_HEATINGTERMS; ++name) {
         _grid->_ionization_variables[_index].set_heating(name, 0.);
       }
     }
@@ -452,7 +448,7 @@ public:
      * @param ion IonName.
      * @return Mean intensity (in m^3).
      */
-    inline double get_mean_intensity(IonName ion) const {
+    inline double get_mean_intensity(int_fast32_t ion) const {
       return _grid->_ionization_variables[_index].get_mean_intensity(ion);
     }
 
@@ -702,8 +698,7 @@ public:
       IonizationVariables &ionization_variables = it.get_ionization_variables();
       ionization_variables.set_number_density(vals.get_number_density());
       ionization_variables.set_temperature(vals.get_temperature());
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         ionization_variables.set_ionic_fraction(ion,
                                                 vals.get_ionic_fraction(ion));
       }

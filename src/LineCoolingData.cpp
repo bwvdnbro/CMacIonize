@@ -27,6 +27,7 @@
 #include "LineCoolingData.hpp"
 #include "Error.hpp"
 #include "PhysicalConstants.hpp"
+#include <cinttypes>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -1400,9 +1401,9 @@ LineCoolingData::LineCoolingData() {
  * @param transition LineCoolingDataTransition.
  * @return Transition probability for deexcitation (in s^-1).
  */
-double LineCoolingData::get_transition_probability(
-    LineCoolingDataFiveLevelElement element,
-    LineCoolingDataTransition transition) const {
+double
+LineCoolingData::get_transition_probability(int_fast32_t element,
+                                            int_fast32_t transition) const {
   return _five_level_transition_probability[element][transition];
 }
 
@@ -1414,9 +1415,8 @@ double LineCoolingData::get_transition_probability(
  * @param transition LineCoolingDataTransition.
  * @return Energy difference (in K).
  */
-double LineCoolingData::get_energy_difference(
-    LineCoolingDataFiveLevelElement element,
-    LineCoolingDataTransition transition) const {
+double LineCoolingData::get_energy_difference(int_fast32_t element,
+                                              int_fast32_t transition) const {
   return _five_level_energy_difference[element][transition];
 }
 
@@ -1427,9 +1427,8 @@ double LineCoolingData::get_energy_difference(
  * @param level Level index.
  * @return Statistical weight.
  */
-double
-LineCoolingData::get_statistical_weight(LineCoolingDataFiveLevelElement element,
-                                        uint_fast8_t level) const {
+double LineCoolingData::get_statistical_weight(int_fast32_t element,
+                                               uint_fast8_t level) const {
   return 1. / _five_level_inverse_statistical_weight[element][level];
 }
 
@@ -1568,9 +1567,8 @@ int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
  * @param level_populations Array to store the resulting level populations in.
  */
 void LineCoolingData::compute_level_populations(
-    LineCoolingDataFiveLevelElement element,
-    double collision_strength_prefactor, double T, double Tinv, double logT,
-    double level_populations[5]) const {
+    int_fast32_t element, double collision_strength_prefactor, double T,
+    double Tinv, double logT, double level_populations[5]) const {
 
   double level_matrix[5][5];
   // initialize the level populations and the first row of the coefficient
@@ -1690,11 +1688,13 @@ void LineCoolingData::compute_level_populations(
       solve_system_of_linear_equations(level_matrix, level_populations);
   if (status != 0) {
     // something went wrong
-    cmac_error("Singular matrix in level population computation (element: %i, "
-               "T: %g, n_e: %g)!",
-               element, 1. / Tinv,
-               collision_strength_prefactor /
-                   (_collision_strength_prefactor * std::sqrt(Tinv)));
+    cmac_error(
+        "Singular matrix in level population computation (element: %" PRIiFAST32
+        ", "
+        "T: %g, n_e: %g)!",
+        element, 1. / Tinv,
+        collision_strength_prefactor /
+            (_collision_strength_prefactor * std::sqrt(Tinv)));
   }
 }
 
@@ -1711,8 +1711,8 @@ void LineCoolingData::compute_level_populations(
  * @return Level population of the second level.
  */
 double LineCoolingData::compute_level_population(
-    LineCoolingDataTwoLevelElement element, double collision_strength_prefactor,
-    double T, double Tinv, double logT) const {
+    int_fast32_t element, double collision_strength_prefactor, double T,
+    double Tinv, double logT) const {
 
   // note that we need to remap the element index
   const int_fast32_t i = element - LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
@@ -1790,10 +1790,8 @@ double LineCoolingData::get_cooling(
   /// five level elements
 
   double cooling = 0.;
-  for (int_fast32_t j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
-
-    const LineCoolingDataFiveLevelElement element =
-        static_cast< LineCoolingDataFiveLevelElement >(j);
+  for (int_fast32_t element = 0; element < LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+       ++element) {
 
     double level_populations[5];
     compute_level_populations(element, collision_strength_prefactor,
@@ -1803,34 +1801,34 @@ double LineCoolingData::get_cooling(
     // this corresponds to equation (3.29) in Osterbrock & Ferland (2006)
     const double cl2 =
         level_populations[1] *
-        _five_level_transition_probability[j][TRANSITION_0_to_1] *
-        _five_level_energy_difference[j][TRANSITION_0_to_1];
+        _five_level_transition_probability[element][TRANSITION_0_to_1] *
+        _five_level_energy_difference[element][TRANSITION_0_to_1];
     const double cl3 =
         level_populations[2] *
-        (_five_level_transition_probability[j][TRANSITION_0_to_2] *
-             _five_level_energy_difference[j][TRANSITION_0_to_2] +
-         _five_level_transition_probability[j][TRANSITION_1_to_2] *
-             _five_level_energy_difference[j][TRANSITION_1_to_2]);
+        (_five_level_transition_probability[element][TRANSITION_0_to_2] *
+             _five_level_energy_difference[element][TRANSITION_0_to_2] +
+         _five_level_transition_probability[element][TRANSITION_1_to_2] *
+             _five_level_energy_difference[element][TRANSITION_1_to_2]);
     const double cl4 =
         level_populations[3] *
-        (_five_level_transition_probability[j][TRANSITION_0_to_3] *
-             _five_level_energy_difference[j][TRANSITION_0_to_3] +
-         _five_level_transition_probability[j][TRANSITION_1_to_3] *
-             _five_level_energy_difference[j][TRANSITION_1_to_3] +
-         _five_level_transition_probability[j][TRANSITION_2_to_3] *
-             _five_level_energy_difference[j][TRANSITION_2_to_3]);
+        (_five_level_transition_probability[element][TRANSITION_0_to_3] *
+             _five_level_energy_difference[element][TRANSITION_0_to_3] +
+         _five_level_transition_probability[element][TRANSITION_1_to_3] *
+             _five_level_energy_difference[element][TRANSITION_1_to_3] +
+         _five_level_transition_probability[element][TRANSITION_2_to_3] *
+             _five_level_energy_difference[element][TRANSITION_2_to_3]);
     const double cl5 =
         level_populations[4] *
-        (_five_level_transition_probability[j][TRANSITION_0_to_4] *
-             _five_level_energy_difference[j][TRANSITION_0_to_4] +
-         _five_level_transition_probability[j][TRANSITION_1_to_4] *
-             _five_level_energy_difference[j][TRANSITION_1_to_4] +
-         _five_level_transition_probability[j][TRANSITION_2_to_4] *
-             _five_level_energy_difference[j][TRANSITION_2_to_4] +
-         _five_level_transition_probability[j][TRANSITION_3_to_4] *
-             _five_level_energy_difference[j][TRANSITION_3_to_4]);
+        (_five_level_transition_probability[element][TRANSITION_0_to_4] *
+             _five_level_energy_difference[element][TRANSITION_0_to_4] +
+         _five_level_transition_probability[element][TRANSITION_1_to_4] *
+             _five_level_energy_difference[element][TRANSITION_1_to_4] +
+         _five_level_transition_probability[element][TRANSITION_2_to_4] *
+             _five_level_energy_difference[element][TRANSITION_2_to_4] +
+         _five_level_transition_probability[element][TRANSITION_3_to_4] *
+             _five_level_energy_difference[element][TRANSITION_3_to_4]);
 
-    cooling += abundances[j] * kb * (cl2 + cl3 + cl4 + cl5);
+    cooling += abundances[element] * kb * (cl2 + cl3 + cl4 + cl5);
   }
 
   /// 2 level atoms
@@ -1839,12 +1837,10 @@ double LineCoolingData::get_cooling(
   const int_fast32_t offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   for (int_fast32_t i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int_fast32_t index = i + offset;
-    const LineCoolingDataTwoLevelElement element =
-        static_cast< LineCoolingDataTwoLevelElement >(index);
+    const int_fast32_t element = i + offset;
     const double level_population = compute_level_population(
         element, collision_strength_prefactor, temperature, Tinv, logT);
-    cooling += abundances[index] * kb * _two_level_energy_difference[i] *
+    cooling += abundances[element] * kb * _two_level_energy_difference[i] *
                _two_level_transition_probability[i] * level_population;
   }
 
@@ -1881,59 +1877,57 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
 
   /// 5 level elements
 
-  for (int_fast32_t j = 0; j < LINECOOLINGDATA_NUMFIVELEVELELEMENTS; ++j) {
+  for (int_fast32_t element = 0; element < LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
+       ++element) {
 
-    line_strengths[j].resize(NUMBER_OF_TRANSITIONS);
-
-    const LineCoolingDataFiveLevelElement element =
-        static_cast< LineCoolingDataFiveLevelElement >(j);
+    line_strengths[element].resize(NUMBER_OF_TRANSITIONS);
 
     double level_populations[5];
     compute_level_populations(element, collision_strength_prefactor,
                               temperature, Tinv, logT, level_populations);
 
-    const double prefactor = abundances[j] * kb;
+    const double prefactor = abundances[element] * kb;
 
-    line_strengths[j][TRANSITION_0_to_1] =
+    line_strengths[element][TRANSITION_0_to_1] =
         prefactor * level_populations[1] *
-        _five_level_transition_probability[j][TRANSITION_0_to_1] *
-        _five_level_energy_difference[j][TRANSITION_0_to_1];
-    line_strengths[j][TRANSITION_0_to_2] =
+        _five_level_transition_probability[element][TRANSITION_0_to_1] *
+        _five_level_energy_difference[element][TRANSITION_0_to_1];
+    line_strengths[element][TRANSITION_0_to_2] =
         prefactor * level_populations[2] *
-        _five_level_transition_probability[j][TRANSITION_0_to_2] *
-        _five_level_energy_difference[j][TRANSITION_0_to_2];
-    line_strengths[j][TRANSITION_1_to_2] =
+        _five_level_transition_probability[element][TRANSITION_0_to_2] *
+        _five_level_energy_difference[element][TRANSITION_0_to_2];
+    line_strengths[element][TRANSITION_1_to_2] =
         prefactor * level_populations[2] *
-        _five_level_transition_probability[j][TRANSITION_1_to_2] *
-        _five_level_energy_difference[j][TRANSITION_1_to_2];
-    line_strengths[j][TRANSITION_0_to_3] =
+        _five_level_transition_probability[element][TRANSITION_1_to_2] *
+        _five_level_energy_difference[element][TRANSITION_1_to_2];
+    line_strengths[element][TRANSITION_0_to_3] =
         prefactor * level_populations[3] *
-        _five_level_transition_probability[j][TRANSITION_0_to_3] *
-        _five_level_energy_difference[j][TRANSITION_0_to_3];
-    line_strengths[j][TRANSITION_1_to_3] =
+        _five_level_transition_probability[element][TRANSITION_0_to_3] *
+        _five_level_energy_difference[element][TRANSITION_0_to_3];
+    line_strengths[element][TRANSITION_1_to_3] =
         prefactor * level_populations[3] *
-        _five_level_transition_probability[j][TRANSITION_1_to_3] *
-        _five_level_energy_difference[j][TRANSITION_1_to_3];
-    line_strengths[j][TRANSITION_2_to_3] =
+        _five_level_transition_probability[element][TRANSITION_1_to_3] *
+        _five_level_energy_difference[element][TRANSITION_1_to_3];
+    line_strengths[element][TRANSITION_2_to_3] =
         prefactor * level_populations[3] *
-        _five_level_transition_probability[j][TRANSITION_2_to_3] *
-        _five_level_energy_difference[j][TRANSITION_2_to_3];
-    line_strengths[j][TRANSITION_0_to_4] =
+        _five_level_transition_probability[element][TRANSITION_2_to_3] *
+        _five_level_energy_difference[element][TRANSITION_2_to_3];
+    line_strengths[element][TRANSITION_0_to_4] =
         prefactor * level_populations[4] *
-        _five_level_transition_probability[j][TRANSITION_0_to_4] *
-        _five_level_energy_difference[j][TRANSITION_0_to_4];
-    line_strengths[j][TRANSITION_1_to_4] =
+        _five_level_transition_probability[element][TRANSITION_0_to_4] *
+        _five_level_energy_difference[element][TRANSITION_0_to_4];
+    line_strengths[element][TRANSITION_1_to_4] =
         prefactor * level_populations[4] *
-        _five_level_transition_probability[j][TRANSITION_1_to_4] *
-        _five_level_energy_difference[j][TRANSITION_1_to_4];
-    line_strengths[j][TRANSITION_2_to_4] =
+        _five_level_transition_probability[element][TRANSITION_1_to_4] *
+        _five_level_energy_difference[element][TRANSITION_1_to_4];
+    line_strengths[element][TRANSITION_2_to_4] =
         prefactor * level_populations[4] *
-        _five_level_transition_probability[j][TRANSITION_2_to_4] *
-        _five_level_energy_difference[j][TRANSITION_2_to_4];
-    line_strengths[j][TRANSITION_3_to_4] =
+        _five_level_transition_probability[element][TRANSITION_2_to_4] *
+        _five_level_energy_difference[element][TRANSITION_2_to_4];
+    line_strengths[element][TRANSITION_3_to_4] =
         prefactor * level_populations[4] *
-        _five_level_transition_probability[j][TRANSITION_3_to_4] *
-        _five_level_energy_difference[j][TRANSITION_3_to_4];
+        _five_level_transition_probability[element][TRANSITION_3_to_4] *
+        _five_level_energy_difference[element][TRANSITION_3_to_4];
   }
 
   /// 2 level elements
@@ -1942,19 +1936,16 @@ std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
   const int_fast32_t offset = LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
   for (int_fast32_t i = 0; i < LINECOOLINGDATA_NUMTWOLEVELELEMENTS; ++i) {
 
-    const int_fast32_t index = i + offset;
+    const int_fast32_t element = i + offset;
 
-    line_strengths[index].resize(1);
-
-    const LineCoolingDataTwoLevelElement element =
-        static_cast< LineCoolingDataTwoLevelElement >(index);
+    line_strengths[element].resize(1);
 
     const double level_population = compute_level_population(
         element, collision_strength_prefactor, temperature, Tinv, logT);
 
-    line_strengths[index][0] = abundances[index] * kb * level_population *
-                               _two_level_energy_difference[i] *
-                               _two_level_transition_probability[i];
+    line_strengths[element][0] = abundances[element] * kb * level_population *
+                                 _two_level_energy_difference[i] *
+                                 _two_level_transition_probability[i];
   }
 
   return line_strengths;

@@ -85,7 +85,7 @@ public:
    * @param ion IonName of a valid ion.
    * @param ionic_fraction New value for the ionic fraction.
    */
-  inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
+  inline void set_ionic_fraction(int_fast32_t ion, double ionic_fraction) {
     _ionic_fraction[ion] = ionic_fraction;
   }
 
@@ -147,7 +147,7 @@ public:
    * @param ion IonName of a valid ion.
    * @return Ionic fraction.
    */
-  inline double get_ionic_fraction(IonName ion) const {
+  inline double get_ionic_fraction(int_fast32_t ion) const {
     return _ionic_fraction[ion];
   }
 

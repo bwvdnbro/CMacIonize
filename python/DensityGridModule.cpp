@@ -147,9 +147,8 @@ static double get_single_variable(DensityGrid::iterator &cell,
                                   std::string name) {
   // names are ordered alphabetically
   if (name.find("NeutralFraction") == 0) {
-    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      if (name == "NeutralFraction" + get_ion_name(i)) {
-        IonName ion = static_cast< IonName >(i);
+    for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+      if (name == "NeutralFraction" + get_ion_name(ion)) {
         return cell.get_ionization_variables().get_ionic_fraction(ion);
       }
     }
