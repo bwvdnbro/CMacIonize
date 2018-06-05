@@ -58,9 +58,23 @@ int main(int argc, char **argv) {
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
+    uint_fast32_t fields[DENSITYGRIDFIELD_NUMBER];
+    // disable all fields by default
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
+         ++property) {
+      fields[property] = 0;
+    }
+    // now activate the fields we test below
+    fields[DENSITYGRIDFIELD_COORDINATES] = true;
+    fields[DENSITYGRIDFIELD_NUMBER_DENSITY] = true;
+    fields[DENSITYGRIDFIELD_TEMPERATURE] = true;
+    // output both the H and He neutral fractions
+    fields[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 3;
+
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);
-    GadgetDensityGridWriter writer("testgrid", ".", &log);
+    GadgetDensityGridWriter writer("testgrid", ".", false,
+                                   DensityGridWriterFields(fields), &log);
     writer.write(grid, 0, params);
   }
 

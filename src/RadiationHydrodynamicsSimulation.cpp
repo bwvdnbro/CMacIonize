@@ -251,7 +251,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       Utilities::get_absolute_path(params.get_value< std::string >(
           "RadiationHydrodynamicsSimulation:output folder", "."));
   DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(output_folder, params, log);
+      DensityGridWriterFactory::generate(output_folder, params, true, log);
 
   uint_fast32_t nloop = params.get_value< uint_fast32_t >(
       "RadiationHydrodynamicsSimulation:number of iterations", 10);
