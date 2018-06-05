@@ -79,12 +79,14 @@ public:
    * placed.
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
+   * @param hydro Flag specifying whether or not hydro is active.
    * @param log Log to write logging information to.
    * @return Pointer to a newly created DensityGridWriter implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
   static DensityGridWriter *generate(std::string output_folder,
                                      ParameterFile &params,
+                                     const bool hydro = false,
                                      Log *log = nullptr) {
 
     const std::string type =
@@ -99,7 +101,7 @@ public:
       return new AsciiFileDensityGridWriter(output_folder, params, log);
 #ifdef HAVE_HDF5
     } else if (type == "Gadget") {
-      return new GadgetDensityGridWriter(output_folder, params, log);
+      return new GadgetDensityGridWriter(output_folder, params, hydro, log);
 #endif
     } else {
       cmac_error("Unknown DensityGridWriter type: \"%s\".", type.c_str());

@@ -40,7 +40,9 @@
  */
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
     std::string prefix, std::string output_folder, Log *log)
-    : DensityGridWriter(output_folder, log), _prefix(prefix) {}
+    : DensityGridWriter(output_folder, false, DensityGridWriterFields(false),
+                        log),
+      _prefix(prefix) {}
 
 /**
  * @brief ParameterFile constructor.
