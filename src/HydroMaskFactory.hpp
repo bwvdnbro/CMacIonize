@@ -32,6 +32,7 @@
 
 // implementations
 #include "BlockSyntaxHydroMask.hpp"
+#include "RescaledICHydroMask.hpp"
 
 /**
  * @brief Factory for HydroMask instances.
@@ -44,6 +45,8 @@ public:
    *
    * Supported types are (default: None):
    *  - BlockSyntax: BlockSyntaxHydroMask
+   *  - RescaledIC: Rescaled version of the initial condition of the cells
+   *    within the mask
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
@@ -62,6 +65,8 @@ public:
 
     if (type == "BlockSyntax") {
       return new BlockSyntaxHydroMask(params);
+    } else if ("RescaledIC") {
+      return new RescaledICHydroMask(params);
     } else if ("None") {
       return nullptr;
     } else {
