@@ -25,6 +25,7 @@
  */
 #include "RadiationHydrodynamicsSimulation.hpp"
 #include "Abundances.hpp"
+#include "BlockSyntaxHydroMask.hpp"
 #include "Box.hpp"
 #include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
@@ -45,7 +46,6 @@
 #include "ExternalPotentialFactory.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
-#include "HydroMask.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
 #include "LineCoolingData.hpp"
@@ -271,11 +271,11 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       charge_transfer_rates, params, log);
 
   // optional mask to fix the hydrodynamics in some parts of the box
-  HydroMask *mask = nullptr;
+  BlockSyntaxHydroMask *mask = nullptr;
   const bool use_mask = params.get_value< bool >(
       "RadiationHydrodynamicsSimulation:use mask", false);
   if (use_mask) {
-    mask = new HydroMask(params);
+    mask = new BlockSyntaxHydroMask(params);
   }
 
   // optional external point mass potential
