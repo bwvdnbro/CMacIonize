@@ -28,13 +28,13 @@
 #define BLOCKSYNTAXHYDROMASK_HPP
 
 #include "BlockSyntaxDensityFunction.hpp"
-#include "DensityGrid.hpp"
+#include "HydroMask.hpp"
 
 /**
  * @brief Masked out region where the hydrodynamics is artificially reset to a
  * constant value.
  */
-class BlockSyntaxHydroMask {
+class BlockSyntaxHydroMask : public HydroMask {
 private:
   /*! @brief BlockSyntaxDensityFunction that contains the masked out blocks. */
   const BlockSyntaxDensityFunction _density_function;
@@ -80,6 +80,10 @@ public:
             params.get_value< double >("HydroMask:polytropic index", 5. / 3.),
             params.get_physical_value< QUANTITY_MASS >("HydroMask:vprof mass",
                                                        "0. kg")) {}
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~BlockSyntaxHydroMask() {}
 
   /**
    * @brief Apply the mask to the given DensityGrid.
@@ -89,7 +93,7 @@ public:
    *
    * @param grid DensityGrid to update.
    */
-  inline void apply_mask(DensityGrid &grid) const {
+  virtual void apply_mask(DensityGrid &grid) const {
 
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
