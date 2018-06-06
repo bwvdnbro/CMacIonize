@@ -1131,6 +1131,17 @@ set(TESTBLOCKSYNTAXHYDROMASK_SOURCES
 add_unit_test(NAME testBlockSyntaxHydroMask
               SOURCES ${TESTBLOCKSYNTAXHYDROMASK_SOURCES})
 
+## Unit test for RescaledICHydroMask
+set(TESTRESCALEDICHYDROMASK
+    testRescaledICHydroMask.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/RescaledICHydroMask.hpp
+)
+add_unit_test(NAME testRescaledICHydroMask
+              SOURCES ${TESTRESCALEDICHYDROMASK})
+
 ## Unit test for PointMassExternalPotential
 set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
     testPointMassExternalPotential.cpp

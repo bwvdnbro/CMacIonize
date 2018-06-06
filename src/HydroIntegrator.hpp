@@ -515,7 +515,7 @@ public:
             params.get_value< bool >("HydroIntegrator:radiative heating", true),
             params.get_value< bool >("HydroIntegrator:radiative cooling",
                                      false),
-            params.get_value< double >("HydroIntegerator:CFL constant", 0.2),
+            params.get_value< double >("HydroIntegrator:CFL constant", 0.2),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(

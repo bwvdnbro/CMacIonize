@@ -42,15 +42,15 @@ public:
   /**
    * @brief Initialize the mask before the first hydrodynamical time step.
    *
-   * @param grid DensityGrid on which to act.
+   * @param grid DensityGrid to read from.
    */
   virtual void initialize_mask(DensityGrid &grid) {}
 
   /**
    * @brief Apply the mask to the given DensityGrid.
    *
-   * All cells within the mask will be updated, all other cells are left
-   * untouched.
+   * The primitive and conserved variables of all cells within the mask will be
+   * updated, all other cells are left untouched.
    *
    * @param grid DensityGrid to update.
    */
