@@ -17,15 +17,15 @@
  ******************************************************************************/
 
 /**
- * @file HydroMask.hpp
+ * @file BlockSyntaxHydroMask.hpp
  *
  * @brief Masked out region where the hydrodynamics is artificially reset to a
  * constant value.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef HYDROMASK_HPP
-#define HYDROMASK_HPP
+#ifndef BLOCKSYNTAXHYDROMASK_HPP
+#define BLOCKSYNTAXHYDROMASK_HPP
 
 #include "BlockSyntaxDensityFunction.hpp"
 #include "DensityGrid.hpp"
@@ -34,7 +34,7 @@
  * @brief Masked out region where the hydrodynamics is artificially reset to a
  * constant value.
  */
-class HydroMask {
+class BlockSyntaxHydroMask {
 private:
   /*! @brief BlockSyntaxDensityFunction that contains the masked out blocks. */
   const BlockSyntaxDensityFunction _density_function;
@@ -55,8 +55,8 @@ public:
    * @param gamma Polytropic index \f$\gamma{}\f$ of the gas.
    * @param vprof_mass Characteristic mass of the velocity profile (in kg).
    */
-  inline HydroMask(std::string filename, const double gamma,
-                   const double vprof_mass = 0.)
+  inline BlockSyntaxHydroMask(std::string filename, const double gamma,
+                              const double vprof_mass = 0.)
       : _density_function(filename), _gm1inv(1. / (gamma - 1.)),
         _vprof_velocity(std::sqrt(PhysicalConstants::get_physical_constant(
                                       PHYSICALCONSTANT_NEWTON_CONSTANT) *
@@ -74,8 +74,8 @@ public:
    *
    * @param params ParameterFile to read.
    */
-  inline HydroMask(ParameterFile &params)
-      : HydroMask(
+  inline BlockSyntaxHydroMask(ParameterFile &params)
+      : BlockSyntaxHydroMask(
             params.get_value< std::string >("HydroMask:filename"),
             params.get_value< double >("HydroMask:polytropic index", 5. / 3.),
             params.get_physical_value< QUANTITY_MASS >("HydroMask:vprof mass",
@@ -146,4 +146,4 @@ public:
   }
 };
 
-#endif // HYDROMASK_HPP
+#endif // BLOCKSYNTAXHYDROMASK_HPP

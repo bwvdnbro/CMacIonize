@@ -17,20 +17,20 @@
  ******************************************************************************/
 
 /**
- * @file testHydroMask.cpp
+ * @file testBlockSyntaxHydroMask.cpp
  *
- * @brief Unit test for the HydroMask class.
+ * @brief Unit test for the BlockSyntaxHydroMask class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "BlockSyntaxHydroMask.hpp"
 #include "CartesianDensityGrid.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "HydroIntegrator.hpp"
-#include "HydroMask.hpp"
 #include <fstream>
 
 /**
- * @brief Unit test for the HydroMask class.
+ * @brief Unit test for the BlockSyntaxHydroMask class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   HydroIntegrator integrator(gamma, false, false, 0.2);
   integrator.initialize_hydro_variables(grid);
 
-  HydroMask hydro_mask("blocksyntaxtest.yml", gamma);
+  BlockSyntaxHydroMask hydro_mask("blocksyntaxtest.yml", gamma);
   hydro_mask.apply_mask(grid);
 
   std::ofstream ofile("test_hydro_mask.txt");
