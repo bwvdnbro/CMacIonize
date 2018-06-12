@@ -94,10 +94,14 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       HDF5Tools::read_dataset< double >(group, "NumberDensity");
   std::vector< double > cell_temperatures =
       HDF5Tools::read_dataset< double >(group, "Temperature");
-  std::vector< std::vector< double > > neutral_fractions(NUMBER_OF_IONNAMES);
+  std::vector< std::vector< double > > neutral_fractions(
+      NUMBER_OF_IONNAMES, std::vector< double >(cell_densities.size(), 1.e-6));
   for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    neutral_fractions[i] = HDF5Tools::read_dataset< double >(
-        group, "NeutralFraction" + get_ion_name(i));
+    // skip ionic fractions that do not exist
+    if (HDF5Tools::group_exists(group, "NeutralFraction" + get_ion_name(i))) {
+      neutral_fractions[i] = HDF5Tools::read_dataset< double >(
+          group, "NeutralFraction" + get_ion_name(i));
+    }
   }
 
   // velocities (if they exist)
