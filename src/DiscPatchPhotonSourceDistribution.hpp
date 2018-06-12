@@ -86,6 +86,12 @@ private:
   /*! @brief Total simulation time (in s). */
   double _total_time;
 
+  /*! @brief Indices of the sources (if output is enabled). */
+  std::vector< uint_fast32_t > _source_indices;
+
+  /*! @brief Index of the next source to add (if output is enabled). */
+  uint_fast32_t _next_index;
+
   /**
    * @brief Generate a new source position.
    *
@@ -136,7 +142,8 @@ public:
         _average_number_of_sources(average_number), _anchor_x(anchor_x),
         _anchor_y(anchor_y), _sides_x(sides_x), _sides_y(sides_y),
         _origin_z(origin_z), _scaleheight_z(scaleheight_z),
-        _random_generator(seed), _output_file(nullptr), _total_time(0.) {
+        _random_generator(seed), _output_file(nullptr), _total_time(0.),
+        _next_index(0) {
 
     // generate sources
     for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
@@ -148,11 +155,13 @@ public:
 
     if (output_sources) {
       _output_file = new std::ofstream("DiscPatch_source_positions.txt");
-      *_output_file << "#time\t\tx\ty\tz\tlifetime\n";
+      *_output_file << "#time\t\tx\ty\tz\tevent\tindex\n";
       for (uint_fast32_t i = 0; i < _source_positions.size(); ++i) {
+        _source_indices.push_back(_next_index);
+        ++_next_index;
         const CoordinateVector<> &pos = _source_positions[i];
         *_output_file << _total_time << "\t" << pos.x() << "\t" << pos.y()
-                      << "\t" << pos.z() << "\t" << _source_lifetimes[i]
+                      << "\t" << pos.z() << "\t1\t" << _source_indices[i]
                       << "\n";
       }
       _output_file->flush();
@@ -265,7 +274,9 @@ public:
    */
   virtual void update(const double timestep) {
 
-    _total_time += timestep;
+    if (_output_file != nullptr) {
+      _total_time += timestep;
+    }
 
     // first clear out sources that do no longer exist
     size_t i = 0;
@@ -273,6 +284,12 @@ public:
       _source_lifetimes[i] -= timestep;
       if (_source_lifetimes[i] <= 0.) {
         // remove the element
+        if (_output_file != nullptr) {
+          *_output_file << _total_time << "\t0.\t0.\t0.\t2\t"
+                        << _source_indices[i] << "\n";
+          _source_indices.erase(_source_indices.begin() + i);
+        }
+
         _source_positions.erase(_source_positions.begin() + i);
         _source_lifetimes.erase(_source_lifetimes.begin() + i);
       } else {
@@ -294,9 +311,11 @@ public:
         _source_lifetimes.push_back(_source_lifetime - offset);
         _source_positions.push_back(generate_source_position());
         if (_output_file != nullptr) {
-          const CoordinateVector<> &pos = _source_positions[i];
+          _source_indices.push_back(_next_index);
+          ++_next_index;
+          const CoordinateVector<> &pos = _source_positions.back();
           *_output_file << _total_time << "\t" << pos.x() << "\t" << pos.y()
-                        << "\t" << pos.z() << "\t" << _source_lifetimes[i]
+                        << "\t" << pos.z() << "\t1\t" << _source_indices.back()
                         << "\n";
         }
         x = _random_generator.get_uniform_random_double();
