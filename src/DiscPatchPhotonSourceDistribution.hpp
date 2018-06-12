@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <fstream>
 #include <vector>
 
 /**
@@ -79,6 +80,12 @@ private:
   /*! @brief Remaining lifetime of the sources (in s). */
   std::vector< double > _source_lifetimes;
 
+  /*! @brief Output file for the sources (if applicable). */
+  std::ofstream *_output_file;
+
+  /*! @brief Total simulation time (in s). */
+  double _total_time;
+
   /**
    * @brief Generate a new source position.
    *
@@ -116,19 +123,20 @@ public:
    * @param scaleheight_z Scale height of the Gaussian disk height distribution
    * (in m).
    * @param seed Seed for the pseudo-random number generator.
+   * @param output_sources Should the source positions be written to a file?
    */
   inline DiscPatchPhotonSourceDistribution(
       const double source_lifetime, const double source_luminosity,
       const uint_fast32_t average_number, double anchor_x, double sides_x,
       double anchor_y, double sides_y, double origin_z, double scaleheight_z,
-      const int_fast32_t seed)
+      const int_fast32_t seed, bool output_sources = false)
       : _source_lifetime(source_lifetime),
         _source_luminosity(source_luminosity),
         _source_probability(1. / source_lifetime),
         _average_number_of_sources(average_number), _anchor_x(anchor_x),
         _anchor_y(anchor_y), _sides_x(sides_x), _sides_y(sides_y),
         _origin_z(origin_z), _scaleheight_z(scaleheight_z),
-        _random_generator(seed) {
+        _random_generator(seed), _output_file(nullptr), _total_time(0.) {
 
     // generate sources
     for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
@@ -136,6 +144,18 @@ public:
           _random_generator.get_uniform_random_double() * _source_lifetime;
       _source_lifetimes.push_back(lifetime);
       _source_positions.push_back(generate_source_position());
+    }
+
+    if (output_sources) {
+      _output_file = new std::ofstream("DiscPatch_source_positions.txt");
+      *_output_file << "#time\t\tx\ty\tz\tlifetime\n";
+      for (uint_fast32_t i = 0; i < _source_positions.size(); ++i) {
+        const CoordinateVector<> &pos = _source_positions[i];
+        *_output_file << _total_time << "\t" << pos.x() << "\t" << pos.y()
+                      << "\t" << pos.z() << "\t" << _source_lifetimes[i]
+                      << "\n";
+      }
+      _output_file->flush();
     }
   }
 
@@ -157,6 +177,8 @@ public:
    *    (default: 63. pc)
    *  - random seed: Random seed used to initialize the random generator that
    *    is used to sample the individual positions (default: 42)
+   *  - output sources: Whether or not to write the source positions to a file
+   *    (default: false)
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
@@ -182,7 +204,9 @@ public:
             params.get_physical_value< QUANTITY_LENGTH >(
                 "PhotonSourceDistribution:scaleheight z", "63. pc"),
             params.get_value< int_fast32_t >(
-                "PhotonSourceDistribution:random seed", 42)) {}
+                "PhotonSourceDistribution:random seed", 42),
+            params.get_value< bool >("PhotonSourceDistribution:output sources",
+                                     false)) {}
 
   /**
    * @brief Virtual destructor.
@@ -241,6 +265,8 @@ public:
    */
   virtual void update(const double timestep) {
 
+    _total_time += timestep;
+
     // first clear out sources that do no longer exist
     size_t i = 0;
     while (i < _source_lifetimes.size()) {
@@ -267,8 +293,18 @@ public:
             _random_generator.get_uniform_random_double() * timestep;
         _source_lifetimes.push_back(_source_lifetime - offset);
         _source_positions.push_back(generate_source_position());
+        if (_output_file != nullptr) {
+          const CoordinateVector<> &pos = _source_positions[i];
+          *_output_file << _total_time << "\t" << pos.x() << "\t" << pos.y()
+                        << "\t" << pos.z() << "\t" << _source_lifetimes[i]
+                        << "\n";
+        }
         x = _random_generator.get_uniform_random_double();
       }
+    }
+
+    if (_output_file != nullptr) {
+      _output_file->flush();
     }
   }
 };
