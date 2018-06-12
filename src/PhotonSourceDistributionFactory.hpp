@@ -32,6 +32,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "DiscPatchPhotonSourceDistribution.hpp"
 #include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 
@@ -96,6 +97,8 @@ public:
 #endif
     if (type == "None") {
       return nullptr;
+    } else if (type == "DiscPatch") {
+      return new DiscPatchPhotonSourceDistribution(params, log);
     } else if (type == "SILCC") {
       return new SILCCPhotonSourceDistribution(params, log);
     } else if (type == "SingleStar") {

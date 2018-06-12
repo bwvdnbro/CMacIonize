@@ -1159,6 +1159,15 @@ set(TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES
 add_unit_test(NAME testDiscPatchExternalPotential
               SOURCES ${TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES})
 
+## Unit test for DiscPatchPhotonSourceDistribution
+set(TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES
+    testDiscPatchPhotonSourceDistribution.cpp
+
+    ../src/DiscPatchPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testDiscPatchPhotonSourceDistribution
+              SOURCES ${TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
