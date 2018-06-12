@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 
   const double Myr_in_s = 1.e6 * 365.25 * 24. * 3600.;
   DiscPatchPhotonSourceDistribution distribution(20. * Myr_in_s, 4.26e49, 6, 0.,
-                                                 1., 0., 1., 0., 1., 42);
+                                                 1., 0., 1., 0., 1., 42, true);
 
   std::ofstream ofile("test_disc_patch_photon_source_distribution.txt");
   ofile << "# t (Myr)\tnumber of sources\n";
