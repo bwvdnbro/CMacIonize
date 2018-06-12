@@ -463,6 +463,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       mask->apply_mask(*grid);
     }
 
+    // update the PhotonSource
+    sourcedistribution->update(actual_timestep);
+    source.update(sourcedistribution);
+
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written
     // outside the integration loop
