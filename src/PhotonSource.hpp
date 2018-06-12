@@ -149,6 +149,8 @@ public:
 
   bool reemit(Photon &photon, const IonizationVariables &ionization_variables,
               RandomGenerator &random_generator) const;
+
+  void update(PhotonSourceDistribution *distribution);
 };
 
 #endif // PHOTONSOURCE_HPP

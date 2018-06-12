@@ -76,6 +76,14 @@ public:
    * @return Total luminosity (in s^-1).
    */
   virtual double get_total_luminosity() const = 0;
+
+  /**
+   * @brief Update the distribution after a system time step with the given
+   * size.
+   *
+   * @param timestep Size of the system time step (in s).
+   */
+  virtual void update(const double timestep) {}
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

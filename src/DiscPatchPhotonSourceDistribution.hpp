@@ -190,45 +190,6 @@ public:
   virtual ~DiscPatchPhotonSourceDistribution() {}
 
   /**
-   * @brief Update the source distribution after a system time step with the
-   * given size.
-   *
-   * @param timestep Size of the system time step (in s).
-   */
-  inline void update(const double timestep) {
-
-    // first clear out sources that do no longer exist
-    size_t i = 0;
-    while (i < _source_lifetimes.size()) {
-      _source_lifetimes[i] -= timestep;
-      if (_source_lifetimes[i] <= 0.) {
-        // remove the element
-        _source_positions.erase(_source_positions.begin() + i);
-        _source_lifetimes.erase(_source_lifetimes.begin() + i);
-      } else {
-        // check the next element
-        ++i;
-      }
-    }
-
-    // now check if new sources need to be generated
-    const double source_probability = timestep * _source_probability;
-    for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
-      double x = _random_generator.get_uniform_random_double();
-      if (x <= source_probability) {
-        // bingo: create a new source
-        // the source could have been created at any given time during the past
-        // time step
-        const double offset =
-            _random_generator.get_uniform_random_double() * timestep;
-        _source_lifetimes.push_back(_source_lifetime - offset);
-        _source_positions.push_back(generate_source_position());
-        x = _random_generator.get_uniform_random_double();
-      }
-    }
-  }
-
-  /**
    * @brief Get the number of sources contained within this distribution.
    *
    * The PhotonSourceDistribution will return exactly this number of valid
@@ -270,6 +231,45 @@ public:
    */
   virtual double get_total_luminosity() const {
     return _source_luminosity * get_number_of_sources();
+  }
+
+  /**
+   * @brief Update the source distribution after a system time step with the
+   * given size.
+   *
+   * @param timestep Size of the system time step (in s).
+   */
+  virtual void update(const double timestep) {
+
+    // first clear out sources that do no longer exist
+    size_t i = 0;
+    while (i < _source_lifetimes.size()) {
+      _source_lifetimes[i] -= timestep;
+      if (_source_lifetimes[i] <= 0.) {
+        // remove the element
+        _source_positions.erase(_source_positions.begin() + i);
+        _source_lifetimes.erase(_source_lifetimes.begin() + i);
+      } else {
+        // check the next element
+        ++i;
+      }
+    }
+
+    // now check if new sources need to be generated
+    const double source_probability = timestep * _source_probability;
+    for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
+      double x = _random_generator.get_uniform_random_double();
+      if (x <= source_probability) {
+        // bingo: create a new source
+        // the source could have been created at any given time during the past
+        // time step
+        const double offset =
+            _random_generator.get_uniform_random_double() * timestep;
+        _source_lifetimes.push_back(_source_lifetime - offset);
+        _source_positions.push_back(generate_source_position());
+        x = _random_generator.get_uniform_random_double();
+      }
+    }
   }
 };
 
