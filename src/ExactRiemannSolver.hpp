@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 /**
- * @file RiemannSolver.hpp
+ * @file ExactRiemannSolver.hpp
  *
  * @brief Exact Riemann solver.
  *
@@ -26,8 +26,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef RIEMANNSOLVER_HPP
-#define RIEMANNSOLVER_HPP
+#ifndef EXACTRIEMANNSOLVER_HPP
+#define EXACTRIEMANNSOLVER_HPP
 
 #include "Error.hpp"
 
@@ -37,7 +37,7 @@
 /**
  * @brief Exact Riemann solver.
  */
-class RiemannSolver {
+class ExactRiemannSolver {
 private:
   /*! @brief Adiabatic index @f$\gamma{}@f$. */
   const double _gamma;
@@ -796,7 +796,7 @@ public:
    *
    * @param gamma Adiabatic index @f$\gamma{}@f$.
    */
-  RiemannSolver(double gamma)
+  ExactRiemannSolver(double gamma)
       : _gamma(std::max(gamma, 1.00000001)),
         _gp1d2g(0.5 * (_gamma + 1.) / _gamma),
         _gm1d2g(0.5 * (_gamma - 1.) / _gamma),
@@ -936,4 +936,4 @@ public:
   }
 };
 
-#endif // RIEMANNSOLVER_HPP
+#endif // EXACTRIEMANNSOLVER_HPP

@@ -23,7 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "RiemannSolver.hpp"
+#include "ExactRiemannSolver.hpp"
 #include "TimingTools.hpp"
 #include <vector>
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     P[i] = 0.1 + Utilities::random_double() * 0.9;
   }
 
-  RiemannSolver solver(5. / 3.);
+  ExactRiemannSolver solver(5. / 3.);
   double rhosol, usol, Psol;
 
   timingtools_start_timing_block("RiemannSolver") {

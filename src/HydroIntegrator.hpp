@@ -29,11 +29,11 @@
 #include "BondiProfile.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "ExactRiemannSolver.hpp"
 #include "GradientCalculator.hpp"
 #include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
-#include "RiemannSolver.hpp"
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
@@ -82,7 +82,7 @@ private:
   const double _ionised_temperature;
 
   /*! @brief Exact Riemann solver used to solve the Riemann problem. */
-  const RiemannSolver _solver;
+  const ExactRiemannSolver _solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
   const HydroBoundaryConditionType _boundaries[6];

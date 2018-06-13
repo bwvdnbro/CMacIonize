@@ -703,7 +703,7 @@ endif(HAVE_MPI)
 set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
 
-    ../src/RiemannSolver.hpp
+    ../src/ExactRiemannSolver.hpp
 )
 add_unit_test(NAME testRiemannSolver
               SOURCES ${TESTRIEMANNSOLVER_SOURCES})
