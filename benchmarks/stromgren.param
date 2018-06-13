@@ -74,6 +74,10 @@ DensityGridWriter:
   # number of digits to be used in the filename counter
   padding: 3
 
+# Disable output of unused fields
+DensityGridWriterFields:
+  NumberDensity: 0
+
 # tell the code we want to use our own cross section values
 CrossSections:
   type: FixedValue
