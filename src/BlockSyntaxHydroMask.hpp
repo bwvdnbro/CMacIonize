@@ -39,7 +39,7 @@ private:
   /*! @brief BlockSyntaxDensityFunction that contains the masked out blocks. */
   const BlockSyntaxDensityFunction _density_function;
 
-  /*! @brief \f$\frac{1}{\gamma{}-1}\f$, with \f$\gamma{}\f$ the polytropic
+  /*! @brief @f$\frac{1}{\gamma{}-1}@f$, with @f$\gamma{}@f$ the polytropic
    *  index of the gas. */
   const double _gm1inv;
 
@@ -52,7 +52,7 @@ public:
    * @brief Constructor.
    *
    * @param filename Name of the YAML file that contains the mask information.
-   * @param gamma Polytropic index \f$\gamma{}\f$ of the gas.
+   * @param gamma Polytropic index @f$\gamma{}@f$ of the gas.
    * @param vprof_mass Characteristic mass of the velocity profile (in kg).
    */
   inline BlockSyntaxHydroMask(std::string filename, const double gamma,
