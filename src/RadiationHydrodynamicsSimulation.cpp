@@ -465,8 +465,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
 
     // update the PhotonSource
-    sourcedistribution->update(actual_timestep);
-    source.update(sourcedistribution);
+    if (sourcedistribution->update(actual_timestep)) {
+      source.update(sourcedistribution);
+    }
 
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written

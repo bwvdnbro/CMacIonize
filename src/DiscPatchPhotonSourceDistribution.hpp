@@ -271,8 +271,11 @@ public:
    * given size.
    *
    * @param timestep Size of the system time step (in s).
+   * @return True if the distribution changed, false otherwise.
    */
-  virtual void update(const double timestep) {
+  virtual bool update(const double timestep) {
+
+    bool changed = false;
 
     if (_output_file != nullptr) {
       _total_time += timestep;
@@ -292,6 +295,7 @@ public:
 
         _source_positions.erase(_source_positions.begin() + i);
         _source_lifetimes.erase(_source_lifetimes.begin() + i);
+        changed = true;
       } else {
         // check the next element
         ++i;
@@ -318,13 +322,15 @@ public:
                         << "\t" << pos.z() << "\t1\t" << _source_indices.back()
                         << "\n";
         }
-        x = _random_generator.get_uniform_random_double();
+        changed = true;
       }
     }
 
     if (_output_file != nullptr) {
       _output_file->flush();
     }
+
+    return changed;
   }
 };
 
