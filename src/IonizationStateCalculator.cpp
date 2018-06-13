@@ -71,16 +71,23 @@ void IonizationStateCalculator::calculate_ionization_state(
   // get the number density
   const double ntot = ionization_variables.get_number_density();
 
+  cmac_assert(jH >= 0.);
+  cmac_assert(jHe >= 0.);
+  cmac_assert(ntot >= 0.);
+
   // find the ionization equilibrium for hydrogen and helium
   if (jH > 0. && ntot > 0.) {
     const double T = ionization_variables.get_temperature();
     const double alphaH =
         _recombination_rates.get_recombination_rate(ION_H_n, T);
-    const double alphaHe =
-        _recombination_rates.get_recombination_rate(ION_He_n, T);
+
+    cmac_assert(alphaH >= 0.);
+
     // h0find
     double h0, he0 = 0.;
     if (_abundances.get_abundance(ELEMENT_He) != 0.) {
+      const double alphaHe =
+          _recombination_rates.get_recombination_rate(ION_He_n, T);
       compute_ionization_states_hydrogen_helium(
           alphaH, alphaHe, jH, jHe, ntot, _abundances.get_abundance(ELEMENT_He),
           T, h0, he0);
@@ -92,8 +99,6 @@ void IonizationStateCalculator::calculate_ionization_state(
     ionization_variables.set_ionic_fraction(ION_He_n, he0);
 
     // do the coolants
-    // this is completely duplicated in TemperatureCalculator, and should be
-    // isolated into one separate function
 
     const double ne =
         ntot * (1. - h0 + _abundances.get_abundance(ELEMENT_He) * (1. - he0));
@@ -158,6 +163,8 @@ void IonizationStateCalculator::calculate_ionization_state(
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
     }
   }
+
+  cmac_assert(ionization_variables.get_ionic_fraction(ION_H_n) >= 0.);
 
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   // set the mean intensity values to the values in correct physical units
@@ -621,11 +628,15 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
  */
 double IonizationStateCalculator::compute_ionization_state_hydrogen(
     double alphaH, double jH, double nH) {
+
   if (jH > 0. && nH > 0.) {
     const double aa = 0.5 * jH / (nH * alphaH);
     const double bb = 2. / aa;
     const double cc = std::sqrt(bb + 1.);
-    return 1. + aa * (1. - cc);
+    // For very large values of jH, we can actually over-ionize the cell,
+    // resulting in a negative neutral fraction
+    // To overcome this issue, we impose a lower limit.
+    return std::max(1.e-14, 1. + aa * (1. - cc));
   } else {
     return 1.;
   }
