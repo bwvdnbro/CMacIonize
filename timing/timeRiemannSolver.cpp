@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "ExactRiemannSolver.hpp"
+#include "HLLCRiemannSolver.hpp"
 #include "TimingTools.hpp"
 #include <vector>
 
@@ -40,27 +41,56 @@ int main(int argc, char **argv) {
 
   // set up the test arrays
   const uint_fast32_t num_test = 100000;
-  std::vector< double > rho(num_test), u(num_test), P(num_test);
+  std::vector< double > rho(num_test), P(num_test);
+  std::vector< CoordinateVector<> > u(num_test), normals(num_test),
+      vface(num_test);
   for (uint_fast32_t i = 0; i < num_test; ++i) {
     // densities in the range [0.125, 1.[
     rho[i] = 0.125 + Utilities::random_double() * 0.875;
     // velocities in the range [-1., 1.[
-    u[i] = 2. * Utilities::random_double() - 1.;
+    u[i][0] = 2. * Utilities::random_double() - 1.;
+    u[i][1] = 2. * Utilities::random_double() - 1.;
+    u[i][2] = 2. * Utilities::random_double() - 1.;
     // pressures in the range [0.1, 1.[
     P[i] = 0.1 + Utilities::random_double() * 0.9;
+    // normals
+    normals[i][0] = Utilities::random_double();
+    normals[i][1] = Utilities::random_double();
+    normals[i][2] = Utilities::random_double();
+    normals[i] /= normals[i].norm();
+    // frame velocities in the range [-1., 1.[
+    vface[i][0] = 2. * Utilities::random_double() - 1.;
+    vface[i][1] = 2. * Utilities::random_double() - 1.;
+    vface[i][2] = 2. * Utilities::random_double() - 1.;
   }
 
-  ExactRiemannSolver solver(5. / 3.);
-  double rhosol, usol, Psol;
+  ExactRiemannSolver exact_solver(5. / 3.);
+  HLLCRiemannSolver hllc_solver(5. / 3.);
+  double mflux = 0.;
+  CoordinateVector<> pflux;
+  double Eflux = 0.;
 
-  timingtools_start_timing_block("RiemannSolver") {
+  timingtools_start_timing_block("ExactRiemannSolver") {
     timingtools_start_timing();
     for (uint_fast32_t i = 0; i < num_test; ++i) {
       const uint_fast32_t iplus = (i + 1) % num_test;
-      solver.solve(rho[i], u[i], P[i], rho[iplus], u[iplus], P[iplus], rhosol,
-                   usol, Psol);
+      exact_solver.solve_for_flux(rho[i], u[i], P[i], rho[iplus], u[iplus],
+                                  P[iplus], mflux, pflux, Eflux, normals[i],
+                                  vface[i]);
     }
     timingtools_stop_timing();
   }
-  timingtools_end_timing_block("RiemannSolver");
+  timingtools_end_timing_block("ExactRiemannSolver");
+
+  timingtools_start_timing_block("HLLCRiemannSolver") {
+    timingtools_start_timing();
+    for (uint_fast32_t i = 0; i < num_test; ++i) {
+      const uint_fast32_t iplus = (i + 1) % num_test;
+      hllc_solver.solve_for_flux(rho[i], u[i], P[i], rho[iplus], u[iplus],
+                                 P[iplus], mflux, pflux, Eflux, normals[i],
+                                 vface[i]);
+    }
+    timingtools_stop_timing();
+  }
+  timingtools_end_timing_block("HLLCRiemannSolver");
 }

@@ -186,6 +186,7 @@ set(CMACIONIZE_SOURCES
     FixedValueRecombinationRates.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    HLLCRiemannSolver.hpp
     HydrogenLymanContinuumSpectrum.hpp
     HydroMask.hpp
     HydroMaskFactory.hpp

@@ -30,6 +30,7 @@
 
 // implementations
 #include "ExactRiemannSolver.hpp"
+#include "HLLCRiemannSolver.hpp"
 
 /**
  * @brief General interface for Riemann solvers.
@@ -52,6 +53,8 @@ public:
 
     if (type == "Exact") {
       return new ExactRiemannSolver(gamma);
+    } else if (type == "HLLC") {
+      return new HLLCRiemannSolver(gamma);
     } else {
       cmac_error("Unknown RiemannSolver type: \"%s\"!", type.c_str());
       return nullptr;
