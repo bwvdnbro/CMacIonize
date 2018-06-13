@@ -155,7 +155,7 @@ public:
 
     if (output_sources) {
       _output_file = new std::ofstream("DiscPatch_source_positions.txt");
-      *_output_file << "#time\t\tx\ty\tz\tevent\tindex\n";
+      *_output_file << "#time (s)\tx (m)\ty (m)\tz (m)\tevent\tindex\n";
       for (uint_fast32_t i = 0; i < _source_positions.size(); ++i) {
         _source_indices.push_back(_next_index);
         ++_next_index;
