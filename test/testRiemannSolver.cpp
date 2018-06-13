@@ -24,7 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "RiemannSolver.hpp"
+#include "ExactRiemannSolver.hpp"
 #include <fstream>
 #include <string>
 
@@ -42,7 +42,7 @@
  * @param uexp Expected velocity solution.
  * @param Pexp Expected pressure solution.
  */
-void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
+void run_test(ExactRiemannSolver &solver, double rhoL, double uL, double PL,
               double rhoR, double uR, double PR, double rhoexp, double uexp,
               double Pexp) {
 
@@ -73,8 +73,8 @@ void run_test(RiemannSolver &solver, double rhoL, double uL, double PL,
  * @param t Time at which to evaluate the solution.
  * @param filename Name of the file to write out.
  */
-void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
-                   double rhoR, double uR, double PR, double t,
+void plot_solution(ExactRiemannSolver &solver, double rhoL, double uL,
+                   double PL, double rhoR, double uR, double PR, double t,
                    std::string filename) {
 
   std::ofstream ofile(filename);
@@ -103,7 +103,7 @@ void plot_solution(RiemannSolver &solver, double rhoL, double uL, double PL,
  */
 int main(int argc, char **argv) {
 
-  RiemannSolver solver(5. / 3.);
+  ExactRiemannSolver solver(5. / 3.);
 
   // Toro tests
   run_test(solver, 1., 0., 1., 0.125, 0., 0.1, 0.47969, 0.841194, 0.293945);

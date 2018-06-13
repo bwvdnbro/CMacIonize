@@ -25,8 +25,8 @@
  */
 #include "CartesianDensityGrid.hpp"
 #include "DensityFunction.hpp"
+#include "ExactRiemannSolver.hpp"
 #include "HydroIntegrator.hpp"
-#include "RiemannSolver.hpp"
 #include "VoronoiDensityGrid.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 #include <fstream>
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     // output reference solution
     {
       std::ofstream snapfile("hydro_ref_1.txt");
-      const RiemannSolver solver(5. / 3.);
+      const ExactRiemannSolver solver(5. / 3.);
       const double t = 0.1;
       for (uint_fast32_t i = 0; i < 1000; ++i) {
         const double x = (i + 0.5) * 0.001;
