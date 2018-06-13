@@ -705,6 +705,7 @@ set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
 
     ../src/ExactRiemannSolver.hpp
+    ../src/RiemannSolver.hpp
 )
 add_unit_test(NAME testRiemannSolver
               SOURCES ${TESTRIEMANNSOLVER_SOURCES})
