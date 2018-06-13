@@ -18,6 +18,10 @@ DensityGridWriter:
   padding: 3
   prefix: bondi_
 
+# Disable output of the neutral fraction, since we don't need it
+DensityGridWriterFields:
+  NeutralFractionH: 0
+
 # Set the hydrodynamical parameters
 HydroIntegrator:
   # We use an isothermal equation of state

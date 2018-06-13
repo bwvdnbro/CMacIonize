@@ -44,6 +44,11 @@ DensityGridWriter:
   padding: 3
   prefix: starbench_voronoi_
 
+# Disable output fields we don't use
+DensityGridWriterFields:
+  Velocities: 0
+  Pressure: 0
+
 # set the hydrodynamical parameters
 HydroIntegrator:
   # we use an almost isothermal equation of state
