@@ -34,59 +34,59 @@
  * @brief DensityFunction that is used as initial condition for an accretion
  * disc simulation.
  *
- * The disc is assumed to orbit an external point mass of mass \f$M\f$. If we
- * assume a gas temperature \f$T\f$, then the corresponding Bondi radius is
+ * The disc is assumed to orbit an external point mass of mass @f$M\f$. If we
+ * assume a gas temperature @f$T\f$, then the corresponding Bondi radius is
  * given by
- * \f[
+ * @f[
  *   R_B = \frac{G M m_m m_p}{2 k T},
- * \f]
- * with \f$G\f$ Newton's constant, \f$k\f$ Boltzmann's constant, \f$m_p\f$ the
- * proton mass and \f$m_m\f$ the mean molecular weight of the gas, for which we
+ * @f]
+ * with @f$G\f$ Newton's constant, @f$k\f$ Boltzmann's constant, @f$m_p\f$ the
+ * proton mass and @f$m_m\f$ the mean molecular weight of the gas, for which we
  * assume
- * \f[
+ * @f[
  *   m_m = \begin{cases}
  *     1, & T < 10,000~{\rm{}K}\\
  *     0.5 & T \geq{} 10,000~{\rm{}K}.
  *   \end{cases}
- * \f]
+ * @f]
  *
  * The density and velocity are then set to
- * \f[
+ * @f[
  *   \rho{}(r) = \rho{}_B \left(\frac{R_B}{r}\right)^{\gamma{}_\rho{}}
- * \f]
+ * @f]
  * and
- * \f[
+ * @f[
  *   \vec{v}(r) = v_B \left(\frac{R_B}{r}\right)^{\gamma{}_v} \vec{e}_\theta{},
- * \f]
- * with \f$\rho{}_B\f$, \f$\gamma{}_\rho{}\f$, \f$v_B\f$ and \f$\gamma{}_v\f$
- * parameters. \f$\vec{e}_\theta{}\f$ is the tangential unit vector in
+ * @f]
+ * with @f$\rho{}_B\f$, @f$\gamma{}_\rho{}@f$, @f$v_B\f$ and @f$\gamma{}_v\f$
+ * parameters. @f$\vec{e}_\theta{}@f$ is the tangential unit vector in
  * cylindrical coordinates:
- * \f[
+ * @f[
  *   \vec{e}_\theta{} = -\frac{y}{R} \vec{e}_x + \frac{x}{R} \vec{e}_y,
- * \f]
- * with \f$R = \sqrt{x^2 + y^2}\f$ the cylindrical radius.
+ * @f]
+ * with @f$R = \sqrt{x^2 + y^2}@f$ the cylindrical radius.
  *
  * To summarize, we hence have 6 input parameters:
- *  - The mass of the external point mass \f$M\f$.
- *  - The gas temperature \f$T\f$.
- *  - The density profile parameters \f$\rho{}_B\f$ and \f$\gamma{}_\rho{}\f$.
- *  - The velocity profile parameters \f$v_B\f$ and \f$\gamma{}_v\f$.
+ *  - The mass of the external point mass @f$M\f$.
+ *  - The gas temperature @f$T\f$.
+ *  - The density profile parameters @f$\rho{}_B\f$ and @f$\gamma{}_\rho{}@f$.
+ *  - The velocity profile parameters @f$v_B\f$ and @f$\gamma{}_v\f$.
  */
 class DiscICDensityFunction : public DensityFunction {
 private:
-  /*! @brief Bondi radius \f$R_B\f$ for the density and velocity profile. */
+  /*! @brief Bondi radius @f$R_B\f$ for the density and velocity profile. */
   const double _R_B;
 
-  /*! @brief Bondi number density \f$\frac{\rho{}_B}{m_m m_p}\f$ (in m^-3). */
+  /*! @brief Bondi number density @f$\frac{\rho{}_B}{m_m m_p}@f$ (in m^-3). */
   const double _n_B;
 
-  /*! @brief Power \f$\gamma{}_\rho{}\f$ of the density profile. */
+  /*! @brief Power @f$\gamma{}_\rho{}@f$ of the density profile. */
   const double _gamma_rho;
 
-  /*! @brief Bondi velocity \f$v_B\f$ (in m s^-1). */
+  /*! @brief Bondi velocity @f$v_B\f$ (in m s^-1). */
   const double _v_B;
 
-  /*! @brief Power \f$\gamma{}_v\f$ of the velocity profile. */
+  /*! @brief Power @f$\gamma{}_v\f$ of the velocity profile. */
   const double _gamma_v;
 
   /*! @brief Initial temperature value for the entire box (in K). */
@@ -126,17 +126,17 @@ private:
   }
 
   /**
-   * @brief Get the Bondi radius \f$R_B\f$ corresponding to the given mass and
+   * @brief Get the Bondi radius @f$R_B\f$ corresponding to the given mass and
    * gas temperature.
    *
    * The Bondi radius is given by
-   * \f[
+   * @f[
    *   R_B = \frac{G M m_m m_p}{2 k T}.
-   * \f]
+   * @f]
    *
-   * @param mass Mass \f$M\f$ (in kg).
-   * @param temperature Temperature \f$T\f$ (in K).
-   * @return Bondi radius \f$R_B\f$ (in m).
+   * @param mass Mass @f$M\f$ (in kg).
+   * @param temperature Temperature @f$T\f$ (in K).
+   * @return Bondi radius @f$R_B\f$ (in m).
    */
   static inline double get_bondi_radius(const double mass,
                                         const double temperature) {
@@ -152,12 +152,12 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param mass Mass \f$M\f$ of the external point mass (in kg).
-   * @param temperature Temperature \f$T\f$ of the gas (in K).
-   * @param rho_B Bondi density \f$\rho{}_B\f$ (in kg m^-3).
-   * @param gamma_rho Power \f$\gamma{}_\rho{}\f$ of the density profile.
-   * @param v_B Bondi velocity \f$v_B\f$ (in m s^-1).
-   * @param gamma_v Power \f$\gamma{}_v\f$ of the velocity profile.
+   * @param mass Mass @f$M\f$ of the external point mass (in kg).
+   * @param temperature Temperature @f$T\f$ of the gas (in K).
+   * @param rho_B Bondi density @f$\rho{}_B\f$ (in kg m^-3).
+   * @param gamma_rho Power @f$\gamma{}_\rho{}@f$ of the density profile.
+   * @param v_B Bondi velocity @f$v_B\f$ (in m s^-1).
+   * @param gamma_v Power @f$\gamma{}_v\f$ of the velocity profile.
    * @param log Log to write logging information to.
    */
   DiscICDensityFunction(const double mass, const double temperature,
@@ -174,14 +174,14 @@ public:
    * @brief ParameterFile constructor.
    *
    * Parameters are:
-   *  - mass: external point mass \f$M\f$ (default: 20. Msol)
-   *  - temperature: gas temperature \f$T\f$ (default: 500. K)
-   *  - Bondi density: Bondi density \f$\rho{}_B\f$ (default: 3.1e3 g m^-3)
-   *  - density power: Power \f$\gamma{}_\rho{}\f$ of the density profile
-   *    (\f$\rho{}(r) \sim{} r^{-\gamma{}_\rho{}}\f$; default: 1.5)
-   *  - Bondi velocity: Bondi velocity \f$v_B\f$ (default: 2.873 km s^-1)
-   *  - velocity power: Power \f$\gamma{}_v\f$ of the velocity profile
-   *    (\f$v(r) \sim{} r^{-\gamma{}_v}\f$; default: 0.5)
+   *  - mass: external point mass @f$M\f$ (default: 20. Msol)
+   *  - temperature: gas temperature @f$T\f$ (default: 500. K)
+   *  - Bondi density: Bondi density @f$\rho{}_B\f$ (default: 3.1e3 g m^-3)
+   *  - density power: Power @f$\gamma{}_\rho{}@f$ of the density profile
+   *    (@f$\rho{}(r) \sim{} r^{-\gamma{}_\rho{}}@f$; default: 1.5)
+   *  - Bondi velocity: Bondi velocity @f$v_B\f$ (default: 2.873 km s^-1)
+   *  - velocity power: Power @f$\gamma{}_v\f$ of the velocity profile
+   *    (@f$v(r) \sim{} r^{-\gamma{}_v}@f$; default: 0.5)
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.

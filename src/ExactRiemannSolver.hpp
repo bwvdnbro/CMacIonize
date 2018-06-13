@@ -30,6 +30,7 @@
 #define EXACTRIEMANNSOLVER_HPP
 
 #include "Error.hpp"
+#include "RiemannSolver.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -37,7 +38,7 @@
 /**
  * @brief Exact Riemann solver.
  */
-class ExactRiemannSolver {
+class ExactRiemannSolver : public RiemannSolver {
 private:
   /*! @brief Adiabatic index @f$\gamma{}@f$. */
   const double _gamma;
@@ -65,6 +66,9 @@ private:
 
   /*! @brief @f$\frac{1}{\gamma}@f$ */
   const double _ginv;
+
+  /*! @brief @f$\frac{1}{\gamma-1}@f$ */
+  const double _gm1inv;
 
   /**
    * @brief Get the soundspeed corresponding to the given density and pressure.
@@ -802,12 +806,18 @@ public:
         _gm1d2g(0.5 * (_gamma - 1.) / _gamma),
         _gm1dgp1((_gamma - 1) / (_gamma + 1.)), _tdgp1(2. / (_gamma + 1.)),
         _tdgm1(2. / (_gamma - 1.)), _gm1d2(0.5 * (_gamma - 1.)),
-        _tgdgm1(2. * _gamma / (_gamma - 1.)), _ginv(1. / _gamma) {
+        _tgdgm1(2. * _gamma / (_gamma - 1.)), _ginv(1. / _gamma),
+        _gm1inv(1. / (_gamma - 1.)) {
 
     if (gamma < 1.) {
       cmac_error("The adiabatic index needs to be 1 or larger!")
     }
   }
+
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~ExactRiemannSolver() {}
 
   /**
    * @brief Solve the Riemann problem with the given left and right state.
@@ -932,6 +942,77 @@ public:
       sample_left_state(rhoL, uL, PL, aL, PLinv, ustar, Pstar, rhosol, usol,
                         Psol, dxdt);
       return -1;
+    }
+  }
+
+  /**
+   * @brief Solve the Riemann problem with the given left and right state and
+   * get the resulting flux accross an interface.
+   *
+   * @param rhoL Left state density.
+   * @param uL Left state velocity.
+   * @param PL Left state pressure.
+   * @param rhoR Right state density.
+   * @param uR Right state velocity.
+   * @param PR Right state pressure.
+   * @param mflux Mass flux solution.
+   * @param pflux Momentum flux solution.
+   * @param Eflux Energy flux solution.
+   * @param normal Surface normal of the interface.
+   * @param vface Velocity of the interface, used to boost the fluxes.
+   */
+  virtual void solve_for_flux(const double rhoL, const CoordinateVector<> uL,
+                              const double PL, const double rhoR,
+                              const CoordinateVector<> uR, const double PR,
+                              double &mflux, CoordinateVector<> &pflux,
+                              double &Eflux, const CoordinateVector<> normal,
+                              const CoordinateVector<> vface = 0.) const {
+
+    // boost the velocities to the interface frame (and use new variables,
+    // as we still want to use the old value of uL for other neighbours)
+    const CoordinateVector<> uLface = uL - vface;
+    const CoordinateVector<> uRface = uR - vface;
+
+    // project the velocities onto the surface normal
+    const double vL = CoordinateVector<>::dot_product(uLface, normal);
+    const double vR = CoordinateVector<>::dot_product(uRface, normal);
+
+    // solve the Riemann problem
+    double rhosol, vsol, Psol;
+    const int flag = solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+
+    // if the solution was vacuum, there is no flux
+    if (flag != 0) {
+      // deproject the velocity
+      CoordinateVector<> usol;
+      if (flag == -1) {
+        vsol -= vL;
+        usol = uLface + vsol * normal;
+      } else {
+        vsol -= vR;
+        usol = uRface + vsol * normal;
+      }
+
+      // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
+      double rhoesol;
+      if (_gamma > 1.) {
+        rhoesol = 0.5 * rhosol * usol.norm2() + Psol * _gm1inv;
+      } else {
+        // this flux will be ignored, but we make sure it has a sensible value
+        rhoesol = 0.5 * rhosol * usol.norm2();
+      }
+      vsol = CoordinateVector<>::dot_product(usol, normal);
+
+      // get the fluxes
+      mflux = rhosol * vsol;
+      pflux = rhosol * vsol * usol + Psol * normal;
+      Eflux = (rhoesol + Psol) * vsol;
+
+      // de-boost fluxes to fixed reference frame
+      const double vface2 = vface.norm2();
+      Eflux +=
+          CoordinateVector<>::dot_product(vface, pflux) + 0.5 * vface2 * mflux;
+      pflux += mflux * vface;
     }
   }
 };

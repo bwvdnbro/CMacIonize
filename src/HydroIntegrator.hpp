@@ -29,11 +29,11 @@
 #include "BondiProfile.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
-#include "ExactRiemannSolver.hpp"
 #include "GradientCalculator.hpp"
 #include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
+#include "RiemannSolverFactory.hpp"
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
@@ -81,8 +81,8 @@ private:
   /*! @brief Assumed temperature for ionised gas (in K). */
   const double _ionised_temperature;
 
-  /*! @brief Exact Riemann solver used to solve the Riemann problem. */
-  const ExactRiemannSolver _solver;
+  /*! @brief Riemann solver used to solve the Riemann problem. */
+  const RiemannSolver *_solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
   const HydroBoundaryConditionType _boundaries[6];
@@ -330,63 +330,23 @@ private:
         uR_prime[2] = limit(uR_prime[2], uR[2], uL[2], dR_over_r);
         PR_prime = limit(PR_prime, PR, PL, dR_over_r);
 
-        // boost the velocities to the interface frame (and use new variables,
-        // as we still want to use the old value of uL for other neighbours)
-        const CoordinateVector<> uLframe = uL_prime - vframe;
-        const CoordinateVector<> uRframe = uR_prime - vframe;
+        double mflux = 0.;
+        CoordinateVector<> pflux;
+        double Eflux = 0.;
+        _hydro_integrator._solver->solve_for_flux(
+            rhoL_prime, uL_prime, PL_prime, rhoR_prime, uR_prime, PR_prime,
+            mflux, pflux, Eflux, normal, vframe);
 
-        // project the velocities onto the surface normal
-        const double vL = CoordinateVector<>::dot_product(uLframe, normal);
-        const double vR = CoordinateVector<>::dot_product(uRframe, normal);
+        const double tfac = surface_area * _timestep;
+        mflux *= tfac;
+        pflux *= tfac;
+        Eflux *= tfac;
 
-        // solve the Riemann problem
-        double rhosol, vsol, Psol;
-        const int flag = _hydro_integrator._solver.solve(
-            rhoL_prime, vL, PL_prime, rhoR_prime, vR, PR_prime, rhosol, vsol,
-            Psol);
-
-        // if the solution was vacuum, there is no flux
-        if (flag != 0) {
-          // deproject the velocity
-          CoordinateVector<> usol;
-          if (flag == -1) {
-            vsol -= vL;
-            usol = uLframe + vsol * normal;
-          } else {
-            vsol -= vR;
-            usol = uRframe + vsol * normal;
-          }
-
-          // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol;
-          if (_hydro_integrator._gamma > 1.) {
-            rhoesol =
-                0.5 * rhosol * usol.norm2() + Psol * _hydro_integrator._gm1_inv;
-          } else {
-            // this flux will be ignored, but we make sure it has a sensible
-            // value
-            rhoesol = 0.5 * rhosol * usol.norm2();
-          }
-          vsol = CoordinateVector<>::dot_product(usol, normal);
-
-          // get the fluxes
-          const double mflux = rhosol * vsol * surface_area * _timestep;
-          CoordinateVector<> pflux = rhosol * vsol * usol + Psol * normal;
-          pflux *= surface_area * _timestep;
-          double eflux = (rhoesol + Psol) * vsol * surface_area * _timestep;
-
-          // de-boost fluxes to fixed reference frame
-          const double vframe2 = vframe.norm2();
-          eflux += CoordinateVector<>::dot_product(vframe, pflux) +
-                   0.5 * vframe2 * mflux;
-          pflux += mflux * vframe;
-
-          cell.get_hydro_variables().delta_conserved(0) += mflux;
-          cell.get_hydro_variables().delta_conserved(1) += pflux.x();
-          cell.get_hydro_variables().delta_conserved(2) += pflux.y();
-          cell.get_hydro_variables().delta_conserved(3) += pflux.z();
-          cell.get_hydro_variables().delta_conserved(4) += eflux;
-        }
+        cell.get_hydro_variables().delta_conserved(0) += mflux;
+        cell.get_hydro_variables().delta_conserved(1) += pflux.x();
+        cell.get_hydro_variables().delta_conserved(2) += pflux.y();
+        cell.get_hydro_variables().delta_conserved(3) += pflux.z();
+        cell.get_hydro_variables().delta_conserved(4) += Eflux;
       }
     }
   };
@@ -401,6 +361,7 @@ public:
    * @param do_radiative_cooling Flag indicating whether to use radiative
    * cooling or not.
    * @param CFL_constant Courant-Friedrichs-Lewy constant for time stepping.
+   * @param riemann_solver_type Type of Riemann solver to use.
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
    * @param boundary_xlow Type of boundary for the lower x boundary.
@@ -414,24 +375,27 @@ public:
    * @param bondi_profile BondiProfile object used for Bondi inflow boundary
    * conditions.
    */
-  inline HydroIntegrator(double gamma, bool do_radiative_heating,
-                         bool do_radiative_cooling, double CFL_constant,
-                         double neutral_temperature = 100.,
-                         double ionised_temperature = 1.e4,
-                         std::string boundary_xlow = "reflective",
-                         std::string boundary_xhigh = "reflective",
-                         std::string boundary_ylow = "reflective",
-                         std::string boundary_yhigh = "reflective",
-                         std::string boundary_zlow = "reflective",
-                         std::string boundary_zhigh = "reflective",
-                         CoordinateVector< bool > box_periodicity =
+  inline HydroIntegrator(const double gamma, const bool do_radiative_heating,
+                         const bool do_radiative_cooling,
+                         const double CFL_constant,
+                         const std::string riemann_solver_type = "Exact",
+                         const double neutral_temperature = 100.,
+                         const double ionised_temperature = 1.e4,
+                         const std::string boundary_xlow = "reflective",
+                         const std::string boundary_xhigh = "reflective",
+                         const std::string boundary_ylow = "reflective",
+                         const std::string boundary_yhigh = "reflective",
+                         const std::string boundary_zlow = "reflective",
+                         const std::string boundary_zhigh = "reflective",
+                         const CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false),
                          const BondiProfile *bondi_profile = nullptr)
       : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
         _do_radiative_heating(do_radiative_heating),
         _do_radiative_cooling(do_radiative_cooling),
         _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
-        _ionised_temperature(ionised_temperature), _solver(gamma),
+        _ionised_temperature(ionised_temperature),
+        _solver(RiemannSolverFactory::generate(riemann_solver_type, gamma)),
         _boundaries{get_boundary_type(boundary_xlow),
                     get_boundary_type(boundary_xhigh),
                     get_boundary_type(boundary_ylow),
@@ -516,6 +480,8 @@ public:
             params.get_value< bool >("HydroIntegrator:radiative cooling",
                                      false),
             params.get_value< double >("HydroIntegrator:CFL constant", 0.2),
+            params.get_value< std::string >(
+                "HydroIntegrator:Riemann solver type", "Exact"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
@@ -540,6 +506,7 @@ public:
    * Clean up the Bondi profile.
    */
   inline ~HydroIntegrator() {
+    delete _solver;
     if (_bondi_profile != nullptr) {
       delete _bondi_profile;
     }
@@ -589,7 +556,7 @@ public:
       const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
       if (_gamma > 1.) {
         // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-        const double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
+        const double total_energy = volume * pressure * _gm1_inv + 0.5 * ekin;
         it.get_hydro_variables().set_conserved_total_energy(total_energy);
       } else {
         // energy is ignored, but we make sure it has a value to avoid problems
@@ -738,7 +705,7 @@ public:
             _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
         it.get_ionization_variables().set_temperature(Tgas);
         if (_gamma > 1.) {
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+          const double ugas = boltzmann_k * Tgas * _gm1_inv / mpart;
           const double uold =
               it.get_hydro_variables().get_primitives_pressure() / _gm1 /
               it.get_hydro_variables().get_primitives_density();

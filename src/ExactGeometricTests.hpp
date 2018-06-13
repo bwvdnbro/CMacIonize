@@ -70,18 +70,18 @@ public:
      * A general double precision floating point value has a sign @f$s@f$, a
      * mantissa @f$m@f$, and an exponent @f$e@f$, so that the value @f$v@f$ of
      * the double is given by
-     * \f[
+     * @f[
      * v = s \times 1.m \times 2^{e-1023}
-     * \f]
+     * @f]
      * (see
      * https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
      *
      * The IEEE 754 standard specifies that @f$s@f$, @f$m@f$ and @f$e@f$ have
      * respectively 1 bit, 52 bit and 11 bit precision. In memory (low to high
      * bits), they are ordered as follows:
-     * \f[
+     * @f[
      * m e s
-     * \f]
+     * @f]
      */
     struct {
       /*! @brief Mantissa @f$m@f$. */
