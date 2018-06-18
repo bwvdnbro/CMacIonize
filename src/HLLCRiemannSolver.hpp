@@ -29,6 +29,7 @@
 #ifndef HLLCRIEMANNSOLVER_HPP
 #define HLLCRIEMANNSOLVER_HPP
 
+#include "Error.hpp"
 #include "RiemannSolver.hpp"
 
 #include <algorithm>
@@ -314,10 +315,10 @@ public:
    * @param gamma Polytropic index of the gas.
    */
   inline HLLCRiemannSolver(const double gamma)
-      : _gamma(gamma), _tdgm1(2. / (gamma - 1.)),
-        _gp1d2g(0.5 * (gamma + 1.) / gamma), _odgm1(1. / (gamma - 1.)),
-        _gm1d2(0.5 * (gamma - 1.)), _gm1dgp1((gamma - 1.) / (gamma + 1.)),
-        _tgdgm1(2. * gamma / (gamma - 1.)), _tdgp1(2. / (gamma + 1.)) {}
+      : _gamma(std::max(gamma, 1.00000001)), _tdgm1(2. / (_gamma - 1.)),
+        _gp1d2g(0.5 * (_gamma + 1.) / _gamma), _odgm1(1. / (_gamma - 1.)),
+        _gm1d2(0.5 * (_gamma - 1.)), _gm1dgp1((_gamma - 1.) / (_gamma + 1.)),
+        _tgdgm1(2. * _gamma / (_gamma - 1.)), _tdgp1(2. / (_gamma + 1.)) {}
 
   /**
    * @brief Virtual destructor.
@@ -361,9 +362,13 @@ public:
     const double vR = CoordinateVector<>::dot_product(uRface, normal);
 
     const double rhoLinv = 1. / rhoL;
+    cmac_assert(rhoLinv == rhoLinv);
     const double rhoRinv = 1. / rhoR;
+    cmac_assert(rhoRinv == rhoRinv);
     const double aL = std::sqrt(_gamma * PL * rhoLinv);
+    cmac_assert(aL == aL);
     const double aR = std::sqrt(_gamma * PR * rhoRinv);
+    cmac_assert(aR == aR);
 
     const double vdiff = vR - vL;
     const double abar = aL + aR;
@@ -385,10 +390,12 @@ public:
     double qL = 1.;
     if (pstar > PL) {
       qL = std::sqrt(1. + _gp1d2g * (pstar / PL - 1.));
+      cmac_assert(qL == qL);
     }
     double qR = 1.;
     if (pstar > PR) {
       qR = std::sqrt(1. + _gp1d2g * (pstar / PR - 1.));
+      cmac_assert(qR == qR);
     }
 
     // we only use the relative speeds below, so these expressions differ from
@@ -397,6 +404,7 @@ public:
     const double SRmvR = aR * qR;
     const double Sstar = (PR - PL + rhoL * vL * SLmvL - rhoR * vR * SRmvR) /
                          (rhoL * SLmvL - rhoR * SRmvR);
+    cmac_assert(Sstar == Sstar);
 
     if (Sstar >= 0.) {
       const double rhoLvL = rhoL * vL;
@@ -410,6 +418,7 @@ public:
 
       if (SL < 0.) {
         const double starfac = SLmvL / (SL - Sstar) - 1.;
+        cmac_assert(starfac == starfac);
         const double SLrhoL = SL * rhoL;
         const double SstarmvL = Sstar - vL;
         const double SLrhoLstarfac = SLrhoL * starfac;
@@ -432,6 +441,7 @@ public:
 
       if (SR > 0.) {
         const double starfac = SRmvR / (SR - Sstar) - 1.;
+        cmac_assert(starfac == starfac);
         const double SRrhoR = SR * rhoR;
         const double SstarmvR = Sstar - vR;
         const double SRrhoRstarfac = SRrhoR * starfac;
