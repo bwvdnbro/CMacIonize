@@ -78,7 +78,9 @@ private:
    * @return Soundspeed.
    */
   inline double get_soundspeed(double rho, double P) const {
-    return std::sqrt(_gamma * P / rho);
+    const double result = std::sqrt(_gamma * P / rho);
+    cmac_assert(result == result);
+    return result;
   }
 
   /**
@@ -95,9 +97,13 @@ private:
   inline double fb(double P, double A, double B, double Pinv, double afac,
                    double Pstar) const {
     if (Pstar > P) {
-      return (Pstar - P) * std::sqrt(A / (Pstar + B));
+      const double result = (Pstar - P) * std::sqrt(A / (Pstar + B));
+      cmac_assert(result == result);
+      return result;
     } else {
-      return afac * (std::pow(Pstar * Pinv, _gm1d2g) - 1.);
+      const double result = afac * (std::pow(Pstar * Pinv, _gm1d2g) - 1.);
+      cmac_assert(result == result);
+      return result;
     }
   }
 
@@ -139,10 +145,14 @@ private:
   inline double fprimeb(double P, double A, double B, double Pinv,
                         double rhoainv, double Pstar) const {
     if (Pstar > P) {
-      const double C = Pstar + B;
-      return (1. - 0.5 * (Pstar - P) / C) * std::sqrt(A / C);
+      const double C = 1. / (Pstar + B);
+      const double result = (1. - 0.5 * (Pstar - P) * C) * std::sqrt(A * C);
+      cmac_assert(result == result);
+      return result;
     } else {
-      return std::pow(Pstar * Pinv, -_gp1d2g) * rhoainv;
+      const double result = std::pow(Pstar * Pinv, -_gp1d2g) * rhoainv;
+      cmac_assert(result == result);
+      return result;
     }
   }
 
@@ -178,7 +188,9 @@ private:
    * @return Value of the gL or gR function.
    */
   inline double gb(double A, double B, double Pstar) const {
-    return std::sqrt(A / (Pstar + B));
+    const double result = std::sqrt(A / (Pstar + B));
+    cmac_assert(result == result);
+    return result;
   }
 
   /**
@@ -201,6 +213,7 @@ private:
     const double Pmin = std::min(PL, PR);
     const double Pmax = std::max(PL, PR);
     const double qmax = Pmax / Pmin;
+    cmac_assert(qmax == qmax);
     const double PLpPR = PL + PR;
     const double smallP = 5.e-9 * PLpPR;
     double Ppv = 0.5 * PLpPR - 0.125 * udiff * PLpPR * (aL + aR);
@@ -214,11 +227,13 @@ private:
             std::pow((aL + aR - _gm1d2 * udiff) / (aL * std::pow(PL, -_gm1d2g) +
                                                    aR * std::pow(PR, -_gm1d2g)),
                      _tgdgm1);
+        cmac_assert(Pguess == Pguess);
       } else {
         // two shocks
         const double gL = gb(AL, BL, Ppv);
         const double gR = gb(AR, BR, Ppv);
         Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
+        cmac_assert(Pguess == Pguess);
       }
     }
     // Toro: "Not that approximate solutions may predict, incorrectly, a
@@ -800,7 +815,7 @@ public:
    *
    * @param gamma Adiabatic index @f$\gamma{}@f$.
    */
-  ExactRiemannSolver(double gamma)
+  ExactRiemannSolver(const double gamma)
       : _gamma(std::max(gamma, 1.00000001)),
         _gp1d2g(0.5 * (_gamma + 1.) / _gamma),
         _gm1d2g(0.5 * (_gamma - 1.) / _gamma),
@@ -835,9 +850,10 @@ public:
    * @return Flag signaling whether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int_fast32_t solve(double rhoL, double uL, double PL, double rhoR,
-                            double uR, double PR, double &rhosol, double &usol,
-                            double &Psol, double dxdt = 0.) const {
+  inline int_fast32_t solve(const double rhoL, const double uL, const double PL,
+                            const double rhoR, const double uR, const double PR,
+                            double &rhosol, double &usol, double &Psol,
+                            const double dxdt = 0.) const {
 
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
@@ -858,7 +874,9 @@ public:
 
     // get the soundspeeds
     const double aL = get_soundspeed(rhoL, PL);
+    cmac_assert(aL == aL);
     const double aR = get_soundspeed(rhoR, PR);
+    cmac_assert(aR == aR);
     const double aLfac = _tdgm1 * aL;
     const double aRfac = _tdgm1 * aR;
     const double udiff = uR - uL;
@@ -871,13 +889,19 @@ public:
 
     // precompute some variables
     const double AL = _tdgp1 / rhoL;
+    cmac_assert(AL == AL);
     const double BL = _gm1dgp1 * PL;
     const double PLinv = 1. / PL;
+    cmac_assert(PLinv == PLinv);
     const double rhoLaLinv = 1. / (rhoL * aL);
+    cmac_assert(rhoLaLinv == rhoLaLinv);
     const double AR = _tdgp1 / rhoR;
+    cmac_assert(AR == AR);
     const double BR = _gm1dgp1 * PR;
     const double PRinv = 1. / PR;
+    cmac_assert(PRinv == PRinv);
     const double rhoRaRinv = 1. / (rhoR * aR);
+    cmac_assert(rhoRaRinv == rhoRaRinv);
 
     // find the pressure and velocity in the middle state
     // since this is an exact Riemann solver, this is an iterative process,
