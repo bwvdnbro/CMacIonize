@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 
   RescaledICHydroMask hydro_mask(CoordinateVector<>(0.), 0.5, 0.01, 1., 0.02);
   hydro_mask.initialize_mask(grid);
-  hydro_mask.apply_mask(grid);
+  hydro_mask.apply_mask(grid,0,0);
 
   std::ofstream ofile("test_rescaled_hydro_mask.txt");
   ofile << "# x\ty\tz\trho\tux\tuy\tuz\tp\n";
