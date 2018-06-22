@@ -29,6 +29,7 @@
 
 #include "BlockSyntaxDensityFunction.hpp"
 #include "HydroMask.hpp"
+#include "Utilities.hpp"
 
 /**
  * @brief Masked out region where the hydrodynamics is artificially reset to a
@@ -54,6 +55,12 @@ private:
   /*! @brief Mask pressure (in kg m^-1 s^-2). */
   double _mask_pressure;
 
+  /*! @brief Snapshot interval in time */
+  double _delta_t;
+
+  /*! @brief snap_counter */
+  int _snap_n;
+
   /**
    * @brief Check if the given position is inside the mask region.
    *
@@ -73,15 +80,19 @@ public:
    * @param scale_factor_density Scale factor for the density.
    * @param scale_factor_velocity Scale factor for the velocity.
    * @param scale_factor_pressure Scale factor for the pressure.
+   * @param output_mass_accretion Should the mass accretion rate be written to a
+   * file?
    */
   inline RescaledICHydroMask(const CoordinateVector<> center,
                              const double radius,
                              const double scale_factor_density,
                              const double scale_factor_velocity,
-                             const double scale_factor_pressure)
+                             const double scale_factor_pressure,
+                             const double delta_t = 0)
       : _center(center), _radius2(radius * radius),
         _scale_factors{scale_factor_density, scale_factor_velocity,
-                       scale_factor_pressure} {}
+                       scale_factor_pressure},
+        _delta_t(delta_t), _snap_n(0) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -103,8 +114,10 @@ public:
                                                          "1. m"),
             params.get_value< double >("HydroMask:scale factor density", 0.01),
             params.get_value< double >("HydroMask:scale factor velocity", 1.),
-            params.get_value< double >("HydroMask:scale factor pressure",
-                                       0.01)) {}
+            params.get_value< double >("HydroMask:scale factor pressure", 0.01),
+            params.get_physical_value< QUANTITY_TIME >("HydroMask:delta t",
+                                                       "5000 yr")) {}
+
   /**
    * @brief Virtual destructor.
    */
@@ -170,7 +183,19 @@ public:
    *
    * @param grid DensityGrid to update.
    */
-  virtual void apply_mask(DensityGrid &grid) const {
+  virtual void apply_mask(DensityGrid &grid, double actual_timestep,
+                          double current_time) {
+
+    std::ofstream *mass_file = nullptr;
+
+    if (current_time >= _snap_n * _delta_t) {
+      std::string filename =
+          Utilities::compose_filename("", "mass_accretion_", "txt", _snap_n, 3);
+      mass_file = new std::ofstream(filename);
+      *mass_file << "#time (s)\tmass difference (kg) \ttimestep (s) \t xpos \t "
+                    "ypos \t zpos \n";
+      _snap_n = _snap_n + 1;
+    }
 
     uint_fast32_t index = 0;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -205,6 +230,26 @@ public:
         // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
         const double total_energy = A * pressure + 0.5 * ekin;
 
+        // print mass accretion in file
+        if (mass_file != nullptr) {
+
+          // get mass for the current cell in the mask
+          const double mass_inflow =
+              it.get_hydro_variables().get_conserved_mass();
+
+          // compute the mass accretion
+          const double mass_difference = mass_inflow - mass;
+
+          // coordinates for accretion
+          double xcoord = it.get_cell_midpoint().x();
+          double ycoord = it.get_cell_midpoint().y();
+          double zcoord = it.get_cell_midpoint().z();
+
+          *mass_file << current_time << "\t" << mass_difference << "\t"
+                     << actual_timestep << "\t" << xcoord << "\t" << ycoord
+                     << "\t" << zcoord << "\n";
+        }
+
         // set conserved variables
         it.get_hydro_variables().set_conserved_mass(mass);
         it.get_hydro_variables().set_conserved_momentum(momentum);
@@ -212,6 +257,9 @@ public:
 
         ++index;
       }
+    }
+    if (mass_file != nullptr) {
+      delete mass_file;
     }
   }
 };

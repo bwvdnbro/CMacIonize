@@ -348,7 +348,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   // apply the mask if applicable
   if (use_mask) {
     mask->initialize_mask(*grid);
-    mask->apply_mask(*grid);
+    mask->apply_mask(*grid, 0, 0);
   }
 
   if (write_output) {
@@ -461,7 +461,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
     // apply the mask if applicable
     if (use_mask) {
-      mask->apply_mask(*grid);
+      mask->apply_mask(*grid, actual_timestep, current_time);
     }
 
     // update the PhotonSource
