@@ -232,8 +232,12 @@ private:
         // two shocks
         const double gL = gb(AL, BL, Ppv);
         const double gR = gb(AR, BR, Ppv);
+        cmac_assert(gL + gR != 0.);
         Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
-        cmac_assert(Pguess == Pguess);
+        cmac_assert_message(Pguess == Pguess, "gL: %g, PL: %g, AL: %g, BL: %g, "
+                                              "gR: %g, PR: %g, AR: %g, BR: %g, "
+                                              "Ppv: %g, udiff: %g",
+                            gL, PL, AL, BL, gR, PR, AR, BR, Ppv, udiff);
       }
     }
     // Toro: "Not that approximate solutions may predict, incorrectly, a
@@ -854,6 +858,18 @@ public:
                             const double rhoR, const double uR, const double PR,
                             double &rhosol, double &usol, double &Psol,
                             const double dxdt = 0.) const {
+
+    // check input
+    cmac_assert(rhoL >= 0.);
+    cmac_assert(rhoL == rhoL);
+    cmac_assert(uL == uL);
+    cmac_assert(PL >= 0.);
+    cmac_assert(PL == PL);
+    cmac_assert(rhoR >= 0.);
+    cmac_assert(rhoR == rhoR);
+    cmac_assert(uR == uR);
+    cmac_assert(PR >= 0.);
+    cmac_assert(PR == PR);
 
     // handle vacuum
     if (rhoL == 0. || rhoR == 0.) {
