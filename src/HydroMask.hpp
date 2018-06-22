@@ -53,11 +53,11 @@ public:
    * updated, all other cells are left untouched.
    *
    * @param grid DensityGrid to update.
-   * @param timestep
-   * @param current time of the simulation
+   * @param actual_timestep Current system time step (in s).
+   * @param current_time Current simulation time (in s).
    */
-  virtual void apply_mask(DensityGrid &grid, double actual_timestep,
-                          double current_time) = 0;
+  virtual void apply_mask(DensityGrid &grid, const double actual_timestep,
+                          const double current_time) = 0;
 };
 
 #endif // HYDROMASK_HPP
