@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   integrator.initialize_hydro_variables(grid);
 
   BlockSyntaxHydroMask hydro_mask("blocksyntaxtest.yml", gamma);
-  hydro_mask.apply_mask(grid);
+  hydro_mask.apply_mask(grid,0,0);
 
   std::ofstream ofile("test_hydro_mask.txt");
   ofile << "# x\ty\tz\trho\tux\tuy\tuz\tp\n";
