@@ -31,6 +31,8 @@
 #include "HydroMask.hpp"
 #include "Utilities.hpp"
 
+#include <cinttypes>
+
 /**
  * @brief Masked out region where the hydrodynamics is artificially reset to a
  * constant value.
@@ -55,11 +57,11 @@ private:
   /*! @brief Mask pressure (in kg m^-1 s^-2). */
   double _mask_pressure;
 
-  /*! @brief Snapshot interval in time */
-  double _delta_t;
+  /*! @brief Mass accretion output interval (in s). */
+  const double _delta_t;
 
-  /*! @brief snap_counter */
-  int _snap_n;
+  /*! @brief Mass accretion output counter. */
+  uint_fast32_t _snap_n;
 
   /**
    * @brief Check if the given position is inside the mask region.
@@ -80,15 +82,14 @@ public:
    * @param scale_factor_density Scale factor for the density.
    * @param scale_factor_velocity Scale factor for the velocity.
    * @param scale_factor_pressure Scale factor for the pressure.
-   * @param output_mass_accretion Should the mass accretion rate be written to a
-   * file?
+   * @param delta_t Mass accretion output interval (in s).
    */
   inline RescaledICHydroMask(const CoordinateVector<> center,
                              const double radius,
                              const double scale_factor_density,
                              const double scale_factor_velocity,
                              const double scale_factor_pressure,
-                             const double delta_t = 0)
+                             const double delta_t = 0.)
       : _center(center), _radius2(radius * radius),
         _scale_factors{scale_factor_density, scale_factor_velocity,
                        scale_factor_pressure},
@@ -103,6 +104,7 @@ public:
    *  - scale factor density: Scale factor for the density (default: 0.01)
    *  - scale factor velocity: Scale factor for the velocity (default: 1.)
    *  - scale factor pressure: Scale factors for the pressure (default: 0.01)
+   *  - delta t: Mass accretion output interval (default: 5000. yr)
    *
    * @param params ParameterFile to read.
    */
@@ -116,7 +118,7 @@ public:
             params.get_value< double >("HydroMask:scale factor velocity", 1.),
             params.get_value< double >("HydroMask:scale factor pressure", 0.01),
             params.get_physical_value< QUANTITY_TIME >("HydroMask:delta t",
-                                                       "5000 yr")) {}
+                                                       "5000. yr")) {}
 
   /**
    * @brief Virtual destructor.
@@ -182,19 +184,20 @@ public:
    * We assume the cell order has not changed since intialize_mask() was called.
    *
    * @param grid DensityGrid to update.
+   * @param actual_timestep Current system time step (in s).
+   * @param current_time Current system time (in s).
    */
-  virtual void apply_mask(DensityGrid &grid, double actual_timestep,
-                          double current_time) {
+  virtual void apply_mask(DensityGrid &grid, const double actual_timestep,
+                          const double current_time) {
 
     std::ofstream *mass_file = nullptr;
-
-    if (current_time >= _snap_n * _delta_t) {
+    if (_delta_t > 0 && current_time >= _snap_n * _delta_t) {
       std::string filename =
           Utilities::compose_filename("", "mass_accretion_", "txt", _snap_n, 3);
       mass_file = new std::ofstream(filename);
-      *mass_file << "#time (s)\tmass difference (kg) \ttimestep (s) \t xpos \t "
-                    "ypos \t zpos \n";
-      _snap_n = _snap_n + 1;
+      *mass_file << "#time (s)\tmass difference (kg)\ttimestep (s)\txpos (m)\t"
+                    "ypos (m)\tzpos (m)\n";
+      ++_snap_n;
     }
 
     uint_fast32_t index = 0;
@@ -241,9 +244,9 @@ public:
           const double mass_difference = mass_inflow - mass;
 
           // coordinates for accretion
-          double xcoord = it.get_cell_midpoint().x();
-          double ycoord = it.get_cell_midpoint().y();
-          double zcoord = it.get_cell_midpoint().z();
+          const double xcoord = it.get_cell_midpoint().x();
+          const double ycoord = it.get_cell_midpoint().y();
+          const double zcoord = it.get_cell_midpoint().z();
 
           *mass_file << current_time << "\t" << mass_difference << "\t"
                      << actual_timestep << "\t" << xcoord << "\t" << ycoord

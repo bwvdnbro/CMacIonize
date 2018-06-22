@@ -370,15 +370,17 @@ else(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
 
-# Try to enable Fortran
-enable_language(Fortran OPTIONAL)
-if(CMAKE_Fortran_COMPILER_WORKS)
-  add_configuration_option(HAVE_FORTRAN True)
-  message(STATUS "Fortran compiler found!")
-else(CMAKE_Fortran_COMPILER_WORKS)
-  add_configuration_option(HAVE_FORTRAN False)
-  message(STATUS "Fortran compiler not found!")
-endif(CMAKE_Fortran_COMPILER_WORKS)
+if(ACTIVATE_FORTRAN_BINDING)
+  # Try to enable Fortran
+  enable_language(Fortran OPTIONAL)
+  if(CMAKE_Fortran_COMPILER_WORKS)
+    add_configuration_option(HAVE_FORTRAN True)
+    message(STATUS "Fortran compiler found!")
+  else(CMAKE_Fortran_COMPILER_WORKS)
+    add_configuration_option(HAVE_FORTRAN False)
+    message(STATUS "Fortran compiler not found!")
+  endif(CMAKE_Fortran_COMPILER_WORKS)
+endif(ACTIVATE_FORTRAN_BINDING)
 
 ## Code configuration ##########################################################
 

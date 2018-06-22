@@ -92,9 +92,11 @@ public:
    * untouched.
    *
    * @param grid DensityGrid to update.
+   * @param actual_timestep Current system time step (in s).
+   * @param current_time Current system time (in s).
    */
-  virtual void apply_mask(DensityGrid &grid, double actual_timestep,
-                          double current_time) {
+  virtual void apply_mask(DensityGrid &grid, const double actual_timestep,
+                          const double current_time) {
 
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
