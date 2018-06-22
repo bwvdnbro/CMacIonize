@@ -705,6 +705,7 @@ set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
 
     ../src/ExactRiemannSolver.hpp
+    ../src/RiemannSolver.hpp
 )
 add_unit_test(NAME testRiemannSolver
               SOURCES ${TESTRIEMANNSOLVER_SOURCES})
@@ -1120,16 +1121,27 @@ set(TESTBONDIPROFILE_SOURCES
 add_unit_test(NAME testBondiProfile
               SOURCES ${TESTBONDIPROFILE_SOURCES})
 
-## Unit test for HydroMask
-set(TESTHYDROMASK_SOURCES
-    testHydroMask.cpp
+## Unit test for BlockSyntaxHydroMask
+set(TESTBLOCKSYNTAXHYDROMASK_SOURCES
+    testBlockSyntaxHydroMask.cpp
 
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
-    ../src/HydroMask.hpp
+    ../src/BlockSyntaxHydroMask.hpp
 )
-add_unit_test(NAME testHydroMask
-              SOURCES ${TESTHYDROMASK_SOURCES})
+add_unit_test(NAME testBlockSyntaxHydroMask
+              SOURCES ${TESTBLOCKSYNTAXHYDROMASK_SOURCES})
+
+## Unit test for RescaledICHydroMask
+set(TESTRESCALEDICHYDROMASK
+    testRescaledICHydroMask.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/RescaledICHydroMask.hpp
+)
+add_unit_test(NAME testRescaledICHydroMask
+              SOURCES ${TESTRESCALEDICHYDROMASK})
 
 ## Unit test for PointMassExternalPotential
 set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES

@@ -184,9 +184,12 @@ set(CMACIONIZE_SOURCES
     FaucherGiguerePhotonSourceSpectrum.hpp
     FixedValueCrossSections.hpp
     FixedValueRecombinationRates.hpp
-    HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    HLLCRiemannSolver.hpp
+    HydrogenLymanContinuumSpectrum.hpp
+    HydroMask.hpp
+    HydroMaskFactory.hpp
     InterpolatedDensityFunction.hpp
     IonizationPhotonShootJob.hpp
     IonizationPhotonShootJobMarket.hpp
@@ -210,6 +213,7 @@ set(CMACIONIZE_SOURCES
     RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
     RecombinationRatesFactory.hpp
+    RiemannSolverFactory.hpp
     Signals.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp

@@ -29,16 +29,20 @@
 #include "BondiProfile.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
-#include "ExactRiemannSolver.hpp"
 #include "GradientCalculator.hpp"
 #include "HydroBoundaryConditions.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
+#include "RiemannSolverFactory.hpp"
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
 /*! @brief Uncomment this to switch off second order integration. */
 //#define NO_SECOND_ORDER
+
+/*! @brief Uncomment this to make sure all hydro variables are always set to
+ *  physical values. */
+#define SAFE_HYDRO
 
 #include <cfloat>
 
@@ -81,8 +85,24 @@ private:
   /*! @brief Assumed temperature for ionised gas (in K). */
   const double _ionised_temperature;
 
-  /*! @brief Exact Riemann solver used to solve the Riemann problem. */
-  const ExactRiemannSolver _solver;
+  /*! @brief Conversion factor from temperature to internal energy,
+   *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
+  const double _u_conversion_factor;
+
+  /*! @brief Conversion factor from pressure to temperature,
+   *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
+  const double _T_conversion_factor;
+
+  /*! @brief Conversion factor from pressure to temperature,
+   *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
+  const double _P_conversion_factor;
+
+  /*! @brief Conversion factor from density to number density,
+   *  @f$n_{fac} = \frac{1}{m_{\rm{}H}}@f$ (in kg^-1). */
+  const double _n_conversion_factor;
+
+  /*! @brief Riemann solver used to solve the Riemann problem. */
+  const RiemannSolver *_solver;
 
   /*! @brief Boundary conditions to apply to each boundary. */
   const HydroBoundaryConditionType _boundaries[6];
@@ -330,63 +350,93 @@ private:
         uR_prime[2] = limit(uR_prime[2], uR[2], uL[2], dR_over_r);
         PR_prime = limit(PR_prime, PR, PL, dR_over_r);
 
-        // boost the velocities to the interface frame (and use new variables,
-        // as we still want to use the old value of uL for other neighbours)
-        const CoordinateVector<> uLframe = uL_prime - vframe;
-        const CoordinateVector<> uRframe = uR_prime - vframe;
+        cmac_assert(rhoL_prime == rhoL_prime);
+        cmac_assert(uL_prime.x() == uL_prime.x());
+        cmac_assert(uL_prime.y() == uL_prime.y());
+        cmac_assert(uL_prime.z() == uL_prime.z());
+        cmac_assert(PL_prime == PL_prime);
 
-        // project the velocities onto the surface normal
-        const double vL = CoordinateVector<>::dot_product(uLframe, normal);
-        const double vR = CoordinateVector<>::dot_product(uRframe, normal);
+        cmac_assert(rhoR_prime == rhoR_prime);
+        cmac_assert(uR_prime.x() == uR_prime.x());
+        cmac_assert(uR_prime.y() == uR_prime.y());
+        cmac_assert(uR_prime.z() == uR_prime.z());
+        cmac_assert(PR_prime == PR_prime);
 
-        // solve the Riemann problem
-        double rhosol, vsol, Psol;
-        const int flag = _hydro_integrator._solver.solve(
-            rhoL_prime, vL, PL_prime, rhoR_prime, vR, PR_prime, rhosol, vsol,
-            Psol);
+// make sure all densities and pressures are physical
+#ifdef SAFE_HYDRO
+        rhoL_prime = std::max(rhoL_prime, 0.);
+        PL_prime = std::max(PL_prime, 0.);
+        rhoR_prime = std::max(rhoR_prime, 0.);
+        PR_prime = std::max(PR_prime, 0.);
+#else
+        cmac_assert(rhoL_prime >= 0.) l;
+        cmac_assert(PL_prime >= 0.) l;
+        cmac_assert(rhoR_prime >= 0.) l;
+        cmac_assert(PR_prime >= 0.) l;
+#endif
 
-        // if the solution was vacuum, there is no flux
-        if (flag != 0) {
-          // deproject the velocity
-          CoordinateVector<> usol;
-          if (flag == -1) {
-            vsol -= vL;
-            usol = uLframe + vsol * normal;
-          } else {
-            vsol -= vR;
-            usol = uRframe + vsol * normal;
-          }
+        double mflux = 0.;
+        CoordinateVector<> pflux;
+        double Eflux = 0.;
+        _hydro_integrator._solver->solve_for_flux(
+            rhoL_prime, uL_prime, PL_prime, rhoR_prime, uR_prime, PR_prime,
+            mflux, pflux, Eflux, normal, vframe);
 
-          // rho*e = rho*u + 0.5*rho*v^2 = P/(gamma-1.) + 0.5*rho*v^2
-          double rhoesol;
-          if (_hydro_integrator._gamma > 1.) {
-            rhoesol =
-                0.5 * rhosol * usol.norm2() + Psol * _hydro_integrator._gm1_inv;
-          } else {
-            // this flux will be ignored, but we make sure it has a sensible
-            // value
-            rhoesol = 0.5 * rhosol * usol.norm2();
-          }
-          vsol = CoordinateVector<>::dot_product(usol, normal);
+        cmac_assert_message(
+            mflux == mflux, "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                            "normal: %g %g %g, vframe: %g %g %g",
+            rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(), PL_prime,
+            rhoR_prime, uR_prime.x(), uR_prime.y(), uR_prime.z(), PR_prime,
+            normal.x(), normal.y(), normal.z(), vframe.x(), vframe.y(),
+            vframe.z());
+        cmac_assert_message(pflux.x() == pflux.x(),
+                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                            "normal: %g %g %g, vframe: %g %g %g",
+                            rhoL_prime, uL_prime.x(), uL_prime.y(),
+                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
+                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
+                            normal.y(), normal.z(), vframe.x(), vframe.y(),
+                            vframe.z());
+        cmac_assert_message(pflux.y() == pflux.y(),
+                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                            "normal: %g %g %g, vframe: %g %g %g",
+                            rhoL_prime, uL_prime.x(), uL_prime.y(),
+                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
+                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
+                            normal.y(), normal.z(), vframe.x(), vframe.y(),
+                            vframe.z());
+        cmac_assert_message(pflux.z() == pflux.z(),
+                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                            "normal: %g %g %g, vframe: %g %g %g",
+                            rhoL_prime, uL_prime.x(), uL_prime.y(),
+                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
+                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
+                            normal.y(), normal.z(), vframe.x(), vframe.y(),
+                            vframe.z());
+        cmac_assert_message(_hydro_integrator._gamma == 1. || Eflux == Eflux,
+                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                            "normal: %g %g %g, vframe: %g %g %g",
+                            rhoL_prime, uL_prime.x(), uL_prime.y(),
+                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
+                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
+                            normal.y(), normal.z(), vframe.x(), vframe.y(),
+                            vframe.z());
 
-          // get the fluxes
-          const double mflux = rhosol * vsol * surface_area * _timestep;
-          CoordinateVector<> pflux = rhosol * vsol * usol + Psol * normal;
-          pflux *= surface_area * _timestep;
-          double eflux = (rhoesol + Psol) * vsol * surface_area * _timestep;
+        const double tfac = surface_area * _timestep;
+        mflux *= tfac;
+        pflux *= tfac;
+        Eflux *= tfac;
 
-          // de-boost fluxes to fixed reference frame
-          const double vframe2 = vframe.norm2();
-          eflux += CoordinateVector<>::dot_product(vframe, pflux) +
-                   0.5 * vframe2 * mflux;
-          pflux += mflux * vframe;
-
-          cell.get_hydro_variables().delta_conserved(0) += mflux;
-          cell.get_hydro_variables().delta_conserved(1) += pflux.x();
-          cell.get_hydro_variables().delta_conserved(2) += pflux.y();
-          cell.get_hydro_variables().delta_conserved(3) += pflux.z();
-          cell.get_hydro_variables().delta_conserved(4) += eflux;
-        }
+        cell.get_hydro_variables().delta_conserved(0) += mflux;
+        cell.get_hydro_variables().delta_conserved(1) += pflux.x();
+        cell.get_hydro_variables().delta_conserved(2) += pflux.y();
+        cell.get_hydro_variables().delta_conserved(3) += pflux.z();
+        cell.get_hydro_variables().delta_conserved(4) += Eflux;
       }
     }
   };
@@ -401,6 +451,7 @@ public:
    * @param do_radiative_cooling Flag indicating whether to use radiative
    * cooling or not.
    * @param CFL_constant Courant-Friedrichs-Lewy constant for time stepping.
+   * @param riemann_solver_type Type of Riemann solver to use.
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
    * @param boundary_xlow Type of boundary for the lower x boundary.
@@ -414,24 +465,42 @@ public:
    * @param bondi_profile BondiProfile object used for Bondi inflow boundary
    * conditions.
    */
-  inline HydroIntegrator(double gamma, bool do_radiative_heating,
-                         bool do_radiative_cooling, double CFL_constant,
-                         double neutral_temperature = 100.,
-                         double ionised_temperature = 1.e4,
-                         std::string boundary_xlow = "reflective",
-                         std::string boundary_xhigh = "reflective",
-                         std::string boundary_ylow = "reflective",
-                         std::string boundary_yhigh = "reflective",
-                         std::string boundary_zlow = "reflective",
-                         std::string boundary_zhigh = "reflective",
-                         CoordinateVector< bool > box_periodicity =
+  inline HydroIntegrator(const double gamma, const bool do_radiative_heating,
+                         const bool do_radiative_cooling,
+                         const double CFL_constant,
+                         const std::string riemann_solver_type = "Exact",
+                         const double neutral_temperature = 100.,
+                         const double ionised_temperature = 1.e4,
+                         const std::string boundary_xlow = "reflective",
+                         const std::string boundary_xhigh = "reflective",
+                         const std::string boundary_ylow = "reflective",
+                         const std::string boundary_yhigh = "reflective",
+                         const std::string boundary_zlow = "reflective",
+                         const std::string boundary_zhigh = "reflective",
+                         const CoordinateVector< bool > box_periodicity =
                              CoordinateVector< bool >(false),
                          const BondiProfile *bondi_profile = nullptr)
       : _gamma(gamma), _gm1(_gamma - 1.), _gm1_inv(1. / _gm1),
         _do_radiative_heating(do_radiative_heating),
         _do_radiative_cooling(do_radiative_cooling),
         _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
-        _ionised_temperature(ionised_temperature), _solver(gamma),
+        _ionised_temperature(ionised_temperature),
+        _u_conversion_factor(PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN) *
+                             _gm1_inv /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS)),
+        _T_conversion_factor(PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS) /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN)),
+        _P_conversion_factor(PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN) /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS)),
+        _n_conversion_factor(1. / PhysicalConstants::get_physical_constant(
+                                      PHYSICALCONSTANT_PROTON_MASS)),
+        _solver(RiemannSolverFactory::generate(riemann_solver_type, gamma)),
         _boundaries{get_boundary_type(boundary_xlow),
                     get_boundary_type(boundary_xhigh),
                     get_boundary_type(boundary_ylow),
@@ -515,7 +584,9 @@ public:
             params.get_value< bool >("HydroIntegrator:radiative heating", true),
             params.get_value< bool >("HydroIntegrator:radiative cooling",
                                      false),
-            params.get_value< double >("HydroIntegerator:CFL constant", 0.2),
+            params.get_value< double >("HydroIntegrator:CFL constant", 0.2),
+            params.get_value< std::string >(
+                "HydroIntegrator:Riemann solver type", "Exact"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
@@ -540,6 +611,7 @@ public:
    * Clean up the Bondi profile.
    */
   inline ~HydroIntegrator() {
+    delete _solver;
     if (_bondi_profile != nullptr) {
       delete _bondi_profile;
     }
@@ -554,8 +626,6 @@ public:
 
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
-    const double boltzmann_k =
-        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
 
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
@@ -568,7 +638,7 @@ public:
       const CoordinateVector<> velocity =
           it.get_hydro_variables().get_primitives_velocity();
       // we assume a completely neutral or completely ionized gas
-      double pressure = density * boltzmann_k * temperature / hydrogen_mass;
+      double pressure = density * _P_conversion_factor * temperature;
       if (temperature >= _ionised_temperature) {
         // ionized gas has a lower mean molecular mass
         pressure *= 2.;
@@ -589,7 +659,7 @@ public:
       const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
       if (_gamma > 1.) {
         // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
-        const double total_energy = volume * pressure / _gm1 + 0.5 * ekin;
+        const double total_energy = volume * pressure * _gm1_inv + 0.5 * ekin;
         it.get_hydro_variables().set_conserved_total_energy(total_energy);
       } else {
         // energy is ignored, but we make sure it has a value to avoid problems
@@ -613,14 +683,16 @@ public:
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double rho = it.get_hydro_variables().get_primitives_density();
-      const double P = it.get_hydro_variables().get_primitives_pressure();
-      const double cs = std::sqrt(_gamma * P / rho);
-      const double v =
-          it.get_hydro_variables().get_primitives_velocity().norm();
-      const double V = it.get_volume();
-      const double R = std::cbrt(0.75 * V / M_PI);
-      const double dt = R / (cs + v);
-      dtmin = std::min(dt, dtmin);
+      if (rho > 0.) {
+        const double P = it.get_hydro_variables().get_primitives_pressure();
+        const double cs = std::sqrt(_gamma * P / rho);
+        const double v =
+            it.get_hydro_variables().get_primitives_velocity().norm();
+        const double V = it.get_volume();
+        const double R = std::cbrt(0.75 * V * M_1_PI);
+        const double dt = R / (cs + v);
+        dtmin = std::min(dt, dtmin);
+      }
     }
     return _CFL_constant * dtmin;
   }
@@ -723,24 +795,19 @@ public:
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {
-      const double boltzmann_k =
-          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
-      const double mH = PhysicalConstants::get_physical_constant(
-          PHYSICALCONSTANT_PROTON_MASS);
-
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const IonizationVariables &ionization_variables =
             it.get_ionization_variables();
 
         const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
-        const double mpart = xH * mH + 0.5 * (1. - xH) * mH;
         const double Tgas =
             _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
         it.get_ionization_variables().set_temperature(Tgas);
-        if (_gamma > 1.) {
-          const double ugas = boltzmann_k * Tgas / _gm1 / mpart;
+        if (_gamma > 1. &&
+            it.get_hydro_variables().get_primitives_density() > 0.) {
+          const double ugas = 2. * _u_conversion_factor * Tgas / (1. + xH);
           const double uold =
-              it.get_hydro_variables().get_primitives_pressure() / _gm1 /
+              it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
               it.get_hydro_variables().get_primitives_density();
           const double du = ugas - uold;
           const double dE = it.get_hydro_variables().get_conserved_mass() * du;
@@ -750,6 +817,8 @@ public:
           if (_do_radiative_cooling && dE < 0.) {
             it.get_hydro_variables().delta_conserved(4) -= dE;
           }
+          cmac_assert(it.get_hydro_variables().delta_conserved(4) ==
+                      it.get_hydro_variables().delta_conserved(4));
         }
       }
     }
@@ -768,17 +837,47 @@ public:
       it.get_hydro_variables().conserved(4) -=
           it.get_hydro_variables().delta_conserved(4);
 
+      cmac_assert(it.get_hydro_variables().get_conserved_mass() ==
+                  it.get_hydro_variables().get_conserved_mass());
+
+#ifdef SAFE_HYDRO
+      it.get_hydro_variables().conserved(0) =
+          std::max(it.get_hydro_variables().get_conserved_mass(), 0.);
+#else
+      cmac_assert(it.get_hydro_variables().get_conserved_mass() >= 0.);
+#endif
+
       // add gravity
       const CoordinateVector<> a =
           it.get_hydro_variables().get_gravitational_acceleration();
-      const double m = it.get_hydro_variables().get_conserved_mass();
+      const double mdt =
+          it.get_hydro_variables().get_conserved_mass() * timestep;
       const CoordinateVector<> p =
           it.get_hydro_variables().get_conserved_momentum();
-      it.get_hydro_variables().conserved(1) += timestep * m * a.x();
-      it.get_hydro_variables().conserved(2) += timestep * m * a.y();
-      it.get_hydro_variables().conserved(3) += timestep * m * a.z();
+      it.get_hydro_variables().conserved(1) += mdt * a.x();
+      it.get_hydro_variables().conserved(2) += mdt * a.y();
+      it.get_hydro_variables().conserved(3) += mdt * a.z();
       it.get_hydro_variables().conserved(4) +=
           timestep * CoordinateVector<>::dot_product(p, a);
+
+      cmac_assert(it.get_hydro_variables().get_conserved_momentum().x() ==
+                  it.get_hydro_variables().get_conserved_momentum().x());
+      cmac_assert(it.get_hydro_variables().get_conserved_momentum().y() ==
+                  it.get_hydro_variables().get_conserved_momentum().y());
+      cmac_assert(it.get_hydro_variables().get_conserved_momentum().z() ==
+                  it.get_hydro_variables().get_conserved_momentum().z());
+
+      cmac_assert(_gamma == 1. ||
+                  it.get_hydro_variables().get_conserved_total_energy() ==
+                      it.get_hydro_variables().get_conserved_total_energy());
+
+#ifdef SAFE_HYDRO
+      it.get_hydro_variables().conserved(4) =
+          std::max(it.get_hydro_variables().get_conserved_total_energy(), 0.);
+#else
+      cmac_assert(_gamma == 1. ||
+                  it.get_hydro_variables().get_conserved_total_energy() >= 0.);
+#endif
 
       // reset time differences
       it.get_hydro_variables().delta_conserved(0) = 0.;
@@ -790,14 +889,12 @@ public:
 
     grid.evolve(timestep);
 
-    const double hydrogen_mass =
-        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
-    const double boltzmann_k =
-        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
+      cmac_assert(volume > 0.);
+
       const double mass = it.get_hydro_variables().get_conserved_mass();
       const CoordinateVector<> momentum =
           it.get_hydro_variables().get_conserved_momentum();
@@ -807,16 +904,12 @@ public:
       IonizationVariables &ionization_variables = it.get_ionization_variables();
 
       const double mean_molecular_mass =
-          ionization_variables.get_ionic_fraction(ION_H_n) * hydrogen_mass +
-          0.5 * (1. - ionization_variables.get_ionic_fraction(ION_H_n)) *
-              hydrogen_mass;
+          0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
 
       double density, pressure;
       CoordinateVector<> velocity;
       if (mass <= 0.) {
-        if (mass < 0.) {
-          cmac_error("Negative mass for cell!");
-        }
+        cmac_assert(mass == 0.);
         // vacuum
         density = 0.;
         velocity = CoordinateVector<>(0.);
@@ -833,22 +926,24 @@ public:
               (total_energy -
                0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
               volume;
-          ionization_variables.set_temperature(mean_molecular_mass * pressure /
-                                               boltzmann_k / density);
+          ionization_variables.set_temperature(
+              mean_molecular_mass * _T_conversion_factor * pressure / density);
         } else {
           const double temperature = ionization_variables.get_temperature();
-          pressure = boltzmann_k * density * temperature / mean_molecular_mass;
+          pressure = _P_conversion_factor * density * temperature /
+                     mean_molecular_mass;
         }
       }
 
-      cmac_assert(density >= 0.);
+      cmac_assert_message(density >= 0., "density: %g, mass: %g, volume: %g",
+                          density, mass, volume);
       cmac_assert(pressure >= 0.);
 
       it.get_hydro_variables().set_primitives_density(density);
       it.get_hydro_variables().set_primitives_velocity(velocity);
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
-      ionization_variables.set_number_density(density / hydrogen_mass);
+      ionization_variables.set_number_density(density * _n_conversion_factor);
 
       cmac_assert(ionization_variables.get_number_density() >= 0.);
       cmac_assert(ionization_variables.get_temperature() >= 0.);

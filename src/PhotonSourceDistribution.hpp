@@ -82,8 +82,9 @@ public:
    * size.
    *
    * @param timestep Size of the system time step (in s).
+   * @return True if the distribution changed, false otherwise.
    */
-  virtual void update(const double timestep) {}
+  virtual bool update(const double timestep) { return false; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

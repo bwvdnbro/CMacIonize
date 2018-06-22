@@ -35,16 +35,16 @@
 /**
  * @brief Spherical Bondi accretion profile.
  *
- * We assume an isothermal gas (\f$P(r) = c_s^2 \rho{}(r)\f$, with \f$c_s\f$ a
+ * We assume an isothermal gas (@f$P(r) = c_s^2 \rho{}(r)@f$, with @f$c_s\f$ a
  * constant isothermal sound speed) spherically accreting onto a point source of
- * mass \f$M\f$ with a constant accretion rate:
- * \f[
+ * mass @f$M\f$ with a constant accretion rate:
+ * @f[
  *   \frac{ {\rm{}d}M_a(r) }{ {\rm{}d}t } =
  *     \frac{ {\rm{}d} }{ {\rm{}d}t } \left( 4\pi{}r^2\rho{}(r)v(r) \right) = 0.
- * \f]
+ * @f]
  * It can be shown (see Vandenbroucke et al., in prep.) that the resulting flow
  * will have the following velocity profile:
- * \f[
+ * @f[
  *   v(r) = -c_s \begin{cases}
  *     \sqrt{-W_{-1}\left( -\left( \frac{R_B}{r} \right)^4
  *                         {\rm{}e}^{3 - 4\frac{R_B}{r}} \right)}
@@ -53,43 +53,43 @@
  *                        {\rm{}e}^{3 - 4\frac{R_B}{r}} \right)}
  *     & r > R_B,
  *   \end{cases}
- * \f]
- * with \f$R_B = \frac{GM}{2c_s^2}\f$ a characteristic Bondi radius, and
- * \f$W_{-1}(x)\f$ and \f$W_{0}(x)\f$ the 0 and -1 branch of the Lambert W
+ * @f]
+ * with @f$R_B = \frac{GM}{2c_s^2}@f$ a characteristic Bondi radius, and
+ * @f$W_{-1}(x)@f$ and @f$W_{0}(x)@f$ the 0 and -1 branch of the Lambert W
  * function (https://en.wikipedia.org/wiki/Lambert_W_function).
  *
  * The density profile is given by
- * \f[
+ * @f[
  *   \rho{}(r) = -\frac{\rho{}_B R_B^2 c_s}{r^2 v(r)},
- * \f]
- * with \f$\rho{}_B\f$ the Bondi density, i.e. the density at the Bondi radius.
+ * @f]
+ * with @f$\rho{}_B\f$ the Bondi density, i.e. the density at the Bondi radius.
  * The Bondi density is related to the density at very large radii
- * (\f$\rho{}_\infty{}\f$) by
- * \f[
+ * (@f$\rho{}_\infty{}@f$) by
+ * @f[
  *   \rho{}_B = \rho{}_\infty{} {\rm{}e}^\frac{3}{2}.
- * \f]
+ * @f]
  *
  * We also consider a variant of this profile for which the isothermal equation
  * of state is changed to
- * \f[
+ * @f[
  *   P(r) = \begin{cases}
  *     P_c c_s^2 \rho{} & r < R_I, \\
  *     c_s^2 \rho{} & R_I \leq{} r,
  *   \end{cases}
- * \f]
- * with \f$R_I\f$ and \f$P_c\f$ two additional parameters, respectively
+ * @f]
+ * with @f$R_I\f$ and @f$P_c\f$ two additional parameters, respectively
  * interpreted as the ionisation radius at which the behaviour changes, and the
  * pressure contrast between the two regions.
  *
  * For this more general equation of state a steady state solution is possible
- * if \f$R_I < R_B\f$, in which case the solution is given by
- * \f[
+ * if @f$R_I < R_B\f$, in which case the solution is given by
+ * @f[
  *   \rho{}(r) = \begin{cases}
  *     \frac{\rho{}_I R_I^2 v_I}{r^2 v(r)} & r < R_I, \\
  *     -\frac{\rho{}_B R_B^2 c_s}{r^2 v(r)} & R_I \leq{} r,
  *   \end{cases}
- * \f]
- * \f[
+ * @f]
+ * @f[
  *   v(r) = -c_s \begin{cases}
  *     \sqrt{P_c} \sqrt{-W_{-1} \left( -\left( \frac{R_I}{r} \right)^4
  *       \frac{v_I^2}{P_c c_s^2} {\rm{}e}^{4\frac{R_B}{P_c R_I} -
@@ -101,33 +101,33 @@
  *                        {\rm{}e}^{3 - 4\frac{R_B}{r}} \right)}
  *     & r > R_B,
  *   \end{cases}
- * \f]
- * with \f$\rho{}_I = \Gamma{} \rho{}(R_I)\f$ and
- * \f$v_I = \frac{v(R_I)}{\Gamma{}}\f$,
- * \f[
+ * @f]
+ * with @f$\rho{}_I = \Gamma{} \rho{}(R_I)@f$ and
+ * @f$v_I = \frac{v(R_I)}{\Gamma{}}@f$,
+ * @f[
  *   \Gamma{} = \frac{1}{2} \left( \frac{v^2(R_I)}{P_c c_s^2} + \frac{1}{P_c} -
  *              \sqrt{\left( \frac{v^2(R_I)}{P_c c_s^2} +
  *                           \frac{1}{P_c} \right)^2 -
  *                    4\frac{v^2(R_I)}{P_c c_s^2}} \right),
- * \f]
- * and \f$\rho{}(R_I)\f$ and \f$v(R_I)\f$ the original profile evaluated at
- * \f$R_I\f$.
+ * @f]
+ * and @f$\rho{}(R_I)@f$ and @f$v(R_I)@f$ the original profile evaluated at
+ * @f$R_I\f$.
  */
 class BondiProfile {
 private:
-  /*! @brief Bondi radius \f$R_B\f$ (in m). */
+  /*! @brief Bondi radius @f$R_B\f$ (in m). */
   const double _bondi_radius;
 
-  /*! @brief Bondi density \f$\rho{}_B\f$ (in kg m^-3). */
+  /*! @brief Bondi density @f$\rho{}_B\f$ (in kg m^-3). */
   const double _bondi_density;
 
-  /*! @brief Isothermal sound speed \f$c_s\f$ (in m s^-1). */
+  /*! @brief Isothermal sound speed @f$c_s\f$ (in m s^-1). */
   const double _sound_speed;
 
-  /*! @brief Ionisation radius \f$R_I\f$ (in m). */
+  /*! @brief Ionisation radius @f$R_I\f$ (in m). */
   const double _ionisation_radius;
 
-  /*! @brief Pressure contrast \f$P_c\f$. */
+  /*! @brief Pressure contrast @f$P_c\f$. */
   const double _pressure_contrast;
 
   /*! @brief Ionised density at the ionisation radius (in kg m^-3). */
@@ -151,12 +151,12 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param central_mass Central accreting mass \f$M\f$ (in kg).
-   * @param bondi_density Density at the Bondi radius \f$\rho{}_B\f$
+   * @param central_mass Central accreting mass @f$M\f$ (in kg).
+   * @param bondi_density Density at the Bondi radius @f$\rho{}_B\f$
    * (in kg m^-3).
-   * @param sound_speed Isothermal sound speed \f$c_s\f$ (in m s^-1).
-   * @param ionisation_radius Ionisation radius \f$R_I\f$ (in m).
-   * @param pressure_contrast Pressure contrast \f$P_c\f$.
+   * @param sound_speed Isothermal sound speed @f$c_s\f$ (in m s^-1).
+   * @param ionisation_radius Ionisation radius @f$R_I\f$ (in m).
+   * @param pressure_contrast Pressure contrast @f$P_c\f$.
    * @param center Location of the center of the Bondi profile (in m).
    * @param vprof_radius Characteristic radius of the superimposed velocity
    * profile (in m).

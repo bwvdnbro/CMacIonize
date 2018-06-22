@@ -45,7 +45,7 @@
 #include "ExternalPotentialFactory.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
-#include "HydroMask.hpp"
+#include "HydroMaskFactory.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
 #include "LineCoolingData.hpp"
@@ -275,7 +275,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const bool use_mask = params.get_value< bool >(
       "RadiationHydrodynamicsSimulation:use mask", false);
   if (use_mask) {
-    mask = new HydroMask(params);
+    mask = HydroMaskFactory::generate(params, log);
   }
 
   // optional external point mass potential
@@ -347,7 +347,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   // apply the mask if applicable
   if (use_mask) {
-    mask->apply_mask(*grid);
+    mask->initialize_mask(*grid);
+    mask->apply_mask(*grid, 0, 0);
   }
 
   if (write_output) {
@@ -460,12 +461,13 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
     // apply the mask if applicable
     if (use_mask) {
-      mask->apply_mask(*grid);
+      mask->apply_mask(*grid, actual_timestep, current_time);
     }
 
     // update the PhotonSource
-    sourcedistribution->update(actual_timestep);
-    source.update(sourcedistribution);
+    if (sourcedistribution->update(actual_timestep)) {
+      source.update(sourcedistribution);
+    }
 
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written
