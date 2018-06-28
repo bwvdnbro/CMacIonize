@@ -37,6 +37,20 @@
 #include <cmath>
 
 /**
+ * @brief Wrapper around std:sqrt that checks if errors occured.
+ *
+ * @param x Input value.
+ * @return Square root of the input value.
+ */
+inline static double safe_sqrt(const double x) {
+  const double y = std::sqrt(x);
+  if (errno != 0) {
+    cmac_error("sqrt error: f(%g) = %g!", x, y);
+  }
+  return y;
+}
+
+/**
  * @brief HLLC Riemann solver.
  */
 class HLLCRiemannSolver : public RiemannSolver {
@@ -365,9 +379,9 @@ public:
     cmac_assert(rhoLinv == rhoLinv);
     const double rhoRinv = 1. / rhoR;
     cmac_assert(rhoRinv == rhoRinv);
-    const double aL = std::sqrt(_gamma * PL * rhoLinv);
+    const double aL = safe_sqrt(_gamma * PL * rhoLinv);
     cmac_assert(aL == aL);
-    const double aR = std::sqrt(_gamma * PR * rhoRinv);
+    const double aR = safe_sqrt(_gamma * PR * rhoRinv);
     cmac_assert(aR == aR);
 
     const double vdiff = vR - vL;
@@ -389,12 +403,12 @@ public:
     // all these speeds are along the interface normal, since uL and uR are
     double qL = 1.;
     if (pstar > PL) {
-      qL = std::sqrt(1. + _gp1d2g * (pstar / PL - 1.));
+      qL = safe_sqrt(1. + _gp1d2g * (pstar / PL - 1.));
       cmac_assert(qL == qL);
     }
     double qR = 1.;
     if (pstar > PR) {
-      qR = std::sqrt(1. + _gp1d2g * (pstar / PR - 1.));
+      qR = safe_sqrt(1. + _gp1d2g * (pstar / PR - 1.));
       cmac_assert(qR == qR);
     }
 
