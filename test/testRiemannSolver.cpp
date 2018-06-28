@@ -126,5 +126,25 @@ int main(int argc, char **argv) {
   plot_solution(solver, 5.99924, 19.5975, 460.894, 5.99242, -6.19633, 46.0950,
                 0.035, "test_riemann_test5.txt");
 
+  // very small values test
+  ExactRiemannSolver solver2(1.);
+  const double cs = 2875.;
+  const double PL = 2.21538e-153;
+  const double PR = 1.54009e-154;
+  const double udiff = -24.3203;
+  const double gamma = 1.00000001;
+  const double uL = 0.;
+
+  const double cs2 = cs * cs;
+  const double rhoL = (gamma * PL) / cs2;
+  const double rhoR = (gamma * PR) / cs2;
+  const double uR = udiff + uL;
+
+  assert_condition(rhoL == rhoL);
+  assert_condition(rhoR == rhoR);
+
+  plot_solution(solver2, rhoL, uL, PL, rhoR, uR, PR, 0.01,
+                "test_riemann_small.txt");
+
   return 0;
 }

@@ -98,11 +98,15 @@ private:
                    double Pstar) const {
     if (Pstar > P) {
       const double result = (Pstar - P) * std::sqrt(A / (Pstar + B));
-      cmac_assert(result == result);
+      cmac_assert_message(result == result,
+                          "P: %g, A: %g, B: %g, Pinv: %g, afac: %g, Pstar: %g",
+                          P, A, B, Pinv, afac, Pstar);
       return result;
     } else {
       const double result = afac * (std::pow(Pstar * Pinv, _gm1d2g) - 1.);
-      cmac_assert(result == result);
+      cmac_assert_message(result == result,
+                          "P: %g, A: %g, B: %g, Pinv: %g, afac: %g, Pstar: %g",
+                          P, A, B, Pinv, afac, Pstar);
       return result;
     }
   }
@@ -234,10 +238,11 @@ private:
         const double gR = gb(AR, BR, Ppv);
         cmac_assert(gL + gR != 0.);
         Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
-        cmac_assert_message(Pguess == Pguess, "gL: %g, PL: %g, AL: %g, BL: %g, "
-                                              "gR: %g, PR: %g, AR: %g, BR: %g, "
-                                              "Ppv: %g, udiff: %g",
-                            gL, PL, AL, BL, gR, PR, AR, BR, Ppv, udiff);
+        cmac_assert_message(Pguess == Pguess,
+                            "gL: %g, aL: %g, PL: %g, AL: %g, BL: %g, "
+                            "gR: %g, aR: %g, PR: %g, AR: %g, BR: %g, "
+                            "Ppv: %g, udiff: %g",
+                            gL, aL, PL, AL, BL, gR, aR, PR, AR, BR, Ppv, udiff);
       }
     }
     // Toro: "Not that approximate solutions may predict, incorrectly, a
