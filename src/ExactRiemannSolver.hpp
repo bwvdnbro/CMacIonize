@@ -80,7 +80,6 @@ private:
    */
   inline double get_soundspeed(const double rhoinv, const double P) const {
     const double result = std::sqrt(_gamma * P * rhoinv);
-    cmac_assert(result == result);
     return result;
   }
 
@@ -99,15 +98,9 @@ private:
                    double Pstar) const {
     if (Pstar > P) {
       const double result = (Pstar - P) * std::sqrt(A / (Pstar + B));
-      cmac_assert_message(result == result,
-                          "P: %g, A: %g, B: %g, Pinv: %g, afac: %g, Pstar: %g",
-                          P, A, B, Pinv, afac, Pstar);
       return result;
     } else {
       const double result = afac * (std::pow(Pstar * Pinv, _gm1d2g) - 1.);
-      cmac_assert_message(result == result,
-                          "P: %g, A: %g, B: %g, Pinv: %g, afac: %g, Pstar: %g",
-                          P, A, B, Pinv, afac, Pstar);
       return result;
     }
   }
@@ -152,11 +145,9 @@ private:
     if (Pstar > P) {
       const double C = 1. / (Pstar + B);
       const double result = (1. - 0.5 * (Pstar - P) * C) * std::sqrt(A * C);
-      cmac_assert(result == result);
       return result;
     } else {
       const double result = std::pow(Pstar * Pinv, -_gp1d2g) * rhoainv;
-      cmac_assert(result == result);
       return result;
     }
   }
@@ -194,7 +185,6 @@ private:
    */
   inline double gb(double A, double B, double Pstar) const {
     const double result = std::sqrt(A / (Pstar + B));
-    cmac_assert(result == result);
     return result;
   }
 
@@ -214,11 +204,11 @@ private:
    */
   inline double guess_P(double PL, double aL, double AL, double BL, double PR,
                         double aR, double AR, double BR, double udiff) const {
+
     double Pguess;
     const double Pmin = std::min(PL, PR);
     const double Pmax = std::max(PL, PR);
     const double qmax = Pmax / Pmin;
-    cmac_assert(qmax == qmax);
     const double PLpPR = PL + PR;
     const double smallP = 5.e-9 * PLpPR;
     double Ppv = 0.5 * PLpPR - 0.125 * udiff * PLpPR * (aL + aR);
@@ -232,22 +222,15 @@ private:
             std::pow((aL + aR - _gm1d2 * udiff) / (aL * std::pow(PL, -_gm1d2g) +
                                                    aR * std::pow(PR, -_gm1d2g)),
                      _tgdgm1);
-        cmac_assert(Pguess == Pguess);
       } else {
         // two shocks
         const double gL = gb(AL, BL, Ppv);
         const double gR = gb(AR, BR, Ppv);
-        cmac_assert(gL + gR != 0.);
         if (isinf(gL) || isinf(gR)) {
           Pguess = smallP;
         } else {
           Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
         }
-        cmac_assert_message(Pguess == Pguess,
-                            "gL: %g, aL: %g, PL: %g, AL: %g, BL: %g, "
-                            "gR: %g, aR: %g, PR: %g, AR: %g, BR: %g, "
-                            "Ppv: %g, udiff: %g",
-                            gL, aL, PL, AL, BL, gR, aR, PR, AR, BR, Ppv, udiff);
       }
     }
     // Toro: "Not that approximate solutions may predict, incorrectly, a
@@ -284,6 +267,7 @@ private:
                             double PRinv, double aRfac, double udiff,
                             double Plow, double Phigh, double fPlow,
                             double fPhigh) const {
+
     double a = Plow;
     double b = Phigh;
     double c = 0.;
@@ -392,6 +376,7 @@ private:
                                       double Pstar, double &rhosol,
                                       double &usol, double &Psol,
                                       double dxdt = 0.) const {
+
     // variable used twice below
     const double PdPR = Pstar * PRinv;
     // get the shock speed
@@ -431,6 +416,7 @@ private:
                                             double &rhosol, double &usol,
                                             double &Psol,
                                             double dxdt = 0.) const {
+
     // get the velocity of the head of the rarefaction wave
     const double SHR = uR + aR;
     if (SHR > dxdt) {
@@ -479,6 +465,7 @@ private:
                                  double PRinv, double ustar, double Pstar,
                                  double &rhosol, double &usol, double &Psol,
                                  double dxdt = 0.) const {
+
     if (Pstar > PR) {
       /// shock wave
       sample_right_shock_wave(rhoR, uR, PR, aR, PRinv, ustar, Pstar, rhosol,
@@ -510,6 +497,7 @@ private:
                                      double aL, double PLinv, double ustar,
                                      double Pstar, double &rhosol, double &usol,
                                      double &Psol, double dxdt = 0.) const {
+
     // variable used twice below
     const double PdPL = Pstar * PLinv;
     // get the shock speed
@@ -549,6 +537,7 @@ private:
                                            double &rhosol, double &usol,
                                            double &Psol,
                                            double dxdt = 0.) const {
+
     // get the velocity of the head of the rarefaction wave
     const double SHL = uL - aL;
     if (SHL < dxdt) {
@@ -597,6 +586,7 @@ private:
                                 double PLinv, double ustar, double Pstar,
                                 double &rhosol, double &usol, double &Psol,
                                 double dxdt = 0.) const {
+
     if (Pstar > PL) {
       /// shock wave
       sample_left_shock_wave(rhoL, uL, PL, aL, PLinv, ustar, Pstar, rhosol,
@@ -626,6 +616,7 @@ private:
                                           double aL, double &rhosol,
                                           double &usol, double &Psol,
                                           double dxdt = 0.) const {
+
     if (uL - aL < dxdt) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -672,6 +663,7 @@ private:
                                          double aR, double &rhosol,
                                          double &usol, double &Psol,
                                          double dxdt = 0.) const {
+
     if (dxdt < uR + aR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -724,6 +716,7 @@ private:
                            double rhoR, double uR, double PR, double aR,
                            double &rhosol, double &usol, double &Psol,
                            double dxdt) const {
+
     // get the speeds of the left and right rarefaction waves
     const double SR = uR - _tdgm1 * aR;
     const double SL = uL + _tdgm1 * aL;
@@ -802,6 +795,7 @@ private:
                                    const double aR, const bool vacuumR,
                                    double &rhosol, double &usol, double &Psol,
                                    const double dxdt = 0.) const {
+
     // if both states are vacuum, the solution is also vacuum
     if (vacuumL && vacuumR) {
       rhosol = 0.;
@@ -927,16 +921,12 @@ public:
     }
 
     // precompute some variables
-    const double AL = _tdgp1 / rhoL;
-    cmac_assert(AL == AL);
+    const double AL = _tdgp1 * rhoLinv;
     const double BL = _gm1dgp1 * PL;
     const double rhoLaLinv = 1. / (rhoL * aL);
-    cmac_assert(rhoLaLinv == rhoLaLinv);
-    const double AR = _tdgp1 / rhoR;
-    cmac_assert(AR == AR);
+    const double AR = _tdgp1 * rhoRinv;
     const double BR = _gm1dgp1 * PR;
     const double rhoRaRinv = 1. / (rhoR * aR);
-    cmac_assert(rhoRaRinv == rhoRaRinv);
 
     // find the pressure and velocity in the middle state
     // since this is an exact Riemann solver, this is an iterative process,
@@ -982,17 +972,6 @@ public:
       Pstar = Pguess;
     }
 
-    cmac_assert_message(
-        Pstar == Pstar,
-        "rhoL: %g, uL: %g, PL: %g, rhoR: %g, uR: %g, PR: %g, Pstar: %g", rhoL,
-        uL, PL, rhoR, uR, PR, Pstar);
-    cmac_assert_message(
-        Pstar >= 0.,
-        "rhoL: %g, uL: %g, PL: %g, rhoR: %g, uR: %g, PR: %g, Pstar: %g", rhoL,
-        uL, PL, rhoR, uR, PR, Pstar);
-
-    // the middle state velocity is fixed once the middle state pressure is
-    // known
     const double fR = fb(PR, AR, BR, PRinv, aRfac, Pstar);
     const double fL = fb(PL, AL, BL, PLinv, aLfac, Pstar);
     if (isinf(fR) || isinf(fL)) {
@@ -1001,15 +980,9 @@ public:
       Psol = 0.;
       return 0;
     } else {
+      // the middle state velocity is fixed once the middle state pressure is
+      // known
       const double ustar = 0.5 * ((uL + uR) + (fR - fL));
-
-      cmac_assert_message(
-          ustar == ustar,
-          "rhoL: %lu, uL: %lu, PL: %lu, rhoR: %lu, uR: %lu, PR: "
-          "%lu, ustar: %g, Pstar: %g",
-          Utilities::as_bytes(rhoL), Utilities::as_bytes(uL),
-          Utilities::as_bytes(PL), Utilities::as_bytes(rhoR),
-          Utilities::as_bytes(uR), Utilities::as_bytes(PR), ustar, Pstar);
 
       // we now have solved the Riemann problem: we have the left, middle and
       // right state, and this completely fixes the solution
@@ -1052,20 +1025,14 @@ public:
                               const CoordinateVector<> vface = 0.) const {
 
     // check input values
-    cmac_assert(rhoL == rhoL);
-    cmac_assert(rhoL >= 0.);
-    cmac_assert(uL.x() == uL.x());
-    cmac_assert(uL.y() == uL.y());
-    cmac_assert(uL.z() == uL.z());
-    cmac_assert(PL == PL);
-    cmac_assert(PL >= 0.);
-    cmac_assert(rhoR == rhoR);
-    cmac_assert(rhoR >= 0.);
-    cmac_assert(uR.x() == uR.x());
-    cmac_assert(uR.y() == uR.y());
-    cmac_assert(uR.z() == uR.z());
-    cmac_assert(PR == PR);
-    cmac_assert(PR >= 0.);
+    cmac_assert_message(
+        rhoL == rhoL && rhoL >= 0. && uL.x() == uL.x() && uL.y() == uL.y() &&
+            uL.z() == uL.z() && PL == PL && PL >= 0. && rhoR == rhoR &&
+            rhoR >= 0. && uR.x() == uR.x() && uR.y() == uR.y() &&
+            uR.z() == uR.z() && PR == PR && PR >= 0.,
+        "Invalid Riemann solver input: rhoL: %g, uL: %g %g %g, PL: %g, rhoR: "
+        "%g, uR: %g %g %g, PR: %g",
+        rhoL, uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
 
     // boost the velocities to the interface frame (and use new variables,
     // as we still want to use the old value of uL for other neighbours)
@@ -1080,27 +1047,17 @@ public:
     double rhosol, vsol, Psol;
     const int flag = solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
 
-    // check Riemann problem output
-    cmac_assert_message(rhosol == rhosol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, "
-                                          "vR: %g, PR: %g, rhosol: %g, vsol: "
-                                          "%g, Psol: %g",
-                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
-    cmac_assert_message(rhosol >= 0., "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
-                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
-                                      "%g",
-                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
-    cmac_assert_message(vsol == vsol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
-                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
-                                      "%g",
-                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
-    cmac_assert_message(Psol == Psol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
-                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
-                                      "%g",
-                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
-    cmac_assert_message(Psol >= 0., "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
-                                    "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
-                                    "%g",
-                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+    // check Riemann problem output and output a reproducable dump if the output
+    // is non-physical
+    cmac_assert_message(rhosol == rhosol && rhosol >= 0. && vsol == vsol &&
+                            Psol == Psol && Psol >= 0.,
+                        "Invalid Riemann solver output: rhosol: %g, vsol: %g, "
+                        "Psol: %g, rhoL: %g (%lu), vL: %g (%lu), PL: %g (%lu), "
+                        "rhoR: %g (%lu), vR: %g (%lu), PR: %g (%lu)",
+                        rhosol, vsol, Psol, rhoL, Utilities::as_bytes(rhoL), vL,
+                        Utilities::as_bytes(vL), PL, Utilities::as_bytes(PL),
+                        rhoR, Utilities::as_bytes(rhoR), vR,
+                        Utilities::as_bytes(vR), PR, Utilities::as_bytes(PR));
 
     // if the solution was vacuum, there is no flux
     if (flag != 0) {
@@ -1134,6 +1091,12 @@ public:
       Eflux +=
           CoordinateVector<>::dot_product(vface, pflux) + 0.5 * vface2 * mflux;
       pflux += mflux * vface;
+    } else {
+      mflux = 0.;
+      pflux[0] = 0.;
+      pflux[1] = 0.;
+      pflux[2] = 0.;
+      Eflux = 0.;
     }
   }
 };

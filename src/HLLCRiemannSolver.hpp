@@ -31,6 +31,7 @@
 
 #include "Error.hpp"
 #include "RiemannSolver.hpp"
+#include "Utilities.hpp"
 
 #include <algorithm>
 #include <cinttypes>
@@ -81,6 +82,7 @@ private:
   inline int_fast32_t sample_right_vacuum(double rhoL, double uL, double PL,
                                           double aL, double &rhosol,
                                           double &usol, double &Psol) const {
+
     if (uL < aL) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -125,6 +127,7 @@ private:
   inline int_fast32_t sample_left_vacuum(double rhoR, double uR, double PR,
                                          double aR, double &rhosol,
                                          double &usol, double &Psol) const {
+
     if (-aR < uR) {
       /// vacuum regime
       // get the vacuum rarefaction wave speed
@@ -357,62 +360,13 @@ public:
 
     // check input values
     cmac_assert_message(
-        rhoL == rhoL,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        rhoL >= 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uL.x() == uL.x(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uL.y() == uL.y(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uL.z() == uL.z(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        PL == PL,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        PL >= 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-
-    cmac_assert_message(
-        rhoR == rhoR,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        rhoR >= 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uR.x() == uR.x(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uR.y() == uR.y(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        uR.z() == uR.z(),
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        PR == PR,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        PR >= 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+        rhoL == rhoL && rhoL >= 0. && uL.x() == uL.x() && uL.y() == uL.y() &&
+            uL.z() == uL.z() && PL == PL && PL >= 0. && rhoR == rhoR &&
+            rhoR >= 0. && uR.x() == uR.x() && uR.y() == uR.y() &&
+            uR.z() == uR.z() && PR == PR && PR >= 0.,
+        "Invalid Riemann solver input: rhoL: %g, uL: %g %g %g, PL: %g, rhoR: "
+        "%g, uR: %g %g %g, PR: %g",
+        rhoL, uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
 
     const double rhoLinv = 1. / rhoL;
     const double rhoRinv = 1. / rhoR;
@@ -453,96 +407,98 @@ public:
       solve_vacuum_flux(rhoL, uL, PL, uLface, vL, aL, vacuumL, rhoR, uR, PR,
                         uRface, vR, aR, vacuumR, mflux, pflux, Eflux, normal,
                         vface);
-      return;
-    }
-
-    cmac_assert_message(
-        PL > 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-    cmac_assert_message(
-        PR > 0.,
-        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
-        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
-
-    // STEP 1: pressure estimate
-    const double rhobar = rhoL + rhoR;
-    const double pPVRS = 0.5 * ((PL + PR) - 0.25 * vdiff * rhobar * abar);
-    const double pstar = std::max(0., pPVRS);
-
-    // STEP 2: wave speed estimates
-    // all these speeds are along the interface normal, since uL and uR are
-    double qL = 1.;
-    if (pstar > PL) {
-      qL = std::sqrt(1. + _gp1d2g * (pstar * PLinv - 1.));
-      cmac_assert(qL == qL);
-    }
-    double qR = 1.;
-    if (pstar > PR) {
-      qR = std::sqrt(1. + _gp1d2g * (pstar * PRinv - 1.));
-      cmac_assert(qR == qR);
-    }
-
-    // we only use the relative speeds below, so these expressions differ from
-    // Toro (2009)
-    const double SLmvL = -aL * qL;
-    const double SRmvR = aR * qR;
-    const double Sstar = (PR - PL + rhoL * vL * SLmvL - rhoR * vR * SRmvR) /
-                         (rhoL * SLmvL - rhoR * SRmvR);
-    cmac_assert(Sstar == Sstar);
-
-    if (Sstar >= 0.) {
-      const double rhoLvL = rhoL * vL;
-      const double vL2 = uLface.norm2();
-      const double eL = PL * _odgm1 * rhoLinv + 0.5 * vL2;
-      const double SL = SLmvL + vL;
-
-      mflux = rhoLvL;
-      pflux = rhoLvL * uLface + PL * normal;
-      Eflux = rhoLvL * eL + PL * vL;
-
-      if (SL < 0.) {
-        const double starfac = SLmvL / (SL - Sstar) - 1.;
-        cmac_assert(starfac == starfac);
-        const double SLrhoL = SL * rhoL;
-        const double SstarmvL = Sstar - vL;
-        const double SLrhoLstarfac = SLrhoL * starfac;
-        const double SLrhoLSstarmvL = SLrhoL * SstarmvL;
-
-        mflux += SLrhoLstarfac;
-        pflux += SLrhoLstarfac * uLface + SLrhoLSstarmvL * normal;
-        Eflux +=
-            SLrhoLstarfac * eL + SLrhoLSstarmvL * (Sstar + PL / (rhoL * SLmvL));
-      }
     } else {
-      const double rhoRvR = rhoR * vR;
-      const double vR2 = uRface.norm2();
-      const double eR = PR * _odgm1 * rhoRinv + 0.5 * vR2;
-      const double SR = SRmvR + vR;
 
-      mflux = rhoRvR;
-      pflux = rhoRvR * uRface + PR * normal;
-      Eflux = rhoRvR * eR + PR * vR;
+      // STEP 1: pressure estimate
+      const double rhobar = rhoL + rhoR;
+      const double pPVRS = 0.5 * ((PL + PR) - 0.25 * vdiff * rhobar * abar);
+      const double pstar = std::max(0., pPVRS);
 
-      if (SR > 0.) {
-        const double starfac = SRmvR / (SR - Sstar) - 1.;
-        cmac_assert(starfac == starfac);
-        const double SRrhoR = SR * rhoR;
-        const double SstarmvR = Sstar - vR;
-        const double SRrhoRstarfac = SRrhoR * starfac;
-        const double SRrhoRSstarmvR = SRrhoR * SstarmvR;
-
-        mflux += SRrhoRstarfac;
-        pflux += SRrhoRstarfac * uRface + SRrhoRSstarmvR * normal;
-        Eflux +=
-            SRrhoRstarfac * eR + SRrhoRSstarmvR * (Sstar + PR / (rhoR * SRmvR));
+      // STEP 2: wave speed estimates
+      // all these speeds are along the interface normal, since uL and uR are
+      double qL = 1.;
+      if (pstar > PL) {
+        qL = std::sqrt(1. + _gp1d2g * (pstar * PLinv - 1.));
       }
+      double qR = 1.;
+      if (pstar > PR) {
+        qR = std::sqrt(1. + _gp1d2g * (pstar * PRinv - 1.));
+      }
+
+      // we only use the relative speeds below, so these expressions differ from
+      // Toro (2009)
+      const double SLmvL = -aL * qL;
+      const double SRmvR = aR * qR;
+      const double Sstar = (PR - PL + rhoL * vL * SLmvL - rhoR * vR * SRmvR) /
+                           (rhoL * SLmvL - rhoR * SRmvR);
+
+      if (Sstar >= 0.) {
+        const double rhoLvL = rhoL * vL;
+        const double vL2 = uLface.norm2();
+        const double eL = PL * _odgm1 * rhoLinv + 0.5 * vL2;
+        const double SL = SLmvL + vL;
+
+        mflux = rhoLvL;
+        pflux = rhoLvL * uLface + PL * normal;
+        Eflux = rhoLvL * eL + PL * vL;
+
+        if (SL < 0.) {
+          const double starfac = SLmvL / (SL - Sstar) - 1.;
+          const double SLrhoL = SL * rhoL;
+          const double SstarmvL = Sstar - vL;
+          const double SLrhoLstarfac = SLrhoL * starfac;
+          const double SLrhoLSstarmvL = SLrhoL * SstarmvL;
+
+          mflux += SLrhoLstarfac;
+          pflux += SLrhoLstarfac * uLface + SLrhoLSstarmvL * normal;
+          Eflux += SLrhoLstarfac * eL +
+                   SLrhoLSstarmvL * (Sstar + PL / (rhoL * SLmvL));
+        }
+      } else {
+        const double rhoRvR = rhoR * vR;
+        const double vR2 = uRface.norm2();
+        const double eR = PR * _odgm1 * rhoRinv + 0.5 * vR2;
+        const double SR = SRmvR + vR;
+
+        mflux = rhoRvR;
+        pflux = rhoRvR * uRface + PR * normal;
+        Eflux = rhoRvR * eR + PR * vR;
+
+        if (SR > 0.) {
+          const double starfac = SRmvR / (SR - Sstar) - 1.;
+          const double SRrhoR = SR * rhoR;
+          const double SstarmvR = Sstar - vR;
+          const double SRrhoRstarfac = SRrhoR * starfac;
+          const double SRrhoRSstarmvR = SRrhoR * SstarmvR;
+
+          mflux += SRrhoRstarfac;
+          pflux += SRrhoRstarfac * uRface + SRrhoRSstarmvR * normal;
+          Eflux += SRrhoRstarfac * eR +
+                   SRrhoRSstarmvR * (Sstar + PR / (rhoR * SRmvR));
+        }
+      }
+
+      const double vface2 = vface.norm2();
+      Eflux +=
+          CoordinateVector<>::dot_product(vface, pflux) + 0.5 * vface2 * mflux;
+      pflux += mflux * vface;
     }
 
-    const double vface2 = vface.norm2();
-    Eflux +=
-        CoordinateVector<>::dot_product(vface, pflux) + 0.5 * vface2 * mflux;
-    pflux += mflux * vface;
+    // check Riemann problem output and output a reproducable dump if the output
+    // is non-physical
+    cmac_assert_message(
+        mflux == mflux && pflux[0] == pflux[0] && pflux[1] == pflux[1] &&
+            pflux[2] == pflux[2] && Eflux == Eflux,
+        "Invalid Riemann solver output: mflux: %g, pflux: %g %g %g, "
+        "Eflux: %g, rhoL: %g (%lu), uL: %g %g %g (%lu %lu %lu), PL: %g (%lu), "
+        "rhoR: %g (%lu), uR: %g %g %g (%lu %lu %lu), PR: %g (%lu)",
+        mflux, pflux[0], pflux[1], pflux[2], Eflux, rhoL,
+        Utilities::as_bytes(rhoL), uL[0], uL[1], uL[2],
+        Utilities::as_bytes(uL[0]), Utilities::as_bytes(uL[1]),
+        Utilities::as_bytes(uL[2]), PL, Utilities::as_bytes(PL), rhoR,
+        Utilities::as_bytes(rhoR), uR[0], uR[1], uR[2],
+        Utilities::as_bytes(uR[0]), Utilities::as_bytes(uR[1]),
+        Utilities::as_bytes(uR[2]), PR, Utilities::as_bytes(PR));
   }
 };
 
