@@ -1003,6 +1003,36 @@ inline std::string as_binary_sequence(uint64_t long_value) {
 }
 
 /**
+ * @brief Convert the given double precision value to a byte sequence.
+ *
+ * @param double_value Double precision value.
+ * @return Byte sequence representation.
+ */
+inline uint64_t as_bytes(const double double_value) {
+  union {
+    double double_value;
+    uint64_t uint64_value;
+  } union_value;
+  union_value.double_value = double_value;
+  return union_value.uint64_value;
+}
+
+/**
+ * @brief Convert the given byte sequence to a double precision value.
+ *
+ * @param uint64_value Byte sequence representation.
+ * @return Double precision value.
+ */
+inline double as_double(const uint64_t uint64_value) {
+  union {
+    double double_value;
+    uint64_t uint64_value;
+  } union_value;
+  union_value.uint64_value = uint64_value;
+  return union_value.double_value;
+}
+
+/**
  * @brief Return a std::vector that contains the indices that would sort the
  * given vector.
  *

@@ -37,20 +37,6 @@
 #include <cmath>
 
 /**
- * @brief Wrapper around std:sqrt that checks if errors occured.
- *
- * @param x Input value.
- * @return Square root of the input value.
- */
-inline static double safe_sqrt(const double x) {
-  const double y = std::sqrt(x);
-  if (errno != 0) {
-    cmac_error("sqrt error: f(%g) = %g!", x, y);
-  }
-  return y;
-}
-
-/**
  * @brief HLLC Riemann solver.
  */
 class HLLCRiemannSolver : public RiemannSolver {
@@ -250,35 +236,36 @@ private:
    * @param uLface Left state velocity deboosted to the interface frame.
    * @param vL Left state velocity along the interface normal.
    * @param aL Left state sound speed.
+   * @param vacuumL Is the left state vacuum?
    * @param rhoR Right state density.
    * @param uR Right state velocity.
    * @param PR Right state pressure.
    * @param uRface Right state velocity deboosted to the interface frame.
    * @param vR Right state velocity along the interface normal.
    * @param aR Right state sound speed.
+   * @param vacuumR Is the right state vacuum?
    * @param mflux Mass flux solution.
    * @param pflux Momentum flux solution.
    * @param Eflux Energy flux solution.
    * @param normal Surface normal of the interface.
    * @param vface Velocity of the interface, used to boost the fluxes.
    */
-  inline void
-  solve_vacuum_flux(const double rhoL, const CoordinateVector<> uL,
-                    const double PL, const CoordinateVector<> uLface,
-                    const double vL, const double aL, const double rhoR,
-                    const CoordinateVector<> uR, const double PR,
-                    const CoordinateVector<> uRface, const double vR,
-                    const double aR, double &mflux, CoordinateVector<> &pflux,
-                    double &Eflux, const CoordinateVector<> normal,
-                    const CoordinateVector<> vface = 0.) const {
+  inline void solve_vacuum_flux(
+      const double rhoL, const CoordinateVector<> uL, const double PL,
+      const CoordinateVector<> uLface, const double vL, const double aL,
+      const bool vacuumL, const double rhoR, const CoordinateVector<> uR,
+      const double PR, const CoordinateVector<> uRface, const double vR,
+      const double aR, const bool vacuumR, double &mflux,
+      CoordinateVector<> &pflux, double &Eflux, const CoordinateVector<> normal,
+      const CoordinateVector<> vface = 0.) const {
 
     // solve the Riemann problem
     double rhosol, vsol, Psol;
     int_fast32_t flag;
-    if (rhoR == 0.) {
+    if (vacuumR) {
       /// vacuum right state
       flag = sample_right_vacuum(rhoL, vL, PL, aL, rhosol, vsol, Psol);
-    } else if (rhoL == 0.) {
+    } else if (vacuumL) {
       /// vacuum left state
       flag = sample_left_vacuum(rhoR, vR, PR, aR, rhosol, vsol, Psol);
     } else {
@@ -319,6 +306,12 @@ private:
       Eflux +=
           CoordinateVector<>::dot_product(vface, pflux) + 0.5 * vface2 * mflux;
       pflux += mflux * vface;
+    } else {
+      mflux = 0.;
+      pflux[0] = 0.;
+      pflux[1] = 0.;
+      pflux[2] = 0.;
+      Eflux = 0.;
     }
   }
 
@@ -362,8 +355,82 @@ public:
                               double &Eflux, const CoordinateVector<> normal,
                               const CoordinateVector<> vface = 0.) const {
 
-    if (rhoL == 0. && rhoR == 0.) {
+    // check input values
+    cmac_assert_message(
+        rhoL == rhoL,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        rhoL >= 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uL.x() == uL.x(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uL.y() == uL.y(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uL.z() == uL.z(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        PL == PL,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        PL >= 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+
+    cmac_assert_message(
+        rhoR == rhoR,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        rhoR >= 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uR.x() == uR.x(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uR.y() == uR.y(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        uR.z() == uR.z(),
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        PR == PR,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        PR >= 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+
+    const double rhoLinv = 1. / rhoL;
+    const double rhoRinv = 1. / rhoR;
+    const double PLinv = 1. / PL;
+    const double PRinv = 1. / PR;
+
+    const bool vacuumL =
+        (rhoL == 0. || isinf(rhoLinv) || PL == 0. || isinf(PLinv));
+    const bool vacuumR =
+        (rhoR == 0. || isinf(rhoRinv) || PR == 0. || isinf(PRinv));
+
+    if (vacuumL && vacuumR) {
       // pure vacuum: all fluxes are 0
+      mflux = 0.;
+      pflux[0] = 0.;
+      pflux[1] = 0.;
+      pflux[2] = 0.;
+      Eflux = 0.;
       return;
     }
 
@@ -375,24 +442,28 @@ public:
     const double vL = CoordinateVector<>::dot_product(uLface, normal);
     const double vR = CoordinateVector<>::dot_product(uRface, normal);
 
-    const double rhoLinv = 1. / rhoL;
-    cmac_assert(rhoLinv == rhoLinv);
-    const double rhoRinv = 1. / rhoR;
-    cmac_assert(rhoRinv == rhoRinv);
-    const double aL = safe_sqrt(_gamma * PL * rhoLinv);
-    cmac_assert(aL == aL);
-    const double aR = safe_sqrt(_gamma * PR * rhoRinv);
-    cmac_assert(aR == aR);
+    const double aL = std::sqrt(_gamma * PL * rhoLinv);
+    const double aR = std::sqrt(_gamma * PR * rhoRinv);
 
     const double vdiff = vR - vL;
     const double abar = aL + aR;
 
     // Handle vacuum: vacuum does not require iteration and is always exact
-    if (rhoL == 0. || rhoR == 0. || _tdgm1 * abar <= vdiff) {
-      solve_vacuum_flux(rhoL, uL, PL, uLface, vL, aL, rhoR, uR, PR, uRface, vR,
-                        aR, mflux, pflux, Eflux, normal, vface);
+    if (vacuumL || vacuumR || _tdgm1 * abar <= vdiff) {
+      solve_vacuum_flux(rhoL, uL, PL, uLface, vL, aL, vacuumL, rhoR, uR, PR,
+                        uRface, vR, aR, vacuumR, mflux, pflux, Eflux, normal,
+                        vface);
       return;
     }
+
+    cmac_assert_message(
+        PL > 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
+    cmac_assert_message(
+        PR > 0.,
+        "rhoL: %g, uL: %g %g %g, PL: %g, rhoR: %g, uR: %g %g %g, PR: %g", rhoL,
+        uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
 
     // STEP 1: pressure estimate
     const double rhobar = rhoL + rhoR;
@@ -403,12 +474,12 @@ public:
     // all these speeds are along the interface normal, since uL and uR are
     double qL = 1.;
     if (pstar > PL) {
-      qL = safe_sqrt(1. + _gp1d2g * (pstar / PL - 1.));
+      qL = std::sqrt(1. + _gp1d2g * (pstar * PLinv - 1.));
       cmac_assert(qL == qL);
     }
     double qR = 1.;
     if (pstar > PR) {
-      qR = safe_sqrt(1. + _gp1d2g * (pstar / PR - 1.));
+      qR = std::sqrt(1. + _gp1d2g * (pstar * PRinv - 1.));
       cmac_assert(qR == qR);
     }
 
