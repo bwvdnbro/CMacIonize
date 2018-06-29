@@ -183,7 +183,7 @@ public:
       // only output if hydro is not active
       return !hydro;
     case DENSITYGRIDFIELD_TEMPERATURE:
-      return false;
+      return hydro;
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
       // only output hydrogen neutral fraction
       return true;

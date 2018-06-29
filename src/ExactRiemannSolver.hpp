@@ -31,6 +31,7 @@
 
 #include "Error.hpp"
 #include "RiemannSolver.hpp"
+#include "Utilities.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -73,12 +74,12 @@ private:
   /**
    * @brief Get the soundspeed corresponding to the given density and pressure.
    *
-   * @param rho Density value.
+   * @param rhoinv Inverse density value.
    * @param P Pressure value.
    * @return Soundspeed.
    */
-  inline double get_soundspeed(double rho, double P) const {
-    const double result = std::sqrt(_gamma * P / rho);
+  inline double get_soundspeed(const double rhoinv, const double P) const {
+    const double result = std::sqrt(_gamma * P * rhoinv);
     cmac_assert(result == result);
     return result;
   }
@@ -237,7 +238,11 @@ private:
         const double gL = gb(AL, BL, Ppv);
         const double gR = gb(AR, BR, Ppv);
         cmac_assert(gL + gR != 0.);
-        Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
+        if (isinf(gL) || isinf(gR)) {
+          Pguess = smallP;
+        } else {
+          Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
+        }
         cmac_assert_message(Pguess == Pguess,
                             "gL: %g, aL: %g, PL: %g, AL: %g, BL: %g, "
                             "gR: %g, aR: %g, PR: %g, AR: %g, BR: %g, "
@@ -777,10 +782,12 @@ private:
    * @param uL Velocity of the left state.
    * @param PL Pressure of the left state.
    * @param aL Soundspeed of the left state.
+   * @param vacuumL Is the left state vacuum?
    * @param rhoR Density of the right state.
    * @param uR Velocity of the right state.
    * @param PR Pressure of the right state.
    * @param aR Soundspeed of the right state.
+   * @param vacuumR Is the right state vacuum?
    * @param rhosol Density solution.
    * @param usol Velocity solution.
    * @param Psol Pressure solution.
@@ -788,22 +795,25 @@ private:
    * @return Flag indicating wether the left state (-1), the right state (1), or
    * a vacuum state (0) was sampled.
    */
-  inline int_fast32_t solve_vacuum(double rhoL, double uL, double PL, double aL,
-                                   double rhoR, double uR, double PR, double aR,
+  inline int_fast32_t solve_vacuum(const double rhoL, const double uL,
+                                   const double PL, const double aL,
+                                   const bool vacuumL, const double rhoR,
+                                   const double uR, const double PR,
+                                   const double aR, const bool vacuumR,
                                    double &rhosol, double &usol, double &Psol,
-                                   double dxdt = 0.) const {
+                                   const double dxdt = 0.) const {
     // if both states are vacuum, the solution is also vacuum
-    if (rhoL == 0. && rhoR == 0.) {
+    if (vacuumL && vacuumR) {
       rhosol = 0.;
       usol = 0.;
       Psol = 0.;
       return 0;
     }
 
-    if (rhoR == 0.) {
+    if (vacuumR) {
       /// vacuum right state
       return sample_right_vacuum(rhoL, uL, PL, aL, rhosol, usol, Psol, dxdt);
-    } else if (rhoL == 0.) {
+    } else if (vacuumL) {
       /// vacuum left state
       return sample_left_vacuum(rhoR, uR, PR, aR, rhosol, usol, Psol, dxdt);
     } else {
@@ -876,51 +886,55 @@ public:
     cmac_assert(PR >= 0.);
     cmac_assert(PR == PR);
 
+    const double rhoLinv = 1. / rhoL;
+    const double rhoRinv = 1. / rhoR;
+    const double PLinv = 1. / PL;
+    const double PRinv = 1. / PR;
+
+    const bool vacuumL =
+        (rhoL == 0. || isinf(rhoLinv) || PL == 0. || isinf(PLinv));
+    const bool vacuumR =
+        (rhoR == 0. || isinf(rhoRinv) || PR == 0. || isinf(PRinv));
+
     // handle vacuum
-    if (rhoL == 0. || rhoR == 0.) {
+    if (vacuumL || vacuumR) {
       double aL, aR;
-      if (rhoL == 0.) {
+      if (vacuumL) {
         aL = 0.;
       } else {
-        aL = get_soundspeed(rhoL, PL);
+        aL = get_soundspeed(rhoLinv, PL);
       }
-      if (rhoR == 0.) {
+      if (vacuumR) {
         aR = 0.;
       } else {
-        aR = get_soundspeed(rhoR, PR);
+        aR = get_soundspeed(rhoRinv, PR);
       }
-      return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
-                          Psol, dxdt);
+      return solve_vacuum(rhoL, uL, PL, aL, vacuumL, rhoR, uR, PR, aR, vacuumR,
+                          rhosol, usol, Psol, dxdt);
     }
 
     // get the soundspeeds
-    const double aL = get_soundspeed(rhoL, PL);
-    cmac_assert(aL == aL);
-    const double aR = get_soundspeed(rhoR, PR);
-    cmac_assert(aR == aR);
+    const double aL = get_soundspeed(rhoLinv, PL);
+    const double aR = get_soundspeed(rhoRinv, PR);
     const double aLfac = _tdgm1 * aL;
     const double aRfac = _tdgm1 * aR;
     const double udiff = uR - uL;
 
     // handle vacuum generation
     if (aLfac + aRfac <= udiff) {
-      return solve_vacuum(rhoL, uL, PL, aL, rhoR, uR, PR, aR, rhosol, usol,
-                          Psol, dxdt);
+      return solve_vacuum(rhoL, uL, PL, aL, vacuumL, rhoR, uR, PR, aR, vacuumR,
+                          rhosol, usol, Psol, dxdt);
     }
 
     // precompute some variables
     const double AL = _tdgp1 / rhoL;
     cmac_assert(AL == AL);
     const double BL = _gm1dgp1 * PL;
-    const double PLinv = 1. / PL;
-    cmac_assert(PLinv == PLinv);
     const double rhoLaLinv = 1. / (rhoL * aL);
     cmac_assert(rhoLaLinv == rhoLaLinv);
     const double AR = _tdgp1 / rhoR;
     cmac_assert(AR == AR);
     const double BR = _gm1dgp1 * PR;
-    const double PRinv = 1. / PR;
-    cmac_assert(PRinv == PRinv);
     const double rhoRaRinv = 1. / (rhoR * aR);
     cmac_assert(rhoRaRinv == rhoRaRinv);
 
@@ -968,25 +982,49 @@ public:
       Pstar = Pguess;
     }
 
+    cmac_assert_message(
+        Pstar == Pstar,
+        "rhoL: %g, uL: %g, PL: %g, rhoR: %g, uR: %g, PR: %g, Pstar: %g", rhoL,
+        uL, PL, rhoR, uR, PR, Pstar);
+    cmac_assert_message(
+        Pstar >= 0.,
+        "rhoL: %g, uL: %g, PL: %g, rhoR: %g, uR: %g, PR: %g, Pstar: %g", rhoL,
+        uL, PL, rhoR, uR, PR, Pstar);
+
     // the middle state velocity is fixed once the middle state pressure is
     // known
-    const double ustar =
-        0.5 * ((uL + uR) + (fb(PR, AR, BR, PRinv, aRfac, Pstar) -
-                            fb(PL, AL, BL, PLinv, aLfac, Pstar)));
-
-    // we now have solved the Riemann problem: we have the left, middle and
-    // right state, and this completely fixes the solution
-    // we just need to sample the solution for x/t = 0.
-    if (ustar < dxdt) {
-      // right state
-      sample_right_state(rhoR, uR, PR, aR, PRinv, ustar, Pstar, rhosol, usol,
-                         Psol, dxdt);
-      return 1;
+    const double fR = fb(PR, AR, BR, PRinv, aRfac, Pstar);
+    const double fL = fb(PL, AL, BL, PLinv, aLfac, Pstar);
+    if (isinf(fR) || isinf(fL)) {
+      rhosol = 0.;
+      usol = 0.;
+      Psol = 0.;
+      return 0;
     } else {
-      // left state
-      sample_left_state(rhoL, uL, PL, aL, PLinv, ustar, Pstar, rhosol, usol,
-                        Psol, dxdt);
-      return -1;
+      const double ustar = 0.5 * ((uL + uR) + (fR - fL));
+
+      cmac_assert_message(
+          ustar == ustar,
+          "rhoL: %lu, uL: %lu, PL: %lu, rhoR: %lu, uR: %lu, PR: "
+          "%lu, ustar: %g, Pstar: %g",
+          Utilities::as_bytes(rhoL), Utilities::as_bytes(uL),
+          Utilities::as_bytes(PL), Utilities::as_bytes(rhoR),
+          Utilities::as_bytes(uR), Utilities::as_bytes(PR), ustar, Pstar);
+
+      // we now have solved the Riemann problem: we have the left, middle and
+      // right state, and this completely fixes the solution
+      // we just need to sample the solution for x/t = 0.
+      if (ustar < dxdt) {
+        // right state
+        sample_right_state(rhoR, uR, PR, aR, PRinv, ustar, Pstar, rhosol, usol,
+                           Psol, dxdt);
+        return 1;
+      } else {
+        // left state
+        sample_left_state(rhoL, uL, PL, aL, PLinv, ustar, Pstar, rhosol, usol,
+                          Psol, dxdt);
+        return -1;
+      }
     }
   }
 
@@ -1013,6 +1051,22 @@ public:
                               double &Eflux, const CoordinateVector<> normal,
                               const CoordinateVector<> vface = 0.) const {
 
+    // check input values
+    cmac_assert(rhoL == rhoL);
+    cmac_assert(rhoL >= 0.);
+    cmac_assert(uL.x() == uL.x());
+    cmac_assert(uL.y() == uL.y());
+    cmac_assert(uL.z() == uL.z());
+    cmac_assert(PL == PL);
+    cmac_assert(PL >= 0.);
+    cmac_assert(rhoR == rhoR);
+    cmac_assert(rhoR >= 0.);
+    cmac_assert(uR.x() == uR.x());
+    cmac_assert(uR.y() == uR.y());
+    cmac_assert(uR.z() == uR.z());
+    cmac_assert(PR == PR);
+    cmac_assert(PR >= 0.);
+
     // boost the velocities to the interface frame (and use new variables,
     // as we still want to use the old value of uL for other neighbours)
     const CoordinateVector<> uLface = uL - vface;
@@ -1025,6 +1079,28 @@ public:
     // solve the Riemann problem
     double rhosol, vsol, Psol;
     const int flag = solve(rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+
+    // check Riemann problem output
+    cmac_assert_message(rhosol == rhosol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, "
+                                          "vR: %g, PR: %g, rhosol: %g, vsol: "
+                                          "%g, Psol: %g",
+                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+    cmac_assert_message(rhosol >= 0., "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
+                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
+                                      "%g",
+                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+    cmac_assert_message(vsol == vsol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
+                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
+                                      "%g",
+                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+    cmac_assert_message(Psol == Psol, "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
+                                      "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
+                                      "%g",
+                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
+    cmac_assert_message(Psol >= 0., "rhoL: %g, vL: %g, PL: %g, rhoR: %g, vR: "
+                                    "%g, PR: %g, rhosol: %g, vsol: %g, Psol: "
+                                    "%g",
+                        rhoL, vL, PL, rhoR, vR, PR, rhosol, vsol, Psol);
 
     // if the solution was vacuum, there is no flux
     if (flag != 0) {
