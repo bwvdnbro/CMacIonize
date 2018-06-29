@@ -441,6 +441,36 @@ private:
     }
   };
 
+  /**
+   * @brief Get the Bondi profile (if needed for the boundary conditions).
+   *
+   * @param params ParameterFile to read from.
+   * @return Pointer to a newly created BondiProfile instance, or nullptr if
+   * none of the boundaries is a Bondi inflow boundary.
+   */
+  inline const BondiProfile *get_bondi_profile(ParameterFile &params) {
+
+    const std::string xlow =
+        params.get_value< std::string >("HydroIntegrator:boundary x low");
+    const std::string xhigh =
+        params.get_value< std::string >("HydroIntegrator:boundary x high");
+    const std::string ylow =
+        params.get_value< std::string >("HydroIntegrator:boundary y low");
+    const std::string yhigh =
+        params.get_value< std::string >("HydroIntegrator:boundary y high");
+    const std::string zlow =
+        params.get_value< std::string >("HydroIntegrator:boundary z low");
+    const std::string zhigh =
+        params.get_value< std::string >("HydroIntegrator:boundary z high");
+
+    if (xlow == "bondi" || xhigh == "bondi" || ylow == "bondi" ||
+        yhigh == "bondi" || zlow == "bondi" || zhigh == "bondi") {
+      return new BondiProfile(params);
+    } else {
+      return nullptr;
+    }
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -603,7 +633,7 @@ public:
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary z high",
                                             "reflective"),
-            simulation_box.get_periodicity(), new BondiProfile(params)) {}
+            simulation_box.get_periodicity(), get_bondi_profile(params)) {}
 
   /**
    * @brief Destructor.
