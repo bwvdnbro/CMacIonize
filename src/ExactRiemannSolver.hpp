@@ -226,7 +226,7 @@ private:
         // two shocks
         const double gL = gb(AL, BL, Ppv);
         const double gR = gb(AR, BR, Ppv);
-        if (isinf(gL) || isinf(gR)) {
+        if (std::isinf(gL) || std::isinf(gR)) {
           Pguess = smallP;
         } else {
           Pguess = (gL * PL + gR * PR - udiff) / (gL + gR);
@@ -886,9 +886,9 @@ public:
     const double PRinv = 1. / PR;
 
     const bool vacuumL =
-        (rhoL == 0. || isinf(rhoLinv) || PL == 0. || isinf(PLinv));
+        (rhoL == 0. || std::isinf(rhoLinv) || PL == 0. || std::isinf(PLinv));
     const bool vacuumR =
-        (rhoR == 0. || isinf(rhoRinv) || PR == 0. || isinf(PRinv));
+        (rhoR == 0. || std::isinf(rhoRinv) || PR == 0. || std::isinf(PRinv));
 
     // handle vacuum
     if (vacuumL || vacuumR) {
@@ -974,7 +974,7 @@ public:
 
     const double fR = fb(PR, AR, BR, PRinv, aRfac, Pstar);
     const double fL = fb(PL, AL, BL, PLinv, aLfac, Pstar);
-    if (isinf(fR) || isinf(fL)) {
+    if (std::isinf(fR) || std::isinf(fL)) {
       rhosol = 0.;
       usol = 0.;
       Psol = 0.;

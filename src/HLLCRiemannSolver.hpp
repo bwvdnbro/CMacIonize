@@ -374,9 +374,9 @@ public:
     const double PRinv = 1. / PR;
 
     const bool vacuumL =
-        (rhoL == 0. || isinf(rhoLinv) || PL == 0. || isinf(PLinv));
+        (rhoL == 0. || std::isinf(rhoLinv) || PL == 0. || std::isinf(PLinv));
     const bool vacuumR =
-        (rhoR == 0. || isinf(rhoRinv) || PR == 0. || isinf(PRinv));
+        (rhoR == 0. || std::isinf(rhoRinv) || PR == 0. || std::isinf(PRinv));
 
     if (vacuumL && vacuumR) {
       // pure vacuum: all fluxes are 0
