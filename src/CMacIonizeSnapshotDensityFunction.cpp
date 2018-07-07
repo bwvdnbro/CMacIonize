@@ -90,8 +90,14 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   group = HDF5Tools::open_group(file, "/PartType0");
   std::vector< CoordinateVector<> > cell_midpoints =
       HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
-  std::vector< double > cell_densities =
-      HDF5Tools::read_dataset< double >(group, "NumberDensity");
+  std::vector< double > cell_densities;
+  if (HDF5Tools::group_exists(group, "NumberDensity")) {
+    cell_densities = HDF5Tools::read_dataset< double >(group, "NumberDensity");
+  } else {
+    cell_densities = HDF5Tools::read_dataset< double >(group, "Density");
+    unit_density_in_SI /=
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+  }
   std::vector< double > cell_temperatures =
       HDF5Tools::read_dataset< double >(group, "Temperature");
   std::vector< std::vector< double > > neutral_fractions(
