@@ -702,6 +702,32 @@ public:
   }
 
   /**
+   * @brief Get the sound speed for the given cell.
+   *
+   * @param cell Cell.
+   * @return Sound speed for the cell (in m s^-1).
+   */
+  inline double get_soundspeed(const DensityGrid::iterator &cell) const {
+    if (_gamma > 1.) {
+      const double rho = cell.get_hydro_variables().get_primitives_density();
+      if (rho > 0.) {
+        const double P = cell.get_hydro_variables().get_primitives_pressure();
+        return std::sqrt(_gamma * P / rho);
+      } else {
+        return DBL_MIN;
+      }
+    } else {
+      const IonizationVariables &ionization_variables =
+          cell.get_ionization_variables();
+      const double mean_molecular_mass =
+          0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+      const double temperature = ionization_variables.get_temperature();
+      return std::sqrt(_P_conversion_factor * temperature /
+                       mean_molecular_mass);
+    }
+  }
+
+  /**
    * @brief Get the maximal system time step that will lead to a stable
    * integration.
    *
@@ -712,17 +738,13 @@ public:
 
     double dtmin = DBL_MAX;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double rho = it.get_hydro_variables().get_primitives_density();
-      if (rho > 0.) {
-        const double P = it.get_hydro_variables().get_primitives_pressure();
-        const double cs = std::sqrt(_gamma * P / rho);
-        const double v =
-            it.get_hydro_variables().get_primitives_velocity().norm();
-        const double V = it.get_volume();
-        const double R = std::cbrt(0.75 * V * M_1_PI);
-        const double dt = R / (cs + v);
-        dtmin = std::min(dt, dtmin);
-      }
+      const double cs = get_soundspeed(it);
+      const double v =
+          it.get_hydro_variables().get_primitives_velocity().norm();
+      const double V = it.get_volume();
+      const double R = std::cbrt(0.75 * V * M_1_PI);
+      const double dt = R / (cs + v);
+      dtmin = std::min(dt, dtmin);
     }
     return _CFL_constant * dtmin;
   }
