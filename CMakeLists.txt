@@ -382,6 +382,14 @@ if(ACTIVATE_FORTRAN_BINDING)
   endif(CMAKE_Fortran_COMPILER_WORKS)
 endif(ACTIVATE_FORTRAN_BINDING)
 
+if(ACTIVATE_PRECISE_INTEL_FLOATS)
+  message(STATUS "Setting precise floating point model...")
+  add_compiler_flag("-fp-model precise" OPTIONAL)
+  add_configuration_option(HAVE_PRECISE_INTEL_FLOATS True)
+else(ACTIVATE_PRECISE_INTEL_FLOATS)
+  add_configuration_option(HAVE_PRECISE_INTEL_FLOATS False)
+endif(ACTIVATE_PRECISE_INTEL_FLOATS)
+
 ## Code configuration ##########################################################
 
 # Tell CMake that headers are in one of the src folders.
