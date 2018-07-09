@@ -55,6 +55,7 @@ enum DensityGridField {
   DENSITYGRIDFIELD_VELOCITIES,
   DENSITYGRIDFIELD_PRESSURE,
   DENSITYGRIDFIELD_MASS,
+  DENSITYGRIDFIELD_MOMENTUM,
   DENSITYGRIDFIELD_TOTAL_ENERGY,
   DENSITYGRIDFIELD_NUMBER
 };
@@ -113,6 +114,8 @@ public:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
     case DENSITYGRIDFIELD_MASS:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
     default:
@@ -159,6 +162,8 @@ public:
       return "Pressure";
     case DENSITYGRIDFIELD_MASS:
       return "Mass";
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return "Momentum";
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return "TotalEnergy";
     default:
@@ -209,6 +214,8 @@ public:
       return hydro;
     case DENSITYGRIDFIELD_MASS:
       return false;
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
     default:
@@ -254,6 +261,8 @@ public:
     case DENSITYGRIDFIELD_PRESSURE:
       return false;
     case DENSITYGRIDFIELD_MASS:
+      return false;
+    case DENSITYGRIDFIELD_MOMENTUM:
       return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
@@ -301,6 +310,8 @@ public:
       return false;
     case DENSITYGRIDFIELD_MASS:
       return false;
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
     default:
@@ -346,6 +357,8 @@ public:
     case DENSITYGRIDFIELD_PRESSURE:
       return true;
     case DENSITYGRIDFIELD_MASS:
+      return true;
+    case DENSITYGRIDFIELD_MOMENTUM:
       return true;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return true;
@@ -404,6 +417,8 @@ public:
       return it.get_cell_midpoint() - box_anchor;
     case DENSITYGRIDFIELD_VELOCITIES:
       return it.get_hydro_variables().get_primitives_velocity();
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return it.get_hydro_variables().get_conserved_momentum();
     default:
       cmac_error("Not a vector DensityGridField: %" PRIiFAST32, field_name);
       return CoordinateVector<>();
