@@ -27,6 +27,7 @@
 #define TIMELINE_HPP
 
 #include "Error.hpp"
+#include "Log.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -93,9 +94,10 @@ public:
    * @param end_time End time of the time line (in s).
    * @param minimum_timestep Minimum size of the time step (in s).
    * @param maximum_timestep Maximum size of the time step (in s).
+   * @param log Log to write logging info to.
    */
   inline TimeLine(double start_time, double end_time, double minimum_timestep,
-                  double maximum_timestep) {
+                  double maximum_timestep, Log *log = nullptr) {
 
     // compute the total physical time interval covered by the time line
     const double timeline_interval = end_time - start_time;
@@ -110,8 +112,8 @@ public:
 
     // convert 'minimum_timestep' to its integer counterpart. Round down to the
     // closest power of two
-    _minimum_timestep = TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
     if (minimum_timestep > 0) {
+      _minimum_timestep = TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
       while (to_physical_time_interval(_minimum_timestep) > minimum_timestep) {
         _minimum_timestep >>= 1;
       }
@@ -137,6 +139,16 @@ public:
     }
 
     _current_time = 0;
+
+    if (log) {
+      log->write_status("Set up TimeLine with start time ", start_time,
+                        " s, end time ", end_time, " s, minimum time step ",
+                        to_physical_time_interval(_minimum_timestep), " s (",
+                        _minimum_timestep,
+                        " on the integer time line) and maximum time step ",
+                        to_physical_time_interval(_maximum_timestep), " s (",
+                        _maximum_timestep, " on the integer time line).");
+    }
   }
 
   /**
