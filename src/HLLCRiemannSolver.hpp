@@ -34,6 +34,7 @@
 #include "Utilities.hpp"
 
 #include <algorithm>
+#include <cfloat>
 #include <cinttypes>
 #include <cmath>
 
@@ -368,10 +369,10 @@ public:
         "%g, uR: %g %g %g, PR: %g",
         rhoL, uL.x(), uL.y(), uL.z(), PL, rhoR, uR.x(), uR.y(), uR.z(), PR);
 
-    const double rhoLinv = 1. / rhoL;
-    const double rhoRinv = 1. / rhoR;
-    const double PLinv = 1. / PL;
-    const double PRinv = 1. / PR;
+    const double rhoLinv = 1. / (rhoL + DBL_MIN);
+    const double rhoRinv = 1. / (rhoR + DBL_MIN);
+    const double PLinv = 1. / (PL + DBL_MIN);
+    const double PRinv = 1. / (PR + DBL_MIN);
 
     const bool vacuumL =
         (rhoL == 0. || std::isinf(rhoLinv) || PL == 0. || std::isinf(PLinv));
@@ -430,7 +431,7 @@ public:
       const double SLmvL = -aL * qL;
       const double SRmvR = aR * qR;
       const double Sstar = (PR - PL + rhoL * vL * SLmvL - rhoR * vR * SRmvR) /
-                           (rhoL * SLmvL - rhoR * SRmvR);
+                           (rhoL * SLmvL - rhoR * SRmvR + DBL_MIN);
 
       if (Sstar >= 0.) {
         const double rhoLvL = rhoL * vL;
@@ -448,11 +449,12 @@ public:
           const double SstarmvL = Sstar - vL;
           const double SLrhoLstarfac = SLrhoL * starfac;
           const double SLrhoLSstarmvL = SLrhoL * SstarmvL;
+          const double SLmvLinv = 1. / (SLmvL + DBL_MIN);
 
           mflux += SLrhoLstarfac;
           pflux += SLrhoLstarfac * uLface + SLrhoLSstarmvL * normal;
           Eflux += SLrhoLstarfac * eL +
-                   SLrhoLSstarmvL * (Sstar + PL / (rhoL * SLmvL));
+                   SLrhoLSstarmvL * (Sstar + PL * rhoLinv * SLmvLinv);
         }
       } else {
         const double rhoRvR = rhoR * vR;
@@ -470,11 +472,12 @@ public:
           const double SstarmvR = Sstar - vR;
           const double SRrhoRstarfac = SRrhoR * starfac;
           const double SRrhoRSstarmvR = SRrhoR * SstarmvR;
+          const double SRmvRinv = 1. / (SRmvR + DBL_MIN);
 
           mflux += SRrhoRstarfac;
           pflux += SRrhoRstarfac * uRface + SRrhoRSstarmvR * normal;
           Eflux += SRrhoRstarfac * eR +
-                   SRrhoRSstarmvR * (Sstar + PR / (rhoR * SRmvR));
+                   SRrhoRSstarmvR * (Sstar + PR * rhoRinv * SRmvRinv);
         }
       }
 

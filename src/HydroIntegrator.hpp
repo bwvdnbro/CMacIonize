@@ -31,6 +31,7 @@
 #include "DensityGridTraversalJobMarket.hpp"
 #include "GradientCalculator.hpp"
 #include "HydroBoundaryConditions.hpp"
+#include "InternalHydroUnits.hpp"
 #include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 #include "RiemannSolverFactory.hpp"
@@ -87,19 +88,22 @@ private:
 
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
-  const double _u_conversion_factor;
+  double _u_conversion_factor;
 
   /*! @brief Conversion factor from pressure to temperature,
    *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
-  const double _T_conversion_factor;
+  double _T_conversion_factor;
 
   /*! @brief Conversion factor from pressure to temperature,
    *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
-  const double _P_conversion_factor;
+  double _P_conversion_factor;
 
   /*! @brief Conversion factor from density to number density,
    *  @f$n_{fac} = \frac{1}{m_{\rm{}H}}@f$ (in kg^-1). */
-  const double _n_conversion_factor;
+  double _n_conversion_factor;
+
+  /*! @brief Internal hydro unit system. */
+  InternalHydroUnits *_hydro_units;
 
   /*! @brief Riemann solver used to solve the Riemann problem. */
   const RiemannSolver *_solver;
@@ -251,7 +255,10 @@ private:
         // the midpoint is only used if we use a second order scheme
         const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
         const CoordinateVector<> normal = std::get< 2 >(*ngbit);
-        const double surface_area = std::get< 3 >(*ngbit);
+        const double surface_area =
+            _hydro_integrator._hydro_units
+                ->convert_to_internal_units< QUANTITY_SURFACE_AREA >(
+                    std::get< 3 >(*ngbit));
         const CoordinateVector<> posR = posL + std::get< 4 >(*ngbit);
 
         // get the right state
@@ -271,7 +278,9 @@ private:
           graduR[1] = ngb.get_hydro_variables().primitive_gradients(2);
           graduR[2] = ngb.get_hydro_variables().primitive_gradients(3);
           gradPR = ngb.get_hydro_variables().primitive_gradients(4);
-          vframe = _grid.get_interface_velocity(cell, ngb, midpoint);
+          vframe = _grid.get_interface_velocity(cell, ngb, midpoint) *
+                   _hydro_integrator._hydro_units
+                       ->get_unit_internal_value< QUANTITY_VELOCITY >();
         } else {
           // apply boundary conditions
           rhoR = rhoL;
@@ -315,7 +324,10 @@ private:
         }
 
         // do the second order spatial gradient extrapolation
-        const CoordinateVector<> dL = midpoint - posL;
+        const CoordinateVector<> dL =
+            (midpoint - posL) *
+            _hydro_integrator._hydro_units
+                ->get_unit_internal_value< QUANTITY_LENGTH >();
         double rhoL_prime =
             rhoL + CoordinateVector<>::dot_product(gradrhoL, dL);
         CoordinateVector<> uL_prime(
@@ -324,7 +336,10 @@ private:
             uL[2] + CoordinateVector<>::dot_product(graduL[2], dL));
         double PL_prime = PL + CoordinateVector<>::dot_product(gradPL, dL);
 
-        const CoordinateVector<> dR = midpoint - posR;
+        const CoordinateVector<> dR =
+            (midpoint - posR) *
+            _hydro_integrator._hydro_units
+                ->get_unit_internal_value< QUANTITY_LENGTH >();
         double rhoR_prime =
             rhoR + CoordinateVector<>::dot_product(gradrhoR, dR);
         CoordinateVector<> uR_prime(
@@ -334,7 +349,9 @@ private:
         double PR_prime = PR + CoordinateVector<>::dot_product(gradPR, dR);
 
         // apply the per face slope limiter
-        const double rinv = 1. / (posL - posR).norm();
+        const double rinv = _hydro_integrator._hydro_units
+                                ->get_unit_SI_value< QUANTITY_LENGTH >() /
+                            (posL - posR).norm();
         const double dL_over_r = dL.norm() * rinv;
         const double dR_over_r = dR.norm() * rinv;
 
@@ -530,6 +547,7 @@ public:
                                  PHYSICALCONSTANT_PROTON_MASS)),
         _n_conversion_factor(1. / PhysicalConstants::get_physical_constant(
                                       PHYSICALCONSTANT_PROTON_MASS)),
+        _hydro_units(nullptr),
         _solver(RiemannSolverFactory::generate(riemann_solver_type, gamma)),
         _boundaries{get_boundary_type(boundary_xlow),
                     get_boundary_type(boundary_xhigh),
@@ -638,12 +656,15 @@ public:
   /**
    * @brief Destructor.
    *
-   * Clean up the Bondi profile.
+   * Clean up the Bondi profile and internal units.
    */
   inline ~HydroIntegrator() {
     delete _solver;
     if (_bondi_profile != nullptr) {
       delete _bondi_profile;
+    }
+    if (_hydro_units != nullptr) {
+      delete _hydro_units;
     }
   }
 
@@ -652,11 +673,19 @@ public:
    *
    * @param grid DensityGrid to operate on.
    */
-  inline void initialize_hydro_variables(DensityGrid &grid) const {
+  inline void initialize_hydro_variables(DensityGrid &grid) {
+
+    // get the average box size, this sets the length unit
+    const CoordinateVector<> box_size = grid.get_box().get_sides();
+    const double avg_box_size =
+        0.5 * (box_size.x() + box_size.y() + box_size.z());
 
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
 
+    // get the average density and pressure, these set the mass and time unit
+    double avg_rho = 0.;
+    double avg_P = 0.;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const double volume = it.get_volume();
       const double number_density =
@@ -679,6 +708,9 @@ public:
       it.get_hydro_variables().set_primitives_density(density);
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
+      avg_rho += density;
+      avg_P += pressure;
+
       const double mass = density * volume;
       const CoordinateVector<> momentum = mass * velocity;
 
@@ -698,7 +730,61 @@ public:
       }
     }
 
-    grid.set_grid_velocity(_gamma);
+    avg_rho /= grid.get_number_of_cells();
+    avg_P /= grid.get_number_of_cells();
+
+//    _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
+    (void)avg_box_size;
+    (void)avg_rho;
+    (void)avg_P;
+    _hydro_units = new InternalHydroUnits(1., 1., 1.);
+
+    const double velocity_unit =
+        _hydro_units->get_unit_internal_value< QUANTITY_VELOCITY >();
+    const double velocity_unit2 = velocity_unit * velocity_unit;
+    _P_conversion_factor *= velocity_unit2;
+    _T_conversion_factor *= velocity_unit2;
+    _u_conversion_factor *= velocity_unit2;
+    _n_conversion_factor *=
+        _hydro_units->get_unit_SI_value< QUANTITY_DENSITY >();
+
+    // rescale all hydro variables to the internal unit system
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      it.get_hydro_variables().primitives(0) =
+          _hydro_units->convert_to_internal_units< QUANTITY_DENSITY >(
+              it.get_hydro_variables().primitives(0));
+      it.get_hydro_variables().primitives(1) =
+          _hydro_units->convert_to_internal_units< QUANTITY_VELOCITY >(
+              it.get_hydro_variables().primitives(1));
+      it.get_hydro_variables().primitives(2) =
+          _hydro_units->convert_to_internal_units< QUANTITY_VELOCITY >(
+              it.get_hydro_variables().primitives(2));
+      it.get_hydro_variables().primitives(3) =
+          _hydro_units->convert_to_internal_units< QUANTITY_VELOCITY >(
+              it.get_hydro_variables().primitives(3));
+      it.get_hydro_variables().primitives(4) =
+          _hydro_units->convert_to_internal_units< QUANTITY_PRESSURE >(
+              it.get_hydro_variables().primitives(4));
+
+      it.get_hydro_variables().conserved(0) =
+          _hydro_units->convert_to_internal_units< QUANTITY_MASS >(
+              it.get_hydro_variables().conserved(0));
+      it.get_hydro_variables().conserved(1) =
+          _hydro_units->convert_to_internal_units< QUANTITY_MOMENTUM >(
+              it.get_hydro_variables().conserved(1));
+      it.get_hydro_variables().conserved(2) =
+          _hydro_units->convert_to_internal_units< QUANTITY_MOMENTUM >(
+              it.get_hydro_variables().conserved(2));
+      it.get_hydro_variables().conserved(3) =
+          _hydro_units->convert_to_internal_units< QUANTITY_MOMENTUM >(
+              it.get_hydro_variables().conserved(3));
+      it.get_hydro_variables().conserved(4) =
+          _hydro_units->convert_to_internal_units< QUANTITY_ENERGY >(
+              it.get_hydro_variables().conserved(4));
+    }
+
+    grid.set_grid_velocity(
+        _gamma, _hydro_units->get_unit_SI_value< QUANTITY_VELOCITY >());
   }
 
   /**
@@ -746,7 +832,8 @@ public:
       const double dt = R / (cs + v);
       dtmin = std::min(dt, dtmin);
     }
-    return _CFL_constant * dtmin;
+    return _hydro_units->convert_to_SI_units< QUANTITY_TIME >(_CFL_constant *
+                                                              dtmin);
   }
 
   /**
@@ -762,14 +849,20 @@ public:
   inline void do_hydro_step(DensityGrid &grid, double timestep,
                             Timer &serial_timer, Timer &parallel_timer) const {
 
+    const double internal_timestep =
+        _hydro_units->convert_to_internal_units< QUANTITY_TIME >(timestep);
+
     const DensityGrid::iterator grid_end = grid.end();
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
 
 #ifndef NO_SECOND_ORDER
     // if second order scheme: compute gradients for primitive variables
-    GradientCalculator::GradientComputation gradient_computation(_boundaries,
-                                                                 grid_end);
+    GradientCalculator::GradientComputation gradient_computation(
+        _boundaries, grid_end,
+        _hydro_units->get_unit_internal_value< QUANTITY_LENGTH >(),
+        _hydro_units->get_unit_internal_value< QUANTITY_SURFACE_AREA >(),
+        _hydro_units->get_unit_SI_value< QUANTITY_VOLUME >());
     WorkDistributor<
         DensityGridTraversalJobMarket<
             GradientCalculator::GradientComputation >,
@@ -782,9 +875,9 @@ public:
     hydro_stop_parallel_timing_block();
 #endif
 
+    const double halfdt = 0.5 * internal_timestep;
     // do the second order time prediction step
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double halfdt = 0.5 * timestep;
 
       // get primitive variables
       const double rho = it.get_hydro_variables().get_primitives_density();
@@ -819,7 +912,8 @@ public:
 
       // add gravitational contribution
       const CoordinateVector<> a =
-          it.get_hydro_variables().get_gravitational_acceleration();
+          it.get_hydro_variables().get_gravitational_acceleration() *
+          _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
       ux_new += halfdt * a.x();
       uy_new += halfdt * a.y();
       uz_new += halfdt * a.z();
@@ -834,7 +928,7 @@ public:
 
     // do the flux computation (in parallel)
     HydroFluxComputation hydro_flux_computation(*this, grid, grid_end,
-                                                timestep);
+                                                internal_timestep);
 
     WorkDistributor< DensityGridTraversalJobMarket< HydroFluxComputation >,
                      DensityGridTraversalJob< HydroFluxComputation > >
@@ -901,16 +995,17 @@ public:
 
       // add gravity
       const CoordinateVector<> a =
-          it.get_hydro_variables().get_gravitational_acceleration();
+          it.get_hydro_variables().get_gravitational_acceleration() *
+          _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
       const double mdt =
-          it.get_hydro_variables().get_conserved_mass() * timestep;
+          it.get_hydro_variables().get_conserved_mass() * internal_timestep;
       const CoordinateVector<> p =
           it.get_hydro_variables().get_conserved_momentum();
       it.get_hydro_variables().conserved(1) += mdt * a.x();
       it.get_hydro_variables().conserved(2) += mdt * a.y();
       it.get_hydro_variables().conserved(3) += mdt * a.z();
       it.get_hydro_variables().conserved(4) +=
-          timestep * CoordinateVector<>::dot_product(p, a);
+          internal_timestep * CoordinateVector<>::dot_product(p, a);
 
       cmac_assert(it.get_hydro_variables().get_conserved_momentum().x() ==
                   it.get_hydro_variables().get_conserved_momentum().x());
@@ -944,7 +1039,9 @@ public:
     // convert conserved variables to primitive variables
     // also set the number density and temperature to the correct value
     for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const double volume = it.get_volume();
+      const double volume =
+          _hydro_units->convert_to_internal_units< QUANTITY_VOLUME >(
+              it.get_volume());
       cmac_assert(volume > 0.);
 
       const double mass = it.get_hydro_variables().get_conserved_mass();
@@ -1001,7 +1098,8 @@ public:
       cmac_assert(ionization_variables.get_temperature() >= 0.);
     }
 
-    grid.set_grid_velocity(_gamma);
+    grid.set_grid_velocity(
+        _gamma, _hydro_units->get_unit_SI_value< QUANTITY_VELOCITY >());
   }
 };
 

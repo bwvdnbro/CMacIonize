@@ -72,14 +72,18 @@ enum Quantity {
   QUANTITY_LENGTH,
   QUANTITY_MASS,
   QUANTITY_MASS_RATE,
+  QUANTITY_MOMENTUM,
   QUANTITY_NUMBER_DENSITY,
   QUANTITY_OPACITY,
+  QUANTITY_PRESSURE,
   QUANTITY_REACTION_RATE,
   QUANTITY_SURFACE_AREA,
   QUANTITY_SURFACE_DENSITY,
   QUANTITY_TEMPERATURE,
   QUANTITY_TIME,
-  QUANTITY_VELOCITY
+  QUANTITY_VELOCITY,
+  QUANTITY_VOLUME,
+  NUMBER_OF_QUANTITIES
 };
 
 /**
@@ -148,6 +152,11 @@ public:
       return Unit(PhysicalConstants::get_physical_constant(
                       PHYSICALCONSTANT_ELECTRONVOLT),
                   2, -2, 1, 0, 0, 0);
+      /// pressure units
+    } else if (name == "Pa") {
+      return Unit(1., -1, -2, 1, 0, 0, 0);
+    } else if (name == "bar") {
+      return Unit(1.e5, -1, -2, 1, 0, 0, 0);
     } else {
       /// error handler
       cmac_error("Unknown unit: \"%s\"!", name.c_str());
@@ -161,7 +170,7 @@ public:
    * @param quantity Quantity.
    * @return Name of the SI unit corresponding to the given quantity.
    */
-  static inline std::string get_SI_unit_name(Quantity quantity) {
+  static inline std::string get_SI_unit_name(const int quantity) {
     switch (quantity) {
     case QUANTITY_ACCELERATION:
       return "m s^-2";
@@ -187,10 +196,14 @@ public:
       return "kg";
     case QUANTITY_MASS_RATE:
       return "kg s^-1";
+    case QUANTITY_MOMENTUM:
+      return "kg m s^-1";
     case QUANTITY_NUMBER_DENSITY:
       return "m^-3";
     case QUANTITY_OPACITY:
       return "m^-1";
+    case QUANTITY_PRESSURE:
+      return "Pa";
     case QUANTITY_REACTION_RATE:
       return "m^3 s^-1";
     case QUANTITY_SURFACE_AREA:
@@ -203,6 +216,8 @@ public:
       return "s";
     case QUANTITY_VELOCITY:
       return "m s^-1";
+    case QUANTITY_VOLUME:
+      return "m^3";
     default:
       cmac_error("Unknown quantity: %i!", quantity);
       return "";
@@ -215,7 +230,7 @@ public:
    * @param quantity Quantity.
    * @return SI Unit corresponding to the given quantity.
    */
-  static inline Unit get_SI_unit(Quantity quantity) {
+  static inline Unit get_SI_unit(const int quantity) {
     return get_unit(get_SI_unit_name(quantity));
   }
 

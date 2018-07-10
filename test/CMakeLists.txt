@@ -1182,6 +1182,15 @@ set(TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES
 add_unit_test(NAME testDiscPatchPhotonSourceDistribution
               SOURCES ${TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES})
 
+## Unit test for InternalHydroUnits
+set(TESTINTERNALHYDROUNITS_SOURCES
+    testInternalHydroUnits.cpp
+
+    ../src/InternalHydroUnits.hpp
+)
+add_unit_test(NAME testInternalHydroUnits
+              SOURCES ${TESTINTERNALHYDROUNITS_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
