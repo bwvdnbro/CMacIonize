@@ -202,6 +202,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const double hydro_radtime = params.get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
+  double time_last_hydro = 0.;
 
   DensityGrid *grid =
       DensityGridFactory::generate(simulation_box, params, true, log);
@@ -362,7 +363,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     maximum_timestep = std::min(maximum_timestep, hydro_radtime);
   }
   TimeLine timeline(0., hydro_total_time, hydro_minimum_timestep,
-                    maximum_timestep);
+                    maximum_timestep, log);
   bool has_next_step = true;
   uint_fast32_t num_step = 0;
   while (has_next_step) {
@@ -389,7 +390,15 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     // decide whether or not to do the radiation step
     if (hydro_radtime < 0. ||
         (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
+
       ++hydro_lastrad;
+      const double dt_hydro = current_time - time_last_hydro;
+      // update the PhotonSource
+      if (sourcedistribution->update(dt_hydro)) {
+        source.update(sourcedistribution);
+      }
+      time_last_hydro = current_time;
+
     } else {
       nloop_step = 0;
     }
@@ -462,11 +471,6 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     // apply the mask if applicable
     if (use_mask) {
       mask->apply_mask(*grid, actual_timestep, current_time);
-    }
-
-    // update the PhotonSource
-    if (sourcedistribution->update(actual_timestep)) {
-      source.update(sourcedistribution);
     }
 
     // write snapshot
