@@ -250,8 +250,11 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @brief Set the velocities of the grid generators.
  *
  * @param gamma Polytropic index of the gas.
+ * @param velocity_unit_in_SI Conversion factor from internal velocity unit to
+ * SI units (in m s^-1).
  */
-void VoronoiDensityGrid::set_grid_velocity(double gamma) {
+void VoronoiDensityGrid::set_grid_velocity(
+    const double gamma, const double velocity_unit_in_SI = 1.) {
   if (_has_hydro && _comoving) {
     for (auto it = begin(); it != end(); ++it) {
       const uint_fast32_t index = it.get_index();
@@ -276,6 +279,8 @@ void VoronoiDensityGrid::set_grid_velocity(double gamma) {
         }
       }
       _hydro_generator_velocity[index] += vcorr;
+
+      _hydro_generator_velocity[index] *= velocity_unit_in_SI;
     }
   }
 }

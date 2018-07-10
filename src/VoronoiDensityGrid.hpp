@@ -83,7 +83,8 @@ public:
   virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
                           DensityFunction &density_function);
   virtual void evolve(double timestep);
-  virtual void set_grid_velocity(double gamma);
+  virtual void set_grid_velocity(const double gamma,
+                                 const double velocity_unit_in_SI);
 
   virtual CoordinateVector<>
   get_interface_velocity(const iterator left, const iterator right,

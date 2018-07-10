@@ -741,8 +741,11 @@ public:
    * This method should only be implemented for moving grids.
    *
    * @param gamma Polytropic index of the gas.
+   * @param velocity_unit_in_SI Conversion factor from internal velocity unit to
+   * SI units (in m s^-1).
    */
-  virtual void set_grid_velocity(double gamma) {}
+  virtual void set_grid_velocity(const double gamma,
+                                 const double velocity_unit_in_SI) {}
 
   /**
    * @brief Get the total number of hydrogen atoms contained in the grid.
