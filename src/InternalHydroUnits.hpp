@@ -26,6 +26,7 @@
 #ifndef INTERNALHYDROUNITS_HPP
 #define INTERNALHYDROUNITS_HPP
 
+#include "CoordinateVector.hpp"
 #include "UnitConverter.hpp"
 
 /**
@@ -202,6 +203,37 @@ public:
   template < Quantity _quantity_ >
   inline double convert_to_SI_units(const double value) const {
     return value * _SI_conversion_factors[_quantity_];
+  }
+
+  /**
+   * @brief Convert the given vector representing the given template quantity
+   * to internal units.
+   *
+   * @param value Value to convert (in SI units).
+   * @return Value in internal units.
+   */
+  template < Quantity _quantity_ >
+  inline CoordinateVector<>
+  convert_to_internal_units(const CoordinateVector<> value) const {
+    return CoordinateVector<>(
+        value.x() * _internal_conversion_factors[_quantity_],
+        value.y() * _internal_conversion_factors[_quantity_],
+        value.z() * _internal_conversion_factors[_quantity_]);
+  }
+
+  /**
+   * @brief Convert the given vector representing the given template quantity
+   * to SI units.
+   *
+   * @param value Value to convert (in internal units).
+   * @return Value in SI units.
+   */
+  template < Quantity _quantity_ >
+  inline CoordinateVector<>
+  convert_to_SI_units(const CoordinateVector<> value) const {
+    return CoordinateVector<>(value.x() * _SI_conversion_factors[_quantity_],
+                              value.y() * _SI_conversion_factors[_quantity_],
+                              value.z() * _SI_conversion_factors[_quantity_]);
   }
 
   /**

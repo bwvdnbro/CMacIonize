@@ -353,7 +353,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   }
 
   if (write_output) {
-    writer->write(*grid, 0, params);
+    writer->write(*grid, 0, params, 0., hydro_integrator->get_internal_units());
   }
 
   double maximum_timestep = hydro_maximum_timestep;
@@ -448,7 +448,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       ++loop;
 
       if (write_output && every_iteration_output && loop < nloop_step) {
-        writer->write(*grid, loop, params);
+        writer->write(*grid, loop, params, current_time,
+                      hydro_integrator->get_internal_units());
       }
     }
 
@@ -478,14 +479,16 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     // outside the integration loop
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
         has_next_step) {
-      writer->write(*grid, hydro_lastsnap, params, current_time);
+      writer->write(*grid, hydro_lastsnap, params, current_time,
+                    hydro_integrator->get_internal_units());
       ++hydro_lastsnap;
     }
   }
 
   // write snapshot
   if (write_output) {
-    writer->write(*grid, hydro_lastsnap, params, hydro_total_time);
+    writer->write(*grid, hydro_lastsnap, params, hydro_total_time,
+                  hydro_integrator->get_internal_units());
   }
 
   serial_timer.stop();

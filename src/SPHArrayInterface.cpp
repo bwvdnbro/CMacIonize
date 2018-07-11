@@ -321,9 +321,11 @@ void SPHArrayInterface::fill_array(float *nH) {
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
  */
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
-                              ParameterFile &params, double time) {
+                              ParameterFile &params, double time,
+                              const InternalHydroUnits *hydro_units) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     const CoordinateVector<> p = it.get_cell_midpoint();
     uint_fast32_t closest = _octree->get_closest_ngb(p);

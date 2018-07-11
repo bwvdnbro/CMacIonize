@@ -34,6 +34,7 @@
 
 class DensityGrid;
 class ParameterFile;
+class InternalHydroUnits;
 
 /**
  * @brief Snapshot file writer for the DensityGrid.
@@ -87,9 +88,11 @@ public:
    * @param params ParameterFile containing the run parameters that should be
    * written to the file.
    * @param time Simulation time (in s).
+   * @param hydro_units Internal unit system for the hydro.
    */
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time = 0.) = 0;
+                     ParameterFile &params, double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr) = 0;
 };
 
 #endif // DENSITYGRIDWRITER_HPP

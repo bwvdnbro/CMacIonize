@@ -44,7 +44,8 @@ public:
                              Log *log = nullptr);
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time = 0.);
+                     ParameterFile &params, double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr);
 };
 
 #endif // ASCIIFILEDENSITYGRIDWRITER_HPP

@@ -94,7 +94,7 @@ private:
    *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
   double _T_conversion_factor;
 
-  /*! @brief Conversion factor from pressure to temperature,
+  /*! @brief Conversion factor from temperature to pressure,
    *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
   double _P_conversion_factor;
 
@@ -669,7 +669,19 @@ public:
   }
 
   /**
+   * @brief Get a pointer to the internal unit system.
+   *
+   * @return InternalHydroUnits.
+   */
+  inline const InternalHydroUnits *get_internal_units() const {
+    return _hydro_units;
+  }
+
+  /**
    * @brief Initialize the hydro variables for the given DensityGrid.
+   *
+   * Note that after this step all hydro variables will have been converted into
+   * internal units.
    *
    * @param grid DensityGrid to operate on.
    */
@@ -733,18 +745,18 @@ public:
     avg_rho /= grid.get_number_of_cells();
     avg_P /= grid.get_number_of_cells();
 
-//    _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
-    (void)avg_box_size;
-    (void)avg_rho;
-    (void)avg_P;
-    _hydro_units = new InternalHydroUnits(1., 1., 1.);
+    _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
 
-    const double velocity_unit =
+    const double velocity_unit_internal =
         _hydro_units->get_unit_internal_value< QUANTITY_VELOCITY >();
-    const double velocity_unit2 = velocity_unit * velocity_unit;
-    _P_conversion_factor *= velocity_unit2;
-    _T_conversion_factor *= velocity_unit2;
-    _u_conversion_factor *= velocity_unit2;
+    const double velocity_unit_internal2 =
+        velocity_unit_internal * velocity_unit_internal;
+    _P_conversion_factor *= velocity_unit_internal2;
+    _u_conversion_factor *= velocity_unit_internal2;
+    const double velocity_unit_SI =
+        _hydro_units->get_unit_SI_value< QUANTITY_VELOCITY >();
+    const double velocity_unit_SI2 = velocity_unit_SI * velocity_unit_SI;
+    _T_conversion_factor *= velocity_unit_SI2;
     _n_conversion_factor *=
         _hydro_units->get_unit_SI_value< QUANTITY_DENSITY >();
 
