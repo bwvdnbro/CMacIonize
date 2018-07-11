@@ -90,9 +90,11 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string output_folder,
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
  */
 void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
-                                    ParameterFile &params, double time) {
+                                    ParameterFile &params, double time,
+                                    const InternalHydroUnits *hydro_units) {
 
   std::string filename = Utilities::compose_filename(
       _output_folder, _prefix, "hdf5", iteration, _padding);
@@ -251,7 +253,7 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
               DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE) {
             vector_props[vector_index][index] =
                 DensityGridWriterFields::get_vector_double_value(
-                    property, it, box.get_anchor());
+                    property, it, box.get_anchor(), hydro_units);
             ++vector_index;
           } else {
             if (DensityGridWriterFields::is_ion_property(property)) {
@@ -275,8 +277,8 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
               }
             } else {
               scalar_props[scalar_index][index] =
-                  DensityGridWriterFields::get_scalar_double_value(property,
-                                                                   it);
+                  DensityGridWriterFields::get_scalar_double_value(property, it,
+                                                                   hydro_units);
               ++scalar_index;
             }
           }

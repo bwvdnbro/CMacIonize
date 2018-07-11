@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 #include "Error.hpp"
+#include "InternalHydroUnits.hpp"
 #include "ParameterFile.hpp"
 
 #include <cinttypes>
@@ -373,11 +374,13 @@ public:
    *
    * @param field_name DensityGridField.
    * @param it DensityGrid::iterator to a cell.
+   * @param hydro_units Internal unit system used for hydro.
    * @return Value of the double scalar field.
    */
   inline static double
   get_scalar_double_value(const int_fast32_t field_name,
-                          const DensityGrid::iterator &it) {
+                          const DensityGrid::iterator &it,
+                          const InternalHydroUnits *hydro_units = nullptr) {
     switch (field_name) {
     case DENSITYGRIDFIELD_NUMBER_DENSITY:
       return it.get_ionization_variables().get_number_density();
@@ -385,14 +388,38 @@ public:
       return it.get_ionization_variables().get_temperature();
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
       return it.get_ionization_variables().get_cosmic_ray_factor();
-    case DENSITYGRIDFIELD_DENSITY:
-      return it.get_hydro_variables().get_primitives_density();
-    case DENSITYGRIDFIELD_PRESSURE:
-      return it.get_hydro_variables().get_primitives_pressure();
-    case DENSITYGRIDFIELD_MASS:
-      return it.get_hydro_variables().get_conserved_mass();
-    case DENSITYGRIDFIELD_TOTAL_ENERGY:
-      return it.get_hydro_variables().get_conserved_total_energy();
+    case DENSITYGRIDFIELD_DENSITY: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_DENSITY >(
+            it.get_hydro_variables().get_primitives_density());
+      } else {
+        return it.get_hydro_variables().get_primitives_density();
+      }
+    }
+    case DENSITYGRIDFIELD_PRESSURE: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_PRESSURE >(
+            it.get_hydro_variables().get_primitives_pressure());
+      } else {
+        return it.get_hydro_variables().get_primitives_pressure();
+      }
+    }
+    case DENSITYGRIDFIELD_MASS: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_MASS >(
+            it.get_hydro_variables().get_conserved_mass());
+      } else {
+        return it.get_hydro_variables().get_conserved_mass();
+      }
+    }
+    case DENSITYGRIDFIELD_TOTAL_ENERGY: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_ENERGY >(
+            it.get_hydro_variables().get_conserved_total_energy());
+      } else {
+        return it.get_hydro_variables().get_conserved_total_energy();
+      }
+    }
     default:
       cmac_error("Not a scalar DensityGridField: %" PRIiFAST32, field_name);
       return 0.;
@@ -406,19 +433,33 @@ public:
    * @param it DensityGrid::iterator to a cell.
    * @param box_anchor Anchor of the simulation box, used for vector corrections
    * (in m).
+   * @param hydro_units Internal unit system used for hydro.
    * @return Value of the double vector field.
    */
   inline static CoordinateVector<>
   get_vector_double_value(const int_fast32_t field_name,
                           const DensityGrid::iterator &it,
-                          const CoordinateVector<> box_anchor) {
+                          const CoordinateVector<> box_anchor,
+                          const InternalHydroUnits *hydro_units = nullptr) {
     switch (field_name) {
     case DENSITYGRIDFIELD_COORDINATES:
       return it.get_cell_midpoint() - box_anchor;
-    case DENSITYGRIDFIELD_VELOCITIES:
-      return it.get_hydro_variables().get_primitives_velocity();
-    case DENSITYGRIDFIELD_MOMENTUM:
-      return it.get_hydro_variables().get_conserved_momentum();
+    case DENSITYGRIDFIELD_VELOCITIES: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_VELOCITY >(
+            it.get_hydro_variables().get_primitives_velocity());
+      } else {
+        return it.get_hydro_variables().get_primitives_velocity();
+      }
+    }
+    case DENSITYGRIDFIELD_MOMENTUM: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_MOMENTUM >(
+            it.get_hydro_variables().get_conserved_momentum());
+      } else {
+        return it.get_hydro_variables().get_conserved_momentum();
+      }
+    }
     default:
       cmac_error("Not a vector DensityGridField: %" PRIiFAST32, field_name);
       return CoordinateVector<>();
