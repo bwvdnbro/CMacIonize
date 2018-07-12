@@ -174,6 +174,11 @@ public:
     while (to_physical_time_interval(integer_timestep) > requested_timestep) {
       integer_timestep >>= 1;
     }
+
+    if (integer_timestep == 0) {
+      cmac_error("Time step smaller than absolute limit!");
+    }
+
     const uint64_t time_left =
         TIMELINE_MAX_INTEGER_TIMELINE_SIZE - _current_time;
     while (time_left % integer_timestep > 0) {

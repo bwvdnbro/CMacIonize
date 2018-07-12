@@ -849,7 +849,12 @@ public:
       const double cs = get_soundspeed(it);
       const double v =
           it.get_hydro_variables().get_primitives_velocity().norm();
-      const double V = it.get_volume();
+
+      cmac_assert(!std::isinf(v));
+
+      const double V =
+          _hydro_units->convert_to_internal_units< QUANTITY_VOLUME >(
+              it.get_volume());
       const double R = std::cbrt(0.75 * V * M_1_PI);
       const double dt = R / (cs + v);
       dtmin = std::min(dt, dtmin);
@@ -903,52 +908,45 @@ public:
 
       // get primitive variables
       const double rho = it.get_hydro_variables().get_primitives_density();
-      const CoordinateVector<> u =
-          it.get_hydro_variables().get_primitives_velocity();
-      const double P = it.get_hydro_variables().get_primitives_pressure();
-
-      // get primitive gradients
-      const CoordinateVector<> drho =
-          it.get_hydro_variables().primitive_gradients(0);
-      const CoordinateVector<> dux =
-          it.get_hydro_variables().primitive_gradients(1);
-      const CoordinateVector<> duy =
-          it.get_hydro_variables().primitive_gradients(2);
-      const CoordinateVector<> duz =
-          it.get_hydro_variables().primitive_gradients(3);
-      const CoordinateVector<> dP =
-          it.get_hydro_variables().primitive_gradients(4);
-
-      // compute updated variables
-      const double divv = dux.x() + duy.y() + duz.z();
-      const double rho_inv = 1. / rho;
-      const double rho_new =
-          rho -
-          halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
-      CoordinateVector<> u_new;
       if (rho > 0.) {
-        u_new[0] = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
-        u_new[1] = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
-        u_new[2] = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
-      }
-      const double P_new =
-          P -
-          halfdt * (_gamma * P * divv + CoordinateVector<>::dot_product(u, dP));
-
-      if (rho > 0.) {
-        // add gravitational contribution
+        const CoordinateVector<> u =
+            it.get_hydro_variables().get_primitives_velocity();
+        const double P = it.get_hydro_variables().get_primitives_pressure();
         const CoordinateVector<> a =
-            it.get_hydro_variables().get_gravitational_acceleration() *
-            _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
-        u_new += halfdt * a;
-      }
+            _hydro_units->convert_to_internal_units< QUANTITY_ACCELERATION >(
+                it.get_hydro_variables().get_gravitational_acceleration());
 
-      // update variables
-      it.get_hydro_variables().primitives(0) = rho_new;
-      it.get_hydro_variables().primitives(1) = u_new.x();
-      it.get_hydro_variables().primitives(2) = u_new.y();
-      it.get_hydro_variables().primitives(3) = u_new.z();
-      it.get_hydro_variables().primitives(4) = P_new;
+        // get primitive gradients
+        const CoordinateVector<> drho =
+            it.get_hydro_variables().primitive_gradients(0);
+        const CoordinateVector<> dux =
+            it.get_hydro_variables().primitive_gradients(1);
+        const CoordinateVector<> duy =
+            it.get_hydro_variables().primitive_gradients(2);
+        const CoordinateVector<> duz =
+            it.get_hydro_variables().primitive_gradients(3);
+        const CoordinateVector<> dP =
+            it.get_hydro_variables().primitive_gradients(4);
+
+        // compute updated variables
+        const double divv = dux.x() + duy.y() + duz.z();
+        const double rho_inv = 1. / rho;
+        const double rho_new =
+            rho -
+            halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
+        const CoordinateVector<> u_new =
+            u - halfdt * (u * divv + rho_inv * dP - a);
+        const double P_new = P -
+                             halfdt * (_gamma * P * divv +
+                                       CoordinateVector<>::dot_product(u, dP));
+
+        // update variables
+        it.get_hydro_variables().primitives(0) = rho_new;
+        it.get_hydro_variables().primitives(1) = u_new.x();
+        it.get_hydro_variables().primitives(2) = u_new.y();
+        it.get_hydro_variables().primitives(3) = u_new.z();
+        it.get_hydro_variables().primitives(4) = P_new;
+      }
     }
 
     // do the flux computation (in parallel)
@@ -1020,8 +1018,8 @@ public:
 
       // add gravity
       const CoordinateVector<> a =
-          it.get_hydro_variables().get_gravitational_acceleration() *
-          _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
+          _hydro_units->convert_to_internal_units< QUANTITY_ACCELERATION >(
+              it.get_hydro_variables().get_gravitational_acceleration());
       const double mdt =
           it.get_hydro_variables().get_conserved_mass() * internal_timestep;
       const CoordinateVector<> p =
