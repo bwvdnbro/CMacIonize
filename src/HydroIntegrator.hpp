@@ -925,26 +925,29 @@ public:
       const double rho_new =
           rho -
           halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
-      double ux_new = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
-      double uy_new = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
-      double uz_new = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
+      CoordinateVector<> u_new;
+      if (rho > 0.) {
+        u_new[0] = u.x() - halfdt * (u.x() * divv + rho_inv * dP.x());
+        u_new[1] = u.y() - halfdt * (u.y() * divv + rho_inv * dP.y());
+        u_new[2] = u.z() - halfdt * (u.z() * divv + rho_inv * dP.z());
+      }
       const double P_new =
           P -
           halfdt * (_gamma * P * divv + CoordinateVector<>::dot_product(u, dP));
 
-      // add gravitational contribution
-      const CoordinateVector<> a =
-          it.get_hydro_variables().get_gravitational_acceleration() *
-          _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
-      ux_new += halfdt * a.x();
-      uy_new += halfdt * a.y();
-      uz_new += halfdt * a.z();
+      if (rho > 0.) {
+        // add gravitational contribution
+        const CoordinateVector<> a =
+            it.get_hydro_variables().get_gravitational_acceleration() *
+            _hydro_units->get_unit_internal_value< QUANTITY_ACCELERATION >();
+        u_new += halfdt * a;
+      }
 
       // update variables
       it.get_hydro_variables().primitives(0) = rho_new;
-      it.get_hydro_variables().primitives(1) = ux_new;
-      it.get_hydro_variables().primitives(2) = uy_new;
-      it.get_hydro_variables().primitives(3) = uz_new;
+      it.get_hydro_variables().primitives(1) = u_new.x();
+      it.get_hydro_variables().primitives(2) = u_new.y();
+      it.get_hydro_variables().primitives(3) = u_new.z();
       it.get_hydro_variables().primitives(4) = P_new;
     }
 

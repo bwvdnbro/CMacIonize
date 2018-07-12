@@ -142,7 +142,10 @@ public:
   virtual DensityValues operator()(const Cell &cell) const {
     const double dz = cell.get_cell_midpoint().z() - _disc_z;
     const double sech = 1. / std::cosh(dz * _b_inv);
-    const double nH = _density_norm * sech * sech;
+    double nH = _density_norm * sech * sech;
+    if (nH < 1.e-100) {
+      nH = 0.;
+    }
 
     DensityValues values;
     values.set_number_density(nH);
