@@ -41,6 +41,9 @@
 /*! @brief Uncomment this to switch off second order integration. */
 //#define NO_SECOND_ORDER
 
+/*! @brief Uncomment this to switch off the use of internal units. */
+//#define NO_INTERNAL_UNITS
+
 /*! @brief Uncomment this to make sure all hydro variables are always set to
  *  physical values. */
 #define SAFE_HYDRO
@@ -278,9 +281,9 @@ private:
           graduR[1] = ngb.get_hydro_variables().primitive_gradients(2);
           graduR[2] = ngb.get_hydro_variables().primitive_gradients(3);
           gradPR = ngb.get_hydro_variables().primitive_gradients(4);
-          vframe = _grid.get_interface_velocity(cell, ngb, midpoint) *
-                   _hydro_integrator._hydro_units
-                       ->get_unit_internal_value< QUANTITY_VELOCITY >();
+          vframe = _hydro_integrator._hydro_units
+                       ->convert_to_internal_units< QUANTITY_VELOCITY >(
+                           _grid.get_interface_velocity(cell, ngb, midpoint));
         } else {
           // apply boundary conditions
           rhoR = rhoL;
@@ -745,7 +748,14 @@ public:
     avg_rho /= grid.get_number_of_cells();
     avg_P /= grid.get_number_of_cells();
 
+#ifdef NO_INTERNAL_UNITS
+    (void)avg_box_size;
+    (void)avg_rho;
+    (void)avg_P;
+    _hydro_units = new InternalHydroUnits(1., 1., 1.);
+#else
     _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
+#endif
 
     const double velocity_unit_internal =
         _hydro_units->get_unit_internal_value< QUANTITY_VELOCITY >();

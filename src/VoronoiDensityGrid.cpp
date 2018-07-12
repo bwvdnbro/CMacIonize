@@ -231,6 +231,8 @@ void VoronoiDensityGrid::evolve(double timestep) {
 
       const CoordinateVector<> vgrid = _hydro_generator_velocity[index];
       _generator_positions[index] += timestep * vgrid;
+
+      cmac_assert(_box.inside(_generator_positions[index]));
     }
 
     voronoidensitygrid_print_generators();
