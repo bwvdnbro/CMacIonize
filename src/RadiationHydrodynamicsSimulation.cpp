@@ -202,7 +202,6 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const double hydro_radtime = params.get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
-  double time_last_hydro = 0.;
 
   DensityGrid *grid =
       DensityGridFactory::generate(simulation_box, params, true, log);
@@ -392,12 +391,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
         (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
 
       ++hydro_lastrad;
-      const double dt_hydro = current_time - time_last_hydro;
       // update the PhotonSource
-      if (sourcedistribution->update(dt_hydro)) {
+      if (sourcedistribution->update(current_time)) {
         source.update(sourcedistribution);
       }
-      time_last_hydro = current_time;
 
     } else {
       nloop_step = 0;
