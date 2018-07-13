@@ -78,13 +78,12 @@ public:
   virtual double get_total_luminosity() const = 0;
 
   /**
-   * @brief Update the distribution after a system time step with the given
-   * size.
+   * @brief Update the distribution after the system moved to the given time.
    *
-   * @param timestep Size of the system time step (in s).
+   * @param simulation_time Current simulation time (in s).
    * @return True if the distribution changed, false otherwise.
    */
-  virtual bool update(const double timestep) { return false; }
+  virtual bool update(const double simulation_time) { return false; }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP
