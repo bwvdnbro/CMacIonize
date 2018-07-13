@@ -42,7 +42,7 @@
 //#define NO_SECOND_ORDER
 
 /*! @brief Uncomment this to switch off the use of internal units. */
-//#define NO_INTERNAL_UNITS
+#define NO_INTERNAL_UNITS
 
 /*! @brief Uncomment this to make sure all hydro variables are always set to
  *  physical values. */
@@ -859,6 +859,9 @@ public:
       const double dt = R / (cs + v);
       dtmin = std::min(dt, dtmin);
     }
+
+    cmac_assert(dtmin > 0.);
+
     return _hydro_units->convert_to_SI_units< QUANTITY_TIME >(_CFL_constant *
                                                               dtmin);
   }
