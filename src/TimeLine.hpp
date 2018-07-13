@@ -176,7 +176,8 @@ public:
     }
 
     if (integer_timestep == 0) {
-      cmac_warning("Time step smaller than absolute limit: %g (limit: %g)! Prematurely stopping simulation...",
+      cmac_warning("Time step smaller than absolute limit: %g (limit: %g)! "
+                   "Prematurely stopping simulation...",
                    requested_timestep, to_physical_time_interval(1));
       return false;
     }
@@ -189,9 +190,9 @@ public:
 
     if (integer_timestep < _minimum_timestep) {
       cmac_warning("Time step wants to be smaller than minimum time step: %g "
-                 "(minimum: %g)! Prematurely stopping simulation...",
-                 to_physical_time_interval(integer_timestep),
-                 to_physical_time_interval(_minimum_timestep));
+                   "(minimum: %g)! Prematurely stopping simulation...",
+                   to_physical_time_interval(integer_timestep),
+                   to_physical_time_interval(_minimum_timestep));
       return false;
     }
 
