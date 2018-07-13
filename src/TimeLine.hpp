@@ -176,7 +176,9 @@ public:
     }
 
     if (integer_timestep == 0) {
-      cmac_error("Time step smaller than absolute limit!");
+      cmac_warning("Time step smaller than absolute limit: %g (limit: %g)! Prematurely stopping simulation...",
+                   requested_timestep, to_physical_time_interval(1));
+      return false;
     }
 
     const uint64_t time_left =
@@ -186,10 +188,11 @@ public:
     }
 
     if (integer_timestep < _minimum_timestep) {
-      cmac_error("Time step wants to be smaller than minimum time step: %g "
-                 "(minimum: %g)!",
+      cmac_warning("Time step wants to be smaller than minimum time step: %g "
+                 "(minimum: %g)! Prematurely stopping simulation...",
                  to_physical_time_interval(integer_timestep),
                  to_physical_time_interval(_minimum_timestep));
+      return false;
     }
 
     // advance '_current_time'
