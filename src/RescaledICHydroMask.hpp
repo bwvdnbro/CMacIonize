@@ -258,6 +258,10 @@ public:
         it.get_hydro_variables().set_conserved_momentum(momentum);
         it.get_hydro_variables().set_conserved_total_energy(total_energy);
 
+        // set neutral fractions to 0
+        it.get_ionization_variables().set_ionic_fraction(ION_H_n, 0.);
+        it.get_ionization_variables().set_ionic_fraction(ION_He_n, 0.);
+
         ++index;
       }
     }
