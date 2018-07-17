@@ -131,6 +131,8 @@ private:
       return HYDRO_BOUNDARY_REFLECTIVE;
     } else if (type == "inflow") {
       return HYDRO_BOUNDARY_INFLOW;
+    } else if (type == "outflow") {
+      return HYDRO_BOUNDARY_OUTFLOW;
     } else if (type == "bondi") {
       return HYDRO_BOUNDARY_BONDI;
     } else {
@@ -322,6 +324,19 @@ private:
               graduR[1] = CoordinateVector<>(0.);
               graduR[2] = CoordinateVector<>(0.);
               gradPR = CoordinateVector<>(0.);
+            } else if ((normal[i] < 0. &&
+                        _hydro_integrator._boundaries[2 * i] ==
+                            HYDRO_BOUNDARY_OUTFLOW) ||
+                       (normal[i] > 0. &&
+                        _hydro_integrator._boundaries[2 * i + 1] ==
+                            HYDRO_BOUNDARY_OUTFLOW)) {
+              // only mirror the velocity accross the boundary if it is leaving
+              // the box
+              if (uR[i] * normal[i] < 0.) {
+                uR[i] = 0.;
+                // set the gradient to zero
+                graduR[i] = CoordinateVector<>(0.);
+              }
             }
           }
         }
