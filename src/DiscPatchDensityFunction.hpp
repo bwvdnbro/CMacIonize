@@ -222,7 +222,7 @@ public:
                 "DensityFunction:surface density", "30. Msol pc^-2"),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "DensityFunction:scale height", "200. pc"),
-            params.get_value< double >("ExternalPotential:gas fraction", 0.1),
+            params.get_value< double >("DensityFunction:gas fraction", 0.1),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "DensityFunction:temperature", "1.e4 K"),
             params.get_value< double >("DensityFunction:neutral fraction",
