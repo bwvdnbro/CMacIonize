@@ -40,20 +40,30 @@ int main(int argc, char **argv) {
   const double Msol =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_SOLAR_MASS);
   const double pc = UnitConverter::to_SI< QUANTITY_LENGTH >(1., "pc");
-  const double surface_density = 12. * Msol / (pc * pc);
-  DiscPatchExternalPotential potential(0., surface_density, 0.1, 1.e4, 1.e-6);
-  DiscPatchDensityFunction density_function(0., surface_density, 0.1, 1.e4,
-                                            1.e-6);
+  const double scale_height = 200. * pc;
+  const double surface_density = 30. * Msol / (pc * pc);
+  DiscPatchExternalPotential potential(0., surface_density, scale_height);
+  DiscPatchDensityFunction density_function(0., surface_density, scale_height,
+                                            0.1, 8000., 1.e-6);
 
   std::ofstream ofile("test_discpatchexternalpotential.txt");
   ofile << "#z\taz\n";
+  double MM = 0.;
+  double Mg = 0.;
   for (uint_fast32_t i = 0; i < 100; ++i) {
-    const DummyCell cell(0., 0., -200. * pc + (i + 0.5) * 4. * pc);
+    const DummyCell cell(0., 0., -2000. * pc + (i + 0.5) * 40. * pc);
     const CoordinateVector<> p = cell.get_cell_midpoint();
     const DensityValues densval = density_function(cell);
     const double a = potential.get_acceleration(p)[2];
+    const double sech = 1. / std::cosh(p.z() / scale_height);
+    const double rhoM = 0.5 * surface_density * sech * sech / scale_height;
+    MM += rhoM;
+    Mg += densval.get_number_density();
     ofile << p.z() << "\t" << a << "\t" << densval.get_number_density() << "\n";
   }
+  Mg *= PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+
+  cmac_status("MM: %g, Mg: %g, fg: %g", MM, Mg, Mg / MM);
 
   return 0;
 }
