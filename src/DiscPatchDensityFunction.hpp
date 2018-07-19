@@ -60,9 +60,9 @@
  * with @f$T@f$ the hydrostatic equilibrium temperature and @f$\mu{}@f$ the
  * mean molecular weight,
  * \f[
- *   \mu{} = \frac{1}{2} (1 + n_{\rm{}H}),
+ *   \mu{} = \frac{1}{2} (1 + x_{\rm{}H}),
  * \f]
- * with @f$n_{\rm{}H}@f$ the hydrogen neutral fraction (we assume a hydrogen
+ * with @f$x_{\rm{}H}@f$ the hydrogen neutral fraction (we assume a hydrogen
  * only gas). @f$k_B@f$, @f$m_p@f$ and @f$G@f$ are respectively Bolzmann's
  * constant, the proton mass and Newton's constant.
  *
@@ -103,14 +103,14 @@ private:
   const double _temperature;
 
   /*! @brief Constant initial neutral fraction for hydrogen,
-   *  @f$n_{\rm{}H}@f$. */
+   *  @f$x_{\rm{}H}@f$. */
   const double _neutral_fraction;
 
   /**
    * @brief Get the mean particle mass @f$\mu{} m_p@f$ corresponding to the
    * given neutral fraction.
    *
-   * @param neutral_fraction Neutral fraction of hydrogen, @f$n_{\rm{}H}@f$.
+   * @param neutral_fraction Neutral fraction of hydrogen, @f$x_{\rm{}H}@f$.
    * @return Mean particle mass, @f$\mu{}m_p@f$ (in kg).
    */
   static inline double get_mean_particle_mass(const double neutral_fraction) {
@@ -127,7 +127,7 @@ private:
    * (in kg m^-2).
    * @param temperature Hydrostatic equilibrium temperature of the gas, @f$T@f$
    * (in K).
-   * @param neutral_fraction Neutral fraction for hydrogen, @f$n_{\rm{}H}@f$.
+   * @param neutral_fraction Neutral fraction for hydrogen, @f$x_{\rm{}H}@f$.
    * @return Scale height for the corresponding equilibrium gas disc, @f$b_g@f$.
    */
   static inline double
@@ -181,7 +181,7 @@ public:
    * in gas, @f$f_g@f$.
    * @param temperature Constant initial temperature, @f$T@f$ (in K).
    * @param neutral_fraction Constant initial neutral fraction for hydrogen,
-   * @f$n_{\rm{}H}@f$.
+   * @f$x_{\rm{}H}@f$.
    */
   inline DiscPatchDensityFunction(const double disc_z,
                                   const double surface_density,
