@@ -134,6 +134,8 @@ public:
    * @param seed Seed for the pseudo-random number generator.
    * @param update_interval Time interval in between successive source
    * distribution updates (in s).
+   * @param starting_time Start time of the simulation. The distribution is
+   * evolved forward in time to this point before it is used (in s).
    * @param output_sources Should the source positions be written to a file?
    */
   inline DiscPatchPhotonSourceDistribution(
@@ -142,7 +144,7 @@ public:
       const double sides_x, const double anchor_y, const double sides_y,
       const double origin_z, const double scaleheight_z,
       const int_fast32_t seed, const double update_interval,
-      bool output_sources = false)
+      const double starting_time, bool output_sources = false)
       : _source_lifetime(source_lifetime),
         _source_luminosity(source_luminosity),
         _source_probability(update_interval / source_lifetime),
@@ -173,6 +175,60 @@ public:
       }
       _output_file->flush();
     }
+
+    // make sure the distribution is evolved up to the right starting time
+    while (_number_of_updates * _update_interval <= starting_time) {
+
+      const double total_time = _number_of_updates * _update_interval;
+      // first clear out sources that do no longer exist
+      size_t i = 0;
+      while (i < _source_lifetimes.size()) {
+        _source_lifetimes[i] -= _update_interval;
+        if (_source_lifetimes[i] <= 0.) {
+          // remove the element
+          if (_output_file != nullptr) {
+            *_output_file << total_time << "\t0.\t0.\t0.\t2\t"
+                          << _source_indices[i] << "\n";
+            _source_indices.erase(_source_indices.begin() + i);
+          }
+
+          _source_positions.erase(_source_positions.begin() + i);
+          _source_lifetimes.erase(_source_lifetimes.begin() + i);
+        } else {
+          // check the next element
+          ++i;
+        }
+      }
+
+      // now check if new sources need to be generated
+      for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
+        double x = _random_generator.get_uniform_random_double();
+        if (x <= _source_probability) {
+          // bingo: create a new source
+          // the source could have been created at any given time during the
+          // past
+          // time step
+          const double offset =
+              _random_generator.get_uniform_random_double() * _update_interval;
+          _source_lifetimes.push_back(_source_lifetime - offset);
+          _source_positions.push_back(generate_source_position());
+          if (_output_file != nullptr) {
+            _source_indices.push_back(_next_index);
+            ++_next_index;
+            const CoordinateVector<> &pos = _source_positions.back();
+            *_output_file << total_time << "\t" << pos.x() << "\t" << pos.y()
+                          << "\t" << pos.z() << "\t1\t"
+                          << _source_indices.back() << "\n";
+          }
+        }
+      }
+
+      if (_output_file != nullptr) {
+        _output_file->flush();
+      }
+
+      ++_number_of_updates;
+    }
   }
 
   /**
@@ -195,6 +251,9 @@ public:
    *    is used to sample the individual positions (default: 42)
    *  - update interval: Time interval in between successive distribution
    *    updates (default: 0.1 Myr)
+   *  - starting time: Starting time of the simulation. The distribution is
+   *    evolved forward in time to this point before it is used
+   *    (default: 0. Myr)
    *  - output sources: Whether or not to write the source positions to a file
    *    (default: false)
    *
@@ -225,6 +284,8 @@ public:
                 "PhotonSourceDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_TIME >(
                 "PhotonSourceDistribution:update interval", "0.1 Myr"),
+            params.get_physical_value< QUANTITY_TIME >(
+                "PhotonSourceDistribution:starting time", "0. Myr"),
             params.get_value< bool >("PhotonSourceDistribution:output sources",
                                      false)) {}
 
