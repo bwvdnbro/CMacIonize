@@ -123,6 +123,9 @@ void RadiationHydrodynamicsSimulation::add_command_line_parameters(
  *    (default: false)
  *  - use potential: Use an external point mass potential as extra gravitational
  *    force (default: false)
+ *  - maximum neutral fraction: Maximum value of the hydrogen neutral fraction
+ *    that is allowed at the start of a radiation step (negative values do not
+ *    impose an upper limit, default: -1)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -202,6 +205,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const double hydro_radtime = params.get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
+
+  const double maximum_neutral_fraction = params.get_value< double >(
+      "RadiationHydrodynamicsSimulation:maximum neutral fraction", -1.);
 
   DensityGrid *grid =
       DensityGridFactory::generate(simulation_box, params, true, log);
@@ -396,6 +402,16 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
         source.update(sourcedistribution);
       }
 
+      // reset the neutral fractions if necessary
+      if (maximum_neutral_fraction > 0.) {
+        for (auto it = grid->begin(); it != grid->end(); ++it) {
+          if (it.get_ionization_variables().get_ionic_fraction(ION_H_n) >
+              maximum_neutral_fraction) {
+            it.get_ionization_variables().set_ionic_fraction(
+                ION_H_n, maximum_neutral_fraction);
+          }
+        }
+      }
     } else {
       nloop_step = 0;
     }
