@@ -48,6 +48,9 @@
  *  physical values. */
 #define SAFE_HYDRO
 
+/*! @brief Uncomment this to activate the flux limiter. */
+#define FLUX_LIMITER
+
 #include <cfloat>
 
 /*! @brief Stop the serial time timer and start the parallel time timer. */
@@ -466,6 +469,22 @@ private:
         mflux *= tfac;
         pflux *= tfac;
         Eflux *= tfac;
+
+#ifdef FLUX_LIMITER
+        // limit the flux
+        mflux = std::min(mflux,
+                         0.5 * cell.get_hydro_variables().get_conserved_mass());
+        if (pflux.norm2() >
+            0.25 *
+                cell.get_hydro_variables().get_conserved_momentum().norm2()) {
+          pflux *= (0.5 *
+                    cell.get_hydro_variables().get_conserved_momentum().norm() /
+                    pflux.norm());
+        }
+        Eflux = std::min(
+            Eflux,
+            0.5 * cell.get_hydro_variables().get_conserved_total_energy());
+#endif
 
         cell.get_hydro_variables().delta_conserved(0) += mflux;
         cell.get_hydro_variables().delta_conserved(1) += pflux.x();
