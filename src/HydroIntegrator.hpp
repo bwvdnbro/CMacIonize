@@ -331,9 +331,9 @@ private:
                         _hydro_integrator._boundaries[2 * i + 1] ==
                             HYDRO_BOUNDARY_OUTFLOW)) {
               // only mirror the velocity accross the boundary if it is leaving
-              // the box
+              // the box, otherwise revert
               if (uR[i] * normal[i] < 0.) {
-                uR[i] = 0.;
+                uR[i] = -uR[i];
                 // set the gradient to zero
                 graduR[i] = CoordinateVector<>(0.);
               }
