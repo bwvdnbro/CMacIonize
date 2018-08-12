@@ -51,14 +51,17 @@ int main(int argc, char **argv) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     const double r = (it.get_cell_midpoint() - center).norm();
     if (r < 0.5) {
-      it.get_hydro_variables().set_conserved_mass(1.);
+      it.get_hydro_variables().set_conserved_mass(1. * it.get_volume());
     } else {
       it.get_hydro_variables().set_conserved_mass(0.);
     }
   }
 
-  TreeSelfGravity self_gravity(grid);
+  TreeSelfGravity self_gravity(grid, 0.25);
+
+  cmac_status("Computing accelerations...");
   self_gravity.compute_accelerations(grid);
+  cmac_status("Done.");
 
   std::ofstream ofile("test_treeselfgravity.txt");
   ofile << "# r (m)\ta (m s^-2)\tx (m)\ty (m)\tz (m)\tax (m s^-2)\tay (m "
