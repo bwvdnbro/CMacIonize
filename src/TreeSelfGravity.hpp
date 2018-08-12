@@ -134,8 +134,8 @@ private:
     /*! @brief Child nodes. */
     Node *_children[8];
 
-    /*! @brief Box containing the node. */
-    Box<> _box;
+    /*! @brief Width of the node (in m). */
+    double _width;
 
     /*! @brief Center of mass position (in m). */
     CoordinateVector<> _COM_position;
@@ -147,9 +147,9 @@ private:
     /**
      * @brief Intermediate node constructor.
      *
-     * @param box Box containing the node.
+     * @param width Width of the node (in m).
      */
-    TreeNode(const Box<> box) : _box(box) {
+    TreeNode(const double width) : _width(width) {
       for (uint_fast8_t i = 0; i < 8; ++i) {
         _children[i] = nullptr;
       }
@@ -201,19 +201,7 @@ private:
         } else {
           // it is: replace with a new intermediate node
           Leaf *old_leaf = static_cast< Leaf * >(_children[node_key]);
-          CoordinateVector<> box_anchor = _box.get_anchor();
-          CoordinateVector<> box_sides = 0.5 * _box.get_sides();
-          if ((node_key & 4) > 0) {
-            box_anchor[0] += box_sides[0];
-          }
-          if ((node_key & 2) > 0) {
-            box_anchor[1] += box_sides[1];
-          }
-          if ((node_key & 1) > 0) {
-            box_anchor[2] += box_sides[2];
-          }
-          const Box<> box(box_anchor, box_sides);
-          _children[node_key] = new TreeNode(box);
+          _children[node_key] = new TreeNode(0.5 * _width);
           static_cast< TreeNode * >(_children[node_key])
               ->add_position(position, mass, key, cell, level + 1);
           static_cast< TreeNode * >(_children[node_key])
@@ -244,13 +232,14 @@ private:
      *
      * @return Width of the node (in m).
      */
-    inline double get_node_width() const { return _box.get_sides().max(); }
+    inline double get_node_width() const { return _width; }
 
     /**
      * @brief Compute the center of mass of the node (and all children).
      */
     inline void finalize() {
       _COM_mass = 0.;
+      _COM_position = CoordinateVector<>(0.);
       for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] != nullptr) {
           if (_children[i]->get_type() == 0) {
@@ -275,10 +264,13 @@ private:
      * @brief Get the gravitational acceleration at the given position.
      *
      * @param position Position (in m).
+     * @param opening_angle Opening angle that determines the accuracy of the
+     * tree walk.
      * @return Gravitational acceleration without Newton constant (in kg m^-2).
      */
     inline CoordinateVector<>
-    get_acceleration(const CoordinateVector<> position) const {
+    get_acceleration(const CoordinateVector<> position,
+                     const double opening_angle) const {
       CoordinateVector<> a;
       for (uint_fast8_t i = 0; i < 8; ++i) {
         if (_children[i] != nullptr) {
@@ -290,11 +282,11 @@ private:
             const CoordinateVector<> r =
                 child_node->get_COM_position() - position;
             const double r2 = r.norm2();
-            if (width * width <= 0.25 * r2) {
+            if (width * width <= opening_angle * r2) {
               // node is far enough away: don't open it
               a += child_node->get_COM_mass() * r / (r2 * std::sqrt(r2));
             } else {
-              a += child_node->get_acceleration(position);
+              a += child_node->get_acceleration(position, opening_angle);
             }
           } else {
             const Leaf *child_leaf = static_cast< Leaf * >(_children[i]);
@@ -313,17 +305,23 @@ private:
   /*! @brief Root node of the tree. */
   TreeNode *_tree_root;
 
+  /*! @brief Opening angle that determines the accuracy of the tree walk. */
+  const double _opening_angle;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param grid DensityGrid to operate on.
+   * @param opening_angle Opening angle that determines the accuracy of the
+   * tree walk.
    */
-  TreeSelfGravity(DensityGrid &grid) {
+  TreeSelfGravity(DensityGrid &grid, const double opening_angle)
+      : _opening_angle(opening_angle) {
 
     MortonKeyGenerator key_generator(grid.get_box());
 
-    _tree_root = new TreeNode(grid.get_box());
+    _tree_root = new TreeNode(grid.get_box().get_sides().max());
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const CoordinateVector<> position = it.get_cell_midpoint();
       const double mass = it.get_hydro_variables().get_conserved_mass();
@@ -349,7 +347,8 @@ public:
     // now loop over the particles and compute the accelerations
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const CoordinateVector<> a_grav =
-          G * _tree_root->get_acceleration(it.get_cell_midpoint());
+          G *
+          _tree_root->get_acceleration(it.get_cell_midpoint(), _opening_angle);
       it.get_hydro_variables().set_gravitational_acceleration(
           it.get_hydro_variables().get_gravitational_acceleration() + a_grav);
     }
