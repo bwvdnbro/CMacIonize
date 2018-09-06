@@ -27,6 +27,7 @@
 #define TREESELFGRAVITY_HPP
 
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
 #include "MortonKeyGenerator.hpp"
 #include "PhysicalConstants.hpp"
 
@@ -70,6 +71,10 @@ private:
     /*! @brief Iterator to the associated cell. */
     DensityGrid::iterator _cell;
 
+    /*! @brief Pointer to the next node in an efficient tree traversal
+     *  algorithm. */
+    Node *_sibling;
+
   public:
     /**
      * @brief Constructor.
@@ -105,6 +110,14 @@ private:
     inline double get_mass() const { return _mass; }
 
     /**
+     * @brief Get a pointer to the next Node in an efficient tree traversal
+     * algorithm.
+     *
+     * @return Next Node in an efficient tree traversal algorithm.
+     */
+    inline Node *get_sibling() const { return _sibling; }
+
+    /**
      * @brief Get the Morton key of the leaf.
      *
      * @return Morton key.
@@ -120,9 +133,12 @@ private:
 
     /**
      * @brief Update the mass of the leaf.
+     *
+     * @param sibling Next Node in an efficient tree traversal algorithm.
      */
-    inline void update() {
+    inline void update(Node *sibling) {
       _mass = _cell.get_hydro_variables().get_conserved_mass();
+      _sibling = sibling;
     }
   };
 
@@ -142,6 +158,13 @@ private:
 
     /*! @brief Center of mass mass (in kg). */
     double _COM_mass;
+
+    /*! @brief Pointer to the first child of the node. */
+    Node *_child;
+
+    /*! @brief Pointer to the next Node in an efficient tree traversal
+     *  algorithm. */
+    Node *_sibling;
 
   public:
     /**
@@ -235,70 +258,126 @@ private:
     inline double get_node_width() const { return _width; }
 
     /**
-     * @brief Compute the center of mass of the node (and all children).
+     * @brief Get a pointer to the first child of this node.
+     *
+     * @return First child of this node.
      */
-    inline void finalize() {
-      _COM_mass = 0.;
-      _COM_position = CoordinateVector<>(0.);
-      for (uint_fast8_t i = 0; i < 8; ++i) {
-        if (_children[i] != nullptr) {
-          if (_children[i]->get_type() == 0) {
-            TreeNode *child_node = static_cast< TreeNode * >(_children[i]);
-            child_node->finalize();
-            _COM_mass += child_node->get_COM_mass();
-            _COM_position +=
-                child_node->get_COM_mass() * child_node->get_COM_position();
-          } else {
-            Leaf *child_leaf = static_cast< Leaf * >(_children[i]);
-            child_leaf->update();
-            _COM_mass += child_leaf->get_mass();
-            _COM_position +=
-                child_leaf->get_mass() * child_leaf->get_position();
-          }
-        }
-      }
-      _COM_position /= _COM_mass;
-    }
+    inline Node *get_child() const { return _child; }
 
     /**
-     * @brief Get the gravitational acceleration at the given position.
+     * @brief Get a pointer to the next Node in an efficient tree traversal
+     * algorithm.
      *
-     * @param position Position (in m).
-     * @param opening_angle Opening angle that determines the accuracy of the
-     * tree walk.
-     * @return Gravitational acceleration without Newton constant (in kg m^-2).
+     * @return Next Node in an efficient tree traversal algorithm.
      */
-    inline CoordinateVector<>
-    get_acceleration(const CoordinateVector<> position,
-                     const double opening_angle) const {
-      CoordinateVector<> a;
-      for (uint_fast8_t i = 0; i < 8; ++i) {
-        if (_children[i] != nullptr) {
-          if (_children[i]->get_type() == 0) {
-            const TreeNode *child_node =
-                static_cast< TreeNode * >(_children[i]);
-            // check if we need to open the node
-            const double width = child_node->get_node_width();
-            const CoordinateVector<> r =
-                child_node->get_COM_position() - position;
-            const double r2 = r.norm2();
-            if (width * width <= opening_angle * r2) {
-              // node is far enough away: don't open it
-              a += child_node->get_COM_mass() * r / (r2 * std::sqrt(r2));
-            } else {
-              a += child_node->get_acceleration(position, opening_angle);
-            }
+    inline Node *get_sibling() const { return _sibling; }
+
+    /**
+     * @brief Compute the center of mass of the node (and all children).
+     *
+     * @param sibling Next Node in an efficient tree traversal algorithm.
+     */
+    inline void finalize(Node *sibling = nullptr) {
+      _COM_mass = 0.;
+      _COM_position = CoordinateVector<>(0.);
+      _child = nullptr;
+
+      uint_fast8_t i = 0;
+      while (i < 8) {
+        while (i < 8 && _children[i] == nullptr) {
+          ++i;
+        }
+        cmac_assert(i != 8);
+        if (_child == nullptr) {
+          _child = _children[i];
+        }
+        uint_fast8_t j = i + 1;
+        while (j < 8 && _children[j] == nullptr) {
+          ++j;
+        }
+        Node *next = sibling;
+        if (j < 8) {
+          next = _children[j];
+        }
+        if (_children[i]->get_type() == 0) {
+          TreeNode *child_node = static_cast< TreeNode * >(_children[i]);
+          child_node->finalize(next);
+          _COM_mass += child_node->get_COM_mass();
+          _COM_position +=
+              child_node->get_COM_mass() * child_node->get_COM_position();
+        } else {
+          Leaf *child_leaf = static_cast< Leaf * >(_children[i]);
+          child_leaf->update(next);
+          _COM_mass += child_leaf->get_mass();
+          _COM_position += child_leaf->get_mass() * child_leaf->get_position();
+        }
+        i = j;
+      }
+      _COM_position /= _COM_mass;
+      _sibling = sibling;
+    }
+  };
+
+  /**
+   * @brief Functor that does the gravity calculation for a single cell.
+   */
+  class GravityComputation {
+  private:
+    /*! @brief Reference to the underlying TreeSelfGravity. */
+    const TreeSelfGravity &_gravity;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param gravity Reference to the underlying TreeSelfGravity.
+     * @param grid Reference to the DensityGrid.
+     * @param grid_end Iterator to the end of the grid.
+     */
+    inline GravityComputation(const TreeSelfGravity &gravity)
+        : _gravity(gravity) {}
+
+    /**
+     * @brief Do the gravity calculation for a single cell of the grid.
+     *
+     * @param cell DensityGrid::iterator pointing to a grid cell.
+     */
+    inline void operator()(DensityGrid::iterator &cell) {
+
+      CoordinateVector<> a_grav;
+      const CoordinateVector<> position = cell.get_cell_midpoint();
+
+      Node *stack = _gravity._tree_root->get_child();
+      cmac_assert(stack != nullptr);
+      while (stack != nullptr) {
+        if (stack->get_type() == 0) {
+          const TreeNode *child_node = static_cast< TreeNode * >(stack);
+          // check if we need to open the node
+          const double width = child_node->get_node_width();
+          const CoordinateVector<> r =
+              child_node->get_COM_position() - position;
+          const double r2 = r.norm2();
+          if (width * width <= _gravity._opening_angle * r2) {
+            // node is far enough away: don't open it
+            a_grav += child_node->get_COM_mass() * r / (r2 * std::sqrt(r2));
+            stack = child_node->get_sibling();
           } else {
-            const Leaf *child_leaf = static_cast< Leaf * >(_children[i]);
-            const CoordinateVector<> r = child_leaf->get_position() - position;
-            const double r2 = r.norm2();
-            if (r2 > 0.) {
-              a += child_leaf->get_mass() * r / (r2 * std::sqrt(r2));
-            }
+            stack = child_node->get_child();
           }
+        } else {
+          const Leaf *child_leaf = static_cast< Leaf * >(stack);
+          const CoordinateVector<> r = child_leaf->get_position() - position;
+          const double r2 = r.norm2();
+          if (r2 > 0.) {
+            a_grav += child_leaf->get_mass() * r / (r2 * std::sqrt(r2));
+          }
+          stack = child_leaf->get_sibling();
         }
       }
-      return a;
+
+      cell.get_hydro_variables().set_gravitational_acceleration(
+          cell.get_hydro_variables().get_gravitational_acceleration() +
+          _gravity._newton_G * a_grav);
     }
   };
 
@@ -307,6 +386,9 @@ private:
 
   /*! @brief Opening angle that determines the accuracy of the tree walk. */
   const double _opening_angle;
+
+  /*! @brief Internal value of Newton's gravity constant. */
+  const double _newton_G;
 
 public:
   /**
@@ -317,7 +399,9 @@ public:
    * tree walk.
    */
   TreeSelfGravity(DensityGrid &grid, const double opening_angle)
-      : _opening_angle(opening_angle) {
+      : _opening_angle(opening_angle),
+        _newton_G(PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_NEWTON_CONSTANT)) {
 
     MortonKeyGenerator key_generator(grid.get_box());
 
@@ -342,16 +426,16 @@ public:
     // first make sure the tree is up to date
     _tree_root->finalize();
 
-    const double G = PhysicalConstants::get_physical_constant(
-        PHYSICALCONSTANT_NEWTON_CONSTANT);
-    // now loop over the particles and compute the accelerations
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      const CoordinateVector<> a_grav =
-          G *
-          _tree_root->get_acceleration(it.get_cell_midpoint(), _opening_angle);
-      it.get_hydro_variables().set_gravitational_acceleration(
-          it.get_hydro_variables().get_gravitational_acceleration() + a_grav);
-    }
+    // now do the gravity calculation (in parallel)
+    std::pair< cellsize_t, cellsize_t > block =
+        std::make_pair(0, grid.get_number_of_cells());
+    GravityComputation gravity(*this);
+    WorkDistributor< DensityGridTraversalJobMarket< GravityComputation >,
+                     DensityGridTraversalJob< GravityComputation > >
+        workers;
+    DensityGridTraversalJobMarket< GravityComputation > jobs(grid, gravity,
+                                                             block);
+    workers.do_in_parallel(jobs);
   }
 
   /**
