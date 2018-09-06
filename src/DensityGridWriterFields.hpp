@@ -58,6 +58,7 @@ enum DensityGridField {
   DENSITYGRIDFIELD_MASS,
   DENSITYGRIDFIELD_MOMENTUM,
   DENSITYGRIDFIELD_TOTAL_ENERGY,
+  DENSITYGRIDFIELD_ACCELERATION,
   DENSITYGRIDFIELD_NUMBER
 };
 
@@ -119,6 +120,8 @@ public:
       return DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+    case DENSITYGRIDFIELD_ACCELERATION:
+      return DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return DENSITYGRIDFIELDTYPE_NUMBER;
@@ -167,6 +170,8 @@ public:
       return "Momentum";
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return "TotalEnergy";
+    case DENSITYGRIDFIELD_ACCELERATION:
+      return "Acceleration";
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return "";
@@ -219,6 +224,8 @@ public:
       return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
+    case DENSITYGRIDFIELD_ACCELERATION:
+      return false;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -266,6 +273,8 @@ public:
     case DENSITYGRIDFIELD_MOMENTUM:
       return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
+      return false;
+    case DENSITYGRIDFIELD_ACCELERATION:
       return false;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
@@ -315,6 +324,8 @@ public:
       return false;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
       return false;
+    case DENSITYGRIDFIELD_ACCELERATION:
+      return false;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -362,6 +373,8 @@ public:
     case DENSITYGRIDFIELD_MOMENTUM:
       return true;
     case DENSITYGRIDFIELD_TOTAL_ENERGY:
+      return true;
+    case DENSITYGRIDFIELD_ACCELERATION:
       return true;
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
@@ -458,6 +471,14 @@ public:
             it.get_hydro_variables().get_conserved_momentum());
       } else {
         return it.get_hydro_variables().get_conserved_momentum();
+      }
+    }
+    case DENSITYGRIDFIELD_ACCELERATION: {
+      if (hydro_units != nullptr) {
+        return hydro_units->convert_to_SI_units< QUANTITY_ACCELERATION >(
+            it.get_hydro_variables().get_gravitational_acceleration());
+      } else {
+        return it.get_hydro_variables().get_gravitational_acceleration();
       }
     }
     default:

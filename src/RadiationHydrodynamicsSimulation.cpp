@@ -60,6 +60,7 @@
 #include "TerminalLog.hpp"
 #include "TimeLine.hpp"
 #include "Timer.hpp"
+#include "TreeSelfGravity.hpp"
 #include "WorkDistributor.hpp"
 #include "WorkEnvironment.hpp"
 
@@ -293,6 +294,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     cmac_error("No external potential provided!");
   }
 
+  const bool do_self_gravity = params.get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use self gravity", false);
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
@@ -338,6 +342,11 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     log->write_status("Done initializing mask. Applying mask...");
     density_mask->apply(*grid);
     log->write_status("Done applying mask.");
+  }
+
+  TreeSelfGravity *self_gravity = nullptr;
+  if (do_self_gravity) {
+    self_gravity = new TreeSelfGravity(*grid, 0.25);
   }
 
   if (log) {
@@ -479,6 +488,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       }
     }
 
+    if (self_gravity != nullptr) {
+      self_gravity->compute_accelerations(*grid);
+    }
+
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
                                     parallel_timer);
 
@@ -523,6 +536,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (self_gravity != nullptr) {
+    delete self_gravity;
+  }
   if (potential != nullptr) {
     delete potential;
   }
