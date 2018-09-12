@@ -69,6 +69,17 @@ message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
 
+# DeRijckeDataLocation.hpp
+set(DR_DATA ${PROJECT_BINARY_DIR}/data/DeRijckeCooling.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/DeRijckeCooling.tar.gz
+               ${DR_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${DR_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(DERIJCKEDATALOCATION ${PROJECT_BINARY_DIR}/data/DeRijckeCooling/)
+message(STATUS "DeRijckeDataLocation.hpp: ${DERIJCKEDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/DeRijckeDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/DeRijckeDataLocation.hpp @ONLY)
+
 # WMBasicDataLocation.hpp
 set(WMBASIC_DATA ${PROJECT_BINARY_DIR}/data/wmbasic.tar.gz)
 configure_file(${PROJECT_SOURCE_DIR}/data/wmbasic.tar.gz
@@ -139,6 +150,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.cpp
     CompilerInfo.cpp.in
     ConfigurationInfo.cpp.in
+    DeRijckeRadiativeCooling.cpp
     DustScattering.cpp
     DustSimulation.cpp
     EmissivityCalculator.cpp

@@ -35,6 +35,7 @@
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
 #include "CrossSectionsFactory.hpp"
+#include "DeRijckeRadiativeCooling.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
@@ -127,6 +128,9 @@ void RadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - maximum neutral fraction: Maximum value of the hydrogen neutral fraction
  *    that is allowed at the start of a radiation step (negative values do not
  *    impose an upper limit, default: -1)
+ *  - use self gravity: Add the gravitational force due to the gas itself
+ *    (default: false)
+ *  - use cooling: Add external cooling (default: false)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -296,6 +300,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   const bool do_self_gravity = params.get_value< bool >(
       "RadiationHydrodynamicsSimulation:use self gravity", false);
+
+  DeRijckeRadiativeCooling *cooling_function = nullptr;
+  if (params.get_value< bool >("RadiationHydrodynamicsSimulation:use cooling",
+                               false)) {
+    cooling_function = new DeRijckeRadiativeCooling();
+  }
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -492,6 +502,19 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       self_gravity->compute_accelerations(*grid);
     }
 
+    // update the cooling terms if applicable
+    if (cooling_function != nullptr) {
+      for (auto it = grid->begin(); it != grid->end(); ++it) {
+        const double nH = it.get_ionization_variables().get_number_density();
+        const double nH2 = nH * nH;
+        const double cooling_rate =
+            cooling_function->get_cooling_rate(
+                it.get_ionization_variables().get_temperature()) *
+            nH2 * it.get_volume();
+        it.get_hydro_variables().set_energy_term(-cooling_rate);
+      }
+    }
+
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
                                     parallel_timer);
 
@@ -536,6 +559,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (cooling_function != nullptr) {
+    delete cooling_function;
+  }
   if (self_gravity != nullptr) {
     delete self_gravity;
   }

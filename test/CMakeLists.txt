@@ -1211,6 +1211,17 @@ set(TESTMORTONKEYGENERATOR_SOURCES
 add_unit_test(NAME testMortonKeyGenerator
               SOURCES ${TESTMORTONKEYGENERATOR_SOURCES})
 
+## Unit test for DeRijckeRadiativeCooling
+set(TESTDERIJCKERADIATIVECOOLING_SOURCES
+    testDeRijckeRadiativeCooling.cpp
+
+    ../src/DeRijckeDataLocation.hpp.in
+    ../src/DeRijckeRadiativeCooling.cpp
+    ../src/DeRijckeRadiativeCooling.hpp
+)
+add_unit_test(NAME testDeRijckeRadiativeCooling
+              SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
