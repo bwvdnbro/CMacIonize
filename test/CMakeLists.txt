@@ -1191,6 +1191,26 @@ set(TESTINTERNALHYDROUNITS_SOURCES
 add_unit_test(NAME testInternalHydroUnits
               SOURCES ${TESTINTERNALHYDROUNITS_SOURCES})
 
+## Unit test for TreeSelfGravity
+set(TESTTREESELFGRAVITY_SOURCES
+    testTreeSelfGravity.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/TreeSelfGravity.hpp
+)
+add_unit_test(NAME testTreeSelfGravity
+              SOURCES ${TESTTREESELFGRAVITY_SOURCES})
+
+## Unit test for MortonKeyGenerator
+set(TESTMORTONKEYGENERATOR_SOURCES
+    testMortonKeyGenerator.cpp
+
+    ../src/MortonKeyGenerator.hpp
+)
+add_unit_test(NAME testMortonKeyGenerator
+              SOURCES ${TESTMORTONKEYGENERATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
