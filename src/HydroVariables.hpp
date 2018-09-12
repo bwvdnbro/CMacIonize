@@ -48,13 +48,16 @@ private:
   /*! @brief Gravitational acceleration (in m s^-2). */
   CoordinateVector<> _gravitational_acceleration;
 
+  /*! @brief External cooling and/or heating (in J s^-1). */
+  double _energy_term;
+
 public:
   /**
    * @brief (Empty) constructor.
    */
   inline HydroVariables()
       : _primitives{0., 0., 0., 0., 0.}, _conserved{0., 0., 0., 0., 0.},
-        _delta_conserved{0., 0., 0., 0., 0.} {}
+        _delta_conserved{0., 0., 0., 0., 0.}, _energy_term(0.) {}
 
   /**
    * @brief Get read only access to the given component of the primitive
@@ -266,6 +269,22 @@ public:
   inline void set_gravitational_acceleration(
       const CoordinateVector<> gravitational_acceleration) {
     _gravitational_acceleration = gravitational_acceleration;
+  }
+
+  /**
+   * @brief Get the energy term.
+   *
+   * @return Energy term (in J s^-1).
+   */
+  inline double get_energy_term() const { return _energy_term; }
+
+  /**
+   * @brief Set the energy term.
+   *
+   * @param energy_term Energy term (in J s^-1).
+   */
+  inline void set_energy_term(const double energy_term) {
+    _energy_term = energy_term;
   }
 };
 

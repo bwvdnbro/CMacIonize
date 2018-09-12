@@ -35,6 +35,10 @@
  */
 DeRijckeRadiativeCooling::DeRijckeRadiativeCooling() {
 
+  const double nH =
+      UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(1., "cm^-3");
+  const double nH2inv = 1. / (nH * nH);
+
   std::stringstream filenamestream;
   filenamestream << DERIJCKEDATALOCATION
                  << "RadLoss_0.00_0.00_11.00_1.00e+00.rates";
@@ -50,7 +54,8 @@ DeRijckeRadiativeCooling::DeRijckeRadiativeCooling() {
     std::istringstream linestream(line);
     linestream >> _temperatures[i] >> _cooling_rates[i];
     _cooling_rates[i] = UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(
-        _cooling_rates[i], "erg cm^-3 s^-1");
+                            _cooling_rates[i], "erg cm^-3 s^-1") *
+                        nH2inv;
   }
 
   _min_logT = std::log(_temperatures[0]);

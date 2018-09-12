@@ -150,6 +150,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.cpp
     CompilerInfo.cpp.in
     ConfigurationInfo.cpp.in
+    DeRijckeRadiativeCooling.cpp
     DustScattering.cpp
     DustSimulation.cpp
     EmissivityCalculator.cpp
