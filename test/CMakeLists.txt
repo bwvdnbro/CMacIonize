@@ -1226,6 +1226,7 @@ add_unit_test(NAME testDeRijckeRadiativeCooling
 set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
     testCoredDMProfileExternalPotential.cpp
 
+    ../src/CoredDMProfileDensityFunction.hpp
     ../src/CoredDMProfileExternalPotential.hpp
 )
 add_unit_test(NAME testCoredDMProfileExternalPotential
