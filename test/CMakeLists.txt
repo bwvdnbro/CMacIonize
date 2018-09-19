@@ -1222,6 +1222,15 @@ set(TESTDERIJCKERADIATIVECOOLING_SOURCES
 add_unit_test(NAME testDeRijckeRadiativeCooling
               SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES})
 
+## Unit test for CoredDMProfileExternalPotential
+set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
+    testCoredDMProfileExternalPotential.cpp
+
+    ../src/CoredDMProfileExternalPotential.hpp
+)
+add_unit_test(NAME testCoredDMProfileExternalPotential
+              SOURCES ${TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

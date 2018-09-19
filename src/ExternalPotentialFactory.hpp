@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "CoredDMProfileExternalPotential.hpp"
 #include "DiscPatchExternalPotential.hpp"
 #include "PointMassExternalPotential.hpp"
 
@@ -61,7 +62,9 @@ public:
       log->write_info("Requested ExternalPotential type: ", type);
     }
 
-    if (type == "DiscPatch") {
+    if (type == "CoredDMProfile") {
+      return new CoredDMProfileExternalPotential(params);
+    } else if (type == "DiscPatch") {
       return new DiscPatchExternalPotential(params);
     } else if (type == "PointMass") {
       return new PointMassExternalPotential(params);
