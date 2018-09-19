@@ -44,6 +44,8 @@ public:
    * given ParameterFile.
    *
    * Supported types are (default: None):
+   *  - CoredDMProfile: Cored DM profile external potential (Caproni et al.,
+   *    2015)
    *  - DiscPatch: Disc patch external potential (Creasey, Theuns & Bower, 2013)
    *  - PointMass: Point mass external potential
    *
