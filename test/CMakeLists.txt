@@ -1232,6 +1232,15 @@ set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
 add_unit_test(NAME testCoredDMProfileExternalPotential
               SOURCES ${TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES})
 
+## Unit test for DwarfGalaxyPhotonSourceDistribution
+set(TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES
+    testDwarfGalaxyPhotonSourceDistribution.cpp
+
+    ../src/DwarfGalaxyPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testDwarfGalaxyPhotonSourceDistribution
+              SOURCES ${TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

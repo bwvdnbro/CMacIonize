@@ -33,6 +33,7 @@
 
 // non library dependent implementations
 #include "DiscPatchPhotonSourceDistribution.hpp"
+#include "DwarfGalaxyPhotonSourceDistribution.hpp"
 #include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 
@@ -99,6 +100,8 @@ public:
       return nullptr;
     } else if (type == "DiscPatch") {
       return new DiscPatchPhotonSourceDistribution(params, log);
+    } else if (type == "DwarfGalaxy") {
+      return new DwarfGalaxyPhotonSourceDistribution(params, log);
     } else if (type == "SILCC") {
       return new SILCCPhotonSourceDistribution(params, log);
     } else if (type == "SingleStar") {
