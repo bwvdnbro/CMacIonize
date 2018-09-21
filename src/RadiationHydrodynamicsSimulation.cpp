@@ -376,6 +376,20 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     mask->apply_mask(*grid, 0, 0);
   }
 
+  // update the gravitational accelerations if applicable (just to make sure
+  // they are present in the first snapshot)
+  if (potential != nullptr) {
+    for (auto it = grid->begin(); it != grid->end(); ++it) {
+      const CoordinateVector<> a =
+          potential->get_acceleration(it.get_cell_midpoint());
+      it.get_hydro_variables().set_gravitational_acceleration(a);
+    }
+  }
+
+  if (self_gravity != nullptr) {
+    self_gravity->compute_accelerations(*grid);
+  }
+
   if (write_output) {
     writer->write(*grid, 0, params, 0., hydro_integrator->get_internal_units());
   }
