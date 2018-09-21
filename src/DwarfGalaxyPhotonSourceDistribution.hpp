@@ -224,17 +224,17 @@ public:
    *  - source lifetime: Lifetime of a source (default: 20. Myr)
    *  - source luminosity: Ionising luminosity of a single source
    *    (default: 1.e48 s^-1)
-   *  - average number of sources: Average number of sources (default: 24)
+   *  - average number of sources: Average number of sources (default: 52)
    *  - center: Center of the source distribution (default: [0. kpc, 0. kpc,
    *    0. kpc])
    *  - scale radius: Scale radius of the source distribution (default: 300. pc)
    *  - random seed: Random seed used to initialize the random generator that
    *    is used to sample the individual positions (default: 42)
    *  - update interval: Time interval in between successive distribution
-   *    updates (default: 0.1 Myr)
+   *    updates (default: 0.01 Gyr)
    *  - starting time: Starting time of the simulation. The distribution is
    *    evolved forward in time to this point before it is used
-   *    (default: 0. Myr)
+   *    (default: 0. Gyr)
    *  - output sources: Whether or not to write the source positions to a file
    *    (default: false)
    *
@@ -248,7 +248,7 @@ public:
             params.get_physical_value< QUANTITY_FREQUENCY >(
                 "PhotonSourceDistribution:source luminosity", "3.125e49 s^-1"),
             params.get_value< photonsourcenumber_t >(
-                "PhotonSourceDistribution:average number of sources", 24),
+                "PhotonSourceDistribution:average number of sources", 52),
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "PhotonSourceDistribution:center", "[0. kpc, 0. kpc, 0. kpc]"),
             params.get_physical_value< QUANTITY_LENGTH >(
@@ -256,9 +256,9 @@ public:
             params.get_value< int_fast32_t >(
                 "PhotonSourceDistribution:random seed", 42),
             params.get_physical_value< QUANTITY_TIME >(
-                "PhotonSourceDistribution:update interval", "0.1 Myr"),
+                "PhotonSourceDistribution:update interval", "0.01 Gyr"),
             params.get_physical_value< QUANTITY_TIME >(
-                "PhotonSourceDistribution:starting time", "0. Myr"),
+                "PhotonSourceDistribution:starting time", "0. Gyr"),
             params.get_value< bool >("PhotonSourceDistribution:output sources",
                                      false)) {}
 
