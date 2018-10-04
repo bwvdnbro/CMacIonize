@@ -331,8 +331,6 @@ private:
      * @brief Constructor.
      *
      * @param gravity Reference to the underlying TreeSelfGravity.
-     * @param grid Reference to the DensityGrid.
-     * @param grid_end Iterator to the end of the grid.
      */
     inline GravityComputation(const TreeSelfGravity &gravity)
         : _gravity(gravity) {}
