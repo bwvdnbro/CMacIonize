@@ -32,6 +32,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "CaproniPhotonSourceDistribution.hpp"
 #include "DiscPatchPhotonSourceDistribution.hpp"
 #include "DwarfGalaxyPhotonSourceDistribution.hpp"
 #include "SILCCPhotonSourceDistribution.hpp"
@@ -98,6 +99,8 @@ public:
 #endif
     if (type == "None") {
       return nullptr;
+    } else if (type == "Caproni") {
+      return new CaproniPhotonSourceDistribution(params, log);
     } else if (type == "DiscPatch") {
       return new DiscPatchPhotonSourceDistribution(params, log);
     } else if (type == "DwarfGalaxy") {
