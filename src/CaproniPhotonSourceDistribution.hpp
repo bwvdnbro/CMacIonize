@@ -409,7 +409,8 @@ public:
             params.get_physical_value< QUANTITY_TIME >(
                 "PhotonSourceDistribution:starting time", "0. Gyr"),
             params.get_value< bool >("PhotonSourceDistribution:output sources",
-                                     false)) {}
+                                     false),
+            log) {}
 
   /**
    * @brief Virtual destructor.
