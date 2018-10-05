@@ -254,17 +254,30 @@ public:
    * @param starting_time Start time of the simulation. The distribution is
    * evolved forward in time to this point before it is used (in s).
    * @param output_sources Should the source positions be written to a file?
+   * @param log Log to write logging info to.
    */
   inline CaproniPhotonSourceDistribution(const double number_function_norm,
                                          const double UV_luminosity_norm,
                                          const int_fast32_t seed,
                                          const double update_interval,
                                          const double starting_time,
-                                         bool output_sources = false)
+                                         bool output_sources = false,
+                                         Log *log = nullptr)
       : _number_function_norm(number_function_norm),
         _UV_luminosity_norm(UV_luminosity_norm), _random_generator(seed),
-        _output_file(nullptr), _update_interval(update_interval),
+        _output_file(nullptr),
+        _update_interval(std::min(update_interval, 9.9e13)),
         _number_of_updates(1), _next_index(0) {
+
+    if (log != nullptr && update_interval > 9.9e13) {
+      log->write_warning("CaproniPhotonSourceDistribution update interval "
+                         "larger than the minimum source life time. Reset to "
+                         "smaller value!");
+    }
+
+    if (starting_time > 6.4e16) {
+      cmac_error("Starting time larger than number function validity range!");
+    }
 
     // generate sources
     _total_source_luminosity = 0.;
@@ -455,6 +468,10 @@ public:
    */
   virtual bool update(const double simulation_time) {
 
+    if (simulation_time > 6.4e16) {
+      cmac_error("Simulation time larger than number function validity range!");
+    }
+
     bool changed = false;
     while (_number_of_updates * _update_interval <= simulation_time) {
 
@@ -505,9 +522,9 @@ public:
           _source_indices.push_back(_next_index);
           ++_next_index;
           const CoordinateVector<> &pos = _source_positions[i];
-          *_output_file << 0. << "\t" << pos.x() << "\t" << pos.y() << "\t"
-                        << pos.z() << "\t1\t" << _source_indices[i] << "\t"
-                        << _source_luminosities[i] << "\t"
+          *_output_file << total_time << "\t" << pos.x() << "\t" << pos.y()
+                        << "\t" << pos.z() << "\t1\t" << _source_indices[i]
+                        << "\t" << _source_luminosities[i] << "\t"
                         << _source_lifetimes[i] << "\n";
         }
       }
