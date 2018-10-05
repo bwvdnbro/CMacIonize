@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     cmac_status("Average number of stars: %g", average_number_of_sources);
   }
 
-  CaproniPhotonSourceDistribution distribution(1., 1., 42, 0.1 * Myr_in_s, 0.,
+  CaproniPhotonSourceDistribution distribution(0.01, 1., 42, 10. * Myr_in_s, 0.,
                                                true);
 
   /// test random star function
@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
 
   std::ofstream ofile("test_caproniphotonsourcedistribution.txt");
   ofile << "# t (Myr)\tnumber of sources\n";
-  const uint_fast32_t num_steps = 1000;
-  const double dt = 2. * Myr_in_s;
+  const uint_fast32_t num_steps = 100;
+  const double dt = 20. * Myr_in_s;
   double average_number_of_sources = 0.;
   for (uint_fast32_t i = 0; i < num_steps; ++i) {
     const double t = i * dt;
