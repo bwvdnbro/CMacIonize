@@ -89,13 +89,10 @@ public:
     const double r = position.norm();
     const double rinv = 1. / r;
     const double ksi = r * _r0inv;
-    const double ksi2 = ksi * ksi;
     const double ksiinv = 1. / ksi;
-    const double ksi2p1inv = 1. / (1. + ksi2);
 
     const double dphidksi =
-        -_vinf2 * (ksi2p1inv * ksi - ksiinv * ksiinv * std::atan(ksi) +
-                   ksiinv * ksi2p1inv);
+        -_vinf2 * (ksiinv - ksiinv * ksiinv * std::atan(ksi));
 
     return position * _r0inv * rinv * dphidksi;
   }

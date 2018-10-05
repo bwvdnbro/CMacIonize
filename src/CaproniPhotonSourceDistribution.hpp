@@ -27,7 +27,7 @@
  * Kroupa @f$M^{-2.3}@f$ high-mass tail for the IMF). The life times of the
  * sources are determined randomly from the high-mass PARSEC stellar evolution
  * tracks (Tang et al., 2014), while their luminosities are based on the
- * Sternberg et al. (2013) stellar models. Positions are based on a rough
+ * Sternberg et al. (2003) stellar models. Positions are based on a rough
  * polynomial fit to the Caproni et al. (2017) SN event radii.
  *
  * To allow more numerical flexibility, we introduced scale parameters that can
@@ -119,7 +119,7 @@ public:
 
     // get the corresponding luminosity
     // we use a 3th order polynomial fit (and extrapolation) for the OB
-    // luminosity data from Sternberg et al. (2013) (OB_LCV.dat)
+    // luminosity data from Sternberg et al. (2003) (OB_LCV.dat)
     const double a[4] = {-8.85154170718e+43, 2.21555601476e+46,
                          -4.25455875963e+47, 8.55819263554e+47};
     luminosity = a[0] * mstar + a[1];
