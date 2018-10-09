@@ -41,6 +41,7 @@
 #ifndef CAPRONIPHOTONSOURCEDISTRIBUTION_HPP
 #define CAPRONIPHOTONSOURCEDISTRIBUTION_HPP
 
+#include "CaproniStellarRoutines.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
@@ -95,152 +96,6 @@ private:
   uint_fast32_t _next_index;
 
 public:
-  /// private functions that are public to make them accessible from the unit
-  /// test
-
-  /**
-   * @brief Get the UV luminosity and life time for a random OB star distributed
-   * according to the IMF.
-   *
-   * @param luminosity Output UV luminosity of the random star (in s^-1).
-   * @param lifetime Output life time of the star (in s).
-   * @return Mass of the star (in Msol; only for test purposes).
-   */
-  inline double get_random_star(double &luminosity, double &lifetime) {
-
-    const double alphap1 = -1.3;
-    const double alphap1inv = 1. / alphap1;
-    const double mlowterm = std::pow(20., alphap1);
-    const double mrangefac = std::pow(100., alphap1) - mlowterm;
-
-    // get a random mass distributed according to the IMF
-    const double u = _random_generator.get_uniform_random_double();
-    const double mstar = std::pow(u * mrangefac + mlowterm, alphap1inv);
-
-    // get the corresponding luminosity
-    // we use a 3th order polynomial fit (and extrapolation) for the OB
-    // luminosity data from Sternberg et al. (2003) (OB_LCV.dat)
-    const double a[4] = {-8.85154170718e+43, 2.21555601476e+46,
-                         -4.25455875963e+47, 8.55819263554e+47};
-    luminosity = a[0] * mstar + a[1];
-    luminosity = luminosity * mstar + a[2];
-    luminosity = luminosity * mstar + a[3];
-
-    // get the corresponding life time
-    // we use a 10th order polynomial fit to the stellar life time data from
-    // Tang et al. (2014), the Z0.017Y0.279 model for masses in the range
-    // [20, 100] Msol. The life time was computed by taking the difference
-    // between the stellar ages at the start of phase 4 (near the ZAM) and
-    // phase 8 (base of the RGB).
-    const double la[11] = {
-        0.00645837785727,   -3.99457743218,     1089.30492119,
-        -172343.582909,     17515331.6211,      -1195587654.33,
-        55641063153.0,      -1.75287305075e+12, 3.61957288273e+13,
-        -4.54128336105e+14, 2.91526506459e+15};
-    lifetime = la[0] * mstar + la[1];
-    lifetime = lifetime * mstar + la[2];
-    lifetime = lifetime * mstar + la[3];
-    lifetime = lifetime * mstar + la[4];
-    lifetime = lifetime * mstar + la[5];
-    lifetime = lifetime * mstar + la[6];
-    lifetime = lifetime * mstar + la[7];
-    lifetime = lifetime * mstar + la[8];
-    lifetime = lifetime * mstar + la[9];
-    lifetime = lifetime * mstar + la[10];
-
-    return mstar;
-  }
-
-  /**
-   * @brief Get the expected number of stars for the given time.
-   *
-   * This number is based on the polynomial fit to the Caproni et al. (2017)
-   * derived OB number function.
-   *
-   * @param t Current simulation time (in s).
-   * @return Expected number of OB stars at this time.
-   */
-  inline static uint_fast32_t get_number_of_stars(const double t) {
-
-    // coefficients for the polynomial
-    const double a[10] = {-4.02787220841e-146, 1.60421512996e-128,
-                          -2.61501324962e-111, 2.28378552108e-94,
-                          -1.16252321273e-77,  3.47502087069e-61,
-                          -5.70743788013e-45,  4.0416648576e-29,
-                          1.81489889811e-15,   28.7796833735};
-
-    // evaluate polynomial in O(n) time using Horner's method
-    double result = a[0] * t + a[1];
-    result = result * t + a[2];
-    result = result * t + a[3];
-    result = result * t + a[4];
-    result = result * t + a[5];
-    result = result * t + a[6];
-    result = result * t + a[7];
-    result = result * t + a[8];
-    result = result * t + a[9];
-
-    return result;
-  }
-
-  /**
-   * @brief Get a random galactic radius corresponding to the given time.
-   *
-   * The radius is based on a polynomial fit to the Caproni et al. (2017) SN
-   * location data.
-   *
-   * @param t Current simulation time (in s).
-   * @return Random galactic radius (in m).
-   */
-  inline double get_galactic_radius(const double t) {
-
-    // fit coefficients;
-    const double a[10] = {-2.47715326891e-128, 6.89912786829e-111,
-                          -7.94169102884e-94,  4.87832127858e-77,
-                          -1.72187755687e-60,  3.502399403e-44,
-                          -3.90591687341e-28,  2.1013797052e-12,
-                          -2757.1605573,       4.61751485207e+18};
-
-    double ravg = a[0] * t + a[1];
-    ravg = ravg * t + a[2];
-    ravg = ravg * t + a[3];
-    ravg = ravg * t + a[4];
-    ravg = ravg * t + a[5];
-    ravg = ravg * t + a[6];
-    ravg = ravg * t + a[7];
-    ravg = ravg * t + a[8];
-    ravg = ravg * t + a[9];
-
-    const double gauss =
-        std::sqrt(-2. *
-                  std::log(_random_generator.get_uniform_random_double())) *
-        std::cos(2. * M_PI * _random_generator.get_uniform_random_double());
-
-    return ravg + 3.086e18 * gauss;
-  }
-
-  /**
-   * @brief Generate a new source position.
-   *
-   * @param t Current simulation time (in s).
-   * @return New source position (in m).
-   */
-  inline CoordinateVector<> generate_source_position(const double t) {
-
-    // get a random radius for this time
-    const double r = get_galactic_radius(t);
-
-    // get a random direction
-    const double cost = 2. * _random_generator.get_uniform_random_double() - 1.;
-    const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
-    const double phi =
-        2. * M_PI * _random_generator.get_uniform_random_double();
-    const double cosp = std::cos(phi);
-    const double sinp = std::sin(phi);
-
-    return CoordinateVector<>(r * sint * cosp, r * sint * sinp, r * cost);
-  }
-
   /**
    * @brief Constructor.
    *
@@ -281,11 +136,15 @@ public:
 
     // generate sources
     _total_source_luminosity = 0.;
-    const uint_fast32_t nexp = _number_function_norm * get_number_of_stars(0.);
+    const uint_fast32_t nexp =
+        _number_function_norm * CaproniStellarRoutines::get_number_of_stars(0.);
     for (uint_fast32_t i = 0; i < nexp; ++i) {
-      const CoordinateVector<> position = generate_source_position(0.);
+      const CoordinateVector<> position =
+          CaproniStellarRoutines::generate_source_position(0.,
+                                                           _random_generator);
       double luminosity, lifetime;
-      get_random_star(luminosity, lifetime);
+      CaproniStellarRoutines::get_random_star(luminosity, lifetime,
+                                              _random_generator);
       luminosity *= _UV_luminosity_norm;
       // reduce the lifetime with a random amount
       lifetime *= _random_generator.get_uniform_random_double();
@@ -341,12 +200,15 @@ public:
 
       // now check if new sources need to be generated
       const uint_fast32_t nexp =
-          _number_function_norm * get_number_of_stars(total_time);
+          _number_function_norm *
+          CaproniStellarRoutines::get_number_of_stars(total_time);
       for (uint_fast32_t i = _source_positions.size(); i < nexp; ++i) {
         const CoordinateVector<> position =
-            generate_source_position(total_time);
+            CaproniStellarRoutines::generate_source_position(total_time,
+                                                             _random_generator);
         double luminosity, lifetime;
-        get_random_star(luminosity, lifetime);
+        CaproniStellarRoutines::get_random_star(luminosity, lifetime,
+                                                _random_generator);
         luminosity *= _UV_luminosity_norm;
         // reduce the lifetime with a random fraction of the update interval
         lifetime -=
@@ -504,12 +366,15 @@ public:
 
       // now check if new sources need to be generated
       const uint_fast32_t nexp =
-          _number_function_norm * get_number_of_stars(total_time);
+          _number_function_norm *
+          CaproniStellarRoutines::get_number_of_stars(total_time);
       for (uint_fast32_t i = _source_positions.size(); i < nexp; ++i) {
         const CoordinateVector<> position =
-            generate_source_position(total_time);
+            CaproniStellarRoutines::generate_source_position(total_time,
+                                                             _random_generator);
         double luminosity, lifetime;
-        get_random_star(luminosity, lifetime);
+        CaproniStellarRoutines::get_random_star(luminosity, lifetime,
+                                                _random_generator);
         luminosity *= _UV_luminosity_norm;
         // reduce the lifetime with a random fraction of the update interval
         lifetime -=
