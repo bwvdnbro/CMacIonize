@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     for (uint_fast32_t i = 0; i < num_steps; ++i) {
       const double t = i * dt;
       const uint_fast32_t nstar =
-          CaproniPhotonSourceDistribution::get_number_of_stars(t);
+          CaproniStellarRoutines::get_number_of_stars(t);
       ofile << t << "\t" << nstar << "\n";
       average_number_of_sources += nstar;
     }
@@ -56,22 +56,22 @@ int main(int argc, char **argv) {
     cmac_status("Average number of stars: %g", average_number_of_sources);
   }
 
-  CaproniPhotonSourceDistribution distribution(0.01, 1., 42, 10. * Myr_in_s, 0.,
-                                               true);
-
   /// test random star function
   {
+    RandomGenerator random_generator;
     std::ofstream ofile("test_caproni_star.txt");
     ofile << "# mass (Msol)\tluminosity (s^-1)\tlifetime (s)\n";
     for (uint_fast32_t i = 0; i < 1000; ++i) {
       double luminosity, lifetime;
-      const double mass = distribution.get_random_star(luminosity, lifetime);
+      const double mass = CaproniStellarRoutines::get_random_star(
+          luminosity, lifetime, random_generator);
       ofile << mass << "\t" << luminosity << "\t" << lifetime << "\n";
     }
   }
 
   /// test random galactic radius function
   {
+    RandomGenerator random_generator;
     std::ofstream ofile("test_caproni_radius.txt");
     ofile << "#t (s)\travg (m)\trstd (m)\n";
     const uint_fast32_t num_steps = 1000;
@@ -81,7 +81,8 @@ int main(int argc, char **argv) {
       double ravg = 0.;
       double ravg2 = 0.;
       for (uint_fast32_t j = 0; j < 100; ++j) {
-        const double r = distribution.get_galactic_radius(t);
+        const double r =
+            CaproniStellarRoutines::get_galactic_radius(t, random_generator);
         ravg += r;
         ravg2 += r * r;
       }
@@ -91,6 +92,9 @@ int main(int argc, char **argv) {
       ofile << t << "\t" << ravg << "\t" << rstd << "\n";
     }
   }
+
+  CaproniPhotonSourceDistribution distribution(0.01, 1., 42, 10. * Myr_in_s, 0.,
+                                               true);
 
   std::ofstream ofile("test_caproniphotonsourcedistribution.txt");
   ofile << "# t (Myr)\tnumber of sources\n";
