@@ -472,18 +472,21 @@ private:
 
 #ifdef FLUX_LIMITER
         // limit the flux
-        mflux = std::min(mflux,
-                         0.5 * cell.get_hydro_variables().get_conserved_mass());
-        if (pflux.norm2() >
-            0.25 *
-                cell.get_hydro_variables().get_conserved_momentum().norm2()) {
-          pflux *= (0.5 *
-                    cell.get_hydro_variables().get_conserved_momentum().norm() /
-                    pflux.norm());
+        double fluxfac = 1.;
+        if (mflux > 0.5 * cell.get_hydro_variables().get_conserved_mass()) {
+          fluxfac =
+              0.5 * cell.get_hydro_variables().get_conserved_mass() / mflux;
         }
-        Eflux = std::min(
-            Eflux,
-            0.5 * cell.get_hydro_variables().get_conserved_total_energy());
+        if (Eflux >
+            0.5 * cell.get_hydro_variables().get_conserved_total_energy()) {
+          fluxfac = std::min(
+              fluxfac,
+              0.5 * cell.get_hydro_variables().get_conserved_total_energy() /
+                  Eflux);
+        }
+        mflux *= fluxfac;
+        pflux *= fluxfac;
+        Eflux *= fluxfac;
 #endif
 
         cell.get_hydro_variables().delta_conserved(0) += mflux;
