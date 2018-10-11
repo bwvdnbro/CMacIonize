@@ -1256,6 +1256,8 @@ set(TESTCAPRONISTELLARFEEDBACK_SOURCES
 
     ../src/CaproniStellarFeedback.hpp
     ../src/CaproniStellarRoutines.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
 )
 add_unit_test(NAME testCaproniStellarFeedback
               SOURCES ${TESTCAPRONISTELLARFEEDBACK_SOURCES})
@@ -1307,5 +1309,5 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R testCaproniStellarFeedback
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
                         DEPENDS ${TESTNAMES})

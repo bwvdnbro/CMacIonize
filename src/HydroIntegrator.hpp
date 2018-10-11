@@ -1070,9 +1070,13 @@ public:
       it.get_hydro_variables().conserved(4) +=
           internal_timestep * CoordinateVector<>::dot_product(p, a);
 
-      // add energy term
+      // add energy terms
       it.get_hydro_variables().conserved(4) +=
-          internal_timestep * it.get_hydro_variables().get_energy_term();
+          internal_timestep * it.get_hydro_variables().get_energy_rate_term();
+      it.get_hydro_variables().conserved(4) +=
+          it.get_hydro_variables().get_energy_term();
+      it.get_hydro_variables().set_energy_rate_term(0.);
+      it.get_hydro_variables().set_energy_term(0.);
 
       cmac_assert(it.get_hydro_variables().get_conserved_momentum().x() ==
                   it.get_hydro_variables().get_conserved_momentum().x());
