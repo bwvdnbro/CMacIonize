@@ -24,6 +24,8 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CaproniStellarFeedback.hpp"
+#include "CartesianDensityGrid.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include "fstream"
 
 /**
@@ -36,6 +38,7 @@
 int main(int argc, char **argv) {
 
   const double Myr_in_s = 1.e6 * 365.25 * 24. * 3600.;
+  const double kpc_in_m = 3.086e19;
 
   /// test SN rate function
   {
@@ -49,7 +52,22 @@ int main(int argc, char **argv) {
     }
   }
 
-  CaproniStellarFeedback stellar_feedback;
+  CaproniStellarFeedback stellar_feedback(42, true);
+
+  HomogeneousDensityFunction testfunction(1., 2000.);
+  testfunction.initialize();
+  CartesianDensityGrid grid(Box<>(-1.5 * kpc_in_m, 3. * kpc_in_m), 32, false,
+                            true);
+  std::pair< cellsize_t, cellsize_t > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block, testfunction);
+
+  stellar_feedback.add_stellar_feedback(grid, 200. * Myr_in_s);
+  double N_SN = 0.;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    N_SN += 1.e-44 * it.get_hydro_variables().get_energy_term();
+  }
+  cmac_status("N_SN: %.0f", N_SN);
 
   return 0;
 }

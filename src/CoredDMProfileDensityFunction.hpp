@@ -100,13 +100,15 @@ public:
    * @param temperature Constant initial temperature, @f$T@f$ (in K).
    * @param neutral_fraction Constant initial neutral fraction for hydrogen,
    * @f$x_{\rm{}H}@f$.
+   * @param gamma Polytropic index.
    */
   inline CoredDMProfileDensityFunction(const double r0, const double vinf,
                                        const double rho0,
                                        const double temperature,
-                                       const double neutral_fraction)
+                                       const double neutral_fraction,
+                                       const double gamma = 1.)
       : _r0inv(1. / r0),
-        _vratio(vinf * vinf /
+        _vratio(gamma * vinf * vinf /
                 get_sound_speed_squared(neutral_fraction, temperature)),
         _n0(rho0 / get_mean_particle_mass(neutral_fraction)),
         _temperature(temperature), _neutral_fraction(neutral_fraction) {}
@@ -122,6 +124,7 @@ public:
    *    g cm^-3)
    *  - temperature: Temperature of the gas (default: 500. K)
    *  - neutral fraction: Hydrogen neutral fraction (default: 1.)
+   *  - polytropic index: Polytropic index of the gas (default: 1.)
    *
    * @param params ParameterFile to read from.
    */
@@ -135,7 +138,8 @@ public:
                 "DensityFunction:central density", "9.48e-21 g cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "DensityFunction:temperature", "500. K"),
-            params.get_value< double >("DensityFunction:neutral fraction",
+            params.get_value< double >("DensityFunction:neutral fraction", 1.),
+            params.get_value< double >("DensityFunction:polytropic index",
                                        1.)) {}
 
   /**

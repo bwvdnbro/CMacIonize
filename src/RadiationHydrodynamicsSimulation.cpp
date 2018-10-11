@@ -26,6 +26,7 @@
 #include "RadiationHydrodynamicsSimulation.hpp"
 #include "Abundances.hpp"
 #include "Box.hpp"
+#include "CaproniStellarFeedback.hpp"
 #include "ChargeTransferRates.hpp"
 #include "CommandLineOption.hpp"
 #include "CommandLineParser.hpp"
@@ -131,6 +132,8 @@ void RadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - use self gravity: Add the gravitational force due to the gas itself
  *    (default: false)
  *  - use cooling: Add external cooling (default: false)
+ *  - use stellar feedback: Add stellar feedback (using the Caproni dwarf
+ *    galaxy rates; default: false)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -305,6 +308,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   if (params.get_value< bool >("RadiationHydrodynamicsSimulation:use cooling",
                                false)) {
     cooling_function = new DeRijckeRadiativeCooling();
+  }
+
+  CaproniStellarFeedback *stellar_feedback = nullptr;
+  if (params.get_value< bool >(
+          "RadiationHydrodynamicsSimulation:use stellar feedback", false)) {
+    stellar_feedback = new CaproniStellarFeedback(params, log);
   }
 
   // we are done reading the parameter file
@@ -525,8 +534,13 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
             cooling_function->get_cooling_rate(
                 it.get_ionization_variables().get_temperature()) *
             nH2 * it.get_volume();
-        it.get_hydro_variables().set_energy_term(-cooling_rate);
+        it.get_hydro_variables().set_energy_rate_term(-cooling_rate);
       }
+    }
+
+    // update the stellar feedback if applicable
+    if (stellar_feedback != nullptr) {
+      stellar_feedback->add_stellar_feedback(*grid, current_time);
     }
 
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
@@ -573,6 +587,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (stellar_feedback != nullptr) {
+    delete stellar_feedback;
+  }
   if (cooling_function != nullptr) {
     delete cooling_function;
   }
