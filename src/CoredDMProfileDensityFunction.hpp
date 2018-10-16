@@ -111,7 +111,8 @@ public:
         _vratio(gamma * vinf * vinf /
                 get_sound_speed_squared(neutral_fraction, temperature)),
         _n0(rho0 / get_mean_particle_mass(neutral_fraction)),
-        _temperature(temperature), _neutral_fraction(neutral_fraction) {}
+        _temperature(temperature / gamma), _neutral_fraction(neutral_fraction) {
+  }
 
   /**
    * @brief ParameterFile constructor.
