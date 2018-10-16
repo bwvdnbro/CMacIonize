@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  CaproniStellarFeedback stellar_feedback(42, true);
+  CaproniStellarFeedback stellar_feedback(42, 1., true);
 
   HomogeneousDensityFunction testfunction(1., 2000.);
   testfunction.initialize();
