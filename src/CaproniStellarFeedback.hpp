@@ -49,6 +49,9 @@ private:
   /*! @brief Time the last SN event occured (in s). */
   double _time_since_last;
 
+  /*! @brief Boost factor for the feedback energy. */
+  const double _boost_factor;
+
   /*! @brief Output file to write log output to. */
   std::ofstream *_output_file;
 
@@ -90,12 +93,15 @@ public:
    * @brief Constructor.
    *
    * @param seed Seed for the RandomGenerator.
+   * @param boost_factor Boost factor for the feedback energy.
    * @param write_output Output SN events to log file?
    * @param log Log to write logging info to.
    */
   inline CaproniStellarFeedback(const uint_fast32_t seed,
+                                const double boost_factor,
                                 const bool write_output, Log *log = nullptr)
-      : _random_generator(seed), _time_since_last(0.), _output_file(nullptr) {
+      : _random_generator(seed), _time_since_last(0.),
+        _boost_factor(boost_factor), _output_file(nullptr) {
 
     if (write_output) {
       _output_file = new std::ofstream("Caproni_SN_events.txt");
@@ -109,6 +115,7 @@ public:
    *
    * The following parameters are read:
    *  - seed: Seed for the random number generator (default: 42)
+   *  - boost factor: Boost factor for the feedback energy (default: 1.)
    *  - write output: Output SN events to a log file? (default: false)
    *
    * @param params ParameterFile to read from.
@@ -117,6 +124,7 @@ public:
   inline CaproniStellarFeedback(ParameterFile &params, Log *log = nullptr)
       : CaproniStellarFeedback(
             params.get_value< uint_fast32_t >("StellarFeedback:seed", 42),
+            params.get_value< double >("StellarFeedback:boost factor", 1.),
             params.get_value< bool >("StellarFeedback:write output", false),
             log) {}
 
@@ -143,7 +151,7 @@ public:
                                                            _random_generator);
       DensityGrid::iterator cell = grid.get_cell(position);
       cell.get_hydro_variables().set_energy_term(
-          cell.get_hydro_variables().get_energy_term() + 1.e44);
+          cell.get_hydro_variables().get_energy_term() + _boost_factor * 1.e44);
 
       if (_output_file != nullptr) {
         *_output_file << time << "\t" << position.x() << "\t" << position.y()

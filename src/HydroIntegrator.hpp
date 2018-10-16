@@ -92,6 +92,10 @@ private:
   /*! @brief Assumed temperature for ionised gas (in K). */
   const double _ionised_temperature;
 
+  /*! @brief Temperature limit for shock heated gas. Gas above this temperature
+   *  is not affected by radiative effects (in K). */
+  const double _shock_temperature;
+
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
   double _u_conversion_factor;
@@ -541,6 +545,7 @@ public:
    * @param riemann_solver_type Type of Riemann solver to use.
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
+   * @param shock_temperature Assumed temperature for shock heated gas (in K).
    * @param boundary_xlow Type of boundary for the lower x boundary.
    * @param boundary_xhigh Type of boundary for the upper x boundary.
    * @param boundary_ylow Type of boundary for the lower y boundary.
@@ -558,6 +563,7 @@ public:
                          const std::string riemann_solver_type = "Exact",
                          const double neutral_temperature = 100.,
                          const double ionised_temperature = 1.e4,
+                         const double shock_temperature = 3.e4,
                          const std::string boundary_xlow = "reflective",
                          const std::string boundary_xhigh = "reflective",
                          const std::string boundary_ylow = "reflective",
@@ -572,6 +578,7 @@ public:
         _do_radiative_cooling(do_radiative_cooling),
         _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature),
+        _shock_temperature(shock_temperature),
         _u_conversion_factor(PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN) *
                              _gm1_inv /
@@ -648,6 +655,9 @@ public:
    *    (default: 100. K)
    *  - ionised temperature: Assumed temperature for ionised gas
    *    (default: 1.e4 K)
+   *  - shock temperature: Assumed temperature for shock heated gas. Gas at
+   *    higher temperatures is not affected by radiative effects (default:
+   *    3.e4 K)
    *  - boundary x low: Boundary condition type for the lower x boundary
    *    (periodic/reflective/inflow, default: reflective)
    *  - boundary x high: Boundary condition type for the upper x boundary
@@ -679,6 +689,8 @@ public:
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:ionised temperature", "1.e4 K"),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "HydroIntegrator:shock temperature", "3.e4 K"),
             params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary x high",
@@ -1014,20 +1026,36 @@ public:
         it.get_ionization_variables().set_temperature(Tgas);
         if (_gamma > 1. &&
             it.get_hydro_variables().get_primitives_density() > 0.) {
-          const double ugas = 2. * _u_conversion_factor * Tgas / (1. + xH);
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
+
+          const double Tgas_old =
+              0.5 * (1. + xH) * _T_conversion_factor *
+              it.get_hydro_variables().get_primitives_pressure() /
               it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          if (_do_radiative_heating && dE > 0.) {
-            it.get_hydro_variables().delta_conserved(4) -= dE;
+          if (it.get_hydro_variables().get_energy_term() > 0. ||
+              Tgas_old > _shock_temperature) {
+            // we don't change the temperature for cells that have very
+            // high temperatures, indicating that they were shock heated
+            it.get_ionization_variables().set_temperature(Tgas_old);
+          } else {
+            const double ugas = 2. * _u_conversion_factor * Tgas / (1. + xH);
+            const double uold =
+                it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
+                it.get_hydro_variables().get_primitives_density();
+            const double du = ugas - uold;
+            const double dE =
+                it.get_hydro_variables().get_conserved_mass() * du;
+            if (_do_radiative_heating && dE > 0.) {
+              it.get_hydro_variables().delta_conserved(4) -= dE;
+            }
+            if (_do_radiative_cooling && dE < 0.) {
+              // we add a factor 1/2 to account for the change in mean particle
+              // mass. Without this factor, we end up subtracting too much
+              // energy, which leads to negative pressure.
+              it.get_hydro_variables().delta_conserved(4) -= 0.5 * dE;
+            }
+            cmac_assert(it.get_hydro_variables().delta_conserved(4) ==
+                        it.get_hydro_variables().delta_conserved(4));
           }
-          if (_do_radiative_cooling && dE < 0.) {
-            it.get_hydro_variables().delta_conserved(4) -= dE;
-          }
-          cmac_assert(it.get_hydro_variables().delta_conserved(4) ==
-                      it.get_hydro_variables().delta_conserved(4));
         }
       }
     }
