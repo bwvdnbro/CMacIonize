@@ -27,6 +27,7 @@
 #define PHOTONSOURCEDISTRIBUTION_HPP
 
 #include "CoordinateVector.hpp"
+#include "DensityGrid.hpp"
 
 /*! @brief Size of a variable that stores the number of photon sources. */
 typedef uint_fast32_t photonsourcenumber_t;
@@ -84,6 +85,17 @@ public:
    * @return True if the distribution changed, false otherwise.
    */
   virtual bool update(const double simulation_time) { return false; }
+
+  /**
+  * @brief Add stellar feedback to the given grid at the given time.
+  *
+  * Not all source distributions support stellar feedback.
+  *
+  * @param grid DensityGrid to operate on.
+  * @param current_time Current simulation time (in s).
+  */
+  virtual void add_stellar_feedback(DensityGrid &grid,
+                                    const double current_time) {}
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

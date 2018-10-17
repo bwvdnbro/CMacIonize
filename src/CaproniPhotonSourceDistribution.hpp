@@ -41,7 +41,6 @@
 #ifndef CAPRONIPHOTONSOURCEDISTRIBUTION_HPP
 #define CAPRONIPHOTONSOURCEDISTRIBUTION_HPP
 
-#include "CaproniStellarRoutines.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
@@ -80,6 +79,12 @@ private:
   /*! @brief Total luminosity of all sources (in s^-1). */
   double _total_source_luminosity;
 
+  /*! @brief Time the last SN event occured (in s). */
+  double _time_since_last;
+
+  /*! @brief Boost factor for the feedback energy. */
+  const double _boost_factor;
+
   /*! @brief Output file for the sources (if applicable). */
   std::ofstream *_output_file;
 
@@ -96,6 +101,180 @@ private:
   uint_fast32_t _next_index;
 
 public:
+  /// static functions
+
+  /**
+   * @brief Get the expected number of stars for the given time.
+   *
+   * This number is based on the polynomial fit to the Caproni et al. (2017)
+   * derived OB number function.
+   *
+   * @param t Current simulation time (in s).
+   * @return Expected number of OB stars at this time.
+   */
+  inline static uint_fast32_t get_number_of_stars(const double t) {
+
+    // coefficients for the polynomial
+    const double a[10] = {-4.22241876763e-146, 1.66204113118e-128,
+                          -2.68754635204e-111, 2.33363366028e-94,
+                          -1.18287541821e-77,  3.52485869869e-61,
+                          -5.7769427071e-45,   4.08847904916e-29,
+                          1.01863714667e-15,   29.0068124326};
+
+    // evaluate polynomial in O(n) time using Horner's method
+    double result = a[0] * t + a[1];
+    result = result * t + a[2];
+    result = result * t + a[3];
+    result = result * t + a[4];
+    result = result * t + a[5];
+    result = result * t + a[6];
+    result = result * t + a[7];
+    result = result * t + a[8];
+    result = result * t + a[9];
+
+    return result;
+  }
+
+  /**
+   * @brief Get the UV luminosity and life time for a random OB star distributed
+   * according to the IMF.
+   *
+   * @param luminosity Output UV luminosity of the random star (in s^-1).
+   * @param lifetime Output life time of the star (in s).
+   * @param random_generator RandomGenerator to use.
+   * @return Mass of the star (in Msol; only for test purposes).
+   */
+  inline static double get_random_star(double &luminosity, double &lifetime,
+                                       RandomGenerator &random_generator) {
+
+    const double alphap1 = -1.3;
+    const double alphap1inv = 1. / alphap1;
+    const double mlowterm = std::pow(20., alphap1);
+    const double mrangefac = std::pow(100., alphap1) - mlowterm;
+
+    // get a random mass distributed according to the IMF
+    const double u = random_generator.get_uniform_random_double();
+    const double mstar = std::pow(u * mrangefac + mlowterm, alphap1inv);
+
+    // get the corresponding luminosity
+    // we use a 3th order polynomial fit (and extrapolation) for the OB
+    // luminosity data from Sternberg et al. (2003) (OB_LCV.dat)
+    const double a[4] = {-8.85154170718e+43, 2.21555601476e+46,
+                         -4.25455875963e+47, 8.55819263554e+47};
+    luminosity = a[0] * mstar + a[1];
+    luminosity = luminosity * mstar + a[2];
+    luminosity = luminosity * mstar + a[3];
+
+    // get the corresponding life time
+    // we use a double power law fit to the stellar life time data from
+    // Tang et al. (2014), the Z0.017Y0.279 model for masses in the range
+    // [20, 100] Msol. The life time was computed by taking the difference
+    // between the stellar ages at the start of phase 4 (near the ZAM) and
+    // phase 8 (base of the RGB).
+    const double la[5] = {7.55609422e+13, 1.03371798e+16, -1.31168267e+00,
+                          1.11162246e+18, -3.81030835e+00};
+    lifetime =
+        la[0] + la[1] * std::pow(mstar, la[2]) + la[3] * std::pow(mstar, la[4]);
+
+    return mstar;
+  }
+
+  /**
+   * @brief Get a random galactic radius corresponding to the given time.
+   *
+   * The radius is based on a polynomial fit to the Caproni et al. (2017) SN
+   * location data.
+   *
+   * @param t Current simulation time (in s).
+   * @param random_generator RandomGenerator to use.
+   * @return Random galactic radius (in m).
+   */
+  inline static double get_galactic_radius(const double t,
+                                           RandomGenerator &random_generator) {
+
+    // fit coefficients;
+    const double a[10] = {-2.48299482225e-128, 6.91524461551e-111,
+                          -7.96019285215e-94,  4.88977912839e-77,
+                          -1.72602520832e-60,  3.51127816196e-44,
+                          -3.91671781513e-28,  2.10807296898e-12,
+                          -2773.58198637,      4.62567627189e+18};
+
+    double ravg = a[0] * t + a[1];
+    ravg = ravg * t + a[2];
+    ravg = ravg * t + a[3];
+    ravg = ravg * t + a[4];
+    ravg = ravg * t + a[5];
+    ravg = ravg * t + a[6];
+    ravg = ravg * t + a[7];
+    ravg = ravg * t + a[8];
+    ravg = ravg * t + a[9];
+
+    const double gauss =
+        std::sqrt(-2. *
+                  std::log(random_generator.get_uniform_random_double())) *
+        std::cos(2. * M_PI * random_generator.get_uniform_random_double());
+
+    return ravg + 3.086e18 * gauss;
+  }
+
+  /**
+   * @brief Generate a new source position.
+   *
+   * @param t Current simulation time (in s).
+   * @param random_generator RandomGenerator to use.
+   * @return New source position (in m).
+   */
+  inline static CoordinateVector<>
+  generate_source_position(const double t, RandomGenerator &random_generator) {
+
+    // get a random radius for this time
+    const double r = get_galactic_radius(t, random_generator);
+
+    // get a random direction
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
+
+    return CoordinateVector<>(r * sint * cosp, r * sint * sinp, r * cost);
+  }
+
+  /**
+   * @brief Get the instanteneous supernova rate at the given time.
+   *
+   * We use a 8th order polynomial fit to the Caproni et al. (2017) data.
+   *
+   * @param time Current simulation time (in s).
+   * @return Instanteneous supernova rate (in s^-1).
+   */
+  inline static double get_SN_rate(const double time) {
+
+    if (time > 6.4e16) {
+      cmac_error("Time value outside fit validity range!");
+    }
+
+    // fit coefficients
+    const double a[9] = {
+        6.89799700195e-143, -1.91715448814e-125, 2.19302246787e-108,
+        -1.32201654133e-91, 4.43164838505e-75,   -7.80981517111e-59,
+        5.39845077482e-43,  9.70796661139e-28,   -8.44606535214e-14};
+
+    double rate = a[0] * time + a[1];
+    rate = rate * time + a[2];
+    rate = rate * time + a[3];
+    rate = rate * time + a[4];
+    rate = rate * time + a[5];
+    rate = rate * time + a[6];
+    rate = rate * time + a[7];
+    rate = rate * time + a[8];
+
+    // make sure the return value is positive
+    return std::max(0., rate);
+  }
+
+  /// member functions
+
   /**
    * @brief Constructor.
    *
@@ -108,18 +287,18 @@ public:
    * distribution updates (in s).
    * @param starting_time Start time of the simulation. The distribution is
    * evolved forward in time to this point before it is used (in s).
+   * @param boost_factor Boost factor for stellar feedback energy.
    * @param output_sources Should the source positions be written to a file?
    * @param log Log to write logging info to.
    */
-  inline CaproniPhotonSourceDistribution(const double number_function_norm,
-                                         const double UV_luminosity_norm,
-                                         const int_fast32_t seed,
-                                         const double update_interval,
-                                         const double starting_time,
-                                         bool output_sources = false,
-                                         Log *log = nullptr)
+  inline CaproniPhotonSourceDistribution(
+      const double number_function_norm, const double UV_luminosity_norm,
+      const int_fast32_t seed, const double update_interval,
+      const double starting_time, const double boost_factor,
+      bool output_sources = false, Log *log = nullptr)
       : _number_function_norm(number_function_norm),
         _UV_luminosity_norm(UV_luminosity_norm), _random_generator(seed),
+        _time_since_last(starting_time), _boost_factor(boost_factor),
         _output_file(nullptr),
         _update_interval(std::min(update_interval, 9.9e13)),
         _number_of_updates(1), _next_index(0) {
@@ -137,14 +316,15 @@ public:
     // generate sources
     _total_source_luminosity = 0.;
     const uint_fast32_t nexp =
-        _number_function_norm * CaproniStellarRoutines::get_number_of_stars(0.);
+        _number_function_norm *
+        CaproniPhotonSourceDistribution::get_number_of_stars(0.);
     for (uint_fast32_t i = 0; i < nexp; ++i) {
       const CoordinateVector<> position =
-          CaproniStellarRoutines::generate_source_position(0.,
-                                                           _random_generator);
+          CaproniPhotonSourceDistribution::generate_source_position(
+              0., _random_generator);
       double luminosity, lifetime;
-      CaproniStellarRoutines::get_random_star(luminosity, lifetime,
-                                              _random_generator);
+      CaproniPhotonSourceDistribution::get_random_star(luminosity, lifetime,
+                                                       _random_generator);
       luminosity *= _UV_luminosity_norm;
       // reduce the lifetime with a random amount
       lifetime *= _random_generator.get_uniform_random_double();
@@ -201,14 +381,14 @@ public:
       // now check if new sources need to be generated
       const uint_fast32_t nexp =
           _number_function_norm *
-          CaproniStellarRoutines::get_number_of_stars(total_time);
+          CaproniPhotonSourceDistribution::get_number_of_stars(total_time);
       for (uint_fast32_t i = _source_positions.size(); i < nexp; ++i) {
         const CoordinateVector<> position =
-            CaproniStellarRoutines::generate_source_position(total_time,
-                                                             _random_generator);
+            CaproniPhotonSourceDistribution::generate_source_position(
+                total_time, _random_generator);
         double luminosity, lifetime;
-        CaproniStellarRoutines::get_random_star(luminosity, lifetime,
-                                                _random_generator);
+        CaproniPhotonSourceDistribution::get_random_star(luminosity, lifetime,
+                                                         _random_generator);
         luminosity *= _UV_luminosity_norm;
         // reduce the lifetime with a random fraction of the update interval
         lifetime -=
@@ -367,14 +547,14 @@ public:
       // now check if new sources need to be generated
       const uint_fast32_t nexp =
           _number_function_norm *
-          CaproniStellarRoutines::get_number_of_stars(total_time);
+          CaproniPhotonSourceDistribution::get_number_of_stars(total_time);
       for (uint_fast32_t i = _source_positions.size(); i < nexp; ++i) {
         const CoordinateVector<> position =
-            CaproniStellarRoutines::generate_source_position(total_time,
-                                                             _random_generator);
+            CaproniPhotonSourceDistribution::generate_source_position(
+                total_time, _random_generator);
         double luminosity, lifetime;
-        CaproniStellarRoutines::get_random_star(luminosity, lifetime,
-                                                _random_generator);
+        CaproniPhotonSourceDistribution::get_random_star(luminosity, lifetime,
+                                                         _random_generator);
         luminosity *= _UV_luminosity_norm;
         // reduce the lifetime with a random fraction of the update interval
         lifetime -=
@@ -403,6 +583,39 @@ public:
     }
 
     return changed;
+  }
+
+  /**
+   * @brief Add stellar feedback at the given time.
+   *
+   * @param grid DensityGrid to operate on.
+   * @param time Current simulation time (in s).
+   */
+  virtual void add_stellar_feedback(DensityGrid &grid, const double time) {
+
+    // compute the number of SN events during the last time step
+    const double dt = time - _time_since_last;
+    const uint_fast32_t N_SN = std::round(get_SN_rate(time) * dt);
+    for (uint_fast32_t i = 0; i < N_SN; ++i) {
+      const CoordinateVector<> position =
+          generate_source_position(time, _random_generator);
+      DensityGrid::iterator cell = grid.get_cell(position);
+      cell.get_hydro_variables().set_energy_term(
+          cell.get_hydro_variables().get_energy_term() + _boost_factor * 1.e44);
+
+      if (_output_file != nullptr) {
+        *_output_file << time << "\t" << position.x() << "\t" << position.y()
+                      << "\t" << position.z() << "\n";
+      }
+    }
+
+    if (N_SN > 0) {
+      _time_since_last = time;
+    }
+
+    if (_output_file != nullptr) {
+      _output_file->flush();
+    }
   }
 };
 
