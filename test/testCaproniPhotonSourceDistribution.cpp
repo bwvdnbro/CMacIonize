@@ -39,6 +39,12 @@
 int main(int argc, char **argv) {
 
   const double Myr_in_s = 1.e6 * 365.25 * 24. * 3600.;
+  const double Msol_in_kg = 1.99e30;
+  const double kpc_in_m = 3.086e19;
+
+  CaproniPhotonSourceDistribution distribution(
+      0.01, 1., 8. * Msol_in_kg, 20. * Msol_in_kg, 100. * Msol_in_kg, -2.3, 42,
+      10. * Myr_in_s, 0., 1., true);
 
   /// test number of stars function
   {
@@ -49,26 +55,12 @@ int main(int argc, char **argv) {
     double average_number_of_sources = 0.;
     for (uint_fast32_t i = 0; i < num_steps; ++i) {
       const double t = i * dt;
-      const uint_fast32_t nstar =
-          CaproniPhotonSourceDistribution::get_number_of_stars(t);
+      const uint_fast32_t nstar = distribution.get_number_of_stars(t);
       ofile << t << "\t" << nstar << "\n";
       average_number_of_sources += nstar;
     }
     average_number_of_sources /= num_steps;
     cmac_status("Average number of stars: %g", average_number_of_sources);
-  }
-
-  /// test random star function
-  {
-    RandomGenerator random_generator;
-    std::ofstream ofile("test_caproni_star.txt");
-    ofile << "# mass (Msol)\tluminosity (s^-1)\tlifetime (s)\n";
-    for (uint_fast32_t i = 0; i < 1000; ++i) {
-      double luminosity, lifetime;
-      const double mass = CaproniPhotonSourceDistribution::get_random_star(
-          luminosity, lifetime, random_generator);
-      ofile << mass << "\t" << luminosity << "\t" << lifetime << "\n";
-    }
   }
 
   /// test random galactic radius function
@@ -83,8 +75,7 @@ int main(int argc, char **argv) {
       double ravg = 0.;
       double ravg2 = 0.;
       for (uint_fast32_t j = 0; j < 100; ++j) {
-        const double r = CaproniPhotonSourceDistribution::get_galactic_radius(
-            t, random_generator);
+        const double r = distribution.get_galactic_radius(t, random_generator);
         ravg += r;
         ravg2 += r * r;
       }
@@ -95,34 +86,17 @@ int main(int argc, char **argv) {
     }
   }
 
-  CaproniPhotonSourceDistribution distribution(0.01, 1., 42, 10. * Myr_in_s, 0.,
-                                               1., true);
-
-  std::ofstream ofile("test_caproniphotonsourcedistribution.txt");
-  ofile << "# t (Myr)\tnumber of sources\n";
-  const uint_fast32_t num_steps = 100;
-  const double dt = 20. * Myr_in_s;
-  double average_number_of_sources = 0.;
-  for (uint_fast32_t i = 0; i < num_steps; ++i) {
-    const double t = i * dt;
-    ofile << t << "\t" << distribution.get_number_of_sources() << "\n";
-    average_number_of_sources += distribution.get_number_of_sources();
-    distribution.update(t);
-  }
-  average_number_of_sources /= num_steps;
-  cmac_status("Average number of sources: %g", average_number_of_sources);
-
-  const double kpc_in_m = 3.086e19;
-
-  /// test SN rate function
+  /// test random stellar mass and stellar properties functions
   {
-    std::ofstream ofile("test_caproni_rate.txt");
-    ofile << "# t (s)\tsupernova rate (s^-1)\n";
-    const double dt = 2. * Myr_in_s;
+    RandomGenerator random_generator;
+    std::ofstream ofile("test_caproni_star.txt");
+    ofile << "# mass (Msol)\tluminosity (s^-1)\tlifetime (s)\n";
     for (uint_fast32_t i = 0; i < 1000; ++i) {
-      const double t = i * dt;
-      const double rate = CaproniPhotonSourceDistribution::get_SN_rate(t);
-      ofile << t << "\t" << rate << "\n";
+      const double mass = distribution.get_random_stellar_mass(
+          random_generator.get_uniform_random_double());
+      const double luminosity = distribution.get_stellar_UV_luminosity(mass);
+      const double lifetime = distribution.get_stellar_lifetime(mass);
+      ofile << mass << "\t" << luminosity << "\t" << lifetime << "\n";
     }
   }
 
@@ -134,12 +108,27 @@ int main(int argc, char **argv) {
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, testfunction);
 
-  distribution.add_stellar_feedback(grid, 200. * Myr_in_s);
-  double N_SN = 0.;
-  for (auto it = grid.begin(); it != grid.end(); ++it) {
-    N_SN += 1.e-44 * it.get_hydro_variables().get_energy_term();
+  std::ofstream ofile("test_caproniphotonsourcedistribution.txt");
+  ofile << "# t (Myr)\tnumber of sources\n";
+  const uint_fast32_t num_steps = 100;
+  const double dt = 20. * Myr_in_s;
+  double average_number_of_sources = 0.;
+  for (uint_fast32_t i = 0; i < num_steps; ++i) {
+    const double t = i * dt;
+    ofile << t << "\t" << distribution.get_number_of_sources() << "\n";
+    average_number_of_sources += distribution.get_number_of_sources();
+    if (i == 10) {
+      distribution.add_stellar_feedback(grid, t);
+      double N_SN = 0.;
+      for (auto it = grid.begin(); it != grid.end(); ++it) {
+        N_SN += 1.e-44 * it.get_hydro_variables().get_energy_term();
+      }
+      cmac_status("N_SN: %.0f", N_SN);
+    }
+    distribution.update(t);
   }
-  cmac_status("N_SN: %.0f", N_SN);
+  average_number_of_sources /= num_steps;
+  cmac_status("Average number of sources: %g", average_number_of_sources);
 
   return 0;
 }
