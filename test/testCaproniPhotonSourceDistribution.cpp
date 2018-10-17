@@ -24,7 +24,9 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "CaproniPhotonSourceDistribution.hpp"
+#include "CartesianDensityGrid.hpp"
 #include "Error.hpp"
+#include "HomogeneousDensityFunction.hpp"
 #include <fstream>
 
 /**
@@ -48,7 +50,7 @@ int main(int argc, char **argv) {
     for (uint_fast32_t i = 0; i < num_steps; ++i) {
       const double t = i * dt;
       const uint_fast32_t nstar =
-          CaproniStellarRoutines::get_number_of_stars(t);
+          CaproniPhotonSourceDistribution::get_number_of_stars(t);
       ofile << t << "\t" << nstar << "\n";
       average_number_of_sources += nstar;
     }
@@ -63,7 +65,7 @@ int main(int argc, char **argv) {
     ofile << "# mass (Msol)\tluminosity (s^-1)\tlifetime (s)\n";
     for (uint_fast32_t i = 0; i < 1000; ++i) {
       double luminosity, lifetime;
-      const double mass = CaproniStellarRoutines::get_random_star(
+      const double mass = CaproniPhotonSourceDistribution::get_random_star(
           luminosity, lifetime, random_generator);
       ofile << mass << "\t" << luminosity << "\t" << lifetime << "\n";
     }
@@ -81,8 +83,8 @@ int main(int argc, char **argv) {
       double ravg = 0.;
       double ravg2 = 0.;
       for (uint_fast32_t j = 0; j < 100; ++j) {
-        const double r =
-            CaproniStellarRoutines::get_galactic_radius(t, random_generator);
+        const double r = CaproniPhotonSourceDistribution::get_galactic_radius(
+            t, random_generator);
         ravg += r;
         ravg2 += r * r;
       }
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
   }
 
   CaproniPhotonSourceDistribution distribution(0.01, 1., 42, 10. * Myr_in_s, 0.,
-                                               true);
+                                               1., true);
 
   std::ofstream ofile("test_caproniphotonsourcedistribution.txt");
   ofile << "# t (Myr)\tnumber of sources\n";
@@ -109,6 +111,35 @@ int main(int argc, char **argv) {
   }
   average_number_of_sources /= num_steps;
   cmac_status("Average number of sources: %g", average_number_of_sources);
+
+  const double kpc_in_m = 3.086e19;
+
+  /// test SN rate function
+  {
+    std::ofstream ofile("test_caproni_rate.txt");
+    ofile << "# t (s)\tsupernova rate (s^-1)\n";
+    const double dt = 2. * Myr_in_s;
+    for (uint_fast32_t i = 0; i < 1000; ++i) {
+      const double t = i * dt;
+      const double rate = CaproniPhotonSourceDistribution::get_SN_rate(t);
+      ofile << t << "\t" << rate << "\n";
+    }
+  }
+
+  HomogeneousDensityFunction testfunction(1., 2000.);
+  testfunction.initialize();
+  CartesianDensityGrid grid(Box<>(-1.5 * kpc_in_m, 3. * kpc_in_m), 32, false,
+                            true);
+  std::pair< cellsize_t, cellsize_t > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  grid.initialize(block, testfunction);
+
+  distribution.add_stellar_feedback(grid, 200. * Myr_in_s);
+  double N_SN = 0.;
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    N_SN += 1.e-44 * it.get_hydro_variables().get_energy_term();
+  }
+  cmac_status("N_SN: %.0f", N_SN);
 
   return 0;
 }

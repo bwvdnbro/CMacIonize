@@ -1246,21 +1246,11 @@ set(TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES
     testCaproniPhotonSourceDistribution.cpp
 
     ../src/CaproniPhotonSourceDistribution.hpp
-)
-add_unit_test(NAME testCaproniPhotonSourceDistribution
-              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES})
-
-## Unit test for CaproniStellarFeedback
-set(TESTCAPRONISTELLARFEEDBACK_SOURCES
-    testCaproniStellarFeedback.cpp
-
-    ../src/CaproniStellarFeedback.hpp
-    ../src/CaproniStellarRoutines.hpp
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
 )
-add_unit_test(NAME testCaproniStellarFeedback
-              SOURCES ${TESTCAPRONISTELLARFEEDBACK_SOURCES})
+add_unit_test(NAME testCaproniPhotonSourceDistribution
+              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
@@ -1309,5 +1299,5 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R testCaproniPhotonSourceDistribution
                         DEPENDS ${TESTNAMES})
