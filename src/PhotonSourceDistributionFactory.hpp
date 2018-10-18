@@ -37,6 +37,7 @@
 #include "DwarfGalaxyPhotonSourceDistribution.hpp"
 #include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
+#include "SingleSupernovaPhotonSourceDistribution.hpp"
 
 // library dependent implementations
 #ifdef HAVE_HDF5
@@ -109,6 +110,8 @@ public:
       return new SILCCPhotonSourceDistribution(params, log);
     } else if (type == "SingleStar") {
       return new SingleStarPhotonSourceDistribution(params, log);
+    } else if (type == "SingleSupernova") {
+      return new SingleSupernovaPhotonSourceDistribution(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotPhotonSourceDistribution(params, log);
