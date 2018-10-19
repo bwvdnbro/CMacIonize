@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
   /// Cartesian grid
   {
-    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC");
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     CoordinateVector< int_fast32_t > ncell(100, 1, 1);
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
 
   /// Voronoi grid
   {
-    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC");
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     SodShockDensityFunction density_function;

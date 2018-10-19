@@ -100,45 +100,42 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   _total_luminosity = discrete_luminosity + continuous_luminosity;
 
-  if (_total_luminosity == 0.) {
-    if (_log) {
-      _log->write_error("Total luminosity of all sources is zero! Not doing "
-                        "radiative transfer, as there is no radiation to "
-                        "propagate.");
-      cmac_error("Total luminosity is zero!");
-    }
-  }
+  if (_total_luminosity > 0.) {
+    const double discrete_fraction = discrete_luminosity / _total_luminosity;
 
-  const double discrete_fraction = discrete_luminosity / _total_luminosity;
-
-  if (discrete_luminosity > 0.) {
-    if (continuous_luminosity > 0.) {
-      _continuous_probability = 0.5;
+    if (discrete_luminosity > 0.) {
+      if (continuous_luminosity > 0.) {
+        _continuous_probability = 0.5;
+      } else {
+        _continuous_probability = 0.;
+      }
+      _discrete_photon_weight = 1.;
+      _continuous_photon_weight = (1. - _continuous_probability) *
+                                  continuous_luminosity /
+                                  _continuous_probability / discrete_luminosity;
     } else {
-      _continuous_probability = 0.;
+      _continuous_probability = 1.;
+      _discrete_photon_weight = 0.;
+      _continuous_photon_weight = 1.;
     }
-    _discrete_photon_weight = 1.;
-    _continuous_photon_weight = (1. - _continuous_probability) *
-                                continuous_luminosity /
-                                _continuous_probability / discrete_luminosity;
+
+    if (_log) {
+      _log->write_status("Total luminosity of discrete sources: ",
+                         discrete_luminosity, " s^-1.");
+      _log->write_status("Total luminosity of continuous sources: ",
+                         continuous_luminosity, " s^-1.");
+      _log->write_status(
+          discrete_fraction * 100.,
+          "% of the ionizing radiation is emitted by discrete sources.");
+    }
   } else {
-    _continuous_probability = 1.;
+    _continuous_probability = 0.;
     _discrete_photon_weight = 0.;
-    _continuous_photon_weight = 1.;
+    _continuous_photon_weight = 0.;
   }
 
   if (diffuse_field) {
     _reemission_handler = new DiffuseReemissionHandler(_cross_sections);
-  }
-
-  if (_log) {
-    _log->write_status("Total luminosity of discrete sources: ",
-                       discrete_luminosity, " s^-1.");
-    _log->write_status("Total luminosity of continuous sources: ",
-                       continuous_luminosity, " s^-1.");
-    _log->write_status(
-        discrete_fraction * 100.,
-        "% of the ionizing radiation is emitted by discrete sources.");
   }
 }
 
@@ -205,6 +202,8 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
  */
 Photon
 PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
+
+  cmac_assert(_total_luminosity > 0.);
 
   CoordinateVector<> position, direction;
   double energy;
@@ -339,28 +338,25 @@ void PhotonSource::update(PhotonSourceDistribution *distribution) {
 
   _total_luminosity = discrete_luminosity + continuous_luminosity;
 
-  if (_total_luminosity == 0.) {
-    if (_log) {
-      _log->write_error("Total luminosity of all sources is zero! Not doing "
-                        "radiative transfer, as there is no radiation to "
-                        "propagate.");
-      cmac_error("Total luminosity is zero!");
-    }
-  }
-
-  if (discrete_luminosity > 0.) {
-    if (continuous_luminosity > 0.) {
-      _continuous_probability = 0.5;
+  if (_total_luminosity > 0.) {
+    if (discrete_luminosity > 0.) {
+      if (continuous_luminosity > 0.) {
+        _continuous_probability = 0.5;
+      } else {
+        _continuous_probability = 0.;
+      }
+      _discrete_photon_weight = 1.;
+      _continuous_photon_weight = (1. - _continuous_probability) *
+                                  continuous_luminosity /
+                                  _continuous_probability / discrete_luminosity;
     } else {
-      _continuous_probability = 0.;
+      _continuous_probability = 1.;
+      _discrete_photon_weight = 0.;
+      _continuous_photon_weight = 1.;
     }
-    _discrete_photon_weight = 1.;
-    _continuous_photon_weight = (1. - _continuous_probability) *
-                                continuous_luminosity /
-                                _continuous_probability / discrete_luminosity;
   } else {
-    _continuous_probability = 1.;
+    _continuous_probability = 0.;
     _discrete_photon_weight = 0.;
-    _continuous_photon_weight = 1.;
+    _continuous_photon_weight = 0.;
   }
 }

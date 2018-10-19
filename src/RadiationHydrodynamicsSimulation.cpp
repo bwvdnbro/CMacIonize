@@ -445,14 +445,23 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
         source.update(sourcedistribution);
       }
 
-      // reset the neutral fractions if necessary
-      if (maximum_neutral_fraction > 0.) {
-        for (auto it = grid->begin(); it != grid->end(); ++it) {
-          if (it.get_ionization_variables().get_ionic_fraction(ION_H_n) >
-              maximum_neutral_fraction) {
-            it.get_ionization_variables().set_ionic_fraction(
-                ION_H_n, maximum_neutral_fraction);
+      if (source.get_total_luminosity() > 0.) {
+        // reset the neutral fractions if necessary
+        if (maximum_neutral_fraction > 0.) {
+          for (auto it = grid->begin(); it != grid->end(); ++it) {
+            if (it.get_ionization_variables().get_ionic_fraction(ION_H_n) >
+                maximum_neutral_fraction) {
+              it.get_ionization_variables().set_ionic_fraction(
+                  ION_H_n, maximum_neutral_fraction);
+            }
           }
+        }
+      } else {
+        // there are no ionising sources: skip radiation for this step
+        nloop_step = 0;
+        // manually set all neutral fractions to 1
+        for (auto it = grid->begin(); it != grid->end(); ++it) {
+          it.get_ionization_variables().set_ionic_fraction(ION_H_n, 1.);
         }
       }
     } else {
