@@ -1037,17 +1037,24 @@ public:
             // high temperatures, indicating that they were shock heated
             it.get_ionization_variables().set_temperature(Tgas_old);
           } else {
-            const double ugas = 2. * _u_conversion_factor * Tgas / (1. + xH);
+            const double ufac = 2. * _u_conversion_factor / (1. + xH);
+            const double ugas = ufac * Tgas;
             const double uold =
                 it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
                 it.get_hydro_variables().get_primitives_density();
             const double du = ugas - uold;
-            const double dE =
-                it.get_hydro_variables().get_conserved_mass() * du;
+            double dE = it.get_hydro_variables().get_conserved_mass() * du;
             if (_do_radiative_heating && dE > 0.) {
               it.get_hydro_variables().delta_conserved(4) -= dE;
             }
             if (_do_radiative_cooling && dE < 0.) {
+              // limit the change in energy to the difference between
+              // neutral and ionised temperature
+              dE = std::max(dE,
+                            2. * ufac *
+                                (_neutral_temperature - _ionised_temperature) *
+                                it.get_hydro_variables().get_conserved_mass());
+              cmac_assert(dE < 0.);
               // we add a factor 1/2 to account for the change in mean particle
               // mass. Without this factor, we end up subtracting too much
               // energy, which leads to negative pressure.
@@ -1120,6 +1127,9 @@ public:
 #ifdef SAFE_HYDRO
       it.get_hydro_variables().conserved(4) =
           std::max(it.get_hydro_variables().get_conserved_total_energy(), 0.);
+      if (it.get_hydro_variables().get_conserved_total_energy() == 0.) {
+        it.get_hydro_variables().set_conserved_momentum(0.);
+      }
 #else
       cmac_assert(_gamma == 1. ||
                   it.get_hydro_variables().get_conserved_total_energy() >= 0.);
@@ -1183,9 +1193,18 @@ public:
         }
       }
 
+#ifdef SAFE_HYDRO
+      density = std::max(density, 0.);
+      pressure = std::max(pressure, 0.);
+#else
       cmac_assert_message(density >= 0., "density: %g, mass: %g, volume: %g",
                           density, mass, volume);
-      cmac_assert(pressure >= 0.);
+      cmac_assert_message(
+          pressure >= 0.,
+          "pressure: %g, total energy: %g, velocity: %g %g %g, volume: %g",
+          pressure, total_energy, velocity.x(), velocity.y(), velocity.z(),
+          volume);
+#endif
 
       it.get_hydro_variables().set_primitives_density(density);
       it.get_hydro_variables().set_primitives_velocity(velocity);
@@ -1193,8 +1212,15 @@ public:
 
       ionization_variables.set_number_density(density * _n_conversion_factor);
 
+#ifdef SAFE_HYDRO
+      ionization_variables.set_number_density(
+          std::max(ionization_variables.get_number_density(), 0.));
+      ionization_variables.set_temperature(
+          std::max(ionization_variables.get_temperature(), 0.));
+#else
       cmac_assert(ionization_variables.get_number_density() >= 0.);
       cmac_assert(ionization_variables.get_temperature() >= 0.);
+#endif
     }
 
     grid.set_grid_velocity(

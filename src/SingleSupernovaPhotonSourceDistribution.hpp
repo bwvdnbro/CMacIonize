@@ -44,6 +44,12 @@ private:
   /*! @brief Position of the supernova explosion (in m). */
   const CoordinateVector<> _position;
 
+  /*! @brief Life time of the source before it explodes (in s). */
+  const double _lifetime;
+
+  /*! @brief Luminosity of the source before it goes supernova (in s^-1). */
+  const double _luminosity;
+
   /*! @brief Energy of the supernova exposion (in J). */
   const double _energy;
 
@@ -55,19 +61,24 @@ public:
    * @brief Constructor.
    *
    * @param position Position of the supernova explosion (in m).
+   * @param lifetime Life time of the source before it explodes (in s).
+   * @param luminosity Ionising luminosity of the source before it goes
+   * supernova (in s^-1).
    * @param energy Energy of the supernova explosion (in J).
    * @param log Log to write logging info to.
    */
   inline SingleSupernovaPhotonSourceDistribution(
-      const CoordinateVector<> position, const double energy,
-      Log *log = nullptr)
-      : _position(position), _energy(energy), _has_exploded(false) {
+      const CoordinateVector<> position, const double lifetime,
+      const double luminosity, const double energy, Log *log = nullptr)
+      : _position(position), _lifetime(lifetime), _luminosity(luminosity),
+        _energy(energy), _has_exploded(false) {
 
     if (log != nullptr) {
       log->write_status(
           "Set up SingleSupernovaPhotonSourceDistribution at position [",
           _position.x(), " m, ", _position.y(), " m, ", _position.z(),
-          " m] and with energy ", _energy, " J.");
+          " m], with life time ", _lifetime, " s, ionising luminosity ",
+          _luminosity, " s^-1 and with SN energy ", _energy, " J.");
     }
   }
 
@@ -77,6 +88,9 @@ public:
    * Parameters are:
    *  - position: Position of the supernova explosion (default: [0. m, 0. m, 0.
    *    m])
+   *  - lifetime: Life time of the source before it explodes (default: 10. Myr)
+   *  - luminosity: Ionising luminosity of the source before it goes supernova
+   *    (default: 1.e49 s^-1)
    *  - energy: Energy of the supernova explosion (default: 1.e51 erg)
    *
    * @param params ParameterFile to read from.
@@ -87,6 +101,10 @@ public:
       : SingleSupernovaPhotonSourceDistribution(
             params.get_physical_vector< QUANTITY_LENGTH >(
                 "PhotonSourceDistribution:position", "[0. m, 0. m, 0. m]"),
+            params.get_physical_value< QUANTITY_TIME >(
+                "PhotonSourceDistribution:lifetime", "10. Myr"),
+            params.get_physical_value< QUANTITY_FREQUENCY >(
+                "PhotonSourceDistribution:luminosity", "1.e49 s^-1"),
             params.get_physical_value< QUANTITY_ENERGY >(
                 "PhotonSourceDistribution:energy", "1.e51 erg"),
             log) {}
@@ -104,7 +122,9 @@ public:
    *
    * @return Number of sources.
    */
-  virtual photonsourcenumber_t get_number_of_sources() const { return 0; }
+  virtual photonsourcenumber_t get_number_of_sources() const {
+    return _luminosity > 0. && !_has_exploded;
+  }
 
   /**
    * @brief Get a valid position from the distribution.
@@ -114,7 +134,7 @@ public:
    * @return CoordinateVector of a valid and photon source position (in m).
    */
   virtual CoordinateVector<> get_position(photonsourcenumber_t index) {
-    return CoordinateVector<>(0.);
+    return _position;
   }
 
   /**
@@ -125,14 +145,20 @@ public:
    * @return Weight of the photon source, used to determine how many photons are
    * emitted from this particular source.
    */
-  virtual double get_weight(photonsourcenumber_t index) const { return 0.; }
+  virtual double get_weight(photonsourcenumber_t index) const { return 1.; }
 
   /**
    * @brief Get the total luminosity of all sources together.
    *
    * @return Total luminosity (in s^-1).
    */
-  virtual double get_total_luminosity() const { return 1.; }
+  virtual double get_total_luminosity() const {
+    if (!_has_exploded) {
+      return _luminosity;
+    } else {
+      return 0.;
+    }
+  }
 
   /**
    * @brief Update the distribution after the system moved to the given time.
@@ -140,7 +166,17 @@ public:
    * @param simulation_time Current simulation time (in s).
    * @return True if the distribution changed, false otherwise.
    */
-  virtual bool update(const double simulation_time) { return false; }
+  virtual bool update(const double simulation_time) {
+
+    if (!_has_exploded && simulation_time >= _lifetime) {
+      _has_exploded = true;
+      return true;
+    } else {
+      // make sure the PhotonSource is warned if the number of sources is
+      // zero
+      return _has_exploded;
+    }
+  }
 
   /**
    * @brief Add stellar feedback at the given time.
@@ -150,7 +186,7 @@ public:
    */
   virtual void add_stellar_feedback(DensityGrid &grid, const double time) {
 
-    if (!_has_exploded) {
+    if (!_has_exploded && time >= _lifetime) {
       DensityGrid::iterator cell = grid.get_cell(_position);
       cell.get_hydro_variables().set_energy_term(_energy);
       _has_exploded = true;

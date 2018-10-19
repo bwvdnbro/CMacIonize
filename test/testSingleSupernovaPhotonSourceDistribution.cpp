@@ -39,9 +39,11 @@
 int main(int argc, char **argv) {
 
   const double kpc_in_m = 3.086e19;
+  const double Myr_in_s = 1.e6 * 365.25 * 24. * 3600.;
 
   CoordinateVector<> position;
-  SingleSupernovaPhotonSourceDistribution distribution(position, 1.e44);
+  SingleSupernovaPhotonSourceDistribution distribution(position, 10. * Myr_in_s,
+                                                       1.e49, 1.e44);
 
   HomogeneousDensityFunction testfunction(1., 2000.);
   testfunction.initialize();
@@ -54,6 +56,8 @@ int main(int argc, char **argv) {
   distribution.add_stellar_feedback(grid, 0.);
   DensityGrid::iterator cell =
       static_cast< DensityGrid * >(&grid)->get_cell(position);
+  assert_condition(cell.get_hydro_variables().get_energy_term() == 0.);
+  distribution.add_stellar_feedback(grid, 10. * Myr_in_s);
   assert_condition(cell.get_hydro_variables().get_energy_term() == 1.e44);
 
   return 0;
