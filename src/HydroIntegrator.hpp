@@ -49,7 +49,7 @@
 #define SAFE_HYDRO
 
 /*! @brief Uncomment this to activate the flux limiter. */
-#define FLUX_LIMITER
+#define FLUX_LIMITER 2.
 
 #include <cfloat>
 
@@ -477,17 +477,73 @@ private:
 #ifdef FLUX_LIMITER
         // limit the flux
         double fluxfac = 1.;
-        if (mflux > 0.5 * cell.get_hydro_variables().get_conserved_mass()) {
-          fluxfac =
-              0.5 * cell.get_hydro_variables().get_conserved_mass() / mflux;
+        const double absmflux = std::abs(mflux);
+        if (absmflux >
+            FLUX_LIMITER * cell.get_hydro_variables().get_conserved_mass()) {
+          fluxfac = FLUX_LIMITER *
+                    cell.get_hydro_variables().get_conserved_mass() / absmflux;
         }
-        if (Eflux >
-            0.5 * cell.get_hydro_variables().get_conserved_total_energy()) {
+        if (ngb != _grid_end &&
+            absmflux >
+                FLUX_LIMITER * ngb.get_hydro_variables().get_conserved_mass()) {
+          fluxfac = std::min(
+              fluxfac, FLUX_LIMITER *
+                           ngb.get_hydro_variables().get_conserved_mass() /
+                           absmflux);
+        }
+        const double absEflux = std::abs(Eflux);
+        if (absEflux >
+            FLUX_LIMITER *
+                cell.get_hydro_variables().get_conserved_total_energy()) {
           fluxfac = std::min(
               fluxfac,
-              0.5 * cell.get_hydro_variables().get_conserved_total_energy() /
-                  Eflux);
+              FLUX_LIMITER *
+                  cell.get_hydro_variables().get_conserved_total_energy() /
+                  absEflux);
         }
+        if (ngb != _grid_end &&
+            absEflux >
+                FLUX_LIMITER *
+                    ngb.get_hydro_variables().get_conserved_total_energy()) {
+          fluxfac = std::min(
+              fluxfac,
+              FLUX_LIMITER *
+                  ngb.get_hydro_variables().get_conserved_total_energy() /
+                  absEflux);
+        }
+        // momentum flux limiter
+        // note that we only apply this for cells that have high momentum, i.e.
+        // whose momentum is higher than the thermal momentum of the cell
+        // without this condition, cells with zero momentum would never be able
+        // to gain momentum...
+        const double p2 =
+            cell.get_hydro_variables().get_conserved_momentum().norm2();
+        if (p2 * cell.get_hydro_variables().get_primitives_density() >
+            _hydro_integrator._gamma *
+                cell.get_hydro_variables().get_primitives_pressure()) {
+          const double pflux2 = pflux.norm2();
+          if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
+            fluxfac =
+                std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * p2 /
+                                            pflux2));
+          }
+        }
+        if (ngb != _grid_end) {
+          const double pn2 =
+              ngb.get_hydro_variables().get_conserved_momentum().norm2();
+          if (p2 * ngb.get_hydro_variables().get_primitives_density() >
+              _hydro_integrator._gamma *
+                  ngb.get_hydro_variables().get_primitives_pressure()) {
+            const double pflux2 = pflux.norm2();
+            if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * pn2) {
+              fluxfac =
+                  std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) *
+                                              pn2 / pflux2));
+            }
+          }
+        }
+        cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g",
+                            fluxfac);
         mflux *= fluxfac;
         pflux *= fluxfac;
         Eflux *= fluxfac;
