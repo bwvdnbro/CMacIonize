@@ -477,21 +477,21 @@ private:
 #ifdef FLUX_LIMITER
         // limit the flux
         double fluxfac = 1.;
-        const double absmflux = std::abs(mflux);
+        const double absmflux = mflux;
         if (absmflux >
             FLUX_LIMITER * cell.get_hydro_variables().get_conserved_mass()) {
           fluxfac = FLUX_LIMITER *
                     cell.get_hydro_variables().get_conserved_mass() / absmflux;
         }
         if (ngb != _grid_end &&
-            absmflux >
+            -absmflux >
                 FLUX_LIMITER * ngb.get_hydro_variables().get_conserved_mass()) {
           fluxfac = std::min(
-              fluxfac, FLUX_LIMITER *
+              fluxfac, -FLUX_LIMITER *
                            ngb.get_hydro_variables().get_conserved_mass() /
                            absmflux);
         }
-        const double absEflux = std::abs(Eflux);
+        const double absEflux = Eflux;
         if (absEflux >
             FLUX_LIMITER *
                 cell.get_hydro_variables().get_conserved_total_energy()) {
@@ -502,12 +502,12 @@ private:
                   absEflux);
         }
         if (ngb != _grid_end &&
-            absEflux >
+            -absEflux >
                 FLUX_LIMITER *
                     ngb.get_hydro_variables().get_conserved_total_energy()) {
           fluxfac = std::min(
               fluxfac,
-              FLUX_LIMITER *
+              -FLUX_LIMITER *
                   ngb.get_hydro_variables().get_conserved_total_energy() /
                   absEflux);
         }
@@ -518,8 +518,10 @@ private:
         // to gain momentum...
         const double p2 =
             cell.get_hydro_variables().get_conserved_momentum().norm2();
+        const double m2 = cell.get_hydro_variables().get_conserved_mass() *
+                          cell.get_hydro_variables().get_conserved_mass();
         if (p2 * cell.get_hydro_variables().get_primitives_density() >
-            _hydro_integrator._gamma *
+            _hydro_integrator._gamma * m2 *
                 cell.get_hydro_variables().get_primitives_pressure()) {
           const double pflux2 = pflux.norm2();
           if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
@@ -531,8 +533,10 @@ private:
         if (ngb != _grid_end) {
           const double pn2 =
               ngb.get_hydro_variables().get_conserved_momentum().norm2();
+          const double mn2 = ngb.get_hydro_variables().get_conserved_mass() *
+                             ngb.get_hydro_variables().get_conserved_mass();
           if (p2 * ngb.get_hydro_variables().get_primitives_density() >
-              _hydro_integrator._gamma *
+              _hydro_integrator._gamma * mn2 *
                   ngb.get_hydro_variables().get_primitives_pressure()) {
             const double pflux2 = pflux.norm2();
             if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * pn2) {
