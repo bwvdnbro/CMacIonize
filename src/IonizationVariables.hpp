@@ -28,6 +28,8 @@
 
 #include "Configuration.hpp"
 #include "ElementNames.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 #ifdef USE_LOCKFREE
 #include "Atomic.hpp"
@@ -302,6 +304,56 @@ public:
    */
   inline void set_cosmic_ray_factor(double cosmic_ray_factor) {
     _cosmic_ray_factor = cosmic_ray_factor;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_number_density);
+    restart_writer.write(_temperature);
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      restart_writer.write(_ionic_fractions[i]);
+      restart_writer.write(_mean_intensity[i]);
+#ifdef DO_OUTPUT_COOLING
+      restart_writer.write(_cooling[i]);
+#endif
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      restart_writer.write(_reemission_probabilities[i]);
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      restart_writer.write(_heating[i]);
+    }
+    restart_writer.write(_cosmic_ray_factor);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline IonizationVariables(RestartReader &restart_reader) {
+
+    _number_density = restart_reader.read< double >();
+    _temperature = restart_reader.read< double >();
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fractions[i] = restart_reader.read< double >();
+      _mean_intensity[i] = restart_reader.read< double >();
+#ifdef DO_OUTPUT_COOLING
+      _cooling[i] = restart_reader.read< double >();
+#endif
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      _reemission_probabilities[i] = restart_reader.read< double >();
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      _heating[i] = restart_reader.read< double >();
+    }
+    _cosmic_ray_factor = restart_reader.read< double >();
   }
 };
 

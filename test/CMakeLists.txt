@@ -1263,6 +1263,17 @@ set(TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES
 add_unit_test(NAME testSingleSupernovaPhotonSourceDistribution
               SOURCES ${TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES})
 
+## Unit test for RestartManager
+set(TESTRESTARTMANAGER_SOURCES
+    testRestartManager.cpp
+
+    ../src/RestartManager.hpp
+    ../src/RestartReader.hpp
+    ../src/RestartWriter.hpp
+)
+add_unit_test(NAME testRestartManager
+              SOURCES ${TESTRESTARTMANAGER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
@@ -1310,5 +1321,5 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R testRestartManager
                         DEPENDS ${TESTNAMES})

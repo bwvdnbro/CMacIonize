@@ -275,6 +275,23 @@ public:
   inline iterator end() {
     return iterator(_yaml_dictionary.get_end_used_values());
   }
+
+  /**
+   * @brief Dump the parameter file to the given restart file.
+   *
+   * @param restart_writer RestartWriter to write to.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    _yaml_dictionary.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline ParameterFile(RestartReader &restart_reader)
+      : _yaml_dictionary(restart_reader) {}
 };
 
 #endif // PARAMETERFILE_HPP
