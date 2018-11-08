@@ -27,6 +27,8 @@
 #define HYDROVARIABLES_HPP
 
 #include "CoordinateVector.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief Hydro related variables.
@@ -305,6 +307,42 @@ public:
    */
   inline void set_energy_term(const double energy_term) {
     _energy_term = energy_term;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      restart_writer.write(_primitives[i]);
+      restart_writer.write(_conserved[i]);
+      restart_writer.write(_delta_conserved[i]);
+      _primitive_gradients[i].write_restart_file(restart_writer);
+    }
+    _gravitational_acceleration.write_restart_file(restart_writer);
+    restart_writer.write(_energy_rate_term);
+    restart_writer.write(_energy_term);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline HydroVariables(RestartReader &restart_reader) {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      _primitives[i] = restart_reader.read< double >();
+      _conserved[i] = restart_reader.read< double >();
+      _delta_conserved[i] = restart_reader.read< double >();
+      _primitive_gradients[i] = CoordinateVector<>(restart_reader);
+    }
+    _gravitational_acceleration = CoordinateVector<>(restart_reader);
+    _energy_rate_term = restart_reader.read< double >();
+    _energy_term = restart_reader.read< double >();
   }
 };
 
