@@ -191,10 +191,11 @@ public:
     }
 
     if (integer_timestep < _minimum_timestep) {
-      cmac_warning("Time step wants to be smaller than minimum time step: %g "
-                   "(minimum: %g)! Prematurely stopping simulation...",
-                   to_physical_time_interval(integer_timestep),
-                   to_physical_time_interval(_minimum_timestep));
+      cmac_warning(
+          "Time step wants to be smaller than minimum time step: %g "
+          "(rounded from: %g, minimum: %g)! Prematurely stopping simulation...",
+          to_physical_time_interval(integer_timestep), requested_timestep,
+          to_physical_time_interval(_minimum_timestep));
       actual_timestep = to_physical_time_interval(integer_timestep);
       current_time = to_physical_time(_current_time);
       return false;

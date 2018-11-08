@@ -407,13 +407,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   }
   TimeLine timeline(0., hydro_total_time, hydro_minimum_timestep,
                     maximum_timestep, log);
-  bool has_next_step = true;
   uint_fast32_t num_step = 0;
+  double requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
+  double actual_timestep, current_time;
+  bool has_next_step =
+      timeline.advance(requested_timestep, actual_timestep, current_time);
   while (has_next_step) {
-    double requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
-    double actual_timestep, current_time;
-    has_next_step =
-        timeline.advance(requested_timestep, actual_timestep, current_time);
     ++num_step;
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
@@ -565,11 +564,15 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                     hydro_integrator->get_internal_units());
       ++hydro_lastsnap;
     }
+
+    requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
+    has_next_step =
+        timeline.advance(requested_timestep, actual_timestep, current_time);
   }
 
   // write snapshot
   if (write_output) {
-    writer->write(*grid, hydro_lastsnap, params, hydro_total_time,
+    writer->write(*grid, hydro_lastsnap, params, current_time,
                   hydro_integrator->get_internal_units());
   }
 
