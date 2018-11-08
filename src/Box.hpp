@@ -27,6 +27,8 @@
 #define BOX_HPP
 
 #include "CoordinateVector.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief Geometrical rectangular box.
@@ -200,6 +202,24 @@ public:
   inline _datatype_ get_volume() const {
     return _sides.x() * _sides.y() * _sides.z();
   }
+
+  /**
+   * @brief Write the box to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    _anchor.write_restart_file(restart_writer);
+    _sides.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline Box(RestartReader &restart_reader)
+      : _anchor(restart_reader), _sides(restart_reader) {}
 };
 
 #endif // BOX_HPP

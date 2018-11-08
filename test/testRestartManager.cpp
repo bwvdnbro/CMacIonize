@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "Box.hpp"
 #include "CoordinateVector.hpp"
 #include "HydroVariables.hpp"
 #include "IonizationVariables.hpp"
@@ -76,6 +77,10 @@ int main(int argc, char **argv) {
     hydro_variables.primitive_gradients(2)[0] = 42.;
     hydro_variables.write_restart_file(*writer);
 
+    // box
+    Box<> box(0., 1.);
+    box.write_restart_file(*writer);
+
     // timer
     timevalue = timer.stop();
     timer.write_restart_file(*writer);
@@ -115,6 +120,11 @@ int main(int argc, char **argv) {
     HydroVariables hydro_variables(*reader);
     assert_condition(hydro_variables.get_primitives_density() == 2.);
     assert_condition(hydro_variables.primitive_gradients(2)[0] == 42.);
+
+    // box
+    Box<> box(*reader);
+    assert_condition(box.get_anchor().x() == 0.);
+    assert_condition(box.get_sides().x() == 1.);
 
     // timer
     Timer timer(*reader);
