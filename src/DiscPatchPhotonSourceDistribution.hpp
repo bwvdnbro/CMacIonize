@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <fstream>
+#include <unistd.h>
 #include <vector>
 
 /**
@@ -71,6 +72,9 @@ private:
   /*! @brief Scale height of the Gaussian disk height distribution (in m). */
   const double _scaleheight_z;
 
+  /*! @brief Update time interval (in s). */
+  const double _update_interval;
+
   /*! @brief Pseudo-random number generator. */
   RandomGenerator _random_generator;
 
@@ -82,9 +86,6 @@ private:
 
   /*! @brief Output file for the sources (if applicable). */
   std::ofstream *_output_file;
-
-  /*! @brief Update time interval (in s). */
-  const double _update_interval;
 
   /*! @brief Number of updates since the start of the simulation. */
   uint_fast32_t _number_of_updates;
@@ -151,9 +152,8 @@ public:
         _average_number_of_sources(average_number), _anchor_x(anchor_x),
         _anchor_y(anchor_y), _sides_x(sides_x), _sides_y(sides_y),
         _origin_z(origin_z), _scaleheight_z(scaleheight_z),
-        _random_generator(seed), _output_file(nullptr),
-        _update_interval(update_interval), _number_of_updates(1),
-        _next_index(0) {
+        _update_interval(update_interval), _random_generator(seed),
+        _output_file(nullptr), _number_of_updates(1), _next_index(0) {
 
     // generate sources
     for (uint_fast32_t i = 0; i < _average_number_of_sources; ++i) {
@@ -403,6 +403,116 @@ public:
     }
 
     return changed;
+  }
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_source_lifetime);
+    restart_writer.write(_source_luminosity);
+    restart_writer.write(_source_probability);
+    restart_writer.write(_average_number_of_sources);
+    restart_writer.write(_anchor_x);
+    restart_writer.write(_anchor_y);
+    restart_writer.write(_sides_x);
+    restart_writer.write(_sides_y);
+    restart_writer.write(_origin_z);
+    restart_writer.write(_scaleheight_z);
+    restart_writer.write(_update_interval);
+    _random_generator.write_restart_file(restart_writer);
+    {
+      const auto size = _source_positions.size();
+      restart_writer.write(size);
+      for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+        _source_positions[i].write_restart_file(restart_writer);
+      }
+    }
+    {
+      const auto size = _source_lifetimes.size();
+      restart_writer.write(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        restart_writer.write(_source_lifetimes[i]);
+      }
+    }
+    restart_writer.write(_number_of_updates);
+    const bool has_output = (_output_file != nullptr);
+    restart_writer.write(has_output);
+    if (has_output) {
+      // store current position in the std::ofstream
+      // we want to be able to continue writing from that point
+      const auto filepos = _output_file->tellp();
+      restart_writer.write(filepos);
+      {
+        const auto size = _source_indices.size();
+        restart_writer.write(size);
+        for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+          restart_writer.write(_source_indices[i]);
+        }
+      }
+      restart_writer.write(_next_index);
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline DiscPatchPhotonSourceDistribution(RestartReader &restart_reader)
+      : _source_lifetime(restart_reader.read< double >()),
+        _source_luminosity(restart_reader.read< double >()),
+        _source_probability(restart_reader.read< double >()),
+        _average_number_of_sources(restart_reader.read< uint_fast32_t >()),
+        _anchor_x(restart_reader.read< double >()),
+        _anchor_y(restart_reader.read< double >()),
+        _sides_x(restart_reader.read< double >()),
+        _sides_y(restart_reader.read< double >()),
+        _origin_z(restart_reader.read< double >()),
+        _scaleheight_z(restart_reader.read< double >()),
+        _update_interval(restart_reader.read< double >()),
+        _random_generator(restart_reader) {
+
+    {
+      const std::vector< CoordinateVector<> >::size_type size =
+          restart_reader.read< std::vector< CoordinateVector<> >::size_type >();
+      _source_positions.resize(size);
+      for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+        _source_positions[i] = CoordinateVector<>(restart_reader);
+      }
+    }
+    {
+      const std::vector< double >::size_type size =
+          restart_reader.read< std::vector< double >::size_type >();
+      _source_lifetimes.resize(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        _source_lifetimes[i] = restart_reader.read< double >();
+      }
+    }
+    _number_of_updates = restart_reader.read< uint_fast32_t >();
+    const bool has_output = restart_reader.read< bool >();
+    if (has_output) {
+      const std::streampos filepos = restart_reader.read< std::streampos >();
+      // truncate the original file to the size we were at
+      if (truncate("DiscPatch_source_positions.txt", filepos) != 0) {
+        cmac_error("Error while truncating output file!");
+      }
+      // now open the file in append mode
+      _output_file = new std::ofstream("DiscPatch_source_positions.txt",
+                                       std::ios_base::app);
+      {
+        const std::vector< uint_fast32_t >::size_type size =
+            restart_reader.read< std::vector< uint_fast32_t >::size_type >();
+        _source_indices.resize(size);
+        for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+          _source_indices[i] = restart_reader.read< uint_fast32_t >();
+        }
+      }
+      _next_index = restart_reader.read< uint_fast32_t >();
+    }
   }
 };
 

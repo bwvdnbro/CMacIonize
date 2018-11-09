@@ -51,7 +51,6 @@
 #include <cinttypes>
 #include <cmath>
 #include <fstream>
-#include <iostream>
 #include <unistd.h>
 #include <vector>
 
@@ -695,7 +694,6 @@ public:
     restart_writer.write(_number_of_updates);
     {
       const auto size = _source_positions.size();
-      std::cerr << "Size: " << size << std::endl;
       restart_writer.write(size);
       for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
         _source_positions[i].write_restart_file(restart_writer);
@@ -703,7 +701,6 @@ public:
     }
     {
       const auto size = _source_lifetimes.size();
-      std::cerr << "Size: " << size << std::endl;
       restart_writer.write(size);
       for (std::vector< double >::size_type i = 0; i < size; ++i) {
         restart_writer.write(_source_lifetimes[i]);
@@ -711,7 +708,6 @@ public:
     }
     {
       const auto size = _source_luminosities.size();
-      std::cerr << "Size: " << size << std::endl;
       restart_writer.write(size);
       for (std::vector< double >::size_type i = 0; i < size; ++i) {
         restart_writer.write(_source_luminosities[i]);
@@ -719,7 +715,6 @@ public:
     }
     {
       const auto size = _OB_indices.size();
-      std::cerr << "Size: " << size << std::endl;
       restart_writer.write(size);
       for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
         restart_writer.write(_OB_indices[i]);
@@ -730,14 +725,12 @@ public:
     const bool has_output = (_output_file != nullptr);
     restart_writer.write(has_output);
     if (has_output) {
-      cmac_status("Output!");
       // store current position in the std::ofstream
       // we want to be able to continue writing from that point
       const auto filepos = _output_file->tellp();
       restart_writer.write(filepos);
       {
         const auto size = _source_indices.size();
-        std::cerr << "Size: " << size << std::endl;
         restart_writer.write(size);
         for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
           restart_writer.write(_source_indices[i]);
@@ -767,7 +760,6 @@ public:
     {
       const std::vector< CoordinateVector<> >::size_type size =
           restart_reader.read< std::vector< CoordinateVector<> >::size_type >();
-      std::cerr << "Size: " << size << std::endl;
       _source_positions.resize(size);
       for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
         _source_positions[i] = CoordinateVector<>(restart_reader);
@@ -776,7 +768,6 @@ public:
     {
       const std::vector< double >::size_type size =
           restart_reader.read< std::vector< double >::size_type >();
-      std::cerr << "Size: " << size << std::endl;
       _source_lifetimes.resize(size);
       for (std::vector< double >::size_type i = 0; i < size; ++i) {
         _source_lifetimes[i] = restart_reader.read< double >();
@@ -785,7 +776,6 @@ public:
     {
       const std::vector< double >::size_type size =
           restart_reader.read< std::vector< double >::size_type >();
-      std::cerr << "Size: " << size << std::endl;
       _source_luminosities.resize(size);
       for (std::vector< double >::size_type i = 0; i < size; ++i) {
         _source_luminosities[i] = restart_reader.read< double >();
@@ -794,7 +784,6 @@ public:
     {
       const std::vector< uint_fast32_t >::size_type size =
           restart_reader.read< std::vector< uint_fast32_t >::size_type >();
-      std::cerr << "Size: " << size << std::endl;
       _OB_indices.resize(size);
       for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
         _OB_indices[i] = restart_reader.read< uint_fast32_t >();
@@ -804,7 +793,6 @@ public:
     _Oflag = restart_reader.read< bool >();
     const bool has_output = restart_reader.read< bool >();
     if (has_output) {
-      cmac_status("Output.");
       const std::streampos filepos = restart_reader.read< std::streampos >();
       // truncate the original file to the size we were at
       if (truncate("Caproni_source_positions.txt", filepos) != 0) {
@@ -816,7 +804,6 @@ public:
       {
         const std::vector< uint_fast32_t >::size_type size =
             restart_reader.read< std::vector< uint_fast32_t >::size_type >();
-        std::cerr << "Size: " << size << std::endl;
         _source_indices.resize(size);
         for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
           _source_indices[i] = restart_reader.read< uint_fast32_t >();

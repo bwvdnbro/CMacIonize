@@ -122,6 +122,48 @@ public:
       return nullptr;
     }
   }
+
+  /**
+   * @brief Write the given distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   * @param distribution PhotonSourceDistribution to write.
+   */
+  inline static void
+  write_restart_file(RestartWriter &restart_writer,
+                     PhotonSourceDistribution &distribution) {
+
+    const std::string tag = typeid(distribution).name();
+    restart_writer.write(tag);
+    distribution.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart the distribution from the given restart file.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created PhotonSourceDistribution implementation.
+   * Memory management for the pointer needs to be done by the calling routine.
+   */
+  inline static PhotonSourceDistribution *restart(RestartReader &restart_reader,
+                                                  Log *log = nullptr) {
+
+    const std::string tag = restart_reader.read< std::string >();
+    if (tag == typeid(CaproniPhotonSourceDistribution).name()) {
+      return new CaproniPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(DiscPatchPhotonSourceDistribution).name()) {
+      return new DiscPatchPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(SingleStarPhotonSourceDistribution).name()) {
+      return new SingleStarPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(SingleSupernovaPhotonSourceDistribution).name()) {
+      return new SingleSupernovaPhotonSourceDistribution(restart_reader);
+    } else {
+      cmac_error("Restarting is not supported for grid type: \"%s\".",
+                 tag.c_str());
+      return nullptr;
+    }
+  }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTIONFACTORY_HPP
