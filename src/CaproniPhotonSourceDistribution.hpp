@@ -578,7 +578,11 @@ public:
   /**
    * @brief Virtual destructor.
    */
-  virtual ~CaproniPhotonSourceDistribution() {}
+  virtual ~CaproniPhotonSourceDistribution() {
+    if (_output_file != nullptr) {
+      delete _output_file;
+    }
+  }
 
   /**
    * @brief Get the number of sources contained within this distribution.

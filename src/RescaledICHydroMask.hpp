@@ -288,6 +288,7 @@ public:
     restart_writer.write(_mask_pressure);
     {
       const auto size = _mask_velocities.size();
+      restart_writer.write(size);
       for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
         _mask_velocities[i].write_restart_file(restart_writer);
       }
