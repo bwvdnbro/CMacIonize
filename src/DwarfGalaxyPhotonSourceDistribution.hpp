@@ -265,7 +265,11 @@ public:
   /**
    * @brief Virtual destructor.
    */
-  virtual ~DwarfGalaxyPhotonSourceDistribution() {}
+  virtual ~DwarfGalaxyPhotonSourceDistribution() {
+    if (_output_file != nullptr) {
+      delete _output_file;
+    }
+  }
 
   /**
    * @brief Get the number of sources contained within this distribution.
