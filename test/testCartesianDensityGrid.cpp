@@ -472,6 +472,8 @@ int main(int argc, char **argv) {
     grid.write_restart_file(restart_writer);
   }
   {
+    const std::string tag = typeid(grid).name();
+    assert_condition(tag == typeid(CartesianDensityGrid).name());
     RestartReader restart_reader("cartesiandensitygrid.dump");
     CartesianDensityGrid restart_grid(restart_reader);
     assert_condition(restart_grid.get_cell_volume(0) ==
