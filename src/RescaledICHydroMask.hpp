@@ -48,20 +48,20 @@ private:
   /*! @brief Scale factors for the hydrodynamic variables. */
   const double _scale_factors[3];
 
-  /*! @brief Mask density (in kg m^-3). */
-  double _mask_density;
-
-  /*! @brief Mask velocities for all cells within the mask (in m s^-1). */
-  std::vector< CoordinateVector<> > _mask_velocities;
-
-  /*! @brief Mask pressure (in kg m^-1 s^-2). */
-  double _mask_pressure;
-
   /*! @brief Mass accretion output interval (in s). */
   const double _delta_t;
 
   /*! @brief Mass accretion output counter. */
   uint_fast32_t _snap_n;
+
+  /*! @brief Mask density (in kg m^-3). */
+  double _mask_density;
+
+  /*! @brief Mask pressure (in kg m^-1 s^-2). */
+  double _mask_pressure;
+
+  /*! @brief Mask velocities for all cells within the mask (in m s^-1). */
+  std::vector< CoordinateVector<> > _mask_velocities;
 
   /**
    * @brief Check if the given position is inside the mask region.
@@ -267,6 +267,53 @@ public:
     }
     if (mass_file != nullptr) {
       delete mass_file;
+    }
+  }
+
+  /**
+   * @brief Write the mask to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    _center.write_restart_file(restart_writer);
+    restart_writer.write(_radius2);
+    restart_writer.write(_scale_factors[0]);
+    restart_writer.write(_scale_factors[1]);
+    restart_writer.write(_scale_factors[2]);
+    restart_writer.write(_delta_t);
+    restart_writer.write(_snap_n);
+    restart_writer.write(_mask_density);
+    restart_writer.write(_mask_pressure);
+    {
+      const auto size = _mask_velocities.size();
+      for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+        _mask_velocities[i].write_restart_file(restart_writer);
+      }
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline RescaledICHydroMask(RestartReader &restart_reader)
+      : _center(restart_reader), _radius2(restart_reader.read< double >()),
+        _scale_factors{restart_reader.read< double >(),
+                       restart_reader.read< double >(),
+                       restart_reader.read< double >()},
+        _delta_t(restart_reader.read< double >()),
+        _snap_n(restart_reader.read< double >()),
+        _mask_density(restart_reader.read< double >()),
+        _mask_pressure(restart_reader.read< double >()) {
+
+    const std::vector< CoordinateVector<> >::size_type size =
+        restart_reader.read< std::vector< CoordinateVector<> >::size_type >();
+    _mask_velocities.resize(size);
+    for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+      _mask_velocities[i] = CoordinateVector<>(restart_reader);
     }
   }
 };
