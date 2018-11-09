@@ -51,6 +51,8 @@
 #include <cinttypes>
 #include <cmath>
 #include <fstream>
+#include <iostream>
+#include <unistd.h>
 #include <vector>
 
 /**
@@ -89,11 +91,11 @@ private:
 
   /// variables that control the random sampling
 
-  /*! @brief Pseudo-random number generator. */
-  RandomGenerator _random_generator;
-
   /*! @brief Update time interval (in s). */
   const double _update_interval;
+
+  /*! @brief Pseudo-random number generator. */
+  RandomGenerator _random_generator;
 
   /*! @brief Number of updates since the start of the simulation. */
   uint_fast32_t _number_of_updates;
@@ -450,9 +452,9 @@ public:
         _OB_mass_limit_in_Msol(OB_mass_limit /
                                PhysicalConstants::get_physical_constant(
                                    PHYSICALCONSTANT_SOLAR_MASS)),
-        _random_generator(seed),
         _update_interval(std::min(update_interval, 9.9e13)),
-        _number_of_updates(1), _output_file(nullptr), _next_index(0) {
+        _random_generator(seed), _number_of_updates(1), _output_file(nullptr),
+        _next_index(0) {
 
     if (log != nullptr && update_interval > 9.9e13) {
       log->write_warning("CaproniPhotonSourceDistribution update interval "
@@ -671,6 +673,156 @@ public:
       DensityGrid::iterator cell = grid.get_cell(position);
       cell.get_hydro_variables().set_energy_term(
           cell.get_hydro_variables().get_energy_term() + _boost_factor * 1.e44);
+    }
+  }
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_number_function_norm);
+    restart_writer.write(_UV_luminosity_norm);
+    restart_writer.write(_boost_factor);
+    restart_writer.write(_IMF_A);
+    restart_writer.write(_IMF_B);
+    restart_writer.write(_IMF_C);
+    restart_writer.write(_OB_mass_limit_in_Msol);
+    restart_writer.write(_update_interval);
+    _random_generator.write_restart_file(restart_writer);
+    restart_writer.write(_number_of_updates);
+    {
+      const auto size = _source_positions.size();
+      std::cerr << "Size: " << size << std::endl;
+      restart_writer.write(size);
+      for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+        _source_positions[i].write_restart_file(restart_writer);
+      }
+    }
+    {
+      const auto size = _source_lifetimes.size();
+      std::cerr << "Size: " << size << std::endl;
+      restart_writer.write(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        restart_writer.write(_source_lifetimes[i]);
+      }
+    }
+    {
+      const auto size = _source_luminosities.size();
+      std::cerr << "Size: " << size << std::endl;
+      restart_writer.write(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        restart_writer.write(_source_luminosities[i]);
+      }
+    }
+    {
+      const auto size = _OB_indices.size();
+      std::cerr << "Size: " << size << std::endl;
+      restart_writer.write(size);
+      for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+        restart_writer.write(_OB_indices[i]);
+      }
+    }
+    restart_writer.write(_total_source_luminosity);
+    restart_writer.write(_Oflag);
+    const bool has_output = (_output_file != nullptr);
+    restart_writer.write(has_output);
+    if (has_output) {
+      cmac_status("Output!");
+      // store current position in the std::ofstream
+      // we want to be able to continue writing from that point
+      const auto filepos = _output_file->tellp();
+      restart_writer.write(filepos);
+      {
+        const auto size = _source_indices.size();
+        std::cerr << "Size: " << size << std::endl;
+        restart_writer.write(size);
+        for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+          restart_writer.write(_source_indices[i]);
+        }
+      }
+      restart_writer.write(_next_index);
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline CaproniPhotonSourceDistribution(RestartReader &restart_reader)
+      : _number_function_norm(restart_reader.read< double >()),
+        _UV_luminosity_norm(restart_reader.read< double >()),
+        _boost_factor(restart_reader.read< double >()),
+        _IMF_A(restart_reader.read< double >()),
+        _IMF_B(restart_reader.read< double >()),
+        _IMF_C(restart_reader.read< double >()),
+        _OB_mass_limit_in_Msol(restart_reader.read< double >()),
+        _update_interval(restart_reader.read< double >()),
+        _random_generator(restart_reader),
+        _number_of_updates(restart_reader.read< uint_fast32_t >()) {
+
+    {
+      const std::vector< CoordinateVector<> >::size_type size =
+          restart_reader.read< std::vector< CoordinateVector<> >::size_type >();
+      std::cerr << "Size: " << size << std::endl;
+      _source_positions.resize(size);
+      for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
+        _source_positions[i] = CoordinateVector<>(restart_reader);
+      }
+    }
+    {
+      const std::vector< double >::size_type size =
+          restart_reader.read< std::vector< double >::size_type >();
+      std::cerr << "Size: " << size << std::endl;
+      _source_lifetimes.resize(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        _source_lifetimes[i] = restart_reader.read< double >();
+      }
+    }
+    {
+      const std::vector< double >::size_type size =
+          restart_reader.read< std::vector< double >::size_type >();
+      std::cerr << "Size: " << size << std::endl;
+      _source_luminosities.resize(size);
+      for (std::vector< double >::size_type i = 0; i < size; ++i) {
+        _source_luminosities[i] = restart_reader.read< double >();
+      }
+    }
+    {
+      const std::vector< uint_fast32_t >::size_type size =
+          restart_reader.read< std::vector< uint_fast32_t >::size_type >();
+      std::cerr << "Size: " << size << std::endl;
+      _OB_indices.resize(size);
+      for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+        _OB_indices[i] = restart_reader.read< uint_fast32_t >();
+      }
+    }
+    _total_source_luminosity = restart_reader.read< double >();
+    _Oflag = restart_reader.read< bool >();
+    const bool has_output = restart_reader.read< bool >();
+    if (has_output) {
+      cmac_status("Output.");
+      const std::streampos filepos = restart_reader.read< std::streampos >();
+      // truncate the original file to the size we were at
+      if (truncate("Caproni_source_positions.txt", filepos) != 0) {
+        cmac_error("Error while truncating output file!");
+      }
+      // now open the file in append mode
+      _output_file =
+          new std::ofstream("Caproni_source_positions.txt", std::ios_base::app);
+      {
+        const std::vector< uint_fast32_t >::size_type size =
+            restart_reader.read< std::vector< uint_fast32_t >::size_type >();
+        std::cerr << "Size: " << size << std::endl;
+        _source_indices.resize(size);
+        for (std::vector< uint_fast32_t >::size_type i = 0; i < size; ++i) {
+          _source_indices[i] = restart_reader.read< uint_fast32_t >();
+        }
+      }
+      _next_index = restart_reader.read< uint_fast32_t >();
     }
   }
 };

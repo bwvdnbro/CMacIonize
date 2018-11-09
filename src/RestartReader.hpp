@@ -59,6 +59,16 @@ public:
 };
 
 /**
+ * @brief RestartReader::read specialization for a bool.
+ *
+ * @return bool read from the restart file.
+ */
+template <> inline bool RestartReader::read() {
+  uint_least8_t boolean = read< uint_least8_t >();
+  return boolean > 0;
+}
+
+/**
  * @brief RestartReader::read specialization for a string.
  *
  * @return std::string read from the restart file.

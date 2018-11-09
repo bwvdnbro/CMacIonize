@@ -57,6 +57,16 @@ public:
 };
 
 /**
+ * @brief RestartWriter::write specialization for a bool.
+ *
+ * @param boolean bool to write to the restart file.
+ */
+template <> inline void RestartWriter::write(const bool &boolean) {
+  uint_least8_t value = boolean;
+  write(value);
+}
+
+/**
  * @brief RestartWriter::write specialization for a string.
  *
  * @param string std::string to write to the restart file.
