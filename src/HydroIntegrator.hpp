@@ -1224,7 +1224,7 @@ public:
       const double mean_molecular_mass =
           0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
 
-      double density, pressure;
+      double density, pressure, temperature;
       CoordinateVector<> velocity;
       if (mass <= 0.) {
         cmac_assert(mass == 0.);
@@ -1232,7 +1232,7 @@ public:
         density = 0.;
         velocity = CoordinateVector<>(0.);
         pressure = 0.;
-        ionization_variables.set_temperature(0.);
+        temperature = 0.;
       } else {
         density = mass / volume;
         velocity = momentum / mass;
@@ -1244,18 +1244,22 @@ public:
               (total_energy -
                0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
               volume;
-          ionization_variables.set_temperature(
-              mean_molecular_mass * _T_conversion_factor * pressure / density);
+          temperature =
+              mean_molecular_mass * _T_conversion_factor * pressure / density;
         } else {
-          const double temperature = ionization_variables.get_temperature();
+          temperature = ionization_variables.get_temperature();
           pressure = _P_conversion_factor * density * temperature /
                      mean_molecular_mass;
         }
       }
 
 #ifdef SAFE_HYDRO
-      density = std::max(density, 0.);
-      pressure = std::max(pressure, 0.);
+      if (density <= 0. || pressure <= 0.) {
+        density = 0.;
+        velocity = CoordinateVector<>(0.);
+        pressure = 0.;
+        temperature = 0.;
+      }
 #else
       cmac_assert_message(density >= 0., "density: %g, mass: %g, volume: %g",
                           density, mass, volume);
@@ -1264,6 +1268,7 @@ public:
           "pressure: %g, total energy: %g, velocity: %g %g %g, volume: %g",
           pressure, total_energy, velocity.x(), velocity.y(), velocity.z(),
           volume);
+      cmac_assert(temperature >= 0.);
 #endif
 
       it.get_hydro_variables().set_primitives_density(density);
@@ -1271,16 +1276,9 @@ public:
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
       ionization_variables.set_number_density(density * _n_conversion_factor);
-
-#ifdef SAFE_HYDRO
-      ionization_variables.set_number_density(
-          std::max(ionization_variables.get_number_density(), 0.));
-      ionization_variables.set_temperature(
-          std::max(ionization_variables.get_temperature(), 0.));
-#else
-      cmac_assert(ionization_variables.get_number_density() >= 0.);
-      cmac_assert(ionization_variables.get_temperature() >= 0.);
-#endif
+      if (_gamma > 1.) {
+        ionization_variables.set_temperature(temperature);
+      }
     }
 
     grid.set_grid_velocity(
