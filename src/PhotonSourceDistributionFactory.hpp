@@ -159,7 +159,7 @@ public:
     } else if (tag == typeid(SingleSupernovaPhotonSourceDistribution).name()) {
       return new SingleSupernovaPhotonSourceDistribution(restart_reader);
     } else {
-      cmac_error("Restarting is not supported for grid type: \"%s\".",
+      cmac_error("Restarting is not supported for distribution type: \"%s\".",
                  tag.c_str());
       return nullptr;
     }

@@ -74,6 +74,41 @@ public:
       return nullptr;
     }
   }
+
+  /**
+   * @brief Write the given mask to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   * @param mask HydroMask to write.
+   */
+  inline static void write_restart_file(RestartWriter &restart_writer,
+                                        HydroMask &mask) {
+
+    const std::string tag = typeid(mask).name();
+    restart_writer.write(tag);
+    mask.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart the distribution from the given restart file.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created HydroMask implementation. Memory
+   * management for the pointer needs to be done by the calling routine.
+   */
+  inline static HydroMask *restart(RestartReader &restart_reader,
+                                   Log *log = nullptr) {
+
+    const std::string tag = restart_reader.read< std::string >();
+    if (tag == typeid(RescaledICHydroMask).name()) {
+      return new RescaledICHydroMask(restart_reader);
+    } else {
+      cmac_error("Restarting is not supported for mask type: \"%s\".",
+                 tag.c_str());
+      return nullptr;
+    }
+  }
 };
 
 #endif // HYDROMASKFACTORY_HPP

@@ -67,5 +67,15 @@ int main(int argc, char **argv) {
           << v.x() << "\t" << v.y() << "\t" << v.z() << "\t" << P << "\n";
   }
 
+  /// restart test
+  {
+    RestartWriter restart_writer("rescaledichydromask.dump");
+    hydro_mask.write_restart_file(restart_writer);
+  }
+  {
+    RestartReader restart_reader("rescaledichydromask.dump");
+    RescaledICHydroMask restart_mask(restart_reader);
+  }
+
   return 0;
 }

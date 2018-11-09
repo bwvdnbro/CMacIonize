@@ -27,6 +27,7 @@
 #define HYDROMASK_HPP
 
 #include "DensityGrid.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief Masked out region where the hydrodynamics is artificially reset to a
@@ -58,6 +59,15 @@ public:
    */
   virtual void apply_mask(DensityGrid &grid, const double actual_timestep,
                           const double current_time) = 0;
+
+  /**
+   * @brief Write the mask to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+    cmac_error("Restarting not supported for this mask!");
+  }
 };
 
 #endif // HYDROMASK_HPP
