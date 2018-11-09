@@ -39,6 +39,8 @@
 #include "Lock.hpp"
 #include "Log.hpp"
 #include "Photon.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include "WorkDistributor.hpp"
@@ -74,13 +76,13 @@ protected:
   /*! @brief Ionization energy of helium (in Hz). */
   const double _ionization_energy_He;
 
+  /*! @brief Flag indicating whether hydro is active or not. */
+  const bool _has_hydro;
+
   /*! @brief Ionization calculation variables. */
   std::vector< IonizationVariables > _ionization_variables;
 
   /// hydro
-
-  /*! @brief Flag indicating whether hydro is active or not. */
-  const bool _has_hydro;
 
   /*! @brief Hydrodynamic variables. */
   std::vector< HydroVariables > _hydro_variables;
@@ -782,6 +784,64 @@ public:
       ntot += n;
     }
     return temperature / ntot;
+  }
+
+  /**
+   * @brief Write the general grid variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    _box.write_restart_file(restart_writer);
+    _periodicity_flags.write_restart_file(restart_writer);
+    restart_writer.write(_ionization_energy_H);
+    restart_writer.write(_ionization_energy_He);
+    restart_writer.write(_has_hydro);
+    {
+      const auto size = _ionization_variables.size();
+      restart_writer.write(size);
+      for (std::vector< IonizationVariables >::size_type i = 0; i < size; ++i) {
+        _ionization_variables[i].write_restart_file(restart_writer);
+      }
+    }
+    {
+      const auto size = _hydro_variables.size();
+      restart_writer.write(size);
+      for (std::vector< HydroVariables >::size_type i = 0; i < size; ++i) {
+        _hydro_variables[i].write_restart_file(restart_writer);
+      }
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline DensityGrid(RestartReader &restart_reader)
+      : _box(restart_reader), _periodicity_flags(restart_reader),
+        _ionization_energy_H(restart_reader.read< double >()),
+        _ionization_energy_He(restart_reader.read< double >()),
+        _has_hydro(restart_reader.read< bool >()) {
+
+    {
+      const std::vector< IonizationVariables >::size_type size =
+          restart_reader
+              .read< std::vector< IonizationVariables >::size_type >();
+      _ionization_variables.resize(size);
+      for (std::vector< IonizationVariables >::size_type i = 0; i < size; ++i) {
+        _ionization_variables[i] = IonizationVariables(restart_reader);
+      }
+    }
+    {
+      const std::vector< HydroVariables >::size_type size =
+          restart_reader.read< std::vector< HydroVariables >::size_type >();
+      _hydro_variables.resize(size);
+      for (std::vector< HydroVariables >::size_type i = 0; i < size; ++i) {
+        _hydro_variables[i] = HydroVariables(restart_reader);
+      }
+    }
   }
 };
 

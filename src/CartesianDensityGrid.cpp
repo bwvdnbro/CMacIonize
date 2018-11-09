@@ -48,8 +48,7 @@
 CartesianDensityGrid::CartesianDensityGrid(
     const Box<> &simulation_box, CoordinateVector< int_fast32_t > ncell,
     CoordinateVector< bool > periodic, bool hydro, Log *log)
-    : DensityGrid(simulation_box, periodic, hydro, log), _box(simulation_box),
-      _periodicity_flags(periodic), _ncell(ncell), _log(log) {
+    : DensityGrid(simulation_box, periodic, hydro, log), _ncell(ncell) {
 
   if (_log) {
     _log->write_status(
