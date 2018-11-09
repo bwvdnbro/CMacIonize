@@ -818,12 +818,13 @@ public:
    * @brief Restart constructor.
    *
    * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
    */
-  inline DensityGrid(RestartReader &restart_reader)
+  inline DensityGrid(RestartReader &restart_reader, Log *log = nullptr)
       : _box(restart_reader), _periodicity_flags(restart_reader),
         _ionization_energy_H(restart_reader.read< double >()),
         _ionization_energy_He(restart_reader.read< double >()),
-        _has_hydro(restart_reader.read< bool >()) {
+        _has_hydro(restart_reader.read< bool >()), _log(log) {
 
     {
       const std::vector< IonizationVariables >::size_type size =

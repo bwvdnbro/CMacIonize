@@ -79,6 +79,41 @@ public:
       return nullptr;
     }
   }
+
+  /**
+   * @brief Write the given density grid to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   * @param grid DensityGrid to write.
+   */
+  inline static void write_restart_file(RestartWriter &restart_writer,
+                                        DensityGrid &grid) {
+
+    const std::string tag = typeid(grid).name();
+    restart_writer.write(tag);
+    grid.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart the grid from the given restart file.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created DensityGrid implementation. Memory
+   * management for the pointer needs to be done by the calling routine.
+   */
+  inline static DensityGrid *restart(RestartReader &restart_reader,
+                                     Log *log = nullptr) {
+
+    const std::string tag = restart_reader.read< std::string >();
+    if (tag == typeid(CartesianDensityGrid).name()) {
+      return new CartesianDensityGrid(restart_reader, log);
+    } else {
+      cmac_error("Restarting is not supported for grid type: \"%s\".",
+                 tag.c_str());
+      return nullptr;
+    }
+  }
 };
 
 #endif // DENSITYGRIDFACTORY_HPP

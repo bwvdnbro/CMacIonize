@@ -240,9 +240,10 @@ public:
    * @brief Restart constructor.
    *
    * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
    */
-  inline CartesianDensityGrid(RestartReader &restart_reader)
-      : DensityGrid(restart_reader), _cellside(restart_reader),
+  inline CartesianDensityGrid(RestartReader &restart_reader, Log *log = nullptr)
+      : DensityGrid(restart_reader, log), _cellside(restart_reader),
         _inverse_cellside(restart_reader), _ncell(restart_reader) {}
 };
 
