@@ -96,6 +96,16 @@ public:
   */
   virtual void add_stellar_feedback(DensityGrid &grid,
                                     const double current_time) {}
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+    cmac_error(
+        "Restarting is not supported for this PhotonSourceDistribution!");
+  }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP
