@@ -81,6 +81,12 @@ int main(int argc, char **argv) {
     Box<> box(0., 1.);
     box.write_restart_file(*writer);
 
+    // bool
+    bool boolean_true = true;
+    bool boolean_false = false;
+    writer->write(boolean_true);
+    writer->write(boolean_false);
+
     // timer
     timevalue = timer.stop();
     timer.write_restart_file(*writer);
@@ -125,6 +131,12 @@ int main(int argc, char **argv) {
     Box<> box(*reader);
     assert_condition(box.get_anchor().x() == 0.);
     assert_condition(box.get_sides().x() == 1.);
+
+    // bool
+    bool boolean_true = reader->read< bool >();
+    bool boolean_false = reader->read< bool >();
+    assert_condition(boolean_true);
+    assert_condition(!boolean_false);
 
     // timer
     Timer timer(*reader);
