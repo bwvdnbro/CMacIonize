@@ -45,6 +45,13 @@ int main(int argc, char **argv) {
   SingleSupernovaPhotonSourceDistribution distribution(position, 10. * Myr_in_s,
                                                        1.e49, 1.e44);
 
+  // restart test
+  {
+    RestartWriter restart_writer(
+        "singlesupernovaphotonsourcedistribution.dump");
+    distribution.write_restart_file(restart_writer);
+  }
+
   HomogeneousDensityFunction testfunction(1., 2000.);
   testfunction.initialize();
   CartesianDensityGrid grid(Box<>(-1.5 * kpc_in_m, 3. * kpc_in_m), 32, false,
@@ -59,6 +66,14 @@ int main(int argc, char **argv) {
   assert_condition(cell.get_hydro_variables().get_energy_term() == 0.);
   distribution.add_stellar_feedback(grid, 10. * Myr_in_s);
   assert_condition(cell.get_hydro_variables().get_energy_term() == 1.e44);
+
+  // restart test
+  {
+    RestartReader restart_reader(
+        "singlesupernovaphotonsourcedistribution.dump");
+    SingleSupernovaPhotonSourceDistribution restart_distribution(
+        restart_reader);
+  }
 
   return 0;
 }

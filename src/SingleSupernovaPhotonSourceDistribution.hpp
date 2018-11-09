@@ -33,6 +33,8 @@
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief PhotonSourceDistribution without UV sources that mimicks a single
@@ -192,6 +194,31 @@ public:
       _has_exploded = true;
     }
   }
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    _position.write_restart_file(restart_writer);
+    restart_writer.write(_lifetime);
+    restart_writer.write(_luminosity);
+    restart_writer.write(_energy);
+    restart_writer.write(_has_exploded);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline SingleSupernovaPhotonSourceDistribution(RestartReader &restart_reader)
+      : _position(restart_reader), _lifetime(restart_reader.read< double >()),
+        _luminosity(restart_reader.read< double >()),
+        _energy(restart_reader.read< double >()),
+        _has_exploded(restart_reader.read< bool >()) {}
 };
 
 #endif // SINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_HPP
