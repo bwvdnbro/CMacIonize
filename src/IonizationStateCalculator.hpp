@@ -45,7 +45,7 @@ class RecombinationRates;
 class IonizationStateCalculator {
 private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
-  const double _luminosity;
+  double _luminosity;
 
   /*! @brief Abundances. */
   const Abundances &_abundances;
@@ -64,6 +64,15 @@ public:
 
   void calculate_ionization_state(double jfac,
                                   DensityGrid::iterator &cell) const;
+
+  /**
+   * @brief Update the total luminosity of the sources.
+   *
+   * @param luminosity New total luminosity for the sources (in s^-1).
+   */
+  inline void update_luminosity(const double luminosity) {
+    _luminosity = luminosity;
+  }
 
   static void compute_ionization_states_metals(
       const double j_metals[NUMBER_OF_IONNAMES - 2], const double ne,

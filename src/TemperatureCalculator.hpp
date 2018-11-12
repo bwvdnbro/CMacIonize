@@ -58,7 +58,7 @@ class RecombinationRates;
 class TemperatureCalculator {
 private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
-  const double _luminosity;
+  double _luminosity;
 
   /*! @brief Abundances. */
   const Abundances &_abundances;
@@ -87,7 +87,7 @@ private:
   const ChargeTransferRates &_charge_transfer_rates;
 
   /*! @brief IonizationStateCalculator used for low iteration numbers. */
-  const IonizationStateCalculator _ionization_state_calculator;
+  IonizationStateCalculator _ionization_state_calculator;
 
   /*! @brief Should the temperature computation be performed? */
   const bool _do_temperature_computation;
@@ -130,6 +130,16 @@ public:
 
   void calculate_temperature(double jfac, double hfac,
                              DensityGrid::iterator &cell) const;
+
+  /**
+   * @brief Update the total luminosity of the sources.
+   *
+   * @param luminosity New total luminosity for the sources (in s^-1).
+   */
+  inline void update_luminosity(const double luminosity) {
+    _luminosity = luminosity;
+    _ionization_state_calculator.update_luminosity(luminosity);
+  }
 
   /**
    * @brief Functor used to calculate the temperature of a single cell.
