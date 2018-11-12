@@ -96,6 +96,10 @@ private:
    *  is not affected by radiative effects (in K). */
   const double _shock_temperature;
 
+  /*! @brief Velocity limit. Gas velocities higher than this value are capped
+   *  (in m s^-1). */
+  const double _max_velocity;
+
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
   double _u_conversion_factor;
@@ -606,6 +610,7 @@ public:
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
    * @param shock_temperature Assumed temperature for shock heated gas (in K).
+   * @param max_velocity Maximum allowed velocity for the gas (in m s^-1).
    * @param boundary_xlow Type of boundary for the lower x boundary.
    * @param boundary_xhigh Type of boundary for the upper x boundary.
    * @param boundary_ylow Type of boundary for the lower y boundary.
@@ -624,6 +629,7 @@ public:
                          const double neutral_temperature = 100.,
                          const double ionised_temperature = 1.e4,
                          const double shock_temperature = 3.e4,
+                         const double max_velocity = DBL_MAX,
                          const std::string boundary_xlow = "reflective",
                          const std::string boundary_xhigh = "reflective",
                          const std::string boundary_ylow = "reflective",
@@ -638,7 +644,7 @@ public:
         _do_radiative_cooling(do_radiative_cooling),
         _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature),
-        _shock_temperature(shock_temperature),
+        _shock_temperature(shock_temperature), _max_velocity(max_velocity),
         _u_conversion_factor(PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN) *
                              _gm1_inv /
@@ -718,6 +724,8 @@ public:
    *  - shock temperature: Assumed temperature for shock heated gas. Gas at
    *    higher temperatures is not affected by radiative effects (default:
    *    3.e4 K)
+   *  - maximum velocity: Maximum allowed velocity for the gas. The gas velocity
+   *    is capped at this value (default: 1.e99 m s^-1)
    *  - boundary x low: Boundary condition type for the lower x boundary
    *    (periodic/reflective/inflow, default: reflective)
    *  - boundary x high: Boundary condition type for the upper x boundary
@@ -751,6 +759,8 @@ public:
                 "HydroIntegrator:ionised temperature", "1.e4 K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:shock temperature", "3.e4 K"),
+            params.get_physical_value< QUANTITY_VELOCITY >(
+                "HydroIntegrator:maximum velocity", "1.e99 m s^-1"),
             params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary x high",
@@ -818,8 +828,12 @@ public:
           it.get_ionization_variables().get_temperature();
 
       const double density = number_density * hydrogen_mass;
-      const CoordinateVector<> velocity =
+      CoordinateVector<> velocity =
           it.get_hydro_variables().get_primitives_velocity();
+      if (velocity.norm() > _max_velocity) {
+        velocity *= (_max_velocity / velocity.norm());
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+      }
       // we assume a completely neutral or completely ionized gas
       double pressure = density * _P_conversion_factor * temperature;
       if (temperature >= _ionised_temperature) {
@@ -1274,6 +1288,19 @@ public:
       it.get_hydro_variables().set_primitives_density(density);
       it.get_hydro_variables().set_primitives_velocity(velocity);
       it.get_hydro_variables().set_primitives_pressure(pressure);
+
+      // apply velocity cap
+      if (velocity.norm() > _max_velocity) {
+        velocity *= (_max_velocity / velocity.norm());
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+      }
+      const double cs = get_soundspeed(it);
+      if (cs > _max_velocity) {
+        // lower the pressure to reduce the sound speed
+        const double factor = _max_velocity / cs;
+        pressure *= factor * factor;
+        it.get_hydro_variables().set_primitives_pressure(pressure);
+      }
 
       ionization_variables.set_number_density(density * _n_conversion_factor);
       if (_gamma > 1.) {
