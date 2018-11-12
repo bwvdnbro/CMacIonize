@@ -843,6 +843,10 @@ public:
         _hydro_variables[i] = HydroVariables(restart_reader);
       }
     }
+
+#ifndef USE_LOCKFREE
+    _lock.resize(_ionization_variables.size());
+#endif
   }
 };
 

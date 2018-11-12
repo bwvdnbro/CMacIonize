@@ -26,6 +26,7 @@
 #ifndef RESTARTMANAGER_HPP
 #define RESTARTMANAGER_HPP
 
+#include "Log.hpp"
 #include "RestartReader.hpp"
 #include "RestartWriter.hpp"
 
@@ -50,11 +51,16 @@ public:
   /**
    * @brief Get a restart file for reading.
    *
+   * @param log Log to write logging info to.
    * @return Pointer to a newly created RestartReader. Memory management of the
    * pointer transfers to the caller.
    */
-  inline RestartReader *get_restart_reader() const {
-    return new RestartReader(_path + "/restart.dump");
+  inline RestartReader *get_restart_reader(Log *log = nullptr) const {
+    std::string filename = _path + "/restart.dump";
+    if (log != nullptr) {
+      log->write_status("Restarting from file ", filename, ".");
+    }
+    return new RestartReader(filename);
   }
 
   /**
@@ -66,6 +72,13 @@ public:
   inline RestartWriter *get_restart_writer() const {
     return new RestartWriter(_path + "/restart.dump");
   }
+
+  /**
+   * @brief Write a restart file?
+   *
+   * @return True if a restart file needs to be written.
+   */
+  inline bool write_restart_file() { return true; }
 };
 
 #endif // RESTARTMANAGER_HPP
