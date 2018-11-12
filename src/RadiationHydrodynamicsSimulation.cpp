@@ -158,8 +158,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   RestartReader *restart_reader = nullptr;
   if (parser.was_found("restart")) {
-    RestartManager restart_manager(parser.get_value< std::string >("restart"));
-    restart_reader = restart_manager.get_restart_reader(log);
+    restart_reader = RestartManager::get_restart_reader(
+        parser.get_value< std::string >("restart"), log);
     total_timer = Timer(*restart_reader);
     serial_timer = Timer(*restart_reader);
     parallel_timer = Timer(*restart_reader);
@@ -356,6 +356,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const bool do_stellar_feedback = params->get_value< bool >(
       "RadiationHydrodynamicsSimulation:use stellar feedback", false);
 
+  RestartManager restart_manager(*params);
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
@@ -480,7 +482,6 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     delete restart_reader;
     restart_reader = nullptr;
   }
-  RestartManager restart_manager(output_folder);
   RandomGenerator restart_seed_generator(random_seed);
   while (has_next_step) {
     ++num_step;
@@ -643,7 +644,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
     random_seed = restart_seed_generator.get_random_integer();
     if (restart_manager.write_restart_file()) {
-      RestartWriter *restart_writer = restart_manager.get_restart_writer();
+      RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
 
       total_timer.stop();
       total_timer.write_restart_file(*restart_writer);
