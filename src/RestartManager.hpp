@@ -56,6 +56,9 @@ private:
   /*! @brief Current number of backup files in the history. */
   uint_fast32_t _number_of_backups;
 
+  /*! @brief Number of restart files in the history. */
+  uint_fast32_t _number_of_restarts;
+
   /*! @brief Timer used to measure elapsed hardware time. */
   Timer _interval_timer;
 
@@ -74,7 +77,7 @@ public:
                         const uint_fast32_t maximum_number_of_backups)
       : _path(path), _output_interval(output_interval),
         _maximum_number_of_backups(maximum_number_of_backups),
-        _number_of_backups(0) {}
+        _number_of_backups(0), _number_of_restarts(0) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -150,18 +153,21 @@ public:
                      old_name.str().c_str());
         }
       }
-      std::string new_name = _path + "/restart.0.back";
-      if (std::rename(filename.c_str(), new_name.c_str()) != 0) {
-        cmac_error("Couldn't back up restart file \"%s\"!", filename.c_str());
-      }
-      if (_number_of_backups < _maximum_number_of_backups) {
-        ++_number_of_backups;
+      if (_number_of_restarts > 0) {
+        std::string new_name = _path + "/restart.0.back";
+        if (std::rename(filename.c_str(), new_name.c_str()) != 0) {
+          cmac_error("Couldn't back up restart file \"%s\"!", filename.c_str());
+        }
+        if (_number_of_backups < _maximum_number_of_backups) {
+          ++_number_of_backups;
+        }
       }
     }
 
     if (log != nullptr) {
       log->write_status("Writing restart file ", filename, ".");
     }
+    ++_number_of_restarts;
     return new RestartWriter(filename);
   }
 
