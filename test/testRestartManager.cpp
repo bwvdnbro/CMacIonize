@@ -40,7 +40,7 @@
  */
 int main(int argc, char **argv) {
 
-  RestartManager manager(".", 0.);
+  RestartManager manager(".", 0., 0);
 
   double timevalue;
   /// part 1: write a file
