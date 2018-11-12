@@ -32,6 +32,8 @@
 #include "RestartWriter.hpp"
 #include "Timer.hpp"
 
+#include <cstdio>
+#include <fstream>
 #include <string>
 
 /**
@@ -46,6 +48,14 @@ private:
    *  successive restart dump outputs (in s). */
   const double _output_interval;
 
+  /*! @brief Number of restart files in the history to back up. If more files
+   *  are in the history, the oldest one is deleted before a new restart file
+   *  is created. */
+  const uint_fast32_t _maximum_number_of_backups;
+
+  /*! @brief Current number of backup files in the history. */
+  uint_fast32_t _number_of_backups;
+
   /*! @brief Timer used to measure elapsed hardware time. */
   Timer _interval_timer;
 
@@ -56,9 +66,15 @@ public:
    * @param path Path to the folder where restart files are stored.
    * @param output_interval Time interval (in actual hardware simulation time)
    * in between successive restart dump outputs (in s).
+   * @param maximum_number_of_backups Number of restart files in the history to
+   * back up. If more files are in the history, the oldest one is deleted before
+   * a new restart file is created.
    */
-  inline RestartManager(const std::string path, const double output_interval)
-      : _path(path), _output_interval(output_interval) {}
+  inline RestartManager(const std::string path, const double output_interval,
+                        const uint_fast32_t maximum_number_of_backups)
+      : _path(path), _output_interval(output_interval),
+        _maximum_number_of_backups(maximum_number_of_backups),
+        _number_of_backups(0) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -68,6 +84,8 @@ public:
    *    .).
    *  - output interval: Interval in between successive restart dump outputs
    *    (in actual hardware simulation time; default: 3600. s).
+   *  - maximum number of backups: Maximum number of files in the history that
+   *    is backed up (default: 1).
    *
    * @param params ParameterFile to read from.
    */
@@ -75,7 +93,9 @@ public:
       : RestartManager(
             params.get_value< std::string >("RestartManager:path", "."),
             params.get_physical_value< QUANTITY_TIME >(
-                "RestartManager:output interval", "3600. s")) {}
+                "RestartManager:output interval", "3600. s"),
+            params.get_value< uint_fast32_t >(
+                "RestartManager:maximum number of backups", 1)) {}
 
   /**
    * @brief Get a restart file for reading.
@@ -112,8 +132,33 @@ public:
    * @return Pointer to a newly created RestartWriter. Memory management of the
    * pointer transfers to the caller.
    */
-  inline RestartWriter *get_restart_writer(Log *log = nullptr) const {
-    std::string filename = _path + "/restart.dump";
+  inline RestartWriter *get_restart_writer(Log *log = nullptr) {
+
+    const std::string filename = _path + "/restart.dump";
+
+    // first check if we need to back up old restart files
+    if (_maximum_number_of_backups > 0) {
+      for (uint_fast32_t i =
+               std::min(_maximum_number_of_backups - 1, _number_of_backups - 1);
+           i > 0; --i) {
+        std::stringstream old_name;
+        old_name << _path << "/restart." << (i - 1) << ".back";
+        std::stringstream new_name;
+        new_name << _path << "/restart." << i << ".back";
+        if (std::rename(old_name.str().c_str(), new_name.str().c_str()) != 0) {
+          cmac_error("Couldn't back up restart file \"%s\"!",
+                     old_name.str().c_str());
+        }
+      }
+      std::string new_name = _path + "/restart.0.back";
+      if (std::rename(filename.c_str(), new_name.c_str()) != 0) {
+        cmac_error("Couldn't back up restart file \"%s\"!", filename.c_str());
+      }
+      if (_number_of_backups < _maximum_number_of_backups) {
+        ++_number_of_backups;
+      }
+    }
+
     if (log != nullptr) {
       log->write_status("Writing restart file ", filename, ".");
     }
@@ -130,6 +175,27 @@ public:
     if (_interval_timer.interval() > _output_interval) {
       _interval_timer.reset();
       _interval_timer.start();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * @brief Check if we want to prematurely stop the simulation.
+   *
+   * This can be done by placing a file called "stop" in the restart folder.
+   *
+   * @return True if we want to stop.
+   */
+  inline bool stop_simulation() const {
+
+    const std::string filename = _path + "/stop";
+
+    std::ifstream sfile(filename);
+    if (sfile.is_open()) {
+      sfile.close();
+      std::remove(filename.c_str());
       return true;
     } else {
       return false;

@@ -482,8 +482,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     delete restart_reader;
     restart_reader = nullptr;
   }
+  bool stop_simulation = false;
   RandomGenerator restart_seed_generator(random_seed);
-  while (has_next_step) {
+  while (has_next_step && !stop_simulation) {
     ++num_step;
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
@@ -643,7 +644,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
         timeline->advance(requested_timestep, actual_timestep, current_time);
 
     random_seed = restart_seed_generator.get_random_integer();
-    if (restart_manager.write_restart_file()) {
+    stop_simulation = restart_manager.stop_simulation();
+    if (restart_manager.write_restart_file() || stop_simulation) {
       RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
 
       total_timer.stop();
@@ -685,10 +687,16 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
   }
 
-  // write snapshot
-  if (write_output) {
-    writer->write(*grid, hydro_lastsnap, *params, current_time,
-                  hydro_integrator->get_internal_units());
+  if (stop_simulation) {
+    if (log != nullptr) {
+      log->write_status("Prematurely stopping simulation on request.");
+    }
+  } else {
+    // write final snapshot
+    if (write_output) {
+      writer->write(*grid, hydro_lastsnap, *params, current_time,
+                    hydro_integrator->get_internal_units());
+    }
   }
 
   serial_timer.stop();
