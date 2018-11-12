@@ -35,6 +35,8 @@
 #include "CartesianDensityGrid.hpp"
 #include "VoronoiDensityGrid.hpp"
 
+#include <typeinfo>
+
 class SimulationBox;
 
 /**

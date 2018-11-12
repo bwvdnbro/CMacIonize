@@ -45,6 +45,7 @@
 #endif
 
 #include <string>
+#include <typeinfo>
 
 /**
  * @brief Factory class for PhotonSourceDistribution instances.
