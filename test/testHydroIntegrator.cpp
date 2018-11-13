@@ -115,8 +115,6 @@ int main(int argc, char **argv) {
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
-    assert_condition(integrator.get_internal_units() == nullptr);
-
     integrator.initialize_hydro_variables(grid);
 
     const InternalHydroUnits *hydro_units = integrator.get_internal_units();

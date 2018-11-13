@@ -314,14 +314,13 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   uint_fast64_t numphoton1 = params->get_value< uint_fast64_t >(
       "RadiationHydrodynamicsSimulation:number of photons first loop",
       numphoton);
-  double Q = source.get_total_luminosity();
 
   ChargeTransferRates charge_transfer_rates;
 
   // used to calculate both the ionization state and the temperature
   TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
-      Q, abundances, line_cooling_data, *recombination_rates,
-      charge_transfer_rates, *params, log);
+      source.get_total_luminosity(), abundances, line_cooling_data,
+      *recombination_rates, charge_transfer_rates, *params, log);
 
   // optional mask to fix the hydrodynamics in some parts of the box
   HydroMask *mask = nullptr;
