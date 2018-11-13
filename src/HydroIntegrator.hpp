@@ -705,6 +705,8 @@ public:
       cmac_error(
           "Bondi inflow boundaries only work if a Bondi profile is given.");
     }
+
+    _hydro_units = new InternalHydroUnits(1., 1., 1.);
   }
 
   /**
@@ -875,8 +877,8 @@ public:
     (void)avg_box_size;
     (void)avg_rho;
     (void)avg_P;
-    _hydro_units = new InternalHydroUnits(1., 1., 1.);
 #else
+    delete _hydro_units;
     _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
 #endif
 
