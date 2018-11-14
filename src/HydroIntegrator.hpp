@@ -495,25 +495,27 @@ private:
                            ngb.get_hydro_variables().get_conserved_mass() /
                            absmflux);
         }
-        const double absEflux = Eflux;
-        if (absEflux >
-            FLUX_LIMITER *
-                cell.get_hydro_variables().get_conserved_total_energy()) {
-          fluxfac = std::min(
-              fluxfac,
+        if (_hydro_integrator._gamma > 1.) {
+          const double absEflux = Eflux;
+          if (absEflux >
               FLUX_LIMITER *
-                  cell.get_hydro_variables().get_conserved_total_energy() /
-                  absEflux);
-        }
-        if (ngb != _grid_end &&
-            -absEflux >
+                  cell.get_hydro_variables().get_conserved_total_energy()) {
+            fluxfac = std::min(
+                fluxfac,
                 FLUX_LIMITER *
-                    ngb.get_hydro_variables().get_conserved_total_energy()) {
-          fluxfac = std::min(
-              fluxfac,
-              -FLUX_LIMITER *
-                  ngb.get_hydro_variables().get_conserved_total_energy() /
-                  absEflux);
+                    cell.get_hydro_variables().get_conserved_total_energy() /
+                    absEflux);
+          }
+          if (ngb != _grid_end &&
+              -absEflux >
+                  FLUX_LIMITER *
+                      ngb.get_hydro_variables().get_conserved_total_energy()) {
+            fluxfac = std::min(
+                fluxfac,
+                -FLUX_LIMITER *
+                    ngb.get_hydro_variables().get_conserved_total_energy() /
+                    absEflux);
+          }
         }
         // momentum flux limiter
         // note that we only apply this for cells that have high momentum, i.e.
