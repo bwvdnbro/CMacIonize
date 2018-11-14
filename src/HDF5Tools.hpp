@@ -1248,27 +1248,37 @@ inline void write_dataset(hid_t group, std::string name,
   const hid_t datatype = get_datatype_name< _datatype_ >();
 
   // create dataspace
-  const hsize_t dims[1] = {values.size()};
+  const uint_fast32_t vsize = values.size();
+  const uint_fast32_t limit = 1 << 10;
+  const hsize_t dims[1] = {vsize};
+  const hsize_t chunk[1] = {std::min(vsize, limit)};
   const hid_t filespace = H5Screate_simple(1, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
+  // enable data compression
+  const hid_t prop = H5Pcreate(H5P_DATASET_CREATE);
+  H5Pset_chunk(prop, 1, chunk);
+  H5Pset_fletcher32(prop);
+  H5Pset_shuffle(prop);
+  H5Pset_deflate(prop, 9);
+
 // create dataset
 #ifdef HDF5_OLD_API
   const hid_t dataset =
-      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+      H5Dcreate(group, name.c_str(), datatype, filespace, prop);
 #else
   const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                                  H5P_DEFAULT, prop, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
   }
 
   // write dataset
-  _datatype_ *data = new _datatype_[values.size()];
-  for (size_t i = 0; i < values.size(); ++i) {
+  _datatype_ *data = new _datatype_[vsize];
+  for (size_t i = 0; i < vsize; ++i) {
     data[i] = values[i];
   }
   herr_t hdf5status =
@@ -1306,27 +1316,37 @@ inline void write_dataset(hid_t group, std::string name,
   const hid_t datatype = get_datatype_name< double >();
 
   // create dataspace
-  const hsize_t dims[2] = {values.size(), 3};
+  const uint_fast32_t vsize = values.size();
+  const uint_fast32_t limit = 1 << 10;
+  const hsize_t dims[2] = {vsize, 3};
+  const hsize_t chunk[2] = {std::min(vsize, limit), 3};
   const hid_t filespace = H5Screate_simple(2, dims, nullptr);
   if (filespace < 0) {
     cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
   }
 
+  // enable data compression
+  const hid_t prop = H5Pcreate(H5P_DATASET_CREATE);
+  H5Pset_chunk(prop, 2, chunk);
+  H5Pset_fletcher32(prop);
+  H5Pset_shuffle(prop);
+  H5Pset_deflate(prop, 9);
+
 // create dataset
 #ifdef HDF5_OLD_API
   const hid_t dataset =
-      H5Dcreate(group, name.c_str(), datatype, filespace, H5P_DEFAULT);
+      H5Dcreate(group, name.c_str(), datatype, filespace, prop);
 #else
   const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
-                                  H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                                  H5P_DEFAULT, prop, H5P_DEFAULT);
 #endif
   if (dataset < 0) {
     cmac_error("Failed to create dataset \"%s\"", name.c_str());
   }
 
   // write dataset
-  double *data = new double[3 * values.size()];
-  for (size_t i = 0; i < values.size(); ++i) {
+  double *data = new double[3 * vsize];
+  for (size_t i = 0; i < vsize; ++i) {
     data[3 * i] = values[i].x();
     data[3 * i + 1] = values[i].y();
     data[3 * i + 2] = values[i].z();
