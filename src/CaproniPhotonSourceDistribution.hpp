@@ -815,6 +815,16 @@ public:
       }
       _next_index = restart_reader.read< uint_fast32_t >();
     }
+
+    // make sure the O star distribution is up to date
+    _OB_indices.clear();
+    _total_source_luminosity = 0.;
+    for (uint_fast32_t i = 0; i < _source_positions.size(); ++i) {
+      if (_source_luminosities[i] > 0.) {
+        _OB_indices.push_back(i);
+        _total_source_luminosity += _source_luminosities[i];
+      }
+    }
   }
 };
 
