@@ -28,6 +28,8 @@
 
 #include "Box.hpp"
 
+#include <vector>
+
 /*! @brief Morton key type. */
 typedef uint64_t morton_key_t;
 
