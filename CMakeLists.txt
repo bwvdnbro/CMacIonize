@@ -198,6 +198,9 @@ add_compiler_flag("-Wall -Werror" OPTIONAL)
 #  before running the code)
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   add_compiler_flag("-fsanitize=address -fno-omit-frame-pointer" OPTIONAL)
+  add_configuration_option(DEBUG_BUILD True)
+else(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_configuration_option(DEBUG_BUILD False)
 endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
 # Add a Profile CMAKE_BUILD_TYPE

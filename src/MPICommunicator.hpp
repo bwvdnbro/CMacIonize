@@ -46,14 +46,14 @@
 #include <unistd.h>
 #endif
 
-#if defined(__clang__)
+#if defined(__clang__) && defined(DEBUG_BUILD)
 // header containing functions to temporarily disable the address sanitizer
 #include <sanitizer/lsan_interface.h>
 #endif
 
 /*! @brief Temporarily disable instrumentation for memory allocations done
  *  between the call to this macro, and the call to NO_LEAK_CHECK_END. */
-#if defined(__clang__)
+#if defined(__clang__) && defined(DEBUG_BUILD)
 #define NO_LEAK_CHECK_BEGIN __lsan_disable();
 #else
 #define NO_LEAK_CHECK_BEGIN
@@ -61,7 +61,7 @@
 
 /*! @brief Re-enable instrumentation after it was disabled by
  *  NO_LEAK_CHECK_BEGIN. */
-#if defined(__clang__)
+#if defined(__clang__) && defined(DEBUG_BUILD)
 #define NO_LEAK_CHECK_END __lsan_enable();
 #else
 #define NO_LEAK_CHECK_END
