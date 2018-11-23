@@ -53,6 +53,37 @@
  *  - default mode: used if no other mode is chosen. In this mode, the
  *    photoionization code is run to post-process an existing density field.
  *
+ * The program accepts the following general command line arguments (more are
+ * added in RadiationHydrodynamicsSimulation::add_command_line_parameters):
+ *  - params ('p', required, string argument): name of the parameter file that
+ *    contains all parameters for the run.
+ *  - verbose ('v', optional, no argument): set the log level to the lowest
+ *    possible value, which means a maximal ammount of information written to
+ *    the Log.
+ *  - logfile ('l', optional, string argument): if present, write logging info
+ *    to a file with the given name, rather than to the terminal window
+ *    (default file name: CMacIonize_run.log).
+ *  - dirty ('d', optional, no argument): allow the code to run even when
+ *    uncommitted changes are detected by git describe (meaning that the run is
+ *    potentially irreproducible).
+ *  - thread ('t', optional, integer argument): number of shared memory parallel
+ *    threads to use while running the code (default: 1). If the given number is
+ *    higher than the available number of threads, the maximum available number
+ *    is used instead.
+ *  - dry-run ('n', optional, no argument): exit the simulation before the main
+ *    simulation loop starts, but after all parameters have been parsed and all
+ *    objects have been created. Useful to test the parameter file and memory
+ *    requirements without actually running the simulation.
+ *  - use-version ('u', optional, string argument): enforce the given git
+ *    version tag (no default value). If the version tag returned by git
+ *    describe does not match this value, the simulation will abort.
+ *  - dusty-radiative-transfer (no abbreviation, optional, no argument): run the
+ *    code in dusty radiative transfer mode rather than photoionization mode.
+ *  - rhd (no abbreviation, optional, no argument): run the code in RHD mode
+ *    rather than photoionization mode.
+ *  - output-statistics ('s', optional, no argument): output statistics about
+ *    the photon packets at the end of each iteration.
+ *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
@@ -64,6 +95,9 @@ int main(int argc, char **argv) {
   MPICommunicator comm(argc, argv);
   bool write_log = (comm.get_rank() == 0);
   bool write_output = (comm.get_rank() == 0);
+
+  // install signal handlers
+  OperatingSystem::install_signal_handlers();
 
   Timer programtimer;
 
@@ -115,9 +149,13 @@ int main(int argc, char **argv) {
   parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
                               "instead of an ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("output_statistics", 's',
+  parser.add_option("output-statistics", 's',
                     "Output statistical information about the photons.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+
+  // add simulation type specific parameters
+  RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
+
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -221,7 +259,7 @@ int main(int argc, char **argv) {
 
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
-        parser.get_value< bool >("output_statistics"),
+        parser.get_value< bool >("output-statistics"),
         parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"), &comm, log);
 

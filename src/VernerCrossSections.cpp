@@ -27,7 +27,7 @@
 #include "Error.hpp"
 #include "PhysicalConstants.hpp"
 #include "VernerCrossSectionsDataLocation.hpp"
-#include <cassert>
+#include <cinttypes>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -256,7 +256,7 @@ double VernerCrossSections::get_cross_section_verner(uint_fast8_t nz,
  * @return Photoionization cross section for the given ion and for the given
  * photon energy (in m^2).
  */
-double VernerCrossSections::get_cross_section(IonName ion,
+double VernerCrossSections::get_cross_section(int_fast32_t ion,
                                               double energy) const {
   switch (ion) {
 
@@ -304,7 +304,7 @@ double VernerCrossSections::get_cross_section(IonName ion,
     return get_cross_section_verner(16, 13, 5, energy);
 
   default:
-    cmac_error("Unknown ion: %i", ion);
+    cmac_error("Unknown ion: %" PRIiFAST32, ion);
   }
   return 0.;
 }

@@ -37,8 +37,8 @@ CMacIonizeVoronoiGeneratorDistribution::CMacIonizeVoronoiGeneratorDistribution(
     const Box<> &simulation_box, ParameterFile &params)
     : _next_index(0) {
 
-  std::string filename = params.get_value< std::string >(
-      "DensityGrid:VoronoiGeneratorDistribution:filename");
+  std::string filename =
+      params.get_filename("DensityGrid:VoronoiGeneratorDistribution:filename");
 
   HDF5Tools::initialize();
 

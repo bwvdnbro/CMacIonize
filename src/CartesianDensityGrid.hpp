@@ -46,26 +46,17 @@ class SimulationBox;
  */
 class CartesianDensityGrid : public DensityGrid {
 private:
-  /*! @brief Box containing the grid. */
-  Box<> _box;
-
-  /*! @brief Periodicity flags. */
-  CoordinateVector< bool > _periodicity_flags;
-
-  /*! @brief Side lengths of a single cell. */
+  /*! @brief Side lengths of a single cell (in m). */
   CoordinateVector<> _cellside;
 
-  /*! @brief Maximal cell side among the three dimensions. */
-  double _cellside_max;
+  /*! @brief Inverse side lengths of a single cell. */
+  CoordinateVector<> _inverse_cellside;
 
   /*! @brief Number of cells per dimension.
    *
    * Note that we do not store these as unsigned integer values, as we need to
    * be able to store negative index values. */
   CoordinateVector< int_fast32_t > _ncell;
-
-  /*! @brief Log to write log messages to. */
-  Log *_log;
 
   /**
    * @brief Convert the given long index into a three component index.
@@ -192,11 +183,11 @@ public:
     return get_cell_volume(get_indices(long_index));
   }
 
-  CoordinateVector<>
-  get_wall_intersection(CoordinateVector<> &photon_origin,
-                        CoordinateVector<> &photon_direction, Box<> &cell,
-                        CoordinateVector< int_fast8_t > &next_index,
-                        double &ds) const;
+  static CoordinateVector<> get_wall_intersection(
+      const CoordinateVector<> &photon_origin,
+      const CoordinateVector<> &photon_direction,
+      const CoordinateVector<> &inverse_photon_direction, const Box<> &cell,
+      CoordinateVector< int_fast8_t > &next_index, double &ds);
 
   virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
@@ -226,7 +217,34 @@ public:
                   CoordinateVector<> > >
   get_neighbours(cellsize_t index);
 
-  virtual std::vector< Face > get_faces(unsigned long index) const;
+  virtual std::vector< Face > get_faces(size_t index) const;
+
+  /**
+   * @brief Write the general grid variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    // first call the equivalent function for the parent class, as we need to
+    // make sure this comes first in the file
+    DensityGrid::write_restart_file(restart_writer);
+
+    // now do the CartesianDensityGrid specific variables
+    _cellside.write_restart_file(restart_writer);
+    _inverse_cellside.write_restart_file(restart_writer);
+    _ncell.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   */
+  inline CartesianDensityGrid(RestartReader &restart_reader, Log *log = nullptr)
+      : DensityGrid(restart_reader, log), _cellside(restart_reader),
+        _inverse_cellside(restart_reader), _ncell(restart_reader) {}
 };
 
 #endif // CARTESIANDENSITYGRID_HPP

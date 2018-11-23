@@ -35,6 +35,7 @@
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CoordinateVector.hpp"
 #include "CrossSectionsFactory.hpp"
+#include "DeRijckeRadiativeCooling.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
@@ -42,8 +43,10 @@
 #include "DiffuseReemissionHandler.hpp"
 #include "DustSimulation.hpp"
 #include "EmissivityCalculator.hpp"
+#include "ExternalPotentialFactory.hpp"
 #include "FileLog.hpp"
 #include "HydroIntegrator.hpp"
+#include "HydroMaskFactory.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "IonizationSimulation.hpp"
 #include "LineCoolingData.hpp"
@@ -53,11 +56,13 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
+#include "RestartManager.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "TimeLine.hpp"
 #include "Timer.hpp"
+#include "TreeSelfGravity.hpp"
 #include "WorkDistributor.hpp"
 #include "WorkEnvironment.hpp"
 
@@ -73,6 +78,29 @@
 #define stop_parallel_timing_block()                                           \
   parallel_timer.stop();                                                       \
   serial_timer.start();
+
+/**
+ * @brief Add RHD simulation specific command line options to the command line
+ * parser.
+ *
+ * The following parameters are added:
+ *  - output-time-unit (no abbreviation, optional, string argument): unit used
+ *    for time values that are written to the Log (default: s).
+ *  - restart (no abbreviation, optional, string argument): restart a run from
+ *    the restart file stored in the given folder (default: .).
+ *
+ * @param parser CommandLineParser that has not yet parsed the command line
+ * options.
+ */
+void RadiationHydrodynamicsSimulation::add_command_line_parameters(
+    CommandLineParser &parser) {
+  parser.add_option("output-time-unit", 0,
+                    "Unit for time stat output to the terminal.",
+                    COMMANDLINEOPTION_STRINGARGUMENT, "s");
+  parser.add_option("restart", 0,
+                    "Restart from the restart file stored in the given folder.",
+                    COMMANDLINEOPTION_STRINGARGUMENT, ".");
+}
 
 /**
  * @brief Perform an RHD simulation.
@@ -99,6 +127,18 @@
  *    photoionization algorithm (default: 1e5)
  *  - number of photons first loop: Number of photons to use during the first
  *    iteration of the photoionization algorithm (default: (number of photons))
+ *  - use mask: Use a mask to keep the hydrodynamics fixed in part of the box?
+ *    (default: false)
+ *  - use potential: Use an external point mass potential as extra gravitational
+ *    force (default: false)
+ *  - maximum neutral fraction: Maximum value of the hydrogen neutral fraction
+ *    that is allowed at the start of a radiation step (negative values do not
+ *    impose an upper limit, default: -1)
+ *  - use self gravity: Add the gravitational force due to the gas itself
+ *    (default: false)
+ *  - use cooling: Add external cooling (default: false)
+ *  - use stellar feedback: Add stellar feedback (using the Caproni dwarf
+ *    galaxy rates; default: false)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -116,6 +156,15 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   Timer serial_timer;
   Timer parallel_timer;
 
+  RestartReader *restart_reader = nullptr;
+  if (parser.was_found("restart")) {
+    restart_reader = RestartManager::get_restart_reader(
+        parser.get_value< std::string >("restart"), log);
+    total_timer = Timer(*restart_reader);
+    serial_timer = Timer(*restart_reader);
+    parallel_timer = Timer(*restart_reader);
+  }
+
   total_timer.start();
   serial_timer.start();
 
@@ -126,6 +175,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   WorkEnvironment::set_max_num_threads(
       parser.get_value< int_fast32_t >("threads"));
 
+  // set the unit for time stats terminal output
+  std::string output_time_unit =
+      parser.get_value< std::string >("output-time-unit");
+
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
   // stored in a CMake configured header
@@ -133,59 +186,87 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
-  ParameterFile params(parser.get_value< std::string >("params"));
+  ParameterFile *params = nullptr;
+  if (restart_reader == nullptr) {
+    params = new ParameterFile(parser.get_value< std::string >("params"));
+  } else {
+    params = new ParameterFile(*restart_reader);
+  }
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
   DensityFunction *density_function =
-      DensityFunctionFactory::generate(params, log);
-  DensityMask *density_mask = DensityMaskFactory::generate(params, log);
-  CrossSections *cross_sections = CrossSectionsFactory::generate(params, log);
+      DensityFunctionFactory::generate(*params, log);
+  DensityMask *density_mask = DensityMaskFactory::generate(*params, log);
+  CrossSections *cross_sections = CrossSectionsFactory::generate(*params, log);
   RecombinationRates *recombination_rates =
-      RecombinationRatesFactory::generate(params, log);
+      RecombinationRatesFactory::generate(*params, log);
 
   // initialize the simulation box
-  const SimulationBox simulation_box(params);
+  const SimulationBox simulation_box(*params);
 
   HydroIntegrator *hydro_integrator =
-      new HydroIntegrator(simulation_box, params);
-  const double hydro_total_time = params.get_physical_value< QUANTITY_TIME >(
+      new HydroIntegrator(simulation_box, *params);
+  const double hydro_total_time = params->get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:total time", "1. s");
 
-  double hydro_minimum_timestep = params.get_physical_value< QUANTITY_TIME >(
+  double hydro_minimum_timestep = params->get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:minimum timestep", "-1. s");
   if (hydro_minimum_timestep < 0.) {
-    hydro_minimum_timestep = 0.01 * hydro_total_time;
+    hydro_minimum_timestep = 1.e-10 * hydro_total_time;
   }
 
-  double hydro_maximum_timestep = params.get_physical_value< QUANTITY_TIME >(
+  double hydro_maximum_timestep = params->get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:maximum timestep", "-1. s");
   if (hydro_maximum_timestep < 0.) {
     hydro_maximum_timestep = 0.1 * hydro_total_time;
   }
 
-  double hydro_snaptime = params.get_physical_value< QUANTITY_TIME >(
+  double hydro_snaptime = params->get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:snapshot time", "-1. s");
   if (hydro_snaptime < 0.) {
     hydro_snaptime = 0.1 * hydro_total_time;
   }
   uint_fast32_t hydro_lastsnap = 1;
+  if (restart_reader != nullptr) {
+    hydro_lastsnap = restart_reader->read< uint_fast32_t >();
+  }
 
-  const double hydro_radtime = params.get_physical_value< QUANTITY_TIME >(
+  const double hydro_radtime = params->get_physical_value< QUANTITY_TIME >(
       "RadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
+  if (restart_reader != nullptr) {
+    hydro_lastrad = restart_reader->read< uint_fast32_t >();
+  }
 
-  DensityGrid *grid =
-      DensityGridFactory::generate(simulation_box, params, true, log);
+  const double maximum_neutral_fraction = params->get_value< double >(
+      "RadiationHydrodynamicsSimulation:maximum neutral fraction", -1.);
+
+  DensityGrid *grid = nullptr;
+  if (restart_reader == nullptr) {
+    grid = DensityGridFactory::generate(simulation_box, *params, true, log);
+  } else {
+    grid = DensityGridFactory::restart(*restart_reader, log);
+  }
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
-  PhotonSourceDistribution *sourcedistribution =
-      PhotonSourceDistributionFactory::generate(params, log);
-  int_fast32_t random_seed = params.get_value< int_fast32_t >(
+  PhotonSourceDistribution *sourcedistribution = nullptr;
+  if (restart_reader == nullptr) {
+    sourcedistribution =
+        PhotonSourceDistributionFactory::generate(*params, log);
+  } else {
+    sourcedistribution =
+        PhotonSourceDistributionFactory::restart(*restart_reader, log);
+  }
+  int_fast32_t random_seed = params->get_value< int_fast32_t >(
       "RadiationHydrodynamicsSimulation:random seed", 42);
+  if (restart_reader != nullptr) {
+    // make sure we do not use the same random seed as used initially...
+    random_seed = restart_reader->read< int_fast32_t >();
+  }
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
-      "PhotonSourceSpectrum", params, log);
+      "PhotonSourceSpectrum", *params, log);
 
   if (sourcedistribution != nullptr && spectrum == nullptr) {
     cmac_error("No spectrum provided for the discrete photon sources!");
@@ -197,11 +278,11 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   }
 
   ContinuousPhotonSource *continuoussource =
-      ContinuousPhotonSourceFactory::generate(simulation_box.get_box(), params,
+      ContinuousPhotonSourceFactory::generate(simulation_box.get_box(), *params,
                                               log);
   PhotonSourceSpectrum *continuousspectrum =
       PhotonSourceSpectrumFactory::generate("ContinuousPhotonSourceSpectrum",
-                                            params, log);
+                                            *params, log);
 
   if (continuoussource != nullptr && continuousspectrum == nullptr) {
     cmac_error("No spectrum provided for the continuous photon sources!");
@@ -212,42 +293,76 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                  "ignored.");
   }
 
-  Abundances abundances(params, log);
+  Abundances abundances(*params, log);
 
   PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, *cross_sections, params,
+                      continuousspectrum, abundances, *cross_sections, *params,
                       log);
 
   // set up output
   std::string output_folder =
-      Utilities::get_absolute_path(params.get_value< std::string >(
+      Utilities::get_absolute_path(params->get_value< std::string >(
           "RadiationHydrodynamicsSimulation:output folder", "."));
   DensityGridWriter *writer =
-      DensityGridWriterFactory::generate(output_folder, params, log);
+      DensityGridWriterFactory::generate(output_folder, *params, true, log);
 
-  uint_fast32_t nloop = params.get_value< uint_fast32_t >(
+  uint_fast32_t nloop = params->get_value< uint_fast32_t >(
       "RadiationHydrodynamicsSimulation:number of iterations", 10);
 
-  uint_fast64_t numphoton = params.get_value< uint_fast64_t >(
+  uint_fast64_t numphoton = params->get_value< uint_fast64_t >(
       "RadiationHydrodynamicsSimulation:number of photons", 1e5);
-  uint_fast64_t numphoton1 = params.get_value< uint_fast64_t >(
+  uint_fast64_t numphoton1 = params->get_value< uint_fast64_t >(
       "RadiationHydrodynamicsSimulation:number of photons first loop",
       numphoton);
-  double Q = source.get_total_luminosity();
 
   ChargeTransferRates charge_transfer_rates;
 
   // used to calculate both the ionization state and the temperature
   TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
-      Q, abundances, line_cooling_data, *recombination_rates,
-      charge_transfer_rates, params, log);
+      source.get_total_luminosity(), abundances, line_cooling_data,
+      *recombination_rates, charge_transfer_rates, *params, log);
+
+  // optional mask to fix the hydrodynamics in some parts of the box
+  HydroMask *mask = nullptr;
+  const bool use_mask = params->get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use mask", false);
+  if (use_mask) {
+    if (restart_reader == nullptr) {
+      mask = HydroMaskFactory::generate(*params, log);
+    } else {
+      mask = HydroMaskFactory::restart(*restart_reader, log);
+    }
+  }
+
+  // optional external point mass potential
+  ExternalPotential *potential =
+      ExternalPotentialFactory::generate(*params, log);
+  if (params->get_value< bool >(
+          "RadiationHydrodynamicsSimulation:use potential", false) &&
+      potential == nullptr) {
+    cmac_error("No external potential provided!");
+  }
+
+  const bool do_self_gravity = params->get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use self gravity", false);
+
+  DeRijckeRadiativeCooling *cooling_function = nullptr;
+  if (params->get_value< bool >("RadiationHydrodynamicsSimulation:use cooling",
+                                false)) {
+    cooling_function = new DeRijckeRadiativeCooling();
+  }
+
+  const bool do_stellar_feedback = params->get_value< bool >(
+      "RadiationHydrodynamicsSimulation:use stellar feedback", false);
+
+  RestartManager restart_manager(*params);
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
-  if (write_output) {
+  if (write_output && restart_reader == nullptr) {
     std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
-    params.print_contents(pfile);
+    params->print_contents(pfile);
     pfile.close();
     if (log) {
       log->write_status("Wrote used parameters to ", output_folder,
@@ -262,6 +377,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     return 0;
   }
 
+  std::pair< cellsize_t, cellsize_t > block =
+      std::make_pair(0, grid->get_number_of_cells());
   if (log) {
     log->write_status("Initializing DensityFunction...");
   }
@@ -270,23 +387,31 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     log->write_status("Done.");
   }
 
-  // done writing file, now initialize grid
-  std::pair< cellsize_t, cellsize_t > block =
-      std::make_pair(0, grid->get_number_of_cells());
-  grid->initialize(block, *density_function);
+  if (restart_reader == nullptr) {
+    // done writing file, now initialize grid
+    grid->initialize(block, *density_function);
+  }
 
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
       workdistributor(parser.get_value< int_fast32_t >("threads"));
   const int_fast32_t worksize = workdistributor.get_worksize();
   Timer worktimer;
+  if (restart_reader != nullptr) {
+    worktimer = Timer(*restart_reader);
+  }
 
-  if (density_mask != nullptr) {
+  if (density_mask != nullptr && restart_reader == nullptr) {
     log->write_status("Initializing DensityMask...");
     density_mask->initialize(worksize);
     log->write_status("Done initializing mask. Applying mask...");
     density_mask->apply(*grid);
     log->write_status("Done applying mask.");
+  }
+
+  TreeSelfGravity *self_gravity = nullptr;
+  if (do_self_gravity) {
+    self_gravity = new TreeSelfGravity(*grid, 0.25);
   }
 
   if (log) {
@@ -297,11 +422,34 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   IonizationPhotonShootJobMarket photonshootjobs(source, random_seed, *grid, 0,
                                                  100, worksize);
 
-  // initialize the hydro variables (before we write the initial snapshot)
-  hydro_integrator->initialize_hydro_variables(*grid);
+  if (restart_reader == nullptr) {
+    // initialize the hydro variables (before we write the initial snapshot)
+    hydro_integrator->initialize_hydro_variables(*grid);
 
-  if (write_output) {
-    writer->write(*grid, 0, params);
+    // apply the mask if applicable
+    if (use_mask) {
+      mask->initialize_mask(*grid);
+      mask->apply_mask(*grid, 0, 0);
+    }
+
+    // update the gravitational accelerations if applicable (just to make sure
+    // they are present in the first snapshot)
+    if (potential != nullptr) {
+      for (auto it = grid->begin(); it != grid->end(); ++it) {
+        const CoordinateVector<> a =
+            potential->get_acceleration(it.get_cell_midpoint());
+        it.get_hydro_variables().set_gravitational_acceleration(a);
+      }
+    }
+
+    if (self_gravity != nullptr) {
+      self_gravity->compute_accelerations(*grid);
+    }
+
+    if (write_output) {
+      writer->write(*grid, 0, *params, 0.,
+                    hydro_integrator->get_internal_units());
+    }
   }
 
   double maximum_timestep = hydro_maximum_timestep;
@@ -310,20 +458,46 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     // ionization steps
     maximum_timestep = std::min(maximum_timestep, hydro_radtime);
   }
-  TimeLine timeline(0., hydro_total_time, hydro_minimum_timestep,
-                    maximum_timestep);
-  bool has_next_step = true;
-  uint_fast32_t num_step = 0;
-  while (has_next_step) {
-    double requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
-    double actual_timestep, current_time;
+
+  TimeLine *timeline = nullptr;
+  uint_fast32_t num_step;
+  double requested_timestep;
+  double actual_timestep, current_time;
+  bool has_next_step;
+  if (restart_reader == nullptr) {
+    timeline = new TimeLine(0., hydro_total_time, hydro_minimum_timestep,
+                            maximum_timestep, log);
+    num_step = 0;
+    requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
     has_next_step =
-        timeline.advance(requested_timestep, actual_timestep, current_time);
+        timeline->advance(requested_timestep, actual_timestep, current_time);
+  } else {
+    timeline = new TimeLine(*restart_reader);
+    num_step = restart_reader->read< uint_fast32_t >();
+    requested_timestep = restart_reader->read< double >();
+    has_next_step = restart_reader->read< bool >();
+    actual_timestep = restart_reader->read< double >();
+    current_time = restart_reader->read< double >();
+    delete restart_reader;
+    restart_reader = nullptr;
+  }
+  bool stop_simulation = false;
+  RandomGenerator restart_seed_generator(random_seed);
+  while (has_next_step && !stop_simulation) {
     ++num_step;
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
-                        (current_time - actual_timestep), " s, dt = ",
-                        actual_timestep, " s.");
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            current_time - actual_timestep, output_time_unit),
+                        ", dt = ",
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            actual_timestep, output_time_unit),
+                        ".");
+    }
+
+    // update the stellar feedback if applicable
+    if (do_stellar_feedback) {
+      sourcedistribution->add_stellar_feedback(*grid, current_time);
     }
 
     // finally: the actual program loop whereby the density grid is ray traced
@@ -334,7 +508,34 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     // decide whether or not to do the radiation step
     if (hydro_radtime < 0. ||
         (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
+
       ++hydro_lastrad;
+      // update the PhotonSource
+      if (sourcedistribution->update(current_time)) {
+        source.update(sourcedistribution);
+        temperature_calculator->update_luminosity(
+            source.get_total_luminosity());
+      }
+
+      if (source.get_total_luminosity() > 0.) {
+        // reset the neutral fractions if necessary
+        if (maximum_neutral_fraction > 0.) {
+          for (auto it = grid->begin(); it != grid->end(); ++it) {
+            if (it.get_ionization_variables().get_ionic_fraction(ION_H_n) >
+                maximum_neutral_fraction) {
+              it.get_ionization_variables().set_ionic_fraction(
+                  ION_H_n, maximum_neutral_fraction);
+            }
+          }
+        }
+      } else {
+        // there are no ionising sources: skip radiation for this step
+        nloop_step = 0;
+        // manually set all neutral fractions to 1
+        for (auto it = grid->begin(); it != grid->end(); ++it) {
+          it.get_ionization_variables().set_ionic_fraction(ION_H_n, 1.);
+        }
+      }
     } else {
       nloop_step = 0;
     }
@@ -384,7 +585,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       ++loop;
 
       if (write_output && every_iteration_output && loop < nloop_step) {
-        writer->write(*grid, loop, params);
+        writer->write(*grid, loop, *params, current_time,
+                      hydro_integrator->get_internal_units());
       }
     }
 
@@ -392,22 +594,108 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       log->write_status("Done with radiation step.");
     }
 
+    // update the gravitational accelerations if applicable
+    if (potential != nullptr) {
+      for (auto it = grid->begin(); it != grid->end(); ++it) {
+        const CoordinateVector<> a =
+            potential->get_acceleration(it.get_cell_midpoint());
+        it.get_hydro_variables().set_gravitational_acceleration(a);
+      }
+    }
+
+    if (self_gravity != nullptr) {
+      self_gravity->compute_accelerations(*grid);
+    }
+
+    // update the cooling terms if applicable
+    if (cooling_function != nullptr) {
+      for (auto it = grid->begin(); it != grid->end(); ++it) {
+        const double nH = it.get_ionization_variables().get_number_density();
+        const double nH2 = nH * nH;
+        const double cooling_rate =
+            cooling_function->get_cooling_rate(
+                it.get_ionization_variables().get_temperature()) *
+            nH2 * it.get_volume();
+        it.get_hydro_variables().set_energy_rate_term(-cooling_rate);
+      }
+    }
+
     hydro_integrator->do_hydro_step(*grid, actual_timestep, serial_timer,
                                     parallel_timer);
+
+    // apply the mask if applicable
+    if (use_mask) {
+      mask->apply_mask(*grid, actual_timestep, current_time);
+    }
 
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written
     // outside the integration loop
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
         has_next_step) {
-      writer->write(*grid, hydro_lastsnap, params, current_time);
+      writer->write(*grid, hydro_lastsnap, *params, current_time,
+                    hydro_integrator->get_internal_units());
       ++hydro_lastsnap;
+    }
+
+    requested_timestep = hydro_integrator->get_maximal_timestep(*grid);
+    has_next_step =
+        timeline->advance(requested_timestep, actual_timestep, current_time);
+
+    random_seed = restart_seed_generator.get_random_integer();
+    stop_simulation = restart_manager.stop_simulation();
+    if (restart_manager.write_restart_file() || stop_simulation) {
+      RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
+
+      total_timer.stop();
+      total_timer.write_restart_file(*restart_writer);
+      total_timer.start();
+
+      serial_timer.stop();
+      serial_timer.write_restart_file(*restart_writer);
+      serial_timer.start();
+
+      parallel_timer.write_restart_file(*restart_writer);
+
+      params->write_restart_file(*restart_writer);
+
+      restart_writer->write(hydro_lastsnap);
+      restart_writer->write(hydro_lastrad);
+
+      DensityGridFactory::write_restart_file(*restart_writer, *grid);
+
+      PhotonSourceDistributionFactory::write_restart_file(*restart_writer,
+                                                          *sourcedistribution);
+
+      restart_writer->write(random_seed);
+
+      if (mask != nullptr) {
+        HydroMaskFactory::write_restart_file(*restart_writer, *mask);
+      }
+
+      worktimer.write_restart_file(*restart_writer);
+
+      timeline->write_restart_file(*restart_writer);
+      restart_writer->write(num_step);
+      restart_writer->write(requested_timestep);
+      restart_writer->write(has_next_step);
+      restart_writer->write(actual_timestep);
+      restart_writer->write(current_time);
+
+      delete restart_writer;
     }
   }
 
-  // write snapshot
-  if (write_output) {
-    writer->write(*grid, hydro_lastsnap, params, hydro_total_time);
+  if (stop_simulation) {
+    if (log != nullptr) {
+      log->write_status("Prematurely stopping simulation on request.");
+    }
+  } else {
+    // write final snapshot
+    if (write_output) {
+      writer->write(*grid, hydro_lastsnap, *params, current_time,
+                    hydro_integrator->get_internal_units());
+    }
   }
 
   serial_timer.stop();
@@ -429,6 +717,18 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
 
+  if (cooling_function != nullptr) {
+    delete cooling_function;
+  }
+  if (self_gravity != nullptr) {
+    delete self_gravity;
+  }
+  if (potential != nullptr) {
+    delete potential;
+  }
+  if (use_mask) {
+    delete mask;
+  }
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;
   }
@@ -448,6 +748,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
   delete cross_sections;
   delete recombination_rates;
+
+  delete timeline;
+  delete params;
 
   // we cannot delete the log, since it is still used in the destructor of
   // objects that are destructed at the return of the main program

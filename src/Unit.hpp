@@ -122,7 +122,7 @@ public:
    * @return Reference to the resulting Unit.
    */
   inline Unit &operator^=(int_fast32_t power) {
-    if (power > 0) {
+    if (power >= 0) {
       int_fast32_t i = 1;
       double value = _value;
       while (i < power) {
@@ -235,6 +235,95 @@ public:
       }
     }
     return stream.str();
+  }
+
+  /**
+   * @brief Get the unit of a variable that represents the same quantity as this
+   * unit, but using the given basic unit system.
+   *
+   * @param unit_length Length unit.
+   * @param unit_time Time unit.
+   * @param unit_mass Mass unit.
+   * @param unit_temperature Temperature unit.
+   * @param unit_current Current unit.
+   * @param unit_angle Angle unit.
+   * @return New Unit that represents the same quantity as this unit.
+   */
+  inline Unit get_equivalent(const Unit &unit_length, const Unit &unit_time,
+                             const Unit &unit_mass,
+                             const Unit &unit_temperature,
+                             const Unit &unit_current,
+                             const Unit &unit_angle) const {
+
+    double value = 1.;
+    if (_length != 0) {
+      if (_length > 0) {
+        for (int i = 0; i < _length; ++i) {
+          value *= unit_length._value;
+        }
+      } else {
+        for (int i = 0; i < -_length; ++i) {
+          value /= unit_length._value;
+        }
+      }
+    }
+    if (_time != 0) {
+      if (_time > 0) {
+        for (int i = 0; i < _time; ++i) {
+          value *= unit_time._value;
+        }
+      } else {
+        for (int i = 0; i < -_time; ++i) {
+          value /= unit_time._value;
+        }
+      }
+    }
+    if (_mass != 0) {
+      if (_mass > 0) {
+        for (int i = 0; i < _mass; ++i) {
+          value *= unit_mass._value;
+        }
+      } else {
+        for (int i = 0; i < -_mass; ++i) {
+          value /= unit_mass._value;
+        }
+      }
+    }
+    if (_temperature != 0) {
+      if (_temperature > 0) {
+        for (int i = 0; i < _temperature; ++i) {
+          value *= unit_temperature._value;
+        }
+      } else {
+        for (int i = 0; i < -_temperature; ++i) {
+          value /= unit_temperature._value;
+        }
+      }
+    }
+    if (_current != 0) {
+      if (_current > 0) {
+        for (int i = 0; i < _current; ++i) {
+          value *= unit_current._value;
+        }
+      } else {
+        for (int i = 0; i < -_current; ++i) {
+          value /= unit_current._value;
+        }
+      }
+    }
+    if (_angle != 0) {
+      if (_angle > 0) {
+        for (int i = 0; i < _angle; ++i) {
+          value *= unit_angle._value;
+        }
+      } else {
+        for (int i = 0; i < -_angle; ++i) {
+          value /= unit_angle._value;
+        }
+      }
+    }
+
+    return Unit(value, _length, _time, _mass, _temperature, _current, _angle);
   }
 };
 

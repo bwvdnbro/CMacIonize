@@ -38,9 +38,9 @@
  */
 SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(false), _octree(nullptr) {
-}
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(false), _octree(nullptr) {}
 
 /**
  * @brief Constructor.
@@ -58,8 +58,9 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI,
                                      const double *box_anchor,
                                      const double *box_sides)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -85,8 +86,9 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI,
                                      const float *box_anchor,
                                      const float *box_sides)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -319,9 +321,11 @@ void SPHArrayInterface::fill_array(float *nH) {
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
  */
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
-                              ParameterFile &params, double time) {
+                              ParameterFile &params, double time,
+                              const InternalHydroUnits *hydro_units) {
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     const CoordinateVector<> p = it.get_cell_midpoint();
     uint_fast32_t closest = _octree->get_closest_ngb(p);

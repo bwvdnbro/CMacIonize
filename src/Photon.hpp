@@ -59,6 +59,9 @@ private:
   /*! @brief Current direction the photon is moving in. */
   CoordinateVector<> _direction;
 
+  /*! @brief Inverse of the movement direction. */
+  CoordinateVector<> _inverse_direction;
+
   /*! @brief Current energy contents of the photon (in Hz). */
   double _energy;
 
@@ -92,8 +95,11 @@ public:
    */
   inline Photon(CoordinateVector<> position, CoordinateVector<> direction,
                 double energy)
-      : _position(position), _direction(direction), _energy(energy),
-        _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY), _weight(1.) {
+      : _position(position), _direction(direction),
+        _inverse_direction(1. / direction.x(), 1. / direction.y(),
+                           1. / direction.z()),
+        _energy(energy), _cross_section_He_corr(0.), _type(PHOTONTYPE_PRIMARY),
+        _weight(1.) {
 
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _cross_sections[i] = 0.;
@@ -119,6 +125,15 @@ public:
   inline CoordinateVector<> get_direction() const { return _direction; }
 
   /**
+   * @brief Get the inverse of the direction the photon is currently moving in.
+   *
+   * @return Inverse current movement direction of the photon.
+   */
+  inline CoordinateVector<> get_inverse_direction() const {
+    return _inverse_direction;
+  }
+
+  /**
    * @brief Get the current energy of the photon.
    *
    * @return Current energy of the photon (in Hz).
@@ -131,7 +146,7 @@ public:
    * @param ion IonName of a valid ion.
    * @return Ionization cross section (in m^2).
    */
-  inline double get_cross_section(IonName ion) const {
+  inline double get_cross_section(int_fast32_t ion) const {
     return _cross_sections[ion];
   }
 
@@ -167,6 +182,9 @@ public:
    */
   inline void set_direction(CoordinateVector<> direction) {
     _direction = direction;
+    _inverse_direction[0] = 1. / direction.x();
+    _inverse_direction[1] = 1. / direction.y();
+    _inverse_direction[2] = 1. / direction.z();
   }
 
   /**
@@ -182,7 +200,7 @@ public:
    * @param ion IonName of a valid ion.
    * @param cross_section Ionization cross section (in m^2).
    */
-  inline void set_cross_section(IonName ion, double cross_section) {
+  inline void set_cross_section(int_fast32_t ion, double cross_section) {
     _cross_sections[ion] = cross_section;
   }
 

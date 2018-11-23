@@ -28,6 +28,8 @@
 
 #include "Configuration.hpp"
 #include "ElementNames.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 #ifdef USE_LOCKFREE
 #include "Atomic.hpp"
@@ -98,11 +100,15 @@ private:
   double _cooling[NUMBER_OF_IONNAMES];
 #endif
 
+  /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
+  double _cosmic_ray_factor;
+
 public:
   /**
    * @brief (Empty) constructor.
    */
-  inline IonizationVariables() : _number_density(0.), _temperature(0.) {
+  inline IonizationVariables()
+      : _number_density(0.), _temperature(0.), _cosmic_ray_factor(-1.) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
@@ -158,7 +164,7 @@ public:
    * @param ion IonName.
    * @return Ionic fraction of that ion.
    */
-  inline double get_ionic_fraction(IonName ion) const {
+  inline double get_ionic_fraction(int_fast32_t ion) const {
     return _ionic_fractions[ion];
   }
 
@@ -168,7 +174,7 @@ public:
    * @param ion IonName.
    * @param ionic_fraction New ionic fraction for that ion.
    */
-  inline void set_ionic_fraction(IonName ion, double ionic_fraction) {
+  inline void set_ionic_fraction(int_fast32_t ion, double ionic_fraction) {
     _ionic_fractions[ion] = ionic_fraction;
   }
 
@@ -179,7 +185,7 @@ public:
    * @return Mean intensity integral for that ion (without normalization factor,
    * in m^3).
    */
-  inline double get_mean_intensity(IonName ion) const {
+  inline double get_mean_intensity(int_fast32_t ion) const {
     return _mean_intensity[ion];
   }
 
@@ -190,7 +196,7 @@ public:
    * @param mean_intensity New value for the mean intensity integral for that
    * ion (without normalization factor, in m^3).
    */
-  inline void set_mean_intensity(IonName ion, double mean_intensity) {
+  inline void set_mean_intensity(int_fast32_t ion, double mean_intensity) {
     _mean_intensity[ion] = mean_intensity;
   }
 
@@ -201,7 +207,7 @@ public:
    * @param ion IonName.
    * @param increment Increment (without normalization factor, in m^3).
    */
-  inline void increase_mean_intensity(IonName ion, double increment) {
+  inline void increase_mean_intensity(int_fast32_t ion, double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_mean_intensity[ion], increment);
 #else
@@ -215,8 +221,7 @@ public:
    * @param name ReemissionProbabilityName.
    * @return Probability for reemission in that specific channel.
    */
-  inline double
-  get_reemission_probability(ReemissionProbabilityName name) const {
+  inline double get_reemission_probability(int_fast32_t name) const {
     return _reemission_probabilities[name];
   }
 
@@ -227,7 +232,7 @@ public:
    * @param reemission_probability New reemission probability for that specific
    * channel.
    */
-  inline void set_reemission_probability(ReemissionProbabilityName name,
+  inline void set_reemission_probability(int_fast32_t name,
                                          double reemission_probability) {
     _reemission_probabilities[name] = reemission_probability;
   }
@@ -238,9 +243,7 @@ public:
    * @param name HeatingTermName.
    * @return Heating term (without normalization factor, in m^3 s^-1).
    */
-  inline double get_heating(HeatingTermName name) const {
-    return _heating[name];
-  }
+  inline double get_heating(int_fast32_t name) const { return _heating[name]; }
 
   /**
    * @brief Set the heating term with the given name.
@@ -249,7 +252,7 @@ public:
    * @param heating New value for the heating term (without normalization
    * factor, in m^3 s^-1).
    */
-  inline void set_heating(HeatingTermName name, double heating) {
+  inline void set_heating(int_fast32_t name, double heating) {
     _heating[name] = heating;
   }
 
@@ -259,7 +262,7 @@ public:
    * @param name HeatingTermName.
    * @param increment Increment (without normalization factor, in m^3 s^-1).
    */
-  inline void increase_heating(HeatingTermName name, double increment) {
+  inline void increase_heating(int_fast32_t name, double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_heating[name], increment);
 #else
@@ -274,7 +277,7 @@ public:
    * @param ion IonName.
    * @return Cooling rate (in J s^-1).
    */
-  inline double get_cooling(IonName ion) const { return _cooling[ion]; }
+  inline double get_cooling(int_fast32_t ion) const { return _cooling[ion]; }
 
   /**
    * @brief Set the cooling rate for the ion with the given name.
@@ -282,10 +285,76 @@ public:
    * @param ion IonName.
    * @param cooling Cooling rate (in J s^-1).
    */
-  inline void set_cooling(IonName ion, double cooling) {
+  inline void set_cooling(int_fast32_t ion, double cooling) {
     _cooling[ion] = cooling;
   }
 #endif
+
+  /**
+   * @brief Get the cosmic ray heating factor.
+   *
+   * @return Cosmic ray heating factor (in kg m A^-1 s^-4).
+   */
+  inline double get_cosmic_ray_factor() const { return _cosmic_ray_factor; }
+
+  /**
+   * @brief Set the cosmic ray heating factor.
+   *
+   * @param cosmic_ray_factor Cosmic ray heating factor (in kg m A^-1 s^-4).
+   */
+  inline void set_cosmic_ray_factor(double cosmic_ray_factor) {
+    _cosmic_ray_factor = cosmic_ray_factor;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_number_density);
+    restart_writer.write(_temperature);
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      restart_writer.write(_ionic_fractions[i]);
+      restart_writer.write(_mean_intensity[i]);
+#ifdef DO_OUTPUT_COOLING
+      restart_writer.write(_cooling[i]);
+#endif
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      restart_writer.write(_reemission_probabilities[i]);
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      restart_writer.write(_heating[i]);
+    }
+    restart_writer.write(_cosmic_ray_factor);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline IonizationVariables(RestartReader &restart_reader) {
+
+    _number_density = restart_reader.read< double >();
+    _temperature = restart_reader.read< double >();
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fractions[i] = restart_reader.read< double >();
+      _mean_intensity[i] = restart_reader.read< double >();
+#ifdef DO_OUTPUT_COOLING
+      _cooling[i] = restart_reader.read< double >();
+#endif
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      _reemission_probabilities[i] = restart_reader.read< double >();
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      _heating[i] = restart_reader.read< double >();
+    }
+    _cosmic_ray_factor = restart_reader.read< double >();
+  }
 };
 
 #endif // IONIZATIONVARIABLES_HPP

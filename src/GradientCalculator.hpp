@@ -44,11 +44,20 @@ public:
    * @param cell DensityGrid::iterator pointing to a single cell of the grid.
    * @param grid_end DensityGrid::iterator pointing to the end of the grid.
    * @param boundaries Boundary condition flags.
+   * @param inverse_length_unit_in_SI Conversion factor from SI lengths to
+   * internal length unit (in m^-1).
+   * @param inverse_surface_area_unit_in_SI Conversion factor from SI surface
+   * area to internal surface area unit (in m^-2).
+   * @param volume_unit_in_SI Conversion factor from internal volume units to
+   * SI units (in m^3).
    */
   static inline void
   compute_gradient(DensityGrid::iterator &cell,
                    const DensityGrid::iterator &grid_end,
-                   const HydroBoundaryConditionType *boundaries) {
+                   const HydroBoundaryConditionType *boundaries,
+                   const double inverse_length_unit_in_SI = 1.,
+                   const double inverse_surface_area_unit_in_SI = 1.,
+                   const double volume_unit_in_SI = 1.) {
 
     // get the cell variables
     const double WL[5] = {cell.get_hydro_variables().primitives(0),
@@ -67,7 +76,8 @@ public:
       DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
       const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
       const CoordinateVector<> normal = std::get< 2 >(*ngbit);
-      const double surface_area = std::get< 3 >(*ngbit);
+      const double surface_area =
+          std::get< 3 >(*ngbit) * inverse_surface_area_unit_in_SI;
       const CoordinateVector<> position_R = position_L + std::get< 4 >(*ngbit);
 
       double WR[5];
@@ -105,8 +115,10 @@ public:
       }
 
       const CoordinateVector<> halfpoint = 0.5 * (position_L + position_R);
-      const CoordinateVector<> rLR = position_L - position_R;
-      const CoordinateVector<> cLR = midpoint - halfpoint;
+      const CoordinateVector<> rLR =
+          (position_L - position_R) * inverse_length_unit_in_SI;
+      const CoordinateVector<> cLR =
+          (midpoint - halfpoint) * inverse_length_unit_in_SI;
       const double rLR_inv = 1. / rLR.norm();
       const double fac = surface_area * rLR_inv;
 
@@ -121,7 +133,7 @@ public:
     }
 
     // normalize the gradients
-    const double Vinv = 1. / cell.get_volume();
+    const double Vinv = volume_unit_in_SI / cell.get_volume();
     for (uint_fast8_t i = 0; i < 5; ++i) {
       for (uint_fast8_t j = 0; j < 3; ++j) {
         cell.get_hydro_variables().primitive_gradients(i)[j] *= Vinv;
@@ -135,7 +147,8 @@ public:
       // get the neighbour variables
       const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
 
-      const CoordinateVector<> deltaLR = midpoint - position_L;
+      const CoordinateVector<> deltaLR =
+          (midpoint - position_L) * inverse_length_unit_in_SI;
       for (uint_fast8_t i = 0; i < 5; ++i) {
         const double phi_ext = CoordinateVector<>::dot_product(
             cell.get_hydro_variables().primitive_gradients(i), deltaLR);
@@ -146,9 +159,12 @@ public:
 
     // slope limiting
     for (uint_fast8_t i = 0; i < 5; ++i) {
-      const double alpha = std::min(
-          1., 0.5 * std::min((phi_ngb_max[i] - WL[i]) / phi_ext_max[i],
-                             (phi_ngb_min[i] - WL[i]) / phi_ext_min[i]));
+      double alpha = 0.;
+      if (phi_ext_max[i] != 0. && phi_ext_min[i] != 0.) {
+        alpha = std::min(
+            1., 0.5 * std::min((phi_ngb_max[i] - WL[i]) / phi_ext_max[i],
+                               (phi_ngb_min[i] - WL[i]) / phi_ext_min[i]));
+      }
       cell.get_hydro_variables().primitive_gradients(i) *= alpha;
     }
   }
@@ -164,16 +180,41 @@ public:
     /*! @brief Iterator to the end of the DensityGrid. */
     const DensityGrid::iterator &_grid_end;
 
+    /*! @brief Conversion factor from SI lengths to internal length unit
+     *  (in m^-1).*/
+    const double _inverse_length_unit_in_SI;
+
+    /*! @brief Conversion factor from SI surface area to internal surface area
+     *  unit (in m^-2). */
+    const double _inverse_surface_area_unit_in_SI;
+
+    /*! @brief Conversion factor from internal volume units to SI units
+     *  (in m^3).*/
+    const double _volume_unit_in_SI;
+
   public:
     /**
      * @brief Constructor.
      *
      * @param boundaries Boundary condition flags.
      * @param grid_end Iterator to the end of the DensityGrid.
+     * @param inverse_length_unit_in_SI Conversion factor from SI lengths to
+     * internal length unit (in m^-1).
+     * @param inverse_surface_area_unit_in_SI Conversion factor from SI surface
+     * area to internal surface area unit (in m^-2).
+     * @param volume_unit_in_SI Conversion factor from internal volume units to
+     * SI units (in m^3).
      */
-    inline GradientComputation(const HydroBoundaryConditionType *boundaries,
-                               const DensityGrid::iterator &grid_end)
-        : _boundaries(boundaries), _grid_end(grid_end) {}
+    inline GradientComputation(
+        const HydroBoundaryConditionType *boundaries,
+        const DensityGrid::iterator &grid_end,
+        const double inverse_length_unit_in_SI = 1.,
+        const double inverse_surface_area_unit_in_SI = 1.,
+        const double volume_unit_in_SI = 1.)
+        : _boundaries(boundaries), _grid_end(grid_end),
+          _inverse_length_unit_in_SI(inverse_length_unit_in_SI),
+          _inverse_surface_area_unit_in_SI(inverse_surface_area_unit_in_SI),
+          _volume_unit_in_SI(volume_unit_in_SI) {}
 
     /**
      * @brief Perform the gradient computation for a single cell of the grid.
@@ -181,7 +222,8 @@ public:
      * @param cell DensityGrid::iterator pointing to a grid cell.
      */
     inline void operator()(DensityGrid::iterator &cell) {
-      compute_gradient(cell, _grid_end, _boundaries);
+      compute_gradient(cell, _grid_end, _boundaries, _inverse_length_unit_in_SI,
+                       _inverse_surface_area_unit_in_SI, _volume_unit_in_SI);
     }
   };
 };

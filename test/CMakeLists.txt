@@ -48,6 +48,12 @@ macro(add_unit_test)
              COMMAND ${TESTCOMMAND})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+
+    # create a custom target for this test alone
+    add_custom_target(check_${TEST_NAME}
+                      COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                              -R ${TEST_NAME}
+                      DEPENDS ${TEST_NAME})
 endmacro(add_unit_test)
 
 ### Actual unit test generation ################################################
@@ -338,6 +344,7 @@ set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     ../src/CoordinateVector.hpp
     ../src/DensityFunction.hpp
     ../src/DensityGrid.cpp
+    ../src/DensityGridWriterFields.hpp
     ../src/DensityValues.hpp
     ../src/Error.hpp
     ../src/GadgetDensityGridWriter.cpp
@@ -438,10 +445,11 @@ set(TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES
 add_unit_test(NAME testFLASHSnapshotDensityFunction
               SOURCES ${TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES}
               LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+# we always configure this file, as we need it for the MD5 test
 configure_file(${PROJECT_SOURCE_DIR}/test/FLASHtest.hdf5
                ${PROJECT_BINARY_DIR}/rundir/test/FLASHtest.hdf5
                COPYONLY)
-endif(HAVE_HDF5)
 
 ## Unit test for AMRGrid
 set(TESTAMRGRID_SOURCES
@@ -697,6 +705,7 @@ endif(HAVE_MPI)
 set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
 
+    ../src/ExactRiemannSolver.hpp
     ../src/RiemannSolver.hpp
 )
 add_unit_test(NAME testRiemannSolver
@@ -1045,9 +1054,23 @@ set(TESTGRADIENTCALCULATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/GradientCalculator.hpp
     ../src/HydroBoundaryConditions.hpp
+    ../src/NewVoronoiCellConstructor.cpp
+    ../src/NewVoronoiGrid.cpp
+    ../src/OldVoronoiCell.cpp
+    ../src/OldVoronoiGrid.cpp
+    ../src/VoronoiDensityGrid.cpp
 )
-add_unit_test(NAME testGradientCalculator
-              SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTGRADIENTCALCULATOR_SOURCES
+       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
+       )
+  add_unit_test(NAME testGradientCalculator
+                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testGradientCalculator
+                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
+endif(HAVE_HDF5)
 
 ## Unit test for MaskedPhotonSourceSpectrum
 set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
@@ -1077,6 +1100,179 @@ set(TESTSPHARRAYINTERFACE_SOURCES
 )
 add_unit_test(NAME testSPHArrayInterface
               SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
+
+## Unit test for LambertW
+set(TESTLAMBERTW_SOURCES
+    testLambertW.cpp
+
+    ../src/LambertW.hpp
+)
+add_unit_test(NAME testLambertW
+              SOURCES ${TESTLAMBERTW_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/test_lambertw_input.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/test_lambertw_input.txt
+               COPYONLY)
+
+## Unit test for BondiProfile
+set(TESTBONDIPROFILE_SOURCES
+    testBondiProfile.cpp
+
+    ../src/BondiProfile.hpp
+)
+add_unit_test(NAME testBondiProfile
+              SOURCES ${TESTBONDIPROFILE_SOURCES})
+
+## Unit test for BlockSyntaxHydroMask
+set(TESTBLOCKSYNTAXHYDROMASK_SOURCES
+    testBlockSyntaxHydroMask.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/BlockSyntaxHydroMask.hpp
+)
+add_unit_test(NAME testBlockSyntaxHydroMask
+              SOURCES ${TESTBLOCKSYNTAXHYDROMASK_SOURCES})
+
+## Unit test for RescaledICHydroMask
+set(TESTRESCALEDICHYDROMASK
+    testRescaledICHydroMask.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/RescaledICHydroMask.hpp
+)
+add_unit_test(NAME testRescaledICHydroMask
+              SOURCES ${TESTRESCALEDICHYDROMASK})
+
+## Unit test for PointMassExternalPotential
+set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
+    testPointMassExternalPotential.cpp
+
+    ../src/ExternalPotential.hpp
+    ../src/PointMassExternalPotential.hpp
+)
+add_unit_test(NAME testPointMassExternalPotential
+              SOURCES ${TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES})
+
+## Unit test for MD5Sum
+set(TESTMD5SUM_SOURCES
+    testMD5Sum.cpp
+
+    ../src/MD5Sum.hpp
+)
+add_unit_test(NAME testMD5Sum
+              SOURCES ${TESTMD5SUM_SOURCES})
+
+## Unit test for DiscPatchExternalPotential
+set(TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES
+    testDiscPatchExternalPotential.cpp
+
+    ../src/DiscPatchDensityFunction.hpp
+    ../src/DiscPatchExternalPotential.hpp
+)
+add_unit_test(NAME testDiscPatchExternalPotential
+              SOURCES ${TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES})
+
+## Unit test for DiscPatchPhotonSourceDistribution
+set(TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES
+    testDiscPatchPhotonSourceDistribution.cpp
+
+    ../src/DiscPatchPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testDiscPatchPhotonSourceDistribution
+              SOURCES ${TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for InternalHydroUnits
+set(TESTINTERNALHYDROUNITS_SOURCES
+    testInternalHydroUnits.cpp
+
+    ../src/InternalHydroUnits.hpp
+)
+add_unit_test(NAME testInternalHydroUnits
+              SOURCES ${TESTINTERNALHYDROUNITS_SOURCES})
+
+## Unit test for TreeSelfGravity
+set(TESTTREESELFGRAVITY_SOURCES
+    testTreeSelfGravity.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/TreeSelfGravity.hpp
+)
+add_unit_test(NAME testTreeSelfGravity
+              SOURCES ${TESTTREESELFGRAVITY_SOURCES})
+
+## Unit test for MortonKeyGenerator
+set(TESTMORTONKEYGENERATOR_SOURCES
+    testMortonKeyGenerator.cpp
+
+    ../src/MortonKeyGenerator.hpp
+)
+add_unit_test(NAME testMortonKeyGenerator
+              SOURCES ${TESTMORTONKEYGENERATOR_SOURCES})
+
+## Unit test for DeRijckeRadiativeCooling
+set(TESTDERIJCKERADIATIVECOOLING_SOURCES
+    testDeRijckeRadiativeCooling.cpp
+
+    ../src/DeRijckeDataLocation.hpp.in
+    ../src/DeRijckeRadiativeCooling.cpp
+    ../src/DeRijckeRadiativeCooling.hpp
+)
+add_unit_test(NAME testDeRijckeRadiativeCooling
+              SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES})
+
+## Unit test for CoredDMProfileExternalPotential
+set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
+    testCoredDMProfileExternalPotential.cpp
+
+    ../src/CoredDMProfileDensityFunction.hpp
+    ../src/CoredDMProfileExternalPotential.hpp
+)
+add_unit_test(NAME testCoredDMProfileExternalPotential
+              SOURCES ${TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES})
+
+## Unit test for DwarfGalaxyPhotonSourceDistribution
+set(TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES
+    testDwarfGalaxyPhotonSourceDistribution.cpp
+
+    ../src/DwarfGalaxyPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testDwarfGalaxyPhotonSourceDistribution
+              SOURCES ${TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for CaproniPhotonSourceDistribution
+set(TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES
+    testCaproniPhotonSourceDistribution.cpp
+
+    ../src/CaproniPhotonSourceDistribution.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+)
+add_unit_test(NAME testCaproniPhotonSourceDistribution
+              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for SingleSupernovaPhotonSourceDistribution
+set(TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES
+    testSingleSupernovaPhotonSourceDistribution.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SingleSupernovaPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testSingleSupernovaPhotonSourceDistribution
+              SOURCES ${TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for RestartManager
+set(TESTRESTARTMANAGER_SOURCES
+    testRestartManager.cpp
+
+    ../src/RestartManager.hpp
+    ../src/RestartReader.hpp
+    ../src/RestartWriter.hpp
+)
+add_unit_test(NAME testRestartManager
+              SOURCES ${TESTRESTARTMANAGER_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

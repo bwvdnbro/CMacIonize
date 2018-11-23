@@ -44,14 +44,17 @@ private:
   const uint_fast8_t _padding;
 
 public:
-  GadgetDensityGridWriter(std::string prefix,
-                          std::string output_folder = std::string("."),
-                          Log *log = nullptr, uint_fast8_t padding = 3);
+  GadgetDensityGridWriter(
+      std::string prefix, std::string output_folder = std::string("."),
+      const bool hydro = false,
+      const DensityGridWriterFields fields = DensityGridWriterFields(false),
+      Log *log = nullptr, uint_fast8_t padding = 3);
   GadgetDensityGridWriter(std::string output_folder, ParameterFile &params,
-                          Log *log = nullptr);
+                          const bool hydro, Log *log = nullptr);
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time = 0.);
+                     ParameterFile &params, double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr);
 };
 
 #endif // GADGETDENSITYGRIDWRITER_HPP

@@ -42,11 +42,16 @@ private:
   /*! @brief AMRGrid containing the snapshot file contents. */
   AMRGrid< DensityValues > _grid;
 
+  /*! @brief Flag indicating if cosmic ray heating variables should be read or
+   *  not. */
+  const bool _read_cosmic_ray_heating;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
 public:
   FLASHSnapshotDensityFunction(std::string filename, double temperature = -1.,
+                               bool read_cosmic_ray_heating = false,
                                Log *log = nullptr);
   FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 

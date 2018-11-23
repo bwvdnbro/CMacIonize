@@ -1,0 +1,15 @@
+Bondi accretion benchmark
+
+This benchmark consists of a homogeneous density field with a point mass at the
+center and a constant inflow of material at the boundaries. On a time scale that
+is roughly equivalent to the free fall time of a test particle at the boundary
+of the box that feels the gravity of the point mass, the system will evolve into
+a steady state accretion flow with a known analytic Bondi profile.
+
+The test can be run using the provided parameter file (bondi.param). To
+analyze the results, use the Python script (bondi.py).
+
+List of files necessary for this benchmark test:
+input:bondi.param
+input:bondi.yml
+input:bondi.py

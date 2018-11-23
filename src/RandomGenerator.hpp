@@ -26,6 +26,9 @@
 #ifndef RANDOMGENERATOR_HPP
 #define RANDOMGENERATOR_HPP
 
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
+
 #include <cstdint>
 
 /**
@@ -229,6 +232,41 @@ public:
   inline int_fast32_t get_random_integer() {
     return get_uniform_random_double() * 2147483648.0;
   }
+
+  /**
+   * @brief Write the random number generator to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (uint_fast8_t i = 0; i < 12; ++i) {
+      restart_writer.write(_xdbl[i]);
+    }
+    restart_writer.write(_carry);
+    restart_writer.write(_ir);
+    restart_writer.write(_jr);
+    restart_writer.write(_ir_old);
+    restart_writer.write(_pr);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline RandomGenerator(RestartReader &restart_reader)
+      : _xdbl{restart_reader.read< double >(), restart_reader.read< double >(),
+              restart_reader.read< double >(), restart_reader.read< double >(),
+              restart_reader.read< double >(), restart_reader.read< double >(),
+              restart_reader.read< double >(), restart_reader.read< double >(),
+              restart_reader.read< double >(), restart_reader.read< double >(),
+              restart_reader.read< double >(), restart_reader.read< double >()},
+        _carry(restart_reader.read< double >()),
+        _ir(restart_reader.read< uint_fast32_t >()),
+        _jr(restart_reader.read< uint_fast32_t >()),
+        _ir_old(restart_reader.read< uint_fast32_t >()),
+        _pr(restart_reader.read< uint_fast32_t >()) {}
 };
 
 #endif // RANDOMGENERATOR_HPP

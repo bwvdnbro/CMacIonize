@@ -40,7 +40,9 @@
  */
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
     std::string prefix, std::string output_folder, Log *log)
-    : DensityGridWriter(output_folder, log), _prefix(prefix) {}
+    : DensityGridWriter(output_folder, false, DensityGridWriterFields(false),
+                        log),
+      _prefix(prefix) {}
 
 /**
  * @brief ParameterFile constructor.
@@ -67,10 +69,12 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
  */
 void AsciiFileDensityGridWriter::write(DensityGrid &grid,
                                        uint_fast32_t iteration,
-                                       ParameterFile &params, double time) {
+                                       ParameterFile &params, double time,
+                                       const InternalHydroUnits *hydro_units) {
 
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);

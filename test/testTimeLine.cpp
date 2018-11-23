@@ -25,6 +25,7 @@
  */
 #include "Assert.hpp"
 #include "TimeLine.hpp"
+
 #include <cinttypes>
 
 /**
@@ -82,6 +83,13 @@ int main(int argc, char **argv) {
   {
     cmac_status("Advanced time line test with variable time step...");
     TimeLine timeline(0., 1., 0.005, 0.1);
+
+    /// restart test
+    {
+      RestartWriter restart_writer("timeline.dump");
+      timeline.write_restart_file(restart_writer);
+    }
+
     double actual_timestep;
     double current_time = 0.;
     uint_fast32_t numstep = 1;
@@ -95,6 +103,21 @@ int main(int argc, char **argv) {
     cmac_status("Took %" PRIuFAST32 " steps.", numstep);
     assert_condition(numstep == 107);
     cmac_status("Done.");
+
+    /// restart test
+    {
+      RestartReader restart_reader("timeline.dump");
+      TimeLine restart_timeline(restart_reader);
+
+      current_time = 0.;
+      uint_fast32_t numstep = 1;
+      while (restart_timeline.advance(
+          0.02 + 0.015 * std::sin(2. * M_PI * current_time), actual_timestep,
+          current_time)) {
+        ++numstep;
+      }
+      assert_condition(numstep == 107);
+    }
   }
 
   return 0;

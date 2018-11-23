@@ -39,6 +39,8 @@
 #include "Lock.hpp"
 #include "Log.hpp"
 #include "Photon.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include "WorkDistributor.hpp"
@@ -74,13 +76,13 @@ protected:
   /*! @brief Ionization energy of helium (in Hz). */
   const double _ionization_energy_He;
 
+  /*! @brief Flag indicating whether hydro is active or not. */
+  const bool _has_hydro;
+
   /*! @brief Ionization calculation variables. */
   std::vector< IonizationVariables > _ionization_variables;
 
   /// hydro
-
-  /*! @brief Flag indicating whether hydro is active or not. */
-  const bool _has_hydro;
 
   /*! @brief Hydrodynamic variables. */
   std::vector< HydroVariables > _hydro_variables;
@@ -138,23 +140,19 @@ protected:
       // the same time), we first calculate all terms that need to be added, and
       // then lock the cell and do all additions as fast as possible
       double dmean_intensity[NUMBER_OF_IONNAMES];
-      for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        dmean_intensity[i] =
-            ds * photon.get_weight() * photon.get_cross_section(ion);
+      const double dsw = ds * photon.get_weight();
+      for (int ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        dmean_intensity[ion] = dsw * photon.get_cross_section(ion);
       }
-      double dheating_H = ds * photon.get_weight() *
-                          photon.get_cross_section(ION_H_n) *
-                          (photon.get_energy() - _ionization_energy_H);
-      double dheating_He = ds * photon.get_weight() *
-                           photon.get_cross_section(ION_He_n) *
-                           (photon.get_energy() - _ionization_energy_He);
+      const double dheating_H = dmean_intensity[ION_H_n] *
+                                (photon.get_energy() - _ionization_energy_H);
+      const double dheating_He = dmean_intensity[ION_He_n] *
+                                 (photon.get_energy() - _ionization_energy_He);
 #ifndef USE_LOCKFREE
       cell.lock();
 #endif
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
-        ionization_variables.increase_mean_intensity(ion, dmean_intensity[i]);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        ionization_variables.increase_mean_intensity(ion, dmean_intensity[ion]);
       }
       ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
       ionization_variables.increase_heating(HEATINGTERM_He, dheating_He);
@@ -428,12 +426,10 @@ public:
      * currently pointing to.
      */
     inline void reset_mean_intensities() {
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        const IonName ion = static_cast< IonName >(i);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         _grid->_ionization_variables[_index].set_mean_intensity(ion, 0.);
       }
-      for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-        const HeatingTermName name = static_cast< HeatingTermName >(i);
+      for (int_fast32_t name = 0; name < NUMBER_OF_HEATINGTERMS; ++name) {
         _grid->_ionization_variables[_index].set_heating(name, 0.);
       }
     }
@@ -454,7 +450,7 @@ public:
      * @param ion IonName.
      * @return Mean intensity (in m^3).
      */
-    inline double get_mean_intensity(IonName ion) const {
+    inline double get_mean_intensity(int_fast32_t ion) const {
       return _grid->_ionization_variables[_index].get_mean_intensity(ion);
     }
 
@@ -704,11 +700,11 @@ public:
       IonizationVariables &ionization_variables = it.get_ionization_variables();
       ionization_variables.set_number_density(vals.get_number_density());
       ionization_variables.set_temperature(vals.get_temperature());
-      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-        IonName ion = static_cast< IonName >(i);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         ionization_variables.set_ionic_fraction(ion,
                                                 vals.get_ionic_fraction(ion));
       }
+      ionization_variables.set_cosmic_ray_factor(vals.get_cosmic_ray_factor());
       if (_hydro) {
         const CoordinateVector<> v = vals.get_velocity();
         it.get_hydro_variables().set_primitives_velocity(v);
@@ -747,8 +743,11 @@ public:
    * This method should only be implemented for moving grids.
    *
    * @param gamma Polytropic index of the gas.
+   * @param velocity_unit_in_SI Conversion factor from internal velocity unit to
+   * SI units (in m s^-1).
    */
-  virtual void set_grid_velocity(double gamma) {}
+  virtual void set_grid_velocity(const double gamma,
+                                 const double velocity_unit_in_SI) {}
 
   /**
    * @brief Get the total number of hydrogen atoms contained in the grid.
@@ -785,6 +784,69 @@ public:
       ntot += n;
     }
     return temperature / ntot;
+  }
+
+  /**
+   * @brief Write the general grid variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    _box.write_restart_file(restart_writer);
+    _periodicity_flags.write_restart_file(restart_writer);
+    restart_writer.write(_ionization_energy_H);
+    restart_writer.write(_ionization_energy_He);
+    restart_writer.write(_has_hydro);
+    {
+      const auto size = _ionization_variables.size();
+      restart_writer.write(size);
+      for (std::vector< IonizationVariables >::size_type i = 0; i < size; ++i) {
+        _ionization_variables[i].write_restart_file(restart_writer);
+      }
+    }
+    {
+      const auto size = _hydro_variables.size();
+      restart_writer.write(size);
+      for (std::vector< HydroVariables >::size_type i = 0; i < size; ++i) {
+        _hydro_variables[i].write_restart_file(restart_writer);
+      }
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   */
+  inline DensityGrid(RestartReader &restart_reader, Log *log = nullptr)
+      : _box(restart_reader), _periodicity_flags(restart_reader),
+        _ionization_energy_H(restart_reader.read< double >()),
+        _ionization_energy_He(restart_reader.read< double >()),
+        _has_hydro(restart_reader.read< bool >()), _log(log) {
+
+    {
+      const std::vector< IonizationVariables >::size_type size =
+          restart_reader
+              .read< std::vector< IonizationVariables >::size_type >();
+      _ionization_variables.resize(size);
+      for (std::vector< IonizationVariables >::size_type i = 0; i < size; ++i) {
+        _ionization_variables[i] = IonizationVariables(restart_reader);
+      }
+    }
+    {
+      const std::vector< HydroVariables >::size_type size =
+          restart_reader.read< std::vector< HydroVariables >::size_type >();
+      _hydro_variables.resize(size);
+      for (std::vector< HydroVariables >::size_type i = 0; i < size; ++i) {
+        _hydro_variables[i] = HydroVariables(restart_reader);
+      }
+    }
+
+#ifndef USE_LOCKFREE
+    _lock.resize(_ionization_variables.size());
+#endif
   }
 };
 

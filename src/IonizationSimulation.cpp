@@ -175,7 +175,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _density_grid_writer = nullptr;
   if (write_output) {
     _density_grid_writer = DensityGridWriterFactory::generate(
-        output_folder, _parameter_file, _log);
+        output_folder, _parameter_file, false, _log);
   }
 
   // used to calculate both the ionization state and the temperature

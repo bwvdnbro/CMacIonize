@@ -23,10 +23,11 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#include "Assert.hpp"
 #include "CartesianDensityGrid.hpp"
 #include "DensityFunction.hpp"
+#include "ExactRiemannSolver.hpp"
 #include "HydroIntegrator.hpp"
-#include "RiemannSolver.hpp"
 #include "VoronoiDensityGrid.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 #include <fstream>
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
 
   /// Cartesian grid
   {
-    HydroIntegrator integrator(5. / 3., false, false);
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     CoordinateVector< int_fast32_t > ncell(100, 1, 1);
@@ -116,6 +117,9 @@ int main(int argc, char **argv) {
 
     integrator.initialize_hydro_variables(grid);
 
+    const InternalHydroUnits *hydro_units = integrator.get_internal_units();
+    assert_condition(hydro_units != nullptr);
+
     // write initial snapshot
     {
       std::ofstream snapfile("hydro_snap_0.txt");
@@ -123,12 +127,21 @@ int main(int argc, char **argv) {
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const HydroVariables &hydro_vars = it.get_hydro_variables();
+
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << hydro_vars.get_primitives_density() << "\t"
-                 << hydro_vars.get_primitives_velocity().x() << "\t"
-                 << hydro_vars.get_primitives_pressure() << "\n";
-        mtot += hydro_vars.get_conserved_mass();
-        etot += hydro_vars.get_conserved_total_energy();
+                 << hydro_units->convert_to_SI_units< QUANTITY_DENSITY >(
+                        hydro_vars.get_primitives_density())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_VELOCITY >(
+                        hydro_vars.get_primitives_velocity().x())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_PRESSURE >(
+                        hydro_vars.get_primitives_pressure())
+                 << "\n";
+        mtot += hydro_units->convert_to_SI_units< QUANTITY_MASS >(
+            hydro_vars.get_conserved_mass());
+        etot += hydro_units->convert_to_SI_units< QUANTITY_ENERGY >(
+            hydro_vars.get_conserved_total_energy());
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -145,12 +158,21 @@ int main(int argc, char **argv) {
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const HydroVariables &hydro_vars = it.get_hydro_variables();
+
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << hydro_vars.get_primitives_density() << "\t"
-                 << hydro_vars.get_primitives_velocity().x() << "\t"
-                 << hydro_vars.get_primitives_pressure() << "\n";
-        mtot += hydro_vars.get_conserved_mass();
-        etot += hydro_vars.get_conserved_total_energy();
+                 << hydro_units->convert_to_SI_units< QUANTITY_DENSITY >(
+                        hydro_vars.get_primitives_density())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_VELOCITY >(
+                        hydro_vars.get_primitives_velocity().x())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_PRESSURE >(
+                        hydro_vars.get_primitives_pressure())
+                 << "\n";
+        mtot += hydro_units->convert_to_SI_units< QUANTITY_MASS >(
+            hydro_vars.get_conserved_mass());
+        etot += hydro_units->convert_to_SI_units< QUANTITY_ENERGY >(
+            hydro_vars.get_conserved_total_energy());
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -158,7 +180,7 @@ int main(int argc, char **argv) {
     // output reference solution
     {
       std::ofstream snapfile("hydro_ref_1.txt");
-      const RiemannSolver solver(5. / 3.);
+      const ExactRiemannSolver solver(5. / 3.);
       const double t = 0.1;
       for (uint_fast32_t i = 0; i < 1000; ++i) {
         const double x = (i + 0.5) * 0.001;
@@ -172,7 +194,7 @@ int main(int argc, char **argv) {
 
   /// Voronoi grid
   {
-    HydroIntegrator integrator(5. / 3., false, false);
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     SodShockDensityFunction density_function;
@@ -187,6 +209,9 @@ int main(int argc, char **argv) {
 
     integrator.initialize_hydro_variables(grid);
 
+    const InternalHydroUnits *hydro_units = integrator.get_internal_units();
+    assert_condition(hydro_units != nullptr);
+
     // write initial snapshot
     {
       std::ofstream snapfile("hydro_voronoi_snap_0.txt");
@@ -194,12 +219,21 @@ int main(int argc, char **argv) {
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const HydroVariables &hydro_vars = it.get_hydro_variables();
+
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << hydro_vars.get_primitives_density() << "\t"
-                 << hydro_vars.get_primitives_velocity().x() << "\t"
-                 << hydro_vars.get_primitives_pressure() << "\n";
-        mtot += hydro_vars.get_conserved_mass();
-        etot += hydro_vars.get_conserved_total_energy();
+                 << hydro_units->convert_to_SI_units< QUANTITY_DENSITY >(
+                        hydro_vars.get_primitives_density())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_VELOCITY >(
+                        hydro_vars.get_primitives_velocity().x())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_PRESSURE >(
+                        hydro_vars.get_primitives_pressure())
+                 << "\n";
+        mtot += hydro_units->convert_to_SI_units< QUANTITY_MASS >(
+            hydro_vars.get_conserved_mass());
+        etot += hydro_units->convert_to_SI_units< QUANTITY_ENERGY >(
+            hydro_vars.get_conserved_total_energy());
       }
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
@@ -216,13 +250,23 @@ int main(int argc, char **argv) {
       double etot = 0.;
       for (auto it = grid.begin(); it != grid.end(); ++it) {
         const HydroVariables &hydro_vars = it.get_hydro_variables();
+
         snapfile << it.get_cell_midpoint().x() << "\t"
-                 << hydro_vars.get_primitives_density() << "\t"
-                 << hydro_vars.get_primitives_velocity().x() << "\t"
-                 << hydro_vars.get_primitives_pressure() << "\n";
-        mtot += hydro_vars.get_conserved_mass();
-        etot += hydro_vars.get_conserved_total_energy();
+                 << hydro_units->convert_to_SI_units< QUANTITY_DENSITY >(
+                        hydro_vars.get_primitives_density())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_VELOCITY >(
+                        hydro_vars.get_primitives_velocity().x())
+                 << "\t"
+                 << hydro_units->convert_to_SI_units< QUANTITY_PRESSURE >(
+                        hydro_vars.get_primitives_pressure())
+                 << "\n";
+        mtot += hydro_units->convert_to_SI_units< QUANTITY_MASS >(
+            hydro_vars.get_conserved_mass());
+        etot += hydro_units->convert_to_SI_units< QUANTITY_ENERGY >(
+            hydro_vars.get_conserved_total_energy());
       }
+      cmac_status("Total mass: %g, total energy: %g", mtot, etot);
       cmac_status("Total mass: %g, total energy: %g", mtot, etot);
     }
   }

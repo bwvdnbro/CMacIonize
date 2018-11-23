@@ -279,7 +279,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_filename("DensityFunction:filename"),
           params.get_value< bool >("DensityFunction:fallback periodic flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(

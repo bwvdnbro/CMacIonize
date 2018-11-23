@@ -69,6 +69,17 @@ message(STATUS "FaucherGiguereDataLocation.hpp: ${FAUCHERGIGUEREDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/FaucherGiguereDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/FaucherGiguereDataLocation.hpp @ONLY)
 
+# DeRijckeDataLocation.hpp
+set(DR_DATA ${PROJECT_BINARY_DIR}/data/DeRijckeCooling.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/DeRijckeCooling.tar.gz
+               ${DR_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${DR_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(DERIJCKEDATALOCATION ${PROJECT_BINARY_DIR}/data/DeRijckeCooling/)
+message(STATUS "DeRijckeDataLocation.hpp: ${DERIJCKEDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/DeRijckeDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/DeRijckeDataLocation.hpp @ONLY)
+
 # WMBasicDataLocation.hpp
 set(WMBASIC_DATA ${PROJECT_BINARY_DIR}/data/wmbasic.tar.gz)
 configure_file(${PROJECT_SOURCE_DIR}/data/wmbasic.tar.gz
@@ -139,6 +150,7 @@ set(CMACIONIZE_SOURCES
     CommandLineParser.cpp
     CompilerInfo.cpp.in
     ConfigurationInfo.cpp.in
+    DeRijckeRadiativeCooling.cpp
     DustScattering.cpp
     DustSimulation.cpp
     EmissivityCalculator.cpp
@@ -150,6 +162,7 @@ set(CMACIONIZE_SOURCES
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
     Box.hpp
+    BondiProfileDensityFunction.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
     CMacIonizeSnapshotDensityFunction.hpp
@@ -173,17 +186,22 @@ set(CMACIONIZE_SOURCES
     DensityGridWriterFactory.hpp
     DensityMaskFactory.hpp
     DensityValues.hpp
+    DiscICDensityFunction.hpp
     DustPhotonShootJob.hpp
     DustPhotonShootJobMarket.hpp
     EmissivityCalculator.hpp
     EmissivityValues.hpp
     Error.hpp
+    ExternalPotentialFactory.hpp
     FaucherGiguerePhotonSourceSpectrum.hpp
     FixedValueCrossSections.hpp
     FixedValueRecombinationRates.hpp
-    HydrogenLymanContinuumSpectrum.hpp
     HeliumLymanContinuumSpectrum.hpp
     HeliumTwoPhotonContinuumSpectrum.hpp
+    HLLCRiemannSolver.hpp
+    HydrogenLymanContinuumSpectrum.hpp
+    HydroMask.hpp
+    HydroMaskFactory.hpp
     InterpolatedDensityFunction.hpp
     IonizationPhotonShootJob.hpp
     IonizationPhotonShootJobMarket.hpp
@@ -207,6 +225,8 @@ set(CMACIONIZE_SOURCES
     RadiationHydrodynamicsSimulation.hpp
     RecombinationRates.hpp
     RecombinationRatesFactory.hpp
+    RiemannSolverFactory.hpp
+    Signals.hpp
     SILCCPhotonSourceDistribution.hpp
     SimulationBox.hpp
     SingleStarPhotonSourceDistribution.hpp

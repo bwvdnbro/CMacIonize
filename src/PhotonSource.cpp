@@ -100,45 +100,42 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 
   _total_luminosity = discrete_luminosity + continuous_luminosity;
 
-  if (_total_luminosity == 0.) {
-    if (_log) {
-      _log->write_error("Total luminosity of all sources is zero! Not doing "
-                        "radiative transfer, as there is no radiation to "
-                        "propagate.");
-      cmac_error("Total luminosity is zero!");
-    }
-  }
+  if (_total_luminosity > 0.) {
+    const double discrete_fraction = discrete_luminosity / _total_luminosity;
 
-  const double discrete_fraction = discrete_luminosity / _total_luminosity;
-
-  if (discrete_luminosity > 0.) {
-    if (continuous_luminosity > 0.) {
-      _continuous_probability = 0.5;
+    if (discrete_luminosity > 0.) {
+      if (continuous_luminosity > 0.) {
+        _continuous_probability = 0.5;
+      } else {
+        _continuous_probability = 0.;
+      }
+      _discrete_photon_weight = 1.;
+      _continuous_photon_weight = (1. - _continuous_probability) *
+                                  continuous_luminosity /
+                                  _continuous_probability / discrete_luminosity;
     } else {
-      _continuous_probability = 0.;
+      _continuous_probability = 1.;
+      _discrete_photon_weight = 0.;
+      _continuous_photon_weight = 1.;
     }
-    _discrete_photon_weight = 1.;
-    _continuous_photon_weight = (1. - _continuous_probability) *
-                                continuous_luminosity /
-                                _continuous_probability / discrete_luminosity;
+
+    if (_log) {
+      _log->write_status("Total luminosity of discrete sources: ",
+                         discrete_luminosity, " s^-1.");
+      _log->write_status("Total luminosity of continuous sources: ",
+                         continuous_luminosity, " s^-1.");
+      _log->write_status(
+          discrete_fraction * 100.,
+          "% of the ionizing radiation is emitted by discrete sources.");
+    }
   } else {
-    _continuous_probability = 1.;
+    _continuous_probability = 0.;
     _discrete_photon_weight = 0.;
-    _continuous_photon_weight = 1.;
+    _continuous_photon_weight = 0.;
   }
 
   if (diffuse_field) {
     _reemission_handler = new DiffuseReemissionHandler(_cross_sections);
-  }
-
-  if (_log) {
-    _log->write_status("Total luminosity of discrete sources: ",
-                       discrete_luminosity, " s^-1.");
-    _log->write_status("Total luminosity of continuous sources: ",
-                       continuous_luminosity, " s^-1.");
-    _log->write_status(
-        discrete_fraction * 100.,
-        "% of the ionizing radiation is emitted by discrete sources.");
   }
 }
 
@@ -188,8 +185,7 @@ PhotonSource::~PhotonSource() { delete _reemission_handler; }
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
 
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    const IonName ion = static_cast< IonName >(i);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }
@@ -206,6 +202,8 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
  */
 Photon
 PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
+
+  cmac_assert(_total_luminosity > 0.);
 
   CoordinateVector<> position, direction;
   double energy;
@@ -292,5 +290,73 @@ bool PhotonSource::reemit(Photon &photon,
   } else {
     photon.set_type(PHOTONTYPE_ABSORBED);
     return false;
+  }
+}
+
+/**
+ * @brief Update the PhotonSource with the given discrete
+ * PhotonSourceDistribution.
+ *
+ * @param distribution Discrete PhotonSourceDistribution.
+ */
+void PhotonSource::update(PhotonSourceDistribution *distribution) {
+
+  double discrete_luminosity = 0.;
+  double continuous_luminosity = 0.;
+  if (distribution != nullptr) {
+    _discrete_positions.resize(distribution->get_number_of_sources());
+    _discrete_probabilities.resize(distribution->get_number_of_sources());
+    for (size_t i = 0; i < _discrete_positions.size(); ++i) {
+      _discrete_positions[i] = distribution->get_position(i);
+      if (i > 0) {
+        _discrete_probabilities[i] =
+            _discrete_probabilities[i - 1] + distribution->get_weight(i);
+      } else {
+        _discrete_probabilities[i] = distribution->get_weight(i);
+      }
+    }
+    if (_discrete_probabilities.size() > 0) {
+      if (std::abs(_discrete_probabilities.back() - 1.) > 1.e-9) {
+        cmac_error("Discrete source weights do not sum to 1.0 (%g)!",
+                   _discrete_probabilities.back());
+      } else {
+        _discrete_probabilities.back() = 1.;
+      }
+    }
+    discrete_luminosity = distribution->get_total_luminosity();
+
+    if (_log) {
+      _log->write_status("Updated PhotonSource, now contains ",
+                         _discrete_positions.size(), " positions and weights.");
+    }
+  }
+
+  if (_continuous_source != nullptr) {
+    continuous_luminosity = _continuous_source->get_total_surface_area() *
+                            _continuous_spectrum->get_total_flux();
+  }
+
+  _total_luminosity = discrete_luminosity + continuous_luminosity;
+
+  if (_total_luminosity > 0.) {
+    if (discrete_luminosity > 0.) {
+      if (continuous_luminosity > 0.) {
+        _continuous_probability = 0.5;
+      } else {
+        _continuous_probability = 0.;
+      }
+      _discrete_photon_weight = 1.;
+      _continuous_photon_weight = (1. - _continuous_probability) *
+                                  continuous_luminosity /
+                                  _continuous_probability / discrete_luminosity;
+    } else {
+      _continuous_probability = 1.;
+      _discrete_photon_weight = 0.;
+      _continuous_photon_weight = 1.;
+    }
+  } else {
+    _continuous_probability = 0.;
+    _discrete_photon_weight = 0.;
+    _continuous_photon_weight = 0.;
   }
 }

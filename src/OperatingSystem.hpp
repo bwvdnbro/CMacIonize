@@ -105,6 +105,12 @@ static std::string absolute_path(std::string path);
  * @return Peak memory usage of the application (in bytes).
  */
 static size_t get_peak_memory_usage();
+
+/**
+ * @brief Install signal handlers that are called when specific signal
+ * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ */
+static void install_signal_handlers();
 }
 
 // ...then include the correct implementation

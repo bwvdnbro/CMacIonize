@@ -95,8 +95,16 @@ public:
       std::string type =
           blockfile.get_value< std::string >(blockname.str() + "type");
       double exponent = get_exponent(type);
-      double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-          blockname.str() + "number density");
+      double density;
+      if (blockfile.has_value(blockname.str() + "number density")) {
+        density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
+            blockname.str() + "number density");
+      } else {
+        density = blockfile.get_physical_value< QUANTITY_DENSITY >(
+            blockname.str() + "density");
+        density /= PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_PROTON_MASS);
+      }
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
       CoordinateVector<> velocity =
@@ -132,7 +140,7 @@ public:
    */
   BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
       : BlockSyntaxDensityFunction(
-            params.get_value< std::string >("DensityFunction:filename"), log) {}
+            params.get_filename("DensityFunction:filename"), log) {}
 
   /**
    * @brief Function that gives the density for a given cell.
@@ -174,6 +182,21 @@ public:
     values.set_ionic_fraction(ION_He_n, 1.e-6);
     values.set_velocity(velocity);
     return values;
+  }
+
+  /**
+   * @brief Check if the given position is inside the range of the blocks.
+   *
+   * @param position Position (in m).
+   * @return True if the position is inside the range of the blocks (and a call
+   * to operator() will be successful).
+   */
+  inline bool inside(const CoordinateVector<> position) const {
+    size_t i = 0;
+    while (i < _blocks.size() && !_blocks[i].is_inside(position)) {
+      ++i;
+    }
+    return i < _blocks.size();
   }
 };
 

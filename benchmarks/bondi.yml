@@ -1,0 +1,8 @@
+number of blocks: 1
+
+block[0]:
+  origin: [0. au, 0. au, 0. au]
+  sides: [20. au, 20. au, 20. au]
+  type: sphere
+  number density: 5.9786375e6 cm^-3
+  initial temperature: 500. K

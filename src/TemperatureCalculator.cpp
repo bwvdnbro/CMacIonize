@@ -538,10 +538,15 @@ void TemperatureCalculator::calculate_temperature(
     return;
   }
 
+  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
+  if (crfac < 0.) {
+    crfac = _crfac;
+  }
+
   // if cosmic ray heating is active, check if the gas is ionized enough
   // if it is not, we just assume the gas is neutral and do not apply heating
   double h0, he0;
-  if (_crfac > 0.) {
+  if (crfac > 0.) {
     const double alphaH =
         _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
     const double alphaHe =
@@ -552,7 +557,7 @@ void TemperatureCalculator::calculate_temperature(
     const double AHe = _abundances.get_abundance(ELEMENT_He);
     IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
         alphaH, alphaHe, jH, jHe, nH, AHe, 8000., h0, he0);
-    if (_crfac > 0. && h0 > _crlim) {
+    if (crfac > 0. && h0 > _crlim) {
       // assume fully neutral
       ionization_variables.set_temperature(500.);
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
@@ -586,16 +591,15 @@ void TemperatureCalculator::calculate_temperature(
 
   // normalize the mean intensity integrals
   double j[NUMBER_OF_IONNAMES];
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    j[i] = jfac * ionization_variables.get_mean_intensity(ion);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    j[ion] = jfac * ionization_variables.get_mean_intensity(ion);
   }
 
   // normalize the heating integrals
   double h[NUMBER_OF_HEATINGTERMS];
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    h[i] = hfac * ionization_variables.get_heating(heating_term);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    h[heating_term] = hfac * ionization_variables.get_heating(heating_term);
   }
 
   // iteratively find the equilibrium temperature by starting from a guess and
@@ -616,7 +620,7 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     compute_cooling_and_heating_balance(
-        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, _crfac,
+        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
@@ -624,13 +628,13 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h02, he02, gain2, loss2;
     compute_cooling_and_heating_balance(
-        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, _crfac,
+        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     compute_cooling_and_heating_balance(
-        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
+        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, crfac,
         _crscale, _line_cooling_data, _recombination_rates,
         _charge_transfer_rates);
 
@@ -774,17 +778,16 @@ void TemperatureCalculator::calculate_temperature(
 
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   // set the mean intensity values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    ionization_variables.set_mean_intensity(ion, j[i]);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    ionization_variables.set_mean_intensity(ion, j[ion]);
   }
 #endif
 
 #ifdef DO_OUTPUT_HEATING
   // set the heating term values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    ionization_variables.set_heating(heating_term, h[i]);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    ionization_variables.set_heating(heating_term, h[heating_term]);
   }
 #endif
 }

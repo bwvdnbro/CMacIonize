@@ -134,7 +134,7 @@ public:
             params.get_value< generatornumber_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 1000),
-            params.get_value< std::string >(
+            params.get_filename(
                 "DensityGrid:VoronoiGeneratorDistribution:filename", "SPH.txt"),
             log) {}
 

@@ -147,9 +147,8 @@ static double get_single_variable(DensityGrid::iterator &cell,
                                   std::string name) {
   // names are ordered alphabetically
   if (name.find("NeutralFraction") == 0) {
-    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      if (name == "NeutralFraction" + get_ion_name(i)) {
-        IonName ion = static_cast< IonName >(i);
+    for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+      if (name == "NeutralFraction" + get_ion_name(ion)) {
         return cell.get_ionization_variables().get_ionic_fraction(ion);
       }
     }
@@ -159,6 +158,20 @@ static double get_single_variable(DensityGrid::iterator &cell,
     return cell.get_ionization_variables().get_number_density();
   } else if (name == "OI_6300") {
     return cell.get_emissivities()->get_emissivity(EMISSIONLINE_OI_6300);
+  } else if (name == "WFC2_F439W") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_WFC2_F439W);
+  } else if (name == "WFC2_F555W") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_WFC2_F555W);
+  } else if (name == "WFC2_F675W") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_WFC2_F675W);
+  } else if (name == "HAlpha") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_HAlpha);
+  } else if (name == "HBeta") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_HBeta);
+  } else if (name == "NII_6584") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_NII_6548);
+  } else if (name == "OIII_5700") {
+    return cell.get_emissivities()->get_emissivity(EMISSIONLINE_OIII_5007);
   } else if (name == "Temperature") {
     return cell.get_ionization_variables().get_temperature();
   } else {
@@ -182,6 +195,20 @@ static std::string get_variable_unit(std::string name) {
   } else if (name == "NumberDensity") {
     return "m^-3";
   } else if (name == "OI_6300") {
+    return "no idea";
+  } else if (name == "WFC2_F439W") {
+    return "no idea";
+  } else if (name == "WFC2_F555W") {
+    return "no idea";
+  } else if (name == "WFC2_F675W") {
+    return "no idea";
+  } else if (name == "HAlpha") {
+    return "no idea";
+  } else if (name == "HBeta") {
+    return "no idea";
+  } else if (name == "NII_6584") {
+    return "no idea";
+  } else if (name == "OIII_5700") {
     return "no idea";
   } else if (name == "Temperature") {
     return "K";

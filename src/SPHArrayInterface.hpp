@@ -98,7 +98,8 @@ public:
   void fill_array(float *nH);
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time);
+                     ParameterFile &params, double time,
+                     const InternalHydroUnits *hydro_units = nullptr);
 };
 
 #endif // SPHARRAYINTERFACE_HPP

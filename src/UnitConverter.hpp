@@ -72,13 +72,18 @@ enum Quantity {
   QUANTITY_LENGTH,
   QUANTITY_MASS,
   QUANTITY_MASS_RATE,
+  QUANTITY_MOMENTUM,
   QUANTITY_NUMBER_DENSITY,
   QUANTITY_OPACITY,
+  QUANTITY_PRESSURE,
   QUANTITY_REACTION_RATE,
   QUANTITY_SURFACE_AREA,
+  QUANTITY_SURFACE_DENSITY,
   QUANTITY_TEMPERATURE,
   QUANTITY_TIME,
-  QUANTITY_VELOCITY
+  QUANTITY_VELOCITY,
+  QUANTITY_VOLUME,
+  NUMBER_OF_QUANTITIES
 };
 
 /**
@@ -107,6 +112,8 @@ public:
       return Unit(1.e-10, 1, 0, 0, 0, 0, 0);
     } else if (name == "km") {
       return Unit(1000., 1, 0, 0, 0, 0, 0);
+    } else if (name == "au") {
+      return Unit(149597870700., 1, 0, 0, 0, 0, 0);
       /// time units
     } else if (name == "s") {
       return Unit(1., 0, 1, 0, 0, 0, 0);
@@ -145,6 +152,11 @@ public:
       return Unit(PhysicalConstants::get_physical_constant(
                       PHYSICALCONSTANT_ELECTRONVOLT),
                   2, -2, 1, 0, 0, 0);
+      /// pressure units
+    } else if (name == "Pa") {
+      return Unit(1., -1, -2, 1, 0, 0, 0);
+    } else if (name == "bar") {
+      return Unit(1.e5, -1, -2, 1, 0, 0, 0);
     } else {
       /// error handler
       cmac_error("Unknown unit: \"%s\"!", name.c_str());
@@ -158,7 +170,7 @@ public:
    * @param quantity Quantity.
    * @return Name of the SI unit corresponding to the given quantity.
    */
-  static inline std::string get_SI_unit_name(Quantity quantity) {
+  static inline std::string get_SI_unit_name(const int quantity) {
     switch (quantity) {
     case QUANTITY_ACCELERATION:
       return "m s^-2";
@@ -184,20 +196,28 @@ public:
       return "kg";
     case QUANTITY_MASS_RATE:
       return "kg s^-1";
+    case QUANTITY_MOMENTUM:
+      return "kg m s^-1";
     case QUANTITY_NUMBER_DENSITY:
       return "m^-3";
     case QUANTITY_OPACITY:
       return "m^-1";
+    case QUANTITY_PRESSURE:
+      return "Pa";
     case QUANTITY_REACTION_RATE:
       return "m^3 s^-1";
     case QUANTITY_SURFACE_AREA:
       return "m^2";
+    case QUANTITY_SURFACE_DENSITY:
+      return "kg m^-2";
     case QUANTITY_TEMPERATURE:
       return "K";
     case QUANTITY_TIME:
       return "s";
     case QUANTITY_VELOCITY:
       return "m s^-1";
+    case QUANTITY_VOLUME:
+      return "m^3";
     default:
       cmac_error("Unknown quantity: %i!", quantity);
       return "";
@@ -210,7 +230,7 @@ public:
    * @param quantity Quantity.
    * @return SI Unit corresponding to the given quantity.
    */
-  static inline Unit get_SI_unit(Quantity quantity) {
+  static inline Unit get_SI_unit(const int quantity) {
     return get_unit(get_SI_unit_name(quantity));
   }
 
@@ -357,7 +377,7 @@ public:
         ++pos2;
       }
       const std::string powstr = name.substr(pos1, pos2 - pos1);
-      const int_fast32_t power = strtod(powstr.c_str(), nullptr);
+      const int_fast32_t power = std::stoi(powstr.c_str());
       unit ^= power;
       if (pos2 == name.size()) {
         return unit;
@@ -391,7 +411,7 @@ public:
           ++pos2;
         }
         const std::string powstr = name.substr(pos1, pos2 - pos1);
-        const int_fast32_t power = strtod(powstr.c_str(), nullptr);
+        const int_fast32_t power = std::stoi(powstr.c_str());
         unit2 ^= power;
       }
       unit *= unit2;
@@ -402,8 +422,6 @@ public:
   /**
    * @brief Convert the given value with the given unit to the equivalent value
    * in SI units.
-   *
-   * This function needs to be specialized for all quantities.
    *
    * @param value Value in obscure non SI unit.
    * @param unit Name of the obscure non SI unit.
@@ -423,8 +441,6 @@ public:
    * @brief Convert the given value in SI units to the equivalent value in the
    * given non SI unit.
    *
-   * This function needs to be specialized for all quantities.
-   *
    * @param value Value in SI units.
    * @param unit Name of an obscure non SI unit.
    * @return Value in that obscure non SI unit.
@@ -437,6 +453,28 @@ public:
       return try_conversion(value, SI_unit, strange_unit);
     }
     return value / strange_unit;
+  }
+
+  /**
+   * @brief Convert the given value in SI units to a string in the given units.
+   *
+   * @param value Value in SI units.
+   * @param unit Name of an obscure non SI unit.
+   * @return Human readable string in the given (non SI) unit.
+   */
+  template < Quantity _quantity_ >
+  static inline std::string to_unit_string(double value, std::string unit) {
+    const Unit SI_unit = get_SI_unit(_quantity_);
+    Unit strange_unit = get_unit(unit);
+    double strange_value;
+    if (!SI_unit.is_same_quantity(strange_unit)) {
+      strange_value = try_conversion(value, SI_unit, strange_unit);
+    } else {
+      strange_value = value / strange_unit;
+    }
+    std::stringstream unit_string;
+    unit_string << strange_value << " " << unit;
+    return unit_string.str();
   }
 
   /**
