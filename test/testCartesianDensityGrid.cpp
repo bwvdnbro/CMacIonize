@@ -31,6 +31,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 /**
  * @brief Unit test for the CartesianDensityGrid class.
