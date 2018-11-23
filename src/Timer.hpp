@@ -31,6 +31,8 @@
 #define TIMER_HPP
 
 #include "OperatingSystem.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
   * @brief A simplified interface to the Unix system timer.
@@ -118,6 +120,27 @@ public:
    * @brief Restart the timer by overwriting the start time.
    */
   inline void restart() { OperatingSystem::get_time_value(_start); }
+
+  /**
+   * @brief Write the state of the timer to the given restart file.
+   *
+   * @param restart_writer RestartWriter.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    restart_writer.write(_start);
+    restart_writer.write(_stop);
+    restart_writer.write(_diff);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to restart from.
+   */
+  inline Timer(RestartReader &restart_reader)
+      : _start(restart_reader.read< OperatingSystem::TimeValue >()),
+        _stop(restart_reader.read< OperatingSystem::TimeValue >()),
+        _diff(restart_reader.read< OperatingSystem::TimeValue >()) {}
 };
 
 #endif // TIMER_HPP

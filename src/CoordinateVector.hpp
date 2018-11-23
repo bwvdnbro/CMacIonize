@@ -26,6 +26,9 @@
 #ifndef COORDINATEVECTOR_HPP
 #define COORDINATEVECTOR_HPP
 
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -297,6 +300,27 @@ public:
     crossvec._z = a._x * b._y - a._y * b._x;
     return crossvec;
   }
+
+  /**
+   * @brief Write the coordinate vector to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    restart_writer.write(_x);
+    restart_writer.write(_y);
+    restart_writer.write(_z);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline CoordinateVector(RestartReader &restart_reader)
+      : _x(restart_reader.read< _datatype_ >()),
+        _y(restart_reader.read< _datatype_ >()),
+        _z(restart_reader.read< _datatype_ >()) {}
 };
 
 /**

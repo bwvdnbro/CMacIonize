@@ -30,6 +30,8 @@
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistribution.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief General interface for photon source distribution functors.
@@ -114,6 +116,26 @@ public:
    * @return Luminosity (in s^-1).
    */
   virtual double get_total_luminosity() const { return _luminosity; }
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    _position.write_restart_file(restart_writer);
+    restart_writer.write(_luminosity);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline SingleStarPhotonSourceDistribution(RestartReader &restart_reader)
+      : _position(restart_reader),
+        _luminosity(restart_reader.read< double >()) {}
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

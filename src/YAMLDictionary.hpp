@@ -29,6 +29,8 @@
 #define YAMLDICTIONARY_HPP
 
 #include "Error.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
 
@@ -554,6 +556,27 @@ public:
     uint_fast32_t count = _dictionary.count(key);
     return count > 0;
   }
+
+  /**
+   * @brief Write the state of the YAML dictionary to the given restart file.
+   *
+   * @param restart_writer RestartWriter to write to.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    restart_writer.write(_dictionary);
+    restart_writer.write(_used_values);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader RestartReader to read from.
+   */
+  inline YAMLDictionary(RestartReader &restart_reader)
+      : _dictionary(
+            restart_reader.read< std::map< std::string, std::string > >()),
+        _used_values(
+            restart_reader.read< std::map< std::string, std::string > >()) {}
 };
 
 /**

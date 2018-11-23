@@ -466,5 +466,23 @@ int main(int argc, char **argv) {
 
   assert_condition(inside == grid.end());
 
+  /// restart test
+  {
+    RestartWriter restart_writer("cartesiandensitygrid.dump");
+    grid.write_restart_file(restart_writer);
+  }
+  {
+    const std::string tag = typeid(grid).name();
+    assert_condition(tag == typeid(CartesianDensityGrid).name());
+    RestartReader restart_reader("cartesiandensitygrid.dump");
+    CartesianDensityGrid restart_grid(restart_reader);
+    assert_condition(restart_grid.get_cell_volume(0) ==
+                     grid.get_cell_volume(0));
+    assert_condition(restart_grid.get_total_hydrogen_number() ==
+                     grid.get_total_hydrogen_number());
+    assert_condition(restart_grid.get_average_temperature() ==
+                     grid.get_average_temperature());
+  }
+
   return 0;
 }

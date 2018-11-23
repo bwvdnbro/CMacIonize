@@ -49,7 +49,7 @@
 #define SAFE_HYDRO
 
 /*! @brief Uncomment this to activate the flux limiter. */
-#define FLUX_LIMITER
+#define FLUX_LIMITER 2.
 
 #include <cfloat>
 
@@ -91,6 +91,14 @@ private:
 
   /*! @brief Assumed temperature for ionised gas (in K). */
   const double _ionised_temperature;
+
+  /*! @brief Temperature limit for shock heated gas. Gas above this temperature
+   *  is not affected by radiative effects (in K). */
+  const double _shock_temperature;
+
+  /*! @brief Velocity limit. Gas velocities higher than this value are capped
+   *  (in m s^-1). */
+  const double _max_velocity;
 
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
@@ -472,18 +480,83 @@ private:
 
 #ifdef FLUX_LIMITER
         // limit the flux
-        mflux = std::min(mflux,
-                         0.5 * cell.get_hydro_variables().get_conserved_mass());
-        if (pflux.norm2() >
-            0.25 *
-                cell.get_hydro_variables().get_conserved_momentum().norm2()) {
-          pflux *= (0.5 *
-                    cell.get_hydro_variables().get_conserved_momentum().norm() /
-                    pflux.norm());
+        double fluxfac = 1.;
+        const double absmflux = mflux;
+        if (absmflux >
+            FLUX_LIMITER * cell.get_hydro_variables().get_conserved_mass()) {
+          fluxfac = FLUX_LIMITER *
+                    cell.get_hydro_variables().get_conserved_mass() / absmflux;
         }
-        Eflux = std::min(
-            Eflux,
-            0.5 * cell.get_hydro_variables().get_conserved_total_energy());
+        if (ngb != _grid_end &&
+            -absmflux >
+                FLUX_LIMITER * ngb.get_hydro_variables().get_conserved_mass()) {
+          fluxfac = std::min(
+              fluxfac, -FLUX_LIMITER *
+                           ngb.get_hydro_variables().get_conserved_mass() /
+                           absmflux);
+        }
+        if (_hydro_integrator._gamma > 1.) {
+          const double absEflux = Eflux;
+          if (absEflux >
+              FLUX_LIMITER *
+                  cell.get_hydro_variables().get_conserved_total_energy()) {
+            fluxfac = std::min(
+                fluxfac,
+                FLUX_LIMITER *
+                    cell.get_hydro_variables().get_conserved_total_energy() /
+                    absEflux);
+          }
+          if (ngb != _grid_end &&
+              -absEflux >
+                  FLUX_LIMITER *
+                      ngb.get_hydro_variables().get_conserved_total_energy()) {
+            fluxfac = std::min(
+                fluxfac,
+                -FLUX_LIMITER *
+                    ngb.get_hydro_variables().get_conserved_total_energy() /
+                    absEflux);
+          }
+        }
+        // momentum flux limiter
+        // note that we only apply this for cells that have high momentum, i.e.
+        // whose momentum is higher than the thermal momentum of the cell
+        // without this condition, cells with zero momentum would never be able
+        // to gain momentum...
+        const double p2 =
+            cell.get_hydro_variables().get_conserved_momentum().norm2();
+        const double m2 = cell.get_hydro_variables().get_conserved_mass() *
+                          cell.get_hydro_variables().get_conserved_mass();
+        if (p2 * cell.get_hydro_variables().get_primitives_density() >
+            _hydro_integrator._gamma * m2 *
+                cell.get_hydro_variables().get_primitives_pressure()) {
+          const double pflux2 = pflux.norm2();
+          if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
+            fluxfac =
+                std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * p2 /
+                                            pflux2));
+          }
+        }
+        if (ngb != _grid_end) {
+          const double pn2 =
+              ngb.get_hydro_variables().get_conserved_momentum().norm2();
+          const double mn2 = ngb.get_hydro_variables().get_conserved_mass() *
+                             ngb.get_hydro_variables().get_conserved_mass();
+          if (p2 * ngb.get_hydro_variables().get_primitives_density() >
+              _hydro_integrator._gamma * mn2 *
+                  ngb.get_hydro_variables().get_primitives_pressure()) {
+            const double pflux2 = pflux.norm2();
+            if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * pn2) {
+              fluxfac =
+                  std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) *
+                                              pn2 / pflux2));
+            }
+          }
+        }
+        cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g",
+                            fluxfac);
+        mflux *= fluxfac;
+        pflux *= fluxfac;
+        Eflux *= fluxfac;
 #endif
 
         cell.get_hydro_variables().delta_conserved(0) += mflux;
@@ -538,6 +611,8 @@ public:
    * @param riemann_solver_type Type of Riemann solver to use.
    * @param neutral_temperature Assumed temperature for neutral gas (in K).
    * @param ionised_temperature Assumed temperature for ionised gas (in K).
+   * @param shock_temperature Assumed temperature for shock heated gas (in K).
+   * @param max_velocity Maximum allowed velocity for the gas (in m s^-1).
    * @param boundary_xlow Type of boundary for the lower x boundary.
    * @param boundary_xhigh Type of boundary for the upper x boundary.
    * @param boundary_ylow Type of boundary for the lower y boundary.
@@ -555,6 +630,8 @@ public:
                          const std::string riemann_solver_type = "Exact",
                          const double neutral_temperature = 100.,
                          const double ionised_temperature = 1.e4,
+                         const double shock_temperature = 3.e4,
+                         const double max_velocity = DBL_MAX,
                          const std::string boundary_xlow = "reflective",
                          const std::string boundary_xhigh = "reflective",
                          const std::string boundary_ylow = "reflective",
@@ -569,6 +646,7 @@ public:
         _do_radiative_cooling(do_radiative_cooling),
         _CFL_constant(CFL_constant), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature),
+        _shock_temperature(shock_temperature), _max_velocity(max_velocity),
         _u_conversion_factor(PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN) *
                              _gm1_inv /
@@ -629,6 +707,8 @@ public:
       cmac_error(
           "Bondi inflow boundaries only work if a Bondi profile is given.");
     }
+
+    _hydro_units = new InternalHydroUnits(1., 1., 1.);
   }
 
   /**
@@ -645,6 +725,11 @@ public:
    *    (default: 100. K)
    *  - ionised temperature: Assumed temperature for ionised gas
    *    (default: 1.e4 K)
+   *  - shock temperature: Assumed temperature for shock heated gas. Gas at
+   *    higher temperatures is not affected by radiative effects (default:
+   *    3.e4 K)
+   *  - maximum velocity: Maximum allowed velocity for the gas. The gas velocity
+   *    is capped at this value (default: 1.e99 m s^-1)
    *  - boundary x low: Boundary condition type for the lower x boundary
    *    (periodic/reflective/inflow, default: reflective)
    *  - boundary x high: Boundary condition type for the upper x boundary
@@ -676,6 +761,10 @@ public:
                 "HydroIntegrator:neutral temperature", "100. K"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
                 "HydroIntegrator:ionised temperature", "1.e4 K"),
+            params.get_physical_value< QUANTITY_TEMPERATURE >(
+                "HydroIntegrator:shock temperature", "3.e4 K"),
+            params.get_physical_value< QUANTITY_VELOCITY >(
+                "HydroIntegrator:maximum velocity", "1.e99 m s^-1"),
             params.get_value< std::string >("HydroIntegrator:boundary x low",
                                             "reflective"),
             params.get_value< std::string >("HydroIntegrator:boundary x high",
@@ -743,8 +832,12 @@ public:
           it.get_ionization_variables().get_temperature();
 
       const double density = number_density * hydrogen_mass;
-      const CoordinateVector<> velocity =
+      CoordinateVector<> velocity =
           it.get_hydro_variables().get_primitives_velocity();
+      if (velocity.norm() > _max_velocity) {
+        velocity *= (_max_velocity / velocity.norm());
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+      }
       // we assume a completely neutral or completely ionized gas
       double pressure = density * _P_conversion_factor * temperature;
       if (temperature >= _ionised_temperature) {
@@ -786,8 +879,8 @@ public:
     (void)avg_box_size;
     (void)avg_rho;
     (void)avg_P;
-    _hydro_units = new InternalHydroUnits(1., 1., 1.);
 #else
+    delete _hydro_units;
     _hydro_units = new InternalHydroUnits(avg_box_size, avg_rho, avg_P);
 #endif
 
@@ -1011,20 +1104,43 @@ public:
         it.get_ionization_variables().set_temperature(Tgas);
         if (_gamma > 1. &&
             it.get_hydro_variables().get_primitives_density() > 0.) {
-          const double ugas = 2. * _u_conversion_factor * Tgas / (1. + xH);
-          const double uold =
-              it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
+
+          const double Tgas_old =
+              0.5 * (1. + xH) * _T_conversion_factor *
+              it.get_hydro_variables().get_primitives_pressure() /
               it.get_hydro_variables().get_primitives_density();
-          const double du = ugas - uold;
-          const double dE = it.get_hydro_variables().get_conserved_mass() * du;
-          if (_do_radiative_heating && dE > 0.) {
-            it.get_hydro_variables().delta_conserved(4) -= dE;
+          if (it.get_hydro_variables().get_energy_term() > 0. ||
+              Tgas_old > _shock_temperature) {
+            // we don't change the temperature for cells that have very
+            // high temperatures, indicating that they were shock heated
+            it.get_ionization_variables().set_temperature(Tgas_old);
+          } else {
+            const double ufac = 2. * _u_conversion_factor / (1. + xH);
+            const double ugas = ufac * Tgas;
+            const double uold =
+                it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
+                it.get_hydro_variables().get_primitives_density();
+            const double du = ugas - uold;
+            double dE = it.get_hydro_variables().get_conserved_mass() * du;
+            if (_do_radiative_heating && dE > 0.) {
+              it.get_hydro_variables().delta_conserved(4) -= dE;
+            }
+            if (_do_radiative_cooling && dE < 0.) {
+              // limit the change in energy to the difference between
+              // neutral and ionised temperature
+              dE = std::max(dE,
+                            2. * ufac *
+                                (_neutral_temperature - _ionised_temperature) *
+                                it.get_hydro_variables().get_conserved_mass());
+              cmac_assert(dE < 0.);
+              // we add a factor 1/2 to account for the change in mean particle
+              // mass. Without this factor, we end up subtracting too much
+              // energy, which leads to negative pressure.
+              it.get_hydro_variables().delta_conserved(4) -= 0.5 * dE;
+            }
+            cmac_assert(it.get_hydro_variables().delta_conserved(4) ==
+                        it.get_hydro_variables().delta_conserved(4));
           }
-          if (_do_radiative_cooling && dE < 0.) {
-            it.get_hydro_variables().delta_conserved(4) -= dE;
-          }
-          cmac_assert(it.get_hydro_variables().delta_conserved(4) ==
-                      it.get_hydro_variables().delta_conserved(4));
         }
       }
     }
@@ -1067,9 +1183,13 @@ public:
       it.get_hydro_variables().conserved(4) +=
           internal_timestep * CoordinateVector<>::dot_product(p, a);
 
-      // add energy term
+      // add energy terms
       it.get_hydro_variables().conserved(4) +=
-          internal_timestep * it.get_hydro_variables().get_energy_term();
+          internal_timestep * it.get_hydro_variables().get_energy_rate_term();
+      it.get_hydro_variables().conserved(4) +=
+          it.get_hydro_variables().get_energy_term();
+      it.get_hydro_variables().set_energy_rate_term(0.);
+      it.get_hydro_variables().set_energy_term(0.);
 
       cmac_assert(it.get_hydro_variables().get_conserved_momentum().x() ==
                   it.get_hydro_variables().get_conserved_momentum().x());
@@ -1085,6 +1205,9 @@ public:
 #ifdef SAFE_HYDRO
       it.get_hydro_variables().conserved(4) =
           std::max(it.get_hydro_variables().get_conserved_total_energy(), 0.);
+      if (it.get_hydro_variables().get_conserved_total_energy() == 0.) {
+        it.get_hydro_variables().set_conserved_momentum(0.);
+      }
 #else
       cmac_assert(_gamma == 1. ||
                   it.get_hydro_variables().get_conserved_total_energy() >= 0.);
@@ -1119,7 +1242,7 @@ public:
       const double mean_molecular_mass =
           0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
 
-      double density, pressure;
+      double density, pressure, temperature;
       CoordinateVector<> velocity;
       if (mass <= 0.) {
         cmac_assert(mass == 0.);
@@ -1127,7 +1250,7 @@ public:
         density = 0.;
         velocity = CoordinateVector<>(0.);
         pressure = 0.;
-        ionization_variables.set_temperature(0.);
+        temperature = 0.;
       } else {
         density = mass / volume;
         velocity = momentum / mass;
@@ -1139,27 +1262,54 @@ public:
               (total_energy -
                0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
               volume;
-          ionization_variables.set_temperature(
-              mean_molecular_mass * _T_conversion_factor * pressure / density);
+          temperature =
+              mean_molecular_mass * _T_conversion_factor * pressure / density;
         } else {
-          const double temperature = ionization_variables.get_temperature();
+          temperature = ionization_variables.get_temperature();
           pressure = _P_conversion_factor * density * temperature /
                      mean_molecular_mass;
         }
       }
 
+#ifdef SAFE_HYDRO
+      if (density <= 0. || pressure <= 0.) {
+        density = 0.;
+        velocity = CoordinateVector<>(0.);
+        pressure = 0.;
+        temperature = 0.;
+      }
+#else
       cmac_assert_message(density >= 0., "density: %g, mass: %g, volume: %g",
                           density, mass, volume);
-      cmac_assert(pressure >= 0.);
+      cmac_assert_message(
+          pressure >= 0.,
+          "pressure: %g, total energy: %g, velocity: %g %g %g, volume: %g",
+          pressure, total_energy, velocity.x(), velocity.y(), velocity.z(),
+          volume);
+      cmac_assert(temperature >= 0.);
+#endif
 
       it.get_hydro_variables().set_primitives_density(density);
       it.get_hydro_variables().set_primitives_velocity(velocity);
       it.get_hydro_variables().set_primitives_pressure(pressure);
 
-      ionization_variables.set_number_density(density * _n_conversion_factor);
+      // apply velocity cap
+      if (velocity.norm() > _max_velocity) {
+        velocity *= (_max_velocity / velocity.norm());
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+      }
+      const double cs = get_soundspeed(it);
+      if (cs > _max_velocity) {
+        // lower the pressure to reduce the sound speed
+        const double factor = _max_velocity / cs;
+        pressure *= factor * factor;
+        it.get_hydro_variables().set_primitives_pressure(pressure);
+      }
 
-      cmac_assert(ionization_variables.get_number_density() >= 0.);
-      cmac_assert(ionization_variables.get_temperature() >= 0.);
+      ionization_variables.set_number_density(density * _n_conversion_factor);
+      if (_gamma > 1.) {
+        ionization_variables.set_temperature(temperature);
+      }
     }
 
     grid.set_grid_velocity(

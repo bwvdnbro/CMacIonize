@@ -28,6 +28,8 @@
 
 #include "Error.hpp"
 #include "Log.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -191,10 +193,11 @@ public:
     }
 
     if (integer_timestep < _minimum_timestep) {
-      cmac_warning("Time step wants to be smaller than minimum time step: %g "
-                   "(minimum: %g)! Prematurely stopping simulation...",
-                   to_physical_time_interval(integer_timestep),
-                   to_physical_time_interval(_minimum_timestep));
+      cmac_warning(
+          "Time step wants to be smaller than minimum time step: %g "
+          "(rounded from: %g, minimum: %g)! Prematurely stopping simulation...",
+          to_physical_time_interval(integer_timestep), requested_timestep,
+          to_physical_time_interval(_minimum_timestep));
       actual_timestep = to_physical_time_interval(integer_timestep);
       current_time = to_physical_time(_current_time);
       return false;
@@ -209,6 +212,32 @@ public:
 
     return _current_time < TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
   }
+
+  /**
+   * @brief Dump the time line to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_minimum_timestep);
+    restart_writer.write(_maximum_timestep);
+    restart_writer.write(_conversion_factors[0]);
+    restart_writer.write(_conversion_factors[1]);
+    restart_writer.write(_current_time);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline TimeLine(RestartReader &restart_reader)
+      : _minimum_timestep(restart_reader.read< uint64_t >()),
+        _maximum_timestep(restart_reader.read< uint64_t >()),
+        _conversion_factors{restart_reader.read< double >(),
+                            restart_reader.read< double >()},
+        _current_time(restart_reader.read< uint64_t >()) {}
 };
 
 #endif // TIMELINE_HPP

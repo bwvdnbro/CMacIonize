@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "CoredDMProfileExternalPotential.hpp"
 #include "DiscPatchExternalPotential.hpp"
 #include "PointMassExternalPotential.hpp"
 
@@ -43,6 +44,8 @@ public:
    * given ParameterFile.
    *
    * Supported types are (default: None):
+   *  - CoredDMProfile: Cored DM profile external potential (Caproni et al.,
+   *    2015)
    *  - DiscPatch: Disc patch external potential (Creasey, Theuns & Bower, 2013)
    *  - PointMass: Point mass external potential
    *
@@ -61,7 +64,9 @@ public:
       log->write_info("Requested ExternalPotential type: ", type);
     }
 
-    if (type == "DiscPatch") {
+    if (type == "CoredDMProfile") {
+      return new CoredDMProfileExternalPotential(params);
+    } else if (type == "DiscPatch") {
       return new DiscPatchExternalPotential(params);
     } else if (type == "PointMass") {
       return new PointMassExternalPotential(params);

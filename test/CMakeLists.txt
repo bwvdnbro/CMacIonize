@@ -1222,6 +1222,58 @@ set(TESTDERIJCKERADIATIVECOOLING_SOURCES
 add_unit_test(NAME testDeRijckeRadiativeCooling
               SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES})
 
+## Unit test for CoredDMProfileExternalPotential
+set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
+    testCoredDMProfileExternalPotential.cpp
+
+    ../src/CoredDMProfileDensityFunction.hpp
+    ../src/CoredDMProfileExternalPotential.hpp
+)
+add_unit_test(NAME testCoredDMProfileExternalPotential
+              SOURCES ${TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES})
+
+## Unit test for DwarfGalaxyPhotonSourceDistribution
+set(TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES
+    testDwarfGalaxyPhotonSourceDistribution.cpp
+
+    ../src/DwarfGalaxyPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testDwarfGalaxyPhotonSourceDistribution
+              SOURCES ${TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for CaproniPhotonSourceDistribution
+set(TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES
+    testCaproniPhotonSourceDistribution.cpp
+
+    ../src/CaproniPhotonSourceDistribution.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+)
+add_unit_test(NAME testCaproniPhotonSourceDistribution
+              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for SingleSupernovaPhotonSourceDistribution
+set(TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES
+    testSingleSupernovaPhotonSourceDistribution.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SingleSupernovaPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testSingleSupernovaPhotonSourceDistribution
+              SOURCES ${TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES})
+
+## Unit test for RestartManager
+set(TESTRESTARTMANAGER_SOURCES
+    testRestartManager.cpp
+
+    ../src/RestartManager.hpp
+    ../src/RestartReader.hpp
+    ../src/RestartWriter.hpp
+)
+add_unit_test(NAME testRestartManager
+              SOURCES ${TESTRESTARTMANAGER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

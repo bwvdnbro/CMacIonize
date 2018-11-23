@@ -27,6 +27,8 @@
 #define HYDROVARIABLES_HPP
 
 #include "CoordinateVector.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief Hydro related variables.
@@ -49,6 +51,9 @@ private:
   CoordinateVector<> _gravitational_acceleration;
 
   /*! @brief External cooling and/or heating (in J s^-1). */
+  double _energy_rate_term;
+
+  /*! @brief External instanteneous energy terms (in J). */
   double _energy_term;
 
 public:
@@ -57,7 +62,8 @@ public:
    */
   inline HydroVariables()
       : _primitives{0., 0., 0., 0., 0.}, _conserved{0., 0., 0., 0., 0.},
-        _delta_conserved{0., 0., 0., 0., 0.}, _energy_term(0.) {}
+        _delta_conserved{0., 0., 0., 0., 0.}, _energy_rate_term(0.),
+        _energy_term(0.) {}
 
   /**
    * @brief Get read only access to the given component of the primitive
@@ -272,19 +278,71 @@ public:
   }
 
   /**
+   * @brief Get the energy rate term.
+   *
+   * @return Energy rate term (in J s^-1).
+   */
+  inline double get_energy_rate_term() const { return _energy_rate_term; }
+
+  /**
+   * @brief Set the energy rate term.
+   *
+   * @param energy_rate_term Energy rate term (in J s^-1).
+   */
+  inline void set_energy_rate_term(const double energy_rate_term) {
+    _energy_rate_term = energy_rate_term;
+  }
+
+  /**
    * @brief Get the energy term.
    *
-   * @return Energy term (in J s^-1).
+   * @return Energy term (in J).
    */
   inline double get_energy_term() const { return _energy_term; }
 
   /**
    * @brief Set the energy term.
    *
-   * @param energy_term Energy term (in J s^-1).
+   * @param energy_term Energy term (in J).
    */
   inline void set_energy_term(const double energy_term) {
     _energy_term = energy_term;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      restart_writer.write(_primitives[i]);
+      restart_writer.write(_conserved[i]);
+      restart_writer.write(_delta_conserved[i]);
+      _primitive_gradients[i].write_restart_file(restart_writer);
+    }
+    _gravitational_acceleration.write_restart_file(restart_writer);
+    restart_writer.write(_energy_rate_term);
+    restart_writer.write(_energy_term);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline HydroVariables(RestartReader &restart_reader) {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      _primitives[i] = restart_reader.read< double >();
+      _conserved[i] = restart_reader.read< double >();
+      _delta_conserved[i] = restart_reader.read< double >();
+      _primitive_gradients[i] = CoordinateVector<>(restart_reader);
+    }
+    _gravitational_acceleration = CoordinateVector<>(restart_reader);
+    _energy_rate_term = restart_reader.read< double >();
+    _energy_term = restart_reader.read< double >();
   }
 };
 

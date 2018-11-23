@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
   /// Cartesian grid
   {
-    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC");
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     CoordinateVector< int_fast32_t > ncell(100, 1, 1);
@@ -114,8 +114,6 @@ int main(int argc, char **argv) {
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
-
-    assert_condition(integrator.get_internal_units() == nullptr);
 
     integrator.initialize_hydro_variables(grid);
 
@@ -196,7 +194,7 @@ int main(int argc, char **argv) {
 
   /// Voronoi grid
   {
-    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC");
+    HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
 
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     SodShockDensityFunction density_function;
@@ -208,8 +206,6 @@ int main(int argc, char **argv) {
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
-
-    assert_condition(integrator.get_internal_units() == nullptr);
 
     integrator.initialize_hydro_variables(grid);
 
