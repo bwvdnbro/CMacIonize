@@ -1,0 +1,66 @@
+{% include header.html %}
+
+    {% include title-group.html %}
+
+    <main>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-10 col-md-offset-1 text-justify">
+                  <h1>Images</h1>
+                </div>
+                {% assign image_count = 0 %}
+                {% for image in page.images %}
+                  <div class="col-md-3 col-md-offset-1">
+                    <a href="#" class="pop" data-toggle="modal" data-target="#{{ image.image | replace: '.', '_' }}">
+                    <img src="{{ site.data.global.url }}/img/{{ image.image }}" class="img-thumbnail" alt="{{ image.text }}">
+                    </a>
+                  </div>
+                {% endfor %}
+                
+                <div class="col-md-10 col-md-offset-1 text-justify">
+                  <h1>Movies</h1>
+                </div>
+                {% assign image_count = 0 %}
+                {% for movie in page.movies %}
+                  <div class="col-md-3 col-md-offset-1">
+                    <a href="#" class="pop" data-toggle="modal" data-target="#{{ movie.movie | replace: '.', '_' }}">
+                    <img src="{{ site.data.global.url }}/movie/{{ movie.image }}" class="img-thumbnail" alt="{{ movie.text }}">
+                    </a>
+                  </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+    
+    {% for image in page.images %}
+    <div class="modal fade" id="{{ image.image | replace: '.', '_' }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <img src="{{ site.data.global.url }}/img/{{ image.image }}" >
+            <p>{{ image.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% for movie in page.movies %}
+    <div class="modal fade" id="{{ movie.movie | replace: '.', '_' }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <video controls>
+            <source src="{{ site.data.global.url }}/movie/{{ movie.movie }}" type="video/mp4">
+            Your browser cannot show this movie. You can download it directly from <a href="{{ site.data.global.url }}/movie/{{ movie.movie }}">{{ site.data.global.url }}/movie/{{ movie.movie }}</a>.
+            </video>
+            <p>{{ movie.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+{% include footer.html %}
