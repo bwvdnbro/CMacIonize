@@ -1,0 +1,27 @@
+# Site/SEO settings
+email: bert.vandenbroucke@gmail.com
+baseurl: ""
+paginate: 12
+paginate_path: "/page/:num"
+permalink: /:title.html
+google_analytics: 
+include: ['_pages']
+
+url: https://bwvdnbro.github.io/CMacIonize
+
+# Build settings
+markdown: kramdown
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+compress_html:
+  clippings: all
+  comments: all
+  startings: [html, head, body]
+exclude:
+  - node_modules
+  - Gemfile
+  - Gemfile.lock
+  - gulpfile.js
+  - package.json
+  - README.md
