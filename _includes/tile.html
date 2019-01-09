@@ -1,6 +1,6 @@
 <div class="tile">
     {% if post.featured_image or post.featured_video_id %}
-    <a href="{{ post.url | prepend: site.data.global.url }}" class="featurette">
+    <a href="{{ post.url | absolute_url }}" class="featurette">
         {% if post.featured_image %}
         <span class="img" style="background-image: url('{{ post.featured_image }}');"></span>
         {% endif %}
@@ -11,9 +11,9 @@
     </a>
     {% endif %}
     <div class="inner-guts">
-        <h2><a href="{{ post.url | prepend: site.data.global.url }}">{{ post.title }}</a></h2>
+        <h2><a href="{{ post.url | absolute_url }}">{{ post.title }}</a></h2>
         <aside>
-            {{ post.date | date: "%m.%d.%y" }}
+            {{ post.date | date: "%d.%m.%y" }}
             {% if post.categories != empty %}
                 &middot;
                 {% for category in post.categories %}
@@ -22,6 +22,6 @@
             {% endif %}
         </aside>
         <div class="excerpt">{{ post.excerpt }}</div>
-        <a href="{{ post.url | prepend: site.data.global.url }}" class="read-more btn btn-info btn-lg">Read More <i class="fa fa-angle-right"></i></a>
+        <a href="{{ post.url | absolute_url }}" class="read-more btn btn-info btn-lg">Read More <i class="fa fa-angle-right"></i></a>
     </div>
 </div>

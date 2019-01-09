@@ -3,11 +3,10 @@ layout: gallery
 title: Gallery
 permalink: /gallery/
 images:
-  - image: fig_kh_hires.png
-    text: Comparison of MPI-AMRVAC and Shadowfax results on a shearing layers test with (bottom) and without (top) extra bulk velocity.
+  - image: 2018SILCC.png
+    text: Comparison of the Halpha line emission from 3 different post-processed SILCC simulations (Vandenbroucke et al., 2018)
+  - image: 2018CMacIonize.png
+    text: Shared memory execution time line for a Strömgren benchmark test on 4 threads, showing the excellent load-balancing of the task-based shared memory parallelization strategy (Vandenbroucke & Wood, 2018).
     
 movies:
-  - movie: overdensity_shadowfax.mp4
-    image: overdensity_shadowfax.png
-    text: Spherical overdensity test in 2D.
 ---

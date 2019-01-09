@@ -21,8 +21,8 @@
         {% else %}
           <div class="item">
         {% endif %}
-          <a href="{{ site.data.global.url }}/gallery">
-          <img src="{{ site.data.global.url }}/img/{{ slide.image }}" alt="{{ slide.text }}">
+          <a href="{{ '/gallery' | absolute_url }}">
+          <img src="{{ '/img/' | absolute_url }}{{ slide.image }}" alt="{{ slide.text }}">
             <div class="carousel-caption">
               <h3>{{ slide.text }}</h3>
             </div>

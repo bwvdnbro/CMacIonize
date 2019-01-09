@@ -12,11 +12,11 @@
                 {% for image in page.images %}
                   <div class="col-md-3 col-md-offset-1">
                     <a href="#" class="pop" data-toggle="modal" data-target="#{{ image.image | replace: '.', '_' }}">
-                    <img src="{{ site.data.global.url }}/img/{{ image.image }}" class="img-thumbnail" alt="{{ image.text }}">
+                    <img src="{{ '/img/' | absolute_url }}{{ image.image }}" class="img-thumbnail" alt="{{ image.text }}">
                     </a>
                   </div>
                 {% endfor %}
-                
+                {% if page.movies %}
                 <div class="col-md-10 col-md-offset-1 text-justify">
                   <h1>Movies</h1>
                 </div>
@@ -24,10 +24,11 @@
                 {% for movie in page.movies %}
                   <div class="col-md-3 col-md-offset-1">
                     <a href="#" class="pop" data-toggle="modal" data-target="#{{ movie.movie | replace: '.', '_' }}">
-                    <img src="{{ site.data.global.url }}/movie/{{ movie.image }}" class="img-thumbnail" alt="{{ movie.text }}">
+                    <img src="{{ '/movie/' | absolute_url }}{{ movie.image }}" class="img-thumbnail" alt="{{ movie.text }}">
                     </a>
                   </div>
                 {% endfor %}
+                {% endif %}
             </div>
         </div>
     </main>
@@ -38,7 +39,7 @@
         <div class="modal-content">
           <div class="modal-body">
             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            <img src="{{ site.data.global.url }}/img/{{ image.image }}" >
+            <img src="{{ '/img/' | absolute_url }}{{ image.image }}" >
             <p>{{ image.text }}</p>
           </div>
         </div>
@@ -53,8 +54,8 @@
           <div class="modal-body">
             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             <video controls>
-            <source src="{{ site.data.global.url }}/movie/{{ movie.movie }}" type="video/mp4">
-            Your browser cannot show this movie. You can download it directly from <a href="{{ site.data.global.url }}/movie/{{ movie.movie }}">{{ site.data.global.url }}/movie/{{ movie.movie }}</a>.
+            <source src="{{ '/movie/' | absolute_url }}{{ movie.movie }}" type="video/mp4">
+            Your browser cannot show this movie. You can download it directly from <a href="{{ '/movie/' | absolute_url }}{{ movie.movie }}">{{ '/movie/' | absolute_url }}{{ movie.movie }}</a>.
             </video>
             <p>{{ movie.text }}</p>
           </div>
