@@ -35,8 +35,8 @@ This is a list of publications about CMacIonize, or making use of
 CMacIonize. If you have used CMacIonize in your work and want to add it 
 to this list, please contact us!
 
-{% assign sorted_pubs = page.publications | sort:"month" %}
-{% assign sorted_pubs = sorted_pubs | sort:"year" %}
+{% assign sorted_pubs = (page.publications | sort:"month") %}
+{% assign sorted_pubs = (sorted_pubs | sort:"year") %}
 
 {% for publication in sorted_pubs reversed %}
 {% if publication.doi %}
