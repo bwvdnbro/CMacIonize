@@ -76,7 +76,7 @@ nav.navbar {
 .title-group {
     text-align: center;
     padding: 0 15px;
-    margin: 50px 0 100px;
+    margin: 50px 0 50px;
 
     p {
         max-width: 800px;
@@ -135,16 +135,16 @@ h1.special {
 .tile {
     position: relative;
     box-shadow: 0 0.15em 0.35em 0 rgba(0, 0, 0, 0.135);
-    margin-bottom: 125px;
+    margin-bottom: 25px;
 
     .inner-guts { padding: 50px; }
 
     h2 {
         margin: 0;
-        font-size: 100px;
+        font-size: 30px;
         font-weight: 400;
         letter-spacing: -0.05em;
-        line-height: 100px;
+        line-height: 30px;
     }
 
     .featurette {
@@ -204,9 +204,8 @@ h1.special {
     }
 
     .excerpt {
-        font-size: 35px;
+        font-size: 22px;
         font-weight: 300;
-        line-height: 49px;
         color: #484848;
 
         p {
@@ -230,7 +229,7 @@ h1.special {
     }
 
     .read-more {
-        margin-top: 50px;
+        margin-top: 10px;
         width: 100%;
         max-width: 175px;
         position: relative;

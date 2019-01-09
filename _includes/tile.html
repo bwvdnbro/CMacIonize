@@ -23,12 +23,5 @@
         </aside>
         <div class="excerpt">{{ post.excerpt }}</div>
         <a href="{{ post.url | prepend: site.data.global.url }}" class="read-more btn btn-info btn-lg">Read More <i class="fa fa-angle-right"></i></a>
-        {% if post.categories != empty %}
-        <div class="tags">
-            {% for tag in post.tags %}
-            <span>{{ tag }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
     </div>
 </div>

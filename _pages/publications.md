@@ -5,6 +5,7 @@ permalink: /publications/
 
 publications:
   - doi: 10.1093/mnras/sty554
+    ads: 2018MNRAS.476.4032V
     title: Radiative transfer calculations of the diffuse ionized gas in disc galaxies with cosmic ray feedback
     authors:
       - name: Vandenbroucke, B.
@@ -19,6 +20,7 @@ publications:
     year: 2018
     description: Study of the diffuse ionized gas in disc galaxies that used CMacIonize to post-process snapshots from the SILCC project.
   - doi: 10.1016/j.ascom.2018.02.005
+    ads: 2018A%26C....23...40V
     title: The Monte Carlo photoionization and moving-mesh radiation hydrodynamics code CMacIonize
     authors:
       - name: Vandenbroucke, B.
@@ -39,13 +41,7 @@ to this list, please contact us!
 {% assign sorted_pubs = sorted_pubs | sort:"year" %}
 
 {% for publication in sorted_pubs reversed %}
-{% if publication.doi %}
-[{{ publication.title }}](http://dx.doi.org/{{ publication.doi }})
-{% elsif publication.url %}
-[{{ publication.title }}]({{ publication.url }})
-{% else %}
-{{ publication.title }}
-{% endif %}
+{% if publication.doi %}[{{ publication.title }}](http://dx.doi.org/{{ publication.doi }}){% elsif publication.url %}[{{ publication.title }}]({{ publication.url }}){% else %}{{ publication.title }}{% endif %}{% if publication.ads %} ([ADS record](http://adsabs.harvard.edu/abs/{{ publication.ads }})){% endif %}
 : *{% for name in publication.authors %}{{ name.name }}, {% endfor %}{{ publication.year }},
     {% if publication.journal %}{{ publication.journal }}, {{ publication.volume }}, {{ publication.page }}*  {% elsif publication.bookinfo %}{{ publication.bookinfo }}*  {% endif %}
     {{ publication.description }}
