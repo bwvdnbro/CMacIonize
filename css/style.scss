@@ -64,7 +64,7 @@ nav.navbar {
         }
     }
     
-    background-image: url("{{ site.data.global.url }}/{{ site.data.global.logo }}");
+    background-image: url("{{ '/' | absolute_url }}{{ site.data.global.logo }}");
     background-repeat: no-repeat;
     background-position: 20px 0px;
 }
