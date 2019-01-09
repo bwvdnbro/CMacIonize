@@ -33,7 +33,7 @@ excerpt_separator: "\n\n"
 # Serving
 detach:  false
 port:    4000
-host:    127.0.0.1
+host:    https://bwvdnbro.github.io/CMacIonize/
 baseurl: "" # does not include hostname
 
 # Outputting
