@@ -1,0 +1,39 @@
+{% include header.html %}
+
+    {% include title-group.html %}
+
+    <main>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-10 col-md-offset-1 text-justify">
+
+{{ content }}
+
+{% assign basic = site.tutorials | where:"level","basic" | sort:"date" %}
+{% assign bsize = basic | size %}
+{% if bsize != 0 %}
+<h2>Getting started</h2>
+<ol>
+{% for tutorial in basic %}
+<li><a href="{{ tutorial.url | absolute_url }}">{{ tutorial.title }}</a></li>
+{% endfor %}
+</ol>
+{% endif %}
+
+{% assign advanced = site.tutorials | where:"level", "advanced" | sort:"date" %}
+{% assign asize = advanced | size %}
+{% if asize != 0 %}
+<h2>Advanced topics</h2>
+<ol>
+{% for tutorial in advanced %}
+<li><a href="{{ tutorial.url | absolute_url }}">{{ tutorial.title }}</a></li>
+{% endfor %}
+</ol>
+{% endif %}
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+{% include footer.html %}

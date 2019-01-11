@@ -2,5 +2,6 @@ main:
     - { url: '/', text: 'Home' }
     - { url: '/about', text: 'About' }
     - { url: '/gallery', text: 'Gallery' }
+    - { url: '/tutorials', text: 'Tutorials' }
     - { url: '/publications', text: 'Publications' }
     - { url: 'https://github.com/bwvdnbro/CMacIonize', text: 'Get CMacIonize', external: True }

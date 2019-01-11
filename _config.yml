@@ -6,6 +6,9 @@ paginate_path: "/page/:num"
 permalink: /:title.html
 google_analytics: 
 include: ['_pages']
+collections:
+  tutorials:
+    output: true
 
 url: https://bwvdnbro.github.io/CMacIonize
 
