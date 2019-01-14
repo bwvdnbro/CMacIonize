@@ -198,6 +198,9 @@ add_compiler_flag("-Wall -Werror" OPTIONAL)
 #  before running the code)
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   add_compiler_flag("-fsanitize=address -fno-omit-frame-pointer" OPTIONAL)
+  add_configuration_option(DEBUG_BUILD True)
+else(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_configuration_option(DEBUG_BUILD False)
 endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
 # Add a Profile CMAKE_BUILD_TYPE
@@ -284,8 +287,8 @@ else(MPI_CXX_FOUND)
           "MPI not found. Distributed memory parallelization will not work.")
 endif(MPI_CXX_FOUND)
 
-# Find Boost, Boost Python, Python, and NumPy
-find_package(Boost COMPONENTS "python")
+# Find Boost, Boost Python, Boost NumPy, Python, and NumPy
+find_package(Boost 1.63.0 COMPONENTS "numpy")
 if(Boost_FOUND)
   find_package(PythonLibs 2.7)
   find_package(PythonInterp 2.7)
@@ -299,7 +302,7 @@ if(Boost_FOUND)
       message(STATUS
              "Python, NumPy and Boost Python found. Will build Python modules.")
       include_directories(${Boost_INCLUDE_DIRS})
-      include_directories(${PYTHON_INCLUDE_PATH})
+      include_directories(${PYTHON_INCLUDE_DIRS})
       include_directories(${NUMPY_OUTPUT})
       set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
       add_configuration_option(HAVE_PYTHON True)

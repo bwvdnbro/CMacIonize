@@ -197,8 +197,9 @@ public:
   /// constructor and destructor
 
   OldVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
-                 const Box<> box, const CoordinateVector< bool > periodic =
-                                      CoordinateVector< bool >(false));
+                 const Box<> box,
+                 const CoordinateVector< bool > periodic =
+                     CoordinateVector< bool >(false));
 
   virtual ~OldVoronoiGrid();
 

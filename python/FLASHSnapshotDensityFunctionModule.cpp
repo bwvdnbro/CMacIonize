@@ -23,8 +23,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "FLASHSnapshotDensityFunction.hpp"
 #include "DensityValues.hpp"
+#include "FLASHSnapshotDensityFunction.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/module.hpp>

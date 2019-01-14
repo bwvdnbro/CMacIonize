@@ -105,9 +105,9 @@ WMBasicPhotonSourceSpectrum::WMBasicPhotonSourceSpectrum(double temperature,
   const double min_frequency = 3.289e15;
   const double max_frequency = 4. * min_frequency;
   for (uint_fast32_t i = 0; i < WMBASICPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
-    _frequencies[i] = min_frequency +
-                      i * (max_frequency - min_frequency) /
-                          (WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
+    _frequencies[i] =
+        min_frequency + i * (max_frequency - min_frequency) /
+                            (WMBASICPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
   }
 
   // create the spectrum in the bin range of interest

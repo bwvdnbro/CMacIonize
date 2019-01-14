@@ -35,13 +35,9 @@
 #include <boost/python/dict.hpp>
 #include <boost/python/make_constructor.hpp>
 #include <boost/python/module.hpp>
-#include <boost/python/numeric.hpp>
+#include <boost/python/numpy.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
-
-/*! @brief Tell numpy to use the non deprecated API. */
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/ndarrayobject.h>
 
 /**
  * @brief Python constructor for a DensityGrid.
@@ -116,10 +112,10 @@ initDensityGrid(const std::string &filename) {
 static boost::python::dict get_box(DensityGrid &grid) {
   Box<> box = grid.get_box();
 
-  npy_intp size = 3;
-  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  boost::python::tuple shape = boost::python::make_tuple(3, 1);
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   boost::python::dict result;
   result["origin"] = arr.copy();
@@ -230,10 +226,12 @@ static std::string get_variable_unit(std::string name) {
  * variable is expressed.
  */
 static boost::python::dict get_variable(DensityGrid &grid, std::string name) {
-  npy_intp size = grid.get_number_of_cells();
-  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+
+  boost::python::tuple shape =
+      boost::python::make_tuple(grid.get_number_of_cells(), 1);
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   uint_fast32_t index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -271,11 +269,13 @@ static boost::python::dict get_variable_cut(DensityGrid &grid, std::string name,
     cmac_error("Unknown coordinate: %c!", coordinate);
   }
 
-  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
-                      boost::python::extract< unsigned int >(shape[1])};
-  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  const unsigned int size[2] = {
+      boost::python::extract< unsigned int >(shape[0]),
+      boost::python::extract< unsigned int >(shape[1])};
+
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   Box<> box = grid.get_box();
 
@@ -338,11 +338,13 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
     cmac_error("Unknown coordinate: %c!", coordinate);
   }
 
-  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
-                      boost::python::extract< unsigned int >(shape[1])};
-  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  const unsigned int size[2] = {
+      boost::python::extract< unsigned int >(shape[0]),
+      boost::python::extract< unsigned int >(shape[1])};
+
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   Box<> box = grid.get_box();
 
@@ -402,11 +404,11 @@ static boost::python::dict collapse(DensityGrid &grid, std::string name,
  */
 static boost::python::dict get_coordinates(DensityGrid &grid) {
 
-  long int gridsize = grid.get_number_of_cells();
-  npy_intp size[2] = {gridsize, 3};
-  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  boost::python::tuple shape =
+      boost::python::make_tuple(grid.get_number_of_cells(), 3);
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   uint_fast32_t index = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
@@ -428,8 +430,8 @@ static boost::python::dict get_coordinates(DensityGrid &grid) {
  * @brief Python module exposure.
  */
 BOOST_PYTHON_MODULE(libdensitygrid) {
-  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-  import_array();
+  Py_Initialize();
+  boost::python::numpy::initialize();
 
   // we need to use no_init to tell Boost that we provide a custom constructor.
   // we need to use noncopyable to tell Boost that we want to construct an

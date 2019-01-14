@@ -162,8 +162,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       _cartesian_grid[ix][iy][iz].set_number_density(cell_densities[i]);
       _cartesian_grid[ix][iy][iz].set_temperature(cell_temperatures[i]);
       for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-        _cartesian_grid[ix][iy]
-                       [iz].set_ionic_fraction(ion, neutral_fractions[ion][i]);
+        _cartesian_grid[ix][iy][iz].set_ionic_fraction(
+            ion, neutral_fractions[ion][i]);
       }
       if (cell_velocities.size() > 0) {
         _cartesian_grid[ix][iy][iz].set_velocity(cell_velocities[i]);

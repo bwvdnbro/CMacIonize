@@ -41,8 +41,9 @@ set_target_properties(linecoolingdata PROPERTIES LIBRARY_OUTPUT_DIRECTORY
 set_target_properties(linecoolingdata PROPERTIES
                      COMPILE_FLAGS "-Wno-unused-function -fno-sanitize=address")
 set_target_properties(linecoolingdata PROPERTIES
-                      LINK_FLAGS "-fno-sanitize=address")
+                      LINK_FLAGS "-fno-sanitize=address -Wl,--no-undefined")
 target_link_libraries(linecoolingdata ${BOOST_PYTHON_LIBRARIES})
+target_link_libraries(linecoolingdata ${PYTHON_LIBRARIES})
 
 # DensityGridModule
 if(HAVE_HDF5)
@@ -69,8 +70,9 @@ if(HAVE_HDF5)
   set_target_properties(densitygrid PROPERTIES
                         COMPILE_FLAGS "-fno-sanitize=address")
   set_target_properties(densitygrid PROPERTIES
-                        LINK_FLAGS "-fno-sanitize=address")
+                        LINK_FLAGS "-fno-sanitize=address -Wl,--no-undefined")
   target_link_libraries(densitygrid ${BOOST_PYTHON_LIBRARIES})
+  target_link_libraries(densitygrid ${PYTHON_LIBRARIES})
   target_link_libraries(densitygrid ${HDF5_LIBRARIES})
 
 endif(HAVE_HDF5)
@@ -89,8 +91,9 @@ set_target_properties(emissivitycalculator PROPERTIES LIBRARY_OUTPUT_DIRECTORY
 set_target_properties(emissivitycalculator PROPERTIES
                       COMPILE_FLAGS "-fno-sanitize=address")
 set_target_properties(emissivitycalculator PROPERTIES
-                      LINK_FLAGS "-fno-sanitize=address")
+                      LINK_FLAGS "-fno-sanitize=address -Wl,--no-undefined")
 target_link_libraries(emissivitycalculator ${BOOST_PYTHON_LIBRARIES})
+target_link_libraries(emissivitycalculator ${PYTHON_LIBRARIES})
 
 # FLASHSnapshotDensityFunctionModule
 if(HAVE_HDF5)
@@ -111,8 +114,9 @@ if(HAVE_HDF5)
   set_target_properties(flashsnapshotdensityfunction PROPERTIES
                         COMPILE_FLAGS "-fno-sanitize=address")
   set_target_properties(flashsnapshotdensityfunction PROPERTIES
-                        LINK_FLAGS "-fno-sanitize=address")
+                        LINK_FLAGS "-fno-sanitize=address -Wl,--no-undefined")
   target_link_libraries(flashsnapshotdensityfunction ${BOOST_PYTHON_LIBRARIES})
+  target_link_libraries(flashsnapshotdensityfunction ${PYTHON_LIBRARIES})
   target_link_libraries(flashsnapshotdensityfunction ${HDF5_LIBRARIES})
 
 endif(HAVE_HDF5)

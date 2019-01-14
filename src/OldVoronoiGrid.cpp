@@ -361,9 +361,9 @@ OldVoronoiGrid::get_index(const CoordinateVector<> &position) const {
   CoordinateVector<> pos(position);
   // unit conversion
   for (uint_fast8_t i = 0; i < 3; ++i) {
-    pos[i] = _internal_box.get_anchor()[i] +
-             (pos[i] - _box.get_anchor()[i]) * _internal_box.get_sides()[i] /
-                 _box.get_sides()[i];
+    pos[i] = _internal_box.get_anchor()[i] + (pos[i] - _box.get_anchor()[i]) *
+                                                 _internal_box.get_sides()[i] /
+                                                 _box.get_sides()[i];
   }
   return _pointlocations->get_closest_neighbour(pos);
 }

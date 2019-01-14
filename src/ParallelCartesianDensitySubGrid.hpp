@@ -396,8 +396,8 @@ public:
                                   CoordinateVector< int_fast32_t > numcell)
       : DensitySubGrid(numcell.x() * numcell.y() * numcell.z()),
         DensitySubGridVariables(numcell.x() * numcell.y() * numcell.z()),
-        _box(box), _numcell(numcell.x(), numcell.y(), numcell.z()), _index(-1),
-        _neighbours{-1, -1, -1, -1, -1, -1} {
+        _box(box), _numcell(numcell.x(), numcell.y(), numcell.z()),
+        _index(-1), _neighbours{-1, -1, -1, -1, -1, -1} {
     _cellsides[0] = box.get_sides().x() / numcell.x();
     _cellsides[1] = box.get_sides().y() / numcell.y();
     _cellsides[2] = box.get_sides().z() / numcell.z();

@@ -177,9 +177,10 @@ public:
    * @param hydro Hydro flag.
    * @param log Log to write log messages to.
    */
-  DensityGrid(Box<> box, CoordinateVector< bool > periodic =
-                             CoordinateVector< bool >(false),
-              bool hydro = false, Log *log = nullptr)
+  DensityGrid(
+      Box<> box,
+      CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
+      bool hydro = false, Log *log = nullptr)
       : _box(box), _periodicity_flags(periodic),
         _ionization_energy_H(
             UnitConverter::to_SI< QUANTITY_FREQUENCY >(13.6, "eV")),

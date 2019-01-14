@@ -69,8 +69,9 @@ private:
    * @return Mean particle mass, @f$\mu{}m_p@f$ (in kg).
    */
   static inline double get_mean_particle_mass(const double neutral_fraction) {
-    return 0.5 * PhysicalConstants::get_physical_constant(
-                     PHYSICALCONSTANT_PROTON_MASS) *
+    return 0.5 *
+           PhysicalConstants::get_physical_constant(
+               PHYSICALCONSTANT_PROTON_MASS) *
            (1. + neutral_fraction);
   }
 

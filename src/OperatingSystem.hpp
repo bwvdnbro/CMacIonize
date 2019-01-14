@@ -111,7 +111,7 @@ static size_t get_peak_memory_usage();
  * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
  */
 static void install_signal_handlers();
-}
+} // namespace OperatingSystem
 
 // ...then include the correct implementation
 #ifdef HAVE_WINDOWS

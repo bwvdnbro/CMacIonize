@@ -376,8 +376,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
         _log->write_status(
             100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
             "% of photons were reemitted as non-ionizing photons.");
-        _log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                   typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+        _log->write_status(100. *
+                               (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                                typecount[PHOTONTYPE_DIFFUSE_HeI]) /
                                totweight,
                            "% of photons were scattered.");
         double escape_fraction =
