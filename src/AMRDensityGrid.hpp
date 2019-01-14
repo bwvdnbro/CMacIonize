@@ -371,8 +371,8 @@ public:
       }
 
       if (_log) {
-        _log->write_status("Number of cells after reset: ",
-                           _grid.get_number_of_cells(), ".");
+        _log->write_status(
+            "Number of cells after reset: ", _grid.get_number_of_cells(), ".");
       }
 
       // reset the ngbs

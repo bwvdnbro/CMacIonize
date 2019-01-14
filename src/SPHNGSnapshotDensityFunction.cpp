@@ -573,10 +573,12 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
   if (r0 >= 2.0 * h) {
     B3 = h2 * h / 4.;
   } else if (r0 > h) {
-    B3 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3 + 8. / 5. * r0h_2);
-    B2 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3);
+    B3 = r03 / 4. *
+         (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
+          1. / 15. * r0h_3 + 8. / 5. * r0h_2);
+    B2 =
+        r03 / 4. *
+        (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
   } else {
     B3 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
     B2 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
@@ -614,10 +616,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D2 = -1. / 6. * I_2 + 0.25 * (r0 / h) * I_3 - 0.15 * r0h2 * I_4 +
          1. / 30. * r0h3 * I_5 - 1. / 60. * r0h_3 * I1 + (B1 - B2) / r03 * I0;
@@ -641,10 +642,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -669,10 +669,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -706,8 +705,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
   // Calculating the integral expression.
 
   if (r2 < h2) {
-    full_int = r0h3 / M_PI * (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 +
-                              1. / 40. * r0h3 * I_5 + B1 / r03 * I0);
+    full_int = r0h3 / M_PI *
+               (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 + 1. / 40. * r0h3 * I_5 +
+                B1 / r03 * I0);
   } else if (r2 < 4.0 * h2) {
     full_int = r0h3 / M_PI *
                (0.25 * (4. / 3. * I_2 - (r0 / h) * I_3 + 0.3 * r0h2 * I_4 -

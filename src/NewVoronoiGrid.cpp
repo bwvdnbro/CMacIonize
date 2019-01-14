@@ -160,17 +160,14 @@ NewVoronoiGrid::NewVoronoiGrid(
   const double box_bottom_anchor_z =
       1. + (box.get_anchor().z() - min_anchor.z()) / max_anchor.z();
   const double box_top_anchor_x =
-      1. +
-      (box.get_anchor().x() + box.get_sides().x() - min_anchor.x()) /
-          max_anchor.x();
+      1. + (box.get_anchor().x() + box.get_sides().x() - min_anchor.x()) /
+               max_anchor.x();
   const double box_top_anchor_y =
-      1. +
-      (box.get_anchor().y() + box.get_sides().y() - min_anchor.y()) /
-          max_anchor.y();
+      1. + (box.get_anchor().y() + box.get_sides().y() - min_anchor.y()) /
+               max_anchor.y();
   const double box_top_anchor_z =
-      1. +
-      (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
-          max_anchor.z();
+      1. + (box.get_anchor().z() + box.get_sides().z() - min_anchor.z()) /
+               max_anchor.z();
 
   _real_rescaled_box = NewVoronoiBox(
       Box<>(CoordinateVector<>(box_bottom_anchor_x, box_bottom_anchor_y,

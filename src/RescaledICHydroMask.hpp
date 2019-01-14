@@ -90,9 +90,10 @@ public:
                              const double scale_factor_velocity,
                              const double scale_factor_pressure,
                              const double delta_t = 0.)
-      : _center(center), _radius2(radius * radius),
-        _scale_factors{scale_factor_density, scale_factor_velocity,
-                       scale_factor_pressure},
+      : _center(center),
+        _radius2(radius * radius), _scale_factors{scale_factor_density,
+                                                  scale_factor_velocity,
+                                                  scale_factor_pressure},
         _delta_t(delta_t), _snap_n(0) {}
 
   /**

@@ -1726,6 +1726,6 @@ inline void append_dataset(hid_t group, std::string name, hsize_t offset,
 
   delete[] data;
 }
-}
+} // namespace HDF5Tools
 
 #endif // HDF5TOOLS_HPP

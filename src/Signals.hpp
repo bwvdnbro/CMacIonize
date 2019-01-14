@@ -39,6 +39,6 @@ namespace Signals {
 inline void signal_interrupt_handler() {
   cmac_error("\nCTRL+C interrupt detected!");
 }
-}
+} // namespace Signals
 
 #endif // SIGNALS_HPP

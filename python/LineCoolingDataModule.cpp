@@ -23,15 +23,15 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "LineCoolingData.hpp"
 #include "Error.hpp"
+#include "LineCoolingData.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/dict.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/lvalue_from_pytype.hpp>
 #include <boost/python/module.hpp>
-#include <boost/python/numeric.hpp>
+#include <boost/python/numpy.hpp>
 #include <boost/python/object.hpp>
 #include <cmath>
 
@@ -51,8 +51,8 @@
  * temperature and electron density.
  */
 static boost::python::dict python_get_line_strengths(
-    LineCoolingData &lines, boost::python::numeric::array &T,
-    boost::python::numeric::array &ne, boost::python::list abundances) {
+    LineCoolingData &lines, boost::python::numpy::ndarray &T,
+    boost::python::numpy::ndarray &ne, boost::python::list abundances) {
   double abund[LINECOOLINGDATA_NUMELEMENTS];
   for (unsigned int i = 0; i < LINECOOLINGDATA_NUMELEMENTS; ++i) {
     abund[i] = boost::python::extract< double >(abundances[i]);
@@ -83,10 +83,10 @@ static boost::python::dict python_get_line_strengths(
   boost::python::dict result;
 
   // we create a single ndarray with the correct size
-  npy_intp size = numT;
-  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  boost::python::tuple shape = boost::python::make_tuple(numT, 1);
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
   // we now simply copy that array into the different dictionary elements
   result["c6300"] = arr.copy();
   result["c9405"] = arr.copy();
@@ -228,11 +228,8 @@ static boost::python::dict python_get_line_strengths(
  * @brief Python module exposure.
  */
 BOOST_PYTHON_MODULE(liblinecoolingdata) {
-  // we need to tell Boost we mean numpy.ndarray whenever we write
-  // boost::python::numeric::array
-  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-  // we have to kindly ask numpy to initialize its array functionality
-  import_array();
+  Py_Initialize();
+  boost::python::numpy::initialize();
 
   // we tell Boost we want to expose our version of
   // LineCoolingData.get_line_strengths()

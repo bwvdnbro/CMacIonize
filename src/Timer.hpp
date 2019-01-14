@@ -35,16 +35,16 @@
 #include "RestartWriter.hpp"
 
 /**
-  * @brief A simplified interface to the Unix system timer.
-  *
-  * The Timer automatically registers the current system time when constructed
-  * and returns the elapsed time in seconds when it is stopped.
-  *
-  * The Timer can also be used to time multiple intervals, by using the
-  * functions Timer::start and Timer::stop. The function Timer::stop always
-  * returns the total registered time, which is the sum of all individual
-  * intervals measured.
-  */
+ * @brief A simplified interface to the Unix system timer.
+ *
+ * The Timer automatically registers the current system time when constructed
+ * and returns the elapsed time in seconds when it is stopped.
+ *
+ * The Timer can also be used to time multiple intervals, by using the
+ * functions Timer::start and Timer::stop. The function Timer::stop always
+ * returns the total registered time, which is the sum of all individual
+ * intervals measured.
+ */
 class Timer {
 private:
   /*! @brief Starting time of the timer */

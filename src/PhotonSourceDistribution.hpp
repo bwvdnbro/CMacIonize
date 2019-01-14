@@ -87,13 +87,13 @@ public:
   virtual bool update(const double simulation_time) { return false; }
 
   /**
-  * @brief Add stellar feedback to the given grid at the given time.
-  *
-  * Not all source distributions support stellar feedback.
-  *
-  * @param grid DensityGrid to operate on.
-  * @param current_time Current simulation time (in s).
-  */
+   * @brief Add stellar feedback to the given grid at the given time.
+   *
+   * Not all source distributions support stellar feedback.
+   *
+   * @param grid DensityGrid to operate on.
+   * @param current_time Current simulation time (in s).
+   */
   virtual void add_stellar_feedback(DensityGrid &grid,
                                     const double current_time) {}
 

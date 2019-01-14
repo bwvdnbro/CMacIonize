@@ -575,41 +575,37 @@ int main(int argc, char **argv) {
     const CoordinateVector<> full_centroid =
         full_volume_tetrahedron.get_centroid(full_volume_positions);
     const double full_area_023 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[2] - full_volume_positions[0],
-            full_volume_positions[3] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[2] - full_volume_positions[0],
+                  full_volume_positions[3] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_023 =
         (full_volume_positions[0] + full_volume_positions[2] +
          full_volume_positions[3]) /
         3.;
     const double full_area_123 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[2] - full_volume_positions[1],
-            full_volume_positions[3] - full_volume_positions[1])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[2] - full_volume_positions[1],
+                  full_volume_positions[3] - full_volume_positions[1])
+                  .norm();
     const CoordinateVector<> full_midpoint_123 =
         (full_volume_positions[1] + full_volume_positions[2] +
          full_volume_positions[3]) /
         3.;
     const double full_area_013 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[1] - full_volume_positions[0],
-            full_volume_positions[3] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[1] - full_volume_positions[0],
+                  full_volume_positions[3] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_013 =
         (full_volume_positions[0] + full_volume_positions[1] +
          full_volume_positions[3]) /
         3.;
     const double full_area_012 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[1] - full_volume_positions[0],
-            full_volume_positions[2] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[1] - full_volume_positions[0],
+                  full_volume_positions[2] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_012 =
         (full_volume_positions[0] + full_volume_positions[1] +
          full_volume_positions[2]) /

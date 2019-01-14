@@ -133,10 +133,9 @@ void DustScattering::scatter(Photon &photon,
                       one_over_one_plus_cos2_scattering_angle;
     // White (1979), equation (6)
     const double scattering_angle = std::acos(cos_scattering_angle);
-    const double cos_skewed_scattering_angle =
-        std::cos(scattering_angle +
-                 _scattering_sc * 3.13 * scattering_angle *
-                     std::exp(-7. * scattering_angle * M_1_PI));
+    const double cos_skewed_scattering_angle = std::cos(
+        scattering_angle + _scattering_sc * 3.13 * scattering_angle *
+                               std::exp(-7. * scattering_angle * M_1_PI));
     const double cos2_skewed_scattering_angle =
         cos_skewed_scattering_angle * cos_skewed_scattering_angle;
     const double P4 = -_scattering_pc * P1 *
