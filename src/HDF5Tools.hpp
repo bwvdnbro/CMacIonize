@@ -310,7 +310,7 @@ inline std::string read_attribute< std::string >(hid_t group,
   }
 
   // set datatype length to variable
-  hdf5status = H5Tset_size(strtype, length);
+  hdf5status = H5Tset_size(strtype, length + 1);
   if (hdf5status < 0) {
     cmac_error("Failed to set size of C-string datatype for attribute \"%s\"!",
                name.c_str());
