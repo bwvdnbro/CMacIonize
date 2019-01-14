@@ -38,11 +38,15 @@
  */
 template < typename _datatype_ = double > class CoordinateVector {
 private:
+  /*! @brief Anonymous union that makes it possible to both index the vector
+   *  elements and to refer to individual components with sensible names. */
   union {
     /*! @brief Array that is used together with the union and anonymous struct
      *  to allow indexing the components. */
     _datatype_ _c[3];
 
+    /*! @brief Anonymous struct containing the individual coordinate
+     *  components. */
     struct {
       /*! @brief x coordinate. */
       _datatype_ _x;

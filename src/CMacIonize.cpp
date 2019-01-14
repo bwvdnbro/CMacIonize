@@ -108,13 +108,15 @@ int main(int argc, char **argv) {
   parser.add_required_option< std::string >(
       "params", 'p',
       "Name of the parameter file containing the simulation parameters.");
-  parser.add_option("verbose", 'v', "Set the logging level to the lowest "
-                                    "possible value to allow more output to be "
-                                    "written to the log.",
+  parser.add_option("verbose", 'v',
+                    "Set the logging level to the lowest "
+                    "possible value to allow more output to be "
+                    "written to the log.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("logfile", 'l', "Output program logs to a file with the "
-                                    "given name, instead of to the standard "
-                                    "output.",
+  parser.add_option("logfile", 'l',
+                    "Output program logs to a file with the "
+                    "given name, instead of to the standard "
+                    "output.",
                     COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
   parser.add_option("dirty", 'd',
                     "Allow running a dirty code version. This is disabled by "
@@ -146,8 +148,9 @@ int main(int argc, char **argv) {
                     "Run a dusty radiative transfer simulation instead of an "
                     "ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
-                              "instead of an ionization simulation.",
+  parser.add_option("rhd", 0,
+                    "Run a radiation hydrodynamics simulation "
+                    "instead of an ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("output-statistics", 's',
                     "Output statistical information about the photons.",

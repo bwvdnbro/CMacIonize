@@ -88,7 +88,7 @@ template <> inline MPI_Datatype get_datatype< unsigned long >() {
  * @return MPI_INT.
  */
 template <> inline MPI_Datatype get_datatype< int >() { return MPI_INT; }
-}
+} // namespace MPIUtilities
 
 #endif // HAVE_MPI
 

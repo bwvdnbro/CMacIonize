@@ -56,9 +56,9 @@ HeliumTwoPhotonContinuumSpectrum::HeliumTwoPhotonContinuumSpectrum() {
   const double max_frequency = 1.6 * min_frequency;
   const double nu0 = 4.98e15;
   for (uint_fast32_t i = 0; i < HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = min_frequency +
-                    i * (max_frequency - min_frequency) /
-                        (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
+    _frequency[i] =
+        min_frequency + i * (max_frequency - min_frequency) /
+                            (HELIUMTWOPHOTONCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
   _cumulative_distribution[0] = 0.;
   // NOTE that we compute every y1/y2 twice (except the first and last bin edge)

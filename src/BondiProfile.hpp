@@ -170,8 +170,9 @@ public:
                       const CoordinateVector<> center = CoordinateVector<>(0.),
                       const double vprof_radius = 0.,
                       const double vprof_velocity = 0.)
-      : _bondi_radius(0.5 * PhysicalConstants::get_physical_constant(
-                                PHYSICALCONSTANT_NEWTON_CONSTANT) *
+      : _bondi_radius(0.5 *
+                      PhysicalConstants::get_physical_constant(
+                          PHYSICALCONSTANT_NEWTON_CONSTANT) *
                       central_mass / (sound_speed * sound_speed)),
         _bondi_density(bondi_density), _sound_speed(sound_speed),
         _ionisation_radius(ionisation_radius),

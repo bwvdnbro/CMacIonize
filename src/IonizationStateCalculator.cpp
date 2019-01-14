@@ -266,12 +266,10 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double C32 =
       jCp2 /
       (ne * alphaC[1] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_C_p2, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_C_p2, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_C_p2, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_C_p2, T4));
   const double C31 = C32 * C21;
   const double sumC_inv = 1. / (1. + C21 + C31);
   ionization_variables.set_ionic_fraction(ION_C_p1, C21 * sumC_inv);
@@ -279,32 +277,25 @@ void IonizationStateCalculator::compute_ionization_states_metals(
 
   // nitrogen
   const double N21 =
-      (jNn +
-       nhp *
-           charge_transfer_rates.get_charge_transfer_ionization_rate_H(ION_N_n,
-                                                                       T4)) /
+      (jNn + nhp * charge_transfer_rates.get_charge_transfer_ionization_rate_H(
+                       ION_N_n, T4)) /
       (ne * alphaN[0] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_N_n, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_n, T4));
   const double N32 =
       jNp1 /
       (ne * alphaN[1] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_N_p1, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_N_p1, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_p1, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_N_p1, T4));
   const double N43 =
       jNp2 /
       (ne * alphaN[2] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_N_p2, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_N_p2, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_N_p2, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_N_p2, T4));
   const double N31 = N32 * N21;
   const double N41 = N43 * N31;
   const double sumN_inv = 1. / (1. + N21 + N31 + N41);
@@ -314,23 +305,18 @@ void IonizationStateCalculator::compute_ionization_states_metals(
 
   // Oxygen
   const double O21 =
-      (jOn +
-       nhp *
-           charge_transfer_rates.get_charge_transfer_ionization_rate_H(ION_O_n,
-                                                                       T4)) /
+      (jOn + nhp * charge_transfer_rates.get_charge_transfer_ionization_rate_H(
+                       ION_O_n, T4)) /
       (ne * alphaO[0] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_O_n, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_O_n, T4));
   const double O32 =
       jOp1 /
       (ne * alphaO[1] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_O_p1, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_O_p1, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_O_p1, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_O_p1, T4));
   const double O31 = O32 * O21;
   const double sumO_inv = 1. / (1. + O21 + O31);
   ionization_variables.set_ionic_fraction(ION_O_n, O21 * sumO_inv);
@@ -341,12 +327,10 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double Ne32 =
       jNep1 /
       (ne * alphaNe[1] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_Ne_p1, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_Ne_p1, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_Ne_p1, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_Ne_p1, T4));
   const double Ne31 = Ne32 * Ne21;
   const double sumNe_inv = 1. / (1. + Ne21 + Ne31);
   ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 * sumNe_inv);
@@ -356,27 +340,22 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double S21 =
       jSp1 /
       (ne * alphaS[0] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_S_p1, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p1, T4));
   const double S32 =
       jSp2 /
       (ne * alphaS[1] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_S_p2, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_S_p2, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p2, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_S_p2, T4));
   const double S43 =
       jSp3 /
       (ne * alphaS[2] +
-       nh0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_H(
-               ION_S_p3, T4) +
-       nhe0 *
-           charge_transfer_rates.get_charge_transfer_recombination_rate_He(
-               ION_S_p3, T4));
+       nh0 * charge_transfer_rates.get_charge_transfer_recombination_rate_H(
+                 ION_S_p3, T4) +
+       nhe0 * charge_transfer_rates.get_charge_transfer_recombination_rate_He(
+                  ION_S_p3, T4));
   const double S31 = S32 * S21;
   const double S41 = S43 * S31;
   const double sumS_inv = 1. / (1. + S21 + S31 + S41);

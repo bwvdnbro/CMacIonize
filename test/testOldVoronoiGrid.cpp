@@ -1652,9 +1652,10 @@ int main(int argc, char **argv) {
     }
     // add a random (small) displacement to one of the generators
     positions[42] += 1.e-5 * box_side * Utilities::random_position();
-    OldVoronoiGrid grid(positions, Box<>(CoordinateVector<>(box_anchor),
-                                         CoordinateVector<>(box_side)),
-                        false);
+    OldVoronoiGrid grid(
+        positions,
+        Box<>(CoordinateVector<>(box_anchor), CoordinateVector<>(box_side)),
+        false);
     grid.compute_grid();
 
     // print the grid while we have the grid connections

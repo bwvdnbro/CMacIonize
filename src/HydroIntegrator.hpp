@@ -306,12 +306,10 @@ private:
           graduR = graduL;
           gradPR = gradPL;
           for (uint_fast8_t i = 0; i < 3; ++i) {
-            if ((normal[i] < 0. &&
-                 _hydro_integrator._boundaries[2 * i] ==
-                     HYDRO_BOUNDARY_REFLECTIVE) ||
-                (normal[i] > 0. &&
-                 _hydro_integrator._boundaries[2 * i + 1] ==
-                     HYDRO_BOUNDARY_REFLECTIVE)) {
+            if ((normal[i] < 0. && _hydro_integrator._boundaries[2 * i] ==
+                                       HYDRO_BOUNDARY_REFLECTIVE) ||
+                (normal[i] > 0. && _hydro_integrator._boundaries[2 * i + 1] ==
+                                       HYDRO_BOUNDARY_REFLECTIVE)) {
               uR[i] = -uR[i];
               gradrhoR[i] = -gradrhoR[i];
               // we only invert the gradient components not orthogonal to the
@@ -428,14 +426,15 @@ private:
             rhoL_prime, uL_prime, PL_prime, rhoR_prime, uR_prime, PR_prime,
             mflux, pflux, Eflux, normal, vframe);
 
-        cmac_assert_message(
-            mflux == mflux, "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+        cmac_assert_message(mflux == mflux,
+                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
                             "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
                             "normal: %g %g %g, vframe: %g %g %g",
-            rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(), PL_prime,
-            rhoR_prime, uR_prime.x(), uR_prime.y(), uR_prime.z(), PR_prime,
-            normal.x(), normal.y(), normal.z(), vframe.x(), vframe.y(),
-            vframe.z());
+                            rhoL_prime, uL_prime.x(), uL_prime.y(),
+                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
+                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
+                            normal.y(), normal.z(), vframe.x(), vframe.y(),
+                            vframe.z());
         cmac_assert_message(pflux.x() == pflux.x(),
                             "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
                             "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
@@ -1066,9 +1065,9 @@ public:
             halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
         const CoordinateVector<> u_new =
             u - halfdt * (u * divv + rho_inv * dP - a);
-        const double P_new = P -
-                             halfdt * (_gamma * P * divv +
-                                       CoordinateVector<>::dot_product(u, dP));
+        const double P_new =
+            P - halfdt * (_gamma * P * divv +
+                          CoordinateVector<>::dot_product(u, dP));
 
         // update variables
         it.get_hydro_variables().primitives(0) = rho_new;
@@ -1257,11 +1256,10 @@ public:
         if (_gamma > 1.) {
           // E = V*(rho*u + 0.5*rho*v^2) = (V*P/(gamma-1) + 0.5*m*v^2)
           // P = (E - 0.5*m*v^2)*(gamma-1)/V
-          pressure =
-              _gm1 *
-              (total_energy -
-               0.5 * CoordinateVector<>::dot_product(velocity, momentum)) /
-              volume;
+          pressure = _gm1 *
+                     (total_energy - 0.5 * CoordinateVector<>::dot_product(
+                                               velocity, momentum)) /
+                     volume;
           temperature =
               mean_molecular_mass * _T_conversion_factor * pressure / density;
         } else {

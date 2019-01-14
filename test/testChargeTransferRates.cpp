@@ -90,10 +90,11 @@ int main(int argc, char **argv) {
       if ((atom == 7 && stage == 1) || (atom == 8 && stage == 1)) {
 
         assert_values_equal_rel(
-            ionization_rate, UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
-                                 rates.get_charge_transfer_ionization_rate_H(
-                                     ion[atom][stage], temperature * 1.e-4),
-                                 "cm^3s^-1"),
+            ionization_rate,
+            UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+                rates.get_charge_transfer_ionization_rate_H(
+                    ion[atom][stage], temperature * 1.e-4),
+                "cm^3s^-1"),
             1.e-6);
       }
     }

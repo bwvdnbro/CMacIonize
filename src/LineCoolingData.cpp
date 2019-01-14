@@ -1725,9 +1725,8 @@ double LineCoolingData::compute_level_population(
        _two_level_collision_strength[i][2] * Tinv +
        _two_level_collision_strength[i][3] * logT +
        _two_level_collision_strength[i][4] * T *
-           (1. +
-            (_two_level_collision_strength[i][5] - 1.) *
-                std::pow(T, _two_level_collision_strength[i][6])));
+           (1. + (_two_level_collision_strength[i][5] - 1.) *
+                     std::pow(T, _two_level_collision_strength[i][6])));
   const double inv_omega_1 = _two_level_inverse_statistical_weight[i][0];
   const double inv_omega_2 = _two_level_inverse_statistical_weight[i][1];
   const double Texp = std::exp(-ksi * Tinv);

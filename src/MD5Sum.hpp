@@ -293,6 +293,6 @@ inline std::string get_file_checksum(std::string filename) {
   }
   return get_checksum(filestream);
 }
-}
+} // namespace MD5Sum
 
 #endif // MD5SUM_HPP

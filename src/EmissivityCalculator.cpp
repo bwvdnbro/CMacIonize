@@ -87,22 +87,18 @@ void EmissivityCalculator::get_balmer_jump_emission(
   i = std::max(i, int_fast32_t(0));
   i = std::min(i, int_fast32_t(6));
 
-  emission_hydrogen_high = _loghplt[i] +
-                           (logt - _logttab[i]) *
-                               (_loghplt[i + 1] - _loghplt[i]) /
-                               (_logttab[i + 1] - _logttab[i]);
-  emission_hydrogen_low = _loghmit[i] +
-                          (logt - _logttab[i]) *
-                              (_loghmit[i + 1] - _loghmit[i]) /
-                              (_logttab[i + 1] - _logttab[i]);
-  emission_helium_high = _logheplt[i] +
-                         (logt - _logttab[i]) *
-                             (_logheplt[i + 1] - _logheplt[i]) /
-                             (_logttab[i + 1] - _logttab[i]);
-  emission_helium_low = _loghemit[i] +
-                        (logt - _logttab[i]) *
-                            (_loghemit[i + 1] - _loghemit[i]) /
-                            (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_high = _loghplt[i] + (logt - _logttab[i]) *
+                                             (_loghplt[i + 1] - _loghplt[i]) /
+                                             (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_low = _loghmit[i] + (logt - _logttab[i]) *
+                                            (_loghmit[i + 1] - _loghmit[i]) /
+                                            (_logttab[i + 1] - _logttab[i]);
+  emission_helium_high = _logheplt[i] + (logt - _logttab[i]) *
+                                            (_logheplt[i + 1] - _logheplt[i]) /
+                                            (_logttab[i + 1] - _logttab[i]);
+  emission_helium_low = _loghemit[i] + (logt - _logttab[i]) *
+                                           (_loghemit[i + 1] - _loghemit[i]) /
+                                           (_logttab[i + 1] - _logttab[i]);
 
   emission_hydrogen_high = std::exp(emission_hydrogen_high);
   emission_hydrogen_low = std::exp(emission_hydrogen_low);
@@ -384,11 +380,11 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
                         ne * nhep * 1.69e-38 * std::pow(T4, -1.065));
     // Verner & Ferland (1996), table 1
-    eval.set_emissivity(EMISSIONLINE_Hrec_s,
-                        ne * nhp * 7.982e-23 /
-                            (std::sqrt(T / 3.148) *
-                             std::pow(1. + std::sqrt(T / 3.148), 0.252) *
-                             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
+    eval.set_emissivity(
+        EMISSIONLINE_Hrec_s,
+        ne * nhp * 7.982e-23 /
+            (std::sqrt(T / 3.148) * std::pow(1. + std::sqrt(T / 3.148), 0.252) *
+             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
 
     // HST WFC2 filters
     // wavelength ranges were based on data found on
