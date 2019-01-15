@@ -158,7 +158,13 @@ variable has two values: the actually used value, which for physical
 quantities is always given in SI units, and the value that was provided 
 in the parameter file (or *default value* if no value was given in the 
 parameter file; this is true for all variables in this example). If a 
-value was not used this will also be clearly indicated.
+value was not used this will also be clearly indicated. When a parameter 
+specifies the name of a file in the local file system (e.g. when using a 
+module that reads a file to set up the initial conditions of the 
+simulation), the `parameters-usedvalues.param` will also include a 
+checksum of that file. If the checksum is provided, the code will throw 
+an error if that checksum does not match the checksum for the file with 
+that name that is present.
 
 You can now use this default parameter file to start creating your own 
 parameter file: copy the file (e.g. `cp parameters-usedvalues.param 
