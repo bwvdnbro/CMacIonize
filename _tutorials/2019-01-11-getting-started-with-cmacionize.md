@@ -5,6 +5,8 @@ date: 2019-01-11
 level: basic
 ---
 
+{% include toc.html %}
+
 To get started with CMacIonize, you need to do 3 things:
 
  1. Download the code.

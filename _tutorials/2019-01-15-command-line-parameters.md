@@ -5,6 +5,8 @@ date: 2019-01-15
 level: basic
 ---
 
+{% include toc.html %}
+
 CMacIonize has a number of command line parameters that control the 
 execution of the program. These command line parameters are not 
 equivalent to the parameters in the parameter file, as changing them 

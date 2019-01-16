@@ -30,3 +30,7 @@ $(window).resize(function() {
 $(window).scroll(function() {
 
 });
+
+$("div.panel-body a").click(function (event) {
+    $(".panel-collapse").collapse("hide");
+});

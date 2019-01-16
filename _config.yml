@@ -14,6 +14,8 @@ url: https://bwvdnbro.github.io/CMacIonize
 
 # Build settings
 markdown: kramdown
+kramdown:
+  parse_block_html: true
 plugins:
   - jekyll-paginate
   - jekyll-sitemap

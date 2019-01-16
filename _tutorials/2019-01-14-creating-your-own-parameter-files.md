@@ -5,6 +5,8 @@ date: 2019-01-14
 level: basic
 ---
 
+{% include toc.html %}
+
 The *parameter file* is the most important component of any CMacIonize 
 simulation, as it contains all the parameters that determine what your 
 simulation will do and how it will do this, including
