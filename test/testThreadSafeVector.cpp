@@ -17,19 +17,20 @@
  ******************************************************************************/
 
 /**
- * @file testAtomicValue.cpp
+ * @file testThreadSafeVector.cpp
  *
- * @brief Unit test for the AtomicValue class.
+ * @brief Unit test for the ThreadSafeVector class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+
 #include "Assert.hpp"
-#include "AtomicValue.hpp"
-#include <cinttypes>
+#include "ThreadSafeVector.hpp"
+
 #include <omp.h>
 
 /**
- * @brief Unit test for the AtomicValue class.
+ * @brief Unit test for the ThreadSafeVector class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -37,39 +38,40 @@
  */
 int main(int argc, char **argv) {
 
-  // this test is a bit tricky, since it will only fail if two threads access
-  // the sum variable at the same time, which does not always happen (it will
-  // of course also only fail if Atomic is badly implemented)
-  // to increase our chances of having a collision (two threads accessing sum at
-  // the same time) we run the test a couple of times and we use a ridiculously
-  // high number of threads
+  // make sure we use way too many threads, to force collisions
   omp_set_num_threads(512);
-  for (uint_fast8_t i_loop = 0; i_loop < 100; ++i_loop) {
-    AtomicValue< int_fast32_t > sum(0);
-    AtomicValue< int_fast32_t > max(0);
-    int_fast32_t nthread = 0;
-#pragma omp parallel shared(sum, nthread)
+
+  // repeat the exercise a couple of times to increase the change of collisions
+  // even more
+  for (uint_fast32_t iloop = 0; iloop < 100; ++iloop) {
+
+    // first fill the vector in a parallel environment
+    // every thread requests one element and sets it to its thread number
+    ThreadSafeVector< int_fast32_t > vector(512);
+#pragma omp parallel default(shared)
     {
       const int_fast32_t this_thread = omp_get_thread_num();
-      if (this_thread % 2 == 0) {
-        sum.post_add(this_thread);
-        sum.pre_increment();
-      } else {
-        sum.pre_add(this_thread);
-        sum.post_increment();
-      }
-      max.max(this_thread);
-#pragma omp single
-      { nthread = omp_get_num_threads(); }
+      const size_t index = vector.get_free_element();
+      vector[index] = this_thread;
     }
 
-    int_fast32_t reference = 0;
-    for (int_fast32_t i = 0; i < nthread; ++i) {
-      reference += i + 1;
+    // now check that all values are present
+    // we make a flag for each individual element that changes from false to
+    // true if that element is present
+    bool flags[512];
+    for (uint_fast32_t i = 0; i < 512; ++i) {
+      flags[i] = false;
+    }
+    for (size_t i = 0; i < 512; ++i) {
+      flags[vector[i]] = true;
+    }
+    for (uint_fast32_t i = 0; i < 512; ++i) {
+      assert_condition(flags[i]);
     }
 
-    assert_condition(sum.value() == reference);
-    assert_condition(max.value() == nthread - 1);
+    // now check that the safe element function returns the size of the vector,
+    // meaning it is full
+    assert_condition(vector.get_free_element_safe() == vector.max_size());
   }
 
   return 0;

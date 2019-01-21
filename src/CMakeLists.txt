@@ -297,6 +297,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     AtomicValue.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
+    ThreadSafeVector.hpp
 )
 
 add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
