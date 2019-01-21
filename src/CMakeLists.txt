@@ -300,6 +300,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     AtomicValue.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
+    ThreadLock.hpp
     ThreadSafeVector.hpp
 )
 
