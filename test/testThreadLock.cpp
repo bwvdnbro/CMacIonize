@@ -17,20 +17,20 @@
  ******************************************************************************/
 
 /**
- * @file testThreadSafeVector.cpp
+ * @file testThreadLock.cpp
  *
- * @brief Unit test for the ThreadSafeVector class.
+ * @brief Unit test for the ThreadLock class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 
 #include "Assert.hpp"
-#include "ThreadSafeVector.hpp"
+#include "ThreadLock.hpp"
 
 #include <omp.h>
 
 /**
- * @brief Unit test for the ThreadSafeVector class.
+ * @brief Unit test for the ThreadLock class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -45,33 +45,21 @@ int main(int argc, char **argv) {
   // even more
   for (uint_fast32_t iloop = 0; iloop < 100; ++iloop) {
 
-    // first fill the vector in a parallel environment
-    // every thread requests one element and sets it to its thread number
-    ThreadSafeVector< int_fast32_t > vector(512);
+    int_fast32_t sum = 0;
+    ThreadLock lock;
 #pragma omp parallel default(shared)
     {
+      lock.lock();
       const int_fast32_t this_thread = omp_get_thread_num();
-      const size_t index = vector.get_free_element();
-      vector[index] = this_thread;
+      sum += this_thread;
+      lock.unlock();
     }
 
-    // now check that all values are present
-    // we make a flag for each individual element that changes from false to
-    // true if that element is present
-    bool flags[512];
+    int_fast32_t reference = 0;
     for (uint_fast32_t i = 0; i < 512; ++i) {
-      flags[i] = false;
+      reference += i;
     }
-    for (size_t i = 0; i < 512; ++i) {
-      flags[vector[i]] = true;
-    }
-    for (uint_fast32_t i = 0; i < 512; ++i) {
-      assert_condition(flags[i]);
-    }
-
-    // now check that the safe element function returns the size of the vector,
-    // meaning it is full
-    assert_condition(vector.get_free_element_safe() == vector.max_size());
+    assert_condition(sum == reference);
   }
 
   return 0;
