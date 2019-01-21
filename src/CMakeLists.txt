@@ -295,8 +295,11 @@ endif(HAVE_MPI)
 set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
     AtomicValue.hpp
+    CPUCycle.hpp
+    Task.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
+    TaskQueue.hpp
     ThreadLock.hpp
     ThreadSafeVector.hpp
 )
