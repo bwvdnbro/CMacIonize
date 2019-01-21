@@ -292,11 +292,32 @@ if(HAVE_MPI)
     target_link_libraries(IonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif(HAVE_MPI)
 
+set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
+
+    AtomicValue.hpp
+    TaskBasedIonizationSimulation.cpp
+    TaskBasedIonizationSimulation.hpp
+)
+
+add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
+add_dependencies(TaskBasedIonizationSimulation CompilerInfo)
+
+# link to HDF5, if we have found it
+if(HAVE_HDF5)
+    target_link_libraries(TaskBasedIonizationSimulation ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(TaskBasedIonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)
+
 add_library(CMILibrary ${LIBCMILIBRARY_SOURCES})
 target_link_libraries(CMILibrary IonizationSimulation)
 
 add_executable(CMacIonize ${CMACIONIZE_SOURCES})
 target_link_libraries(CMacIonize IonizationSimulation)
+target_link_libraries(CMacIonize TaskBasedIonizationSimulation)
 add_dependencies(CMacIonize CompilerInfo)
 
 # link to HDF5, if we have found it

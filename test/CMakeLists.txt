@@ -1360,6 +1360,17 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_multi_tracker.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_multi_tracker.yml @ONLY)
 
+## Unit test for AtomicValue
+if(HAVE_OPENMP)
+set(TESTATOMICVALUE_SOURCES
+    testAtomicValue.cpp
+
+    ../src/AtomicValue.hpp
+)
+add_unit_test(NAME testAtomicValue
+              SOURCES ${TESTATOMICVALUE_SOURCES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
