@@ -1462,6 +1462,17 @@ add_unit_test(NAME testThreadSafeVector
               SOURCES ${TESTTHREADSAFEVECTOR_SOURCES})
 endif(HAVE_OPENMP)
 
+## Unit test for ThreadLock
+if(HAVE_OPENMP)
+set(TESTTHREADLOCK_SOURCES
+    testThreadLock.cpp
+
+    ../src/ThreadLock.hpp
+)
+add_unit_test(NAME testThreadLock
+              SOURCES ${TESTTHREADLOCK_SOURCES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
