@@ -1451,6 +1451,17 @@ add_unit_test(NAME testAtomicValue
               SOURCES ${TESTATOMICVALUE_SOURCES})
 endif(HAVE_OPENMP)
 
+## Unit test for ThreadSafeVector
+if(HAVE_OPENMP)
+set(TESTTHREADSAFEVECTOR_SOURCES
+    testThreadSafeVector.cpp
+
+    ../src/ThreadSafeVector.hpp
+)
+add_unit_test(NAME testThreadSafeVector
+              SOURCES ${TESTTHREADSAFEVECTOR_SOURCES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
