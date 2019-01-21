@@ -1473,6 +1473,18 @@ add_unit_test(NAME testThreadLock
               SOURCES ${TESTTHREADLOCK_SOURCES})
 endif(HAVE_OPENMP)
 
+## Unit test for TaskQueue
+if(HAVE_OPENMP)
+set(TESTTASKQUEUE_SOURCES
+    testTaskQueue.cpp
+
+    ../src/Task.hpp
+    ../src/TaskQueue.hpp
+)
+add_unit_test(NAME testTaskQueue
+              SOURCES ${TESTTASKQUEUE_SOURCES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
