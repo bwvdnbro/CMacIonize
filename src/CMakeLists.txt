@@ -299,12 +299,15 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
     AtomicValue.hpp
     CPUCycle.hpp
+    PhotonBuffer.hpp
+    PhotonPacket.hpp
     Task.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
     TaskQueue.hpp
     ThreadLock.hpp
     ThreadSafeVector.hpp
+    TravelDirections.hpp
 )
 
 add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
