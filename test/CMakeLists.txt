@@ -1405,6 +1405,20 @@ add_unit_test(NAME testTaskQueue
               SOURCES ${TESTTASKQUEUE_SOURCES})
 endif(HAVE_OPENMP)
 
+## Unit test for PhotonBuffer
+if(HAVE_MPI)
+set(TESTPHOTONBUFFER_SOURCES
+    testPhotonBuffer.cpp
+
+    ../src/PhotonBuffer.hpp
+    ../src/PhotonPacket.hpp
+)
+add_unit_test(NAME testPhotonBuffer
+              SOURCES ${TESTPHOTONBUFFER_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
+              PARALLEL)
+endif(HAVE_MPI)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
