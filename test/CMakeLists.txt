@@ -1431,6 +1431,29 @@ add_unit_test(NAME testMemorySpace
               LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif(HAVE_OPENMP)
 
+## Unit test for DensitySubGrid
+set(TESTDENSITYSUBGRID_SOURCES
+    testDensitySubGrid.cpp
+
+    ../src/DensitySubGrid.hpp
+)
+add_unit_test(NAME testDensitySubGrid
+              SOURCES ${TESTDENSITYSUBGRID_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
+## Unit test for DensitySubGrid MPI communication
+if(HAVE_MPI)
+set(TESTDENSITYSUBGRID_MPI_SOURCES
+    testDensitySubGrid_MPI.cpp
+
+    ../src/DensitySubGrid.hpp
+)
+add_unit_test(NAME testDensitySubGrid_MPI
+              SOURCES ${TESTDENSITYSUBGRID_MPI_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
+              PARALLEL)
+endif(HAVE_MPI)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
