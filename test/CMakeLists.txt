@@ -1499,6 +1499,18 @@ add_unit_test(NAME testPhotonBuffer
               PARALLEL)
 endif(HAVE_MPI)
 
+## Unit test for MemorySpace
+if(HAVE_OPENMP)
+set(TESTMEMORYSPACE_SOURCES
+    testMemorySpace.cpp
+
+    ../src/MemorySpace.hpp
+)
+add_unit_test(NAME testMemorySpace
+              SOURCES ${TESTMEMORYSPACE_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_OPENMP)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
