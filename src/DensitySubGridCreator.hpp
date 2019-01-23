@@ -31,6 +31,7 @@
 #include "Error.hpp"
 
 #include <cinttypes>
+#include <vector>
 
 /**
  * @brief Class responsible for creating DensitySubGrid instances that make up
@@ -145,6 +146,118 @@ public:
     }       // for nix
 
     return this_grid;
+  }
+
+  /**
+   * @brief Create copies for the given subgrids according to the given copy
+   * level specification.
+   *
+   * @param subgrids Vector containing the subgrids (copies are added to the
+   * end of this vector).
+   * @param copy_levels Desired copy level for each subgrid.
+   * @param originals Vector in which the index of the original for each
+   * subgrid will be stored.
+   * @param copies Vector in which the index of the first copy for each subgrid
+   * will be stored (or 0xffffffff if there are no copies).
+   */
+  inline void create_copies(std::vector< DensitySubGrid * > &subgrids,
+                            std::vector< uint_fast8_t > &copy_levels,
+                            std::vector< uint_fast32_t > &originals,
+                            std::vector< uint_fast32_t > &copies) const {
+
+    // we need to do 2 loops:
+    //  - one loop to create the copies and store the offset of the first copy
+    //    for each subgrid
+    //  - a second loop that sets the neighbours (and has access to all
+    //  necessary
+    //    copies to set inter-copy neighbour relations)
+
+    // we need to store the original number of subgrids for reference
+    const int_fast32_t number_of_unique_subgrids = subgrids.size();
+    cmac_assert_message(number_of_unique_subgrids ==
+                            _number_of_subgrids[0] * _number_of_subgrids[1] *
+                                _number_of_subgrids[2],
+                        "Number of subgrids does not match expectation!");
+
+    // array to store the offsets of new copies in
+    copies.resize(number_of_unique_subgrids, 0xffffffff);
+    for (int_fast32_t i = 0; i < number_of_unique_subgrids; ++i) {
+      const uint_fast8_t level = copy_levels[i];
+      const uint_fast32_t number_of_copies = 1 << level;
+      // create the copies
+      if (number_of_copies > 1) {
+        copies[i] = subgrids.size();
+      }
+      for (uint_fast32_t j = 1; j < number_of_copies; ++j) {
+        subgrids.push_back(new DensitySubGrid(*subgrids[i]));
+        originals.push_back(i);
+      }
+    }
+
+    // neighbour setting
+    for (int_fast32_t i = 0; i < number_of_unique_subgrids; ++i) {
+      const uint_fast8_t level = copy_levels[i];
+      const uint_fast32_t number_of_copies = 1 << level;
+      // first do the self-reference for each copy (if there are copies)
+      for (uint_fast32_t j = 1; j < number_of_copies; ++j) {
+        const uint_fast32_t copy = copies[i] + j - 1;
+        subgrids[copy]->set_neighbour(0, copy);
+      }
+      // now do the actual neighbours
+      for (int_fast32_t j = 1; j < TRAVELDIRECTION_NUMBER; ++j) {
+        const uint_fast32_t original_ngb = subgrids[i]->get_neighbour(j);
+        if (original_ngb != NEIGHBOUR_OUTSIDE) {
+          const uint_fast8_t ngb_level = copy_levels[original_ngb];
+          // check how the neighbour level compares to the subgrid level
+          if (ngb_level == level) {
+            // same, easy: just make copies mutual neighbours
+            // and leave the original grid as is
+            for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+              const uint_fast32_t copy = copies[i] + k - 1;
+              const uint_fast32_t ngb_copy = copies[original_ngb] + k - 1;
+              subgrids[copy]->set_neighbour(j, ngb_copy);
+            }
+          } else {
+            // not the same: there are 2 options
+            if (level > ngb_level) {
+              // we have less neighbour copies, so some of our copies need to
+              // share the same neighbour
+              // some of our copies might also need to share the original
+              // neighbour
+              const uint_fast32_t number_of_ngb_copies = 1
+                                                         << (level - ngb_level);
+              for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+                const uint_fast32_t copy = copies[i] + k - 1;
+                // this term will round down, which is what we want
+                const uint_fast32_t ngb_index = k / number_of_ngb_copies;
+                const uint_fast32_t ngb_copy =
+                    (ngb_index > 0) ? copies[original_ngb] + ngb_index - 1
+                                    : original_ngb;
+                subgrids[copy]->set_neighbour(j, ngb_copy);
+              }
+            } else {
+              // we have more neighbour copies: pick a subset
+              const uint_fast32_t number_of_own_copies = 1
+                                                         << (ngb_level - level);
+              for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+                const uint_fast32_t copy = copies[i] + k - 1;
+                // the second term will skip some neighbour copies, which is
+                // what we want
+                const uint_fast32_t ngb_copy =
+                    copies[original_ngb] + (k - 1) * number_of_own_copies;
+                subgrids[copy]->set_neighbour(j, ngb_copy);
+              }
+            }
+          }
+        } else {
+          // flag this neighbour as NEIGHBOUR_OUTSIDE for all copies
+          for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+            const uint_fast32_t copy = copies[i] + k - 1;
+            subgrids[copy]->set_neighbour(j, NEIGHBOUR_OUTSIDE);
+          }
+        }
+      }
+    }
   }
 };
 
