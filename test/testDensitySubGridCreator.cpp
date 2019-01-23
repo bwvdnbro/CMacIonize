@@ -162,7 +162,15 @@ int main(int argc, char **argv) {
   assert_condition(subgrids[82]->get_neighbour(TRAVELDIRECTION_FACE_Z_N) == 81);
   assert_condition(subgrids[82]->get_neighbour(TRAVELDIRECTION_FACE_Z_P) == 83);
 
-  for (int_fast32_t igrid = 0; igrid < ngrid; ++igrid) {
+  std::vector< uint_fast8_t > copy_levels(ngrid, 0);
+  copy_levels[82] = 1;
+  std::vector< uint_fast32_t > originals, copies;
+  grid_creator.create_copies(subgrids, copy_levels, originals, copies);
+
+  assert_condition(originals[0] == 82);
+  assert_condition(copies[82] == ngrid);
+
+  for (size_t igrid = 0; igrid < subgrids.size(); ++igrid) {
     delete subgrids[igrid];
   }
 
