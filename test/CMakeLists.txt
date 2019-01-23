@@ -1534,6 +1534,16 @@ add_unit_test(NAME testDensitySubGrid_MPI
               PARALLEL)
 endif(HAVE_MPI)
 
+## Unit test for DensitySubGridCreator
+set(TESTDENSITYSUBGRIDCREATOR_SOURCES
+    testDensitySubGridCreator.cpp
+
+    ../src/DensitySubGridCreator.hpp
+)
+add_unit_test(NAME testDensitySubGridCreator
+              SOURCES ${TESTDENSITYSUBGRIDCREATOR_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
