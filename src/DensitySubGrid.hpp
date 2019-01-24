@@ -435,40 +435,41 @@ public:
     cmac_assert_message(
         std::abs(three_index[0] - static_cast< int_fast32_t >(
                                       position[0] * _inv_cell_size[0])) < 2,
-        "input_direction: "
-            << input_direction << "\nposition: " << position[0] << " "
-            << position[1] << " " << position[2]
-            << "\nthree_index[0]: " << three_index[0] << "\nreal: "
-            << static_cast< int_fast32_t >(position[0] * _inv_cell_size[0]));
+        "input_direction: %" PRIiFAST32
+        "\nposition: %g %g %g\nthree_index[0]: %" PRIiFAST32
+        "\nreal: %" PRIiFAST32,
+        input_direction, position[0], position[1], position[2], three_index[0],
+        static_cast< int_fast32_t >(position[0] * _inv_cell_size[0]));
 
     three_index[1] = get_y_index(position[1], input_direction);
 
     cmac_assert_message(
         std::abs(three_index[1] - static_cast< int_fast32_t >(
                                       position[1] * _inv_cell_size[1])) < 2,
-        "input_direction: " << input_direction << "\nposition: " << position[0]
-                            << " " << position[1] << " " << position[2]
-                            << "\nthree_index[1]: " << three_index[1]);
+        "input_direction: %" PRIiFAST32
+        "\nposition: %g %g %g\nthree_index[1]: %" PRIiFAST32,
+        input_direction, position[0], position[1], position[2], three_index[1]);
 
     three_index[2] = get_z_index(position[2], input_direction);
 
     cmac_assert_message(
         std::abs(three_index[2] - static_cast< int_fast32_t >(
                                       position[2] * _inv_cell_size[2])) < 2,
-        "input_direction: " << input_direction << "\nposition: " << position[0]
-                            << " " << position[1] << " " << position[2]
-                            << "\nthree_index[2]: " << three_index[2]);
+        "input_direction: %" PRIiFAST32
+        "\nposition: %g %g %g\nthree_index[2]: %" PRIiFAST32,
+        input_direction, position[0], position[1], position[2], three_index[2]);
 
-    cmac_assert_message(
-        is_inside(three_index),
-        "position: " << position[0] + _anchor[0] << " "
-                     << position[1] + _anchor[1] << " "
-                     << position[2] + _anchor[2] << "\nbox:\t" << _anchor[0]
-                     << " " << _anchor[1] << " " << _anchor[2] << "\n\t"
-                     << _cell_size[0] * _number_of_cells[0] << " "
-                     << _cell_size[1] * _number_of_cells[1] << " "
-                     << _cell_size[2] * _number_of_cells[2]
-                     << "\ndirection: " << input_direction);
+    cmac_assert_message(is_inside(three_index),
+                        "position: %g %g %g, box: %g %g %g %g %g "
+                        "%g, direction: %" PRIiFAST32
+                        ", three_index: %" PRIiFAST32 " %" PRIiFAST32
+                        " %" PRIiFAST32,
+                        position[0] + _anchor[0], position[1] + _anchor[1],
+                        position[2] + _anchor[2], _anchor[0], _anchor[1],
+                        _anchor[2], _cell_size[0] * _number_of_cells[0],
+                        _cell_size[1] * _number_of_cells[1],
+                        _cell_size[2] * _number_of_cells[2], input_direction,
+                        three_index[0], three_index[1], three_index[2]);
 
     return get_one_index(three_index);
   }
@@ -649,7 +650,7 @@ public:
   get_neighbour(const int_fast32_t output_direction) const {
     cmac_assert_message(output_direction >= 0 &&
                             output_direction < TRAVELDIRECTION_NUMBER,
-                        "output_direction: " << output_direction);
+                        "output_direction: %" PRIiFAST32, output_direction);
     return _ngbs[output_direction];
   }
 
@@ -664,7 +665,7 @@ public:
 
     cmac_assert_message(output_direction >= 0 &&
                             output_direction < TRAVELDIRECTION_NUMBER,
-                        "output_direction: " << output_direction);
+                        "output_direction: %" PRIiFAST32, output_direction);
     _ngbs[output_direction] = ngb;
   }
 
@@ -969,17 +970,16 @@ public:
 
     cmac_assert_message(input_direction >= 0 &&
                             input_direction < TRAVELDIRECTION_NUMBER,
-                        "input_direction: " << input_direction);
+                        "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
     const double *direction = photon.get_direction();
 
-    cmac_assert_message(
-        TravelDirections::is_compatible_input_direction(direction,
-                                                        input_direction),
-        "direction: " << direction[0] << " " << direction[1] << " "
-                      << direction[2]
-                      << ", input_direction: " << input_direction);
+    cmac_assert_message(TravelDirections::is_compatible_input_direction(
+                            direction, input_direction),
+                        "direction: %g %g %g, input_direction: %" PRIiFAST32,
+                        direction[0], direction[1], direction[2],
+                        input_direction);
 
     const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
                                          1. / direction[2]};
@@ -990,8 +990,8 @@ public:
     double tau_done = 0.;
     const double tau_target = photon.get_target_optical_depth();
 
-    cmac_assert_message(tau_done < tau_target,
-                        "tau_done: " << tau_done << ", target: " << tau_target);
+    cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
+                        tau_done, tau_target);
 
     const double cross_section = photon.get_photoionization_cross_section();
     const double photon_weight = photon.get_weight();
@@ -1000,11 +1000,11 @@ public:
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
-    cmac_assert_message(
-        active_cell >= 0 &&
-            active_cell < _number_of_cells[0] * _number_of_cells[3],
-        "active_cell: " << active_cell << ", size: "
-                        << _number_of_cells[0] * _number_of_cells[3]);
+    cmac_assert_message(active_cell >= 0 &&
+                            active_cell <
+                                _number_of_cells[0] * _number_of_cells[3],
+                        "active_cell: %" PRIiFAST32 ", size: %" PRIiFAST32,
+                        active_cell, _number_of_cells[0] * _number_of_cells[3]);
 
     // enter photon traversal loop
     // double condition:
@@ -1023,14 +1023,13 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: " << position[0] << " " << position[1] << " "
-                       << position[2] << "\ncell_low: " << cell_low[0] << " "
-                       << cell_low[1] << " " << cell_low[2]
-                       << "\ncell_high: " << cell_high[0] << " " << cell_high[1]
-                       << " " << cell_high[2] << "\ndirection: " << direction[0]
-                       << " " << direction[1] << " " << direction[2]
-                       << "\nthree_index: " << three_index[0] << " "
-                       << three_index[1] << " " << three_index[2]);
+          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
+          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          " %" PRIiFAST32,
+          position[0], position[1], position[2], cell_low[0], cell_low[1],
+          cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
+          direction[1], direction[2], three_index[0], three_index[1],
+          three_index[2]);
 
       // compute cell distances
       double l[3];
@@ -1048,15 +1047,13 @@ public:
       // find the minimum
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
-      cmac_assert_message(
-          lmin >= 0., "lmin: " << lmin << "\nl: " << l[0] << " " << l[1] << " "
-                               << l[2] << "\ncell: " << cell_low[0] << " "
-                               << cell_low[1] << " " << cell_low[2] << ", "
-                               << cell_high[0] << " " << cell_high[1] << " "
-                               << cell_high[2] << "\nposition: " << position[0]
-                               << " " << position[1] << " " << position[2]
-                               << "\ndirection: " << direction[0] << " "
-                               << direction[1] << " " << direction[2]);
+      cmac_assert_message(lmin >= 0.,
+                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
+                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
+                          cell_low[2], cell_high[0], cell_high[1], cell_high[2],
+                          position[0], position[1], position[2], direction[0],
+                          direction[1], direction[2]);
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
@@ -1129,17 +1126,16 @@ public:
 
     cmac_assert_message(input_direction >= 0 &&
                             input_direction < TRAVELDIRECTION_NUMBER,
-                        "input_direction: " << input_direction);
+                        "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
     const double *direction = photon.get_direction();
 
-    cmac_assert_message(
-        TravelDirections::is_compatible_input_direction(direction,
-                                                        input_direction),
-        "direction: " << direction[0] << " " << direction[1] << " "
-                      << direction[2]
-                      << ", input_direction: " << input_direction);
+    cmac_assert_message(TravelDirections::is_compatible_input_direction(
+                            direction, input_direction),
+                        "direction: %g %g %g, input_direction: %" PRIiFAST32,
+                        direction[0], direction[1], direction[2],
+                        input_direction);
 
     const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
                                          1. / direction[2]};
@@ -1150,8 +1146,8 @@ public:
     double tau_done = 0.;
     const double tau_target = photon.get_target_optical_depth();
 
-    cmac_assert_message(tau_done < tau_target,
-                        "tau_done: " << tau_done << ", target: " << tau_target);
+    cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
+                        tau_done, tau_target);
 
     const double cross_section = photon.get_photoionization_cross_section();
     // get the indices of the first cell on the photon's path
@@ -1159,11 +1155,11 @@ public:
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
-    cmac_assert_message(
-        active_cell >= 0 &&
-            active_cell < _number_of_cells[0] * _number_of_cells[3],
-        "active_cell: " << active_cell << ", size: "
-                        << _number_of_cells[0] * _number_of_cells[3]);
+    cmac_assert_message(active_cell >= 0 &&
+                            active_cell <
+                                _number_of_cells[0] * _number_of_cells[3],
+                        "active_cell: %" PRIiFAST32 ", size: %" PRIiFAST32,
+                        active_cell, _number_of_cells[0] * _number_of_cells[3]);
 
     // enter photon traversal loop
     // double condition:
@@ -1182,14 +1178,13 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: " << position[0] << " " << position[1] << " "
-                       << position[2] << "\ncell_low: " << cell_low[0] << " "
-                       << cell_low[1] << " " << cell_low[2]
-                       << "\ncell_high: " << cell_high[0] << " " << cell_high[1]
-                       << " " << cell_high[2] << "\ndirection: " << direction[0]
-                       << " " << direction[1] << " " << direction[2]
-                       << "\nthree_index: " << three_index[0] << " "
-                       << three_index[1] << " " << three_index[2]);
+          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
+          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          " %" PRIiFAST32,
+          position[0], position[1], position[2], cell_low[0], cell_low[1],
+          cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
+          direction[1], direction[2], three_index[0], three_index[1],
+          three_index[2]);
 
       // compute cell distances
       double l[3];
@@ -1207,15 +1202,13 @@ public:
       // find the minimum
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
-      cmac_assert_message(
-          lmin >= 0., "lmin: " << lmin << "\nl: " << l[0] << " " << l[1] << " "
-                               << l[2] << "\ncell: " << cell_low[0] << " "
-                               << cell_low[1] << " " << cell_low[2] << ", "
-                               << cell_high[0] << " " << cell_high[1] << " "
-                               << cell_high[2] << "\nposition: " << position[0]
-                               << " " << position[1] << " " << position[2]
-                               << "\ndirection: " << direction[0] << " "
-                               << direction[1] << " " << direction[2]);
+      cmac_assert_message(lmin >= 0.,
+                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
+                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
+                          cell_low[2], cell_high[0], cell_high[1], cell_high[2],
+                          position[0], position[1], position[2], direction[0],
+                          direction[1], direction[2]);
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
@@ -1286,17 +1279,16 @@ public:
 
     cmac_assert_message(input_direction >= 0 &&
                             input_direction < TRAVELDIRECTION_NUMBER,
-                        "input_direction: " << input_direction);
+                        "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
     const double *direction = photon.get_direction();
 
-    cmac_assert_message(
-        TravelDirections::is_compatible_input_direction(direction,
-                                                        input_direction),
-        "direction: " << direction[0] << " " << direction[1] << " "
-                      << direction[2]
-                      << ", input_direction: " << input_direction);
+    cmac_assert_message(TravelDirections::is_compatible_input_direction(
+                            direction, input_direction),
+                        "direction: %g %g %g, input_direction: %" PRIiFAST32,
+                        direction[0], direction[1], direction[2],
+                        input_direction);
 
     const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
                                          1. / direction[2]};
@@ -1312,11 +1304,11 @@ public:
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
-    cmac_assert_message(
-        active_cell >= 0 &&
-            active_cell < _number_of_cells[0] * _number_of_cells[3],
-        "active_cell: " << active_cell << ", size: "
-                        << _number_of_cells[0] * _number_of_cells[3]);
+    cmac_assert_message(active_cell >= 0 &&
+                            active_cell <
+                                _number_of_cells[0] * _number_of_cells[3],
+                        "active_cell: %" PRIiFAST32 ", size: %" PRIiFAST32,
+                        active_cell, _number_of_cells[0] * _number_of_cells[3]);
 
     // enter photon traversal loop
     // double condition:
@@ -1334,14 +1326,13 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: " << position[0] << " " << position[1] << " "
-                       << position[2] << "\ncell_low: " << cell_low[0] << " "
-                       << cell_low[1] << " " << cell_low[2]
-                       << "\ncell_high: " << cell_high[0] << " " << cell_high[1]
-                       << " " << cell_high[2] << "\ndirection: " << direction[0]
-                       << " " << direction[1] << " " << direction[2]
-                       << "\nthree_index: " << three_index[0] << " "
-                       << three_index[1] << " " << three_index[2]);
+          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
+          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          " %" PRIiFAST32,
+          position[0], position[1], position[2], cell_low[0], cell_low[1],
+          cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
+          direction[1], direction[2], three_index[0], three_index[1],
+          three_index[2]);
 
       // compute cell distances
       double l[3];
@@ -1359,15 +1350,13 @@ public:
       // find the minimum
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
-      cmac_assert_message(
-          lmin >= 0., "lmin: " << lmin << "\nl: " << l[0] << " " << l[1] << " "
-                               << l[2] << "\ncell: " << cell_low[0] << " "
-                               << cell_low[1] << " " << cell_low[2] << ", "
-                               << cell_high[0] << " " << cell_high[1] << " "
-                               << cell_high[2] << "\nposition: " << position[0]
-                               << " " << position[1] << " " << position[2]
-                               << "\ndirection: " << direction[0] << " "
-                               << direction[1] << " " << direction[2]);
+      cmac_assert_message(lmin >= 0.,
+                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
+                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
+                          cell_low[2], cell_high[0], cell_high[1], cell_high[2],
+                          position[0], position[1], position[2], direction[0],
+                          direction[1], direction[2]);
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
@@ -1622,41 +1611,7 @@ public:
       cmac_assert_message(_intensity_integral[i] ==
                               other._intensity_integral[i],
                           "Intensity integral not the same!");
-
-      for (int_fast32_t j = 0; j < 5; ++j) {
-        cmac_assert_message(_conserved_variables[5 * i + j] ==
-                                other._conserved_variables[5 * i + j],
-                            "Conserved variable not the same!");
-        cmac_assert_message(_delta_conserved_variables[5 * i + j] ==
-                                other._delta_conserved_variables[5 * i + j],
-                            "Conserved variable change not the same!");
-        cmac_assert_message(_primitive_variables[5 * i + j] ==
-                                other._primitive_variables[5 * i + j],
-                            "Primitive variable not the same!");
-        for (int_fast32_t k = 0; k < 3; ++k) {
-          cmac_assert_message(
-              _primitive_variable_gradients[15 * i + 3 * j + k] ==
-                  other._primitive_variable_gradients[15 * i + 3 * j + k],
-              "Primitive variable gradient not the same!");
-        }
-        for (int_fast32_t k = 0; k < 2; ++k) {
-          cmac_assert_message(
-              _primitive_variable_limiters[10 * i + 2 * j + k] ==
-                  other._primitive_variable_limiters[10 * i + 2 * j + k],
-              "Primitive variable limiters not the same!");
-        }
-      }
     }
-    cmac_assert_message(_cell_volume == other._cell_volume,
-                        "Cell volumes not the same!");
-    cmac_assert_message(_inverse_cell_volume == other._inverse_cell_volume,
-                        "Inverse cell volumes not the same!");
-    cmac_assert_message(_cell_areas[0] == other._cell_areas[0],
-                        "Cell areas not the same!");
-    cmac_assert_message(_cell_areas[1] == other._cell_areas[1],
-                        "Cell areas not the same!");
-    cmac_assert_message(_cell_areas[2] == other._cell_areas[2],
-                        "Cell areas not the same!");
   }
 
   /**
