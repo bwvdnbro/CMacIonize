@@ -1544,6 +1544,14 @@ add_unit_test(NAME testDensitySubGridCreator
               SOURCES ${TESTDENSITYSUBGRIDCREATOR_SOURCES}
               LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
+## Unit test for TaskBasedIonizationSimulation
+set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
+    testTaskBasedIonizationSimulation.cpp
+)
+add_unit_test(NAME testTaskBasedIonizationSimulation
+              SOURCES ${TESTTASKBASEDIONIZATIONSIMULATION_SOURCES}
+              LIBS TaskBasedIonizationSimulation)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
