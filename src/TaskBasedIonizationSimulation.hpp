@@ -27,8 +27,18 @@
 #ifndef TASKBASEDIONIZATIONSIMULATION_HPP
 #define TASKBASEDIONIZATIONSIMULATION_HPP
 
+#include "RandomGenerator.hpp"
+#include "Task.hpp"
+#include "ThreadSafeVector.hpp"
+
+#include <vector>
+
 class DensityFunction;
 class DensityGridWriter;
+class DensitySubGrid;
+class DensitySubGridCreator;
+class MemorySpace;
+class TaskQueue;
 
 /**
  * @brief Ionization radiative transfer simulation using a task-based parallel
@@ -36,6 +46,27 @@ class DensityGridWriter;
  */
 class TaskBasedIonizationSimulation {
 private:
+  /*! @brief Grid parts. */
+  std::vector< DensitySubGrid * > _subgrids;
+
+  /*! @brief PhotonPacket buffers. */
+  MemorySpace *_buffers;
+
+  /*! @brief Queues per thread. */
+  std::vector< TaskQueue * > _queues;
+
+  /*! @brief General shared queue. */
+  TaskQueue *_shared_queue;
+
+  /*! @brief Task space. */
+  ThreadSafeVector< Task > *_tasks;
+
+  /*! @brief Random number generator per thread. */
+  std::vector< RandomGenerator > _random_generators;
+
+  /*! @brief Grid creator. */
+  DensitySubGridCreator *_grid_creator;
+
 public:
   TaskBasedIonizationSimulation();
   ~TaskBasedIonizationSimulation();
