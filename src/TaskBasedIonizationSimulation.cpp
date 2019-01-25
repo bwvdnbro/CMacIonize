@@ -39,18 +39,18 @@
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation() {
 
   const uint_fast8_t numthreads = 8;
-  const double box[6] = {-1.93e17, -1.93e17, -1.93e17,
-                         3.086e17, 3.086e17, 3.086e17};
+  const double box[6] = {-1.543e17, -1.543e17, -1.543e17,
+                         3.086e17,  3.086e17,  3.086e17};
   const int_fast32_t ncell[3] = {64, 64, 64};
   const int_fast32_t ngrid[3] = {8, 8, 8};
 
   omp_set_num_threads(numthreads);
 
-  _subgrids.resize(ncell[0] * ncell[1] * ncell[2], nullptr);
+  _subgrids.resize(ngrid[0] * ngrid[1] * ngrid[2], nullptr);
   _buffers = new MemorySpace(50000);
   _queues.resize(numthreads);
   for (uint_fast8_t ithread = 0; ithread < numthreads; ++ithread) {
-    _queues[ithread] = new TaskQueue(100);
+    _queues[ithread] = new TaskQueue(10000);
   }
   _shared_queue = new TaskQueue(100000);
   _tasks = new ThreadSafeVector< Task >(500000);
@@ -65,6 +65,9 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation() {
  * @brief Destructor.
  */
 TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
+  for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
+    delete _subgrids[igrid];
+  }
   delete _buffers;
   for (uint_fast8_t ithread = 0; ithread < _queues.size(); ++ithread) {
     delete _queues[ithread];
@@ -99,6 +102,8 @@ void TaskBasedIonizationSimulation::run(
     DensityGridWriter *density_grid_writer) {
 
   for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
+
+    cmac_warning("Loop: %" PRIuFAST8, iloop);
 
     _tasks->get_free_elements(5000);
 #pragma omp parallel for default(shared)
@@ -527,8 +532,13 @@ void TaskBasedIonizationSimulation::run(
           }
         }
 
+        cmac_warning("num_empty: %" PRIuFAST32
+                     ", num_active_buffers: %" PRIuFAST32
+                     ", num_photon_done: %" PRIuFAST32,
+                     num_empty.value(), num_active_buffers.value(),
+                     num_photon_done.value());
         if (num_empty.value() == num_empty_target &&
-            num_active_buffers.value() == 0) {
+            num_active_buffers.value() == 0 && num_photon_done.value() == 1e6) {
           global_run_flag = false;
         }
       } // while(global_run_flag)
@@ -538,6 +548,8 @@ void TaskBasedIonizationSimulation::run(
     for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
       _subgrids[igrid]->compute_neutral_fraction(4.26e49, 1e6);
     }
+
+    _tasks->clear();
   } // photoionization loop
 
   std::ofstream ofile("testTaskBasedIonizationSimulation_output.txt");
