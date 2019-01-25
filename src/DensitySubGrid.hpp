@@ -30,6 +30,7 @@
 // local includes
 #include "AtomicValue.hpp"
 #include "Error.hpp"
+#include "MPITypes.hpp"
 #include "PhotonPacket.hpp"
 #include "ThreadLock.hpp"
 #include "TravelDirections.hpp"
@@ -789,7 +790,7 @@ public:
     cmac_assert_message(buffer_size >= get_MPI_size(), "Buffer too small!");
 
     int buffer_position = 0;
-    MPI_Pack(&_computational_cost, 1, MPI_UNSIGNED_LONG, buffer, buffer_size,
+    MPI_Pack(&_computational_cost, 1, MPI_UINT_LEAST64_T, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(_anchor, 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
              MPI_COMM_WORLD);
@@ -797,12 +798,13 @@ public:
              MPI_COMM_WORLD);
     MPI_Pack(_inv_cell_size, 3, MPI_DOUBLE, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_number_of_cells, 4, MPI_INT, buffer, buffer_size,
+    MPI_Pack(_number_of_cells, 4, MPI_INT_FAST32_T, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_ngbs, TRAVELDIRECTION_NUMBER, MPI_UNSIGNED, buffer, buffer_size,
-             &buffer_position, MPI_COMM_WORLD);
+    MPI_Pack(_ngbs, TRAVELDIRECTION_NUMBER, MPI_UINT_LEAST32_T, buffer,
+             buffer_size, &buffer_position, MPI_COMM_WORLD);
 
-    const int tot_num_cells = _number_of_cells[0] * _number_of_cells[3];
+    const int_fast32_t tot_num_cells =
+        _number_of_cells[0] * _number_of_cells[3];
     MPI_Pack(_number_density, tot_num_cells, MPI_DOUBLE, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(_neutral_fraction, tot_num_cells, MPI_DOUBLE, buffer, buffer_size,
@@ -823,18 +825,18 @@ public:
   inline void unpack(char *buffer, const int_fast32_t buffer_size) {
     int buffer_position = 0;
     MPI_Unpack(buffer, buffer_size, &buffer_position, &_computational_cost, 1,
-               MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+               MPI_UINT_LEAST64_T, MPI_COMM_WORLD);
     MPI_Unpack(buffer, buffer_size, &buffer_position, _anchor, 3, MPI_DOUBLE,
                MPI_COMM_WORLD);
     MPI_Unpack(buffer, buffer_size, &buffer_position, _cell_size, 3, MPI_DOUBLE,
                MPI_COMM_WORLD);
     MPI_Unpack(buffer, buffer_size, &buffer_position, _inv_cell_size, 3,
                MPI_DOUBLE, MPI_COMM_WORLD);
-    unsigned int new_number_of_cells[4];
+    int_fast32_t new_number_of_cells[4];
     MPI_Unpack(buffer, buffer_size, &buffer_position, new_number_of_cells, 4,
-               MPI_INT, MPI_COMM_WORLD);
+               MPI_INT_FAST32_T, MPI_COMM_WORLD);
     MPI_Unpack(buffer, buffer_size, &buffer_position, _ngbs,
-               TRAVELDIRECTION_NUMBER, MPI_UNSIGNED, MPI_COMM_WORLD);
+               TRAVELDIRECTION_NUMBER, MPI_UINT_LEAST32_T, MPI_COMM_WORLD);
 
     const int_fast32_t tot_num_cells =
         new_number_of_cells[0] * new_number_of_cells[3];
