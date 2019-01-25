@@ -1447,6 +1447,7 @@ set(TESTDENSITYSUBGRID_MPI_SOURCES
     testDensitySubGrid_MPI.cpp
 
     ../src/DensitySubGrid.hpp
+    ../src/MPITypes.hpp
 )
 add_unit_test(NAME testDensitySubGrid_MPI
               SOURCES ${TESTDENSITYSUBGRID_MPI_SOURCES}
