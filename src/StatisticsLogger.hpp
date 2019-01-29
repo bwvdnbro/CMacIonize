@@ -99,7 +99,7 @@ public:
       cmac_error("Error while truncating output file!");
     }
     // now open the file in append mode
-    _logfile = std::ofstream("StatisticsLogger.txt", std::ios_base::app);
+    _logfile.open("StatisticsLogger.txt", std::ios_base::app);
   }
 };
 
