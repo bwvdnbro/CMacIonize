@@ -58,6 +58,7 @@
 #include "RecombinationRatesFactory.hpp"
 #include "RestartManager.hpp"
 #include "SimulationBox.hpp"
+#include "StatisticsLogger.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TerminalLog.hpp"
 #include "TimeLine.hpp"
@@ -139,6 +140,8 @@ void RadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - use cooling: Add external cooling (default: false)
  *  - use stellar feedback: Add stellar feedback (using the Caproni dwarf
  *    galaxy rates; default: false)
+ *  - output statistics: Output statistical information about the grid during
+ *    the simulation (default: true)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -355,6 +358,16 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   const bool do_stellar_feedback = params->get_value< bool >(
       "RadiationHydrodynamicsSimulation:use stellar feedback", false);
 
+  StatisticsLogger *statistics = nullptr;
+  if (params->get_value< bool >(
+          "RadiationHydrodynamicsSimulation:output statistics", true)) {
+    if (restart_reader != nullptr) {
+      statistics = new StatisticsLogger(*restart_reader);
+    } else {
+      statistics = new StatisticsLogger;
+    }
+  }
+
   RestartManager restart_manager(*params);
 
   // we are done reading the parameter file
@@ -480,6 +493,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     current_time = restart_reader->read< double >();
     delete restart_reader;
     restart_reader = nullptr;
+  }
+  if (statistics != nullptr) {
+    statistics->write_statistics(current_time, *grid);
   }
   bool stop_simulation = false;
   RandomGenerator restart_seed_generator(random_seed);
@@ -642,6 +658,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     has_next_step =
         timeline->advance(requested_timestep, actual_timestep, current_time);
 
+    if (statistics != nullptr) {
+      statistics->write_statistics(current_time, *grid);
+    }
+
     random_seed = restart_seed_generator.get_random_integer();
     stop_simulation = restart_manager.stop_simulation();
     if (restart_manager.write_restart_file() || stop_simulation) {
@@ -671,6 +691,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
 
       if (mask != nullptr) {
         HydroMaskFactory::write_restart_file(*restart_writer, *mask);
+      }
+
+      if (statistics != nullptr) {
+        statistics->write_restart_file(*restart_writer);
       }
 
       worktimer.write_restart_file(*restart_writer);
