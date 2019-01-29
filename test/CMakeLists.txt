@@ -1382,6 +1382,17 @@ configure_file(
   COPYONLY)
 endif(HAVE_HDF5)
 
+## Unit test for StatisticsLogger
+set(TESTSTATISTICSLOGGER_SOURCES
+    testStatisticsLogger.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/StatisticsLogger.hpp
+)
+add_unit_test(NAME testStatisticsLogger
+              SOURCES ${TESTSTATISTICSLOGGER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

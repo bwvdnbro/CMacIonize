@@ -38,6 +38,8 @@
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
 
+#include <cfloat>
+
 /*! @brief Uncomment this to switch off second order integration. */
 //#define NO_SECOND_ORDER
 
@@ -50,8 +52,6 @@
 
 /*! @brief Uncomment this to activate the flux limiter. */
 #define FLUX_LIMITER 2.
-
-#include <cfloat>
 
 /*! @brief Stop the serial time timer and start the parallel time timer. */
 #define hydro_start_parallel_timing_block()                                    \
