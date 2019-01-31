@@ -27,6 +27,7 @@
 #define STATISTICSLOGGER_HPP
 
 #include "DensityGrid.hpp"
+#include "InternalHydroUnits.hpp"
 #include "RestartReader.hpp"
 #include "RestartWriter.hpp"
 
@@ -46,9 +47,9 @@ public:
    * @brief Constructor.
    */
   inline StatisticsLogger() : _logfile("StatisticsLogger.txt") {
-    _logfile << "time (s)\ttotal mass (kg)\ttotal momentum x (kg m s^-1)\t"
-                "total momentum y (kg m s^-1)\ttotal momentum z (kg m s^-1)\t"
-                "total energy (kg m^2 s^-2)\n";
+    _logfile << "time (s)\ttotal mass (kg)\ttotal momentum x  (kg m "
+                "s^-1)\ttotal momentum y (kg m s^-1)\ttotal momentum z (kg m "
+                "s^-1)\ttotal energy (ks m^2 s^-2)\n";
   }
 
   /**
@@ -56,8 +57,10 @@ public:
    *
    * @param time Current simulation time (s).
    * @param grid DensityGrid to analyse.
+   * @param hydro_units Internal hydro units.
    */
-  inline void write_statistics(const double time, DensityGrid &grid) {
+  inline void write_statistics(const double time, DensityGrid &grid,
+                               const InternalHydroUnits &hydro_units) {
 
     double mass = 0.;
     CoordinateVector<> momentum(0., 0., 0.);
@@ -65,9 +68,12 @@ public:
 
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       const HydroVariables hydro = it.get_hydro_variables();
-      mass += hydro.get_conserved_mass();
-      momentum += hydro.get_conserved_momentum();
-      energy += hydro.get_conserved_total_energy();
+      mass += hydro_units.convert_to_SI_units< QUANTITY_MASS >(
+          hydro.get_conserved_mass());
+      momentum += hydro_units.convert_to_SI_units< QUANTITY_MOMENTUM >(
+          hydro.get_conserved_momentum());
+      energy += hydro_units.convert_to_SI_units< QUANTITY_ENERGY >(
+          hydro.get_conserved_total_energy());
     }
 
     _logfile << time << "\t" << mass << "\t" << momentum.x() << "\t"
