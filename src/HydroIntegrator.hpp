@@ -44,7 +44,7 @@
 //#define NO_SECOND_ORDER
 
 /*! @brief Uncomment this to switch off the use of internal units. */
-#define NO_INTERNAL_UNITS
+//#define NO_INTERNAL_UNITS
 
 /*! @brief Uncomment this to make sure all hydro variables are always set to
  *  physical values. */
@@ -98,7 +98,7 @@ private:
 
   /*! @brief Velocity limit. Gas velocities higher than this value are capped
    *  (in m s^-1). */
-  const double _max_velocity;
+  double _max_velocity;
 
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
@@ -250,6 +250,8 @@ private:
      * @param cell DensityGrid::iterator pointing to a grid cell.
      */
     inline void operator()(DensityGrid::iterator &cell) {
+
+      cell.register_access();
 
       const CoordinateVector<> posL = cell.get_cell_midpoint();
       const double rhoL = cell.get_hydro_variables().get_primitives_density();
@@ -933,6 +935,10 @@ public:
 
     grid.set_grid_velocity(
         _gamma, _hydro_units->get_unit_SI_value< QUANTITY_VELOCITY >());
+
+    _max_velocity =
+        _hydro_units->convert_to_internal_units< QUANTITY_VELOCITY >(
+            _max_velocity);
   }
 
   /**
@@ -1087,9 +1093,13 @@ public:
         workers;
     DensityGridTraversalJobMarket< HydroFluxComputation > jobs(
         grid, hydro_flux_computation, block);
+    grid.reset_access_flags();
     hydro_start_parallel_timing_block();
     workers.do_in_parallel(jobs);
     hydro_stop_parallel_timing_block();
+    if (!grid.check_access()) {
+      cmac_error("Access error in hydro flux exchange loop!");
+    }
 
     // do radiation (if enabled)
     if (_do_radiative_heating || _do_radiative_cooling) {

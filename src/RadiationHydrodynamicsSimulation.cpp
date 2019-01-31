@@ -495,7 +495,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     restart_reader = nullptr;
   }
   if (statistics != nullptr) {
-    statistics->write_statistics(current_time, *grid);
+    statistics->write_statistics(current_time, *grid,
+                                 *hydro_integrator->get_internal_units());
   }
   bool stop_simulation = false;
   RandomGenerator restart_seed_generator(random_seed);
@@ -659,7 +660,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
         timeline->advance(requested_timestep, actual_timestep, current_time);
 
     if (statistics != nullptr) {
-      statistics->write_statistics(current_time, *grid);
+      statistics->write_statistics(current_time, *grid,
+                                   *hydro_integrator->get_internal_units());
     }
 
     random_seed = restart_seed_generator.get_random_integer();

@@ -92,6 +92,10 @@ protected:
   /*! @brief EmissivityValues for the cells. */
   std::vector< EmissivityValues * > _emissivities;
 
+  /*! @brief Additional flags to check cell access during parallel grid
+   *  operations. */
+  std::vector< uint_fast32_t > _accessed;
+
 #ifndef USE_LOCKFREE
   /*! @brief Locks to ensure safe write access to the cell data. */
   std::vector< Lock > _lock;
@@ -213,6 +217,7 @@ public:
     // available memory
     _ionization_variables.resize(numcell);
     _emissivities.resize(numcell, nullptr);
+    _accessed.resize(numcell, 0);
 #ifndef USE_LOCKFREE
     _lock.resize(numcell);
 #endif
@@ -387,6 +392,29 @@ public:
   }
 
   /**
+   * @brief Reset the access flags for all cells.
+   */
+  inline void reset_access_flags() {
+    for (size_t i = 0; i < _accessed.size(); ++i) {
+      _accessed[i] = 0;
+    }
+  }
+
+  /**
+   * @brief Check if all cells in the grid were accessed exactly once.
+   *
+   * @return True if all cells were accessed once, false otherwise.
+   */
+  inline bool check_access() const {
+    for (size_t i = 0; i < _accessed.size(); ++i) {
+      if (_accessed[i] != 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * @brief Iterator to loop over the cells in the grid.
    */
   class iterator : public Cell {
@@ -543,6 +571,12 @@ public:
     inline void set_emissivities(EmissivityValues *emissivities) {
       _grid->_emissivities[_index] = emissivities;
     }
+
+    /**
+     * @brief Register a cell access for the cell the iterator is currently
+     * pointing to.
+     */
+    inline void register_access() { ++_grid->_accessed[_index]; }
 
 #ifndef USE_LOCKFREE
     /**

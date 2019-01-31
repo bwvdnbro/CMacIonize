@@ -50,21 +50,21 @@ int main(int argc, char **argv) {
 
   {
     StatisticsLogger logger;
-    logger.write_statistics(0., grid);
+    logger.write_statistics(0., grid, *integrator.get_internal_units());
 
     {
       RestartWriter restart_writer("statistics_logger.dump");
       logger.write_restart_file(restart_writer);
     }
 
-    logger.write_statistics(1., grid);
+    logger.write_statistics(1., grid, *integrator.get_internal_units());
   }
 
   /// restart test
   {
     RestartReader restart_reader("statistics_logger.dump");
     StatisticsLogger logger(restart_reader);
-    logger.write_statistics(2., grid);
+    logger.write_statistics(2., grid, *integrator.get_internal_units());
   }
 
   return 0;
