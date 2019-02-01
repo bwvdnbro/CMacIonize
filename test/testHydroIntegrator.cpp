@@ -28,6 +28,7 @@
 #include "DensityFunction.hpp"
 #include "ExactRiemannSolver.hpp"
 #include "HydroIntegrator.hpp"
+#include "RandomGenerator.hpp"
 #include "VoronoiDensityGrid.hpp"
 #include "VoronoiGeneratorDistribution.hpp"
 #include <fstream>
@@ -101,6 +102,165 @@ public:
  */
 int main(int argc, char **argv) {
 
+  /// Flux symmetry check
+  {
+    const uint_fast32_t nrho = 100;
+    const uint_fast32_t nu = 100;
+    const uint_fast32_t nP = 100;
+
+    const double rhoL = 1.;
+    const CoordinateVector<> uL(1.);
+    const double PL = 1.;
+
+    const CoordinateVector<> posL(0.1, 0.1, 0.1);
+    const CoordinateVector<> posR(0.2, 0.2, 0.2);
+    const CoordinateVector<> midpoint(0.15, 0.15, 0.15);
+
+    const CoordinateVector<> dL = midpoint - posL;
+    const CoordinateVector<> dR = midpoint - posR;
+    const double rinv = 1. / ((posL - posR).norm());
+    const double dL_over_r = dL.norm() * rinv;
+    const double dR_over_r = dR.norm() * rinv;
+
+    CoordinateVector<> normal(1., 1., 1.);
+    normal /= normal.norm();
+    const CoordinateVector<> vframe;
+    const double surface_area = 0.1;
+    const double timestep = 0.1;
+
+    const HLLCRiemannSolver solver(5. / 3.);
+
+    RandomGenerator random_generator(42);
+
+    double mfluxL, mfluxR, EfluxL, EfluxR;
+    CoordinateVector<> pfluxL, pfluxR;
+    for (uint_fast32_t irho = 0; irho < nrho; ++irho) {
+      for (uint_fast32_t iu = 0; iu < nu; ++iu) {
+        for (uint_fast32_t iP = 0; iP < nP; ++iP) {
+          const double rhoR = std::pow(10., -10. + 0.2 * (irho + 0.5));
+          const CoordinateVector<> uR(std::pow(10., -10. + 0.4 * (iu + 0.5)) -
+                                      std::pow(10., 10. - 0.4 * (iu + 0.5)));
+          const double PR = std::pow(10., -10. + 0.2 * (iP + 0.5));
+
+          const CoordinateVector<> gradrhoL(
+              2. * random_generator.get_uniform_random_double() - 1.,
+              2. * random_generator.get_uniform_random_double() - 1.,
+              2. * random_generator.get_uniform_random_double() - 1.);
+          const CoordinateVector< CoordinateVector<> > graduL(
+              CoordinateVector<>(
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.),
+              CoordinateVector<>(
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.),
+              CoordinateVector<>(
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.));
+          const CoordinateVector<> gradPL(
+              2. * random_generator.get_uniform_random_double() - 1.,
+              2. * random_generator.get_uniform_random_double() - 1.,
+              2. * random_generator.get_uniform_random_double() - 1.);
+
+          const CoordinateVector<> gradrhoR =
+              rhoR *
+              CoordinateVector<>(
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.,
+                  2. * random_generator.get_uniform_random_double() - 1.);
+          const CoordinateVector< CoordinateVector<> > graduR(
+              uR.x() *
+                  CoordinateVector<>(
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.),
+              uR.y() *
+                  CoordinateVector<>(
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.),
+              uR.z() *
+                  CoordinateVector<>(
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.,
+                      2. * random_generator.get_uniform_random_double() - 1.));
+          const CoordinateVector<> gradPR =
+              PR * CoordinateVector<>(
+                       2. * random_generator.get_uniform_random_double() - 1.,
+                       2. * random_generator.get_uniform_random_double() - 1.,
+                       2. * random_generator.get_uniform_random_double() - 1.);
+
+          HydroIntegrator::HydroFluxComputation::compute_fluxes(
+              rhoL, uL, PL, rhoR, uR, PR, gradrhoL, graduL, gradPL, gradrhoR,
+              graduR, gradPR, dL, dR, dL_over_r, dR_over_r, solver, normal,
+              vframe, surface_area, timestep, true, mfluxL, pfluxL, EfluxL);
+          HydroIntegrator::HydroFluxComputation::compute_fluxes(
+              rhoR, uR, PR, rhoL, uL, PL, gradrhoR, graduR, gradPR, gradrhoL,
+              graduL, gradPL, dR, dL, dR_over_r, dL_over_r, solver,
+              -1. * normal, vframe, surface_area, timestep, true, mfluxR,
+              pfluxR, EfluxR);
+
+          assert_condition_message(mfluxL == -mfluxR, "%.17g %.17g", mfluxL,
+                                   mfluxR);
+          assert_condition_message(pfluxL == -1. * pfluxR,
+                                   "[%.17g %.17g %.17g] [%.17g %.17g %.17g]",
+                                   pfluxL.x(), pfluxL.y(), pfluxL.z(),
+                                   pfluxR.x(), pfluxR.y(), pfluxR.z());
+          assert_condition_message(EfluxL == -EfluxR, "%.17g %.17g", EfluxL,
+                                   EfluxR);
+
+          const double mLfluxlimit =
+              random_generator.get_uniform_random_double();
+          const double pL2fluxlimit =
+              random_generator.get_uniform_random_double();
+          const double ELfluxlimit =
+              random_generator.get_uniform_random_double();
+          const double mRfluxlimit =
+              random_generator.get_uniform_random_double();
+          const double pR2fluxlimit =
+              random_generator.get_uniform_random_double();
+          const double ERfluxlimit =
+              random_generator.get_uniform_random_double();
+          const double facL = HydroIntegrator::HydroFluxComputation::limit_flux(
+              mfluxL, pfluxL.norm2(), EfluxL, mLfluxlimit, pL2fluxlimit,
+              ELfluxlimit, mRfluxlimit, pR2fluxlimit, ERfluxlimit, true, true,
+              false);
+          const double facR = HydroIntegrator::HydroFluxComputation::limit_flux(
+              mfluxR, pfluxR.norm2(), EfluxR, mRfluxlimit, pR2fluxlimit,
+              ERfluxlimit, mLfluxlimit, pL2fluxlimit, ELfluxlimit, true, true,
+              false);
+          assert_condition(facL == facR);
+        }
+      }
+    }
+  }
+  /// Flux limiter symmetry check
+  {
+    RandomGenerator random_generator(42);
+    for (uint_fast32_t i = 0; i < 1000; ++i) {
+      const double mLfluxlimit = random_generator.get_uniform_random_double();
+      const double pL2fluxlimit = random_generator.get_uniform_random_double();
+      const double ELfluxlimit = random_generator.get_uniform_random_double();
+      const double mRfluxlimit = random_generator.get_uniform_random_double();
+      const double pR2fluxlimit = random_generator.get_uniform_random_double();
+      const double ERfluxlimit = random_generator.get_uniform_random_double();
+      const double mflux =
+          2. * random_generator.get_uniform_random_double() - 1.;
+      const double pflux2 = random_generator.get_uniform_random_double();
+      const double Eflux =
+          2. * random_generator.get_uniform_random_double() - 1.;
+      const double facL = HydroIntegrator::HydroFluxComputation::limit_flux(
+          mflux, pflux2, Eflux, mLfluxlimit, pL2fluxlimit, ELfluxlimit,
+          mRfluxlimit, pR2fluxlimit, ERfluxlimit, true, true, false);
+      const double facR = HydroIntegrator::HydroFluxComputation::limit_flux(
+          -mflux, pflux2, -Eflux, mRfluxlimit, pR2fluxlimit, ERfluxlimit,
+          mLfluxlimit, pL2fluxlimit, ELfluxlimit, true, true, false);
+      assert_condition(facL == facR);
+    }
+  }
+
   /// Cartesian grid
   {
     HydroIntegrator integrator(5. / 3., false, false, 0.2, "HLLC", 0.);
@@ -109,7 +269,7 @@ int main(int argc, char **argv) {
     CoordinateVector< int_fast32_t > ncell(100, 1, 1);
     SodShockDensityFunction density_function;
     density_function.initialize();
-    CoordinateVector< bool > periodic(false, true, true);
+    CoordinateVector< bool > periodic(true, true, true);
     CartesianDensityGrid grid(box, ncell, periodic, true);
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());

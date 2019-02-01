@@ -152,6 +152,7 @@ private:
     }
   }
 
+public:
   /**
    * @brief Functor that does the flux computation for a single cell.
    */
@@ -228,6 +229,237 @@ private:
       return phimid;
     }
 
+    /**
+     * @brief Construct a slope-limited reconstruction of the given quantity.
+     *
+     * @param quantity0 Quantity to reconstruct.
+     * @param gradient Gradient of the quantity.
+     * @param distance Distance over which to reconstruct.
+     * @param quantity1 Quantity on the other side of the interface.
+     * @param fractional_distance Ratio of the distance between the interface
+     * and the central cell and the distance between the central cell and the
+     * neighbouring cell.
+     * @return Slope limited, reconstructed quantity.
+     */
+    inline static double reconstruct_quantity(
+        const double quantity0, const CoordinateVector<> gradient,
+        const CoordinateVector<> distance, const double quantity1,
+        const double fractional_distance) {
+
+      const double quantity0_prime =
+          quantity0 + CoordinateVector<>::dot_product(gradient, distance);
+      return limit(quantity0_prime, quantity0, quantity1, fractional_distance);
+    }
+
+  public:
+    /**
+     * @brief Get a flux-limiting factor for the given flux.
+     *
+     * @param mflux Mass flux.
+     * @param pflux2 Squared norm of the momentum flux.
+     * @param Eflux Energy flux.
+     * @param mLfluxlimit Maximum allowed mass flux out of the left cell.
+     * @param pL2fluxlimit Maximum allowed squared momentum flux out of the left
+     * cell.
+     * @param ELfluxlimit Maximum allowed energy flux out of the left cell.
+     * @param mRfluxlimit Maximum allowed mass flux out of the right cell.
+     * @param pR2fluxlimit Maximum allowed squared momentum flux out of the
+     * right cell.
+     * @param ERfluxlimit Maximum allowed energy flux out of the right cell.
+     * @param high_momentum_L Flag signaling if the left cell has a high
+     * momentum.
+     * @param high_momentum_R Flag signaling if the right cell has a high
+     * momentum.
+     * @param isothermal Flag signaling if we have an isothermal equation of
+     * state.
+     * @return Limiting factor for the fluxes.
+     */
+    inline static double
+    limit_flux(const double mflux, const double pflux2, const double Eflux,
+               const double mLfluxlimit, const double pL2fluxlimit,
+               const double ELfluxlimit, const double mRfluxlimit,
+               const double pR2fluxlimit, const double ERfluxlimit,
+               const bool high_momentum_L, const bool high_momentum_R,
+               const bool isothermal) {
+      // limit the flux
+      double fluxfac = 1.;
+      if (mflux > mLfluxlimit) {
+        fluxfac = mLfluxlimit / mflux;
+      }
+      if (-mflux > mRfluxlimit) {
+        fluxfac = std::min(fluxfac, -mRfluxlimit / mflux);
+      }
+      if (!isothermal) {
+        if (Eflux > ELfluxlimit) {
+          fluxfac = std::min(fluxfac, ELfluxlimit / Eflux);
+        }
+        if (-Eflux > ERfluxlimit) {
+          fluxfac = std::min(fluxfac, -ERfluxlimit / Eflux);
+        }
+      }
+      // momentum flux limiter
+      // note that we only apply this for cells that have high momentum, i.e.
+      // whose momentum is higher than the thermal momentum of the cell
+      // without this condition, cells with zero momentum would never be able
+      // to gain momentum...
+      if (high_momentum_L) {
+        if (pflux2 > pL2fluxlimit) {
+          fluxfac = std::min(fluxfac, std::sqrt(pL2fluxlimit / pflux2));
+        }
+      }
+      if (high_momentum_R) {
+        if (pflux2 > pR2fluxlimit) {
+          fluxfac = std::min(fluxfac, std::sqrt(pR2fluxlimit / pflux2));
+        }
+      }
+      cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g",
+                          fluxfac);
+      return fluxfac;
+    }
+
+    /**
+     * @brief Compute the fluxes between the given left and right states.
+     *
+     * @param rhoL Left state density.
+     * @param uL Left state velocity.
+     * @param PL Left state pressure.
+     * @param rhoR Right state density.
+     * @param uR Right state velocity.
+     * @param PR Right state pressure.
+     * @param gradrhoL Left state density gradient.
+     * @param graduL Left state velocity gradients.
+     * @param gradPL Left state pressure gradient.
+     * @param gradrhoR Right state density gradient.
+     * @param graduR Right state velocity gradients.
+     * @param gradPR Right state pressure gradient.
+     * @param dL Distance vector between the left state reference point and the
+     * interface midpoint.
+     * @param dR Distance vector between the right state reference point and the
+     * interface midpoint.
+     * @param dL_over_r Fractional distance to between the left state reference
+     * point and the interface midpoint w.r.t. the distance between the left
+     * state and right state reference points.
+     * @param dR_over_r Fractional distance to between the right state reference
+     * point and the interface midpoint w.r.t. the distance between the left
+     * state and right state reference points.
+     * @param solver RiemannSolver to use.
+     * @param normal Interface surface normal.
+     * @param vframe Velocity of the interface.
+     * @param surface_area Surface area of the interface.
+     * @param timestep Timestep for the flux exchange.
+     * @param isothermal Flag specifying whether to us an isothermal equation
+     * of state or not.
+     * @param mflux Variable to store the mass flux in.
+     * @param pflux Variable to store the momentum flux in.
+     * @param Eflux Variable to store the energy flux in.
+     */
+    inline static void compute_fluxes(
+        const double rhoL, const CoordinateVector<> uL, const double PL,
+        const double rhoR, const CoordinateVector<> uR, const double PR,
+        const CoordinateVector<> gradrhoL,
+        const CoordinateVector< CoordinateVector<> > graduL,
+        const CoordinateVector<> gradPL, const CoordinateVector<> gradrhoR,
+        const CoordinateVector< CoordinateVector<> > graduR,
+        const CoordinateVector<> gradPR, const CoordinateVector<> dL,
+        const CoordinateVector<> dR, const double dL_over_r,
+        const double dR_over_r, const RiemannSolver &solver,
+        const CoordinateVector<> normal, const CoordinateVector<> vframe,
+        const double surface_area, const double timestep, const bool isothermal,
+        double &mflux, CoordinateVector<> &pflux, double &Eflux) {
+
+      // do the second order spatial gradient extrapolation
+      double rhoL_prime =
+          reconstruct_quantity(rhoL, gradrhoL, dL, rhoR, dL_over_r);
+      CoordinateVector<> uL_prime(
+          reconstruct_quantity(uL[0], graduL[0], dL, uR[0], dL_over_r),
+          reconstruct_quantity(uL[1], graduL[1], dL, uR[1], dL_over_r),
+          reconstruct_quantity(uL[2], graduL[2], dL, uR[2], dL_over_r));
+      double PL_prime = reconstruct_quantity(PL, gradPL, dL, PR, dL_over_r);
+
+      double rhoR_prime =
+          reconstruct_quantity(rhoR, gradrhoR, dR, rhoL, dR_over_r);
+      CoordinateVector<> uR_prime(
+          reconstruct_quantity(uR[0], graduR[0], dR, uL[0], dR_over_r),
+          reconstruct_quantity(uR[1], graduR[1], dR, uL[1], dR_over_r),
+          reconstruct_quantity(uR[2], graduR[2], dR, uL[2], dR_over_r));
+      double PR_prime = reconstruct_quantity(PR, gradPR, dR, PL, dR_over_r);
+
+      cmac_assert(rhoL_prime == rhoL_prime);
+      cmac_assert(uL_prime.x() == uL_prime.x());
+      cmac_assert(uL_prime.y() == uL_prime.y());
+      cmac_assert(uL_prime.z() == uL_prime.z());
+      cmac_assert(PL_prime == PL_prime);
+
+      cmac_assert(rhoR_prime == rhoR_prime);
+      cmac_assert(uR_prime.x() == uR_prime.x());
+      cmac_assert(uR_prime.y() == uR_prime.y());
+      cmac_assert(uR_prime.z() == uR_prime.z());
+      cmac_assert(PR_prime == PR_prime);
+
+// make sure all densities and pressures are physical
+#ifdef SAFE_HYDRO
+      rhoL_prime = std::max(rhoL_prime, 0.);
+      PL_prime = std::max(PL_prime, 0.);
+      rhoR_prime = std::max(rhoR_prime, 0.);
+      PR_prime = std::max(PR_prime, 0.);
+#else
+      cmac_assert(rhoL_prime >= 0.);
+      cmac_assert(PL_prime >= 0.);
+      cmac_assert(rhoR_prime >= 0.);
+      cmac_assert(PR_prime >= 0.);
+#endif
+
+      solver.solve_for_flux(rhoL_prime, uL_prime, PL_prime, rhoR_prime,
+                            uR_prime, PR_prime, mflux, pflux, Eflux, normal,
+                            vframe);
+
+      cmac_assert_message(mflux == mflux,
+                          "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                          "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                          "normal: %g %g %g, vframe: %g %g %g",
+                          rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(),
+                          PL_prime, rhoR_prime, uR_prime.x(), uR_prime.y(),
+                          uR_prime.z(), PR_prime, normal.x(), normal.y(),
+                          normal.z(), vframe.x(), vframe.y(), vframe.z());
+      cmac_assert_message(pflux.x() == pflux.x(),
+                          "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                          "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                          "normal: %g %g %g, vframe: %g %g %g",
+                          rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(),
+                          PL_prime, rhoR_prime, uR_prime.x(), uR_prime.y(),
+                          uR_prime.z(), PR_prime, normal.x(), normal.y(),
+                          normal.z(), vframe.x(), vframe.y(), vframe.z());
+      cmac_assert_message(pflux.y() == pflux.y(),
+                          "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                          "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                          "normal: %g %g %g, vframe: %g %g %g",
+                          rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(),
+                          PL_prime, rhoR_prime, uR_prime.x(), uR_prime.y(),
+                          uR_prime.z(), PR_prime, normal.x(), normal.y(),
+                          normal.z(), vframe.x(), vframe.y(), vframe.z());
+      cmac_assert_message(pflux.z() == pflux.z(),
+                          "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                          "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                          "normal: %g %g %g, vframe: %g %g %g",
+                          rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(),
+                          PL_prime, rhoR_prime, uR_prime.x(), uR_prime.y(),
+                          uR_prime.z(), PR_prime, normal.x(), normal.y(),
+                          normal.z(), vframe.x(), vframe.y(), vframe.z());
+      cmac_assert_message(isothermal || Eflux == Eflux,
+                          "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
+                          "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
+                          "normal: %g %g %g, vframe: %g %g %g",
+                          rhoL_prime, uL_prime.x(), uL_prime.y(), uL_prime.z(),
+                          PL_prime, rhoR_prime, uR_prime.x(), uR_prime.y(),
+                          uR_prime.z(), PR_prime, normal.x(), normal.y(),
+                          normal.z(), vframe.x(), vframe.y(), vframe.z());
+
+      const double tfac = surface_area * timestep;
+      mflux *= tfac;
+      pflux *= tfac;
+      Eflux *= tfac;
+    }
+
   public:
     /**
      * @brief Constructor.
@@ -267,8 +499,22 @@ private:
           cell.get_hydro_variables().primitive_gradients(3));
       const CoordinateVector<> gradPL =
           cell.get_hydro_variables().primitive_gradients(4);
+
+#ifdef FLUX_LIMITER
+      const double mLfluxlimit =
+          FLUX_LIMITER * cell.get_hydro_variables().get_conserved_mass();
+      const double mL2 = mLfluxlimit * mLfluxlimit;
+      const double pL2 =
+          cell.get_hydro_variables().get_conserved_momentum().norm2();
+      const double ELfluxlimit =
+          FLUX_LIMITER *
+          cell.get_hydro_variables().get_conserved_total_energy();
+#endif
+
       auto ngbs = cell.get_neighbours();
       for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
+
+        // get geometrical information
         DensityGrid::iterator ngb = std::get< 0 >(*ngbit);
         // the midpoint is only used if we use a second order scheme
         const CoordinateVector<> midpoint = std::get< 1 >(*ngbit);
@@ -279,7 +525,22 @@ private:
                     std::get< 3 >(*ngbit));
         const CoordinateVector<> posR = posL + std::get< 4 >(*ngbit);
 
-        // get the right state
+        // derived geometrical information
+        const CoordinateVector<> dL =
+            (midpoint - posL) *
+            _hydro_integrator._hydro_units
+                ->get_unit_internal_value< QUANTITY_LENGTH >();
+        const CoordinateVector<> dR =
+            (midpoint - posR) *
+            _hydro_integrator._hydro_units
+                ->get_unit_internal_value< QUANTITY_LENGTH >();
+        const double rinv = _hydro_integrator._hydro_units
+                                ->get_unit_SI_value< QUANTITY_LENGTH >() /
+                            (posL - posR).norm();
+        const double dL_over_r = dL.norm() * rinv;
+        const double dR_over_r = dR.norm() * rinv;
+
+        // get the right state hydro variables
         double rhoR;
         CoordinateVector<> uR;
         double PR;
@@ -287,6 +548,12 @@ private:
         CoordinateVector< CoordinateVector<> > graduR;
         CoordinateVector<> gradPR;
         CoordinateVector<> vframe;
+#ifdef FLUX_LIMITER
+        double mRfluxlimit;
+        double mR2;
+        double pR2;
+        double ERfluxlimit;
+#endif
         if (ngb != _grid_end) {
           rhoR = ngb.get_hydro_variables().get_primitives_density();
           uR = ngb.get_hydro_variables().get_primitives_velocity();
@@ -299,6 +566,14 @@ private:
           vframe = _hydro_integrator._hydro_units
                        ->convert_to_internal_units< QUANTITY_VELOCITY >(
                            _grid.get_interface_velocity(cell, ngb, midpoint));
+#ifdef FLUX_LIMITER
+          mRfluxlimit =
+              FLUX_LIMITER * ngb.get_hydro_variables().get_conserved_mass();
+          mR2 = mRfluxlimit * mRfluxlimit;
+          pR2 = ngb.get_hydro_variables().get_conserved_momentum().norm2();
+          ERfluxlimit = FLUX_LIMITER *
+                        ngb.get_hydro_variables().get_conserved_total_energy();
+#endif
         } else {
           // apply boundary conditions
           rhoR = rhoL;
@@ -307,6 +582,12 @@ private:
           gradrhoR = gradrhoL;
           graduR = graduL;
           gradPR = gradPL;
+#ifdef FLUX_LIMITER
+          mRfluxlimit = mLfluxlimit;
+          mR2 = mL2;
+          pR2 = pL2;
+          ERfluxlimit = ELfluxlimit;
+#endif
           for (uint_fast8_t i = 0; i < 3; ++i) {
             if ((normal[i] < 0. && _hydro_integrator._boundaries[2 * i] ==
                                        HYDRO_BOUNDARY_REFLECTIVE) ||
@@ -352,209 +633,24 @@ private:
           }
         }
 
-        // do the second order spatial gradient extrapolation
-        const CoordinateVector<> dL =
-            (midpoint - posL) *
-            _hydro_integrator._hydro_units
-                ->get_unit_internal_value< QUANTITY_LENGTH >();
-        double rhoL_prime =
-            rhoL + CoordinateVector<>::dot_product(gradrhoL, dL);
-        CoordinateVector<> uL_prime(
-            uL[0] + CoordinateVector<>::dot_product(graduL[0], dL),
-            uL[1] + CoordinateVector<>::dot_product(graduL[1], dL),
-            uL[2] + CoordinateVector<>::dot_product(graduL[2], dL));
-        double PL_prime = PL + CoordinateVector<>::dot_product(gradPL, dL);
-
-        const CoordinateVector<> dR =
-            (midpoint - posR) *
-            _hydro_integrator._hydro_units
-                ->get_unit_internal_value< QUANTITY_LENGTH >();
-        double rhoR_prime =
-            rhoR + CoordinateVector<>::dot_product(gradrhoR, dR);
-        CoordinateVector<> uR_prime(
-            uR[0] + CoordinateVector<>::dot_product(graduR[0], dR),
-            uR[1] + CoordinateVector<>::dot_product(graduR[1], dR),
-            uR[2] + CoordinateVector<>::dot_product(graduR[2], dR));
-        double PR_prime = PR + CoordinateVector<>::dot_product(gradPR, dR);
-
-        // apply the per face slope limiter
-        const double rinv = _hydro_integrator._hydro_units
-                                ->get_unit_SI_value< QUANTITY_LENGTH >() /
-                            (posL - posR).norm();
-        const double dL_over_r = dL.norm() * rinv;
-        const double dR_over_r = dR.norm() * rinv;
-
-        rhoL_prime = limit(rhoL_prime, rhoL, rhoR, dL_over_r);
-        uL_prime[0] = limit(uL_prime[0], uL[0], uR[0], dL_over_r);
-        uL_prime[1] = limit(uL_prime[1], uL[1], uR[1], dL_over_r);
-        uL_prime[2] = limit(uL_prime[2], uL[2], uR[2], dL_over_r);
-        PL_prime = limit(PL_prime, PL, PR, dL_over_r);
-
-        rhoR_prime = limit(rhoR_prime, rhoR, rhoL, dR_over_r);
-        uR_prime[0] = limit(uR_prime[0], uR[0], uL[0], dR_over_r);
-        uR_prime[1] = limit(uR_prime[1], uR[1], uL[1], dR_over_r);
-        uR_prime[2] = limit(uR_prime[2], uR[2], uL[2], dR_over_r);
-        PR_prime = limit(PR_prime, PR, PL, dR_over_r);
-
-        cmac_assert(rhoL_prime == rhoL_prime);
-        cmac_assert(uL_prime.x() == uL_prime.x());
-        cmac_assert(uL_prime.y() == uL_prime.y());
-        cmac_assert(uL_prime.z() == uL_prime.z());
-        cmac_assert(PL_prime == PL_prime);
-
-        cmac_assert(rhoR_prime == rhoR_prime);
-        cmac_assert(uR_prime.x() == uR_prime.x());
-        cmac_assert(uR_prime.y() == uR_prime.y());
-        cmac_assert(uR_prime.z() == uR_prime.z());
-        cmac_assert(PR_prime == PR_prime);
-
-// make sure all densities and pressures are physical
-#ifdef SAFE_HYDRO
-        rhoL_prime = std::max(rhoL_prime, 0.);
-        PL_prime = std::max(PL_prime, 0.);
-        rhoR_prime = std::max(rhoR_prime, 0.);
-        PR_prime = std::max(PR_prime, 0.);
-#else
-        cmac_assert(rhoL_prime >= 0.) l;
-        cmac_assert(PL_prime >= 0.) l;
-        cmac_assert(rhoR_prime >= 0.) l;
-        cmac_assert(PR_prime >= 0.) l;
-#endif
-
-        double mflux = 0.;
+        // flux calculation
+        double mflux;
         CoordinateVector<> pflux;
-        double Eflux = 0.;
-        _hydro_integrator._solver->solve_for_flux(
-            rhoL_prime, uL_prime, PL_prime, rhoR_prime, uR_prime, PR_prime,
-            mflux, pflux, Eflux, normal, vframe);
-
-        cmac_assert_message(mflux == mflux,
-                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
-                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
-                            "normal: %g %g %g, vframe: %g %g %g",
-                            rhoL_prime, uL_prime.x(), uL_prime.y(),
-                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
-                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
-                            normal.y(), normal.z(), vframe.x(), vframe.y(),
-                            vframe.z());
-        cmac_assert_message(pflux.x() == pflux.x(),
-                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
-                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
-                            "normal: %g %g %g, vframe: %g %g %g",
-                            rhoL_prime, uL_prime.x(), uL_prime.y(),
-                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
-                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
-                            normal.y(), normal.z(), vframe.x(), vframe.y(),
-                            vframe.z());
-        cmac_assert_message(pflux.y() == pflux.y(),
-                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
-                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
-                            "normal: %g %g %g, vframe: %g %g %g",
-                            rhoL_prime, uL_prime.x(), uL_prime.y(),
-                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
-                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
-                            normal.y(), normal.z(), vframe.x(), vframe.y(),
-                            vframe.z());
-        cmac_assert_message(pflux.z() == pflux.z(),
-                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
-                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
-                            "normal: %g %g %g, vframe: %g %g %g",
-                            rhoL_prime, uL_prime.x(), uL_prime.y(),
-                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
-                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
-                            normal.y(), normal.z(), vframe.x(), vframe.y(),
-                            vframe.z());
-        cmac_assert_message(_hydro_integrator._gamma == 1. || Eflux == Eflux,
-                            "rhoL_prime: %g, uL_prime: %g %g %g, PL_prime: %g, "
-                            "rhoR_prime: %g, uR_prime: %g %g %g, PR_prime: %g, "
-                            "normal: %g %g %g, vframe: %g %g %g",
-                            rhoL_prime, uL_prime.x(), uL_prime.y(),
-                            uL_prime.z(), PL_prime, rhoR_prime, uR_prime.x(),
-                            uR_prime.y(), uR_prime.z(), PR_prime, normal.x(),
-                            normal.y(), normal.z(), vframe.x(), vframe.y(),
-                            vframe.z());
-
-        const double tfac = surface_area * _timestep;
-        mflux *= tfac;
-        pflux *= tfac;
-        Eflux *= tfac;
+        double Eflux;
+        compute_fluxes(rhoL, uL, PL, rhoR, uR, PR, gradrhoL, graduL, gradPL,
+                       gradrhoR, graduR, gradPR, dL, dR, dL_over_r, dR_over_r,
+                       *_hydro_integrator._solver, normal, vframe, surface_area,
+                       _timestep, _hydro_integrator._gamma == 1., mflux, pflux,
+                       Eflux);
 
 #ifdef FLUX_LIMITER
-        // limit the flux
-        double fluxfac = 1.;
-        const double absmflux = mflux;
-        if (absmflux >
-            FLUX_LIMITER * cell.get_hydro_variables().get_conserved_mass()) {
-          fluxfac = FLUX_LIMITER *
-                    cell.get_hydro_variables().get_conserved_mass() / absmflux;
-        }
-        if (ngb != _grid_end &&
-            -absmflux >
-                FLUX_LIMITER * ngb.get_hydro_variables().get_conserved_mass()) {
-          fluxfac = std::min(
-              fluxfac, -FLUX_LIMITER *
-                           ngb.get_hydro_variables().get_conserved_mass() /
-                           absmflux);
-        }
-        if (_hydro_integrator._gamma > 1.) {
-          const double absEflux = Eflux;
-          if (absEflux >
-              FLUX_LIMITER *
-                  cell.get_hydro_variables().get_conserved_total_energy()) {
-            fluxfac = std::min(
-                fluxfac,
-                FLUX_LIMITER *
-                    cell.get_hydro_variables().get_conserved_total_energy() /
-                    absEflux);
-          }
-          if (ngb != _grid_end &&
-              -absEflux >
-                  FLUX_LIMITER *
-                      ngb.get_hydro_variables().get_conserved_total_energy()) {
-            fluxfac = std::min(
-                fluxfac,
-                -FLUX_LIMITER *
-                    ngb.get_hydro_variables().get_conserved_total_energy() /
-                    absEflux);
-          }
-        }
-        // momentum flux limiter
-        // note that we only apply this for cells that have high momentum, i.e.
-        // whose momentum is higher than the thermal momentum of the cell
-        // without this condition, cells with zero momentum would never be able
-        // to gain momentum...
-        const double p2 =
-            cell.get_hydro_variables().get_conserved_momentum().norm2();
-        const double m2 = cell.get_hydro_variables().get_conserved_mass() *
-                          cell.get_hydro_variables().get_conserved_mass();
-        if (p2 * cell.get_hydro_variables().get_primitives_density() >
-            _hydro_integrator._gamma * m2 *
-                cell.get_hydro_variables().get_primitives_pressure()) {
-          const double pflux2 = pflux.norm2();
-          if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
-            fluxfac =
-                std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * p2 /
-                                            pflux2));
-          }
-        }
-        if (ngb != _grid_end) {
-          const double pn2 =
-              ngb.get_hydro_variables().get_conserved_momentum().norm2();
-          const double mn2 = ngb.get_hydro_variables().get_conserved_mass() *
-                             ngb.get_hydro_variables().get_conserved_mass();
-          if (p2 * ngb.get_hydro_variables().get_primitives_density() >
-              _hydro_integrator._gamma * mn2 *
-                  ngb.get_hydro_variables().get_primitives_pressure()) {
-            const double pflux2 = pflux.norm2();
-            if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * pn2) {
-              fluxfac =
-                  std::min(fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) *
-                                              pn2 / pflux2));
-            }
-          }
-        }
-        cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g",
-                            fluxfac);
+        const double fluxfac = limit_flux(
+            mflux, pflux.norm2(), Eflux, mLfluxlimit,
+            (FLUX_LIMITER * FLUX_LIMITER) * pL2, ELfluxlimit, mRfluxlimit,
+            (FLUX_LIMITER * FLUX_LIMITER) * pR2, ERfluxlimit,
+            pL2 * rhoL > _hydro_integrator._gamma * mL2 * PL,
+            pR2 * rhoR > _hydro_integrator._gamma * mR2 * PR,
+            _hydro_integrator._gamma == 1.);
         mflux *= fluxfac;
         pflux *= fluxfac;
         Eflux *= fluxfac;
@@ -569,6 +665,7 @@ private:
     }
   };
 
+private:
   /**
    * @brief Get the Bondi profile (if needed for the boundary conditions).
    *
