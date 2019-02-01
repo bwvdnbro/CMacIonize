@@ -38,6 +38,16 @@
     cmac_error("Assertion failed (%s)!", #condition);                          \
   }
 
+/*! @brief Assert that the given condition is true and throw an error with the
+ *  given additional message if it is not. */
+#define assert_condition_message(condition, message, ...)                      \
+  {                                                                            \
+    if (!(condition)) {                                                        \
+      cmac_error("Assertion failed (%s): " message "!", #condition,            \
+                 ##__VA_ARGS__);                                               \
+    }                                                                          \
+  }
+
 /*! @brief Assert that the given values are equal up to the given relative and
  *  absolute tolerance level. This is useful for comparing floating point values
  *  with round off error. */

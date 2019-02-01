@@ -412,7 +412,8 @@ public:
 
       // STEP 1: pressure estimate
       const double rhobar = rhoL + rhoR;
-      const double pPVRS = 0.5 * ((PL + PR) - 0.25 * vdiff * rhobar * abar);
+      const double Pbar = PL + PR;
+      const double pPVRS = 0.5 * (Pbar - 0.25 * vdiff * rhobar * abar);
       const double pstar = std::max(0., pPVRS);
 
       // STEP 2: wave speed estimates
@@ -430,8 +431,16 @@ public:
       // Toro (2009)
       const double SLmvL = -aL * qL;
       const double SRmvR = aR * qR;
-      const double Sstar = (PR - PL + rhoL * vL * SLmvL - rhoR * vR * SRmvR) /
-                           (rhoL * SLmvL - rhoR * SRmvR + DBL_MIN);
+      // note that we need to be extremely careful with the Sstar calculation
+      // below: if we would plug in the expressions for Pdiff and rhovSdiff etc
+      // directly, the round off on Sstar might be asymmetric under a L-R swap
+      // this could cause problems with conservation of mass, momentum and
+      // energy, since fluxes are computed from both points of view for the
+      // flux exchange
+      const double Pdiff = PR - PL;
+      const double rhovSdiff = rhoL * vL * SLmvL - rhoR * vR * SRmvR;
+      const double rhoSdiff = rhoL * SLmvL - rhoR * SRmvR;
+      const double Sstar = (Pdiff + rhovSdiff) / (rhoSdiff + DBL_MIN);
 
       if (Sstar >= 0.) {
         const double rhoLvL = rhoL * vL;
