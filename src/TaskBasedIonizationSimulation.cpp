@@ -516,6 +516,7 @@ void TaskBasedIonizationSimulation::run(
             // log the end time of the task
             task.stop();
           }
+          task.unlock_dependency();
 
           for (uint_fast32_t itask = 0; itask < num_tasks_to_add; ++itask) {
             if (queues_to_add[itask] < 0) {
@@ -532,11 +533,6 @@ void TaskBasedIonizationSimulation::run(
           }
         }
 
-        cmac_warning("num_empty: %" PRIuFAST32
-                     ", num_active_buffers: %" PRIuFAST32
-                     ", num_photon_done: %" PRIuFAST32,
-                     num_empty.value(), num_active_buffers.value(),
-                     num_photon_done.value());
         if (num_empty.value() == num_empty_target &&
             num_active_buffers.value() == 0 && num_photon_done.value() == 1e6) {
           global_run_flag = false;
