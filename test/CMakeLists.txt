@@ -1548,6 +1548,8 @@ add_unit_test(NAME testDensitySubGridCreator
 ## Unit test for TaskBasedIonizationSimulation
 set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     testTaskBasedIonizationSimulation.cpp
+
+    ../src/ParameterFile.cpp
 )
 add_unit_test(NAME testTaskBasedIonizationSimulation
               SOURCES ${TESTTASKBASEDIONIZATIONSIMULATION_SOURCES}

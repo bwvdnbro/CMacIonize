@@ -27,6 +27,7 @@
 #ifndef DENSITYSUBGRIDCREATOR_HPP
 #define DENSITYSUBGRIDCREATOR_HPP
 
+#include "Box.hpp"
 #include "DensitySubGrid.hpp"
 #include "Error.hpp"
 
@@ -40,40 +41,38 @@
 class DensitySubGridCreator {
 private:
   /*! @brief Anchor of the simulation box (in m). */
-  const double _box_anchor[3];
+  const CoordinateVector<> _box_anchor;
 
   /*! @brief Side length of a single subgrid (in m). */
-  const double _subgrid_sides[3];
+  const CoordinateVector<> _subgrid_sides;
 
   /*! @brief Number of subgrids in each coordinate direction. */
-  const int_fast32_t _number_of_subgrids[3];
+  const CoordinateVector< int_fast32_t > _number_of_subgrids;
 
   /*! @brief Number of cells in each coordinate direction for a single
    *  subgrid. */
-  const int_fast32_t _subgrid_number_of_cells[3];
+  const CoordinateVector< int_fast32_t > _subgrid_number_of_cells;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param box_anchor Anchor of the simulation box (in m).
-   * @param box_sides Side lengths of the simulation box (in m).
+   * @param box Dimensions of the simulation box (in m).
    * @param number_of_cells Number of cells in each coordinate direction.
    * @param number_of_subgrids Number of subgrids in each coordinate direction.
    */
-  inline DensitySubGridCreator(const double box_anchor[3],
-                               const double box_sides[3],
-                               const int_fast32_t number_of_cells[3],
-                               const int_fast32_t number_of_subgrids[3])
-      : _box_anchor{box_anchor[0], box_anchor[1], box_anchor[2]},
-        _subgrid_sides{box_sides[0] / number_of_subgrids[0],
-                       box_sides[1] / number_of_subgrids[1],
-                       box_sides[2] / number_of_subgrids[2]},
-        _number_of_subgrids{number_of_subgrids[0], number_of_subgrids[1],
-                            number_of_subgrids[2]},
-        _subgrid_number_of_cells{number_of_cells[0] / number_of_subgrids[0],
+  inline DensitySubGridCreator(
+      const Box<> box, const CoordinateVector< int_fast32_t > number_of_cells,
+      const CoordinateVector< int_fast32_t > number_of_subgrids)
+      : _box_anchor(box.get_anchor()),
+        _subgrid_sides(box.get_sides()[0] / number_of_subgrids[0],
+                       box.get_sides()[1] / number_of_subgrids[1],
+                       box.get_sides()[2] / number_of_subgrids[2]),
+        _number_of_subgrids(number_of_subgrids[0], number_of_subgrids[1],
+                            number_of_subgrids[2]),
+        _subgrid_number_of_cells(number_of_cells[0] / number_of_subgrids[0],
                                  number_of_cells[1] / number_of_subgrids[1],
-                                 number_of_cells[2] / number_of_subgrids[2]} {
+                                 number_of_cells[2] / number_of_subgrids[2]) {
 
     for (uint_fast8_t i = 0; i < 3; ++i) {
       if (number_of_cells[i] % number_of_subgrids[i] != 0) {
