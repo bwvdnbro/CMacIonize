@@ -53,40 +53,40 @@
  * @param parameterfile_name Name of the parameter file to use.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
-    const int_fast32_t num_thread, const std::string parameterfile_name) {
+    const int_fast32_t num_thread, const std::string parameterfile_name)
+    : _parameter_file(parameterfile_name) {
 
-  ParameterFile parameterfile(parameterfile_name);
-
-  const SimulationBox simulation_box(parameterfile);
+  const SimulationBox simulation_box(_parameter_file);
 
   omp_set_num_threads(num_thread);
 
-  const size_t number_of_buffers = parameterfile.get_value< size_t >(
+  const size_t number_of_buffers = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of buffers", 50000);
   _buffers = new MemorySpace(number_of_buffers);
-  const size_t queue_size_per_thread = parameterfile.get_value< size_t >(
+  const size_t queue_size_per_thread = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:queue size per thread", 10000);
   _queues.resize(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _queues[ithread] = new TaskQueue(queue_size_per_thread);
   }
-  const size_t shared_queue_size = parameterfile.get_value< size_t >(
+  const size_t shared_queue_size = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:shared queue size", 100000);
   _shared_queue = new TaskQueue(shared_queue_size);
-  const size_t number_of_tasks = parameterfile.get_value< size_t >(
+  const size_t number_of_tasks = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of tasks", 500000);
   _tasks = new ThreadSafeVector< Task >(number_of_tasks);
   _random_generators.resize(num_thread);
-  const int_fast32_t random_seed = parameterfile.get_value< int_fast32_t >(
+  const int_fast32_t random_seed = _parameter_file.get_value< int_fast32_t >(
       "TaskBasedIonizationSimulation:random seed", 42);
   for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _random_generators[ithread].set_seed(random_seed + ithread);
   }
   _grid_creator =
-      new DensitySubGridCreator(simulation_box.get_box(), parameterfile);
+      new DensitySubGridCreator(simulation_box.get_box(), _parameter_file);
   _subgrids.resize(_grid_creator->number_of_subgrids(), nullptr);
 
-  _density_function = DensityFunctionFactory::generate(parameterfile, nullptr);
+  _density_function =
+      DensityFunctionFactory::generate(_parameter_file, nullptr);
 }
 
 /**
