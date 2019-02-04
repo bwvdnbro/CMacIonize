@@ -1623,7 +1623,7 @@ public:
    * @brief Get the midpoint of the cell with the given index.
    *
    * @param index Index of a cell.
-   * @param midpoint Coordinates of the midpoint of that cell (in m).
+   * @return Coordinates of the midpoint of that cell (in m).
    */
   inline CoordinateVector<> get_cell_midpoint(const uint_fast32_t index) const {
 
@@ -1635,6 +1635,9 @@ public:
         _anchor[2] + (three_index[2] + 0.5) * _cell_size[2]);
   }
 
+  /**
+   * @brief Iterator to loop over the cells in the subgrid.
+   */
   class iterator : public Cell {
   private:
     /*! @brief Index of the cell the iterator is currently pointing to. */

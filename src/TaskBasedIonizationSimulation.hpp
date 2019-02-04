@@ -27,6 +27,7 @@
 #ifndef TASKBASEDIONIZATIONSIMULATION_HPP
 #define TASKBASEDIONIZATIONSIMULATION_HPP
 
+#include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "Task.hpp"
 #include "ThreadSafeVector.hpp"
@@ -63,6 +64,9 @@ private:
 
   /*! @brief Random number generator per thread. */
   std::vector< RandomGenerator > _random_generators;
+
+  /*! @brief ParameterFile containing the run parameters. */
+  ParameterFile _parameter_file;
 
   /*! @brief Grid creator. */
   DensitySubGridCreator *_grid_creator;
