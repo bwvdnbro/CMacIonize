@@ -384,17 +384,63 @@ public:
           reconstruct_quantity(uR[2], graduR[2], dR, uL[2], dR_over_r));
       double PR_prime = reconstruct_quantity(PR, gradPR, dR, PL, dR_over_r);
 
-      cmac_assert(rhoL_prime == rhoL_prime);
-      cmac_assert(uL_prime.x() == uL_prime.x());
-      cmac_assert(uL_prime.y() == uL_prime.y());
-      cmac_assert(uL_prime.z() == uL_prime.z());
-      cmac_assert(PL_prime == PL_prime);
+      cmac_assert_message(rhoL_prime == rhoL_prime,
+                          "rhoL: %g, gradrhoL: [%g %g %g], dL: [%g %g %g], "
+                          "rhoR: %g, dL_over_r: %g",
+                          rhoL, gradrhoL.x(), gradrhoL.y(), gradrhoL.z(),
+                          dL.x(), dL.y(), dL.z(), rhoR, dL_over_r);
+      cmac_assert_message(uL_prime.x() == uL_prime.x(),
+                          "uL.x(): %g, graduL[0]: [%g %g %g], dL: [%g %g %g], "
+                          "uR.x(): %g, dL_over_r: %g",
+                          uL_prime.x(), graduL[0].x(), graduL[0].y(),
+                          graduL[0].z(), dL.x(), dL.y(), dL.z(), uR.x(),
+                          dL_over_r);
+      cmac_assert_message(uL_prime.y() == uL_prime.y(),
+                          "uL.y(): %g, graduL[1]: [%g %g %g], dL: [%g %g %g], "
+                          "uR.y(): %g, dL_over_r: %g",
+                          uL_prime.y(), graduL[1].x(), graduL[1].y(),
+                          graduL[1].z(), dL.x(), dL.y(), dL.z(), uR.y(),
+                          dL_over_r);
+      cmac_assert_message(uL_prime.z() == uL_prime.z(),
+                          "uL.z(): %g, graduL[2]: [%g %g %g], dL: [%g %g %g], "
+                          "uR.z(): %g, dL_over_r: %g",
+                          uL_prime.z(), graduL[2].x(), graduL[2].y(),
+                          graduL[2].z(), dL.x(), dL.y(), dL.z(), uR.z(),
+                          dL_over_r);
+      cmac_assert_message(
+          PL_prime == PL_prime,
+          "PL: %g, gradPL: [%g %g %g], dL: [%g %g %g], PR: %g, dL_over_r: %g",
+          PL, gradPL.x(), gradPL.y(), gradPL.z(), dL.x(), dL.y(), dL.z(), PR,
+          dL_over_r);
 
-      cmac_assert(rhoR_prime == rhoR_prime);
-      cmac_assert(uR_prime.x() == uR_prime.x());
-      cmac_assert(uR_prime.y() == uR_prime.y());
-      cmac_assert(uR_prime.z() == uR_prime.z());
-      cmac_assert(PR_prime == PR_prime);
+      cmac_assert_message(rhoR_prime == rhoR_prime,
+                          "rhoR: %g, gradrhoR: [%g %g %g], dR: [%g %g %g], "
+                          "rhoL: %g, dR_over_r: %g",
+                          rhoR, gradrhoR.x(), gradrhoR.y(), gradrhoR.z(),
+                          dR.x(), dR.y(), dR.z(), rhoL, dR_over_r);
+      cmac_assert_message(uR_prime.x() == uR_prime.x(),
+                          "uR.x(): %g, graduR[0]: [%g %g %g], dR: [%g %g %g], "
+                          "uL.x(): %g, dR_over_r: %g",
+                          uR_prime.x(), graduR[0].x(), graduR[0].y(),
+                          graduR[0].z(), dR.x(), dR.y(), dR.z(), uL.x(),
+                          dR_over_r);
+      cmac_assert_message(uR_prime.y() == uR_prime.y(),
+                          "uR.y(): %g, graduR[1]: [%g %g %g], dR: [%g %g %g], "
+                          "uL.y(): %g, dR_over_r: %g",
+                          uR_prime.y(), graduR[1].x(), graduR[1].y(),
+                          graduR[1].z(), dR.x(), dR.y(), dR.z(), uL.y(),
+                          dR_over_r);
+      cmac_assert_message(uR_prime.z() == uR_prime.z(),
+                          "uR.z(): %g, graduR[2]: [%g %g %g], dR: [%g %g %g], "
+                          "uL.z(): %g, dR_over_r: %g",
+                          uR_prime.z(), graduR[2].x(), graduR[2].y(),
+                          graduR[2].z(), dR.x(), dR.y(), dR.z(), uL.z(),
+                          dR_over_r);
+      cmac_assert_message(
+          PR_prime == PR_prime,
+          "PR: %g, gradPR: [%g %g %g], dR: [%g %g %g], PL: %g, dR_over_r: %g",
+          PR, gradPR.x(), gradPR.y(), gradPR.z(), dR.x(), dR.y(), dR.z(), PL,
+          dR_over_r);
 
 // make sure all densities and pressures are physical
 #ifdef SAFE_HYDRO
