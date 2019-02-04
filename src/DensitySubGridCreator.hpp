@@ -30,6 +30,7 @@
 #include "Box.hpp"
 #include "DensitySubGrid.hpp"
 #include "Error.hpp"
+#include "ParameterFile.hpp"
 
 #include <cinttypes>
 #include <vector>
@@ -82,13 +83,45 @@ public:
   }
 
   /**
+   * @brief ParameterFile constructor.
+   *
+   * This method will read the following parameters from the parameter file:
+   *  - (DensityGrid:)number of cells: number of cells in each coordinate
+   *    direction (default: [64, 64, 64])
+   *  - number of subgrids: number of subgrids in each coordinate direction
+   *    (default: [8, 8, 8])
+   *
+   * @param box Dimensions of the simulation box (in m).
+   * @param params ParameterFile to read from.
+   */
+  inline DensitySubGridCreator(const Box<> box, ParameterFile &params)
+      : DensitySubGridCreator(
+            box,
+            params.get_value< CoordinateVector< int_fast32_t > >(
+                "DensityGrid:number of cells",
+                CoordinateVector< int_fast32_t >(64)),
+            params.get_value< CoordinateVector< int_fast32_t > >(
+                "DensitySubGridCreator:number of subgrids",
+                CoordinateVector< int_fast32_t >(8))) {}
+
+  /**
+   * @brief Get the number of subgrids created by the creator.
+   *
+   * @return Total number of subgrids.
+   */
+  inline uint_fast32_t number_of_subgrids() const {
+    return _number_of_subgrids.x() * _number_of_subgrids.y() *
+           _number_of_subgrids.z();
+  }
+
+  /**
    * @brief Create the DensitySubGrid with the given index.
    *
    * @param index Index of the subgrid.
    * @return Pointer to a newly created DensitySubGrid instance. Memory
    * management for the pointer is transferred to the caller.
    */
-  inline DensitySubGrid *create_subgrid(const int_fast32_t index) const {
+  inline DensitySubGrid *create_subgrid(const uint_fast32_t index) const {
 
     const int_fast32_t ix =
         index / (_number_of_subgrids[1] * _number_of_subgrids[2]);

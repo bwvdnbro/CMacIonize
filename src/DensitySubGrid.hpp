@@ -29,6 +29,7 @@
 
 // local includes
 #include "AtomicValue.hpp"
+#include "Cell.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 #include "MPITypes.hpp"
@@ -1624,13 +1625,167 @@ public:
    * @param index Index of a cell.
    * @param midpoint Coordinates of the midpoint of that cell (in m).
    */
-  inline void get_cell_midpoint(const uint_fast32_t index, double midpoint[3]) {
+  inline CoordinateVector<> get_cell_midpoint(const uint_fast32_t index) const {
 
     int_fast32_t three_index[3];
     get_three_index(index, three_index);
-    midpoint[0] = _anchor[0] + (three_index[0] + 0.5) * _cell_size[0];
-    midpoint[1] = _anchor[1] + (three_index[1] + 0.5) * _cell_size[1];
-    midpoint[2] = _anchor[2] + (three_index[2] + 0.5) * _cell_size[2];
+    return CoordinateVector<>(
+        _anchor[0] + (three_index[0] + 0.5) * _cell_size[0],
+        _anchor[1] + (three_index[1] + 0.5) * _cell_size[1],
+        _anchor[2] + (three_index[2] + 0.5) * _cell_size[2]);
+  }
+
+  class iterator : public Cell {
+  private:
+    /*! @brief Index of the cell the iterator is currently pointing to. */
+    uint_fast32_t _index;
+
+    /*! @brief Pointer to the underlying subgrid (we cannot use a reference,
+     *  since then things like it = it would not work). */
+    DensitySubGrid *_subgrid;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param index Index of the cell the iterator is currently pointing to.
+     * @param subgrid DensitySubGrid over which we iterate.
+     */
+    inline iterator(const uint_fast32_t index, DensitySubGrid &subgrid)
+        : _index(index), _subgrid(&subgrid) {}
+
+    // Cell interface
+
+    /**
+     * @brief Get the midpoint of the cell the iterator is pointing to.
+     *
+     * @return Cell midpoint (in m).
+     */
+    virtual CoordinateVector<> get_cell_midpoint() const {
+      return _subgrid->get_cell_midpoint(_index);
+    }
+
+    /**
+     * @brief Get the volume of the cell the iterator is pointing to.
+     *
+     * @return Cell volume (in m^3).
+     */
+    virtual double get_volume() const {
+      return _subgrid->_cell_size[0] * _subgrid->_cell_size[1] *
+             _subgrid->_cell_size[2];
+    }
+
+    /**
+     * @brief Get the faces of the cell.
+     *
+     * @return Faces of the cell.
+     */
+    virtual std::vector< Face > get_faces() const {
+      return std::vector< Face >();
+    }
+
+    // DensitySubGrid access functionality
+
+    /**
+     * @brief Set the number density for the cell the iterator is currently
+     * pointing to.
+     *
+     * @param number_density Number density for the cell (in m^-3).
+     */
+    inline void set_number_density(const double number_density) {
+      _subgrid->_number_density[_index] = number_density;
+    }
+
+    /**
+     * @brief Set the neutral fraction for the cell the iterator is currently
+     * pointing to.
+     *
+     * @param neutral_fraction Neutral fraction for the cell.
+     */
+    inline void set_neutral_fraction(const double neutral_fraction) {
+      _subgrid->_neutral_fraction[_index] = neutral_fraction;
+    }
+
+    // Iterator functionality
+
+    /**
+     * @brief Increment operator.
+     *
+     * We only implemented the pre-increment version, since the post-increment
+     * version creates a new object and is computationally more expensive.
+     *
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator++() {
+      ++_index;
+      return *this;
+    }
+
+    /**
+     * @brief Increment operator.
+     *
+     * @param increment Increment to add.
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator+=(const uint_fast32_t increment) {
+      _index += increment;
+      return *this;
+    }
+
+    /**
+     * @brief Free addition operator.
+     *
+     * @param increment Increment to add to the iterator.
+     * @return Incremented iterator.
+     */
+    inline iterator operator+(const uint_fast32_t increment) const {
+      iterator it(*this);
+      it += increment;
+      return it;
+    }
+
+    /**
+     * @brief Get the index of the cell the iterator is currently pointing to.
+     *
+     * @return Index of the current cell.
+     */
+    inline uint_fast32_t get_index() const { return _index; }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators point to the same cell of the same grid.
+     */
+    inline bool operator==(iterator it) const {
+      return (_subgrid == it._subgrid && _index == it._index);
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators do not point to the same cell of the same
+     * grid.
+     */
+    inline bool operator!=(iterator it) const { return !(*this == it); }
+  };
+
+  /**
+   * @brief Get an iterator to the first cell in the subgrid.
+   *
+   * @return Iterator to the first cell in the subgrid.
+   */
+  inline iterator begin() { return iterator(0, *this); }
+
+  /**
+   * @brief Get an iterator to the beyond last cell in the subgrid.
+   *
+   * @return Iterator to the beyond last cell in the subgrid.
+   */
+  inline iterator end() {
+    return iterator(
+        _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2], *this);
   }
 };
 

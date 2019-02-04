@@ -25,6 +25,7 @@
  */
 
 #include "TaskBasedIonizationSimulation.hpp"
+#include "DensityFunctionFactory.hpp"
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "MemorySpace.hpp"
@@ -38,6 +39,16 @@
 /**
  * @brief Constructor.
  *
+ * This method will read the following parameters from the parameter file:
+ *  - number of buffers: Number of photon packets buffers to allocate in memory
+ *    (default: 50000)
+ *  - queue size per thread: Size of the queue for a single thread (default:
+ *    10000)
+ *  - shared queue size: Size of the shared queue (default: 100000)
+ *  - number of tasks: Number of tasks to allocate in memory (default: 500000)
+ *  - random seed: Seed used to initialize the random number generator (default:
+ *    42)
+ *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
  */
@@ -48,31 +59,34 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   const SimulationBox simulation_box(parameterfile);
 
-  const CoordinateVector< int_fast32_t > grid_resolution =
-      parameterfile.get_value< CoordinateVector< int_fast32_t > >(
-          "DensityGrid:number of cells", CoordinateVector< int_fast32_t >(64));
-  const CoordinateVector< int_fast32_t > subgrid_number =
-      parameterfile.get_value< CoordinateVector< int_fast32_t > >(
-          "DensityGrid:number of subgrids",
-          CoordinateVector< int_fast32_t >(8));
-
   omp_set_num_threads(num_thread);
 
-  _subgrids.resize(subgrid_number[0] * subgrid_number[1] * subgrid_number[2],
-                   nullptr);
-  _buffers = new MemorySpace(50000);
+  const size_t number_of_buffers = parameterfile.get_value< size_t >(
+      "TaskBasedIonizationSimulation:number of buffers", 50000);
+  _buffers = new MemorySpace(number_of_buffers);
+  const size_t queue_size_per_thread = parameterfile.get_value< size_t >(
+      "TaskBasedIonizationSimulation:queue size per thread", 10000);
   _queues.resize(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
-    _queues[ithread] = new TaskQueue(10000);
+    _queues[ithread] = new TaskQueue(queue_size_per_thread);
   }
-  _shared_queue = new TaskQueue(100000);
-  _tasks = new ThreadSafeVector< Task >(500000);
+  const size_t shared_queue_size = parameterfile.get_value< size_t >(
+      "TaskBasedIonizationSimulation:shared queue size", 100000);
+  _shared_queue = new TaskQueue(shared_queue_size);
+  const size_t number_of_tasks = parameterfile.get_value< size_t >(
+      "TaskBasedIonizationSimulation:number of tasks", 500000);
+  _tasks = new ThreadSafeVector< Task >(number_of_tasks);
   _random_generators.resize(num_thread);
+  const int_fast32_t random_seed = parameterfile.get_value< int_fast32_t >(
+      "TaskBasedIonizationSimulation:random seed", 42);
   for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
-    _random_generators[ithread].set_seed(42 + ithread);
+    _random_generators[ithread].set_seed(random_seed + ithread);
   }
-  _grid_creator = new DensitySubGridCreator(simulation_box.get_box(),
-                                            grid_resolution, subgrid_number);
+  _grid_creator =
+      new DensitySubGridCreator(simulation_box.get_box(), parameterfile);
+  _subgrids.resize(_grid_creator->number_of_subgrids(), nullptr);
+
+  _density_function = DensityFunctionFactory::generate(parameterfile, nullptr);
 }
 
 /**
@@ -89,6 +103,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _shared_queue;
   delete _tasks;
   delete _grid_creator;
+  delete _density_function;
 }
 
 /**
@@ -100,10 +115,19 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
 void TaskBasedIonizationSimulation::initialize(
     DensityFunction *density_function) {
 
+  if (density_function == nullptr) {
+    density_function = _density_function;
+  }
+
 #pragma omp parallel for default(shared)
   for (uint_fast32_t i = 0; i < _subgrids.size(); ++i) {
     _subgrids[i] = _grid_creator->create_subgrid(i);
     _subgrids[i]->set_owning_thread(omp_get_thread_num());
+    for (auto it = _subgrids[i]->begin(); it != _subgrids[i]->end(); ++it) {
+      DensityValues values = (*density_function)(it);
+      it.set_number_density(values.get_number_density());
+      it.set_neutral_fraction(values.get_ionic_fraction(ION_H_n));
+    }
   }
 }
 

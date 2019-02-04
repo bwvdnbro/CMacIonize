@@ -297,12 +297,18 @@ endif(HAVE_MPI)
 
 set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
+    AsciiFileDensityFunction.cpp
     AtomicValue.hpp
+    CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
+    FLASHSnapshotDensityFunction.cpp
+    GadgetSnapshotDensityFunction.cpp
+    InterpolatedDensityFunction.cpp
     MemorySpace.hpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
+    SPHNGSnapshotDensityFunction.cpp
     Task.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
