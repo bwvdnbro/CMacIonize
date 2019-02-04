@@ -35,7 +35,8 @@
  */
 int main(int argc, char **argv) {
 
-  TaskBasedIonizationSimulation simulation;
+  TaskBasedIonizationSimulation simulation(8,
+                                           "test_ionizationsimulation.param");
   simulation.initialize(nullptr);
   simulation.run(nullptr);
 

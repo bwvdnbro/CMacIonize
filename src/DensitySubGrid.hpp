@@ -29,6 +29,7 @@
 
 // local includes
 #include "AtomicValue.hpp"
+#include "CoordinateVector.hpp"
 #include "Error.hpp"
 #include "MPITypes.hpp"
 #include "PhotonPacket.hpp"
@@ -525,7 +526,8 @@ public:
    * of the box).
    * @param ncell Number of cells in each dimension.
    */
-  inline DensitySubGrid(const double *box, const int_fast32_t *ncell)
+  inline DensitySubGrid(const double *box,
+                        const CoordinateVector< int_fast32_t > ncell)
       : _computational_cost(0), _anchor{box[0], box[1], box[2]},
         _cell_size{box[3] / ncell[0], box[4] / ncell[1], box[5] / ncell[2]},
         _inv_cell_size{ncell[0] / box[3], ncell[1] / box[4], ncell[2] / box[5]},

@@ -28,6 +28,8 @@
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "MemorySpace.hpp"
+#include "ParameterFile.hpp"
+#include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 
 #include <fstream>
@@ -35,30 +37,42 @@
 
 /**
  * @brief Constructor.
+ *
+ * @param num_thread Number of shared memory parallel threads to use.
+ * @param parameterfile_name Name of the parameter file to use.
  */
-TaskBasedIonizationSimulation::TaskBasedIonizationSimulation() {
+TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
+    const int_fast32_t num_thread, const std::string parameterfile_name) {
 
-  const uint_fast8_t numthreads = 8;
-  const double box[6] = {-1.543e17, -1.543e17, -1.543e17,
-                         3.086e17,  3.086e17,  3.086e17};
-  const int_fast32_t ncell[3] = {64, 64, 64};
-  const int_fast32_t ngrid[3] = {8, 8, 8};
+  ParameterFile parameterfile(parameterfile_name);
 
-  omp_set_num_threads(numthreads);
+  const SimulationBox simulation_box(parameterfile);
 
-  _subgrids.resize(ngrid[0] * ngrid[1] * ngrid[2], nullptr);
+  const CoordinateVector< int_fast32_t > grid_resolution =
+      parameterfile.get_value< CoordinateVector< int_fast32_t > >(
+          "DensityGrid:number of cells", CoordinateVector< int_fast32_t >(64));
+  const CoordinateVector< int_fast32_t > subgrid_number =
+      parameterfile.get_value< CoordinateVector< int_fast32_t > >(
+          "DensityGrid:number of subgrids",
+          CoordinateVector< int_fast32_t >(8));
+
+  omp_set_num_threads(num_thread);
+
+  _subgrids.resize(subgrid_number[0] * subgrid_number[1] * subgrid_number[2],
+                   nullptr);
   _buffers = new MemorySpace(50000);
-  _queues.resize(numthreads);
-  for (uint_fast8_t ithread = 0; ithread < numthreads; ++ithread) {
+  _queues.resize(num_thread);
+  for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _queues[ithread] = new TaskQueue(10000);
   }
   _shared_queue = new TaskQueue(100000);
   _tasks = new ThreadSafeVector< Task >(500000);
-  _random_generators.resize(numthreads);
-  for (uint_fast8_t ithread = 0; ithread < numthreads; ++ithread) {
+  _random_generators.resize(num_thread);
+  for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _random_generators[ithread].set_seed(42 + ithread);
   }
-  _grid_creator = new DensitySubGridCreator(&box[0], &box[3], ncell, ngrid);
+  _grid_creator = new DensitySubGridCreator(simulation_box.get_box(),
+                                            grid_resolution, subgrid_number);
 }
 
 /**

@@ -68,7 +68,8 @@ private:
   DensitySubGridCreator *_grid_creator;
 
 public:
-  TaskBasedIonizationSimulation();
+  TaskBasedIonizationSimulation(const int_fast32_t num_thread,
+                                const std::string parameterfile_name);
   ~TaskBasedIonizationSimulation();
 
   void initialize(DensityFunction *density_function = nullptr);
