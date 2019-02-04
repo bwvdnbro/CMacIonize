@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   // set up a random DensitySubGrid
   const double box[6] = {-0.5, -0.5, -0.5, 1., 1., 1.};
-  const int_fast32_t ncell[3] = {3, 4, 5};
+  const CoordinateVector< int_fast32_t > ncell(3, 4, 5);
   DensitySubGrid test_grid(box, ncell);
   RandomGenerator random_generator(42);
   test_grid.add_computational_cost(random_generator.get_random_integer());
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
              &status);
     // ...and unpack (we deliberately make the receiving grid too small to
     //  check the reallocation)
-    const int_fast32_t recv_ncell[3] = {1, 1, 1};
+    const CoordinateVector< int_fast32_t > recv_ncell(1, 1, 1);
     DensitySubGrid recv_grid(box, recv_ncell);
     recv_grid.unpack(MPI_buffer, buffer_size);
 

@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
   const double box[6] = {-1.543e17, -1.543e17, -1.543e17,
                          3.086e17,  3.086e17,  3.086e17};
-  const int_fast32_t ncell[3] = {16, 16, 16};
+  const CoordinateVector< int_fast32_t > ncell(16, 16, 16);
   DensitySubGrid grid(box, ncell);
   RandomGenerator random_generator(42);
 

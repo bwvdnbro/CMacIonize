@@ -39,17 +39,18 @@
  */
 int main(int argc, char **argv) {
 
-  const double box_anchor[3] = {0., 0., 0.};
-  const double box_sides[3] = {1., 1., 1.};
-  const int_fast32_t ncell[3] = {16, 16, 16};
-  const int_fast32_t nsubgrid[3] = {4, 4, 8};
+  const CoordinateVector<> box_anchor(0., 0., 0.);
+  const CoordinateVector<> box_sides(1., 1., 1.);
+  const CoordinateVector< int_fast32_t > ncell(16, 16, 16);
+  const CoordinateVector< int_fast32_t > nsubgrid(4, 4, 8);
 
-  DensitySubGridCreator grid_creator(box_anchor, box_sides, ncell, nsubgrid);
-  const int_fast32_t ngrid = nsubgrid[0] * nsubgrid[1] * nsubgrid[2];
+  DensitySubGridCreator grid_creator(Box<>(box_anchor, box_sides), ncell,
+                                     nsubgrid);
+  const uint_fast32_t ngrid = nsubgrid[0] * nsubgrid[1] * nsubgrid[2];
   std::vector< DensitySubGrid * > subgrids(ngrid, nullptr);
 
   std::ofstream ofile("testDensitySubGridCreator_grid.txt");
-  for (int_fast32_t igrid = 0; igrid < ngrid; ++igrid) {
+  for (uint_fast32_t igrid = 0; igrid < ngrid; ++igrid) {
     DensitySubGrid *subgrid = grid_creator.create_subgrid(igrid);
     const size_t nsubcells = subgrid->get_number_of_cells();
     assert_condition(nsubcells == 32);
