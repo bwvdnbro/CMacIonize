@@ -67,6 +67,9 @@ private:
   /*! @brief Grid creator. */
   DensitySubGridCreator *_grid_creator;
 
+  /*! @brief Density function that sets the density field. */
+  DensityFunction *_density_function;
+
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,
                                 const std::string parameterfile_name);

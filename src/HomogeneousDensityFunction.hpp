@@ -74,7 +74,7 @@ public:
    * Parameters are:
    *  - density: Constant number density value (default: 100. cm^-3)
    *  - temperature: Constant initial temperature value (default: 8000. K)
-   *  - neutral fraction H: Contant initial neutral fraction value
+   *  - neutral fraction H: Constant initial neutral fraction value
    *    (default: 1.e-6)
    *
    * @param params ParameterFile to read from.
