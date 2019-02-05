@@ -873,6 +873,8 @@ public:
       for (std::vector< IonizationVariables >::size_type i = 0; i < size; ++i) {
         _ionization_variables[i] = IonizationVariables(restart_reader);
       }
+
+      _accessed.resize(size, false);
     }
     {
       const std::vector< HydroVariables >::size_type size =
