@@ -204,7 +204,7 @@ public:
         phiplus = phimax + delta1;
       } else {
         const double absphimax = std::abs(phimax);
-        phiplus = phimax * absphimax / (absphimax + delta1);
+        phiplus = phimax * absphimax / (absphimax + delta1 + DBL_MIN);
       }
 
       // if sign(phimin-delta1) == sign(phimin)
@@ -213,7 +213,7 @@ public:
         phiminus = phimin - delta1;
       } else {
         const double absphimin = std::abs(phimin);
-        phiminus = phimin * absphimin / (absphimin + delta1);
+        phiminus = phimin * absphimin / (absphimin + delta1 + DBL_MIN);
       }
 
       double phimid;
@@ -367,6 +367,28 @@ public:
         const double surface_area, const double timestep, const bool isothermal,
         double &mflux, CoordinateVector<> &pflux, double &Eflux) {
 
+      cmac_assert_message(rhoL == rhoL, "rhoL: %g, uL: [%g %g %g], PL: %g",
+                          rhoL, uL.x(), uL.y(), uL.z(), PL);
+      cmac_assert_message(uL.x() == uL.x(), "rhoL: %g, uL: [%g %g %g], PL: %g",
+                          rhoL, uL.x(), uL.y(), uL.z(), PL);
+      cmac_assert_message(uL.y() == uL.y(), "rhoL: %g, uL: [%g %g %g], PL: %g",
+                          rhoL, uL.x(), uL.y(), uL.z(), PL);
+      cmac_assert_message(uL.z() == uL.z(), "rhoL: %g, uL: [%g %g %g], PL: %g",
+                          rhoL, uL.x(), uL.y(), uL.z(), PL);
+      cmac_assert_message(PL == PL, "rhoL: %g, uL: [%g %g %g], PL: %g", rhoL,
+                          uL.x(), uL.y(), uL.z(), PL);
+
+      cmac_assert_message(rhoR == rhoR, "rhoR: %g, uR: [%g %g %g], PR: %g",
+                          rhoR, uR.x(), uR.y(), uR.z(), PR);
+      cmac_assert_message(uR.x() == uR.x(), "rhoR: %g, uR: [%g %g %g], PR: %g",
+                          rhoR, uR.x(), uR.y(), uR.z(), PR);
+      cmac_assert_message(uR.y() == uR.y(), "rhoR: %g, uR: [%g %g %g], PR: %g",
+                          rhoR, uR.x(), uR.y(), uR.z(), PR);
+      cmac_assert_message(uR.z() == uR.z(), "rhoR: %g, uR: [%g %g %g], PR: %g",
+                          rhoR, uR.x(), uR.y(), uR.z(), PR);
+      cmac_assert_message(PR == PR, "rhoR: %g, uR: [%g %g %g], PR: %g", rhoR,
+                          uR.x(), uR.y(), uR.z(), PR);
+
       // do the second order spatial gradient extrapolation
       double rhoL_prime =
           reconstruct_quantity(rhoL, gradrhoL, dL, rhoR, dL_over_r);
@@ -392,21 +414,18 @@ public:
       cmac_assert_message(uL_prime.x() == uL_prime.x(),
                           "uL.x(): %g, graduL[0]: [%g %g %g], dL: [%g %g %g], "
                           "uR.x(): %g, dL_over_r: %g",
-                          uL_prime.x(), graduL[0].x(), graduL[0].y(),
-                          graduL[0].z(), dL.x(), dL.y(), dL.z(), uR.x(),
-                          dL_over_r);
+                          uL.x(), graduL[0].x(), graduL[0].y(), graduL[0].z(),
+                          dL.x(), dL.y(), dL.z(), uR.x(), dL_over_r);
       cmac_assert_message(uL_prime.y() == uL_prime.y(),
                           "uL.y(): %g, graduL[1]: [%g %g %g], dL: [%g %g %g], "
                           "uR.y(): %g, dL_over_r: %g",
-                          uL_prime.y(), graduL[1].x(), graduL[1].y(),
-                          graduL[1].z(), dL.x(), dL.y(), dL.z(), uR.y(),
-                          dL_over_r);
+                          uL.y(), graduL[1].x(), graduL[1].y(), graduL[1].z(),
+                          dL.x(), dL.y(), dL.z(), uR.y(), dL_over_r);
       cmac_assert_message(uL_prime.z() == uL_prime.z(),
                           "uL.z(): %g, graduL[2]: [%g %g %g], dL: [%g %g %g], "
                           "uR.z(): %g, dL_over_r: %g",
-                          uL_prime.z(), graduL[2].x(), graduL[2].y(),
-                          graduL[2].z(), dL.x(), dL.y(), dL.z(), uR.z(),
-                          dL_over_r);
+                          uL.z(), graduL[2].x(), graduL[2].y(), graduL[2].z(),
+                          dL.x(), dL.y(), dL.z(), uR.z(), dL_over_r);
       cmac_assert_message(
           PL_prime == PL_prime,
           "PL: %g, gradPL: [%g %g %g], dL: [%g %g %g], PR: %g, dL_over_r: %g",
@@ -421,21 +440,18 @@ public:
       cmac_assert_message(uR_prime.x() == uR_prime.x(),
                           "uR.x(): %g, graduR[0]: [%g %g %g], dR: [%g %g %g], "
                           "uL.x(): %g, dR_over_r: %g",
-                          uR_prime.x(), graduR[0].x(), graduR[0].y(),
-                          graduR[0].z(), dR.x(), dR.y(), dR.z(), uL.x(),
-                          dR_over_r);
+                          uR.x(), graduR[0].x(), graduR[0].y(), graduR[0].z(),
+                          dR.x(), dR.y(), dR.z(), uL.x(), dR_over_r);
       cmac_assert_message(uR_prime.y() == uR_prime.y(),
                           "uR.y(): %g, graduR[1]: [%g %g %g], dR: [%g %g %g], "
                           "uL.y(): %g, dR_over_r: %g",
-                          uR_prime.y(), graduR[1].x(), graduR[1].y(),
-                          graduR[1].z(), dR.x(), dR.y(), dR.z(), uL.y(),
-                          dR_over_r);
+                          uR.y(), graduR[1].x(), graduR[1].y(), graduR[1].z(),
+                          dR.x(), dR.y(), dR.z(), uL.y(), dR_over_r);
       cmac_assert_message(uR_prime.z() == uR_prime.z(),
                           "uR.z(): %g, graduR[2]: [%g %g %g], dR: [%g %g %g], "
                           "uL.z(): %g, dR_over_r: %g",
-                          uR_prime.z(), graduR[2].x(), graduR[2].y(),
-                          graduR[2].z(), dR.x(), dR.y(), dR.z(), uL.z(),
-                          dR_over_r);
+                          uR.z(), graduR[2].x(), graduR[2].y(), graduR[2].z(),
+                          dR.x(), dR.y(), dR.z(), uL.z(), dR_over_r);
       cmac_assert_message(
           PR_prime == PR_prime,
           "PR: %g, gradPR: [%g %g %g], dR: [%g %g %g], PL: %g, dR_over_r: %g",
@@ -1186,7 +1202,8 @@ public:
 
       // get primitive variables
       const double rho = it.get_hydro_variables().get_primitives_density();
-      if (rho > 0.) {
+      const double rho_inv = 1. / rho;
+      if (rho > 0. && !std::isinf(rho_inv)) {
         const CoordinateVector<> u =
             it.get_hydro_variables().get_primitives_velocity();
         const double P = it.get_hydro_variables().get_primitives_pressure();
@@ -1208,7 +1225,6 @@ public:
 
         // compute updated variables
         const double divv = dux.x() + duy.y() + duz.z();
-        const double rho_inv = 1. / rho;
         const double rho_new =
             rho -
             halfdt * (rho * divv + CoordinateVector<>::dot_product(u, drho));
@@ -1217,6 +1233,31 @@ public:
         const double P_new =
             P - halfdt * (_gamma * P * divv +
                           CoordinateVector<>::dot_product(u, dP));
+
+        cmac_assert_message(
+            rho_new == rho_new,
+            "rho: %g, halfdt: %g, divv: %g, u: [%g %g %g], drho: [%g %g %g]",
+            rho, halfdt, divv, u.x(), u.y(), u.z(), drho.x(), drho.y(),
+            drho.z());
+        cmac_assert_message(u_new.x() == u_new.x(),
+                            "u: [%g %g %g], halfdt: %g, divv: %g, rho_inv: %g, "
+                            "dP: [%g %g %g], a: [%g %g %g]",
+                            u.x(), u.y(), u.z(), halfdt, divv, rho_inv, dP.x(),
+                            dP.y(), dP.z(), a.x(), a.y(), a.z());
+        cmac_assert_message(u_new.y() == u_new.y(),
+                            "u: [%g %g %g], halfdt: %g, divv: %g, rho_inv: %g, "
+                            "dP: [%g %g %g], a: [%g %g %g]",
+                            u.x(), u.y(), u.z(), halfdt, divv, rho_inv, dP.x(),
+                            dP.y(), dP.z(), a.x(), a.y(), a.z());
+        cmac_assert_message(u_new.z() == u_new.z(),
+                            "u: [%g %g %g], halfdt: %g, divv: %g, rho_inv: %g, "
+                            "dP: [%g %g %g], a: [%g %g %g]",
+                            u.x(), u.y(), u.z(), halfdt, divv, rho_inv, dP.x(),
+                            dP.y(), dP.z(), a.x(), a.y(), a.z());
+        cmac_assert_message(
+            P_new == P_new,
+            "P: %g, halfdt: %g, divv: %g, u: [%g %g %g], dP: [%g %g %g]", P,
+            halfdt, divv, u.x(), u.y(), u.z(), dP.x(), dP.y(), dP.z());
 
         // update variables
         it.get_hydro_variables().primitives(0) = rho_new;
@@ -1260,7 +1301,7 @@ public:
           const double Tgas_old =
               0.5 * (1. + xH) * _T_conversion_factor *
               it.get_hydro_variables().get_primitives_pressure() /
-              it.get_hydro_variables().get_primitives_density();
+              (it.get_hydro_variables().get_primitives_density() + DBL_MIN);
           if (it.get_hydro_variables().get_energy_term() > 0. ||
               Tgas_old > _shock_temperature) {
             // we don't change the temperature for cells that have very
@@ -1271,7 +1312,7 @@ public:
             const double ugas = ufac * Tgas;
             const double uold =
                 it.get_hydro_variables().get_primitives_pressure() * _gm1_inv /
-                it.get_hydro_variables().get_primitives_density();
+                (it.get_hydro_variables().get_primitives_density() + DBL_MIN);
             const double du = ugas - uold;
             double dE = it.get_hydro_variables().get_conserved_mass() * du;
             if (_do_radiative_heating && dE > 0.) {
@@ -1429,6 +1470,10 @@ public:
         pressure = 0.;
         temperature = 0.;
       }
+
+      cmac_assert(velocity.x() == velocity.x());
+      cmac_assert(velocity.y() == velocity.y());
+      cmac_assert(velocity.z() == velocity.z());
 #else
       cmac_assert_message(density >= 0., "density: %g, mass: %g, volume: %g",
                           density, mass, volume);
