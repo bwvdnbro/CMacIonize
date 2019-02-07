@@ -115,6 +115,16 @@ public:
   }
 
   /**
+   * @brief Total number of cells in the grid.
+   *
+   * @return Total number of cells.
+   */
+  inline uint_fast64_t number_of_cells() const {
+    return number_of_subgrids() * _subgrid_number_of_cells.x() *
+           _subgrid_number_of_cells.y() * _subgrid_number_of_cells.z();
+  }
+
+  /**
    * @brief Create the DensitySubGrid with the given index.
    *
    * @param index Index of the subgrid.

@@ -34,6 +34,10 @@ macro(add_unit_test)
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                           ${PROJECT_BINARY_DIR}/rundir/test)
     target_link_libraries(${TEST_NAME} ${TEST_LIBS})
+    if(HAVE_MPI)
+      target_link_libraries(${TEST_NAME}
+                            ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    endif(HAVE_MPI)
 
     if(TEST_PARALLEL AND HAVE_MPI)
       set(TESTCOMMAND ${MPIEXEC})
@@ -1549,11 +1553,20 @@ add_unit_test(NAME testDensitySubGridCreator
 set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     testTaskBasedIonizationSimulation.cpp
 
+    ../src/AsciiFileDensityGridWriter.cpp
+    ../src/GadgetDensityGridWriter.cpp
     ../src/ParameterFile.cpp
+
+    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 add_unit_test(NAME testTaskBasedIonizationSimulation
               SOURCES ${TESTTASKBASEDIONIZATIONSIMULATION_SOURCES}
               LIBS TaskBasedIonizationSimulation)
+configure_file(
+  ${PROJECT_SOURCE_DIR}/test/test_taskbasedionizationsimulation.param
+  ${PROJECT_BINARY_DIR}/rundir/test/test_taskbasedionizationsimulation.param
+  COPYONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)

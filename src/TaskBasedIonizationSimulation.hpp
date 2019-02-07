@@ -29,6 +29,7 @@
 
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
+#include "SimulationBox.hpp"
 #include "Task.hpp"
 #include "ThreadSafeVector.hpp"
 
@@ -68,11 +69,17 @@ private:
   /*! @brief ParameterFile containing the run parameters. */
   ParameterFile _parameter_file;
 
+  /*! @brief Simulation box (in m). */
+  SimulationBox _simulation_box;
+
   /*! @brief Grid creator. */
   DensitySubGridCreator *_grid_creator;
 
-  /*! @brief Density function that sets the density field. */
+  /*! @brief DensityFunction that sets the density field. */
   DensityFunction *_density_function;
+
+  /*! @brief DensityGridWriter used for snapshots. */
+  DensityGridWriter *_density_grid_writer;
 
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,

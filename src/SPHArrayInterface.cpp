@@ -1223,3 +1223,23 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
   time_log.end("Inverse_mapping");
   time_log.output("time-log-file.txt", true);
 }
+
+/**
+ * @brief Write a snapshot for a split grid.
+ *
+ * @param subgrids Subgrids making up the grid.
+ * @param number_of_subgrids Number of (original) subgrids.
+ * @param number_of_cells Total number of cells in the grid.
+ * @param box Dimensions of the simulation box (in m).
+ * @param counter Counter value to add to the snapshot file name.
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
+ * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydrodynamic quantities.
+ */
+void SPHArrayInterface::write(const std::vector< DensitySubGrid * > &subgrids,
+                              const uint_fast32_t number_of_subgrids,
+                              const uint_fast64_t number_of_cells,
+                              const Box<> box, uint_fast32_t counter,
+                              ParameterFile &params, double time,
+                              const InternalHydroUnits *hydro_units) {}
