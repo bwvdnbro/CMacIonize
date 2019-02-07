@@ -92,14 +92,14 @@ namespace MPITypes {
  *
  * @return The MPI_Datatype for the given template _integer_type_.
  */
-template < typename _integer_type_ > MPI_Datatype get_datatype();
+template < typename _integer_type_ > inline MPI_Datatype get_datatype();
 
 /**
  * @brief MPITypes::get_datatype() specialization for an unsigned char.
  *
  * @return MPI_UNSIGNED_CHAR.
  */
-template <> MPI_Datatype get_datatype< unsigned char >() {
+template <> inline MPI_Datatype get_datatype< unsigned char >() {
   return MPI_UNSIGNED_CHAR;
 }
 
@@ -108,21 +108,23 @@ template <> MPI_Datatype get_datatype< unsigned char >() {
  *
  * @return MPI_SIGNED_CHAR.
  */
-template <> MPI_Datatype get_datatype< char >() { return MPI_SIGNED_CHAR; }
+template <> inline MPI_Datatype get_datatype< char >() {
+  return MPI_SIGNED_CHAR;
+}
 
 /**
  * @brief MPITypes::get_datatype() specialization for a short.
  *
  * @return MPI_SHORT.
  */
-template <> MPI_Datatype get_datatype< short >() { return MPI_SHORT; }
+template <> inline MPI_Datatype get_datatype< short >() { return MPI_SHORT; }
 
 /**
  * @brief MPITypes::get_datatype() specialization for an unsigned short.
  *
  * @return MPI_UNSIGNED_SHORT.
  */
-template <> MPI_Datatype get_datatype< unsigned short >() {
+template <> inline MPI_Datatype get_datatype< unsigned short >() {
   return MPI_UNSIGNED_SHORT;
 }
 
@@ -131,28 +133,30 @@ template <> MPI_Datatype get_datatype< unsigned short >() {
  *
  * @return MPI_INT.
  */
-template <> MPI_Datatype get_datatype< int >() { return MPI_INT; }
+template <> inline MPI_Datatype get_datatype< int >() { return MPI_INT; }
 
 /**
  * @brief MPITypes::get_datatype() specialization for an unsigned int.
  *
  * @return MPI_UNSIGNED.
  */
-template <> MPI_Datatype get_datatype< unsigned int >() { return MPI_UNSIGNED; }
+template <> inline MPI_Datatype get_datatype< unsigned int >() {
+  return MPI_UNSIGNED;
+}
 
 /**
  * @brief MPITypes::get_datatype() specialization for a long.
  *
  * @return MPI_LONG.
  */
-template <> MPI_Datatype get_datatype< long >() { return MPI_LONG; }
+template <> inline MPI_Datatype get_datatype< long >() { return MPI_LONG; }
 
 /**
  * @brief MPITypes::get_datatype() specialization for an unsigned long.
  *
  * @return MPI_UNSIGNED_LONG.
  */
-template <> MPI_Datatype get_datatype< unsigned long >() {
+template <> inline MPI_Datatype get_datatype< unsigned long >() {
   return MPI_UNSIGNED_LONG;
 }
 
@@ -161,14 +165,16 @@ template <> MPI_Datatype get_datatype< unsigned long >() {
  *
  * @return MPI_LONG_LONG.
  */
-template <> MPI_Datatype get_datatype< long long >() { return MPI_LONG_LONG; }
+template <> inline MPI_Datatype get_datatype< long long >() {
+  return MPI_LONG_LONG;
+}
 
 /**
  * @brief MPITypes::get_datatype() specialization for an unsigned long long.
  *
  * @return MPI_UNSIGNED_LONG_LONG.
  */
-template <> MPI_Datatype get_datatype< unsigned long long >() {
+template <> inline MPI_Datatype get_datatype< unsigned long long >() {
   return MPI_UNSIGNED_LONG_LONG;
 }
 

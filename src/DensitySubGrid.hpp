@@ -1700,6 +1700,16 @@ public:
     }
 
     /**
+     * @brief Get the number density for the cell the iterator is currently
+     * pointing to.
+     *
+     * @return Number density for the cell (in m^-3).
+     */
+    inline double get_number_density() const {
+      return _subgrid->_number_density[_index];
+    }
+
+    /**
      * @brief Set the neutral fraction for the cell the iterator is currently
      * pointing to.
      *
@@ -1707,6 +1717,16 @@ public:
      */
     inline void set_neutral_fraction(const double neutral_fraction) {
       _subgrid->_neutral_fraction[_index] = neutral_fraction;
+    }
+
+    /**
+     * @brief Get the neutral fraction for the cell the iterator is currently
+     * pointing to.
+     *
+     * @return Neutral fraction for the cell.
+     */
+    inline double get_neutral_fraction() const {
+      return _subgrid->_neutral_fraction[_index];
     }
 
     // Iterator functionality
