@@ -55,6 +55,13 @@ public:
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
                      ParameterFile &params, double time = 0.,
                      const InternalHydroUnits *hydro_units = nullptr);
+
+  virtual void write(const std::vector< DensitySubGrid * > &subgrids,
+                     const uint_fast32_t number_of_subgrids,
+                     const uint_fast64_t number_of_cells, const Box<> box,
+                     uint_fast32_t counter, ParameterFile &params,
+                     double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr);
 };
 
 #endif // GADGETDENSITYGRIDWRITER_HPP

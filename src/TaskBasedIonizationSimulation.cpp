@@ -26,6 +26,7 @@
 
 #include "TaskBasedIonizationSimulation.hpp"
 #include "DensityFunctionFactory.hpp"
+#include "DensityGridWriterFactory.hpp"
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "MemorySpace.hpp"
@@ -35,6 +36,54 @@
 
 #include <fstream>
 #include <omp.h>
+
+/**
+ * @brief Write a file with the start and end times of all tasks.
+ *
+ * @param iloop Iteration number (added to file name).
+ * @param tasks Tasks to print.
+ * @param iteration_start Start CPU cycle count of the iteration on this
+ * process.
+ * @param iteration_end End CPU cycle count of the iteration on this process.
+ */
+inline void output_tasks(const uint_fast32_t iloop,
+                         ThreadSafeVector< Task > &tasks,
+                         const uint_fast64_t iteration_start,
+                         const uint_fast64_t iteration_end) {
+
+  {
+    // compose the file name
+    std::stringstream filename;
+    filename << "tasks_";
+    filename.fill('0');
+    filename.width(2);
+    filename << iloop;
+    filename << ".txt";
+
+    // now open the file
+    std::ofstream ofile(filename.str(), std::ofstream::trunc);
+
+    ofile << "# rank\tthread\tstart\tstop\ttype\n";
+
+    // write the start and end CPU cycle count
+    // this is a dummy task executed by thread 0 (so that the min or max
+    // thread count is not affected), but with non-existing type -1
+    ofile << "0\t0\t" << iteration_start << "\t" << iteration_end << "\t-1\n";
+
+    // write the task info
+    const size_t tsize = tasks.size();
+    for (size_t i = 0; i < tsize; ++i) {
+      const Task &task = tasks[i];
+      cmac_assert_message(task.done(), "Task was never executed!");
+      int_fast8_t type;
+      int_fast32_t thread_id;
+      uint_fast64_t start, end;
+      task.get_timing_information(type, thread_id, start, end);
+      ofile << "0\t" << thread_id << "\t" << start << "\t" << end << "\t"
+            << static_cast< int_fast32_t >(type) << "\n";
+    }
+  }
+}
 
 /**
  * @brief Constructor.
@@ -54,9 +103,7 @@
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name)
-    : _parameter_file(parameterfile_name) {
-
-  const SimulationBox simulation_box(_parameter_file);
+    : _parameter_file(parameterfile_name), _simulation_box(_parameter_file) {
 
   omp_set_num_threads(num_thread);
 
@@ -82,11 +129,13 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     _random_generators[ithread].set_seed(random_seed + ithread);
   }
   _grid_creator =
-      new DensitySubGridCreator(simulation_box.get_box(), _parameter_file);
+      new DensitySubGridCreator(_simulation_box.get_box(), _parameter_file);
   _subgrids.resize(_grid_creator->number_of_subgrids(), nullptr);
 
   _density_function =
       DensityFunctionFactory::generate(_parameter_file, nullptr);
+  _density_grid_writer =
+      DensityGridWriterFactory::generate(".", _parameter_file, false, nullptr);
 }
 
 /**
@@ -104,6 +153,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _tasks;
   delete _grid_creator;
   delete _density_function;
+  delete _density_grid_writer;
 }
 
 /**
@@ -139,7 +189,14 @@ void TaskBasedIonizationSimulation::initialize(
 void TaskBasedIonizationSimulation::run(
     DensityGridWriter *density_grid_writer) {
 
+  if (density_grid_writer == nullptr) {
+    density_grid_writer = _density_grid_writer;
+  }
+
   for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
+
+    uint_fast64_t iteration_start, iteration_end;
+    cpucycle_tick(iteration_start);
 
     cmac_warning("Loop: %" PRIuFAST8, iloop);
 
@@ -583,11 +640,13 @@ void TaskBasedIonizationSimulation::run(
       _subgrids[igrid]->compute_neutral_fraction(4.26e49, 1e6);
     }
 
+    cpucycle_tick(iteration_end);
+    output_tasks(iloop, *_tasks, iteration_start, iteration_end);
+
     _tasks->clear();
   } // photoionization loop
 
-  std::ofstream ofile("testTaskBasedIonizationSimulation_output.txt");
-  for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
-    _subgrids[igrid]->print_intensities(ofile);
-  }
+  _density_grid_writer->write(_subgrids, _grid_creator->number_of_subgrids(),
+                              _grid_creator->number_of_cells(),
+                              _simulation_box.get_box(), 10, _parameter_file);
 }

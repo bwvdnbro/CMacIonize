@@ -27,7 +27,7 @@
 #define TASK_HPP
 
 /*! @brief Activate this to record the start and end time of each task. */
-//#define TASK_PLOT
+#define TASK_PLOT
 
 #include "AtomicValue.hpp"
 #include "CPUCycle.hpp"
