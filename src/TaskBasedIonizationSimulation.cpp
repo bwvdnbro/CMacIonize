@@ -86,6 +86,57 @@ inline void output_tasks(const uint_fast32_t iloop,
 }
 
 /**
+ * @brief Get the next task for the given thread.
+ *
+ * We try to get a task in different stages:
+ *  - first, we try to get a task from the thread's own queue
+ *  - next, we try to steal a task from another thread's queue
+ *  - if all else fails, we try to get a task from the shared queue
+ * If this doesn't yield a task, we give up and assume there are no more tasks
+ * available to this thread.
+ *
+ * @param thread_id Thread id of this thread.
+ * @return Index of a task or NO_TASK if no tasks are available.
+ */
+uint_fast32_t
+TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
+
+  uint_fast32_t task_index = _queues[thread_id]->get_task(*_tasks);
+  if (task_index == NO_TASK) {
+
+    // try to steal a task from another thread's queue
+
+    // sort the queues by size
+    std::vector< size_t > queue_sizes(_queues.size(), 0);
+    for (size_t i = 0; i < _queues.size(); ++i) {
+      queue_sizes[i] = _queues[i]->size();
+    }
+    std::vector< uint_fast32_t > sorti = Utilities::argsort(queue_sizes);
+
+    // now try to steal from the largest queue first
+    uint_fast32_t i = 0;
+    while (task_index == NO_TASK && i < queue_sizes.size() &&
+           queue_sizes[sorti[queue_sizes.size() - i - 1]] > 0) {
+      task_index =
+          _queues[sorti[queue_sizes.size() - i - 1]]->try_get_task(*_tasks);
+      ++i;
+    }
+    if (task_index != NO_TASK) {
+      // stealing means transferring ownership...
+      if ((*_tasks)[task_index].get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
+        _subgrids[(*_tasks)[task_index].get_subgrid()]->set_owning_thread(
+            thread_id);
+      }
+    } else {
+      // get a task from the shared queue
+      task_index = _shared_queue->get_task(*_tasks);
+    }
+  }
+
+  return task_index;
+}
+
+/**
  * @brief Constructor.
  *
  * This method will read the following parameters from the parameter file:
@@ -193,6 +244,48 @@ void TaskBasedIonizationSimulation::run(
     density_grid_writer = _density_grid_writer;
   }
 
+  const uint_fast32_t central_index = 4 * 8 * 8 + 4 * 8 + 4;
+
+  std::vector< uint_fast32_t > originals;
+  std::vector< uint_fast32_t > copies(_grid_creator->number_of_subgrids(),
+                                      0xffffffff);
+  std::vector< uint_fast8_t > levels(_grid_creator->number_of_subgrids(), 0);
+  levels[central_index] = 4;
+  // impose copy restrictions
+  {
+    uint_fast8_t max_level = 0;
+    const size_t levelsize = levels.size();
+    for (size_t i = 0; i < levelsize; ++i) {
+      max_level = std::max(max_level, levels[i]);
+    }
+
+    size_t ngbs[6];
+    while (max_level > 0) {
+      for (size_t i = 0; i < levelsize; ++i) {
+        if (levels[i] == max_level) {
+          const uint_fast8_t numngbs = _grid_creator->get_neighbours(i, ngbs);
+          for (uint_fast8_t ingb = 0; ingb < numngbs; ++ingb) {
+            const size_t ngbi = ngbs[ingb];
+            if (levels[ngbi] < levels[i] - 1) {
+              levels[ngbi] = levels[i] - 1;
+            }
+          }
+        }
+      }
+      --max_level;
+    }
+  }
+  _grid_creator->create_copies(_subgrids, levels, originals, copies);
+
+  std::vector< uint_fast32_t > central_indices(1, central_index);
+  size_t copy = copies[central_index];
+  while (copy < _subgrids.size() &&
+         originals[copy + _grid_creator->number_of_subgrids()] ==
+             central_index) {
+    central_indices.push_back(copy);
+    ++copy;
+  }
+
   for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
 
     uint_fast64_t iteration_start, iteration_end;
@@ -230,10 +323,8 @@ void TaskBasedIonizationSimulation::run(
 
       // actual run flag
       while (global_run_flag) {
-        uint_fast32_t current_index = _queues[thread_id]->get_task(*_tasks);
-        if (current_index == NO_TASK) {
-          current_index = _shared_queue->get_task(*_tasks);
-        }
+
+        uint_fast32_t current_index = get_task(thread_id);
 
         if (current_index == NO_TASK) {
           uint_fast32_t threshold_size = PHOTONBUFFER_SIZE;
@@ -320,10 +411,7 @@ void TaskBasedIonizationSimulation::run(
               }
             }
           }
-          current_index = _queues[thread_id]->get_task(*_tasks);
-          if (current_index == NO_TASK) {
-            current_index = _shared_queue->get_task(*_tasks);
-          }
+          current_index = get_task(thread_id);
         }
 
         while (current_index != NO_TASK) {
@@ -347,7 +435,15 @@ void TaskBasedIonizationSimulation::run(
             // assign the buffer to a random thread that has a copy of the
             // subgrid that contains the source position. This should ensure
             // a balanced load for these threads.
-            uint_fast32_t this_central_index = 4 * 8 * 8 + 4 * 8 + 4;
+            uint_fast32_t which_central_index =
+                _random_generators[thread_id].get_uniform_random_double() *
+                central_indices.size();
+            cmac_assert_message(which_central_index >= 0 &&
+                                    which_central_index <
+                                        central_indices.size(),
+                                "index: %" PRIuFAST32, which_central_index);
+            uint_fast32_t this_central_index =
+                central_indices[which_central_index];
 
             // set general buffer information
             input_buffer.grow(num_photon_this_loop);
@@ -409,7 +505,7 @@ void TaskBasedIonizationSimulation::run(
             // dependency)
             new_task.set_dependency(subgrid.get_dependency());
 
-            queues_to_add[num_tasks_to_add] = thread_id;
+            queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
             tasks_to_add[num_tasks_to_add] = task_index;
             ++num_tasks_to_add;
 
@@ -622,10 +718,7 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
-          current_index = _queues[thread_id]->get_task(*_tasks);
-          if (current_index == NO_TASK) {
-            current_index = _shared_queue->get_task(*_tasks);
-          }
+          current_index = get_task(thread_id);
         }
 
         if (num_empty.value() == num_empty_target &&
@@ -635,9 +728,23 @@ void TaskBasedIonizationSimulation::run(
       } // while(global_run_flag)
     }   // parallel region
 
+    // update copies (don't do in parallel)
+    for (size_t i = 0; i < originals.size(); ++i) {
+      const size_t original = originals[i];
+      const size_t copy = _grid_creator->number_of_subgrids() + i;
+      _subgrids[original]->update_intensities(*_subgrids[copy]);
+    }
+
 #pragma omp parallel for default(shared)
     for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
       _subgrids[igrid]->compute_neutral_fraction(4.26e49, 1e6);
+    }
+
+    // update copies
+    for (size_t i = 0; i < originals.size(); ++i) {
+      const size_t original = originals[i];
+      const size_t copy = _grid_creator->number_of_subgrids() + i;
+      _subgrids[copy]->update_neutral_fractions(*_subgrids[original]);
     }
 
     cpucycle_tick(iteration_end);
