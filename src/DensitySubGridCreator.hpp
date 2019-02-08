@@ -125,6 +125,86 @@ public:
   }
 
   /**
+   * @brief Get the 3D integer coordinates of the given subgrid index within
+   * the subgrid grid layout.
+   *
+   * @param index Subgrid index (needs to be smaller than number_of_subgrids).
+   * @return 3D integer coordinates of the subgrid within the subgrid grid
+   * layout.
+   */
+  inline CoordinateVector< int_fast32_t >
+  get_grid_position(const size_t index) const {
+
+    const int_fast32_t ix =
+        index / (_number_of_subgrids[1] * _number_of_subgrids[2]);
+    const int_fast32_t iy =
+        (index - ix * _number_of_subgrids[1] * _number_of_subgrids[2]) /
+        _number_of_subgrids[2];
+    const int_fast32_t iz =
+        index - ix * _number_of_subgrids[1] * _number_of_subgrids[2] -
+        iy * _number_of_subgrids[2];
+    return CoordinateVector< int_fast32_t >(ix, iy, iz);
+  }
+
+  /**
+   * @brief Get the indices for the neighbouring subgrids of the given subgrid.
+   *
+   * @param index Subgrid index (needs to be smaller than number_of_subgrids).
+   * @param neighbours Return array containing the indices of the neighbouring
+   * subgrids.
+   * @return Number of existing neighbours.
+   */
+  inline uint_fast8_t get_neighbours(const size_t index,
+                                     size_t neighbours[6]) const {
+
+    const CoordinateVector< int_fast32_t > p = get_grid_position(index);
+    uint_fast8_t number_of_neighbours = 0;
+    if (p.x() > 0) {
+      const size_t ngbi =
+          (p.x() - 1) * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    if (p.x() < _number_of_subgrids[0] - 1) {
+      const size_t ngbi =
+          (p.x() + 1) * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    if (p.y() > 0) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          (p.y() - 1) * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    if (p.y() < _number_of_subgrids[1] - 1) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          (p.y() + 1) * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    if (p.z() > 0) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2] + p.z() - 1;
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    if (p.z() < _number_of_subgrids[2] - 1) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2] + p.z() + 1;
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    }
+    return number_of_neighbours;
+  }
+
+  /**
    * @brief Create the DensitySubGrid with the given index.
    *
    * @param index Index of the subgrid.
