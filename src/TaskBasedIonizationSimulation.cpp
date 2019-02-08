@@ -280,10 +280,16 @@ void TaskBasedIonizationSimulation::run(
   std::vector< uint_fast32_t > central_indices(1, central_index);
   size_t copy = copies[central_index];
   while (copy < _subgrids.size() &&
-         originals[copy + _grid_creator->number_of_subgrids()] ==
+         originals[copy - _grid_creator->number_of_subgrids()] ==
              central_index) {
     central_indices.push_back(copy);
     ++copy;
+  }
+
+  for (size_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
+    for (int ingb = 0; ingb < TRAVELDIRECTION_NUMBER; ++ingb) {
+      _subgrids[igrid]->set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
+    }
   }
 
   for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
