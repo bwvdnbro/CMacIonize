@@ -338,9 +338,6 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
  * @brief Write a snapshot for a split grid.
  *
  * @param grid_creator Grid.
- * @param number_of_subgrids Number of (original) subgrids.
- * @param number_of_cells Total number of cells in the grid.
- * @param box Dimensions of the simulation box (in m).
  * @param counter Counter value to add to the snapshot file name.
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
@@ -348,9 +345,7 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
  * @param hydro_units Internal unit system for the hydrodynamic quantities.
  */
 void GadgetDensityGridWriter::write(DensitySubGridCreator &grid_creator,
-                                    const uint_fast32_t number_of_subgrids,
-                                    const uint_fast64_t number_of_cells,
-                                    const Box<> box, uint_fast32_t counter,
+                                    const uint_fast32_t counter,
                                     ParameterFile &params, double time,
                                     const InternalHydroUnits *hydro_units) {
 
@@ -360,6 +355,8 @@ void GadgetDensityGridWriter::write(DensitySubGridCreator &grid_creator,
   if (_log) {
     _log->write_status("Writing file \"", filename, "\".");
   }
+
+  const Box<> box = grid_creator.get_box();
 
   // we force output of the required fields for now
   uint_fast32_t field_flags[DENSITYGRIDFIELD_NUMBER];
@@ -390,6 +387,7 @@ void GadgetDensityGridWriter::write(DensitySubGridCreator &grid_creator,
                                                       masstable);
   int32_t numfiles = 1;
   HDF5Tools::write_attribute< int32_t >(group, "NumFilesPerSnapshot", numfiles);
+  const uint64_t number_of_cells = grid_creator.number_of_cells();
   std::vector< uint32_t > numpart(6, 0);
   numpart[0] = static_cast< uint32_t >(number_of_cells);
   std::vector< uint32_t > numpart_high(6, 0);
