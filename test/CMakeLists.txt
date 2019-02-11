@@ -1488,6 +1488,15 @@ configure_file(
   ${PROJECT_BINARY_DIR}/rundir/test/test_taskbasedionizationsimulation.param
   COPYONLY)
 
+## Unit test for DistributedPhotonSource
+set(TESTDISTRIBUTEDPHOTONSOURCE_SOURCES
+    testDistributedPhotonSource.cpp
+
+    ../src/DistributedPhotonSource.hpp
+)
+add_unit_test(NAME testDistributedPhotonSource
+              SOURCES ${TESTDISTRIBUTEDPHOTONSOURCE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

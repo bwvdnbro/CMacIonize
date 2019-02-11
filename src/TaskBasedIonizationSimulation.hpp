@@ -40,6 +40,7 @@ class DensityGridWriter;
 class DensitySubGrid;
 class DensitySubGridCreator;
 class MemorySpace;
+class PhotonSourceDistribution;
 class TaskQueue;
 
 /**
@@ -77,6 +78,10 @@ private:
 
   /*! @brief DensityGridWriter used for snapshots. */
   DensityGridWriter *_density_grid_writer;
+
+  /*! @brief PhotonSourceDistribution specifying the positions of the
+   *  sources. */
+  PhotonSourceDistribution *_photon_source_distribution;
 
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
