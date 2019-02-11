@@ -93,6 +93,7 @@ public:
     _subgrids.resize(_number_of_subgrids[0] * _number_of_subgrids[1] *
                          _number_of_subgrids[2],
                      nullptr);
+    _copies.resize(_subgrids.size(), 0xffffffff);
   }
 
   /**
@@ -463,7 +464,6 @@ public:
     //    copies to set inter-copy neighbour relations)
 
     // array to store the offsets of new copies in
-    _copies.resize(number_of_unique_subgrids, 0xffffffff);
     for (int_fast32_t i = 0; i < number_of_unique_subgrids; ++i) {
       const uint_fast8_t level = copy_levels[i];
       const uint_fast32_t number_of_copies = 1 << level;

@@ -304,6 +304,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     DensitySubGrid.hpp
     FLASHSnapshotDensityFunction.cpp
     GadgetSnapshotDensityFunction.cpp
+    GadgetSnapshotPhotonSourceDistribution.cpp
     InterpolatedDensityFunction.cpp
     MemorySpace.hpp
     PhotonBuffer.hpp
