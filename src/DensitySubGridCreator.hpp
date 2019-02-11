@@ -51,8 +51,8 @@ private:
   /*! @brief Indices of the first copy of each subgrid. */
   std::vector< size_t > _copies;
 
-  /*! @brief Anchor of the simulation box (in m). */
-  const CoordinateVector<> _box_anchor;
+  /*! @brief Dimensions of the simulation box (in m). */
+  const Box<> _box;
 
   /*! @brief Side length of a single subgrid (in m). */
   const CoordinateVector<> _subgrid_sides;
@@ -75,10 +75,9 @@ public:
   inline DensitySubGridCreator(
       const Box<> box, const CoordinateVector< int_fast32_t > number_of_cells,
       const CoordinateVector< int_fast32_t > number_of_subgrids)
-      : _box_anchor(box.get_anchor()),
-        _subgrid_sides(box.get_sides()[0] / number_of_subgrids[0],
-                       box.get_sides()[1] / number_of_subgrids[1],
-                       box.get_sides()[2] / number_of_subgrids[2]),
+      : _box(box), _subgrid_sides(box.get_sides()[0] / number_of_subgrids[0],
+                                  box.get_sides()[1] / number_of_subgrids[1],
+                                  box.get_sides()[2] / number_of_subgrids[2]),
         _number_of_subgrids(number_of_subgrids[0], number_of_subgrids[1],
                             number_of_subgrids[2]),
         _subgrid_number_of_cells(number_of_cells[0] / number_of_subgrids[0],
@@ -155,6 +154,13 @@ public:
     return number_of_original_subgrids() * _subgrid_number_of_cells.x() *
            _subgrid_number_of_cells.y() * _subgrid_number_of_cells.z();
   }
+
+  /**
+   * @brief Get the dimensions of the box containing the grid.
+   *
+   * @return Dimensions of the box containing the grid (in m).
+   */
+  inline Box<> get_box() const { return _box; }
 
   /**
    * @brief Get the 3D integer coordinates of the given subgrid index within
@@ -253,12 +259,13 @@ public:
     const int_fast32_t iz =
         index - ix * _number_of_subgrids[1] * _number_of_subgrids[2] -
         iy * _number_of_subgrids[2];
-    const double subgrid_box[6] = {_box_anchor[0] + ix * _subgrid_sides[0],
-                                   _box_anchor[1] + iy * _subgrid_sides[1],
-                                   _box_anchor[2] + iz * _subgrid_sides[2],
-                                   _subgrid_sides[0],
-                                   _subgrid_sides[1],
-                                   _subgrid_sides[2]};
+    const double subgrid_box[6] = {
+        _box.get_anchor()[0] + ix * _subgrid_sides[0],
+        _box.get_anchor()[1] + iy * _subgrid_sides[1],
+        _box.get_anchor()[2] + iz * _subgrid_sides[2],
+        _subgrid_sides[0],
+        _subgrid_sides[1],
+        _subgrid_sides[2]};
     DensitySubGrid *this_grid =
         new DensitySubGrid(subgrid_box, _subgrid_number_of_cells);
     for (int_fast32_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
@@ -716,11 +723,11 @@ public:
    */
   inline iterator get_subgrid(const CoordinateVector<> position) {
     const int_fast32_t ix =
-        std::floor((position.x() - _box_anchor.x()) / _subgrid_sides.x());
+        std::floor((position.x() - _box.get_anchor().x()) / _subgrid_sides.x());
     const int_fast32_t iy =
-        std::floor((position.y() - _box_anchor.y()) / _subgrid_sides.y());
+        std::floor((position.y() - _box.get_anchor().y()) / _subgrid_sides.y());
     const int_fast32_t iz =
-        std::floor((position.z() - _box_anchor.z()) / _subgrid_sides.z());
+        std::floor((position.z() - _box.get_anchor().z()) / _subgrid_sides.z());
     return iterator(ix * _number_of_subgrids[1] * _number_of_subgrids[2] +
                         iy * _number_of_subgrids[2] + iz,
                     *this);

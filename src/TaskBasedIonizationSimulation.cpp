@@ -733,8 +733,5 @@ void TaskBasedIonizationSimulation::run(
     _tasks->clear();
   } // photoionization loop
 
-  _density_grid_writer->write(*_grid_creator,
-                              _grid_creator->number_of_original_subgrids(),
-                              _grid_creator->number_of_cells(),
-                              _simulation_box.get_box(), 10, _parameter_file);
+  _density_grid_writer->write(*_grid_creator, 10, _parameter_file);
 }
