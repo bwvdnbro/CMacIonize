@@ -1227,7 +1227,7 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
 /**
  * @brief Write a snapshot for a split grid.
  *
- * @param subgrids Subgrids making up the grid.
+ * @param grid_creator Grid.
  * @param number_of_subgrids Number of (original) subgrids.
  * @param number_of_cells Total number of cells in the grid.
  * @param box Dimensions of the simulation box (in m).
@@ -1237,7 +1237,7 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
  * @param time Simulation time (in s).
  * @param hydro_units Internal unit system for the hydrodynamic quantities.
  */
-void SPHArrayInterface::write(const std::vector< DensitySubGrid * > &subgrids,
+void SPHArrayInterface::write(DensitySubGridCreator &grid_creator,
                               const uint_fast32_t number_of_subgrids,
                               const uint_fast64_t number_of_cells,
                               const Box<> box, uint_fast32_t counter,

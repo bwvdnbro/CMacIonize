@@ -47,7 +47,7 @@ public:
                      ParameterFile &params, double time = 0.,
                      const InternalHydroUnits *hydro_units = nullptr);
 
-  virtual void write(const std::vector< DensitySubGrid * > &subgrids,
+  virtual void write(DensitySubGridCreator &grid_creator,
                      const uint_fast32_t number_of_subgrids,
                      const uint_fast64_t number_of_cells, const Box<> box,
                      uint_fast32_t counter, ParameterFile &params,
