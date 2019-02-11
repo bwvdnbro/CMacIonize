@@ -48,9 +48,6 @@ class TaskQueue;
  */
 class TaskBasedIonizationSimulation {
 private:
-  /*! @brief Grid parts. */
-  std::vector< DensitySubGrid * > _subgrids;
-
   /*! @brief PhotonPacket buffers. */
   MemorySpace *_buffers;
 

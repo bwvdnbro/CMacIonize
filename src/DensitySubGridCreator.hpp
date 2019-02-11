@@ -28,6 +28,7 @@
 #define DENSITYSUBGRIDCREATOR_HPP
 
 #include "Box.hpp"
+#include "DensityFunction.hpp"
 #include "DensitySubGrid.hpp"
 #include "Error.hpp"
 #include "ParameterFile.hpp"
@@ -41,6 +42,15 @@
  */
 class DensitySubGridCreator {
 private:
+  /*! @brief Subgrids that make up the grid. */
+  std::vector< DensitySubGrid * > _subgrids;
+
+  /*! @brief Indices of the original subgrid corresponding to each copy. */
+  std::vector< size_t > _originals;
+
+  /*! @brief Indices of the first copy of each subgrid. */
+  std::vector< size_t > _copies;
+
   /*! @brief Anchor of the simulation box (in m). */
   const CoordinateVector<> _box_anchor;
 
@@ -80,6 +90,10 @@ public:
         cmac_error("Number of subgrids not compatible with number of cells!");
       }
     }
+
+    _subgrids.resize(_number_of_subgrids[0] * _number_of_subgrids[1] *
+                         _number_of_subgrids[2],
+                     nullptr);
   }
 
   /**
@@ -105,13 +119,31 @@ public:
                 CoordinateVector< int_fast32_t >(8))) {}
 
   /**
+   * @brief Destructor.
+   */
+  inline ~DensitySubGridCreator() {
+    for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
+      delete _subgrids[igrid];
+    }
+  }
+
+  /**
    * @brief Get the number of subgrids created by the creator.
+   *
+   * @return Total number of original subgrids.
+   */
+  inline uint_fast32_t number_of_original_subgrids() const {
+    return _number_of_subgrids.x() * _number_of_subgrids.y() *
+           _number_of_subgrids.z();
+  }
+
+  /**
+   * @brief Get the actual number of subgrids including all copies.
    *
    * @return Total number of subgrids.
    */
-  inline uint_fast32_t number_of_subgrids() const {
-    return _number_of_subgrids.x() * _number_of_subgrids.y() *
-           _number_of_subgrids.z();
+  inline uint_fast32_t number_of_actual_subgrids() const {
+    return _subgrids.size();
   }
 
   /**
@@ -120,7 +152,7 @@ public:
    * @return Total number of cells.
    */
   inline uint_fast64_t number_of_cells() const {
-    return number_of_subgrids() * _subgrid_number_of_cells.x() *
+    return number_of_original_subgrids() * _subgrid_number_of_cells.x() *
            _subgrid_number_of_cells.y() * _subgrid_number_of_cells.z();
   }
 
@@ -271,6 +303,25 @@ public:
   }
 
   /**
+   * @brief Initialize the subgrids that make up the grid.
+   *
+   * @param density_function DensityFunction to use to initialize the cell
+   * variables.
+   */
+  inline void initialize(DensityFunction &density_function) {
+#pragma omp parallel for default(shared)
+    for (size_t i = 0; i < _subgrids.size(); ++i) {
+      _subgrids[i] = create_subgrid(i);
+      _subgrids[i]->set_owning_thread(omp_get_thread_num());
+      for (auto it = _subgrids[i]->begin(); it != _subgrids[i]->end(); ++it) {
+        DensityValues values = density_function(it);
+        it.set_number_density(values.get_number_density());
+        it.set_neutral_fraction(values.get_ionic_fraction(ION_H_n));
+      }
+    }
+  }
+
+  /**
    * @brief Create copies for the given subgrids according to the given copy
    * level specification.
    *
@@ -285,7 +336,7 @@ public:
   inline void create_copies(std::vector< DensitySubGrid * > &subgrids,
                             std::vector< uint_fast8_t > &copy_levels,
                             std::vector< uint_fast32_t > &originals,
-                            std::vector< uint_fast32_t > &copies) const {
+                            std::vector< uint_fast32_t > &copies) {
 
     // we need to do 2 loops:
     //  - one loop to create the copies and store the offset of the first copy
@@ -380,6 +431,309 @@ public:
         }
       }
     }
+  }
+
+  /**
+   * @brief Create copies for the given subgrids according to the given copy
+   * level specification.
+   *
+   * @param copy_levels Desired copy level for each subgrid.
+   */
+  inline void create_copies(std::vector< uint_fast8_t > &copy_levels) {
+
+    // we need to store the original number of subgrids for reference
+    const int_fast32_t number_of_unique_subgrids =
+        number_of_original_subgrids();
+    cmac_assert_message(number_of_unique_subgrids ==
+                            _number_of_subgrids[0] * _number_of_subgrids[1] *
+                                _number_of_subgrids[2],
+                        "Number of subgrids does not match expectation!");
+    // we need to do 2 loops:
+    //  - one loop to create the copies and store the offset of the first copy
+    //    for each subgrid
+    //  - a second loop that sets the neighbours (and has access to all
+    //  necessary
+    //    copies to set inter-copy neighbour relations)
+
+    // array to store the offsets of new copies in
+    _copies.resize(number_of_unique_subgrids, 0xffffffff);
+    for (int_fast32_t i = 0; i < number_of_unique_subgrids; ++i) {
+      const uint_fast8_t level = copy_levels[i];
+      const uint_fast32_t number_of_copies = 1 << level;
+      // create the copies
+      if (number_of_copies > 1) {
+        _copies[i] = _subgrids.size();
+      }
+      for (uint_fast32_t j = 1; j < number_of_copies; ++j) {
+        _subgrids.push_back(new DensitySubGrid(*_subgrids[i]));
+        _originals.push_back(i);
+      }
+    }
+
+    // neighbour setting
+    for (int_fast32_t i = 0; i < number_of_unique_subgrids; ++i) {
+      const uint_fast8_t level = copy_levels[i];
+      const uint_fast32_t number_of_copies = 1 << level;
+      // first do the self-reference for each copy (if there are copies)
+      for (uint_fast32_t j = 1; j < number_of_copies; ++j) {
+        const uint_fast32_t copy = _copies[i] + j - 1;
+        _subgrids[copy]->set_neighbour(0, copy);
+      }
+      // now do the actual neighbours
+      for (int_fast32_t j = 1; j < TRAVELDIRECTION_NUMBER; ++j) {
+        const uint_fast32_t original_ngb = _subgrids[i]->get_neighbour(j);
+        if (original_ngb != NEIGHBOUR_OUTSIDE) {
+          const uint_fast8_t ngb_level = copy_levels[original_ngb];
+          // check how the neighbour level compares to the subgrid level
+          if (ngb_level == level) {
+            // same, easy: just make copies mutual neighbours
+            // and leave the original grid as is
+            for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+              const uint_fast32_t copy = _copies[i] + k - 1;
+              const uint_fast32_t ngb_copy = _copies[original_ngb] + k - 1;
+              _subgrids[copy]->set_neighbour(j, ngb_copy);
+            }
+          } else {
+            // not the same: there are 2 options
+            if (level > ngb_level) {
+              // we have less neighbour copies, so some of our copies need to
+              // share the same neighbour
+              // some of our copies might also need to share the original
+              // neighbour
+              const uint_fast32_t number_of_ngb_copies = 1
+                                                         << (level - ngb_level);
+              for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+                const uint_fast32_t copy = _copies[i] + k - 1;
+                // this term will round down, which is what we want
+                const uint_fast32_t ngb_index = k / number_of_ngb_copies;
+                const uint_fast32_t ngb_copy =
+                    (ngb_index > 0) ? _copies[original_ngb] + ngb_index - 1
+                                    : original_ngb;
+                _subgrids[copy]->set_neighbour(j, ngb_copy);
+              }
+            } else {
+              // we have more neighbour copies: pick a subset
+              const uint_fast32_t number_of_own_copies = 1
+                                                         << (ngb_level - level);
+              for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+                const uint_fast32_t copy = _copies[i] + k - 1;
+                // the second term will skip some neighbour copies, which is
+                // what we want
+                const uint_fast32_t ngb_copy =
+                    _copies[original_ngb] + (k - 1) * number_of_own_copies;
+                _subgrids[copy]->set_neighbour(j, ngb_copy);
+              }
+            }
+          }
+        } else {
+          // flag this neighbour as NEIGHBOUR_OUTSIDE for all copies
+          for (uint_fast32_t k = 1; k < number_of_copies; ++k) {
+            const uint_fast32_t copy = _copies[i] + k - 1;
+            _subgrids[copy]->set_neighbour(j, NEIGHBOUR_OUTSIDE);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Update the counters of all original subgrids with the contributions
+   * from their copies.
+   */
+  inline void update_original_counters() {
+    for (size_t i = 0; i < _originals.size(); ++i) {
+      const size_t original = _originals[i];
+      const size_t copy = number_of_original_subgrids() + i;
+      _subgrids[original]->update_intensities(*_subgrids[copy]);
+    }
+  }
+
+  /**
+   * @brief Update the properties of subgrid copies with the changed properties
+   * of their original.
+   */
+  inline void update_copy_properties() {
+    for (size_t i = 0; i < _originals.size(); ++i) {
+      const size_t original = _originals[i];
+      const size_t copy = number_of_original_subgrids() + i;
+      _subgrids[copy]->update_neutral_fractions(*_subgrids[original]);
+    }
+  }
+
+  /**
+   * @brief iterator to loop over subgrids.
+   */
+  class iterator {
+  private:
+    /*! @brief Index of the subgrid the iterator is currently pointing to. */
+    size_t _index;
+
+    /*! @brief Pointer to the underlying grid creator (we cannot use a
+     *  reference, since then things like it = it would not work). */
+    DensitySubGridCreator *_grid_creator;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param index Index of the cell the iterator is currently pointing to.
+     * @param grid_creator DensitySubGridCreator over which we iterate.
+     */
+    inline iterator(const uint_fast32_t index,
+                    DensitySubGridCreator &grid_creator)
+        : _index(index), _grid_creator(&grid_creator) {}
+
+    /**
+     * @brief Dereference operator.
+     *
+     * @return Reference to the subgrid the iterator is currently pointing to.
+     */
+    inline DensitySubGrid &operator*() {
+      return *_grid_creator->_subgrids[_index];
+    }
+
+    /**
+     * @brief Get an iterator to the first and beyond last copy of the subgrid
+     * the iterator is currently pointing to.
+     *
+     * @return Pair containing the first and last copy of the subgrid the
+     * iterator is currently pointing to.
+     */
+    inline std::pair< iterator, iterator > get_copies() {
+      const size_t first_copy = _grid_creator->_copies[_index];
+      if (first_copy == 0xffffffff) {
+        return std::make_pair(
+            iterator(_grid_creator->_subgrids.size(), *_grid_creator),
+            iterator(_grid_creator->_subgrids.size(), *_grid_creator));
+      }
+      size_t last_copy = first_copy;
+      while (
+          last_copy < _grid_creator->_subgrids.size() &&
+          _grid_creator
+                  ->_originals[last_copy -
+                               _grid_creator->number_of_original_subgrids()] ==
+              _index) {
+        ++last_copy;
+      }
+      return std::make_pair(iterator(first_copy, *_grid_creator),
+                            iterator(last_copy, *_grid_creator));
+    }
+
+    // Iterator functionality
+
+    /**
+     * @brief Increment operator.
+     *
+     * We only implemented the pre-increment version, since the post-increment
+     * version creates a new object and is computationally more expensive.
+     *
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator++() {
+      ++_index;
+      return *this;
+    }
+
+    /**
+     * @brief Increment operator.
+     *
+     * @param increment Increment to add.
+     * @return Reference to the incremented iterator.
+     */
+    inline iterator &operator+=(const uint_fast32_t increment) {
+      _index += increment;
+      return *this;
+    }
+
+    /**
+     * @brief Free addition operator.
+     *
+     * @param increment Increment to add to the iterator.
+     * @return Incremented iterator.
+     */
+    inline iterator operator+(const uint_fast32_t increment) const {
+      iterator it(*this);
+      it += increment;
+      return it;
+    }
+
+    /**
+     * @brief Get the index of the subgrid the iterator is currently pointing
+     * to.
+     *
+     * @return Index of the current cell.
+     */
+    inline size_t get_index() const { return _index; }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators point to the same subgrid of the same grid.
+     */
+    inline bool operator==(iterator it) const {
+      return (_grid_creator == it._grid_creator && _index == it._index);
+    }
+
+    /**
+     * @brief Compare iterators.
+     *
+     * @param it Iterator to compare with.
+     * @return True if the iterators do not point to the same subgrid of the
+     * same grid.
+     */
+    inline bool operator!=(iterator it) const { return !(*this == it); }
+  };
+
+  /**
+   * @brief Get an iterator to the beginning of the grid.
+   *
+   * @return Iterator to the first subgrid.
+   */
+  inline iterator begin() { return iterator(0, *this); }
+
+  /**
+   * @brief Get an iterator to the end of the original subgrids.
+   *
+   * @return Iterator to the end of the original subgrids.
+   */
+  inline iterator original_end() {
+    return iterator(number_of_original_subgrids(), *this);
+  }
+
+  /**
+   * @brief Get an iterator to the end of all subgrids.
+   *
+   * @return Iterator to the end of all subgrids.
+   */
+  inline iterator all_end() { return iterator(_subgrids.size(), *this); }
+
+  /**
+   * @brief Get an iterator to the subgrid that contains the given position.
+   *
+   * @param position Position (in m).
+   * @return Iterator to the subgrid that contains that position.
+   */
+  inline iterator get_subgrid(const CoordinateVector<> position) {
+    const int_fast32_t ix =
+        std::floor((position.x() - _box_anchor.x()) / _subgrid_sides.x());
+    const int_fast32_t iy =
+        std::floor((position.y() - _box_anchor.y()) / _subgrid_sides.y());
+    const int_fast32_t iz =
+        std::floor((position.z() - _box_anchor.z()) / _subgrid_sides.z());
+    return iterator(ix * _number_of_subgrids[1] * _number_of_subgrids[2] +
+                        iy * _number_of_subgrids[2] + iz,
+                    *this);
+  }
+
+  /**
+   * @brief Get the subgrid with the given index.
+   *
+   * @param index Index of a subgrid.
+   * @return Corresponding subgrid.
+   */
+  inline iterator get_subgrid(const size_t index) {
+    return iterator(index, *this);
   }
 };
 

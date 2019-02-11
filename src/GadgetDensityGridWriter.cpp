@@ -29,7 +29,7 @@
 #include "ConfigurationInfo.hpp"
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
-#include "DensitySubGrid.hpp"
+#include "DensitySubGridCreator.hpp"
 #include "DensityValues.hpp"
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
@@ -337,7 +337,7 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
 /**
  * @brief Write a snapshot for a split grid.
  *
- * @param subgrids Subgrids making up the grid.
+ * @param grid_creator Grid.
  * @param number_of_subgrids Number of (original) subgrids.
  * @param number_of_cells Total number of cells in the grid.
  * @param box Dimensions of the simulation box (in m).
@@ -347,11 +347,12 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
  * @param time Simulation time (in s).
  * @param hydro_units Internal unit system for the hydrodynamic quantities.
  */
-void GadgetDensityGridWriter::write(
-    const std::vector< DensitySubGrid * > &subgrids,
-    const uint_fast32_t number_of_subgrids, const uint_fast64_t number_of_cells,
-    const Box<> box, uint_fast32_t counter, ParameterFile &params, double time,
-    const InternalHydroUnits *hydro_units) {
+void GadgetDensityGridWriter::write(DensitySubGridCreator &grid_creator,
+                                    const uint_fast32_t number_of_subgrids,
+                                    const uint_fast64_t number_of_cells,
+                                    const Box<> box, uint_fast32_t counter,
+                                    ParameterFile &params, double time,
+                                    const InternalHydroUnits *hydro_units) {
 
   std::string filename = Utilities::compose_filename(_output_folder, _prefix,
                                                      "hdf5", counter, _padding);
@@ -496,16 +497,16 @@ void GadgetDensityGridWriter::write(
 
   const uint_fast32_t blocksize = 10000;
   uint_fast32_t block_offset = 0;
-  for (uint_fast32_t igrid = 0; igrid < number_of_subgrids; ++igrid) {
+  for (auto gridit = grid_creator.begin();
+       gridit != grid_creator.original_end(); ++gridit) {
 
     const uint_fast32_t numblock =
-        subgrids[igrid]->get_number_of_cells() / blocksize +
-        (subgrids[igrid]->get_number_of_cells() % blocksize > 0);
+        (*gridit).get_number_of_cells() / blocksize +
+        ((*gridit).get_number_of_cells() % blocksize > 0);
     for (uint_fast32_t iblock = 0; iblock < numblock; ++iblock) {
       const uint_fast32_t offset = iblock * blocksize;
-      const uint_fast32_t upper_limit =
-          std::min(offset + blocksize,
-                   uint_fast32_t(subgrids[igrid]->get_number_of_cells()));
+      const uint_fast32_t upper_limit = std::min(
+          offset + blocksize, uint_fast32_t((*gridit).get_number_of_cells()));
       const uint_fast32_t thisblocksize = upper_limit - offset;
 
       std::vector< std::vector< CoordinateVector<> > > vector_props(
@@ -516,8 +517,8 @@ void GadgetDensityGridWriter::write(
           std::vector< double >(thisblocksize));
 
       size_t index = 0;
-      for (auto it = subgrids[igrid]->begin() + offset;
-           it != subgrids[igrid]->begin() + upper_limit; ++it) {
+      for (auto cellit = (*gridit).begin() + offset;
+           cellit != (*gridit).begin() + upper_limit; ++cellit) {
         uint_fast8_t vector_index = 0;
         uint_fast8_t scalar_index = 0;
         for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
@@ -527,7 +528,7 @@ void GadgetDensityGridWriter::write(
                 DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE) {
               vector_props[vector_index][index] =
                   DensityGridWriterFields::get_vector_double_value(
-                      property, it, box.get_anchor(), hydro_units);
+                      property, cellit, box.get_anchor(), hydro_units);
               ++vector_index;
             } else {
               if (DensityGridWriterFields::is_ion_property(property)) {
@@ -535,7 +536,7 @@ void GadgetDensityGridWriter::write(
                   if (fields.ion_present(property, ion)) {
                     scalar_props[scalar_index][index] =
                         DensityGridWriterFields::get_scalar_double_ion_value(
-                            property, ion, it);
+                            property, ion, cellit);
                     ++scalar_index;
                   }
                 }
@@ -547,14 +548,14 @@ void GadgetDensityGridWriter::write(
                     scalar_props[scalar_index][index] =
                         DensityGridWriterFields::
                             get_scalar_double_heating_value(property, heating,
-                                                            it);
+                                                            cellit);
                     ++scalar_index;
                   }
                 }
               } else {
                 scalar_props[scalar_index][index] =
                     DensityGridWriterFields::get_scalar_double_value(
-                        property, it, hydro_units);
+                        property, cellit, hydro_units);
                 ++scalar_index;
               }
             }
@@ -606,7 +607,7 @@ void GadgetDensityGridWriter::write(
         }
       }
     }
-    block_offset += subgrids[igrid]->get_number_of_cells();
+    block_offset += (*gridit).get_number_of_cells();
   }
   HDF5Tools::close_group(group);
 

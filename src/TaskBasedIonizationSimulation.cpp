@@ -124,8 +124,8 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
     if (task_index != NO_TASK) {
       // stealing means transferring ownership...
       if ((*_tasks)[task_index].get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
-        _subgrids[(*_tasks)[task_index].get_subgrid()]->set_owning_thread(
-            thread_id);
+        (*_grid_creator->get_subgrid((*_tasks)[task_index].get_subgrid()))
+            .set_owning_thread(thread_id);
       }
     } else {
       // get a task from the shared queue
@@ -181,7 +181,6 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   }
   _grid_creator =
       new DensitySubGridCreator(_simulation_box.get_box(), _parameter_file);
-  _subgrids.resize(_grid_creator->number_of_subgrids(), nullptr);
 
   _density_function =
       DensityFunctionFactory::generate(_parameter_file, nullptr);
@@ -193,9 +192,6 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
  * @brief Destructor.
  */
 TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
-  for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
-    delete _subgrids[igrid];
-  }
   delete _buffers;
   for (uint_fast8_t ithread = 0; ithread < _queues.size(); ++ithread) {
     delete _queues[ithread];
@@ -220,16 +216,7 @@ void TaskBasedIonizationSimulation::initialize(
     density_function = _density_function;
   }
 
-#pragma omp parallel for default(shared)
-  for (uint_fast32_t i = 0; i < _subgrids.size(); ++i) {
-    _subgrids[i] = _grid_creator->create_subgrid(i);
-    _subgrids[i]->set_owning_thread(omp_get_thread_num());
-    for (auto it = _subgrids[i]->begin(); it != _subgrids[i]->end(); ++it) {
-      DensityValues values = (*density_function)(it);
-      it.set_number_density(values.get_number_density());
-      it.set_neutral_fraction(values.get_ionic_fraction(ION_H_n));
-    }
-  }
+  _grid_creator->initialize(*density_function);
 }
 
 /**
@@ -246,10 +233,8 @@ void TaskBasedIonizationSimulation::run(
 
   const uint_fast32_t central_index = 4 * 8 * 8 + 4 * 8 + 4;
 
-  std::vector< uint_fast32_t > originals;
-  std::vector< uint_fast32_t > copies(_grid_creator->number_of_subgrids(),
-                                      0xffffffff);
-  std::vector< uint_fast8_t > levels(_grid_creator->number_of_subgrids(), 0);
+  std::vector< uint_fast8_t > levels(
+      _grid_creator->number_of_original_subgrids(), 0);
   levels[central_index] = 4;
   // impose copy restrictions
   {
@@ -275,20 +260,21 @@ void TaskBasedIonizationSimulation::run(
       --max_level;
     }
   }
-  _grid_creator->create_copies(_subgrids, levels, originals, copies);
+  _grid_creator->create_copies(levels);
 
-  std::vector< uint_fast32_t > central_indices(1, central_index);
-  size_t copy = copies[central_index];
-  while (copy < _subgrids.size() &&
-         originals[copy - _grid_creator->number_of_subgrids()] ==
-             central_index) {
-    central_indices.push_back(copy);
-    ++copy;
+  DensitySubGridCreator::iterator central_grid =
+      _grid_creator->get_subgrid(CoordinateVector<>(0.));
+  std::pair< DensitySubGridCreator::iterator, DensitySubGridCreator::iterator >
+      central_copies = central_grid.get_copies();
+  std::vector< uint_fast32_t > central_indices(1, central_grid.get_index());
+  for (auto it = central_copies.first; it != central_copies.second; ++it) {
+    central_indices.push_back(it.get_index());
   }
 
-  for (size_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
+  for (auto gridit = _grid_creator->begin(); gridit != _grid_creator->all_end();
+       ++gridit) {
     for (int ingb = 0; ingb < TRAVELDIRECTION_NUMBER; ++ingb) {
-      _subgrids[igrid]->set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
+      (*gridit).set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
     }
   }
 
@@ -308,12 +294,11 @@ void TaskBasedIonizationSimulation::run(
     _shared_queue->add_tasks(0, 5000);
 
     bool global_run_flag = true;
-    AtomicValue< uint_fast32_t > num_empty(TRAVELDIRECTION_NUMBER *
-                                           _subgrids.size());
+    const uint_fast32_t num_empty_target =
+        TRAVELDIRECTION_NUMBER * _grid_creator->number_of_actual_subgrids();
+    AtomicValue< uint_fast32_t > num_empty(num_empty_target);
     AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
-    const uint_fast32_t num_empty_target =
-        TRAVELDIRECTION_NUMBER * _subgrids.size();
 #pragma omp parallel default(shared)
     {
       // thread initialisation
@@ -336,23 +321,24 @@ void TaskBasedIonizationSimulation::run(
           uint_fast32_t threshold_size = PHOTONBUFFER_SIZE;
           while (threshold_size > 0) {
             threshold_size >>= 1;
-            for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
-              if (_subgrids[igrid]->get_largest_buffer_size() >
-                      threshold_size &&
-                  _subgrids[igrid]->get_dependency()->try_lock()) {
+            for (auto gridit = _grid_creator->begin();
+                 gridit != _grid_creator->all_end(); ++gridit) {
+              DensitySubGrid &this_subgrid = *gridit;
+              if (this_subgrid.get_largest_buffer_size() > threshold_size &&
+                  this_subgrid.get_dependency()->try_lock()) {
 
                 const uint_fast8_t largest_index =
-                    _subgrids[igrid]->get_largest_buffer_index();
+                    this_subgrid.get_largest_buffer_index();
                 if (largest_index != TRAVELDIRECTION_NUMBER) {
 
                   const uint_fast32_t non_full_index =
-                      _subgrids[igrid]->get_active_buffer(largest_index);
+                      this_subgrid.get_active_buffer(largest_index);
                   const uint_fast32_t new_index = _buffers->get_free_buffer();
                   (*_buffers)[new_index].set_subgrid_index(
                       (*_buffers)[non_full_index].get_subgrid_index());
                   (*_buffers)[new_index].set_direction(
                       (*_buffers)[non_full_index].get_direction());
-                  _subgrids[igrid]->set_active_buffer(largest_index, new_index);
+                  this_subgrid.set_active_buffer(largest_index, new_index);
                   // we are creating a new active photon buffer
                   num_active_buffers.pre_increment();
                   // we created a new empty buffer
@@ -364,18 +350,15 @@ void TaskBasedIonizationSimulation::run(
                       (*_buffers)[non_full_index].get_subgrid_index());
                   new_task.set_buffer(non_full_index);
                   if (largest_index > 0) {
-                    DensitySubGrid &subgrid =
-                        *_subgrids[(*_buffers)[non_full_index]
-                                       .get_subgrid_index()];
+                    DensitySubGrid &subgrid = *_grid_creator->get_subgrid(
+                        (*_buffers)[non_full_index].get_subgrid_index());
                     new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
 
                     // add dependency
                     new_task.set_dependency(subgrid.get_dependency());
 
                     const uint_fast32_t queue_index =
-                        _subgrids[(*_buffers)[non_full_index]
-                                      .get_subgrid_index()]
-                            ->get_owning_thread();
+                        subgrid.get_owning_thread();
                     _queues[queue_index]->add_task(task_index);
                   } else {
                     new_task.set_type(TASKTYPE_PHOTON_REEMIT);
@@ -388,23 +371,21 @@ void TaskBasedIonizationSimulation::run(
                   uint_fast32_t new_largest_size = 0;
                   for (uint_fast8_t ibuffer = 0;
                        ibuffer < TRAVELDIRECTION_NUMBER; ++ibuffer) {
-                    if (_subgrids[igrid]->get_active_buffer(ibuffer) !=
+                    if (this_subgrid.get_active_buffer(ibuffer) !=
                             NEIGHBOUR_OUTSIDE &&
-                        (*_buffers)[_subgrids[igrid]->get_active_buffer(
-                                        ibuffer)]
+                        (*_buffers)[this_subgrid.get_active_buffer(ibuffer)]
                                 .size() > new_largest_size) {
                       new_largest_index = ibuffer;
                       new_largest_size =
-                          (*_buffers)[_subgrids[igrid]->get_active_buffer(
-                                          ibuffer)]
+                          (*_buffers)[this_subgrid.get_active_buffer(ibuffer)]
                               .size();
                     }
                   }
-                  _subgrids[igrid]->set_largest_buffer(new_largest_index,
-                                                       new_largest_size);
+                  this_subgrid.set_largest_buffer(new_largest_index,
+                                                  new_largest_size);
 
                   // unlock the subgrid, we are done with it
-                  _subgrids[igrid]->get_dependency()->unlock();
+                  this_subgrid.get_dependency()->unlock();
 
                   // we managed to activate a buffer, we are done with this
                   // function
@@ -412,7 +393,7 @@ void TaskBasedIonizationSimulation::run(
                 } else {
                   // no semi-full buffers for this subgrid: release the lock
                   // again
-                  _subgrids[igrid]->get_dependency()->unlock();
+                  this_subgrid.get_dependency()->unlock();
                 }
               }
             }
@@ -498,7 +479,8 @@ void TaskBasedIonizationSimulation::run(
             }
 
             // add to the queue of the corresponding thread
-            DensitySubGrid &subgrid = *_subgrids[this_central_index];
+            DensitySubGrid &subgrid =
+                *_grid_creator->get_subgrid(this_central_index);
             const size_t task_index = _tasks->get_free_element();
             Task &new_task = (*_tasks)[task_index];
             new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
@@ -525,7 +507,7 @@ void TaskBasedIonizationSimulation::run(
             const uint_fast32_t current_buffer_index = task.get_buffer();
             PhotonBuffer &photon_buffer = (*_buffers)[current_buffer_index];
             const uint_fast32_t igrid = photon_buffer.get_subgrid_index();
-            DensitySubGrid &this_grid = *_subgrids[igrid];
+            DensitySubGrid &this_grid = *_grid_creator->get_subgrid(igrid);
 
             // prepare output buffers: make sure they are empty and that buffers
             // corresponding to directions outside the simulation box are
@@ -639,8 +621,8 @@ void TaskBasedIonizationSimulation::run(
                   // photon packets in the other buffers left the subgrid and
                   // need to be traversed in the neighbouring subgrid
                   if (i > 0) {
-                    DensitySubGrid &subgrid =
-                        *_subgrids[(*_buffers)[new_index].get_subgrid_index()];
+                    DensitySubGrid &subgrid = *_grid_creator->get_subgrid(
+                        (*_buffers)[new_index].get_subgrid_index());
                     const size_t task_index = _tasks->get_free_element();
                     Task &new_task = (*_tasks)[task_index];
                     new_task.set_subgrid(
@@ -654,7 +636,7 @@ void TaskBasedIonizationSimulation::run(
 
                     // add the task to the queue of the corresponding thread
                     const int_fast32_t queue_index =
-                        _subgrids[ngb]->get_owning_thread();
+                        (*_grid_creator->get_subgrid(ngb)).get_owning_thread();
                     queues_to_add[num_tasks_to_add] = queue_index;
                     tasks_to_add[num_tasks_to_add] = task_index;
                     ++num_tasks_to_add;
@@ -735,23 +717,15 @@ void TaskBasedIonizationSimulation::run(
     }   // parallel region
 
     // update copies (don't do in parallel)
-    for (size_t i = 0; i < originals.size(); ++i) {
-      const size_t original = originals[i];
-      const size_t copy = _grid_creator->number_of_subgrids() + i;
-      _subgrids[original]->update_intensities(*_subgrids[copy]);
-    }
+    _grid_creator->update_original_counters();
 
-#pragma omp parallel for default(shared)
-    for (uint_fast32_t igrid = 0; igrid < _subgrids.size(); ++igrid) {
-      _subgrids[igrid]->compute_neutral_fraction(4.26e49, 1e6);
+    for (auto gridit = _grid_creator->begin();
+         gridit != _grid_creator->original_end(); ++gridit) {
+      (*gridit).compute_neutral_fraction(4.26e49, 1e6);
     }
 
     // update copies
-    for (size_t i = 0; i < originals.size(); ++i) {
-      const size_t original = originals[i];
-      const size_t copy = _grid_creator->number_of_subgrids() + i;
-      _subgrids[copy]->update_neutral_fractions(*_subgrids[original]);
-    }
+    _grid_creator->update_copy_properties();
 
     cpucycle_tick(iteration_end);
     output_tasks(iloop, *_tasks, iteration_start, iteration_end);
@@ -759,7 +733,8 @@ void TaskBasedIonizationSimulation::run(
     _tasks->clear();
   } // photoionization loop
 
-  _density_grid_writer->write(_subgrids, _grid_creator->number_of_subgrids(),
+  _density_grid_writer->write(*_grid_creator,
+                              _grid_creator->number_of_original_subgrids(),
                               _grid_creator->number_of_cells(),
                               _simulation_box.get_box(), 10, _parameter_file);
 }

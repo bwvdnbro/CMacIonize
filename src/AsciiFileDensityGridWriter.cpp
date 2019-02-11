@@ -28,7 +28,7 @@
 
 #include "AsciiFileDensityGridWriter.hpp"
 #include "DensityGrid.hpp"
-#include "DensitySubGrid.hpp"
+#include "DensitySubGridCreator.hpp"
 #include "Utilities.hpp"
 #include <fstream>
 
@@ -97,7 +97,7 @@ void AsciiFileDensityGridWriter::write(DensityGrid &grid,
 /**
  * @brief Write a snapshot for a split grid.
  *
- * @param subgrids Subgrids making up the grid.
+ * @param grid_creator Grid.
  * @param number_of_subgrids Number of (original) subgrids.
  * @param number_of_cells Total number of cells in the grid.
  * @param box Dimensions of the simulation box (in m).
@@ -107,11 +107,12 @@ void AsciiFileDensityGridWriter::write(DensityGrid &grid,
  * @param time Simulation time (in s).
  * @param hydro_units Internal unit system for the hydrodynamic quantities.
  */
-void AsciiFileDensityGridWriter::write(
-    const std::vector< DensitySubGrid * > &subgrids,
-    const uint_fast32_t number_of_subgrids, const uint_fast64_t number_of_cells,
-    const Box<> box, uint_fast32_t counter, ParameterFile &params, double time,
-    const InternalHydroUnits *hydro_units) {
+void AsciiFileDensityGridWriter::write(DensitySubGridCreator &grid_creator,
+                                       const uint_fast32_t number_of_subgrids,
+                                       const uint_fast64_t number_of_cells,
+                                       const Box<> box, uint_fast32_t counter,
+                                       ParameterFile &params, double time,
+                                       const InternalHydroUnits *hydro_units) {
 
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", counter, 3);
@@ -119,12 +120,13 @@ void AsciiFileDensityGridWriter::write(
 
   file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\tvolume (m^3)\tneutral H fraction\n";
 
-  for (uint_fast32_t i = 0; i < number_of_subgrids; ++i) {
-    for (auto it = subgrids[i]->begin(); it != subgrids[i]->end(); ++it) {
-      const CoordinateVector<> x = it.get_cell_midpoint();
-      const double n = it.get_number_density();
-      const double xH = it.get_neutral_fraction();
-      const double volume = it.get_volume();
+  for (auto gridit = grid_creator.begin();
+       gridit != grid_creator.original_end(); ++gridit) {
+    for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
+      const CoordinateVector<> x = cellit.get_cell_midpoint();
+      const double n = cellit.get_number_density();
+      const double xH = cellit.get_neutral_fraction();
+      const double volume = cellit.get_volume();
       file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t"
            << volume << "\t" << xH << "\n";
     }
