@@ -29,8 +29,10 @@
 #include "DensityGridWriterFactory.hpp"
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
+#include "DistributedPhotonSource.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
+#include "PhotonSourceDistributionFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 
@@ -186,6 +188,9 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       DensityFunctionFactory::generate(_parameter_file, nullptr);
   _density_grid_writer =
       DensityGridWriterFactory::generate(".", _parameter_file, false, nullptr);
+
+  _photon_source_distribution =
+      PhotonSourceDistributionFactory::generate(_parameter_file, nullptr);
 }
 
 /**
@@ -201,6 +206,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _grid_creator;
   delete _density_function;
   delete _density_grid_writer;
+  delete _photon_source_distribution;
 }
 
 /**
@@ -262,14 +268,8 @@ void TaskBasedIonizationSimulation::run(
   }
   _grid_creator->create_copies(levels);
 
-  DensitySubGridCreator::iterator central_grid =
-      _grid_creator->get_subgrid(CoordinateVector<>(0.));
-  std::pair< DensitySubGridCreator::iterator, DensitySubGridCreator::iterator >
-      central_copies = central_grid.get_copies();
-  std::vector< uint_fast32_t > central_indices(1, central_grid.get_index());
-  for (auto it = central_copies.first; it != central_copies.second; ++it) {
-    central_indices.push_back(it.get_index());
-  }
+  DistributedPhotonSource photon_source(1e6, *_photon_source_distribution,
+                                        *_grid_creator);
 
   for (auto gridit = _grid_creator->begin(); gridit != _grid_creator->all_end();
        ++gridit) {
@@ -280,18 +280,25 @@ void TaskBasedIonizationSimulation::run(
 
   for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
 
+    photon_source.reset();
+
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
 
     cmac_warning("Loop: %" PRIuFAST8, iloop);
 
-    _tasks->get_free_elements(5000);
-#pragma omp parallel for default(shared)
-    for (uint_fast32_t i = 0; i < 5000; ++i) {
-      (*_tasks)[i].set_type(TASKTYPE_SOURCE_PHOTON);
-      (*_tasks)[i].set_buffer(PHOTONBUFFER_SIZE);
+    for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
+         ++isrc) {
+      for (size_t ibatch = 0; ibatch < photon_source.get_number_of_batches(
+                                           isrc, PHOTONBUFFER_SIZE);
+           ++ibatch) {
+        const size_t new_task = _tasks->get_free_element();
+        (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
+        (*_tasks)[new_task].set_subgrid(photon_source.get_subgrid(isrc));
+        (*_tasks)[new_task].set_buffer(isrc);
+        _shared_queue->add_task(new_task);
+      }
     }
-    _shared_queue->add_tasks(0, 5000);
 
     bool global_run_flag = true;
     const uint_fast32_t num_empty_target =
@@ -414,28 +421,23 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
             num_active_buffers.pre_increment();
-            uint_fast32_t num_photon_this_loop = task.get_buffer();
+            const size_t source_index = task.get_buffer();
+            const size_t subgrid_index = task.get_subgrid();
+
+            const size_t num_photon_this_loop =
+                photon_source.get_photon_batch(source_index, PHOTONBUFFER_SIZE);
 
             // get a free photon buffer in the central queue
             uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
             PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
-            // assign the buffer to a random thread that has a copy of the
-            // subgrid that contains the source position. This should ensure
-            // a balanced load for these threads.
-            uint_fast32_t which_central_index =
-                _random_generators[thread_id].get_uniform_random_double() *
-                central_indices.size();
-            cmac_assert_message(which_central_index >= 0 &&
-                                    which_central_index <
-                                        central_indices.size(),
-                                "index: %" PRIuFAST32, which_central_index);
-            uint_fast32_t this_central_index =
-                central_indices[which_central_index];
 
             // set general buffer information
             input_buffer.grow(num_photon_this_loop);
-            input_buffer.set_subgrid_index(this_central_index);
+            input_buffer.set_subgrid_index(subgrid_index);
             input_buffer.set_direction(TRAVELDIRECTION_INSIDE);
+
+            const CoordinateVector<> source_position =
+                photon_source.get_position(source_index);
 
             // draw random photons and store them in the buffer
             for (uint_fast32_t i = 0; i < num_photon_this_loop; ++i) {
@@ -444,7 +446,8 @@ void TaskBasedIonizationSimulation::run(
 
               // initial position: we currently assume a single source at the
               // origin
-              photon.set_position(0., 0., 0.);
+              photon.set_position(source_position.x(), source_position.y(),
+                                  source_position.z());
 
               // draw two pseudo random numbers
               const double cost = 2. * _random_generators[thread_id]
@@ -480,11 +483,11 @@ void TaskBasedIonizationSimulation::run(
 
             // add to the queue of the corresponding thread
             DensitySubGrid &subgrid =
-                *_grid_creator->get_subgrid(this_central_index);
+                *_grid_creator->get_subgrid(subgrid_index);
             const size_t task_index = _tasks->get_free_element();
             Task &new_task = (*_tasks)[task_index];
             new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-            new_task.set_subgrid(this_central_index);
+            new_task.set_subgrid(subgrid_index);
             new_task.set_buffer(buffer_index);
 
             // add dependency for task:
