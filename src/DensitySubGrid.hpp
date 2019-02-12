@@ -32,6 +32,7 @@
 #include "Cell.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "IonizationVariables.hpp"
 #include "MPITypes.hpp"
 #include "PhotonPacket.hpp"
 #include "ThreadLock.hpp"
@@ -191,6 +192,9 @@ private:
 
   /*! @brief Ionizing intensity estimate for each cell (in m^3). */
   double *_intensity_integral;
+
+  /*! @brief Ionization calculation variables. */
+  IonizationVariables *_ionization_variables;
 
   /*! @brief Cell locks (if active). */
   subgrid_cell_lock_variables();
@@ -548,6 +552,7 @@ public:
     _number_density = new double[tot_ncell];
     _neutral_fraction = new double[tot_ncell];
     _intensity_integral = new double[tot_ncell];
+    _ionization_variables = new IonizationVariables[tot_ncell];
     subgrid_cell_lock_init(tot_ncell);
 
     // initialize data arrays
@@ -591,6 +596,7 @@ public:
     _number_density = new double[tot_ncell];
     _neutral_fraction = new double[tot_ncell];
     _intensity_integral = new double[tot_ncell];
+    _ionization_variables = new IonizationVariables[tot_ncell];
     subgrid_cell_lock_init(tot_ncell);
 
     // copy data arrays
@@ -610,6 +616,7 @@ public:
     delete[] _number_density;
     delete[] _neutral_fraction;
     delete[] _intensity_integral;
+    delete[] _ionization_variables;
     subgrid_cell_lock_destroy();
   }
 
