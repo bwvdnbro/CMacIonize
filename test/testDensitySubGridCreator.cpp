@@ -55,7 +55,8 @@ int main(int argc, char **argv) {
        ++gridit) {
     assert_condition((*gridit).get_number_of_cells() == 32);
     for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
-      cellit.set_neutral_fraction(gridit.get_index());
+      cellit.get_ionization_variables().set_ionic_fraction(ION_H_n,
+                                                           gridit.get_index());
     }
     (*gridit).print_intensities(ofile);
   }
