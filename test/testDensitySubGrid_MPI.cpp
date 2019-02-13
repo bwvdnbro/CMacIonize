@@ -65,14 +65,13 @@ int main(int argc, char **argv) {
   for (uint_fast32_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
     test_grid.set_neighbour(i, random_generator.get_random_integer());
   }
-  const int_fast32_t tot_ncell = ncell[0] * ncell[1] * ncell[2];
-  for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-    test_grid.set_number_density(i,
+  for (auto cellit = test_grid.begin(); cellit != test_grid.end(); ++cellit) {
+    IonizationVariables &variables = cellit.get_ionization_variables();
+    variables.set_number_density(random_generator.get_uniform_random_double());
+    variables.set_ionic_fraction(ION_H_n,
                                  random_generator.get_uniform_random_double());
-    test_grid.set_neutral_fraction(
-        i, random_generator.get_uniform_random_double());
-    test_grid.set_intensity_integral(
-        i, random_generator.get_uniform_random_double());
+    variables.set_mean_intensity(ION_H_n,
+                                 random_generator.get_uniform_random_double());
   }
 
   // now communicate:

@@ -133,6 +133,72 @@ public:
   }
 
   /**
+   * @brief Copy the contents of the given IonizationVariables instance into
+   * this one.
+   *
+   * @param other Other IonizationVariables instance.
+   */
+  inline void copy_all(const IonizationVariables &other) {
+
+    // single variables
+    _number_density = other._number_density;
+    _temperature = other._temperature;
+    _cosmic_ray_factor = other._cosmic_ray_factor;
+
+    // ionic variables
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fractions[i] = other._ionic_fractions[i];
+      _mean_intensity[i] = other._mean_intensity[i];
+#ifdef DO_OUTPUT_COOLING
+      _cooling[i] = other._cooling[i];
+#endif
+    }
+
+    // reemission variables
+    for (int_fast32_t i = 0; i < NUMBER_OF_REEMISSIONPROBABILITIES; ++i) {
+      _reemission_probabilities[i] = other._reemission_probabilities[i];
+    }
+
+    // heating variables
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      _heating[i] = other._heating[i];
+    }
+  }
+
+  /**
+   * @brief Copy the ionic fractions from the given IonizationVariables instance
+   * into this one.
+   *
+   * @param other Other IonizationVariables instance.
+   */
+  inline void copy_ionic_fractions(const IonizationVariables &other) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _ionic_fractions[i] = other._ionic_fractions[i];
+    }
+  }
+
+  /**
+   * @brief Reset all mean intensity counters.
+   */
+  inline void reset_mean_intensities() {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _mean_intensity[i] = 0.;
+    }
+  }
+
+  /**
+   * @brief Add the contributions from the given IonizationVariables instance
+   * for all mean intensity counters.
+   *
+   * @param other Other IonizationVariables instance.
+   */
+  inline void increase_mean_intensities(const IonizationVariables &other) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _mean_intensity[i] += other._mean_intensity[i];
+    }
+  }
+
+  /**
    * @brief Get the number density.
    *
    * @return Number density (in m^-3).

@@ -542,14 +542,6 @@ public:
     const int_fast32_t tot_ncell = _number_of_cells[3] * ncell[0];
     _ionization_variables = new IonizationVariables[tot_ncell];
     subgrid_cell_lock_init(tot_ncell);
-
-    // initialize data arrays
-    for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      // initial density (homogeneous density)
-      _ionization_variables[i].set_number_density(1.e8);
-      _ionization_variables[i].set_ionic_fraction(ION_H_n, 1.e-6);
-      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
-    }
   }
 
   /**
@@ -584,14 +576,7 @@ public:
 
     // copy data arrays
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      _ionization_variables[i].set_number_density(
-          original._ionization_variables[i].get_number_density());
-      _ionization_variables[i].set_ionic_fraction(
-          ION_H_n,
-          original._ionization_variables[i].get_ionic_fraction(ION_H_n));
-      _ionization_variables[i].set_mean_intensity(
-          ION_H_n,
-          original._ionization_variables[i].get_mean_intensity(ION_H_n));
+      _ionization_variables[i].copy_all(original._ionization_variables[i]);
     }
   }
 
@@ -857,10 +842,9 @@ public:
   inline void update_neutral_fractions(const DensitySubGrid &original) {
     const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      _ionization_variables[i].set_ionic_fraction(
-          ION_H_n,
-          original._ionization_variables[i].get_ionic_fraction(ION_H_n));
-      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
+      _ionization_variables[i].copy_ionic_fractions(
+          original._ionization_variables[i]);
+      _ionization_variables[i].reset_mean_intensities();
     }
   }
 
@@ -879,43 +863,9 @@ public:
 
     const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      _ionization_variables[i].increase_mean_intensity(
-          ION_H_n, copy._ionization_variables[i].get_mean_intensity(ION_H_n));
+      _ionization_variables[i].increase_mean_intensities(
+          copy._ionization_variables[i]);
     }
-  }
-
-  /**
-   * @brief Set the number density for the cell with the given index.
-   *
-   * @param index Index of a cell.
-   * @param number_density New value for the number density (in kg m^-3).
-   */
-  inline void set_number_density(const uint_fast32_t index,
-                                 const double number_density) {
-    _ionization_variables[index].set_number_density(number_density);
-  }
-
-  /**
-   * @brief Set the neutral fraction for the cell with the given index.
-   *
-   * @param index Index of a cell.
-   * @param neutral_fraction New value for the neutral fraction.
-   */
-  inline void set_neutral_fraction(const uint_fast32_t index,
-                                   const double neutral_fraction) {
-    _ionization_variables[index].set_ionic_fraction(ION_H_n, neutral_fraction);
-  }
-
-  /**
-   * @brief Set the intensity integral for the cell with the given index.
-   *
-   * @param index Index of a cell.
-   * @param intensity_integral New value for the intensity integral.
-   */
-  inline void set_intensity_integral(const uint_fast32_t index,
-                                     const double intensity_integral) {
-    _ionization_variables[index].set_mean_intensity(ION_H_n,
-                                                    intensity_integral);
   }
 
   /**
@@ -1396,22 +1346,6 @@ public:
   }
 
   /**
-   * @brief Get the intensity integral for the cell with the given indices.
-   *
-   * @param ix X index of the cell.
-   * @param iy Y index of the cell.
-   * @param iz Z index of the cell.
-   * @return Luminosity integral for the cell with the given indices.
-   */
-  inline double get_intensity_integral(const int_fast32_t ix,
-                                       const int_fast32_t iy,
-                                       const int_fast32_t iz) const {
-    const int_fast32_t three_index[3] = {ix, iy, iz};
-    const int_fast32_t index = get_one_index(three_index);
-    return _ionization_variables[index].get_mean_intensity(ION_H_n);
-  }
-
-  /**
    * @brief Update the ionization state for all the cells in this subgrid.
    *
    * @param luminosity Total ionising luminosity of all sources (in s^-1).
@@ -1687,46 +1621,23 @@ public:
     // DensitySubGrid access functionality
 
     /**
-     * @brief Set the number density for the cell the iterator is currently
-     * pointing to.
+     * @brief Get read only access to the ionization variables stored in this
+     * cell.
      *
-     * @param number_density Number density for the cell (in m^-3).
+     * @return Read only access to the ionization variables.
      */
-    inline void set_number_density(const double number_density) {
-      _subgrid->_ionization_variables[_index].set_number_density(
-          number_density);
+    inline const IonizationVariables &get_ionization_variables() const {
+      return _subgrid->_ionization_variables[_index];
     }
 
     /**
-     * @brief Get the number density for the cell the iterator is currently
-     * pointing to.
+     * @brief Get read/write access to the ionization variables stored in this
+     * cell.
      *
-     * @return Number density for the cell (in m^-3).
+     * @return Read/write access to the ionization variables.
      */
-    inline double get_number_density() const {
-      return _subgrid->_ionization_variables[_index].get_number_density();
-    }
-
-    /**
-     * @brief Set the neutral fraction for the cell the iterator is currently
-     * pointing to.
-     *
-     * @param neutral_fraction Neutral fraction for the cell.
-     */
-    inline void set_neutral_fraction(const double neutral_fraction) {
-      _subgrid->_ionization_variables[_index].set_ionic_fraction(
-          ION_H_n, neutral_fraction);
-    }
-
-    /**
-     * @brief Get the neutral fraction for the cell the iterator is currently
-     * pointing to.
-     *
-     * @return Neutral fraction for the cell.
-     */
-    inline double get_neutral_fraction() const {
-      return _subgrid->_ionization_variables[_index].get_ionic_fraction(
-          ION_H_n);
+    inline IonizationVariables &get_ionization_variables() {
+      return _subgrid->_ionization_variables[_index];
     }
 
     // Iterator functionality

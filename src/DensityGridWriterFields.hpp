@@ -454,13 +454,11 @@ public:
                           const InternalHydroUnits *hydro_units = nullptr) {
     switch (field_name) {
     case DENSITYGRIDFIELD_NUMBER_DENSITY:
-      return it.get_number_density();
+      return it.get_ionization_variables().get_number_density();
     case DENSITYGRIDFIELD_TEMPERATURE:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_temperature();
     case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_cosmic_ray_factor();
     case DENSITYGRIDFIELD_DENSITY: {
       if (hydro_units != nullptr) {
         cmac_error("Not implemented yet!");
@@ -644,24 +642,16 @@ public:
                               const int_fast32_t ion_name,
                               const DensitySubGrid::iterator &it) {
 
-    if (field_name == DENSITYGRIDFIELD_NEUTRAL_FRACTION &&
-        ion_name == ION_H_n) {
-      return it.get_neutral_fraction();
-    }
-
     switch (field_name) {
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_ionic_fraction(ion_name);
 #ifdef DO_OUTPUT_COOLING
     case DENSITYGRIDFIELD_COOLING:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_cooling(ion_name);
 #endif
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
     case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_mean_intensity(ion_name);
 #endif
     default:
       cmac_error("Not a scalar ion DensityGridField: %" PRIiFAST32, field_name);
@@ -710,8 +700,7 @@ public:
     switch (field_name) {
 #ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:
-      cmac_error("Not implemented yet!");
-      return 0.;
+      return it.get_ionization_variables().get_heating(heating_property_name);
 #endif
     default:
       cmac_error("Not a scalar heating property DensityGridField: %" PRIiFAST32,
