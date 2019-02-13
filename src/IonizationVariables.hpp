@@ -114,6 +114,7 @@ public:
   inline IonizationVariables()
       : _number_density(0.), _temperature(0.), _cosmic_ray_factor(-1.),
         _tracker(nullptr) {
+
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
@@ -143,7 +144,7 @@ public:
    *
    * @param number_density New number density (in m^-3).
    */
-  inline void set_number_density(double number_density) {
+  inline void set_number_density(const double number_density) {
     _number_density = number_density;
   }
 
@@ -159,7 +160,7 @@ public:
    *
    * @param temperature New temperature (in K).
    */
-  inline void set_temperature(double temperature) {
+  inline void set_temperature(const double temperature) {
     _temperature = temperature;
   }
 
@@ -169,7 +170,7 @@ public:
    * @param ion IonName.
    * @return Ionic fraction of that ion.
    */
-  inline double get_ionic_fraction(int_fast32_t ion) const {
+  inline double get_ionic_fraction(const int_fast32_t ion) const {
     return _ionic_fractions[ion];
   }
 
@@ -179,7 +180,8 @@ public:
    * @param ion IonName.
    * @param ionic_fraction New ionic fraction for that ion.
    */
-  inline void set_ionic_fraction(int_fast32_t ion, double ionic_fraction) {
+  inline void set_ionic_fraction(const int_fast32_t ion,
+                                 const double ionic_fraction) {
     _ionic_fractions[ion] = ionic_fraction;
   }
 
@@ -190,7 +192,7 @@ public:
    * @return Mean intensity integral for that ion (without normalization factor,
    * in m^3).
    */
-  inline double get_mean_intensity(int_fast32_t ion) const {
+  inline double get_mean_intensity(const int_fast32_t ion) const {
     return _mean_intensity[ion];
   }
 
@@ -201,7 +203,8 @@ public:
    * @param mean_intensity New value for the mean intensity integral for that
    * ion (without normalization factor, in m^3).
    */
-  inline void set_mean_intensity(int_fast32_t ion, double mean_intensity) {
+  inline void set_mean_intensity(const int_fast32_t ion,
+                                 const double mean_intensity) {
     _mean_intensity[ion] = mean_intensity;
   }
 
@@ -212,7 +215,8 @@ public:
    * @param ion IonName.
    * @param increment Increment (without normalization factor, in m^3).
    */
-  inline void increase_mean_intensity(int_fast32_t ion, double increment) {
+  inline void increase_mean_intensity(const int_fast32_t ion,
+                                      const double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_mean_intensity[ion], increment);
 #else
@@ -226,7 +230,7 @@ public:
    * @param name ReemissionProbabilityName.
    * @return Probability for reemission in that specific channel.
    */
-  inline double get_reemission_probability(int_fast32_t name) const {
+  inline double get_reemission_probability(const int_fast32_t name) const {
     return _reemission_probabilities[name];
   }
 
@@ -237,8 +241,8 @@ public:
    * @param reemission_probability New reemission probability for that specific
    * channel.
    */
-  inline void set_reemission_probability(int_fast32_t name,
-                                         double reemission_probability) {
+  inline void set_reemission_probability(const int_fast32_t name,
+                                         const double reemission_probability) {
     _reemission_probabilities[name] = reemission_probability;
   }
 
@@ -248,7 +252,9 @@ public:
    * @param name HeatingTermName.
    * @return Heating term (without normalization factor, in m^3 s^-1).
    */
-  inline double get_heating(int_fast32_t name) const { return _heating[name]; }
+  inline double get_heating(const int_fast32_t name) const {
+    return _heating[name];
+  }
 
   /**
    * @brief Set the heating term with the given name.
@@ -257,7 +263,7 @@ public:
    * @param heating New value for the heating term (without normalization
    * factor, in m^3 s^-1).
    */
-  inline void set_heating(int_fast32_t name, double heating) {
+  inline void set_heating(const int_fast32_t name, const double heating) {
     _heating[name] = heating;
   }
 
@@ -267,7 +273,8 @@ public:
    * @param name HeatingTermName.
    * @param increment Increment (without normalization factor, in m^3 s^-1).
    */
-  inline void increase_heating(int_fast32_t name, double increment) {
+  inline void increase_heating(const int_fast32_t name,
+                               const double increment) {
 #ifdef USE_LOCKFREE
     Atomic::add(_heating[name], increment);
 #else
@@ -282,7 +289,9 @@ public:
    * @param ion IonName.
    * @return Cooling rate (in J s^-1).
    */
-  inline double get_cooling(int_fast32_t ion) const { return _cooling[ion]; }
+  inline double get_cooling(const int_fast32_t ion) const {
+    return _cooling[ion];
+  }
 
   /**
    * @brief Set the cooling rate for the ion with the given name.
@@ -290,7 +299,7 @@ public:
    * @param ion IonName.
    * @param cooling Cooling rate (in J s^-1).
    */
-  inline void set_cooling(int_fast32_t ion, double cooling) {
+  inline void set_cooling(const int_fast32_t ion, const double cooling) {
     _cooling[ion] = cooling;
   }
 #endif
@@ -307,7 +316,7 @@ public:
    *
    * @param cosmic_ray_factor Cosmic ray heating factor (in kg m A^-1 s^-4).
    */
-  inline void set_cosmic_ray_factor(double cosmic_ray_factor) {
+  inline void set_cosmic_ray_factor(const double cosmic_ray_factor) {
     _cosmic_ray_factor = cosmic_ray_factor;
   }
 

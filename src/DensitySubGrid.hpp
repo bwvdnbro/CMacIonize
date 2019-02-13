@@ -184,15 +184,6 @@ private:
 
   /// PHOTOIONIZATION VARIABLES
 
-  /*! @brief Number density for each cell (in m^-3). */
-  double *_number_density;
-
-  /*! @brief Neutral fraction of hydrogen for each cell. */
-  double *_neutral_fraction;
-
-  /*! @brief Ionizing intensity estimate for each cell (in m^3). */
-  double *_intensity_integral;
-
   /*! @brief Ionization calculation variables. */
   IonizationVariables *_ionization_variables;
 
@@ -549,20 +540,15 @@ public:
 
     // allocate memory for data arrays
     const int_fast32_t tot_ncell = _number_of_cells[3] * ncell[0];
-    _number_density = new double[tot_ncell];
-    _neutral_fraction = new double[tot_ncell];
-    _intensity_integral = new double[tot_ncell];
     _ionization_variables = new IonizationVariables[tot_ncell];
     subgrid_cell_lock_init(tot_ncell);
 
     // initialize data arrays
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
       // initial density (homogeneous density)
-      _number_density[i] = 1.e8;
-      // initial neutral fraction (low value, to allow radiation to effectively
-      // cover the entire volume initially)
-      _neutral_fraction[i] = 1.e-6;
-      _intensity_integral[i] = 0.;
+      _ionization_variables[i].set_number_density(1.e8);
+      _ionization_variables[i].set_ionic_fraction(ION_H_n, 1.e-6);
+      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
     }
   }
 
@@ -593,18 +579,19 @@ public:
 #endif
 
     const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
-    _number_density = new double[tot_ncell];
-    _neutral_fraction = new double[tot_ncell];
-    _intensity_integral = new double[tot_ncell];
     _ionization_variables = new IonizationVariables[tot_ncell];
     subgrid_cell_lock_init(tot_ncell);
 
     // copy data arrays
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      // initial density (homogeneous density)
-      _number_density[i] = original._number_density[i];
-      _neutral_fraction[i] = original._neutral_fraction[i];
-      _intensity_integral[i] = 0.;
+      _ionization_variables[i].set_number_density(
+          original._ionization_variables[i].get_number_density());
+      _ionization_variables[i].set_ionic_fraction(
+          ION_H_n,
+          original._ionization_variables[i].get_ionic_fraction(ION_H_n));
+      _ionization_variables[i].set_mean_intensity(
+          ION_H_n,
+          original._ionization_variables[i].get_mean_intensity(ION_H_n));
     }
   }
 
@@ -613,9 +600,6 @@ public:
    */
   inline ~DensitySubGrid() {
     // deallocate data arrays
-    delete[] _number_density;
-    delete[] _neutral_fraction;
-    delete[] _intensity_integral;
     delete[] _ionization_variables;
     subgrid_cell_lock_destroy();
   }
@@ -627,16 +611,6 @@ public:
    */
   inline size_t get_number_of_cells() const {
     return _number_of_cells[0] * _number_of_cells[3];
-  }
-
-  /**
-   * @brief Get a read-only access pointer to the neutral fractions stored in
-   * this subgrid.
-   *
-   * @return Read-only pointer to the neutral fractions.
-   */
-  inline const double *get_neutral_fraction() const {
-    return _neutral_fraction;
   }
 
   /**
@@ -815,12 +789,14 @@ public:
 
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
-    MPI_Pack(_number_density, tot_num_cells, MPI_DOUBLE, buffer, buffer_size,
-             &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_neutral_fraction, tot_num_cells, MPI_DOUBLE, buffer, buffer_size,
-             &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_intensity_integral, tot_num_cells, MPI_DOUBLE, buffer,
-             buffer_size, &buffer_position, MPI_COMM_WORLD);
+    for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      const double vals[3] = {
+          _ionization_variables[i].get_number_density(),
+          _ionization_variables[i].get_ionic_fraction(ION_H_n),
+          _ionization_variables[i].get_mean_intensity(ION_H_n)};
+      MPI_Pack(vals, 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
+               MPI_COMM_WORLD);
+    }
   }
 
   /**
@@ -859,19 +835,17 @@ public:
       _number_of_cells[1] = new_number_of_cells[1];
       _number_of_cells[2] = new_number_of_cells[2];
       _number_of_cells[3] = new_number_of_cells[3];
-      delete[] _number_density;
-      delete[] _neutral_fraction;
-      delete[] _intensity_integral;
-      _number_density = new double[tot_num_cells];
-      _neutral_fraction = new double[tot_num_cells];
-      _intensity_integral = new double[tot_num_cells];
+      delete[] _ionization_variables;
+      _ionization_variables = new IonizationVariables[tot_num_cells];
     }
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _number_density,
-               tot_num_cells, MPI_DOUBLE, MPI_COMM_WORLD);
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _neutral_fraction,
-               tot_num_cells, MPI_DOUBLE, MPI_COMM_WORLD);
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _intensity_integral,
-               tot_num_cells, MPI_DOUBLE, MPI_COMM_WORLD);
+    for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      double vals[3];
+      MPI_Unpack(buffer, buffer_size, &buffer_position, vals, 3, MPI_DOUBLE,
+                 MPI_COMM_WORLD);
+      _ionization_variables[i].set_number_density(vals[0]);
+      _ionization_variables[i].set_ionic_fraction(ION_H_n, vals[1]);
+      _ionization_variables[i].set_mean_intensity(ION_H_n, vals[2]);
+    }
   }
 #endif
 
@@ -883,8 +857,10 @@ public:
   inline void update_neutral_fractions(const DensitySubGrid &original) {
     const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      _neutral_fraction[i] = original._neutral_fraction[i];
-      _intensity_integral[i] = 0.;
+      _ionization_variables[i].set_ionic_fraction(
+          ION_H_n,
+          original._ionization_variables[i].get_ionic_fraction(ION_H_n));
+      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
     }
   }
 
@@ -903,7 +879,8 @@ public:
 
     const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
-      _intensity_integral[i] += copy._intensity_integral[i];
+      _ionization_variables[i].increase_mean_intensity(
+          ION_H_n, copy._ionization_variables[i].get_mean_intensity(ION_H_n));
     }
   }
 
@@ -915,7 +892,7 @@ public:
    */
   inline void set_number_density(const uint_fast32_t index,
                                  const double number_density) {
-    _number_density[index] = number_density;
+    _ionization_variables[index].set_number_density(number_density);
   }
 
   /**
@@ -926,7 +903,7 @@ public:
    */
   inline void set_neutral_fraction(const uint_fast32_t index,
                                    const double neutral_fraction) {
-    _neutral_fraction[index] = neutral_fraction;
+    _ionization_variables[index].set_ionic_fraction(ION_H_n, neutral_fraction);
   }
 
   /**
@@ -937,7 +914,8 @@ public:
    */
   inline void set_intensity_integral(const uint_fast32_t index,
                                      const double intensity_integral) {
-    _intensity_integral[index] = intensity_integral;
+    _ionization_variables[index].set_mean_intensity(ION_H_n,
+                                                    intensity_integral);
   }
 
   /**
@@ -1069,8 +1047,9 @@ public:
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau = lminsigma * _number_density[active_cell] *
-                         _neutral_fraction[active_cell];
+      const double tau =
+          lminsigma * _ionization_variables[active_cell].get_number_density() *
+          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
       tau_done += tau;
       // check if the target optical depth was reached
       if (tau_done >= tau_target) {
@@ -1089,7 +1068,8 @@ public:
       }
       // add the pathlength to the intensity counter
       subgrid_cell_lock_lock(active_cell);
-      _intensity_integral[active_cell] += lminsigma * photon_weight;
+      _ionization_variables[active_cell].increase_mean_intensity(
+          ION_H_n, lminsigma * photon_weight);
       subgrid_cell_lock_unlock(active_cell);
       // update the photon position
       // we use the complicated syntax below to make sure the positions we
@@ -1224,8 +1204,9 @@ public:
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau = lminsigma * _number_density[active_cell] *
-                         _neutral_fraction[active_cell];
+      const double tau =
+          lminsigma * _ionization_variables[active_cell].get_number_density() *
+          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
       tau_done += tau;
       // check if the target optical depth was reached
       if (tau_done >= tau_target) {
@@ -1372,8 +1353,9 @@ public:
 
       double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau = lminsigma * _number_density[active_cell] *
-                         _neutral_fraction[active_cell];
+      const double tau =
+          lminsigma * _ionization_variables[active_cell].get_number_density() *
+          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
       tau_done += tau;
       // photon leaves cell
       // update three_index
@@ -1426,7 +1408,7 @@ public:
                                        const int_fast32_t iz) const {
     const int_fast32_t three_index[3] = {ix, iy, iz};
     const int_fast32_t index = get_one_index(three_index);
-    return _intensity_integral[index];
+    return _ionization_variables[index].get_mean_intensity(ION_H_n);
   }
 
   /**
@@ -1451,20 +1433,22 @@ public:
     // compute the balance for each cell
     for (int_fast32_t i = 0; i < ncell_tot; ++i) {
       // normalize the intensity estimate
-      const double jH = jfac * _intensity_integral[i];
+      const double jH =
+          jfac * _ionization_variables[i].get_mean_intensity(ION_H_n);
       // if the intensity was non-zero: solve the balance equation
       if (jH > 0.) {
-        const double ntot = _number_density[i];
+        const double ntot = _ionization_variables[i].get_number_density();
         const double aa = 0.5 * jH / (ntot * alphaH);
         const double bb = 2. / aa;
         const double cc = std::sqrt(bb + 1.);
-        _neutral_fraction[i] = 1. + aa * (1. - cc);
+        _ionization_variables[i].set_ionic_fraction(ION_H_n,
+                                                    1. + aa * (1. - cc));
       } else {
         // if there was no ionizing radiation, the cell is trivially neutral
-        _neutral_fraction[i] = 1.;
+        _ionization_variables[i].set_ionic_fraction(ION_H_n, 1.);
       }
       // reset the intensity for the next loop
-      _intensity_integral[i] = 0.;
+      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
     }
   }
 
@@ -1484,7 +1468,8 @@ public:
           const int_fast32_t three_index[3] = {ix, iy, iz};
           const int_fast32_t index = get_one_index(three_index);
           stream << pos_x << "\t" << pos_y << "\t" << pos_z << "\t"
-                 << _neutral_fraction[index] << "\t" << _number_density[index]
+                 << _ionization_variables[index].get_ionic_fraction(ION_H_n)
+                 << "\t" << _ionization_variables[index].get_number_density()
                  << "\n";
         }
       }
@@ -1510,10 +1495,10 @@ public:
           stream.write(reinterpret_cast< char * >(&pos_x), sizeof(double));
           stream.write(reinterpret_cast< char * >(&pos_y), sizeof(double));
           stream.write(reinterpret_cast< char * >(&pos_z), sizeof(double));
-          stream.write(reinterpret_cast< char * >(&_neutral_fraction[index]),
-                       sizeof(double));
-          stream.write(reinterpret_cast< char * >(&_number_density[index]),
-                       sizeof(double));
+          double xH = _ionization_variables[index].get_ionic_fraction(ION_H_n);
+          stream.write(reinterpret_cast< char * >(&xH), sizeof(double));
+          double nH = _ionization_variables[index].get_number_density();
+          stream.write(reinterpret_cast< char * >(&nH), sizeof(double));
         }
       }
     }
@@ -1616,13 +1601,18 @@ public:
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
-      cmac_assert_message(_number_density[i] == other._number_density[i],
-                          "Number density not the same!");
-      cmac_assert_message(_neutral_fraction[i] == other._neutral_fraction[i],
-                          "Neutral fraction not the same!");
-      cmac_assert_message(_intensity_integral[i] ==
-                              other._intensity_integral[i],
-                          "Intensity integral not the same!");
+      cmac_assert_message(
+          _ionization_variables[i].get_number_density() ==
+              other._ionization_variables[i].get_number_density(),
+          "Number density not the same!");
+      cmac_assert_message(
+          _ionization_variables[i].get_ionic_fraction(ION_H_n) ==
+              other._ionization_variables[i].get_ionic_fraction(ION_H_n),
+          "Neutral fraction not the same!");
+      cmac_assert_message(
+          _ionization_variables[i].get_mean_intensity(ION_H_n) ==
+              other._ionization_variables[i].get_mean_intensity(ION_H_n),
+          "Intensity integral not the same!");
     }
   }
 
@@ -1703,7 +1693,8 @@ public:
      * @param number_density Number density for the cell (in m^-3).
      */
     inline void set_number_density(const double number_density) {
-      _subgrid->_number_density[_index] = number_density;
+      _subgrid->_ionization_variables[_index].set_number_density(
+          number_density);
     }
 
     /**
@@ -1713,7 +1704,7 @@ public:
      * @return Number density for the cell (in m^-3).
      */
     inline double get_number_density() const {
-      return _subgrid->_number_density[_index];
+      return _subgrid->_ionization_variables[_index].get_number_density();
     }
 
     /**
@@ -1723,7 +1714,8 @@ public:
      * @param neutral_fraction Neutral fraction for the cell.
      */
     inline void set_neutral_fraction(const double neutral_fraction) {
-      _subgrid->_neutral_fraction[_index] = neutral_fraction;
+      _subgrid->_ionization_variables[_index].set_ionic_fraction(
+          ION_H_n, neutral_fraction);
     }
 
     /**
@@ -1733,7 +1725,8 @@ public:
      * @return Neutral fraction for the cell.
      */
     inline double get_neutral_fraction() const {
-      return _subgrid->_neutral_fraction[_index];
+      return _subgrid->_ionization_variables[_index].get_ionic_fraction(
+          ION_H_n);
     }
 
     // Iterator functionality
