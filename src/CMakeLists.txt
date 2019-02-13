@@ -294,6 +294,7 @@ endif(HAVE_MPI)
 
 set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
+    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AtomicValue.hpp
     CMacIonizeSnapshotDensityFunction.cpp
