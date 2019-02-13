@@ -121,15 +121,17 @@ public:
 
   static void compute_cooling_and_heating_balance(
       double &h0, double &he0, double &gain, double &loss, double T,
-      DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
-      const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
-      double pahfac, double crfac, double crscale,
-      const LineCoolingData &line_cooling_data,
+      IonizationVariables &ionization_variables,
+      const CoordinateVector<> cell_midpoint,
+      const double j[NUMBER_OF_IONNAMES], const Abundances &abundances,
+      const double h[NUMBER_OF_HEATINGTERMS], double pahfac, double crfac,
+      double crscale, const LineCoolingData &line_cooling_data,
       const RecombinationRates &recombination_rates,
       const ChargeTransferRates &charge_transfer_rates);
 
-  void calculate_temperature(double jfac, double hfac,
-                             DensityGrid::iterator &cell) const;
+  void calculate_temperature(IonizationVariables &ionization_variables,
+                             const double jfac, const double hfac,
+                             const CoordinateVector<> cell_midpoint) const;
 
   /**
    * @brief Update the total luminosity of the sources.
@@ -182,14 +184,18 @@ public:
      * @param cell DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(DensityGrid::iterator cell) {
-      _calculator.calculate_temperature(_jfac / cell.get_volume(),
-                                        _hfac / cell.get_volume(), cell);
+      _calculator.calculate_temperature(
+          cell.get_ionization_variables(), _jfac / cell.get_volume(),
+          _hfac / cell.get_volume(), cell.get_cell_midpoint());
     }
   };
 
   void calculate_temperature(uint_fast32_t loop, double totweight,
                              DensityGrid &grid,
                              std::pair< cellsize_t, cellsize_t > &block) const;
+
+  void calculate_temperature(const uint_fast32_t loop, const double totweight,
+                             DensitySubGrid &subgrid) const;
 };
 
 #endif // TEMPERATURECALCULATOR_HPP

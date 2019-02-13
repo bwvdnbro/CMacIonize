@@ -26,6 +26,7 @@
 
 #include "Assert.hpp"
 #include "DensitySubGrid.hpp"
+#include "IonizationStateCalculator.hpp"
 #include "RandomGenerator.hpp"
 
 #include <fstream>
@@ -45,6 +46,11 @@ int main(int argc, char **argv) {
   DensitySubGrid grid(box, ncell);
   RandomGenerator random_generator(42);
 
+  for (auto cellit = grid.begin(); cellit != grid.end(); ++cellit) {
+    cellit.get_ionization_variables().set_number_density(1.e8);
+    cellit.get_ionization_variables().set_ionic_fraction(ION_H_n, 1.e-6);
+  }
+
   for (uint_fast32_t iloop = 0; iloop < 10; ++iloop) {
     for (uint_fast32_t i = 0; i < 1e5; ++i) {
       PhotonPacket photon;
@@ -63,7 +69,7 @@ int main(int argc, char **argv) {
       const double tau =
           -std::log(random_generator.get_uniform_random_double());
 
-      photon.set_position(0.5, 0.5, 0.5);
+      photon.set_position(0., 0., 0.);
       photon.set_direction(dx, dy, dz);
       photon.set_photoionization_cross_section(6.3e-22);
       photon.set_weight(1.);
@@ -72,7 +78,18 @@ int main(int argc, char **argv) {
       grid.interact(photon, TRAVELDIRECTION_INSIDE);
     }
 
-    grid.compute_neutral_fraction(1.e49, 1e5);
+    for (auto cellit = grid.begin(); cellit != grid.end(); ++cellit) {
+      const double jH =
+          (1.e49 / (1.e5 * cellit.get_volume())) *
+          cellit.get_ionization_variables().get_mean_intensity(ION_H_n);
+      const double alphaH = 4.e-19;
+      const double nH = cellit.get_ionization_variables().get_number_density();
+      const double xH =
+          IonizationStateCalculator::compute_ionization_state_hydrogen(alphaH,
+                                                                       jH, nH);
+      cellit.get_ionization_variables().set_ionic_fraction(ION_H_n, xH);
+      cellit.get_ionization_variables().reset_mean_intensities();
+    }
   }
 
   std::ofstream ofile("testDensitySubGrid_output.txt");

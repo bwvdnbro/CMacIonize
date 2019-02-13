@@ -1346,47 +1346,6 @@ public:
   }
 
   /**
-   * @brief Update the ionization state for all the cells in this subgrid.
-   *
-   * @param luminosity Total ionising luminosity of all sources (in s^-1).
-   * @param num_photon Total number of photon packets that was used, used to
-   * normalize the intensity estimates.
-   */
-  inline void compute_neutral_fraction(const double luminosity,
-                                       const uint_fast32_t num_photon) {
-    // compute the normalization factor:
-    // constant source luminosity / number of packets / cell volume
-    // if we multiply this with the intensity estimates (unit: m^3), we get a
-    // quantity in s^-1
-    const double jfac = luminosity / num_photon * _inv_cell_size[0] *
-                        _inv_cell_size[1] * _inv_cell_size[2];
-    // constant recombination rate
-    const double alphaH = 4.e-19;
-    // total number of cells in the subgrid
-    const int_fast32_t ncell_tot = _number_of_cells[0] * _number_of_cells[3];
-    // compute the balance for each cell
-    for (int_fast32_t i = 0; i < ncell_tot; ++i) {
-      // normalize the intensity estimate
-      const double jH =
-          jfac * _ionization_variables[i].get_mean_intensity(ION_H_n);
-      // if the intensity was non-zero: solve the balance equation
-      if (jH > 0.) {
-        const double ntot = _ionization_variables[i].get_number_density();
-        const double aa = 0.5 * jH / (ntot * alphaH);
-        const double bb = 2. / aa;
-        const double cc = std::sqrt(bb + 1.);
-        _ionization_variables[i].set_ionic_fraction(ION_H_n,
-                                                    1. + aa * (1. - cc));
-      } else {
-        // if there was no ionizing radiation, the cell is trivially neutral
-        _ionization_variables[i].set_ionic_fraction(ION_H_n, 1.);
-      }
-      // reset the intensity for the next loop
-      _ionization_variables[i].set_mean_intensity(ION_H_n, 0.);
-    }
-  }
-
-  /**
    * @brief Print the neutral fractions to the given ASCII stream.
    *
    * @param stream std::ostream to write to.

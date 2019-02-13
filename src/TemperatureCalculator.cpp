@@ -29,12 +29,14 @@
 #include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "DensitySubGrid.hpp"
 #include "DensityValues.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "PhysicalConstants.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+
 #include <cinttypes>
 #include <cmath>
 
@@ -177,8 +179,10 @@ TemperatureCalculator::TemperatureCalculator(
  * @param gain Total energy gain due to heating.
  * @param loss Total energy loss due to cooling.
  * @param T Temperature (in K).
- * @param cell Cell for which we compute the ionization equilibrium and cooling
- * and heating.
+ * @param ionization_variables Ionization variables for the cell for which we
+ * compute the balance.
+ * @param cell_midpoint Midpoint of the cell for which we compute the ionization
+ * equilibrium and cooling and heating.
  * @param j Mean ionizing intensity integrals (in s^-1).
  * @param abundances Abundances.
  * @param h Heating integrals (in J s^-1).
@@ -194,7 +198,8 @@ TemperatureCalculator::TemperatureCalculator(
  */
 void TemperatureCalculator::compute_cooling_and_heating_balance(
     double &h0, double &he0, double &gain, double &loss, double T,
-    DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
+    IonizationVariables &ionization_variables,
+    const CoordinateVector<> cell_midpoint, const double j[NUMBER_OF_IONNAMES],
     const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
     double pahfac, double crfac, double crscale,
     const LineCoolingData &line_cooling_data,
@@ -202,11 +207,6 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
     const ChargeTransferRates &charge_transfer_rates) {
 
   /// step 0: initialize some variables
-
-  // get a reference to the ionization variables of the cell
-  // this will be used to set the ionic fractions of the coolants, and to get
-  // access to the number density
-  IonizationVariables &ionization_variables = cell.get_ionization_variables();
 
   // get the recombination rates of all elements at the selected temperature
   const double alphaH = recombination_rates.get_recombination_rate(ION_H_n, T);
@@ -294,7 +294,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   if (crfac > 0.) {
     heatcr = crfac * 1.2e-25 / std::sqrt(ne);
     if (crscale > 0.) {
-      heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+      heatcr *= std::exp(-std::abs(cell_midpoint.z()) / crscale);
     }
   }
   gain += heatcr;
@@ -498,14 +498,15 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
  * is zero or negative. We therefore make sure that our heating/cooling is never
  * negative, and add extra code to handle a zero heating/cooling term.
  *
+ * @param ionization_variables Ionization variables of the cell we are working
+ * on.
  * @param jfac Normalization factor for the mean intensity integrals.
  * @param hfac Normalization factor for the heating integrals.
- * @param cell DensityGrid::iterator pointing to a cell.
+ * @param cell_midpoint Midpoint of the cell we are working on.
  */
 void TemperatureCalculator::calculate_temperature(
-    double jfac, double hfac, DensityGrid::iterator &cell) const {
-
-  IonizationVariables &ionization_variables = cell.get_ionization_variables();
+    IonizationVariables &ionization_variables, const double jfac,
+    const double hfac, const CoordinateVector<> cell_midpoint) const {
 
   // if the ionizing intensity is 0, the gas is trivially neutral and all
   // coolants are in the ground state
@@ -620,23 +621,23 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     compute_cooling_and_heating_balance(
-        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h01, he01, gain1, loss1, T1, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     const double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     compute_cooling_and_heating_balance(
-        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h02, he02, gain2, loss2, T2, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     compute_cooling_and_heating_balance(
-        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h0, he0, gain0, loss0, T0, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     // funny detail: this value is actually constant :p
     static const double logtt = std::log(1.1 / 0.9);
@@ -828,5 +829,37 @@ void TemperatureCalculator::calculate_temperature(
   } else {
     _ionization_state_calculator.calculate_ionization_state(totweight, grid,
                                                             block);
+  }
+}
+
+/**
+ * @brief Calculate the temperature and ionization balance for all cells in the
+ * given subgrid.
+ *
+ * @param loop Iteration number.
+ * @param totweight Total weight of all photon packets.
+ * @param subgrid DensitySubGrid to operate on.
+ */
+void TemperatureCalculator::calculate_temperature(
+    const uint_fast32_t loop, const double totweight,
+    DensitySubGrid &subgrid) const {
+
+  if (_do_temperature_computation && loop > _minimum_iteration_number) {
+    // get the normalization factors for the ionizing intensity and heating
+    // integrals (they depend on the total weight of the photons)
+    const double jfac = _luminosity / totweight;
+    // the integral calculation uses the photon frequency (in Hz)
+    // we want to convert this to the photon energy (in Joule)
+    // we do this by multiplying with the Planck constant (in Js)
+    const double hfac = jfac * PhysicalConstants::get_physical_constant(
+                                   PHYSICALCONSTANT_PLANCK);
+    for (auto cellit = subgrid.begin(); cellit != subgrid.end(); ++cellit) {
+      calculate_temperature(
+          cellit.get_ionization_variables(), jfac / cellit.get_volume(),
+          hfac / cellit.get_volume(), cellit.get_cell_midpoint());
+      cellit.get_ionization_variables().reset_mean_intensities();
+    }
+  } else {
+    _ionization_state_calculator.calculate_ionization_state(totweight, subgrid);
   }
 }
