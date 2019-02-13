@@ -323,8 +323,10 @@ public:
       _subgrids[i]->set_owning_thread(omp_get_thread_num());
       for (auto it = _subgrids[i]->begin(); it != _subgrids[i]->end(); ++it) {
         DensityValues values = density_function(it);
-        it.set_number_density(values.get_number_density());
-        it.set_neutral_fraction(values.get_ionic_fraction(ION_H_n));
+        it.get_ionization_variables().set_number_density(
+            values.get_number_density());
+        it.get_ionization_variables().set_ionic_fraction(
+            ION_H_n, values.get_ionic_fraction(ION_H_n));
       }
     }
   }

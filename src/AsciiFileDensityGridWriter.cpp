@@ -119,8 +119,9 @@ void AsciiFileDensityGridWriter::write(DensitySubGridCreator &grid_creator,
        gridit != grid_creator.original_end(); ++gridit) {
     for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
       const CoordinateVector<> x = cellit.get_cell_midpoint();
-      const double n = cellit.get_number_density();
-      const double xH = cellit.get_neutral_fraction();
+      const double n = cellit.get_ionization_variables().get_number_density();
+      const double xH =
+          cellit.get_ionization_variables().get_ionic_fraction(ION_H_n);
       const double volume = cellit.get_volume();
       file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t"
            << volume << "\t" << xH << "\n";
