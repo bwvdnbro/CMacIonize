@@ -60,3 +60,20 @@ DensityGridWriter:
   type: AsciiFile
   # prefix to add to output files
   prefix: test_taskbasedionizationsimulation
+
+RecombinationRates:
+  type: FixedValue
+  hydrogen_1: 4.e-13 cm^3 s^-1
+  helium_1: 0. m^3 s^-1
+  carbon_2: 0. m^3 s^-1
+  carbon_3: 0. m^3 s^-1
+  nitrogen_1: 0. m^3 s^-1
+  nitrogen_2: 0. m^3 s^-1
+  nitrogen_3: 0. m^3 s^-1
+  oxygen_1: 0. m^3 s^-1
+  oxygen_2: 0. m^3 s^-1
+  neon_1: 0. m^3 s^-1
+  neon_2: 0. m^3 s^-1
+  sulphur_2: 0. m^3 s^-1
+  sulphur_3: 0. m^3 s^-1
+  sulphur_4: 0. m^3 s^-1

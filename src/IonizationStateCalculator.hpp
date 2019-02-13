@@ -31,6 +31,7 @@
 
 class Abundances;
 class ChargeTransferRates;
+class DensitySubGrid;
 class RecombinationRates;
 
 /**
@@ -58,12 +59,14 @@ private:
   const ChargeTransferRates &_charge_transfer_rates;
 
 public:
-  IonizationStateCalculator(double luminosity, const Abundances &abundances,
+  IonizationStateCalculator(const double luminosity,
+                            const Abundances &abundances,
                             const RecombinationRates &recombination_rates,
                             const ChargeTransferRates &charge_transfer_rates);
 
-  void calculate_ionization_state(double jfac,
-                                  DensityGrid::iterator &cell) const;
+  void
+  calculate_ionization_state(const double jfac,
+                             IonizationVariables &ionization_variables) const;
 
   /**
    * @brief Update the total luminosity of the sources.
@@ -82,11 +85,13 @@ public:
       IonizationVariables &ionization_variables);
 
   static void compute_ionization_states_hydrogen_helium(
-      double alphaH, double alphaHe, double jH, double jHe, double nH,
-      double AHe, double T, double &h0, double &he0);
+      const double alphaH, const double alphaHe, const double jH,
+      const double jHe, const double nH, const double AHe, const double T,
+      double &h0, double &he0);
 
-  static double compute_ionization_state_hydrogen(double alphaH, double jH,
-                                                  double nH);
+  static double compute_ionization_state_hydrogen(const double alphaH,
+                                                  const double jH,
+                                                  const double nH);
 
   /**
    * @brief Functor used to calculate the ionization state of a single cell.
@@ -110,7 +115,7 @@ public:
      * call.
      */
     IonizationStateCalculatorFunction(
-        const IonizationStateCalculator &calculator, double jfac)
+        const IonizationStateCalculator &calculator, const double jfac)
         : _calculator(calculator), _jfac(jfac) {}
 
     /**
@@ -119,13 +124,17 @@ public:
      * @param cell DensityGrid::iterator pointing to a single cell in the grid.
      */
     inline void operator()(DensityGrid::iterator &cell) {
-      _calculator.calculate_ionization_state(_jfac / cell.get_volume(), cell);
+      _calculator.calculate_ionization_state(_jfac / cell.get_volume(),
+                                             cell.get_ionization_variables());
     }
   };
 
   void
-  calculate_ionization_state(double totweight, DensityGrid &grid,
+  calculate_ionization_state(const double totweight, DensityGrid &grid,
                              std::pair< cellsize_t, cellsize_t > &block) const;
+
+  void calculate_ionization_state(const double totweight,
+                                  DensitySubGrid &subgrid) const;
 };
 
 #endif // IONIZATIONSTATECALCULATOR_HPP

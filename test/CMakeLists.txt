@@ -1439,7 +1439,9 @@ endif(HAVE_OPENMP)
 set(TESTDENSITYSUBGRID_SOURCES
     testDensitySubGrid.cpp
 
+    ../src/ChargeTransferRates.cpp
     ../src/DensitySubGrid.hpp
+    ../src/IonizationStateCalculator.cpp
 )
 add_unit_test(NAME testDensitySubGrid
               SOURCES ${TESTDENSITYSUBGRID_SOURCES}

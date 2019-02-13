@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2016, 2019 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,10 +28,12 @@
 #include "ChargeTransferRates.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "DensitySubGrid.hpp"
 #include "DensityValues.hpp"
 #include "Error.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -58,12 +60,10 @@ IonizationStateCalculator::IonizationStateCalculator(
  *
  * @param jfac Normalization factor for the mean intensity integrals in this
  * cell.
- * @param cell DensityGrid::iterator pointing to a cell.
+ * @param ionization_variables Ionization variables for the cell we operate on.
  */
 void IonizationStateCalculator::calculate_ionization_state(
-    double jfac, DensityGrid::iterator &cell) const {
-
-  IonizationVariables &ionization_variables = cell.get_ionization_variables();
+    const double jfac, IonizationVariables &ionization_variables) const {
 
   // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
@@ -373,7 +373,7 @@ void IonizationStateCalculator::compute_ionization_states_metals(
  * @param block Block that should be traversed by the local MPI process.
  */
 void IonizationStateCalculator::calculate_ionization_state(
-    double totweight, DensityGrid &grid,
+    const double totweight, DensityGrid &grid,
     std::pair< cellsize_t, cellsize_t > &block) const {
 
   // compute the normalization factor for the mean intensity integrals, which
@@ -389,6 +389,23 @@ void IonizationStateCalculator::calculate_ionization_state(
   DensityGridTraversalJobMarket< IonizationStateCalculatorFunction > jobs(
       grid, do_calculation, block);
   workers.do_in_parallel(jobs);
+}
+
+/**
+ * @brief Calculate the ionization state for all cells in the given subgrid.
+ *
+ * @param totweight Total weight of all photon packets.
+ * @param subgrid DensitySubGrid to work on.
+ */
+void IonizationStateCalculator::calculate_ionization_state(
+    const double totweight, DensitySubGrid &subgrid) const {
+
+  const double jfac = _luminosity / totweight;
+  for (auto cellit = subgrid.begin(); cellit != subgrid.end(); ++cellit) {
+    calculate_ionization_state(jfac / cellit.get_volume(),
+                               cellit.get_ionization_variables());
+    cellit.get_ionization_variables().reset_mean_intensities();
+  }
 }
 
 /**
@@ -490,8 +507,9 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @param he0 Variable to store resulting helium neutral fraction in.
  */
 void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
-    double alphaH, double alphaHe, double jH, double jHe, double nH, double AHe,
-    double T, double &h0, double &he0) {
+    const double alphaH, const double alphaHe, const double jH,
+    const double jHe, const double nH, const double AHe, const double T,
+    double &h0, double &he0) {
 
   // make sure the input to this function is physical
   cmac_assert(alphaH >= 0.);
@@ -606,7 +624,7 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
  * @return Neutral fraction of hydrogen.
  */
 double IonizationStateCalculator::compute_ionization_state_hydrogen(
-    double alphaH, double jH, double nH) {
+    const double alphaH, const double jH, const double nH) {
 
   if (jH > 0. && nH > 0.) {
     const double aa = 0.5 * jH / (nH * alphaH);

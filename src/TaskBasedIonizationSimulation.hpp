@@ -27,6 +27,9 @@
 #ifndef TASKBASEDIONIZATIONSIMULATION_HPP
 #define TASKBASEDIONIZATIONSIMULATION_HPP
 
+#include "Abundances.hpp"
+#include "ChargeTransferRates.hpp"
+#include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "SimulationBox.hpp"
@@ -41,7 +44,9 @@ class DensitySubGrid;
 class DensitySubGridCreator;
 class MemorySpace;
 class PhotonSourceDistribution;
+class RecombinationRates;
 class TaskQueue;
+class TemperatureCalculator;
 
 /**
  * @brief Ionization radiative transfer simulation using a task-based parallel
@@ -82,6 +87,22 @@ private:
   /*! @brief PhotonSourceDistribution specifying the positions of the
    *  sources. */
   PhotonSourceDistribution *_photon_source_distribution;
+
+  /*! @brief Object used to compute the combined ionization and temperature
+   *  balance at the end of a ray tracing step. */
+  TemperatureCalculator *_temperature_calculator;
+
+  /*! @brief Data values for line cooling. */
+  const LineCoolingData _line_cooling_data;
+
+  /*! @brief Charge transfer rates. */
+  const ChargeTransferRates _charge_transfer_rates;
+
+  /*! @brief Abundances. */
+  const Abundances _abundances;
+
+  /*! @brief Recombination rates. */
+  RecombinationRates *_recombination_rates;
 
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
