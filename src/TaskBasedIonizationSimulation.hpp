@@ -38,12 +38,14 @@
 
 #include <vector>
 
+class CrossSections;
 class DensityFunction;
 class DensityGridWriter;
 class DensitySubGrid;
 class DensitySubGridCreator;
 class MemorySpace;
 class PhotonSourceDistribution;
+class PhotonSourceSpectrum;
 class RecombinationRates;
 class TaskQueue;
 class TemperatureCalculator;
@@ -72,6 +74,13 @@ private:
   /*! @brief ParameterFile containing the run parameters. */
   ParameterFile _parameter_file;
 
+  /*! @brief Number of iterations of the ray tracing loop. */
+  const uint_fast32_t _number_of_iterations;
+
+  /*! @brief Number of photons used in every iteration of the ray tracing
+   *  loop. */
+  const uint_fast64_t _number_of_photons;
+
   /*! @brief Simulation box (in m). */
   SimulationBox _simulation_box;
 
@@ -88,6 +97,9 @@ private:
    *  sources. */
   PhotonSourceDistribution *_photon_source_distribution;
 
+  /*! @brief Spectrum for the discrete UV sources. */
+  PhotonSourceSpectrum *_photon_source_spectrum;
+
   /*! @brief Object used to compute the combined ionization and temperature
    *  balance at the end of a ray tracing step. */
   TemperatureCalculator *_temperature_calculator;
@@ -100,6 +112,9 @@ private:
 
   /*! @brief Abundances. */
   const Abundances _abundances;
+
+  /*! @brief Cross sections for photoionization. */
+  CrossSections *_cross_sections;
 
   /*! @brief Recombination rates. */
   RecombinationRates *_recombination_rates;

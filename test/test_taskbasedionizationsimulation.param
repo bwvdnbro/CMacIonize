@@ -47,12 +47,12 @@ PhotonSourceSpectrum:
   # temperature of the black body spectrum
   temperature: 40000. K
 
-IonizationSimulation:
+TaskBasedIonizationSimulation:
   # number of photons to use
-  number of photons: 50000
+  number of photons: 1e6
 
   # maximum number of iterations
-  number of iterations: 4
+  number of iterations: 10
 
 # output options
 DensityGridWriter:
@@ -77,3 +77,26 @@ RecombinationRates:
   sulphur_2: 0. m^3 s^-1
   sulphur_3: 0. m^3 s^-1
   sulphur_4: 0. m^3 s^-1
+
+CrossSections:
+  type: FixedValue
+  # set the photoionization cross section for neutral hydrogen
+  hydrogen_0: 6.3e-18 cm^2
+  # all other cross sections are set to zero
+  helium_0: 0. m^2
+  carbon_1: 0. m^2
+  carbon_2: 0. m^2
+  nitrogen_0: 0. m^2
+  nitrogen_1: 0. m^2
+  nitrogen_2: 0. m^2
+  oxygen_0: 0. m^2
+  oxygen_1: 0. m^2
+  neon_0: 0. m^2
+  neon_1: 0. m^2
+  sulphur_1: 0. m^2
+  sulphur_2: 0. m^2
+  sulphur_3: 0. m^2
+
+PhotonSourceSpectrum:
+  type: Monochromatic
+  frequency: 3.28847e+15 Hz

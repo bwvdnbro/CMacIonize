@@ -301,15 +301,18 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
+    FaucherGiguerePhotonSourceSpectrum.cpp
     FLASHSnapshotDensityFunction.cpp
     GadgetSnapshotDensityFunction.cpp
     GadgetSnapshotPhotonSourceDistribution.cpp
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
+    MaskedPhotonSourceSpectrum.cpp
     MemorySpace.hpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
+    PlanckPhotonSourceSpectrum.cpp
     SPHNGSnapshotDensityFunction.cpp
     Task.hpp
     TaskBasedIonizationSimulation.cpp
@@ -319,7 +322,9 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     ThreadLock.hpp
     ThreadSafeVector.hpp
     TravelDirections.hpp
+    VernerCrossSections.cpp
     VernerRecombinationRates.cpp
+    WMBasicPhotonSourceSpectrum.cpp
 )
 
 add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
