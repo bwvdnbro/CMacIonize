@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     ionization_variables.set_temperature(T);
 
     // calculate the ionization state of the cell
-    calculator.calculate_ionization_state(1., cell);
+    calculator.calculate_ionization_state(1., cell.get_ionization_variables());
 
     h0 = ionization_variables.get_ionic_fraction(ION_H_n);
 

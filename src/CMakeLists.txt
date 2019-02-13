@@ -300,6 +300,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AtomicValue.hpp
+    ChargeTransferRates.cpp
     CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
@@ -307,6 +308,8 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     GadgetSnapshotDensityFunction.cpp
     GadgetSnapshotPhotonSourceDistribution.cpp
     InterpolatedDensityFunction.cpp
+    IonizationStateCalculator.cpp
+    LineCoolingData.cpp
     MemorySpace.hpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
@@ -315,9 +318,11 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
     TaskQueue.hpp
+    TemperatureCalculator.cpp
     ThreadLock.hpp
     ThreadSafeVector.hpp
     TravelDirections.hpp
+    VernerRecombinationRates.cpp
 )
 
 add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})

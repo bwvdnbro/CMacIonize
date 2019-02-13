@@ -33,8 +33,10 @@
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
+#include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
+#include "TemperatureCalculator.hpp"
 
 #include <fstream>
 #include <omp.h>
@@ -156,7 +158,8 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name)
-    : _parameter_file(parameterfile_name), _simulation_box(_parameter_file) {
+    : _parameter_file(parameterfile_name), _simulation_box(_parameter_file),
+      _abundances(_parameter_file, nullptr) {
 
   omp_set_num_threads(num_thread);
 
@@ -191,6 +194,16 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   _photon_source_distribution =
       PhotonSourceDistributionFactory::generate(_parameter_file, nullptr);
+
+  _recombination_rates =
+      RecombinationRatesFactory::generate(_parameter_file, nullptr);
+
+  const double total_luminosity =
+      _photon_source_distribution->get_total_luminosity();
+  // used to calculate both the ionization state and the temperature
+  _temperature_calculator = new TemperatureCalculator(
+      total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
+      _charge_transfer_rates, _parameter_file, nullptr);
 }
 
 /**
@@ -207,6 +220,8 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _density_function;
   delete _density_grid_writer;
   delete _photon_source_distribution;
+  delete _temperature_calculator;
+  delete _recombination_rates;
 }
 
 /**
@@ -724,7 +739,7 @@ void TaskBasedIonizationSimulation::run(
 
     for (auto gridit = _grid_creator->begin();
          gridit != _grid_creator->original_end(); ++gridit) {
-      (*gridit).compute_neutral_fraction(4.26e49, 1e6);
+      _temperature_calculator->calculate_temperature(iloop, 1.e6, *gridit);
     }
 
     // update copies
