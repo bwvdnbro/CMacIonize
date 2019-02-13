@@ -25,6 +25,7 @@
  */
 
 #include "TaskBasedIonizationSimulation.hpp"
+#include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensitySubGrid.hpp"
@@ -33,6 +34,7 @@
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
+#include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
@@ -152,14 +154,23 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *  - number of tasks: Number of tasks to allocate in memory (default: 500000)
  *  - random seed: Seed used to initialize the random number generator (default:
  *    42)
+ *  - number of iterations: Number of iterations of the photoionization
+ *    algorithm to perform (default: 10)
+ *  - number of photons: Number of photon packets to use for each iteration of
+ *    the photoionization algorithm (default: 1e6)
+ *  - output folder: Folder where all output files will be placed (default: .)
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name)
-    : _parameter_file(parameterfile_name), _simulation_box(_parameter_file),
-      _abundances(_parameter_file, nullptr) {
+    : _parameter_file(parameterfile_name),
+      _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
+          "TaskBasedIonizationSimulation:number of iterations", 10)),
+      _number_of_photons(_parameter_file.get_value< uint_fast64_t >(
+          "TaskBasedIonizationSimulation:number of photons", 1e6)),
+      _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr) {
 
   omp_set_num_threads(num_thread);
 
@@ -189,12 +200,20 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   _density_function =
       DensityFunctionFactory::generate(_parameter_file, nullptr);
-  _density_grid_writer =
-      DensityGridWriterFactory::generate(".", _parameter_file, false, nullptr);
+
+  // set up output
+  std::string output_folder =
+      Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
+          "IonizationSimulation:output folder", "."));
+  _density_grid_writer = DensityGridWriterFactory::generate(
+      output_folder, _parameter_file, false, nullptr);
 
   _photon_source_distribution =
       PhotonSourceDistributionFactory::generate(_parameter_file, nullptr);
+  _photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
+      "PhotonSourceSpectrum", _parameter_file, nullptr);
 
+  _cross_sections = CrossSectionsFactory::generate(_parameter_file, nullptr);
   _recombination_rates =
       RecombinationRatesFactory::generate(_parameter_file, nullptr);
 
@@ -204,6 +223,12 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   _temperature_calculator = new TemperatureCalculator(
       total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
       _charge_transfer_rates, _parameter_file, nullptr);
+
+  // we are done reading the parameter file
+  // now output all parameters (also those for which default values were used)
+  std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
+  _parameter_file.print_contents(pfile);
+  pfile.close();
 }
 
 /**
@@ -220,7 +245,9 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _density_function;
   delete _density_grid_writer;
   delete _photon_source_distribution;
+  delete _photon_source_spectrum;
   delete _temperature_calculator;
+  delete _cross_sections;
   delete _recombination_rates;
 }
 
@@ -283,8 +310,8 @@ void TaskBasedIonizationSimulation::run(
   }
   _grid_creator->create_copies(levels);
 
-  DistributedPhotonSource photon_source(1e6, *_photon_source_distribution,
-                                        *_grid_creator);
+  DistributedPhotonSource photon_source(
+      _number_of_photons, *_photon_source_distribution, *_grid_creator);
 
   for (auto gridit = _grid_creator->begin(); gridit != _grid_creator->all_end();
        ++gridit) {
@@ -293,14 +320,14 @@ void TaskBasedIonizationSimulation::run(
     }
   }
 
-  for (uint_fast8_t iloop = 0; iloop < 10; ++iloop) {
+  for (uint_fast32_t iloop = 0; iloop < _number_of_iterations; ++iloop) {
 
     photon_source.reset();
 
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
 
-    cmac_warning("Loop: %" PRIuFAST8, iloop);
+    cmac_warning("Loop: %" PRIuFAST32, iloop);
 
     for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
          ++isrc) {
@@ -492,8 +519,13 @@ void TaskBasedIonizationSimulation::run(
               photon.set_target_optical_depth(-std::log(
                   _random_generators[thread_id].get_uniform_random_double()));
 
+              const double frequency =
+                  _photon_source_spectrum->get_random_frequency(
+                      _random_generators[thread_id]);
+              const double sigmaH =
+                  _cross_sections->get_cross_section(ION_H_n, frequency);
               // this is the fixed cross section we use for the moment
-              photon.set_photoionization_cross_section(6.3e-22);
+              photon.set_photoionization_cross_section(sigmaH);
             }
 
             // add to the queue of the corresponding thread
@@ -728,7 +760,8 @@ void TaskBasedIonizationSimulation::run(
         }
 
         if (num_empty.value() == num_empty_target &&
-            num_active_buffers.value() == 0 && num_photon_done.value() == 1e6) {
+            num_active_buffers.value() == 0 &&
+            num_photon_done.value() == _number_of_photons) {
           global_run_flag = false;
         }
       } // while(global_run_flag)
@@ -739,7 +772,8 @@ void TaskBasedIonizationSimulation::run(
 
     for (auto gridit = _grid_creator->begin();
          gridit != _grid_creator->original_end(); ++gridit) {
-      _temperature_calculator->calculate_temperature(iloop, 1.e6, *gridit);
+      _temperature_calculator->calculate_temperature(iloop, _number_of_photons,
+                                                     *gridit);
     }
 
     // update copies
@@ -751,5 +785,6 @@ void TaskBasedIonizationSimulation::run(
     _tasks->clear();
   } // photoionization loop
 
-  _density_grid_writer->write(*_grid_creator, 10, _parameter_file);
+  _density_grid_writer->write(*_grid_creator, _number_of_iterations,
+                              _parameter_file);
 }
