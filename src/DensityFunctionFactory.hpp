@@ -46,6 +46,7 @@
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
+#include "AmunSnapshotDensityFunction.hpp"
 #include "CMacIonizeSnapshotDensityFunction.hpp"
 #include "FLASHSnapshotDensityFunction.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
@@ -66,8 +67,8 @@ public:
    * @param log Log to write logging info to.
    */
   static void check_hdf5(std::string type, Log *log = nullptr) {
-    if (type == "CMacIonizeSnapshot" || type == "FLASHSnapshot" ||
-        type == "GadgetSnapshot") {
+    if (type == "AmunSnapshot" || type == "CMacIonizeSnapshot" ||
+        type == "FLASHSnapshot" || type == "GadgetSnapshot") {
       if (log) {
         log->write_error("Cannot create an instance of ", type,
                          "DensityFunction, since the code was "
@@ -84,6 +85,8 @@ public:
    * file.
    *
    * Supported types are (default: Homogeneous):
+   *  - AmunSnapshot: Implementation that reads a density grid from an Amun
+   *    snapshot file
    *  - AsciiFile: Implementation that reads a density grid from an ASCII text
    *    file
    *  - BlockSyntax: Implementation that reads a geometrically constructed
@@ -148,6 +151,8 @@ public:
     } else if (type == "SpiralGalaxy") {
       return new SpiralGalaxyDensityFunction(params, log);
 #ifdef HAVE_HDF5
+    } else if (type == "AmunSnapshot") {
+      return new AmunSnapshotDensityFunction(params, log);
     } else if (type == "CMacIonizeSnapshot") {
       return new CMacIonizeSnapshotDensityFunction(params, log);
     } else if (type == "FLASHSnapshot") {
