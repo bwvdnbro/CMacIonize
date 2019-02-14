@@ -100,6 +100,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
                ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.hpp @ONLY)
 
 set(LIBIONIZATIONSIMULATION_SOURCES
+    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
     CartesianDensityGrid.cpp
@@ -159,6 +160,7 @@ set(CMACIONIZE_SOURCES
     Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
+    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
     Box.hpp

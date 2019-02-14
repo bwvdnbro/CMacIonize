@@ -1274,6 +1274,52 @@ set(TESTRESTARTMANAGER_SOURCES
 add_unit_test(NAME testRestartManager
               SOURCES ${TESTRESTARTMANAGER_SOURCES})
 
+## Unit test for AmunSnapshotDensityFunction
+if(HAVE_HDF5)
+set(TESTAMUNSNAPSHOTDENSITYFUNCTION_SOURCES
+    testAmunSnapshotDensityFunction.cpp
+
+    Assert.hpp
+
+    ../src/AmunSnapshotDensityFunction.cpp
+    ../src/AmunSnapshotDensityFunction.hpp
+    ../src/Box.hpp
+    ../src/CartesianDensityGrid.cpp
+    ../src/CartesianDensityGrid.hpp
+    ../src/ChargeTransferRates.cpp
+    ../src/CoordinateVector.hpp
+    ../src/CubicSplineKernel.hpp
+    ../src/DensityFunction.hpp
+    ../src/DensityGrid.cpp
+    ../src/DensityValues.hpp
+    ../src/ElementNames.hpp
+    ../src/Error.hpp
+    ../src/HDF5Tools.hpp
+    ../src/IonizationStateCalculator.cpp
+    ../src/IonizationStateCalculator.hpp
+    ../src/ParameterFile.cpp
+    ../src/ParameterFile.hpp
+    ../src/Photon.hpp
+    ../src/RecombinationRates.hpp
+    ../src/Timer.hpp
+)
+add_unit_test(NAME testAmunSnapshotDensityFunction
+              SOURCES ${TESTAMUNSNAPSHOTDENSITYFUNCTION_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_00.h5
+               ${PROJECT_BINARY_DIR}/rundir/test/Amun_test_00.h5
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_01.h5
+               ${PROJECT_BINARY_DIR}/rundir/test/Amun_test_01.h5
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_02.h5
+               ${PROJECT_BINARY_DIR}/rundir/test/Amun_test_02.h5
+               COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_03.h5
+              ${PROJECT_BINARY_DIR}/rundir/test/Amun_test_03.h5
+              COPYONLY)
+endif(HAVE_HDF5)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
@@ -1321,5 +1367,5 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R testAmunSnapshotDensityFunction
                         DEPENDS ${TESTNAMES})
