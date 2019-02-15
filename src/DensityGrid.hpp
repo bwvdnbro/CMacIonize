@@ -156,6 +156,10 @@ protected:
       }
       ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
       ionization_variables.increase_heating(HEATINGTERM_He, dheating_He);
+      SpectrumTracker *tracker = ionization_variables.get_tracker();
+      if (tracker != nullptr) {
+        tracker->count_photon(photon);
+      }
 #ifndef USE_LOCKFREE
       cell.unlock();
 #endif

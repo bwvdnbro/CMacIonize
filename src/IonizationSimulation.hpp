@@ -47,6 +47,7 @@ class PhotonSource;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 class RecombinationRates;
+class SpectrumTrackerManager;
 class TemperatureCalculator;
 
 /**
@@ -162,6 +163,9 @@ private:
   /*! @brief Object used to do the ray tracing of photons through the grid in
    *  parallel. */
   IonizationPhotonShootJobMarket *_ionization_photon_shoot_job_market;
+
+  /*! @brief Optional spectrum tracker manager. */
+  SpectrumTrackerManager *_spectrum_trackers;
 
   /// internal timers
 
