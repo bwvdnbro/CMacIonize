@@ -1320,6 +1320,30 @@ configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_03.h5
               COPYONLY)
 endif(HAVE_HDF5)
 
+## Unit test for SpectrumTracker
+set(TESTSPECTRUMTRACKER_SOURCES
+    testSpectrumTracker.cpp
+
+    ../src/SpectrumTracker.hpp
+    ../src/WMBasicPhotonSourceSpectrum.cpp
+)
+add_unit_test(NAME testSpectrumTracker
+              SOURCES ${TESTSPECTRUMTRACKER_SOURCES})
+
+## Unit test for SpectrumTrackerManager
+set(TESTSPECTRUMTRACKERMANAGER_SOURCES
+    testSpectrumTrackerManager.cpp
+
+    ../src/CartesianDensityGrid.cpp
+    ../src/DensityGrid.cpp
+    ../src/SpectrumTrackerManager.hpp
+)
+add_unit_test(NAME testSpectrumTrackerManager
+              SOURCES ${TESTSPECTRUMTRACKERMANAGER_SOURCES})
+configure_file(
+  ${PROJECT_SOURCE_DIR}/test/test_spectrum_tracker_manager.yml
+  ${PROJECT_BINARY_DIR}/rundir/test/test_spectrum_tracker_manager.yml @ONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
@@ -1367,5 +1391,5 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R testAmunSnapshotDensityFunction
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
                         DEPENDS ${TESTNAMES})

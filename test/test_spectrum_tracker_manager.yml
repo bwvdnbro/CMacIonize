@@ -1,0 +1,12 @@
+number of trackers: 3
+
+tracker[0]:
+  position: [0. pc, 0. pc, 0. pc]
+
+tracker[1]:
+  position: [4. pc, 0. pc, 0. pc]
+  number of bins: 1000
+
+tracker[2]:
+  position: [0. pc, 4. pc, 0. pc]
+  output name: special_position.txt

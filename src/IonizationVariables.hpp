@@ -30,6 +30,7 @@
 #include "ElementNames.hpp"
 #include "RestartReader.hpp"
 #include "RestartWriter.hpp"
+#include "SpectrumTracker.hpp"
 
 #ifdef USE_LOCKFREE
 #include "Atomic.hpp"
@@ -103,12 +104,16 @@ private:
   /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
   double _cosmic_ray_factor;
 
+  /*! @brief (Optional) spectrum tracker for this cell. */
+  SpectrumTracker *_tracker;
+
 public:
   /**
    * @brief (Empty) constructor.
    */
   inline IonizationVariables()
-      : _number_density(0.), _temperature(0.), _cosmic_ray_factor(-1.) {
+      : _number_density(0.), _temperature(0.), _cosmic_ray_factor(-1.),
+        _tracker(nullptr) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = 0.;
       _mean_intensity[i] = 0.;
@@ -355,6 +360,20 @@ public:
     }
     _cosmic_ray_factor = restart_reader.read< double >();
   }
+
+  /**
+   * @brief Add the given tracker to this cell.
+   *
+   * @param tracker SpectrumTracker.
+   */
+  inline void add_tracker(SpectrumTracker *tracker) { _tracker = tracker; }
+
+  /**
+   * @brief Get the tracker for this cell.
+   *
+   * @return Tracker for this cell.
+   */
+  inline SpectrumTracker *get_tracker() { return _tracker; }
 };
 
 #endif // IONIZATIONVARIABLES_HPP

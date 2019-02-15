@@ -40,6 +40,7 @@
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
+#include "SpectrumTrackerManager.hpp"
 #include "TemperatureCalculator.hpp"
 #include "WorkEnvironment.hpp"
 #include <fstream>
@@ -80,6 +81,8 @@
  *  - output folder: Folder where all output files will be placed (default: .)
  *  - random seed: Seed used to initialize the random number generator (default:
  *    42)
+ *  - track spectra: Track spectra for photon packets travelling through
+ *    specific position? (default: no)
  *
  * @param write_output Should this process write output?
  * @param every_iteration_output Write an output file after every iteration of
@@ -192,6 +195,13 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   }
   _ionization_photon_shoot_job_market = new IonizationPhotonShootJobMarket(
       *_photon_source, random_seed, *_density_grid, 0, 100, _num_thread);
+
+  if (_parameter_file.get_value< bool >("IonizationSimulation:track spectra",
+                                        false)) {
+    _spectrum_trackers = new SpectrumTrackerManager(_parameter_file);
+  } else {
+    _spectrum_trackers = nullptr;
+  }
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -322,6 +332,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     if (_log) {
       _log->write_status("Starting loop ", loop, ".");
+    }
+
+    if (_spectrum_trackers != nullptr && loop == _number_of_iterations - 1) {
+      _spectrum_trackers->add_trackers(*_density_grid);
     }
 
     uint_fast64_t lnumphoton = _number_of_photons;
@@ -555,6 +569,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
                        ") reached, stopping.");
   }
 
+  if (_spectrum_trackers != nullptr) {
+    _spectrum_trackers->output_trackers();
+  }
+
   // write final snapshot
   if (_density_grid_writer) {
     _density_grid_writer->write(*_density_grid, _number_of_iterations,
@@ -622,4 +640,6 @@ IonizationSimulation::~IonizationSimulation() {
   // cross sections and recombination rates
   delete _cross_sections;
   delete _recombination_rates;
+
+  delete _spectrum_trackers;
 }
