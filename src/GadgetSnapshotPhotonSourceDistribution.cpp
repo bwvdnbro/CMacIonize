@@ -37,6 +37,7 @@
  * @param filename Name of the snapshot file to read.
  * @param formation_time_name Name of the formation time data set in the
  * snapshot file.
+ * @param box Dimensions of the simulation box (in m).
  * @param fallback_unit_length_in_SI Length unit to use if the units group is
  * not found in the snapshot file.
  * @param fallback_unit_time_in_SI Time unit to use if the units group is not
@@ -58,7 +59,7 @@
  * @param log Log to write logging information to.
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
-    std::string filename, std::string formation_time_name,
+    std::string filename, std::string formation_time_name, const Box<> box,
     double fallback_unit_length_in_SI, double fallback_unit_time_in_SI,
     double fallback_unit_mass_in_SI, double cutoff_age,
     double rate_per_mass_unit, bool use_gas, double SFR_unit,
@@ -156,8 +157,9 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
     // filter out all particles with zero star formation rate
     for (size_t i = 0; i < positions.size(); ++i) {
-      if (sfrs[i] > 0.) {
-        _positions.push_back(positions[i]);
+      const CoordinateVector<> position = position[i] * unit_length_in_SI;
+      if (sfrs[i] > 0. && box.inside(position)) {
+        _positions.push_back(position);
         // by multiplying the star formation rate with the cutoff age, we get
         // the total mass in stars that is young enough to contain O stars
         // we multiply by the rate per mass to get the ionization rate of the
@@ -188,17 +190,11 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     // filter out all stars older than the cutoff age
     for (size_t i = 0; i < formtimes.size(); ++i) {
       const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
-      if (age <= cutoff_age) {
-        _positions.push_back(positions[i]);
+      const CoordinateVector<> position = positions[i] * unit_length_in_SI;
+      if (age <= cutoff_age && box.inside(position)) {
+        _positions.push_back(position);
         _total_luminosity += masses[i] * unit_mass_in_SI * rate_per_mass_unit;
       }
-    }
-
-    // unit conversion
-    for (size_t i = 0; i < _positions.size(); ++i) {
-      _positions[i][0] *= unit_length_in_SI;
-      _positions[i][1] *= unit_length_in_SI;
-      _positions[i][2] *= unit_length_in_SI;
     }
   }
 
@@ -248,6 +244,10 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
           params.get_filename("PhotonSourceDistribution:filename"),
           params.get_value< std::string >(
               "PhotonSourceDistribution:formation time name", "FormationTime"),
+          Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
+                    "SimulationBox:anchor"),
+                params.get_physical_vector< QUANTITY_LENGTH >(
+                    "SimulationBox:sides")),
           params.get_physical_value< QUANTITY_LENGTH >(
               "PhotonSourceDistribution:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(

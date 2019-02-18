@@ -87,8 +87,8 @@ public:
  */
 int main(int argc, char **argv) {
 
-  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5",
-                                                      "FormationTime");
+  GadgetSnapshotPhotonSourceDistribution distribution(
+      "test.hdf5", "FormationTime", Box<>(0., 1.));
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;
