@@ -52,7 +52,7 @@ private:
 
 public:
   GadgetSnapshotPhotonSourceDistribution(
-      std::string filename, std::string formation_time_name,
+      std::string filename, std::string formation_time_name, const Box<> box,
       double fallback_unit_length_in_SI = 0.,
       double fallback_unit_time_in_SI = 0.,
       double fallback_unit_mass_in_SI = 0., double cutoff_age = 1.577e14,
