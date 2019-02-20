@@ -26,6 +26,7 @@
 #ifndef TRAVELDIRECTIONS_HPP
 #define TRAVELDIRECTIONS_HPP
 
+#include "CoordinateVector.hpp"
 #include "Error.hpp"
 
 #include <cinttypes>
@@ -163,7 +164,7 @@ output_to_input_direction(const int_fast32_t output_direction) {
  * @return True if a ray with the given direction could leave the subgrid in
  * the given TravelDirection.
  */
-inline bool is_compatible_output_direction(const double *direction,
+inline bool is_compatible_output_direction(const CoordinateVector<> direction,
                                            int_fast32_t output_direction) {
   switch (output_direction) {
   case TRAVELDIRECTION_INSIDE:
@@ -236,7 +237,7 @@ inline bool is_compatible_output_direction(const double *direction,
  * @return True if a ray with the given direction could enter the subgrid in
  * the given TravelDirection.
  */
-inline bool is_compatible_input_direction(const double *direction,
+inline bool is_compatible_input_direction(const CoordinateVector<> direction,
                                           int_fast32_t input_direction) {
   switch (input_direction) {
   case TRAVELDIRECTION_INSIDE:

@@ -488,8 +488,7 @@ void TaskBasedIonizationSimulation::run(
 
               // initial position: we currently assume a single source at the
               // origin
-              photon.set_position(source_position.x(), source_position.y(),
-                                  source_position.z());
+              photon.set_position(source_position);
 
               // draw two pseudo random numbers
               const double cost = 2. * _random_generators[thread_id]
@@ -505,12 +504,10 @@ void TaskBasedIonizationSimulation::run(
               const double sinp = std::sin(phi);
 
               // set the direction...
-              double direction[3];
-              direction[0] = sint * cosp;
-              direction[1] = sint * sinp;
-              direction[2] = cost;
+              const CoordinateVector<> direction(sint * cosp, sint * sinp,
+                                                 cost);
 
-              photon.set_direction(direction[0], direction[1], direction[2]);
+              photon.set_direction(direction);
 
               // we currently assume equal weight for all photons
               photon.set_weight(1.);

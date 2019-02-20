@@ -144,17 +144,17 @@ private:
 
   /*! @brief Lower front left corner of the box that contains the subgrid (in
    *  m). */
-  double _anchor[3];
+  CoordinateVector<> _anchor;
 
   /*! @brief Dimensions of a single cell of the subgrid (in m). */
-  double _cell_size[3];
+  CoordinateVector<> _cell_size;
 
   /**
    * @brief Inverse dimensions of a single cell of the subgrid (in m^-1).
    *
    * Used to convert positions into grid indices.
    */
-  double _inv_cell_size[3];
+  CoordinateVector<> _inv_cell_size;
 
   /**
    * @brief Number of cells in each grid dimension (and commonly used
@@ -199,7 +199,8 @@ private:
    * @param three_index 3 indices of a cell.
    * @return Single index of that same cell.
    */
-  inline int_fast32_t get_one_index(const int_fast32_t *three_index) const {
+  inline int_fast32_t
+  get_one_index(const CoordinateVector< int_fast32_t > three_index) const {
     return three_index[0] * _number_of_cells[3] +
            three_index[1] * _number_of_cells[2] + three_index[2];
   }
@@ -210,8 +211,9 @@ private:
    * @param one_index Single index of the cell.
    * @param three_index 3 indices of that same cell.
    */
-  inline void get_three_index(const int_fast32_t one_index,
-                              int_fast32_t *three_index) const {
+  inline void
+  get_three_index(const int_fast32_t one_index,
+                  CoordinateVector< int_fast32_t > &three_index) const {
     three_index[0] = one_index / _number_of_cells[3];
     three_index[1] = (one_index - three_index[0] * _number_of_cells[3]) /
                      _number_of_cells[2];
@@ -225,7 +227,8 @@ private:
    * @param three_index 3 indices of a cell.
    * @return True if the 3 indices match a cell in this grid.
    */
-  inline bool is_inside(const int_fast32_t *three_index) const {
+  inline bool
+  is_inside(const CoordinateVector< int_fast32_t > three_index) const {
     return three_index[0] < _number_of_cells[0] && three_index[0] >= 0 &&
            three_index[1] < _number_of_cells[1] && three_index[1] >= 0 &&
            three_index[2] < _number_of_cells[2] && three_index[2] >= 0;
@@ -424,9 +427,10 @@ public:
    * @param three_index 3 index (output variable).
    * @return Single index of the cell.
    */
-  inline int_fast32_t get_start_index(const double *position,
-                                      const int_fast32_t input_direction,
-                                      int_fast32_t *three_index) const {
+  inline int_fast32_t
+  get_start_index(const CoordinateVector<> position,
+                  const int_fast32_t input_direction,
+                  CoordinateVector< int_fast32_t > &three_index) const {
 
     three_index[0] = get_x_index(position[0], input_direction);
 
@@ -484,8 +488,8 @@ public:
    * @param three_index 3 index of a cell, possibly no longer inside this grid.
    * @return Outgoing direction corresponding to that 3 index.
    */
-  inline int_fast32_t
-  get_output_direction(const int_fast32_t *three_index) const {
+  inline int_fast32_t get_output_direction(
+      const CoordinateVector< int_fast32_t > three_index) const {
 
     // this is hopefully compiled into a bitwise operation rather than an
     // actual condition
@@ -550,13 +554,9 @@ public:
    * @param original DensitySubGrid to copy.
    */
   inline DensitySubGrid(const DensitySubGrid &original)
-      : _computational_cost(0), _anchor{original._anchor[0],
-                                        original._anchor[1],
-                                        original._anchor[2]},
-        _cell_size{original._cell_size[0], original._cell_size[1],
-                   original._cell_size[2]},
-        _inv_cell_size{original._inv_cell_size[0], original._inv_cell_size[1],
-                       original._inv_cell_size[2]},
+      : _computational_cost(0), _anchor(original._anchor),
+        _cell_size(original._cell_size),
+        _inv_cell_size(original._inv_cell_size),
         _number_of_cells{
             original._number_of_cells[0], original._number_of_cells[1],
             original._number_of_cells[2], original._number_of_cells[3]},
@@ -761,11 +761,11 @@ public:
     int buffer_position = 0;
     MPI_Pack(&_computational_cost, 1, MPI_UINT_LEAST64_T, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_anchor, 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
+    MPI_Pack(&_anchor[0], 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
              MPI_COMM_WORLD);
-    MPI_Pack(_cell_size, 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
-             MPI_COMM_WORLD);
-    MPI_Pack(_inv_cell_size, 3, MPI_DOUBLE, buffer, buffer_size,
+    MPI_Pack(&_cell_size[0], 3, MPI_DOUBLE, buffer, buffer_size,
+             &buffer_position, MPI_COMM_WORLD);
+    MPI_Pack(&_inv_cell_size[0], 3, MPI_DOUBLE, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(_number_of_cells, 4, MPI_INT_FAST32_T, buffer, buffer_size,
              &buffer_position, MPI_COMM_WORLD);
@@ -797,12 +797,22 @@ public:
     int buffer_position = 0;
     MPI_Unpack(buffer, buffer_size, &buffer_position, &_computational_cost, 1,
                MPI_UINT_LEAST64_T, MPI_COMM_WORLD);
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _anchor, 3, MPI_DOUBLE,
+    double temp[3];
+    MPI_Unpack(buffer, buffer_size, &buffer_position, temp, 3, MPI_DOUBLE,
                MPI_COMM_WORLD);
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _cell_size, 3, MPI_DOUBLE,
+    _anchor[0] = temp[0];
+    _anchor[1] = temp[1];
+    _anchor[2] = temp[2];
+    MPI_Unpack(buffer, buffer_size, &buffer_position, temp, 3, MPI_DOUBLE,
                MPI_COMM_WORLD);
-    MPI_Unpack(buffer, buffer_size, &buffer_position, _inv_cell_size, 3,
-               MPI_DOUBLE, MPI_COMM_WORLD);
+    _cell_size[0] = temp[0];
+    _cell_size[1] = temp[1];
+    _cell_size[2] = temp[2];
+    MPI_Unpack(buffer, buffer_size, &buffer_position, temp, 3, MPI_DOUBLE,
+               MPI_COMM_WORLD);
+    _inv_cell_size[0] = temp[0];
+    _inv_cell_size[1] = temp[1];
+    _inv_cell_size[2] = temp[2];
     int_fast32_t new_number_of_cells[4];
     MPI_Unpack(buffer, buffer_size, &buffer_position, new_number_of_cells, 4,
                MPI_INT_FAST32_T, MPI_COMM_WORLD);
@@ -889,7 +899,7 @@ public:
    * @param position Position (in m).
    * @return True if the given position is in the box of the subgrid.
    */
-  inline bool is_in_box(const double *position) const {
+  inline bool is_in_box(const CoordinateVector<> position) const {
     return position[0] >= _anchor[0] &&
            position[0] <= _anchor[0] + _cell_size[0] * _number_of_cells[0] &&
            position[1] >= _anchor[1] &&
@@ -913,7 +923,7 @@ public:
                         "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
-    const double *direction = photon.get_direction();
+    const CoordinateVector<> direction = photon.get_direction();
 
     cmac_assert_message(TravelDirections::is_compatible_input_direction(
                             direction, input_direction),
@@ -921,12 +931,9 @@ public:
                         direction[0], direction[1], direction[2],
                         input_direction);
 
-    const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
-                                         1. / direction[2]};
+    const CoordinateVector<> inverse_direction = 1. / direction;
     // NOTE: position is relative w.r.t. _anchor!!!
-    double position[3] = {photon.get_position()[0] - _anchor[0],
-                          photon.get_position()[1] - _anchor[1],
-                          photon.get_position()[2] - _anchor[2]};
+    CoordinateVector<> position = photon.get_position() - _anchor;
     double tau_done = 0.;
     const double tau_target = photon.get_target_optical_depth();
 
@@ -936,7 +943,7 @@ public:
     const double cross_section = photon.get_photoionization_cross_section();
     const double photon_weight = photon.get_weight();
     // get the indices of the first cell on the photon's path
-    int_fast32_t three_index[3];
+    CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
@@ -1038,8 +1045,7 @@ public:
     }
     // update photon quantities
     photon.set_target_optical_depth(tau_target - tau_done);
-    photon.set_position(position[0] + _anchor[0], position[1] + _anchor[1],
-                        position[2] + _anchor[2]);
+    photon.set_position(position + _anchor);
     // get the outgoing direction
     int_fast32_t output_direction;
     if (tau_done >= tau_target) {
@@ -1071,7 +1077,7 @@ public:
                         "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
-    const double *direction = photon.get_direction();
+    const CoordinateVector<> direction = photon.get_direction();
 
     cmac_assert_message(TravelDirections::is_compatible_input_direction(
                             direction, input_direction),
@@ -1079,12 +1085,9 @@ public:
                         direction[0], direction[1], direction[2],
                         input_direction);
 
-    const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
-                                         1. / direction[2]};
+    const CoordinateVector<> inverse_direction = 1. / direction;
     // NOTE: position is relative w.r.t. _anchor!!!
-    double position[3] = {photon.get_position()[0] - _anchor[0],
-                          photon.get_position()[1] - _anchor[1],
-                          photon.get_position()[2] - _anchor[2]};
+    CoordinateVector<> position = photon.get_position() - _anchor;
     double tau_done = 0.;
     const double tau_target = photon.get_target_optical_depth();
 
@@ -1093,7 +1096,7 @@ public:
 
     const double cross_section = photon.get_photoionization_cross_section();
     // get the indices of the first cell on the photon's path
-    int_fast32_t three_index[3];
+    CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
@@ -1191,8 +1194,7 @@ public:
     }
     // update photon quantities
     photon.set_target_optical_depth(tau_target - tau_done);
-    photon.set_position(position[0] + _anchor[0], position[1] + _anchor[1],
-                        position[2] + _anchor[2]);
+    photon.set_position(position + _anchor);
     // get the outgoing direction
     int_fast32_t output_direction;
     if (tau_done >= tau_target) {
@@ -1225,7 +1227,7 @@ public:
                         "input_direction: %" PRIiFAST32, input_direction);
 
     // get some photon variables
-    const double *direction = photon.get_direction();
+    const CoordinateVector<> direction = photon.get_direction();
 
     cmac_assert_message(TravelDirections::is_compatible_input_direction(
                             direction, input_direction),
@@ -1233,17 +1235,14 @@ public:
                         direction[0], direction[1], direction[2],
                         input_direction);
 
-    const double inverse_direction[3] = {1. / direction[0], 1. / direction[1],
-                                         1. / direction[2]};
+    const CoordinateVector<> inverse_direction = 1. / direction;
     // NOTE: position is relative w.r.t. _anchor!!!
-    double position[3] = {photon.get_position()[0] - _anchor[0],
-                          photon.get_position()[1] - _anchor[1],
-                          photon.get_position()[2] - _anchor[2]};
+    CoordinateVector<> position = photon.get_position() - _anchor;
     double tau_done = 0.;
 
     const double cross_section = photon.get_photoionization_cross_section();
     // get the indices of the first cell on the photon's path
-    int_fast32_t three_index[3];
+    CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
         get_start_index(position, input_direction, three_index);
 
@@ -1333,8 +1332,7 @@ public:
     // update photon quantities
     photon.set_target_optical_depth(photon.get_target_optical_depth() +
                                     tau_done);
-    photon.set_position(position[0] + _anchor[0], position[1] + _anchor[1],
-                        position[2] + _anchor[2]);
+    photon.set_position(position + _anchor);
     // get the outgoing direction
     int_fast32_t output_direction = get_output_direction(three_index);
 
@@ -1358,7 +1356,7 @@ public:
         const double pos_y = _anchor[1] + (iy + 0.5) * _cell_size[1];
         for (int_fast32_t iz = 0; iz < _number_of_cells[2]; ++iz) {
           const double pos_z = _anchor[2] + (iz + 0.5) * _cell_size[2];
-          const int_fast32_t three_index[3] = {ix, iy, iz};
+          const CoordinateVector< int_fast32_t > three_index(ix, iy, iz);
           const int_fast32_t index = get_one_index(three_index);
           stream << pos_x << "\t" << pos_y << "\t" << pos_z << "\t"
                  << _ionization_variables[index].get_ionic_fraction(ION_H_n)
@@ -1383,7 +1381,7 @@ public:
         double pos_y = _anchor[1] + (iy + 0.5) * _cell_size[1];
         for (int_fast32_t iz = 0; iz < _number_of_cells[2]; ++iz) {
           double pos_z = _anchor[2] + (iz + 0.5) * _cell_size[2];
-          const int_fast32_t three_index[3] = {ix, iy, iz};
+          const CoordinateVector< int_fast32_t > three_index(ix, iy, iz);
           const int_fast32_t index = get_one_index(three_index);
           stream.write(reinterpret_cast< char * >(&pos_x), sizeof(double));
           stream.write(reinterpret_cast< char * >(&pos_y), sizeof(double));
@@ -1517,7 +1515,7 @@ public:
    */
   inline CoordinateVector<> get_cell_midpoint(const uint_fast32_t index) const {
 
-    int_fast32_t three_index[3];
+    CoordinateVector< int_fast32_t > three_index;
     get_three_index(index, three_index);
     return CoordinateVector<>(
         _anchor[0] + (three_index[0] + 0.5) * _cell_size[0],
