@@ -27,10 +27,11 @@
 #define PHOTONPACKET_HPP
 
 /*! @brief Size of the MPI buffer necessary to store a single Photon. */
-#define PHOTON_MPI_SIZE (9 * sizeof(double))
+#define PHOTON_MPI_SIZE ((8 + NUMBER_OF_IONNAMES) * sizeof(double))
 
 #include "Configuration.hpp"
 #include "CoordinateVector.hpp"
+#include "ElementNames.hpp"
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -52,7 +53,7 @@ private:
 
   /*! @brief Photoionization cross section of the photons in the photon packet
    *  (in m^2). */
-  double _photoionization_cross_section;
+  double _photoionization_cross_section[NUMBER_OF_IONNAMES];
 
   /*! @brief Weight of the photon packet. */
   double _weight;
@@ -74,8 +75,8 @@ public:
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(&_target_optical_depth, 1, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
              &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(&_photoionization_cross_section, 1, MPI_DOUBLE, buffer,
-             PHOTON_MPI_SIZE, &buffer_position, MPI_COMM_WORLD);
+    MPI_Pack(_photoionization_cross_section, NUMBER_OF_IONNAMES, MPI_DOUBLE,
+             buffer, PHOTON_MPI_SIZE, &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(&_weight, 1, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE, &buffer_position,
              MPI_COMM_WORLD);
   }
@@ -103,7 +104,8 @@ public:
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position,
                &_target_optical_depth, 1, MPI_DOUBLE, MPI_COMM_WORLD);
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position,
-               &_photoionization_cross_section, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+               _photoionization_cross_section, NUMBER_OF_IONNAMES, MPI_DOUBLE,
+               MPI_COMM_WORLD);
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, &_weight, 1,
                MPI_DOUBLE, MPI_COMM_WORLD);
   }
@@ -130,9 +132,11 @@ public:
                         "Directions do not match!");
     cmac_assert_message(_target_optical_depth == other._target_optical_depth,
                         "Target optical depths do not match!");
-    cmac_assert_message(_photoionization_cross_section ==
-                            other._photoionization_cross_section,
-                        "Cross sections do not match!");
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      cmac_assert_message(_photoionization_cross_section[i] ==
+                              other._photoionization_cross_section[i],
+                          "Cross sections do not match!");
+    }
     cmac_assert_message(_weight == other._weight, "Weights do not match!");
   }
 
@@ -194,23 +198,29 @@ public:
   }
 
   /**
-   * @brief Get the photoionization cross section for the photon packet.
+   * @brief Get the photoionization cross section for the given ion for the
+   * photon packet.
    *
-   * @return Photoionization cross section for the photon packet (in m^2).
+   * @param ion Ion for which we want the photoionization cross section.
+   * @return Corresponding photoionization cross section for the photon packet
+   * (in m^2).
    */
-  inline double get_photoionization_cross_section() const {
-    return _photoionization_cross_section;
+  inline double
+  get_photoionization_cross_section(const int_fast32_t ion) const {
+    return _photoionization_cross_section[ion];
   }
 
   /**
-   * @brief Set the photoionization cross section for the photon packet.
+   * @brief Set the photoionization cross section for the given ion for the
+   * photon packet.
    *
+   * @param ion Ion for which we want to set the photoionization cross section.
    * @param photoionization_cross_section New photoionization cross section
    * (in m^2).
    */
   inline void set_photoionization_cross_section(
-      const double photoionization_cross_section) {
-    _photoionization_cross_section = photoionization_cross_section;
+      const int_fast32_t ion, const double photoionization_cross_section) {
+    _photoionization_cross_section[ion] = photoionization_cross_section;
   }
 
   /**

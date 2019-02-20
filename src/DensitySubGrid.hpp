@@ -940,7 +940,8 @@ public:
     cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
                         tau_done, tau_target);
 
-    const double cross_section = photon.get_photoionization_cross_section();
+    const double cross_section =
+        photon.get_photoionization_cross_section(ION_H_n);
     const double photon_weight = photon.get_weight();
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
@@ -1094,7 +1095,8 @@ public:
     cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
                         tau_done, tau_target);
 
-    const double cross_section = photon.get_photoionization_cross_section();
+    const double cross_section =
+        photon.get_photoionization_cross_section(ION_H_n);
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
@@ -1240,7 +1242,8 @@ public:
     CoordinateVector<> position = photon.get_position() - _anchor;
     double tau_done = 0.;
 
-    const double cross_section = photon.get_photoionization_cross_section();
+    const double cross_section =
+        photon.get_photoionization_cross_section(ION_H_n);
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =

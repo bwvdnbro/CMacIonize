@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
       photon.set_position(CoordinateVector<>(0.));
       photon.set_direction(d);
-      photon.set_photoionization_cross_section(6.3e-22);
+      photon.set_photoionization_cross_section(ION_H_n, 6.3e-22);
       photon.set_weight(1.);
       photon.set_target_optical_depth(tau);
 
