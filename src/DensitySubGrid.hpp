@@ -415,6 +415,46 @@ private:
     }
   }
 
+  /**
+   * @brief Get the optical depth corresponding to the given distance for the
+   * given photon packet and cell.
+   *
+   * @param active_cell Index of the cell.
+   * @param distance Distance travelled through the cell (in m).
+   * @param photon Photon packet that travels through the cell.
+   * @return Corresponding optical depth.
+   */
+  inline double get_optical_depth(const int_fast32_t active_cell,
+                                  const double distance,
+                                  const PhotonPacket &photon) const {
+    return distance * _ionization_variables[active_cell].get_number_density() *
+           (photon.get_photoionization_cross_section(ION_H_n) *
+                _ionization_variables[active_cell].get_ionic_fraction(ION_H_n) +
+            photon.get_photoionization_cross_section(ION_He_n) *
+                _ionization_variables[active_cell].get_ionic_fraction(
+                    ION_He_n));
+  }
+
+  /**
+   * @brief Update the intensity counters for the given cell with the
+   * contribution due to the given photon packet travelling the given distance.
+   *
+   * @param active_cell Index of the cell.
+   * @param distance Distance travelled through the cell (in m).
+   * @param photon Photon packet that travels through the cell.
+   */
+  inline void update_intensity_counters(const int_fast32_t active_cell,
+                                        const double distance,
+                                        const PhotonPacket &photon) {
+    subgrid_cell_lock_lock(active_cell);
+    for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+      _ionization_variables[active_cell].increase_mean_intensity(
+          ion, distance * photon.get_photoionization_cross_section(ion) *
+                   photon.get_weight());
+    }
+    subgrid_cell_lock_unlock(active_cell);
+  }
+
 public:
   /**
    * @brief Get the index (and 3 index) of the cell containing the given
@@ -940,9 +980,6 @@ public:
     cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
                         tau_done, tau_target);
 
-    const double cross_section =
-        photon.get_photoionization_cross_section(ION_H_n);
-    const double photon_weight = photon.get_weight();
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
@@ -1003,18 +1040,14 @@ public:
                           position[0], position[1], position[2], direction[0],
                           direction[1], direction[2]);
 
-      double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau =
-          lminsigma * _ionization_variables[active_cell].get_number_density() *
-          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
+      const double tau = get_optical_depth(active_cell, lmin, photon);
       tau_done += tau;
       // check if the target optical depth was reached
       if (tau_done >= tau_target) {
         // if so: subtract the surplus from the path
         const double correction = (tau_done - tau_target) / tau;
         lmin *= (1. - correction);
-        lminsigma = lmin * cross_section;
       } else {
         // if not: photon leaves cell
         // update three_index
@@ -1025,10 +1058,7 @@ public:
         }
       }
       // add the pathlength to the intensity counter
-      subgrid_cell_lock_lock(active_cell);
-      _ionization_variables[active_cell].increase_mean_intensity(
-          ION_H_n, lminsigma * photon_weight);
-      subgrid_cell_lock_unlock(active_cell);
+      update_intensity_counters(active_cell, lmin, photon);
       // update the photon position
       // we use the complicated syntax below to make sure the positions we
       // know are 100% accurate (only important for our assertions)
@@ -1095,8 +1125,6 @@ public:
     cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
                         tau_done, tau_target);
 
-    const double cross_section =
-        photon.get_photoionization_cross_section(ION_H_n);
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
@@ -1157,18 +1185,14 @@ public:
                           position[0], position[1], position[2], direction[0],
                           direction[1], direction[2]);
 
-      double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau =
-          lminsigma * _ionization_variables[active_cell].get_number_density() *
-          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
+      const double tau = get_optical_depth(active_cell, lmin, photon);
       tau_done += tau;
       // check if the target optical depth was reached
       if (tau_done >= tau_target) {
         // if so: subtract the surplus from the path
         const double correction = (tau_done - tau_target) / tau;
         lmin *= (1. - correction);
-        lminsigma = lmin * cross_section;
       } else {
         // if not: photon leaves cell
         // update three_index
@@ -1242,8 +1266,6 @@ public:
     CoordinateVector<> position = photon.get_position() - _anchor;
     double tau_done = 0.;
 
-    const double cross_section =
-        photon.get_photoionization_cross_section(ION_H_n);
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
     int_fast32_t active_cell =
@@ -1303,11 +1325,8 @@ public:
                           position[0], position[1], position[2], direction[0],
                           direction[1], direction[2]);
 
-      double lminsigma = lmin * cross_section;
       // compute the corresponding optical depth
-      const double tau =
-          lminsigma * _ionization_variables[active_cell].get_number_density() *
-          _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
+      const double tau = get_optical_depth(active_cell, lmin, photon);
       tau_done += tau;
       // photon leaves cell
       // update three_index

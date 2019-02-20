@@ -52,7 +52,8 @@ private:
   double _target_optical_depth;
 
   /*! @brief Photoionization cross section of the photons in the photon packet
-   *  (in m^2). */
+   *  (in m^2). Note that for ions other than hydrogen, these values contain an
+   *  additional abundance factor. */
   double _photoionization_cross_section[NUMBER_OF_IONNAMES];
 
   /*! @brief Weight of the photon packet. */
