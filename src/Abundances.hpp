@@ -50,8 +50,9 @@ public:
    * @param AS Abundance of sulphur.
    * @param log Log to write logging info to.
    */
-  inline Abundances(double AHe, double AC, double AN, double AO, double ANe,
-                    double AS, Log *log = nullptr) {
+  inline Abundances(const double AHe, const double AC, const double AN,
+                    const double AO, const double ANe, const double AS,
+                    Log *log = nullptr) {
     _abundances[ELEMENT_He] = AHe;
     _abundances[ELEMENT_C] = AC;
     _abundances[ELEMENT_N] = AN;
@@ -61,7 +62,7 @@ public:
 
     if (log) {
       log->write_status("Abundances:");
-      for (int i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+      for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
         log->write_status(get_element_name(i), ": ", _abundances[i]);
       }
     }
@@ -107,7 +108,7 @@ public:
    * @param name Valid ElementName.
    * @return Abundance of the atom with that name.
    */
-  inline double get_abundance(ElementName name) const {
+  inline double get_abundance(const int_fast32_t name) const {
     return _abundances[name];
   }
 };

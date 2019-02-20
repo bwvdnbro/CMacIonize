@@ -520,8 +520,11 @@ void TaskBasedIonizationSimulation::run(
                   _photon_source_spectrum->get_random_frequency(
                       _random_generators[thread_id]);
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-                const double sigma =
+                double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
+                if (ion != ION_H_n) {
+                  sigma *= _abundances.get_abundance(get_element(ion));
+                }
                 // this is the fixed cross section we use for the moment
                 photon.set_photoionization_cross_section(ion, sigma);
               }
@@ -771,6 +774,19 @@ void TaskBasedIonizationSimulation::run(
 
     for (auto gridit = _grid_creator->begin();
          gridit != _grid_creator->original_end(); ++gridit) {
+
+      // correct the intensity counters for abundance factors
+      for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+           ++cellit) {
+        IonizationVariables &vars = cellit.get_ionization_variables();
+        for (int_fast32_t ion = 1; ion < NUMBER_OF_IONNAMES; ++ion) {
+          const double abundance = _abundances.get_abundance(get_element(ion));
+          if (abundance > 0.) {
+            vars.set_mean_intensity(ion,
+                                    vars.get_mean_intensity(ion) / abundance);
+          }
+        }
+      }
       _temperature_calculator->calculate_temperature(iloop, _number_of_photons,
                                                      *gridit);
     }

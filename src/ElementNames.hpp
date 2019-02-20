@@ -29,6 +29,7 @@
 
 #include "Error.hpp"
 
+#include <cinttypes>
 #include <string>
 
 /**
@@ -103,7 +104,8 @@ enum IonName {
  * @param element ElementName for a valid element.
  * @return Textual representation of the element name.
  */
-static inline std::string get_element_name(int element) {
+static inline std::string get_element_name(const int_fast32_t element) {
+
   switch (element) {
   case ELEMENT_He:
     return "He";
@@ -118,7 +120,7 @@ static inline std::string get_element_name(int element) {
   case ELEMENT_S:
     return "S";
   default:
-    cmac_error("Unknown element: %i!", element);
+    cmac_error("Unknown element: %" PRIiFAST32 "!", element);
     return "";
   }
 }
@@ -129,7 +131,8 @@ static inline std::string get_element_name(int element) {
  * @param ion IonName for a valid ion.
  * @return Textual representation of the ion name.
  */
-static inline std::string get_ion_name(int ion) {
+static inline std::string get_ion_name(const int_fast32_t ion) {
+
   switch (ion) {
 
   case ION_H_n:
@@ -168,8 +171,59 @@ static inline std::string get_ion_name(int ion) {
     return "S+++";
 
   default:
-    cmac_error("Unknown ion: %i!", ion);
+    cmac_error("Unknown ion: %" PRIiFAST32 "!", ion);
     return "";
+  }
+}
+
+/**
+ * @brief Get the element corresponding to the given ion.
+ *
+ * @param ion IonName.
+ * @return Corresponding ElementName.
+ */
+static inline int_fast32_t get_element(const int_fast32_t ion) {
+  switch (ion) {
+
+  case ION_H_n:
+    cmac_error("Hydrogen ions don't have a corresponding element!");
+    return -1;
+
+  case ION_He_n:
+    return ELEMENT_He;
+
+  case ION_C_p1:
+    return ELEMENT_C;
+  case ION_C_p2:
+    return ELEMENT_C;
+
+  case ION_N_n:
+    return ELEMENT_N;
+  case ION_N_p1:
+    return ELEMENT_N;
+  case ION_N_p2:
+    return ELEMENT_N;
+
+  case ION_O_n:
+    return ELEMENT_O;
+  case ION_O_p1:
+    return ELEMENT_O;
+
+  case ION_Ne_n:
+    return ELEMENT_Ne;
+  case ION_Ne_p1:
+    return ELEMENT_Ne;
+
+  case ION_S_p1:
+    return ELEMENT_S;
+  case ION_S_p2:
+    return ELEMENT_S;
+  case ION_S_p3:
+    return ELEMENT_S;
+
+  default:
+    cmac_error("Unknown ion: %" PRIiFAST32 "!", ion);
+    return -1;
   }
 }
 
