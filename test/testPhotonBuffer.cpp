@@ -70,12 +70,14 @@ int main(int argc, char **argv) {
                             TRAVELDIRECTION_NUMBER);
   for (uint_fast32_t i = 0; i < test_buffer.size(); ++i) {
     PhotonPacket &photon = test_buffer[i];
-    photon.set_position(random_generator.get_uniform_random_double(),
-                        random_generator.get_uniform_random_double(),
-                        random_generator.get_uniform_random_double());
-    photon.set_direction(random_generator.get_uniform_random_double(),
-                         random_generator.get_uniform_random_double(),
-                         random_generator.get_uniform_random_double());
+    photon.set_position(
+        CoordinateVector<>(random_generator.get_uniform_random_double(),
+                           random_generator.get_uniform_random_double(),
+                           random_generator.get_uniform_random_double()));
+    photon.set_direction(
+        CoordinateVector<>(random_generator.get_uniform_random_double(),
+                           random_generator.get_uniform_random_double(),
+                           random_generator.get_uniform_random_double()));
     photon.set_weight(random_generator.get_uniform_random_double());
     photon.set_target_optical_depth(
         random_generator.get_uniform_random_double());
