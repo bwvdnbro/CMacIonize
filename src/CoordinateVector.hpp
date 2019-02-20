@@ -396,4 +396,18 @@ operator/(CoordinateVector< _datatype_ > v, _scalartype_ s) {
   return v /= s;
 }
 
+/**
+ * @brief Free operator that divides a scaler by a CoordinateVector and
+ * returns a CoordinateVector.
+ *
+ * @param s Scalar that should be divided.
+ * @param v CoordinateVector to divide by.
+ * @return Resulting CoordinateVector.
+ */
+template < typename _scalartype_, typename _datatype_ >
+inline CoordinateVector< _datatype_ >
+operator/(_scalartype_ s, CoordinateVector< _datatype_ > v) {
+  return CoordinateVector< _datatype_ >(s / v.x(), s / v.y(), s / v.z());
+}
+
 #endif // COORDINATEVECTOR_HPP

@@ -62,15 +62,13 @@ int main(int argc, char **argv) {
       const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
       const double cosp = std::cos(phi);
       const double sinp = std::sin(phi);
-      const double dx = sint * cosp;
-      const double dy = sint * sinp;
-      const double dz = cost;
+      const CoordinateVector<> d(sint * cosp, sint * sinp, cost);
 
       const double tau =
           -std::log(random_generator.get_uniform_random_double());
 
-      photon.set_position(0., 0., 0.);
-      photon.set_direction(dx, dy, dz);
+      photon.set_position(CoordinateVector<>(0.));
+      photon.set_direction(d);
       photon.set_photoionization_cross_section(6.3e-22);
       photon.set_weight(1.);
       photon.set_target_optical_depth(tau);

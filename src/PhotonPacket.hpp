@@ -30,6 +30,7 @@
 #define PHOTON_MPI_SIZE (9 * sizeof(double))
 
 #include "Configuration.hpp"
+#include "CoordinateVector.hpp"
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -41,10 +42,10 @@
 class PhotonPacket {
 private:
   /*! @brief Current position of the photon packet (in m). */
-  double _position[3];
+  CoordinateVector<> _position;
 
   /*! @brief Propagation direction of the photon packet. */
-  double _direction[3];
+  CoordinateVector<> _direction;
 
   /*! @brief Target optical depth for the photon packet. */
   double _target_optical_depth;
@@ -67,9 +68,9 @@ public:
    */
   inline void pack(char buffer[PHOTON_MPI_SIZE]) {
     int_least32_t buffer_position = 0;
-    MPI_Pack(_position, 3, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
+    MPI_Pack(&_position[0], 3, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
              &buffer_position, MPI_COMM_WORLD);
-    MPI_Pack(_direction, 3, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
+    MPI_Pack(&_direction[0], 3, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(&_target_optical_depth, 1, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE,
              &buffer_position, MPI_COMM_WORLD);
@@ -88,10 +89,17 @@ public:
    */
   inline void unpack(char buffer[PHOTON_MPI_SIZE]) {
     int_least32_t buffer_position = 0;
-    MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, _position, 3,
-               MPI_DOUBLE, MPI_COMM_WORLD);
-    MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, _direction, 3,
-               MPI_DOUBLE, MPI_COMM_WORLD);
+    double temp[3];
+    MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, temp, 3, MPI_DOUBLE,
+               MPI_COMM_WORLD);
+    _position[0] = temp[0];
+    _position[1] = temp[1];
+    _position[2] = temp[2];
+    MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, temp, 3, MPI_DOUBLE,
+               MPI_COMM_WORLD);
+    _direction[0] = temp[0];
+    _direction[1] = temp[1];
+    _direction[2] = temp[2];
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position,
                &_target_optical_depth, 1, MPI_DOUBLE, MPI_COMM_WORLD);
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position,
@@ -129,50 +137,42 @@ public:
   }
 
   /**
-   * @brief Get a constant pointer to the direction array.
+   * @brief Get a constant reference to the direction of the photon packet.
    *
-   * @return Constant pointer to the direction array.
+   * @return Constant reference to the direction.
    */
-  inline const double *get_direction() const { return _direction; }
+  inline const CoordinateVector<> &get_direction() const { return _direction; }
 
   /**
-   * @brief Get a writable pointer to the direction array.
+   * @brief Get a reference to the direction of the photon packet.
    *
-   * @return Writable pointer to the direction array.
+   * @return Reference to the direction.
    */
-  inline double *get_direction() { return _direction; }
+  inline CoordinateVector<> &get_direction() { return _direction; }
 
   /**
    * @brief Set the direction vector directly.
    *
-   * @param x x component.
-   * @param y y component.
-   * @param z z component.
+   * @param direction Direction for the photon packet.
    */
-  inline void set_direction(const double x, const double y, const double z) {
-    _direction[0] = x;
-    _direction[1] = y;
-    _direction[2] = z;
+  inline void set_direction(const CoordinateVector<> direction) {
+    _direction = direction;
   }
 
   /**
-   * @brief Get a constant pointer to the position array.
+   * @brief Get a constant reference to the position.
    *
-   * @return Constant pointer to the position array.
+   * @return Constant reference to the position (in m).
    */
-  inline const double *get_position() const { return _position; }
+  inline const CoordinateVector<> &get_position() const { return _position; }
 
   /**
    * @brief Update the position of the photon packet.
    *
-   * @param x New x coordinate (in m).
-   * @param y New y coordinate (in m).
-   * @param z New z coordinate (in m).
+   * @param position Position for the photon packet (in m).
    */
-  inline void set_position(const double x, const double y, const double z) {
-    _position[0] = x;
-    _position[1] = y;
-    _position[2] = z;
+  inline void set_position(const CoordinateVector<> position) {
+    _position = position;
   }
 
   /**

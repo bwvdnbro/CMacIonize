@@ -291,10 +291,10 @@ public:
             //  - -ncell --> negative --> lower limit
             //  - 0 --> in range --> inside
             //  - ncell --> upper limit
-            const int_fast32_t three_index[3] = {
+            const CoordinateVector< int_fast32_t > three_index(
                 nix * _subgrid_number_of_cells[0],
                 niy * _subgrid_number_of_cells[1],
-                niz * _subgrid_number_of_cells[2]};
+                niz * _subgrid_number_of_cells[2]);
             const int_fast32_t ngbi =
                 this_grid->get_output_direction(three_index);
             // now get the actual ngb index
