@@ -519,10 +519,12 @@ void TaskBasedIonizationSimulation::run(
               const double frequency =
                   _photon_source_spectrum->get_random_frequency(
                       _random_generators[thread_id]);
-              const double sigmaH =
-                  _cross_sections->get_cross_section(ION_H_n, frequency);
-              // this is the fixed cross section we use for the moment
-              photon.set_photoionization_cross_section(sigmaH);
+              for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+                const double sigma =
+                    _cross_sections->get_cross_section(ion, frequency);
+                // this is the fixed cross section we use for the moment
+                photon.set_photoionization_cross_section(ion, sigma);
+              }
             }
 
             // add to the queue of the corresponding thread
