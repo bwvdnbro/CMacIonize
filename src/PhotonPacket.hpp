@@ -27,7 +27,7 @@
 #define PHOTONPACKET_HPP
 
 /*! @brief Size of the MPI buffer necessary to store a single Photon. */
-#define PHOTON_MPI_SIZE ((8 + NUMBER_OF_IONNAMES) * sizeof(double))
+#define PHOTON_MPI_SIZE ((9 + NUMBER_OF_IONNAMES) * sizeof(double))
 
 #include "Configuration.hpp"
 #include "CoordinateVector.hpp"
@@ -56,6 +56,9 @@ private:
    *  additional abundance factor. */
   double _photoionization_cross_section[NUMBER_OF_IONNAMES];
 
+  /*! @brief Energy of the photon packet (in Hz). */
+  double _energy;
+
   /*! @brief Weight of the photon packet. */
   double _weight;
 
@@ -78,6 +81,8 @@ public:
              &buffer_position, MPI_COMM_WORLD);
     MPI_Pack(_photoionization_cross_section, NUMBER_OF_IONNAMES, MPI_DOUBLE,
              buffer, PHOTON_MPI_SIZE, &buffer_position, MPI_COMM_WORLD);
+    MPI_Pack(&_energy, 1, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE, &buffer_position,
+             MPI_COMM_WORLD);
     MPI_Pack(&_weight, 1, MPI_DOUBLE, buffer, PHOTON_MPI_SIZE, &buffer_position,
              MPI_COMM_WORLD);
   }
@@ -107,6 +112,8 @@ public:
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position,
                _photoionization_cross_section, NUMBER_OF_IONNAMES, MPI_DOUBLE,
                MPI_COMM_WORLD);
+    MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, &_energy, 1,
+               MPI_DOUBLE, MPI_COMM_WORLD);
     MPI_Unpack(buffer, PHOTON_MPI_SIZE, &buffer_position, &_weight, 1,
                MPI_DOUBLE, MPI_COMM_WORLD);
   }
@@ -138,6 +145,7 @@ public:
                               other._photoionization_cross_section[i],
                           "Cross sections do not match!");
     }
+    cmac_assert_message(_energy == other._energy, "Energies do not match!");
     cmac_assert_message(_weight == other._weight, "Weights do not match!");
   }
 
@@ -223,6 +231,20 @@ public:
       const int_fast32_t ion, const double photoionization_cross_section) {
     _photoionization_cross_section[ion] = photoionization_cross_section;
   }
+
+  /**
+   * @brief Get the energy of the photon packet.
+   *
+   * @return Energy of the photon packet (in Hz).
+   */
+  inline double get_energy() const { return _energy; }
+
+  /**
+   * @brief Set the energy of the photon packet.
+   *
+   * @param energy Energy of the photon packet (in Hz).
+   */
+  inline void set_energy(const double energy) { _energy = energy; }
 
   /**
    * @brief Get the weight for the photon packet.

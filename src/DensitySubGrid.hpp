@@ -447,11 +447,20 @@ private:
                                         const double distance,
                                         const PhotonPacket &photon) {
     subgrid_cell_lock_lock(active_cell);
+    double dmean_intensity[NUMBER_OF_IONNAMES];
     for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+      dmean_intensity[ion] = distance *
+                             photon.get_photoionization_cross_section(ion) *
+                             photon.get_weight();
       _ionization_variables[active_cell].increase_mean_intensity(
-          ion, distance * photon.get_photoionization_cross_section(ion) *
-                   photon.get_weight());
+          ion, dmean_intensity[ion]);
     }
+    _ionization_variables[active_cell].increase_heating(
+        HEATINGTERM_H,
+        dmean_intensity[ION_H_n] * (photon.get_energy() - 3.288e15));
+    _ionization_variables[active_cell].increase_heating(
+        HEATINGTERM_He,
+        dmean_intensity[ION_He_n] * (photon.get_energy() - 5.948e15));
     subgrid_cell_lock_unlock(active_cell);
   }
 
@@ -1699,6 +1708,18 @@ public:
   inline iterator end() {
     return iterator(
         _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2], *this);
+  }
+
+  /**
+   * @brief Get an iterator to the cell that contains the given position.
+   *
+   * @param position Position (in m).
+   * @return Iterator to the corresponding cell.
+   */
+  inline iterator get_cell(const CoordinateVector<> position) {
+    CoordinateVector< int_fast32_t > three_index;
+    return iterator(
+        get_start_index(position, TRAVELDIRECTION_INSIDE, three_index), *this);
   }
 };
 

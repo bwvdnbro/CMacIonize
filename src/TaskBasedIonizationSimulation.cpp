@@ -30,6 +30,7 @@
 #include "DensityGridWriterFactory.hpp"
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "DistributedPhotonSource.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
@@ -159,6 +160,7 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *  - number of photons: Number of photon packets to use for each iteration of
  *    the photoionization algorithm (default: 1e6)
  *  - output folder: Folder where all output files will be placed (default: .)
+ *  - diffuse field: Should the diffuse field be tracked? (default: false)
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
@@ -224,6 +226,13 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
       _charge_transfer_rates, _parameter_file, nullptr);
 
+  if (_parameter_file.get_value< bool >(
+          "TaskBasedIonizationSimulation:diffuse field", false)) {
+    _reemission_handler = new DiffuseReemissionHandler(*_cross_sections);
+  } else {
+    _reemission_handler = nullptr;
+  }
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
@@ -249,6 +258,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _temperature_calculator;
   delete _cross_sections;
   delete _recombination_rates;
+  delete _reemission_handler;
 }
 
 /**
@@ -322,10 +332,30 @@ void TaskBasedIonizationSimulation::run(
 
   for (uint_fast32_t iloop = 0; iloop < _number_of_iterations; ++iloop) {
 
-    photon_source.reset();
-
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
+
+    // reset the photon source information
+    photon_source.reset();
+
+    // reset the diffuse field variables
+    {
+      AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+      while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+          auto gridit = _grid_creator->get_subgrid(this_igrid);
+
+          // correct the intensity counters for abundance factors
+          for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+               ++cellit) {
+            IonizationVariables &vars = cellit.get_ionization_variables();
+            DiffuseReemissionHandler::set_reemission_probabilities(vars);
+          }
+        }
+      }
+    }
 
     cmac_warning("Loop: %" PRIuFAST32, iloop);
 
@@ -519,6 +549,7 @@ void TaskBasedIonizationSimulation::run(
               const double frequency =
                   _photon_source_spectrum->get_random_frequency(
                       _random_generators[thread_id]);
+              photon.set_energy(frequency);
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                 double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
@@ -552,6 +583,90 @@ void TaskBasedIonizationSimulation::run(
             // log the end time of the task
             task.stop();
 
+          } else if (task.get_type() == TASKTYPE_PHOTON_REEMIT) {
+
+            task.start(thread_id);
+
+            const size_t current_buffer_index = task.get_buffer();
+            PhotonBuffer &buffer = (*_buffers)[current_buffer_index];
+
+            uint_fast32_t num_photon_done_now = buffer.size();
+            DensitySubGrid &subgrid =
+                *_grid_creator->get_subgrid(task.get_subgrid());
+
+            // reemission
+            uint_fast32_t index = 0;
+            for (uint_fast32_t iphoton = 0; iphoton < buffer.size();
+                 ++iphoton) {
+              PhotonPacket &old_photon = buffer[iphoton];
+              const IonizationVariables &ionization_variables =
+                  subgrid.get_cell(old_photon.get_position())
+                      .get_ionization_variables();
+              const double new_frequency = _reemission_handler->reemit(
+                  old_photon, _abundances.get_abundance(ELEMENT_He),
+                  ionization_variables, _random_generators[thread_id]);
+              if (new_frequency > 0.) {
+                PhotonPacket &new_photon = buffer[index];
+                new_photon.set_position(old_photon.get_position());
+                new_photon.set_weight(old_photon.get_weight());
+
+                new_photon.set_energy(new_frequency);
+                for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+                  double sigma =
+                      _cross_sections->get_cross_section(ion, new_frequency);
+                  if (ion != ION_H_n) {
+                    sigma *= _abundances.get_abundance(get_element(ion));
+                  }
+                  // this is the fixed cross section we use for the moment
+                  new_photon.set_photoionization_cross_section(ion, sigma);
+                }
+
+                // draw two pseudo random numbers
+                const double cost = 2. * _random_generators[thread_id]
+                                             .get_uniform_random_double() -
+                                    1.;
+                const double phi =
+                    2. * M_PI *
+                    _random_generators[thread_id].get_uniform_random_double();
+
+                // now use them to get all directional angles
+                const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+                const double cosp = std::cos(phi);
+                const double sinp = std::sin(phi);
+
+                // set the direction...
+                const CoordinateVector<> direction(sint * cosp, sint * sinp,
+                                                   cost);
+
+                new_photon.set_direction(direction);
+
+                // target optical depth (exponential distribution)
+                new_photon.set_target_optical_depth(-std::log(
+                    _random_generators[thread_id].get_uniform_random_double()));
+
+                ++index;
+              }
+            }
+            // update the size of the buffer to account for photons that were
+            // not reemitted
+            buffer.grow(index);
+
+            num_photon_done_now -= buffer.size();
+            num_photon_done.pre_add(num_photon_done_now);
+
+            const size_t task_index = _tasks->get_free_element();
+            Task &new_task = (*_tasks)[task_index];
+            new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+            new_task.set_subgrid(task.get_subgrid());
+            new_task.set_buffer(current_buffer_index);
+            new_task.set_dependency(subgrid.get_dependency());
+
+            queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
+            tasks_to_add[num_tasks_to_add] = task_index;
+            ++num_tasks_to_add;
+
+            task.stop();
+
           } else if (task.get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
 
             task.start(thread_id);
@@ -575,7 +690,7 @@ void TaskBasedIonizationSimulation::run(
             }
 
             // if reemission is disabled, disable output to the internal buffer
-            if (true) {
+            if (_reemission_handler == nullptr) {
               local_buffer_flags[TRAVELDIRECTION_INSIDE] = false;
             }
 
@@ -772,36 +887,39 @@ void TaskBasedIonizationSimulation::run(
     // update copies (don't do in parallel)
     _grid_creator->update_original_counters();
 
-    //    for (auto gridit = _grid_creator->begin();
-    //         gridit != _grid_creator->original_end(); ++gridit) {
-    AtomicValue< size_t > igrid(0);
+    {
+      AtomicValue< size_t > igrid(0);
 #pragma omp parallel default(shared)
-    while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
-      const size_t this_igrid = igrid.post_increment();
-      if (this_igrid < _grid_creator->number_of_original_subgrids()) {
-        auto gridit = _grid_creator->get_subgrid(this_igrid);
+      while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+          auto gridit = _grid_creator->get_subgrid(this_igrid);
 
-        const size_t itask = _tasks->get_free_element();
-        Task &task = (*_tasks)[itask];
-        task.set_type(TASKTYPE_TEMPERATURE_STATE);
-        task.start(omp_get_thread_num());
+          const size_t itask = _tasks->get_free_element();
+          Task &task = (*_tasks)[itask];
+          task.set_type(TASKTYPE_TEMPERATURE_STATE);
+          task.start(omp_get_thread_num());
 
-        // correct the intensity counters for abundance factors
-        for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
-             ++cellit) {
-          IonizationVariables &vars = cellit.get_ionization_variables();
-          for (int_fast32_t ion = 1; ion < NUMBER_OF_IONNAMES; ++ion) {
-            const double abundance =
-                _abundances.get_abundance(get_element(ion));
-            if (abundance > 0.) {
-              vars.set_mean_intensity(ion,
-                                      vars.get_mean_intensity(ion) / abundance);
+          // correct the intensity counters for abundance factors
+          for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+               ++cellit) {
+            IonizationVariables &vars = cellit.get_ionization_variables();
+            for (int_fast32_t ion = 1; ion < NUMBER_OF_IONNAMES; ++ion) {
+              const double abundance =
+                  _abundances.get_abundance(get_element(ion));
+              if (abundance > 0.) {
+                vars.set_mean_intensity(ion, vars.get_mean_intensity(ion) /
+                                                 abundance);
+              }
             }
+            vars.set_heating(HEATINGTERM_He,
+                             vars.get_heating(HEATINGTERM_He) /
+                                 _abundances.get_abundance(ELEMENT_He));
           }
+          _temperature_calculator->calculate_temperature(
+              iloop, _number_of_photons, *gridit);
+          task.stop();
         }
-        _temperature_calculator->calculate_temperature(
-            iloop, _number_of_photons, *gridit);
-        task.stop();
       }
     }
 

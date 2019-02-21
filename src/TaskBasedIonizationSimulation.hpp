@@ -43,6 +43,7 @@ class DensityFunction;
 class DensityGridWriter;
 class DensitySubGrid;
 class DensitySubGridCreator;
+class DiffuseReemissionHandler;
 class MemorySpace;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
@@ -118,6 +119,9 @@ private:
 
   /*! @brief Recombination rates. */
   RecombinationRates *_recombination_rates;
+
+  /*! @brief Reemission handler. */
+  DiffuseReemissionHandler *_reemission_handler;
 
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
