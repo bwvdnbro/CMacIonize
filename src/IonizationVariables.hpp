@@ -175,6 +175,7 @@ public:
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fractions[i] = other._ionic_fractions[i];
     }
+    _temperature = other._temperature;
   }
 
   /**
@@ -183,6 +184,9 @@ public:
   inline void reset_mean_intensities() {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _mean_intensity[i] = 0.;
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      _heating[i] = 0.;
     }
   }
 

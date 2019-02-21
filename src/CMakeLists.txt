@@ -301,10 +301,14 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
+    DiffuseReemissionHandler.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     FLASHSnapshotDensityFunction.cpp
     GadgetSnapshotDensityFunction.cpp
     GadgetSnapshotPhotonSourceDistribution.cpp
+    HeliumLymanContinuumSpectrum.cpp
+    HeliumTwoPhotonContinuumSpectrum.cpp
+    HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
