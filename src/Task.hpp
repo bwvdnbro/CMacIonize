@@ -45,6 +45,8 @@ enum TaskType {
   TASKTYPE_PHOTON_TRAVERSAL,
   /*! @brief Reemit photons. */
   TASKTYPE_PHOTON_REEMIT,
+  /*! @brief Compute the temperature/ionization state. */
+  TASKTYPE_TEMPERATURE_STATE,
   /*! @brief Send a buffer to another process. */
   TASKTYPE_SEND,
   /*! @brief Receive a buffer from another process. */
