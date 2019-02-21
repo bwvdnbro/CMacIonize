@@ -772,23 +772,37 @@ void TaskBasedIonizationSimulation::run(
     // update copies (don't do in parallel)
     _grid_creator->update_original_counters();
 
-    for (auto gridit = _grid_creator->begin();
-         gridit != _grid_creator->original_end(); ++gridit) {
+    //    for (auto gridit = _grid_creator->begin();
+    //         gridit != _grid_creator->original_end(); ++gridit) {
+    AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+    while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+        auto gridit = _grid_creator->get_subgrid(this_igrid);
 
-      // correct the intensity counters for abundance factors
-      for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
-           ++cellit) {
-        IonizationVariables &vars = cellit.get_ionization_variables();
-        for (int_fast32_t ion = 1; ion < NUMBER_OF_IONNAMES; ++ion) {
-          const double abundance = _abundances.get_abundance(get_element(ion));
-          if (abundance > 0.) {
-            vars.set_mean_intensity(ion,
-                                    vars.get_mean_intensity(ion) / abundance);
+        const size_t itask = _tasks->get_free_element();
+        Task &task = (*_tasks)[itask];
+        task.set_type(TASKTYPE_TEMPERATURE_STATE);
+        task.start(omp_get_thread_num());
+
+        // correct the intensity counters for abundance factors
+        for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+             ++cellit) {
+          IonizationVariables &vars = cellit.get_ionization_variables();
+          for (int_fast32_t ion = 1; ion < NUMBER_OF_IONNAMES; ++ion) {
+            const double abundance =
+                _abundances.get_abundance(get_element(ion));
+            if (abundance > 0.) {
+              vars.set_mean_intensity(ion,
+                                      vars.get_mean_intensity(ion) / abundance);
+            }
           }
         }
+        _temperature_calculator->calculate_temperature(
+            iloop, _number_of_photons, *gridit);
+        task.stop();
       }
-      _temperature_calculator->calculate_temperature(iloop, _number_of_photons,
-                                                     *gridit);
     }
 
     // update copies

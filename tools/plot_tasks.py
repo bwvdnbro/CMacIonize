@@ -51,13 +51,14 @@ pl.rcParams["font.size"] = 14
 
 # name labels and colours for the various task types
 # add extra colours and labels here if new tasks are created
-task_names = ["source photon", "photon traversal", "reemission", "send",
+task_names = ["source photon", "photon traversal", "reemission",
+              "temperature/ionization state", "send",
               "receive", "gradsweep internal", "gradsweep neighbour",
               "gradsweep boundary", "slope limiter", "predict primitives",
               "fluxsweep internal", "fluxsweep neighbour", "fluxsweep boundary",
               "update conserved", "update primitives"]
 task_colors = \
-  pl.cm.ScalarMappable(cmap = "gist_ncar").to_rgba(
+  pl.cm.ScalarMappable(cmap = "tab20").to_rgba(
     np.linspace(0., 1., len(task_names)))
 
 # load the program time data
