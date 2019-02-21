@@ -27,9 +27,12 @@
 #define DIFFUSEREEMISSIONHANDLER_HPP
 
 #include "DensityGrid.hpp"
+#include "DensitySubGridCreator.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
+
+class PhotonPacket;
 
 /**
  * @brief ReemissionHandler for diffuse reemission.
@@ -115,6 +118,10 @@ public:
   double reemit(const Photon &photon, double helium_abundance,
                 const IonizationVariables &ionization_variables,
                 RandomGenerator &random_generator, PhotonType &type) const;
+
+  double reemit(const PhotonPacket &photon, const double helium_abundance,
+                const IonizationVariables &ionization_variables,
+                RandomGenerator &random_generator) const;
 };
 
 #endif // DIFFUSEREEMISSIONHANDLER_HPP

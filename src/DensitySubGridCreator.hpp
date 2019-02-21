@@ -325,8 +325,11 @@ public:
         DensityValues values = density_function(it);
         it.get_ionization_variables().set_number_density(
             values.get_number_density());
-        it.get_ionization_variables().set_ionic_fraction(
-            ION_H_n, values.get_ionic_fraction(ION_H_n));
+        for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+          it.get_ionization_variables().set_ionic_fraction(
+              ion, values.get_ionic_fraction(ion));
+        }
+        it.get_ionization_variables().set_temperature(values.get_temperature());
       }
     }
   }

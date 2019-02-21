@@ -359,16 +359,16 @@ void GadgetDensityGridWriter::write(DensitySubGridCreator &grid_creator,
   const Box<> box = grid_creator.get_box();
 
   // we force output of the required fields for now
-  uint_fast32_t field_flags[DENSITYGRIDFIELD_NUMBER];
-  for (uint_fast32_t i = 0; i < DENSITYGRIDFIELD_NUMBER; ++i) {
-    field_flags[i] = 0;
-  }
-  field_flags[DENSITYGRIDFIELD_COORDINATES] = 1;
-  field_flags[DENSITYGRIDFIELD_NUMBER_DENSITY] = 1;
-  field_flags[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 1;
-  const DensityGridWriterFields fields(field_flags);
+  //  uint_fast32_t field_flags[DENSITYGRIDFIELD_NUMBER];
+  //  for (uint_fast32_t i = 0; i < DENSITYGRIDFIELD_NUMBER; ++i) {
+  //    field_flags[i] = 0;
+  //  }
+  //  field_flags[DENSITYGRIDFIELD_COORDINATES] = 1;
+  //  field_flags[DENSITYGRIDFIELD_NUMBER_DENSITY] = 1;
+  //  field_flags[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 1;
+  //  const DensityGridWriterFields fields(field_flags);
   // this line is what we actually want...
-  //  const DensityGridWriterFields &fields = _fields;
+  const DensityGridWriterFields &fields = _fields;
 
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_WRITE);
