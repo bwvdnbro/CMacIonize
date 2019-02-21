@@ -43,7 +43,7 @@
 class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
-  const Box<> &_box;
+  const Box<> _box;
 
 public:
   /**
@@ -52,7 +52,7 @@ public:
    * @param simulation_box Simulation box (in m).
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+  IsotropicContinuousPhotonSource(const Box<> simulation_box,
                                   Log *log = nullptr)
       : _box(simulation_box) {
 
