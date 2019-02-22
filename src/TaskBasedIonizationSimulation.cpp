@@ -43,6 +43,7 @@
 
 #include <fstream>
 #include <omp.h>
+#include <sstream>
 
 /**
  * @brief Write a file with the start and end times of all tasks.
@@ -183,11 +184,13 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       "TaskBasedIonizationSimulation:queue size per thread", 10000);
   _queues.resize(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
-    _queues[ithread] = new TaskQueue(queue_size_per_thread);
+    std::stringstream queue_name;
+    queue_name << "Queue for Thread " << ithread;
+    _queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
   }
   const size_t shared_queue_size = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:shared queue size", 100000);
-  _shared_queue = new TaskQueue(shared_queue_size);
+  _shared_queue = new TaskQueue(shared_queue_size, "Shared queue");
   const size_t number_of_tasks = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of tasks", 500000);
   _tasks = new ThreadSafeVector< Task >(number_of_tasks, "Tasks");

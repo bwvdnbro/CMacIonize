@@ -64,13 +64,18 @@ private:
   size_t _max_queue_size;
 #endif
 
+  /*! @brief Label to identify this queue in error messages. */
+  const std::string _label;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param size Size of the queue.
+   * @param label Label to identify this queue in error messages.
    */
-  inline TaskQueue(const size_t size) : _current_queue_size(0), _size(size) {
+  inline TaskQueue(const size_t size, const std::string label = "")
+      : _current_queue_size(0), _size(size), _label(label) {
     _queue = new size_t[size];
 #ifdef QUEUE_STATS
     _max_queue_size = 0;
@@ -90,7 +95,8 @@ public:
   inline void add_task(const size_t task) {
     _queue_lock.lock();
     cmac_assert_message(_current_queue_size < _size,
-                        "Too many tasks in queue!");
+                        "Too many tasks in queue (%zu < %zu)! (%s)",
+                        _current_queue_size, _size, _label.c_str());
     _queue[_current_queue_size] = task;
     ++_current_queue_size;
 #ifdef QUEUE_STATS
@@ -107,7 +113,9 @@ public:
    */
   inline void add_tasks(const size_t task_start, const size_t task_end) {
 
-    cmac_assert_message(task_end <= _size, "Too many tasks for queue!");
+    cmac_assert_message(task_end <= _size,
+                        "Too many tasks for queue (%zu < %zu)! (%s)", task_end,
+                        _size, _label.c_str());
 
     _queue_lock.lock();
 #pragma omp parallel for

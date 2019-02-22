@@ -273,7 +273,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   // Wood, Mathis & Ercolano (2004), equation 17
   // we extracted the factor 10^4 from the square root and multiplied it with
   // the constant 0.77
-  const double pHots = 1. / (1. + 77. / sqrtT * he0 / h0);
+  const double pHots = 1. / (1. + 77. * he0 / (sqrtT * h0));
   // the constant factor is the energy gain due to a helium Lyman alpha photon
   // being absorbed by hydrogen: (21.2 eV - 13.6 eV) = 1.21765423e-18 J
   gain += pHots * 1.21765423e-18 * alpha_e_2sP * nenhep;
