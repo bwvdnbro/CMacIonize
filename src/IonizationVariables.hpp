@@ -200,6 +200,9 @@ public:
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _mean_intensity[i] += other._mean_intensity[i];
     }
+    for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
+      _heating[i] += other._heating[i];
+    }
   }
 
   /**

@@ -190,7 +190,7 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   _shared_queue = new TaskQueue(shared_queue_size);
   const size_t number_of_tasks = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of tasks", 500000);
-  _tasks = new ThreadSafeVector< Task >(number_of_tasks);
+  _tasks = new ThreadSafeVector< Task >(number_of_tasks, "Tasks");
   _random_generators.resize(num_thread);
   const int_fast32_t random_seed = _parameter_file.get_value< int_fast32_t >(
       "TaskBasedIonizationSimulation:random seed", 42);
