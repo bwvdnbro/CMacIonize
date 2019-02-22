@@ -1401,9 +1401,8 @@ LineCoolingData::LineCoolingData() {
  * @param transition LineCoolingDataTransition.
  * @return Transition probability for deexcitation (in s^-1).
  */
-double
-LineCoolingData::get_transition_probability(int_fast32_t element,
-                                            int_fast32_t transition) const {
+double LineCoolingData::get_transition_probability(
+    const int_fast32_t element, const int_fast32_t transition) const {
   return _five_level_transition_probability[element][transition];
 }
 
@@ -1415,8 +1414,9 @@ LineCoolingData::get_transition_probability(int_fast32_t element,
  * @param transition LineCoolingDataTransition.
  * @return Energy difference (in K).
  */
-double LineCoolingData::get_energy_difference(int_fast32_t element,
-                                              int_fast32_t transition) const {
+double
+LineCoolingData::get_energy_difference(const int_fast32_t element,
+                                       const int_fast32_t transition) const {
   return _five_level_energy_difference[element][transition];
 }
 
@@ -1427,8 +1427,8 @@ double LineCoolingData::get_energy_difference(int_fast32_t element,
  * @param level Level index.
  * @return Statistical weight.
  */
-double LineCoolingData::get_statistical_weight(int_fast32_t element,
-                                               uint_fast8_t level) const {
+double LineCoolingData::get_statistical_weight(const int_fast32_t element,
+                                               const uint_fast8_t level) const {
   return 1. / _five_level_inverse_statistical_weight[element][level];
 }
 
@@ -1567,8 +1567,9 @@ int LineCoolingData::solve_system_of_linear_equations(double A[5][5],
  * @param level_populations Array to store the resulting level populations in.
  */
 void LineCoolingData::compute_level_populations(
-    int_fast32_t element, double collision_strength_prefactor, double T,
-    double Tinv, double logT, double level_populations[5]) const {
+    const int_fast32_t element, const double collision_strength_prefactor,
+    const double T, const double Tinv, const double logT,
+    double level_populations[5]) const {
 
   double level_matrix[5][5];
   // initialize the level populations and the first row of the coefficient
@@ -1711,8 +1712,8 @@ void LineCoolingData::compute_level_populations(
  * @return Level population of the second level.
  */
 double LineCoolingData::compute_level_population(
-    int_fast32_t element, double collision_strength_prefactor, double T,
-    double Tinv, double logT) const {
+    const int_fast32_t element, const double collision_strength_prefactor,
+    const double T, const double Tinv, const double logT) const {
 
   // note that we need to remap the element index
   const int_fast32_t i = element - LINECOOLINGDATA_NUMFIVELEVELELEMENTS;
@@ -1764,7 +1765,7 @@ double LineCoolingData::compute_level_population(
  * @return Radiative cooling per hydrogen atom (in kg m^2s^-3).
  */
 double LineCoolingData::get_cooling(
-    double temperature, double electron_density,
+    const double temperature, const double electron_density,
     const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const {
 
   if (electron_density == 0.) {
@@ -1856,7 +1857,7 @@ double LineCoolingData::get_cooling(
  * for each transition (in J s^-1).
  */
 std::vector< std::vector< double > > LineCoolingData::get_line_strengths(
-    double temperature, double electron_density,
+    const double temperature, const double electron_density,
     const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const {
 
   /// initialize some variables

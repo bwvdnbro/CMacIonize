@@ -230,32 +230,35 @@ private:
    *  \left(2\pi{}m_e\right)^\frac{3}{2}\f$ (in K^0.5 m^3 s^-1). */
   double _collision_strength_prefactor;
 
-  void compute_level_populations(int_fast32_t element,
-                                 double collision_strength_prefactor, double T,
-                                 double Tinv, double logT,
+  void compute_level_populations(const int_fast32_t element,
+                                 const double collision_strength_prefactor,
+                                 const double T, const double Tinv,
+                                 const double logT,
                                  double level_populations[5]) const;
 
-  double compute_level_population(int_fast32_t element,
-                                  double collision_strength_prefactor, double T,
-                                  double Tinv, double logT) const;
+  double compute_level_population(const int_fast32_t element,
+                                  const double collision_strength_prefactor,
+                                  const double T, const double Tinv,
+                                  const double logT) const;
 
 public:
   LineCoolingData();
 
-  double get_transition_probability(int_fast32_t element,
-                                    int_fast32_t transition) const;
-  double get_energy_difference(int_fast32_t element,
-                               int_fast32_t transition) const;
-  double get_statistical_weight(int_fast32_t element, uint_fast8_t level) const;
+  double get_transition_probability(const int_fast32_t element,
+                                    const int_fast32_t transition) const;
+  double get_energy_difference(const int_fast32_t element,
+                               const int_fast32_t transition) const;
+  double get_statistical_weight(const int_fast32_t element,
+                                const uint_fast8_t level) const;
 
   static int solve_system_of_linear_equations(double A[5][5], double B[5]);
 
   double
-  get_cooling(double temperature, double electron_density,
+  get_cooling(const double temperature, const double electron_density,
               const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const;
 
   std::vector< std::vector< double > > get_line_strengths(
-      double temperature, double electron_density,
+      const double temperature, const double electron_density,
       const double abundances[LINECOOLINGDATA_NUMELEMENTS]) const;
 };
 
