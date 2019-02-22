@@ -1718,8 +1718,9 @@ public:
    */
   inline iterator get_cell(const CoordinateVector<> position) {
     CoordinateVector< int_fast32_t > three_index;
-    return iterator(
-        get_start_index(position, TRAVELDIRECTION_INSIDE, three_index), *this);
+    return iterator(get_start_index(position - _anchor, TRAVELDIRECTION_INSIDE,
+                                    three_index),
+                    *this);
   }
 };
 

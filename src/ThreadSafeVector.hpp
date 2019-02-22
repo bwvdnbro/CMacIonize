@@ -29,6 +29,8 @@
 #include "AtomicValue.hpp"
 #include "Error.hpp"
 
+#include <string>
+
 /*! @brief Total size of the variables whose size is known at compile time. */
 #define THREADSAFEVECTOR_FIXED_SIZE sizeof(ThreadSafeVector< _datatype_ >)
 
@@ -63,14 +65,17 @@ private:
   AtomicValue< size_t > _max_number_taken;
 #endif
 
+  /*! @brief Label appended to error messages. */
+  std::string _label;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param size Size of the vector.
    */
-  inline ThreadSafeVector(const size_t size)
-      : _current_index(0), _size(size), _number_taken(0) {
+  inline ThreadSafeVector(const size_t size, const std::string label = "")
+      : _current_index(0), _size(size), _number_taken(0), _label(label) {
     _vector = new _datatype_[size];
     // Atomic values are automatically initialized to 0 (= false) by the
     // constructor
@@ -116,7 +121,8 @@ public:
    */
   inline void get_free_elements(const size_t size) {
 
-    cmac_assert_message(size < _size, "Not enough elements available!");
+    cmac_assert_message(size < _size, "Not enough elements available! (%s)",
+                        _label.c_str());
 
     for (size_t i = 0; i < size; ++i) {
       _locks[i].lock();
@@ -159,9 +165,10 @@ public:
    */
   inline _datatype_ &operator[](const size_t index) {
     cmac_assert_message(index < _size,
-                        "Element out of range (index: %zu, size: %zu)!", index,
-                        _size);
-    cmac_assert_message(_locks[index].value(), "Element not in use!");
+                        "Element out of range (index: %zu, size: %zu)! (%s)",
+                        index, _size, _label.c_str());
+    cmac_assert_message(_locks[index].value(), "Element not in use! (%s)",
+                        _label.c_str());
     return _vector[index];
   }
 
@@ -173,9 +180,10 @@ public:
    */
   inline const _datatype_ &operator[](const size_t index) const {
     cmac_assert_message(index < _size,
-                        "Element out of range (index: %zu, size: %zu)!", index,
-                        _size);
-    cmac_assert_message(_locks[index].value(), "Element not in use!");
+                        "Element out of range (index: %zu, size: %zu)! (%s)",
+                        index, _size, _label.c_str());
+    cmac_assert_message(_locks[index].value(), "Element not in use! (%s)",
+                        _label.c_str());
     return _vector[index];
   }
 
@@ -189,7 +197,8 @@ public:
    */
   inline size_t get_free_element() {
     cmac_assert_message(_number_taken.value() < _size,
-                        "No more free elements in vector!");
+                        "No more free elements in vector (%zu < %zu)! (%s)",
+                        _number_taken.value(), _size, _label.c_str());
     size_t index = _current_index.post_increment() % _size;
     while (!_locks[index].lock()) {
       index = _current_index.post_increment() % _size;
@@ -238,7 +247,8 @@ public:
    * @param index Index of an element that was in use.
    */
   inline void free_element(const size_t index) {
-    cmac_assert_message(_locks[index].value(), "Element not in use!");
+    cmac_assert_message(_locks[index].value(), "Element not in use! (%s)",
+                        _label.c_str());
     _locks[index].unlock();
     _number_taken.pre_decrement();
   }
@@ -253,7 +263,7 @@ public:
    */
   inline size_t size() const {
     cmac_assert_message(_number_taken.value() == _current_index.value(),
-                        "Non continuous vector!");
+                        "Non continuous vector! (%s)", _label.c_str());
     return _number_taken.value();
   }
 

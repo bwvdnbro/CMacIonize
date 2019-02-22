@@ -45,7 +45,7 @@ public:
    *
    * @param size Size of the memory space.
    */
-  inline MemorySpace(const size_t size) : _memory_space(size) {}
+  inline MemorySpace(const size_t size) : _memory_space(size, "MemorySpace") {}
 
   /**
    * @brief Access the buffer with the given index.
