@@ -79,7 +79,7 @@ if ptime[0, 1] < 0:
   ptime[0, 1] = data[:,2].min()
   ptime[0, 2] = data[:,3].max()
 if (data[:,4] == -1).sum() == 0:
-  data = np.append(data, [[0, 0, ptime[0, 1], ptime[0, 2], -1]], axis = 0)
+  data = np.append(data, [[0, 0, ptime[0, 1], ptime[0, 2], -1, 0]], axis = 0)
 
 task_flags = [len(data[data[:,4] == task]) > 0 \
               for task in range(len(task_names))]
@@ -139,7 +139,10 @@ for iproc in range(nproc):
     bar = [((task[1] - tmin[iproc]) * tconv[iproc],
             (task[2] - task[1]) * tconv[iproc]) \
              for task in thread]
-    tottime = np.array([line[1] for line in bar]).sum()
+    if len(thread[0]) > 4:
+      tottime = thread[:,4].sum() * tconv[iproc]
+    else:
+      tottime = np.array([line[1] for line in bar]).sum()
     alltime += tottime
     bar = [(line[0] * tconv_in_s[iproc] + tmin_in_s[iproc],
             line[1] * tconv_in_s[iproc])
