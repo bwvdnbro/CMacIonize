@@ -126,11 +126,15 @@ private:
   /*! @brief Reemission handler. */
   DiffuseReemissionHandler *_reemission_handler;
 
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,
-                                const std::string parameterfile_name);
+                                const std::string parameterfile_name,
+                                Log *log = nullptr);
   ~TaskBasedIonizationSimulation();
 
   void initialize(DensityFunction *density_function = nullptr);
