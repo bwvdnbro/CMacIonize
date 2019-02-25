@@ -88,14 +88,7 @@ def main():
       a = coords["units"], b = "m")
     sys.exit(1)
 
-  units = {"NumberDensity": "m^-3", "Temperature": "K", "NeutralFractionH": "",
-           "NeutralFractionHe": "", "NeutralFractionC+": "",
-           "NeutralFractionC++": "", "NeutralFractionN": "",
-           "NeutralFractionN+": "", "NeutralFractionN++": "",
-           "NeutralFractionO": "", "NeutralFractionO+": "",
-           "NeutralFractionNe": "", "NeutralFractionNe+": "",
-           "NeutralFractionS+": "", "NeutralFractionS++": "",
-           "NeutralFractionS+++": ""}
+  units = {"NumberDensity": "m^-3", "Temperature": "K", "NeutralFractionH": ""}
   for variable in units:
     data = densitygrid.get_variable(variable)
     fdata = np.array(file["/PartType0/{variable}".format(variable = variable)])

@@ -137,14 +137,19 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     const double ntot = ionization_variables.get_number_density();
     const double nhp =
         ntot * (1. - ionization_variables.get_ionic_fraction(ION_H_n));
+#ifdef HAS_HELIUM
     const double nhep =
         ntot * (1. - ionization_variables.get_ionic_fraction(ION_He_n)) *
         abundances.get_abundance(ELEMENT_He);
+#else
+    const double nhep = 0.;
+#endif
     const double ne = nhp + nhep;
 
     // get the abundances of the ions used by the line cooling computation
     double abund[LINECOOLINGDATA_NUMELEMENTS];
 
+#ifdef HAS_CARBON
     // carbon
     // we assume that all carbon is either C+, C++, or C+++
     // we only use C+ and C++
@@ -155,7 +160,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_C_p2));
     abund[CIII] = abundances.get_abundance(ELEMENT_C) *
                   ionization_variables.get_ionic_fraction(ION_C_p1);
+#endif
 
+#ifdef HAS_NITROGEN
     // nitrogen
     // we assume all nitrogen is either N0, N+, N++ or N+++
     // we only use N0, N+ and N++
@@ -167,7 +174,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                  ionization_variables.get_ionic_fraction(ION_N_n);
     abund[NIII] = abundances.get_abundance(ELEMENT_N) *
                   ionization_variables.get_ionic_fraction(ION_N_p1);
+#endif
 
+#ifdef HAS_OXYGEN
     // oxygen
     // we assume all oxygen is either O0, O+ or O++
     // we use all of them
@@ -178,7 +187,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                  ionization_variables.get_ionic_fraction(ION_O_n);
     abund[OIII] = abundances.get_abundance(ELEMENT_O) *
                   ionization_variables.get_ionic_fraction(ION_O_p1);
+#endif
 
+#ifdef HAS_NEON
     // neon
     // we make no assumptions on the relative abundances of different neon ions
     // we only use Ne+ and Ne++
@@ -186,7 +197,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_Ne_n);
     abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
                    ionization_variables.get_ionic_fraction(ION_Ne_p1);
+#endif
 
+#ifdef HAS_SULPHUR
     // sulphur
     // we assume all sulphur is either S+, S++, S+++ or S++++
     // we only use S+, S++ and S+++
@@ -198,6 +211,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_S_p1);
     abund[SIV] = abundances.get_abundance(ELEMENT_S) *
                  ionization_variables.get_ionic_fraction(ION_S_p2);
+#endif
 
     std::vector< std::vector< double > > line_strengths =
         line_cooling_data.get_line_strengths(
@@ -368,10 +382,12 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // density weighted average temperature of ionized particles
     eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
     eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
+#ifdef HAS_HELIUM
     // average ionized hydrogen and helium density product
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe,
         ne * (1. - ionization_variables.get_ionic_fraction(ION_He_n)));
+#endif
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe_count,
         ne * (1. - ionization_variables.get_ionic_fraction(ION_H_n)));

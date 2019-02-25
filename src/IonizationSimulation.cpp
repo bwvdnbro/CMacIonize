@@ -285,10 +285,12 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
         ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
             _density_grid->begin(), _density_grid->end(), local_chunk.first,
             local_chunk.second, 0);
+#ifdef HAS_HELIUM
     _mpi_communicator
         ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
             _density_grid->begin(), _density_grid->end(), local_chunk.first,
             local_chunk.second, 0);
+#endif
     stop_parallel_timing_block();
   }
 
@@ -438,15 +440,23 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_H_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_He_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_CARBON
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_C_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_C_p2 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_NITROGEN
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_N_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
@@ -456,18 +466,27 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_N_p2 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_OXYGEN
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_O_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_O_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_NEON
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_Ne_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_Ne_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_SULPHUR
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_S_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
@@ -477,12 +496,17 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_S_p3 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  HeatingPropertyAccessor< HEATINGTERM_H > >(
           _density_grid->begin(), _density_grid->end(), 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  HeatingPropertyAccessor< HEATINGTERM_He > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
     }
 
     _temperature_calculator->calculate_temperature(loop, totweight,
@@ -500,10 +524,15 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_CARBON
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_C_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -512,6 +541,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_C_p2 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_NITROGEN
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_N_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -524,6 +556,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_N_p2 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_OXYGEN
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_O_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -532,6 +567,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_O_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_NEON
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_Ne_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -540,6 +578,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_Ne_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_SULPHUR
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_S_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -552,6 +593,7 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_S_p3 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
     }
 
     stop_parallel_timing_block();

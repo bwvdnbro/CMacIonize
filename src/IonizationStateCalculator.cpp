@@ -67,12 +67,15 @@ void IonizationStateCalculator::calculate_ionization_state(
 
   // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
+  cmac_assert(jH >= 0.);
+
+#ifdef HAS_HELIUM
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+  cmac_assert(jHe >= 0.);
+#endif
+
   // get the number density
   const double ntot = ionization_variables.get_number_density();
-
-  cmac_assert(jH >= 0.);
-  cmac_assert(jHe >= 0.);
   cmac_assert(ntot >= 0.);
 
   // find the ionization equilibrium for hydrogen and helium
@@ -83,6 +86,7 @@ void IonizationStateCalculator::calculate_ionization_state(
 
     cmac_assert(alphaH >= 0.);
 
+#ifdef HAS_HELIUM
     // h0find
     double h0, he0 = 0.;
     if (_abundances.get_abundance(ELEMENT_He) != 0.) {
@@ -94,33 +98,69 @@ void IonizationStateCalculator::calculate_ionization_state(
     } else {
       h0 = compute_ionization_state_hydrogen(alphaH, jH, ntot);
     }
+#else
+    const double h0 = compute_ionization_state_hydrogen(alphaH, jH, ntot);
+#endif
 
     ionization_variables.set_ionic_fraction(ION_H_n, h0);
+
+#ifdef HAS_HELIUM
     ionization_variables.set_ionic_fraction(ION_He_n, he0);
+#endif
 
     // do the coolants
-
+    const double nhp = ntot * (1. - h0);
+#ifdef HAS_HELIUM
     const double ne =
         ntot * (1. - h0 + _abundances.get_abundance(ELEMENT_He) * (1. - he0));
+#else
+    const double ne = nhp;
+#endif
     const double T4 = T * 1.e-4;
-    const double nhp = ntot * (1. - h0);
 
     const double j_metals[12] = {
+#ifdef HAS_CARBON
         ionization_variables.get_mean_intensity(ION_C_p1),
         ionization_variables.get_mean_intensity(ION_C_p2),
+#else
+        0., 0.,
+#endif
+#ifdef HAS_NITROGEN
         ionization_variables.get_mean_intensity(ION_N_n),
         ionization_variables.get_mean_intensity(ION_N_p1),
         ionization_variables.get_mean_intensity(ION_N_p2),
+#else
+        0., 0.,
+        0.,
+#endif
+#ifdef HAS_OXYGEN
         ionization_variables.get_mean_intensity(ION_O_n),
         ionization_variables.get_mean_intensity(ION_O_p1),
+#else
+        0., 0.,
+#endif
+#ifdef HAS_NEON
         ionization_variables.get_mean_intensity(ION_Ne_n),
         ionization_variables.get_mean_intensity(ION_Ne_p1),
+#else
+        0., 0.,
+#endif
+#ifdef HAS_SULPHUR
         ionization_variables.get_mean_intensity(ION_S_p1),
         ionization_variables.get_mean_intensity(ION_S_p2),
-        ionization_variables.get_mean_intensity(ION_S_p3)};
+        ionization_variables.get_mean_intensity(ION_S_p3)
+#else
+        0., 0.,
+        0.
+#endif
+    };
 
     const double nh0 = ntot * h0;
+#ifdef HAS_HELIUM
     const double nhe0 = ntot * he0 * _abundances.get_abundance(ELEMENT_He);
+#else
+    const double nhe0 = 0.;
+#endif
     compute_ionization_states_metals(
         j_metals, ne, T, T4, nh0, nhe0, nhp, _recombination_rates,
         _charge_transfer_rates, ionization_variables);
@@ -131,36 +171,73 @@ void IonizationStateCalculator::calculate_ionization_state(
     if (ntot > 0.) {
       // mean intensity for hydrogen was zero: cell is entirely neutral
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
+
+#ifdef HAS_HELIUM
       ionization_variables.set_ionic_fraction(ION_He_n, 1.);
+#endif
+
       // all coolants are also neutral, so their ionic fractions are 0
+#ifdef HAS_CARBON
       ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
+
+#ifdef HAS_NITROGEN
       ionization_variables.set_ionic_fraction(ION_N_n, 1.);
       ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
+
+#ifdef HAS_OXYGEN
       ionization_variables.set_ionic_fraction(ION_O_n, 1.);
       ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
+
+#ifdef HAS_NEON
       ionization_variables.set_ionic_fraction(ION_Ne_n, 1.);
       ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
+
+#ifdef HAS_SULPHUR
       ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
+
     } else {
       // vacuum cell: set all values to 0
       ionization_variables.set_ionic_fraction(ION_H_n, 0.);
+
+#ifdef HAS_HELIUM
       ionization_variables.set_ionic_fraction(ION_He_n, 0.);
+#endif
+
+#ifdef HAS_CARBON
       ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
+
+#ifdef HAS_NITROGEN
       ionization_variables.set_ionic_fraction(ION_N_n, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
+
+#ifdef HAS_OXYGEN
       ionization_variables.set_ionic_fraction(ION_O_n, 0.);
       ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
+
+#ifdef HAS_NEON
       ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
       ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
+
+#ifdef HAS_SULPHUR
       ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
     }
   }
 
@@ -223,43 +300,72 @@ void IonizationStateCalculator::calculate_ionization_state(
  * @param ionization_variables IonizationStateVariables to operate on.
  */
 void IonizationStateCalculator::compute_ionization_states_metals(
-    const double j_metals[NUMBER_OF_IONNAMES - 2], const double ne,
-    const double T, const double T4, const double nh0, const double nhe0,
-    const double nhp, const RecombinationRates &recombination_rates,
+    const double *j_metals, const double ne, const double T, const double T4,
+    const double nh0, const double nhe0, const double nhp,
+    const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates,
     IonizationVariables &ionization_variables) {
 
+#ifdef HAS_CARBON
   const double jCp1 = j_metals[0];
   const double jCp2 = j_metals[1];
+#endif
+
+#ifdef HAS_NITROGEN
   const double jNn = j_metals[2];
   const double jNp1 = j_metals[3];
   const double jNp2 = j_metals[4];
+#endif
+
+#ifdef HAS_OXYGEN
   const double jOn = j_metals[5];
   const double jOp1 = j_metals[6];
+#endif
+
+#ifdef HAS_NEON
   const double jNen = j_metals[7];
   const double jNep1 = j_metals[8];
+#endif
+
+#ifdef HAS_SULPHUR
   const double jSp1 = j_metals[9];
   const double jSp2 = j_metals[10];
   const double jSp3 = j_metals[11];
+#endif
 
+#ifdef HAS_CARBON
   const double alphaC[2] = {
       recombination_rates.get_recombination_rate(ION_C_p1, T),
       recombination_rates.get_recombination_rate(ION_C_p2, T)};
+#endif
+
+#ifdef HAS_NITROGEN
   const double alphaN[3] = {
       recombination_rates.get_recombination_rate(ION_N_n, T),
       recombination_rates.get_recombination_rate(ION_N_p1, T),
       recombination_rates.get_recombination_rate(ION_N_p2, T)};
+#endif
+
+#ifdef HAS_OXYGEN
   const double alphaO[2] = {
       recombination_rates.get_recombination_rate(ION_O_n, T),
       recombination_rates.get_recombination_rate(ION_O_p1, T)};
+#endif
+
+#ifdef HAS_NEON
   const double alphaNe[2] = {
       recombination_rates.get_recombination_rate(ION_Ne_n, T),
       recombination_rates.get_recombination_rate(ION_Ne_p1, T)};
+#endif
+
+#ifdef HAS_SULPHUR
   const double alphaS[3] = {
       recombination_rates.get_recombination_rate(ION_S_p1, T),
       recombination_rates.get_recombination_rate(ION_S_p2, T),
       recombination_rates.get_recombination_rate(ION_S_p3, T)};
+#endif
 
+#ifdef HAS_CARBON
   // carbon
   // the charge transfer recombination rates for C+ are negligble
   const double C21 = jCp1 / (ne * alphaC[0]);
@@ -274,7 +380,9 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double sumC_inv = 1. / (1. + C21 + C31);
   ionization_variables.set_ionic_fraction(ION_C_p1, C21 * sumC_inv);
   ionization_variables.set_ionic_fraction(ION_C_p2, C31 * sumC_inv);
+#endif
 
+#ifdef HAS_NITROGEN
   // nitrogen
   const double N21 =
       (jNn + nhp * charge_transfer_rates.get_charge_transfer_ionization_rate_H(
@@ -302,7 +410,9 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   ionization_variables.set_ionic_fraction(ION_N_n, N21 * sumN_inv);
   ionization_variables.set_ionic_fraction(ION_N_p1, N31 * sumN_inv);
   ionization_variables.set_ionic_fraction(ION_N_p2, N41 * sumN_inv);
+#endif
 
+#ifdef HAS_OXYGEN
   // Oxygen
   const double O21 =
       (jOn + nhp * charge_transfer_rates.get_charge_transfer_ionization_rate_H(
@@ -321,7 +431,9 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double sumO_inv = 1. / (1. + O21 + O31);
   ionization_variables.set_ionic_fraction(ION_O_n, O21 * sumO_inv);
   ionization_variables.set_ionic_fraction(ION_O_p1, O31 * sumO_inv);
+#endif
 
+#ifdef HAS_NEON
   // Neon
   const double Ne21 = jNen / (ne * alphaNe[0]);
   const double Ne32 =
@@ -335,7 +447,9 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   const double sumNe_inv = 1. / (1. + Ne21 + Ne31);
   ionization_variables.set_ionic_fraction(ION_Ne_n, Ne21 * sumNe_inv);
   ionization_variables.set_ionic_fraction(ION_Ne_p1, Ne31 * sumNe_inv);
+#endif
 
+#ifdef HAS_SULPHUR
   // Sulphur
   const double S21 =
       jSp1 /
@@ -362,6 +476,7 @@ void IonizationStateCalculator::compute_ionization_states_metals(
   ionization_variables.set_ionic_fraction(ION_S_p1, S21 * sumS_inv);
   ionization_variables.set_ionic_fraction(ION_S_p2, S31 * sumS_inv);
   ionization_variables.set_ionic_fraction(ION_S_p3, S41 * sumS_inv);
+#endif
 }
 
 /**

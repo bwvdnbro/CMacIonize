@@ -53,12 +53,27 @@ public:
   inline Abundances(const double AHe, const double AC, const double AN,
                     const double AO, const double ANe, const double AS,
                     Log *log = nullptr) {
+
+#ifdef HAS_HELIUM
     _abundances[ELEMENT_He] = AHe;
+#else
+    _abundances[ELEMENT_H] = 1.;
+#endif
+#ifdef HAS_CARBON
     _abundances[ELEMENT_C] = AC;
+#endif
+#ifdef HAS_NITROGEN
     _abundances[ELEMENT_N] = AN;
+#endif
+#ifdef HAS_OXYGEN
     _abundances[ELEMENT_O] = AO;
+#endif
+#ifdef HAS_NEON
     _abundances[ELEMENT_Ne] = ANe;
+#endif
+#ifdef HAS_SULPHUR
     _abundances[ELEMENT_S] = AS;
+#endif
 
     if (log) {
       log->write_status("Abundances:");

@@ -112,7 +112,9 @@ public:
     values.set_number_density(number_density);
     values.set_temperature(temperature);
     values.set_ionic_fraction(ION_H_n, _neutral_fraction);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
     values.set_velocity(velocity);
 
     return values;

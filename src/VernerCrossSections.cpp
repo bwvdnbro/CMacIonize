@@ -163,10 +163,10 @@ VernerCrossSections::VernerCrossSections() {
  * @param e Photon energy (in Hz).
  * @return Photoionization cross section (in m^2).
  */
-double VernerCrossSections::get_cross_section_verner(uint_fast8_t nz,
-                                                     uint_fast8_t ne,
-                                                     uint_fast8_t is,
-                                                     double e) const {
+double VernerCrossSections::get_cross_section_verner(const uint_fast8_t nz,
+                                                     const uint_fast8_t ne,
+                                                     const uint_fast8_t is,
+                                                     const double e) const {
 
   cmac_assert(nz > 0 && nz <= 30);
   cmac_assert(ne > 0 && ne <= nz);
@@ -256,22 +256,27 @@ double VernerCrossSections::get_cross_section_verner(uint_fast8_t nz,
  * @return Photoionization cross section for the given ion and for the given
  * photon energy (in m^2).
  */
-double VernerCrossSections::get_cross_section(int_fast32_t ion,
-                                              double energy) const {
+double VernerCrossSections::get_cross_section(const int_fast32_t ion,
+                                              const double energy) const {
   switch (ion) {
 
   case ION_H_n:
     return get_cross_section_verner(1, 1, 1, energy);
 
+#ifdef HAS_HELIUM
   case ION_He_n:
     return get_cross_section_verner(2, 2, 1, energy);
+#endif
 
+#ifdef HAS_CARBON
   case ION_C_p1:
     return get_cross_section_verner(6, 5, 3, energy) +
            get_cross_section_verner(6, 5, 2, energy);
   case ION_C_p2:
     return get_cross_section_verner(6, 4, 2, energy);
+#endif
 
+#ifdef HAS_NITROGEN
   case ION_N_n:
     return get_cross_section_verner(7, 7, 3, energy) +
            get_cross_section_verner(7, 7, 2, energy);
@@ -280,20 +285,26 @@ double VernerCrossSections::get_cross_section(int_fast32_t ion,
            get_cross_section_verner(7, 6, 2, energy);
   case ION_N_p2:
     return get_cross_section_verner(7, 5, 3, energy);
+#endif
 
+#ifdef HAS_OXYGEN
   case ION_O_n:
     return get_cross_section_verner(8, 8, 3, energy) +
            get_cross_section_verner(8, 8, 2, energy);
   case ION_O_p1:
     return get_cross_section_verner(8, 7, 3, energy) +
            get_cross_section_verner(8, 7, 2, energy);
+#endif
 
+#ifdef HAS_NEON
   case ION_Ne_n:
     return get_cross_section_verner(10, 10, 3, energy) +
            get_cross_section_verner(10, 10, 2, energy);
   case ION_Ne_p1:
     return get_cross_section_verner(10, 9, 3, energy);
+#endif
 
+#ifdef HAS_SULPHUR
   case ION_S_p1:
     return get_cross_section_verner(16, 15, 5, energy) +
            get_cross_section_verner(16, 15, 4, energy);
@@ -302,6 +313,7 @@ double VernerCrossSections::get_cross_section(int_fast32_t ion,
            get_cross_section_verner(16, 14, 4, energy);
   case ION_S_p3:
     return get_cross_section_verner(16, 13, 5, energy);
+#endif
 
   default:
     cmac_error("Unknown ion: %" PRIiFAST32, ion);

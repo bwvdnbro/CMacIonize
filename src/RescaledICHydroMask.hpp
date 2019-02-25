@@ -261,7 +261,9 @@ public:
 
         // set neutral fractions to 0
         it.get_ionization_variables().set_ionic_fraction(ION_H_n, 0.);
+#ifdef HAS_HELIUM
         it.get_ionization_variables().set_ionic_fraction(ION_He_n, 0.);
+#endif
 
         ++index;
       }

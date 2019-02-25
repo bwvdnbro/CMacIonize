@@ -85,10 +85,12 @@ private:
 public:
   VernerRecombinationRates();
 
-  double get_recombination_rate_verner(uint_fast8_t iz, uint_fast8_t in,
-                                       double T) const;
+  double get_recombination_rate_verner(const uint_fast8_t iz,
+                                       const uint_fast8_t in,
+                                       const double T) const;
 
-  virtual double get_recombination_rate(IonName ion, double temperature) const;
+  virtual double get_recombination_rate(const int_fast32_t ion,
+                                        const double temperature) const;
 };
 
 #endif // VERNERRECOMBINATIONRATES_HPP

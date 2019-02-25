@@ -78,9 +78,9 @@ public:
   }
 
   static void compute_ionization_states_metals(
-      const double j_metals[NUMBER_OF_IONNAMES - 2], const double ne,
-      const double T, const double T4, const double nh0, const double nhe0,
-      const double nhp, const RecombinationRates &recombination_rates,
+      const double *j_metals, const double ne, const double T, const double T4,
+      const double nh0, const double nhe0, const double nhp,
+      const RecombinationRates &recombination_rates,
       const ChargeTransferRates &charge_transfer_rates,
       IonizationVariables &ionization_variables);
 

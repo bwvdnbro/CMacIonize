@@ -70,6 +70,9 @@ public:
  */
 int main(int argc, char **argv) {
 
+#if defined(HAS_HELIUM) && defined(HAS_CARBON) && defined(HAS_NITROGEN) &&     \
+    defined(HAS_OXYGEN) && defined(HAS_NEON) && defined(HAS_SULPHUR)
+
   /// test without CR feedback
   {
     LineCoolingData data;
@@ -380,6 +383,7 @@ int main(int argc, char **argv) {
       ionization_variables.set_mean_intensity(
           ION_Ne_p1, std::pow(10., -1.990e-58 * z3 + (8.613e-39) * z2 +
                                        (-1.742e-19) * z + (-1.267e+01)));
+
       ionization_variables.set_mean_intensity(
           ION_S_p1, std::pow(10., -3.066e-59 * z3 + (2.701e-39) * z2 +
                                       (-1.091e-19) * z + (-1.099e+01)));
@@ -410,6 +414,8 @@ int main(int argc, char **argv) {
     }
     ofile.close();
   }
+
+#endif
 
   return 0;
 }

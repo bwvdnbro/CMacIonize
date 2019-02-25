@@ -78,6 +78,9 @@
 /*! @brief Flag telling us if this is a debug build or not. */
 #cmakedefine DEBUG_BUILD
 
+/*! @brief Flag telling us if we are running in hydrogen only mode or not. */
+#cmakedefine HAVE_HYDROGEN_ONLY
+
 /*! @brief Maximum number of shared memory threads that can be used on this
  *  system. */
 // clang-format off
