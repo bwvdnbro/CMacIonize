@@ -167,9 +167,11 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
+ * @param log Log to write logging info to.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
-    const int_fast32_t num_thread, const std::string parameterfile_name)
+    const int_fast32_t num_thread, const std::string parameterfile_name,
+    Log *log)
     : _parameter_file(parameterfile_name),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
@@ -177,7 +179,8 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
           "TaskBasedIonizationSimulation:number of photons", 1e6)),
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
-      _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr) {
+      _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
+      _log(log) {
 
   omp_set_num_threads(num_thread);
 
@@ -207,31 +210,30 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   _grid_creator =
       new DensitySubGridCreator(_simulation_box.get_box(), _parameter_file);
 
-  _density_function =
-      DensityFunctionFactory::generate(_parameter_file, nullptr);
+  _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
 
   // set up output
   std::string output_folder =
       Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
           "IonizationSimulation:output folder", "."));
   _density_grid_writer = DensityGridWriterFactory::generate(
-      output_folder, _parameter_file, false, nullptr);
+      output_folder, _parameter_file, false, _log);
 
   _photon_source_distribution =
-      PhotonSourceDistributionFactory::generate(_parameter_file, nullptr);
+      PhotonSourceDistributionFactory::generate(_parameter_file, _log);
   _photon_source_spectrum = PhotonSourceSpectrumFactory::generate(
-      "PhotonSourceSpectrum", _parameter_file, nullptr);
+      "PhotonSourceSpectrum", _parameter_file, _log);
 
-  _cross_sections = CrossSectionsFactory::generate(_parameter_file, nullptr);
+  _cross_sections = CrossSectionsFactory::generate(_parameter_file, _log);
   _recombination_rates =
-      RecombinationRatesFactory::generate(_parameter_file, nullptr);
+      RecombinationRatesFactory::generate(_parameter_file, _log);
 
   const double total_luminosity =
       _photon_source_distribution->get_total_luminosity();
   // used to calculate both the ionization state and the temperature
   _temperature_calculator = new TemperatureCalculator(
       total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
-      _charge_transfer_rates, _parameter_file, nullptr);
+      _charge_transfer_rates, _parameter_file, _log);
 
   if (_parameter_file.get_value< bool >(
           "TaskBasedIonizationSimulation:diffuse field", false)) {
@@ -245,6 +247,10 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
   _parameter_file.print_contents(pfile);
   pfile.close();
+  if (_log) {
+    _log->write_status("Wrote used parameters to ", output_folder,
+                       "/parameters-usedvalues.param.");
+  }
 }
 
 /**
@@ -358,6 +364,10 @@ void TaskBasedIonizationSimulation::run(
 
   for (uint_fast32_t iloop = 0; iloop < _number_of_iterations; ++iloop) {
 
+    if (_log) {
+      _log->write_status("Starting loop ", iloop, ".");
+    }
+
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
 
@@ -382,8 +392,6 @@ void TaskBasedIonizationSimulation::run(
         }
       }
     }
-
-    cmac_warning("Loop: %" PRIuFAST32, iloop);
 
     for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
          ++isrc) {
