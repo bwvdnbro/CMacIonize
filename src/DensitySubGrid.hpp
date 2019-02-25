@@ -427,12 +427,18 @@ private:
   inline double get_optical_depth(const int_fast32_t active_cell,
                                   const double distance,
                                   const PhotonPacket &photon) const {
+#ifdef HAS_HELIUM
     return distance * _ionization_variables[active_cell].get_number_density() *
            (photon.get_photoionization_cross_section(ION_H_n) *
                 _ionization_variables[active_cell].get_ionic_fraction(ION_H_n) +
             photon.get_photoionization_cross_section(ION_He_n) *
                 _ionization_variables[active_cell].get_ionic_fraction(
                     ION_He_n));
+#else
+    return distance * _ionization_variables[active_cell].get_number_density() *
+           photon.get_photoionization_cross_section(ION_H_n) *
+           _ionization_variables[active_cell].get_ionic_fraction(ION_H_n);
+#endif
   }
 
   /**
@@ -458,9 +464,11 @@ private:
     _ionization_variables[active_cell].increase_heating(
         HEATINGTERM_H,
         dmean_intensity[ION_H_n] * (photon.get_energy() - 3.288e15));
+#ifdef HAS_HELIUM
     _ionization_variables[active_cell].increase_heating(
         HEATINGTERM_He,
         dmean_intensity[ION_He_n] * (photon.get_energy() - 5.948e15));
+#endif
     subgrid_cell_lock_unlock(active_cell);
   }
 

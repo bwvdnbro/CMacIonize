@@ -86,6 +86,7 @@ public:
    */
   virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
 
+#ifdef HAS_OXYGEN
     const double volume = cell.get_volume();
     const IonizationVariables &ioniziation_variables =
         cell.get_ionization_variables();
@@ -93,6 +94,9 @@ public:
     const double Op1_frac = ioniziation_variables.get_ionic_fraction(ION_O_p1);
     const double nH = ioniziation_variables.get_number_density();
     return volume * On_frac * Op1_frac * nH > _target_N && level < _max_level;
+#else
+    return false;
+#endif
   }
 };
 

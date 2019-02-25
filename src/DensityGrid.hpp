@@ -112,11 +112,17 @@ protected:
   inline static double
   get_optical_depth(double ds, const IonizationVariables &ionization_variables,
                     const Photon &photon) {
+#ifdef HAS_HELIUM
     return ds * ionization_variables.get_number_density() *
            (photon.get_cross_section(ION_H_n) *
                 ionization_variables.get_ionic_fraction(ION_H_n) +
             photon.get_cross_section_He_corr() *
                 ionization_variables.get_ionic_fraction(ION_He_n));
+#else
+    return ds * ionization_variables.get_number_density() *
+           photon.get_cross_section(ION_H_n) *
+           ionization_variables.get_ionic_fraction(ION_H_n);
+#endif
   }
 
   /**
@@ -146,20 +152,30 @@ protected:
       }
       const double dheating_H = dmean_intensity[ION_H_n] *
                                 (photon.get_energy() - _ionization_energy_H);
+
+#ifdef HAS_HELIUM
       const double dheating_He = dmean_intensity[ION_He_n] *
                                  (photon.get_energy() - _ionization_energy_He);
+#endif
+
 #ifndef USE_LOCKFREE
       cell.lock();
 #endif
+
       for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
         ionization_variables.increase_mean_intensity(ion, dmean_intensity[ion]);
       }
       ionization_variables.increase_heating(HEATINGTERM_H, dheating_H);
+
+#ifdef HAS_HELIUM
       ionization_variables.increase_heating(HEATINGTERM_He, dheating_He);
+#endif
+
       Tracker *tracker = ionization_variables.get_tracker();
       if (tracker != nullptr) {
         tracker->count_photon(photon);
       }
+
 #ifndef USE_LOCKFREE
       cell.unlock();
 #endif

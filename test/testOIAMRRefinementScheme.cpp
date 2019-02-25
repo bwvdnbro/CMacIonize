@@ -37,6 +37,7 @@
  */
 int main(int argc, char **argv) {
 
+#ifdef HAS_OXYGEN
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
   CoordinateVector< uint_fast32_t > ncell(8);
   HomogeneousDensityFunction density_function(1.);
@@ -61,6 +62,7 @@ int main(int argc, char **argv) {
   grid.reset_grid(density_function);
 
   assert_condition(grid.get_number_of_cells() == 8 * 8 * 8 + 7);
+#endif
 
   return 0;
 }

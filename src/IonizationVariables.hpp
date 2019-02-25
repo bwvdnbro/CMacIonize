@@ -63,8 +63,10 @@ enum ReemissionProbabilityName {
 enum HeatingTermName {
   /*! @brief Heating by hydrogen ionization. */
   HEATINGTERM_H = 0,
+#ifdef HAS_HELIUM
   /*! @brief Heating by helium ionization. */
   HEATINGTERM_He,
+#endif
   /*! @brief Counter. Should always be the last element! */
   NUMBER_OF_HEATINGTERMS
 };

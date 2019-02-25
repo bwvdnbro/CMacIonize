@@ -283,7 +283,9 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
   values.set_number_density(density / 1.6737236e-27);
   values.set_temperature(8000.);
   values.set_ionic_fraction(ION_H_n, 1.e-6);
+#ifdef HAS_HELIUM
   values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
   return values;
 }
 

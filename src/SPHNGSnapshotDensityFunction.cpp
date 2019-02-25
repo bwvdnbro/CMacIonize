@@ -939,7 +939,9 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // temporary values
     values.set_temperature(_initial_temperature);
     values.set_ionic_fraction(ION_H_n, 1.e-6);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
 
   } else {
 
@@ -964,7 +966,9 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // temporary values
     values.set_temperature(_initial_temperature);
     values.set_ionic_fraction(ION_H_n, 1.e-6);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
   }
 
   return values;
