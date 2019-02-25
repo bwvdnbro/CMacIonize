@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
 
     TaskBasedIonizationSimulation simulation(
         parser.get_value< int_fast32_t >("threads"),
-        parser.get_value< std::string >("params"));
+        parser.get_value< std::string >("params"), log);
 
     if (parser.get_value< bool >("dry-run")) {
       if (log) {
