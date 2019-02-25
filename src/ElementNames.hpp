@@ -32,6 +32,16 @@
 #include <cinttypes>
 #include <string>
 
+// activate additional metals
+#ifndef HAVE_HYDROGEN_ONLY
+#define HAS_HELIUM
+#define HAS_CARBON
+#define HAS_NITROGEN
+#define HAS_OXYGEN
+#define HAS_NEON
+#define HAS_SULPHUR
+#endif
+
 /**
  * @brief Names of supported atoms.
  *
@@ -40,18 +50,33 @@
  * why should we if it is not used?
  */
 enum ElementName {
+#ifdef HAS_HELIUM
   /*! @brief Helium. */
-  ELEMENT_He = 0,
+  ELEMENT_He,
+#else
+  /*! @brief Hydrogen. */
+  ELEMENT_H = 0,
+#endif
+#ifdef HAS_CARBON
   /*! @brief Carbon. */
   ELEMENT_C,
+#endif
+#ifdef HAS_NITROGEN
   /*! @brief Nitrogen. */
   ELEMENT_N,
+#endif
+#ifdef HAS_OXYGEN
   /*! @brief Oxygen. */
   ELEMENT_O,
+#endif
+#ifdef HAS_NEON
   /*! @brief Neon. */
   ELEMENT_Ne,
+#endif
+#ifdef HAS_SULPHUR
   /*! @brief Sulphur. */
   ELEMENT_S,
+#endif
   /*! @brief Atom number counter. Add new atoms above this element! */
   NUMBER_OF_ELEMENTNAMES
 };
@@ -67,33 +92,45 @@ enum ElementName {
  */
 enum IonName {
   /*! @brief Neutral hydrogen. */
-  ION_H_n = 0,
+  ION_H_n,
+#ifdef HAS_HELIUM
   /*! @brief Neutral helium. */
   ION_He_n,
+#endif
+#ifdef HAS_CARBON
   /*! @brief Ionized carbon. */
   ION_C_p1,
   /*! @brief Double ionized carbon. */
   ION_C_p2,
+#endif
+#ifdef HAS_NITROGEN
   /*! @brief Neutral nytrogen. */
   ION_N_n,
   /*! @brief Ionized nytrogen. */
   ION_N_p1,
   /*! @brief Double ionized nytrogen. */
   ION_N_p2,
+#endif
+#ifdef HAS_OXYGEN
   /*! @brief Neutral oxygen. */
   ION_O_n,
   /*! @brief Ionized oxygen. */
   ION_O_p1,
+#endif
+#ifdef HAS_NEON
   /*! @brief Neutral neon. */
   ION_Ne_n,
   /*! @brief Ionized neon. */
   ION_Ne_p1,
+#endif
+#ifdef HAS_SULPHUR
   /*! @brief Ionized sulphur. */
   ION_S_p1,
   /*! @brief Double ionized sulphur. */
   ION_S_p2,
   /*! @brief Triple ionized sulphur. */
   ION_S_p3,
+#endif
   /*! @brief Number of supported elements. */
   NUMBER_OF_IONNAMES
 };
@@ -107,18 +144,33 @@ enum IonName {
 static inline std::string get_element_name(const int_fast32_t element) {
 
   switch (element) {
+#ifdef HAS_HELIUM
   case ELEMENT_He:
     return "He";
+#else
+  case ELEMENT_H:
+    return "H";
+#endif
+#ifdef HAS_CARBON
   case ELEMENT_C:
     return "C";
+#endif
+#ifdef HAS_NITROGEN
   case ELEMENT_N:
     return "N";
+#endif
+#ifdef HAS_OXYGEN
   case ELEMENT_O:
     return "O";
+#endif
+#ifdef HAS_NEON
   case ELEMENT_Ne:
     return "Ne";
+#endif
+#ifdef HAS_SULPHUR
   case ELEMENT_S:
     return "S";
+#endif
   default:
     cmac_error("Unknown element: %" PRIiFAST32 "!", element);
     return "";
@@ -138,37 +190,49 @@ static inline std::string get_ion_name(const int_fast32_t ion) {
   case ION_H_n:
     return "H";
 
+#ifdef HAS_HELIUM
   case ION_He_n:
     return "He";
+#endif
 
+#ifdef HAS_CARBON
   case ION_C_p1:
     return "C+";
   case ION_C_p2:
     return "C++";
+#endif
 
+#ifdef HAS_NITROGEN
   case ION_N_n:
     return "N";
   case ION_N_p1:
     return "N+";
   case ION_N_p2:
     return "N++";
+#endif
 
+#ifdef HAS_OXYGEN
   case ION_O_n:
     return "O";
   case ION_O_p1:
     return "O+";
+#endif
 
+#ifdef HAS_NEON
   case ION_Ne_n:
     return "Ne";
   case ION_Ne_p1:
     return "Ne+";
+#endif
 
+#ifdef HAS_SULPHUR
   case ION_S_p1:
     return "S+";
   case ION_S_p2:
     return "S++";
   case ION_S_p3:
     return "S+++";
+#endif
 
   default:
     cmac_error("Unknown ion: %" PRIiFAST32 "!", ion);
@@ -189,37 +253,49 @@ static inline int_fast32_t get_element(const int_fast32_t ion) {
     cmac_error("Hydrogen ions don't have a corresponding element!");
     return -1;
 
+#ifdef HAS_HELIUM
   case ION_He_n:
     return ELEMENT_He;
+#endif
 
+#ifdef HAS_CARBON
   case ION_C_p1:
     return ELEMENT_C;
   case ION_C_p2:
     return ELEMENT_C;
+#endif
 
+#ifdef HAS_NITROGEN
   case ION_N_n:
     return ELEMENT_N;
   case ION_N_p1:
     return ELEMENT_N;
   case ION_N_p2:
     return ELEMENT_N;
+#endif
 
+#ifdef HAS_OXYGEN
   case ION_O_n:
     return ELEMENT_O;
   case ION_O_p1:
     return ELEMENT_O;
+#endif
 
+#ifdef HAS_NEON
   case ION_Ne_n:
     return ELEMENT_Ne;
   case ION_Ne_p1:
     return ELEMENT_Ne;
+#endif
 
+#ifdef HAS_SULPHUR
   case ION_S_p1:
     return ELEMENT_S;
   case ION_S_p2:
     return ELEMENT_S;
   case ION_S_p3:
     return ELEMENT_S;
+#endif
 
   default:
     cmac_error("Unknown ion: %" PRIiFAST32 "!", ion);

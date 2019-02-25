@@ -64,7 +64,9 @@ int main(int argc, char **argv) {
     // ionization variables
     IonizationVariables ionization_variables;
     ionization_variables.set_number_density(100.);
+#ifdef HAS_SULPHUR
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.5);
+#endif
     ionization_variables.write_restart_file(*writer);
 
     // CoordinateVector
@@ -114,7 +116,9 @@ int main(int argc, char **argv) {
     // ionization variables
     IonizationVariables ionization_variables(*reader);
     assert_condition(ionization_variables.get_number_density() == 100.);
+#ifdef HAS_SULPHUR
     assert_condition(ionization_variables.get_ionic_fraction(ION_S_p1) == 0.5);
+#endif
 
     // CoordinateVector
     CoordinateVector<> coordinate_vector(*reader);

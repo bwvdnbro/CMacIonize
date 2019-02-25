@@ -60,9 +60,13 @@ double DiffuseReemissionHandler::reemit(
   // determine whether the photon is absorbed by hydrogen or by helium
   const double nH0anuH0 = ionization_variables.get_ionic_fraction(ION_H_n) *
                           photon.get_photoionization_cross_section(ION_H_n);
+#ifdef HAS_HELIUM
   const double nHe0anuHe0 = ionization_variables.get_ionic_fraction(ION_He_n) *
                             helium_abundance *
                             photon.get_photoionization_cross_section(ION_He_n);
+#else
+  const double nHe0anuHe0 = 0.;
+#endif
   const double pHabs = nH0anuH0 / (nH0anuH0 + nHe0anuHe0);
 
   double x = random_generator.get_uniform_random_double();
@@ -124,13 +128,17 @@ double DiffuseReemissionHandler::reemit(
       // helium Lyman alpha, is either absorbed on the spot, or converted to
       // helium two-photon emission
 
+#ifdef HAS_HELIUM
       // we precompute this factor to limit the number of divisions
       const double sqrtTnH0 =
           std::sqrt(ionization_variables.get_temperature()) *
           ionization_variables.get_ionic_fraction(ION_H_n);
-      double pHots =
+      const double pHots =
           sqrtTnH0 /
           (sqrtTnH0 + 77. * ionization_variables.get_ionic_fraction(ION_He_n));
+#else
+      const double pHots = 1.;
+#endif
       x = random_generator.get_uniform_random_double();
       if (x < pHots) {
 
@@ -193,9 +201,13 @@ double DiffuseReemissionHandler::reemit(
   // determine whether the photon is absorbed by hydrogen or by helium
   const double nH0anuH0 = ionization_variables.get_ionic_fraction(ION_H_n) *
                           photon.get_cross_section(ION_H_n);
+#ifdef HAS_HELIUM
   const double nHe0anuHe0 = ionization_variables.get_ionic_fraction(ION_He_n) *
                             helium_abundance *
                             photon.get_cross_section(ION_He_n);
+#else
+  const double nHe0anuHe0 = 0.;
+#endif
   const double pHabs = nH0anuH0 / (nH0anuH0 + nHe0anuHe0);
 
   double x = random_generator.get_uniform_random_double();
@@ -269,13 +281,17 @@ double DiffuseReemissionHandler::reemit(
       // helium Lyman alpha, is either absorbed on the spot, or converted to
       // helium two-photon emission
 
+#ifdef HAS_HELIUM
       // we precompute this factor to limit the number of divisions
       const double sqrtTnH0 =
           std::sqrt(ionization_variables.get_temperature()) *
           ionization_variables.get_ionic_fraction(ION_H_n);
-      double pHots =
+      const double pHots =
           sqrtTnH0 /
           (sqrtTnH0 + 77. * ionization_variables.get_ionic_fraction(ION_He_n));
+#else
+      const double pHots = 1.;
+#endif
       x = random_generator.get_uniform_random_double();
       if (x < pHots) {
 

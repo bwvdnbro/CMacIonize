@@ -91,11 +91,15 @@ double HLyc_luminosity(CrossSections &cross_sections, double T,
 double HeLyc_luminosity(CrossSections &cross_sections, double T,
                         double frequency) {
 
+#ifdef HAS_HELIUM
   const double xsecHe = cross_sections.get_cross_section(
       ION_He_n,
       UnitConverter::to_SI< QUANTITY_FREQUENCY >(frequency * 13.6, "eV"));
   return 1.e22 * frequency * frequency * xsecHe *
          std::exp(-157919.667 * (frequency - 1.81) / T);
+#else
+  return 0.;
+#endif
 }
 
 /**

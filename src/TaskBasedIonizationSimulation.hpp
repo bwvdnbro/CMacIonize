@@ -82,6 +82,9 @@ private:
    *  loop. */
   const uint_fast64_t _number_of_photons;
 
+  /*! @brief Copy level for subgrids that contain a source. */
+  const uint_fast8_t _source_copy_level;
+
   /*! @brief Simulation box (in m). */
   SimulationBox _simulation_box;
 

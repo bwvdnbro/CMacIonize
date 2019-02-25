@@ -68,13 +68,16 @@ int main(int argc, char **argv) {
               1.e18,
           tolerance);
 
+#ifdef HAS_HELIUM
       assert_values_equal_rel(
           xsecHe,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
               cross_sections.get_cross_section(ION_He_n, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_CARBON
       assert_values_equal_rel(
           xsecCp1,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
@@ -87,7 +90,9 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_C_p2, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_NITROGEN
       assert_values_equal_rel(
           xsecN,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
@@ -106,7 +111,9 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_N_p2, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_OXYGEN
       assert_values_equal_rel(
           xsecO,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
@@ -119,7 +126,9 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_O_p1, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_NEON
       assert_values_equal_rel(
           xsecNe,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
@@ -132,7 +141,9 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_Ne_p1, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_SULPHUR
       assert_values_equal_rel(
           xsecSp1,
           UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
@@ -151,6 +162,7 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_S_p3, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
     }
   }
 

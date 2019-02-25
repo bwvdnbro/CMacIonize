@@ -52,15 +52,17 @@ public:
    */
   ChargeTransferRates() {}
 
-  double get_charge_transfer_recombination_rate_H(IonName ion,
-                                                  double temperature) const;
-  double get_charge_transfer_ionization_rate_H(IonName ion,
-                                               double temperature) const;
+  double
+  get_charge_transfer_recombination_rate_H(const int_fast32_t ion,
+                                           const double temperature) const;
+  double get_charge_transfer_ionization_rate_H(const int_fast32_t ion,
+                                               const double temperature) const;
 
-  double get_charge_transfer_recombination_rate_He(IonName ion,
-                                                   double temperature) const;
-  double get_charge_transfer_ionization_rate_He(IonName ion,
-                                                double temperature) const;
+  double
+  get_charge_transfer_recombination_rate_He(const int_fast32_t ion,
+                                            const double temperature) const;
+  double get_charge_transfer_ionization_rate_He(const int_fast32_t ion,
+                                                const double temperature) const;
 };
 
 #endif // CHARGETRANSFERRATES_HPP

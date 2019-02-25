@@ -193,8 +193,10 @@ void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }
+#ifdef HAS_HELIUM
   photon.set_cross_section_He_corr(_abundances.get_abundance(ELEMENT_He) *
                                    photon.get_cross_section(ION_He_n));
+#endif
 }
 
 /**
@@ -274,9 +276,13 @@ bool PhotonSource::reemit(Photon &photon,
 
   if (_reemission_handler) {
     PhotonType type;
+#ifdef HAS_HELIUM
+    const double AHe = _abundances.get_abundance(ELEMENT_He);
+#else
+    const double AHe = 0.;
+#endif
     const double new_frequency = _reemission_handler->reemit(
-        photon, _abundances.get_abundance(ELEMENT_He), ionization_variables,
-        random_generator, type);
+        photon, AHe, ionization_variables, random_generator, type);
 
     photon.set_type(type);
     if (new_frequency == 0.) {

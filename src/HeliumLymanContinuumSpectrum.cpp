@@ -80,8 +80,12 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     for (uint_fast32_t inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       // first do the lower edge of the frequency interval
+#ifdef HAS_HELIUM
       double xsecHe =
           cross_sections.get_cross_section(ION_He_n, _frequency[inu - 1]);
+#else
+      double xsecHe = 0.;
+#endif
       // Wood, Mathis & Ercolano (2004), equation (8)
       // note that we ignore all constant prefactors, since we normalize the
       // spectrum afterwards
@@ -94,7 +98,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
           std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
       // now do the upper edge of the interval
+#ifdef HAS_HELIUM
       xsecHe = cross_sections.get_cross_section(ION_He_n, _frequency[inu]);
+#endif
       const double jHeIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecHe *
           std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /

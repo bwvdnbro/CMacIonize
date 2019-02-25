@@ -33,6 +33,7 @@
 #include "IonizationSimulation.hpp"
 #include "MPICommunicator.hpp"
 #include "RadiationHydrodynamicsSimulation.hpp"
+#include "TaskBasedIonizationSimulation.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
 
@@ -84,6 +85,8 @@
  *    rather than photoionization mode.
  *  - output-statistics ('s', optional, no argument): output statistics about
  *    the photon packets at the end of each iteration.
+ *  - task-based (no abbreviation, optional, no argument): run the code using
+ *    a task-based parallel algorithm.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -157,6 +160,9 @@ int main(int argc, char **argv) {
                     "Output statistical information about the photons.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("emission", 0, "Compute emission for the given snapshot.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("task-based", 0,
+                    "Run a task-based photoionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
 
   // add simulation type specific parameters
@@ -269,6 +275,39 @@ int main(int argc, char **argv) {
     }
     return EmissivityCalculationSimulation::do_simulation(parser, write_output,
                                                           programtimer, log);
+  } else if (parser.get_value< bool >("task-based")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI task based algorithm does not exist yet.");
+    }
+
+    TaskBasedIonizationSimulation simulation(
+        parser.get_value< int_fast32_t >("threads"),
+        parser.get_value< std::string >("params"));
+
+    if (parser.get_value< bool >("dry-run")) {
+      if (log) {
+        log->write_warning("Dry run requested. Program will now halt.");
+      }
+      return 0;
+    }
+
+    simulation.initialize();
+    simulation.run();
+
+    programtimer.stop();
+
+    size_t memory_usage = OperatingSystem::get_peak_memory_usage();
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(memory_usage);
+    if (log) {
+      log->write_status("Total program time: ",
+                        Utilities::human_readable_time(programtimer.value()),
+                        ".");
+      log->write_status("Peak memory usage: ",
+                        Utilities::human_readable_bytes(memory_usage), ".");
+    }
+    return 0;
+
   } else {
 
     IonizationSimulation simulation(

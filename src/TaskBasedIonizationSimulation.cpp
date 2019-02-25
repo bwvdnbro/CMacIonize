@@ -162,6 +162,8 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *    the photoionization algorithm (default: 1e6)
  *  - output folder: Folder where all output files will be placed (default: .)
  *  - diffuse field: Should the diffuse field be tracked? (default: false)
+ *  - source copy level: Copy level for subgrids that contain a source (default:
+ *    4)
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
@@ -173,6 +175,8 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
       _number_of_photons(_parameter_file.get_value< uint_fast64_t >(
           "TaskBasedIonizationSimulation:number of photons", 1e6)),
+      _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
+          "TaskBasedIonizationSimulation:source copy level", 4)),
       _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr) {
 
   omp_set_num_threads(num_thread);
@@ -288,15 +292,34 @@ void TaskBasedIonizationSimulation::initialize(
 void TaskBasedIonizationSimulation::run(
     DensityGridWriter *density_grid_writer) {
 
+  // write the initial state of the grid to an output file (only do this if
+  // we are not in library mode)
+  if (_density_grid_writer) {
+    _density_grid_writer->write(*_grid_creator, 0, _parameter_file);
+  }
+
   if (density_grid_writer == nullptr) {
     density_grid_writer = _density_grid_writer;
   }
 
-  const uint_fast32_t central_index = 4 * 8 * 8 + 4 * 8 + 4;
-
   std::vector< uint_fast8_t > levels(
       _grid_creator->number_of_original_subgrids(), 0);
-  levels[central_index] = 4;
+
+  // set the copy level off all subgrids containing a source to the given
+  // parameter value (for now)
+  {
+    const photonsourcenumber_t number_of_sources =
+        _photon_source_distribution->get_number_of_sources();
+    for (photonsourcenumber_t isource = 0; isource < number_of_sources;
+         ++isource) {
+      const CoordinateVector<> position =
+          _photon_source_distribution->get_position(isource);
+      DensitySubGridCreator::iterator gridit =
+          _grid_creator->get_subgrid(position);
+      levels[gridit.get_index()] = _source_copy_level;
+    }
+  }
+
   // impose copy restrictions
   {
     uint_fast8_t max_level = 0;
@@ -605,9 +628,14 @@ void TaskBasedIonizationSimulation::run(
               const IonizationVariables &ionization_variables =
                   subgrid.get_cell(old_photon.get_position())
                       .get_ionization_variables();
+#ifdef HAS_HELIUM
+              const double AHe = _abundances.get_abundance(ELEMENT_He);
+#else
+              const double AHe = 0.;
+#endif
               const double new_frequency = _reemission_handler->reemit(
-                  old_photon, _abundances.get_abundance(ELEMENT_He),
-                  ionization_variables, _random_generators[thread_id]);
+                  old_photon, AHe, ionization_variables,
+                  _random_generators[thread_id]);
               if (new_frequency > 0.) {
                 PhotonPacket &new_photon = buffer[index];
                 new_photon.set_position(old_photon.get_position());
@@ -915,9 +943,11 @@ void TaskBasedIonizationSimulation::run(
                                                  abundance);
               }
             }
+#ifdef HAS_HELIUM
             vars.set_heating(HEATINGTERM_He,
                              vars.get_heating(HEATINGTERM_He) /
                                  _abundances.get_abundance(ELEMENT_He));
+#endif
           }
           _temperature_calculator->calculate_temperature(
               iloop, _number_of_photons, *gridit);

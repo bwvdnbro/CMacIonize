@@ -393,6 +393,14 @@ else(ACTIVATE_PRECISE_INTEL_FLOATS)
   add_configuration_option(HAVE_PRECISE_INTEL_FLOATS False)
 endif(ACTIVATE_PRECISE_INTEL_FLOATS)
 
+if(HYDROGEN_ONLY)
+  message(STATUS "Compiling in hydrogen only mode.")
+  add_configuration_option(HAVE_HYDROGEN_ONLY True)
+else(HYDROGEN_ONLY)
+  message(STATUS "Compiling full code.")
+  add_configuration_option(HAVE_HYDROGEN_ONLY False)
+endif(HYDROGEN_ONLY)
+
 ## Code configuration ##########################################################
 
 # Tell CMake that headers are in one of the src folders.
