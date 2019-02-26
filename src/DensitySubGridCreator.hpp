@@ -317,19 +317,25 @@ public:
    * variables.
    */
   inline void initialize(DensityFunction &density_function) {
-#pragma omp parallel for default(shared)
-    for (size_t i = 0; i < _subgrids.size(); ++i) {
-      _subgrids[i] = create_subgrid(i);
-      _subgrids[i]->set_owning_thread(omp_get_thread_num());
-      for (auto it = _subgrids[i]->begin(); it != _subgrids[i]->end(); ++it) {
-        DensityValues values = density_function(it);
-        it.get_ionization_variables().set_number_density(
-            values.get_number_density());
-        for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-          it.get_ionization_variables().set_ionic_fraction(
-              ion, values.get_ionic_fraction(ion));
+    AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+    while (igrid.value() < _subgrids.size()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < _subgrids.size()) {
+        _subgrids[this_igrid] = create_subgrid(this_igrid);
+        _subgrids[this_igrid]->set_owning_thread(omp_get_thread_num());
+        for (auto it = _subgrids[this_igrid]->begin();
+             it != _subgrids[this_igrid]->end(); ++it) {
+          DensityValues values = density_function(it);
+          it.get_ionization_variables().set_number_density(
+              values.get_number_density());
+          for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+            it.get_ionization_variables().set_ionic_fraction(
+                ion, values.get_ionic_fraction(ion));
+          }
+          it.get_ionization_variables().set_temperature(
+              values.get_temperature());
         }
-        it.get_ionization_variables().set_temperature(values.get_temperature());
       }
     }
   }

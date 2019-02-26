@@ -94,6 +94,43 @@ inline void output_tasks(const uint_fast32_t iloop,
 }
 
 /**
+ * @brief Write file with queue size information for an iteration.
+ *
+ * @param iloop Iteration number (added to file names).
+ * @param queues Per thread queues.
+ * @param general_queue General queue.
+ */
+inline void output_queues(const unsigned int iloop,
+                          std::vector< TaskQueue * > &queues,
+                          TaskQueue &general_queue) {
+
+  // first compose the file name
+  std::stringstream filename;
+  filename << "queues_";
+  filename.fill('0');
+  filename.width(2);
+  filename << iloop;
+  filename << ".txt";
+
+  // now output
+  // open the file
+  std::ofstream ofile(filename.str(), std::ofstream::trunc);
+
+  ofile << "# rank\tqueue\tsize\n";
+
+  // start with the general queue (-1)
+  ofile << "0\t-1\t" << general_queue.get_max_queue_size() << "\n";
+  general_queue.reset_max_queue_size();
+
+  // now do the other queues
+  for (size_t i = 0; i < queues.size(); ++i) {
+    TaskQueue &queue = *queues[i];
+    ofile << "0\t" << i << "\t" << queue.get_max_queue_size() << "\n";
+    queue.reset_max_queue_size();
+  }
+}
+
+/**
  * @brief Get the next task for the given thread.
  *
  * We try to get a task in different stages:
@@ -355,10 +392,18 @@ void TaskBasedIonizationSimulation::run(
   DistributedPhotonSource photon_source(
       _number_of_photons, *_photon_source_distribution, *_grid_creator);
 
-  for (auto gridit = _grid_creator->begin(); gridit != _grid_creator->all_end();
-       ++gridit) {
-    for (int ingb = 0; ingb < TRAVELDIRECTION_NUMBER; ++ingb) {
-      (*gridit).set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
+  {
+    AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+    while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
+        DensitySubGrid &subgrid = *_grid_creator->get_subgrid(this_igrid);
+        for (int ingb = 0; ingb < TRAVELDIRECTION_NUMBER; ++ingb) {
+          subgrid.set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
+          subgrid.set_owning_thread(omp_get_thread_num());
+        }
+      }
     }
   }
 
@@ -398,8 +443,9 @@ void TaskBasedIonizationSimulation::run(
            ++ibatch) {
         const size_t new_task = _tasks->get_free_element();
         (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
-        (*_tasks)[new_task].set_subgrid(photon_source.get_subgrid(isrc));
-        (*_tasks)[new_task].set_buffer(isrc);
+        (*_tasks)[new_task].set_subgrid(isrc);
+        (*_tasks)[new_task].set_buffer(
+            photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE));
         _shared_queue->add_task(new_task);
       }
     }
@@ -498,8 +544,8 @@ void TaskBasedIonizationSimulation::run(
                   // unlock the subgrid, we are done with it
                   this_subgrid.get_dependency()->unlock();
 
-                  // we managed to activate a buffer, we are done with this
-                  // function
+                  // we managed to activate a buffer, we are done
+                  threshold_size = 0;
                   break;
                 } else {
                   // no semi-full buffers for this subgrid: release the lock
@@ -525,11 +571,11 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
             num_active_buffers.pre_increment();
-            const size_t source_index = task.get_buffer();
-            const size_t subgrid_index = task.get_subgrid();
+            const size_t source_index = task.get_subgrid();
 
-            const size_t num_photon_this_loop =
-                photon_source.get_photon_batch(source_index, PHOTONBUFFER_SIZE);
+            const size_t num_photon_this_loop = task.get_buffer();
+            const size_t subgrid_index =
+                photon_source.get_subgrid(source_index);
 
             // get a free photon buffer in the central queue
             uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
@@ -967,6 +1013,7 @@ void TaskBasedIonizationSimulation::run(
 
     cpucycle_tick(iteration_end);
     output_tasks(iloop, *_tasks, iteration_start, iteration_end);
+    output_queues(iloop, _queues, *_shared_queue);
 
     _tasks->clear();
   } // photoionization loop
