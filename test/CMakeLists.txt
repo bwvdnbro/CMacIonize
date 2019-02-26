@@ -1515,6 +1515,12 @@ macro(add_python_unit_test)
              COMMAND ${PYTHON_EXECUTABLE} ${TEST_NAME})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+
+    # create a custom target for this test alone
+    add_custom_target(check_${TEST_NAME}
+                      COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                              -R ${TEST_NAME}
+                      DEPENDS ${TEST_NAME})
 endmacro(add_python_unit_test)
 
 if(HAVE_PYTHON)
