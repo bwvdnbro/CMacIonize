@@ -192,7 +192,7 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   _queues.resize(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     std::stringstream queue_name;
-    queue_name << "Queue for Thread " << ithread;
+    queue_name << "Queue for Thread " << static_cast< int_fast32_t >(ithread);
     _queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
   }
   const size_t shared_queue_size = _parameter_file.get_value< size_t >(
@@ -375,15 +375,13 @@ void TaskBasedIonizationSimulation::run(
     photon_source.reset();
 
     // reset the diffuse field variables
-    {
+    if (_reemission_handler != nullptr) {
       AtomicValue< size_t > igrid(0);
 #pragma omp parallel default(shared)
       while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < _grid_creator->number_of_original_subgrids()) {
           auto gridit = _grid_creator->get_subgrid(this_igrid);
-
-          // correct the intensity counters for abundance factors
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                ++cellit) {
             IonizationVariables &vars = cellit.get_ionization_variables();

@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
           abundances);
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_ENERGY_RATE >(cool, "erg s^-1"),
-          coolf, 1.e-14);
+          coolf, 1.e-6);
     }
   }
 
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
       c7330 = 0.;
       csiv10 = 0.;
 
-      double tolerance = 1.e-14;
+      double tolerance = 1.e-5;
 
       assert_values_equal_rel(
           c6300,
