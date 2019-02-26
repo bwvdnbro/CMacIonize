@@ -42,6 +42,8 @@
  *  time. */
 #define QUEUE_ELEMENT_SIZE sizeof(size_t)
 
+#define QUEUE_STATS
+
 /**
  * @brief Task queue.
  */
