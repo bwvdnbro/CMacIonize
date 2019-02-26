@@ -90,14 +90,14 @@ int main(int argc, char **argv) {
 
     CoordinateVector<> gradrho =
         it_center.get_hydro_variables().primitive_gradients(0);
-    assert_values_equal_rel(gradrho[0], -5., 1.e-16);
-    assert_condition(gradrho[1] == 0.);
-    assert_condition(gradrho[2] == 0.);
+    assert_values_equal_rel(gradrho[0], -5., 1.e-15);
+    assert_values_equal_tol(gradrho[1], 0., 1.e-15);
+    assert_values_equal_tol(gradrho[2], 0., 1.e-15);
     const CoordinateVector<> gradP =
         it_center.get_hydro_variables().primitive_gradients(4);
-    assert_values_equal_rel(gradP[0], -5., 1.e-16);
-    assert_condition(gradP[1] == 0.);
-    assert_condition(gradP[2] == 0.);
+    assert_values_equal_rel(gradP[0], -5., 1.e-15);
+    assert_values_equal_tol(gradP[2], 0., 1.e-15);
+    assert_values_equal_tol(gradP[2], 0., 1.e-15);
 
     // check the boundary treatment
     index_center = CoordinateVector< int_fast32_t >(0, 0, 9);
@@ -120,9 +120,9 @@ int main(int argc, char **argv) {
     GradientCalculator::compute_gradient(it_center, grid.end(), boundaries);
 
     gradrho = it_center.get_hydro_variables().primitive_gradients(0);
-    assert_condition(gradrho[0] == 0.);
-    assert_condition(gradrho[1] == 0.);
-    assert_condition(gradrho[2] == 0.);
+    assert_values_equal_tol(gradrho[0], 0., 1.e-15);
+    assert_values_equal_tol(gradrho[1], 0., 1.e-15);
+    assert_values_equal_tol(gradrho[2], 0., 1.e-15);
   }
 
   /// Voronoi grid
@@ -153,9 +153,9 @@ int main(int argc, char **argv) {
     CoordinateVector<> gradrho =
         cell.get_hydro_variables().primitive_gradients(0);
     cmac_status("gradrho: %g %g %g", gradrho[0], gradrho[1], gradrho[2]);
-    assert_condition(gradrho[0] == 0.);
-    assert_condition(gradrho[1] == 0.);
-    assert_condition(gradrho[2] == 0.);
+    assert_values_equal_tol(gradrho[0], 0., 1.e-15);
+    assert_values_equal_tol(gradrho[1], 0., 1.e-15);
+    assert_values_equal_tol(gradrho[2], 0., 1.e-15);
   }
 
   return 0;
