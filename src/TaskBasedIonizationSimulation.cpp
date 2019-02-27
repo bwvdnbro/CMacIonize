@@ -436,11 +436,11 @@ void TaskBasedIonizationSimulation::run(
       }
     }
 
-    for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
-         ++isrc) {
-      for (size_t ibatch = 0; ibatch < photon_source.get_number_of_batches(
-                                           isrc, PHOTONBUFFER_SIZE);
-           ++ibatch) {
+    for (size_t ibatch = 0;
+         ibatch < photon_source.get_number_of_batches(0, PHOTONBUFFER_SIZE);
+         ++ibatch) {
+      for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
+           ++isrc) {
         const size_t new_task = _tasks->get_free_element();
         (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
         (*_tasks)[new_task].set_subgrid(isrc);
@@ -470,9 +470,8 @@ void TaskBasedIonizationSimulation::run(
       }
 
       // actual run flag
+      uint_fast32_t current_index = _shared_queue->get_task(*_tasks);
       while (global_run_flag) {
-
-        uint_fast32_t current_index = get_task(thread_id);
 
         if (current_index == NO_TASK) {
           uint_fast32_t threshold_size = PHOTONBUFFER_SIZE;
@@ -963,6 +962,8 @@ void TaskBasedIonizationSimulation::run(
             num_active_buffers.value() == 0 &&
             num_photon_done.value() == _number_of_photons) {
           global_run_flag = false;
+        } else {
+          current_index = get_task(thread_id);
         }
       } // while(global_run_flag)
     }   // parallel region
