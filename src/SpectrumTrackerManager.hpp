@@ -48,14 +48,22 @@ private:
   /*! @brief List of output file names. */
   std::vector< std::string > _output_names;
 
+  /*! @brief Number of photon packets to use during the spectrum tracking
+   *  step. */
+  const uint_fast64_t _number_of_photons;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param filename Name of the file that contains the positions of the
    * trackers.
+   * @param number_of_photons Number of photon packets to use during the
+   * spectrum tracking step.
    */
-  SpectrumTrackerManager(const std::string filename) {
+  SpectrumTrackerManager(const std::string filename,
+                         const uint_fast64_t number_of_photons)
+      : _number_of_photons(number_of_photons) {
 
     std::ifstream file(filename);
 
@@ -90,11 +98,21 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * The following parameters are read from the parameter file:
+   *  - filename: Name of the file that contains the tracker positions
+   *    (required)
+   *  - minimum number of photon packets: Minimum number of photon packets to
+   *    use during the spectrum tracking step (default: 0, meaning we do not
+   *    use a different number for the spectrum tracking step)
+   *
    * @param params ParameterFile to read from.
    */
   SpectrumTrackerManager(ParameterFile &params)
-      : SpectrumTrackerManager(params.get_value< std::string >(
-            "SpectrumTrackerManager:filename")) {}
+      : SpectrumTrackerManager(
+            params.get_filename("SpectrumTrackerManager:filename"),
+            params.get_value< uint_fast64_t >(
+                "SpectrumTrackerManager:minimum number of photon packets", 0)) {
+  }
 
   /**
    * @brief Destructor.
@@ -125,6 +143,16 @@ public:
     for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
       _trackers[i]->output_spectrum(_output_names[i]);
     }
+  }
+
+  /**
+   * @brief Get the number of photon packets to use during the spectrum
+   * tracking step.
+   *
+   * @return Number of photons to use during the spectrum tracking step.
+   */
+  inline uint_fast64_t get_number_of_photons() const {
+    return _number_of_photons;
   }
 };
 
