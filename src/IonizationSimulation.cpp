@@ -334,11 +334,13 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _log->write_status("Starting loop ", loop, ".");
     }
 
+    uint_fast64_t lnumphoton = _number_of_photons;
+
     if (_spectrum_trackers != nullptr && loop == _number_of_iterations - 1) {
       _spectrum_trackers->add_trackers(*_density_grid);
+      lnumphoton =
+          std::max(lnumphoton, _spectrum_trackers->get_number_of_photons());
     }
-
-    uint_fast64_t lnumphoton = _number_of_photons;
 
     if (loop == 0) {
       // overwrite the number of photons for the first loop (might be useful

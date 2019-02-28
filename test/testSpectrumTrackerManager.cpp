@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 64);
 
-  SpectrumTrackerManager manager("test_spectrum_tracker_manager.yml");
+  SpectrumTrackerManager manager("test_spectrum_tracker_manager.yml", 99);
   manager.add_trackers(grid);
 
   uint_fast32_t num_tracker = 0;
@@ -53,6 +53,8 @@ int main(int argc, char **argv) {
   }
 
   assert_condition(num_tracker == 3);
+
+  assert_condition(manager.get_number_of_photons() == 99);
 
   return 0;
 }
