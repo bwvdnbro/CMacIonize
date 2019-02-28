@@ -407,6 +407,7 @@ void TaskBasedIonizationSimulation::run(
     }
   }
 
+  Timer MCtimer;
   for (uint_fast32_t iloop = 0; iloop < _number_of_iterations; ++iloop) {
 
     if (_log) {
@@ -415,6 +416,7 @@ void TaskBasedIonizationSimulation::run(
 
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
+    MCtimer.start();
 
     // reset the photon source information
     photon_source.reset();
@@ -1013,6 +1015,7 @@ void TaskBasedIonizationSimulation::run(
     _grid_creator->update_copy_properties();
 
     cpucycle_tick(iteration_end);
+    MCtimer.stop();
     output_tasks(iloop, *_tasks, iteration_start, iteration_end);
     output_queues(iloop, _queues, *_shared_queue);
 
@@ -1021,4 +1024,7 @@ void TaskBasedIonizationSimulation::run(
 
   _density_grid_writer->write(*_grid_creator, _number_of_iterations,
                               _parameter_file);
+
+  _log->write_status(
+      "Total time spent in Monte Carlo algorithm: ", MCtimer.value(), " s.");
 }
