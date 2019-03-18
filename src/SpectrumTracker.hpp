@@ -130,6 +130,20 @@ public:
             << _number_counts_diffuse_He[i] << "\n";
     }
   }
+
+  /**
+   * @brief Describe the tracker in the given output stream, appending the given
+   * prefix to each line of output.
+   *
+   * @param prefix Prefix to add to each output line.
+   * @param stream std::ostream to write to.
+   */
+  virtual void describe(const std::string prefix, std::ostream &stream) const {
+
+    stream << prefix << "type: Spectrum\n";
+    stream << prefix << "number of bins: " << _number_counts_primary.size()
+           << "\n";
+  }
 };
 
 #endif // SPECTRUMTRACKER_HPP

@@ -53,6 +53,15 @@ public:
    * @param filename Name of the output file.
    */
   virtual void output_tracker(const std::string filename) const = 0;
+
+  /**
+   * @brief Describe the tracker in the given output stream, appending the given
+   * prefix to each line of output.
+   *
+   * @param prefix Prefix to add to each output line.
+   * @param stream std::ostream to write to.
+   */
+  virtual void describe(const std::string prefix, std::ostream &stream) const {}
 };
 
 #endif // TRACKER_HPP
