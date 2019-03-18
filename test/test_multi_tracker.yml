@@ -1,0 +1,11 @@
+number of trackers: 3
+
+tracker[0]:
+  type: Multi
+  position: [0. pc, 0. pc, 0. pc]
+  number of trackers: 2
+  tracker[0]:
+    type: Spectrum
+  tracker[1]:
+    type: Spectrum
+  

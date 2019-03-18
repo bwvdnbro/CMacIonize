@@ -17,21 +17,17 @@
  ******************************************************************************/
 
 /**
- * @file testSpectrumTracker.cpp
+ * @file testMultiTracker.cpp
  *
- * @brief Unit test for the SpectrumTracker class.
+ * @brief Unit test for the MultiTracker class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "Photon.hpp"
-#include "RandomGenerator.hpp"
-#include "SpectrumTracker.hpp"
-#include "WMBasicPhotonSourceSpectrum.hpp"
-
-#include <cmath>
+#include "MultiTracker.hpp"
+#include "YAMLDictionary.hpp"
 
 /**
- * @brief Unit test for the SpectrumTracker class.
+ * @brief Unit test for the MultiTracker class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -39,17 +35,11 @@
  */
 int main(int argc, char **argv) {
 
-  SpectrumTracker tracker(1000);
-  WMBasicPhotonSourceSpectrum spectrum(40000., 25.);
+  std::ifstream ifile("test_multi_tracker.yml");
+  YAMLDictionary dictionary(ifile);
+  MultiTracker tracker("tracker[0]:", dictionary);
 
-  RandomGenerator random_generator(42);
-  for (uint_fast32_t i = 0; i < 1e6; ++i) {
-    const double nu = spectrum.get_random_frequency(random_generator);
-    Photon photon(CoordinateVector<>(0.), CoordinateVector<>(0.), nu);
-    tracker.count_photon(photon);
-  }
-
-  tracker.output_tracker("test_SpectrumTracker.txt");
+  tracker.output_tracker("test_MultiTracker.txt");
 
   return 0;
 }

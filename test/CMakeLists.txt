@@ -1346,6 +1346,18 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_tracker_manager.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_tracker_manager.yml @ONLY)
 
+## Unit test for MultiTracker
+set(TESTMULTITRACKER_SOURCES
+    testMultiTracker.cpp
+
+    ../src/MultiTracker.hpp
+)
+add_unit_test(NAME testMultiTracker
+              SOURCES ${TESTMULTITRACKER_SOURCES})
+configure_file(
+  ${PROJECT_SOURCE_DIR}/test/test_multi_tracker.yml
+  ${PROJECT_BINARY_DIR}/rundir/test/test_multi_tracker.yml @ONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

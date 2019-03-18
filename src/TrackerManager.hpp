@@ -86,7 +86,7 @@ public:
       _trackers[i] = TrackerFactory::generate(blockname.str(), blocks);
 
       std::stringstream default_name;
-      default_name << "SpectrumTracker" << i << ".txt";
+      default_name << "Tracker" << i << ".txt";
       _output_names[i] = blocks.get_value< std::string >(
           blockname.str() + "output name", default_name.str());
     }
@@ -110,10 +110,9 @@ public:
    */
   TrackerManager(ParameterFile &params)
       : TrackerManager(
-            params.get_filename("SpectrumTrackerManager:filename"),
+            params.get_filename("TrackerManager:filename"),
             params.get_value< uint_fast64_t >(
-                "SpectrumTrackerManager:minimum number of photon packets", 0)) {
-  }
+                "TrackerManager:minimum number of photon packets", 0)) {}
 
   /**
    * @brief Destructor.
