@@ -1325,24 +1325,26 @@ set(TESTSPECTRUMTRACKER_SOURCES
     testSpectrumTracker.cpp
 
     ../src/SpectrumTracker.hpp
+    ../src/Tracker.hpp
+    ../src/TrackerFactory.hpp
     ../src/WMBasicPhotonSourceSpectrum.cpp
 )
 add_unit_test(NAME testSpectrumTracker
               SOURCES ${TESTSPECTRUMTRACKER_SOURCES})
 
-## Unit test for SpectrumTrackerManager
-set(TESTSPECTRUMTRACKERMANAGER_SOURCES
-    testSpectrumTrackerManager.cpp
+## Unit test for TrackerManager
+set(TESTTRACKERMANAGER_SOURCES
+    testTrackerManager.cpp
 
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
-    ../src/SpectrumTrackerManager.hpp
+    ../src/TrackerManager.hpp
 )
-add_unit_test(NAME testSpectrumTrackerManager
-              SOURCES ${TESTSPECTRUMTRACKERMANAGER_SOURCES})
+add_unit_test(NAME testTrackerManager
+              SOURCES ${TESTTRACKERMANAGER_SOURCES})
 configure_file(
-  ${PROJECT_SOURCE_DIR}/test/test_spectrum_tracker_manager.yml
-  ${PROJECT_BINARY_DIR}/rundir/test/test_spectrum_tracker_manager.yml @ONLY)
+  ${PROJECT_SOURCE_DIR}/test/test_tracker_manager.yml
+  ${PROJECT_BINARY_DIR}/rundir/test/test_tracker_manager.yml @ONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
