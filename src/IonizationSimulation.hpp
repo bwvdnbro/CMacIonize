@@ -47,8 +47,8 @@ class PhotonSource;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 class RecombinationRates;
-class SpectrumTrackerManager;
 class TemperatureCalculator;
+class TrackerManager;
 
 /**
  * @brief Ionization radiative transfer simulation.
@@ -165,7 +165,7 @@ private:
   IonizationPhotonShootJobMarket *_ionization_photon_shoot_job_market;
 
   /*! @brief Optional spectrum tracker manager. */
-  SpectrumTrackerManager *_spectrum_trackers;
+  TrackerManager *_trackers;
 
   /// internal timers
 
