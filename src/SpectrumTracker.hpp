@@ -28,6 +28,8 @@
 #define SPECTRUMTRACKER_HPP
 
 #include "Photon.hpp"
+#include "Tracker.hpp"
+#include "YAMLDictionary.hpp"
 
 #include <cinttypes>
 #include <fstream>
@@ -38,7 +40,7 @@
  * @brief Instrument that keeps track of the spectrum of photons that pass
  * through a cell.
  */
-class SpectrumTracker {
+class SpectrumTracker : public Tracker {
 private:
   /*! @brief Minimum frequency for the spectral bins (in Hz). */
   const double _minimum_frequency;
@@ -73,11 +75,27 @@ public:
         _number_counts_diffuse_He(number_of_bins, 0) {}
 
   /**
+   * @brief YAMLDictionary constructor.
+   *
+   * @param name Name of the block in the dictionary that contains additional
+   * parameters for the spectrum tracker.
+   * @param blocks YAMLDictionary that contains additional parameters.
+   */
+  SpectrumTracker(const std::string name, YAMLDictionary &blocks)
+      : SpectrumTracker(
+            blocks.get_value< uint_fast32_t >(name + "number of bins", 100)) {}
+
+  /**
+   * @brief Virtual destructor.
+   */
+  virtual ~SpectrumTracker() {}
+
+  /**
    * @brief Add the contribution of the given photon packet to the bins.
    *
    * @param photon Photon to add.
    */
-  inline void count_photon(const Photon &photon) {
+  virtual inline void count_photon(const Photon &photon) {
 
     const double frequency = photon.get_energy();
     const uint_fast32_t index =
@@ -100,7 +118,7 @@ public:
    *
    * @param filename Name of the output file.
    */
-  inline void output_spectrum(const std::string filename) const {
+  virtual inline void output_tracker(const std::string filename) const {
 
     std::ofstream ofile(filename);
     ofile << "# frequency (Hz)\tprimary count\tdiffuse H count\tdiffuse He "

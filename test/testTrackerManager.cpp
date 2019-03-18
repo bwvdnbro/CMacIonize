@@ -17,15 +17,15 @@
  ******************************************************************************/
 
 /**
- * @file testSpectrumTrackerManager.cpp
+ * @file testTrackerManager.cpp
  *
- * @brief Unit test for the SpectrumTrackerManager class.
+ * @brief Unit test for the TrackerManager class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
 #include "CartesianDensityGrid.hpp"
-#include "SpectrumTrackerManager.hpp"
+#include "TrackerManager.hpp"
 
 /**
  * @brief Unit test for the SpectrumTrackerManager class.
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   Box<> box(anchor, sides);
   CartesianDensityGrid grid(box, 64);
 
-  SpectrumTrackerManager manager("test_spectrum_tracker_manager.yml", 99);
+  TrackerManager manager("test_tracker_manager.yml", 99);
   manager.add_trackers(grid);
 
   uint_fast32_t num_tracker = 0;

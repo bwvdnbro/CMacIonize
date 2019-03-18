@@ -17,39 +17,38 @@
  ******************************************************************************/
 
 /**
- * @file SpectrumTrackerManager.hpp
+ * @file TrackerManager.hpp
  *
- * @brief Class that manages SpectrumTrackers in the grid.
+ * @brief Class that manages Trackers in the grid.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef SPECTRUMTRACKERMANAGER_HPP
-#define SPECTRUMTRACKERMANAGER_HPP
+#ifndef TRACKERMANAGER_HPP
+#define TRACKERMANAGER_HPP
 
 #include "DensityGrid.hpp"
 #include "ParameterFile.hpp"
-#include "SpectrumTracker.hpp"
+#include "TrackerFactory.hpp"
 #include "YAMLDictionary.hpp"
 
 #include <fstream>
 #include <vector>
 
 /**
- * @brief Class that manages SpectrumTrackers in the grid.
+ * @brief Class that manages Trackers in the grid.
  */
-class SpectrumTrackerManager {
+class TrackerManager {
 private:
   /*! @brief List of tracker positions. */
   std::vector< CoordinateVector<> > _tracker_positions;
 
   /*! @brief List of trackers. */
-  std::vector< SpectrumTracker * > _trackers;
+  std::vector< Tracker * > _trackers;
 
   /*! @brief List of output file names. */
   std::vector< std::string > _output_names;
 
-  /*! @brief Number of photon packets to use during the spectrum tracking
-   *  step. */
+  /*! @brief Number of photon packets to use during the tracking step. */
   const uint_fast64_t _number_of_photons;
 
 public:
@@ -59,10 +58,10 @@ public:
    * @param filename Name of the file that contains the positions of the
    * trackers.
    * @param number_of_photons Number of photon packets to use during the
-   * spectrum tracking step.
+   * tracking step.
    */
-  SpectrumTrackerManager(const std::string filename,
-                         const uint_fast64_t number_of_photons)
+  TrackerManager(const std::string filename,
+                 const uint_fast64_t number_of_photons)
       : _number_of_photons(number_of_photons) {
 
     std::ifstream file(filename);
@@ -84,15 +83,17 @@ public:
       _tracker_positions[i] = blocks.get_physical_vector< QUANTITY_LENGTH >(
           blockname.str() + "position");
 
-      const uint_fast32_t nbin = blocks.get_value< uint_fast32_t >(
-          blockname.str() + "number of bins", 100);
-      _trackers[i] = new SpectrumTracker(nbin);
+      _trackers[i] = TrackerFactory::generate(blockname.str(), blocks);
 
       std::stringstream default_name;
       default_name << "SpectrumTracker" << i << ".txt";
       _output_names[i] = blocks.get_value< std::string >(
           blockname.str() + "output name", default_name.str());
     }
+
+    std::ofstream ofile(filename + ".used-values");
+    blocks.print_contents(ofile, true);
+    ofile.close();
   }
 
   /**
@@ -107,8 +108,8 @@ public:
    *
    * @param params ParameterFile to read from.
    */
-  SpectrumTrackerManager(ParameterFile &params)
-      : SpectrumTrackerManager(
+  TrackerManager(ParameterFile &params)
+      : TrackerManager(
             params.get_filename("SpectrumTrackerManager:filename"),
             params.get_value< uint_fast64_t >(
                 "SpectrumTrackerManager:minimum number of photon packets", 0)) {
@@ -117,7 +118,7 @@ public:
   /**
    * @brief Destructor.
    */
-  ~SpectrumTrackerManager() {
+  ~TrackerManager() {
     for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
       delete _trackers[i];
     }
@@ -141,19 +142,18 @@ public:
    */
   inline void output_trackers() const {
     for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
-      _trackers[i]->output_spectrum(_output_names[i]);
+      _trackers[i]->output_tracker(_output_names[i]);
     }
   }
 
   /**
-   * @brief Get the number of photon packets to use during the spectrum
-   * tracking step.
+   * @brief Get the number of photon packets to use during the tracking step.
    *
-   * @return Number of photons to use during the spectrum tracking step.
+   * @return Number of photons to use during the tracking step.
    */
   inline uint_fast64_t get_number_of_photons() const {
     return _number_of_photons;
   }
 };
 
-#endif // SPECTRUMTRACKERMANAGER_HPP
+#endif // TRACKERMANAGER_HPP
