@@ -49,8 +49,14 @@ private:
   /*! @brief Inverse width of a single frequency bin (in Hz^-1). */
   const double _inverse_frequency_width;
 
-  /*! @brief Number counts per bin. */
-  std::vector< double > _number_counts;
+  /*! @brief Number counts per bin for direct radiation from a source. */
+  std::vector< uint_fast64_t > _number_counts_primary;
+
+  /*! @brief Number counts per bin for diffuse hydrogen reemission. */
+  std::vector< uint_fast64_t > _number_counts_diffuse_H;
+
+  /*! @brief Number counts per bin for diffuse helium reemission. */
+  std::vector< uint_fast64_t > _number_counts_diffuse_He;
 
 public:
   /**
@@ -62,7 +68,9 @@ public:
       : _minimum_frequency(3.289e15),
         _frequency_width(3. * 3.289e15 / number_of_bins),
         _inverse_frequency_width(1. / _frequency_width),
-        _number_counts(number_of_bins, 0.) {}
+        _number_counts_primary(number_of_bins, 0),
+        _number_counts_diffuse_H(number_of_bins, 0),
+        _number_counts_diffuse_He(number_of_bins, 0) {}
 
   /**
    * @brief Add the contribution of the given photon packet to the bins.
@@ -74,8 +82,16 @@ public:
     const double frequency = photon.get_energy();
     const uint_fast32_t index =
         (frequency - _minimum_frequency) * _inverse_frequency_width;
-    if (index < _number_counts.size()) {
-      _number_counts[index] += 1.;
+    if (index < _number_counts_primary.size()) {
+      if (photon.get_type() == PHOTONTYPE_PRIMARY) {
+        ++_number_counts_primary[index];
+      }
+      if (photon.get_type() == PHOTONTYPE_DIFFUSE_HI) {
+        ++_number_counts_diffuse_H[index];
+      }
+      if (photon.get_type() == PHOTONTYPE_DIFFUSE_HeI) {
+        ++_number_counts_diffuse_He[index];
+      }
     }
   }
 
@@ -86,17 +102,14 @@ public:
    */
   inline void output_spectrum(const std::string filename) const {
 
-    //    double numcount = 0.;
-    //    for(uint_fast32_t i = 0; i < _number_counts.size(); ++i){
-    //      numcount += _number_counts[i];
-    //    }
-
     std::ofstream ofile(filename);
-    ofile << "# frequency (Hz)\tprobability\n";
-    for (uint_fast32_t i = 0; i < _number_counts.size(); ++i) {
+    ofile << "# frequency (Hz)\tprimary count\tdiffuse H count\tdiffuse He "
+             "count\n";
+    for (uint_fast32_t i = 0; i < _number_counts_primary.size(); ++i) {
       const double nu = _minimum_frequency + (i + 0.5) * _frequency_width;
-      //      ofile << nu << "\t" << _number_counts[i] / numcount << "\n";
-      ofile << nu << "\t" << _number_counts[i] << "\n";
+      ofile << nu << "\t" << _number_counts_primary[i] << "\t"
+            << _number_counts_diffuse_H[i] << "\t"
+            << _number_counts_diffuse_He[i] << "\n";
     }
   }
 };
