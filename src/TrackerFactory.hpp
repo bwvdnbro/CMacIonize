@@ -30,6 +30,7 @@
 #include "YAMLDictionary.hpp"
 
 // implementations
+#include "MultiTracker.hpp"
 #include "SpectrumTracker.hpp"
 
 /**
@@ -54,7 +55,9 @@ public:
 
     const std::string type = blocks.get_value< std::string >(name + "type");
 
-    if (type == "Spectrum") {
+    if (type == "Multi") {
+      return new MultiTracker(name, blocks);
+    } else if (type == "Spectrum") {
       return new SpectrumTracker(name, blocks);
     } else {
       cmac_error("Unknown Tracker type: \"%s\"!", type.c_str());

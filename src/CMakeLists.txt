@@ -117,6 +117,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     IonizationStateCalculator.cpp
     LineCoolingData.cpp
     MaskedPhotonSourceSpectrum.cpp
+    MultiTracker.cpp
     NewVoronoiCellConstructor.cpp
     NewVoronoiGrid.cpp
     OldVoronoiCell.cpp

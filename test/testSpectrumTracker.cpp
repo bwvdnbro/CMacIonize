@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Photon.hpp"
+#include "PhotonSource.hpp"
 #include "RandomGenerator.hpp"
 #include "SpectrumTracker.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
@@ -39,17 +40,22 @@
  */
 int main(int argc, char **argv) {
 
-  SpectrumTracker tracker(1000);
+  SpectrumTracker tracker_all(1000);
+  SpectrumTracker tracker_half(1000, 0.5 * M_PI,
+                               CoordinateVector<>(1., 0., 0.));
   WMBasicPhotonSourceSpectrum spectrum(40000., 25.);
 
   RandomGenerator random_generator(42);
   for (uint_fast32_t i = 0; i < 1e6; ++i) {
     const double nu = spectrum.get_random_frequency(random_generator);
-    Photon photon(CoordinateVector<>(0.), CoordinateVector<>(0.), nu);
-    tracker.count_photon(photon);
+    Photon photon(CoordinateVector<>(0.),
+                  PhotonSource::get_random_direction(random_generator), nu);
+    tracker_all.count_photon(photon);
+    tracker_half.count_photon(photon);
   }
 
-  tracker.output_tracker("test_SpectrumTracker.txt");
+  tracker_all.output_tracker("test_SpectrumTracker_all.txt");
+  tracker_half.output_tracker("test_SpectrumTracker_half.txt");
 
   return 0;
 }
