@@ -26,9 +26,12 @@
 #ifndef MULTITRACKER_HPP
 #define MULTITRACKER_HPP
 
-#include "Photon.hpp"
-#include "TrackerFactory.hpp"
-#include "YAMLDictionary.hpp"
+#include "Tracker.hpp"
+
+#include <vector>
+
+class Photon;
+class YAMLDictionary;
 
 /**
  * @brief Tracker that allows attaching multiple trackers to one cell.
@@ -43,73 +46,13 @@ private:
   std::vector< std::string > _output_names;
 
 public:
-  /**
-   * @brief YAMLDictionary constructor.
-   *
-   * @param name Name of the block in the dictionary that contains additional
-   * parameters for the spectrum tracker.
-   * @param blocks YAMLDictionary that contains additional parameters.
-   */
-  MultiTracker(const std::string name, YAMLDictionary &blocks) {
+  MultiTracker(const std::string name, YAMLDictionary &blocks);
 
-    const uint_fast32_t number_of_trackers =
-        blocks.get_value< uint_fast32_t >(name + "number of trackers");
+  virtual ~MultiTracker();
 
-    _trackers.resize(number_of_trackers, nullptr);
-    _output_names.resize(number_of_trackers);
+  virtual void count_photon(const Photon &photon);
 
-    for (uint_fast32_t i = 0; i < number_of_trackers; ++i) {
-      std::stringstream blockname;
-      blockname << name << "tracker[" << i << "]:";
-      _trackers[i] = TrackerFactory::generate(blockname.str(), blocks);
-      _output_names[i] =
-          blocks.get_value< std::string >(blockname.str() + "output name", "");
-    }
-  }
-
-  /**
-   * @brief Virtual destructor.
-   */
-  virtual ~MultiTracker() {
-    for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
-      delete _trackers[i];
-    }
-  }
-
-  /**
-   * @brief Add the contribution of the given photon packet to the bins.
-   *
-   * @param photon Photon to add.
-   */
-  virtual inline void count_photon(const Photon &photon) {
-
-    for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
-      _trackers[i]->count_photon(photon);
-    }
-  }
-
-  /**
-   * @brief Output the spectrum to the file with the given name.
-   *
-   * @param filename Name of the output file.
-   */
-  virtual inline void output_tracker(const std::string filename) const {
-
-    std::ofstream ofile(filename);
-    for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
-      std::string this_filename = _output_names[i];
-      if (this_filename == "") {
-        std::stringstream this_filename_stream;
-        this_filename_stream << filename << "." << i << ".txt";
-        this_filename = this_filename_stream.str();
-      }
-      _trackers[i]->output_tracker(this_filename);
-
-      ofile << "tracker[" << i << "]:\n";
-      ofile << "  output name: " << this_filename << "\n";
-      _trackers[i]->describe("  ", ofile);
-    }
-  }
+  virtual void output_tracker(const std::string filename) const;
 };
 
 #endif // MULTITRACKER_HPP

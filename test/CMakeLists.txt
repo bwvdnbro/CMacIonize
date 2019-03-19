@@ -1338,6 +1338,7 @@ set(TESTTRACKERMANAGER_SOURCES
 
     ../src/CartesianDensityGrid.cpp
     ../src/DensityGrid.cpp
+    ../src/MultiTracker.cpp
     ../src/TrackerManager.hpp
 )
 add_unit_test(NAME testTrackerManager
@@ -1350,6 +1351,7 @@ configure_file(
 set(TESTMULTITRACKER_SOURCES
     testMultiTracker.cpp
 
+    ../src/MultiTracker.cpp
     ../src/MultiTracker.hpp
 )
 add_unit_test(NAME testMultiTracker
