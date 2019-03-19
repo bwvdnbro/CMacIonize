@@ -43,6 +43,9 @@ private:
   /*! @brief Box dimensions (in m). */
   const Box<> _box;
 
+  /*! @brief Position shift (in fractions of the box size). */
+  const CoordinateVector<> _shift;
+
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< uint_fast32_t > _number_of_cells;
 
@@ -54,7 +57,8 @@ public:
                               const std::string prefix,
                               const uint_fast32_t padding,
                               const uint_fast32_t number_of_files,
-                              const Box<> box, const double number_density);
+                              const Box<> box, const double number_density,
+                              const CoordinateVector<> shift);
 
   AmunSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
