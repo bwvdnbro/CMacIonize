@@ -130,9 +130,15 @@ public:
    */
   inline void add_trackers(DensityGrid &grid) {
     for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
-      grid.get_cell(_tracker_positions[i])
-          .get_ionization_variables()
-          .add_tracker(_trackers[i]);
+      if (!grid.get_box().inside(_tracker_positions[i])) {
+        cmac_error("Tracker is not inside grid!");
+      }
+      IonizationVariables &ionization_variables =
+          grid.get_cell(_tracker_positions[i]).get_ionization_variables();
+      if (ionization_variables.get_tracker() != nullptr) {
+        cmac_error("Cell already has a tracker!");
+      }
+      ionization_variables.add_tracker(_trackers[i]);
     }
   }
 
