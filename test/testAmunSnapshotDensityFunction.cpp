@@ -38,7 +38,8 @@ int main(int argc, char **argv) {
 
   AmunSnapshotDensityFunction snapshot(
       ".", "Amun_test_", 2, 4,
-      Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 1.);
+      Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 1.,
+      CoordinateVector<>(0.));
 
   std::ofstream ofile("testAmunSnapshotDensityFunction.txt");
   ofile << "# x (m)\ty (m)\tnH (m^-3)\n";
