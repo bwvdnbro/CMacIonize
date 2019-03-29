@@ -39,13 +39,13 @@
  */
 int main(int argc, char **argv) {
 
-  DensitySubGridCreator grid_creator(
+  DensitySubGridCreator< DensitySubGrid > grid_creator(
       Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
       CoordinateVector< int_fast32_t >(64),
       CoordinateVector< int_fast32_t >(8));
   HomogeneousDensityFunction density_function;
   grid_creator.initialize(density_function);
-  DensitySubGridCreator::iterator center =
+  DensitySubGridCreator< DensitySubGrid >::iterator center =
       grid_creator.get_subgrid(CoordinateVector<>(0));
   std::vector< uint_fast8_t > levels(grid_creator.number_of_original_subgrids(),
                                      0);
@@ -54,7 +54,8 @@ int main(int argc, char **argv) {
 
   SingleStarPhotonSourceDistribution distribution(CoordinateVector<>(0.),
                                                   4.26e49);
-  DistributedPhotonSource photon_source(1e6, distribution, grid_creator);
+  DistributedPhotonSource< DensitySubGrid > photon_source(1e6, distribution,
+                                                          grid_creator);
 
   assert_condition(photon_source.get_number_of_sources() == 16);
 

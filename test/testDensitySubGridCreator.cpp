@@ -45,8 +45,8 @@ int main(int argc, char **argv) {
   const CoordinateVector< int_fast32_t > ncell(16, 16, 16);
   const CoordinateVector< int_fast32_t > nsubgrid(4, 4, 8);
 
-  DensitySubGridCreator grid_creator(Box<>(box_anchor, box_sides), ncell,
-                                     nsubgrid);
+  DensitySubGridCreator< DensitySubGrid > grid_creator(
+      Box<>(box_anchor, box_sides), ncell, nsubgrid);
   HomogeneousDensityFunction density_function;
   grid_creator.initialize(density_function);
 

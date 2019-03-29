@@ -27,6 +27,7 @@
 #define HYDRODENSITYSUBGRID_HPP
 
 #include "DensitySubGrid.hpp"
+#include "DensityValues.hpp"
 #include "Hydro.hpp"
 #include "HydroVariables.hpp"
 
@@ -121,14 +122,20 @@ public:
    * @brief Initialize the conserved variables for the grid.
    *
    * @param hydro Hydro instance to use.
+   * @return Minimum initial time step for the cells in the grid.
    */
-  inline void initialize_conserved_variables(const Hydro &hydro) {
+  inline double initialize_hydrodynamic_variables(const Hydro &hydro) {
 
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
+    double timestep = 0.;
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      hydro.ionization_to_hydro(_ionization_variables[i], _hydro_variables[i]);
       hydro.set_conserved_variables(_hydro_variables[i], _cell_volume);
+      timestep = std::min(
+          timestep, hydro.get_timestep(_hydro_variables[i], _cell_volume));
     }
+    return timestep;
   }
 
   /**
@@ -740,6 +747,17 @@ public:
    */
   inline size_t get_hydro_task(const int_fast32_t i) const {
     return _hydro_tasks[i];
+  }
+
+  /**
+   * @brief Initialize the hydrodynamic variables for a cell in this subgrid.
+   *
+   * @param index Index of a cell in the subgrid.
+   * @param values DensityValues to use.
+   */
+  virtual void initialize_hydro(const uint_fast32_t index,
+                                const DensityValues &values) {
+    _hydro_variables[index].set_primitives_velocity(values.get_velocity());
   }
 
   /**

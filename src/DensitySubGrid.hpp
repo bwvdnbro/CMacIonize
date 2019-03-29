@@ -50,6 +50,8 @@
 #include <mpi.h>
 #endif
 
+class DensityValues;
+
 /*! @brief Special neighbour index marking a neighbour that does not exist. */
 #define NEIGHBOUR_OUTSIDE 0xffffffff
 
@@ -1563,6 +1565,17 @@ public:
         _anchor[1] + (three_index[1] + 0.5) * _cell_size[1],
         _anchor[2] + (three_index[2] + 0.5) * _cell_size[2]);
   }
+
+  /**
+   * @brief Initialize the hydrodynamic variables for a cell in this subgrid.
+   *
+   * Empty placeholder.
+   *
+   * @param index Index of a cell in the subgrid.
+   * @param values DensityValues to use.
+   */
+  virtual void initialize_hydro(const uint_fast32_t index,
+                                const DensityValues &values) {}
 
   /**
    * @brief Iterator to loop over the cells in the subgrid.

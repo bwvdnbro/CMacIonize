@@ -42,7 +42,7 @@ class CrossSections;
 class DensityFunction;
 class DensityGridWriter;
 class DensitySubGrid;
-class DensitySubGridCreator;
+template < class _subgrid_type_ > class DensitySubGridCreator;
 class DiffuseReemissionHandler;
 class MemorySpace;
 class PhotonSourceDistribution;
@@ -89,7 +89,7 @@ private:
   SimulationBox _simulation_box;
 
   /*! @brief Grid creator. */
-  DensitySubGridCreator *_grid_creator;
+  DensitySubGridCreator< DensitySubGrid > *_grid_creator;
 
   /*! @brief DensityFunction that sets the density field. */
   DensityFunction *_density_function;
