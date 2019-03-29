@@ -1579,6 +1579,26 @@ set(TESTDISTRIBUTEDPHOTONSOURCE_SOURCES
 add_unit_test(NAME testDistributedPhotonSource
               SOURCES ${TESTDISTRIBUTEDPHOTONSOURCE_SOURCES})
 
+## Unit test for HydroDensitySubGrid
+set(TESTHYDRODENSITYSUBGRID_SOURCES
+    testHydroDensitySubGrid.cpp
+
+    ../src/HydroBoundary.hpp
+    ../src/HydroDensitySubGrid.hpp
+)
+add_unit_test(NAME testHydroDensitySubGrid
+              SOURCES ${TESTHYDRODENSITYSUBGRID_SOURCES}
+              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
+## Unit test for Hydro
+set(TESTHYDRO_SOURCES
+    testHydro.cpp
+
+    ../src/Hydro.hpp
+)
+add_unit_test(NAME testHydro
+              SOURCES ${TESTHYDRO_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
