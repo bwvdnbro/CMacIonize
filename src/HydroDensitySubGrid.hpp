@@ -373,10 +373,9 @@ public:
    * @param boundary HydroBoundary that sets the right state primitive
    * variables.
    */
-  template < typename _boundary_ >
   inline void outer_ghost_flux_sweep(const int_fast32_t direction,
                                      const Hydro &hydro,
-                                     const _boundary_ &boundary) {
+                                     const HydroBoundary &boundary) {
 
     int_fast32_t i, start_index_left, row_increment, row_length,
         column_increment, column_length;
@@ -636,10 +635,9 @@ public:
    * @param boundary HydroBoundary that sets the right state primitive
    * variables.
    */
-  template < typename _boundary_ >
   inline void outer_ghost_gradient_sweep(const int_fast32_t direction,
                                          const Hydro &hydro,
-                                         const _boundary_ &boundary) {
+                                         const HydroBoundary &boundary) {
 
     int_fast32_t i, start_index_left, row_increment, row_length,
         column_increment, column_length;

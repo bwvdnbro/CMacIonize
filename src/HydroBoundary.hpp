@@ -29,9 +29,9 @@
 #include "HydroVariables.hpp"
 
 /**
- * @brief Inflow hydro boundary.
+ * @brief General interface for hydrodynamical boundary conditions.
  */
-class InflowHydroBoundary {
+class HydroBoundary {
 public:
   /**
    * @brief Get the right state primitive variables corresponding to the given
@@ -41,9 +41,39 @@ public:
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables).
    */
-  inline static HydroVariables
+  virtual HydroVariables get_right_state_gradient_variables(
+      const int i, const HydroVariables &left_state) const = 0;
+
+  /**
+   * @brief Get the right state primitive variables and gradients corresponding
+   * to the given left state boundary ghost.
+   *
+   * @param i Interface direction: x (0), y (1) or z (2).
+   * @param left_state Left state hydro variables.
+   * @return Corresponding right state (only containing primitive variables and
+   * gradients).
+   */
+  virtual HydroVariables
+  get_right_state_flux_variables(const int i,
+                                 const HydroVariables &left_state) const = 0;
+};
+
+/**
+ * @brief Inflow hydro boundary.
+ */
+class InflowHydroBoundary : public HydroBoundary {
+public:
+  /**
+   * @brief Get the right state primitive variables corresponding to the given
+   * left state boundary ghost.
+   *
+   * @param i Interface direction: x (0), y (1) or z (2).
+   * @param left_state Left state hydro variables.
+   * @return Corresponding right state (only containing primitive variables).
+   */
+  virtual HydroVariables
   get_right_state_gradient_variables(const int i,
-                                     const HydroVariables &left_state) {
+                                     const HydroVariables &left_state) const {
 
     HydroVariables right_state;
 
@@ -63,9 +93,9 @@ public:
    * @return Corresponding right state (only containing primitive variables and
    * gradients).
    */
-  inline static HydroVariables
+  virtual HydroVariables
   get_right_state_flux_variables(const int i,
-                                 const HydroVariables &left_state) {
+                                 const HydroVariables &left_state) const {
 
     HydroVariables right_state;
 
@@ -81,7 +111,7 @@ public:
 /**
  * @brief Reflective hydro boundary.
  */
-class ReflectiveHydroBoundary {
+class ReflectiveHydroBoundary : public HydroBoundary {
 public:
   /**
    * @brief Get the right state primitive variables corresponding to the given
@@ -91,9 +121,9 @@ public:
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables).
    */
-  inline static HydroVariables
+  virtual HydroVariables
   get_right_state_gradient_variables(const int i,
-                                     const HydroVariables &left_state) {
+                                     const HydroVariables &left_state) const {
 
     HydroVariables right_state;
 
@@ -115,9 +145,9 @@ public:
    * @return Corresponding right state (only containing primitive variables and
    * gradients).
    */
-  inline static HydroVariables
+  virtual HydroVariables
   get_right_state_flux_variables(const int i,
-                                 const HydroVariables &left_state) {
+                                 const HydroVariables &left_state) const {
 
     HydroVariables right_state;
 
