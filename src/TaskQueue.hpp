@@ -42,6 +42,7 @@
  *  time. */
 #define QUEUE_ELEMENT_SIZE sizeof(size_t)
 
+/*! @brief Enable this to keep track of queue statistics. */
 #define QUEUE_STATS
 
 /**
