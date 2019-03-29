@@ -244,8 +244,8 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
   for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _random_generators[ithread].set_seed(random_seed + ithread);
   }
-  _grid_creator =
-      new DensitySubGridCreator(_simulation_box.get_box(), _parameter_file);
+  _grid_creator = new DensitySubGridCreator< DensitySubGrid >(
+      _simulation_box.get_box(), _parameter_file);
 
   _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
 
@@ -357,7 +357,7 @@ void TaskBasedIonizationSimulation::run(
          ++isource) {
       const CoordinateVector<> position =
           _photon_source_distribution->get_position(isource);
-      DensitySubGridCreator::iterator gridit =
+      DensitySubGridCreator< DensitySubGrid >::iterator gridit =
           _grid_creator->get_subgrid(position);
       levels[gridit.get_index()] = _source_copy_level;
     }
@@ -389,7 +389,7 @@ void TaskBasedIonizationSimulation::run(
   }
   _grid_creator->create_copies(levels);
 
-  DistributedPhotonSource photon_source(
+  DistributedPhotonSource< DensitySubGrid > photon_source(
       _number_of_photons, *_photon_source_distribution, *_grid_creator);
 
   {

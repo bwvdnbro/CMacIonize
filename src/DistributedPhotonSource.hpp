@@ -34,7 +34,7 @@
 /**
  * @brief PhotonSource to be used by a distributed grid consisting of subgrids.
  */
-class DistributedPhotonSource {
+template < class _subgrid_type_ > class DistributedPhotonSource {
 private:
   /*! @brief Number of photons to emit from each source. */
   std::vector< size_t > _total_number_of_photons;
@@ -60,9 +60,9 @@ public:
    * weights of all the sources.
    * @param grid_creator Distributed grid.
    */
-  DistributedPhotonSource(const size_t number_of_photons,
-                          PhotonSourceDistribution &distribution,
-                          DensitySubGridCreator &grid_creator) {
+  DistributedPhotonSource(
+      const size_t number_of_photons, PhotonSourceDistribution &distribution,
+      DensitySubGridCreator< _subgrid_type_ > &grid_creator) {
 
     size_t number_done = 0;
     std::vector< size_t > overhead;
@@ -71,11 +71,11 @@ public:
     for (photonsourcenumber_t isource = 0; isource < number_of_sources;
          ++isource) {
       const CoordinateVector<> position = distribution.get_position(isource);
-      DensitySubGridCreator::iterator first_cell =
+      typename DensitySubGridCreator< _subgrid_type_ >::iterator first_cell =
           grid_creator.get_subgrid(position);
       std::vector< size_t > subgrids(1, first_cell.get_index());
-      std::pair< DensitySubGridCreator::iterator,
-                 DensitySubGridCreator::iterator >
+      std::pair< typename DensitySubGridCreator< _subgrid_type_ >::iterator,
+                 typename DensitySubGridCreator< _subgrid_type_ >::iterator >
           copies = first_cell.get_copies();
       if (copies.first != grid_creator.all_end()) {
         for (auto it = copies.first; it != copies.second; ++it) {

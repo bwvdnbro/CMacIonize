@@ -157,6 +157,7 @@ set(CMACIONIZE_SOURCES
     DustSimulation.cpp
     EmissivityCalculator.cpp
     RadiationHydrodynamicsSimulation.cpp
+    TaskBasedRadiationHydrodynamicsSimulation.cpp
 
     Abundances.hpp
     AMRRefinementScheme.hpp
@@ -236,6 +237,7 @@ set(CMACIONIZE_SOURCES
     SpatialAMRRefinementScheme.hpp
     SPHNGSnapshotDensityFunction.hpp
     SPHVoronoiGeneratorDistribution.hpp
+    TaskBasedRadiationHydrodynamicsSimulation.hpp
     TemperatureCalculator.hpp
     Timer.hpp
     Utilities.hpp

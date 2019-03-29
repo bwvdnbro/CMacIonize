@@ -344,9 +344,7 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
- * @param hydro_units Internal unit system for the hydrodynamic quantities.
  */
-void SPHArrayInterface::write(DensitySubGridCreator &grid_creator,
-                              const uint_fast32_t counter,
-                              ParameterFile &params, double time,
-                              const InternalHydroUnits *hydro_units) {}
+void SPHArrayInterface::write(
+    DensitySubGridCreator< DensitySubGrid > &grid_creator,
+    const uint_fast32_t counter, ParameterFile &params, double time) {}
