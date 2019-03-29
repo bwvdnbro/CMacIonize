@@ -29,6 +29,8 @@
 #include "HLLCRiemannSolver.hpp"
 #include "HydroBoundary.hpp"
 #include "HydroVariables.hpp"
+#include "IonizationVariables.hpp"
+#include "PhysicalConstants.hpp"
 
 #include <cfloat>
 
@@ -46,6 +48,21 @@ private:
   /*! @brief @f$\frac{1}{\gamma{}-1}@f$. */
   const double _one_over_gamma_minus_one;
 
+  /*! @brief Conversion factor from number density to density (in kg). */
+  const double _density_conversion_factor;
+
+  /*! @brief Conversion factor from temperature to pressure,
+   *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
+  const double _pressure_conversion_factor;
+
+  /*! @brief Conversion factor from density to number density,
+   *  @f$n_{fac} = \frac{1}{m_{\rm{}H}}@f$ (in kg^-1). */
+  double _n_conversion_factor;
+
+  /*! @brief Conversion factor from pressure to temperature,
+   *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
+  double _T_conversion_factor;
+
   /*! @brief Riemann solver used to solve the Riemann problem. */
   const HLLCRiemannSolver _riemann_solver;
 
@@ -58,18 +75,29 @@ public:
   inline Hydro(const double gamma = 5. / 3.)
       : _gamma(gamma), _gamma_minus_one(_gamma - 1.),
         _one_over_gamma_minus_one(1. / _gamma_minus_one),
+        _density_conversion_factor(PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_PROTON_MASS)),
+        _pressure_conversion_factor(PhysicalConstants::get_physical_constant(
+                                        PHYSICALCONSTANT_BOLTZMANN) /
+                                    PhysicalConstants::get_physical_constant(
+                                        PHYSICALCONSTANT_PROTON_MASS)),
+        _n_conversion_factor(1. / PhysicalConstants::get_physical_constant(
+                                      PHYSICALCONSTANT_PROTON_MASS)),
+        _T_conversion_factor(PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS) /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN)),
         _riemann_solver(gamma) {}
 
   /**
-   * @brief Get the soundspeed for the given density and pressure.
+   * @brief Get the soundspeed for the given hydrodynamic variables.
    *
-   * @param density Density (in kg m^-3).
-   * @param pressure Pressure (in kg m^-1 s^-2).
+   * @param hydro_variables Hydro variables.
    * @return Soundspeed (in m s^-1).
    */
-  inline double get_soundspeed(const double density,
-                               const double pressure) const {
-    return std::sqrt(_gamma * pressure / density);
+  inline double get_soundspeed(const HydroVariables hydro_variables) const {
+    return std::sqrt(_gamma * hydro_variables.get_primitives_pressure() /
+                     hydro_variables.get_primitives_density());
   }
 
   /**
@@ -388,6 +416,70 @@ public:
     state.primitives(3) -= dt * (vz * divv + rhoinv * dPdz);
     state.primitives(4) -=
         dt * (_gamma * P * divv + vx * dPdx + vy * dPdy + vz * dPdz);
+  }
+
+  /**
+   * @brief Set the hydrodynamic variables based on the given ionization
+   * variables.
+   *
+   * @param ionization_variables IonizationVariables.
+   * @param hydro_variables HydroVariables.
+   */
+  inline void
+  ionization_to_hydro(const IonizationVariables &ionization_variables,
+                      HydroVariables &hydro_variables) const {
+
+    const double density =
+        _density_conversion_factor * ionization_variables.get_number_density();
+    const double mean_molecular_mass =
+        0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+    const double pressure = _pressure_conversion_factor * density *
+                            ionization_variables.get_temperature() /
+                            mean_molecular_mass;
+
+    // the velocity is directly set from the initial condition
+    hydro_variables.set_primitives_density(density);
+    hydro_variables.set_primitives_pressure(pressure);
+  }
+
+  /**
+   * @brief Set the ionization variables based on the given hydrodynamic
+   * variables.
+   *
+   * @param hydro_variables HydroVariables.
+   * @param ionization_variables IonizationVariables.
+   */
+  inline void
+  hydro_to_ionization(const HydroVariables &hydro_variables,
+                      IonizationVariables &ionization_variables) const {
+
+    const double number_density =
+        _n_conversion_factor * hydro_variables.get_primitives_density();
+    const double mean_molecular_mass =
+        0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+    const double temperature = mean_molecular_mass * _T_conversion_factor *
+                               hydro_variables.get_primitives_pressure() /
+                               hydro_variables.get_primitives_density();
+
+    ionization_variables.set_number_density(number_density);
+    ionization_variables.set_temperature(temperature);
+  }
+
+  /**
+   * @brief Get the hydrodynamical timestep for the given cell.
+   *
+   * @param hydro_variables Hydro variables.
+   * @param volume Volume of the cell (in m^3).
+   * @return Corresponding timestep.
+   */
+  inline double get_timestep(const HydroVariables &hydro_variables,
+                             const double volume) const {
+
+    const double cs = get_soundspeed(hydro_variables);
+    const double v = hydro_variables.get_primitives_velocity().norm();
+    const double R = std::cbrt(0.75 * volume * M_1_PI);
+
+    return R / (cs + v);
   }
 };
 

@@ -40,10 +40,10 @@
  * @brief Class responsible for creating DensitySubGrid instances that make up
  * a larger grid.
  */
-class DensitySubGridCreator {
+template < class _subgrid_type_ > class DensitySubGridCreator {
 private:
   /*! @brief Subgrids that make up the grid. */
-  std::vector< DensitySubGrid * > _subgrids;
+  std::vector< _subgrid_type_ * > _subgrids;
 
   /*! @brief Indices of the original subgrid corresponding to each copy. */
   std::vector< size_t > _originals;
@@ -250,7 +250,7 @@ public:
    * @return Pointer to a newly created DensitySubGrid instance. Memory
    * management for the pointer is transferred to the caller.
    */
-  inline DensitySubGrid *create_subgrid(const uint_fast32_t index) const {
+  inline _subgrid_type_ *create_subgrid(const uint_fast32_t index) const {
 
     const int_fast32_t ix =
         index / (_number_of_subgrids[1] * _number_of_subgrids[2]);
@@ -267,8 +267,8 @@ public:
         _subgrid_sides[0],
         _subgrid_sides[1],
         _subgrid_sides[2]};
-    DensitySubGrid *this_grid =
-        new DensitySubGrid(subgrid_box, _subgrid_number_of_cells);
+    _subgrid_type_ *this_grid =
+        new _subgrid_type_(subgrid_box, _subgrid_number_of_cells);
     for (int_fast32_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
       this_grid->set_neighbour(i, NEIGHBOUR_OUTSIDE);
       this_grid->set_active_buffer(i, NEIGHBOUR_OUTSIDE);
@@ -335,6 +335,7 @@ public:
           }
           it.get_ionization_variables().set_temperature(
               values.get_temperature());
+          _subgrids[this_igrid]->initialize_hydro(it.get_index(), values);
         }
       }
     }
@@ -371,7 +372,7 @@ public:
         _copies[i] = _subgrids.size();
       }
       for (uint_fast32_t j = 1; j < number_of_copies; ++j) {
-        _subgrids.push_back(new DensitySubGrid(*_subgrids[i]));
+        _subgrids.push_back(new _subgrid_type_(*_subgrids[i]));
         _originals.push_back(i);
       }
     }
@@ -494,7 +495,7 @@ public:
      *
      * @return Reference to the subgrid the iterator is currently pointing to.
      */
-    inline DensitySubGrid &operator*() {
+    inline _subgrid_type_ &operator*() {
       return *_grid_creator->_subgrids[_index];
     }
 
