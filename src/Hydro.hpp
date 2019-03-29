@@ -192,10 +192,9 @@ public:
    * @param dx Distance between left and right state midpoint (in m).
    * @param A Signed surface area of the interface (in m^2).
    */
-  template < typename _boundary_ >
   inline void do_ghost_flux_calculation(const uint_fast8_t i,
                                         HydroVariables &left_state,
-                                        const _boundary_ &boundary,
+                                        const HydroBoundary &boundary,
                                         const double dx, const double A) const {
 
     HydroVariables right_state =
@@ -291,10 +290,9 @@ public:
    * @param WLlim Left state primitive variable limiters (updated; density -
    * kg m^-3, velocity - m s^-1, pressure - kg m^-1 s^-2).
    */
-  template < typename _boundary_ >
   inline void do_ghost_gradient_calculation(const int_fast32_t i,
                                             HydroVariables &left_state,
-                                            const _boundary_ &boundary,
+                                            const HydroBoundary &boundary,
                                             const double dxinv,
                                             double WLlim[10]) const {
 
