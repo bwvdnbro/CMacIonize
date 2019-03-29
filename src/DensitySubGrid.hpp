@@ -127,7 +127,7 @@
  * grid.
  */
 class DensitySubGrid {
-private:
+protected:
   /*! @brief Indices of the neighbouring subgrids. */
   uint_least32_t _ngbs[TRAVELDIRECTION_NUMBER];
 
@@ -642,7 +642,7 @@ public:
   /**
    * @brief Destructor.
    */
-  inline ~DensitySubGrid() {
+  virtual ~DensitySubGrid() {
     // deallocate data arrays
     delete[] _ionization_variables;
     subgrid_cell_lock_destroy();
