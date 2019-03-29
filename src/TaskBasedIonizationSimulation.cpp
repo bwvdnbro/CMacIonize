@@ -1025,6 +1025,8 @@ void TaskBasedIonizationSimulation::run(
   _density_grid_writer->write(*_grid_creator, _number_of_iterations,
                               _parameter_file);
 
-  _log->write_status(
-      "Total time spent in Monte Carlo algorithm: ", MCtimer.value(), " s.");
+  if (_log != nullptr) {
+    _log->write_status(
+        "Total time spent in Monte Carlo algorithm: ", MCtimer.value(), " s.");
+  }
 }
