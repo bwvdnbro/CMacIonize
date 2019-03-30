@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
   const InflowHydroBoundary inflow_boundary;
   const ReflectiveHydroBoundary reflective_boundary;
 
-  test_grid1.initialize_conserved_variables(hydro);
-  test_grid2.initialize_conserved_variables(hydro);
+  test_grid1.initialize_hydrodynamic_variables(hydro, false);
+  test_grid2.initialize_hydrodynamic_variables(hydro, false);
 
   for (uint_fast32_t istep = 0; istep < 300; ++istep) {
 
