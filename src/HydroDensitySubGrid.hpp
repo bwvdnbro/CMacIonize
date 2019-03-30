@@ -122,15 +122,21 @@ public:
    * @brief Initialize the conserved variables for the grid.
    *
    * @param hydro Hydro instance to use.
+   * @param do_primitives Initialize the primitive variables based on the
+   * ionization variables?
    * @return Minimum initial time step for the cells in the grid.
    */
-  inline double initialize_hydrodynamic_variables(const Hydro &hydro) {
+  inline double initialize_hydrodynamic_variables(const Hydro &hydro,
+                                                  const bool do_primitives) {
 
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
-    double timestep = 0.;
+    double timestep = DBL_MAX;
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
-      hydro.ionization_to_hydro(_ionization_variables[i], _hydro_variables[i]);
+      if (do_primitives) {
+        hydro.ionization_to_hydro(_ionization_variables[i],
+                                  _hydro_variables[i]);
+      }
       hydro.set_conserved_variables(_hydro_variables[i], _cell_volume);
       timestep = std::min(
           timestep, hydro.get_timestep(_hydro_variables[i], _cell_volume));
@@ -830,6 +836,26 @@ public:
      */
     inline HydroVariables &get_hydro_variables() {
       return _subgrid->_hydro_variables[_index];
+    }
+
+    /**
+     * @brief Get read only access to the ionization variables stored in this
+     * cell.
+     *
+     * @return Read only access to the ionization variables.
+     */
+    inline const IonizationVariables &get_ionization_variables() const {
+      return _subgrid->_ionization_variables[_index];
+    }
+
+    /**
+     * @brief Get read/write access to the ionization variables stored in this
+     * cell.
+     *
+     * @return Read/write access to the ionization variables.
+     */
+    inline IonizationVariables &get_ionization_variables() {
+      return _subgrid->_ionization_variables[_index];
     }
 
     // Iterator functionality

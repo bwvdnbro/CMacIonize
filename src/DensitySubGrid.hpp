@@ -32,6 +32,7 @@
 #include "Cell.hpp"
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "HydroVariables.hpp"
 #include "IonizationVariables.hpp"
 #include "MPITypes.hpp"
 #include "PhotonPacket.hpp"
@@ -1649,6 +1650,18 @@ public:
      */
     inline IonizationVariables &get_ionization_variables() {
       return _subgrid->_ionization_variables[_index];
+    }
+
+    /**
+     * @brief Dummy access to the hydro variables that this subgrid does not
+     * have.
+     *
+     * @return Meaningless reference.
+     */
+    inline const HydroVariables &get_hydro_variables() const {
+      cmac_error("A DensitySubGrid has no hydro variables!");
+      return reinterpret_cast< HydroVariables & >(
+          _subgrid->_ionization_variables[_index]);
     }
 
     // Iterator functionality
