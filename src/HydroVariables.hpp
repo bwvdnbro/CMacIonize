@@ -114,7 +114,7 @@ public:
    *
    * @param density New fluid density (in kg m^-3).
    */
-  inline void set_primitives_density(double density) {
+  inline void set_primitives_density(const double density) {
     _primitives[0] = density;
   }
 
@@ -123,7 +123,7 @@ public:
    *
    * @param velocity New fluid velocity (in m s^-1).
    */
-  inline void set_primitives_velocity(CoordinateVector<> velocity) {
+  inline void set_primitives_velocity(const CoordinateVector<> velocity) {
     _primitives[1] = velocity.x();
     _primitives[2] = velocity.y();
     _primitives[3] = velocity.z();
@@ -134,7 +134,7 @@ public:
    *
    * @param pressure New fluid pressure (in kg m^-1 s^-2).
    */
-  inline void set_primitives_pressure(double pressure) {
+  inline void set_primitives_pressure(const double pressure) {
     _primitives[4] = pressure;
   }
 
@@ -187,14 +187,14 @@ public:
    *
    * @param mass New fluid mass (in kg).
    */
-  inline void set_conserved_mass(double mass) { _conserved[0] = mass; }
+  inline void set_conserved_mass(const double mass) { _conserved[0] = mass; }
 
   /**
    * @brief Set the fluid momentum.
    *
    * @param momentum New fluid momentum (in kg m s^-1).
    */
-  inline void set_conserved_momentum(CoordinateVector<> momentum) {
+  inline void set_conserved_momentum(const CoordinateVector<> momentum) {
     _conserved[1] = momentum.x();
     _conserved[2] = momentum.y();
     _conserved[3] = momentum.z();
@@ -205,7 +205,7 @@ public:
    *
    * @param total_energy New fluid total energy (in kg m^2 s^-2).
    */
-  inline void set_conserved_total_energy(double total_energy) {
+  inline void set_conserved_total_energy(const double total_energy) {
     _conserved[4] = total_energy;
   }
 

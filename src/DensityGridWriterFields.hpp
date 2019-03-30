@@ -27,7 +27,6 @@
 #define DENSITYGRIDWRITERFIELDS_HPP
 
 #include "DensityGrid.hpp"
-#include "DensitySubGrid.hpp"
 #include "Error.hpp"
 #include "InternalHydroUnits.hpp"
 #include "ParameterFile.hpp"
@@ -448,9 +447,10 @@ public:
    * @param hydro_units Internal unit system used for hydro.
    * @return Value of the double scalar field.
    */
+  template < typename _cell_iterator_ >
   inline static double
   get_scalar_double_value(const int_fast32_t field_name,
-                          const DensitySubGrid::iterator &it,
+                          const _cell_iterator_ &it,
                           const InternalHydroUnits *hydro_units = nullptr) {
     switch (field_name) {
     case DENSITYGRIDFIELD_NUMBER_DENSITY:
@@ -464,8 +464,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_primitives_density();
       }
     }
     case DENSITYGRIDFIELD_PRESSURE: {
@@ -473,8 +472,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_primitives_pressure();
       }
     }
     case DENSITYGRIDFIELD_MASS: {
@@ -482,8 +480,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_conserved_mass();
       }
     }
     case DENSITYGRIDFIELD_TOTAL_ENERGY: {
@@ -491,8 +488,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_conserved_total_energy();
       }
     }
     default:
@@ -559,9 +555,10 @@ public:
    * @param hydro_units Internal unit system used for hydro.
    * @return Value of the double vector field.
    */
+  template < typename _cell_iterator_ >
   inline static CoordinateVector<>
   get_vector_double_value(const int_fast32_t field_name,
-                          const DensitySubGrid::iterator &it,
+                          const _cell_iterator_ &it,
                           const CoordinateVector<> box_anchor,
                           const InternalHydroUnits *hydro_units = nullptr) {
     switch (field_name) {
@@ -572,8 +569,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_primitives_velocity();
       }
     }
     case DENSITYGRIDFIELD_MOMENTUM: {
@@ -581,8 +577,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_conserved_momentum();
       }
     }
     case DENSITYGRIDFIELD_ACCELERATION: {
@@ -590,8 +585,7 @@ public:
         cmac_error("Not implemented yet!");
         return 0.;
       } else {
-        cmac_error("Not implemented yet!");
-        return 0.;
+        return it.get_hydro_variables().get_gravitational_acceleration();
       }
     }
     default:
@@ -637,10 +631,11 @@ public:
    * @param it DensitySubGrid::iterator to a cell.
    * @return Value of the double scalar ion field.
    */
+  template < typename _cell_iterator_ >
   inline static double
   get_scalar_double_ion_value(const int_fast32_t field_name,
                               const int_fast32_t ion_name,
-                              const DensitySubGrid::iterator &it) {
+                              const _cell_iterator_ &it) {
 
     switch (field_name) {
     case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
@@ -693,10 +688,11 @@ public:
    * @param it DensitySubGrid::iterator to a cell.
    * @return Value fo the double scalar heating property field.
    */
+  template < typename _cell_iterator_ >
   inline static double
   get_scalar_double_heating_value(const int_fast32_t field_name,
                                   const int_fast32_t heating_property_name,
-                                  const DensitySubGrid::iterator &it) {
+                                  const _cell_iterator_ &it) {
     switch (field_name) {
 #ifdef DO_OUTPUT_HEATING
     case DENSITYGRIDFIELD_HEATING_RATE:

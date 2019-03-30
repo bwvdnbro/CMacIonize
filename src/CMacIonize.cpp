@@ -34,6 +34,7 @@
 #include "MPICommunicator.hpp"
 #include "RadiationHydrodynamicsSimulation.hpp"
 #include "TaskBasedIonizationSimulation.hpp"
+#include "TaskBasedRadiationHydrodynamicsSimulation.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
 
@@ -87,6 +88,8 @@
  *    the photon packets at the end of each iteration.
  *  - task-based (no abbreviation, optional, no argument): run the code using
  *    a task-based parallel algorithm.
+ *  - task-based-rhd (no abbreviation, optional, no argument): run the RHD code
+ *    using a task-based parallel algorithm.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -163,6 +166,8 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("task-based", 0,
                     "Run a task-based photoionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("task-based-rhd", 0, "Run a task-based RHD simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
 
   // add simulation type specific parameters
@@ -308,6 +313,13 @@ int main(int argc, char **argv) {
     }
     return 0;
 
+  } else if (parser.get_value< bool >("task-based-rhd")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI RHD is not (yet) supported!");
+    }
+    return TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
+        parser, write_output, programtimer, log);
   } else {
 
     IonizationSimulation simulation(

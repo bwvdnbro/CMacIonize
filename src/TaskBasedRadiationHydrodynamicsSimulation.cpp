@@ -872,8 +872,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   double requested_timestep = DBL_MAX;
   for (auto cellit = grid_creator->begin();
        cellit != grid_creator->original_end(); ++cellit) {
-    requested_timestep = std::min(
-        requested_timestep, (*cellit).initialize_hydrodynamic_variables(hydro));
+    requested_timestep =
+        std::min(requested_timestep,
+                 (*cellit).initialize_hydrodynamic_variables(hydro, true));
     make_hydro_tasks(*tasks, cellit.get_index(), *grid_creator);
   }
   for (auto cellit = grid_creator->begin();
@@ -887,6 +888,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (write_output) {
     writer->write(*grid_creator, 0, *params, 0.);
   }
+
   double maximum_timestep = hydro_maximum_timestep;
   if (hydro_radtime > 0.) {
     // make sure the system is evolved hydrodynamically in between successive
@@ -903,6 +905,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       timeline->advance(requested_timestep, actual_timestep, current_time);
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
+
+    if (log) {
+      log->write_status("Starting hydro integration step ", num_step,
+                        ", t = ", current_time);
+    }
+    ++num_step;
+
     // reset the hydro tasks and add them to the queue
     AtomicValue< uint_fast32_t > number_of_tasks;
     for (auto cellit = grid_creator->begin();
@@ -964,6 +973,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     requested_timestep *= CFL;
     has_next_step =
         timeline->advance(requested_timestep, actual_timestep, current_time);
+  }
+
+  if (write_output) {
+    writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
   }
 
   (void)num_step;
