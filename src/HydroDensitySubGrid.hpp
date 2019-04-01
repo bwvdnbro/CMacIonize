@@ -205,6 +205,21 @@ public:
   }
 
   /**
+   * @brief Add the energy because of photoionization to the hydro variables.
+   *
+   * @param hydro Hydro instance to use.
+   */
+  inline void add_ionization_energy(const Hydro &hydro) {
+
+    const int_fast32_t tot_num_cells =
+        _number_of_cells[0] * _number_of_cells[3];
+    for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      hydro.add_ionization_energy(_ionization_variables[i],
+                                  _hydro_variables[i]);
+    }
+  }
+
+  /**
    * @brief Half time step prediction for the primitive variables.
    *
    * @param hydro Hydro instance to use.
