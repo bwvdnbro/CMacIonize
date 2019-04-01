@@ -37,7 +37,7 @@
  */
 int main(int argc, char **argv) {
 
-  Hydro hydro;
+  Hydro hydro(5. / 3., 100., 1.e4);
 
   HydroVariables variables[100];
   double limiters[1000];

@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   }
 
   const double dt = 0.001;
-  const Hydro hydro;
+  const Hydro hydro(5. / 3., 100., 1.e4);
   const InflowHydroBoundary inflow_boundary;
   const ReflectiveHydroBoundary reflective_boundary;
 
