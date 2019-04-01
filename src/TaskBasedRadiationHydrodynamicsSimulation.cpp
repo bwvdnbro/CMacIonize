@@ -45,6 +45,64 @@
 
 #include <omp.h>
 
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define start_parallel_timing_block()                                          \
+  serial_timer.stop();                                                         \
+  parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define stop_parallel_timing_block()                                           \
+  parallel_timer.stop();                                                       \
+  serial_timer.start();
+
+/**
+ * @brief Write a file with the start and end times of all tasks.
+ *
+ * @param iloop Iteration number (added to file name).
+ * @param tasks Tasks to print.
+ * @param iteration_start Start CPU cycle count of the iteration on this
+ * process.
+ * @param iteration_end End CPU cycle count of the iteration on this process.
+ */
+inline void output_tasks(const uint_fast32_t iloop,
+                         ThreadSafeVector< Task > &tasks,
+                         const uint_fast64_t iteration_start,
+                         const uint_fast64_t iteration_end) {
+
+  {
+    // compose the file name
+    std::stringstream filename;
+    filename << "tasks_";
+    filename.fill('0');
+    filename.width(2);
+    filename << iloop;
+    filename << ".txt";
+
+    // now open the file
+    std::ofstream ofile(filename.str(), std::ofstream::trunc);
+
+    ofile << "# rank\tthread\tstart\tstop\ttype\n";
+
+    // write the start and end CPU cycle count
+    // this is a dummy task executed by thread 0 (so that the min or max
+    // thread count is not affected), but with non-existing type -1
+    ofile << "0\t0\t" << iteration_start << "\t" << iteration_end << "\t-1\n";
+
+    // write the task info
+    const size_t tsize = tasks.size();
+    for (size_t i = 0; i < tsize; ++i) {
+      const Task &task = tasks[i];
+      cmac_assert_message(task.done(), "Task was never executed!");
+      int_fast8_t type;
+      int_fast32_t thread_id;
+      uint_fast64_t start, end;
+      task.get_timing_information(type, thread_id, start, end);
+      ofile << "0\t" << thread_id << "\t" << start << "\t" << end << "\t"
+            << static_cast< int_fast32_t >(type) << "\n";
+    }
+  }
+}
+
 /**
  * @brief Make the hydro tasks for the given subgrid.
  *
@@ -683,6 +741,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     CommandLineParser &parser, bool write_output, Timer &programtimer,
     Log *log) {
 
+  Timer total_timer;
+  Timer serial_timer;
+  Timer parallel_timer;
+  Timer worktimer;
+
+  total_timer.start();
+  serial_timer.start();
+
   const int_fast32_t num_thread = parser.get_value< int_fast32_t >("threads");
   omp_set_num_threads(num_thread);
 
@@ -868,7 +934,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (log) {
     log->write_status("Initializing grid...");
   }
+  start_parallel_timing_block();
   grid_creator->initialize(*density_function);
+  stop_parallel_timing_block();
   double requested_timestep = DBL_MAX;
   for (auto cellit = grid_creator->begin();
        cellit != grid_creator->original_end(); ++cellit) {
@@ -906,11 +974,73 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
 
-    if (log) {
-      log->write_status("Starting hydro integration step ", num_step,
-                        ", t = ", current_time);
-    }
+    uint_fast64_t iteration_start, iteration_end;
+    cpucycle_tick(iteration_start);
+
     ++num_step;
+
+    if (log) {
+      log->write_status("Starting hydro step ", num_step, ", t = ",
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            current_time - actual_timestep, output_time_unit),
+                        ", dt = ",
+                        UnitConverter::to_unit_string< QUANTITY_TIME >(
+                            actual_timestep, output_time_unit),
+                        ".");
+    }
+
+    uint_fast32_t loop = 0;
+    uint_fast32_t nloop_step = nloop;
+
+    // decide whether or not to do the radiation step
+    if (hydro_radtime < 0. ||
+        (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
+
+      ++hydro_lastrad;
+      // update the PhotonSource
+      if (sourcedistribution->update(current_time)) {
+        source.update(sourcedistribution);
+        temperature_calculator->update_luminosity(
+            source.get_total_luminosity());
+      }
+
+      if (source.get_total_luminosity() > 0.) {
+        for (auto it = grid_creator->begin();
+             it != grid_creator->original_end(); ++it) {
+          (*it).update_ionization_variables(hydro, maximum_neutral_fraction);
+        }
+      } else {
+        // there are no ionising sources: skip radiation for this step
+        nloop_step = 0;
+        // manually set all neutral fractions to 1
+        for (auto it = grid_creator->begin();
+             it != grid_creator->original_end(); ++it) {
+          for (auto cellit = (*it).begin(); cellit != (*it).end(); ++cellit) {
+            cellit.get_ionization_variables().set_ionic_fraction(ION_H_n, 1.);
+          }
+        }
+      }
+
+    } else {
+      nloop_step = 0;
+    }
+
+    if (log && nloop_step > 0) {
+      log->write_status("Starting radiation step...");
+    }
+
+    while (loop < nloop_step) {
+
+      if (log) {
+        log->write_status("Loop ", loop, " of ", nloop_step, ".");
+      }
+
+      ++loop;
+    }
+
+    if (log) {
+      log->write_status("Done with radiation step.");
+    }
 
     // reset the hydro tasks and add them to the queue
     AtomicValue< uint_fast32_t > number_of_tasks;
@@ -927,6 +1057,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       }
     }
 
+    start_parallel_timing_block();
 #pragma omp parallel default(shared)
     {
       const int_fast32_t thread_id = omp_get_thread_num();
@@ -959,6 +1090,19 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
     }
+    stop_parallel_timing_block();
+
+    cpucycle_tick(iteration_end);
+
+    // write snapshot
+    // we don't write if this is the last snapshot, because then it is written
+    // outside the integration loop
+    if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
+        has_next_step) {
+      writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+      output_tasks(hydro_lastsnap, *tasks, iteration_start, iteration_end);
+      ++hydro_lastsnap;
+    }
 
     requested_timestep = DBL_MAX;
     for (auto gridit = grid_creator->begin();
@@ -979,12 +1123,28 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
   }
 
-  (void)num_step;
-  (void)hydro_lastsnap;
-  (void)hydro_lastrad;
+  serial_timer.stop();
+  total_timer.stop();
+  programtimer.stop();
+  if (log) {
+    log->write_status("Total serial time: ",
+                      Utilities::human_readable_time(serial_timer.value()),
+                      ".");
+    log->write_status("Total parallel time: ",
+                      Utilities::human_readable_time(parallel_timer.value()),
+                      ".");
+    log->write_status("Total overall time: ",
+                      Utilities::human_readable_time(total_timer.value()), ".");
+    log->write_status("Total program time: ",
+                      Utilities::human_readable_time(programtimer.value()),
+                      ".");
+    log->write_status("Total photon shooting time: ",
+                      Utilities::human_readable_time(worktimer.value()), ".");
+  }
+
   (void)maximum_neutral_fraction;
-  (void)nloop;
   (void)numphoton1;
+
   if (sourcedistribution != nullptr) {
     delete sourcedistribution;
   }
