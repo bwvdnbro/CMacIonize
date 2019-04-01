@@ -30,6 +30,7 @@
 #include "HydroBoundary.hpp"
 #include "HydroVariables.hpp"
 #include "IonizationVariables.hpp"
+#include "ParameterFile.hpp"
 #include "PhysicalConstants.hpp"
 
 #include <cfloat>
@@ -41,6 +42,12 @@ class Hydro {
 private:
   /*! @brief Polytropic index @f$\gamma{}@f$ of the gas. */
   const double _gamma;
+
+  /*! @brief Assumed temperature for neutral gas (in K). */
+  const double _neutral_temperature;
+
+  /*! @brief Assumed temperature for ionised gas (in K). */
+  const double _ionised_temperature;
 
   /*! @brief @f$\gamma{}-1@f$. */
   const double _gamma_minus_one;
@@ -71,9 +78,14 @@ public:
    * @brief Constructor.
    *
    * @param gamma Polytropic index @f$\gamma{}@f$ of the gas.
+   * @param neutral_temperature Assumed neutral temperature for the gas (in K).
+   * @param ionised_temperature Assumed ionised temperature for the gas (in K).
    */
-  inline Hydro(const double gamma = 5. / 3.)
-      : _gamma(gamma), _gamma_minus_one(_gamma - 1.),
+  inline Hydro(const double gamma, const double neutral_temperature,
+               const double ionised_temperature)
+      : _gamma(gamma), _neutral_temperature(neutral_temperature),
+        _ionised_temperature(ionised_temperature),
+        _gamma_minus_one(_gamma - 1.),
         _one_over_gamma_minus_one(1. / _gamma_minus_one),
         _density_conversion_factor(PhysicalConstants::get_physical_constant(
             PHYSICALCONSTANT_PROTON_MASS)),
@@ -88,6 +100,25 @@ public:
                              PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN)),
         _riemann_solver(gamma) {}
+
+  /**
+   * @brief ParameterFile constructor.
+   *
+   * The following parameters are read:
+   *  - polytropic index: Polytropic index of the gas (default: 5. / 3.)
+   *  - neutral temperature: Assumed neutral temperature for the gas (default:
+   *    100. K)
+   *  - ionised temperature: Assumed ionised temperature for the gas (default:
+   *    1.e4 K)
+   *
+   * @param params ParameterFile to read from.
+   */
+  inline Hydro(ParameterFile &params)
+      : Hydro(params.get_value< double >("Hydro:polytropic index", 5. / 3.),
+              params.get_physical_value< QUANTITY_TEMPERATURE >(
+                  "Hydro:neutral temperature", "100. K"),
+              params.get_physical_value< QUANTITY_TEMPERATURE >(
+                  "Hydro:ionised temperature", "1.e4 K")) {}
 
   /**
    * @brief Get the soundspeed for the given hydrodynamic variables.
@@ -439,6 +470,29 @@ public:
 
     // the velocity is directly set from the initial condition
     hydro_variables.set_primitives_density(density);
+    hydro_variables.set_primitives_pressure(pressure);
+  }
+
+  /**
+   * @brief Add the energy due to ionization to the given hydrodynamic
+   * variables.
+   *
+   * @param ionization_variables IonizationVariables.
+   * @param hydro_variables HydroVariables.
+   */
+  inline void add_ionization_energy(IonizationVariables &ionization_variables,
+                                    HydroVariables &hydro_variables) const {
+
+    const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
+    const double mean_molecular_mass = 0.5 * (1. + xH);
+    const double temperature =
+        _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
+    const double pressure = _pressure_conversion_factor *
+                            hydro_variables.get_primitives_density() *
+                            temperature / mean_molecular_mass;
+
+    // the velocity is directly set from the initial condition
+    ionization_variables.set_temperature(temperature);
     hydro_variables.set_primitives_pressure(pressure);
   }
 

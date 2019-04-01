@@ -892,8 +892,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   const double CFL = params->get_value< double >(
       "TaskBasedRadiationHydrodynamicsSimulation:CFL", 0.2);
 
-  Hydro hydro(params->get_value< double >(
-      "TaskBasedRadiationHydrodynamicsSimulation:polytropic index", 5. / 3.));
+  Hydro hydro(*params);
   InflowHydroBoundary hydro_boundary;
 
   ChargeTransferRates charge_transfer_rates;
@@ -1038,7 +1037,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       ++loop;
     }
 
-    if (log) {
+    if (nloop_step > 0) {
+      for (auto it = grid_creator->begin(); it != grid_creator->original_end();
+           ++it) {
+        (*it).add_ionization_energy(hydro);
+      }
+    }
+
+    if (log && nloop_step > 0) {
       log->write_status("Done with radiation step.");
     }
 
