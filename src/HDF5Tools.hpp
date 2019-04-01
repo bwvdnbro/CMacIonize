@@ -27,6 +27,9 @@
 #ifndef HDF5TOOLS_HPP
 #define HDF5TOOLS_HPP
 
+/*! @brief Enable this to compress HDF5 files. */
+//#define DO_HDF5_COMPRESSION
+
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 
@@ -1263,6 +1266,7 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
+#ifdef DO_HDF5_COMPRESSION
   hdf5status = H5Pset_fletcher32(prop);
   if (hdf5status < 0) {
     cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
@@ -1276,6 +1280,7 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
   }
+#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1351,6 +1356,7 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
+#ifdef DO_HDF5_COMPRESSION
   hdf5status = H5Pset_fletcher32(prop);
   if (hdf5status < 0) {
     cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
@@ -1364,6 +1370,7 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
   }
+#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1441,6 +1448,7 @@ inline void create_dataset(hid_t group, std::string name, hsize_t size) {
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
+#ifdef DO_HDF5_COMPRESSION
   hdf5status = H5Pset_fletcher32(prop);
   if (hdf5status < 0) {
     cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
@@ -1454,6 +1462,7 @@ inline void create_dataset(hid_t group, std::string name, hsize_t size) {
   if (hdf5status < 0) {
     cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
   }
+#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1517,6 +1526,7 @@ inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
+#ifdef DO_HDF5_COMPRESSION
   hdf5status = H5Pset_fletcher32(prop);
   if (hdf5status < 0) {
     cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
@@ -1530,6 +1540,7 @@ inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
   }
+#endif
 
 // create dataset
 #ifdef HDF5_OLD_API

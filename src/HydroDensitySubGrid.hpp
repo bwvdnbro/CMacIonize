@@ -181,6 +181,30 @@ public:
   }
 
   /**
+   * @brief Update the ionization variables for all cells in the subgrid using
+   * their hydrodynamical variables.
+   *
+   * @param hydro Hydro instance to use.
+   * @param maximum_neutral_fraction Maximum neutral fraction for hydrogen.
+   */
+  inline void
+  update_ionization_variables(const Hydro &hydro,
+                              const double maximum_neutral_fraction) {
+
+    const int_fast32_t tot_num_cells =
+        _number_of_cells[0] * _number_of_cells[3];
+    for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      hydro.hydro_to_ionization(_hydro_variables[i], _ionization_variables[i]);
+      if (maximum_neutral_fraction > 0. &&
+          _ionization_variables[i].get_ionic_fraction(ION_H_n) >
+              maximum_neutral_fraction) {
+        _ionization_variables[i].set_ionic_fraction(ION_H_n,
+                                                    maximum_neutral_fraction);
+      }
+    }
+  }
+
+  /**
    * @brief Half time step prediction for the primitive variables.
    *
    * @param hydro Hydro instance to use.
