@@ -130,6 +130,31 @@ public:
   }
 
   /**
+   * @brief Copy operator.
+   *
+   * We have to provide this operator, as the default copy operator does not
+   * work for the AtomicValue member variables. We only copy the values that
+   * were initialised by the compiler to avoid uninitialized value warnings.
+   *
+   * @param other Task to copy into this one.
+   * @return Reference to the this Task.
+   */
+  inline Task &operator=(const Task &other) {
+
+    _number_of_children = other._number_of_children;
+    _dependency[0] = other._dependency[0];
+    _dependency[1] = other._dependency[1];
+
+#ifdef TASK_PLOT
+    _end_time = other._end_time;
+#else
+    _type = other._type;
+#endif
+
+    return *this;
+  }
+
+  /**
    * @brief Record the start time of the task.
    *
    * @param thread_id Thread that executes the task.
