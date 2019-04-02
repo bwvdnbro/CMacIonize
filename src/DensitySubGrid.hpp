@@ -916,6 +916,8 @@ public:
     for (int_fast32_t i = 0; i < tot_ncell; ++i) {
       _ionization_variables[i].copy_ionic_fractions(
           original._ionization_variables[i]);
+      _ionization_variables[i].set_number_density(
+          original._ionization_variables[i].get_number_density());
       _ionization_variables[i].reset_mean_intensities();
     }
   }
