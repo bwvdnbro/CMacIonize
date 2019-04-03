@@ -1144,14 +1144,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
                         const uint_fast32_t non_full_index =
                             this_subgrid.get_active_buffer(largest_index);
-                        const uint_fast32_t new_index =
-                            buffers->get_free_buffer();
-                        (*buffers)[new_index].set_subgrid_index(
-                            (*buffers)[non_full_index].get_subgrid_index());
-                        (*buffers)[new_index].set_direction(
-                            (*buffers)[non_full_index].get_direction());
                         this_subgrid.set_active_buffer(largest_index,
-                                                       new_index);
+                                                       NEIGHBOUR_OUTSIDE);
                         // we are creating a new active photon buffer
                         num_active_buffers.pre_increment();
                         // we created a new empty buffer
@@ -1438,10 +1432,22 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                         // new_buffers.add_photons already created a new empty
                         // buffer, set it as the active buffer for this output
                         // direction
-                        this_grid.set_active_buffer(i, add_index);
                         if ((*buffers)[add_index].size() == 0) {
+                          buffers->free_buffer(add_index);
+                          this_grid.set_active_buffer(i, NEIGHBOUR_OUTSIDE);
                           // we have created a new empty buffer
                           num_empty.pre_increment();
+                        } else {
+                          this_grid.set_active_buffer(i, add_index);
+
+                          cmac_assert_message(
+                              (*buffers)[add_index].get_subgrid_index() == ngb,
+                              "Wrong subgrid");
+                          cmac_assert_message(
+                              (*buffers)[add_index].get_direction() ==
+                                  TravelDirections::output_to_input_direction(
+                                      i),
+                              "Wrong direction");
                         }
 
                         // YES: create a task for the buffer and add it to the
@@ -1485,14 +1491,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                           tasks_to_add[num_tasks_to_add] = task_index;
                           ++num_tasks_to_add;
                         }
-
-                        cmac_assert_message(
-                            (*buffers)[add_index].get_subgrid_index() == ngb,
-                            "Wrong subgrid");
-                        cmac_assert_message(
-                            (*buffers)[add_index].get_direction() ==
-                                TravelDirections::output_to_input_direction(i),
-                            "Wrong direction");
 
                       } // if (add_index != new_index)
 
@@ -1566,9 +1564,15 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
               }
             } // while(global_run_flag)
           }   // parallel region
-          // update copies (don't do in parallel)
 
+          buffers->reset();
+
+          // update copies (don't do in parallel)
           grid_creator->update_original_counters();
+
+          cmac_assert_message(buffers->is_empty(),
+                              "Number of active buffers: %zu",
+                              buffers->get_number_of_active_buffers());
 
           {
             AtomicValue< size_t > igrid(0);
@@ -1611,9 +1615,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
              it != grid_creator->original_end(); ++it) {
           (*it).add_ionization_energy(hydro);
         }
-
-        // remove radiation tasks
-        tasks->clear_after(radiation_task_offset);
       } else {
 
         if (log) {
@@ -1629,6 +1630,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           }
         }
       }
+
+      cmac_assert_message(buffers->is_empty(), "Number of active buffers: %zu",
+                          buffers->get_number_of_active_buffers());
 
       if (log) {
         log->write_status("Done with radiation step.");
@@ -1696,6 +1700,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       output_tasks(hydro_lastsnap, *tasks, iteration_start, iteration_end);
       ++hydro_lastsnap;
     }
+
+    // remove radiation tasks
+    tasks->clear_after(radiation_task_offset);
 
     requested_timestep = DBL_MAX;
     for (auto gridit = grid_creator->begin();
