@@ -133,6 +133,27 @@ public:
     return _memory_space.get_memory_size();
   }
 
+  /**
+   * @brief Check if the memory space is empty.
+   *
+   * @return True if the memory space is empty.
+   */
+  inline bool is_empty() const { return _memory_space.is_empty(); }
+
+  /**
+   * @brief Get the number of active photon buffers in the memory space.
+   *
+   * @return Number of active photon buffers in the memory space.
+   */
+  inline size_t get_number_of_active_buffers() const {
+    return _memory_space.get_number_of_active_elements();
+  }
+
+  /**
+   * @brief Reset the memory space.
+   */
+  inline void reset() { _memory_space.clear_fast(); }
+
 #ifdef THREADSAFEVECTOR_STATS
   /**
    * @brief Get the maximum number of elements in the memory space at any given
