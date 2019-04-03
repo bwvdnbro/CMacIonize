@@ -138,8 +138,9 @@ public:
                                   _hydro_variables[i]);
       }
       hydro.set_conserved_variables(_hydro_variables[i], _cell_volume);
-      timestep = std::min(
-          timestep, hydro.get_timestep(_hydro_variables[i], _cell_volume));
+      timestep = std::min(timestep, hydro.get_timestep(_hydro_variables[i],
+                                                       _ionization_variables[i],
+                                                       _cell_volume));
     }
     return timestep;
   }
