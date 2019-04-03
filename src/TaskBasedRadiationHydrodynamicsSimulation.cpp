@@ -1709,9 +1709,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
          gridit != grid_creator->original_end(); ++gridit) {
       for (auto cellit = (*gridit).hydro_begin();
            cellit != (*gridit).hydro_end(); ++cellit) {
-        requested_timestep = std::min(
-            requested_timestep, hydro.get_timestep(cellit.get_hydro_variables(),
-                                                   cellit.get_volume()));
+        requested_timestep =
+            std::min(requested_timestep,
+                     hydro.get_timestep(cellit.get_hydro_variables(),
+                                        cellit.get_ionization_variables(),
+                                        cellit.get_volume()));
       }
     }
     requested_timestep *= CFL;
