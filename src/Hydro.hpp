@@ -35,6 +35,10 @@
 
 #include <cfloat>
 
+/*! @brief Uncomment this to enable hard resets for unphysical hydro
+ *  variables. */
+#define SAFE_HYDRO_VARIABLES
+
 /**
  * @brief Hydro related functionality.
  */
@@ -64,14 +68,77 @@ private:
 
   /*! @brief Conversion factor from density to number density,
    *  @f$n_{fac} = \frac{1}{m_{\rm{}H}}@f$ (in kg^-1). */
-  double _n_conversion_factor;
+  const double _n_conversion_factor;
 
   /*! @brief Conversion factor from pressure to temperature,
    *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
-  double _T_conversion_factor;
+  const double _T_conversion_factor;
+
+  /*! @brief Conversion factor from temperature to pressure,
+   *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
+  const double _P_conversion_factor;
 
   /*! @brief Riemann solver used to solve the Riemann problem. */
   const HLLCRiemannSolver _riemann_solver;
+
+  /**
+   * @brief Per face slope limiter for a single quantity.
+   *
+   * Based on the slope limiter described in one of the appendices of Hopkins'
+   * GIZMO paper.
+   *
+   * @param phimid0 Reconstructed value of the quantity at the interface.
+   * @param phiL Value at the left of the interface.
+   * @param phiR Value at the right of the interface.
+   * @param dnrm_over_r Ratio of the distance between the left cell midpoint
+   * to the face midpoint and the distances between left and right cell
+   * midpoint.
+   * @return Limited value of the quantity at the interface.
+   */
+  inline static double limit(const double phimid0, const double phiL,
+                             const double phiR, const double dnrm_over_r) {
+
+    const static double psi1 = 0.5;
+    const static double psi2 = 0.25;
+
+    const double delta1 = psi1 * std::abs(phiL - phiR);
+    const double delta2 = psi2 * std::abs(phiL - phiR);
+
+    const double phimin = std::min(phiL, phiR);
+    const double phimax = std::max(phiL, phiR);
+
+    const double phibar = phiL + dnrm_over_r * (phiR - phiL);
+
+    // if sign(phimax+delta1) == sign(phimax)
+    double phiplus;
+    if ((phimax + delta1) * phimax > 0.) {
+      phiplus = phimax + delta1;
+    } else {
+      const double absphimax = std::abs(phimax);
+      phiplus = phimax * absphimax / (absphimax + delta1);
+    }
+
+    // if sign(phimin-delta1) == sign(phimin)
+    double phiminus;
+    if ((phimin - delta1) * phimin > 0.) {
+      phiminus = phimin - delta1;
+    } else {
+      const double absphimin = std::abs(phimin);
+      phiminus = phimin * absphimin / (absphimin + delta1);
+    }
+
+    double phimid;
+    if (phiL == phiR) {
+      phimid = phiL;
+    } else {
+      if (phiL < phiR) {
+        phimid = std::max(phiminus, std::min(phibar + delta2, phimid0));
+      } else {
+        phimid = std::min(phiplus, std::max(phibar - delta2, phimid0));
+      }
+    }
+    return phimid;
+  }
 
 public:
   /**
@@ -99,6 +166,10 @@ public:
                                  PHYSICALCONSTANT_PROTON_MASS) /
                              PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN)),
+        _P_conversion_factor(PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN) /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS)),
         _riemann_solver(gamma) {}
 
   /**
@@ -124,11 +195,41 @@ public:
    * @brief Get the soundspeed for the given hydrodynamic variables.
    *
    * @param hydro_variables Hydro variables.
+   * @param ionization_variables IonizationVariables for the same cell.
    * @return Soundspeed (in m s^-1).
    */
-  inline double get_soundspeed(const HydroVariables hydro_variables) const {
-    return std::sqrt(_gamma * hydro_variables.get_primitives_pressure() /
-                     hydro_variables.get_primitives_density());
+  inline double
+  get_soundspeed(const HydroVariables &hydro_variables,
+                 const IonizationVariables &ionization_variables) const {
+
+    if (_gamma > 1.) {
+      const double rho = hydro_variables.get_primitives_density();
+      if (rho > 0.) {
+        const double rho_inv = 1. / rho;
+        if (!std::isinf(rho_inv)) {
+          const double cs = std::sqrt(
+              _gamma * hydro_variables.get_primitives_pressure() * rho_inv);
+          cmac_assert(cs == cs);
+          cmac_assert(cs > 0.);
+          return cs;
+        } else {
+          return DBL_MIN;
+        }
+      } else {
+        return DBL_MIN;
+      }
+    } else {
+      const double mean_molecular_mass =
+          0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+      const double temperature = ionization_variables.get_temperature();
+      const double cs =
+          std::sqrt(_P_conversion_factor * temperature / mean_molecular_mass);
+      cmac_assert(cs == cs);
+      cmac_assert_message(cs > 0., "xH: %g, T: %g",
+                          ionization_variables.get_ionic_fraction(ION_H_n),
+                          temperature);
+      return cs;
+    }
   }
 
   /**
@@ -142,14 +243,27 @@ public:
 
     const double inverse_mass = 1. / state.get_conserved_mass();
 
-    const double density = state.get_conserved_mass() * inverse_volume;
+    double density = state.get_conserved_mass() * inverse_volume;
     const CoordinateVector<> velocity =
         inverse_mass * state.get_conserved_momentum();
-    const double pressure =
-        _gamma_minus_one * inverse_volume *
-        (state.get_conserved_total_energy() -
-         0.5 * CoordinateVector<>::dot_product(velocity,
-                                               state.get_conserved_momentum()));
+    double pressure = _gamma_minus_one * inverse_volume *
+                      (state.get_conserved_total_energy() -
+                       0.5 * CoordinateVector<>::dot_product(
+                                 velocity, state.get_conserved_momentum()));
+
+    cmac_assert(density == density);
+    cmac_assert(velocity.x() == velocity.x());
+    cmac_assert(velocity.y() == velocity.y());
+    cmac_assert(velocity.z() == velocity.z());
+    cmac_assert(_gamma == 1. || pressure == pressure);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    density = std::max(density, 0.);
+    pressure = std::max(pressure, 0.);
+#else
+    cmac_assert(density >= 0.);
+    cmac_assert(_gamma == 1. || pressure >= 0.);
+#endif
 
     state.set_primitives_density(density);
     state.set_primitives_velocity(velocity);
@@ -165,12 +279,26 @@ public:
   inline void set_conserved_variables(HydroVariables &state,
                                       const double volume) const {
 
-    const double mass = state.get_primitives_density() * volume;
+    double mass = state.get_primitives_density() * volume;
     const CoordinateVector<> momentum = mass * state.get_primitives_velocity();
-    const double total_energy =
+    double total_energy =
         _one_over_gamma_minus_one * state.get_primitives_pressure() * volume +
         0.5 * CoordinateVector<>::dot_product(momentum,
                                               state.get_primitives_velocity());
+
+    cmac_assert(mass == mass);
+    cmac_assert(momentum.x() == momentum.x());
+    cmac_assert(momentum.y() == momentum.y());
+    cmac_assert(momentum.z() == momentum.z());
+    cmac_assert(_gamma == 1. || total_energy == total_energy);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    mass = std::max(mass, 0.);
+    total_energy = std::max(total_energy, 0.);
+#else
+    cmac_assert(mass >= 0.);
+    cmac_assert(_gamma == 1. || total_energy >= 0.);
+#endif
 
     state.set_conserved_mass(mass);
     state.set_conserved_momentum(momentum);
@@ -192,28 +320,73 @@ public:
                                   const double A) const {
 
     const double halfdx = 0.5 * dx;
-    const double rhoL = left_state.get_primitives_density() +
-                        halfdx * left_state.primitive_gradients(0)[i];
-    const CoordinateVector<> vL(
-        left_state.primitives(1) +
-            halfdx * left_state.primitive_gradients(1)[i],
-        left_state.primitives(2) +
-            halfdx * left_state.primitive_gradients(2)[i],
-        left_state.primitives(3) +
-            halfdx * left_state.primitive_gradients(3)[i]);
-    const double PL = left_state.get_primitives_pressure() +
-                      halfdx * left_state.primitive_gradients(4)[i];
-    const double rhoR = right_state.get_primitives_density() -
-                        halfdx * right_state.primitive_gradients(0)[i];
-    const CoordinateVector<> vR(
-        right_state.primitives(1) -
-            halfdx * right_state.primitive_gradients(1)[i],
-        right_state.primitives(2) -
-            halfdx * right_state.primitive_gradients(2)[i],
-        right_state.primitives(3) -
-            halfdx * right_state.primitive_gradients(3)[i]);
-    const double PR = right_state.get_primitives_pressure() -
-                      halfdx * right_state.primitive_gradients(4)[i];
+    double rhoL = left_state.get_primitives_density() +
+                  halfdx * left_state.primitive_gradients(0)[i];
+    CoordinateVector<> vL(left_state.primitives(1) +
+                              halfdx * left_state.primitive_gradients(1)[i],
+                          left_state.primitives(2) +
+                              halfdx * left_state.primitive_gradients(2)[i],
+                          left_state.primitives(3) +
+                              halfdx * left_state.primitive_gradients(3)[i]);
+    double PL = left_state.get_primitives_pressure() +
+                halfdx * left_state.primitive_gradients(4)[i];
+    double rhoR = right_state.get_primitives_density() -
+                  halfdx * right_state.primitive_gradients(0)[i];
+    CoordinateVector<> vR(right_state.primitives(1) -
+                              halfdx * right_state.primitive_gradients(1)[i],
+                          right_state.primitives(2) -
+                              halfdx * right_state.primitive_gradients(2)[i],
+                          right_state.primitives(3) -
+                              halfdx * right_state.primitive_gradients(3)[i]);
+    double PR = right_state.get_primitives_pressure() -
+                halfdx * right_state.primitive_gradients(4)[i];
+
+    rhoL = limit(rhoL, left_state.get_primitives_density(),
+                 right_state.get_primitives_density(), 0.5);
+    vL[0] = limit(vL.x(), left_state.get_primitives_velocity().x(),
+                  right_state.get_primitives_velocity().x(), 0.5);
+    vL[1] = limit(vL.y(), left_state.get_primitives_velocity().y(),
+                  right_state.get_primitives_velocity().y(), 0.5);
+    vL[2] = limit(vL.z(), left_state.get_primitives_velocity().z(),
+                  right_state.get_primitives_velocity().z(), 0.5);
+    PL = limit(PL, left_state.get_primitives_pressure(),
+               right_state.get_primitives_pressure(), 0.5);
+
+    rhoR = limit(rhoR, right_state.get_primitives_density(),
+                 left_state.get_primitives_density(), 0.5);
+    vR[0] = limit(vR.x(), right_state.get_primitives_velocity().x(),
+                  left_state.get_primitives_velocity().x(), 0.5);
+    vR[1] = limit(vR.y(), right_state.get_primitives_velocity().y(),
+                  left_state.get_primitives_velocity().y(), 0.5);
+    vR[2] = limit(vR.z(), right_state.get_primitives_velocity().z(),
+                  left_state.get_primitives_velocity().z(), 0.5);
+    PR = limit(PR, right_state.get_primitives_pressure(),
+               left_state.get_primitives_pressure(), 0.5);
+
+    cmac_assert(rhoL == rhoL);
+    cmac_assert(vL.x() == vL.x());
+    cmac_assert(vL.y() == vL.y());
+    cmac_assert(vL.z() == vL.z());
+    cmac_assert(PL == PL);
+
+    cmac_assert(rhoR == rhoR);
+    cmac_assert(vR.x() == vR.x());
+    cmac_assert(vR.y() == vR.y());
+    cmac_assert(vR.z() == vR.z());
+    cmac_assert(PR == PR);
+
+    // make sure all densities and pressures are physical
+#ifdef SAFE_HYDRO_VARIABLES
+    rhoL = std::max(rhoL, 0.);
+    PL = std::max(PL, 0.);
+    rhoR = std::max(rhoR, 0.);
+    PR = std::max(PR, 0.);
+#else
+    cmac_assert(rhoL >= 0.);
+    cmac_assert(PL >= 0.);
+    cmac_assert(rhoR >= 0.);
+    cmac_assert(PR >= 0.);
+#endif
 
     double mflux = 0.;
     CoordinateVector<> pflux;
@@ -222,6 +395,12 @@ public:
     normal[i] = 1.;
     _riemann_solver.solve_for_flux(rhoL, vL, PL, rhoR, vR, PR, mflux, pflux,
                                    Eflux, normal);
+
+    cmac_assert(mflux == mflux);
+    cmac_assert(pflux.x() == pflux.x());
+    cmac_assert(pflux.y() == pflux.y());
+    cmac_assert(pflux.z() == pflux.z());
+    cmac_assert(Eflux == Eflux);
 
     mflux *= A;
     pflux[0] *= A;
@@ -260,28 +439,73 @@ public:
         boundary.get_right_state_flux_variables(i, left_state);
 
     const double halfdx = 0.5 * dx;
-    const double rhoL = left_state.get_primitives_density() +
-                        halfdx * left_state.primitive_gradients(0)[i];
-    const CoordinateVector<> vL(
-        left_state.primitives(1) +
-            halfdx * left_state.primitive_gradients(1)[i],
-        left_state.primitives(2) +
-            halfdx * left_state.primitive_gradients(2)[i],
-        left_state.primitives(3) +
-            halfdx * left_state.primitive_gradients(3)[i]);
-    const double PL = left_state.get_primitives_pressure() +
-                      halfdx * left_state.primitive_gradients(4)[i];
-    const double rhoR = right_state.get_primitives_density() -
-                        halfdx * right_state.primitive_gradients(0)[i];
-    const CoordinateVector<> vR(
-        right_state.primitives(1) -
-            halfdx * right_state.primitive_gradients(1)[i],
-        right_state.primitives(2) -
-            halfdx * right_state.primitive_gradients(2)[i],
-        right_state.primitives(3) -
-            halfdx * right_state.primitive_gradients(3)[i]);
-    const double PR = right_state.get_primitives_pressure() -
-                      halfdx * right_state.primitive_gradients(4)[i];
+    double rhoL = left_state.get_primitives_density() +
+                  halfdx * left_state.primitive_gradients(0)[i];
+    CoordinateVector<> vL(left_state.primitives(1) +
+                              halfdx * left_state.primitive_gradients(1)[i],
+                          left_state.primitives(2) +
+                              halfdx * left_state.primitive_gradients(2)[i],
+                          left_state.primitives(3) +
+                              halfdx * left_state.primitive_gradients(3)[i]);
+    double PL = left_state.get_primitives_pressure() +
+                halfdx * left_state.primitive_gradients(4)[i];
+    double rhoR = right_state.get_primitives_density() -
+                  halfdx * right_state.primitive_gradients(0)[i];
+    CoordinateVector<> vR(right_state.primitives(1) -
+                              halfdx * right_state.primitive_gradients(1)[i],
+                          right_state.primitives(2) -
+                              halfdx * right_state.primitive_gradients(2)[i],
+                          right_state.primitives(3) -
+                              halfdx * right_state.primitive_gradients(3)[i]);
+    double PR = right_state.get_primitives_pressure() -
+                halfdx * right_state.primitive_gradients(4)[i];
+
+    rhoL = limit(rhoL, left_state.get_primitives_density(),
+                 right_state.get_primitives_density(), 0.5);
+    vL[0] = limit(vL.x(), left_state.get_primitives_velocity().x(),
+                  right_state.get_primitives_velocity().x(), 0.5);
+    vL[1] = limit(vL.y(), left_state.get_primitives_velocity().y(),
+                  right_state.get_primitives_velocity().y(), 0.5);
+    vL[2] = limit(vL.z(), left_state.get_primitives_velocity().z(),
+                  right_state.get_primitives_velocity().z(), 0.5);
+    PL = limit(PL, left_state.get_primitives_pressure(),
+               right_state.get_primitives_pressure(), 0.5);
+
+    rhoR = limit(rhoR, right_state.get_primitives_density(),
+                 left_state.get_primitives_density(), 0.5);
+    vR[0] = limit(vR.x(), right_state.get_primitives_velocity().x(),
+                  left_state.get_primitives_velocity().x(), 0.5);
+    vR[1] = limit(vR.y(), right_state.get_primitives_velocity().y(),
+                  left_state.get_primitives_velocity().y(), 0.5);
+    vR[2] = limit(vR.z(), right_state.get_primitives_velocity().z(),
+                  left_state.get_primitives_velocity().z(), 0.5);
+    PR = limit(PR, right_state.get_primitives_pressure(),
+               left_state.get_primitives_pressure(), 0.5);
+
+    cmac_assert(rhoL == rhoL);
+    cmac_assert(vL.x() == vL.x());
+    cmac_assert(vL.y() == vL.y());
+    cmac_assert(vL.z() == vL.z());
+    cmac_assert(PL == PL);
+
+    cmac_assert(rhoR == rhoR);
+    cmac_assert(vR.x() == vR.x());
+    cmac_assert(vR.y() == vR.y());
+    cmac_assert(vR.z() == vR.z());
+    cmac_assert(PR == PR);
+
+    // make sure all densities and pressures are physical
+#ifdef SAFE_HYDRO_VARIABLES
+    rhoL = std::max(rhoL, 0.);
+    PL = std::max(PL, 0.);
+    rhoR = std::max(rhoR, 0.);
+    PR = std::max(PR, 0.);
+#else
+    cmac_assert(rhoL >= 0.);
+    cmac_assert(PL >= 0.);
+    cmac_assert(rhoR >= 0.);
+    cmac_assert(PR >= 0.);
+#endif
 
     double mflux = 0.;
     CoordinateVector<> pflux;
@@ -290,6 +514,12 @@ public:
     normal[i] = 1.;
     _riemann_solver.solve_for_flux(rhoL, vL, PL, rhoR, vR, PR, mflux, pflux,
                                    Eflux, normal);
+
+    cmac_assert(mflux == mflux);
+    cmac_assert(pflux.x() == pflux.x());
+    cmac_assert(pflux.y() == pflux.y());
+    cmac_assert(pflux.z() == pflux.z());
+    cmac_assert(Eflux == Eflux);
 
     mflux *= A;
     pflux[0] *= A;
@@ -302,12 +532,6 @@ public:
     left_state.delta_conserved(2) -= pflux.y();
     left_state.delta_conserved(3) -= pflux.z();
     left_state.delta_conserved(4) -= Eflux;
-
-    right_state.delta_conserved(0) += mflux;
-    right_state.delta_conserved(1) += pflux.x();
-    right_state.delta_conserved(2) += pflux.y();
-    right_state.delta_conserved(3) += pflux.z();
-    right_state.delta_conserved(4) += Eflux;
   }
 
   /**
@@ -424,6 +648,7 @@ public:
     const double vy = state.get_primitives_velocity().y();
     const double vz = state.get_primitives_velocity().z();
     const double P = state.get_primitives_pressure();
+
     const double rhoinv = 1. / rho;
 
     const double drhodx = state.primitive_gradients(0).x();
@@ -440,13 +665,31 @@ public:
 
     const double divv = dvxdx + dvydy + dvzdz;
 
-    state.primitives(0) -=
-        dt * (rho * divv + vx * drhodx + vy * drhody + vz * drhodz);
-    state.primitives(1) -= dt * (vx * divv + rhoinv * dPdx);
-    state.primitives(2) -= dt * (vy * divv + rhoinv * dPdy);
-    state.primitives(3) -= dt * (vz * divv + rhoinv * dPdz);
-    state.primitives(4) -=
-        dt * (_gamma * P * divv + vx * dPdx + vy * dPdy + vz * dPdz);
+    double rho_new =
+        rho - dt * (rho * divv + vx * drhodx + vy * drhody + vz * drhodz);
+    const CoordinateVector<> v_new(vx - dt * (vx * divv + rhoinv * dPdx),
+                                   vy - dt * (vy * divv + rhoinv * dPdy),
+                                   vz - dt * (vz * divv + rhoinv * dPdz));
+    double P_new =
+        P - dt * (_gamma * P * divv + vx * dPdx + vy * dPdy + vz * dPdz);
+
+    cmac_assert(rho_new == rho_new);
+    cmac_assert(v_new.x() == v_new.x());
+    cmac_assert(v_new.y() == v_new.y());
+    cmac_assert(v_new.z() == v_new.z());
+    cmac_assert(P_new == P_new);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    rho_new = std::max(rho_new, 0.);
+    P_new = std::max(P_new, 0.);
+#else
+    cmac_assert(rho_new >= 0.);
+    cmac_assert(P_new >= 0.);
+#endif
+
+    state.set_primitives_density(rho_new);
+    state.set_primitives_velocity(v_new);
+    state.set_primitives_pressure(P_new);
   }
 
   /**
@@ -460,13 +703,24 @@ public:
   ionization_to_hydro(const IonizationVariables &ionization_variables,
                       HydroVariables &hydro_variables) const {
 
-    const double density =
+    double density =
         _density_conversion_factor * ionization_variables.get_number_density();
     const double mean_molecular_mass =
         0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
-    const double pressure = _pressure_conversion_factor * density *
-                            ionization_variables.get_temperature() /
-                            mean_molecular_mass;
+    double pressure = _pressure_conversion_factor * density *
+                      ionization_variables.get_temperature() /
+                      mean_molecular_mass;
+
+    cmac_assert(density == density);
+    cmac_assert(pressure == pressure);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    density = std::max(density, 0.);
+    pressure = std::max(pressure, 0.);
+#else
+    cmac_assert(density >= 0.);
+    cmac_assert(pressure >= 0.);
+#endif
 
     // the velocity is directly set from the initial condition
     hydro_variables.set_primitives_density(density);
@@ -485,11 +739,22 @@ public:
 
     const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
     const double mean_molecular_mass = 0.5 * (1. + xH);
-    const double temperature =
+    double temperature =
         _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
-    const double pressure = _pressure_conversion_factor *
-                            hydro_variables.get_primitives_density() *
-                            temperature / mean_molecular_mass;
+    double pressure = _pressure_conversion_factor *
+                      hydro_variables.get_primitives_density() * temperature /
+                      mean_molecular_mass;
+
+    cmac_assert(temperature == temperature);
+    cmac_assert(pressure == pressure);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    temperature = std::max(temperature, 0.);
+    pressure = std::max(pressure, 0.);
+#else
+    cmac_assert(temperature >= 0.);
+    cmac_assert(pressure >= 0.);
+#endif
 
     // the velocity is directly set from the initial condition
     ionization_variables.set_temperature(temperature);
@@ -507,33 +772,39 @@ public:
   hydro_to_ionization(const HydroVariables &hydro_variables,
                       IonizationVariables &ionization_variables) const {
 
-    const double number_density =
+    double number_density =
         _n_conversion_factor * hydro_variables.get_primitives_density();
-    const double mean_molecular_mass =
-        0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
-    const double temperature = mean_molecular_mass * _T_conversion_factor *
-                               hydro_variables.get_primitives_pressure() /
-                               hydro_variables.get_primitives_density();
+
+    cmac_assert(number_density == number_density);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    number_density = std::max(number_density, 0.);
+#else
+    cmac_assert(number_density >= 0.);
+#endif
 
     ionization_variables.set_number_density(number_density);
-    ionization_variables.set_temperature(temperature);
   }
 
   /**
    * @brief Get the hydrodynamical timestep for the given cell.
    *
    * @param hydro_variables Hydro variables.
+   * @param ionization_variables IonizationVariables for the cell.
    * @param volume Volume of the cell (in m^3).
    * @return Corresponding timestep.
    */
   inline double get_timestep(const HydroVariables &hydro_variables,
+                             const IonizationVariables &ionization_variables,
                              const double volume) const {
 
-    const double cs = get_soundspeed(hydro_variables);
+    const double cs = get_soundspeed(hydro_variables, ionization_variables);
     const double v = hydro_variables.get_primitives_velocity().norm();
     const double R = std::cbrt(0.75 * volume * M_1_PI);
 
-    return R / (cs + v);
+    const double dt = R / (cs + v);
+    cmac_assert(dt > 0.);
+    return dt;
   }
 };
 
