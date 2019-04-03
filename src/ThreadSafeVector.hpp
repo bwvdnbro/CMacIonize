@@ -113,6 +113,14 @@ public:
   }
 
   /**
+   * @brief Quickly clear the contents of the vector.
+   */
+  inline void clear_fast() {
+    cmac_assert(_number_taken.value() == 0);
+    _current_index.set(0);
+  }
+
+  /**
    * @brief Get a continuous block of elements with the given size at the start
    * of the vector.
    *
@@ -271,6 +279,22 @@ public:
                         "Non continuous vector (%zu =/= %zu)! (%s)",
                         _number_taken.value(), _current_index.value(),
                         _label.c_str());
+    return _number_taken.value();
+  }
+
+  /**
+   * @brief Check if the vector is empty.
+   *
+   * @return True if the vector is empty.
+   */
+  inline bool is_empty() const { return _number_taken.value() == 0; }
+
+  /**
+   * @brief Get the number of active elements in the vector.
+   *
+   * @return Number of active elements in the vector.
+   */
+  inline size_t get_number_of_active_elements() const {
     return _number_taken.value();
   }
 
