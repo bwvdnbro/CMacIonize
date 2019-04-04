@@ -32,6 +32,7 @@
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DistributedPhotonSource.hpp"
+#include "HydroBoundaryManager.hpp"
 #include "HydroDensitySubGrid.hpp"
 #include "LineCoolingData.hpp"
 #include "MemorySpace.hpp"
@@ -629,13 +630,13 @@ steal_task(const int_fast32_t thread_id, const int_fast32_t num_threads,
  * @param tasks Tasks.
  * @param timestep System time step (in s).
  * @param hydro Hydro instance to use.
- * @param boundary HydroBoundary to use.
+ * @param boundary_manager HydroBoundaryManager to use.
  */
 inline void
 execute_task(const size_t itask,
              DensitySubGridCreator< HydroDensitySubGrid > &grid_creator,
              ThreadSafeVector< Task > &tasks, const double timestep,
-             const Hydro &hydro, const HydroBoundary &boundary) {
+             const Hydro &hydro, const HydroBoundaryManager &boundary_manager) {
 
   const Task &task = tasks[itask];
   HydroDensitySubGrid &subgrid = *grid_creator.get_subgrid(task.get_subgrid());
@@ -649,7 +650,8 @@ execute_task(const size_t itask,
     break;
   case TASKTYPE_GRADIENTSWEEP_EXTERNAL_BOUNDARY:
     subgrid.outer_ghost_gradient_sweep(task.get_interaction_direction(), hydro,
-                                       boundary);
+                                       boundary_manager.get_boundary_condition(
+                                           task.get_interaction_direction()));
     break;
   case TASKTYPE_SLOPE_LIMITER:
     subgrid.apply_slope_limiter(hydro);
@@ -666,7 +668,8 @@ execute_task(const size_t itask,
     break;
   case TASKTYPE_FLUXSWEEP_EXTERNAL_BOUNDARY:
     subgrid.outer_ghost_flux_sweep(task.get_interaction_direction(), hydro,
-                                   boundary);
+                                   boundary_manager.get_boundary_condition(
+                                       task.get_interaction_direction()));
     break;
   case TASKTYPE_UPDATE_CONSERVED:
     subgrid.update_conserved_variables(timestep);
@@ -894,7 +897,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       "TaskBasedRadiationHydrodynamicsSimulation:source copy level", 4);
 
   Hydro hydro(*params);
-  InflowHydroBoundary hydro_boundary;
+  HydroBoundaryManager hydro_boundary_manager(*params);
 
   ChargeTransferRates charge_transfer_rates;
 
@@ -1667,7 +1670,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         if (current_task != NO_TASK) {
           (*tasks)[current_task].start(thread_id);
           execute_task(current_task, *grid_creator, *tasks, actual_timestep,
-                       hydro, hydro_boundary);
+                       hydro, hydro_boundary_manager);
           (*tasks)[current_task].stop();
           (*tasks)[current_task].unlock_dependency();
           const unsigned char numchild =

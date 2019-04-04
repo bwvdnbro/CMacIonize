@@ -93,8 +93,10 @@ private:
    */
   double _total_luminosity;
 
+#ifndef HAVE_HYDROGEN_ONLY
   /*! @brief Abundances of the elements in the ISM. */
   const Abundances &_abundances;
+#endif
 
   /*! @brief Cross sections for photoionization. */
   const CrossSections &_cross_sections;

@@ -34,6 +34,11 @@
 class HydroBoundary {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  inline virtual ~HydroBoundary() {}
+
+  /**
    * @brief Get the right state primitive variables corresponding to the given
    * left state boundary ghost.
    *

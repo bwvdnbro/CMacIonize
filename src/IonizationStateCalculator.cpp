@@ -51,9 +51,13 @@ IonizationStateCalculator::IonizationStateCalculator(
     double luminosity, const Abundances &abundances,
     const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates)
-    : _luminosity(luminosity), _abundances(abundances),
+    : _luminosity(luminosity),
+#ifndef HAVE_HYDROGEN_ONLY
+      _abundances(abundances),
+#endif
       _recombination_rates(recombination_rates),
-      _charge_transfer_rates(charge_transfer_rates) {}
+      _charge_transfer_rates(charge_transfer_rates) {
+}
 
 /**
  * @brief Does the ionization state calculation for a single cell.

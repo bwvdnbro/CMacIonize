@@ -1504,6 +1504,7 @@ set(TESTHYDRODENSITYSUBGRID_SOURCES
     testHydroDensitySubGrid.cpp
 
     ../src/HydroBoundary.hpp
+    ../src/HydroBoundaryManager.hpp
     ../src/HydroDensitySubGrid.hpp
 )
 add_unit_test(NAME testHydroDensitySubGrid
