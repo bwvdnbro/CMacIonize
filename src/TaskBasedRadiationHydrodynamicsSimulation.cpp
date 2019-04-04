@@ -1065,6 +1065,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             numphoton, *sourcedistribution, *grid_creator);
         {
           AtomicValue< size_t > igrid(0);
+          start_parallel_timing_block();
 #pragma omp parallel default(shared)
           while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
             const size_t this_igrid = igrid.post_increment();
@@ -1076,6 +1077,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
               }
             }
           }
+          stop_parallel_timing_block();
         }
 
         for (uint_fast32_t iloop = 0; iloop < nloop; ++iloop) {
@@ -1113,6 +1115,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           AtomicValue< uint_fast32_t > num_empty(num_empty_target);
           AtomicValue< uint_fast32_t > num_active_buffers(0);
           AtomicValue< uint_fast32_t > num_photon_done(0);
+          start_parallel_timing_block();
 #pragma omp parallel default(shared)
           {
             // thread initialisation
@@ -1567,6 +1570,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
               }
             } // while(global_run_flag)
           }   // parallel region
+          stop_parallel_timing_block();
 
           buffers->reset();
 
@@ -1579,6 +1583,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
           {
             AtomicValue< size_t > igrid(0);
+            start_parallel_timing_block();
 #pragma omp parallel default(shared)
             while (igrid.value() <
                    grid_creator->number_of_original_subgrids()) {
@@ -1609,15 +1614,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 task.stop();
               }
             }
+            stop_parallel_timing_block();
           }
 
           worktimer.stop();
         }
 
-        for (auto it = grid_creator->begin();
-             it != grid_creator->original_end(); ++it) {
-          (*it).add_ionization_energy(hydro);
-        }
       } else {
 
         if (log) {
@@ -1637,9 +1639,18 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       cmac_assert_message(buffers->is_empty(), "Number of active buffers: %zu",
                           buffers->get_number_of_active_buffers());
 
+      for (auto it = grid_creator->begin(); it != grid_creator->original_end();
+           ++it) {
+        (*it).add_ionization_energy(hydro);
+      }
+
       if (log) {
         log->write_status("Done with radiation step.");
       }
+    }
+
+    if (log) {
+      log->write_status("Starting hydro step...");
     }
 
     // reset the hydro tasks and add them to the queue
@@ -1693,6 +1704,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     stop_parallel_timing_block();
 
     cpucycle_tick(iteration_end);
+
+    if (log) {
+      log->write_status("Done with hydro step.");
+    }
 
     // write snapshot
     // we don't write if this is the last snapshot, because then it is written
