@@ -64,6 +64,9 @@ private:
    *  subgrid. */
   const CoordinateVector< int_fast32_t > _subgrid_number_of_cells;
 
+  /*! @brief Periodicity flags. */
+  const CoordinateVector< bool > _periodicity;
+
 public:
   /**
    * @brief Constructor.
@@ -71,10 +74,12 @@ public:
    * @param box Dimensions of the simulation box (in m).
    * @param number_of_cells Number of cells in each coordinate direction.
    * @param number_of_subgrids Number of subgrids in each coordinate direction.
+   * @param periodicity Periodicity flags.
    */
   inline DensitySubGridCreator(
       const Box<> box, const CoordinateVector< int_fast32_t > number_of_cells,
-      const CoordinateVector< int_fast32_t > number_of_subgrids)
+      const CoordinateVector< int_fast32_t > number_of_subgrids,
+      const CoordinateVector< bool > periodicity)
       : _box(box), _subgrid_sides(box.get_sides()[0] / number_of_subgrids[0],
                                   box.get_sides()[1] / number_of_subgrids[1],
                                   box.get_sides()[2] / number_of_subgrids[2]),
@@ -82,7 +87,8 @@ public:
                             number_of_subgrids[2]),
         _subgrid_number_of_cells(number_of_cells[0] / number_of_subgrids[0],
                                  number_of_cells[1] / number_of_subgrids[1],
-                                 number_of_cells[2] / number_of_subgrids[2]) {
+                                 number_of_cells[2] / number_of_subgrids[2]),
+        _periodicity(periodicity) {
 
     for (uint_fast8_t i = 0; i < 3; ++i) {
       if (number_of_cells[i] % number_of_subgrids[i] != 0) {
@@ -116,7 +122,10 @@ public:
                 CoordinateVector< int_fast32_t >(64)),
             params.get_value< CoordinateVector< int_fast32_t > >(
                 "DensitySubGridCreator:number of subgrids",
-                CoordinateVector< int_fast32_t >(8))) {}
+                CoordinateVector< int_fast32_t >(8)),
+            params.get_value< CoordinateVector< bool > >(
+                "DensitySubGridCreator:periodicity",
+                CoordinateVector< bool >(false))) {}
 
   /**
    * @brief Destructor.
@@ -204,11 +213,21 @@ public:
           p.y() * _number_of_subgrids[2] + p.z();
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
+    } else if (_periodicity.x()) {
+      const size_t ngbi = (_number_of_subgrids[0] - 1) *
+                              _number_of_subgrids[1] * _number_of_subgrids[2] +
+                          p.y() * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
     }
     if (p.x() < _number_of_subgrids[0] - 1) {
       const size_t ngbi =
           (p.x() + 1) * _number_of_subgrids[1] * _number_of_subgrids[2] +
           p.y() * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    } else if (_periodicity.x()) {
+      const size_t ngbi = p.y() * _number_of_subgrids[2] + p.z();
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
     }
@@ -218,11 +237,22 @@ public:
           (p.y() - 1) * _number_of_subgrids[2] + p.z();
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
+    } else if (_periodicity.y()) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          (_number_of_subgrids[1] - 1) * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
     }
     if (p.y() < _number_of_subgrids[1] - 1) {
       const size_t ngbi =
           p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
           (p.y() + 1) * _number_of_subgrids[2] + p.z();
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    } else if (_periodicity.y()) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] + p.z();
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
     }
@@ -232,11 +262,23 @@ public:
           p.y() * _number_of_subgrids[2] + p.z() - 1;
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
+    } else if (_periodicity.z()) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2] + _number_of_subgrids[2] - 1;
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
     }
     if (p.z() < _number_of_subgrids[2] - 1) {
       const size_t ngbi =
           p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
           p.y() * _number_of_subgrids[2] + p.z() + 1;
+      neighbours[number_of_neighbours] = ngbi;
+      ++number_of_neighbours;
+    } else if (_periodicity.z()) {
+      const size_t ngbi =
+          p.x() * _number_of_subgrids[1] * _number_of_subgrids[2] +
+          p.y() * _number_of_subgrids[2];
       neighbours[number_of_neighbours] = ngbi;
       ++number_of_neighbours;
     }
@@ -277,9 +319,33 @@ public:
       for (int_fast32_t niy = -1; niy < 2; ++niy) {
         for (int_fast32_t niz = -1; niz < 2; ++niz) {
           // get neighbour corrected indices
-          const int_fast32_t cix = ix + nix;
-          const int_fast32_t ciy = iy + niy;
-          const int_fast32_t ciz = iz + niz;
+          int_fast32_t cix = ix + nix;
+          int_fast32_t ciy = iy + niy;
+          int_fast32_t ciz = iz + niz;
+          if (_periodicity.x()) {
+            if (cix < 0) {
+              cix = _number_of_subgrids[0] - 1;
+            }
+            if (cix >= _number_of_subgrids[0]) {
+              cix = 0;
+            }
+          }
+          if (_periodicity.y()) {
+            if (ciy < 0) {
+              ciy = _number_of_subgrids[1] - 1;
+            }
+            if (ciy >= _number_of_subgrids[1]) {
+              ciy = 0;
+            }
+          }
+          if (_periodicity.z()) {
+            if (ciz < 0) {
+              ciz = _number_of_subgrids[2] - 1;
+            }
+            if (ciz >= _number_of_subgrids[2]) {
+              ciz = 0;
+            }
+          }
           // if the indices above point to a real subgrid: set up the
           // neighbour relations
           if (cix >= 0 && cix < _number_of_subgrids[0] && ciy >= 0 &&
