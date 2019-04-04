@@ -47,33 +47,61 @@
  *   to that plane.
  */
 enum TravelDirection {
+  /*! @brief Photon inside the subgrid (0). */
   TRAVELDIRECTION_INSIDE = 0,
+  /*! @brief (1,1,1) corner of the box (1). */
   TRAVELDIRECTION_CORNER_PPP,
+  /*! @brief (1,1,0) corner of the box (2). */
   TRAVELDIRECTION_CORNER_PPN,
+  /*! @brief (1,0,1) corner of the box (3). */
   TRAVELDIRECTION_CORNER_PNP,
+  /*! @brief (1,0,0) corner of the box (4). */
   TRAVELDIRECTION_CORNER_PNN,
+  /*! @brief (0,1,1) corner of the box (5). */
   TRAVELDIRECTION_CORNER_NPP,
+  /*! @brief (0,1,0) corner of the box (6). */
   TRAVELDIRECTION_CORNER_NPN,
+  /*! @brief (0,0,1) corner of the box (7). */
   TRAVELDIRECTION_CORNER_NNP,
+  /*! @brief (0,0,0) corner of the box (8). */
   TRAVELDIRECTION_CORNER_NNN,
+  /*! @brief (:,1,1) edge of the box (9). */
   TRAVELDIRECTION_EDGE_X_PP,
+  /*! @brief (:,1,0) edge of the box (10). */
   TRAVELDIRECTION_EDGE_X_PN,
+  /*! @brief (:,0,1) edge of the box (11). */
   TRAVELDIRECTION_EDGE_X_NP,
+  /*! @brief (:,0,0) edge of the box (12). */
   TRAVELDIRECTION_EDGE_X_NN,
+  /*! @brief (1,:,1) edge of the box (13). */
   TRAVELDIRECTION_EDGE_Y_PP,
+  /*! @brief (1,:,0) edge of the box (14). */
   TRAVELDIRECTION_EDGE_Y_PN,
+  /*! @brief (0,:,1) edge of the box (15). */
   TRAVELDIRECTION_EDGE_Y_NP,
+  /*! @brief (0,:,0) edge of the box (16). */
   TRAVELDIRECTION_EDGE_Y_NN,
+  /*! @brief (1,1,:) edge of the box (17). */
   TRAVELDIRECTION_EDGE_Z_PP,
+  /*! @brief (1,0,:) edge of the box (18). */
   TRAVELDIRECTION_EDGE_Z_PN,
+  /*! @brief (0,1,:) edge of the box (19). */
   TRAVELDIRECTION_EDGE_Z_NP,
+  /*! @brief (0,0,:) edge of the box (20). */
   TRAVELDIRECTION_EDGE_Z_NN,
+  /*! @brief x=1 face of the box (21). */
   TRAVELDIRECTION_FACE_X_P,
+  /*! @brief x=0 face of the box (22). */
   TRAVELDIRECTION_FACE_X_N,
+  /*! @brief y=1 face of the box (23). */
   TRAVELDIRECTION_FACE_Y_P,
+  /*! @brief y=0 face of the box (24). */
   TRAVELDIRECTION_FACE_Y_N,
+  /*! @brief z=1 face of the box (25). */
   TRAVELDIRECTION_FACE_Z_P,
+  /*! @brief z=0 face of the box (26). */
   TRAVELDIRECTION_FACE_Z_N,
+  /*! @brief Number of directions (27). */
   TRAVELDIRECTION_NUMBER
 };
 
