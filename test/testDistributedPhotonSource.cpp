@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
 
   DensitySubGridCreator< DensitySubGrid > grid_creator(
       Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)),
-      CoordinateVector< int_fast32_t >(64),
-      CoordinateVector< int_fast32_t >(8));
+      CoordinateVector< int_fast32_t >(64), CoordinateVector< int_fast32_t >(8),
+      CoordinateVector< bool >(false));
   HomogeneousDensityFunction density_function;
   grid_creator.initialize(density_function);
   DensitySubGridCreator< DensitySubGrid >::iterator center =
