@@ -37,7 +37,7 @@
 
 /*! @brief Uncomment this to enable hard resets for unphysical hydro
  *  variables. */
-#define SAFE_HYDRO_VARIABLES
+//#define SAFE_HYDRO_VARIABLES
 
 /**
  * @brief Hydro related functionality.
@@ -77,6 +77,10 @@ private:
   /*! @brief Conversion factor from temperature to pressure,
    *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
   const double _P_conversion_factor;
+
+  /*! @brief Conversion factor from temperature to internal energy,
+   *  @f$u_{fac} = \frac{2k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
+  const double _u_conversion_factor;
 
   /*! @brief Riemann solver used to solve the Riemann problem. */
   const HLLCRiemannSolver _riemann_solver;
@@ -170,6 +174,12 @@ public:
                                  PHYSICALCONSTANT_BOLTZMANN) /
                              PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_PROTON_MASS)),
+        _u_conversion_factor(2. *
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_BOLTZMANN) *
+                             _one_over_gamma_minus_one /
+                             PhysicalConstants::get_physical_constant(
+                                 PHYSICALCONSTANT_PROTON_MASS)),
         _riemann_solver(gamma) {}
 
   /**
@@ -210,7 +220,9 @@ public:
           const double cs = std::sqrt(
               _gamma * hydro_variables.get_primitives_pressure() * rho_inv);
           cmac_assert(cs == cs);
-          cmac_assert(cs > 0.);
+          cmac_assert_message(cs > 0., "gamma: %g, rho: %g, rho_inv: %g, P: %g",
+                              _gamma, rho, rho_inv,
+                              hydro_variables.get_primitives_pressure());
           return cs;
         } else {
           return DBL_MIN;
@@ -246,10 +258,17 @@ public:
     double density = state.get_conserved_mass() * inverse_volume;
     const CoordinateVector<> velocity =
         inverse_mass * state.get_conserved_momentum();
-    double pressure = _gamma_minus_one * inverse_volume *
-                      (state.get_conserved_total_energy() -
-                       0.5 * CoordinateVector<>::dot_product(
-                                 velocity, state.get_conserved_momentum()));
+    double pressure;
+    if (_gamma > 1.) {
+      pressure = _gamma_minus_one * inverse_volume *
+                 (state.get_conserved_total_energy() -
+                  0.5 * CoordinateVector<>::dot_product(
+                            velocity, state.get_conserved_momentum()));
+    } else {
+      const double CS =
+          state.get_primitives_pressure() / state.get_primitives_density();
+      pressure = CS * density;
+    }
 
     cmac_assert(density == density);
     cmac_assert(velocity.x() == velocity.x());
@@ -737,28 +756,51 @@ public:
   inline void add_ionization_energy(IonizationVariables &ionization_variables,
                                     HydroVariables &hydro_variables) const {
 
-    const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
-    const double mean_molecular_mass = 0.5 * (1. + xH);
-    double temperature =
-        _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
-    double pressure = _pressure_conversion_factor *
-                      hydro_variables.get_primitives_density() * temperature /
-                      mean_molecular_mass;
+    if (_gamma == 1.) {
+      const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
+      const double mean_molecular_mass = 0.5 * (1. + xH);
+      double temperature =
+          _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
+      double pressure = _pressure_conversion_factor *
+                        hydro_variables.get_primitives_density() * temperature /
+                        mean_molecular_mass;
 
-    cmac_assert(temperature == temperature);
-    cmac_assert(pressure == pressure);
+      cmac_assert(temperature == temperature);
+      cmac_assert(pressure == pressure);
 
 #ifdef SAFE_HYDRO_VARIABLES
-    temperature = std::max(temperature, 0.);
-    pressure = std::max(pressure, 0.);
+      temperature = std::max(temperature, 0.);
+      pressure = std::max(pressure, 0.);
 #else
-    cmac_assert(temperature >= 0.);
-    cmac_assert(pressure >= 0.);
+      cmac_assert(temperature >= 0.);
+      cmac_assert(pressure >= 0.);
 #endif
 
-    // the velocity is directly set from the initial condition
-    ionization_variables.set_temperature(temperature);
-    hydro_variables.set_primitives_pressure(pressure);
+      ionization_variables.set_temperature(temperature);
+      hydro_variables.set_primitives_pressure(pressure);
+    } else {
+      const double rho = hydro_variables.get_primitives_density();
+      if (rho <= 0.) {
+        return;
+      }
+      const double rho_inv = 1. / rho;
+      if (std::isinf(rho_inv)) {
+        return;
+      }
+      const double P = hydro_variables.get_primitives_pressure();
+      const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
+      const double m = hydro_variables.get_conserved_mass();
+      const double Tgas_new =
+          _ionised_temperature * (1. - xH) + _neutral_temperature * xH;
+      const double ufac = _u_conversion_factor / (1. + xH);
+      const double ugas_new = ufac * Tgas_new;
+      const double ugas_old = _one_over_gamma_minus_one * P * rho_inv;
+      const double du = ugas_new - ugas_old;
+      const double dE = m * du;
+      if (dE > 0.) {
+        hydro_variables.conserved(4) += dE;
+      }
+    }
   }
 
   /**
