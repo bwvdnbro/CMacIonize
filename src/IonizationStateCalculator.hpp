@@ -48,8 +48,10 @@ private:
   /*! @brief Total ionizing luminosity of all photon sources (in s^-1). */
   double _luminosity;
 
+#ifndef HAVE_HYDROGEN_ONLY
   /*! @brief Abundances. */
   const Abundances &_abundances;
+#endif
 
   /*! @brief Recombination rates used in ionization balance calculation. */
   const RecombinationRates &_recombination_rates;

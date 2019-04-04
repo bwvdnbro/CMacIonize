@@ -95,6 +95,8 @@ public:
     const double nH = ioniziation_variables.get_number_density();
     return volume * On_frac * Op1_frac * nH > _target_N && level < _max_level;
 #else
+    (void)_max_level;
+    (void)_target_N;
     return false;
 #endif
   }
