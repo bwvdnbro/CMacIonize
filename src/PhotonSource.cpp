@@ -60,7 +60,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            bool diffuse_field, Log *log)
     : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
-      _continuous_spectrum(continuous_spectrum), _abundances(abundances),
+      _continuous_spectrum(continuous_spectrum),
+#ifndef HAVE_HYDROGEN_ONLY
+      _abundances(abundances),
+#endif
       _cross_sections(cross_sections), _reemission_handler(nullptr), _log(log) {
 
   double discrete_luminosity = 0.;
