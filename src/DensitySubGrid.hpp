@@ -500,8 +500,8 @@ public:
         std::abs(three_index[0] - static_cast< int_fast32_t >(
                                       position[0] * _inv_cell_size[0])) < 2,
         "input_direction: %" PRIiFAST32
-        "\nposition: %g %g %g\nthree_index[0]: %" PRIiFAST32
-        "\nreal: %" PRIiFAST32,
+        ", position: %g %g %g, three_index[0]: %" PRIiFAST32
+        ", real: %" PRIiFAST32,
         input_direction, position[0], position[1], position[2], three_index[0],
         static_cast< int_fast32_t >(position[0] * _inv_cell_size[0]));
 
@@ -511,7 +511,7 @@ public:
         std::abs(three_index[1] - static_cast< int_fast32_t >(
                                       position[1] * _inv_cell_size[1])) < 2,
         "input_direction: %" PRIiFAST32
-        "\nposition: %g %g %g\nthree_index[1]: %" PRIiFAST32,
+        ", position: %g %g %g, three_index[1]: %" PRIiFAST32,
         input_direction, position[0], position[1], position[2], three_index[1]);
 
     three_index[2] = get_z_index(position[2], input_direction);
@@ -520,7 +520,7 @@ public:
         std::abs(three_index[2] - static_cast< int_fast32_t >(
                                       position[2] * _inv_cell_size[2])) < 2,
         "input_direction: %" PRIiFAST32
-        "\nposition: %g %g %g\nthree_index[2]: %" PRIiFAST32,
+        ", position: %g %g %g, three_index[2]: %" PRIiFAST32,
         input_direction, position[0], position[1], position[2], three_index[2]);
 
     cmac_assert_message(is_inside(three_index),
@@ -1032,8 +1032,8 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
-          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          "position: %g %g %g, cell_low: %g %g %g, cell_high: %g %g "
+          "%g, direction: %g %g %g, three_index: %" PRIiFAST32 " %" PRIiFAST32
           " %" PRIiFAST32,
           position[0], position[1], position[2], cell_low[0], cell_low[1],
           cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
@@ -1057,8 +1057,8 @@ public:
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
       cmac_assert_message(lmin >= 0.,
-                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
-                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          "lmin: %g, l: %g %g %g, cell: %g %g %g, cell_high: "
+                          "%g %g %g, position: %g %g %g, direction: %g %g %g",
                           lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
                           cell_low[2], cell_high[0], cell_high[1], cell_high[2],
                           position[0], position[1], position[2], direction[0],
@@ -1177,8 +1177,8 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
-          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          "position: %g %g %g, cell_low: %g %g %g, cell_high: %g %g "
+          "%g, direction: %g %g %g, three_index: %" PRIiFAST32 " %" PRIiFAST32
           " %" PRIiFAST32,
           position[0], position[1], position[2], cell_low[0], cell_low[1],
           cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
@@ -1202,8 +1202,8 @@ public:
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
       cmac_assert_message(lmin >= 0.,
-                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
-                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          "lmin: %g, l: %g %g %g, cell: %g %g %g, cell_high: "
+                          "%g %g %g, position: %g %g %g, direction: %g %g %g",
                           lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
                           cell_low[2], cell_high[0], cell_high[1], cell_high[2],
                           position[0], position[1], position[2], direction[0],
@@ -1317,8 +1317,8 @@ public:
           cell_low[0] <= position[0] && cell_high[0] >= position[0] &&
               cell_low[1] <= position[1] && cell_high[1] >= position[1] &&
               cell_low[2] <= position[2] && cell_high[2] >= position[2],
-          "position: %g %g %g\ncell_low: %g %g %g\ncell_high: %g %g "
-          "%g\ndirection: %g %g %g\nthree_index: %" PRIiFAST32 " %" PRIiFAST32
+          "position: %g %g %g, cell_low: %g %g %g, cell_high: %g %g "
+          "%g, direction: %g %g %g, three_index: %" PRIiFAST32 " %" PRIiFAST32
           " %" PRIiFAST32,
           position[0], position[1], position[2], cell_low[0], cell_low[1],
           cell_low[2], cell_high[0], cell_high[1], cell_high[2], direction[0],
@@ -1342,8 +1342,8 @@ public:
       double lmin = std::min(l[0], std::min(l[1], l[2]));
 
       cmac_assert_message(lmin >= 0.,
-                          "lmin: %g\nl: %g %g %g\ncell: %g %g %g\ncell_high: "
-                          "%g %g %g\nposition: %g %g %g\ndirection: %g %g %g",
+                          "lmin: %g, l: %g %g %g, cell: %g %g %g, cell_high: "
+                          "%g %g %g, position: %g %g %g, direction: %g %g %g",
                           lmin, l[0], l[1], l[2], cell_low[0], cell_low[1],
                           cell_low[2], cell_high[0], cell_high[1], cell_high[2],
                           position[0], position[1], position[2], direction[0],
