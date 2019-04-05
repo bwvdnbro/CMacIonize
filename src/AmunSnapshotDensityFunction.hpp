@@ -52,6 +52,12 @@ private:
   /*! @brief Number densities (in m^-3). */
   std::vector< double > _densities;
 
+  /*! @brief Velocities (in km s^-1). */
+  std::vector< CoordinateVector<> > _velocities;
+
+  /*! @brief Pressures (in kg m^-1 s^-2). */
+  std::vector< double > _pressures;
+
 public:
   AmunSnapshotDensityFunction(const std::string folder,
                               const std::string prefix,
