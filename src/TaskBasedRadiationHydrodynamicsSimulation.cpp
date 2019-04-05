@@ -1379,25 +1379,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                     cmac_assert_message(
                         result >= 0 && result < TRAVELDIRECTION_NUMBER, "fail");
 
-                    // periodically wrap the photon position
-                    {
-                      const Box<> box = simulation_box.get_box();
-                      CoordinateVector<> photon_position =
-                          photon.get_position();
-                      photon_position -= box.get_anchor();
-                      for (uint_fast8_t ipos = 0; ipos < 3; ++ipos) {
-                        if (photon_position[ipos] <= 0.) {
-                          photon_position[ipos] += box.get_sides()[ipos];
-                        }
-                        if (photon_position[ipos] >= box.get_sides()[ipos]) {
-                          photon_position[ipos] -= box.get_sides()[ipos];
-                        }
-                      }
-                      photon_position += box.get_anchor();
-                      cmac_assert(box.inside(photon_position));
-                      photon.set_position(photon_position);
-                    }
-
                     // add the photon to an output buffer, if it still exists
                     // (if the corresponding output buffer does not exist, this
                     // means the photon left the simulation box)

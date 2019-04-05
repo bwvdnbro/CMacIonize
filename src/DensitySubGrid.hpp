@@ -238,6 +238,132 @@ protected:
   }
 
   /**
+   * @brief Update the given photon position to make sure the photon is inside
+   * the subgrid.
+   *
+   * @param input_direction Input direction of the photon.
+   * @param position Photon position (in m).
+   */
+  inline void update_photon_position(const int_fast32_t input_direction,
+                                     CoordinateVector<> &position) const {
+
+    switch (input_direction) {
+    case TRAVELDIRECTION_INSIDE:
+      return;
+    case TRAVELDIRECTION_CORNER_NNN:
+      position[0] = 0.;
+      position[1] = 0.;
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_CORNER_NNP:
+      position[0] = 0.;
+      position[1] = 0.;
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_CORNER_NPN:
+      position[0] = 0.;
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_CORNER_NPP:
+      position[0] = 0.;
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_CORNER_PNN:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = 0.;
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_CORNER_PNP:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = 0.;
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_CORNER_PPN:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_CORNER_PPP:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_EDGE_X_NN:
+      position[1] = 0.;
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_X_NP:
+      position[1] = 0.;
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_EDGE_X_PN:
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_X_PP:
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_EDGE_Y_NN:
+      position[0] = 0.;
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_Y_NP:
+      position[0] = 0.;
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_EDGE_Y_PN:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_Y_PP:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    case TRAVELDIRECTION_EDGE_Z_NN:
+      position[0] = 0.;
+      position[1] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_Z_NP:
+      position[0] = 0.;
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      return;
+    case TRAVELDIRECTION_EDGE_Z_PN:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = 0.;
+      return;
+    case TRAVELDIRECTION_EDGE_Z_PP:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      return;
+    case TRAVELDIRECTION_FACE_X_N:
+      position[0] = 0.;
+      return;
+    case TRAVELDIRECTION_FACE_X_P:
+      position[0] = _number_of_cells[0] * _cell_size[0];
+      return;
+    case TRAVELDIRECTION_FACE_Y_N:
+      position[1] = 0.;
+      return;
+    case TRAVELDIRECTION_FACE_Y_P:
+      position[1] = _number_of_cells[1] * _cell_size[1];
+      return;
+    case TRAVELDIRECTION_FACE_Z_N:
+      position[2] = 0.;
+      return;
+    case TRAVELDIRECTION_FACE_Z_P:
+      position[2] = _number_of_cells[2] * _cell_size[2];
+      return;
+    default:
+      // something went wrong
+      cmac_error("Invalid input direction: %" PRIiFAST32, input_direction);
+      return;
+    }
+  }
+
+  /**
    * @brief Get the x 3 index corresponding to the given coordinate and incoming
    * direction.
    *
@@ -511,8 +637,10 @@ public:
         std::abs(three_index[1] - static_cast< int_fast32_t >(
                                       position[1] * _inv_cell_size[1])) < 2,
         "input_direction: %" PRIiFAST32
-        ", position: %g %g %g, three_index[1]: %" PRIiFAST32,
-        input_direction, position[0], position[1], position[2], three_index[1]);
+        ", position: %g %g %g, three_index[1]: %" PRIiFAST32
+        ", real: %" PRIiFAST32,
+        input_direction, position[0], position[1], position[2], three_index[1],
+        static_cast< int_fast32_t >(position[1] * _inv_cell_size[1]));
 
     three_index[2] = get_z_index(position[2], input_direction);
 
@@ -520,8 +648,10 @@ public:
         std::abs(three_index[2] - static_cast< int_fast32_t >(
                                       position[2] * _inv_cell_size[2])) < 2,
         "input_direction: %" PRIiFAST32
-        ", position: %g %g %g, three_index[2]: %" PRIiFAST32,
-        input_direction, position[0], position[1], position[2], three_index[2]);
+        ", position: %g %g %g, three_index[2]: %" PRIiFAST32
+        ", real: %" PRIiFAST32,
+        input_direction, position[0], position[1], position[2], three_index[2],
+        static_cast< int_fast32_t >(position[2] * _inv_cell_size[2]));
 
     cmac_assert_message(is_inside(three_index),
                         "position: %g %g %g, box: %g %g %g %g %g "
@@ -1003,6 +1133,8 @@ public:
 
     cmac_assert_message(tau_done < tau_target, "tau_done: %g, target: %g",
                         tau_done, tau_target);
+
+    update_photon_position(input_direction, position);
 
     // get the indices of the first cell on the photon's path
     CoordinateVector< int_fast32_t > three_index;
