@@ -348,9 +348,9 @@ public:
           }
           // if the indices above point to a real subgrid: set up the
           // neighbour relations
-          if (cix >= 0 && cix < _number_of_subgrids[0] && ciy >= 0 &&
-              ciy < _number_of_subgrids[1] && ciz >= 0 &&
-              ciz < _number_of_subgrids[2]) {
+          if ((cix >= 0 && cix < _number_of_subgrids[0]) &&
+              (ciy >= 0 && ciy < _number_of_subgrids[1]) &&
+              (ciz >= 0 && ciz < _number_of_subgrids[2])) {
             // we use get_output_direction() to get the correct index
             // for the neighbour
             // the three_index components will either be
