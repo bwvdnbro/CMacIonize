@@ -74,6 +74,8 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
       _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
 
   _densities.resize(totnumcell);
+  _velocities.resize(totnumcell);
+  _pressures.resize(totnumcell);
 
   // now read all the blocks
   double average_density = 0.;
@@ -98,6 +100,14 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
           HDF5Tools::open_group(file, "/variables");
       HDF5Tools::HDF5DataBlock< float, 3 > dens =
           HDF5Tools::read_dataset< float, 3 >(variables, "dens");
+      HDF5Tools::HDF5DataBlock< float, 3 > velx =
+          HDF5Tools::read_dataset< float, 3 >(variables, "velx");
+      HDF5Tools::HDF5DataBlock< float, 3 > vely =
+          HDF5Tools::read_dataset< float, 3 >(variables, "vely");
+      HDF5Tools::HDF5DataBlock< float, 3 > velz =
+          HDF5Tools::read_dataset< float, 3 >(variables, "velz");
+      HDF5Tools::HDF5DataBlock< float, 3 > pres =
+          HDF5Tools::read_dataset< float, 3 >(variables, "pres");
       HDF5Tools::close_group(variables);
 
       for (int_fast32_t ix = 0; ix < dims[0]; ++ix) {
@@ -107,10 +117,22 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
                                               static_cast< size_t >(iy),
                                               static_cast< size_t >(ix)}};
             const double this_density = dens[index];
+            const double this_velx = velx[index];
+            const double this_vely = vely[index];
+            const double this_velz = velz[index];
+            const double this_pres = pres[index];
             _densities[(iz + offset_z) * _number_of_cells[1] *
                            _number_of_cells[0] +
                        (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
                 this_density;
+            _velocities[(iz + offset_z) * _number_of_cells[1] *
+                            _number_of_cells[0] +
+                        (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
+                CoordinateVector<>(this_velx, this_vely, this_velz);
+            _pressures[(iz + offset_z) * _number_of_cells[1] *
+                           _number_of_cells[0] +
+                       (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
+                this_pres;
             average_density += this_density;
           }
         }
