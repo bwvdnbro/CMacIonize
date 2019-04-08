@@ -38,18 +38,22 @@ int main(int argc, char **argv) {
 
   AmunSnapshotDensityFunction snapshot(
       ".", "Amun_test_", 2, 4,
-      Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 1.,
-      CoordinateVector<>(0.));
+      Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 1., 0.1, 100.,
+      1.e-6, CoordinateVector<>(0.));
 
   std::ofstream ofile("testAmunSnapshotDensityFunction.txt");
-  ofile << "# x (m)\ty (m)\tnH (m^-3)\n";
+  ofile << "# x (m)\ty (m)\tz (m)\tnH (m^-3)\tvx (m s^-1)\tvy (m s^-1)\tvz (m "
+           "s^-1)\tT (K)\n";
   for (uint_fast32_t ix = 0; ix < 32; ++ix) {
     for (uint_fast32_t iy = 0; iy < 32; ++iy) {
       DummyCell cell((ix + 0.5) / 32, (iy + 0.5) / 32, 0.5);
       const DensityValues vals = snapshot(cell);
       const CoordinateVector<> p = cell.get_cell_midpoint();
-      ofile << p.x() << "\t" << p.y() << "\t" << vals.get_number_density()
-            << "\n";
+      const double rho = vals.get_number_density();
+      const CoordinateVector<> v = vals.get_velocity();
+      const double T = vals.get_temperature();
+      ofile << p.x() << "\t" << p.y() << "\t" << p.z() << "\t" << rho << "\t"
+            << v.x() << "\t" << v.y() << "\t" << v.z() << "\t" << T << "\n";
     }
   }
   ofile.close();
