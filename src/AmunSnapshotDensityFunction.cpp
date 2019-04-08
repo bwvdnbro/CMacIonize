@@ -38,14 +38,20 @@
  * @param number_of_files Number of files that make up the snapshot.
  * @param box Desired dimensions of the simulation box (in m).
  * @param number_density Desired average number density (in m^-3).
+ * @param sound_speed Sound speed set in the AMUN parameter file (in AMUN
+ * velocity units).
+ * @param temperature Desired base temperature (in K).
+ * @param initial_neutral_fraction Initial neutral fraction.
  * @param shift Position shift (in fractions of the box size).
  */
 AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
     const std::string folder, const std::string prefix,
     const uint_fast32_t padding, const uint_fast32_t number_of_files,
-    const Box<> box, const double number_density,
+    const Box<> box, const double number_density, const double sound_speed,
+    const double temperature, const double initial_neutral_fraction,
     const CoordinateVector<> shift)
-    : _box(box), _shift(shift) {
+    : _box(box), _shift(shift),
+      _initial_neutral_fraction(initial_neutral_fraction) {
 
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
@@ -73,9 +79,9 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
   const uint_fast32_t totnumcell =
       _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
 
-  _densities.resize(totnumcell);
+  _number_densities.resize(totnumcell);
   _velocities.resize(totnumcell);
-  _pressures.resize(totnumcell);
+  _temperatures.resize(totnumcell);
 
   // now read all the blocks
   double average_density = 0.;
@@ -121,18 +127,18 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
             const double this_vely = vely[index];
             const double this_velz = velz[index];
             const double this_pres = pres[index];
-            _densities[(iz + offset_z) * _number_of_cells[1] *
-                           _number_of_cells[0] +
-                       (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
-                this_density;
+            _number_densities[(iz + offset_z) * _number_of_cells[1] *
+                                  _number_of_cells[0] +
+                              (iy + offset_y) * _number_of_cells[0] + ix +
+                              offset_x] = this_density;
             _velocities[(iz + offset_z) * _number_of_cells[1] *
                             _number_of_cells[0] +
                         (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
                 CoordinateVector<>(this_velx, this_vely, this_velz);
-            _pressures[(iz + offset_z) * _number_of_cells[1] *
-                           _number_of_cells[0] +
-                       (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
-                this_pres;
+            _temperatures[(iz + offset_z) * _number_of_cells[1] *
+                              _number_of_cells[0] +
+                          (iy + offset_y) * _number_of_cells[0] + ix +
+                          offset_x] = this_pres / this_density;
             average_density += this_density;
           }
         }
@@ -143,9 +149,19 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
   }
   average_density /= totnumcell;
 
-  const double conversion_factor = number_density / average_density;
-  for (size_t i = 0; i < _densities.size(); ++i) {
-    _densities[i] *= conversion_factor;
+  const double physical_sound_speed = std::sqrt(
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN) *
+      temperature /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS));
+  const double velocity_unit = physical_sound_speed / sound_speed;
+  const double number_density_unit = number_density / average_density;
+  const double temperature_conversion_factor =
+      temperature / (sound_speed * sound_speed);
+
+  for (size_t i = 0; i < _number_densities.size(); ++i) {
+    _number_densities[i] *= number_density_unit;
+    _velocities[i] *= velocity_unit;
+    _temperatures[i] *= temperature_conversion_factor;
   }
 }
 
@@ -163,6 +179,12 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
  *    m, 1. m])
  *  - average number density: Desired average number density (default: 100.
  *    cm^-3)
+ *  - AMUN soundspeed: Value of the sound speed parameter in the AMUN parameter
+ *    file (default: 0.1)
+ *  - average temperature: Desired average temperature for the gas (default:
+ *    100. K)
+ *  - initial neutral fraction: Initial neutral fraction for the gas (default:
+ *    1.e-6)
  *  - shift: (Periodic) shift to apply to all positions (in fractions of the box
  *    size, default: [0., 0., 0.])
  *
@@ -183,6 +205,11 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(ParameterFile &params,
                     "DensityFunction:box sides", "[1. m, 1. m, 1. m]")),
           params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
               "DensityFunction:average number density", "100. cm^-3"),
+          params.get_value< double >("DensityFunction:AMUN soundspeed", 0.1),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "DensityFunction:average temperature", "100. K"),
+          params.get_value< double >("DensityFunction:initial neutral fraction",
+                                     1.e-6),
           params.get_value< CoordinateVector<> >("DensityFunction:shift",
                                                  CoordinateVector<>(0.))) {}
 
@@ -215,11 +242,17 @@ DensityValues AmunSnapshotDensityFunction::operator()(const Cell &cell) const {
   const uint_fast32_t iy = dx.y() / _box.get_sides().y() * _number_of_cells.y();
   const uint_fast32_t iz = dx.z() / _box.get_sides().z() * _number_of_cells.z();
 
-  const double nH = _densities[iz * _number_of_cells[1] * _number_of_cells[0] +
-                               iy * _number_of_cells[0] + ix];
+  const uint_fast32_t index = iz * _number_of_cells[1] * _number_of_cells[0] +
+                              iy * _number_of_cells[0] + ix;
+  const double nH = _number_densities[index];
+  const CoordinateVector<> v = _velocities[index];
+  const double T = _temperatures[index];
 
   DensityValues values;
   values.set_number_density(nH);
+  values.set_velocity(v);
+  values.set_temperature(T);
+  values.set_ionic_fraction(ION_H_n, _initial_neutral_fraction);
 
   return values;
 }

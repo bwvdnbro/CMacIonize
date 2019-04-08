@@ -49,22 +49,25 @@ private:
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< uint_fast32_t > _number_of_cells;
 
+  /*! @brief Initial neutral fraction. */
+  const double _initial_neutral_fraction;
+
   /*! @brief Number densities (in m^-3). */
-  std::vector< double > _densities;
+  std::vector< double > _number_densities;
 
   /*! @brief Velocities (in km s^-1). */
   std::vector< CoordinateVector<> > _velocities;
 
   /*! @brief Pressures (in kg m^-1 s^-2). */
-  std::vector< double > _pressures;
+  std::vector< double > _temperatures;
 
 public:
-  AmunSnapshotDensityFunction(const std::string folder,
-                              const std::string prefix,
-                              const uint_fast32_t padding,
-                              const uint_fast32_t number_of_files,
-                              const Box<> box, const double number_density,
-                              const CoordinateVector<> shift);
+  AmunSnapshotDensityFunction(
+      const std::string folder, const std::string prefix,
+      const uint_fast32_t padding, const uint_fast32_t number_of_files,
+      const Box<> box, const double number_density, const double sound_speed,
+      const double temperature, const double initial_neutral_fraction,
+      const CoordinateVector<> shift);
 
   AmunSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
