@@ -698,7 +698,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
   double value;
   try {
     value = std::stod(svalue, &idx);
-  } catch (std::invalid_argument e) {
+  } catch (std::invalid_argument &e) {
     cmac_error("Error extracting value from \"%s\" unit-value pair!",
                svalue.c_str());
   }
