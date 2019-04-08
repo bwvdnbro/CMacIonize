@@ -35,25 +35,35 @@ import numpy as np
 import h5py
 
 ##
-# @brief Density function.
+# @brief Hydro value function.
 #
 # @param x X coordinate of a position.
 # @param y Y coordinate of a position.
 # @param z Z coordinate of a position.
-# @return Density at that position.
+# @return Hydro values at that position.
 ##
-def density(x, y, z):
-  return 1. + x + y + z
+def values(x, y, z):
+  density = 1. + x + y + z
+  velocity_x = -x + y - z
+  velocity_y = x - y - z
+  velocity_z = -x - y + z
+  pressure = 2. + x + y + z
+  return density, velocity_x, velocity_y, velocity_z, pressure
 
 dims = np.array([16, 16, 32], dtype = np.int32)
 pdims = np.array([2, 2, 1], dtype = np.int32)
 rho = np.zeros((32, 32, 32))
+vx = np.zeros((32, 32, 32))
+vy = np.zeros((32, 32, 32))
+vz = np.zeros((32, 32, 32))
+P = np.zeros((32, 32, 32))
 for ix in range(32):
   for iy in range(32):
     for iz in range(32):
-      rho[iz, iy, ix] = density((ix + 0.5) / 32.,
-                              (iy + 0.5) / 32.,
-                              (iz + 0.5) / 32.)
+      rho[iz, iy, ix], vx[iz, iy, ix], vy[iz, iy, ix], vz[iz, iy, ix], \
+        P[iz, iy, ix]  = values((ix + 0.5) / 32.,
+                                (iy + 0.5) / 32.,
+                                (iz + 0.5) / 32.)
 
 # loop over the 4 files
 for f in range(4):
@@ -69,5 +79,13 @@ for f in range(4):
   ybeg = (f % 2) * 16
   yend = ybeg + 16
   rho_block = rho[:, xbeg:xend, ybeg:yend]
+  vx_block = vx[:, xbeg:xend, ybeg:yend]
+  vy_block = vy[:, xbeg:xend, ybeg:yend]
+  vz_block = vz[:, xbeg:xend, ybeg:yend]
+  P_block = P[:, xbeg:xend, ybeg:yend]
   variables = file.create_group("/variables")
   variables.create_dataset("dens", data = rho_block, dtype = np.float32)
+  variables.create_dataset("velx", data = vx_block, dtype = np.float32)
+  variables.create_dataset("vely", data = vy_block, dtype = np.float32)
+  variables.create_dataset("velz", data = vz_block, dtype = np.float32)
+  variables.create_dataset("pres", data = P_block, dtype = np.float32)
