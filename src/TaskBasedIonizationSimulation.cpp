@@ -491,12 +491,8 @@ void TaskBasedIonizationSimulation::run(
 
                   const uint_fast32_t non_full_index =
                       this_subgrid.get_active_buffer(largest_index);
-                  const uint_fast32_t new_index = _buffers->get_free_buffer();
-                  (*_buffers)[new_index].set_subgrid_index(
-                      (*_buffers)[non_full_index].get_subgrid_index());
-                  (*_buffers)[new_index].set_direction(
-                      (*_buffers)[non_full_index].get_direction());
-                  this_subgrid.set_active_buffer(largest_index, new_index);
+                  this_subgrid.set_active_buffer(largest_index,
+                                                 NEIGHBOUR_OUTSIDE);
                   // we are creating a new active photon buffer
                   num_active_buffers.pre_increment();
                   // we created a new empty buffer
@@ -860,10 +856,21 @@ void TaskBasedIonizationSimulation::run(
                   // new_buffers.add_photons already created a new empty
                   // buffer, set it as the active buffer for this output
                   // direction
-                  this_grid.set_active_buffer(i, add_index);
                   if ((*_buffers)[add_index].size() == 0) {
+                    _buffers->free_buffer(add_index);
+                    this_grid.set_active_buffer(i, NEIGHBOUR_OUTSIDE);
                     // we have created a new empty buffer
                     num_empty.pre_increment();
+                  } else {
+                    this_grid.set_active_buffer(i, add_index);
+
+                    cmac_assert_message(
+                        (*_buffers)[add_index].get_subgrid_index() == ngb,
+                        "Wrong subgrid");
+                    cmac_assert_message(
+                        (*_buffers)[add_index].get_direction() ==
+                            TravelDirections::output_to_input_direction(i),
+                        "Wrong direction");
                   }
 
                   // YES: create a task for the buffer and add it to the queue
@@ -904,14 +911,6 @@ void TaskBasedIonizationSimulation::run(
                     tasks_to_add[num_tasks_to_add] = task_index;
                     ++num_tasks_to_add;
                   }
-
-                  cmac_assert_message(
-                      (*_buffers)[add_index].get_subgrid_index() == ngb,
-                      "Wrong subgrid");
-                  cmac_assert_message(
-                      (*_buffers)[add_index].get_direction() ==
-                          TravelDirections::output_to_input_direction(i),
-                      "Wrong direction");
 
                 } // if (add_index != new_index)
 
@@ -1010,6 +1009,11 @@ void TaskBasedIonizationSimulation::run(
         }
       }
     }
+
+    _buffers->reset();
+
+    cmac_assert_message(_buffers->is_empty(), "Number of active buffers: %zu",
+                        _buffers->get_number_of_active_buffers());
 
     // update copies
     _grid_creator->update_copy_properties();

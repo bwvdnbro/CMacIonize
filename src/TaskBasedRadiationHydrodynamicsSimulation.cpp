@@ -31,6 +31,7 @@
 #include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "DistributedPhotonSource.hpp"
 #include "HydroBoundaryManager.hpp"
 #include "HydroDensitySubGrid.hpp"
@@ -733,6 +734,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - maximum neutral fraction: Maximum value of the hydrogen neutral fraction
  *    that is allowed at the start of a radiation step (negative values do not
  *    impose an upper limit, default: -1)
+ *  - diffuse field: Enable diffuse reemission? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -777,6 +779,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   CrossSections *cross_sections = CrossSectionsFactory::generate(*params, log);
   RecombinationRates *recombination_rates =
       RecombinationRatesFactory::generate(*params, log);
+  DiffuseReemissionHandler *reemission_handler = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:diffuse field", false)) {
+    reemission_handler = new DiffuseReemissionHandler(*cross_sections);
+  }
 
   // initialize the simulation box
   const SimulationBox simulation_box(*params);
@@ -1094,6 +1101,24 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           // reset the photon source information
           photon_source.reset();
 
+          // reset the diffuse field variables
+          if (reemission_handler != nullptr) {
+            AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+            while (igrid.value() <
+                   grid_creator->number_of_original_subgrids()) {
+              const size_t this_igrid = igrid.post_increment();
+              if (this_igrid < grid_creator->number_of_original_subgrids()) {
+                auto gridit = grid_creator->get_subgrid(this_igrid);
+                for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+                     ++cellit) {
+                  IonizationVariables &vars = cellit.get_ionization_variables();
+                  DiffuseReemissionHandler::set_reemission_probabilities(vars);
+                }
+              }
+            }
+          }
+
           for (size_t ibatch = 0; ibatch < photon_source.get_number_of_batches(
                                                0, PHOTONBUFFER_SIZE);
                ++ibatch) {
@@ -1328,6 +1353,93 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   // log the end time of the task
                   task.stop();
 
+                } else if (task.get_type() == TASKTYPE_PHOTON_REEMIT) {
+
+                  task.start(thread_id);
+
+                  const size_t current_buffer_index = task.get_buffer();
+                  PhotonBuffer &buffer = (*buffers)[current_buffer_index];
+
+                  uint_fast32_t num_photon_done_now = buffer.size();
+                  DensitySubGrid &subgrid =
+                      *grid_creator->get_subgrid(task.get_subgrid());
+
+                  // reemission
+                  uint_fast32_t index = 0;
+                  for (uint_fast32_t iphoton = 0; iphoton < buffer.size();
+                       ++iphoton) {
+                    PhotonPacket &old_photon = buffer[iphoton];
+                    const IonizationVariables &ionization_variables =
+                        subgrid.get_cell(old_photon.get_position())
+                            .get_ionization_variables();
+                    const double AHe = 0.;
+                    const double new_frequency = reemission_handler->reemit(
+                        old_photon, AHe, ionization_variables,
+                        random_generators[thread_id]);
+                    if (new_frequency > 0.) {
+                      PhotonPacket &new_photon = buffer[index];
+                      new_photon.set_position(old_photon.get_position());
+                      new_photon.set_weight(old_photon.get_weight());
+
+                      new_photon.set_energy(new_frequency);
+                      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES;
+                           ++ion) {
+                        double sigma = cross_sections->get_cross_section(
+                            ion, new_frequency);
+                        // this is the fixed cross section we use for the moment
+                        new_photon.set_photoionization_cross_section(ion,
+                                                                     sigma);
+                      }
+
+                      // draw two pseudo random numbers
+                      const double cost =
+                          2. * random_generators[thread_id]
+                                   .get_uniform_random_double() -
+                          1.;
+                      const double phi = 2. * M_PI *
+                                         random_generators[thread_id]
+                                             .get_uniform_random_double();
+
+                      // now use them to get all directional angles
+                      const double sint =
+                          std::sqrt(std::max(1. - cost * cost, 0.));
+                      const double cosp = std::cos(phi);
+                      const double sinp = std::sin(phi);
+
+                      // set the direction...
+                      const CoordinateVector<> direction(sint * cosp,
+                                                         sint * sinp, cost);
+
+                      new_photon.set_direction(direction);
+
+                      // target optical depth (exponential distribution)
+                      new_photon.set_target_optical_depth(
+                          -std::log(random_generators[thread_id]
+                                        .get_uniform_random_double()));
+
+                      ++index;
+                    }
+                  }
+                  // update the size of the buffer to account for photons that
+                  // were not reemitted
+                  buffer.grow(index);
+
+                  num_photon_done_now -= buffer.size();
+                  num_photon_done.pre_add(num_photon_done_now);
+
+                  const size_t task_index = tasks->get_free_element();
+                  Task &new_task = (*tasks)[task_index];
+                  new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+                  new_task.set_subgrid(task.get_subgrid());
+                  new_task.set_buffer(current_buffer_index);
+                  new_task.set_dependency(subgrid.get_dependency());
+
+                  queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
+                  tasks_to_add[num_tasks_to_add] = task_index;
+                  ++num_tasks_to_add;
+
+                  task.stop();
+
                 } else if (task.get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
 
                   task.start(thread_id);
@@ -1351,8 +1463,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                     }
                   }
 
-                  // reemission is disabled
-                  local_buffer_flags[TRAVELDIRECTION_INSIDE] = false;
+                  // only enable output to internal buffer if reemission
+                  // is enabled
+                  if (reemission_handler == nullptr) {
+                    local_buffer_flags[TRAVELDIRECTION_INSIDE] = false;
+                  }
 
                   // keep track of the original number of photons
                   uint_fast32_t num_photon_done_now = photon_buffer.size();
@@ -1800,6 +1915,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   delete cross_sections;
   delete recombination_rates;
+  if (reemission_handler != nullptr) {
+    delete reemission_handler;
+  }
 
   delete params;
 
