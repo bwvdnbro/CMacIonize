@@ -514,10 +514,18 @@ public:
    * from their copies.
    */
   inline void update_original_counters() {
-    for (size_t i = 0; i < _originals.size(); ++i) {
-      const size_t original = _originals[i];
-      const size_t copy = number_of_original_subgrids() + i;
-      _subgrids[original]->update_intensities(*_subgrids[copy]);
+    AtomicValue< size_t > ioriginal(0);
+#pragma omp parallel default(shared)
+    while (ioriginal.value() < _copies.size()) {
+      const size_t this_ioriginal = ioriginal.post_increment();
+      if (this_ioriginal < _copies.size() &&
+          _copies[this_ioriginal] != 0xffffffff) {
+        size_t copy_index = _copies[this_ioriginal];
+        while (_originals[copy_index - _copies.size()] == this_ioriginal) {
+          _subgrids[this_ioriginal]->update_intensities(*_subgrids[copy_index]);
+          ++copy_index;
+        }
+      }
     }
   }
 
@@ -526,10 +534,19 @@ public:
    * of their original.
    */
   inline void update_copy_properties() {
-    for (size_t i = 0; i < _originals.size(); ++i) {
-      const size_t original = _originals[i];
-      const size_t copy = number_of_original_subgrids() + i;
-      _subgrids[copy]->update_neutral_fractions(*_subgrids[original]);
+    AtomicValue< size_t > ioriginal(0);
+#pragma omp parallel default(shared)
+    while (ioriginal.value() < _copies.size()) {
+      const size_t this_ioriginal = ioriginal.post_increment();
+      if (this_ioriginal < _copies.size() &&
+          _copies[this_ioriginal] != 0xffffffff) {
+        size_t copy_index = _copies[this_ioriginal];
+        while (_originals[copy_index - _copies.size()] == this_ioriginal) {
+          _subgrids[copy_index]->update_neutral_fractions(
+              *_subgrids[this_ioriginal]);
+          ++copy_index;
+        }
+      }
     }
   }
 
