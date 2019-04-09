@@ -1574,7 +1574,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
           buffers->reset();
 
-          // update copies (don't do in parallel)
+          // update copies
           grid_creator->update_original_counters();
 
           cmac_assert_message(buffers->is_empty(),
@@ -1628,20 +1628,40 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
         // there are no ionising sources: skip radiation for this step
         // manually set all neutral fractions to 1
-        for (auto it = grid_creator->begin();
-             it != grid_creator->original_end(); ++it) {
-          for (auto cellit = (*it).begin(); cellit != (*it).end(); ++cellit) {
-            cellit.get_ionization_variables().set_ionic_fraction(ION_H_n, 1.);
+        {
+          AtomicValue< size_t > igrid(0);
+          start_parallel_timing_block();
+#pragma omp parallel default(shared)
+          while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+            const size_t this_igrid = igrid.post_increment();
+            if (this_igrid < grid_creator->number_of_original_subgrids()) {
+              auto gridit = grid_creator->get_subgrid(this_igrid);
+              for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+                   ++cellit) {
+                cellit.get_ionization_variables().set_ionic_fraction(ION_H_n,
+                                                                     1.);
+              }
+            }
           }
+          stop_parallel_timing_block();
         }
       }
 
       cmac_assert_message(buffers->is_empty(), "Number of active buffers: %zu",
                           buffers->get_number_of_active_buffers());
 
-      for (auto it = grid_creator->begin(); it != grid_creator->original_end();
-           ++it) {
-        (*it).add_ionization_energy(hydro);
+      {
+        AtomicValue< size_t > igrid(0);
+        start_parallel_timing_block();
+#pragma omp parallel default(shared)
+        while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+          const size_t this_igrid = igrid.post_increment();
+          if (this_igrid < grid_creator->number_of_original_subgrids()) {
+            auto gridit = grid_creator->get_subgrid(this_igrid);
+            (*gridit).add_ionization_energy(hydro);
+          }
+        }
+        stop_parallel_timing_block();
       }
 
       if (log) {
@@ -1758,6 +1778,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     log->write_status("Total program time: ",
                       Utilities::human_readable_time(programtimer.value()),
                       ".");
+
+    const size_t memory_usage = OperatingSystem::get_peak_memory_usage();
+    log->write_status("Peak memory usage: ",
+                      Utilities::human_readable_bytes(memory_usage), ".");
     log->write_status("Total photon shooting time: ",
                       Utilities::human_readable_time(worktimer.value()), ".");
   }
