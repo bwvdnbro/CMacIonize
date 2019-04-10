@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file DiffuseReemissionHandler.hpp
+ * @file PhysicalDiffuseReemissionHandler.hpp
  *
  * @brief ReemissionHandler for diffuse reemission.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef DIFFUSEREEMISSIONHANDLER_HPP
-#define DIFFUSEREEMISSIONHANDLER_HPP
+#ifndef PHYSICALDIFFUSEREEMISSIONHANDLER_HPP
+#define PHYSICALDIFFUSEREEMISSIONHANDLER_HPP
 
 #include "DensityGrid.hpp"
 #include "DensitySubGridCreator.hpp"
@@ -43,7 +43,7 @@ class PhotonPacket;
  * from Wood, K., Mathis, J. S. & Ercolano, B. 2004, MNRAS, 348, 1337
  * (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W).
  */
-class DiffuseReemissionHandler {
+class PhysicalDiffuseReemissionHandler {
 private:
   /*! @brief Hydrogen Lyman continuum spectrum. */
   const HydrogenLymanContinuumSpectrum _HLyc_spectrum;
@@ -55,7 +55,7 @@ private:
   const HeliumTwoPhotonContinuumSpectrum _He2pc_spectrum;
 
 public:
-  DiffuseReemissionHandler(const CrossSections &cross_sections);
+  PhysicalDiffuseReemissionHandler(const CrossSections &cross_sections);
 
   /**
    * @brief Set the re-emission probabilities for the given cell.
@@ -124,4 +124,4 @@ public:
                 RandomGenerator &random_generator) const;
 };
 
-#endif // DIFFUSEREEMISSIONHANDLER_HPP
+#endif // PHYSICALDIFFUSEREEMISSIONHANDLER_HPP

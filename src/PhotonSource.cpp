@@ -138,7 +138,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   if (diffuse_field) {
-    _reemission_handler = new DiffuseReemissionHandler(_cross_sections);
+    _reemission_handler = new PhysicalDiffuseReemissionHandler(_cross_sections);
   }
 }
 

@@ -106,7 +106,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     DensityGrid.cpp
-    DiffuseReemissionHandler.cpp
+    PhysicalDiffuseReemissionHandler.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
@@ -303,7 +303,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
-    DiffuseReemissionHandler.cpp
+    PhysicalDiffuseReemissionHandler.cpp
     FaucherGiguerePhotonSourceSpectrum.cpp
     FLASHSnapshotDensityFunction.cpp
     GadgetSnapshotDensityFunction.cpp

@@ -218,7 +218,7 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityValues.hpp
-    ../src/DiffuseReemissionHandler.cpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -376,7 +376,7 @@ if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
     testGadgetSnapshotPhotonSourceDistribution.cpp
 
-    ../src/DiffuseReemissionHandler.cpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -967,7 +967,7 @@ set(TESTDUSTSIMULATION_SOURCES
     ../src/CommandLineOption.cpp
     ../src/CommandLineParser.cpp
     ../src/DensityGrid.cpp
-    ../src/DiffuseReemissionHandler.cpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/DustScattering.cpp
     ../src/DustScattering.hpp
     ../src/DustSimulation.cpp
@@ -1025,18 +1025,18 @@ add_unit_test(NAME testCMICLibrary
               SOURCES ${TESTCMICLIBRARY_SOURCES}
               LIBS CMILibrary)
 
-## Unit test for DiffuseReemissionHandler
-set(TESTDIFFUSEREEMISSIONHANDLER_SOURCES
-    testDiffuseReemissionHandler.cpp
+## Unit test for PhysicalDiffuseReemissionHandler
+set(TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES
+    testPhysicalDiffuseReemissionHandler.cpp
 
-    ../src/DiffuseReemissionHandler.cpp
-    ../src/DiffuseReemissionHandler.hpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
+    ../src/PhysicalDiffuseReemissionHandler.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp
     ../src/HeliumTwoPhotonContinuumSpectrum.cpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
 )
-add_unit_test(NAME testDiffuseReemissionHandler
-              SOURCES ${TESTDIFFUSEREEMISSIONHANDLER_SOURCES})
+add_unit_test(NAME testPhysicalDiffuseReemissionHandler
+              SOURCES ${TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES})
 configure_file(${PROJECT_SOURCE_DIR}/test/probset_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/probset_testdata.txt
                COPYONLY)
