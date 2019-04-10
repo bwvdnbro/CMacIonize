@@ -28,11 +28,11 @@
 
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
-#include "DiffuseReemissionHandler.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "Photon.hpp"
+#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
@@ -102,7 +102,7 @@ private:
   const CrossSections &_cross_sections;
 
   /*! @brief ReemissionHandler for diffuse reemission. */
-  DiffuseReemissionHandler *_reemission_handler;
+  PhysicalDiffuseReemissionHandler *_reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;

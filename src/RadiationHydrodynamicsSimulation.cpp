@@ -40,7 +40,6 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
-#include "DiffuseReemissionHandler.hpp"
 #include "DustSimulation.hpp"
 #include "EmissivityCalculator.hpp"
 #include "ExternalPotentialFactory.hpp"
@@ -55,6 +54,7 @@
 #include "PhotonSource.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "RestartManager.hpp"
 #include "SimulationBox.hpp"
@@ -577,7 +577,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       }
 
       grid->reset_grid(*density_function);
-      DiffuseReemissionHandler::set_reemission_probabilities(*grid);
+      PhysicalDiffuseReemissionHandler::set_reemission_probabilities(*grid);
 
       double typecount[PHOTONTYPE_NUMBER] = {0};
 
