@@ -173,6 +173,8 @@ int main(int argc, char **argv) {
   // add simulation type specific parameters
   RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
   EmissivityCalculationSimulation::add_command_line_parameters(parser);
+  TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
+      parser);
 
   parser.parse_arguments(argc, argv);
 
