@@ -50,6 +50,12 @@ public:
   virtual void initialize() {}
 
   /**
+   * @brief Free up the memory used by the density function. After this,
+   * operator() will no longer work.
+   */
+  virtual void free() {}
+
+  /**
    * @brief Function that gives the density for a given cell.
    *
    * @param cell Geometrical information about the cell.

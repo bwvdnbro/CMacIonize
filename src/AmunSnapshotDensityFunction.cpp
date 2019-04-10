@@ -50,119 +50,14 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(
     const Box<> box, const double number_density, const double sound_speed,
     const double temperature, const double initial_neutral_fraction,
     const CoordinateVector<> shift)
-    : _box(box), _shift(shift),
-      _initial_neutral_fraction(initial_neutral_fraction) {
+    : _folder(folder), _prefix(prefix), _padding(padding),
+      _number_of_files(number_of_files), _box(box),
+      _number_density(number_density), _sound_speed(sound_speed),
+      _temperature(temperature),
+      _initial_neutral_fraction(initial_neutral_fraction), _shift(shift) {
 
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
-
-  // open the first file for metadata reading
-  std::vector< int32_t > dims;
-  std::vector< int32_t > pdims;
-  {
-    const std::string name =
-        Utilities::compose_filename(folder, prefix, "h5", 0, padding);
-    HDF5Tools::HDF5File file =
-        HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
-    HDF5Tools::HDF5Group attributes =
-        HDF5Tools::open_group(file, "/attributes");
-    dims = HDF5Tools::read_vector_attribute< int32_t >(attributes, "dims");
-    pdims = HDF5Tools::read_vector_attribute< int32_t >(attributes, "pdims");
-
-    HDF5Tools::close_group(attributes);
-    HDF5Tools::close_file(file);
-
-    _number_of_cells[0] = static_cast< uint_fast32_t >(dims[0] * pdims[0]);
-    _number_of_cells[1] = static_cast< uint_fast32_t >(dims[1] * pdims[1]);
-    _number_of_cells[2] = static_cast< uint_fast32_t >(dims[2] * pdims[2]);
-  }
-  const uint_fast32_t totnumcell =
-      _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
-
-  _number_densities.resize(totnumcell);
-  _velocities.resize(totnumcell);
-  _temperatures.resize(totnumcell);
-
-  // now read all the blocks
-  double average_density = 0.;
-  for (uint_fast32_t ifile = 0; ifile < number_of_files; ++ifile) {
-    uint_fast32_t offset_z = ifile / (pdims[0] * pdims[1]);
-    uint_fast32_t offset_x =
-        (ifile - offset_z * pdims[0] * pdims[1]) / pdims[1];
-    uint_fast32_t offset_y =
-        ifile - offset_z * pdims[0] * pdims[1] - offset_x * pdims[1];
-
-    offset_x *= dims[0];
-    offset_y *= dims[1];
-    offset_z *= dims[2];
-
-    const std::string name =
-        Utilities::compose_filename(folder, prefix, "h5", ifile, padding);
-    HDF5Tools::HDF5File file =
-        HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
-
-    {
-      HDF5Tools::HDF5Group variables =
-          HDF5Tools::open_group(file, "/variables");
-      HDF5Tools::HDF5DataBlock< float, 3 > dens =
-          HDF5Tools::read_dataset< float, 3 >(variables, "dens");
-      HDF5Tools::HDF5DataBlock< float, 3 > velx =
-          HDF5Tools::read_dataset< float, 3 >(variables, "velx");
-      HDF5Tools::HDF5DataBlock< float, 3 > vely =
-          HDF5Tools::read_dataset< float, 3 >(variables, "vely");
-      HDF5Tools::HDF5DataBlock< float, 3 > velz =
-          HDF5Tools::read_dataset< float, 3 >(variables, "velz");
-      HDF5Tools::HDF5DataBlock< float, 3 > pres =
-          HDF5Tools::read_dataset< float, 3 >(variables, "pres");
-      HDF5Tools::close_group(variables);
-
-      for (int_fast32_t ix = 0; ix < dims[0]; ++ix) {
-        for (int_fast32_t iy = 0; iy < dims[1]; ++iy) {
-          for (int_fast32_t iz = 0; iz < dims[2]; ++iz) {
-            std::array< size_t, 3 > index = {{static_cast< size_t >(iz),
-                                              static_cast< size_t >(iy),
-                                              static_cast< size_t >(ix)}};
-            const double this_density = dens[index];
-            const double this_velx = velx[index];
-            const double this_vely = vely[index];
-            const double this_velz = velz[index];
-            const double this_pres = pres[index];
-            _number_densities[(iz + offset_z) * _number_of_cells[1] *
-                                  _number_of_cells[0] +
-                              (iy + offset_y) * _number_of_cells[0] + ix +
-                              offset_x] = this_density;
-            _velocities[(iz + offset_z) * _number_of_cells[1] *
-                            _number_of_cells[0] +
-                        (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
-                CoordinateVector<>(this_velx, this_vely, this_velz);
-            _temperatures[(iz + offset_z) * _number_of_cells[1] *
-                              _number_of_cells[0] +
-                          (iy + offset_y) * _number_of_cells[0] + ix +
-                          offset_x] = this_pres / this_density;
-            average_density += this_density;
-          }
-        }
-      }
-    }
-
-    HDF5Tools::close_file(file);
-  }
-  average_density /= totnumcell;
-
-  const double physical_sound_speed = std::sqrt(
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN) *
-      temperature /
-      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS));
-  const double velocity_unit = physical_sound_speed / sound_speed;
-  const double number_density_unit = number_density / average_density;
-  const double temperature_conversion_factor =
-      temperature / (sound_speed * sound_speed);
-
-  for (size_t i = 0; i < _number_densities.size(); ++i) {
-    _number_densities[i] *= number_density_unit;
-    _velocities[i] *= velocity_unit;
-    _temperatures[i] *= temperature_conversion_factor;
-  }
 }
 
 /**
@@ -217,6 +112,129 @@ AmunSnapshotDensityFunction::AmunSnapshotDensityFunction(ParameterFile &params,
  * @brief Virtual destructor.
  */
 AmunSnapshotDensityFunction::~AmunSnapshotDensityFunction() {}
+
+/**
+ * @brief Read the cell data from the snapshots.
+ */
+void AmunSnapshotDensityFunction::initialize() {
+
+  // open the first file for metadata reading
+  std::vector< int32_t > dims;
+  std::vector< int32_t > pdims;
+  {
+    const std::string name =
+        Utilities::compose_filename(_folder, _prefix, "h5", 0, _padding);
+    HDF5Tools::HDF5File file =
+        HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
+    HDF5Tools::HDF5Group attributes =
+        HDF5Tools::open_group(file, "/attributes");
+    dims = HDF5Tools::read_vector_attribute< int32_t >(attributes, "dims");
+    pdims = HDF5Tools::read_vector_attribute< int32_t >(attributes, "pdims");
+
+    HDF5Tools::close_group(attributes);
+    HDF5Tools::close_file(file);
+
+    _number_of_cells[0] = static_cast< uint_fast32_t >(dims[0] * pdims[0]);
+    _number_of_cells[1] = static_cast< uint_fast32_t >(dims[1] * pdims[1]);
+    _number_of_cells[2] = static_cast< uint_fast32_t >(dims[2] * pdims[2]);
+  }
+  const uint_fast32_t totnumcell =
+      _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
+
+  _number_densities.resize(totnumcell);
+  _velocities.resize(totnumcell);
+  _temperatures.resize(totnumcell);
+
+  // now read all the blocks
+  double average_density = 0.;
+  for (uint_fast32_t ifile = 0; ifile < _number_of_files; ++ifile) {
+    uint_fast32_t offset_z = ifile / (pdims[0] * pdims[1]);
+    uint_fast32_t offset_x =
+        (ifile - offset_z * pdims[0] * pdims[1]) / pdims[1];
+    uint_fast32_t offset_y =
+        ifile - offset_z * pdims[0] * pdims[1] - offset_x * pdims[1];
+
+    offset_x *= dims[0];
+    offset_y *= dims[1];
+    offset_z *= dims[2];
+
+    const std::string name =
+        Utilities::compose_filename(_folder, _prefix, "h5", ifile, _padding);
+    HDF5Tools::HDF5File file =
+        HDF5Tools::open_file(name, HDF5Tools::HDF5FILEMODE_READ);
+
+    {
+      HDF5Tools::HDF5Group variables =
+          HDF5Tools::open_group(file, "/variables");
+      HDF5Tools::HDF5DataBlock< float, 3 > dens =
+          HDF5Tools::read_dataset< float, 3 >(variables, "dens");
+      HDF5Tools::HDF5DataBlock< float, 3 > velx =
+          HDF5Tools::read_dataset< float, 3 >(variables, "velx");
+      HDF5Tools::HDF5DataBlock< float, 3 > vely =
+          HDF5Tools::read_dataset< float, 3 >(variables, "vely");
+      HDF5Tools::HDF5DataBlock< float, 3 > velz =
+          HDF5Tools::read_dataset< float, 3 >(variables, "velz");
+      HDF5Tools::HDF5DataBlock< float, 3 > pres =
+          HDF5Tools::read_dataset< float, 3 >(variables, "pres");
+      HDF5Tools::close_group(variables);
+
+      for (int_fast32_t ix = 0; ix < dims[0]; ++ix) {
+        for (int_fast32_t iy = 0; iy < dims[1]; ++iy) {
+          for (int_fast32_t iz = 0; iz < dims[2]; ++iz) {
+            std::array< size_t, 3 > index = {{static_cast< size_t >(iz),
+                                              static_cast< size_t >(iy),
+                                              static_cast< size_t >(ix)}};
+            const double this_density = dens[index];
+            const double this_velx = velx[index];
+            const double this_vely = vely[index];
+            const double this_velz = velz[index];
+            const double this_pres = pres[index];
+            _number_densities[(iz + offset_z) * _number_of_cells[1] *
+                                  _number_of_cells[0] +
+                              (iy + offset_y) * _number_of_cells[0] + ix +
+                              offset_x] = this_density;
+            _velocities[(iz + offset_z) * _number_of_cells[1] *
+                            _number_of_cells[0] +
+                        (iy + offset_y) * _number_of_cells[0] + ix + offset_x] =
+                CoordinateVector<>(this_velx, this_vely, this_velz);
+            _temperatures[(iz + offset_z) * _number_of_cells[1] *
+                              _number_of_cells[0] +
+                          (iy + offset_y) * _number_of_cells[0] + ix +
+                          offset_x] = this_pres / this_density;
+            average_density += this_density;
+          }
+        }
+      }
+    }
+
+    HDF5Tools::close_file(file);
+  }
+  average_density /= totnumcell;
+
+  const double physical_sound_speed = std::sqrt(
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN) *
+      _temperature /
+      PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS));
+  const double velocity_unit = physical_sound_speed / _sound_speed;
+  const double number_density_unit = _number_density / average_density;
+  const double temperature_conversion_factor =
+      _temperature / (_sound_speed * _sound_speed);
+
+  for (size_t i = 0; i < _number_densities.size(); ++i) {
+    _number_densities[i] *= number_density_unit;
+    _velocities[i] *= velocity_unit;
+    _temperatures[i] *= temperature_conversion_factor;
+  }
+}
+
+/**
+ * @brief Free up the internal data arrays.
+ */
+void AmunSnapshotDensityFunction::free() {
+  _number_densities.clear();
+  _velocities.clear();
+  _temperatures.clear();
+}
 
 /**
  * @brief Function that gives the density for a given cell.

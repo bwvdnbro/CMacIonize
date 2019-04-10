@@ -830,28 +830,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   const size_t number_of_buffers = params->get_value< size_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:number of buffers", 50000);
-  MemorySpace *buffers = new MemorySpace(number_of_buffers);
   const size_t queue_size_per_thread = params->get_value< size_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:queue size per thread", 10000);
-  std::vector< TaskQueue * > queues(num_thread);
-  for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
-    std::stringstream queue_name;
-    queue_name << "Queue for Thread " << static_cast< int_fast32_t >(ithread);
-    queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
-  }
   const size_t shared_queue_size = params->get_value< size_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:shared queue size", 100000);
-  TaskQueue *shared_queue = new TaskQueue(shared_queue_size, "Shared queue");
   const size_t number_of_tasks = params->get_value< size_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:number of tasks", 500000);
-  ThreadSafeVector< Task > *tasks =
-      new ThreadSafeVector< Task >(number_of_tasks, "Tasks");
-  std::vector< RandomGenerator > random_generators(num_thread);
   const int_fast32_t random_seed = params->get_value< int_fast32_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:random seed", 42);
-  for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
-    random_generators[ithread].set_seed(random_seed + ithread);
-  }
   DensitySubGridCreator< HydroDensitySubGrid > *grid_creator =
       new DensitySubGridCreator< HydroDensitySubGrid >(simulation_box.get_box(),
                                                        *params);
@@ -957,6 +943,48 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   start_parallel_timing_block();
   grid_creator->initialize(*density_function);
   stop_parallel_timing_block();
+  if (log) {
+    log->write_status("Done.");
+  }
+
+  density_function->free();
+
+  if (log) {
+    log->write_status("Initializing task-based structures...");
+  }
+  if (log) {
+    log->write_status("Allocating memory space...");
+  }
+  MemorySpace *buffers = new MemorySpace(number_of_buffers);
+  if (log) {
+    log->write_status("Allocating task memory...");
+  }
+  ThreadSafeVector< Task > *tasks =
+      new ThreadSafeVector< Task >(number_of_tasks, "Tasks");
+  if (log) {
+    log->write_status("Allocating shared queue...");
+  }
+  TaskQueue *shared_queue = new TaskQueue(shared_queue_size, "Shared queue");
+  if (log) {
+    log->write_status("Allocating per thread queues...");
+  }
+  std::vector< TaskQueue * > queues(num_thread);
+  for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
+    std::stringstream queue_name;
+    queue_name << "Queue for Thread " << static_cast< int_fast32_t >(ithread);
+    queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
+  }
+  if (log) {
+    log->write_status("Initializing per thread random generators...");
+  }
+  std::vector< RandomGenerator > random_generators(num_thread);
+  for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
+    random_generators[ithread].set_seed(random_seed + ithread);
+  }
+  if (log) {
+    log->write_status("Done initializing task-based structures.");
+  }
+
   double requested_timestep = DBL_MAX;
   for (auto cellit = grid_creator->begin();
        cellit != grid_creator->original_end(); ++cellit) {
@@ -970,9 +998,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     set_dependencies(cellit.get_index(), *grid_creator, *tasks);
   }
   const size_t radiation_task_offset = tasks->size();
-  if (log) {
-    log->write_status("Done.");
-  }
 
   if (write_output) {
     writer->write(*grid_creator, 0, *params, 0.);
@@ -1043,6 +1068,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
+    std::vector< uint_fast64_t > active_time(num_thread, 0);
 
     ++num_step;
 
@@ -1277,6 +1303,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 int_fast32_t queues_to_add[TRAVELDIRECTION_NUMBER];
 
                 Task &task = (*tasks)[current_index];
+                uint_fast64_t task_start, task_stop;
+                cpucycle_tick(task_start);
 
                 if (task.get_type() == TASKTYPE_SOURCE_PHOTON) {
 
@@ -1670,6 +1698,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 }
                 task.unlock_dependency();
 
+                cpucycle_tick(task_stop);
+                active_time[thread_id] += task_stop - task_start;
+
+                if (task_plot_i >= task_plot_N) {
+                  tasks->free_element(current_index);
+                }
+
                 for (uint_fast32_t itask = 0; itask < num_tasks_to_add;
                      ++itask) {
                   if (queues_to_add[itask] < 0) {
@@ -1729,6 +1764,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
                 const size_t itask = tasks->get_free_element();
                 Task &task = (*tasks)[itask];
+
+                uint_fast64_t task_start, task_stop;
+                cpucycle_tick(task_start);
+
                 task.set_type(TASKTYPE_TEMPERATURE_STATE);
                 task.start(omp_get_thread_num());
 
@@ -1748,6 +1787,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 temperature_calculator->calculate_temperature(iloop, numphoton,
                                                               *gridit);
                 task.stop();
+                cpucycle_tick(task_stop);
+                active_time[omp_get_thread_num()] += task_stop - task_start;
               }
             }
             stop_parallel_timing_block();
@@ -1836,9 +1877,17 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
         if (current_task != NO_TASK) {
           (*tasks)[current_task].start(thread_id);
+
+          uint_fast64_t task_start, task_stop;
+          cpucycle_tick(task_start);
+
           execute_task(current_task, *grid_creator, *tasks, actual_timestep,
                        hydro, hydro_boundary_manager);
           (*tasks)[current_task].stop();
+
+          cpucycle_tick(task_stop);
+          active_time[thread_id] += task_stop - task_start;
+
           (*tasks)[current_task].unlock_dependency();
           const unsigned char numchild =
               (*tasks)[current_task].get_number_of_children();
@@ -1863,6 +1912,16 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     if (log) {
       log->write_status("Done with hydro step.");
+    }
+
+    if (log) {
+      const uint_fast64_t total_interval = iteration_end - iteration_start;
+      log->write_status("Thread activity level:");
+      for (int_fast32_t ithread = 0; ithread < num_thread; ++ithread) {
+        const double percentage =
+            (100. * active_time[ithread]) / total_interval;
+        log->write_status("Thread ", ithread, ": ", percentage, "%.");
+      }
     }
 
     // write snapshot
