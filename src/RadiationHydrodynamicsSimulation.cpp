@@ -560,7 +560,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
       }
 
       grid->reset_grid(*density_function);
-      PhysicalDiffuseReemissionHandler::set_reemission_probabilities(*grid);
+      if (source.get_reemission_handler()) {
+        source.get_reemission_handler()->set_reemission_probabilities(*grid);
+      }
 
       double typecount[PHOTONTYPE_NUMBER] = {0};
 

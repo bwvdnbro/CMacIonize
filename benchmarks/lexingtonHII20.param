@@ -13,6 +13,9 @@ DensityFunction:
   type: BlockSyntax
   filename: lexingtonHII20.yml
 
+DiffuseReemissionHandler:
+  type: Physical
+
 SimulationBox:
   anchor: [-3. pc, -3. pc, -3. pc]
   sides: [6. pc, 6. pc, 6. pc]

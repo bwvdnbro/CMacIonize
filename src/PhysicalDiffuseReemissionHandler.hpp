@@ -28,6 +28,7 @@
 
 #include "DensityGrid.hpp"
 #include "DensitySubGridCreator.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
@@ -43,7 +44,7 @@ class PhotonPacket;
  * from Wood, K., Mathis, J. S. & Ercolano, B. 2004, MNRAS, 348, 1337
  * (http://adsabs.harvard.edu/abs/2004MNRAS.348.1337W).
  */
-class PhysicalDiffuseReemissionHandler {
+class PhysicalDiffuseReemissionHandler : public DiffuseReemissionHandler {
 private:
   /*! @brief Hydrogen Lyman continuum spectrum. */
   const HydrogenLymanContinuumSpectrum _HLyc_spectrum;
@@ -62,7 +63,7 @@ public:
    *
    * @param ionization_variables IonizationVariables of the cell.
    */
-  inline static void
+  virtual void
   set_reemission_probabilities(IonizationVariables &ionization_variables) {
 
     const double T4 = ionization_variables.get_temperature() * 1.e-4;
@@ -103,25 +104,15 @@ public:
         REEMISSIONPROBABILITY_HELIUM_LYA, He_LyA);
   }
 
-  /**
-   * @brief Set the reemission probabilities for the cells in the given grid.
-   *
-   * @param grid DensityGrid.
-   */
-  inline static void set_reemission_probabilities(DensityGrid &grid) {
+  virtual double reemit(const Photon &photon, double helium_abundance,
+                        const IonizationVariables &ionization_variables,
+                        RandomGenerator &random_generator,
+                        PhotonType &type) const;
 
-    for (auto it = grid.begin(); it != grid.end(); ++it) {
-      set_reemission_probabilities(it.get_ionization_variables());
-    }
-  }
-
-  double reemit(const Photon &photon, double helium_abundance,
-                const IonizationVariables &ionization_variables,
-                RandomGenerator &random_generator, PhotonType &type) const;
-
-  double reemit(const PhotonPacket &photon, const double helium_abundance,
-                const IonizationVariables &ionization_variables,
-                RandomGenerator &random_generator) const;
+  virtual double reemit(const PhotonPacket &photon,
+                        const double helium_abundance,
+                        const IonizationVariables &ionization_variables,
+                        RandomGenerator &random_generator) const;
 };
 
 #endif // PHYSICALDIFFUSEREEMISSIONHANDLER_HPP

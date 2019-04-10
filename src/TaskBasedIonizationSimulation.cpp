@@ -30,12 +30,12 @@
 #include "DensityGridWriterFactory.hpp"
 #include "DensitySubGrid.hpp"
 #include "DensitySubGridCreator.hpp"
+#include "DiffuseReemissionHandlerFactory.hpp"
 #include "DistributedPhotonSource.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
-#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
@@ -274,8 +274,8 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   if (_parameter_file.get_value< bool >(
           "TaskBasedIonizationSimulation:diffuse field", false)) {
-    _reemission_handler =
-        new PhysicalDiffuseReemissionHandler(*_cross_sections);
+    _reemission_handler = DiffuseReemissionHandlerFactory::generate(
+        *_cross_sections, _parameter_file, _log);
   } else {
     _reemission_handler = nullptr;
   }
@@ -433,8 +433,7 @@ void TaskBasedIonizationSimulation::run(
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                ++cellit) {
             IonizationVariables &vars = cellit.get_ionization_variables();
-            PhysicalDiffuseReemissionHandler::set_reemission_probabilities(
-                vars);
+            _reemission_handler->set_reemission_probabilities(vars);
           }
         }
       }

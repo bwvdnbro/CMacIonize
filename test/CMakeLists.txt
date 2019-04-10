@@ -218,7 +218,6 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/CoordinateVector.hpp
     ../src/CrossSections.hpp
     ../src/DensityValues.hpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/ElementNames.hpp
     ../src/Error.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -232,6 +231,7 @@ set(TESTPHOTONSOURCE_SOURCES
     ../src/PhotonSource.hpp
     ../src/PhotonSourceDistribution.hpp
     ../src/PhotonSourceSpectrum.hpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/SingleStarPhotonSourceDistribution.hpp
     ../src/Utilities.hpp
 )
@@ -376,7 +376,6 @@ if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
     testGadgetSnapshotPhotonSourceDistribution.cpp
 
-    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.cpp
     ../src/GadgetSnapshotPhotonSourceDistribution.hpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
@@ -388,6 +387,7 @@ set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
     ../src/PhotonSource.cpp
     ../src/PhotonSource.hpp
     ../src/PhotonSourceDistribution.hpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
 )
 add_unit_test(NAME testGadgetSnapshotPhotonSourceDistribution
               SOURCES ${TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES}
@@ -967,7 +967,6 @@ set(TESTDUSTSIMULATION_SOURCES
     ../src/CommandLineOption.cpp
     ../src/CommandLineParser.cpp
     ../src/DensityGrid.cpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/DustScattering.cpp
     ../src/DustScattering.hpp
     ../src/DustSimulation.cpp
@@ -977,6 +976,7 @@ set(TESTDUSTSIMULATION_SOURCES
     ../src/HydrogenLymanContinuumSpectrum.cpp
     ../src/ParameterFile.cpp
     ../src/PhotonSource.cpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
     ../src/VernerCrossSections.cpp
 )
 add_unit_test(NAME testDustSimulation
@@ -1029,11 +1029,13 @@ add_unit_test(NAME testCMICLibrary
 set(TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES
     testPhysicalDiffuseReemissionHandler.cpp
 
-    ../src/PhysicalDiffuseReemissionHandler.cpp
-    ../src/PhysicalDiffuseReemissionHandler.hpp
+    ../src/DiffuseReemissionHandler.hpp
     ../src/HeliumLymanContinuumSpectrum.cpp
     ../src/HeliumTwoPhotonContinuumSpectrum.cpp
     ../src/HydrogenLymanContinuumSpectrum.cpp
+    ../src/PhysicalDiffuseReemissionHandler.cpp
+    ../src/PhysicalDiffuseReemissionHandler.hpp
+    ../src/VernerCrossSections.cpp
 )
 add_unit_test(NAME testPhysicalDiffuseReemissionHandler
               SOURCES ${TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES})
