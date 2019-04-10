@@ -692,6 +692,8 @@ execute_task(const size_t itask,
  *    for time values that are written to the Log (default: s).
  *  - restart (no abbreviation, optional, string argument): restart a run from
  *    the restart file stored in the given folder (default: .).
+ *  - task-plot (no abbreviation, optional, integer argument): output task
+ *    information for the first N steps of the algorithm (default: 0).
  *
  * @param parser CommandLineParser that has not yet parsed the command line
  * options.
@@ -704,6 +706,10 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
   parser.add_option("restart", 0,
                     "Restart from the restart file stored in the given folder.",
                     COMMANDLINEOPTION_STRINGARGUMENT, ".");
+  parser.add_option(
+      "task-plot", 0,
+      "Output task information for the first N steps of the algorithm",
+      COMMANDLINEOPTION_INTARGUMENT, "0");
 }
 
 /**
@@ -762,6 +768,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   std::string output_time_unit =
       parser.get_value< std::string >("output-time-unit");
 
+  const int_fast32_t task_plot_N =
+      parser.get_value< int_fast32_t >("task-plot");
+
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
   // stored in a CMake configured header
@@ -809,6 +818,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     hydro_snaptime = 0.1 * hydro_total_time;
   }
   uint_fast32_t hydro_lastsnap = 1;
+  int_fast32_t task_plot_i = 0;
 
   const double hydro_radtime = params->get_physical_value< QUANTITY_TIME >(
       "TaskBasedRadiationHydrodynamicsSimulation:radiation time", "-1. s");
@@ -1063,9 +1073,20 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       }
 
       if (source.get_total_luminosity() > 0.) {
-        for (auto it = grid_creator->begin();
-             it != grid_creator->original_end(); ++it) {
-          (*it).update_ionization_variables(hydro, maximum_neutral_fraction);
+        {
+          AtomicValue< size_t > igrid(0);
+          start_parallel_timing_block();
+#pragma omp parallel default(shared)
+          while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+            const size_t this_igrid = igrid.post_increment();
+            if (this_igrid < grid_creator->number_of_original_subgrids()) {
+              HydroDensitySubGrid &subgrid =
+                  *grid_creator->get_subgrid(this_igrid);
+              subgrid.update_ionization_variables(hydro,
+                                                  maximum_neutral_fraction);
+            }
+          }
+          stop_parallel_timing_block();
         }
 
         DistributedPhotonSource< HydroDensitySubGrid > photon_source(
@@ -1850,8 +1871,18 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
         has_next_step) {
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
-      output_tasks(hydro_lastsnap, *tasks, iteration_start, iteration_end);
       ++hydro_lastsnap;
+    }
+
+    if (write_output && task_plot_i < task_plot_N) {
+      if (log) {
+        log->write_status("Writing task plot file...");
+      }
+      output_tasks(task_plot_i, *tasks, iteration_start, iteration_end);
+      if (log) {
+        log->write_status("Done writing task plot file.");
+      }
+      ++task_plot_i;
     }
 
     // remove radiation tasks
