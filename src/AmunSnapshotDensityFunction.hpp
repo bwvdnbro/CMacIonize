@@ -40,17 +40,38 @@ class ParameterFile;
  */
 class AmunSnapshotDensityFunction : public DensityFunction {
 private:
+  /*! @brief Folder containing the snapshot files. */
+  const std::string _folder;
+
+  /*! @brief Prefix of the snapshot file names. */
+  const std::string _prefix;
+
+  /*! @brief Padding in the snapshot file names. */
+  const uint_fast32_t _padding;
+
+  /*! @brief Number of snapshot files. */
+  const uint_fast32_t _number_of_files;
+
   /*! @brief Box dimensions (in m). */
   const Box<> _box;
+
+  /*! @brief Desired average number density (in m^-3). */
+  const double _number_density;
+
+  /*! @brief Sound speed parameter in the AMUN parameter file. */
+  const double _sound_speed;
+
+  /*! @brief Desired average temperature (in K). */
+  const double _temperature;
+
+  /*! @brief Initial neutral fraction. */
+  const double _initial_neutral_fraction;
 
   /*! @brief Position shift (in fractions of the box size). */
   const CoordinateVector<> _shift;
 
   /*! @brief Number of cells in each dimension. */
   CoordinateVector< uint_fast32_t > _number_of_cells;
-
-  /*! @brief Initial neutral fraction. */
-  const double _initial_neutral_fraction;
 
   /*! @brief Number densities (in m^-3). */
   std::vector< double > _number_densities;
@@ -72,6 +93,10 @@ public:
   AmunSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   virtual ~AmunSnapshotDensityFunction();
+
+  virtual void initialize();
+
+  virtual void free();
 
   virtual DensityValues operator()(const Cell &cell) const;
 };
