@@ -31,6 +31,7 @@
 #include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
+#include "DiffuseReemissionHandlerFactory.hpp"
 #include "DistributedPhotonSource.hpp"
 #include "HydroBoundaryManager.hpp"
 #include "HydroDensitySubGrid.hpp"
@@ -39,7 +40,6 @@
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
-#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
@@ -788,10 +788,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   CrossSections *cross_sections = CrossSectionsFactory::generate(*params, log);
   RecombinationRates *recombination_rates =
       RecombinationRatesFactory::generate(*params, log);
-  PhysicalDiffuseReemissionHandler *reemission_handler = nullptr;
+  DiffuseReemissionHandler *reemission_handler = nullptr;
   if (params->get_value< bool >(
           "TaskBasedRadiationHydrodynamicsSimulation:diffuse field", false)) {
-    reemission_handler = new PhysicalDiffuseReemissionHandler(*cross_sections);
+    reemission_handler = DiffuseReemissionHandlerFactory::generate(
+        *cross_sections, *params, log);
   }
 
   // initialize the simulation box
@@ -1160,8 +1161,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                      ++cellit) {
                   IonizationVariables &vars = cellit.get_ionization_variables();
-                  PhysicalDiffuseReemissionHandler::
-                      set_reemission_probabilities(vars);
+                  reemission_handler->set_reemission_probabilities(vars);
                 }
               }
             }
