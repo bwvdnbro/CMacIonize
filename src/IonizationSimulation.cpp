@@ -361,8 +361,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     }
 
     _density_grid->reset_grid(*_density_function);
-    PhysicalDiffuseReemissionHandler::set_reemission_probabilities(
-        *_density_grid);
+    if (_photon_source->get_reemission_handler()) {
+      _photon_source->get_reemission_handler()->set_reemission_probabilities(
+          *_density_grid);
+    }
     if (_log) {
       _log->write_status("Start shooting ", lnumphoton, " photons...");
     }

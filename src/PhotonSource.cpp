@@ -28,6 +28,7 @@
 #include "ContinuousPhotonSource.hpp"
 #include "CrossSections.hpp"
 #include "DensityValues.hpp"
+#include "DiffuseReemissionHandlerFactory.hpp"
 #include "ElementNames.hpp"
 #include "Error.hpp"
 #include "Log.hpp"
@@ -48,7 +49,7 @@
  * source.
  * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
- * @param diffuse_field Enable diffuse reemission?
+ * @param reemission_handler Diffuse reemission handler.
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
@@ -57,14 +58,16 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            const PhotonSourceSpectrum *continuous_spectrum,
                            const Abundances &abundances,
                            const CrossSections &cross_sections,
-                           bool diffuse_field, Log *log)
+                           DiffuseReemissionHandler *reemission_handler,
+                           Log *log)
     : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum),
 #ifndef HAVE_HYDROGEN_ONLY
       _abundances(abundances),
 #endif
-      _cross_sections(cross_sections), _reemission_handler(nullptr), _log(log) {
+      _cross_sections(cross_sections), _reemission_handler(reemission_handler),
+      _log(log) {
 
   double discrete_luminosity = 0.;
   double continuous_luminosity = 0.;
@@ -140,18 +143,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     _discrete_photon_weight = 0.;
     _continuous_photon_weight = 0.;
   }
-
-  if (diffuse_field) {
-    _reemission_handler = new PhysicalDiffuseReemissionHandler(_cross_sections);
-  }
 }
 
 /**
  * @brief ParameterFile constructor.
- *
- * Parameters are:
- *  - diffuse field: Enable the hydrogen and helium diffuse reemission field
- *    (default: true)?
  *
  * @param distribution PhotonSourceDistribution giving the positions of the
  * discrete photon sources.
@@ -174,7 +169,8 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
                            ParameterFile &params, Log *log)
     : PhotonSource(distribution, discrete_spectrum, continuous_source,
                    continuous_spectrum, abundances, cross_sections,
-                   params.get_value< bool >("PhotonSource:diffuse field", true),
+                   DiffuseReemissionHandlerFactory::generate(cross_sections,
+                                                             params, log),
                    log) {}
 
 /**

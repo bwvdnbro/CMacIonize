@@ -28,11 +28,11 @@
 
 #include "CoordinateVector.hpp"
 #include "DensityGrid.hpp"
+#include "DiffuseReemissionHandler.hpp"
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
 #include "Photon.hpp"
-#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"
 
@@ -102,7 +102,7 @@ private:
   const CrossSections &_cross_sections;
 
   /*! @brief ReemissionHandler for diffuse reemission. */
-  PhysicalDiffuseReemissionHandler *_reemission_handler;
+  DiffuseReemissionHandler *_reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
@@ -115,7 +115,8 @@ public:
                const ContinuousPhotonSource *continuous_source,
                const PhotonSourceSpectrum *continuous_spectrum,
                const Abundances &abundances,
-               const CrossSections &cross_sections, bool diffuse_field = true,
+               const CrossSections &cross_sections,
+               DiffuseReemissionHandler *reemission_handler = nullptr,
                Log *log = nullptr);
 
   PhotonSource(PhotonSourceDistribution *distribution,
@@ -153,6 +154,15 @@ public:
               RandomGenerator &random_generator) const;
 
   void update(PhotonSourceDistribution *distribution);
+
+  /**
+   * @brief Get a pointer to the reemission handler.
+   *
+   * @return Pointer to the remission handler.
+   */
+  inline DiffuseReemissionHandler *get_reemission_handler() {
+    return _reemission_handler;
+  }
 };
 
 #endif // PHOTONSOURCE_HPP

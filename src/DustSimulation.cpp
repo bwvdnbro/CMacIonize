@@ -92,7 +92,7 @@ int DustSimulation::do_simulation(CommandLineParser &parser, bool write_output,
   Abundances abundances(0., 0., 0., 0., 0., 0., log);
   VernerCrossSections cross_sections;
   PhotonSource source(nullptr, nullptr, &continuoussource, &continuousspectrum,
-                      abundances, cross_sections, false, log);
+                      abundances, cross_sections, nullptr, log);
 
   DustScattering dust_scattering(params, log);
 
