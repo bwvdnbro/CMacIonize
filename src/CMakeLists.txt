@@ -104,6 +104,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
     AsciiFileTablePhotonSourceDistribution.cpp
+    BimodalCrossSections.hpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     DensityGrid.cpp

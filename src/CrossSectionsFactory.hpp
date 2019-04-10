@@ -30,6 +30,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "BimodalCrossSections.hpp"
 #include "FixedValueCrossSections.hpp"
 #include "VernerCrossSections.hpp"
 
@@ -43,6 +44,10 @@ public:
    * parameter file.
    *
    * Supported types are (default: Verner):
+   *  - Bimodal: Implementation that uses two sets of user specified cross
+   *    sections (to be used in conjunction with
+   *    FixedValueDiffuseReemissionHandler to set different cross sections for
+   *    diffuse radiation).
    *  - FixedValue: Implementation that uses user specified cross sections.
    *  - Verner: Implementation that uses the Verner & Yakovlev (1995) and Verner
    *    et al. (1996) cross sections.
@@ -61,7 +66,9 @@ public:
       log->write_info("Requested CrossSections type: ", type);
     }
 
-    if (type == "FixedValue") {
+    if (type == "Bimodal") {
+      return new BiModalCrossSections(params);
+    } else if (type == "FixedValue") {
       return new FixedValueCrossSections(params);
     } else if (type == "Verner") {
       return new VernerCrossSections();
