@@ -31,13 +31,13 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
-#include "DiffuseReemissionHandler.hpp"
 #include "IonizationVariablesPropertyAccessors.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
@@ -361,7 +361,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     }
 
     _density_grid->reset_grid(*_density_function);
-    DiffuseReemissionHandler::set_reemission_probabilities(*_density_grid);
+    PhysicalDiffuseReemissionHandler::set_reemission_probabilities(
+        *_density_grid);
     if (_log) {
       _log->write_status("Start shooting ", lnumphoton, " photons...");
     }

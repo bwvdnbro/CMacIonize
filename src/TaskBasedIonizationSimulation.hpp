@@ -43,7 +43,7 @@ class DensityFunction;
 class DensityGridWriter;
 class DensitySubGrid;
 template < class _subgrid_type_ > class DensitySubGridCreator;
-class DiffuseReemissionHandler;
+class PhysicalDiffuseReemissionHandler;
 class MemorySpace;
 class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
@@ -124,7 +124,7 @@ private:
   RecombinationRates *_recombination_rates;
 
   /*! @brief Reemission handler. */
-  DiffuseReemissionHandler *_reemission_handler;
+  PhysicalDiffuseReemissionHandler *_reemission_handler;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
