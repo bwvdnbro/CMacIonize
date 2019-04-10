@@ -108,6 +108,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     DensityGrid.cpp
     DiffuseReemissionHandlerFactory.hpp
     FaucherGiguerePhotonSourceSpectrum.cpp
+    FixedValueDiffuseReemissionHandler.hpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp

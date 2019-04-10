@@ -31,6 +31,7 @@
 #include "ParameterFile.hpp"
 
 // implementations
+#include "FixedValueDiffuseReemissionHandler.hpp"
 #include "PhysicalDiffuseReemissionHandler.hpp"
 
 /**
@@ -43,6 +44,7 @@ public:
    * the given ParameterFile.
    *
    * Supported types are (default: None):
+   *  - FixedValue: Fixed reemission probability and frequency handler.
    *  - Physical: Physical diffuse reemission handler.
    *
    * @param cross_sections Photoionization cross sections to use.
@@ -64,7 +66,9 @@ public:
       log->write_info("Requested DiffuseReemissionHandler type: ", type);
     }
 
-    if (type == "Physical") {
+    if (type == "FixedValue") {
+      return new FixedValueDiffuseReemissionHandler(params);
+    } else if (type == "Physical") {
       return new PhysicalDiffuseReemissionHandler(cross_sections);
     } else if ("None") {
       return nullptr;
