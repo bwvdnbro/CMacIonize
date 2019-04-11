@@ -33,6 +33,7 @@
 #include "DensityGridWriterFactory.hpp"
 #include "DiffuseReemissionHandlerFactory.hpp"
 #include "DistributedPhotonSource.hpp"
+#include "ExternalPotentialFactory.hpp"
 #include "HydroBoundaryManager.hpp"
 #include "HydroDensitySubGrid.hpp"
 #include "LineCoolingData.hpp"
@@ -741,6 +742,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *    that is allowed at the start of a radiation step (negative values do not
  *    impose an upper limit, default: -1)
  *  - diffuse field: Enable diffuse reemission? (default: no)
+ *  - external gravity: Enable external gravity? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -793,6 +795,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           "TaskBasedRadiationHydrodynamicsSimulation:diffuse field", false)) {
     reemission_handler = DiffuseReemissionHandlerFactory::generate(
         *cross_sections, *params, log);
+  }
+  ExternalPotential *external_potential = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:external gravity",
+          false)) {
+    external_potential = ExternalPotentialFactory::generate(*params, log);
   }
 
   // initialize the simulation box
@@ -999,6 +1007,26 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     set_dependencies(cellit.get_index(), *grid_creator, *tasks);
   }
   const size_t radiation_task_offset = tasks->size();
+
+  // update the gravitational accelerations if applicable (just to make sure
+  // they are present in the first snapshot)
+  {
+    AtomicValue< size_t > igrid(0);
+    start_parallel_timing_block();
+#pragma omp parallel default(shared)
+    while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < grid_creator->number_of_original_subgrids()) {
+        HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+        for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end(); ++it) {
+          const CoordinateVector<> a =
+              external_potential->get_acceleration(it.get_cell_midpoint());
+          it.get_hydro_variables().set_gravitational_acceleration(a);
+        }
+      }
+    }
+    stop_parallel_timing_block();
+  }
 
   if (write_output) {
     writer->write(*grid_creator, 0, *params, 0.);
@@ -1851,6 +1879,27 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       log->write_status("Starting hydro step...");
     }
 
+    // update the gravitational accelerations if applicable (just to make sure
+    // they are present in the first snapshot)
+    {
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end();
+               ++it) {
+            const CoordinateVector<> a =
+                external_potential->get_acceleration(it.get_cell_midpoint());
+            it.get_hydro_variables().set_gravitational_acceleration(a);
+          }
+        }
+      }
+      stop_parallel_timing_block();
+    }
+
     // reset the hydro tasks and add them to the queue
     AtomicValue< uint_fast32_t > number_of_tasks;
     for (auto cellit = grid_creator->begin();
@@ -2008,6 +2057,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   delete recombination_rates;
   if (reemission_handler != nullptr) {
     delete reemission_handler;
+  }
+  if (external_potential != nullptr) {
+    delete external_potential;
   }
 
   delete params;

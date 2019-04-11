@@ -155,6 +155,15 @@ public:
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
+      const CoordinateVector<> a =
+          _hydro_variables[i].get_gravitational_acceleration();
+      const CoordinateVector<> p = _hydro_variables[i].get_conserved_momentum();
+      const double mdt = _hydro_variables[i].get_conserved_mass() * timestep;
+      _hydro_variables[i].conserved(1) += mdt * a.x();
+      _hydro_variables[i].conserved(2) += mdt * a.y();
+      _hydro_variables[i].conserved(3) += mdt * a.z();
+      _hydro_variables[i].conserved(4) +=
+          timestep * CoordinateVector<>::dot_product(p, a);
       for (int_fast8_t j = 0; j < 5; ++j) {
         _hydro_variables[i].conserved(j) +=
             _hydro_variables[i].delta_conserved(j) * timestep;
