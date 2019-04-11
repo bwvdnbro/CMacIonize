@@ -49,6 +49,18 @@ public:
   virtual void initialize_mask(DensityGrid &grid) {}
 
   /**
+   * @brief Initialize the mask before the first hydrodynamical time step.
+   *
+   * Note that this method is not thread safe and should only be called in
+   * serial!
+   *
+   * @param index Index of this subgrid in the subgrid list.
+   * @param subgrid HydroDensitySubGrid to read from.
+   */
+  virtual void initialize_mask(const uint_fast32_t index,
+                               HydroDensitySubGrid &subgrid) {}
+
+  /**
    * @brief Apply the mask to the given DensityGrid.
    *
    * The primitive and conserved variables of all cells within the mask will be
@@ -67,11 +79,13 @@ public:
    * The primitive and conserved variables of all cells within the mask will be
    * updated, all other cells are left untouched.
    *
+   * @param index Index of this subgrid in the subgrid list.
    * @param subgrid HydroDensitySubGrid to update.
    * @param actual_timestep Current system time step (in s).
    * @param current_time Current simulation time (in s).
    */
-  virtual void apply_mask(HydroDensitySubGrid &subgrid,
+  virtual void apply_mask(const uint_fast32_t index,
+                          HydroDensitySubGrid &subgrid,
                           const double actual_timestep,
                           const double current_time) = 0;
 
