@@ -32,6 +32,7 @@
 #include "Utilities.hpp"
 
 #include <cinttypes>
+#include <map>
 
 /**
  * @brief Masked out region where the hydrodynamics is artificially reset to a
@@ -57,11 +58,18 @@ private:
   /*! @brief Mask density (in kg m^-3). */
   double _mask_density;
 
+  /*! @brief Reference mask velocity (in m s^-1). */
+  double _mask_velocity;
+
   /*! @brief Mask pressure (in kg m^-1 s^-2). */
   double _mask_pressure;
 
   /*! @brief Mask velocities for all cells within the mask (in m s^-1). */
   std::vector< CoordinateVector<> > _mask_velocities;
+
+  /*! @brief Map that connects subgrid indices to offsets in the mask
+   *  velocities array. */
+  std::map< uint_fast32_t, uint_fast32_t > _subgrid_offsets;
 
   /**
    * @brief Check if the given position is inside the mask region.
@@ -94,7 +102,8 @@ public:
         _radius2(radius * radius), _scale_factors{scale_factor_density,
                                                   scale_factor_velocity,
                                                   scale_factor_pressure},
-        _delta_t(delta_t), _snap_n(0) {}
+        _delta_t(delta_t), _snap_n(0), _mask_density(DBL_MAX),
+        _mask_velocity(DBL_MAX), _mask_pressure(DBL_MAX) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -133,9 +142,9 @@ public:
    */
   virtual void initialize_mask(DensityGrid &grid) {
 
-    double min_rho = -1.;
-    double min_v = -1.;
-    double min_P = -1.;
+    double min_rho = _mask_density;
+    double min_v = _mask_velocity;
+    double min_P = _mask_pressure;
     for (auto it = grid.begin(); it != grid.end(); ++it) {
       if (is_inside(it.get_cell_midpoint())) {
         const HydroVariables &hydro_variables = it.get_hydro_variables();
@@ -143,21 +152,9 @@ public:
         const double v = hydro_variables.get_primitives_velocity().norm();
         const double P = hydro_variables.get_primitives_pressure();
 
-        if (min_rho < 0.) {
-          min_rho = rho;
-        } else {
-          min_rho = std::min(min_rho, rho);
-        }
-        if (min_v < 0.) {
-          min_v = v;
-        } else {
-          min_v = std::min(min_v, v);
-        }
-        if (min_P < 0.) {
-          min_P = P;
-        } else {
-          min_P = std::min(min_P, P);
-        }
+        min_rho = std::min(min_rho, rho);
+        min_v = std::min(min_v, v);
+        min_P = std::min(min_P, P);
       }
     }
 
@@ -177,6 +174,42 @@ public:
         _mask_velocities.push_back(v);
       }
     }
+  }
+
+  /**
+   * @brief Initialize the mask before the first hydrodynamical time step.
+   *
+   * Note that this method is not thread safe and should only be called in
+   * serial!
+   *
+   * @param index Index of this subgrid in the subgrid list.
+   * @param subgrid HydroDensitySubGrid to read from.
+   */
+  virtual void initialize_mask(const uint_fast32_t index,
+                               HydroDensitySubGrid &subgrid) {
+
+    _subgrid_offsets[index] = _mask_velocities.size();
+    double min_rho = _mask_density;
+    double min_v = _mask_velocity;
+    double min_P = _mask_pressure;
+    for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end(); ++it) {
+      if (is_inside(it.get_cell_midpoint())) {
+        const HydroVariables &hydro_variables = it.get_hydro_variables();
+        const double rho = hydro_variables.get_primitives_density();
+        const double v = hydro_variables.get_primitives_velocity().norm();
+        const double P = hydro_variables.get_primitives_pressure();
+
+        min_rho = std::min(min_rho, rho);
+        min_v = std::min(min_v, v);
+        min_P = std::min(min_P, P);
+
+        _mask_velocities.push_back(v);
+      }
+    }
+
+    _mask_density = min_rho;
+    _mask_velocity = min_v;
+    _mask_pressure = min_P;
   }
 
   /**
@@ -279,15 +312,68 @@ public:
    * The primitive and conserved variables of all cells within the mask will be
    * updated, all other cells are left untouched.
    *
+   * @param index Index of this subgrid in the subgrid list.
    * @param subgrid HydroDensitySubGrid to update.
    * @param actual_timestep Current system time step (in s).
    * @param current_time Current simulation time (in s).
    */
-  virtual void apply_mask(HydroDensitySubGrid &subgrid,
+  virtual void apply_mask(const uint_fast32_t index,
+                          HydroDensitySubGrid &subgrid,
                           const double actual_timestep,
                           const double current_time) {
-    cmac_error(
-        "This type of mask is not (yet) supported for a distributed grid!");
+
+    uint_fast32_t cell_index = _subgrid_offsets[index];
+    for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end(); ++it) {
+
+      if (is_inside(it.get_cell_midpoint())) {
+
+        const double old_density =
+            it.get_hydro_variables().get_primitives_density();
+        const CoordinateVector<> old_velocity =
+            it.get_hydro_variables().get_primitives_velocity();
+        const double old_pressure =
+            it.get_hydro_variables().get_primitives_pressure();
+        const double old_energy =
+            it.get_hydro_variables().get_conserved_total_energy();
+        const double A =
+            (old_energy - 0.5 * old_density * old_velocity.norm2()) /
+            old_pressure;
+
+        const double density = _mask_density * _scale_factors[0];
+        CoordinateVector<> velocity;
+        const double vnrm2 = _mask_velocities[cell_index].norm2();
+        if (vnrm2 > 0.) {
+          velocity = _mask_velocities[cell_index] *
+                     (_mask_velocity * _scale_factors[1] / std::sqrt(vnrm2));
+        }
+        const double pressure = _mask_pressure * _scale_factors[2];
+
+        // set the primitive variables
+        it.get_hydro_variables().set_primitives_density(density);
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+        it.get_hydro_variables().set_primitives_pressure(pressure);
+
+        const double volume = it.get_volume();
+        const double mass = density * volume;
+        const CoordinateVector<> momentum = mass * velocity;
+        const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
+        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
+        const double total_energy = A * pressure + 0.5 * ekin;
+
+        // set conserved variables
+        it.get_hydro_variables().set_conserved_mass(mass);
+        it.get_hydro_variables().set_conserved_momentum(momentum);
+        it.get_hydro_variables().set_conserved_total_energy(total_energy);
+
+        // set neutral fractions to 0
+        it.get_ionization_variables().set_ionic_fraction(ION_H_n, 0.);
+#ifdef HAS_HELIUM
+        it.get_ionization_variables().set_ionic_fraction(ION_He_n, 0.);
+#endif
+
+        ++cell_index;
+      }
+    }
   }
 
   /**
