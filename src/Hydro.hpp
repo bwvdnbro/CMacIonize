@@ -667,6 +667,9 @@ public:
     const double vy = state.get_primitives_velocity().y();
     const double vz = state.get_primitives_velocity().z();
     const double P = state.get_primitives_pressure();
+    const double ax = state.get_gravitational_acceleration().x();
+    const double ay = state.get_gravitational_acceleration().y();
+    const double az = state.get_gravitational_acceleration().z();
 
     const double rhoinv = 1. / rho;
 
@@ -686,9 +689,9 @@ public:
 
     double rho_new =
         rho - dt * (rho * divv + vx * drhodx + vy * drhody + vz * drhodz);
-    const CoordinateVector<> v_new(vx - dt * (vx * divv + rhoinv * dPdx),
-                                   vy - dt * (vy * divv + rhoinv * dPdy),
-                                   vz - dt * (vz * divv + rhoinv * dPdz));
+    const CoordinateVector<> v_new(vx - dt * (vx * divv + rhoinv * dPdx - ax),
+                                   vy - dt * (vy * divv + rhoinv * dPdy - ay),
+                                   vz - dt * (vz * divv + rhoinv * dPdz - az));
     double P_new =
         P - dt * (_gamma * P * divv + vx * dPdx + vy * dPdy + vz * dPdz);
 
