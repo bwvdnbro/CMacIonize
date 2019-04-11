@@ -36,6 +36,7 @@
 #include "ExternalPotentialFactory.hpp"
 #include "HydroBoundaryManager.hpp"
 #include "HydroDensitySubGrid.hpp"
+#include "HydroMaskFactory.hpp"
 #include "LineCoolingData.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
@@ -743,6 +744,8 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *    impose an upper limit, default: -1)
  *  - diffuse field: Enable diffuse reemission? (default: no)
  *  - external gravity: Enable external gravity? (default: no)
+ *  - use mask: Use a mask to disable hydrodynamics and radiation in part of
+ *    the box? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -801,6 +804,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           "TaskBasedRadiationHydrodynamicsSimulation:external gravity",
           false)) {
     external_potential = ExternalPotentialFactory::generate(*params, log);
+  }
+  HydroMask *hydro_mask = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:use mask", false)) {
+    hydro_mask = HydroMaskFactory::generate(*params, log);
   }
 
   // initialize the simulation box
@@ -1008,9 +1016,23 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   const size_t radiation_task_offset = tasks->size();
 
+  // apply the mask (if applicable)
+  if (hydro_mask != nullptr) {
+    AtomicValue< size_t > igrid(0);
+    start_parallel_timing_block();
+#pragma omp parallel default(shared)
+    while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < grid_creator->number_of_original_subgrids()) {
+        hydro_mask->apply_mask(*grid_creator->get_subgrid(this_igrid), 0., 0.);
+      }
+    }
+    stop_parallel_timing_block();
+  }
+
   // update the gravitational accelerations if applicable (just to make sure
   // they are present in the first snapshot)
-  {
+  if (external_potential != nullptr) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -1881,7 +1903,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     // update the gravitational accelerations if applicable (just to make sure
     // they are present in the first snapshot)
-    {
+    if (external_potential != nullptr) {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -1957,6 +1979,21 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       }
     }
     stop_parallel_timing_block();
+
+    // apply the mask (if applicable)
+    if (hydro_mask != nullptr) {
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          hydro_mask->apply_mask(*grid_creator->get_subgrid(this_igrid),
+                                 actual_timestep, current_time);
+        }
+      }
+      stop_parallel_timing_block();
+    }
 
     cpucycle_tick(iteration_end);
 
@@ -2060,6 +2097,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   if (external_potential != nullptr) {
     delete external_potential;
+  }
+  if (hydro_mask != nullptr) {
+    delete hydro_mask;
   }
 
   delete params;
