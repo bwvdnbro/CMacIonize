@@ -27,6 +27,7 @@
 #define HYDROMASK_HPP
 
 #include "DensityGrid.hpp"
+#include "HydroDensitySubGrid.hpp"
 #include "RestartWriter.hpp"
 
 /**
@@ -58,6 +59,20 @@ public:
    * @param current_time Current simulation time (in s).
    */
   virtual void apply_mask(DensityGrid &grid, const double actual_timestep,
+                          const double current_time) = 0;
+
+  /**
+   * @brief Apply the mask to the given HydroDensitySubGrid.
+   *
+   * The primitive and conserved variables of all cells within the mask will be
+   * updated, all other cells are left untouched.
+   *
+   * @param subgrid HydroDensitySubGrid to update.
+   * @param actual_timestep Current system time step (in s).
+   * @param current_time Current simulation time (in s).
+   */
+  virtual void apply_mask(HydroDensitySubGrid &subgrid,
+                          const double actual_timestep,
                           const double current_time) = 0;
 
   /**
