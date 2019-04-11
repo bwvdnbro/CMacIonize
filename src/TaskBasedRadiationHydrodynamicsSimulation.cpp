@@ -1016,6 +1016,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   const size_t radiation_task_offset = tasks->size();
 
+  // initialize the mask (if applicable). MUST BE DONE IN SERIAL!
+  if (hydro_mask != nullptr) {
+    for (auto gridit = grid_creator->begin();
+         gridit != grid_creator->original_end(); ++gridit) {
+      hydro_mask->initialize_mask(gridit.get_index(), *gridit);
+    }
+  }
+
   // apply the mask (if applicable)
   if (hydro_mask != nullptr) {
     AtomicValue< size_t > igrid(0);
@@ -1024,7 +1032,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     while (igrid.value() < grid_creator->number_of_original_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < grid_creator->number_of_original_subgrids()) {
-        hydro_mask->apply_mask(*grid_creator->get_subgrid(this_igrid), 0., 0.);
+        hydro_mask->apply_mask(this_igrid,
+                               *grid_creator->get_subgrid(this_igrid), 0., 0.);
       }
     }
     stop_parallel_timing_block();
@@ -1988,7 +1997,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
-          hydro_mask->apply_mask(*grid_creator->get_subgrid(this_igrid),
+          hydro_mask->apply_mask(this_igrid,
+                                 *grid_creator->get_subgrid(this_igrid),
                                  actual_timestep, current_time);
         }
       }

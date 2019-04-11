@@ -164,11 +164,13 @@ public:
    * All cells within the mask will be updated, all other cells are left
    * untouched.
    *
+   * @param index Index of this subgrid in the subgrid list.
    * @param subgrid HydroDensitySubGrid to update.
    * @param actual_timestep Current system time step (in s).
    * @param current_time Current system time (in s).
    */
-  virtual void apply_mask(HydroDensitySubGrid &subgrid,
+  virtual void apply_mask(const uint_fast32_t index,
+                          HydroDensitySubGrid &subgrid,
                           const double actual_timestep,
                           const double current_time) {
 
