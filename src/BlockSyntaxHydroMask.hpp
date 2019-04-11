@@ -157,6 +157,80 @@ public:
       }
     }
   }
+
+  /**
+   * @brief Apply the mask to the given HydroDensitySubGrid.
+   *
+   * All cells within the mask will be updated, all other cells are left
+   * untouched.
+   *
+   * @param subgrid HydroDensitySubGrid to update.
+   * @param actual_timestep Current system time step (in s).
+   * @param current_time Current system time (in s).
+   */
+  virtual void apply_mask(HydroDensitySubGrid &subgrid,
+                          const double actual_timestep,
+                          const double current_time) {
+
+    const double hydrogen_mass =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
+    const double boltzmann_k =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+
+    for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end(); ++it) {
+
+      const CoordinateVector<> position = it.get_cell_midpoint();
+      if (_density_function.inside(position)) {
+
+        const DensityValues values = _density_function(it);
+
+        const double volume = it.get_volume();
+        const double number_density = values.get_number_density();
+        const double temperature = values.get_temperature();
+
+        const double density = number_density * hydrogen_mass;
+        CoordinateVector<> velocity = values.get_velocity();
+        // we assume a completely neutral or completely ionized gas
+        double pressure = density * boltzmann_k * temperature / hydrogen_mass;
+        if (temperature >= 1.e4) {
+          // ionized gas has a lower mean molecular mass
+          pressure *= 2.;
+        }
+
+        // now add the tangential velocity profile
+        if (_vprof_velocity > 0.) {
+          const double Rinv = 1. / std::sqrt(position.x() * position.x() +
+                                             position.y() * position.y());
+          const double rinvsqrt = std::sqrt(1. / position.norm());
+          const double vphi = _vprof_velocity * rinvsqrt;
+          velocity[0] -= position.y() * vphi * Rinv;
+          velocity[1] += position.x() * vphi * Rinv;
+        }
+
+        // set the primitive variables
+        it.get_hydro_variables().set_primitives_density(density);
+        it.get_hydro_variables().set_primitives_velocity(velocity);
+        it.get_hydro_variables().set_primitives_pressure(pressure);
+
+        const double mass = density * volume;
+        const CoordinateVector<> momentum = mass * velocity;
+        const double ekin = CoordinateVector<>::dot_product(velocity, momentum);
+        // E = V*(rho*u + 0.5*rho*v^2) = V*(P/(gamma-1) + 0.5*rho*v^2)
+        const double total_energy = volume * pressure * _gm1inv + 0.5 * ekin;
+
+        // set conserved variables
+        it.get_hydro_variables().set_conserved_mass(mass);
+        it.get_hydro_variables().set_conserved_momentum(momentum);
+        it.get_hydro_variables().set_conserved_total_energy(total_energy);
+
+        // set neutral fractions to 0
+        it.get_ionization_variables().set_ionic_fraction(ION_H_n, 0.);
+#ifdef HAS_HELIUM
+        it.get_ionization_variables().set_ionic_fraction(ION_He_n, 0.);
+#endif
+      }
+    }
+  }
 };
 
 #endif // BLOCKSYNTAXHYDROMASK_HPP
