@@ -82,11 +82,9 @@ public:
         force += fr * std::cos(kdotx) - fi * std::sin(kdotx);
       }
 
-      const double mdt =
-          cellit.get_hydro_variables().get_conserved_mass() * _time_step;
-      cellit.get_hydro_variables().conserved(1) += mdt * force.x();
-      cellit.get_hydro_variables().conserved(2) += mdt * force.y();
-      cellit.get_hydro_variables().conserved(3) += mdt * force.z();
+      cellit.get_hydro_variables().conserved(1) += _time_step * force.x();
+      cellit.get_hydro_variables().conserved(2) += _time_step * force.y();
+      cellit.get_hydro_variables().conserved(3) += _time_step * force.z();
     }
   }
 };
