@@ -1522,6 +1522,15 @@ set(TESTHYDRO_SOURCES
 add_unit_test(NAME testHydro
               SOURCES ${TESTHYDRO_SOURCES})
 
+## Unit test for AlveliusTurbulenceForcing
+set(TESTALVELIUSTURBULENCEFORCING_SOURCES
+    testAlveliusTurbulenceForcing.cpp
+
+    ../src/AlveliusTurbulenceForcing.hpp
+)
+add_unit_test(NAME testAlveliusTurbulenceForcing
+              SOURCES ${TESTALVELIUSTURBULENCEFORCING_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
