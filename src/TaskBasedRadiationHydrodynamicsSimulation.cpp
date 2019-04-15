@@ -38,6 +38,7 @@
 #include "HydroDensitySubGrid.hpp"
 #include "HydroMaskFactory.hpp"
 #include "LineCoolingData.hpp"
+#include "MemoryLogger.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
@@ -696,6 +697,9 @@ execute_task(const size_t itask,
  *    the restart file stored in the given folder (default: .).
  *  - task-plot (no abbreviation, optional, integer argument): output task
  *    information for the first N steps of the algorithm (default: 0).
+ *  - number-of-steps (no abbreviation, optional, integer argument): number of
+ *    time steps to execute before halting the code (negative values mean no
+ *    limit on the number of time steps, default: -1).
  *
  * @param parser CommandLineParser that has not yet parsed the command line
  * options.
@@ -712,6 +716,9 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
       "task-plot", 0,
       "Output task information for the first N steps of the algorithm",
       COMMANDLINEOPTION_INTARGUMENT, "0");
+  parser.add_option("number-of-steps", 0,
+                    "Number of time steps to execute before halting the code.",
+                    COMMANDLINEOPTION_INTARGUMENT, "-1");
 }
 
 /**
@@ -763,8 +770,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   Timer parallel_timer;
   Timer worktimer;
 
+  uint_fast64_t program_start, program_end;
+  cpucycle_tick(program_start);
+
   total_timer.start();
   serial_timer.start();
+
+  MemoryLogger memory_logger;
+  memory_logger.add_entry("start");
 
   const int_fast32_t num_thread = parser.get_value< int_fast32_t >("threads");
   omp_set_num_threads(num_thread);
@@ -775,6 +788,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   const int_fast32_t task_plot_N =
       parser.get_value< int_fast32_t >("task-plot");
+
+  const int_fast32_t number_of_steps =
+      parser.get_value< int_fast32_t >("number-of-steps");
 
   // second: initialize the parameters that are read in from static files
   // these files should be configured by CMake and put in a location that is
@@ -946,6 +962,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     return 0;
   }
 
+  memory_logger.add_entry("preinit");
+
   if (log) {
     log->write_status("Initializing DensityFunction...");
   }
@@ -957,14 +975,20 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (log) {
     log->write_status("Initializing grid...");
   }
+  memory_logger.add_entry("grid");
   start_parallel_timing_block();
   grid_creator->initialize(*density_function);
   stop_parallel_timing_block();
+  memory_logger.finalize_entry();
   if (log) {
     log->write_status("Done.");
   }
 
+  memory_logger.add_entry("postinit");
+
   density_function->free();
+
+  memory_logger.add_entry("pretasks");
 
   if (log) {
     log->write_status("Initializing task-based structures...");
@@ -972,25 +996,33 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (log) {
     log->write_status("Allocating memory space...");
   }
+  memory_logger.add_entry("memory space");
   MemorySpace *buffers = new MemorySpace(number_of_buffers);
+  memory_logger.finalize_entry();
   if (log) {
     log->write_status("Allocating task memory...");
   }
+  memory_logger.add_entry("tasks");
   ThreadSafeVector< Task > *tasks =
       new ThreadSafeVector< Task >(number_of_tasks, "Tasks");
+  memory_logger.finalize_entry();
   if (log) {
     log->write_status("Allocating shared queue...");
   }
+  memory_logger.add_entry("shared queue");
   TaskQueue *shared_queue = new TaskQueue(shared_queue_size, "Shared queue");
+  memory_logger.finalize_entry();
   if (log) {
     log->write_status("Allocating per thread queues...");
   }
+  memory_logger.add_entry("per thread queues");
   std::vector< TaskQueue * > queues(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     std::stringstream queue_name;
     queue_name << "Queue for Thread " << static_cast< int_fast32_t >(ithread);
     queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
   }
+  memory_logger.finalize_entry();
   if (log) {
     log->write_status("Initializing per thread random generators...");
   }
@@ -1001,6 +1033,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (log) {
     log->write_status("Done initializing task-based structures.");
   }
+
+  memory_logger.add_entry("posttasks");
 
   double requested_timestep = DBL_MAX;
   for (auto cellit = grid_creator->begin();
@@ -1118,7 +1152,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   /// SIMULATION
   TimeLine *timeline = new TimeLine(
       0., hydro_total_time, hydro_minimum_timestep, maximum_timestep, log);
-  uint_fast32_t num_step = 0;
+  int_fast32_t num_step = 0;
   double actual_timestep, current_time;
   requested_timestep *= CFL;
   bool has_next_step =
@@ -1126,12 +1160,22 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
 
+    // check if we want to prematurely stop the algorithm
+    if (number_of_steps > 0 && num_step == number_of_steps) {
+      break;
+    }
+
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
     std::vector< uint_fast64_t > active_time(num_thread, 0);
 
     ++num_step;
 
+    {
+      std::stringstream num_step_line;
+      num_step_line << "step " << num_step;
+      memory_logger.add_entry(num_step_line.str());
+    }
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
                         UnitConverter::to_unit_string< QUANTITY_TIME >(
@@ -2065,6 +2109,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
   }
 
+  cpucycle_tick(program_end);
+
   serial_timer.stop();
   total_timer.stop();
   programtimer.stop();
@@ -2086,6 +2132,27 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                       Utilities::human_readable_bytes(memory_usage), ".");
     log->write_status("Total photon shooting time: ",
                       Utilities::human_readable_time(worktimer.value()), ".");
+  }
+
+  memory_logger.add_entry("end");
+
+  if (number_of_steps > 0) {
+    {
+      std::ofstream pfile("program_time.txt");
+      pfile << "# rank\tstart\tstop\ttime\n";
+      pfile << "0\t" << program_start << "\t" << program_end << "\t"
+            << total_timer.value() << "\n";
+    }
+
+    {
+      std::ofstream mfile("memory.txt");
+      memory_logger.print(mfile, false);
+    }
+
+    {
+      std::ofstream mfile("memory_timeline.txt");
+      memory_logger.print(mfile, true);
+    }
   }
 
   if (sourcedistribution != nullptr) {
