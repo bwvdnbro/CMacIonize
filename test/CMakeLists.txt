@@ -1611,6 +1611,15 @@ set(TESTALVELIUSTURBULENCEFORCING_SOURCES
 add_unit_test(NAME testAlveliusTurbulenceForcing
               SOURCES ${TESTALVELIUSTURBULENCEFORCING_SOURCES})
 
+# Unit test for MemoryLogger
+set(TESTMEMORYLOGGER_SOURCES
+    testMemoryLogger.cpp
+
+    ../src/MemoryLogger.hpp
+)
+add_unit_test(NAME testMemoryLogger
+              SOURCES ${TESTMEMORYLOGGER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
