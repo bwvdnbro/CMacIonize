@@ -26,6 +26,10 @@
 #ifndef MPITYPES_HPP
 #define MPITYPES_HPP
 
+#include "Configuration.hpp"
+
+#ifdef HAVE_MPI
+
 #include <cinttypes>
 #include <mpi.h>
 
@@ -179,5 +183,7 @@ template <> inline MPI_Datatype get_datatype< unsigned long long >() {
 }
 
 } // namespace MPITypes
+
+#endif // HAVE_MPI
 
 #endif // MPITYPES_HPP
