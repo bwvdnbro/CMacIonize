@@ -43,13 +43,13 @@
 class MemoryLogEntry {
 private:
   /*! @brief Name of the entry. */
-  const std::string _name;
+  std::string _name;
 
   /*! @brief Memory size (in page sizes). */
   uint_fast64_t _memory_size;
 
   /*! @brief Time stamp (in CPU cycles). */
-  const uint_fast64_t _time_stamp;
+  uint_fast64_t _time_stamp;
 
   /*! @brief True if this entry corresponds to a virtual memory snapshot, false
    *  if this entry is the memory associated to a specific allocation. */
