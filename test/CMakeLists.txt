@@ -1492,7 +1492,6 @@ add_unit_test(NAME testTaskQueue
 endif(HAVE_OPENMP)
 
 ## Unit test for PhotonBuffer
-if(HAVE_MPI)
 set(TESTPHOTONBUFFER_SOURCES
     testPhotonBuffer.cpp
 
@@ -1500,10 +1499,7 @@ set(TESTPHOTONBUFFER_SOURCES
     ../src/PhotonPacket.hpp
 )
 add_unit_test(NAME testPhotonBuffer
-              SOURCES ${TESTPHOTONBUFFER_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
-              PARALLEL)
-endif(HAVE_MPI)
+              SOURCES ${TESTPHOTONBUFFER_SOURCES})
 
 ## Unit test for MemorySpace
 if(HAVE_OPENMP)
@@ -1513,8 +1509,7 @@ set(TESTMEMORYSPACE_SOURCES
     ../src/MemorySpace.hpp
 )
 add_unit_test(NAME testMemorySpace
-              SOURCES ${TESTMEMORYSPACE_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+              SOURCES ${TESTMEMORYSPACE_SOURCES})
 endif(HAVE_OPENMP)
 
 ## Unit test for DensitySubGrid
@@ -1526,8 +1521,7 @@ set(TESTDENSITYSUBGRID_SOURCES
     ../src/IonizationStateCalculator.cpp
 )
 add_unit_test(NAME testDensitySubGrid
-              SOURCES ${TESTDENSITYSUBGRID_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+              SOURCES ${TESTDENSITYSUBGRID_SOURCES})
 
 ## Unit test for DensitySubGrid MPI communication
 if(HAVE_MPI)
@@ -1550,8 +1544,7 @@ set(TESTDENSITYSUBGRIDCREATOR_SOURCES
     ../src/DensitySubGridCreator.hpp
 )
 add_unit_test(NAME testDensitySubGridCreator
-              SOURCES ${TESTDENSITYSUBGRIDCREATOR_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+              SOURCES ${TESTDENSITYSUBGRIDCREATOR_SOURCES})
 
 ## Unit test for TaskBasedIonizationSimulation
 set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
@@ -1590,8 +1583,7 @@ set(TESTHYDRODENSITYSUBGRID_SOURCES
     ../src/HydroDensitySubGrid.hpp
 )
 add_unit_test(NAME testHydroDensitySubGrid
-              SOURCES ${TESTHYDRODENSITYSUBGRID_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+              SOURCES ${TESTHYDRODENSITYSUBGRID_SOURCES})
 
 ## Unit test for Hydro
 set(TESTHYDRO_SOURCES
