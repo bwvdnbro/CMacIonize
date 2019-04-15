@@ -34,6 +34,8 @@
 #include "BlockSyntaxHydroMask.hpp"
 #include "RescaledICHydroMask.hpp"
 
+#include <typeinfo>
+
 /**
  * @brief Factory for HydroMask instances.
  */
