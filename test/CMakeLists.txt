@@ -674,7 +674,6 @@ set(TESTMPICOMMUNICATOR_SOURCES
 )
 add_unit_test(NAME testMPICommunicator
               SOURCES ${TESTMPICOMMUNICATOR_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
               PARALLEL)
 endif(HAVE_MPI)
 
@@ -701,7 +700,6 @@ set(TESTMPIMESSAGE_SOURCES
 )
 add_unit_test(NAME testMPIMessage
               SOURCES ${TESTMPIMESSAGE_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
               PARALLEL)
 endif(HAVE_MPI)
 
@@ -1492,14 +1490,17 @@ add_unit_test(NAME testTaskQueue
 endif(HAVE_OPENMP)
 
 ## Unit test for PhotonBuffer
-set(TESTPHOTONBUFFER_SOURCES
-    testPhotonBuffer.cpp
+if(HAVE_MPI)
+  set(TESTPHOTONBUFFER_SOURCES
+      testPhotonBuffer.cpp
 
-    ../src/PhotonBuffer.hpp
-    ../src/PhotonPacket.hpp
-)
-add_unit_test(NAME testPhotonBuffer
-              SOURCES ${TESTPHOTONBUFFER_SOURCES})
+      ../src/PhotonBuffer.hpp
+      ../src/PhotonPacket.hpp
+  )
+  add_unit_test(NAME testPhotonBuffer
+                SOURCES ${TESTPHOTONBUFFER_SOURCES}
+                PARALLEL)
+endif(HAVE_MPI)
 
 ## Unit test for MemorySpace
 if(HAVE_OPENMP)
@@ -1533,7 +1534,6 @@ set(TESTDENSITYSUBGRID_MPI_SOURCES
 )
 add_unit_test(NAME testDensitySubGrid_MPI
               SOURCES ${TESTDENSITYSUBGRID_MPI_SOURCES}
-              LIBS ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}
               PARALLEL)
 endif(HAVE_MPI)
 
