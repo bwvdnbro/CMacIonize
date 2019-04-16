@@ -725,6 +725,61 @@ public:
   inline iterator get_subgrid(const size_t index) {
     return iterator(index, *this);
   }
+
+  /**
+   * @brief Dump the subgrids to the given restart file.
+   *
+   * @param restart_writer RestartWriter to write to.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    // const members
+    _box.write_restart_file(restart_writer);
+    _subgrid_sides.write_restart_file(restart_writer);
+    _number_of_subgrids.write_restart_file(restart_writer);
+    _subgrid_number_of_cells.write_restart_file(restart_writer);
+    _periodicity.write_restart_file(restart_writer);
+
+    const size_t number_of_subgrids = _subgrids.size();
+    restart_writer.write(number_of_subgrids);
+    for (size_t i = 0; i < number_of_subgrids; ++i) {
+      _subgrids[i]->write_restart_file(restart_writer);
+    }
+    const size_t number_of_copies = _originals.size();
+    restart_writer.write(number_of_copies);
+    for (size_t i = 0; i < number_of_copies; ++i) {
+      restart_writer.write(_originals[i]);
+    }
+    for (size_t i = 0; i < number_of_subgrids; ++i) {
+      restart_writer.write(_copies[i]);
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline DensitySubGridCreator(RestartReader &restart_reader)
+      : _box(restart_reader), _subgrid_sides(restart_reader),
+        _number_of_subgrids(restart_reader),
+        _subgrid_number_of_cells(restart_reader), _periodicity(restart_reader) {
+
+    const size_t number_of_subgrids = restart_reader.read< size_t >();
+    _subgrids.resize(number_of_subgrids, nullptr);
+    for (size_t i = 0; i < number_of_subgrids; ++i) {
+      _subgrids[i] = new _subgrid_type_(restart_reader);
+    }
+    const size_t number_of_copies = restart_reader.read< size_t >();
+    _originals.resize(number_of_copies, 0);
+    for (size_t i = 0; i < number_of_copies; ++i) {
+      _originals[i] = restart_reader.read< size_t >();
+    }
+    _copies.resize(number_of_subgrids, 0);
+    for (size_t i = 0; i < number_of_subgrids; ++i) {
+      _copies[i] = restart_reader.read< size_t >();
+    }
+  }
 };
 
 #endif // DENSITYSUBGRIDCREATOR_HPP

@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 
+#include "Assert.hpp"
 #include "HydroDensitySubGrid.hpp"
 
 #include <fstream>
@@ -133,6 +134,31 @@ int main(int argc, char **argv) {
     // primitive variable update
     test_grid1.update_primitive_variables(hydro);
     test_grid2.update_primitive_variables(hydro);
+  }
+
+  /// write a restart file
+  {
+    RestartWriter writer("test_hydrodensitysubgrid.restart");
+    test_grid1.write_restart_file(writer);
+  }
+
+  /// read the restart file and check that both grids are the same
+  {
+    RestartReader reader("test_hydrodensitysubgrid.restart");
+    HydroDensitySubGrid grid2(reader);
+    assert_condition(test_grid1.get_number_of_cells() ==
+                     grid2.get_number_of_cells());
+    auto it = test_grid1.hydro_begin();
+    auto it2 = grid2.hydro_begin();
+    while (it != test_grid1.hydro_end() && it2 != grid2.hydro_end()) {
+      assert_condition(
+          it.get_ionization_variables().get_ionic_fraction(ION_H_n) ==
+          it2.get_ionization_variables().get_ionic_fraction(ION_H_n));
+      assert_condition(it.get_hydro_variables().get_primitives_density() ==
+                       it2.get_hydro_variables().get_primitives_density());
+      ++it;
+      ++it2;
+    }
   }
 
   std::ofstream ofile("testHydroDensitySubGrid_result.txt");

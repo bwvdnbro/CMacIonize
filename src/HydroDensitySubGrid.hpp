@@ -1001,6 +1001,58 @@ public:
                                          TRAVELDIRECTION_INSIDE, three_index),
                          *this);
   }
+
+  /**
+   * @brief Dump the subgrid to the given restart file.
+   *
+   * @param restart_writer RestartWriter to write to.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    DensitySubGrid::write_restart_file(restart_writer);
+
+    restart_writer.write(_cell_volume);
+    restart_writer.write(_cell_areas[0]);
+    restart_writer.write(_cell_areas[1]);
+    restart_writer.write(_cell_areas[2]);
+    const int_fast32_t number_of_cells =
+        _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
+    for (int_fast32_t i = 0; i < number_of_cells; ++i) {
+      _hydro_variables[i].write_restart_file(restart_writer);
+    }
+    for (uint_fast8_t i = 0; i < 18; ++i) {
+      restart_writer.write(_hydro_tasks[i]);
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline HydroDensitySubGrid(RestartReader &restart_reader)
+      : DensitySubGrid(restart_reader) {
+
+    _cell_volume = restart_reader.read< double >();
+    _inverse_cell_volume = 1. / _cell_volume;
+    _cell_areas[0] = restart_reader.read< double >();
+    _cell_areas[1] = restart_reader.read< double >();
+    _cell_areas[2] = restart_reader.read< double >();
+    const int_fast32_t number_of_cells =
+        _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
+    _hydro_variables = new HydroVariables[number_of_cells];
+    for (int_fast32_t i = 0; i < number_of_cells; ++i) {
+      _hydro_variables[i] = HydroVariables(restart_reader);
+    }
+    _primitive_variable_limiters = new double[10 * number_of_cells];
+    for (int_fast32_t i = 0; i < 5 * number_of_cells; ++i) {
+      _primitive_variable_limiters[2 * i] = DBL_MAX;
+      _primitive_variable_limiters[2 * i + 1] = -DBL_MAX;
+    }
+    for (uint_fast8_t i = 0; i < 18; ++i) {
+      _hydro_tasks[i] = restart_reader.read< size_t >();
+    }
+  }
 };
 
 #endif // HYDRODENSITYSUBGRID_HPP
