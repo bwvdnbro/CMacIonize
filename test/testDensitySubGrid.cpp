@@ -90,6 +90,28 @@ int main(int argc, char **argv) {
     }
   }
 
+  /// write a restart file
+  {
+    RestartWriter writer("test_densitysubgrid.restart");
+    grid.write_restart_file(writer);
+  }
+
+  /// read the restart file and check that both grids are the same
+  {
+    RestartReader reader("test_densitysubgrid.restart");
+    DensitySubGrid grid2(reader);
+    assert_condition(grid.get_number_of_cells() == grid2.get_number_of_cells());
+    auto it = grid.begin();
+    auto it2 = grid2.begin();
+    while (it != grid.end() && it2 != grid2.end()) {
+      assert_condition(
+          it.get_ionization_variables().get_ionic_fraction(ION_H_n) ==
+          it2.get_ionization_variables().get_ionic_fraction(ION_H_n));
+      ++it;
+      ++it2;
+    }
+  }
+
   std::ofstream ofile("testDensitySubGrid_output.txt");
   ofile << "# x (m)\ty (m)\tz (m)\txH\tnH (m^-3)\n";
   grid.print_intensities(ofile);
