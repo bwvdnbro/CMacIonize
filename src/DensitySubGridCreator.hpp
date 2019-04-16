@@ -750,7 +750,9 @@ public:
     for (size_t i = 0; i < number_of_copies; ++i) {
       restart_writer.write(_originals[i]);
     }
-    for (size_t i = 0; i < number_of_subgrids; ++i) {
+    const size_t number_of_originals = _copies.size();
+    restart_writer.write(number_of_originals);
+    for (size_t i = 0; i < number_of_originals; ++i) {
       restart_writer.write(_copies[i]);
     }
   }
@@ -775,8 +777,9 @@ public:
     for (size_t i = 0; i < number_of_copies; ++i) {
       _originals[i] = restart_reader.read< size_t >();
     }
-    _copies.resize(number_of_subgrids, 0);
-    for (size_t i = 0; i < number_of_subgrids; ++i) {
+    const size_t number_of_originals = restart_reader.read< size_t >();
+    _copies.resize(number_of_originals, 0);
+    for (size_t i = 0; i < number_of_originals; ++i) {
       _copies[i] = restart_reader.read< size_t >();
     }
   }

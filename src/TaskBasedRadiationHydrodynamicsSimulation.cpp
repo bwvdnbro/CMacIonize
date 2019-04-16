@@ -44,6 +44,7 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
+#include "RestartManager.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
@@ -770,6 +771,18 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   Timer parallel_timer;
   Timer worktimer;
 
+  RestartReader *restart_reader = nullptr;
+  if (parser.was_found("restart")) {
+    restart_reader = RestartManager::get_restart_reader(
+        parser.get_value< std::string >("restart"), log);
+    total_timer = Timer(*restart_reader);
+    serial_timer = Timer(*restart_reader);
+    parallel_timer = Timer(*restart_reader);
+    worktimer = Timer(*restart_reader);
+    // there is no point in restarting the cycle counts, as they won't make
+    // any sense
+  }
+
   uint_fast64_t program_start, program_end;
   cpucycle_tick(program_start);
 
@@ -799,8 +812,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   // third: read in the parameters of the run from a parameter file. This file
   // should be read by a ParameterFileParser object that acts as a dictionary
-  ParameterFile *params =
-      new ParameterFile(parser.get_value< std::string >("params"));
+  ParameterFile *params = nullptr;
+  if (restart_reader == nullptr) {
+    params = new ParameterFile(parser.get_value< std::string >("params"));
+  } else {
+    params = new ParameterFile(*restart_reader);
+  }
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
@@ -824,7 +841,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   HydroMask *hydro_mask = nullptr;
   if (params->get_value< bool >(
           "TaskBasedRadiationHydrodynamicsSimulation:use mask", false)) {
-    hydro_mask = HydroMaskFactory::generate(*params, log);
+    if (restart_reader == nullptr) {
+      hydro_mask = HydroMaskFactory::generate(*params, log);
+    } else {
+      hydro_mask = HydroMaskFactory::restart(*restart_reader, log);
+    }
   }
 
   // initialize the simulation box
@@ -857,6 +878,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       "TaskBasedRadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
 
+  if (restart_reader != nullptr) {
+    hydro_lastsnap = restart_reader->read< uint_fast32_t >();
+    hydro_lastrad = restart_reader->read< uint_fast32_t >();
+  }
+
   const double maximum_neutral_fraction = params->get_value< double >(
       "TaskBasedRadiationHydrodynamicsSimulation:maximum neutral fraction",
       -1.);
@@ -869,16 +895,30 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       "TaskBasedRadiationHydrodynamicsSimulation:shared queue size", 100000);
   const size_t number_of_tasks = params->get_value< size_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:number of tasks", 500000);
-  const int_fast32_t random_seed = params->get_value< int_fast32_t >(
+  int_fast32_t random_seed = params->get_value< int_fast32_t >(
       "TaskBasedRadiationHydrodynamicsSimulation:random seed", 42);
-  DensitySubGridCreator< HydroDensitySubGrid > *grid_creator =
-      new DensitySubGridCreator< HydroDensitySubGrid >(simulation_box.get_box(),
-                                                       *params);
+  if (restart_reader != nullptr) {
+    random_seed = restart_reader->read< int_fast32_t >();
+  }
+  DensitySubGridCreator< HydroDensitySubGrid > *grid_creator = nullptr;
+  if (restart_reader == nullptr) {
+    grid_creator = new DensitySubGridCreator< HydroDensitySubGrid >(
+        simulation_box.get_box(), *params);
+  } else {
+    grid_creator =
+        new DensitySubGridCreator< HydroDensitySubGrid >(*restart_reader);
+  }
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
-  PhotonSourceDistribution *sourcedistribution =
-      PhotonSourceDistributionFactory::generate(*params, log);
+  PhotonSourceDistribution *sourcedistribution = nullptr;
+  if (restart_reader == nullptr) {
+    sourcedistribution =
+        PhotonSourceDistributionFactory::generate(*params, log);
+  } else {
+    sourcedistribution =
+        PhotonSourceDistributionFactory::restart(*restart_reader, log);
+  }
   PhotonSourceSpectrum *spectrum = PhotonSourceSpectrumFactory::generate(
       "PhotonSourceSpectrum", *params, log);
 
@@ -942,6 +982,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       source.get_total_luminosity(), abundances, line_cooling_data,
       *recombination_rates, charge_transfer_rates, *params, log);
 
+  RestartManager restart_manager(*params);
+  RandomGenerator restart_generator(random_seed);
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
@@ -964,29 +1007,31 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   memory_logger.add_entry("preinit");
 
-  if (log) {
-    log->write_status("Initializing DensityFunction...");
-  }
-  density_function->initialize();
-  if (log) {
-    log->write_status("Done.");
-  }
+  if (restart_reader == nullptr) {
+    if (log) {
+      log->write_status("Initializing DensityFunction...");
+    }
+    density_function->initialize();
+    if (log) {
+      log->write_status("Done.");
+    }
 
-  if (log) {
-    log->write_status("Initializing grid...");
-  }
-  memory_logger.add_entry("grid");
-  start_parallel_timing_block();
-  grid_creator->initialize(*density_function);
-  stop_parallel_timing_block();
-  memory_logger.finalize_entry();
-  if (log) {
-    log->write_status("Done.");
-  }
+    if (log) {
+      log->write_status("Initializing grid...");
+    }
+    memory_logger.add_entry("grid");
+    start_parallel_timing_block();
+    grid_creator->initialize(*density_function);
+    stop_parallel_timing_block();
+    memory_logger.finalize_entry();
+    if (log) {
+      log->write_status("Done.");
+    }
 
-  memory_logger.add_entry("postinit");
+    memory_logger.add_entry("postinit");
 
-  density_function->free();
+    density_function->free();
+  }
 
   memory_logger.add_entry("pretasks");
 
@@ -1037,11 +1082,17 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   memory_logger.add_entry("posttasks");
 
   double requested_timestep = DBL_MAX;
+  if (restart_reader == nullptr) {
+    for (auto cellit = grid_creator->begin();
+         cellit != grid_creator->original_end(); ++cellit) {
+      requested_timestep =
+          std::min(requested_timestep,
+                   (*cellit).initialize_hydrodynamic_variables(hydro, true));
+    }
+  }
+
   for (auto cellit = grid_creator->begin();
        cellit != grid_creator->original_end(); ++cellit) {
-    requested_timestep =
-        std::min(requested_timestep,
-                 (*cellit).initialize_hydrodynamic_variables(hydro, true));
     make_hydro_tasks(*tasks, cellit.get_index(), *grid_creator);
   }
   for (auto cellit = grid_creator->begin();
@@ -1051,7 +1102,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   const size_t radiation_task_offset = tasks->size();
 
   // initialize the mask (if applicable). MUST BE DONE IN SERIAL!
-  if (hydro_mask != nullptr) {
+  if (hydro_mask != nullptr && restart_reader == nullptr) {
     for (auto gridit = grid_creator->begin();
          gridit != grid_creator->original_end(); ++gridit) {
       hydro_mask->initialize_mask(gridit.get_index(), *gridit);
@@ -1059,7 +1110,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
 
   // apply the mask (if applicable)
-  if (hydro_mask != nullptr) {
+  if (hydro_mask != nullptr && restart_reader == nullptr) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -1075,7 +1126,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   // update the gravitational accelerations if applicable (just to make sure
   // they are present in the first snapshot)
-  if (external_potential != nullptr) {
+  if (external_potential != nullptr && restart_reader == nullptr) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -1093,7 +1144,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     stop_parallel_timing_block();
   }
 
-  if (write_output) {
+  if (write_output && restart_reader == nullptr) {
     writer->write(*grid_creator, 0, *params, 0.);
   }
 
@@ -1105,58 +1156,74 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
 
   /// RADIATION
-  std::vector< uint_fast8_t > levels(
-      grid_creator->number_of_original_subgrids(), 0);
+  if (restart_reader == nullptr) {
+    std::vector< uint_fast8_t > levels(
+        grid_creator->number_of_original_subgrids(), 0);
 
-  // set the copy level off all subgrids containing a source to the given
-  // parameter value (for now)
-  {
-    const photonsourcenumber_t number_of_sources =
-        sourcedistribution->get_number_of_sources();
-    for (photonsourcenumber_t isource = 0; isource < number_of_sources;
-         ++isource) {
-      const CoordinateVector<> position =
-          sourcedistribution->get_position(isource);
-      DensitySubGridCreator< HydroDensitySubGrid >::iterator gridit =
-          grid_creator->get_subgrid(position);
-      levels[gridit.get_index()] = source_copy_level;
-    }
-  }
-
-  // impose copy restrictions
-  {
-    uint_fast8_t max_level = 0;
-    const size_t levelsize = levels.size();
-    for (size_t i = 0; i < levelsize; ++i) {
-      max_level = std::max(max_level, levels[i]);
+    // set the copy level off all subgrids containing a source to the given
+    // parameter value (for now)
+    {
+      const photonsourcenumber_t number_of_sources =
+          sourcedistribution->get_number_of_sources();
+      for (photonsourcenumber_t isource = 0; isource < number_of_sources;
+           ++isource) {
+        const CoordinateVector<> position =
+            sourcedistribution->get_position(isource);
+        DensitySubGridCreator< HydroDensitySubGrid >::iterator gridit =
+            grid_creator->get_subgrid(position);
+        levels[gridit.get_index()] = source_copy_level;
+      }
     }
 
-    size_t ngbs[6];
-    while (max_level > 0) {
+    // impose copy restrictions
+    {
+      uint_fast8_t max_level = 0;
+      const size_t levelsize = levels.size();
       for (size_t i = 0; i < levelsize; ++i) {
-        if (levels[i] == max_level) {
-          const uint_fast8_t numngbs = grid_creator->get_neighbours(i, ngbs);
-          for (uint_fast8_t ingb = 0; ingb < numngbs; ++ingb) {
-            const size_t ngbi = ngbs[ingb];
-            if (levels[ngbi] < levels[i] - 1) {
-              levels[ngbi] = levels[i] - 1;
+        max_level = std::max(max_level, levels[i]);
+      }
+
+      size_t ngbs[6];
+      while (max_level > 0) {
+        for (size_t i = 0; i < levelsize; ++i) {
+          if (levels[i] == max_level) {
+            const uint_fast8_t numngbs = grid_creator->get_neighbours(i, ngbs);
+            for (uint_fast8_t ingb = 0; ingb < numngbs; ++ingb) {
+              const size_t ngbi = ngbs[ingb];
+              if (levels[ngbi] < levels[i] - 1) {
+                levels[ngbi] = levels[i] - 1;
+              }
             }
           }
         }
+        --max_level;
       }
-      --max_level;
     }
+    grid_creator->create_copies(levels);
   }
-  grid_creator->create_copies(levels);
 
   /// SIMULATION
-  TimeLine *timeline = new TimeLine(
-      0., hydro_total_time, hydro_minimum_timestep, maximum_timestep, log);
+  TimeLine *timeline = nullptr;
   int_fast32_t num_step = 0;
   double actual_timestep, current_time;
   requested_timestep *= CFL;
-  bool has_next_step =
-      timeline->advance(requested_timestep, actual_timestep, current_time);
+  bool has_next_step;
+  if (restart_reader == nullptr) {
+    timeline = new TimeLine(0., hydro_total_time, hydro_minimum_timestep,
+                            maximum_timestep, log);
+    has_next_step =
+        timeline->advance(requested_timestep, actual_timestep, current_time);
+  } else {
+    timeline = new TimeLine(*restart_reader);
+    num_step = restart_reader->read< uint_fast32_t >();
+    requested_timestep = restart_reader->read< double >();
+    has_next_step = restart_reader->read< bool >();
+    actual_timestep = restart_reader->read< double >();
+    current_time = restart_reader->read< double >();
+    delete restart_reader;
+    restart_reader = nullptr;
+  }
+
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
 
@@ -2103,10 +2170,57 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     requested_timestep *= CFL;
     has_next_step =
         timeline->advance(requested_timestep, actual_timestep, current_time);
+
+    random_seed = restart_generator.get_random_integer();
+    stop_simulation = restart_manager.stop_simulation();
+    if (restart_manager.write_restart_file() || stop_simulation) {
+      RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
+
+      total_timer.stop();
+      total_timer.write_restart_file(*restart_writer);
+      total_timer.start();
+
+      serial_timer.stop();
+      serial_timer.write_restart_file(*restart_writer);
+      serial_timer.start();
+
+      parallel_timer.write_restart_file(*restart_writer);
+      worktimer.write_restart_file(*restart_writer);
+
+      params->write_restart_file(*restart_writer);
+
+      if (hydro_mask != nullptr) {
+        HydroMaskFactory::write_restart_file(*restart_writer, *hydro_mask);
+      }
+
+      restart_writer->write(hydro_lastsnap);
+      restart_writer->write(hydro_lastrad);
+      restart_writer->write(random_seed);
+
+      grid_creator->write_restart_file(*restart_writer);
+
+      PhotonSourceDistributionFactory::write_restart_file(*restart_writer,
+                                                          *sourcedistribution);
+
+      timeline->write_restart_file(*restart_writer);
+      restart_writer->write(num_step);
+      restart_writer->write(requested_timestep);
+      restart_writer->write(has_next_step);
+      restart_writer->write(actual_timestep);
+      restart_writer->write(current_time);
+
+      delete restart_writer;
+    }
   }
 
-  if (write_output) {
-    writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+  if (stop_simulation) {
+    if (log) {
+      log->write_status("Prematurely stopping simulation on request.");
+    }
+  } else {
+    if (write_output) {
+      writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+    }
   }
 
   cpucycle_tick(program_end);
