@@ -26,6 +26,10 @@
 #ifndef RESTARTWRITER_HPP
 #define RESTARTWRITER_HPP
 
+/*! @brief Enable this to produce a detailed info file that describes everything
+ *  that was written by the writer. */
+#define RESTARTWRITER_INFO
+
 #include <fstream>
 #include <map>
 #include <string>
@@ -38,13 +42,24 @@ private:
   /*! @brief Underlying output file. */
   std::ofstream _file;
 
+#ifdef RESTARTWRITER_INFO
+  /*! @brief Detailed info file describing everything that was written by
+   *  the writer. */
+  std::ofstream _info_file;
+#endif
+
 public:
   /**
    * @brief Constructor.
    *
    * @param filename Name of the restart file.
    */
-  inline RestartWriter(const std::string filename) : _file(filename) {}
+  inline RestartWriter(const std::string filename) : _file(filename) {
+
+#ifdef RESTARTWRITER_INFO
+    _info_file.open("restart_writer_info.txt");
+#endif
+  }
 
   /**
    * @brief General write function for basic template data types.
@@ -53,6 +68,9 @@ public:
    */
   template < typename _datatype_ > void write(const _datatype_ &value) {
     _file.write(reinterpret_cast< const char * >(&value), sizeof(_datatype_));
+#ifdef RESTARTWRITER_INFO
+    _info_file << sizeof(_datatype_) << "\n";
+#endif
   }
 };
 
@@ -64,6 +82,9 @@ public:
 template <> inline void RestartWriter::write(const bool &boolean) {
   uint_least8_t value = boolean;
   write(value);
+#ifdef RESTARTWRITER_INFO
+  _info_file << "bool\n";
+#endif
 }
 
 /**
@@ -75,6 +96,9 @@ template <> inline void RestartWriter::write(const std::string &string) {
   const auto size = string.size();
   write(size);
   _file.write(string.c_str(), size);
+#ifdef RESTARTWRITER_INFO
+  _info_file << "string\n";
+#endif
 }
 
 /**
@@ -93,6 +117,9 @@ RestartWriter::write(const std::map< std::string, std::string > &map) {
     write(key);
     write(value);
   }
+#ifdef RESTARTWRITER_INFO
+  _info_file << "map\n";
+#endif
 }
 
 #endif // RESTARTWRITER_HPP
