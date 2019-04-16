@@ -63,8 +63,22 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
     cmac_error(
         "\"help\" and 'h' are reserved for the help command line option!");
   }
-  _options.push_back(CommandLineOption(long_name, short_name, description,
-                                       argument_type, default_value, required));
+  // check if the command line option already exists
+  bool exists = false;
+  for (size_t i = 0; i < _options.size(); ++i) {
+    if (_options[i].get_long_name() == long_name) {
+      exists = true;
+      break;
+    }
+  }
+  if (exists) {
+    cmac_warning("Command line option \"%s\" already exists!",
+                 long_name.c_str());
+  } else {
+    _options.push_back(CommandLineOption(long_name, short_name, description,
+                                         argument_type, default_value,
+                                         required));
+  }
 }
 
 /**

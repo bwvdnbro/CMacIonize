@@ -310,24 +310,6 @@ public:
   }
 
   /**
-   * @brief Write the ionization variables to the given restart file.
-   *
-   * @param restart_writer RestartWriter to use.
-   */
-  inline void write_restart_file(RestartWriter &restart_writer) const {
-
-    for (uint_fast8_t i = 0; i < 5; ++i) {
-      restart_writer.write(_primitives[i]);
-      restart_writer.write(_conserved[i]);
-      restart_writer.write(_delta_conserved[i]);
-      _primitive_gradients[i].write_restart_file(restart_writer);
-    }
-    _gravitational_acceleration.write_restart_file(restart_writer);
-    restart_writer.write(_energy_rate_term);
-    restart_writer.write(_energy_term);
-  }
-
-  /**
    * @brief Copy the contents of the given HydroVariables instance into
    * this one.
    *
@@ -345,6 +327,24 @@ public:
 
     _energy_rate_term = other._energy_rate_term;
     _energy_term = other._energy_term;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      restart_writer.write(_primitives[i]);
+      restart_writer.write(_conserved[i]);
+      restart_writer.write(_delta_conserved[i]);
+      _primitive_gradients[i].write_restart_file(restart_writer);
+    }
+    _gravitational_acceleration.write_restart_file(restart_writer);
+    restart_writer.write(_energy_rate_term);
+    restart_writer.write(_energy_term);
   }
 
   /**
