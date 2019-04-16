@@ -51,6 +51,29 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction density_function;
   grid_creator.initialize(density_function);
 
+  /// write restart file
+  {
+    RestartWriter writer("test_densitysubgridcreator.restart");
+    grid_creator.write_restart_file(writer);
+  }
+
+  /// read restart file
+  {
+    RestartReader reader("test_densitysubgridcreator.restart");
+    DensitySubGridCreator< DensitySubGrid > grid_creator2(reader);
+    assert_condition(grid_creator.number_of_original_subgrids() ==
+                     grid_creator2.number_of_original_subgrids());
+    auto gridit = grid_creator.begin();
+    auto gridit2 = grid_creator2.begin();
+    while (gridit != grid_creator.original_end() &&
+           gridit2 != grid_creator2.original_end()) {
+      assert_condition((*gridit).get_number_of_cells() ==
+                       (*gridit2).get_number_of_cells());
+      ++gridit;
+      ++gridit2;
+    }
+  }
+
   std::ofstream ofile("testDensitySubGridCreator_grid.txt");
   for (auto gridit = grid_creator.begin(); gridit != grid_creator.all_end();
        ++gridit) {

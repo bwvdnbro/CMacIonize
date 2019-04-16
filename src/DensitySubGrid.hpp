@@ -36,6 +36,8 @@
 #include "IonizationVariables.hpp"
 #include "MPITypes.hpp"
 #include "PhotonPacket.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 #include "ThreadLock.hpp"
 #include "TravelDirections.hpp"
 
@@ -1891,6 +1893,60 @@ public:
     return iterator(get_start_index(position - _anchor, TRAVELDIRECTION_INSIDE,
                                     three_index),
                     *this);
+  }
+
+  /**
+   * @brief Dump the subgrid to the given restart file.
+   *
+   * @param restart_writer RestartWriter to write to.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
+      restart_writer.write(_ngbs[i]);
+    }
+    _anchor.write_restart_file(restart_writer);
+    _cell_size.write_restart_file(restart_writer);
+    for (uint_fast8_t i = 0; i < 3; ++i) {
+      restart_writer.write(_number_of_cells[i]);
+    }
+    restart_writer.write(_owning_thread);
+    const int_fast32_t number_of_cells =
+        _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
+    for (int_fast32_t i = 0; i < number_of_cells; ++i) {
+      _ionization_variables[i].write_restart_file(restart_writer);
+    }
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline DensitySubGrid(RestartReader &restart_reader) {
+
+    for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
+      _ngbs[i] = restart_reader.read< uint_least32_t >();
+      _active_buffers[i] = NEIGHBOUR_OUTSIDE;
+    }
+    _computational_cost = 0;
+    _anchor = CoordinateVector<>(restart_reader);
+    _cell_size = CoordinateVector<>(restart_reader);
+    _inv_cell_size = CoordinateVector<>(
+        1. / _cell_size.x(), 1. / _cell_size.y(), 1. / _cell_size.z());
+    for (uint_fast8_t i = 0; i < 3; ++i) {
+      _number_of_cells[i] = restart_reader.read< int_fast32_t >();
+    }
+    _number_of_cells[3] = _number_of_cells[1] * _number_of_cells[2];
+    _owning_thread = restart_reader.read< int_least32_t >();
+    _largest_buffer_index = TRAVELDIRECTION_NUMBER;
+    _largest_buffer_size = 0;
+    const int_fast32_t number_of_cells =
+        _number_of_cells[0] * _number_of_cells[1] * _number_of_cells[2];
+    _ionization_variables = new IonizationVariables[number_of_cells];
+    for (int_fast32_t i = 0; i < number_of_cells; ++i) {
+      _ionization_variables[i] = IonizationVariables(restart_reader);
+    }
   }
 };
 
