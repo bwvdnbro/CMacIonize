@@ -988,7 +988,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
-  if (write_output) {
+  if (write_output && restart_reader == nullptr) {
     std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
     params->print_contents(pfile);
     pfile.close();

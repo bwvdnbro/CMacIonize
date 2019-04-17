@@ -1020,9 +1020,6 @@ public:
     for (int_fast32_t i = 0; i < number_of_cells; ++i) {
       _hydro_variables[i].write_restart_file(restart_writer);
     }
-    for (uint_fast8_t i = 0; i < 18; ++i) {
-      restart_writer.write(_hydro_tasks[i]);
-    }
   }
 
   /**
@@ -1048,9 +1045,6 @@ public:
     for (int_fast32_t i = 0; i < 5 * number_of_cells; ++i) {
       _primitive_variable_limiters[2 * i] = DBL_MAX;
       _primitive_variable_limiters[2 * i + 1] = -DBL_MAX;
-    }
-    for (uint_fast8_t i = 0; i < 18; ++i) {
-      _hydro_tasks[i] = restart_reader.read< size_t >();
     }
   }
 };
