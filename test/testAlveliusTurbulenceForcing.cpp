@@ -35,7 +35,7 @@
  */
 int main(int argc, char **argv) {
 
-  AlveliusTurbulenceForcing forcing;
+  AlveliusTurbulenceForcing forcing(2., 3., 2.5, 0.2, 1., 42, 1.e-6);
 
   double box[6] = {0., 0., 0., 1., 1., 1.};
   CoordinateVector< int_fast32_t > ncell(32, 32, 32);
@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
     cellit.get_hydro_variables().conserved(0) = 1.;
   }
 
+  forcing.update_turbulence();
   forcing.add_turbulent_forcing(subgrid);
 
   std::ofstream ofile("test_alvelius.txt");
