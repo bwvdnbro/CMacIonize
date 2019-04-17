@@ -520,9 +520,11 @@ public:
       const size_t this_ioriginal = ioriginal.post_increment();
       if (this_ioriginal < _copies.size() &&
           _copies[this_ioriginal] != 0xffffffff) {
-        size_t copy_index = _copies[this_ioriginal];
-        while (_originals[copy_index - _copies.size()] == this_ioriginal) {
-          _subgrids[this_ioriginal]->update_intensities(*_subgrids[copy_index]);
+        size_t copy_index = _copies[this_ioriginal] - _copies.size();
+        while (copy_index < _originals.size() &&
+               _originals[copy_index] == this_ioriginal) {
+          _subgrids[this_ioriginal]->update_intensities(
+              *_subgrids[copy_index + _copies.size()]);
           ++copy_index;
         }
       }
@@ -540,9 +542,10 @@ public:
       const size_t this_ioriginal = ioriginal.post_increment();
       if (this_ioriginal < _copies.size() &&
           _copies[this_ioriginal] != 0xffffffff) {
-        size_t copy_index = _copies[this_ioriginal];
-        while (_originals[copy_index - _copies.size()] == this_ioriginal) {
-          _subgrids[copy_index]->update_neutral_fractions(
+        size_t copy_index = _copies[this_ioriginal] - _copies.size();
+        while (copy_index < _originals.size() &&
+               _originals[copy_index] == this_ioriginal) {
+          _subgrids[copy_index + _copies.size()]->update_neutral_fractions(
               *_subgrids[this_ioriginal]);
           ++copy_index;
         }
