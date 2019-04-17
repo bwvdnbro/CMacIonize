@@ -28,7 +28,7 @@
 
 /*! @brief Enable this to produce a detailed info file that describes everything
  *  that was read by the reader. */
-#define RESTARTREADER_INFO
+//#define RESTARTREADER_INFO
 
 #include <fstream>
 #include <map>

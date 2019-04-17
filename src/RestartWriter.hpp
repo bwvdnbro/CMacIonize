@@ -28,7 +28,7 @@
 
 /*! @brief Enable this to produce a detailed info file that describes everything
  *  that was written by the writer. */
-#define RESTARTWRITER_INFO
+//#define RESTARTWRITER_INFO
 
 #include <fstream>
 #include <map>
