@@ -45,8 +45,11 @@ private:
   /*! @brief Name of the entry. */
   std::string _name;
 
-  /*! @brief Memory size (in page sizes). */
-  uint_fast64_t _memory_size;
+  /*! @brief Virtual memory size (in page sizes). */
+  uint_fast64_t _virtual_memory_size;
+
+  /*! @brief Physical memory size (in page sizes). */
+  uint_fast64_t _physical_memory_size;
 
   /*! @brief Time stamp (in CPU cycles). */
   uint_fast64_t _time_stamp;
@@ -60,24 +63,32 @@ public:
    * @brief Constructor.
    *
    * @param name Name of the entry.
-   * @param memory_size Memory size (in page sizes).
+   * @param virtual_memory_size Virtual memory size (in page sizes).
+   * @param physical_memory_size Physical memory size (in page sizes).
    * @param time_stamp Time stamp (in CPU cycles).
    */
-  inline MemoryLogEntry(const std::string name, const uint_fast64_t memory_size,
+  inline MemoryLogEntry(const std::string name,
+                        const uint_fast64_t virtual_memory_size,
+                        const uint_fast64_t physical_memory_size,
                         const uint_fast64_t time_stamp)
-      : _name(name), _memory_size(memory_size), _time_stamp(time_stamp),
+      : _name(name), _virtual_memory_size(virtual_memory_size),
+        _physical_memory_size(physical_memory_size), _time_stamp(time_stamp),
         _is_snapshot(true) {}
 
   /**
    * @brief Update the size for the given entry after the memory allocation
    * was finished.
    *
-   * @param new_size Size of the virtual memory after the allocation (in page
-   * sizes).
+   * @param new_virtual_size Size of the virtual memory after the allocation (in
+   * page sizes).
+   * @param new_physical_size Size of the physical memory after the allocation
+   * (in page sizes).
    */
-  inline void update_size(const uint_fast64_t new_size) {
-    cmac_assert(new_size > _memory_size);
-    _memory_size = new_size - _memory_size;
+  inline void update_size(const uint_fast64_t new_virtual_size,
+                          const uint_fast64_t new_physical_size) {
+    cmac_assert(new_virtual_size > _virtual_memory_size);
+    _virtual_memory_size = new_virtual_size - _virtual_memory_size;
+    _physical_memory_size = new_physical_size - _physical_memory_size;
     _is_snapshot = false;
   }
 
@@ -92,8 +103,8 @@ public:
                     const bool snapshots) const {
 
     if (snapshots == _is_snapshot) {
-      stream << _name << "\t" << _memory_size * pagesize << "\t" << _time_stamp
-             << "\n";
+      stream << _name << "\t" << _virtual_memory_size * pagesize << "\t"
+             << _physical_memory_size << "\t" << _time_stamp << "\n";
     }
   }
 };
@@ -107,22 +118,19 @@ private:
   std::vector< MemoryLogEntry > _log;
 
   /**
-   * @brief Get the current virtual memory size of the process.
+   * @brief Get the current virtual and physical memory size of the process.
    *
-   * @return Current virtual memory size of the process (in page sizes).
+   * @param virtual_memory_size Variable to store the virtual memory size of the
+   * process in (in page sizes).
+   * @param physical_memory_size Variable to store the physical memory size of
+   * the process in (in page sizes).
    */
-  inline static uint_fast64_t get_virtual_memory_size() {
+  inline static void get_memory_size(uint_fast64_t &virtual_memory_size,
+                                     uint_fast64_t &physical_memory_size) {
 
     std::ifstream statm("/proc/self/statm");
-    uint_fast64_t vmem_size;
-    statm >> vmem_size;
-    statm >> vmem_size;
-    statm >> vmem_size;
-    statm >> vmem_size;
-    statm >> vmem_size;
-    statm >> vmem_size;
-
-    return vmem_size;
+    statm >> virtual_memory_size;
+    statm >> physical_memory_size;
   }
 
 public:
@@ -137,8 +145,9 @@ public:
 #ifdef MEMORY_LOGGING
     uint_fast64_t time_stamp;
     cpucycle_tick(time_stamp);
-    const uint_fast64_t vmem_size = get_virtual_memory_size();
-    _log.push_back(MemoryLogEntry(name, vmem_size, time_stamp));
+    uint_fast64_t vmem_size, phys_size;
+    get_memory_size(vmem_size, phys_size);
+    _log.push_back(MemoryLogEntry(name, vmem_size, phys_size, time_stamp));
     return _log.size() - 1;
 #else
     return 0;
@@ -160,7 +169,9 @@ public:
     if (index == 0xffffffffffffffffull) {
       index = _log.size() - 1;
     }
-    _log[index].update_size(get_virtual_memory_size());
+    uint_fast64_t vmem_size, phys_size;
+    get_memory_size(vmem_size, phys_size);
+    _log[index].update_size(vmem_size, phys_size);
 #endif
   }
 
@@ -172,7 +183,8 @@ public:
    */
   inline void print(std::ostream &stream, const bool snapshots) const {
 
-    stream << "# label\tsize (bytes)\ttime stamp\n";
+    stream
+        << "# label\tvirtual size (bytes)\tphysical size (bytes)\ttime stamp\n";
 
     const uint_fast64_t pagesize = getpagesize();
     for (size_t i = 0; i < _log.size(); ++i) {
