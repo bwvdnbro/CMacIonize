@@ -39,21 +39,24 @@ MB = 1<<20
 
 # load the memory allocation data
 data = np.loadtxt("memory.txt", delimiter = "\t",
-                  dtype = {"names": ("label", "size", "timestamp"),
-                           "formats": ("S100", "u8", "u8")})
+                  dtype = {"names": ("label", "virtual size", "physical size",
+                                     "timestamp"),
+                           "formats": ("S100", "u8", "u8", "u8")})
 
 # filter out small contributions (less than 1% of total memory usage)
-data = data[data["size"] > 0.01 * data["size"].sum()]
+memsum = data["virtual size"].sum()
+data = data[data["virtual size"] > 0.01 * memsum]
 
 # convert sizes to MB
 for row in data:
-  row["label"] += " ({0:.0f} MB)".format(float(row["size"]) / MB)
+  row["label"] += " ({0:.0f} MB)".format(float(row["virtual size"]) / MB)
 
 # create the pie chart
-pl.pie(data["size"], explode = np.ones(len(data)) * 0.1, labels = data["label"])
+pl.pie(data["virtual size"], explode = np.ones(len(data)) * 0.1,
+       labels = data["label"])
 
 # put the total memory usage in the title
-pl.title("Total memory: {0:.0f} MB".format(float(data["size"].sum()) / MB))
+pl.title("Total memory: {0:.0f} MB".format(memsum / MB))
 
 # force aspect ratio
 pl.gca().set_aspect("equal")

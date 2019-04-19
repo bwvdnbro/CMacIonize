@@ -104,7 +104,7 @@ public:
 
     if (snapshots == _is_snapshot) {
       stream << _name << "\t" << _virtual_memory_size * pagesize << "\t"
-             << _physical_memory_size << "\t" << _time_stamp << "\n";
+             << _physical_memory_size * pagesize << "\t" << _time_stamp << "\n";
     }
   }
 };
