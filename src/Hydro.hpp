@@ -331,7 +331,7 @@ public:
    * @param left_state Left state hydro variables.
    * @param right_state Right state hydro variables.
    * @param dx Distance between left and right state midpoint (in m).
-   * @param A Signed surface area of the interface (in m^2).
+   * @param A Surface area of the interface (in m^2).
    */
   inline void do_flux_calculation(const uint_fast8_t i,
                                   HydroVariables &left_state,
@@ -448,7 +448,7 @@ public:
    * @param left_state Left state hydro variables.
    * @param boundary HydroBoundary that sets the right state variables.
    * @param dx Distance between left and right state midpoint (in m).
-   * @param A Signed surface area of the interface (in m^2).
+   * @param A Surface area of the interface (in m^2).
    */
   inline void do_ghost_flux_calculation(const uint_fast8_t i,
                                         const CoordinateVector<> posR,
@@ -532,7 +532,7 @@ public:
     CoordinateVector<> pflux;
     double Eflux = 0.;
     CoordinateVector<> normal;
-    normal[i] = 1.;
+    normal[i] = 1. - 2. * std::signbit(dx);
     _riemann_solver.solve_for_flux(rhoL, vL, PL, rhoR, vR, PR, mflux, pflux,
                                    Eflux, normal);
 

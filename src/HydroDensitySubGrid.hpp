@@ -463,7 +463,7 @@ public:
       column_increment = _number_of_cells[2];
       column_length = _number_of_cells[1];
       dx = -_cell_size[0];
-      A = -_cell_areas[0];
+      A = _cell_areas[0];
       offset = CoordinateVector<>(-_cell_size[0], 0., 0.);
       break;
     case TRAVELDIRECTION_FACE_Y_P:
@@ -485,7 +485,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dx = -_cell_size[1];
-      A = -_cell_areas[1];
+      A = _cell_areas[1];
       offset = CoordinateVector<>(0., -_cell_size[1], 0.);
       break;
     case TRAVELDIRECTION_FACE_Z_P:
@@ -507,7 +507,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dx = -_cell_size[2];
-      A = -_cell_areas[2];
+      A = _cell_areas[2];
       offset = CoordinateVector<>(0., 0., -_cell_size[2]);
       break;
     default:

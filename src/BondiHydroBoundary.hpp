@@ -64,6 +64,7 @@ public:
     right_state.set_primitives_density(rhoR);
     right_state.set_primitives_velocity(uR);
     right_state.set_primitives_pressure(PR);
+
     return right_state;
   }
 
@@ -88,6 +89,7 @@ public:
     right_state.set_primitives_density(rhoR);
     right_state.set_primitives_velocity(uR);
     right_state.set_primitives_pressure(PR);
+
     return right_state;
   }
 };
