@@ -86,7 +86,7 @@ public:
    */
   inline void update_size(const uint_fast64_t new_virtual_size,
                           const uint_fast64_t new_physical_size) {
-    cmac_assert(new_virtual_size > _virtual_memory_size);
+    cmac_assert(new_virtual_size >= _virtual_memory_size);
     _virtual_memory_size = new_virtual_size - _virtual_memory_size;
     _physical_memory_size = new_physical_size - _physical_memory_size;
     _is_snapshot = false;
