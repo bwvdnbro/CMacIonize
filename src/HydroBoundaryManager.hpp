@@ -26,6 +26,7 @@
 #ifndef HYDROBOUNDARYMANAGER_HPP
 #define HYDROBOUNDARYMANAGER_HPP
 
+#include "BondiHydroBoundary.hpp"
 #include "HydroBoundary.hpp"
 #include "ParameterFile.hpp"
 #include "TravelDirections.hpp"
@@ -42,14 +43,18 @@ private:
    * @brief Get a HydroBoundary with the given type name.
    *
    * @param type Type of boundary condition.
+   * @param params ParameterFile to read from.
    * @return Pointer to a new HydroBoundary object.
    */
-  inline static HydroBoundary *get_boundary(const std::string type) {
+  inline static HydroBoundary *get_boundary(const std::string type,
+                                            ParameterFile &params) {
 
     if (type == "inflow") {
       return new InflowHydroBoundary();
     } else if (type == "reflective") {
       return new ReflectiveHydroBoundary();
+    } else if (type == "bondi") {
+      return new BondiHydroBoundary(params);
     } else {
       cmac_error("Unknown hydro boundary type: \"%s\"!", type.c_str());
       return nullptr;
@@ -63,18 +68,25 @@ public:
    * @param params ParameterFile to read from.
    */
   inline HydroBoundaryManager(ParameterFile &params)
-      : _boundaries{get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary x low", "inflow")),
-                    get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary x high", "inflow")),
-                    get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary y low", "inflow")),
-                    get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary y high", "inflow")),
-                    get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary z low", "inflow")),
-                    get_boundary(params.get_value< std::string >(
-                        "HydroBoundaryManager:boundary z high", "inflow"))} {}
+      : _boundaries{
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary x high", "inflow"),
+                         params),
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary x low", "inflow"),
+                         params),
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary y high", "inflow"),
+                         params),
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary y low", "inflow"),
+                         params),
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary z high", "inflow"),
+                         params),
+            get_boundary(params.get_value< std::string >(
+                             "HydroBoundaryManager:boundary z low", "inflow"),
+                         params)} {}
 
   /**
    * @brief Destructor.

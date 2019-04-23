@@ -1532,6 +1532,15 @@ set(TESTMEMORYLOGGER_SOURCES
 add_unit_test(NAME testMemoryLogger
               SOURCES ${TESTMEMORYLOGGER_SOURCES})
 
+## Unit test for BondiHydroBoundary
+set(TESTBONDIHYDROBOUNDARY_SOURCES
+    testBondiHydroBoundary.cpp
+
+    ../src/BondiHydroBoundary.hpp
+)
+add_unit_test(NAME testBondiHydroBoundary
+              SOURCES ${TESTBONDIHYDROBOUNDARY_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

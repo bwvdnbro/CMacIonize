@@ -67,9 +67,9 @@ public:
 
     if (type == "BlockSyntax") {
       return new BlockSyntaxHydroMask(params);
-    } else if ("RescaledIC") {
+    } else if (type == "RescaledIC") {
       return new RescaledICHydroMask(params);
-    } else if ("None") {
+    } else if (type == "None") {
       return nullptr;
     } else {
       cmac_error("Unknown HydroMask type: \"%s\"!", type.c_str());

@@ -309,7 +309,7 @@ public:
     }
 
     // convert vB to a velocity vector
-    velocity = vB * inverse_radius * position;
+    velocity = vB * inverse_radius * relpos;
 
     // now add the tangential velocity profile
     if (_vprof_radius > 0. && _vprof_velocity > 0.) {

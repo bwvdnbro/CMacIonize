@@ -43,23 +43,26 @@ public:
    * left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables).
    */
   virtual HydroVariables get_right_state_gradient_variables(
-      const int i, const HydroVariables &left_state) const = 0;
+      const int i, const CoordinateVector<> posR,
+      const HydroVariables &left_state) const = 0;
 
   /**
    * @brief Get the right state primitive variables and gradients corresponding
    * to the given left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables and
    * gradients).
    */
   virtual HydroVariables
-  get_right_state_flux_variables(const int i,
+  get_right_state_flux_variables(const int i, const CoordinateVector<> posR,
                                  const HydroVariables &left_state) const = 0;
 };
 
@@ -73,11 +76,12 @@ public:
    * left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables).
    */
   virtual HydroVariables
-  get_right_state_gradient_variables(const int i,
+  get_right_state_gradient_variables(const int i, const CoordinateVector<> posR,
                                      const HydroVariables &left_state) const {
 
     HydroVariables right_state;
@@ -94,12 +98,13 @@ public:
    * to the given left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables and
    * gradients).
    */
   virtual HydroVariables
-  get_right_state_flux_variables(const int i,
+  get_right_state_flux_variables(const int i, const CoordinateVector<> posR,
                                  const HydroVariables &left_state) const {
 
     HydroVariables right_state;
@@ -123,11 +128,12 @@ public:
    * left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables).
    */
   virtual HydroVariables
-  get_right_state_gradient_variables(const int i,
+  get_right_state_gradient_variables(const int i, const CoordinateVector<> posR,
                                      const HydroVariables &left_state) const {
 
     HydroVariables right_state;
@@ -146,12 +152,13 @@ public:
    * to the given left state boundary ghost.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @return Corresponding right state (only containing primitive variables and
    * gradients).
    */
   virtual HydroVariables
-  get_right_state_flux_variables(const int i,
+  get_right_state_flux_variables(const int i, const CoordinateVector<> posR,
                                  const HydroVariables &left_state) const {
 
     HydroVariables right_state;
