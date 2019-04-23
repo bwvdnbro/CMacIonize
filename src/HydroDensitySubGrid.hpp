@@ -442,6 +442,7 @@ public:
     int_fast32_t i, start_index_left, row_increment, row_length,
         column_increment, column_length;
     double dx, A;
+    CoordinateVector<> offset;
     switch (direction) {
     case TRAVELDIRECTION_FACE_X_P:
       i = 0;
@@ -452,6 +453,7 @@ public:
       column_length = _number_of_cells[1];
       dx = _cell_size[0];
       A = _cell_areas[0];
+      offset = CoordinateVector<>(_cell_size[0], 0., 0.);
       break;
     case TRAVELDIRECTION_FACE_X_N:
       i = 0;
@@ -462,6 +464,7 @@ public:
       column_length = _number_of_cells[1];
       dx = -_cell_size[0];
       A = -_cell_areas[0];
+      offset = CoordinateVector<>(-_cell_size[0], 0., 0.);
       break;
     case TRAVELDIRECTION_FACE_Y_P:
       i = 1;
@@ -472,6 +475,7 @@ public:
       column_length = _number_of_cells[0];
       dx = _cell_size[1];
       A = _cell_areas[1];
+      offset = CoordinateVector<>(0., _cell_size[1], 0.);
       break;
     case TRAVELDIRECTION_FACE_Y_N:
       i = 1;
@@ -482,6 +486,7 @@ public:
       column_length = _number_of_cells[0];
       dx = -_cell_size[1];
       A = -_cell_areas[1];
+      offset = CoordinateVector<>(0., -_cell_size[1], 0.);
       break;
     case TRAVELDIRECTION_FACE_Z_P:
       i = 2;
@@ -492,6 +497,7 @@ public:
       column_length = _number_of_cells[0];
       dx = _cell_size[2];
       A = _cell_areas[2];
+      offset = CoordinateVector<>(0., 0., _cell_size[2]);
       break;
     case TRAVELDIRECTION_FACE_Z_N:
       i = 2;
@@ -502,6 +508,7 @@ public:
       column_length = _number_of_cells[0];
       dx = -_cell_size[2];
       A = -_cell_areas[2];
+      offset = CoordinateVector<>(0., 0., -_cell_size[2]);
       break;
     default:
       cmac_error("Unknown hydro neighbour: %" PRIiFAST32, direction);
@@ -514,8 +521,9 @@ public:
       for (int_fast32_t ir = 0; ir < row_length; ++ir) {
         const int_fast32_t index_left =
             start_index_left + ic * column_increment + ir * row_increment;
-        hydro.do_ghost_flux_calculation(i, _hydro_variables[index_left],
-                                        boundary, dx, A);
+        hydro.do_ghost_flux_calculation(
+            i, get_cell_midpoint(index_left) + offset,
+            _hydro_variables[index_left], boundary, dx, A);
       }
     }
   }
@@ -705,6 +713,7 @@ public:
         column_increment, column_length;
     double dxinv;
     HydroDensitySubGrid *left_grid;
+    CoordinateVector<> offset;
     switch (direction) {
     case TRAVELDIRECTION_FACE_X_P:
       i = 0;
@@ -715,6 +724,7 @@ public:
       column_increment = _number_of_cells[2];
       column_length = _number_of_cells[1];
       dxinv = _inv_cell_size[0];
+      offset = CoordinateVector<>(_cell_size[0], 0., 0.);
       break;
     case TRAVELDIRECTION_FACE_X_N:
       i = 0;
@@ -725,6 +735,7 @@ public:
       column_increment = _number_of_cells[2];
       column_length = _number_of_cells[1];
       dxinv = -_inv_cell_size[0];
+      offset = CoordinateVector<>(-_cell_size[0], 0., 0.);
       break;
     case TRAVELDIRECTION_FACE_Y_P:
       i = 1;
@@ -735,6 +746,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dxinv = _inv_cell_size[1];
+      offset = CoordinateVector<>(0., _cell_size[1], 0.);
       break;
     case TRAVELDIRECTION_FACE_Y_N:
       i = 1;
@@ -745,6 +757,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dxinv = -_inv_cell_size[1];
+      offset = CoordinateVector<>(0., -_cell_size[1], 0.);
       break;
     case TRAVELDIRECTION_FACE_Z_P:
       i = 2;
@@ -755,6 +768,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dxinv = _inv_cell_size[2];
+      offset = CoordinateVector<>(0., 0., _cell_size[2]);
       break;
     case TRAVELDIRECTION_FACE_Z_N:
       i = 2;
@@ -765,6 +779,7 @@ public:
       column_increment = _number_of_cells[3];
       column_length = _number_of_cells[0];
       dxinv = -_inv_cell_size[2];
+      offset = CoordinateVector<>(0., 0., -_cell_size[2]);
       break;
     default:
       cmac_error("Unknown hydro neighbour: %" PRIiFAST32, direction);
@@ -778,7 +793,8 @@ public:
         const int_fast32_t index_left =
             start_index_left + ic * column_increment + ir * row_increment;
         hydro.do_ghost_gradient_calculation(
-            i, left_grid->_hydro_variables[index_left], boundary, dxinv,
+            i, get_cell_midpoint(index_left) + offset,
+            left_grid->_hydro_variables[index_left], boundary, dxinv,
             &left_grid->_primitive_variable_limiters[10 * index_left]);
       }
     }

@@ -37,7 +37,7 @@
 
 /*! @brief Uncomment this to enable hard resets for unphysical hydro
  *  variables. */
-//#define SAFE_HYDRO_VARIABLES
+#define SAFE_HYDRO_VARIABLES
 
 /**
  * @brief Hydro related functionality.
@@ -444,18 +444,20 @@ public:
    * @brief Do the flux calculation across a box boundary.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state hydro variables.
    * @param boundary HydroBoundary that sets the right state variables.
    * @param dx Distance between left and right state midpoint (in m).
    * @param A Signed surface area of the interface (in m^2).
    */
   inline void do_ghost_flux_calculation(const uint_fast8_t i,
+                                        const CoordinateVector<> posR,
                                         HydroVariables &left_state,
                                         const HydroBoundary &boundary,
                                         const double dx, const double A) const {
 
     HydroVariables right_state =
-        boundary.get_right_state_flux_variables(i, left_state);
+        boundary.get_right_state_flux_variables(i, posR, left_state);
 
     const double halfdx = 0.5 * dx;
     double rhoL = left_state.get_primitives_density() +
@@ -586,6 +588,7 @@ public:
    * @brief Do the gradient calculation across a box boundary.
    *
    * @param i Interface direction: x (0), y (1) or z (2).
+   * @param posR Midpoint position of the ghost cell (in m).
    * @param left_state Left state variables.
    * @param boundary HydroBoundary that sets the right state variables.
    * @param dxinv Inverse distance between left and right state midpoint (in m).
@@ -593,13 +596,14 @@ public:
    * kg m^-3, velocity - m s^-1, pressure - kg m^-1 s^-2).
    */
   inline void do_ghost_gradient_calculation(const int_fast32_t i,
+                                            const CoordinateVector<> posR,
                                             HydroVariables &left_state,
                                             const HydroBoundary &boundary,
                                             const double dxinv,
                                             double WLlim[10]) const {
 
     HydroVariables right_state =
-        boundary.get_right_state_gradient_variables(i, left_state);
+        boundary.get_right_state_gradient_variables(i, posR, left_state);
     for (int_fast32_t j = 0; j < 5; ++j) {
       const double dwdx =
           0.5 * (left_state.primitives(j) + right_state.primitives(j)) * dxinv;
