@@ -237,6 +237,46 @@ int main(int argc, char **argv) {
     check_quantity< QUANTITY_FREQUENCY_PER_MASS >(unitnames, unitlogic);
   }
 
+  /// INVERSE LENGTH
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+
+    unitnames.push_back("m^-1");
+    unitlogic.push_back(0);
+
+    unitnames.push_back("cm^-1");
+    unitlogic.push_back(1);
+
+    unitnames.push_back("pc^-1");
+    unitlogic.push_back(-1);
+
+    unitnames.push_back("kpc^-1");
+    unitlogic.push_back(-1);
+
+    unitnames.push_back("angstrom^-1");
+    unitlogic.push_back(1);
+
+    unitnames.push_back("au^-1");
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_INVERSE_LENGTH >(unitnames, unitlogic);
+  }
+
+  /// INVERSE SURFACE AREA
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+
+    unitnames.push_back("m^-2");
+    unitlogic.push_back(0);
+
+    unitnames.push_back("cm^-2");
+    unitlogic.push_back(1);
+
+    check_quantity< QUANTITY_INVERSE_SURFACE_AREA >(unitnames, unitlogic);
+  }
+
   /// LENGTH
   {
     std::vector< std::string > unitnames;

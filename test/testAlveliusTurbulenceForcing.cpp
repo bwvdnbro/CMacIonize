@@ -25,6 +25,7 @@
  */
 
 #include "AlveliusTurbulenceForcing.hpp"
+#include "Assert.hpp"
 
 /**
  * @brief Unit test for the AlveliusTurbulenceForcing class.
@@ -46,8 +47,17 @@ int main(int argc, char **argv) {
     cellit.get_hydro_variables().conserved(0) = 1.;
   }
 
-  forcing.update_turbulence();
+  assert_condition(forcing.update_turbulence(1.e-5));
   forcing.add_turbulent_forcing(subgrid);
+
+  {
+    RestartWriter writer("test_alvelius.restart");
+    forcing.write_restart_file(writer);
+  }
+  {
+    RestartReader reader("test_alvelius.restart");
+    AlveliusTurbulenceForcing forcing2(reader);
+  }
 
   std::ofstream ofile("test_alvelius.txt");
   ofile << "#x (m)\ty (m)\tz (m)\tvx (m s^-1)\tvy (m s^-1)\tvz (m s^-1)\n";
