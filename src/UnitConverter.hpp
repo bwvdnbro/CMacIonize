@@ -67,8 +67,11 @@ enum Quantity {
   QUANTITY_ENERGY_CHANGE_RATE,
   QUANTITY_ENERGY_RATE,
   QUANTITY_FLUX,
+  QUANTITY_FORCING_POWER,
   QUANTITY_FREQUENCY,
   QUANTITY_FREQUENCY_PER_MASS,
+  QUANTITY_INVERSE_LENGTH,
+  QUANTITY_INVERSE_SURFACE_AREA,
   QUANTITY_LENGTH,
   QUANTITY_MASS,
   QUANTITY_MASS_RATE,
@@ -186,10 +189,16 @@ public:
       return "J s^-1";
     case QUANTITY_FLUX:
       return "m^-2 s^-1";
+    case QUANTITY_FORCING_POWER:
+      return "m^2 s^-3";
     case QUANTITY_FREQUENCY:
       return "Hz";
     case QUANTITY_FREQUENCY_PER_MASS:
       return "Hz kg^-1";
+    case QUANTITY_INVERSE_LENGTH:
+      return "m^-1";
+    case QUANTITY_INVERSE_SURFACE_AREA:
+      return "m^-2";
     case QUANTITY_LENGTH:
       return "m";
     case QUANTITY_MASS:
