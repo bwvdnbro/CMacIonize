@@ -28,6 +28,7 @@
 #ifndef ALVELIUSTURBULENCEFORCING_HPP
 #define ALVELIUSTURBULENCEFORCING_HPP
 
+#include "Box.hpp"
 #include "HydroDensitySubGrid.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
@@ -98,17 +99,20 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param kmin Minimum wave number (in m^-1).
-   * @param kmax Maximum wave number (in m^-1).
-   * @param kforcing Wave number of highest forcing (in m^-1).
-   * @param concentration_factor Width of the spectral function (in m^-2).
+   * @param box_length Length of the simulation box, L (in m).
+   * @param kmin Minimum wave number (in L^-1).
+   * @param kmax Maximum wave number (in L^-1).
+   * @param kforcing Wave number of highest forcing (in L^-1).
+   * @param concentration_factor Width of the spectral function (in L^-2).
    * @param power_forcing Input power (in m^2 s^-3).
    * @param seed Seed for the random generator.
    * @param dtfor Forcing time step (in s).
    */
-  AlveliusTurbulenceForcing(double kmin, double kmax, double kforcing,
-                            double concentration_factor, double power_forcing,
-                            int_fast32_t seed, double dtfor)
+  AlveliusTurbulenceForcing(const double box_length, const double kmin,
+                            const double kmax, const double kforcing,
+                            const double concentration_factor,
+                            const double power_forcing, const int_fast32_t seed,
+                            const double dtfor)
       : _random_generator(seed), _time_step(dtfor),
         _number_of_driving_steps(0) {
 
@@ -157,10 +161,11 @@ public:
                                                -sqrtk13 * invk,
                                                k2 * k3 * invsqrtk13 * invk));
             }
-            _ktable.push_back(CoordinateVector<>(k1, k2, k3));
+            _ktable.push_back(CoordinateVector<>(k1, k2, k3) * box_length);
             const double gaussian_spectra = std::exp(-kdiff * kdiff * cinv);
             spectra_sum += gaussian_spectra;
-            _kforce.push_back(gaussian_spectra * inv2pi * invkk);
+            _kforce.push_back(gaussian_spectra * inv2pi * invkk * box_length *
+                              box_length);
           }
         }
       }
@@ -181,24 +186,30 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * @param box Dimensions of the simulation box (in m).
    * @param params ParameterFile to read from.
    */
-  AlveliusTurbulenceForcing(ParameterFile &params)
+  AlveliusTurbulenceForcing(const Box<> box, ParameterFile &params)
       : AlveliusTurbulenceForcing(
-            params.get_physical_value< QUANTITY_INVERSE_LENGTH >(
-                "TurbulenceForcing:minimum wavenumber", "1. m^-1"),
-            params.get_physical_value< QUANTITY_INVERSE_LENGTH >(
-                "TurbulenceForcing:maximum wavenumber", "3. m^-1"),
-            params.get_physical_value< QUANTITY_INVERSE_LENGTH >(
-                "TurbulenceForing:peak forcing wavenumber", "2.5 m^-1"),
-            params.get_physical_value< QUANTITY_INVERSE_SURFACE_AREA >(
-                "TurbulenceForcing:concentration factor", "0.2 m^-2"),
+            box.get_sides().x(),
+            params.get_value< double >("TurbulenceForcing:minimum wavenumber",
+                                       1.),
+            params.get_value< double >("TurbulenceForcing:maximum wavenumber",
+                                       3.),
+            params.get_value< double >(
+                "TurbulenceForing:peak forcing wavenumber", 2.5),
+            params.get_value< double >("TurbulenceForcing:concentration factor",
+                                       0.2),
             params.get_physical_value< QUANTITY_FORCING_POWER >(
                 "TurbulenceForcing:power forcing", "1. m^2 s^-3"),
             params.get_value< int_fast32_t >("TurbulenceForcing:random seed",
                                              42),
             params.get_physical_value< QUANTITY_TIME >(
-                "TurbulenceForcing:time step", "1.e-6 s")) {}
+                "TurbulenceForcing:time step", "1.e-6 s")) {
+
+    cmac_assert(box.get_sides().x() == box.get_sides().y());
+    cmac_assert(box.get_sides().x() == box.get_sides().z());
+  }
 
   /**
    * @brief Update the turbulent amplitudes for the next time step.
