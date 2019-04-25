@@ -456,8 +456,10 @@ public:
                                         const HydroBoundary &boundary,
                                         const double dx, const double A) const {
 
-    HydroVariables right_state =
-        boundary.get_right_state_flux_variables(i, posR, left_state);
+    // the sign bit is set (1) for negative values
+    int_fast8_t orientation = 1 - 2 * std::signbit(dx);
+    HydroVariables right_state = boundary.get_right_state_flux_variables(
+        i, orientation, posR, left_state);
 
     const double halfdx = 0.5 * dx;
     double rhoL = left_state.get_primitives_density() +
@@ -532,7 +534,7 @@ public:
     CoordinateVector<> pflux;
     double Eflux = 0.;
     CoordinateVector<> normal;
-    normal[i] = 1. - 2. * std::signbit(dx);
+    normal[i] = orientation;
     _riemann_solver.solve_for_flux(rhoL, vL, PL, rhoR, vR, PR, mflux, pflux,
                                    Eflux, normal);
 
@@ -602,8 +604,10 @@ public:
                                             const double dxinv,
                                             double WLlim[10]) const {
 
-    HydroVariables right_state =
-        boundary.get_right_state_gradient_variables(i, posR, left_state);
+    // the sign bit is set (1) for negative values
+    int_fast8_t orientation = 1 - 2 * std::signbit(dxinv);
+    HydroVariables right_state = boundary.get_right_state_gradient_variables(
+        i, orientation, posR, left_state);
     for (int_fast32_t j = 0; j < 5; ++j) {
       const double dwdx =
           0.5 * (left_state.primitives(j) + right_state.primitives(j)) * dxinv;
