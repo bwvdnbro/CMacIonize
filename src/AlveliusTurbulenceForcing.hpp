@@ -30,6 +30,7 @@
 
 #include "Box.hpp"
 #include "HydroDensitySubGrid.hpp"
+#include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "RestartReader.hpp"
@@ -107,12 +108,13 @@ public:
    * @param power_forcing Input power (in m^2 s^-3).
    * @param seed Seed for the random generator.
    * @param dtfor Forcing time step (in s).
+   * @param log Log to write logging info to.
    */
   AlveliusTurbulenceForcing(const double box_length, const double kmin,
                             const double kmax, const double kforcing,
                             const double concentration_factor,
                             const double power_forcing, const int_fast32_t seed,
-                            const double dtfor)
+                            const double dtfor, Log *log = nullptr)
       : _random_generator(seed), _time_step(dtfor),
         _number_of_driving_steps(0) {
 
@@ -161,11 +163,14 @@ public:
                                                -sqrtk13 * invk,
                                                k2 * k3 * invsqrtk13 * invk));
             }
+
+            cmac_assert(_e1.back().norm2() <= 1.1);
+            cmac_assert(_e2.back().norm2() <= 1.1);
+
             _ktable.push_back(CoordinateVector<>(k1, k2, k3) * box_length);
             const double gaussian_spectra = std::exp(-kdiff * kdiff * cinv);
             spectra_sum += gaussian_spectra;
-            _kforce.push_back(gaussian_spectra * inv2pi * invkk * box_length *
-                              box_length);
+            _kforce.push_back(gaussian_spectra * inv2pi * invkk);
           }
         }
       }
@@ -181,31 +186,53 @@ public:
       _kforce[i] *= norm;
       _kforce[i] = std::sqrt(_kforce[i]);
     }
+
+    if (log) {
+      log->write_status("Number of turbulent modes: ", _ktable.size());
+    }
   }
 
   /**
    * @brief ParameterFile constructor.
    *
+   * The following parameters are read:
+   *  - minimum wave number: Minimum wave number to track, in units of the
+   *    inverse box length (default: 1.)
+   *  - maximum wave number: Maximum wave number to track, in units of the
+   *    inverse box length (default: 3.)
+   *  - peak forcing wave number: Wave number at which the distribution of the
+   *    forcing amplitude peaks, in units of the inverse box lenght (default:
+   *    2.5)
+   *  - concentration factor: measure for the width of the forcing amplitude
+   *    distribution, in units of the inverse box length squared (default: 0.2)
+   *  - forcing power: Power of the forcing (default: 2.717e-4 m^2 s^-3)
+   *  - random seed: Seed for the internal random number generator (default: 42)
+   *  - time step: Time step between subsequent applications of the forcing
+   *    (default: 1.519e6 s)
+   *
    * @param box Dimensions of the simulation box (in m).
    * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
    */
-  AlveliusTurbulenceForcing(const Box<> box, ParameterFile &params)
+  AlveliusTurbulenceForcing(const Box<> box, ParameterFile &params,
+                            Log *log = nullptr)
       : AlveliusTurbulenceForcing(
             box.get_sides().x(),
-            params.get_value< double >("TurbulenceForcing:minimum wavenumber",
+            params.get_value< double >("TurbulenceForcing:minimum wave number",
                                        1.),
-            params.get_value< double >("TurbulenceForcing:maximum wavenumber",
+            params.get_value< double >("TurbulenceForcing:maximum wave number",
                                        3.),
             params.get_value< double >(
-                "TurbulenceForing:peak forcing wavenumber", 2.5),
+                "TurbulenceForcing:peak forcing wave number", 2.5),
             params.get_value< double >("TurbulenceForcing:concentration factor",
                                        0.2),
             params.get_physical_value< QUANTITY_FORCING_POWER >(
-                "TurbulenceForcing:power forcing", "1. m^2 s^-3"),
+                "TurbulenceForcing:forcing power", "2.717e-4 m^2 s^-3"),
             params.get_value< int_fast32_t >("TurbulenceForcing:random seed",
                                              42),
             params.get_physical_value< QUANTITY_TIME >(
-                "TurbulenceForcing:time step", "1.e-6 s")) {
+                "TurbulenceForcing:time step", "1.519e6 s"),
+            log) {
 
     cmac_assert(box.get_sides().x() == box.get_sides().y());
     cmac_assert(box.get_sides().x() == box.get_sides().z());
@@ -222,9 +249,16 @@ public:
 
     if (_number_of_driving_steps * _time_step < end_of_timestep) {
       for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
+
         double RealRand[2];
         double ImRand[2];
         get_random_factors(_random_generator, RealRand, ImRand);
+
+        cmac_assert(std::abs(RealRand[0]) <= 1.);
+        cmac_assert(std::abs(RealRand[1]) <= 1.);
+        cmac_assert(std::abs(ImRand[0]) <= 1.);
+        cmac_assert(std::abs(ImRand[1]) <= 1.);
+
         _amplitudes_real[i] = _kforce[i] * _e1[i] * RealRand[0] +
                               _kforce[i] * _e2[i] * RealRand[1];
         _amplitudes_imaginary[i] =
@@ -258,6 +292,8 @@ public:
         force += fr * std::cos(kdotx) - fi * std::sin(kdotx);
       }
 
+      cellit.get_hydro_variables().set_gravitational_acceleration(force);
+
       const double mdt =
           cellit.get_hydro_variables().get_conserved_mass() * _time_step;
       cellit.get_hydro_variables().conserved(1) += mdt * force.x();
@@ -271,7 +307,7 @@ public:
    *
    * @param restart_writer RestartWriter to write to.
    */
-  virtual void write_restart_file(RestartWriter &restart_writer) const {
+  void write_restart_file(RestartWriter &restart_writer) const {
 
     _random_generator.write_restart_file(restart_writer);
     restart_writer.write(_time_step);
