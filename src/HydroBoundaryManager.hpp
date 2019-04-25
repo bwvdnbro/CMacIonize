@@ -48,13 +48,16 @@ private:
    */
   inline static HydroBoundary *get_boundary(const std::string type,
                                             ParameterFile &params) {
-
-    if (type == "inflow") {
+    if (type == "bondi") {
+      return new BondiHydroBoundary(params);
+    } else if (type == "inflow") {
       return new InflowHydroBoundary();
+    } else if (type == "outflow") {
+      return new OutflowHydroBoundary();
+    } else if (type == "periodic") {
+      return nullptr;
     } else if (type == "reflective") {
       return new ReflectiveHydroBoundary();
-    } else if (type == "bondi") {
-      return new BondiHydroBoundary(params);
     } else {
       cmac_error("Unknown hydro boundary type: \"%s\"!", type.c_str());
       return nullptr;
@@ -107,7 +110,11 @@ public:
     cmac_assert_message(direction >= TRAVELDIRECTION_FACE_X_P &&
                             direction <= TRAVELDIRECTION_FACE_Z_N,
                         "Invalid boundary direction: %" PRIiFAST8, direction);
-    return *_boundaries[direction - TRAVELDIRECTION_FACE_X_P];
+    HydroBoundary *boundary = _boundaries[direction - TRAVELDIRECTION_FACE_X_P];
+    if (boundary == nullptr) {
+      cmac_error("Periodic boundaries are not properly linked!");
+    }
+    return *boundary;
   }
 };
 

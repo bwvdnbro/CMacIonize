@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   HydroVariables left_state;
   CoordinateVector<> posR(3.e12, 0., 0.);
   const HydroVariables right_state =
-      boundary.get_right_state_flux_variables(0, posR, left_state);
+      boundary.get_right_state_flux_variables(0, 1, posR, left_state);
 
   double rhoR, PR, nfrac;
   CoordinateVector<> uR;
