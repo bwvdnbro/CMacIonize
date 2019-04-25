@@ -25,6 +25,7 @@
  */
 
 #include "TaskBasedRadiationHydrodynamicsSimulation.hpp"
+#include "AlveliusTurbulenceForcing.hpp"
 #include "ChargeTransferRates.hpp"
 #include "CommandLineParser.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
@@ -754,6 +755,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - external gravity: Enable external gravity? (default: no)
  *  - use mask: Use a mask to disable hydrodynamics and radiation in part of
  *    the box? (default: no)
+ *  - turbulent forcing: Enable turbulent forcing? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -832,6 +834,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     reemission_handler = DiffuseReemissionHandlerFactory::generate(
         *cross_sections, *params, log);
   }
+
+  // initialize the simulation box
+  const SimulationBox simulation_box(*params);
+
   ExternalPotential *external_potential = nullptr;
   if (params->get_value< bool >(
           "TaskBasedRadiationHydrodynamicsSimulation:external gravity",
@@ -847,9 +853,17 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       hydro_mask = HydroMaskFactory::restart(*restart_reader, log);
     }
   }
-
-  // initialize the simulation box
-  const SimulationBox simulation_box(*params);
+  AlveliusTurbulenceForcing *turbulence_forcing = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:turbulent forcing",
+          false)) {
+    if (restart_reader == nullptr) {
+      turbulence_forcing =
+          new AlveliusTurbulenceForcing(simulation_box.get_box(), *params, log);
+    } else {
+      turbulence_forcing = new AlveliusTurbulenceForcing(*restart_reader);
+    }
+  }
 
   const double hydro_total_time = params->get_physical_value< QUANTITY_TIME >(
       "TaskBasedRadiationHydrodynamicsSimulation:total time", "1. s");
@@ -2021,8 +2035,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       log->write_status("Starting hydro step...");
     }
 
-    // update the gravitational accelerations if applicable (just to make sure
-    // they are present in the first snapshot)
+    // update the gravitational accelerations if applicable
     if (external_potential != nullptr) {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
@@ -2030,6 +2043,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          uint_fast64_t task_start, task_stop;
+          cpucycle_tick(task_start);
           HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
           for (auto it = subgrid.hydro_begin(); it != subgrid.hydro_end();
                ++it) {
@@ -2037,9 +2052,45 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 external_potential->get_acceleration(it.get_cell_midpoint());
             it.get_hydro_variables().set_gravitational_acceleration(a);
           }
+          cpucycle_tick(task_stop);
+          active_time[omp_get_thread_num()] += task_stop - task_start;
         }
       }
       stop_parallel_timing_block();
+    }
+
+    // apply the turbulent forcing if applicable
+    if (turbulence_forcing != nullptr) {
+      if (log) {
+        log->write_status("Applying turbulence forcing...");
+      }
+      uint_fast32_t number_of_turbulence_steps = 0;
+      while (turbulence_forcing->update_turbulence(current_time +
+                                                   actual_timestep)) {
+        ++number_of_turbulence_steps;
+        if (log) {
+          log->write_status("Turbulence step ", number_of_turbulence_steps);
+        }
+        AtomicValue< size_t > igrid(0);
+        start_parallel_timing_block();
+#pragma omp parallel default(shared)
+        while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+          const size_t this_igrid = igrid.post_increment();
+          if (this_igrid < grid_creator->number_of_original_subgrids()) {
+            uint_fast64_t task_start, task_stop;
+            cpucycle_tick(task_start);
+            HydroDensitySubGrid &subgrid =
+                *grid_creator->get_subgrid(this_igrid);
+            turbulence_forcing->add_turbulent_forcing(subgrid);
+            cpucycle_tick(task_stop);
+            active_time[omp_get_thread_num()] += task_stop - task_start;
+          }
+        }
+        stop_parallel_timing_block();
+      }
+      if (log) {
+        log->write_status("Done applying turbulence forcing.");
+      }
     }
 
     // reset the hydro tasks and add them to the queue
@@ -2192,6 +2243,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (hydro_mask != nullptr) {
         HydroMaskFactory::write_restart_file(*restart_writer, *hydro_mask);
       }
+      if (turbulence_forcing != nullptr) {
+        turbulence_forcing->write_restart_file(*restart_writer);
+      }
 
       restart_writer->write(hydro_lastsnap);
       restart_writer->write(hydro_lastrad);
@@ -2291,6 +2345,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   if (hydro_mask != nullptr) {
     delete hydro_mask;
+  }
+  if (turbulence_forcing != nullptr) {
+    delete turbulence_forcing;
   }
 
   delete params;
