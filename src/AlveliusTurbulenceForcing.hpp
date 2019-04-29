@@ -167,7 +167,7 @@ public:
             cmac_assert(_e1.back().norm2() <= 1.1);
             cmac_assert(_e2.back().norm2() <= 1.1);
 
-            _ktable.push_back(CoordinateVector<>(k1, k2, k3) * box_length);
+            _ktable.push_back(CoordinateVector<>(k1, k2, k3) / box_length);
             const double gaussian_spectra = std::exp(-kdiff * kdiff * cinv);
             spectra_sum += gaussian_spectra;
             _kforce.push_back(gaussian_spectra * inv2pi * invkk);
