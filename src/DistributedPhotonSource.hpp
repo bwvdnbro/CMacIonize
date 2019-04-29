@@ -107,6 +107,13 @@ public:
       ++_total_number_of_photons[overhead[index]];
     }
 
+    number_done = 0;
+    for (size_t i = 0; i < _subgrids.size(); ++i) {
+      cmac_assert(_total_number_of_photons[i] > 0);
+      number_done += _total_number_of_photons[i];
+    }
+    cmac_assert(number_done == number_of_photons);
+
     _locks = new std::vector< ThreadLock >(_subgrids.size());
   }
 
@@ -146,6 +153,9 @@ public:
    */
   inline size_t get_photon_batch(const size_t source_index,
                                  const size_t max_number) {
+
+    cmac_assert(source_index < _subgrids.size());
+
     if (_number_done[source_index] == _total_number_of_photons[source_index]) {
       return 0;
     }

@@ -963,10 +963,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   Abundances abundances(*params, log);
 
-  PhotonSource source(sourcedistribution, spectrum, continuoussource,
-                      continuousspectrum, abundances, *cross_sections, *params,
-                      log);
-
   // set up output
   std::string output_folder =
       Utilities::get_absolute_path(params->get_value< std::string >(
@@ -993,7 +989,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   // used to calculate both the ionization state and the temperature
   TemperatureCalculator *temperature_calculator = new TemperatureCalculator(
-      source.get_total_luminosity(), abundances, line_cooling_data,
+      sourcedistribution->get_total_luminosity(), abundances, line_cooling_data,
       *recombination_rates, charge_transfer_rates, *params, log);
 
   RestartManager restart_manager(*params);
@@ -1278,12 +1274,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       ++hydro_lastrad;
       // update the PhotonSource
       if (sourcedistribution->update(current_time)) {
-        source.update(sourcedistribution);
         temperature_calculator->update_luminosity(
-            source.get_total_luminosity());
+            sourcedistribution->get_total_luminosity());
       }
 
-      if (source.get_total_luminosity() > 0.) {
+      if (sourcedistribution->get_total_luminosity() > 0.) {
         {
           AtomicValue< size_t > igrid(0);
           start_parallel_timing_block();
@@ -1351,19 +1346,24 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             }
           }
 
-          for (size_t ibatch = 0; ibatch < photon_source.get_number_of_batches(
-                                               0, PHOTONBUFFER_SIZE);
-               ++ibatch) {
+          size_t number_of_photons_done = 0;
+          while (number_of_photons_done < numphoton) {
             for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
                  ++isrc) {
-              const size_t new_task = tasks->get_free_element();
-              (*tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
-              (*tasks)[new_task].set_subgrid(isrc);
-              (*tasks)[new_task].set_buffer(
-                  photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE));
-              shared_queue->add_task(new_task);
+
+              const size_t number_of_photons_this_batch =
+                  photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE);
+              if (number_of_photons_this_batch > 0) {
+                const size_t new_task = tasks->get_free_element();
+                (*tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
+                (*tasks)[new_task].set_subgrid(isrc);
+                (*tasks)[new_task].set_buffer(number_of_photons_this_batch);
+                shared_queue->add_task(new_task);
+                number_of_photons_done += number_of_photons_this_batch;
+              }
             }
           }
+          cmac_assert(number_of_photons_done == numphoton);
 
           bool global_run_flag = true;
           const uint_fast32_t num_empty_target =
@@ -1908,6 +1908,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                     current_index = shared_queue->get_task(*tasks);
                   }
                 }
+              }
+
+              if (log) {
+                log->write_info(
+                    "num_empty: ", num_empty.value(),
+                    ", num_active_buffers: ", num_active_buffers.value(),
+                    ", num_photon_done: ", num_photon_done.value());
               }
 
               if (num_empty.value() == num_empty_target &&
