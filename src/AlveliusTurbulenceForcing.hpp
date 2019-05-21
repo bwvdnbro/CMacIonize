@@ -123,7 +123,7 @@ public:
      *        amplitude*gaussian_exponential
      */
     double spectra_sum = 0.;
-    const double cinv = 1. / concentration_factor;
+    const double cinv = 1. / (concentration_factor * concentration_factor);
     // M_1_PI is equal to 1/pi
     const double inv2pi = 0.5 * M_1_PI;
 
@@ -134,9 +134,21 @@ public:
      * in which the forcing is going to be applied (given by unit vectors e1 and
      * e2)
      */
-    for (double k1 = 0; k1 <= kmax; k1 += 1.) {
-      for (double k2 = 0; k2 <= kmax; k2 += 1.) {
-        for (double k3 = 0; k3 <= kmax; k3 += 1.) {
+    for (double k1 = 0.; k1 <= kmax; k1 += 1.) {
+      double k2start;
+      if (k1 == 0.) {
+        k2start = 0.;
+      } else {
+        k2start = -kmax;
+      }
+      for (double k2 = k2start; k2 <= kmax; k2 += 1.) {
+        double k3start;
+        if (k1 == 0. && k2 == 0.) {
+          k3start = 0.;
+        } else {
+          k3start = -kmax;
+        }
+        for (double k3 = k3start; k3 <= kmax; k3 += 1.) {
           const double pwrk1 = k1 * k1;
           const double pwrk2 = k2 * k2;
           const double pwrk3 = k3 * k3;
@@ -189,6 +201,12 @@ public:
 
     if (log) {
       log->write_status("Number of turbulent modes: ", _ktable.size());
+      log->write_status("Modes:");
+      for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
+        const CoordinateVector<> k = _ktable[i] * box_length;
+        log->write_status("mode ", i, ": ", k.x(), " ", k.y(), " ", k.z(),
+                          " (norm: ", k.norm(), ")");
+      }
     }
   }
 
@@ -242,12 +260,15 @@ public:
    * @brief Update the turbulent amplitudes for the next time step.
    *
    * @param end_of_timestep End of the current hydro time step (in s).
-   * @return True if the amplitudes were updated and we need to add the
-   * turbulent forcing to the cells in the grid.
    */
-  inline bool update_turbulence(const double end_of_timestep) {
+  inline void update_turbulence(const double end_of_timestep) {
 
-    if (_number_of_driving_steps * _time_step < end_of_timestep) {
+    for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
+      _amplitudes_real[i] = CoordinateVector<>(0.);
+      _amplitudes_imaginary[i] = CoordinateVector<>(0.);
+    }
+
+    while (_number_of_driving_steps * _time_step < end_of_timestep) {
       for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
 
         double RealRand[2];
@@ -259,15 +280,12 @@ public:
         cmac_assert(std::abs(ImRand[0]) <= 1.);
         cmac_assert(std::abs(ImRand[1]) <= 1.);
 
-        _amplitudes_real[i] = _kforce[i] * _e1[i] * RealRand[0] +
-                              _kforce[i] * _e2[i] * RealRand[1];
-        _amplitudes_imaginary[i] =
+        _amplitudes_real[i] += _kforce[i] * _e1[i] * RealRand[0] +
+                               _kforce[i] * _e2[i] * RealRand[1];
+        _amplitudes_imaginary[i] +=
             _kforce[i] * _e1[i] * ImRand[0] + _kforce[i] * _e2[i] * ImRand[1];
       }
       ++_number_of_driving_steps;
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -289,7 +307,8 @@ public:
         const CoordinateVector<> fi = _amplitudes_imaginary[ik];
 
         const double kdotx = CoordinateVector<>::dot_product(k, x);
-        force += fr * std::cos(kdotx) - fi * std::sin(kdotx);
+        force +=
+            fr * std::cos(2. * M_PI * kdotx) - fi * std::sin(2. * M_PI * kdotx);
       }
 
       cellit.get_hydro_variables().set_gravitational_acceleration(force);
@@ -299,6 +318,11 @@ public:
       cellit.get_hydro_variables().conserved(1) += mdt * force.x();
       cellit.get_hydro_variables().conserved(2) += mdt * force.y();
       cellit.get_hydro_variables().conserved(3) += mdt * force.z();
+      const double dkin = 0.5 * force.norm2() * _time_step * mdt;
+      cellit.get_hydro_variables().conserved(4) += dkin;
+      cellit.get_hydro_variables().primitives(1) += _time_step * force.x();
+      cellit.get_hydro_variables().primitives(2) += _time_step * force.y();
+      cellit.get_hydro_variables().primitives(3) += _time_step * force.z();
     }
   }
 
