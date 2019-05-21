@@ -2071,30 +2071,22 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (log) {
         log->write_status("Applying turbulence forcing...");
       }
-      uint_fast32_t number_of_turbulence_steps = 0;
-      while (turbulence_forcing->update_turbulence(current_time +
-                                                   actual_timestep)) {
-        ++number_of_turbulence_steps;
-        if (log) {
-          log->write_status("Turbulence step ", number_of_turbulence_steps);
-        }
-        AtomicValue< size_t > igrid(0);
-        start_parallel_timing_block();
+      turbulence_forcing->update_turbulence(current_time + actual_timestep);
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
 #pragma omp parallel default(shared)
-        while (igrid.value() < grid_creator->number_of_original_subgrids()) {
-          const size_t this_igrid = igrid.post_increment();
-          if (this_igrid < grid_creator->number_of_original_subgrids()) {
-            uint_fast64_t task_start, task_stop;
-            cpucycle_tick(task_start);
-            HydroDensitySubGrid &subgrid =
-                *grid_creator->get_subgrid(this_igrid);
-            turbulence_forcing->add_turbulent_forcing(subgrid);
-            cpucycle_tick(task_stop);
-            active_time[omp_get_thread_num()] += task_stop - task_start;
-          }
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          uint_fast64_t task_start, task_stop;
+          cpucycle_tick(task_start);
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          turbulence_forcing->add_turbulent_forcing(subgrid);
+          cpucycle_tick(task_stop);
+          active_time[omp_get_thread_num()] += task_stop - task_start;
         }
-        stop_parallel_timing_block();
       }
+      stop_parallel_timing_block();
       if (log) {
         log->write_status("Done applying turbulence forcing.");
       }

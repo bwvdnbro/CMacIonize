@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     cellit.get_hydro_variables().conserved(0) = 1.;
   }
 
-  assert_condition(forcing.update_turbulence(1.e-5));
+  forcing.update_turbulence(1.e-5);
   forcing.add_turbulent_forcing(subgrid);
 
   {
