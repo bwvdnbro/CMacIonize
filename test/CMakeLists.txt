@@ -1621,6 +1621,15 @@ set(TESTBONDIHYDROBOUNDARY_SOURCES
 add_unit_test(NAME testBondiHydroBoundary
               SOURCES ${TESTBONDIHYDROBOUNDARY_SOURCES})
 
+## Unit test for UniformRandomPhotonSourceDistribution
+set(TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES
+    testUniformRandomPhotonSourceDistribution.cpp
+
+    ../src/UniformRandomPhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testUniformRandomPhotonSourceDistribution
+              SOURCES ${TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

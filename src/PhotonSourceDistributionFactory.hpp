@@ -40,6 +40,7 @@
 #include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 #include "SingleSupernovaPhotonSourceDistribution.hpp"
+#include "UniformRandomPhotonSourceDistribution.hpp"
 
 // library dependent implementations
 #ifdef HAVE_HDF5
@@ -117,6 +118,8 @@ public:
       return new SingleStarPhotonSourceDistribution(params, log);
     } else if (type == "SingleSupernova") {
       return new SingleSupernovaPhotonSourceDistribution(params, log);
+    } else if (type == "UniformRandom") {
+      return new UniformRandomPhotonSourceDistribution(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotPhotonSourceDistribution(params, log);
@@ -163,6 +166,8 @@ public:
       return new SingleStarPhotonSourceDistribution(restart_reader);
     } else if (tag == typeid(SingleSupernovaPhotonSourceDistribution).name()) {
       return new SingleSupernovaPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(UniformRandomPhotonSourceDistribution).name()) {
+      return new UniformRandomPhotonSourceDistribution(restart_reader);
     } else {
       cmac_error("Restarting is not supported for distribution type: \"%s\".",
                  tag.c_str());
