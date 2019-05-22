@@ -510,6 +510,25 @@ public:
   }
 
   /**
+   * @brief Create copies for the given subgrids according to the given copy
+   * level specification.
+   *
+   * @param copy_levels Desired copy level for each subgrid.
+   */
+  inline void update_copies(std::vector< uint_fast8_t > &copy_levels) {
+
+    const uint_fast32_t original_number = number_of_original_subgrids();
+    for (uint_fast32_t igrid = original_number; igrid < _subgrids.size();
+         ++igrid) {
+      delete _subgrids[igrid];
+    }
+    _subgrids.resize(original_number);
+    _originals.clear();
+
+    create_copies(copy_levels);
+  }
+
+  /**
    * @brief Update the counters of all original subgrids with the contributions
    * from their copies.
    */

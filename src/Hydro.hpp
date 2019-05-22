@@ -763,9 +763,11 @@ public:
    *
    * @param ionization_variables IonizationVariables.
    * @param hydro_variables HydroVariables.
+   * @param inverse_volume Inverse volume of the cell (in m^-3).
    */
   inline void add_ionization_energy(IonizationVariables &ionization_variables,
-                                    HydroVariables &hydro_variables) const {
+                                    HydroVariables &hydro_variables,
+                                    const double inverse_volume) const {
 
     if (_gamma == 1.) {
       const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
@@ -810,6 +812,14 @@ public:
       const double dE = m * du;
       if (dE > 0.) {
         hydro_variables.conserved(4) += dE;
+
+        const double pressure =
+            _gamma_minus_one * inverse_volume *
+            (hydro_variables.get_conserved_total_energy() -
+             0.5 * CoordinateVector<>::dot_product(
+                       hydro_variables.get_primitives_velocity(),
+                       hydro_variables.get_conserved_momentum()));
+        hydro_variables.set_primitives_pressure(pressure);
       }
     }
   }
