@@ -124,8 +124,6 @@ public:
      */
     double spectra_sum = 0.;
     const double cinv = 1. / (concentration_factor * concentration_factor);
-    // M_1_PI is equal to 1/pi
-    const double inv2pi = 0.5 * M_1_PI;
 
     /*
      * Iterate over all possible wavenumbers for
@@ -180,9 +178,10 @@ public:
             cmac_assert(_e2.back().norm2() <= 1.1);
 
             _ktable.push_back(CoordinateVector<>(k1, k2, k3) / box_length);
-            const double gaussian_spectra = std::exp(-kdiff * kdiff * cinv);
+            const double gaussian_spectra =
+                std::exp(-kdiff * kdiff * cinv) * invkk;
             spectra_sum += gaussian_spectra;
-            _kforce.push_back(gaussian_spectra * inv2pi * invkk);
+            _kforce.push_back(gaussian_spectra);
           }
         }
       }
@@ -311,18 +310,24 @@ public:
             fr * std::cos(2. * M_PI * kdotx) - fi * std::sin(2. * M_PI * kdotx);
       }
 
-      cellit.get_hydro_variables().set_gravitational_acceleration(force);
-
       const double mdt =
           cellit.get_hydro_variables().get_conserved_mass() * _time_step;
+      const double Etherm =
+          cellit.get_hydro_variables().get_conserved_total_energy() -
+          0.5 * CoordinateVector<>::dot_product(
+                    cellit.get_hydro_variables().get_primitives_velocity(),
+                    cellit.get_hydro_variables().get_conserved_momentum());
       cellit.get_hydro_variables().conserved(1) += mdt * force.x();
       cellit.get_hydro_variables().conserved(2) += mdt * force.y();
       cellit.get_hydro_variables().conserved(3) += mdt * force.z();
-      const double dkin = 0.5 * force.norm2() * _time_step * mdt;
-      cellit.get_hydro_variables().conserved(4) += dkin;
       cellit.get_hydro_variables().primitives(1) += _time_step * force.x();
       cellit.get_hydro_variables().primitives(2) += _time_step * force.y();
       cellit.get_hydro_variables().primitives(3) += _time_step * force.z();
+      const double Ekin =
+          0.5 * CoordinateVector<>::dot_product(
+                    cellit.get_hydro_variables().get_primitives_velocity(),
+                    cellit.get_hydro_variables().get_conserved_momentum());
+      cellit.get_hydro_variables().set_conserved_total_energy(Etherm + Ekin);
     }
   }
 
