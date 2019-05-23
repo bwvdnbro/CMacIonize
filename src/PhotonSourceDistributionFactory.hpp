@@ -32,6 +32,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "AsciiFilePhotonSourceDistribution.hpp"
 #include "CaproniPhotonSourceDistribution.hpp"
 #include "DiscPatchPhotonSourceDistribution.hpp"
 #include "DwarfGalaxyPhotonSourceDistribution.hpp"
@@ -102,6 +103,8 @@ public:
 #endif
     if (type == "None") {
       return nullptr;
+    } else if (type == "AsciiFile") {
+      return new AsciiFilePhotonSourceDistribution(params, log);
     } else if (type == "Caproni") {
       return new CaproniPhotonSourceDistribution(params, log);
     } else if (type == "DiscPatch") {
@@ -154,7 +157,9 @@ public:
                                                   Log *log = nullptr) {
 
     const std::string tag = restart_reader.read< std::string >();
-    if (tag == typeid(CaproniPhotonSourceDistribution).name()) {
+    if (tag == typeid(AsciiFilePhotonSourceDistribution).name()) {
+      return new AsciiFilePhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(CaproniPhotonSourceDistribution).name()) {
       return new CaproniPhotonSourceDistribution(restart_reader);
     } else if (tag == typeid(DiscPatchPhotonSourceDistribution).name()) {
       return new DiscPatchPhotonSourceDistribution(restart_reader);
