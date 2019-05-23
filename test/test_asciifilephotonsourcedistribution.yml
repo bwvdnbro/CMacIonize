@@ -1,0 +1,13 @@
+number of sources: 3
+
+source[0]:
+  position: [0. m, 0. m, 0. m]
+  luminosity: 1.e49 s^-1
+
+source[1]:
+  position: [0.5 kpc, 0.2 kpc, 0.4 kpc]
+  luminosity: 4.e48 s^-1
+
+source[2]:
+  position: [0.1 pc, -0.4 pc, 0.2 pc]
+  luminosity: 1.e49 s^-1

@@ -1630,6 +1630,19 @@ set(TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES
 add_unit_test(NAME testUniformRandomPhotonSourceDistribution
               SOURCES ${TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES})
 
+## Unit test for AsciiFilePhotonSourceDistribution
+set(TESTASCIIFILEPHOTONSOURCEDISTRIBUTION_SOURCES
+    testAsciiFilePhotonSourceDistribution.cpp
+
+    ../src/AsciiFilePhotonSourceDistribution.hpp
+)
+add_unit_test(NAME testAsciiFilePhotonSourceDistribution
+              SOURCES ${TESTASCIIFILEPHOTONSOURCEDISTRIBUTION_SOURCES})
+configure_file(
+  ${PROJECT_SOURCE_DIR}/test/test_asciifilephotonsourcedistribution.yml
+  ${PROJECT_BINARY_DIR}/rundir/test/test_asciifilephotonsourcedistribution.yml
+  COPYONLY)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
