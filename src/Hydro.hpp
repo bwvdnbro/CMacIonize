@@ -214,15 +214,14 @@ public:
 
     if (_gamma > 1.) {
       const double rho = hydro_variables.get_primitives_density();
-      if (rho > 0.) {
+      const double P = hydro_variables.get_primitives_pressure();
+      if (rho > 0. && P > 0.) {
         const double rho_inv = 1. / rho;
         if (!std::isinf(rho_inv)) {
-          const double cs = std::sqrt(
-              _gamma * hydro_variables.get_primitives_pressure() * rho_inv);
+          const double cs = std::sqrt(_gamma * P * rho_inv);
           cmac_assert(cs == cs);
           cmac_assert_message(cs > 0., "gamma: %g, rho: %g, rho_inv: %g, P: %g",
-                              _gamma, rho, rho_inv,
-                              hydro_variables.get_primitives_pressure());
+                              _gamma, rho, rho_inv, P);
           return cs;
         } else {
           return DBL_MIN;
