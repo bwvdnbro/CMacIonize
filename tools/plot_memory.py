@@ -28,6 +28,7 @@
 # import modules
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
 
@@ -35,13 +36,17 @@ import pylab as pl
 pl.rcParams["text.usetex"] = True
 
 # predefine the MB (in bytes)
-MB = 1<<20
+MB = 1 << 20
 
 # load the memory allocation data
-data = np.loadtxt("memory.txt", delimiter = "\t",
-                  dtype = {"names": ("label", "virtual size", "physical size",
-                                     "timestamp"),
-                           "formats": ("S100", "u8", "u8", "u8")})
+data = np.loadtxt(
+    "memory.txt",
+    delimiter="\t",
+    dtype={
+        "names": ("label", "virtual size", "physical size", "timestamp"),
+        "formats": ("S100", "u8", "u8", "u8"),
+    },
+)
 
 # filter out small contributions (less than 1% of total memory usage)
 memsum = data["virtual size"].sum()
@@ -49,11 +54,12 @@ data = data[data["virtual size"] > 0.01 * memsum]
 
 # convert sizes to MB
 for row in data:
-  row["label"] += " ({0:.0f} MB)".format(float(row["virtual size"]) / MB)
+    row["label"] += " ({0:.0f} MB)".format(float(row["virtual size"]) / MB)
 
 # create the pie chart
-pl.pie(data["virtual size"], explode = np.ones(len(data)) * 0.1,
-       labels = data["label"])
+pl.pie(
+    data["virtual size"], explode=np.ones(len(data)) * 0.1, labels=data["label"]
+)
 
 # put the total memory usage in the title
 pl.title("Total memory: {0:.0f} MB".format(memsum / MB))
@@ -62,4 +68,4 @@ pl.title("Total memory: {0:.0f} MB".format(memsum / MB))
 pl.gca().set_aspect("equal")
 
 # save the image
-pl.savefig("memory.png", dpi = 300, bbox_inches = "tight")
+pl.savefig("memory.png", dpi=300, bbox_inches="tight")

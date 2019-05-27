@@ -30,11 +30,12 @@
 ## load necessary modules
 # for reading in the binary file
 import numpy as np
+
 # for plotting
 import pylab as pl
 
 # load the binary file
-image = np.fromfile("galaxy_image.dat", dtype = np.float64)
+image = np.fromfile("galaxy_image.dat", dtype=np.float64)
 
 # convert to a 200x200 image array
 image = image.reshape((200, 200))

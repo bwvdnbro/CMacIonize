@@ -28,6 +28,7 @@
 # import modules
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
 
@@ -35,33 +36,37 @@ import pylab as pl
 pl.rcParams["text.usetex"] = True
 
 # pre-define the MB
-MB = 1<<20
+MB = 1 << 20
 
 # load the memory usage time line data
-data = np.loadtxt("memory_timeline.txt", delimiter = "\t",
-                  dtype = {"names": ("label", "virtual size", "physical size",
-                                     "timestamp"),
-                           "formats": ("S100", "u8", "u8", "u8")})
+data = np.loadtxt(
+    "memory_timeline.txt",
+    delimiter="\t",
+    dtype={
+        "names": ("label", "virtual size", "physical size", "timestamp"),
+        "formats": ("S100", "u8", "u8", "u8"),
+    },
+)
 
 # convert sizes to MB
 for row in data:
-  row["virtual size"] /= MB
-  row["physical size"] /= MB
+    row["virtual size"] /= MB
+    row["physical size"] /= MB
 
 # plot the time line
 t = np.arange(0, len(data))
-pl.plot(t, data["virtual size"], label = "virtual")
-pl.plot(t, data["physical size"], label = "physical")
+pl.plot(t, data["virtual size"], label="virtual")
+pl.plot(t, data["physical size"], label="physical")
 
 # appropriate labels
 pl.ylabel("memory usage (MB)")
 
 # use snapshot labels as x-label
 pl.gca().set_xticks(t)
-pl.gca().set_xticklabels(data["label"], rotation = "vertical")
+pl.gca().set_xticklabels(data["label"], rotation="vertical")
 
-pl.legend(loc = "best")
+pl.legend(loc="best")
 
 # finalise and save image
 pl.tight_layout()
-pl.savefig("memory_timeline.png", dpi = 300, bbox_inches = "tight")
+pl.savefig("memory_timeline.png", dpi=300, bbox_inches="tight")

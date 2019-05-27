@@ -26,32 +26,43 @@
 
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
 import argparse
 
 # parse the command line arguments
 argparser = argparse.ArgumentParser(
-  description = "Plot task time stats based on a given task output file.")
+    description="Plot task time stats based on a given task output file."
+)
 
-argparser.add_argument("-n", "--name", action = "store", required = True)
-argparser.add_argument("-o", "--output", action = "store", required = True)
-argparser.add_argument("-m", "--max", action = "store", default = -1,
-                       type = float)
-argparser.add_argument("-b", "--bins", action = "store", default = 100,
-                       type = int)
-argparser.add_argument("-y", "--ylim", action = "store", default = -1,
-                       type = float)
+argparser.add_argument("-n", "--name", action="store", required=True)
+argparser.add_argument("-o", "--output", action="store", required=True)
+argparser.add_argument("-m", "--max", action="store", default=-1, type=float)
+argparser.add_argument("-b", "--bins", action="store", default=100, type=int)
+argparser.add_argument("-y", "--ylim", action="store", default=-1, type=float)
 
 args = argparser.parse_args()
 
 # list of all supported tasks
-task_names = ["source photon", "photon traversal", "reemission",
-              "temperature/ionization state", "send",
-              "receive", "gradsweep internal", "gradsweep neighbour",
-              "gradsweep boundary", "slope limiter", "predict primitives",
-              "fluxsweep internal", "fluxsweep neighbour", "fluxsweep boundary",
-              "update conserved", "update primitives"]
+task_names = [
+    "source photon",
+    "photon traversal",
+    "reemission",
+    "temperature/ionization state",
+    "send",
+    "receive",
+    "gradsweep internal",
+    "gradsweep neighbour",
+    "gradsweep boundary",
+    "slope limiter",
+    "predict primitives",
+    "fluxsweep internal",
+    "fluxsweep neighbour",
+    "fluxsweep boundary",
+    "update conserved",
+    "update primitives",
+]
 
 # load the task data
 data = np.loadtxt(args.name)
@@ -60,28 +71,28 @@ labels = []
 taskmax = 0
 # loop over all task types
 for i in range(len(task_names)):
-  # filter out all tasks of this type
-  task = data[data[:,4] == i]
+    # filter out all tasks of this type
+    task = data[data[:, 4] == i]
 
-  # skip tasks that are not present
-  if len(task) == 0:
-    continue
+    # skip tasks that are not present
+    if len(task) == 0:
+        continue
 
-  # compute the time spent in each task
-  times = task[:,3] - task[:,2]
-  taskmax = max(taskmax, times.max())
+    # compute the time spent in each task
+    times = task[:, 3] - task[:, 2]
+    taskmax = max(taskmax, times.max())
 
-  # add to the lists
-  tasks.append(times)
-  labels.append(task_names[i])
+    # add to the lists
+    tasks.append(times)
+    labels.append(task_names[i])
 
 # plot a histogram of all tasks that are present
 if args.max > 0:
-  taskmax = args.max
-pl.hist(tasks, np.linspace(0, taskmax, args.bins + 1), label = labels)
+    taskmax = args.max
+pl.hist(tasks, np.linspace(0, taskmax, args.bins + 1), label=labels)
 
 if args.ylim > 0:
-  pl.ylim(0, args.ylim)
+    pl.ylim(0, args.ylim)
 
-pl.legend(loc = "best")
-pl.savefig(args.output, dpi = 300)
+pl.legend(loc="best")
+pl.savefig(args.output, dpi=300)
