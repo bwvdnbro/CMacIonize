@@ -53,29 +53,32 @@ import scipy.stats as stats
 # @return Binned values and standard deviations.
 ##
 def bin_quantity(r, q, r_bin_edge):
-  q_bin, _, _ = \
-    stats.binned_statistic(r, q, statistic = "mean", bins = r_bin_edge)
-  q2_bin, _, _ = \
-    stats.binned_statistic(r, q**2, statistic = "mean", bins = r_bin_edge)
-  q_sigma_bin = np.sqrt(q2_bin - q_bin**2)
-  return q_bin, q_sigma_bin
+    q_bin, _, _ = stats.binned_statistic(
+        r, q, statistic="mean", bins=r_bin_edge
+    )
+    q2_bin, _, _ = stats.binned_statistic(
+        r, q ** 2, statistic="mean", bins=r_bin_edge
+    )
+    q_sigma_bin = np.sqrt(q2_bin - q_bin ** 2)
+    return q_bin, q_sigma_bin
+
 
 # define the parsec
-pc = 3.086e16 # in m
+pc = 3.086e16  # in m
 
 # set the radial limits for the x axis
-xlims = [1., 5.5]
+xlims = [1.0, 5.5]
 
 # set the number of radial bins
 numbin = 100
 
 # get the last snapshot in the directory
 f = sorted(glob.glob("lexingtonHII40_*.hdf5"))[-1]
-print "Processing last snapshot:", f
+print("Processing last snapshot:", f)
 
-print "Reading file"
+print("Reading file")
 # open the file
-file = h5py.File(f, 'r')
+file = h5py.File(f, "r")
 # read in the data arrays
 coords = np.array(file["/PartType0/Coordinates"])
 nfracH = np.array(file["/PartType0/NeutralFractionH"])
@@ -95,30 +98,32 @@ ifracSp4 = np.array(file["/PartType0/NeutralFractionS+++"])
 temp = np.array(file["/PartType0/Temperature"])
 
 # compute additional data arrays
-ifracCp1 = 1. - ifracCp2 - ifracCp3
-ifracSp1 = 1. - ifracSp2 - ifracSp3 - ifracSp4
+ifracCp1 = 1.0 - ifracCp2 - ifracCp3
+ifracSp1 = 1.0 - ifracSp2 - ifracSp3 - ifracSp4
 
 # read in the box size
 box = np.array(file["/Header"].attrs["BoxSize"])
 
-print "Done reading file"
+print("Done reading file")
 
-print "Setting up radial bins"
+print("Setting up radial bins")
 # compute the radii
-radius = np.sqrt((coords[:,0] - 0.5*box[0])**2 +
-                 (coords[:,1] - 0.5*box[1])**2 +
-                 (coords[:,2] - 0.5*box[2])**2)
+radius = np.sqrt(
+    (coords[:, 0] - 0.5 * box[0]) ** 2
+    + (coords[:, 1] - 0.5 * box[1]) ** 2
+    + (coords[:, 2] - 0.5 * box[2]) ** 2
+)
 # convert them from m to pc
 radius /= pc
 
 # set up the radial bins...
-rbin = np.linspace(xlims[0], xlims[1], numbin+1)
-rbin = np.concatenate(([0.], rbin))
-rbin = np.concatenate((rbin, [np.max(radius)*1.1]))
+rbin = np.linspace(xlims[0], xlims[1], numbin + 1)
+rbin = np.concatenate(([0.0], rbin))
+rbin = np.concatenate((rbin, [np.max(radius) * 1.1]))
 # ...and the centres of the bins
-rmid = 0.5*(rbin[:-1] + rbin[1:])
+rmid = 0.5 * (rbin[:-1] + rbin[1:])
 
-print "Binning data"
+print("Binning data")
 # get the binned values and standard deviations
 nfracHb, nfracHs = bin_quantity(radius, nfracH, rbin)
 nfracHeb, nfracHes = bin_quantity(radius, nfracHe, rbin)
@@ -138,101 +143,86 @@ ifracSp3b, ifracSp3s = bin_quantity(radius, ifracSp3, rbin)
 ifracSp4b, ifracSp4s = bin_quantity(radius, ifracSp4, rbin)
 tempb, temps = bin_quantity(radius, temp, rbin)
 
-print "Creating figures"
+print("Creating figures")
 # create the abundances figure
-fig, ax = pl.subplots(2, 3, figsize = (16, 12))
+fig, ax = pl.subplots(2, 3, figsize=(16, 12))
 
 # we need to clip the errorbars that end up outside the figure box, since
 # otherwise they are not shown properly
-ax[0][0].set_yscale("log", nonposy = "clip")
-ax[0][0].errorbar(rmid, nfracHb, yerr = nfracHs, fmt = ".", label = "H0/H")
-ax[0][0].errorbar(rmid, nfracHeb, yerr = nfracHes, fmt = ".",
-                  label = "He0/He")
+ax[0][0].set_yscale("log", nonposy="clip")
+ax[0][0].errorbar(rmid, nfracHb, yerr=nfracHs, fmt=".", label="H0/H")
+ax[0][0].errorbar(rmid, nfracHeb, yerr=nfracHes, fmt=".", label="He0/He")
 ax[0][0].set_xlim(xlims[0], xlims[1])
-ax[0][0].set_ylim(1.e-5, 2.)
+ax[0][0].set_ylim(1.0e-5, 2.0)
 ax[0][0].set_xlabel("$r$ (pc)")
 ax[0][0].set_ylabel("Neutral fraction")
-ax[0][0].legend(loc = "best")
+ax[0][0].legend(loc="best")
 
-ax[0][1].set_yscale("log", nonposy = "clip")
-ax[0][1].errorbar(rmid, ifracOp1b, yerr = ifracOp1s, fmt = ".",
-                  label = "O+/O")
-ax[0][1].errorbar(rmid, ifracOp2b, yerr = ifracOp2s, fmt = ".",
-                  label = "O++/O")
+ax[0][1].set_yscale("log", nonposy="clip")
+ax[0][1].errorbar(rmid, ifracOp1b, yerr=ifracOp1s, fmt=".", label="O+/O")
+ax[0][1].errorbar(rmid, ifracOp2b, yerr=ifracOp2s, fmt=".", label="O++/O")
 ax[0][1].set_xlim(xlims[0], xlims[1])
-ax[0][1].set_ylim(1.e-3, 2.)
+ax[0][1].set_ylim(1.0e-3, 2.0)
 ax[0][1].set_xlabel("$r$ (pc)")
 ax[0][1].set_ylabel("Ion fraction")
-ax[0][1].legend(loc = "best")
+ax[0][1].legend(loc="best")
 
-ax[0][2].set_yscale("log", nonposy = "clip")
-ax[0][2].errorbar(rmid, ifracCp1b, yerr = ifracCp1s, fmt = ".",
-                  label = "C+/C")
-ax[0][2].errorbar(rmid, ifracCp2b, yerr = ifracCp2s, fmt = ".",
-                  label = "C++/C")
-ax[0][2].errorbar(rmid, ifracCp3b, yerr = ifracCp3s, fmt = ".",
-                  label = "C+++/C")
+ax[0][2].set_yscale("log", nonposy="clip")
+ax[0][2].errorbar(rmid, ifracCp1b, yerr=ifracCp1s, fmt=".", label="C+/C")
+ax[0][2].errorbar(rmid, ifracCp2b, yerr=ifracCp2s, fmt=".", label="C++/C")
+ax[0][2].errorbar(rmid, ifracCp3b, yerr=ifracCp3s, fmt=".", label="C+++/C")
 ax[0][2].set_xlim(xlims[0], xlims[1])
-ax[0][2].set_ylim(0.001, 2.)
+ax[0][2].set_ylim(0.001, 2.0)
 ax[0][2].set_xlabel("$r$ (pc)")
 ax[0][2].set_ylabel("Ion fraction")
-ax[0][2].legend(loc = "best")
+ax[0][2].legend(loc="best")
 
-ax[1][0].set_yscale("log", nonposy = "clip")
-ax[1][0].errorbar(rmid, ifracNp1b, yerr = ifracNp1s, fmt = ".",
-                  label = "N+/N")
-ax[1][0].errorbar(rmid, ifracNp2b, yerr = ifracNp2s, fmt = ".",
-                  label = "N++/N")
-ax[1][0].errorbar(rmid, ifracNp3b, yerr = ifracNp3s, fmt = ".",
-                  label = "N+++/N")
+ax[1][0].set_yscale("log", nonposy="clip")
+ax[1][0].errorbar(rmid, ifracNp1b, yerr=ifracNp1s, fmt=".", label="N+/N")
+ax[1][0].errorbar(rmid, ifracNp2b, yerr=ifracNp2s, fmt=".", label="N++/N")
+ax[1][0].errorbar(rmid, ifracNp3b, yerr=ifracNp3s, fmt=".", label="N+++/N")
 ax[1][0].set_xlim(xlims[0], xlims[1])
-ax[1][0].set_ylim(0.001, 2.)
+ax[1][0].set_ylim(0.001, 2.0)
 ax[1][0].set_xlabel("$r$ (pc)")
 ax[1][0].set_ylabel("Ion fraction")
-ax[1][0].legend(loc = "best")
+ax[1][0].legend(loc="best")
 
-ax[1][1].set_yscale("log", nonposy = "clip")
-ax[1][1].errorbar(rmid, ifracNep1b, yerr = ifracNep1s, fmt = ".",
-                  label = "Ne+/Ne")
-ax[1][1].errorbar(rmid, ifracNep2b, yerr = ifracNep2s, fmt = ".",
-                  label = "Ne++/Ne")
+ax[1][1].set_yscale("log", nonposy="clip")
+ax[1][1].errorbar(rmid, ifracNep1b, yerr=ifracNep1s, fmt=".", label="Ne+/Ne")
+ax[1][1].errorbar(rmid, ifracNep2b, yerr=ifracNep2s, fmt=".", label="Ne++/Ne")
 ax[1][1].set_xlim(xlims[0], xlims[1])
-ax[1][1].set_ylim(0.001, 2.)
+ax[1][1].set_ylim(0.001, 2.0)
 ax[1][1].set_xlabel("$r$ (pc)")
 ax[1][1].set_ylabel("Ion fraction")
-ax[1][1].legend(loc = "best")
+ax[1][1].legend(loc="best")
 
-ax[1][2].set_yscale("log", nonposy = "clip")
-ax[1][2].errorbar(rmid, ifracSp1b, yerr = ifracSp1s, fmt = ".",
-                  label = "S+/S")
-ax[1][2].errorbar(rmid, ifracSp2b, yerr = ifracSp2s, fmt = ".",
-                  label = "S++/S")
-ax[1][2].errorbar(rmid, ifracSp3b, yerr = ifracSp3s, fmt = ".",
-                  label = "S+++/S")
-ax[1][2].errorbar(rmid, ifracSp4b, yerr = ifracSp4s, fmt = ".",
-                  label = "S++++/S")
+ax[1][2].set_yscale("log", nonposy="clip")
+ax[1][2].errorbar(rmid, ifracSp1b, yerr=ifracSp1s, fmt=".", label="S+/S")
+ax[1][2].errorbar(rmid, ifracSp2b, yerr=ifracSp2s, fmt=".", label="S++/S")
+ax[1][2].errorbar(rmid, ifracSp3b, yerr=ifracSp3s, fmt=".", label="S+++/S")
+ax[1][2].errorbar(rmid, ifracSp4b, yerr=ifracSp4s, fmt=".", label="S++++/S")
 ax[1][2].set_xlim(xlims[0], xlims[1])
-ax[1][2].set_ylim(1.e-6, 2.)
+ax[1][2].set_ylim(1.0e-6, 2.0)
 ax[1][2].set_xlabel("$r$ (pc)")
 ax[1][2].set_ylabel("Ion fraction")
-ax[1][2].legend(loc = "best")
+ax[1][2].legend(loc="best")
 
 # let matplotlib handle the whitespace in the figure to make it look nicer
 pl.tight_layout()
 # save the figure
-abundances_filename = "{name}_abundances.png".format(name = f[:-5])
+abundances_filename = "{name}_abundances.png".format(name=f[:-5])
 pl.savefig(abundances_filename)
-print "Wrote", abundances_filename
+print("Wrote", abundances_filename)
 # close the plot, as we want to make a new one
 pl.close()
 
 # plot the temperature
-pl.errorbar(rmid, tempb, yerr = temps, fmt = ".")
+pl.errorbar(rmid, tempb, yerr=temps, fmt=".")
 pl.xlim(xlims[0], xlims[1])
-pl.ylim(6000., 11000.)
+pl.ylim(6000.0, 11000.0)
 pl.ylabel("$T$ (K)")
 pl.xlabel("$r$ (pc)")
 pl.tight_layout()
-temperature_filename = "{name}_temperature.png".format(name = f[:-5])
+temperature_filename = "{name}_temperature.png".format(name=f[:-5])
 pl.savefig(temperature_filename)
-print "Wrote", temperature_filename
+print("Wrote", temperature_filename)

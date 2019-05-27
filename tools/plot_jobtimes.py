@@ -45,22 +45,16 @@ import sys
 
 # global list of colours for the different job names reported by the code
 jobs = {
-"testjob":
-  'r',
-"densitygrid_traversal<N11DensityGrid33DensityGridInitializationFunctionE>":
-  'b',
-"photonshootjob":
-  'y',
-"densitygrid_traversal" \
-"<N25IonizationStateCalculator33IonizationStateCalculatorFunctionE>":
-  'g',
-"densitygrid_traversal" \
-"<N25TemperatureCalculator33TemperatureCalculatorFunctionE>":
-  'k',
-"fractaldensitymask_construction":
-  'c',
-"voronoigrid_construction":
-  'm'}
+    "testjob": "r",
+    "densitygrid_traversal<N11DensityGrid33DensityGridInitializationFunctionE>": "b",
+    "photonshootjob": "y",
+    "densitygrid_traversal"
+    "<N25IonizationStateCalculator33IonizationStateCalculatorFunctionE>": "g",
+    "densitygrid_traversal"
+    "<N25TemperatureCalculator33TemperatureCalculatorFunctionE>": "k",
+    "fractaldensitymask_construction": "c",
+    "voronoigrid_construction": "m",
+}
 
 ##
 # @brief Auxiliary function that parses a 'jobtimes_X.txt' file and returns a
@@ -70,17 +64,18 @@ jobs = {
 # @return List of jobs and corresponding start and end cycle.
 ##
 def get_times(filename):
-  # open the file for reading (this displays a pretty clear error if the file
-  # does not exist, so no need to check this ourselves)
-  file = open(filename, 'r')
-  # read the lines from the file
-  lines = file.readlines()
-  # parse the lines and add them to a list
-  times = []
-  for line in lines:
-    data = line.split()
-    times.append([data[0], int(data[1]), int(data[2])])
-  return times
+    # open the file for reading (this displays a pretty clear error if the file
+    # does not exist, so no need to check this ourselves)
+    file = open(filename, "r")
+    # read the lines from the file
+    lines = file.readlines()
+    # parse the lines and add them to a list
+    times = []
+    for line in lines:
+        data = line.split()
+        times.append([data[0], int(data[1]), int(data[2])])
+    return times
+
 
 ##
 # @brief Main script routine.
@@ -88,33 +83,38 @@ def get_times(filename):
 # @param args Command line options passed on to the script.
 ##
 def main(args):
-  # tell the interpreter we want to use the global 'jobs' list
-  global jobs
-  # tell the interpreter we want to use the 'pl' module
-  global pl
+    # tell the interpreter we want to use the global 'jobs' list
+    global jobs
+    # tell the interpreter we want to use the 'pl' module
+    global pl
 
-  # parse the command line arguments
-  # note that the first command line argument is always the name of the script
-  if len(args) < 2:
-    print "Usage: python plot_jobtimes.py NUMBER_OF_THREADS"
-    exit()
-  num_threads = int(args[1])
+    # parse the command line arguments
+    # note that the first command line argument is always the name of the script
+    if len(args) < 2:
+        print("Usage: python plot_jobtimes.py NUMBER_OF_THREADS")
+        exit()
+    num_threads = int(args[1])
 
-  # do the actual plotting
-  # loop over the number of threads
-  for i in range(num_threads):
-    # get the data
-    times = get_times("jobtimes_{i}.txt".format(i = i))
-    # plot each data group in the corresponding colour
-    for time in times:
-      for key in jobs:
-        if time[0] == key:
-          pl.barh(i, time[2]-time[1], left = time[1]-times[0][1],
-                  color = jobs[key])
-  # show the plot
-  # the program will resume when the window is closed by the user
-  pl.show()
+    # do the actual plotting
+    # loop over the number of threads
+    for i in range(num_threads):
+        # get the data
+        times = get_times("jobtimes_{i}.txt".format(i=i))
+        # plot each data group in the corresponding colour
+        for time in times:
+            for key in jobs:
+                if time[0] == key:
+                    pl.barh(
+                        i,
+                        time[2] - time[1],
+                        left=time[1] - times[0][1],
+                        color=jobs[key],
+                    )
+    # show the plot
+    # the program will resume when the window is closed by the user
+    pl.show()
+
 
 # make sure the main() routine is called
 if __name__ == "__main__":
-  main(sys.argv)
+    main(sys.argv)
