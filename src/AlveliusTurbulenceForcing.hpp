@@ -108,13 +108,15 @@ public:
    * @param power_forcing Input power (in m^2 s^-3).
    * @param seed Seed for the random generator.
    * @param dtfor Forcing time step (in s).
+   * @param starting_time Starting time of the simulation (in s).
    * @param log Log to write logging info to.
    */
   AlveliusTurbulenceForcing(const double box_length, const double kmin,
                             const double kmax, const double kforcing,
                             const double concentration_factor,
                             const double power_forcing, const int_fast32_t seed,
-                            const double dtfor, Log *log = nullptr)
+                            const double dtfor, const double starting_time,
+                            Log *log = nullptr)
       : _random_generator(seed), _time_step(dtfor),
         _number_of_driving_steps(0) {
 
@@ -198,6 +200,15 @@ public:
       _kforce[i] = std::sqrt(_kforce[i]);
     }
 
+    // evolve the simulation forward in time until the starting time
+    while (_number_of_driving_steps * _time_step < starting_time) {
+      for (uint_fast32_t i = 0; i < 3 * _ktable.size(); ++i) {
+        // we draw 3 random numbers per mode per evolution step
+        _random_generator.get_uniform_random_double();
+      }
+      ++_number_of_driving_steps;
+    }
+
     if (log) {
       log->write_status("Number of turbulent modes: ", _ktable.size());
       log->write_status("Modes:");
@@ -226,6 +237,9 @@ public:
    *  - random seed: Seed for the internal random number generator (default: 42)
    *  - time step: Time step between subsequent applications of the forcing
    *    (default: 1.519e6 s)
+   *  - starting time: Starting time of the simulation. The random number
+   *    generator will be forwarded to this time to guarantee a consistent
+   *    random sequence between runs (default: 0. s)
    *
    * @param box Dimensions of the simulation box (in m).
    * @param params ParameterFile to read from.
@@ -249,6 +263,8 @@ public:
                                              42),
             params.get_physical_value< QUANTITY_TIME >(
                 "TurbulenceForcing:time step", "1.519e6 s"),
+            params.get_physical_value< QUANTITY_TIME >(
+                "TurbulenceForcing:starting time", "0. s"),
             log) {
 
     cmac_assert(box.get_sides().x() == box.get_sides().y());

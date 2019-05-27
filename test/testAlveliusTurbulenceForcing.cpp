@@ -36,7 +36,7 @@
  */
 int main(int argc, char **argv) {
 
-  AlveliusTurbulenceForcing forcing(1., 2., 3., 2.5, 0.2, 1., 42, 1.e-6);
+  AlveliusTurbulenceForcing forcing(1., 2., 3., 2.5, 0.2, 1., 42, 1.e-6, 0.);
 
   double box[6] = {0., 0., 0., 1., 1., 1.};
   CoordinateVector< int_fast32_t > ncell(32, 32, 32);
