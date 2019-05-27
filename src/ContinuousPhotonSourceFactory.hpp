@@ -35,6 +35,7 @@
 // implementations
 #include "DistantStarContinuousPhotonSource.hpp"
 #include "IsotropicContinuousPhotonSource.hpp"
+#include "PlanarContinuousPhotonSource.hpp"
 #include "SpiralGalaxyContinuousPhotonSource.hpp"
 
 /**
@@ -53,6 +54,7 @@ public:
    *    simulation box
    *  - Isotropic: Infalling radiation from an external isotropic radiation
    *    field
+   *  - Planar: Radiation emitted from a plane
    *  - SpiralGalaxy: Radiation from a diffuse galaxy luminosity model
    *
    * @param simulation_box Simulation box (in m).
@@ -74,6 +76,8 @@ public:
       return new DistantStarContinuousPhotonSource(simulation_box, params, log);
     } else if (type == "Isotropic") {
       return new IsotropicContinuousPhotonSource(simulation_box, params, log);
+    } else if (type == "Planar") {
+      return new PlanarContinuousPhotonSource(params, log);
     } else if (type == "SpiralGalaxy") {
       return new SpiralGalaxyContinuousPhotonSource(simulation_box, params,
                                                     log);

@@ -1393,6 +1393,15 @@ set(TESTSTATISTICSLOGGER_SOURCES
 add_unit_test(NAME testStatisticsLogger
               SOURCES ${TESTSTATISTICSLOGGER_SOURCES})
 
+## Unit test for PlanarContinuousPhotonSource
+set(TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES
+    testPlanarContinuousPhotonSource.cpp
+
+    ../src/PlanarContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testPlanarContinuousPhotonSource
+              SOURCES ${TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
