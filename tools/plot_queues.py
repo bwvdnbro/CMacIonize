@@ -28,6 +28,7 @@
 # import modules
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
 import glob
@@ -38,28 +39,33 @@ files = sorted(glob.glob("queues_??.txt"))
 # collect the data
 alldata = []
 for file in files:
-  data = np.loadtxt(file)
-  data = data[data[:,1] != -1]
-  if len(data.shape) > 1:
-    data = np.array(sorted(data, key = itemgetter(0, 1)))
-  else:
-    data = [data]
-  alldata.append(data)
+    data = np.loadtxt(file)
+    data = data[data[:, 1] != -1]
+    if len(data.shape) > 1:
+        data = np.array(sorted(data, key=itemgetter(0, 1)))
+    else:
+        data = [data]
+    alldata.append(data)
 
 alldata = np.array(alldata)
 
 # prepare data for plotting
-nproc = int(alldata[:,:,0].max()) + 2
-nthread = int(alldata[:,:,1].max()) + 1
-alldata[:,:,0] = alldata[:,:,0] / nproc
-alldata[:,:,1] = alldata[:,:,1] / (nproc * nthread)
+nproc = int(alldata[:, :, 0].max()) + 2
+nthread = int(alldata[:, :, 1].max()) + 1
+alldata[:, :, 0] = alldata[:, :, 0] / nproc
+alldata[:, :, 1] = alldata[:, :, 1] / (nproc * nthread)
 steps = np.arange(len(files))
 
 # plot the contributions for the different processes
 for i in range(nproc - 1):
-  for j in range(nthread):
-    pl.bar(alldata[:,i * nthread + j,0] + alldata[:,i * nthread + j,1] + steps,
-           alldata[:,i * nthread + j,2], 1. / (nproc * nthread))
+    for j in range(nthread):
+        pl.bar(
+            alldata[:, i * nthread + j, 0]
+            + alldata[:, i * nthread + j, 1]
+            + steps,
+            alldata[:, i * nthread + j, 2],
+            1.0 / (nproc * nthread),
+        )
 
 # plot layout
 pl.xticks([])
