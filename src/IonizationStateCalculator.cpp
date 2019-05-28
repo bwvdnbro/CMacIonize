@@ -598,7 +598,43 @@ void IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
  * @brief find_H0() for a system without helium.
  *
  * We do not need to iterate in this case: the solution is simply given by the
- * solution of a quadratic equation.
+ * solution of a quadratic equation. This can be derived as follows.
+ *
+ * The ionization balance equation for hydrogen is given by
+ * @f[
+ *   n_{\rm{}H}^2 \left(1 - x_{\rm{}H}\right)^2 \alpha{}_{\rm{}H} =
+ *     n_{\rm{}H} x_{\rm{}H} J_{\rm{}H}.
+ * @f]
+ *
+ * This can be rewritten as
+ * @f[
+ *   x_{\rm{}H}^2 - \left(2 + C_{\rm{}H}\right) x_{\rm{}H} + 1 = 0,
+ * @f]
+ * with @f$C_{\rm{}H} = \frac{J_{\rm{}H}}{n_{\rm{}H}\alpha{}_{\rm{}H}}@f$.
+ *
+ * The solutions of this equation are
+ * @f[
+ *   x_{\rm{}H} = 1 + \frac{1}{2}C_{\rm{}H} \pm{} \sqrt{\left(1 + \frac{1}{2}
+ *     C_{\rm{}H}\right)^2 - 1}.
+ * @f]
+ *
+ * Since @f$C_{\rm{}H} > 0@f$ and @f$0 \leq{} x_{\rm{}H} \leq{} 1@f$, we choose
+ * the solution with the negative square root.
+ *
+ * For normal values of @f$C_{\rm{}H}@f$ (meaning: not too large), the
+ * expression reduces to
+ * @f[
+ *   x_{\rm{}H} = 1 + \frac{1}{2}C_{\rm{}H} \left(1 - \sqrt{\frac{4}{C_{\rm{}H}}
+ *     + 1}\right).
+ * @f]
+ *
+ * For very large values of @f$C_{\rm{}H}@f$, the term in between the square
+ * root becomes very small and round off error can lead the expression to
+ * wrongly evaluate to @f$x_{\rm{}H} = 1@f$. To overcome this, we do a second
+ * order Taylor expansion of the square root, which leads to
+ * @f[
+ *   x_{\rm{}H} = \frac{1}{C_{\rm{}H}}.
+ * @f]
  *
  * @param alphaH Hydrogen recombination rate (in m^3s^-1).
  * @param jH Hydrogen intensity integral (in s^-1).
@@ -611,11 +647,15 @@ double IonizationStateCalculator::compute_ionization_state_hydrogen(
   if (jH > 0. && nH > 0.) {
     const double aa = 0.5 * jH / (nH * alphaH);
     const double bb = 2. / aa;
-    const double cc = std::sqrt(bb + 1.);
-    // For very large values of jH, we can actually over-ionize the cell,
-    // resulting in a negative neutral fraction
-    // To overcome this issue, we impose a lower limit.
-    return std::max(1.e-14, 1. + aa * (1. - cc));
+    if (bb < 1.e-10) {
+      return std::max(1.e-14, 0.25 * bb);
+    } else {
+      const double cc = std::sqrt(bb + 1.);
+      // For very large values of jH, we can actually over-ionize the cell,
+      // resulting in a negative neutral fraction
+      // To overcome this issue, we impose a lower limit.
+      return std::max(1.e-14, 1. + aa * (1. - cc));
+    }
   } else {
     return 1.;
   }
