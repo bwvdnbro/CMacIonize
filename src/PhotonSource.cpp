@@ -332,8 +332,12 @@ void PhotonSource::update(PhotonSourceDistribution *distribution) {
   }
 
   if (_continuous_source != nullptr) {
-    continuous_luminosity = _continuous_source->get_total_surface_area() *
-                            _continuous_spectrum->get_total_flux();
+    if (_continuous_source->has_total_luminosity()) {
+      continuous_luminosity = _continuous_source->get_total_luminosity();
+    } else {
+      continuous_luminosity = _continuous_source->get_total_surface_area() *
+                              _continuous_spectrum->get_total_flux();
+    }
   }
 
   _total_luminosity = discrete_luminosity + continuous_luminosity;

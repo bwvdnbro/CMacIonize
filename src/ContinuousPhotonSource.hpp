@@ -27,6 +27,7 @@
 #define CONTINUOUSPHOTONSOURCE_HPP
 
 #include "CoordinateVector.hpp"
+#include "Error.hpp"
 
 class RandomGenerator;
 
@@ -59,6 +60,27 @@ public:
    * @return Total surface area through which radiation enters the box (in m^2).
    */
   virtual double get_total_surface_area() const = 0;
+
+  /**
+   * @brief Does this ContinuousPhotonSource have a total luminosity value?
+   *
+   * @return False, as the total luminosity by default depends on the spectrum.
+   */
+  virtual bool has_total_luminosity() const { return false; }
+
+  /**
+   * @brief Get the total luminosity for the source.
+   *
+   * Only provided if has_total_luminosity() returns true.
+   *
+   * @return Total ionizing luminosity of the source (in s^-1).
+   */
+  virtual double get_total_luminosity() const {
+    cmac_error(
+        "This function should always be implemented for "
+        "ContinuousPhotonSources that provide a total ionizing luminosity!");
+    return 0;
+  }
 };
 
 #endif // CONTINUOUSPHOTONSOURCE_HPP

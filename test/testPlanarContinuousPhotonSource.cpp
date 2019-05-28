@@ -38,8 +38,11 @@
  */
 int main(int argc, char **argv) {
 
-  PlanarContinuousPhotonSource source("z", 0., 0., 0., 1., 1.);
+  PlanarContinuousPhotonSource source("z", 0., 0., 0., 1., 1., 1.e48);
   RandomGenerator random_generator;
+
+  assert_condition(source.has_total_luminosity());
+  assert_condition(source.get_total_luminosity() == 1.e48);
 
   double bins[100];
   for (uint_fast32_t i = 0; i < 100; ++i) {

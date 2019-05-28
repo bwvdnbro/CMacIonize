@@ -53,6 +53,9 @@ private:
   /*! @brief Sides for the non-fixed coordinates (in m). */
   const double _sides[2];
 
+  /*! @brief Total ionizing luminosity (in s^-1). */
+  const double _luminosity;
+
   /**
    * @brief Get the index corresponding to the given coordinate axis name.
    *
@@ -103,27 +106,32 @@ public:
    * @param anchor1 Anchor for the second non-fixed coordinate (in m).
    * @param sides0 Side for the first non-fixed coordinate (in m).
    * @param sides1 Side for the second non-fixed coordinate (in m).
+   * @param luminosity Total ionizing luminosity (in s^-1).
    * @param log Log to write logging info to.
    */
-  PlanarContinuousPhotonSource(const std::string fixed_coordinate_name,
-                               const double fixed_coordinate_value,
-                               const double anchor0, const double anchor1,
-                               const double sides0, const double sides1,
-                               Log *log = nullptr)
+  inline PlanarContinuousPhotonSource(const std::string fixed_coordinate_name,
+                                      const double fixed_coordinate_value,
+                                      const double anchor0,
+                                      const double anchor1, const double sides0,
+                                      const double sides1,
+                                      const double luminosity,
+                                      Log *log = nullptr)
       : _fixed_coordinate_index(get_coordinate_index(fixed_coordinate_name)),
         _fixed_coordinate_value(fixed_coordinate_value),
         _non_fixed_indices{get_non_fixed_index(_fixed_coordinate_index, 0),
                            get_non_fixed_index(_fixed_coordinate_index, 1)},
-        _anchors{anchor0, anchor1}, _sides{sides0, sides1} {
+        _anchors{anchor0, anchor1}, _sides{sides0, sides1},
+        _luminosity(luminosity) {
 
     if (log) {
       log->write_status(
           "Constructed PlanarContinuousPhotonSource perpendicular to the axis "
           "c[",
           _fixed_coordinate_index, "] = ", _fixed_coordinate_value,
-          " and with bounds [", _anchors[0], ", ", _anchors[1], "] m - [",
+          ", with bounds [", _anchors[0], ", ", _anchors[1], "] m - [",
           _sides[0], ", ", _sides[1], "m for indices [", _non_fixed_indices[0],
-          ", ", _non_fixed_indices[1], "].");
+          ", ", _non_fixed_indices[1],
+          "] and with a total ionizing luminosity of ", _luminosity, " s^-1.");
     }
   }
 
@@ -139,11 +147,12 @@ public:
    *  - anchor 1: Anchor for the second non-fixed coordinate (default: 0. m)
    *  - side 0: Side for the first non-fixed coordinate (default: 1. m)
    *  - side 1: Side for the second non-fixed coordinate (default: 1. m)
+   *  - luminosity: Total ionizing luminosity (default: 1.e48 s^-1)
    *
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  PlanarContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
+  inline PlanarContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
       : PlanarContinuousPhotonSource(
             params.get_value< std::string >(
                 "ContinuousPhotonSource:normal axis", "z"),
@@ -157,6 +166,8 @@ public:
                 "ContinuousPhotonSource:side 0", "1. m"),
             params.get_physical_value< QUANTITY_LENGTH >(
                 "ContinuousPhotonSource:side 1", "1. m"),
+            params.get_physical_value< QUANTITY_FREQUENCY >(
+                "ContinuousPhotonSource:luminosity", "1.e48 s^-1"),
             log) {}
 
   /**
@@ -171,7 +182,7 @@ public:
    * @return std::pair of CoordinateVector instances, specifying a starting
    * position and direction for a photon.
    */
-  std::pair< CoordinateVector<>, CoordinateVector<> >
+  virtual std::pair< CoordinateVector<>, CoordinateVector<> >
   get_random_incoming_direction(RandomGenerator &random_generator) const {
 
     CoordinateVector<> position;
@@ -198,7 +209,23 @@ public:
    *
    * @return Total surface area (in m^2).
    */
-  inline double get_total_surface_area() const { return _sides[0] * _sides[1]; }
+  virtual double get_total_surface_area() const {
+    return _sides[0] * _sides[1];
+  }
+
+  /**
+   * @brief Does this ContinuousPhotonSource have a total luminosity value?
+   *
+   * @return True.
+   */
+  virtual bool has_total_luminosity() const { return true; }
+
+  /**
+   * @brief Get the total luminosity for the source.
+   *
+   * @return Total ionizing luminosity of the source (in s^-1).
+   */
+  virtual double get_total_luminosity() const { return _luminosity; }
 };
 
 #endif // PLANARCONTINUOUSPHOTONSOURCE_HPP
