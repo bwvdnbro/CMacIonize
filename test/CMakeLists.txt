@@ -1643,6 +1643,15 @@ configure_file(
   ${PROJECT_BINARY_DIR}/rundir/test/test_asciifilephotonsourcedistribution.yml
   COPYONLY)
 
+## Unit test for SurfaceDensityCalculator
+set(TESTSURFACEDENSITYCALCULATOR_SOURCES
+    testSurfaceDensityCalculator.cpp
+
+    ../src/SurfaceDensityCalculator.hpp
+)
+add_unit_test(NAME testSurfaceDensityCalculator
+              SOURCES ${TESTSURFACEDENSITYCALCULATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
