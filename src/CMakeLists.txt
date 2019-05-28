@@ -218,6 +218,7 @@ set(CMACIONIZE_SOURCES
     IonizationStateCalculator.hpp
     IonizationVariablesPropertyAccessors.hpp
     LineCoolingData.hpp
+    LiveOutputManager.hpp
     Lock.hpp
     MonochromaticPhotonSourceSpectrum.hpp
     MPICommunicator.hpp
