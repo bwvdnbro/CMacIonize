@@ -415,18 +415,34 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
     cooling[i] *= n;
     loss += cooling[i];
   }
+
+#ifdef HAS_CARBON
   ionization_variables.set_cooling(ION_C_p1, cooling[CII]);
   ionization_variables.set_cooling(ION_C_p2, cooling[CIII]);
+#endif
+
+#ifdef HAS_NITROGEN
   ionization_variables.set_cooling(ION_N_n, cooling[NI]);
   ionization_variables.set_cooling(ION_N_p1, cooling[NII]);
   ionization_variables.set_cooling(ION_N_p2, cooling[NIII]);
+#endif
+
+#ifdef HAS_OXYGEN
   ionization_variables.set_cooling(ION_O_n, cooling[OII]);
   ionization_variables.set_cooling(ION_O_p1, cooling[OIII]);
+#endif
+
+#ifdef HAS_NEON
   ionization_variables.set_cooling(ION_Ne_n, cooling[NeII]);
   ionization_variables.set_cooling(ION_Ne_p1, cooling[NeIII]);
+#endif
+
+#ifdef HAS_SULPHUR
   ionization_variables.set_cooling(ION_S_p1, cooling[SII]);
   ionization_variables.set_cooling(ION_S_p2, cooling[SIII]);
   ionization_variables.set_cooling(ION_S_p3, cooling[SIV]);
+#endif
+
 #else
   loss = line_cooling_data.get_cooling(T, ne, abund) * n;
 #endif
@@ -457,7 +473,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double Lhep = 1.55e-39 * nenhep * std::pow(T, 0.3647);
 #ifdef DO_OUTPUT_COOLING
   ionization_variables.set_cooling(ION_H_n, Lhp);
+#ifdef HAS_HELIUM
   ionization_variables.set_cooling(ION_He_n, Lhep);
+#endif
 #endif
   loss += Lhp + Lhep;
 
