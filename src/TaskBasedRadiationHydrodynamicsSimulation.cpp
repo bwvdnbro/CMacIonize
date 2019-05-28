@@ -39,6 +39,7 @@
 #include "HydroDensitySubGrid.hpp"
 #include "HydroMaskFactory.hpp"
 #include "LineCoolingData.hpp"
+#include "LiveOutputManager.hpp"
 #include "MemoryLogger.hpp"
 #include "MemorySpace.hpp"
 #include "ParameterFile.hpp"
@@ -995,6 +996,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   RestartManager restart_manager(*params);
   RandomGenerator restart_generator(random_seed);
 
+  LiveOutputManager live_output_manager(grid_creator->get_subgrid_layout(),
+                                        grid_creator->get_subgrid_cell_layout(),
+                                        *params);
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
@@ -1248,7 +1253,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     ++num_step;
 
-    {
+    if (number_of_steps > 0) {
       std::stringstream num_step_line;
       num_step_line << "step " << num_step;
       memory_logger.add_entry(num_step_line.str());
@@ -2240,6 +2245,20 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         has_next_step) {
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
       ++hydro_lastsnap;
+    }
+
+    // check for live output
+    if (live_output_manager.do_output(current_time)) {
+      AtomicValue< size_t > igrid(0);
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          live_output_manager.compute_output(
+              this_igrid, *grid_creator->get_subgrid(this_igrid));
+        }
+      }
+      live_output_manager.write_output(simulation_box.get_box());
     }
 
     if (write_output && task_plot_i < task_plot_N) {

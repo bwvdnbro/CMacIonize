@@ -166,6 +166,24 @@ public:
   }
 
   /**
+   * @brief Get the number of subgrids in each coordinate direction.
+   *
+   * @return Number of subgrids in each coordinate direction.
+   */
+  inline CoordinateVector< int_fast32_t > get_subgrid_layout() const {
+    return _number_of_subgrids;
+  }
+
+  /**
+   * @brief Get the number of cells in each coordinate direction per subgrid.
+   *
+   * @return Number of cells in each coordinate direction per subgrid.
+   */
+  inline CoordinateVector< int_fast32_t > get_subgrid_cell_layout() const {
+    return _subgrid_number_of_cells;
+  }
+
+  /**
    * @brief Get the dimensions of the box containing the grid.
    *
    * @return Dimensions of the box containing the grid (in m).
