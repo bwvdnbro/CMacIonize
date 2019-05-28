@@ -250,7 +250,9 @@ void IonizationStateCalculator::calculate_ionization_state(
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   // set the mean intensity values to the values in correct physical units
   ionization_variables.set_mean_intensity(ION_H_n, jH);
+#ifdef HAS_HELIUM
   ionization_variables.set_mean_intensity(ION_He_n, jHe);
+#endif
 #endif
 }
 
