@@ -77,7 +77,7 @@ for depth in range(mindepth, maxdepth + 1):
 
     # create a bar plot
     bar = [(line["start"], line["end"] - line["start"]) for line in data[idx]]
-    colors = ["C{0}".format(line["id"] % 10) for line in data[idx]]
+    colors = ["C{0}".format(i % 10) for i in range(len(data[idx]))]
     pl.broken_barh(bar, (depth - 0.4, 0.8), facecolors=colors, edgecolor="none")
     # add labels
     labels = [line["label"] for line in data[idx]]
