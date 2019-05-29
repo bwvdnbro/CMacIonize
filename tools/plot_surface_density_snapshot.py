@@ -21,12 +21,13 @@
 #
 # @brief Script that generates an image for a surface density output file.
 #
-# The script takes two command line arguments: the name of the file to plot,
-# and the name of the desired output file (should be an image format supported
-# by Matplotlib). All other relevant information is automatically read from the
-# output file.
-# An additional optional command line argument (--log) can be used to plot
-# the surface density on a logarithmic rather than a linear scale.
+# The script takes two required command line arguments: the name of the file to
+# plot, and the name of the desired output file (should be an image format
+# supported by Matplotlib). All other relevant information is automatically
+# read from the output file.
+# Additional optional command line arguments can be used to plot the surface
+# density on a logarithmic rather than a linear scale (--log), and to manually
+# override the minimum and maximum surface density in the plots (--min, --max).
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
@@ -50,6 +51,8 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("--file", "-f", action="store", required=True)
 argparser.add_argument("--output", "-o", action="store", required=True)
 argparser.add_argument("--log", "-l", action="store_true")
+argparser.add_argument("--min", "-m", action="store", type=float, default=-1.0)
+argparser.add_argument("--max", "-M", action="store", type=float, default=-1.0)
 args = argparser.parse_args()
 
 # open the file and read the image layout information on the first 4 lines
@@ -78,23 +81,36 @@ for ix in range(ngrid[0]):
         )
 
 # set up the coordinate axes based on the box information in the snapshot
-x = np.linspace(box_anchor[0], box_sides[0], ntot[0])
-y = np.linspace(box_anchor[1], box_sides[1], ntot[1])
+x = box_anchor[0] + np.linspace(0.0, box_sides[0], ntot[0])
+y = box_anchor[1] + np.linspace(0.0, box_sides[1], ntot[1])
 
 # plot the image
 fig, ax = pl.subplots(1, 1)
 
 if args.log:
     image = np.log10(image)
-rhoplot = ax.contourf(x, y, image, 500)
+
+rhomin = np.floor(image.min())
+rhomax = np.ceil(image.max())
+if args.min >= 0.0:
+    if args.log:
+        rhomin = np.log10(args.min)
+    else:
+        rhomin = args.min
+if args.max >= 0.0:
+    if args.log:
+        rhomax = np.log10(args.max)
+    else:
+        rhomax = args.max
+levels = np.linspace(rhomin, rhomax, 500)
+
+rhoplot = ax.contourf(x, y, image, levels=levels, vmin=rhomin, vmax=rhomax)
 ax.set_xlabel("$x$ (m)")
 ax.set_ylabel("$y$ (m)")
 
 # add a colorbar and overwrite default matplotlib ticks (and tick labels for
 # logarithmic plots)
-cbar = fig.colorbar(rhoplot, ax=ax, label="$\\rho{}$ (kg m$^{-3}$)")
-rhomin = np.ceil(image.min())
-rhomax = np.floor(image.max())
+cbar = fig.colorbar(rhoplot, ax=ax, label="$\\rho{}$ (kg m$^{-2}$)")
 ticks = np.arange(rhomin, rhomax + 0.5, 1.0)
 cbar.set_ticks(ticks)
 if args.log:
