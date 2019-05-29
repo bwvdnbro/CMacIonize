@@ -208,6 +208,9 @@ public:
       }
       ++_number_of_driving_steps;
     }
+    // reset the number of driving steps to make sure update() works from time
+    // 0
+    _number_of_driving_steps = 0;
 
     if (log) {
       log->write_status("Number of turbulent modes: ", _ktable.size());
