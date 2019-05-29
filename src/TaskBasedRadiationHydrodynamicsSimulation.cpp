@@ -1164,7 +1164,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
 
   if (write_output && restart_reader == nullptr) {
+    time_logger.start("snapshot");
     writer->write(*grid_creator, 0, *params, 0.);
+    time_logger.end("snapshot");
   }
 
   double maximum_timestep = hydro_maximum_timestep;
@@ -2144,7 +2146,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (log) {
         log->write_status("Applying turbulence forcing...");
       }
+      time_logger.start("update");
       turbulence_forcing->update_turbulence(current_time + actual_timestep);
+      time_logger.end("update");
+      time_logger.start("grid update");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -2160,6 +2165,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
       stop_parallel_timing_block();
+      time_logger.end("grid update");
       if (log) {
         log->write_status("Done applying turbulence forcing.");
       }
@@ -2284,7 +2290,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
       live_output_manager.write_output(simulation_box.get_box());
-      time_logger.end("live_output");
+      time_logger.end("live output");
     }
 
     if (write_output && task_plot_i < task_plot_N) {
@@ -2384,7 +2390,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     }
   } else {
     if (write_output) {
+      time_logger.start("snapshot");
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+      time_logger.end("snapshot");
     }
   }
 
