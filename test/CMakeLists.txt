@@ -1572,6 +1572,15 @@ set(TESTSURFACEDENSITYCALCULATOR_SOURCES
 add_unit_test(NAME testSurfaceDensityCalculator
               SOURCES ${TESTSURFACEDENSITYCALCULATOR_SOURCES})
 
+## Unit test for DensityPDFCalculator
+set(TESTDENSITYPDFCALCULATOR_SOURCES
+    testDensityPDFCalculator.cpp
+
+    ../src/DensityPDFCalculator.hpp
+)
+add_unit_test(NAME testDensityPDFCalculator
+              SOURCES ${TESTDENSITYPDFCALCULATOR_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
