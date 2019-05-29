@@ -26,7 +26,8 @@
 # supported by Matplotlib). All other relevant information is automatically
 # read from the output file.
 # Additional optional command line arguments can be used to control the depth
-# in the time log that is plotted (--min-depth, --max-depth).
+# in the time log that is plotted (--min-depth, --max-depth) and to only plot
+# specific parts of the execution tree (--children-of-id, --children-of-name).
 #
 # @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
 ##
@@ -53,6 +54,10 @@ argparser.add_argument("--min-depth", "-m", action="store", default=0, type=int)
 argparser.add_argument(
     "--max-depth", "-M", action="store", default=-1, type=int
 )
+argparser.add_argument(
+    "--children-of-id", "-c", action="store", default=-1, type=int
+)
+argparser.add_argument("--children-of-name", "-C", action="store", default="")
 args = argparser.parse_args()
 
 # load the time log
@@ -65,10 +70,17 @@ data = np.loadtxt(
     },
 )
 
+if args.children_of_id >= 0:
+    data = data[data["pid"] == args.children_of_id]
+if args.children_of_name:
+    pid = data[data["label"] == args.children_of_name]["id"]
+    data = data[data["pid"] == pid[0]]
+
 # get the depth values
-mindepth = args.min_depth
-if args.max_depth < 0:
-    maxdepth = data["depth"].max()
+mindepth = max(args.min_depth, data["depth"].min())
+maxdepth = data["depth"].max()
+if args.max_depth > 0:
+    maxdepth = min(maxdepth, args.max_depth)
 
 # plot all requested depths
 for depth in range(mindepth, maxdepth + 1):
@@ -84,7 +96,7 @@ for depth in range(mindepth, maxdepth + 1):
     for i in range(len(labels)):
         pl.text(
             bar[i][0] + 0.5 * bar[i][1],
-            depth - 0.2,
+            depth - 0.2 + 0.4 * (i % 2),
             labels[i],
             ha="center",
             bbox=dict(facecolor="white", alpha=0.9),
