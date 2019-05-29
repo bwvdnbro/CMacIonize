@@ -33,7 +33,6 @@
 #include "Timer.hpp"
 
 #include <cinttypes>
-#include <fstream>
 #include <vector>
 
 /**
@@ -41,9 +40,6 @@
  */
 class TimeLogEntry {
 private:
-  /*! @brief ID of the entry. */
-  uint_fast32_t _ID;
-
   /*! @brief Label for the entry. */
   std::string _label;
 
@@ -54,7 +50,7 @@ private:
   uint_fast64_t _end_time;
 
   /*! @brief Index of the parent entry. */
-  uint_fast32_t _parent_index;
+  uint_fast32_t _parent;
 
   /*! @brief Depth of the entry. */
   uint_fast32_t _depth;
@@ -63,33 +59,16 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param ID ID for the entry.
    * @param label Label for the entry.
    * @param start_time Start time stamp (in CPU cycles).
-   * @param parent_index Parent index.
+   * @param parent Parent ID.
    * @param depth Depth of the entry.
    */
-  inline TimeLogEntry(const uint_fast32_t ID, const std::string label,
-                      const uint_fast64_t start_time,
-                      const uint_fast32_t parent_index = 0,
+  inline TimeLogEntry(const std::string label, const uint_fast64_t start_time,
+                      const uint_fast32_t parent = 0,
                       const uint_fast32_t depth = 0)
-      : _ID(ID), _label(label), _start_time(start_time), _end_time(0),
-        _parent_index(parent_index), _depth(depth) {}
-
-  /**
-   * @brief Empty constructor.
-   *
-   * Only provided so that the compiler does not complain, should never be
-   * actually used.
-   */
-  inline TimeLogEntry() { cmac_error("Should not be used!"); }
-
-  /**
-   * @brief Get the ID of the entry.
-   *
-   * @return ID of the entry.
-   */
-  inline uint_fast32_t get_ID() const { return _ID; }
+      : _label(label), _start_time(start_time), _end_time(0), _parent(parent),
+        _depth(depth) {}
 
   /**
    * @brief Get the label for the entry.
@@ -113,11 +92,11 @@ public:
   inline uint_fast64_t get_end_time() const { return _end_time; }
 
   /**
-   * @brief Get the parent index.
+   * @brief Get the parent.
    *
-   * @return Parent index.
+   * @return Parent ID.
    */
-  inline uint_fast32_t get_parent() const { return _parent_index; }
+  inline uint_fast32_t get_parent() const { return _parent; }
 
   /**
    * @brief Get the depth of the entry.
@@ -130,11 +109,11 @@ public:
    * @brief Close the entry.
    *
    * @param end_time End time for the entry (in CPU cycles).
-   * @return Parent index.
+   * @return Parent entry.
    */
   inline uint_fast32_t close(const uint_fast64_t end_time) {
     _end_time = end_time;
-    return _parent_index;
+    return _parent;
   }
 };
 
@@ -152,21 +131,18 @@ private:
   /*! @brief Active entry. */
   uint_fast32_t _active_entry;
 
-  /*! @brief Last ID. */
-  uint_fast32_t _last_ID;
-
 public:
   /**
    * @brief Constructor.
    *
    * Records the initial time stamp and starts the timer for normalisation.
    */
-  inline TimeLogger() : _active_entry(0), _last_ID(0) {
+  inline TimeLogger() : _active_entry(0) {
 
 #ifdef TIME_LOGGING
     uint_fast64_t start_time;
     cpucycle_tick(start_time);
-    _log.push_back(TimeLogEntry(0, "root", start_time));
+    _log.push_back(TimeLogEntry("root", start_time));
     _timer.start();
 #endif
   }
@@ -181,8 +157,7 @@ public:
 #ifdef TIME_LOGGING
     uint_fast64_t start_time;
     cpucycle_tick(start_time);
-    ++_last_ID;
-    _log.push_back(TimeLogEntry(_last_ID, label, start_time, _active_entry,
+    _log.push_back(TimeLogEntry(label, start_time, _active_entry,
                                 _log[_active_entry].get_depth() + 1));
     _active_entry = _log.size() - 1;
 #endif
@@ -202,8 +177,7 @@ public:
     cpucycle_tick(end_time);
     if (label.compare(_log[_active_entry].get_label()) != 0) {
       cmac_error("Trying to end time log entry that was not opened or that was "
-                 "opened before the last entry was opened (label: \"%s\")!",
-                 label.c_str());
+                 "opened before the last entry was opened!");
     }
     _active_entry = _log[_active_entry].close(end_time);
 #endif
@@ -213,9 +187,8 @@ public:
    * @brief Output the time log to the file with the given name.
    *
    * @param filename Output file name.
-   * @param append Append to an existing log file?
    */
-  inline void output(const std::string filename, const bool append = false) {
+  inline void output(const std::string filename) {
 
 #ifdef TIME_LOGGING
     if (_active_entry != 0) {
@@ -225,31 +198,27 @@ public:
     uint_fast64_t end_time;
     cpucycle_tick(end_time);
     _log[0].close(end_time);
-    const double real_time = _timer.interval();
+    const double real_time = _timer.stop();
     const uint_fast64_t global_start_time = _log[0].get_start_time();
     const uint_fast64_t full_range = end_time - global_start_time;
     const double time_unit = real_time / full_range;
+    cmac_warning("real_time: %g, full_range: %" PRIuFAST64 ", time_unit: %g",
+                 real_time, full_range, time_unit);
 
-    std::ofstream ofile;
-    if (append) {
-      ofile.open(filename, std::ios_base::app);
-    } else {
-      ofile.open(filename, std::ios_base::trunc);
-      ofile << "# entry id\tparent id\tdepth\tstart time (ticks)\tend time "
-               "(ticks)\tstart time (s)\tend time (s)\tlabel\n";
-    }
-    for (uint_fast32_t i = 1; i < _log.size(); ++i) {
+    std::ofstream ofile(filename);
+    ofile << "# entry id\tparent id\tdepth\tstart time (ticks)\tend time "
+             "(ticks)\tstart time (s)\tend time (s)\tlabel\n";
+    for (uint_fast32_t i = 0; i < _log.size(); ++i) {
       TimeLogEntry &entry = _log[i];
       const double entry_start =
           (entry.get_start_time() - global_start_time) * time_unit;
       const double entry_end =
           (entry.get_end_time() - global_start_time) * time_unit;
-      ofile << entry.get_ID() << "\t" << _log[entry.get_parent()].get_ID()
-            << "\t" << entry.get_depth() << "\t" << entry.get_start_time()
-            << "\t" << entry.get_end_time() << "\t" << entry_start << "\t"
-            << entry_end << "\t" << entry.get_label() << "\n";
+      ofile << i << "\t" << entry.get_parent() << "\t" << entry.get_depth()
+            << "\t" << entry.get_start_time() << "\t" << entry.get_end_time()
+            << "\t" << entry_start << "\t" << entry_end << "\t"
+            << entry.get_label() << "\n";
     }
-    _log.resize(1);
 #endif
   }
 };
