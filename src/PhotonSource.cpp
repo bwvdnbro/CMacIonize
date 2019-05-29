@@ -94,7 +94,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
   }
 
   if (continuous_source != nullptr) {
-    if(continuous_source->has_total_luminosity()){
+    if (continuous_source->has_total_luminosity()) {
       continuous_luminosity = continuous_source->get_total_luminosity();
     } else {
       continuous_luminosity = continuous_source->get_total_surface_area() *
