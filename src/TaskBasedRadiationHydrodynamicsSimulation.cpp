@@ -51,6 +51,7 @@
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
 #include "TimeLine.hpp"
+#include "TimeLogger.hpp"
 
 #include <omp.h>
 
@@ -794,6 +795,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   MemoryLogger memory_logger;
   memory_logger.add_entry("start");
+  TimeLogger time_logger;
+
+  time_logger.start("initialization");
 
   const int_fast32_t num_thread = parser.get_value< int_fast32_t >("threads");
   omp_set_num_threads(num_thread);
@@ -1239,6 +1243,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     restart_reader = nullptr;
   }
 
+  time_logger.end("initialization");
+
+  time_logger.start("time integration loop");
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
 
@@ -1257,6 +1264,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       std::stringstream num_step_line;
       num_step_line << "step " << num_step;
       memory_logger.add_entry(num_step_line.str());
+      time_logger.start(num_step_line.str());
     }
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
@@ -1271,6 +1279,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     // decide whether or not to do the radiation step
     if (hydro_radtime < 0. ||
         (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
+
+      time_logger.start("radiation");
 
       if (log) {
         log->write_status("Starting radiation step...");
@@ -2092,7 +2102,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (log) {
         log->write_status("Done with radiation step.");
       }
+
+      time_logger.end("radiation");
     }
+
+    time_logger.start("hydro");
 
     if (log) {
       log->write_status("Starting hydro step...");
@@ -2100,6 +2114,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     // update the gravitational accelerations if applicable
     if (external_potential != nullptr) {
+      time_logger.start("gravity");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -2120,10 +2135,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
       stop_parallel_timing_block();
+      time_logger.end("gravity");
     }
 
     // apply the turbulent forcing if applicable
     if (turbulence_forcing != nullptr) {
+      time_logger.start("turbulence");
       if (log) {
         log->write_status("Applying turbulence forcing...");
       }
@@ -2146,6 +2163,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (log) {
         log->write_status("Done applying turbulence forcing.");
       }
+      time_logger.end("turbulence");
     }
 
     // reset the hydro tasks and add them to the queue
@@ -2208,6 +2226,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     // apply the mask (if applicable)
     if (hydro_mask != nullptr) {
+      time_logger.start("mask");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -2220,6 +2239,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
       stop_parallel_timing_block();
+      time_logger.end("mask");
     }
 
     cpucycle_tick(iteration_end);
@@ -2227,6 +2247,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     if (log) {
       log->write_status("Done with hydro step.");
     }
+
+    time_logger.end("hydro");
 
     if (log) {
       const uint_fast64_t total_interval = iteration_end - iteration_start;
@@ -2243,12 +2265,15 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     // outside the integration loop
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
         has_next_step) {
+      time_logger.start("snapshot");
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+      time_logger.end("snapshot");
       ++hydro_lastsnap;
     }
 
     // check for live output
     if (live_output_manager.do_output(current_time)) {
+      time_logger.start("live output");
       AtomicValue< size_t > igrid(0);
 #pragma omp parallel default(shared)
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
@@ -2259,9 +2284,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         }
       }
       live_output_manager.write_output(simulation_box.get_box());
+      time_logger.end("live_output");
     }
 
     if (write_output && task_plot_i < task_plot_N) {
+      time_logger.start("task plot");
       if (log) {
         log->write_status("Writing task plot file...");
       }
@@ -2269,12 +2296,16 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (log) {
         log->write_status("Done writing task plot file.");
       }
+      time_logger.end("task plot");
       ++task_plot_i;
     }
 
     // remove radiation tasks
+    time_logger.start("task cleanup");
     tasks->clear_after(radiation_task_offset);
+    time_logger.end("task cleanup");
 
+    time_logger.start("time step");
     requested_timestep = DBL_MAX;
     for (auto gridit = grid_creator->begin();
          gridit != grid_creator->original_end(); ++gridit) {
@@ -2290,10 +2321,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     requested_timestep *= CFL;
     has_next_step =
         timeline->advance(requested_timestep, actual_timestep, current_time);
+    time_logger.end("time step");
 
     random_seed = restart_generator.get_random_integer();
     stop_simulation = restart_manager.stop_simulation();
     if (restart_manager.write_restart_file() || stop_simulation) {
+      time_logger.start("restart file");
       RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
 
       total_timer.stop();
@@ -2333,8 +2366,17 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       restart_writer->write(current_time);
 
       delete restart_writer;
+      time_logger.end("restart file");
+    }
+
+    if (number_of_steps > 0) {
+      std::stringstream num_step_line;
+      num_step_line << "step " << num_step;
+      time_logger.end(num_step_line.str());
     }
   }
+
+  time_logger.end("time integration loop");
 
   if (stop_simulation) {
     if (log) {
@@ -2390,6 +2432,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       std::ofstream mfile("memory_timeline.txt");
       memory_logger.print(mfile, true);
     }
+
+    { time_logger.output("time_log.txt"); }
   }
 
   if (sourcedistribution != nullptr) {

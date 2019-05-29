@@ -202,8 +202,6 @@ public:
     const uint_fast64_t global_start_time = _log[0].get_start_time();
     const uint_fast64_t full_range = end_time - global_start_time;
     const double time_unit = real_time / full_range;
-    cmac_warning("real_time: %g, full_range: %" PRIuFAST64 ", time_unit: %g",
-                 real_time, full_range, time_unit);
 
     std::ofstream ofile(filename);
     ofile << "# entry id\tparent id\tdepth\tstart time (ticks)\tend time "
