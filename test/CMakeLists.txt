@@ -1670,6 +1670,15 @@ set(TESTVELOCITYPDFCALCULATOR_SOURCES
 add_unit_test(NAME testVelocityPDFCalculator
               SOURCES ${TESTVELOCITYPDFCALCULATOR_SOURCES})
 
+## Unit test for TimeLogger
+set(TESTTIMELOGGER_SOURCES
+    testTimeLogger.cpp
+
+    ../src/TimeLogger.hpp
+)
+add_unit_test(NAME testTimeLogger
+              SOURCES ${TESTTIMELOGGER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
