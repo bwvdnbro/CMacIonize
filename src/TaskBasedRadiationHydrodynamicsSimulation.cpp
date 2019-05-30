@@ -758,6 +758,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - use mask: Use a mask to disable hydrodynamics and radiation in part of
  *    the box? (default: no)
  *  - turbulent forcing: Enable turbulent forcing? (default: no)
+ *  - first snapshot: Index of the first snapshot to write out (default: 0)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -892,6 +893,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   uint_fast32_t hydro_lastsnap = 1;
   int_fast32_t task_plot_i = 0;
+  const uint_fast32_t hydro_firstsnap = params->get_value< uint_fast32_t >(
+      "TaskBasedRadiationHydrodynamicsSimulation:first snapshot", 0);
 
   const double hydro_radtime = params->get_physical_value< QUANTITY_TIME >(
       "TaskBasedRadiationHydrodynamicsSimulation:radiation time", "-1. s");
@@ -1163,7 +1166,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     stop_parallel_timing_block();
   }
 
-  if (write_output && restart_reader == nullptr) {
+  if (write_output && restart_reader == nullptr && hydro_firstsnap == 0) {
     time_logger.start("snapshot");
     writer->write(*grid_creator, 0, *params, 0.);
     time_logger.end("snapshot");
@@ -2270,7 +2273,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     // we don't write if this is the last snapshot, because then it is written
     // outside the integration loop
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
-        has_next_step) {
+        has_next_step && hydro_firstsnap <= hydro_lastsnap) {
       time_logger.start("snapshot");
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
       time_logger.end("snapshot");
@@ -2389,6 +2392,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       log->write_status("Prematurely stopping simulation on request.");
     }
   } else {
+    // the final snapshot is always written
     if (write_output) {
       time_logger.start("snapshot");
       writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
