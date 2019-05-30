@@ -1256,7 +1256,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   time_logger.end("initialization");
 
-  time_logger.start("time integration loop");
+  time_logger.output("time_log.txt");
+
   bool stop_simulation = false;
   while (has_next_step && !stop_simulation) {
 
@@ -1270,12 +1271,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     std::vector< uint_fast64_t > active_time(num_thread, 0);
 
     ++num_step;
+    std::stringstream num_step_line;
+    num_step_line << "step " << num_step;
+    time_logger.start(num_step_line.str());
 
     if (number_of_steps > 0) {
-      std::stringstream num_step_line;
-      num_step_line << "step " << num_step;
       memory_logger.add_entry(num_step_line.str());
-      time_logger.start(num_step_line.str());
     }
     if (log) {
       log->write_status("Starting hydro step ", num_step, ", t = ",
@@ -2417,14 +2418,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.end("restart file");
     }
 
-    if (number_of_steps > 0) {
-      std::stringstream num_step_line;
-      num_step_line << "step " << num_step;
-      time_logger.end(num_step_line.str());
-    }
+    time_logger.end(num_step_line.str());
+    time_logger.output("time_log.txt", true);
   }
-
-  time_logger.end("time integration loop");
 
   if (stop_simulation) {
     if (log) {
@@ -2440,6 +2436,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
 
   cpucycle_tick(program_end);
+
+  time_logger.output("time_log.txt", true);
 
   serial_timer.stop();
   total_timer.stop();
@@ -2483,8 +2481,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       std::ofstream mfile("memory_timeline.txt");
       memory_logger.print(mfile, true);
     }
-
-    { time_logger.output("time_log.txt"); }
   }
 
   if (sourcedistribution != nullptr) {
