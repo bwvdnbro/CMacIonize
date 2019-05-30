@@ -41,15 +41,17 @@
  */
 class AlveliusTurbulenceForcing {
 private:
+  /*! @brief Number of subgrids in each coordinate direction. */
+  const CoordinateVector< int_fast32_t > _number_of_subgrids;
+
+  /*! @brief Number of cells per coordinate direction for a single subgrid. */
+  const CoordinateVector< int_fast32_t > _number_of_cells;
+
   /*! @brief Real amplitudes of the forcing (in m s^-2). */
   std::vector< CoordinateVector<> > _amplitudes_real;
 
   /*! @brief Imaginary amplitudes of the forcing (in m s^-2). */
   std::vector< CoordinateVector<> > _amplitudes_imaginary;
-
-  /*! @brief A table that has the x, y and z wavenumber components of the
-   *  different driving modes (in m^-1). */
-  std::vector< CoordinateVector<> > _ktable;
 
   /*! @brief Direction unit vectors describing the direction of the first force
    *  term for every mode. */
@@ -61,6 +63,24 @@ private:
 
   /*! @brief The forcing for each mode (in m s^-2). */
   std::vector< double > _kforce;
+
+  /*! @brief Precomputed sine waves in the x direction. */
+  std::vector< double > _sin_x;
+
+  /*! @brief Precomputed sine waves in the y direction. */
+  std::vector< double > _sin_y;
+
+  /*! @brief Precomputed sine waves in the z direction. */
+  std::vector< double > _sin_z;
+
+  /*! @brief Precomputed cosine waves in the x direction. */
+  std::vector< double > _cos_x;
+
+  /*! @brief Precomputed cosine waves in the y direction. */
+  std::vector< double > _cos_y;
+
+  /*! @brief Precomputed cosine waves in the z direction. */
+  std::vector< double > _cos_z;
 
   /*! @brief Random Generator for turbulence used to generate random forces. */
   RandomGenerator _random_generator;
@@ -100,7 +120,10 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param box_length Length of the simulation box, L (in m).
+   * @param number_of_subgrids Number of subgrids in each coordinate direction.
+   * @param number_of_cells Number of cells per coordinate direction for a
+   * single subgrid.
+   * @param box Dimensions of the simulation box, L (in m).
    * @param kmin Minimum wave number (in L^-1).
    * @param kmax Maximum wave number (in L^-1).
    * @param kforcing Wave number of highest forcing (in L^-1).
@@ -111,14 +134,16 @@ public:
    * @param starting_time Starting time of the simulation (in s).
    * @param log Log to write logging info to.
    */
-  AlveliusTurbulenceForcing(const double box_length, const double kmin,
-                            const double kmax, const double kforcing,
-                            const double concentration_factor,
-                            const double power_forcing, const int_fast32_t seed,
-                            const double dtfor, const double starting_time,
-                            Log *log = nullptr)
-      : _random_generator(seed), _time_step(dtfor),
-        _number_of_driving_steps(0) {
+  AlveliusTurbulenceForcing(
+      const CoordinateVector< int_fast32_t > number_of_subgrids,
+      const CoordinateVector< int_fast32_t > number_of_cells, const Box<> box,
+      const double kmin, const double kmax, const double kforcing,
+      const double concentration_factor, const double power_forcing,
+      const int_fast32_t seed, const double dtfor, const double starting_time,
+      Log *log = nullptr)
+      : _number_of_subgrids(number_of_subgrids),
+        _number_of_cells(number_of_cells), _random_generator(seed),
+        _time_step(dtfor), _number_of_driving_steps(0) {
 
     /* The force spectrum here prescribed is  Gaussian in shape:
      * F(k) = amplitude*exp^((k-kforcing)^2/concentration_factor)
@@ -126,6 +151,9 @@ public:
      */
     double spectra_sum = 0.;
     const double cinv = 1. / (concentration_factor * concentration_factor);
+
+    const double Linv = 1. / box.get_sides().x();
+    std::vector< CoordinateVector<> > ktable;
 
     /*
      * Iterate over all possible wavenumbers for
@@ -179,7 +207,7 @@ public:
             cmac_assert(_e1.back().norm2() <= 1.1);
             cmac_assert(_e2.back().norm2() <= 1.1);
 
-            _ktable.push_back(CoordinateVector<>(k1, k2, k3) / box_length);
+            ktable.push_back(CoordinateVector<>(k1, k2, k3) * Linv);
             const double gaussian_spectra =
                 std::exp(-kdiff * kdiff * cinv) * invkk;
             spectra_sum += gaussian_spectra;
@@ -189,20 +217,61 @@ public:
       }
     }
 
+    const uint_fast32_t number_of_modes = ktable.size();
+
     // Initialize the amplitude vectors to the right size
-    _amplitudes_real.resize(_ktable.size());
-    _amplitudes_imaginary.resize(_ktable.size());
+    _amplitudes_real.resize(number_of_modes);
+    _amplitudes_imaginary.resize(number_of_modes);
 
     // Obtain full expression for the forcing amplitude
     const double norm = power_forcing / (spectra_sum * dtfor);
-    for (uint_fast32_t i = 0; i < _kforce.size(); ++i) {
+    for (uint_fast32_t i = 0; i < number_of_modes; ++i) {
       _kforce[i] *= norm;
       _kforce[i] = std::sqrt(_kforce[i]);
     }
 
+    // precompute the sine and cosine waves for faster Fourier transforms
+    const CoordinateVector< int_fast32_t > ntot(
+        number_of_subgrids.x() * number_of_cells.x(),
+        number_of_subgrids.y() * number_of_cells.y(),
+        number_of_subgrids.z() * number_of_cells.z());
+    const CoordinateVector<> dx(box.get_sides().x() / ntot.x(),
+                                box.get_sides().y() / ntot.y(),
+                                box.get_sides().z() / ntot.z());
+    const CoordinateVector<> anchor = box.get_anchor();
+    _sin_x.resize(number_of_modes * ntot.x());
+    _sin_y.resize(number_of_modes * ntot.y());
+    _sin_z.resize(number_of_modes * ntot.z());
+    _cos_x.resize(number_of_modes * ntot.x());
+    _cos_y.resize(number_of_modes * ntot.y());
+    _cos_z.resize(number_of_modes * ntot.z());
+    for (uint_fast32_t ik = 0; ik < number_of_modes; ++ik) {
+      for (int_fast32_t ix = 0; ix < ntot.x(); ++ix) {
+        const double x = anchor.x() + (ix + 0.5) * dx.x();
+        const int_fast32_t index = ix * number_of_modes + ik;
+        const double angle = 2. * M_PI * ktable[ik].x() * x;
+        _sin_x[index] = std::sin(angle);
+        _cos_x[index] = std::cos(angle);
+      }
+      for (int_fast32_t iy = 0; iy < ntot.y(); ++iy) {
+        const double y = anchor.y() + (iy + 0.5) * dx.y();
+        const int_fast32_t index = iy * number_of_modes + ik;
+        const double angle = 2. * M_PI * ktable[ik].y() * y;
+        _sin_y[index] = std::sin(angle);
+        _cos_y[index] = std::cos(angle);
+      }
+      for (int_fast32_t iz = 0; iz < ntot.z(); ++iz) {
+        const double z = anchor.z() + (iz + 0.5) * dx.z();
+        const int_fast32_t index = iz * number_of_modes + ik;
+        const double angle = 2. * M_PI * ktable[ik].z() * z;
+        _sin_z[index] = std::sin(angle);
+        _cos_z[index] = std::cos(angle);
+      }
+    }
+
     // evolve the simulation forward in time until the starting time
     while (_number_of_driving_steps * _time_step < starting_time) {
-      for (uint_fast32_t i = 0; i < 3 * _ktable.size(); ++i) {
+      for (uint_fast32_t i = 0; i < 3 * number_of_modes; ++i) {
         // we draw 3 random numbers per mode per evolution step
         _random_generator.get_uniform_random_double();
       }
@@ -213,10 +282,10 @@ public:
     _number_of_driving_steps = 0;
 
     if (log) {
-      log->write_status("Number of turbulent modes: ", _ktable.size());
+      log->write_status("Number of turbulent modes: ", number_of_modes);
       log->write_status("Modes:");
-      for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
-        const CoordinateVector<> k = _ktable[i] * box_length;
+      for (uint_fast32_t i = 0; i < number_of_modes; ++i) {
+        const CoordinateVector<> k = ktable[i] * box.get_sides().x();
         log->write_status("mode ", i, ": ", k.x(), " ", k.y(), " ", k.z(),
                           " (norm: ", k.norm(), ")");
       }
@@ -244,14 +313,19 @@ public:
    *    generator will be forwarded to this time to guarantee a consistent
    *    random sequence between runs (default: 0. s)
    *
+   * @param number_of_subgrids Number of subgrids in each coordinate direction.
+   * @param number_of_cells Number of cells per coordinate direction for a
+   * single subgrid.
    * @param box Dimensions of the simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  AlveliusTurbulenceForcing(const Box<> box, ParameterFile &params,
-                            Log *log = nullptr)
+  AlveliusTurbulenceForcing(
+      const CoordinateVector< int_fast32_t > number_of_subgrids,
+      const CoordinateVector< int_fast32_t > number_of_cells, const Box<> box,
+      ParameterFile &params, Log *log = nullptr)
       : AlveliusTurbulenceForcing(
-            box.get_sides().x(),
+            number_of_subgrids, number_of_cells, box,
             params.get_value< double >("TurbulenceForcing:minimum wave number",
                                        1.),
             params.get_value< double >("TurbulenceForcing:maximum wave number",
@@ -281,13 +355,13 @@ public:
    */
   inline void update_turbulence(const double end_of_timestep) {
 
-    for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
+    for (uint_fast32_t i = 0; i < _kforce.size(); ++i) {
       _amplitudes_real[i] = CoordinateVector<>(0.);
       _amplitudes_imaginary[i] = CoordinateVector<>(0.);
     }
 
     while (_number_of_driving_steps * _time_step < end_of_timestep) {
-      for (uint_fast32_t i = 0; i < _ktable.size(); ++i) {
+      for (uint_fast32_t i = 0; i < _kforce.size(); ++i) {
 
         double RealRand[2];
         double ImRand[2];
@@ -310,37 +384,67 @@ public:
   /**
    * @brief Add the turbulent forcing for the given subgrid.
    *
+   * @param index Subgrid index.
    * @param subgrid HydroDensitySubGrid to operate on.
    */
-  inline void add_turbulent_forcing(HydroDensitySubGrid &subgrid) const {
+  inline void add_turbulent_forcing(const uint_fast32_t index,
+                                    HydroDensitySubGrid &subgrid) const {
 
-    for (auto cellit = subgrid.hydro_begin(); cellit != subgrid.hydro_end();
-         ++cellit) {
+    const int_fast32_t offset_x =
+        index / (_number_of_subgrids.y() * _number_of_subgrids.z());
+    const int_fast32_t offset_y =
+        (index - offset_x * _number_of_subgrids.y() * _number_of_subgrids.z()) /
+        _number_of_subgrids.z();
+    const int_fast32_t offset_z =
+        index - offset_x * _number_of_subgrids.y() * _number_of_subgrids.z() -
+        offset_y * _number_of_subgrids.z();
 
-      const CoordinateVector<> x = cellit.get_cell_midpoint();
-      CoordinateVector<> force;
-      for (uint_fast32_t ik = 0; ik < _ktable.size(); ++ik) {
-        const CoordinateVector<> k = _ktable[ik];
-        const CoordinateVector<> fr = _amplitudes_real[ik];
-        const CoordinateVector<> fi = _amplitudes_imaginary[ik];
+    const uint_fast32_t nk = _kforce.size();
 
-        const double kdotx = CoordinateVector<>::dot_product(k, x);
-        force +=
-            fr * std::cos(2. * M_PI * kdotx) - fi * std::sin(2. * M_PI * kdotx);
+    auto cellit = subgrid.hydro_begin();
+    for (int_fast32_t ix = 0; ix < _number_of_cells.x(); ++ix) {
+      const uint_fast32_t oix = (offset_x + ix) * nk;
+      for (int_fast32_t iy = 0; iy < _number_of_cells.y(); ++iy) {
+        const uint_fast32_t oiy = (offset_y + iy) * nk;
+        for (int_fast32_t iz = 0; iz < _number_of_cells.z(); ++iz) {
+          const uint_fast32_t oiz = (offset_z + iz) * nk;
+          CoordinateVector<> force;
+          for (uint_fast32_t ik = 0; ik < nk; ++ik) {
+            const CoordinateVector<> fr = _amplitudes_real[ik];
+            const CoordinateVector<> fi = _amplitudes_imaginary[ik];
+
+            const double cosx = _cos_x[oix + ik];
+            const double cosy = _cos_y[oiy + ik];
+            const double cosz = _cos_z[oiz + ik];
+            const double sinx = _sin_x[oix + ik];
+            const double siny = _sin_y[oiy + ik];
+            const double sinz = _sin_z[oiz + ik];
+
+            const double cosyz = cosy * cosz - siny * sinz;
+            const double sinyz = siny * cosz + cosy * sinz;
+
+            const double cosxyz = cosx * cosyz - sinx * sinyz;
+            const double sinxyz = sinx * cosyz + cosx * sinyz;
+
+            force += fr * cosxyz - fi * sinxyz;
+          }
+
+          const double mdt =
+              cellit.get_hydro_variables().get_conserved_mass() * _time_step;
+          const CoordinateVector<> old_p =
+              cellit.get_hydro_variables().get_conserved_momentum();
+          cellit.get_hydro_variables().conserved(1) += mdt * force.x();
+          cellit.get_hydro_variables().conserved(2) += mdt * force.y();
+          cellit.get_hydro_variables().conserved(3) += mdt * force.z();
+          cellit.get_hydro_variables().conserved(4) +=
+              _time_step * CoordinateVector<>::dot_product(old_p, force);
+          cellit.get_hydro_variables().primitives(1) += _time_step * force.x();
+          cellit.get_hydro_variables().primitives(2) += _time_step * force.y();
+          cellit.get_hydro_variables().primitives(3) += _time_step * force.z();
+
+          ++cellit;
+        }
       }
-
-      const double mdt =
-          cellit.get_hydro_variables().get_conserved_mass() * _time_step;
-      const CoordinateVector<> old_p =
-          cellit.get_hydro_variables().get_conserved_momentum();
-      cellit.get_hydro_variables().conserved(1) += mdt * force.x();
-      cellit.get_hydro_variables().conserved(2) += mdt * force.y();
-      cellit.get_hydro_variables().conserved(3) += mdt * force.z();
-      cellit.get_hydro_variables().conserved(4) +=
-          _time_step * CoordinateVector<>::dot_product(old_p, force);
-      cellit.get_hydro_variables().primitives(1) += _time_step * force.x();
-      cellit.get_hydro_variables().primitives(2) += _time_step * force.y();
-      cellit.get_hydro_variables().primitives(3) += _time_step * force.z();
     }
   }
 
@@ -351,17 +455,38 @@ public:
    */
   void write_restart_file(RestartWriter &restart_writer) const {
 
+    _number_of_subgrids.write_restart_file(restart_writer);
+    _number_of_cells.write_restart_file(restart_writer);
+
     _random_generator.write_restart_file(restart_writer);
     restart_writer.write(_time_step);
     restart_writer.write(_number_of_driving_steps);
 
-    const size_t number_of_modes = _ktable.size();
+    const size_t number_of_modes = _kforce.size();
     restart_writer.write(number_of_modes);
     for (size_t i = 0; i < number_of_modes; ++i) {
-      _ktable[i].write_restart_file(restart_writer);
       _e1[i].write_restart_file(restart_writer);
       _e2[i].write_restart_file(restart_writer);
       restart_writer.write(_kforce[i]);
+    }
+
+    const uint_fast32_t nx =
+        _number_of_subgrids.x() * _number_of_cells.x() * number_of_modes;
+    for (uint_fast32_t ix = 0; ix < nx; ++ix) {
+      restart_writer.write(_sin_x[ix]);
+      restart_writer.write(_cos_x[ix]);
+    }
+    const uint_fast32_t ny =
+        _number_of_subgrids.y() * _number_of_cells.y() * number_of_modes;
+    for (uint_fast32_t iy = 0; iy < ny; ++iy) {
+      restart_writer.write(_sin_y[iy]);
+      restart_writer.write(_cos_y[iy]);
+    }
+    const uint_fast32_t nz =
+        _number_of_subgrids.z() * _number_of_cells.z() * number_of_modes;
+    for (uint_fast32_t iz = 0; iz < nz; ++iz) {
+      restart_writer.write(_sin_z[iz]);
+      restart_writer.write(_cos_z[iz]);
     }
   }
 
@@ -371,22 +496,46 @@ public:
    * @param restart_reader Restart file to read from.
    */
   inline AlveliusTurbulenceForcing(RestartReader &restart_reader)
-      : _random_generator(restart_reader),
+      : _number_of_subgrids(restart_reader), _number_of_cells(restart_reader),
+        _random_generator(restart_reader),
         _time_step(restart_reader.read< double >()),
         _number_of_driving_steps(restart_reader.read< uint_fast32_t >()) {
 
     const size_t number_of_modes = restart_reader.read< size_t >();
     _amplitudes_real.resize(number_of_modes);
     _amplitudes_imaginary.resize(number_of_modes);
-    _ktable.resize(number_of_modes);
     _e1.resize(number_of_modes);
     _e2.resize(number_of_modes);
     _kforce.resize(number_of_modes);
     for (size_t i = 0; i < number_of_modes; ++i) {
-      _ktable[i] = CoordinateVector<>(restart_reader);
       _e1[i] = CoordinateVector<>(restart_reader);
       _e2[i] = CoordinateVector<>(restart_reader);
       _kforce[i] = restart_reader.read< double >();
+    }
+
+    const uint_fast32_t nx =
+        _number_of_subgrids.x() * _number_of_cells.x() * number_of_modes;
+    _sin_x.resize(nx);
+    _cos_x.resize(nx);
+    for (uint_fast32_t ix = 0; ix < nx; ++ix) {
+      _sin_x[ix] = restart_reader.read< double >();
+      _cos_x[ix] = restart_reader.read< double >();
+    }
+    const uint_fast32_t ny =
+        _number_of_subgrids.y() * _number_of_cells.y() * number_of_modes;
+    _sin_y.resize(ny);
+    _cos_y.resize(ny);
+    for (uint_fast32_t iy = 0; iy < ny; ++iy) {
+      _sin_y[iy] = restart_reader.read< double >();
+      _cos_y[iy] = restart_reader.read< double >();
+    }
+    const uint_fast32_t nz =
+        _number_of_subgrids.z() * _number_of_cells.z() * number_of_modes;
+    _sin_z.resize(nz);
+    _cos_z.resize(nz);
+    for (uint_fast32_t iz = 0; iz < nz; ++iz) {
+      _sin_z[iz] = restart_reader.read< double >();
+      _cos_z[iz] = restart_reader.read< double >();
     }
   }
 };
