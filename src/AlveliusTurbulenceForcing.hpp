@@ -403,11 +403,11 @@ public:
 
     auto cellit = subgrid.hydro_begin();
     for (int_fast32_t ix = 0; ix < _number_of_cells.x(); ++ix) {
-      const uint_fast32_t oix = (offset_x + ix) * nk;
+      const uint_fast32_t oix = (offset_x * _number_of_cells.x() + ix) * nk;
       for (int_fast32_t iy = 0; iy < _number_of_cells.y(); ++iy) {
-        const uint_fast32_t oiy = (offset_y + iy) * nk;
+        const uint_fast32_t oiy = (offset_y * _number_of_cells.y() + iy) * nk;
         for (int_fast32_t iz = 0; iz < _number_of_cells.z(); ++iz) {
-          const uint_fast32_t oiz = (offset_z + iz) * nk;
+          const uint_fast32_t oiz = (offset_z * _number_of_cells.z() + iz) * nk;
           CoordinateVector<> force;
           for (uint_fast32_t ik = 0; ik < nk; ++ik) {
             const CoordinateVector<> fr = _amplitudes_real[ik];
