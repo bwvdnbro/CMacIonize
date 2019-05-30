@@ -759,6 +759,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *    the box? (default: no)
  *  - turbulent forcing: Enable turbulent forcing? (default: no)
  *  - first snapshot: Index of the first snapshot to write out (default: 0)
+ *  - do radiation: Enable radiation? (default: yes)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -888,6 +889,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   const double hydro_radtime = params->get_physical_value< QUANTITY_TIME >(
       "TaskBasedRadiationHydrodynamicsSimulation:radiation time", "-1. s");
   uint_fast32_t hydro_lastrad = 0;
+  const bool do_radiation = params->get_value< bool >(
+      "TaskBasedRadiationHydrodynamicsSimulation:do radiation", true);
 
   if (restart_reader != nullptr) {
     hydro_lastsnap = restart_reader->read< uint_fast32_t >();
@@ -1285,8 +1288,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     }
 
     // decide whether or not to do the radiation step
-    if (hydro_radtime < 0. ||
-        (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime) {
+    if (do_radiation &&
+        (hydro_radtime < 0. ||
+         (current_time - actual_timestep) >= hydro_lastrad * hydro_radtime)) {
 
       time_logger.start("radiation");
 
@@ -1297,6 +1301,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       ++hydro_lastrad;
       // update the PhotonSource
       if (sourcedistribution->update(current_time)) {
+        time_logger.start("source update");
+
         temperature_calculator->update_luminosity(
             sourcedistribution->get_total_luminosity());
 
@@ -1350,9 +1356,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           }
         }
         grid_creator->update_copies(levels);
+
+        time_logger.end("source update");
       }
 
       if (sourcedistribution->get_total_luminosity() > 0.) {
+        time_logger.start("radiation transfer");
+
         {
           AtomicValue< size_t > igrid(0);
           start_parallel_timing_block();
@@ -2065,6 +2075,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           worktimer.stop();
         }
 
+        time_logger.end("radiation transfer");
+
       } else {
 
         if (log) {
@@ -2096,6 +2108,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                           buffers->get_number_of_active_buffers());
 
       {
+        time_logger.start("ionizing energy update");
         AtomicValue< size_t > igrid(0);
         start_parallel_timing_block();
 #pragma omp parallel default(shared)
@@ -2107,6 +2120,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           }
         }
         stop_parallel_timing_block();
+        time_logger.end("ionizing energy update");
       }
 
       if (log) {
