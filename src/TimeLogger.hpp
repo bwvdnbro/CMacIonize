@@ -71,6 +71,14 @@ public:
         _depth(depth) {}
 
   /**
+   * @brief Empty constructor.
+   *
+   * Only provided so that the compiler does not complain, should never be
+   * actually used.
+   */
+  inline TimeLogEntry() { cmac_error("Should not be used!"); }
+
+  /**
    * @brief Get the label for the entry.
    *
    * @return Label for the entry.
@@ -188,8 +196,9 @@ public:
    * @brief Output the time log to the file with the given name.
    *
    * @param filename Output file name.
+   * @param append Append to an existing log file?
    */
-  inline void output(const std::string filename) {
+  inline void output(const std::string filename, const bool append = false) {
 
 #ifdef TIME_LOGGING
     if (_active_entry != 0) {
@@ -199,15 +208,20 @@ public:
     uint_fast64_t end_time;
     cpucycle_tick(end_time);
     _log[0].close(end_time);
-    const double real_time = _timer.stop();
+    const double real_time = _timer.interval();
     const uint_fast64_t global_start_time = _log[0].get_start_time();
     const uint_fast64_t full_range = end_time - global_start_time;
     const double time_unit = real_time / full_range;
 
-    std::ofstream ofile(filename);
-    ofile << "# entry id\tparent id\tdepth\tstart time (ticks)\tend time "
-             "(ticks)\tstart time (s)\tend time (s)\tlabel\n";
-    for (uint_fast32_t i = 0; i < _log.size(); ++i) {
+    std::ofstream ofile;
+    if (append) {
+      ofile.open(filename, std::ios_base::app);
+    } else {
+      ofile.open(filename, std::ios_base::trunc);
+      ofile << "# entry id\tparent id\tdepth\tstart time (ticks)\tend time "
+               "(ticks)\tstart time (s)\tend time (s)\tlabel\n";
+    }
+    for (uint_fast32_t i = 1; i < _log.size(); ++i) {
       TimeLogEntry &entry = _log[i];
       const double entry_start =
           (entry.get_start_time() - global_start_time) * time_unit;
@@ -218,6 +232,7 @@ public:
             << "\t" << entry_start << "\t" << entry_end << "\t"
             << entry.get_label() << "\n";
     }
+    _log.resize(1);
 #endif
   }
 };
