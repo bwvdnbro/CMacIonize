@@ -859,17 +859,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       hydro_mask = HydroMaskFactory::restart(*restart_reader, log);
     }
   }
-  AlveliusTurbulenceForcing *turbulence_forcing = nullptr;
-  if (params->get_value< bool >(
-          "TaskBasedRadiationHydrodynamicsSimulation:turbulent forcing",
-          false)) {
-    if (restart_reader == nullptr) {
-      turbulence_forcing =
-          new AlveliusTurbulenceForcing(simulation_box.get_box(), *params, log);
-    } else {
-      turbulence_forcing = new AlveliusTurbulenceForcing(*restart_reader);
-    }
-  }
 
   const double hydro_total_time = params->get_physical_value< QUANTITY_TIME >(
       "TaskBasedRadiationHydrodynamicsSimulation:total time", "1. s");
@@ -929,6 +918,20 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   } else {
     grid_creator =
         new DensitySubGridCreator< HydroDensitySubGrid >(*restart_reader);
+  }
+
+  AlveliusTurbulenceForcing *turbulence_forcing = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:turbulent forcing",
+          false)) {
+    if (restart_reader == nullptr) {
+      turbulence_forcing =
+          new AlveliusTurbulenceForcing(grid_creator->get_subgrid_layout(),
+                                        grid_creator->get_subgrid_cell_layout(),
+                                        simulation_box.get_box(), *params, log);
+    } else {
+      turbulence_forcing = new AlveliusTurbulenceForcing(*restart_reader);
+    }
   }
 
   // fifth: construct the stellar sources. These should be stored in a
@@ -2164,7 +2167,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           uint_fast64_t task_start, task_stop;
           cpucycle_tick(task_start);
           HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
-          turbulence_forcing->add_turbulent_forcing(subgrid);
+          turbulence_forcing->add_turbulent_forcing(this_igrid, subgrid);
           cpucycle_tick(task_stop);
           active_time[omp_get_thread_num()] += task_stop - task_start;
         }
@@ -2375,15 +2378,16 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       if (hydro_mask != nullptr) {
         HydroMaskFactory::write_restart_file(*restart_writer, *hydro_mask);
       }
-      if (turbulence_forcing != nullptr) {
-        turbulence_forcing->write_restart_file(*restart_writer);
-      }
 
       restart_writer->write(hydro_lastsnap);
       restart_writer->write(hydro_lastrad);
       restart_writer->write(random_seed);
 
       grid_creator->write_restart_file(*restart_writer);
+
+      if (turbulence_forcing != nullptr) {
+        turbulence_forcing->write_restart_file(*restart_writer);
+      }
 
       PhotonSourceDistributionFactory::write_restart_file(*restart_writer,
                                                           *sourcedistribution);
