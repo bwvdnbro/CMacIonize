@@ -1402,6 +1402,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           // reset the diffuse field variables
           if (reemission_handler != nullptr) {
             AtomicValue< size_t > igrid(0);
+            start_parallel_timing_block();
 #pragma omp parallel default(shared)
             while (igrid.value() <
                    grid_creator->number_of_original_subgrids()) {
@@ -1415,6 +1416,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 }
               }
             }
+            stop_parallel_timing_block();
           }
 
           size_t number_of_photons_done = 0;
@@ -2284,6 +2286,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     if (live_output_manager.do_output(current_time)) {
       time_logger.start("live output");
       AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
 #pragma omp parallel default(shared)
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
@@ -2292,6 +2295,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
               this_igrid, *grid_creator->get_subgrid(this_igrid));
         }
       }
+      stop_parallel_timing_block();
       live_output_manager.write_output(simulation_box.get_box());
       time_logger.end("live output");
     }
@@ -2316,15 +2320,32 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
     time_logger.start("time step");
     requested_timestep = DBL_MAX;
-    for (auto gridit = grid_creator->begin();
-         gridit != grid_creator->original_end(); ++gridit) {
-      for (auto cellit = (*gridit).hydro_begin();
-           cellit != (*gridit).hydro_end(); ++cellit) {
+    {
+      // first figure out the time step for each subgrid, then do the global
+      // time step
+      std::vector< double > requested_timestep_list(
+          grid_creator->number_of_original_subgrids(), DBL_MAX);
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          for (auto cellit = subgrid.hydro_begin();
+               cellit != subgrid.hydro_end(); ++cellit) {
+            requested_timestep_list[this_igrid] =
+                std::min(requested_timestep_list[this_igrid],
+                         hydro.get_timestep(cellit.get_hydro_variables(),
+                                            cellit.get_ionization_variables(),
+                                            cellit.get_volume()));
+          }
+        }
+      }
+      stop_parallel_timing_block();
+      for (uint_fast32_t i = 0; i < requested_timestep_list.size(); ++i) {
         requested_timestep =
-            std::min(requested_timestep,
-                     hydro.get_timestep(cellit.get_hydro_variables(),
-                                        cellit.get_ionization_variables(),
-                                        cellit.get_volume()));
+            std::min(requested_timestep, requested_timestep_list[i]);
       }
     }
     requested_timestep *= CFL;
