@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2019 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *                    Nina Sartorio (sartorio.nina@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,6 +25,7 @@
  * at runtime.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Nina Sartorio (sartorio.nina@gmail.com)
  *
  */
 #ifndef SurfaceDensityIonizedCALCULATOR_HPP
@@ -41,8 +43,10 @@
  */
 class SurfaceDensityIonizedCalculatorValues {
 private:
-  /*! @brief Surface density values (in kg m^-2). */
+  /*! @brief Surface density values for Halpha (in kg^2 m^-5). */
   std::vector< double > _surface_densities_Halpha;
+
+  /*! @brief Neutral surface density values (in kg m^-2). */
   std::vector< double > _surface_densities_neutral;
 
   /*! @brief Number of pixels in the vertical direction. */
@@ -71,7 +75,7 @@ public:
   }
 
   /**
-   * @brief Access the pixel with the given index values.
+   * @brief Access the neutral pixel with the given index values.
    *
    * @param ix Horizontal index.
    * @param iy Vertical index.
@@ -80,6 +84,14 @@ public:
   inline double &pixel_neutral(const int_fast32_t ix, const int_fast32_t iy) {
     return _surface_densities_neutral[(ix * _ny + iy)];
   }
+
+  /**
+   * @brief Access the Halpha pixel with the given index values.
+   *
+   * @param ix Horizontal index.
+   * @param iy Vertical index.
+   * @return Reference to the corresponding pixel.
+   */
   inline double &pixel_ion(const int_fast32_t ix, const int_fast32_t iy) {
     return _surface_densities_Halpha[(ix * _ny + iy)];
   }
@@ -192,7 +204,7 @@ public:
 
           neutral += Density * N_fraction;
 
-          const double H_alpha = Density * (1 - N_fraction);
+          const double H_alpha = Density * (1. - N_fraction);
 
           ion += H_alpha * H_alpha;
         }
