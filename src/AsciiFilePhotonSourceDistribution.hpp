@@ -90,7 +90,7 @@ public:
    */
   inline AsciiFilePhotonSourceDistribution(ParameterFile &params, Log *log)
       : AsciiFilePhotonSourceDistribution(params.get_filename(
-            "PhotonSourceDistributino:filename", "sources.yml")) {}
+            "PhotonSourceDistribution:filename", "sources.yml")) {}
 
   /**
    * @brief Get the number of sources contained within this distribution.

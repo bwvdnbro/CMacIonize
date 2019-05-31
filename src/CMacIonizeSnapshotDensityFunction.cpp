@@ -33,15 +33,82 @@
  * @brief Constructor.
  *
  * @param filename Name of the snapshot file to read.
+ * @param use_density Use the mass density instead of the number density?
+ * @param use_pressure Use the pressure instead of the temperature?
+ * @param initial_neutral_fraction Initial neutral fraction to use (if
+ * neutral fractions are not present in the file).
  * @param log Log to write logging info to.
  */
 CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
-    std::string filename, Log *log)
-    : _cartesian_grid(nullptr), _amr_grid(nullptr),
+    std::string filename, const bool use_density, const bool use_pressure,
+    const double initial_neutral_fraction, Log *log)
+    : _filename(filename), _use_density(use_density),
+      _use_pressure(use_pressure),
+      _initial_neutral_fraction(initial_neutral_fraction), _log(log),
+      _cartesian_grid(nullptr), _amr_grid(nullptr),
       _voronoi_pointlocations(nullptr) {
 
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    cmac_error("Could not open file \"%s\"!", filename.c_str());
+  }
+}
+
+/**
+ * @brief ParameterFile constructor.
+ *
+ * Parameters are:
+ *  - filename: Name of the snapshot file to read (required)
+ *  - use density: Use the mass density instead of the number density? (default:
+ *    no)
+ *  - use pressure: Use the pressure instead of the temperature? (default: no)
+ *  - initial neutral fraction: Initial value for the neutral fractions if they
+ *    are not present in the file (default: 1.e-6)
+ *
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
+    ParameterFile &params, Log *log)
+    : CMacIonizeSnapshotDensityFunction(
+          params.get_filename("DensityFunction:filename"),
+          params.get_value< bool >("DensityFunction:use density", false),
+          params.get_value< bool >("DensityFunction:use pressure", false),
+          params.get_value< double >("DensityFunction:initial neutral fraction",
+                                     1.e-6),
+          log) {}
+
+/**
+ * @brief Destructor.
+ *
+ * Delete the internal density grid.
+ */
+CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
+  if (_cartesian_grid) {
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        delete[] _cartesian_grid[ix][iy];
+      }
+      delete[] _cartesian_grid[ix];
+    }
+    delete[] _cartesian_grid;
+  } else if (_amr_grid) {
+    delete _amr_grid;
+  } else if (_voronoi_pointlocations) {
+    delete _voronoi_pointlocations;
+  }
+}
+
+/**
+ * @brief Perform all computationally expensive initialization that needs to
+ * be done before operator() will work.
+ *
+ * This routine actually reads the file.
+ */
+void CMacIonizeSnapshotDensityFunction::initialize() {
+
   HDF5Tools::HDF5File file =
-      HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
+      HDF5Tools::open_file(_filename, HDF5Tools::HDF5FILEMODE_READ);
 
   // read grid parameters
   HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/Parameters");
@@ -59,7 +126,12 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
       parameters.get_physical_vector< QUANTITY_LENGTH >("SimulationBox:sides"));
   _ncell = parameters.get_value< CoordinateVector< uint_fast32_t > >(
       "DensityGrid:number of cells", CoordinateVector< uint_fast32_t >(-1));
-  std::string type = parameters.get_value< std::string >("DensityGrid:type");
+  std::string type;
+  if (parameters.has_value("DensityGrid:type")) {
+    type = parameters.get_value< std::string >("DensityGrid:type");
+  } else {
+    type = "Cartesian";
+  }
   HDF5Tools::close_group(group);
 
   // units
@@ -91,22 +163,34 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
   std::vector< CoordinateVector<> > cell_midpoints =
       HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
   std::vector< double > cell_densities;
-  if (HDF5Tools::group_exists(group, "NumberDensity")) {
+  if (HDF5Tools::group_exists(group, "NumberDensity") && !_use_density) {
     cell_densities = HDF5Tools::read_dataset< double >(group, "NumberDensity");
   } else {
     cell_densities = HDF5Tools::read_dataset< double >(group, "Density");
     unit_density_in_SI /=
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
   }
-  std::vector< double > cell_temperatures =
-      HDF5Tools::read_dataset< double >(group, "Temperature");
   std::vector< std::vector< double > > neutral_fractions(
-      NUMBER_OF_IONNAMES, std::vector< double >(cell_densities.size(), 1.e-6));
+      NUMBER_OF_IONNAMES,
+      std::vector< double >(cell_densities.size(), _initial_neutral_fraction));
   for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
     // skip ionic fractions that do not exist
     if (HDF5Tools::group_exists(group, "NeutralFraction" + get_ion_name(i))) {
       neutral_fractions[i] = HDF5Tools::read_dataset< double >(
           group, "NeutralFraction" + get_ion_name(i));
+    }
+  }
+  std::vector< double > cell_temperatures;
+  if (HDF5Tools::group_exists(group, "Temperature") && !_use_pressure) {
+    cell_temperatures = HDF5Tools::read_dataset< double >(group, "Temperature");
+  } else {
+    const double kB =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN);
+    cell_temperatures = HDF5Tools::read_dataset< double >(group, "Pressure");
+    for (size_t i = 0; i < cell_temperatures.size(); ++i) {
+      const double mu = 0.5 * (1. + neutral_fractions[ION_H_n][i]);
+      cell_temperatures[i] *= mu / (cell_densities[i] * unit_density_in_SI *
+                                    kB * unit_temperature_in_SI);
     }
   }
 
@@ -135,8 +219,8 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
     }
   }
 
-  if (log) {
-    log->write_status(
+  if (_log) {
+    _log->write_status(
         "Constructing a CMacIonizeSnapshotDensityFunction containing ",
         _ncell.x(), " x ", _ncell.y(), " x ", _ncell.z(), " cells.");
   }
@@ -255,25 +339,10 @@ CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
 }
 
 /**
- * @brief ParameterFile constructor.
- *
- * Parameters are:
- *  - filename: Name of the snapshot file to read (required)
- *
- * @param params ParameterFile to read from.
- * @param log Log to write logging info to.
+ * @brief Free up the memory used by the density function. After this,
+ * operator() will no longer work.
  */
-CMacIonizeSnapshotDensityFunction::CMacIonizeSnapshotDensityFunction(
-    ParameterFile &params, Log *log)
-    : CMacIonizeSnapshotDensityFunction(
-          params.get_filename("DensityFunction:filename"), log) {}
-
-/**
- * @brief Destructor.
- *
- * Delete the internal density grid.
- */
-CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
+void CMacIonizeSnapshotDensityFunction::free() {
   if (_cartesian_grid) {
     for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
       for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
@@ -282,10 +351,13 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
       delete[] _cartesian_grid[ix];
     }
     delete[] _cartesian_grid;
+    _cartesian_grid = nullptr;
   } else if (_amr_grid) {
     delete _amr_grid;
+    _amr_grid = nullptr;
   } else if (_voronoi_pointlocations) {
     delete _voronoi_pointlocations;
+    _voronoi_pointlocations = nullptr;
   }
 }
 
