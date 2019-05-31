@@ -28,6 +28,8 @@
 
 #include "DensityPDFCalculator.hpp"
 #include "ParameterFile.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 #include "SurfaceDensityCalculator.hpp"
 #include "Utilities.hpp"
 #include "VelocityPDFCalculator.hpp"
@@ -233,6 +235,24 @@ public:
     }
 
     ++_next_output;
+  }
+
+  /**
+   * @brief Write essential restart info to the given restart file.
+   *
+   * @param restart_writer Restart file to write to.
+   */
+  inline void write_restart_info(RestartWriter &restart_writer) const {
+    restart_writer.write(_next_output);
+  }
+
+  /**
+   * @brief Read essential restart info from the given restart file.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline void read_restart_info(RestartReader &restart_reader) {
+    _next_output = restart_reader.read< uint_fast32_t >();
   }
 };
 
