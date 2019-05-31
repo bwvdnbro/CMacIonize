@@ -1652,6 +1652,15 @@ set(TESTSURFACEDENSITYCALCULATOR_SOURCES
 add_unit_test(NAME testSurfaceDensityCalculator
               SOURCES ${TESTSURFACEDENSITYCALCULATOR_SOURCES})
 
+## Unit test for SurfaceDensityIonizedCalculator
+set(TESTSURFACEDENSITYIONIZEDCALCULATOR_SOURCES
+    testSurfaceDensityIonizedCalculator.cpp
+
+    ../src/SurfaceDensityIonizedCalculator.hpp
+)
+add_unit_test(NAME testSurfaceDensityIonizedCalculator
+              SOURCES ${TESTSURFACEDENSITYIONIZEDCALCULATOR_SOURCES})
+
 ## Unit test for DensityPDFCalculator
 set(TESTDENSITYPDFCALCULATOR_SOURCES
     testDensityPDFCalculator.cpp
