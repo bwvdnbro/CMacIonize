@@ -29,6 +29,7 @@
 #include "DensityPDFCalculator.hpp"
 #include "ParameterFile.hpp"
 #include "SurfaceDensityCalculator.hpp"
+#include "SurfaceDensityIonizedCalculator.hpp"
 #include "Utilities.hpp"
 #include "VelocityPDFCalculator.hpp"
 
@@ -49,6 +50,9 @@ private:
   /*! @brief SurfaceDensityCalculator (if live output enabled). */
   SurfaceDensityCalculator *_surface_density_calculator;
 
+  /*! @brief Ionized surface density calculator (if live output enabled). */
+  SurfaceDensityIonizedCalculator *_surface_density_ionized_calculator;
+
   /*! @brief DensityPDFCalculator (if live output enabled). */
   DensityPDFCalculator *_density_PDF_calculator;
 
@@ -64,6 +68,7 @@ public:
    * subgrid.
    * @param enabled Whether or not output is enabled.
    * @param output_surface_density Output the surface density?
+   * @param output_ionized_surface_density Output the ionized surface density?
    * @param output_density_PDF Output the density PDF?
    * @param minimum_density Minimum density for the density PDF (in kg m^-3).
    * @param maximum_density Maximum density for the density PDF (in kg m^-3).
@@ -77,8 +82,9 @@ public:
       const CoordinateVector< int_fast32_t > number_of_subgrids,
       const CoordinateVector< int_fast32_t > number_of_cells,
       const bool enabled, const bool output_surface_density,
-      const bool output_density_PDF, const double minimum_density,
-      const double maximum_density, const uint_fast32_t number_of_density_bins,
+      const bool output_ionized_surface_density, const bool output_density_PDF,
+      const double minimum_density, const double maximum_density,
+      const uint_fast32_t number_of_density_bins,
       const bool output_velocity_PDF, const double maximum_velocity,
       const uint_fast32_t number_of_velocity_bins, const double output_interval)
       : _enabled(enabled), _output_interval(output_interval), _next_output(0),
@@ -89,6 +95,12 @@ public:
       if (output_surface_density) {
         _surface_density_calculator =
             new SurfaceDensityCalculator(number_of_subgrids, number_of_cells);
+      }
+
+      if (output_ionized_surface_density) {
+        _surface_density_ionized_calculator =
+            new SurfaceDensityIonizedCalculator(number_of_subgrids,
+                                                number_of_cells);
       }
 
       if (output_density_PDF) {
@@ -114,6 +126,8 @@ public:
    *  - enabled: Master override switch to enable/disable all output (default:
    *    false)
    *  - output surface density: Output surface densities? (default: true)
+   *  - output ionized surface density: Output ionized surface densities?
+   *    (default: false)
    *  - output density PDF: Output density PDF? (default: true)
    *  - minimum density: Lower limit for the density PDF (default:
    *    1.e-25 g cm^-3)
@@ -141,6 +155,8 @@ public:
             params.get_value< bool >("LiveOutputManager:enabled", false),
             params.get_value< bool >("LiveOutputManager:output surface density",
                                      true),
+            params.get_value< bool >(
+                "LiveOutputManager:output ionized surface density", false),
             params.get_value< bool >("LiveOutputManager:output density PDF",
                                      true),
             params.get_physical_value< QUANTITY_DENSITY >(
@@ -164,6 +180,9 @@ public:
   inline ~LiveOutputManager() {
     if (_surface_density_calculator) {
       delete _surface_density_calculator;
+    }
+    if (_surface_density_ionized_calculator) {
+      delete _surface_density_ionized_calculator;
     }
     if (_density_PDF_calculator) {
       delete _density_PDF_calculator;
@@ -198,6 +217,11 @@ public:
       _surface_density_calculator->calculate_surface_density(index, subgrid);
     }
 
+    if (_surface_density_ionized_calculator) {
+      _surface_density_ionized_calculator->calculate_surface_density(index,
+                                                                     subgrid);
+    }
+
     if (_density_PDF_calculator) {
       _density_PDF_calculator->calculate_density_PDF(index, subgrid);
     }
@@ -218,6 +242,12 @@ public:
       std::string filename = Utilities::compose_filename(
           ".", "surface_density_", "txt", _next_output, 4);
       _surface_density_calculator->output(filename, box);
+    }
+
+    if (_surface_density_ionized_calculator) {
+      std::string filename = Utilities::compose_filename(
+          ".", "ionized_surface_density_", "txt", _next_output, 4);
+      _surface_density_ionized_calculator->output(filename, box);
     }
 
     if (_density_PDF_calculator) {
