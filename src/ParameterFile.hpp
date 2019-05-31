@@ -49,6 +49,16 @@ public:
   ParameterFile(std::string filename);
 
   /**
+   * @brief Check if the parameter with the given name exists.
+   *
+   * @param key Parameter name.
+   * @return True if the parameter exists.
+   */
+  inline bool has_value(const std::string key) const {
+    return _yaml_dictionary.has_value(key);
+  }
+
+  /**
    * @brief Add the given value and key to the internal dictionary.
    *
    * If the key already exists, the existing value is replaced.

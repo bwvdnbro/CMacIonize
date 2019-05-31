@@ -801,6 +801,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   time_logger.start("initialization");
 
+  time_logger.start("parameter reading");
+
   const int_fast32_t num_thread = parser.get_value< int_fast32_t >("threads");
   omp_set_num_threads(num_thread);
 
@@ -830,8 +832,10 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   // fourth: construct the density grid. This should be stored in a separate
   // DensityGrid object with geometrical and physical properties
+  time_logger.start("density function creation");
   DensityFunction *density_function =
       DensityFunctionFactory::generate(*params, log);
+  time_logger.end("density function creation");
   CrossSections *cross_sections = CrossSectionsFactory::generate(*params, log);
   RecombinationRates *recombination_rates =
       RecombinationRatesFactory::generate(*params, log);
@@ -914,6 +918,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (restart_reader != nullptr) {
     random_seed = restart_reader->read< int_fast32_t >();
   }
+  time_logger.start("density grid creation");
   DensitySubGridCreator< HydroDensitySubGrid > *grid_creator = nullptr;
   if (restart_reader == nullptr) {
     grid_creator = new DensitySubGridCreator< HydroDensitySubGrid >(
@@ -922,16 +927,19 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     grid_creator =
         new DensitySubGridCreator< HydroDensitySubGrid >(*restart_reader);
   }
+  time_logger.end("density grid creation");
 
   AlveliusTurbulenceForcing *turbulence_forcing = nullptr;
   if (params->get_value< bool >(
           "TaskBasedRadiationHydrodynamicsSimulation:turbulent forcing",
           false)) {
     if (restart_reader == nullptr) {
+      time_logger.start("turbulence initialization");
       turbulence_forcing =
           new AlveliusTurbulenceForcing(grid_creator->get_subgrid_layout(),
                                         grid_creator->get_subgrid_cell_layout(),
                                         simulation_box.get_box(), *params, log);
+      time_logger.end("turbulence initialization");
     } else {
       turbulence_forcing = new AlveliusTurbulenceForcing(*restart_reader);
     }
@@ -1026,6 +1034,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     }
   }
 
+  time_logger.end("parameter reading");
+
   if (parser.get_value< bool >("dry-run")) {
     if (log) {
       log->write_warning("Dry run requested. Program will now halt.");
@@ -1036,6 +1046,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   memory_logger.add_entry("preinit");
 
   if (restart_reader == nullptr) {
+    time_logger.start("grid initialization");
     if (log) {
       log->write_status("Initializing DensityFunction...");
     }
@@ -1059,9 +1070,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     memory_logger.add_entry("postinit");
 
     density_function->free();
+    time_logger.end("grid initialization");
   }
 
   memory_logger.add_entry("pretasks");
+
+  time_logger.start("task initialization");
 
   if (log) {
     log->write_status("Initializing task-based structures...");
@@ -1109,6 +1123,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
   memory_logger.add_entry("posttasks");
 
+  time_logger.end("task initialization");
+
+  time_logger.start("initial time step");
   double requested_timestep = DBL_MAX;
   if (restart_reader == nullptr) {
     for (auto cellit = grid_creator->begin();
@@ -1118,7 +1135,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                    (*cellit).initialize_hydrodynamic_variables(hydro, true));
     }
   }
+  time_logger.end("initial time step");
 
+  time_logger.start("hydro task creation");
   for (auto cellit = grid_creator->begin();
        cellit != grid_creator->original_end(); ++cellit) {
     make_hydro_tasks(*tasks, cellit.get_index(), *grid_creator);
@@ -1128,6 +1147,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     set_dependencies(cellit.get_index(), *grid_creator, *tasks);
   }
   const size_t radiation_task_offset = tasks->size();
+  time_logger.end("hydro task creation");
 
   // initialize the mask (if applicable). MUST BE DONE IN SERIAL!
   if (hydro_mask != nullptr && restart_reader == nullptr) {

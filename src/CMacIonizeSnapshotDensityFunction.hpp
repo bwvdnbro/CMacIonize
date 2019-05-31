@@ -39,6 +39,21 @@ class ParameterFile;
  */
 class CMacIonizeSnapshotDensityFunction : public DensityFunction {
 private:
+  /*! @brief Name of the snapshot file. */
+  const std::string _filename;
+
+  /*! @brief Use the mass density instead of the number density? */
+  const bool _use_density;
+
+  /*! @brief Use the pressure instead of the temperature? */
+  const bool _use_pressure;
+
+  /*! @brief Initial value for the neutral fractions (if not present). */
+  const double _initial_neutral_fraction;
+
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
   /*! @brief Box containing the grid. */
   Box<> _box;
 
@@ -91,11 +106,19 @@ private:
   }
 
 public:
-  CMacIonizeSnapshotDensityFunction(std::string filename, Log *log = nullptr);
+  CMacIonizeSnapshotDensityFunction(std::string filename,
+                                    const bool use_density,
+                                    const bool use_pressure,
+                                    const double initial_neutral_fraction,
+                                    Log *log = nullptr);
 
   CMacIonizeSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
   virtual ~CMacIonizeSnapshotDensityFunction();
+
+  virtual void initialize();
+
+  virtual void free();
 
   virtual DensityValues operator()(const Cell &cell) const;
 };

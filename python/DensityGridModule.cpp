@@ -86,7 +86,9 @@ initDensityGrid(const std::string &filename) {
     parameters.add_value("DensityGrid:number of Lloyd iterations", "0");
   }
 
-  CMacIonizeSnapshotDensityFunction density_function(filename);
+  CMacIonizeSnapshotDensityFunction density_function(filename, false, false,
+                                                     1.e-6);
+  density_function.initialize();
 
   const SimulationBox simulation_box(parameters);
   boost::shared_ptr< DensityGrid > ptr =
