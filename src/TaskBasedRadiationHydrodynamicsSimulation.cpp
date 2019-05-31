@@ -1020,6 +1020,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   LiveOutputManager live_output_manager(grid_creator->get_subgrid_layout(),
                                         grid_creator->get_subgrid_cell_layout(),
                                         *params);
+  if (restart_reader != nullptr) {
+    live_output_manager.read_restart_info(*restart_reader);
+  }
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
@@ -2426,6 +2429,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
       PhotonSourceDistributionFactory::write_restart_file(*restart_writer,
                                                           *sourcedistribution);
+
+      live_output_manager.write_restart_info(*restart_writer);
 
       timeline->write_restart_file(*restart_writer);
       restart_writer->write(num_step);
