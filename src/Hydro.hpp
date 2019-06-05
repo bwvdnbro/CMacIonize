@@ -670,6 +670,15 @@ public:
                                           const double dt) const {
 
     const double rho = state.get_primitives_density();
+
+    if (rho == 0.) {
+      return;
+    }
+    const double rhoinv = 1. / rho;
+    if (std::isinf(rhoinv)) {
+      return;
+    }
+
     const double vx = state.get_primitives_velocity().x();
     const double vy = state.get_primitives_velocity().y();
     const double vz = state.get_primitives_velocity().z();
@@ -677,8 +686,6 @@ public:
     const double ax = state.get_gravitational_acceleration().x();
     const double ay = state.get_gravitational_acceleration().y();
     const double az = state.get_gravitational_acceleration().z();
-
-    const double rhoinv = 1. / rho;
 
     const double drhodx = state.primitive_gradients(0).x();
     const double drhody = state.primitive_gradients(0).y();
