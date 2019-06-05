@@ -71,7 +71,8 @@ void IonizationStateCalculator::calculate_ionization_state(
 
   // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
-  cmac_assert(jH >= 0.);
+  cmac_assert_message(jH >= 0., "jH: %g, jfac: %g, mean_intensity: %g", jH,
+                      jfac, ionization_variables.get_mean_intensity(ION_H_n));
 
 #ifdef HAS_HELIUM
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);

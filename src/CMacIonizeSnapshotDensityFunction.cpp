@@ -107,8 +107,17 @@ CMacIonizeSnapshotDensityFunction::~CMacIonizeSnapshotDensityFunction() {
  */
 void CMacIonizeSnapshotDensityFunction::initialize() {
 
+  if (_log) {
+    _log->write_info("Opening file ", _filename, "...");
+  }
+
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file(_filename, HDF5Tools::HDF5FILEMODE_READ);
+
+  if (_log) {
+    _log->write_info("Done opening file.");
+    _log->write_info("Reading parameter block...");
+  }
 
   // read grid parameters
   HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/Parameters");
@@ -134,6 +143,11 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
   }
   HDF5Tools::close_group(group);
 
+  if (_log) {
+    _log->write_info("Done reading parameters.");
+    _log->write_info("Reading unit block...");
+  }
+
   // units
   double unit_length_in_SI = 1.;
   double unit_density_in_SI = 1.;
@@ -158,10 +172,25 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
     HDF5Tools::close_group(units);
   }
 
+  if (_log) {
+    _log->write_info("Done reading units.");
+    _log->write_info("Reading particle data...");
+  }
+
   // read cell midpoints, number densities and temperatures
   group = HDF5Tools::open_group(file, "/PartType0");
+
+  if (_log) {
+    _log->write_info("Coordinates...");
+  }
+
   std::vector< CoordinateVector<> > cell_midpoints =
       HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
+
+  if (_log) {
+    _log->write_info("Densities...");
+  }
+
   std::vector< double > cell_densities;
   if (HDF5Tools::group_exists(group, "NumberDensity") && !_use_density) {
     cell_densities = HDF5Tools::read_dataset< double >(group, "NumberDensity");
@@ -170,6 +199,11 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
     unit_density_in_SI /=
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);
   }
+
+  if (_log) {
+    _log->write_info("Ionic fractions...");
+  }
+
   std::vector< std::vector< double > > neutral_fractions(
       NUMBER_OF_IONNAMES,
       std::vector< double >(cell_densities.size(), _initial_neutral_fraction));
@@ -180,6 +214,11 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
           group, "NeutralFraction" + get_ion_name(i));
     }
   }
+
+  if (_log) {
+    _log->write_info("Temperatures...");
+  }
+
   std::vector< double > cell_temperatures;
   if (HDF5Tools::group_exists(group, "Temperature") && !_use_pressure) {
     cell_temperatures = HDF5Tools::read_dataset< double >(group, "Temperature");
@@ -194,6 +233,10 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
     }
   }
 
+  if (_log) {
+    _log->write_info("Velocities...");
+  }
+
   // velocities (if they exist)
   std::vector< CoordinateVector<> > cell_velocities;
   if (HDF5Tools::group_exists(group, "Velocities")) {
@@ -203,7 +246,16 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
 
   HDF5Tools::close_group(group);
 
+  if (_log) {
+    _log->write_info("Done reading particle data.");
+    _log->write_info("Closing file.");
+  }
+
   HDF5Tools::close_file(file);
+
+  if (_log) {
+    _log->write_info("Converting units...");
+  }
 
   // unit conversion
   for (size_t i = 0; i < cell_midpoints.size(); ++i) {
@@ -220,9 +272,14 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
   }
 
   if (_log) {
+    _log->write_info("Done converting units.");
     _log->write_status(
         "Constructing a CMacIonizeSnapshotDensityFunction containing ",
         _ncell.x(), " x ", _ncell.y(), " x ", _ncell.z(), " cells.");
+  }
+
+  if (_log) {
+    _log->write_info("Creating grid structure...");
   }
 
   if (type == "Cartesian") {
@@ -335,6 +392,10 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
     cmac_error("Reconstructing a density field from a %sDensityGrid is not yet "
                "supported!",
                type.c_str());
+  }
+
+  if (_log) {
+    _log->write_info("Done creating grid structure.");
   }
 }
 
