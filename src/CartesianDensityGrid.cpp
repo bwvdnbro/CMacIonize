@@ -396,7 +396,6 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
     DensityGrid::iterator it(get_long_index(index), *this);
     last_cell = it;
 
-    // Helium abundance. Should be a parameter.
     double tau = get_optical_depth(ds, it.get_ionization_variables(), photon);
     optical_depth -= tau;
 

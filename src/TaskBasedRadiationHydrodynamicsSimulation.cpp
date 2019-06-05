@@ -1252,7 +1252,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         --max_level;
       }
     }
+    memory_logger.add_entry("subgrid copies");
     grid_creator->create_copies(levels);
+    memory_logger.finalize_entry();
   }
 
   /// SIMULATION
