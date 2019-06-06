@@ -108,7 +108,7 @@ public:
    *
    * @return The time in seconds since the timer was last started.
    */
-  inline double interval() {
+  inline double interval() const {
     OperatingSystem::TimeValue tempstop;
     OperatingSystem::get_time_value(tempstop);
     OperatingSystem::TimeValue interval;

@@ -33,6 +33,7 @@
 #include "Timer.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 
@@ -53,14 +54,26 @@ private:
    *  is created. */
   const uint_fast32_t _maximum_number_of_backups;
 
+  /*! @brief Maximum time the simulation can run (in s). */
+  const double _maximum_time;
+
+  /*! @brief Command to execute when the simulation is stopped. */
+  const std::string _resubmit_command;
+
   /*! @brief Current number of backup files in the history. */
   uint_fast32_t _number_of_backups;
 
   /*! @brief Number of restart files in the history. */
   uint_fast32_t _number_of_restarts;
 
+  /*! @brief Flag that is set when a stop file is detected. */
+  bool _stop_file;
+
   /*! @brief Timer used to measure elapsed hardware time. */
   Timer _interval_timer;
+
+  /*! @brief Timer use to measure the total elapsed hardware time. */
+  Timer _total_timer;
 
 public:
   /**
@@ -72,12 +85,18 @@ public:
    * @param maximum_number_of_backups Number of restart files in the history to
    * back up. If more files are in the history, the oldest one is deleted before
    * a new restart file is created.
+   * @param maximum_time Maximum time the simulation can run (in s).
+   * @param resubmit_command Command that is executed when the simulation
+   * prematurely stops.
    */
   inline RestartManager(const std::string path, const double output_interval,
-                        const uint_fast32_t maximum_number_of_backups)
+                        const uint_fast32_t maximum_number_of_backups,
+                        const double maximum_time,
+                        const std::string resubmit_command)
       : _path(path), _output_interval(output_interval),
         _maximum_number_of_backups(maximum_number_of_backups),
-        _number_of_backups(0), _number_of_restarts(0) {}
+        _maximum_time(maximum_time), _resubmit_command(resubmit_command),
+        _number_of_backups(0), _number_of_restarts(0), _stop_file(false) {}
 
   /**
    * @brief ParameterFile constructor.
@@ -89,6 +108,9 @@ public:
    *    (in actual hardware simulation time; default: 3600. s).
    *  - maximum number of backups: Maximum number of files in the history that
    *    is backed up (default: 1).
+   *  - maximum time: Maximum time the simulation can run (default: 118 h).
+   *  - resubmit command: Command that is executed when the simulation is
+   *    prematurely stopped (default: "").
    *
    * @param params ParameterFile to read from.
    */
@@ -98,7 +120,11 @@ public:
             params.get_physical_value< QUANTITY_TIME >(
                 "RestartManager:output interval", "3600. s"),
             params.get_value< uint_fast32_t >(
-                "RestartManager:maximum number of backups", 1)) {}
+                "RestartManager:maximum number of backups", 1),
+            params.get_physical_value< QUANTITY_TIME >(
+                "RestartManager:maximum time", "118. h"),
+            params.get_value< std::string >("RestartManager:resubmit command",
+                                            "")) {}
 
   /**
    * @brief Get a restart file for reading.
@@ -194,7 +220,7 @@ public:
    *
    * @return True if we want to stop.
    */
-  inline bool stop_simulation() const {
+  inline bool stop_simulation() {
 
     const std::string filename = _path + "/stop";
 
@@ -202,9 +228,28 @@ public:
     if (sfile.is_open()) {
       sfile.close();
       std::remove(filename.c_str());
+      _stop_file = true;
       return true;
-    } else {
-      return false;
+    }
+
+    if (_total_timer.interval() > _maximum_time) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * @brief Resubmit the simulation after it was prematurely stopped.
+   */
+  inline void resubmit() const {
+
+    if (!_stop_file && !_resubmit_command.empty()) {
+      int_fast32_t exit_code = system(_resubmit_command.c_str());
+      if (exit_code != 0) {
+        cmac_error("Error when executing command \"%s\"!",
+                   _resubmit_command.c_str());
+      }
     }
   }
 };

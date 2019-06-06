@@ -2453,6 +2453,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     if (log) {
       log->write_status("Prematurely stopping simulation on request.");
     }
+    restart_manager.resubmit();
   } else {
     // the final snapshot is always written
     if (write_output) {

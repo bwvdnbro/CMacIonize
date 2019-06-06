@@ -126,6 +126,8 @@ public:
       return Unit(3.154e13, 0, 1, 0, 0, 0, 0);
     } else if (name == "yr") {
       return Unit(3.154e7, 0, 1, 0, 0, 0, 0);
+    } else if (name == "h") {
+      return Unit(3600., 0, 1, 0, 0, 0, 0);
       /// mass units
     } else if (name == "kg") {
       return Unit(1., 0, 0, 1, 0, 0, 0);
