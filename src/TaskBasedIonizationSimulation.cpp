@@ -45,6 +45,16 @@
 #include <omp.h>
 #include <sstream>
 
+/*! @brief Stop the serial time timer and start the parallel time timer. */
+#define start_parallel_timing_block()                                          \
+  _serial_timer.stop();                                                        \
+  _parallel_timer.start();
+
+/*! @brief Stop the parallel time timer and start the serial time timer. */
+#define stop_parallel_timing_block()                                           \
+  _parallel_timer.stop();                                                      \
+  _serial_timer.start();
+
 /**
  * @brief Write a file with the start and end times of all tasks.
  *
@@ -221,38 +231,70 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   omp_set_num_threads(num_thread);
 
+  cpucycle_tick(_program_start);
+  _total_timer.start();
+  _serial_timer.start();
+
+  _memory_log.add_entry("start");
+  _time_log.start("simulation start");
+
+  _time_log.start("memory space");
   const size_t number_of_buffers = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of buffers", 50000);
+  _memory_log.add_entry("memory space");
   _buffers = new MemorySpace(number_of_buffers);
+  _memory_log.finalize_entry();
+  _time_log.end("memory space");
+
+  _time_log.start("thread queues");
   const size_t queue_size_per_thread = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:queue size per thread", 10000);
+  _memory_log.add_entry("thread queues");
   _queues.resize(num_thread);
   for (int_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     std::stringstream queue_name;
     queue_name << "Queue for Thread " << static_cast< int_fast32_t >(ithread);
     _queues[ithread] = new TaskQueue(queue_size_per_thread, queue_name.str());
   }
+  _memory_log.finalize_entry();
+  _time_log.end("thread queues");
+
+  _time_log.start("shared queue");
   const size_t shared_queue_size = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:shared queue size", 100000);
+  _memory_log.add_entry("shared queue");
   _shared_queue = new TaskQueue(shared_queue_size, "Shared queue");
+  _memory_log.finalize_entry();
+  _time_log.end("shared queue");
+
+  _time_log.start("tasks");
   const size_t number_of_tasks = _parameter_file.get_value< size_t >(
       "TaskBasedIonizationSimulation:number of tasks", 500000);
+  _memory_log.add_entry("tasks");
   _tasks = new ThreadSafeVector< Task >(number_of_tasks, "Tasks");
+  _memory_log.finalize_entry();
+  _time_log.end("tasks");
+
   _random_generators.resize(num_thread);
   const int_fast32_t random_seed = _parameter_file.get_value< int_fast32_t >(
       "TaskBasedIonizationSimulation:random seed", 42);
   for (uint_fast8_t ithread = 0; ithread < num_thread; ++ithread) {
     _random_generators[ithread].set_seed(random_seed + ithread);
   }
+
+  _time_log.start("grid creator");
   _grid_creator = new DensitySubGridCreator< DensitySubGrid >(
       _simulation_box.get_box(), _parameter_file);
+  _time_log.end("grid creator");
 
+  _time_log.start("density function");
   _density_function = DensityFunctionFactory::generate(_parameter_file, _log);
+  _time_log.end("density function");
 
   // set up output
   std::string output_folder =
       Utilities::get_absolute_path(_parameter_file.get_value< std::string >(
-          "IonizationSimulation:output folder", "."));
+          "TaskBasedIonizationSimulation:output folder", "."));
   _density_grid_writer = DensityGridWriterFactory::generate(
       output_folder, _parameter_file, false, _log);
 
@@ -289,12 +331,56 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     _log->write_status("Wrote used parameters to ", output_folder,
                        "/parameters-usedvalues.param.");
   }
+
+  _memory_log.add_entry("parameters done");
+  _time_log.end("simulation start");
 }
 
 /**
  * @brief Destructor.
  */
 TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
+
+  uint_fast64_t program_end;
+  cpucycle_tick(program_end);
+
+  _memory_log.add_entry("end");
+  _serial_timer.stop();
+  _total_timer.stop();
+
+  if (_log) {
+    _log->write_status("Total serial time: ",
+                       Utilities::human_readable_time(_serial_timer.value()),
+                       ".");
+    _log->write_status("Total parallel time: ",
+                       Utilities::human_readable_time(_parallel_timer.value()),
+                       ".");
+    _log->write_status("Total overall time: ",
+                       Utilities::human_readable_time(_total_timer.value()),
+                       ".");
+    _log->write_status("Total photon shooting time: ",
+                       Utilities::human_readable_time(_worktimer.value()), ".");
+  }
+
+  {
+    std::ofstream pfile("program_time.txt");
+    pfile << "# rank\tstart\tstop\ttime\n";
+    pfile << "0\t" << _program_start << "\t" << program_end << "\t"
+          << _total_timer.value() << "\n";
+  }
+
+  {
+    std::ofstream mfile("memory.txt");
+    _memory_log.print(mfile, false);
+  }
+
+  {
+    std::ofstream mfile("memory_timeline.txt");
+    _memory_log.print(mfile, true);
+  }
+
+  _time_log.output("time_log.txt", false);
+
   delete _buffers;
   for (uint_fast8_t ithread = 0; ithread < _queues.size(); ++ithread) {
     delete _queues[ithread];
@@ -321,11 +407,31 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
 void TaskBasedIonizationSimulation::initialize(
     DensityFunction *density_function) {
 
+  _time_log.start("initialisation");
+
   if (density_function == nullptr) {
     density_function = _density_function;
   }
 
+  _time_log.start("density function");
+  density_function->initialize();
+  _memory_log.add_entry("density function");
+  _time_log.end("density function");
+
+  _time_log.start("grid");
+  _memory_log.add_entry("grid");
+  start_parallel_timing_block();
   _grid_creator->initialize(*density_function);
+  stop_parallel_timing_block();
+  _memory_log.finalize_entry();
+  _time_log.end("grid");
+
+  _memory_log.add_entry("post initialisation");
+
+  density_function->free();
+  _memory_log.add_entry("pre run");
+
+  _time_log.end("initialisation");
 }
 
 /**
@@ -336,20 +442,25 @@ void TaskBasedIonizationSimulation::initialize(
 void TaskBasedIonizationSimulation::run(
     DensityGridWriter *density_grid_writer) {
 
+  _time_log.start("main run");
+
   // write the initial state of the grid to an output file (only do this if
   // we are not in library mode)
   if (_density_grid_writer) {
+    _time_log.start("snapshot");
     _density_grid_writer->write(*_grid_creator, 0, _parameter_file);
+    _time_log.end("snapshot");
   }
 
   if (density_grid_writer == nullptr) {
     density_grid_writer = _density_grid_writer;
   }
 
+  _time_log.start("subgrid copies");
   std::vector< uint_fast8_t > levels(
       _grid_creator->number_of_original_subgrids(), 0);
 
-  // set the copy level off all subgrids containing a source to the given
+  // set the copy level of all subgrids containing a source to the given
   // parameter value (for now)
   {
     const photonsourcenumber_t number_of_sources =
@@ -388,13 +499,24 @@ void TaskBasedIonizationSimulation::run(
       --max_level;
     }
   }
+  _memory_log.add_entry("subgrid copies");
   _grid_creator->create_copies(levels);
+  _memory_log.finalize_entry();
+  _time_log.end("subgrid copies");
+  if (_log) {
+    _log->write_status("Created ",
+                       _grid_creator->number_of_actual_subgrids() -
+                           _grid_creator->number_of_original_subgrids(),
+                       " subgrid copies.");
+  }
 
   DistributedPhotonSource< DensitySubGrid > photon_source(
       _number_of_photons, *_photon_source_distribution, *_grid_creator);
 
+  _time_log.start("subgrid initialisation");
   {
     AtomicValue< size_t > igrid(0);
+    start_parallel_timing_block();
 #pragma omp parallel default(shared)
     while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
@@ -406,10 +528,17 @@ void TaskBasedIonizationSimulation::run(
         }
       }
     }
+    stop_parallel_timing_block();
   }
+  _time_log.end("subgrid initialisation");
 
-  Timer MCtimer;
+  _time_log.start("photoionization loop");
   for (uint_fast32_t iloop = 0; iloop < _number_of_iterations; ++iloop) {
+
+    std::stringstream iloopstr;
+    iloopstr << "loop " << iloop;
+    _time_log.start(iloopstr.str());
+    _memory_log.add_entry(iloopstr.str());
 
     if (_log) {
       _log->write_status("Starting loop ", iloop, ".");
@@ -417,14 +546,16 @@ void TaskBasedIonizationSimulation::run(
 
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
-    MCtimer.start();
+    _worktimer.start();
 
     // reset the photon source information
     photon_source.reset();
 
+    _time_log.start("diffuse field variables");
     // reset the diffuse field variables
     if (_reemission_handler != nullptr) {
       AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
 #pragma omp parallel default(shared)
       while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
@@ -437,28 +568,39 @@ void TaskBasedIonizationSimulation::run(
           }
         }
       }
+      stop_parallel_timing_block();
     }
+    _time_log.end("diffuse field variables");
 
-    for (size_t ibatch = 0;
-         ibatch < photon_source.get_number_of_batches(0, PHOTONBUFFER_SIZE);
-         ++ibatch) {
+    _time_log.start("photon source tasks");
+    size_t number_of_photons_done = 0;
+    while (number_of_photons_done < _number_of_photons) {
       for (size_t isrc = 0; isrc < photon_source.get_number_of_sources();
            ++isrc) {
-        const size_t new_task = _tasks->get_free_element();
-        (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
-        (*_tasks)[new_task].set_subgrid(isrc);
-        (*_tasks)[new_task].set_buffer(
-            photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE));
-        _shared_queue->add_task(new_task);
+
+        const size_t number_of_photons_this_batch =
+            photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE);
+        if (number_of_photons_this_batch > 0) {
+          const size_t new_task = _tasks->get_free_element();
+          (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
+          (*_tasks)[new_task].set_subgrid(isrc);
+          (*_tasks)[new_task].set_buffer(number_of_photons_this_batch);
+          _shared_queue->add_task(new_task);
+          number_of_photons_done += number_of_photons_this_batch;
+        }
       }
     }
+    cmac_assert(number_of_photons_done == _number_of_photons);
+    _time_log.end("photon source tasks");
 
+    _time_log.start("photon propagation");
     bool global_run_flag = true;
     const uint_fast32_t num_empty_target =
         TRAVELDIRECTION_NUMBER * _grid_creator->number_of_actual_subgrids();
     AtomicValue< uint_fast32_t > num_empty(num_empty_target);
     AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
+    start_parallel_timing_block();
 #pragma omp parallel default(shared)
     {
       // thread initialisation
@@ -969,12 +1111,19 @@ void TaskBasedIonizationSimulation::run(
         }
       } // while(global_run_flag)
     }   // parallel region
+    stop_parallel_timing_block();
+    _time_log.end("photon propagation");
 
-    // update copies (don't do in parallel)
+    _time_log.start("update copies");
+    start_parallel_timing_block();
     _grid_creator->update_original_counters();
+    stop_parallel_timing_block();
+    _time_log.end("update copies");
 
+    _time_log.start("temperature calculation");
     {
       AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
 #pragma omp parallel default(shared)
       while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
@@ -1009,29 +1158,43 @@ void TaskBasedIonizationSimulation::run(
           task.stop();
         }
       }
+      stop_parallel_timing_block();
     }
+    _time_log.end("temperature calculation");
 
+    _time_log.start("buffer reset");
     _buffers->reset();
+    _time_log.end("buffer reset");
 
     cmac_assert_message(_buffers->is_empty(), "Number of active buffers: %zu",
                         _buffers->get_number_of_active_buffers());
 
     // update copies
+    _time_log.start("copy update");
+    start_parallel_timing_block();
     _grid_creator->update_copy_properties();
+    stop_parallel_timing_block();
+    _time_log.end("copy update");
 
+    _time_log.start("task output");
     cpucycle_tick(iteration_end);
-    MCtimer.stop();
+    _worktimer.stop();
     output_tasks(iloop, *_tasks, iteration_start, iteration_end);
     output_queues(iloop, _queues, *_shared_queue);
+    _time_log.end("task output");
 
+    _time_log.start("task reset");
     _tasks->clear();
-  } // photoionization loop
+    _time_log.end("task reset");
 
+    _time_log.end(iloopstr.str());
+  } // photoionization loop
+  _time_log.end("photoionization loop");
+
+  _time_log.start("snapshot");
   _density_grid_writer->write(*_grid_creator, _number_of_iterations,
                               _parameter_file);
+  _time_log.end("snapshot");
 
-  if (_log != nullptr) {
-    _log->write_status(
-        "Total time spent in Monte Carlo algorithm: ", MCtimer.value(), " s.");
-  }
+  _time_log.end("main run");
 }

@@ -168,8 +168,10 @@ int main(int argc, char **argv) {
 
   assert_condition(params.get_filename("test_filename", "test.param") ==
                    "test.param");
+#ifdef DO_CHECKSUM
   assert_condition(params.get_value< std::string >("test_filename checksum") ==
                    "5430d38453a81cac10ee4b159f7908bf");
+#endif
 
   std::cout << "Original:\n";
   params.print_contents(std::cout);
