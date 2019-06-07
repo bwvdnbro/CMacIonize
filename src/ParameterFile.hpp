@@ -29,6 +29,9 @@
 #include "MD5Sum.hpp"
 #include "YAMLDictionary.hpp"
 
+/*! @brief Enable this to do an MD5 checksum for file name parameters. */
+//#define DO_CHECKSUM
+
 /**
  * @brief Parameter file.
  *
@@ -185,7 +188,9 @@ public:
    */
   std::string get_filename(std::string key) {
     const std::string filename = _yaml_dictionary.get_value< std::string >(key);
+#ifdef DO_CHECKSUM
     do_filename_checksum(key, filename);
+#endif
     return filename;
   }
 
@@ -205,7 +210,9 @@ public:
   std::string get_filename(std::string key, std::string default_value) {
     const std::string filename =
         _yaml_dictionary.get_value< std::string >(key, default_value);
+#ifdef DO_CHECKSUM
     do_filename_checksum(key, filename);
+#endif
     return filename;
   }
 

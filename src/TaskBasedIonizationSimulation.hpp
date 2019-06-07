@@ -30,11 +30,13 @@
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "LineCoolingData.hpp"
+#include "MemoryLogger.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
 #include "SimulationBox.hpp"
 #include "Task.hpp"
 #include "ThreadSafeVector.hpp"
+#include "TimeLogger.hpp"
 
 #include <vector>
 
@@ -128,6 +130,27 @@ private:
 
   /*! @brief Log to write logging info to. */
   Log *_log;
+
+  /*! @brief Timer for the total simulation time. */
+  Timer _total_timer;
+
+  /*! @brief Timer for serial simulation time. */
+  Timer _serial_timer;
+
+  /*! @brief Timer for parallel simulation time. */
+  Timer _parallel_timer;
+
+  /*! @brief Timer for Monte Carlo simulation time. */
+  Timer _worktimer;
+
+  /*! @brief Start time of the program (in CPU cycles). */
+  uint_fast64_t _program_start;
+
+  /*! @brief Memory log. */
+  MemoryLogger _memory_log;
+
+  /*! @brief Time log. */
+  TimeLogger _time_log;
 
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
