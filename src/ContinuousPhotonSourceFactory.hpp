@@ -34,6 +34,7 @@
 
 // implementations
 #include "DistantStarContinuousPhotonSource.hpp"
+#include "ExtendedDiscContinuousPhotonSource.hpp"
 #include "IsotropicContinuousPhotonSource.hpp"
 #include "PlanarContinuousPhotonSource.hpp"
 #include "SpiralGalaxyContinuousPhotonSource.hpp"
@@ -52,6 +53,8 @@ public:
    * Supported types are (default: None):
    *  - DistantStar: Infalling radiation from a stellar object outside the
    *    simulation box
+   *  - ExtendedDisc: Radiation emitted from an extended Gaussian disc
+   *    perpendicular to one of the coordinate axes
    *  - Isotropic: Infalling radiation from an external isotropic radiation
    *    field
    *  - Planar: Radiation emitted from a plane
@@ -74,6 +77,9 @@ public:
     }
     if (type == "DistantStar") {
       return new DistantStarContinuousPhotonSource(simulation_box, params, log);
+    } else if (type == "ExtendedDisc") {
+      return new ExtendedDiscContinuousPhotonSource(simulation_box, params,
+                                                    log);
     } else if (type == "Isotropic") {
       return new IsotropicContinuousPhotonSource(simulation_box, params, log);
     } else if (type == "Planar") {

@@ -1402,6 +1402,15 @@ set(TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES
 add_unit_test(NAME testPlanarContinuousPhotonSource
               SOURCES ${TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES})
 
+## Unit test for ExtendedDiscContinuousPhotonSource
+set(TESTEXTENDEDDISCCONTINUOUSPHOTONSOURCE_SOURCES
+    testExtendedDiscContinuousPhotonSource.cpp
+
+    ../src/ExtendedDiscContinuousPhotonSource.hpp
+)
+add_unit_test(NAME testExtendedDiscContinuousPhotonSource
+              SOURCES ${TESTEXTENDEDDISCCONTINUOUSPHOTONSOURCE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
