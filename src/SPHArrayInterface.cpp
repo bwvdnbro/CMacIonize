@@ -26,8 +26,6 @@
 #include "SPHArrayInterface.hpp"
 #include "CubicSplineKernel.hpp"
 #include "DensityGrid.hpp"
-#include "DensityGridTraversalJobMarket.hpp"
-#include "Lock.hpp"
 #include <cfloat>
 
 /**
@@ -44,7 +42,6 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
       _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(false), _octree(nullptr) {
 
   gridding();
-  time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -74,7 +71,6 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
   _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
 
   gridding();
-  time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -104,7 +100,6 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
   _box.get_sides()[2] = box_sides[2] * _unit_length_in_SI;
 
   gridding();
-  time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -112,7 +107,7 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
  *
  * Frees up memory used by the internal Octree.
  */
-SPHArrayInterface::~SPHArrayInterface() { delete _octree;  time_log.output("filename", true);}
+SPHArrayInterface::~SPHArrayInterface() { delete _octree; }
 
 /**
  * @brief Reset the internal data values.
@@ -257,7 +252,6 @@ Octree *SPHArrayInterface::get_octree() { return _octree; }
 void SPHArrayInterface::initialize() {
   _octree = new Octree(_positions, _box, _is_periodic);
   _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
-  //_dens_map = new DensityMapping();
 }
 
 /**
@@ -267,8 +261,6 @@ void SPHArrayInterface::gridding() {
   double phi, r0, R_0, h, mu0;
   int i, j, k, n, nr1, nr2;
   double rl, mul, cphil;
-
-  time_log.start("Gridding");
 
   h=1.0;
   n=150;
@@ -369,8 +361,6 @@ void SPHArrayInterface::gridding() {
     }
     printf("\n");
     }*/
-
-  time_log.end("Gridding");
 }
 
 /**
@@ -508,7 +498,7 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
  */
 
 double SPHArrayInterface::full_integral(double phi, double r0,
-                          double R_0, double h) {
+                                                   double R_0, double h) {
 
   double B1, B2, B3, mu, a, logs, u;
   double full_int;
@@ -697,7 +687,8 @@ double SPHArrayInterface::full_integral(double phi, double r0,
  * @return The mass contribution of the particle to the cell.
  */
 
-double SPHArrayInterface::mass_contribution(const Cell &cell,  CoordinateVector<> particle, double h) const {
+double SPHArrayInterface::mass_contribution(
+    const Cell &cell, const CoordinateVector<> particle, double h) const {
 
   double M, Msum;
 
@@ -868,16 +859,8 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,  CoordinateVector<
     }
   }
 
-  // Ensure there is no negative mass
-  if(Msum < 1e-6) Msum=1e-6;
-  
   return Msum;
 }
-
-double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const{
-  return _density_values[i][j][k];
-}
-
 
 /**
  * @brief Function that gives the density for a given cell.
@@ -887,85 +870,72 @@ double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const{
  */
 DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
 
-  //time_log.start("Density_mapping");
-
-  const bool _is_old_density_mapping = false;
-  const bool _is_petkova_density_mapping = true;
+  const bool _is_new_density_mapping = false;
   DensityValues values;
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
   double density = 0.;
 
-  if(_is_old_density_mapping) {
-    density = _masses[0] / cell.get_volume();
-  } else {
-    if(_is_petkova_density_mapping) {
-      CoordinateVector<> position = cell.get_cell_midpoint();
+  if(_is_new_density_mapping) {
+    CoordinateVector<> position = cell.get_cell_midpoint();
 
-      // Find the vertex that is furthest away from the cell midpoint.
-      std::vector< Face > face_vector = cell.get_faces();
-      double radius = 0.0;
-      for (unsigned int i = 0; i < face_vector.size(); i++) {
-        for (Face::Vertices j = face_vector[i].first_vertex();
-             j != face_vector[i].last_vertex(); ++j) {
-          double distance = (j.get_position()-position).norm();
-          if (distance > radius)
-            radius = distance;
-        }
-      }
-
-      // Find the neighbours that are contained inside of a sphere of centre the
-      // cell midpoint
-      // and radius given by the distance to the furthest vertex.
-      std::vector< uint_fast32_t > ngbs =
-          _octree->get_ngbs_sphere(position, radius);
-      const unsigned int numngbs = ngbs.size();
-
-      //printf("ngbs: %u, faces: %lu, radius: %g\n", numngbs, face_vector.size(), radius);
-
-      // Loop over all the neighbouring particles and calculate their mass
-      // contributions.
-      for (unsigned int i = 0; i < numngbs; i++) {
-        const unsigned int index = ngbs[i];
-        const double h = _smoothing_lengths[index] / 2.0;
-        const CoordinateVector<> particle = _positions[index];
-        if(h < 0) printf("h < 0: %g, %u", h, index);
-        density += SPHArrayInterface::mass_contribution(cell, particle, h) * _masses[index];
-      }
-
-      // Divide the cell mass by the cell volume to get density.
-      density = density / cell.get_volume();
-
-    } else {
-      const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
-      const size_t numngbs = ngbs.size();
-      for (size_t i = 0; i < numngbs; ++i) {
-        const size_t index = ngbs[i];
-        double r;
-        if (!_box.get_sides().x()) {
-          r = (position - _positions[index]).norm();
-        } else {
-          r = _box.periodic_distance(position, _positions[index]).norm();
-        }
-        const double h = _smoothing_lengths[index];
-        const double u = r / h;
-        const double m = _masses[index];
-        const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
-        density += splineval;
+    // Find the vertex that is furthest away from the cell midpoint.
+    std::vector< Face > face_vector = cell.get_faces();
+    double radius = 0.0;
+    for (unsigned int i = 0; i < face_vector.size(); i++) {
+      for (Face::Vertices j = face_vector[i].first_vertex();
+           j != face_vector[i].last_vertex(); ++j) {
+        double distance = (j.get_position()-position).norm();
+        if (distance > radius)
+          radius = distance;
       }
     }
-  }
 
-  // Ensure that the density > 0
-  if(density <= 0.0) density = _masses[0] / cell.get_volume() * 1e-6;
+    // Find the neighbours that are contained inside of a sphere of centre the
+    // cell midpoint
+    // and radius given by the distance to the furthest vertex.
+    std::vector< uint_fast32_t > ngbs =
+        _octree->get_ngbs_sphere(position, radius);
+    const unsigned int numngbs = ngbs.size();
+
+    //printf("ngbs: %u, faces: %lu, radius: %g\n", numngbs, face_vector.size(), radius);
+
+    // Loop over all the neighbouring particles and calculate their mass
+    // contributions.
+    for (unsigned int i = 0; i < numngbs; i++) {
+      const unsigned int index = ngbs[i];
+      const double h = _smoothing_lengths[index] / 2.0;
+      const CoordinateVector<> particle = _positions[index];
+      if(h < 0) printf("h < 0: %g, %u", h, index);
+      density += SPHArrayInterface::mass_contribution(cell, particle, h) * _masses[index];
+    }
+
+    // Divide the cell mass by the cell volume to get density.
+    density = density / cell.get_volume();
+
+  } else {
+    const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+    const size_t numngbs = ngbs.size();
+    for (size_t i = 0; i < numngbs; ++i) {
+      const size_t index = ngbs[i];
+      double r;
+      if (!_box.get_sides().x()) {
+        r = (position - _positions[index]).norm();
+      } else {
+        r = _box.periodic_distance(position, _positions[index]).norm();
+      }
+      const double h = _smoothing_lengths[index];
+      const double u = r / h;
+      const double m = _masses[index];
+      const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
+      density += splineval;
+    }
+  }
 
   values.set_number_density(density / 1.6737236e-27);
   values.set_temperature(8000.);
   values.set_ionic_fraction(ION_H_n, 1.e-6);
   values.set_ionic_fraction(ION_He_n, 1.e-6);
-
-  //time_log.end("Density_mapping");
-  
   return values;
 }
 
@@ -996,181 +966,119 @@ void SPHArrayInterface::fill_array(float *nH) {
 }
 
 /**
- * @brief Functor for the inverse mapping.
+ * @brief Map the state of the grid back to the SPH particle distribution.
+ *
+ * @param grid DensityGrid to write out.
+ * @param iteration Iteration number to use in the snapshot file name(s).
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
+ * @param time Simulation time (in s).
  */
-class InverseMappingFunction {
-private:
-  /*! @brief Reference to the Octree. */
-  Octree &_octree;
-
-  /*! @brief Reference to the SPHArrayInterface. */
-  const SPHArrayInterface &_array_interface;
-
-  /*! @brief Reference to the neutral fraction vector. */
-  std::vector< double > &_neutral_fractions;
-
-  /*! @brief Reference to the positions vector. */
-  std::vector< CoordinateVector<> > &_positions;
-
-  /*! @brief Reference to the smoothing lengths vector. */
-  std::vector< double > &_smoothing_lengths;
-
-  /*! @brief Reference to the masses vector. */
-  std::vector< double > &_masses;
-
-  /*! @brief Reference to the simulation box. */
-  Box<> &_box;
-
-  /*! @brief Locks protecting the neutral fraction vector entries. */
-  std::vector< Lock > &_locks;
-
-public:
-  /**
-   * @brief Constructor.
-   *
-   * @param octree Reference to the Octree.
-   * @param neutral_fractions Reference to the neutral fraction vector.
-   * @param positions Reference to the positions vector.
-   * @param smoothing_lengths Reference to the smoothing_lengths vector.
-   * @param masses Reference to the masses vector.
-   * @param box Reference to the simulation box.
-   * @param locks Locks protecting the neutral fraction vector entries.
-   */
-  InverseMappingFunction(Octree &octree,    
-		  	 const SPHArrayInterface &array_interface,
-			 std::vector< double > &neutral_fractions,
-			 std::vector< CoordinateVector<> > &positions,
-			 std::vector< double > &smoothing_lengths,
-			 std::vector< double > &masses,
-			 Box<> &box,
-                         std::vector< Lock > &locks)
-      : _octree(octree), _array_interface(array_interface), _neutral_fractions(neutral_fractions), _positions(positions), _smoothing_lengths(smoothing_lengths), _masses(masses), _box(box),_locks(locks) {}
-  /**
-   * @brief Do the inverse mapping for a single cell.
-   *
-   * @param cell DensityGrid::iterator pointing to a single cell in the grid.
-   */
-  inline void operator()(DensityGrid::iterator cell) {
-
-    const bool _is_old_density_mapping = false;
-    const bool _is_petkova_density_mapping = true;
-
-    if(_is_old_density_mapping) {
-      const CoordinateVector<> p = cell.get_cell_midpoint();
-      uint_fast32_t closest = _octree.get_closest_ngb(p);
-      _locks[closest].lock();
-      _neutral_fractions[closest] =
-        cell.get_ionization_variables().get_ionic_fraction(ION_H_n);
-      _locks[closest].unlock();
-    } else {
-      if(_is_petkova_density_mapping) {
-	const CoordinateVector<> position = cell.get_cell_midpoint();
-      	// Find the vertex that is furthest away from the cell midpoint.
-      	std::vector< Face > face_vector = cell.get_faces();
-      	double radius = 0.0;
-      	for (unsigned int i = 0; i < face_vector.size(); i++) {
-          for (Face::Vertices j = face_vector[i].first_vertex();
-            	j != face_vector[i].last_vertex(); ++j) {
-            double distance = (j.get_position()-position).norm();
-            if (distance > radius)
-            	radius = distance;
-           }
-       	 }
-
-      	 // Find the neighbours that are contained inside of a sphere of centre the
-      	 // cell midpoint
-      	 // and radius given by the distance to the furthest vertex.
-      	 std::vector< uint_fast32_t > ngbs =
-          	_octree.get_ngbs_sphere(position, radius);
-      	 const unsigned int numngbs = ngbs.size();
-
-      	 double cell_mass = 0.;
-      	 std::vector< double > denseval;
-
-      	 // Loop over all the neighbouring particles and calculate their mass
-      	 // contributions.
-      	 for (unsigned int i = 0; i < numngbs; i++) {
-           const unsigned int index = ngbs[i];
-           const double h = _smoothing_lengths[index] / 2.0;
-           const CoordinateVector<> particle = _positions[index];
-           denseval.push_back(_array_interface.mass_contribution(cell, particle, h) * _masses[index]);
-           //denseval.push_back(CubicSplineKernel::kernel_evaluate(0.5, h) * _masses[index]);
-	   cell_mass += denseval[i];
-      	 }
-
-      	 for (unsigned int i = 0; i < numngbs; i++) {
-           const unsigned int index = ngbs[i];
-	   _locks[index].lock();
-           _neutral_fractions[index] -= denseval[i]/cell_mass * (1. - cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
-	   _locks[index].unlock();
-      	 }
-	} else {
-      	  const CoordinateVector<> p = cell.get_cell_midpoint();
-      	  const std::vector< uint_fast32_t > ngbs = _octree.get_ngbs(p);
-      	  const unsigned int numngbs = ngbs.size();
-      	  double cell_mass = 0.;
-      	  for (unsigned int i = 0; i < numngbs; ++i) {
-            const unsigned int index = ngbs[i];
-	    double r;
-            if (!_box.get_sides().x()) {
-              r = (p - _positions[index]).norm();
-            } else {
-              r = _box.periodic_distance(p, _positions[index]).norm();
-            }
-            const double h = _smoothing_lengths[index];
-            const double u = r / h;
-            const double m = _masses[index];
-            const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
-            cell_mass += splineval;
-      	  }
-
-      	  for (unsigned int i = 0; i < numngbs; ++i) {
-            const unsigned int index = ngbs[i];
-            double r;
-            if (!_box.get_sides().x()) {
-              r = (p - _positions[index]).norm();
-            } else {
-              r = _box.periodic_distance(p, _positions[index]).norm();
-            }
-            const double h = _smoothing_lengths[index];
-            const double u = r / h;
-            const double m = _masses[index];
-            const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
-	    _locks[index].lock();
-            _neutral_fractions[index] -= splineval/cell_mass * (1. - cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
-	    _locks[index].unlock();
-      	  }
-
-	}
-    }
-  }
-};
-
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                               ParameterFile &params, double time) {
-			      
-  time_log.start("Inverse_mapping");
+
+  const bool _is_new_density_mapping = false;
 
   for (unsigned int i =0; i < _neutral_fractions.size(); ++i) {
     _neutral_fractions[i] = 1.0;
   }
 
-  std::vector< Lock > locks(_neutral_fractions.size());
+  if(_is_new_density_mapping) {
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      const CoordinateVector<> position = it.get_cell_midpoint();
+      //const std::vector< unsigned int > ngbs = _octree->get_ngbs(p);
+      //const unsigned int numngbs = ngbs.size();
 
-  std::pair< cellsize_t, cellsize_t > block =
-      std::make_pair(0, grid.get_number_of_cells());
-  WorkDistributor< DensityGridTraversalJobMarket< InverseMappingFunction >,
-                   DensityGridTraversalJob< InverseMappingFunction > >
-      workers;
+      //const Cell &cell=it;
+      // Find the vertex that is furthest away from the cell midpoint.
+      std::vector< Face > face_vector = it.get_faces();
+      double radius = 0.0;
+      for (unsigned int i = 0; i < face_vector.size(); i++) {
+        for (Face::Vertices j = face_vector[i].first_vertex();
+          j != face_vector[i].last_vertex(); ++j) {
+          double distance = (j.get_position()-position).norm();
+          if (distance > radius)
+            radius = distance;
+         }
+       }
 
-  //const SPHArrayInterface &_array_interface;
-  InverseMappingFunction do_calculation(*_octree,*this,_neutral_fractions,_positions,_smoothing_lengths,_masses,_box,locks);
+      // Find the neighbours that are contained inside of a sphere of centre the
+      // cell midpoint
+      // and radius given by the distance to the furthest vertex.
+      std::vector< uint_fast32_t > ngbs =
+          _octree->get_ngbs_sphere(position, radius);
+      const unsigned int numngbs = ngbs.size();
 
-  DensityGridTraversalJobMarket< InverseMappingFunction > jobs(
-      grid, do_calculation, block);
-  workers.do_in_parallel(jobs);
+      double cell_mass = 0.;
+      std::vector< double > denseval;
 
-  time_log.end("Inverse_mapping");
-  time_log.output("time-log-file.txt", true);
+      // Loop over all the neighbouring particles and calculate their mass
+      // contributions.
+      for (unsigned int i = 0; i < numngbs; i++) {
+        const unsigned int index = ngbs[i];
+        const double h = _smoothing_lengths[index] / 2.0;
+        const CoordinateVector<> particle = _positions[index];
+        denseval.push_back(mass_contribution(it, particle, h) * _masses[index]);
+        cell_mass += denseval[i];
+      }
+
+      for (unsigned int i = 0; i < numngbs; i++) {
+        const unsigned int index = ngbs[i];
+        //const double h = _smoothing_lengths[index] / 2.0;
+        //const CoordinateVector<> particle = _positions[index];
+        //const double denseval = mass_contribution(it, particle, h) * _masses[index];
+        _neutral_fractions[index] -= denseval[i]/cell_mass * (1. - it.get_ionization_variables().get_ionic_fraction(ION_H_n));
+      }
+    }
+  } else {
+    for (auto it = grid.begin(); it != grid.end(); ++it) {
+      const CoordinateVector<> p = it.get_cell_midpoint();
+      const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(p);
+      const unsigned int numngbs = ngbs.size();
+      double cell_mass = 0.;
+      for (unsigned int i = 0; i < numngbs; ++i) {
+        const unsigned int index = ngbs[i];
+        double r;
+        if (!_box.get_sides().x()) {
+          r = (p - _positions[index]).norm();
+        } else {
+          r = _box.periodic_distance(p, _positions[index]).norm();
+        }
+        const double h = _smoothing_lengths[index];
+        const double u = r / h;
+        const double m = _masses[index];
+        const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
+        cell_mass += splineval;
+      }
+
+      for (unsigned int i = 0; i < numngbs; ++i) {
+        const unsigned int index = ngbs[i];
+        double r;
+        if (!_box.get_sides().x()) {
+          r = (p - _positions[index]).norm();
+        } else {
+          r = _box.periodic_distance(p, _positions[index]).norm();
+        }
+        const double h = _smoothing_lengths[index];
+        const double u = r / h;
+        const double m = _masses[index];
+        const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
+        _neutral_fractions[index] -= splineval/cell_mass * (1. - it.get_ionization_variables().get_ionic_fraction(ION_H_n));
+      }
+    }
+  }
 }
 
+/*void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
+                              ParameterFile &params, double time) {
+  for (auto it = grid.begin(); it != grid.end(); ++it) {
+    const CoordinateVector<> p = it.get_cell_midpoint();
+    uint_fast32_t closest = _octree->get_closest_ngb(p);
+    _neutral_fractions[closest] =
+        it.get_ionization_variables().get_ionic_fraction(ION_H_n);
+  }
+  }*/
+
+double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const{
+  return _density_values[i][j][k];
+}
