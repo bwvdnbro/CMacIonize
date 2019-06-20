@@ -22,6 +22,7 @@
  * @brief Factory class for PhotonSourceDistribution instances.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef PHOTONSOURCEDISTRIBUTIONFACTORY_HPP
 #define PHOTONSOURCEDISTRIBUTIONFACTORY_HPP
@@ -32,6 +33,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "AsciiFilePhotonSourceDistribution.hpp"
 #include "CaproniPhotonSourceDistribution.hpp"
 #include "DiscPatchPhotonSourceDistribution.hpp"
 #include "DwarfGalaxyPhotonSourceDistribution.hpp"
@@ -101,6 +103,8 @@ public:
 #endif
     if (type == "None") {
       return nullptr;
+    } else if (type == "AsciiFile") {
+      return new AsciiFilePhotonSourceDistribution(params, log);
     } else if (type == "Caproni") {
       return new CaproniPhotonSourceDistribution(params, log);
     } else if (type == "DiscPatch") {
