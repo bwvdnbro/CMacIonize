@@ -27,7 +27,7 @@
 #define CMILIBRARY_HPP
 
 /*! @brief Allow the CMI library to print messsages to the terminal. */
-//#define CMILIBRARY_TALK
+#define CMILIBRARY_TALK
 
 #include <cstddef>
 #include <cstdint>

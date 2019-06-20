@@ -103,6 +103,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
+    AsciiFilePhotonSourceDistribution.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     DensityGrid.cpp
@@ -165,6 +166,7 @@ set(CMACIONIZE_SOURCES
     AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
+    AsciiFilePhotonSourceDistribution.hpp
     Box.hpp
     BondiProfileDensityFunction.hpp
     CartesianDensityGrid.hpp
