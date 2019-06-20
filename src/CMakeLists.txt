@@ -91,6 +91,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
 set(LIBIONIZATIONSIMULATION_SOURCES
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
+    AsciiFilePhotonSourceDistribution.cpp
     CartesianDensityGrid.cpp
     ChargeTransferRates.cpp
     DensityGrid.cpp
@@ -149,6 +150,7 @@ set(CMACIONIZE_SOURCES
     AMRRefinementSchemeFactory.hpp
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
+    AsciiFilePhotonSourceDistribution.hpp
     Box.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
