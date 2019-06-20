@@ -2318,10 +2318,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     // we don't write if this is the last snapshot, because then it is written
     // outside the integration loop
     if (write_output && hydro_lastsnap * hydro_snaptime <= current_time &&
-        has_next_step && hydro_firstsnap <= hydro_lastsnap) {
-      time_logger.start("snapshot");
-      writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
-      time_logger.end("snapshot");
+        has_next_step) {
+      if (hydro_firstsnap <= hydro_lastsnap) {
+        time_logger.start("snapshot");
+        writer->write(*grid_creator, hydro_lastsnap, *params, current_time);
+        time_logger.end("snapshot");
+      }
       ++hydro_lastsnap;
     }
 
