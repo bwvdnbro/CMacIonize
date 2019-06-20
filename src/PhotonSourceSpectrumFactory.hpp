@@ -35,6 +35,7 @@
 #include "MaskedPhotonSourceSpectrum.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "UniformPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
 
 /**
@@ -66,6 +67,8 @@ public:
       return new MonochromaticPhotonSourceSpectrum(role, params, log);
     } else if (type == "Planck") {
       return new PlanckPhotonSourceSpectrum(role, params, log);
+    } else if (type == "Uniform") {
+      return new UniformPhotonSourceSpectrum();
     } else if (type == "WMBasic") {
       return new WMBasicPhotonSourceSpectrum(role, params, log);
     } else if (type == "None") {
