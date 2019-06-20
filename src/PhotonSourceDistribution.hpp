@@ -28,6 +28,9 @@
 
 #include "CoordinateVector.hpp"
 
+/*! @brief Size of a variable that stores the number of photon sources. */
+typedef uint_fast32_t photonsourcenumber_t;
+
 /**
  * @brief General interface for photon source distribution functors.
  */
@@ -46,7 +49,7 @@ public:
    *
    * @return Number of sources.
    */
-  virtual unsigned int get_number_of_sources() const = 0;
+  virtual photonsourcenumber_t get_number_of_sources() const = 0;
 
   /**
    * @brief Get a valid position from the distribution.
@@ -55,7 +58,7 @@ public:
    * get_number_of_sources().
    * @return CoordinateVector of a valid and photon source position (in m).
    */
-  virtual CoordinateVector<> get_position(unsigned int index) = 0;
+  virtual CoordinateVector<> get_position(photonsourcenumber_t index) = 0;
 
   /**
    * @brief Get the weight of a photon source.
@@ -65,7 +68,7 @@ public:
    * @return Weight of the photon source, used to determine how many photons are
    * emitted from this particular source.
    */
-  virtual double get_weight(unsigned int index) const = 0;
+  virtual double get_weight(photonsourcenumber_t index) const = 0;
 
   /**
    * @brief Get the total luminosity of all sources together.

@@ -29,6 +29,7 @@
 
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
+#include "OperatingSystem.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -47,6 +48,10 @@ namespace Utilities {
 /**
  * @brief Get a random double precision floating point value in between 0 and 1.
  *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
+ *
  * @return Random uniform double precision floating point value.
  */
 inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
@@ -54,6 +59,10 @@ inline double random_double() { return ((double)rand()) / ((double)RAND_MAX); }
 /**
  * @brief Get a random double precision position in a box with origin (0, 0, 0)
  * and a unit side length.
+ *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
  *
  * @return Random uniform double precision position.
  */
@@ -64,11 +73,15 @@ inline CoordinateVector<> random_position() {
 /**
  * @brief Get a random integer value within the given range.
  *
+ * @note This function should not be used to generate scientific random numbers,
+ * because it relies on the standard C++ random generator that does not have
+ * optimal statistical properties.
+ *
  * @param min_value Minimum value (inclusive).
  * @param max_value Maximum value (exclusive).
  * @return Uniform random value in the range [min_value, max_value[.
  */
-inline unsigned int random_int(int min_value, int max_value) {
+inline int_fast32_t random_int(int_fast32_t min_value, int_fast32_t max_value) {
   return min_value + random_double() * (max_value - min_value);
 }
 
@@ -104,11 +117,12 @@ inline void split_string(const std::string &value, std::string &str1,
  */
 template < typename _integer_type_ >
 _integer_type_ string_to_integer(const std::string &value) {
+
   if (value.size() == 0) {
     cmac_error("Cannot extract an integer from an empty string!");
   }
 
-  unsigned int idx = 0;
+  size_t idx = 0;
   // strip trailing whitespace
   while (idx < value.size() && value[idx] == ' ') {
     ++idx;
@@ -137,7 +151,7 @@ _integer_type_ string_to_integer(const std::string &value) {
         digits.push_back(value[idx] - '0');
       } else {
         // a-f (A-F) also have successive codes
-        char cval = tolower(value[idx]);
+        const char cval = tolower(value[idx]);
         digits.push_back(10 + cval - 'a');
       }
       ++idx;
@@ -149,7 +163,7 @@ _integer_type_ string_to_integer(const std::string &value) {
         sizeof(_integer_type_) * 8 - std::is_signed< _integer_type_ >::value) {
       cmac_error("Integer value too large: \"%s\"!", value.c_str());
     }
-    unsigned int base = 1;
+    uint_fast32_t base = 1;
     // we use a reverse iterator, since the least significant digit comes last
     for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
       ivalue += base * (*it);
@@ -163,7 +177,7 @@ _integer_type_ string_to_integer(const std::string &value) {
       digits.push_back(value[idx] - '0');
       ++idx;
     }
-    unsigned int base = 1;
+    uint_fast32_t base = 1;
     // we use a reverse iterator, since the least significant digit comes last
     for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
       ivalue += base * (*it);
@@ -180,15 +194,15 @@ _integer_type_ string_to_integer(const std::string &value) {
         digits.push_back(value[idx] - '0');
         ++idx;
       }
-      unsigned int exponent = 0;
-      unsigned int base = 1;
+      uint_fast32_t exponent = 0;
+      uint_fast32_t base = 1;
       // we use a reverse iterator, since the least significant digit comes last
       for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
         exponent += base * (*it);
         base *= 10;
       }
       _integer_type_ extra_part = 1;
-      for (unsigned int i = 0; i < exponent; ++i) {
+      for (uint_fast32_t i = 0; i < exponent; ++i) {
         extra_part *= 10;
       }
       ivalue *= extra_part;
@@ -217,7 +231,7 @@ template < typename _datatype_ > _datatype_ convert(const std::string &value);
  */
 template <> inline double convert< double >(const std::string &value) {
   char *str_end;
-  double dvalue = strtod(value.c_str(), &str_end);
+  const double dvalue = strtod(value.c_str(), &str_end);
   if (str_end == value.c_str()) {
     cmac_error("Error converting \"%s\" to a floating point value!",
                value.c_str());
@@ -234,9 +248,10 @@ template <> inline double convert< double >(const std::string &value) {
 template <>
 inline CoordinateVector<>
 convert< CoordinateVector<> >(const std::string &value) {
+
   CoordinateVector<> vvalue;
-  int num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]", &vvalue[0], &vvalue[1],
-                         &vvalue[2]);
+  const int_fast32_t num_found = sscanf(value.c_str(), "[%lf,%lf,%lf]",
+                                        &vvalue[0], &vvalue[1], &vvalue[2]);
   if (num_found != 3) {
     cmac_error("Error converting \"%s\" to a floating point CoordinateVector!",
                value.c_str());
@@ -247,40 +262,177 @@ convert< CoordinateVector<> >(const std::string &value) {
 /**
  * @brief Convert the given string to an integer value.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value std::string value.
  * @return Integer stored in the string.
  */
-template <> inline int convert< int >(const std::string &value) {
-  int ivalue = string_to_integer< int >(value);
+template <> inline long int convert< long int >(const std::string &value) {
+  const long int ivalue = string_to_integer< long int >(value);
   return ivalue;
 }
 
 /**
- * @brief Convert the given string to an unsigned integer value.
+ * @brief Convert the given string to an unsigned long integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string value.
- * @return Unsigned integer stored in the string.
+ * @return Unsigned long integer stored in the string.
  */
 template <>
-inline unsigned int convert< unsigned int >(const std::string &value) {
-  unsigned int ivalue = string_to_integer< unsigned int >(value);
+inline unsigned long int
+convert< unsigned long int >(const std::string &value) {
+  const unsigned long int ivalue =
+      string_to_integer< unsigned long int >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Integer stored in the string.
+ */
+template <> inline int convert< int >(const std::string &value) {
+  const int ivalue = string_to_integer< int >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned long integer value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned long integer stored in the string.
+ */
+template <>
+inline unsigned int
+convert< unsigned int >(const std::string &value) {
+  const unsigned int ivalue =
+      string_to_integer< unsigned int >(value);
   return ivalue;
 }
 
 /**
  * @brief Convert the given string to an unsigned char value.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned char stored in the string.
+ */
+template <>
+inline unsigned short convert< unsigned short >(const std::string &value) {
+  const unsigned short ivalue = string_to_integer< unsigned short >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned char value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string value.
+ * @return Unsigned char stored in the string.
+ */
+template <>
+inline unsigned long long convert< unsigned long long >(const std::string &value) {
+  const unsigned long long ivalue = string_to_integer< unsigned long long >(value);
+  return ivalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned char value.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value std::string value.
  * @return Unsigned char stored in the string.
  */
 template <>
 inline unsigned char convert< unsigned char >(const std::string &value) {
-  unsigned char ivalue = string_to_integer< unsigned char >(value);
+  const unsigned char ivalue = string_to_integer< unsigned char >(value);
   return ivalue;
 }
 
 /**
  * @brief Convert the given string to an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< long int >
+convert< CoordinateVector< long int > >(const std::string &value) {
+  CoordinateVector< long int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< long int >(x);
+  vvalue[1] = convert< long int >(y);
+  vvalue[2] = convert< long int >(z);
+  return vvalue;
+}
+
+/**
+ * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value std::string to convert.
+ * @return CoordinateVector containing the components found.
+ */
+template <>
+inline CoordinateVector< unsigned long int >
+convert< CoordinateVector< unsigned long int > >(const std::string &value) {
+  CoordinateVector< unsigned long int > vvalue;
+  std::string x, y, z;
+  split_string(value, x, y, z);
+  vvalue[0] = convert< unsigned long int >(x);
+  vvalue[1] = convert< unsigned long int >(y);
+  vvalue[2] = convert< unsigned long int >(z);
+  return vvalue;
+}
+
+/**
+ * @brief Convert the given string to an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string to convert.
  * @return CoordinateVector containing the components found.
@@ -299,6 +451,11 @@ convert< CoordinateVector< int > >(const std::string &value) {
 
 /**
  * @brief Convert the given string to an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
  *
  * @param value std::string to convert.
  * @return CoordinateVector containing the components found.
@@ -328,12 +485,13 @@ convert< CoordinateVector< unsigned int > >(const std::string &value) {
  * @return True or false.
  */
 template <> inline bool convert< bool >(const std::string &value) {
+
   std::string value_copy(value);
   // convert to lowercase
   std::transform(value_copy.begin(), value_copy.end(), value_copy.begin(),
                  ::tolower);
   // strip trailing whitespace
-  unsigned int i = 0;
+  uint_fast32_t i = 0;
   while (value_copy[i] == ' ') {
     ++i;
   }
@@ -393,12 +551,17 @@ template < typename _datatype_ > std::string to_string(_datatype_ value) {
  * otherwise it is outputted as the character it is supposed to represent, which
  * yields garbage.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value Value to convert.
  * @return std::string.
  */
 template <> inline std::string to_string< unsigned char >(unsigned char value) {
   std::stringstream sstream;
-  unsigned int ivalue = value;
+  const unsigned int ivalue = value;
   sstream << ivalue;
   return sstream.str();
 }
@@ -434,12 +597,17 @@ to_string< CoordinateVector<> >(const CoordinateVector<> value) {
 /**
  * @brief to_string specialization for an integer CoordinateVector.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value Integer CoordinateVector.
  * @return std::string containing the 3 components of the CoordinateVector.
  */
 template <>
-inline std::string
-to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
+inline std::string to_string< CoordinateVector< long int > >(
+    const CoordinateVector< long int > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
@@ -448,12 +616,55 @@ to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
 /**
  * @brief to_string specialization for an unsigned integer CoordinateVector.
  *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value Unsigned integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string to_string< CoordinateVector< unsigned long int > >(
+    const CoordinateVector< unsigned long int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for an unsigned integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
  * @param value Unsigned integer CoordinateVector.
  * @return std::string containing the 3 components of the CoordinateVector.
  */
 template <>
 inline std::string to_string< CoordinateVector< unsigned int > >(
     const CoordinateVector< unsigned int > value) {
+  std::stringstream sstream;
+  sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
+  return sstream.str();
+}
+
+/**
+ * @brief to_string specialization for an integer CoordinateVector.
+ *
+ * @note We need to specialize for basic integer types and not for the cstdint
+ * types, as the compiler replaces the latter with the former (and some of the
+ * cstdint types translate to the same basic type, leading to compilation errors
+ * if more than one version is implemented).
+ *
+ * @param value Integer CoordinateVector.
+ * @return std::string containing the 3 components of the CoordinateVector.
+ */
+template <>
+inline std::string
+to_string< CoordinateVector< int > >(const CoordinateVector< int > value) {
   std::stringstream sstream;
   sstream << "[" << value.x() << ", " << value.y() << ", " << value.z() << "]";
   return sstream.str();
@@ -495,7 +706,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
   while (svalue[idx] == ' ') {
     ++idx;
   }
-  std::string unit = svalue.substr(idx);
+  const std::string unit = svalue.substr(idx);
   return make_pair(value, unit);
 }
 
@@ -512,11 +723,12 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
  * @return Index of the last element in the ordered array that is smaller than
  * the given value, i.e. value is in between xarr[index] and xarr[index+1].
  */
-inline unsigned int locate(double x, const double *xarr, unsigned int length) {
-  unsigned int jl = 0;
-  unsigned int ju = length;
+inline uint_fast32_t locate(double x, const double *xarr,
+                            uint_fast32_t length) {
+  uint_fast32_t jl = 0;
+  uint_fast32_t ju = length;
   while (ju - jl > 1) {
-    unsigned int jm = (ju + jl) / 2;
+    uint_fast32_t jm = (ju + jl) >> 1;
     if (x > xarr[jm]) {
       jl = jm;
     } else {
@@ -544,8 +756,8 @@ inline unsigned int locate(double x, const double *xarr, unsigned int length) {
 inline std::string compose_filename(const std::string &folder,
                                     const std::string &prefix,
                                     const std::string &extension,
-                                    unsigned int counter,
-                                    unsigned int padding) {
+                                    uint_fast32_t counter,
+                                    uint_fast32_t padding) {
   std::stringstream namestring;
   if (!folder.empty()) {
     namestring << folder << "/";
@@ -570,13 +782,7 @@ inline std::string get_absolute_path(std::string path) {
     path = path.substr(0, path.size() - 1);
   }
 
-  char *absolute_path_ptr = realpath(path.c_str(), nullptr);
-  if (absolute_path_ptr == nullptr) {
-    cmac_error("Unable to resolve path \"%s\"!", path.c_str());
-  }
-  std::string absolute_path(absolute_path_ptr);
-  free(absolute_path_ptr);
-  return absolute_path;
+  return OperatingSystem::absolute_path(path);
 }
 
 /**
@@ -585,8 +791,8 @@ inline std::string get_absolute_path(std::string path) {
  * @return Time stamp.
  */
 inline std::string get_timestamp() {
-  std::time_t timestamp = std::time(nullptr);
-  std::tm *time = std::localtime(&timestamp);
+  const std::time_t timestamp = std::time(nullptr);
+  const std::tm *time = std::localtime(&timestamp);
   std::stringstream timestream;
   if (time->tm_mday < 10) {
     timestream << "0";
@@ -627,16 +833,16 @@ inline std::string human_readable_time(double time) {
   std::stringstream timestream;
   // 2^32 minutes is 8166 years. We can safely assume no internal timer will
   // ever reach that value
-  unsigned int minutes = time / 60.;
-  double seconds = time - 60. * minutes;
+  uint_fast32_t minutes = time / 60.;
+  const double seconds = time - 60. * minutes;
   if (minutes > 0) {
-    unsigned int hours = minutes / 60;
+    uint_fast32_t hours = minutes / 60;
     if (hours > 0) {
       minutes -= 60 * hours;
-      unsigned int days = hours / 24;
+      uint_fast32_t days = hours / 24;
       if (days > 0) {
         hours -= 24 * days;
-        unsigned int years = days / 365;
+        const uint_fast32_t years = days / 365;
         if (years > 0) {
           days -= 365 * years;
           timestream << years << "y ";
@@ -657,7 +863,7 @@ inline std::string human_readable_time(double time) {
  * @param exponent Exponent @f$e@f$.
  * @return Name for @f$2^{10e}@f$ bytes: (@f$2^{10}@f$ bytes = KB, ...).
  */
-inline std::string byte_unit(unsigned char exponent) {
+inline std::string byte_unit(uint_fast8_t exponent) {
   switch (exponent) {
   case 0:
     return "bytes";
@@ -682,8 +888,8 @@ inline std::string byte_unit(unsigned char exponent) {
  * @return std::string containing the given number of bytes in "bytes", "KB",
  * "MB", "GB"...
  */
-inline std::string human_readable_bytes(unsigned long bytes) {
-  unsigned char sizecount = 0;
+inline std::string human_readable_bytes(size_t bytes) {
+  uint_fast8_t sizecount = 0;
   double bytefloat = bytes;
   while ((bytes >> 10) > 0) {
     bytes >>= 10;
@@ -708,7 +914,7 @@ inline bool string_ends_with(const std::string &haystack,
   if (needle.size() > haystack.size()) {
     return false;
   }
-  size_t check = haystack.rfind(needle);
+  const size_t check = haystack.rfind(needle);
   // make sure we only flag needle at the end of the string
   return (check == haystack.size() - needle.size());
 }
@@ -719,9 +925,10 @@ inline bool string_ends_with(const std::string &haystack,
  * @param number Number to decompose.
  * @return std::vector containing the prime integer components.
  */
-inline std::vector< int > decompose(int number) {
-  std::vector< int > components;
-  int divisor = 2;
+template < typename _integer_type_ >
+inline std::vector< _integer_type_ > decompose(_integer_type_ number) {
+  std::vector< _integer_type_ > components;
+  _integer_type_ divisor = 2;
   while (divisor <= number && number > 1) {
     if (number % divisor == 0) {
       number /= divisor;
@@ -743,16 +950,18 @@ inline std::vector< int > decompose(int number) {
  * @param numblock Number of blocks to subdivide in.
  * @return Resolution of a single block.
  */
-inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
-                                         int numblock) {
-  std::vector< std::vector< int > > d_ncell(3);
+template < typename _integer_type_, typename _size_type_ >
+inline CoordinateVector< _integer_type_ >
+subdivide(CoordinateVector< _integer_type_ > ncell, _size_type_ numblock) {
+
+  std::vector< std::vector< _integer_type_ > > d_ncell(3);
   d_ncell[0] = decompose(ncell.x());
   d_ncell[1] = decompose(ncell.y());
   d_ncell[2] = decompose(ncell.z());
 
   // remove large factors until we reach at least the requested number of blocks
-  int factor = 1;
-  unsigned int idim = 0;
+  _size_type_ factor = 1;
+  uint_fast8_t idim = 0;
   while (factor < numblock) {
     factor *= d_ncell[idim].back();
     d_ncell[idim].pop_back();
@@ -763,9 +972,9 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
   }
 
   // collapse the remaining factors to get the block size
-  CoordinateVector< int > block(1);
-  for (unsigned int i = 0; i < 3; ++i) {
-    for (unsigned int j = 0; j < d_ncell[i].size(); ++j) {
+  CoordinateVector< _integer_type_ > block(1);
+  for (uint_fast8_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < d_ncell[i].size(); ++j) {
       block[i] *= d_ncell[i][j];
     }
   }
@@ -779,10 +988,11 @@ inline CoordinateVector< int > subdivide(CoordinateVector< int > ncell,
  * @param long_value Long value to convert.
  * @return std::string containing a binary representation of the long value.
  */
-inline std::string as_binary_sequence(unsigned long long_value) {
+inline std::string as_binary_sequence(uint64_t long_value) {
+
   std::stringstream binary_stream;
-  unsigned long mask = 0x8000000000000000;
-  for (unsigned int i = 0; i < 64; ++i) {
+  uint64_t mask = 0x8000000000000000;
+  for (uint_fast8_t i = 0; i < 64; ++i) {
     if (i > 0 && i % 4 == 0) {
       binary_stream << " ";
     }
@@ -801,9 +1011,10 @@ inline std::string as_binary_sequence(unsigned long long_value) {
  * std::vector in an order that would sort the std::vector.
  */
 template < typename _datatype_ >
-std::vector< unsigned int > argsort(const std::vector< _datatype_ > &values) {
-  std::vector< unsigned int > idx(values.size());
-  for (unsigned int i = 0; i < values.size(); ++i) {
+std::vector< uint_fast32_t > argsort(const std::vector< _datatype_ > &values) {
+
+  std::vector< uint_fast32_t > idx(values.size());
+  for (size_t i = 0; i < values.size(); ++i) {
     idx[i] = i;
   }
   std::sort(idx.begin(), idx.end(), [&values](size_t i1, size_t i2) {

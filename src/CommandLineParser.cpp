@@ -26,7 +26,6 @@
 #include "CommandLineParser.hpp"
 #include "Error.hpp"
 #include <iostream>
-using namespace std;
 
 /**
  * @brief Constructor.
@@ -102,24 +101,26 @@ void CommandLineParser::print_description(std::ostream &stream) const {
  * @param argv Command line arguments.
  */
 void CommandLineParser::parse_arguments(int argc, char **argv) {
+
   // we discard the first argument, as this is simply the program name
   int i = 1;
   while (i < argc) {
     if (argv[i][0] != '-') {
-      cout << "Found orphan argument \"%s\" in command line options (did you "
-              "forget the \"--\"?)\n";
-      print_description(cout);
+      std::cerr
+          << "Found orphan argument \"%s\" in command line options (did you "
+             "forget the \"--\"?)\n";
+      print_description(std::cerr);
       exit(1);
     }
-    string option(argv[i]);
+    std::string option(argv[i]);
     // check if the option is --help or -h
     if (option == "--help" || option == "-h") {
-      print_description(cout);
+      print_description(std::cerr);
       exit(0);
     }
     size_t eqpos = option.find('=');
-    string argument;
-    if (eqpos != string::npos) {
+    std::string argument;
+    if (eqpos != std::string::npos) {
       argument = option.substr(eqpos + 1);
       option = option.substr(0, eqpos);
     } else {
@@ -134,13 +135,13 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
     }
     // we now have the option and the (possibly empty) argument
     // find an option in the list that corresponds to it:
-    unsigned int j = 0;
+    size_t j = 0;
     while (j < _options.size() && !_options[j].matches(option)) {
       ++j;
     }
     if (j == _options.size()) {
-      cout << "Unknown option: '" << option << "'\n";
-      print_description(cout);
+      std::cerr << "Unknown option: '" << option << "'\n";
+      print_description(std::cerr);
       exit(1);
     }
     _dictionary[_options[j].get_long_name()] =
@@ -149,8 +150,8 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
     // argument was provided. The dictionary entry can only be empty if the
     // default value was empty, which means the argument is required.
     if (!_dictionary[_options[j].get_long_name()].size()) {
-      cout << "Missing argument for option '" << option << "'\n";
-      print_description(cout);
+      std::cerr << "Missing argument for option '" << option << "'\n";
+      print_description(std::cerr);
       exit(1);
     }
     ++i;
@@ -161,8 +162,9 @@ void CommandLineParser::parse_arguments(int argc, char **argv) {
   for (auto it = _options.begin(); it != _options.end(); ++it) {
     if (!_dictionary.count(it->get_long_name())) {
       if (it->is_required()) {
-        cout << "Required option --" << it->get_long_name() << " not found!\n";
-        print_description(cout);
+        std::cerr << "Required option --" << it->get_long_name()
+                  << " not found!\n";
+        print_description(std::cerr);
         exit(1);
       } else {
         _dictionary[it->get_long_name()] = it->get_default_value();

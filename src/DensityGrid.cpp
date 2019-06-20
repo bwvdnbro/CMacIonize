@@ -37,9 +37,11 @@
  * @param worksize Number of parallel threads to use. If a negative number is
  * given, all available threads will be used.
  */
-void DensityGrid::initialize(std::pair< unsigned long, unsigned long > &block,
-                             DensityFunction &function, int worksize) {
-  DensityGridInitializationFunction init(function);
+void DensityGrid::set_densities(std::pair< cellsize_t, cellsize_t > &block,
+                                DensityFunction &function,
+                                int_fast32_t worksize) {
+
+  DensityGridInitializationFunction init(function, _has_hydro);
   WorkDistributor<
       DensityGridTraversalJobMarket< DensityGridInitializationFunction >,
       DensityGridTraversalJob< DensityGridInitializationFunction > >

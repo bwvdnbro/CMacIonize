@@ -25,36 +25,13 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "GadgetSnapshotDensityFunction.hpp"
+#include "CubicSplineKernel.hpp"
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "UnitConverter.hpp"
 #include <cfloat>
 #include <fstream>
-using namespace std;
-
-/**
- * @brief Cubic spline kernel used in Gadget2.
- *
- * @param u Distance in units of the smoothing length.
- * @param h Smoothing length.
- * @return Value of the cubic spline kernel.
- */
-double GadgetSnapshotDensityFunction::cubic_spline_kernel(double u, double h) {
-  const double KC1 = 2.546479089470;
-  const double KC2 = 15.278874536822;
-  const double KC5 = 5.092958178941;
-  if (u < 1.) {
-    if (u < 0.5) {
-      return (KC1 + KC2 * (u - 1.) * u * u) / (h * h * h);
-    } else {
-      return KC5 * (1. - u) * (1. - u) * (1. - u) / (h * h * h);
-    }
-  } else {
-    // the cubic spline kernel has compact support
-    return 0.;
-  }
-}
 
 /**
  * @brief Constructor.
@@ -86,6 +63,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     bool use_neutral_fraction, double fallback_temperature,
     bool comoving_integration, double hubble_parameter, Log *log)
     : _log(log) {
+
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
 
@@ -98,8 +76,8 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     HDF5Tools::HDF5Group runtimepars =
         HDF5Tools::open_group(file, "/RuntimePars");
     // read the PeriodicBoundariesOn flag
-    periodic = HDF5Tools::read_attribute< int >(runtimepars,
-                                                "PeriodicBoundariesOn") != 0;
+    periodic = HDF5Tools::read_attribute< int32_t >(
+                   runtimepars, "PeriodicBoundariesOn") != 0;
     // close the group
     HDF5Tools::close_group(runtimepars);
   } else {
@@ -118,7 +96,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
         HDF5Tools::read_attribute< CoordinateVector<> >(header, "BoxSize");
     // in this case, the anchor is just (0., 0., 0.)
     CoordinateVector<> anchor;
-    _box = Box(anchor, sides);
+    _box = Box<>(anchor, sides);
     // close the Header group
     HDF5Tools::close_group(header);
   }
@@ -129,9 +107,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   double unit_temperature_in_SI = fallback_unit_temperature_in_SI;
   if (HDF5Tools::group_exists(file, "/Units")) {
     HDF5Tools::HDF5Group units = HDF5Tools::open_group(file, "/Units");
-    double unit_length_in_cgs =
+    const double unit_length_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit length in cgs (U_L)");
-    double unit_mass_in_cgs =
+    const double unit_mass_in_cgs =
         HDF5Tools::read_attribute< double >(units, "Unit mass in cgs (U_M)");
     unit_temperature_in_SI = HDF5Tools::read_attribute< double >(
         units, "Unit temperature in cgs (U_T)");
@@ -177,8 +155,9 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     unit_mass_in_SI /= hubble_parameter;
   }
 
-  double unit_length_in_SI_squared = unit_length_in_SI * unit_length_in_SI;
-  double unit_density_in_SI =
+  const double unit_length_in_SI_squared =
+      unit_length_in_SI * unit_length_in_SI;
+  const double unit_density_in_SI =
       unit_mass_in_SI / unit_length_in_SI / unit_length_in_SI_squared;
 
   // open the group containing the SPH particle data
@@ -220,7 +199,7 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
   // unit conversion + treebox data collection
   CoordinateVector<> minpos(DBL_MAX);
   CoordinateVector<> maxpos(-DBL_MAX);
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
+  for (size_t i = 0; i < _positions.size(); ++i) {
     _positions[i][0] *= unit_length_in_SI;
     _positions[i][1] *= unit_length_in_SI;
     _positions[i][2] *= unit_length_in_SI;
@@ -244,16 +223,16 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     _log->write_status("Successfully read densities from file \"", name, "\".");
   }
 
-  Box box(_box);
+  Box<> box(_box);
   if (!periodic) {
     // set box to particle extents + small margin
     CoordinateVector<> sides = maxpos - minpos;
-    CoordinateVector<> anchor = minpos - 0.005 * sides;
+    const CoordinateVector<> anchor = minpos - 0.005 * sides;
     sides *= 1.01;
-    box = Box(anchor, sides);
+    box = Box<>(anchor, sides);
   }
   if (_log) {
-    string pstring;
+    std::string pstring;
     if (periodic) {
       pstring = "periodic ";
     }
@@ -275,28 +254,47 @@ GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
 /**
  * @brief ParameterFile constructor.
  *
+ * Parameters are:
+ *  - filename: Name of the snapshot file (required)
+ *  - fallback periodic flag: Periodicity flag to use when no periodicity flag
+ *    can be found in the snapshot file (default: false)
+ *  - fallback unit length: Length unit to use if no units can be found in the
+ *    snapshot file (default: 1. m, with warning)
+ *  - fallback unit mass: Mass unit to use if no units can be found in the
+ *    snapshot file (default: 1. kg, with warning)
+ *  - fallback unit temperature: Temperature unit to use if no units can be
+ *    found in the snapshot file (default: 1. K, with warning)
+ *  - use neutral fraction: Use initial neutral fractions from the snapshot file
+ *    (if present; default: false)?
+ *  - fallback initial temperature: Initial temperature to use if no temperature
+ *    values can be found in the snapshot file (default: 8000. K, with warning)
+ *  - comoving integration flag: Was comoving integration used in the original
+ *    simulation (default: false)?
+ *  - hubble parameter: Reduced Hubble parameter used for the original
+ *    simulation (default: 0.7)
+ *
  * @param params ParameterFile to read.
  * @param log Log to write logging information to.
  */
 GadgetSnapshotDensityFunction::GadgetSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : GadgetSnapshotDensityFunction(
-          params.get_value< string >("densityfunction:filename"),
-          params.get_value< bool >("densityfunction:fallback_periodic_flag",
+          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_value< bool >("DensityFunction:fallback periodic flag",
                                    false),
           params.get_physical_value< QUANTITY_LENGTH >(
-              "densityfunction:fallback_unit_length", "0. m"),
+              "DensityFunction:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_MASS >(
-              "densityfunction:fallback_unit_mass", "0. kg"),
+              "DensityFunction:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_unit_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:use_neutral_fraction",
+              "DensityFunction:fallback unit temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:use neutral fraction",
                                    false),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
-              "densityfunction:fallback_initial_temperature", "0. K"),
-          params.get_value< bool >("densityfunction:comoving_integration_flag",
+              "DensityFunction:fallback initial temperature", "0. K"),
+          params.get_value< bool >("DensityFunction:comoving integration flag",
                                    false),
-          params.get_value< double >("densityfunction:hubble_parameter", 0.7),
+          params.get_value< double >("DensityFunction:hubble parameter", 0.7),
           log) {}
 
 /**
@@ -309,51 +307,38 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
 }
 
 /**
- * @brief Function that returns the density for the given coordinate.
+ * @brief Function that gives the density for a given cell.
  *
- * @param position CoordinateVector specifying a coordinate position (in m).
- * @return Density at the given coordinate (in m^-3).
+ * @param cell Geometrical information about the cell.
+ * @return Initial physical field values for that cell.
  */
 DensityValues GadgetSnapshotDensityFunction::
-operator()(CoordinateVector<> position) const {
-  DensityValues cell;
+operator()(const Cell &cell) const {
 
-  // brute force version: slow
-  /*double density = 0.;
-  for (unsigned int i = 0; i < _positions.size(); ++i) {
-    double r;
-    if (!_box.get_sides().x()) {
-      r = (position - _positions[i]).norm();
-    } else {
-      r = _box.periodic_distance(position, _positions[i]).norm();
-    }
-    double h = _smoothing_lengths[i];
-    double u = r / h;
-    double m = _masses[i];
-    density += m * cubic_spline_kernel(u, h);
-  }
-  return density / 1.6737236e-27;*/
-  // tree version
+  DensityValues values;
+
+  const CoordinateVector<> position = cell.get_cell_midpoint();
+
   double density = 0.;
   double temperature = 0.;
   double neutral_fraction = -1.;
   if (_neutral_fractions.size() > 0) {
     neutral_fraction = 0.;
   }
-  std::vector< unsigned int > ngbs = _octree->get_ngbs(position);
-  const unsigned int numngbs = ngbs.size();
-  for (unsigned int i = 0; i < numngbs; ++i) {
-    unsigned int index = ngbs[i];
+  const std::vector< uint_fast32_t > ngbs = _octree->get_ngbs(position);
+  const size_t numngbs = ngbs.size();
+  for (size_t i = 0; i < numngbs; ++i) {
+    const uint_fast32_t index = ngbs[i];
     double r;
     if (!_box.get_sides().x()) {
       r = (position - _positions[index]).norm();
     } else {
       r = _box.periodic_distance(position, _positions[index]).norm();
     }
-    double h = _smoothing_lengths[index];
-    double u = r / h;
-    double m = _masses[index];
-    double splineval = m * cubic_spline_kernel(u, h);
+    const double h = _smoothing_lengths[index];
+    const double u = r / h;
+    const double m = _masses[index];
+    const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
     density += splineval;
     temperature += splineval * _temperatures[index] / _densities[index];
     if (neutral_fraction >= 0.) {
@@ -361,15 +346,15 @@ operator()(CoordinateVector<> position) const {
     }
   }
 
-  cell.set_number_density(density / 1.6737236e-27);
-  cell.set_temperature(temperature);
+  values.set_number_density(density / 1.6737236e-27);
+  values.set_temperature(temperature);
   if (neutral_fraction >= 0.) {
-    cell.set_ionic_fraction(ION_H_n, neutral_fraction / density);
+    values.set_ionic_fraction(ION_H_n, neutral_fraction / density);
   } else {
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
   }
-  cell.set_ionic_fraction(ION_He_n, 1.e-6);
-  return cell;
+  values.set_ionic_fraction(ION_He_n, 1.e-6);
+  return values;
 }
 
 /**
@@ -379,7 +364,7 @@ operator()(CoordinateVector<> position) const {
  */
 double GadgetSnapshotDensityFunction::get_total_hydrogen_number() const {
   double mtot = 0.;
-  for (unsigned int i = 0; i < _masses.size(); ++i) {
+  for (size_t i = 0; i < _masses.size(); ++i) {
     mtot += _masses[i];
   }
   return mtot / 1.6737236e-27;

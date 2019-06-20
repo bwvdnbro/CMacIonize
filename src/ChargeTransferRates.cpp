@@ -24,114 +24,352 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "ChargeTransferRates.hpp"
-#include "ChargeTransferRatesDataLocation.hpp"
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <sstream>
 #include <string>
 
 /**
- * @brief Constructor.
+ * @brief Get the charge transfer recombination rate to the given ion due to a
+ * charge transfer reaction with hydrogen at the given temperature.
  *
- * Reads in the data from the data file.
+ * NOTE that we return the recombination rate TO the given ion, so it is
+ * actually the recombination rate for the ionized state of that ion.
+ *
+ * @param ion IonName.
+ * @param temperature Temperature (in 10^4 K).
+ * @return Charge transfer recombination rate (in m^3 s^-1).
  */
-ChargeTransferRates::ChargeTransferRates() {
-  std::ifstream file(CHARGETRANSFERRATESDATALOCATION);
+double ChargeTransferRates::get_charge_transfer_recombination_rate_H(
+    IonName ion, double temperature) const {
 
-  std::string line;
+  switch (ion) {
 
-  // skip initial line of comments
-  getline(file, line);
+  case ION_H_n:
+    cmac_error("Requested charge transfer recombination rate for hydrogen with "
+               "itself! This does not make any sense!");
+    return 0;
 
-  // read CTIon array
-  {
-    // skip comment line
-    getline(file, line);
-    for (unsigned int i = 0; i < 7; ++i) {
-      for (unsigned int j = 0; j < 4; ++j) {
-        getline(file, line);
-        std::istringstream lstream(line);
-        for (unsigned int k = 0; k < 30; ++k) {
-          lstream >> _CTIon[i][j][k];
-        }
-      }
-    }
+  case ION_He_n: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [6,000 K; 100,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.6);
+    temperature = std::min(temperature, 10.);
+    return 7.47e-21 * std::pow(temperature, 2.06) *
+           (1. + 9.93 * std::exp(-3.89 * temperature));
   }
 
-  // read CTRecomb array
-  {
-    // skip comment line
-    getline(file, line);
-    for (unsigned int i = 0; i < 6; ++i) {
-      for (unsigned int j = 0; j < 4; ++j) {
-        getline(file, line);
-        std::istringstream lstream(line);
-        for (unsigned int k = 0; k < 30; ++k) {
-          lstream >> _CTRecomb[i][j][k];
-        }
-      }
-    }
+  case ION_C_p1: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [5,000 K; 50,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.5);
+    temperature = std::min(temperature, 5.);
+    return 1.67e-19 * std::pow(temperature, 2.79) *
+           (1. + 304.74 * std::exp(-4.07 * temperature));
+  }
+  case ION_C_p2: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [1,000 K; 100,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 10.);
+    return 3.25e-15 * std::pow(temperature, 0.21) *
+           (1. + 0.19 * std::exp(-3.29 * temperature));
+  }
+
+  case ION_N_n: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [100 K; 50,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.01);
+    temperature = std::min(temperature, 5.);
+    return 1.01e-18 * std::pow(temperature, -0.29) *
+           (1. - 0.92 * std::exp(-8.38 * temperature));
+  }
+  case ION_N_p1: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [1,000 K; 100,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 10.);
+    return 3.05e-16 * std::pow(temperature, 0.6) *
+           (1. + 2.65 * std::exp(-0.93 * temperature));
+  }
+  case ION_N_p2: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [10 K; 100,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.001);
+    temperature = std::min(temperature, 10.);
+    return 4.54e-15 * std::pow(temperature, 0.57) *
+           (1. - 0.65 * std::exp(-0.89 * temperature));
+  }
+
+  case ION_O_n: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [10 K; 10,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.001);
+    temperature = std::min(temperature, 1.);
+    return 1.04e-15 * std::pow(temperature, 3.15e-2) *
+           (1. - 0.61 * std::exp(-9.73 * temperature));
+  }
+  case ION_O_p1: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [100 K; 100,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.01);
+    temperature = std::min(temperature, 10.);
+    return 1.04e-15 * std::pow(temperature, 0.27) *
+           (1. + 2.02 * std::exp(-5.92 * temperature));
+  }
+
+  case ION_Ne_n:
+    // no rate listed in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_Ne_p1: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [5,000 K; 50,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    return 1.e-20;
+  }
+
+  case ION_S_p1: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    return 1.e-20;
+  }
+  case ION_S_p2: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 2.29e-15 * std::pow(temperature, 4.02e-2) *
+           (1. + 1.59 * std::exp(-6.06 * temperature));
+  }
+  case ION_S_p3: {
+    // Kingdon & Ferland (1996), table 1
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 6.44e-15 * std::pow(temperature, 0.13) *
+           (1. + 2.69 * std::exp(-5.69 * temperature));
+  }
+
+  default:
+    cmac_error("Unknown ion name: %i!", ion);
+    return 0;
   }
 }
 
 /**
- * @brief Get the charge transfer recombination rate.
+ * @brief Get the charge transfer ionization rate for the given ion due to a
+ * charge transfer reaction with hydrogen at the given temperature.
  *
- * @param stage Stage of ionization.
- * @param atom Atomic number.
- * @param temperature Temperature (in K).
- * @return Charge transfer recombination rate (in m^3s^-1).
+ * @param ion IonName.
+ * @param temperature Temperature (in 10^4 K).
+ * @return Charge transfer ionization rate (in m^3 s^-1).
  */
-double ChargeTransferRates::get_charge_transfer_recombination_rate(
-    unsigned char stage, unsigned char atom, double temperature) const {
-  unsigned char ipIon = stage - 1;
+double ChargeTransferRates::get_charge_transfer_ionization_rate_H(
+    IonName ion, double temperature) const {
 
-  if (ipIon == 0) {
+  switch (ion) {
+
+  case ION_H_n:
+    cmac_error("Requested charge transfer ionization rate for hydrogen with "
+               "itself. This does not make any sense!");
+    return 0.;
+
+  case ION_He_n:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  case ION_C_p1:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_C_p2:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  case ION_N_n: {
+    // Kingdon & Ferland (1996), table 3
+    // valid in the range [100 K; 50,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.01);
+    temperature = std::min(temperature, 5.);
+    return 4.55e-18 * std::pow(temperature, -0.29) *
+           (1. - 0.92 * std::exp(-8.38 * temperature)) *
+           std::exp(-1.086 / temperature);
+  }
+  case ION_N_p1:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_N_p2:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  case ION_O_n: {
+    // Kingdon & Ferland (1996), table 3
+    // valid in the range [10 K; 10,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.001);
+    temperature = std::min(temperature, 1.);
+    return 7.4e-17 * std::pow(temperature, 0.47) *
+           (1. + 24.37 * std::exp(-0.74 * temperature)) *
+           std::exp(-0.023 / temperature);
+  }
+  case ION_O_p1:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  case ION_Ne_n:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_Ne_p1:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  case ION_S_p1:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_S_p2:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+  case ION_S_p3:
+    // no rate given in Kingdon & Ferland (1996)
+    return 0.;
+
+  default:
+    cmac_error("Unknown ion: %i!", ion);
     return 0.;
   }
-  if (ipIon > 4) {
-    // we multiplied Kenny's version with 1e-6 to convert from cm^3 to m^3
-    return 1.92e-15 * ipIon;
-  }
-
-  double tused = std::max(temperature, _CTRecomb[4][ipIon - 1][atom - 1]);
-  tused = std::min(tused, _CTRecomb[5][ipIon - 1][atom - 1]);
-  tused *= 1.e-4;
-
-  // we multiplied Kenny's version with 1e-6 to convert from cm^3 to m^3
-  return _CTRecomb[0][ipIon - 1][atom - 1] * 1.e-15 *
-         std::pow(tused, _CTRecomb[1][ipIon - 1][atom - 1]) *
-         (1. +
-          _CTRecomb[2][ipIon - 1][atom - 1] *
-              std::exp(_CTRecomb[3][ipIon - 1][atom - 1] * tused));
 }
 
 /**
- * @brief Get the charge transfer ionization rate.
+ * @brief Get the charge transfer recombination rate to the given ion due to a
+ * charge transfer reaction with helium at the given temperature.
  *
- * @param stage Stage of ionization.
- * @param atom Atomic number.
- * @param temperature Temperature (in K).
- * @return Charge transfer ionization rate (in m^3s^-1).
+ * NOTE that we return the recombination rate TO the given ion, so it is
+ * actually the recombination rate for the ionized state of that ion.
+ *
+ * @param ion IonName.
+ * @param temperature Temperature (in 10^4 K).
+ * @return Charge transfer recombination rate (in m^3 s^-1).
  */
-double ChargeTransferRates::get_charge_transfer_ionization_rate(
-    unsigned char stage, unsigned char atom, double temperature) const {
+double ChargeTransferRates::get_charge_transfer_recombination_rate_He(
+    IonName ion, double temperature) const {
 
-  unsigned char ipIon = stage;
-  if (_CTIon[0][ipIon - 1][atom - 1] == 0.) {
+  switch (ion) {
+
+  case ION_H_n:
+    // not used, so not implemented
     return 0.;
+
+  case ION_He_n:
+    cmac_error("Requested charge transfer recombination rate of helium with "
+               "itself! This does not make any sense!");
+    return 0.;
+
+  case ION_C_p1:
+    // Arnaud & Rothenflug (1985) give a very low value, so we ignore this rate
+    return 0.;
+  case ION_C_p2: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 4.6e-17 * temperature * temperature;
   }
 
-  double tused = std::max(temperature, _CTIon[4][ipIon - 1][atom - 1]);
-  tused = std::min(tused, _CTIon[5][ipIon - 1][atom - 1]);
-  tused *= 1.e-4;
+  case ION_N_n:
+    // no rate given in Arnaud & Rothenflug (1985)
+    return 0.;
+  case ION_N_p1: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    // NOTE the mistake in Kenny's code: division by T4 instead of
+    // multiplication
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 3.3e-16 * std::pow(temperature, 0.29) *
+           (1. + 1.3 * std::exp(-4.5 * temperature));
+  }
+  case ION_N_p2: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    return 1.5e-16;
+  }
 
-  // we multiplied the value from Kenny's code with 1e-6 to convert from cm^3
-  // to m^3
-  return _CTIon[0][ipIon - 1][atom - 1] * 1.e-15 *
-         std::pow(tused, _CTIon[1][ipIon - 1][atom - 1]) *
-         (1. +
-          _CTIon[2][ipIon - 1][atom - 1] *
-              std::exp(_CTIon[3][ipIon - 1][atom - 1] * tused)) *
-         std::exp(-_CTIon[6][ipIon - 1][atom - 1] / tused);
+  case ION_O_n:
+    // no rate given in Arnaud & Rothenflug (1985)
+    return 0.;
+  case ION_O_p1: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [5,000 K; 50,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.5);
+    temperature = std::min(temperature, 5.);
+    return 2.e-16 * std::pow(temperature, 0.95);
+  }
+
+  case ION_Ne_n:
+    // no rate given in Arnaud & Rothenflug (1985)
+    return 0.;
+  case ION_Ne_p1: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    return 1.e-20;
+  }
+
+  case ION_S_p1:
+    // no rate given in Arnaud & Rothenflug (1985)
+    return 0.;
+  case ION_S_p2: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 1.1e-15 * std::pow(temperature, 0.56);
+  }
+  case ION_S_p3: {
+    // Arnaud & Rothenflug (1985), table III
+    // valid in the range [1,000 K; 30,000 K]
+    // we multiplied with 1.e-6 to convert cm^3 s^-1 to m^3 s^-1
+    temperature = std::max(temperature, 0.1);
+    temperature = std::min(temperature, 3.);
+    return 7.6e-19 * std::pow(temperature, 0.32) *
+           (1. + 3.4 * std::exp(-5.25 * temperature));
+  }
+
+  default:
+    cmac_error("Unknown ion: %i!", ion);
+    return 0.;
+  }
+}
+
+/**
+ * @brief Get the charge transfer ionization rate for the given ion due to a
+ * charge transfer reaction with helium at the given temperature.
+ *
+ * This function has not been implemented, as it is not currently used.
+ *
+ * @param ion IonName.
+ * @param temperature Temperature (in 10^4 K).
+ * @return Charge transfer ionization rate (in m^3 s^-1).
+ */
+double ChargeTransferRates::get_charge_transfer_ionization_rate_He(
+    IonName ion, double temperature) const {
+  cmac_error("This function has not been implemented!");
+  return 0;
 }

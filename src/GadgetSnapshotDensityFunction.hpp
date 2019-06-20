@@ -43,7 +43,7 @@ class GadgetSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief Simulation box, only initialized if the box is periodic (if the box
    *  is not periodic, the components of the Box will all be zero). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Positions of the SPH particles in the snapshot (in m). */
   std::vector< CoordinateVector<> > _positions;
@@ -72,8 +72,6 @@ private:
   /*! @brief Log to write logging info to. */
   Log *_log;
 
-  static double cubic_spline_kernel(double u, double h);
-
 public:
   GadgetSnapshotDensityFunction(std::string name,
                                 bool fallback_periodic = false,
@@ -90,7 +88,7 @@ public:
 
   virtual ~GadgetSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 
   double get_total_hydrogen_number() const;
 };

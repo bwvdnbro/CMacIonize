@@ -34,6 +34,11 @@
 class RecombinationRates {
 public:
   /**
+   * @brief Virtual destructor.
+   */
+  virtual ~RecombinationRates() {}
+
+  /**
    * @brief Get the recombination rate for the given ion at the given
    * temperature.
    *

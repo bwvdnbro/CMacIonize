@@ -33,6 +33,7 @@
 #include "ParameterFile.hpp"
 #include "YAMLDictionary.hpp"
 
+#include <cinttypes>
 #include <fstream>
 #include <sstream>
 
@@ -80,8 +81,9 @@ public:
 
     YAMLDictionary blockfile(file);
 
-    const int numblock = blockfile.get_value< int >("number of blocks");
-    for (int i = 0; i < numblock; ++i) {
+    const uint_fast32_t numblock =
+        blockfile.get_value< uint_fast32_t >("number of blocks");
+    for (uint_fast32_t i = 0; i < numblock; ++i) {
       std::stringstream blockname;
       blockname << "block[" << i << "]:";
       CoordinateVector<> origin =
@@ -97,15 +99,20 @@ public:
           blockname.str() + "number density");
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
+      CoordinateVector<> velocity =
+          blockfile.get_physical_vector< QUANTITY_VELOCITY >(
+              blockname.str() + "initial velocity",
+              "[0. m s^-1, 0. m s^-1, 0. m s^-1]");
       if (density < 0.) {
-        cmac_error("Negative density (%g) given for block %i!", density, i);
+        cmac_error("Negative density (%g) given for block %" PRIuFAST32 "!",
+                   density, i);
       }
       if (temperature < 0.) {
-        cmac_error("Negative temperature (%g) given for block %i!", temperature,
-                   i);
+        cmac_error("Negative temperature (%g) given for block %" PRIuFAST32 "!",
+                   temperature, i);
       }
-      _blocks.push_back(
-          BlockSyntaxBlock(origin, sides, exponent, density, temperature));
+      _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
+                                         temperature, velocity));
     }
 
     if (log) {
@@ -117,32 +124,39 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - filename: Name of the file that contains the blocks (required)
+   *
    * @param params ParameterFile to read.
    * @param log Log to write logging info to.
    */
   BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
       : BlockSyntaxDensityFunction(
-            params.get_value< std::string >("densityfunction:filename"), log) {}
+            params.get_value< std::string >("DensityFunction:filename"), log) {}
 
   /**
-   * @brief Function that gives the DensityValues for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
    * Due to the way this function is written, the values for the last block
    * containing the given position are used. This means the order in which
    * nested blocks are given is important!
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return DensityValues at the given coordinate (in SI units).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
+  virtual DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+
+    const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density = -1.;
     double temperature = -1.;
-    for (unsigned int i = 0; i < _blocks.size(); ++i) {
+    CoordinateVector<> velocity;
+    for (size_t i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
-        density = _blocks[i].get_density();
+        density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();
+        velocity = _blocks[i].get_velocity();
       }
     }
     if (density < 0.) {
@@ -154,11 +168,12 @@ public:
                  position.x(), position.y(), position.z());
     }
 
-    cell.set_number_density(density);
-    cell.set_temperature(temperature);
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    return cell;
+    values.set_number_density(density);
+    values.set_temperature(temperature);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_He_n, 1.e-6);
+    values.set_velocity(velocity);
+    return values;
   }
 };
 

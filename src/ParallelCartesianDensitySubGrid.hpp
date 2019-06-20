@@ -43,7 +43,7 @@ private:
   std::vector< Photon * > _photon_pool;
 
   /*! @brief Number of cells in this sub region. */
-  unsigned int _numcell;
+  uint_least32_t _numcell;
 
 public:
   /**
@@ -51,7 +51,7 @@ public:
    *
    * @param numcell Number of cells in this sub region.
    */
-  DensitySubGrid(unsigned int numcell) : _numcell(numcell) {}
+  DensitySubGrid(uint_fast32_t numcell) : _numcell(numcell) {}
 
   /**
    * @brief Virtual destructor.
@@ -89,14 +89,14 @@ public:
    *
    * @return Number of photons in the photon pool.
    */
-  inline unsigned int photon_size() const { return _photon_pool.size(); }
+  inline uint_fast32_t photon_size() const { return _photon_pool.size(); }
 
   /**
    * @brief Get the number of cells in this sub region of the grid.
    *
    * @return Number of cells in this sub region.
    */
-  inline unsigned int get_number_of_cells() const { return _numcell; }
+  inline uint_fast32_t get_number_of_cells() const { return _numcell; }
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -110,7 +110,7 @@ public:
    * index refering to a local sub region (including this one), or an index
    * refering to a GhostDensitySubGrid.
    */
-  virtual int interact(Photon &photon, double optical_depth) = 0;
+  virtual int_fast32_t interact(Photon &photon, double optical_depth) = 0;
 
   /**
    * @brief Initialize all cells in the sub region.
@@ -152,7 +152,7 @@ public:
    *
    * @param numcell Number of cells in the sub region.
    */
-  DensitySubGridVariables(int numcell) {
+  DensitySubGridVariables(int_fast32_t numcell) {
     _number_density.resize(numcell, 0.);
     _neutral_fraction_H.resize(numcell, 0.);
     _reemission_probability_H.resize(numcell, 0.);
@@ -173,7 +173,7 @@ public:
    * @param photon Photon.
    * @return Optical depth.
    */
-  inline double get_optical_depth(double ds, int index,
+  inline double get_optical_depth(double ds, int_fast32_t index,
                                   const Photon &photon) const {
     return ds * _number_density[index] *
            (photon.get_cross_section(ION_H_n) * _neutral_fraction_H[index]);
@@ -187,7 +187,8 @@ public:
    * @param index Index of the cell the photon travels in.
    * @param photon Photon.
    */
-  inline void update_integrals(double ds, int index, const Photon &photon) {
+  inline void update_integrals(double ds, int_fast32_t index,
+                               const Photon &photon) {
     if (_number_density[index] > 0.) {
       double dmean_intensity_H =
           ds * photon.get_weight() * photon.get_cross_section(ION_H_n);
@@ -202,7 +203,7 @@ public:
    * @param index Index of a cell.
    * @param values DensityValues for that cell.
    */
-  inline void initialize(int index, DensityValues values) {
+  inline void initialize(int_fast32_t index, DensityValues values) {
     _number_density[index] = values.get_number_density();
     _neutral_fraction_H[index] = values.get_ionic_fraction(ION_H_n);
     double T = values.get_temperature();
@@ -227,7 +228,7 @@ public:
 class GhostDensitySubGrid : public DensitySubGrid {
 private:
   /*! @brief Process that holds the data for this sub region. */
-  int _home_process;
+  int_least32_t _home_process;
 
 public:
   /**
@@ -235,7 +236,7 @@ public:
    *
    * @param numcell Number of cells in this sub region.
    */
-  GhostDensitySubGrid(unsigned int numcell)
+  GhostDensitySubGrid(uint_fast32_t numcell)
       : DensitySubGrid(numcell), _home_process(-1) {}
 
   /**
@@ -249,14 +250,16 @@ public:
    * @param home_process Rank of the process that holds the data for this sub
    * region.
    */
-  void set_home_process(int home_process) { _home_process = home_process; }
+  void set_home_process(int_fast32_t home_process) {
+    _home_process = home_process;
+  }
 
   /**
    * @brief Get the process that holds the data for this sub region.
    *
    * @return Rank of the process that holds the data for this sub region.
    */
-  int get_home_process() const { return _home_process; }
+  int_fast32_t get_home_process() const { return _home_process; }
 
   /**
    * @brief Let the given Photon travel through the density grid until the given
@@ -273,7 +276,7 @@ public:
    * index refering to a local sub region (including this one), or an index
    * refering to a GhostDensitySubGrid.
    */
-  virtual int interact(Photon &photon, double optical_depth) {
+  virtual int_fast32_t interact(Photon &photon, double optical_depth) {
     cmac_error("A photon should never be propagated through a ghost region!");
   }
 
@@ -293,19 +296,19 @@ class ParallelCartesianDensitySubGrid : public DensitySubGrid,
                                         public DensitySubGridVariables {
 private:
   /*! @brief Box containing the sub region of the grid (in m). */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of cells per dimension. */
-  CoordinateVector< int > _numcell;
+  CoordinateVector< int_least32_t > _numcell;
 
   /*! @brief Side lengths of a single cell (in m). */
   CoordinateVector<> _cellsides;
 
   /*! @brief Index of this cell. */
-  int _index;
+  int_least32_t _index;
 
   /*! @brief Indexes of the neighbouring sub regions. */
-  int _neighbours[6];
+  int_least32_t _neighbours[6];
 
   /**
    * @brief Convert the given three component index into a single long index.
@@ -313,8 +316,9 @@ private:
    * @param index Index to convert.
    * @return Single long index.
    */
-  inline unsigned long get_long_index(CoordinateVector< int > index) const {
-    unsigned long long_index = index.x();
+  inline uint_fast64_t
+  get_long_index(CoordinateVector< int_fast32_t > index) const {
+    uint_fast64_t long_index = index.x();
     long_index *= _numcell.y() * _numcell.z();
     long_index += index.y() * _numcell.z();
     long_index += index.z();
@@ -327,12 +331,13 @@ private:
    * @param long_index Single long index.
    * @return Three component index.
    */
-  inline CoordinateVector< int > get_indices(unsigned long long_index) const {
-    unsigned long index_x = long_index / (_numcell.y() * _numcell.z());
+  inline CoordinateVector< int_fast32_t >
+  get_indices(uint_fast64_t long_index) const {
+    uint_fast64_t index_x = long_index / (_numcell.y() * _numcell.z());
     long_index -= index_x * _numcell.y() * _numcell.z();
-    unsigned long index_y = long_index / _numcell.z();
+    uint_fast64_t index_y = long_index / _numcell.z();
     long_index -= index_y * _numcell.z();
-    return CoordinateVector< int >(index_x, index_y, long_index);
+    return CoordinateVector< int_fast32_t >(index_x, index_y, long_index);
   }
 
   /**
@@ -342,11 +347,12 @@ private:
    * @return CoordinateVector<unsigned int> containing the three indices of the
    * cell.
    */
-  CoordinateVector< int > get_cell_indices(CoordinateVector<> position) const {
-    int ix = (position.x() - _box.get_anchor().x()) / _cellsides.x();
-    int iy = (position.y() - _box.get_anchor().y()) / _cellsides.y();
-    int iz = (position.z() - _box.get_anchor().z()) / _cellsides.z();
-    return CoordinateVector< int >(ix, iy, iz);
+  CoordinateVector< int_fast32_t >
+  get_cell_indices(CoordinateVector<> position) const {
+    int_fast32_t ix = (position.x() - _box.get_anchor().x()) / _cellsides.x();
+    int_fast32_t iy = (position.y() - _box.get_anchor().y()) / _cellsides.y();
+    int_fast32_t iz = (position.z() - _box.get_anchor().z()) / _cellsides.z();
+    return CoordinateVector< int_fast32_t >(ix, iy, iz);
   }
 
   /**
@@ -355,7 +361,7 @@ private:
    * @param index Indices of the cell.
    * @return True if the indices are valid, false otherwise.
    */
-  bool is_inside(CoordinateVector< int > &index) const {
+  bool is_inside(CoordinateVector< int_fast32_t > &index) const {
     bool inside = true;
     inside &= (index.x() >= 0 && index.x() < _numcell.x());
     inside &= (index.y() >= 0 && index.y() < _numcell.y());
@@ -371,11 +377,12 @@ private:
    * right
    * corner of the cell (in m).
    */
-  Box get_cell(CoordinateVector< int > index) const {
+  Box<> get_cell(CoordinateVector< int_fast32_t > index) const {
     double cell_xmin = _box.get_anchor().x() + _cellsides.x() * index.x();
     double cell_ymin = _box.get_anchor().y() + _cellsides.y() * index.y();
     double cell_zmin = _box.get_anchor().z() + _cellsides.z() * index.z();
-    return Box(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin), _cellsides);
+    return Box<>(CoordinateVector<>(cell_xmin, cell_ymin, cell_zmin),
+                 _cellsides);
   }
 
 public:
@@ -385,10 +392,11 @@ public:
    * @param box Box containing the sub region of the grid.
    * @param numcell Resolution of the sub region.
    */
-  ParallelCartesianDensitySubGrid(Box box, CoordinateVector< int > numcell)
+  ParallelCartesianDensitySubGrid(Box<> box,
+                                  CoordinateVector< int_fast32_t > numcell)
       : DensitySubGrid(numcell.x() * numcell.y() * numcell.z()),
         DensitySubGridVariables(numcell.x() * numcell.y() * numcell.z()),
-        _box(box), _numcell(numcell), _index(-1),
+        _box(box), _numcell(numcell.x(), numcell.y(), numcell.z()), _index(-1),
         _neighbours{-1, -1, -1, -1, -1, -1} {
     _cellsides[0] = box.get_sides().x() / numcell.x();
     _cellsides[1] = box.get_sides().y() / numcell.y();
@@ -405,7 +413,7 @@ public:
    *
    * @param index Index of this cell.
    */
-  void set_index(int index) { _index = index; }
+  void set_index(int_fast32_t index) { _index = index; }
 
   /**
    * @brief Set the neighbour at the given position to the given value.
@@ -413,7 +421,7 @@ public:
    * @param neighbour_position Position of the neighbour.
    * @param neighbour New value for the neighbour.
    */
-  void set_neighbour(int neighbour_position, int neighbour) {
+  void set_neighbour(int_fast32_t neighbour_position, int_fast32_t neighbour) {
     _neighbours[neighbour_position] = neighbour;
   }
 
@@ -453,11 +461,11 @@ public:
    * point
    * of the photon and the closest wall (in m).
    */
-  CoordinateVector<> get_wall_intersection(CoordinateVector<> &photon_origin,
-                                           CoordinateVector<> &photon_direction,
-                                           Box &cell,
-                                           CoordinateVector< char > &next_index,
-                                           double &ds) const {
+  CoordinateVector<>
+  get_wall_intersection(CoordinateVector<> &photon_origin,
+                        CoordinateVector<> &photon_direction, Box<> &cell,
+                        CoordinateVector< int_fast8_t > &next_index,
+                        double &ds) const {
     CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
     CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
@@ -583,24 +591,24 @@ public:
    * ParallelCartesianDensitySubGrid (including this one), or an index refering
    * to a GhostDensitySubGrid.
    */
-  virtual int interact(Photon &photon, double optical_depth) {
+  virtual int_fast32_t interact(Photon &photon, double optical_depth) {
     double S = 0.;
 
     CoordinateVector<> photon_origin = photon.get_position();
     CoordinateVector<> photon_direction = photon.get_direction();
 
     // find out in which cell the photon is currently hiding
-    CoordinateVector< int > index = get_cell_indices(photon_origin);
+    CoordinateVector< int_fast32_t > index = get_cell_indices(photon_origin);
 
-    unsigned int ncell = 0;
+    uint_fast32_t ncell = 0;
     // while the photon has not exceeded the optical depth and is still in the
     // box
     while (is_inside(index) && optical_depth > 0.) {
       ++ncell;
-      Box cell = get_cell(index);
+      Box<> cell = get_cell(index);
 
       double ds;
-      CoordinateVector< char > next_index;
+      CoordinateVector< int_fast8_t > next_index;
       CoordinateVector<> next_wall = get_wall_intersection(
           photon_origin, photon_direction, cell, next_index, ds);
 
@@ -648,7 +656,7 @@ public:
 
     photon.set_position(photon_origin);
 
-    int next_index = _index;
+    int_fast32_t next_index = _index;
     if (!is_inside(index)) {
       // find out on which side the photon leaves the sub grid
       if (index.x() < 0) {
@@ -675,15 +683,17 @@ public:
    * @param function DensityFunction to use.
    */
   virtual void initialize(DensityFunction &function) {
-    for (int ix = 0; ix < _numcell.x(); ++ix) {
-      for (int iy = 0; iy < _numcell.y(); ++iy) {
-        for (int iz = 0; iz < _numcell.z(); ++iz) {
-          int index = get_long_index(CoordinateVector< int >(ix, iy, iz));
+    for (int_fast32_t ix = 0; ix < _numcell.x(); ++ix) {
+      for (int_fast32_t iy = 0; iy < _numcell.y(); ++iy) {
+        for (int_fast32_t iz = 0; iz < _numcell.z(); ++iz) {
+          int_fast32_t index =
+              get_long_index(CoordinateVector< int_fast32_t >(ix, iy, iz));
           CoordinateVector<> position;
           position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
           position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();
           position[2] = _box.get_anchor().z() + (iz + 0.5) * _cellsides.z();
-          DensitySubGridVariables::initialize(index, function(position));
+          const DummyCell cell(position.x(), position.y(), position.z());
+          DensitySubGridVariables::initialize(index, function(cell));
         }
       }
     }
@@ -697,9 +707,9 @@ public:
    */
   std::vector< CoordinateVector<> > get_positions() const {
     std::vector< CoordinateVector<> > positions;
-    for (int ix = 0; ix < _numcell.x(); ++ix) {
-      for (int iy = 0; iy < _numcell.y(); ++iy) {
-        for (int iz = 0; iz < _numcell.z(); ++iz) {
+    for (int_fast32_t ix = 0; ix < _numcell.x(); ++ix) {
+      for (int_fast32_t iy = 0; iy < _numcell.y(); ++iy) {
+        for (int_fast32_t iz = 0; iz < _numcell.z(); ++iz) {
           CoordinateVector<> position;
           position[0] = _box.get_anchor().x() + (ix + 0.5) * _cellsides.x();
           position[1] = _box.get_anchor().y() + (iy + 0.5) * _cellsides.y();

@@ -30,6 +30,7 @@
 #include "PhotonSourceSpectrum.hpp"
 
 #include <string>
+#include <vector>
 
 class Log;
 class ParameterFile;
@@ -42,28 +43,24 @@ class RandomGenerator;
 
 /**
  * @brief PhotonSourceSpectrum implementation for a Planck blackbody spectrum.
+ *
+ * We used the spectrum found on the Wikipedia page about black body radiation:
+ * https://en.wikipedia.org/wiki/Black-body_radiation.
  */
 class PlanckPhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
-  /*! @brief Frequency bins (in 13.6 eV). */
-  double _frequency[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
-
   /*! @brief Base 10 logarithm of the frequency bins (in log(frequency/13.6 eV).
    */
-  double _log_frequency[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
-
-  /*! @brief Luminosity in each bin (in some units that are not really
-   *  important, since we convert to the cumulative distribution). */
-  double _luminosity[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
+  std::vector< double > _log_frequency;
 
   /*! @brief Cumulative distribution in each bin. */
-  double _cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
+  std::vector< double > _cumulative_distribution;
 
   /*! @brief Base 10 logarithm of the cumulative distribution in each bin. */
-  double _log_cumulative_distribution[PLANCKPHOTONSOURCESPECTRUM_NUMFREQ];
+  std::vector< double > _log_cumulative_distribution;
 
   /*! @brief Ionizing flux of the spectrum (in m^-2 s^-1). */
-  double _ionizing_flux;
+  const double _ionizing_flux;
 
 public:
   PlanckPhotonSourceSpectrum(double temperature, double ionizing_flux = -1.,

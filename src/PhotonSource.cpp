@@ -35,7 +35,6 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "Utilities.hpp"
 #include <cmath>
-using namespace std;
 
 /**
  * @brief Constructor.
@@ -49,26 +48,27 @@ using namespace std;
  * source.
  * @param abundances Abundances of the elements in the ISM.
  * @param cross_sections Cross sections for photoionization.
+ * @param diffuse_field Enable diffuse reemission?
  * @param log Log to write logging info to.
  */
 PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
-                           PhotonSourceSpectrum *discrete_spectrum,
-                           ContinuousPhotonSource *continuous_source,
-                           PhotonSourceSpectrum *continuous_spectrum,
-                           Abundances &abundances,
-                           CrossSections &cross_sections, Log *log)
+                           const PhotonSourceSpectrum *discrete_spectrum,
+                           const ContinuousPhotonSource *continuous_source,
+                           const PhotonSourceSpectrum *continuous_spectrum,
+                           const Abundances &abundances,
+                           const CrossSections &cross_sections,
+                           bool diffuse_field, Log *log)
     : _discrete_spectrum(discrete_spectrum),
       _continuous_source(continuous_source),
       _continuous_spectrum(continuous_spectrum), _abundances(abundances),
-      _cross_sections(cross_sections), _HLyc_spectrum(cross_sections),
-      _HeLyc_spectrum(cross_sections), _log(log) {
+      _cross_sections(cross_sections), _reemission_handler(nullptr), _log(log) {
 
   double discrete_luminosity = 0.;
   double continuous_luminosity = 0.;
   if (distribution != nullptr) {
     _discrete_positions.resize(distribution->get_number_of_sources());
     _discrete_probabilities.resize(distribution->get_number_of_sources());
-    for (unsigned int i = 0; i < _discrete_positions.size(); ++i) {
+    for (size_t i = 0; i < _discrete_positions.size(); ++i) {
       _discrete_positions[i] = distribution->get_position(i);
       if (i > 0) {
         _discrete_probabilities[i] =
@@ -109,7 +109,7 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     }
   }
 
-  double discrete_fraction = discrete_luminosity / _total_luminosity;
+  const double discrete_fraction = discrete_luminosity / _total_luminosity;
 
   if (discrete_luminosity > 0.) {
     if (continuous_luminosity > 0.) {
@@ -127,6 +127,10 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
     _continuous_photon_weight = 1.;
   }
 
+  if (diffuse_field) {
+    _reemission_handler = new DiffuseReemissionHandler(_cross_sections);
+  }
+
   if (_log) {
     _log->write_status("Total luminosity of discrete sources: ",
                        discrete_luminosity, " s^-1.");
@@ -139,14 +143,53 @@ PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
 }
 
 /**
+ * @brief ParameterFile constructor.
+ *
+ * Parameters are:
+ *  - diffuse field: Enable the hydrogen and helium diffuse reemission field
+ *    (default: true)?
+ *
+ * @param distribution PhotonSourceDistribution giving the positions of the
+ * discrete photon sources.
+ * @param discrete_spectrum PhotonSourceSpectrum for the discrete photon
+ * sources.
+ * @param continuous_source IsotropicContinuousPhotonSource.
+ * @param continuous_spectrum PhotonSourceSpectrum for the continuous photon
+ * source.
+ * @param abundances Abundances of the elements in the ISM.
+ * @param cross_sections Cross sections for photoionization.
+ * @param params ParameterFile to read from.
+ * @param log Log to write logging info to.
+ */
+PhotonSource::PhotonSource(PhotonSourceDistribution *distribution,
+                           const PhotonSourceSpectrum *discrete_spectrum,
+                           const ContinuousPhotonSource *continuous_source,
+                           const PhotonSourceSpectrum *continuous_spectrum,
+                           const Abundances &abundances,
+                           const CrossSections &cross_sections,
+                           ParameterFile &params, Log *log)
+    : PhotonSource(distribution, discrete_spectrum, continuous_source,
+                   continuous_spectrum, abundances, cross_sections,
+                   params.get_value< bool >("PhotonSource:diffuse field", true),
+                   log) {}
+
+/**
+ * @brief Destructor.
+ *
+ * Delete the DiffuseReemissionHandler.
+ */
+PhotonSource::~PhotonSource() { delete _reemission_handler; }
+
+/**
  * @brief Set the cross sections of the given photon with the given energy.
  *
  * @param photon Photon.
  * @param energy Energy of the photon (in Hz).
  */
 void PhotonSource::set_cross_sections(Photon &photon, double energy) const {
-  for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
+
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    const IonName ion = static_cast< IonName >(i);
     photon.set_cross_section(ion,
                              _cross_sections.get_cross_section(ion, energy));
   }
@@ -174,7 +217,7 @@ PhotonSource::get_random_photon(RandomGenerator &random_generator) const {
     cmac_assert(_discrete_probabilities.back() == 1.);
     // discrete photon
     x = random_generator.get_uniform_random_double();
-    unsigned int i = 0;
+    size_t i = 0;
     while (x > _discrete_probabilities[i]) {
       ++i;
       cmac_assert(i < _discrete_probabilities.size());
@@ -217,110 +260,37 @@ double PhotonSource::get_total_luminosity() const { return _total_luminosity; }
  * direction.
  *
  * @param photon Photon to reemit.
- * @param cell DensityGrid::iterator pointing to the cell in which the Photon
- * currently resides.
+ * @param ionization_variables IonizationVariables of the cell that contains the
+ * current location of the Photon.
  * @param random_generator RandomGenerator to use.
  * @return True if the photon is re-emitted as an ionizing photon, false if it
  * leaves the system.
  */
-bool PhotonSource::reemit(Photon &photon, const DensityGrid::iterator &cell,
+bool PhotonSource::reemit(Photon &photon,
+                          const IonizationVariables &ionization_variables,
                           RandomGenerator &random_generator) const {
-  double new_frequency = 0.;
-  double helium_abundance = _abundances.get_abundance(ELEMENT_He);
-  double pHabs = 1. / (1. +
-                       cell.get_ionic_fraction(ION_He_n) * helium_abundance *
-                           photon.get_cross_section(ION_He_n) /
-                           cell.get_ionic_fraction(ION_H_n) /
-                           photon.get_cross_section(ION_H_n));
 
-  double x = random_generator.get_uniform_random_double();
-  if (x <= pHabs) {
-    // photon absorbed by hydrogen
-    x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_hydrogen_reemission_probability()) {
-      // sample new frequency from H Ly c
-      new_frequency = _HLyc_spectrum.get_random_frequency(
-          random_generator, cell.get_temperature());
-      photon.set_type(PHOTONTYPE_DIFFUSE_HI);
-    } else {
-      // photon escapes
-      photon.set_type(PHOTONTYPE_ABSORBED);
+  if (_reemission_handler) {
+    PhotonType type;
+    const double new_frequency = _reemission_handler->reemit(
+        photon, _abundances.get_abundance(ELEMENT_He), ionization_variables,
+        random_generator, type);
+
+    photon.set_type(type);
+    if (new_frequency == 0.) {
       return false;
+    } else {
+      photon.set_energy(new_frequency);
+
+      CoordinateVector<> direction = get_random_direction(random_generator);
+      photon.set_direction(direction);
+
+      set_cross_sections(photon, new_frequency);
+
+      return true;
     }
   } else {
-    // photon absorbed by helium
-    x = random_generator.get_uniform_random_double();
-    if (x <= cell.get_helium_reemission_probability(0)) {
-      // sample new frequency from He Ly c
-      new_frequency = _HeLyc_spectrum.get_random_frequency(
-          random_generator, cell.get_temperature());
-      photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_helium_reemission_probability(1)) {
-      // new frequency is 19.8eV
-      new_frequency = 4.788e15;
-      photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-    } else if (x <= cell.get_helium_reemission_probability(2)) {
-      x = random_generator.get_uniform_random_double();
-      if (x < 0.56) {
-        // sample new frequency from H-ionizing part of He 2-photon continuum
-        new_frequency = _He2pc_spectrum.get_random_frequency(
-            random_generator, cell.get_temperature());
-        photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-      } else {
-        // photon escapes
-        photon.set_type(PHOTONTYPE_ABSORBED);
-        return false;
-      }
-    } else if (x <= cell.get_helium_reemission_probability(3)) {
-      // HeI Ly-alpha, is either absorbed on the spot or converted to HeI
-      // 2-photon continuum
-      double pHots = 1. / (1. +
-                           77. * cell.get_ionic_fraction(ION_He_n) /
-                               sqrt(cell.get_temperature()) /
-                               cell.get_ionic_fraction(ION_H_n));
-      x = random_generator.get_uniform_random_double();
-      if (x < pHots) {
-        // absorbed on the spot
-        x = random_generator.get_uniform_random_double();
-        if (x <= cell.get_hydrogen_reemission_probability()) {
-          // H Ly c, like above
-          new_frequency = _HLyc_spectrum.get_random_frequency(
-              random_generator, cell.get_temperature());
-          photon.set_type(PHOTONTYPE_DIFFUSE_HI);
-        } else {
-          // photon escapes
-          photon.set_type(PHOTONTYPE_ABSORBED);
-          return false;
-        }
-      } else {
-        // He 2-photon continuum
-        x = random_generator.get_uniform_random_double();
-        if (x < 0.56) {
-          // sample like above
-          new_frequency =
-              _He2pc_spectrum.get_random_frequency(random_generator);
-          photon.set_type(PHOTONTYPE_DIFFUSE_HeI);
-        } else {
-          // photon escapes
-          photon.set_type(PHOTONTYPE_ABSORBED);
-          return false;
-        }
-      }
-    } else {
-      // not in Kenny's code, since the probabilities above are forced to sum
-      // to 1.
-      // the code below is hence never executed
-      photon.set_type(PHOTONTYPE_ABSORBED);
-      return false;
-    }
+    photon.set_type(PHOTONTYPE_ABSORBED);
+    return false;
   }
-
-  photon.set_energy(new_frequency);
-
-  CoordinateVector<> direction = get_random_direction(random_generator);
-  photon.set_direction(direction);
-
-  set_cross_sections(photon, new_frequency);
-
-  return true;
 }

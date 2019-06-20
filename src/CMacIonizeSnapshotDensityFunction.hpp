@@ -29,6 +29,7 @@
 #include "AMRGrid.hpp"
 #include "Box.hpp"
 #include "DensityFunction.hpp"
+#include "PointLocations.hpp"
 
 class Log;
 class ParameterFile;
@@ -39,16 +40,26 @@ class ParameterFile;
 class CMacIonizeSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief Box containing the grid. */
-  Box _box;
+  Box<> _box;
 
   /*! @brief Number of cells in each dimension. */
-  CoordinateVector< int > _ncell;
+  CoordinateVector< uint_fast32_t > _ncell;
 
   /*! @brief Cartesian density grid (if applicable). */
   DensityValues ***_cartesian_grid;
 
   /*! @brief AMR density grid (if applicable). */
   AMRGrid< DensityValues > *_amr_grid;
+
+  /*! @brief Locations of the Voronoi grid generators (if applicable). */
+  std::vector< CoordinateVector<> > _voronoi_generators;
+
+  /*! @brief PointLocations object used to query the Voronoi grid generator
+   *  locations (if applicable). */
+  PointLocations *_voronoi_pointlocations;
+
+  /*! @brief DensityValues stored in the Voronoi grid (if applicable). */
+  std::vector< DensityValues > _voronoi_densityvalues;
 
   /**
    * @brief Get the largest odd factor of the given number.
@@ -59,7 +70,7 @@ private:
    * @param number Number to decompose.
    * @return Largest odd factor of the number.
    */
-  inline static int get_largest_odd_factor(int number) {
+  inline static uint_fast32_t get_largest_odd_factor(uint_fast32_t number) {
     while ((number % 2) == 0) {
       number >>= 1;
     }
@@ -75,7 +86,7 @@ private:
    * @param number Number to decompose.
    * @return Largest power of two factor.
    */
-  inline static int get_power_of_two(int number) {
+  inline static uint_fast32_t get_power_of_two(uint_fast32_t number) {
     return number / get_largest_odd_factor(number);
   }
 
@@ -86,7 +97,7 @@ public:
 
   virtual ~CMacIonizeSnapshotDensityFunction();
 
-  virtual DensityValues operator()(CoordinateVector<> position) const;
+  virtual DensityValues operator()(const Cell &cell) const;
 };
 
 #endif // CMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

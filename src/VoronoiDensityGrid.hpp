@@ -27,9 +27,10 @@
 #define VORONOIDENSITYGRID_HPP
 
 #include "DensityGrid.hpp"
-#include "VoronoiGrid.hpp"
 
+class SimulationBox;
 class VoronoiGeneratorDistribution;
+class VoronoiGrid;
 
 /**
  * @brief DensityGrid implementation that uses an unstructured Voronoi grid.
@@ -41,46 +42,64 @@ private:
   VoronoiGeneratorDistribution *_position_generator;
 
   /*! @brief Underlying Voronoi grid. */
-  VoronoiGrid _voronoi_grid;
+  VoronoiGrid *_voronoi_grid;
+
+  /*! @brief Periodicity flags for the simulation box. */
+  CoordinateVector< bool > _periodicity_flags;
+
+  /*! @brief Number of Lloyd iterations to apply to the grid after it has been
+   *  constructed for the first time. */
+  uint_fast8_t _num_lloyd;
+
+  /*! @brief Generator positions (in m). */
+  std::vector< CoordinateVector<> > _generator_positions;
 
   /*! @brief Velocity of the grid generators (in m s^-1). */
-  std::vector< double > _hydro_generator_velocity[3];
+  std::vector< CoordinateVector<> > _hydro_generator_velocity;
 
-  /*! @brief Time step used in the hydro scheme (in s). */
-  double _hydro_timestep;
+  /*! @brief Epsilon displacement factor used to guarantee a point lies inside
+   *  a cell. */
+  double _epsilon;
 
-  /*! @brief Polytropic index for the ideal gas equation of state. */
-  double _hydro_gamma;
+  /*! @brief Type of Voronoi grid to use. */
+  std::string _voronoi_grid_type;
 
 public:
   VoronoiDensityGrid(
       VoronoiGeneratorDistribution *position_generator,
-      DensityFunction &density_function, Box box,
+      const Box<> &simulation_box, std::string grid_type = "Old",
+      uint_fast8_t num_lloyd = 0,
       CoordinateVector< bool > periodic = CoordinateVector< bool >(false),
-      bool hydro = false, double hydro_timestep = 0.,
-      double hydro_gamma = 5. / 3., Log *log = nullptr);
+      bool hydro = false, Log *log = nullptr);
 
-  VoronoiDensityGrid(ParameterFile &params, DensityFunction &density_function,
-                     Log *log = nullptr);
+  VoronoiDensityGrid(const SimulationBox &simulation_box, ParameterFile &params,
+                     bool hydro = false, Log *log = nullptr);
 
   virtual ~VoronoiDensityGrid();
 
-  virtual void initialize(std::pair< unsigned long, unsigned long > &block);
+  virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
+                          DensityFunction &density_function);
   virtual void evolve(double timestep);
-  virtual void set_grid_velocity();
+  virtual void set_grid_velocity(double gamma);
 
   virtual CoordinateVector<>
   get_interface_velocity(const iterator left, const iterator right,
                          const CoordinateVector<> interface_midpoint) const;
 
-  virtual unsigned int get_number_of_cells() const;
-  virtual unsigned long get_cell_index(CoordinateVector<> position) const;
-  virtual CoordinateVector<> get_cell_midpoint(unsigned long index) const;
-  virtual std::vector< std::tuple< DensityGrid::iterator, CoordinateVector<>,
-                                   CoordinateVector<>, double > >
-  get_neighbours(unsigned long index);
-  virtual double get_cell_volume(unsigned long index) const;
+  virtual cellsize_t get_number_of_cells() const;
+  virtual cellsize_t get_cell_index(CoordinateVector<> position) const;
+  virtual CoordinateVector<> get_cell_midpoint(cellsize_t index) const;
+  virtual std::vector<
+      std::tuple< iterator, CoordinateVector<>, CoordinateVector<>, double,
+                  CoordinateVector<> > >
+  get_neighbours(cellsize_t index);
+  virtual std::vector< Face > get_faces(cellsize_t index) const;
+  virtual double get_cell_volume(cellsize_t index) const;
+  virtual double integrate_optical_depth(const Photon &photon);
   virtual DensityGrid::iterator interact(Photon &photon, double optical_depth);
+  virtual double get_total_emission(CoordinateVector<> origin,
+                                    CoordinateVector<> direction,
+                                    EmissionLine line);
   virtual DensityGrid::iterator begin();
   virtual DensityGrid::iterator end();
 };

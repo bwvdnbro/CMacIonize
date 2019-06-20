@@ -37,6 +37,8 @@
  * mass, temperature, and current. The exponents specify the power of the unit
  * of that quantity when the unit is written out as a string, e.g.
  * Unit(1., 1, 2, -3, 4, -5) --> 1. m s^2 kg^-3 K^4 A^-5.
+ *
+ * To support angle conversions, we added a 6th quantity.
  */
 class Unit {
 private:
@@ -44,19 +46,22 @@ private:
   double _value;
 
   /*! @brief Length scale exponent. */
-  int _length;
+  int_fast32_t _length;
 
   /*! @brief Time scale exponent. */
-  int _time;
+  int_fast32_t _time;
 
   /*! @brief Mass scale exponent. */
-  int _mass;
+  int_fast32_t _mass;
 
   /*! @brief Temperature scale exponent. */
-  int _temperature;
+  int_fast32_t _temperature;
 
   /*! @brief Current scale exponent. */
-  int _current;
+  int_fast32_t _current;
+
+  /*! @brief 1D angular scale exponent. */
+  int_fast32_t _angle;
 
 public:
   /**
@@ -68,11 +73,13 @@ public:
    * @param mass Mass scale exponent.
    * @param temperature Temperature scale exponent.
    * @param current Current scale exponent.
+   * @param angle 1D angular scale exponent.
    */
-  inline Unit(double value, int length, int time, int mass, int temperature,
-              int current)
+  inline Unit(double value, int_fast32_t length, int_fast32_t time,
+              int_fast32_t mass, int_fast32_t temperature, int_fast32_t current,
+              int_fast32_t angle)
       : _value(value), _length(length), _time(time), _mass(mass),
-        _temperature(temperature), _current(current) {}
+        _temperature(temperature), _current(current), _angle(angle) {}
 
   /**
    * @brief Multiply another Unit with this one.
@@ -87,6 +94,7 @@ public:
     _mass += unit._mass;
     _temperature += unit._temperature;
     _current += unit._current;
+    _angle += unit._angle;
     return *this;
   }
 
@@ -103,6 +111,7 @@ public:
     _mass -= unit._mass;
     _temperature -= unit._temperature;
     _current -= unit._current;
+    _angle -= unit._angle;
     return *this;
   }
 
@@ -112,16 +121,16 @@ public:
    * @param power Exponent of the power.
    * @return Reference to the resulting Unit.
    */
-  inline Unit &operator^=(int power) {
+  inline Unit &operator^=(int_fast32_t power) {
     if (power > 0) {
-      int i = 1;
+      int_fast32_t i = 1;
       double value = _value;
       while (i < power) {
         _value *= value;
         ++i;
       }
     } else {
-      int i = 0;
+      int_fast32_t i = 0;
       double value = _value;
       _value = 1.;
       while (i < -power) {
@@ -134,6 +143,7 @@ public:
     _mass *= power;
     _temperature *= power;
     _current *= power;
+    _angle *= power;
     return *this;
   }
 
@@ -163,10 +173,10 @@ public:
    * @param unit Unit to compare with.
    * @return True if both units have the same scale exponents.
    */
-  inline bool is_same_quantity(Unit unit) const {
+  inline bool is_same_quantity(const Unit &unit) const {
     return _length == unit._length && _time == unit._time &&
            _mass == unit._mass && _temperature == unit._temperature &&
-           _current == unit._current;
+           _current == unit._current && _angle == unit._angle;
   }
 
   /**
@@ -176,7 +186,7 @@ public:
    * @return True if both units have the same value and represent the same
    * quantity.
    */
-  inline bool operator==(Unit unit) const {
+  inline bool operator==(const Unit &unit) const {
     return _value == unit._value && is_same_quantity(unit);
   }
 
@@ -216,6 +226,12 @@ public:
       stream << " A";
       if (_current != 1) {
         stream << "^" << _current;
+      }
+    }
+    if (_angle != 0) {
+      stream << " radians";
+      if (_angle != 1) {
+        stream << "^" << _angle;
       }
     }
     return stream.str();

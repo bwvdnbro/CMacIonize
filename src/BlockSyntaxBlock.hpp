@@ -34,50 +34,56 @@
  */
 class BlockSyntaxBlock {
 private:
-  /*! @brief Origin of the block. */
+  /*! @brief Origin of the block (in m). */
   CoordinateVector<> _origin;
 
-  /*! @brief Side lengths of the block. */
+  /*! @brief Side lengths of the block (in m). */
   CoordinateVector<> _sides;
 
   /*! @brief Exponent of the block. */
   double _exponent;
 
   /*! @brief Density inside the block (in m^-3). */
-  double _density;
+  double _number_density;
 
   /*! @brief Temperature inside the block (in K). */
   double _temperature;
+
+  /*! @brief Fluid velocity inside the block (in m s^-1). */
+  CoordinateVector<> _velocity;
 
 public:
   /**
    * @brief Empty constructor.
    */
-  inline BlockSyntaxBlock() : _density(0.), _temperature(0.) {}
+  inline BlockSyntaxBlock() : _number_density(0.), _temperature(0.) {}
 
   /**
    * @brief Constructor.
    *
-   * @param origin Origin of the block.
-   * @param sides Side lengths of the block.
+   * @param origin Origin of the block (in m).
+   * @param sides Side lengths of the block (in m).
    * @param exponent Exponent of the block.
-   * @param density Density inside the block.
-   * @param temperature Temperature inside the block.
+   * @param number_density Number density inside the block (in m^-3).
+   * @param temperature Temperature inside the block (in K).
+   * @param velocity Fluid velocity inside the block (in m s^-1).
    */
   inline BlockSyntaxBlock(CoordinateVector<> origin, CoordinateVector<> sides,
-                          double exponent, double density, double temperature)
-      : _origin(origin), _sides(sides), _exponent(exponent), _density(density),
-        _temperature(temperature) {}
+                          double exponent, double number_density,
+                          double temperature, CoordinateVector<> velocity)
+      : _origin(origin), _sides(sides), _exponent(exponent),
+        _number_density(number_density), _temperature(temperature),
+        _velocity(velocity) {}
 
   /**
    * @brief Check if the given position lies inside this block.
    *
-   * @param position CoordinateVector specifying a position.
+   * @param position CoordinateVector specifying a position (in m).
    * @return True if the position lies inside this block.
    */
   inline bool is_inside(CoordinateVector<> position) const {
     double r = 0.;
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
       if (_exponent < 10.) {
         r += std::pow(x, _exponent);
@@ -96,7 +102,7 @@ public:
    *
    * @return Number density inside this block (in m^-3).
    */
-  inline double get_density() const { return _density; }
+  inline double get_number_density() const { return _number_density; }
 
   /**
    * @brief Get the temperature inside this block.
@@ -104,6 +110,13 @@ public:
    * @return Temperature inside this block (in K).
    */
   inline double get_temperature() const { return _temperature; }
+
+  /**
+   * @brief Get the fluid velocity inside this block.
+   *
+   * @return Fluid velocity inside this block (in m s^-1).
+   */
+  inline CoordinateVector<> get_velocity() const { return _velocity; }
 };
 
 #endif // BLOCKSYNTAXBLOCK_HPP

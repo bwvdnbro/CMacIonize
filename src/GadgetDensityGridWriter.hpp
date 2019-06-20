@@ -38,20 +38,20 @@ class ParameterFile;
 class GadgetDensityGridWriter : public DensityGridWriter {
 private:
   /*! @brief Prefix of the name for the file to write. */
-  std::string _prefix;
+  const std::string _prefix;
 
   /*! @brief Number of digits used for the counter in the filenames. */
-  unsigned char _padding;
+  const uint_fast8_t _padding;
 
 public:
-  GadgetDensityGridWriter(std::string prefix, DensityGrid &grid,
+  GadgetDensityGridWriter(std::string prefix,
                           std::string output_folder = std::string("."),
-                          Log *log = nullptr, unsigned char padding = 3);
-  GadgetDensityGridWriter(ParameterFile &params, DensityGrid &grid,
+                          Log *log = nullptr, uint_fast8_t padding = 3);
+  GadgetDensityGridWriter(std::string output_folder, ParameterFile &params,
                           Log *log = nullptr);
 
-  virtual void write(unsigned int iteration, ParameterFile &params,
-                     double time = 0.);
+  virtual void write(DensityGrid &grid, uint_fast32_t iteration,
+                     ParameterFile &params, double time = 0.);
 };
 
 #endif // GADGETDENSITYGRIDWRITER_HPP

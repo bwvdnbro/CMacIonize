@@ -43,16 +43,18 @@
 class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
-  Box _box;
+  const Box<> &_box;
 
 public:
   /**
    * @brief Constructor.
    *
-   * @param box Box in which the radiation enters (in m).
+   * @param simulation_box Simulation box (in m).
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(Box box, Log *log = nullptr) : _box(box) {
+  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+                                  Log *log = nullptr)
+      : _box(simulation_box) {
 
     if (log) {
       log->write_status(
@@ -66,16 +68,13 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
-   * @param params ParamterFile to read from.
+   * @param simulation_box Simulation box (in m).
+   * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
-      : IsotropicContinuousPhotonSource(
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides")),
-            log) {}
+  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+                                  ParameterFile &params, Log *log = nullptr)
+      : IsotropicContinuousPhotonSource(simulation_box, log) {}
 
   /**
    * @brief Virtual destructor.
@@ -91,6 +90,7 @@ public:
    */
   std::pair< CoordinateVector<>, CoordinateVector<> >
   get_random_incoming_direction(RandomGenerator &random_generator) const {
+
     // we randomly sample a focus point in the box
     CoordinateVector<> focus;
     focus[0] =
@@ -104,13 +104,12 @@ public:
         _box.get_sides().z() * random_generator.get_uniform_random_double();
 
     // random incoming direction for the focus point
-    double cost = 2. * random_generator.get_uniform_random_double() - 1.;
-    double sint = 1. - cost * cost;
-    sint = std::sqrt(std::max(sint, 0.));
-    double phi = 2. * M_PI * random_generator.get_uniform_random_double();
-    double cosp = std::cos(phi);
-    double sinp = std::sin(phi);
-    CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
+    const double cost = 2. * random_generator.get_uniform_random_double() - 1.;
+    const double sint = std::sqrt(std::max(0., 1. - cost * cost));
+    const double phi = 2. * M_PI * random_generator.get_uniform_random_double();
+    const double cosp = std::cos(phi);
+    const double sinp = std::sin(phi);
+    const CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
 
     // the direction and the focus point define a line:
     //   line = focus + t * direction.
@@ -118,8 +117,8 @@ public:
     // find the intersection points of this line with the walls of the box
     // the origin of the random photon is the intersection point with negative
     // t value
-    CoordinateVector<> anchor_bottom = _box.get_anchor();
-    CoordinateVector<> anchor_top = _box.get_top_anchor();
+    const CoordinateVector<> anchor_bottom = _box.get_anchor();
+    const CoordinateVector<> anchor_top = _box.get_top_anchor();
 
     // the box has 6 faces, each of which has an intersection point with the
     // line. If the focus point is inside the box (which it should be), then
@@ -156,13 +155,12 @@ public:
       lz = -DBL_MAX;
     }
 
-    double maxl = std::max(lx, ly);
-    maxl = std::max(maxl, lz);
+    const double maxl = std::max(std::max(lx, ly), lz);
 
     CoordinateVector<> position = focus + maxl * direction;
 
     // make sure the photon is inside the box
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       // we cannot simply take the top anchor of the box as upper limit, since
       // the top anchor itself strictly speaking lies outside the box (lower
       // limits are inclusive, upper limits exclusive due to the way we
@@ -187,6 +185,7 @@ public:
    * @return Total surface area (in m^2).
    */
   inline double get_total_surface_area() const {
+
     return 2. * _box.get_sides().x() * _box.get_sides().y() +
            2. * _box.get_sides().x() * _box.get_sides().z() +
            2. * _box.get_sides().y() * _box.get_sides().z();

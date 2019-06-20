@@ -37,10 +37,10 @@
 class HomogeneousDensityFunction : public DensityFunction {
 private:
   /*! @brief Single density value for the entire box (in m^-3). */
-  double _density;
+  const double _density;
 
   /*! @brief Single temperature value for the entire box (in K). */
-  double _temperature;
+  const double _temperature;
 
 public:
   /**
@@ -53,6 +53,7 @@ public:
   HomogeneousDensityFunction(double density = 1., double temperature = 8000.,
                              Log *log = nullptr)
       : _density(density), _temperature(temperature) {
+
     if (log) {
       log->write_status(
           "Created HomogeneousDensityFunction with constant density ", _density,
@@ -63,32 +64,34 @@ public:
   /**
    * @brief ParameterFile constructor.
    *
+   * Parameters are:
+   *  - density: Constant number density value (default: 100. cm^-3)
+   *  - temperature: Constant initial temperature value (default: 8000. K)
+   *
    * @param params ParameterFile to read from.
    * @param log Log to write logging information to.
    */
   HomogeneousDensityFunction(ParameterFile &params, Log *log = nullptr)
       : HomogeneousDensityFunction(
             params.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-                "densityfunction:density", "100. cm^-3"),
+                "DensityFunction:density", "100. cm^-3"),
             params.get_physical_value< QUANTITY_TEMPERATURE >(
-                "densityfunction:temperature", "8000. K"),
+                "DensityFunction:temperature", "8000. K"),
             log) {}
 
   /**
-   * @brief Function that gives the density for a given coordinate.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position CoordinateVector specifying a coordinate position (in m).
-   * @return Density at the given coordinate: the single value stored
-   * internally (in m^-3).
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
-
-    cell.set_number_density(_density);
-    cell.set_temperature(_temperature);
-    cell.set_ionic_fraction(ION_H_n, 1.e-6);
-    cell.set_ionic_fraction(ION_He_n, 1.e-6);
-    return cell;
+  virtual DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+    values.set_number_density(_density);
+    values.set_temperature(_temperature);
+    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_He_n, 1.e-6);
+    return values;
   }
 };
 

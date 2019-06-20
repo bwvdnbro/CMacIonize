@@ -35,6 +35,8 @@
 #include "CartesianDensityGrid.hpp"
 #include "VoronoiDensityGrid.hpp"
 
+class SimulationBox;
+
 /**
  * @brief Factory for DensityGrid implementations.
  */
@@ -44,27 +46,34 @@ public:
    * @brief Generate a DensityGrid based on the type chosen in the parameter
    * file.
    *
+   * Supported types are (default: Cartesian):
+   *  - AMR: Regular static grid with adaptive mesh refinement
+   *  - Cartesian: Regular static Cartesian grid
+   *  - Voronoi: Unstructured, moving Voronoi grid
+   *
+   * @param simulation_box SimulationBox.
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
-   * @param function DensityFunction that returns the density field.
+   * @param hydro Is hydrodynamics enabled?
    * @param log Log to write logging info to.
    * @return Pointer to a newly created DensityGrid implementation. Memory
    * management for the pointer needs to be done by the calling routine.
    */
-  inline static DensityGrid *generate(ParameterFile &params,
-                                      DensityFunction &function,
+  inline static DensityGrid *generate(const SimulationBox &simulation_box,
+                                      ParameterFile &params, bool hydro = false,
                                       Log *log = nullptr) {
-    std::string type =
-        params.get_value< std::string >("densitygrid:type", "Cartesian");
+
+    const std::string type =
+        params.get_value< std::string >("DensityGrid:type", "Cartesian");
     if (log) {
       log->write_info("Requested DensityGrid type: ", type);
     }
     if (type == "AMR") {
-      return new AMRDensityGrid(params, function, log);
+      return new AMRDensityGrid(simulation_box, params, hydro, log);
     } else if (type == "Cartesian") {
-      return new CartesianDensityGrid(params, function, log);
+      return new CartesianDensityGrid(simulation_box, params, hydro, log);
     } else if (type == "Voronoi") {
-      return new VoronoiDensityGrid(params, function, log);
+      return new VoronoiDensityGrid(simulation_box, params, hydro, log);
     } else {
       cmac_error("Unknown DensityGrid type: \"%s\".", type.c_str());
       return nullptr;

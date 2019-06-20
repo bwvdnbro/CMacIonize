@@ -39,11 +39,11 @@
 class PointLocations {
 private:
   /*! @brief Grid containing indices. */
-  std::vector< std::vector< std::vector< std::vector< unsigned int > > > >
+  std::vector< std::vector< std::vector< std::vector< uint_least32_t > > > >
       _grid;
 
   /*! @brief Map that maps indices to grid cells. */
-  std::vector< std::tuple< unsigned int, unsigned int, unsigned int > >
+  std::vector< std::tuple< uint_least32_t, uint_least32_t, uint_least32_t > >
       _cell_map;
 
   /*! @brief Anchor of the grid in physical space (in m). */
@@ -64,18 +64,19 @@ public:
    * @param box Box containing the positions (in m).
    */
   inline PointLocations(const std::vector< CoordinateVector<> > &positions,
-                        unsigned int num_per_cell = 100,
-                        const Box box = Box(CoordinateVector<>(0.),
-                                            CoordinateVector<>(-1.)))
+                        uint_fast32_t num_per_cell = 100,
+                        const Box<> box = Box<>(CoordinateVector<>(0.),
+                                                CoordinateVector<>(-1.)))
       : _positions(positions) {
-    const unsigned int positions_size = positions.size();
+
+    const uint_fast32_t positions_size = positions.size();
 
     CoordinateVector<> minpos;
     CoordinateVector<> maxpos;
     if (box.get_sides().x() < 0.) {
       minpos = positions[0];
       maxpos = positions[0];
-      for (unsigned int i = 1; i < positions_size; ++i) {
+      for (size_t i = 1; i < positions_size; ++i) {
         minpos = CoordinateVector<>::min(minpos, positions[i]);
         maxpos = CoordinateVector<>::max(maxpos, positions[i]);
       }
@@ -91,10 +92,13 @@ public:
       maxpos = box.get_sides();
     }
 
+    // make sure the desired number of cells makes sense
+    num_per_cell = std::min(num_per_cell, positions_size);
+
     // now find the right size for the grid: we want an average of num_per_cell
     // positions per grid cell
     const double desired_num_cell = positions_size / num_per_cell;
-    const unsigned int ncell_1D = std::round(std::cbrt(desired_num_cell));
+    const uint_fast32_t ncell_1D = std::round(std::cbrt(desired_num_cell));
 
     // set up the geometrical quantities
     _grid_anchor = minpos;
@@ -102,22 +106,32 @@ public:
 
     // set up the positions grid
     _grid.resize(ncell_1D);
-    for (unsigned int ix = 0; ix < ncell_1D; ++ix) {
+    for (uint_fast32_t ix = 0; ix < ncell_1D; ++ix) {
       _grid[ix].resize(ncell_1D);
-      for (unsigned int iy = 0; iy < ncell_1D; ++iy) {
+      for (uint_fast32_t iy = 0; iy < ncell_1D; ++iy) {
         _grid[ix][iy].resize(ncell_1D);
       }
     }
 
     // add the positions to the positions grid
     _cell_map.resize(positions_size);
-    for (unsigned int i = 0; i < positions_size; ++i) {
-      unsigned int ix = (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
-      unsigned int iy = (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
-      unsigned int iz = (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
+    for (uint_fast32_t i = 0; i < positions_size; ++i) {
+      cmac_assert(positions[i].x() >= minpos.x() &&
+                  positions[i].x() <= maxpos.x());
+      cmac_assert(positions[i].y() >= minpos.y() &&
+                  positions[i].y() <= maxpos.y());
+      cmac_assert(positions[i].z() >= minpos.z() &&
+                  positions[i].z() <= maxpos.z());
+      const uint_fast32_t ix =
+          (positions[i].x() - minpos.x()) / maxpos.x() * ncell_1D;
+      const uint_fast32_t iy =
+          (positions[i].y() - minpos.y()) / maxpos.y() * ncell_1D;
+      const uint_fast32_t iz =
+          (positions[i].z() - minpos.z()) / maxpos.z() * ncell_1D;
       _grid[ix][iy][iz].push_back(i);
       _cell_map[i] =
-          std::tuple< unsigned int, unsigned int, unsigned int >(ix, iy, iz);
+          std::tuple< uint_least32_t, uint_least32_t, uint_least32_t >(ix, iy,
+                                                                       iz);
     }
   }
 
@@ -130,19 +144,19 @@ public:
     const PointLocations &_locations;
 
     /*! @brief Anchor of the current subgrid selection. */
-    const std::tuple< unsigned int, unsigned int, unsigned int > _anchor;
+    const std::tuple< uint_fast32_t, uint_fast32_t, uint_fast32_t > _anchor;
 
     /*! @brief Range of the current subgrid selection. */
-    std::tuple< int, int, int > _range;
+    std::tuple< int_fast32_t, int_fast32_t, int_fast32_t > _range;
 
     /*! @brief Current level of the subgrid selection. */
-    int _level;
+    int_fast32_t _level;
 
     /*! @brief Maximum range within the simulation grid. */
-    std::tuple< int, int, int > _maxrange;
+    std::tuple< int_fast32_t, int_fast32_t, int_fast32_t > _maxrange;
 
     /*! @brief Maximum level of the subgrid selection. */
-    int _maxlevel;
+    int_fast32_t _maxlevel;
 
     /*! @brief Lower coverage limits of the search (in m). */
     CoordinateVector<> _lower_bound;
@@ -167,10 +181,12 @@ public:
      * @param sz Z range size.
      */
     inline static void
-    set_max_range(int &mx, int &my, int &mz, int &mlevel, const unsigned int ax,
-                  const unsigned int ay, const unsigned int az,
-                  const unsigned int sx, const unsigned int sy,
-                  const unsigned int sz) {
+    set_max_range(int_fast32_t &mx, int_fast32_t &my, int_fast32_t &mz,
+                  int_fast32_t &mlevel, const uint_fast32_t ax,
+                  const uint_fast32_t ay, const uint_fast32_t az,
+                  const uint_fast32_t sx, const uint_fast32_t sy,
+                  const uint_fast32_t sz) {
+
       cmac_assert(ax < sx);
       cmac_assert(ay < sy);
       cmac_assert(az < sz);
@@ -180,15 +196,15 @@ public:
       // box (see is_inside).
       // this block has at least two positive index values, and at most one
       // negative. The code below figures out what its indices are.
-      const int minrx = -ax;
-      const int minry = -ay;
-      const int minrz = -az;
-      const int maxrx = sx - ax - 1;
-      const int maxry = sy - ay - 1;
-      const int maxrz = sz - az - 1;
-      const int maxlevx = std::max(-minrx, maxrx);
-      const int maxlevy = std::max(-minry, maxry);
-      const int maxlevz = std::max(-minrz, maxrz);
+      const int_fast32_t minrx = -ax;
+      const int_fast32_t minry = -ay;
+      const int_fast32_t minrz = -az;
+      const int_fast32_t maxrx = sx - ax - 1;
+      const int_fast32_t maxry = sy - ay - 1;
+      const int_fast32_t maxrz = sz - az - 1;
+      const int_fast32_t maxlevx = std::max(-minrx, maxrx);
+      const int_fast32_t maxlevy = std::max(-minry, maxry);
+      const int_fast32_t maxlevz = std::max(-minrz, maxrz);
       // the max level is only used to assert we never step outside of the
       // maximally allowed range
       mlevel = std::max(maxlevx, maxlevy);
@@ -218,18 +234,19 @@ public:
      * @param locations Reference to the underlying PointLocations object.
      * @param index Index of the point for which we want neighbours.
      */
-    inline ngbiterator(const PointLocations &locations, unsigned int index)
+    inline ngbiterator(const PointLocations &locations, uint_fast32_t index)
         : _locations(locations), _anchor(_locations._cell_map[index]),
           _range(0, 0, 0), _level(0) {
-      const unsigned int ax = std::get< 0 >(_anchor);
-      const unsigned int ay = std::get< 1 >(_anchor);
-      const unsigned int az = std::get< 2 >(_anchor);
-      const unsigned int sx = _locations._grid.size();
-      const unsigned int sy = _locations._grid[0].size();
-      const unsigned int sz = _locations._grid[0][0].size();
-      int &mx = std::get< 0 >(_maxrange);
-      int &my = std::get< 1 >(_maxrange);
-      int &mz = std::get< 2 >(_maxrange);
+
+      const uint_fast32_t ax = std::get< 0 >(_anchor);
+      const uint_fast32_t ay = std::get< 1 >(_anchor);
+      const uint_fast32_t az = std::get< 2 >(_anchor);
+      const uint_fast32_t sx = _locations._grid.size();
+      const uint_fast32_t sy = _locations._grid[0].size();
+      const uint_fast32_t sz = _locations._grid[0][0].size();
+      int_fast32_t &mx = std::get< 0 >(_maxrange);
+      int_fast32_t &my = std::get< 1 >(_maxrange);
+      int_fast32_t &mz = std::get< 2 >(_maxrange);
       set_max_range(mx, my, mz, _maxlevel, ax, ay, az, sx, sy, sz);
 
       // lower bound and upper bound values are used to get the geometric box
@@ -258,10 +275,11 @@ public:
      *
      * @return std::vector containing the indices of neighbouring points.
      */
-    inline const std::vector< unsigned int > &get_neighbours() const {
-      const unsigned int ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
-      const unsigned int iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
-      const unsigned int iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
+    inline const std::vector< uint_least32_t > &get_neighbours() const {
+
+      const uint_fast32_t ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
+      const uint_fast32_t iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
+      const uint_fast32_t iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
       return _locations._grid[ix][iy][iz];
     }
 
@@ -273,7 +291,9 @@ public:
      * @param rz Z range index.
      * @param level Level index.
      */
-    static void increase_indices(int &rx, int &ry, int &rz, int &level) {
+    static void increase_indices(int_fast32_t &rx, int_fast32_t &ry,
+                                 int_fast32_t &rz, int_fast32_t &level) {
+
       if (rz == level) {
         rz = -level;
         if (ry == level) {
@@ -307,13 +327,15 @@ public:
      * @param rz Z range index.
      * @return True if the given range is inside the grid, false otherwise.
      */
-    inline bool is_inside(int rx, int ry, int rz) const {
-      const int ax = std::get< 0 >(_anchor);
-      const int ay = std::get< 1 >(_anchor);
-      const int az = std::get< 2 >(_anchor);
-      const int sx = _locations._grid.size();
-      const int sy = _locations._grid[0].size();
-      const int sz = _locations._grid[0][0].size();
+    inline bool is_inside(int_fast32_t rx, int_fast32_t ry,
+                          int_fast32_t rz) const {
+
+      const int_fast32_t ax = std::get< 0 >(_anchor);
+      const int_fast32_t ay = std::get< 1 >(_anchor);
+      const int_fast32_t az = std::get< 2 >(_anchor);
+      const int_fast32_t sx = _locations._grid.size();
+      const int_fast32_t sy = _locations._grid[0].size();
+      const int_fast32_t sz = _locations._grid[0][0].size();
       return ax + rx >= 0 && ax + rx < sx && ay + ry >= 0 && ay + ry < sy &&
              az + rz >= 0 && az + rz < sz;
     }
@@ -325,14 +347,15 @@ public:
      * are still more potential neighbours to be found.
      */
     inline bool increase_range() {
+
       if (_range == _maxrange) {
         return false;
       }
-      int &rx = std::get< 0 >(_range);
-      int &ry = std::get< 1 >(_range);
-      int &rz = std::get< 2 >(_range);
-      int &level = _level;
-      const int oldlevel = level;
+      int_fast32_t &rx = std::get< 0 >(_range);
+      int_fast32_t &ry = std::get< 1 >(_range);
+      int_fast32_t &rz = std::get< 2 >(_range);
+      int_fast32_t &level = _level;
+      const int_fast32_t oldlevel = level;
       increase_indices(rx, ry, rz, level);
       while (!is_inside(rx, ry, rz)) {
         increase_indices(rx, ry, rz, level);
@@ -340,30 +363,36 @@ public:
       }
       if (level > oldlevel) {
         // increase exclusion range
-        const int ax = std::get< 0 >(_anchor);
-        const int ay = std::get< 1 >(_anchor);
-        const int az = std::get< 2 >(_anchor);
-        const int sx = _locations._grid.size();
-        const int sy = _locations._grid[0].size();
-        const int sz = _locations._grid[0][0].size();
-        if (oldlevel <= ax) {
-          _lower_bound[0] -= _locations._grid_cell_sides.x();
-        }
-        if (oldlevel <= ay) {
-          _lower_bound[1] -= _locations._grid_cell_sides.y();
-        }
-        if (oldlevel <= az) {
-          _lower_bound[2] -= _locations._grid_cell_sides.z();
-        }
-        if (oldlevel + ax < sx) {
-          _upper_bound[0] += _locations._grid_cell_sides.x();
-        }
-        if (oldlevel + ay < sy) {
-          _upper_bound[1] += _locations._grid_cell_sides.y();
-        }
-        if (oldlevel + az < sz) {
-          _upper_bound[2] += _locations._grid_cell_sides.z();
-        }
+        // the commented out code below made sure the covered region is always
+        // entirely inside the box
+        // however, this makes neighbour searches close to the box edge very
+        // slow, as max_radius2 will always be very small in this case
+        // as I am not entirely sure why we would want the covered region to be
+        // inside the box, I have disabled but not removed this code
+        //        const int ax = std::get< 0 >(_anchor);
+        //        const int ay = std::get< 1 >(_anchor);
+        //        const int az = std::get< 2 >(_anchor);
+        //        const int sx = _locations._grid.size();
+        //        const int sy = _locations._grid[0].size();
+        //        const int sz = _locations._grid[0][0].size();
+        //        if (oldlevel <= ax) {
+        _lower_bound[0] -= _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel <= ay) {
+        _lower_bound[1] -= _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel <= az) {
+        _lower_bound[2] -= _locations._grid_cell_sides.z();
+        //        }
+        //        if (oldlevel + ax < sx) {
+        _upper_bound[0] += _locations._grid_cell_sides.x();
+        //        }
+        //        if (oldlevel + ay < sy) {
+        _upper_bound[1] += _locations._grid_cell_sides.y();
+        //        }
+        //        if (oldlevel + az < sz) {
+        _upper_bound[2] += _locations._grid_cell_sides.z();
+        //        }
       }
       return true;
     }
@@ -393,7 +422,7 @@ public:
    * @param index Index of a position in the grid.
    * @return ngbiterator that can be used to get neighbours for this index.
    */
-  inline ngbiterator get_neighbours(unsigned int index) const {
+  inline ngbiterator get_neighbours(uint_fast32_t index) const {
     return ngbiterator(*this, index);
   }
 
@@ -407,19 +436,19 @@ public:
     const PointLocations &_locations;
 
     /*! @brief Anchor of the current subgrid selection. */
-    std::tuple< unsigned int, unsigned int, unsigned int > _anchor;
+    std::tuple< uint_fast32_t, uint_fast32_t, uint_fast32_t > _anchor;
 
     /*! @brief Range of the current subgrid selection. */
-    std::tuple< int, int, int > _range;
+    std::tuple< int_fast32_t, int_fast32_t, int_fast32_t > _range;
 
     /*! @brief Current level of the subgrid selection. */
-    int _level;
+    int_fast32_t _level;
 
     /*! @brief Maximum range within the simulation grid. */
-    std::tuple< int, int, int > _maxrange;
+    std::tuple< int_fast32_t, int_fast32_t, int_fast32_t > _maxrange;
 
     /*! @brief Maximum level of the subgrid selection. */
-    int _maxlevel;
+    int_fast32_t _maxlevel;
 
     /*! @brief Lower coverage limits of the search (in m). */
     CoordinateVector<> _lower_bound;
@@ -444,10 +473,12 @@ public:
      * @param sz Z range size.
      */
     inline static void
-    set_max_range(int &mx, int &my, int &mz, int &mlevel, const unsigned int ax,
-                  const unsigned int ay, const unsigned int az,
-                  const unsigned int sx, const unsigned int sy,
-                  const unsigned int sz) {
+    set_max_range(int_fast32_t &mx, int_fast32_t &my, int_fast32_t &mz,
+                  int_fast32_t &mlevel, const uint_fast32_t ax,
+                  const uint_fast32_t ay, const uint_fast32_t az,
+                  const uint_fast32_t sx, const uint_fast32_t sy,
+                  const uint_fast32_t sz) {
+
       cmac_assert(ax < sx);
       cmac_assert(ay < sy);
       cmac_assert(az < sz);
@@ -457,15 +488,15 @@ public:
       // box (see is_inside).
       // this block has at least two positive index values, and at most one
       // negative. The code below figures out what its indices are.
-      const int minrx = -ax;
-      const int minry = -ay;
-      const int minrz = -az;
-      const int maxrx = sx - ax - 1;
-      const int maxry = sy - ay - 1;
-      const int maxrz = sz - az - 1;
-      const int maxlevx = std::max(-minrx, maxrx);
-      const int maxlevy = std::max(-minry, maxry);
-      const int maxlevz = std::max(-minrz, maxrz);
+      const int_fast32_t minrx = -ax;
+      const int_fast32_t minry = -ay;
+      const int_fast32_t minrz = -az;
+      const int_fast32_t maxrx = sx - ax - 1;
+      const int_fast32_t maxry = sy - ay - 1;
+      const int_fast32_t maxrz = sz - az - 1;
+      const int_fast32_t maxlevx = std::max(-minrx, maxrx);
+      const int_fast32_t maxlevy = std::max(-minry, maxry);
+      const int_fast32_t maxlevz = std::max(-minrz, maxrz);
       // the max level is only used to assert we never step outside of the
       // maximally allowed range
       mlevel = std::max(maxlevx, maxlevy);
@@ -498,21 +529,22 @@ public:
     inline generalngbiterator(const PointLocations &locations,
                               const CoordinateVector<> &position)
         : _locations(locations), _range(0, 0, 0), _level(0) {
-      unsigned int &ax = std::get< 0 >(_anchor);
-      unsigned int &ay = std::get< 1 >(_anchor);
-      unsigned int &az = std::get< 2 >(_anchor);
+
+      uint_fast32_t &ax = std::get< 0 >(_anchor);
+      uint_fast32_t &ay = std::get< 1 >(_anchor);
+      uint_fast32_t &az = std::get< 2 >(_anchor);
       ax = (position.x() - _locations._grid_anchor.x()) /
            _locations._grid_cell_sides.x();
       ay = (position.y() - _locations._grid_anchor.y()) /
            _locations._grid_cell_sides.y();
       az = (position.z() - _locations._grid_anchor.z()) /
            _locations._grid_cell_sides.z();
-      const unsigned int sx = _locations._grid.size();
-      const unsigned int sy = _locations._grid[0].size();
-      const unsigned int sz = _locations._grid[0][0].size();
-      int &mx = std::get< 0 >(_maxrange);
-      int &my = std::get< 1 >(_maxrange);
-      int &mz = std::get< 2 >(_maxrange);
+      const uint_fast32_t sx = _locations._grid.size();
+      const uint_fast32_t sy = _locations._grid[0].size();
+      const uint_fast32_t sz = _locations._grid[0][0].size();
+      int_fast32_t &mx = std::get< 0 >(_maxrange);
+      int_fast32_t &my = std::get< 1 >(_maxrange);
+      int_fast32_t &mz = std::get< 2 >(_maxrange);
       set_max_range(mx, my, mz, _maxlevel, ax, ay, az, sx, sy, sz);
 
       // lower bound and upper bound values are used to get the geometric box
@@ -541,10 +573,11 @@ public:
      *
      * @return std::vector containing the indices of neighbouring points.
      */
-    inline const std::vector< unsigned int > &get_neighbours() const {
-      const unsigned int ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
-      const unsigned int iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
-      const unsigned int iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
+    inline const std::vector< uint_least32_t > &get_neighbours() const {
+
+      const uint_fast32_t ix = std::get< 0 >(_anchor) + std::get< 0 >(_range);
+      const uint_fast32_t iy = std::get< 1 >(_anchor) + std::get< 1 >(_range);
+      const uint_fast32_t iz = std::get< 2 >(_anchor) + std::get< 2 >(_range);
       return _locations._grid[ix][iy][iz];
     }
 
@@ -556,7 +589,9 @@ public:
      * @param rz Z range index.
      * @param level Level index.
      */
-    static void increase_indices(int &rx, int &ry, int &rz, int &level) {
+    static void increase_indices(int_fast32_t &rx, int_fast32_t &ry,
+                                 int_fast32_t &rz, int_fast32_t &level) {
+
       if (rz == level) {
         rz = -level;
         if (ry == level) {
@@ -590,13 +625,15 @@ public:
      * @param rz Z range index.
      * @return True if the given range is inside the grid, false otherwise.
      */
-    inline bool is_inside(int rx, int ry, int rz) const {
-      const int ax = std::get< 0 >(_anchor);
-      const int ay = std::get< 1 >(_anchor);
-      const int az = std::get< 2 >(_anchor);
-      const int sx = _locations._grid.size();
-      const int sy = _locations._grid[0].size();
-      const int sz = _locations._grid[0][0].size();
+    inline bool is_inside(int_fast32_t rx, int_fast32_t ry,
+                          int_fast32_t rz) const {
+
+      const int_fast32_t ax = std::get< 0 >(_anchor);
+      const int_fast32_t ay = std::get< 1 >(_anchor);
+      const int_fast32_t az = std::get< 2 >(_anchor);
+      const int_fast32_t sx = _locations._grid.size();
+      const int_fast32_t sy = _locations._grid[0].size();
+      const int_fast32_t sz = _locations._grid[0][0].size();
       return ax + rx >= 0 && ax + rx < sx && ay + ry >= 0 && ay + ry < sy &&
              az + rz >= 0 && az + rz < sz;
     }
@@ -608,14 +645,15 @@ public:
      * are still more potential neighbours to be found.
      */
     inline bool increase_range() {
+
       if (_range == _maxrange) {
         return false;
       }
-      int &rx = std::get< 0 >(_range);
-      int &ry = std::get< 1 >(_range);
-      int &rz = std::get< 2 >(_range);
-      int &level = _level;
-      const int oldlevel = level;
+      int_fast32_t &rx = std::get< 0 >(_range);
+      int_fast32_t &ry = std::get< 1 >(_range);
+      int_fast32_t &rz = std::get< 2 >(_range);
+      int_fast32_t &level = _level;
+      const int_fast32_t oldlevel = level;
       increase_indices(rx, ry, rz, level);
       while (!is_inside(rx, ry, rz)) {
         increase_indices(rx, ry, rz, level);
@@ -623,12 +661,12 @@ public:
       }
       if (level > oldlevel) {
         // increase exclusion range
-        const int ax = std::get< 0 >(_anchor);
-        const int ay = std::get< 1 >(_anchor);
-        const int az = std::get< 2 >(_anchor);
-        const int sx = _locations._grid.size();
-        const int sy = _locations._grid[0].size();
-        const int sz = _locations._grid[0][0].size();
+        const int_fast32_t ax = std::get< 0 >(_anchor);
+        const int_fast32_t ay = std::get< 1 >(_anchor);
+        const int_fast32_t az = std::get< 2 >(_anchor);
+        const int_fast32_t sx = _locations._grid.size();
+        const int_fast32_t sy = _locations._grid[0].size();
+        const int_fast32_t sz = _locations._grid[0][0].size();
         if (oldlevel <= ax) {
           _lower_bound[0] -= _locations._grid_cell_sides.x();
         }
@@ -677,8 +715,9 @@ public:
    * neighbour (in m).
    * @return Index of the closest neighbour.
    */
-  inline unsigned int
+  inline uint_fast32_t
   get_closest_neighbour(const CoordinateVector<> cpos) const {
+
     cmac_assert_message(cpos.x() >= _grid_anchor.x() &&
                             cpos.x() < _grid_anchor.x() +
                                            _grid.size() * _grid_cell_sides.x(),
@@ -700,7 +739,7 @@ public:
     generalngbiterator it(*this, cpos);
 
     double minr2 = -1.;
-    unsigned int minindex = 0;
+    uint_fast32_t minindex = 0;
     auto ngbs = it.get_neighbours();
     for (auto ngbit = ngbs.begin(); ngbit != ngbs.end(); ++ngbit) {
       const CoordinateVector<> &ngbpos = _positions[*ngbit];

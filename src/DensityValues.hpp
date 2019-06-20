@@ -54,7 +54,7 @@ public:
    * @brief Empty constructor.
    */
   inline DensityValues() : _number_density(0.), _temperature(0.) {
-    for (int i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _ionic_fraction[i] = 0.;
     }
   }

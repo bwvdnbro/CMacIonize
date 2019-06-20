@@ -26,6 +26,8 @@
 #ifndef LOG_HPP
 #define LOG_HPP
 
+#include "Utilities.hpp"
+
 #include <ctime>
 #include <sstream>
 #include <string>
@@ -53,7 +55,7 @@ enum LogLevel {
 class Log {
 private:
   /*! @brief Log level. */
-  LogLevel _level;
+  const LogLevel _level;
 
   /**
    * @brief Get a time stamp to append to log messages.
@@ -63,8 +65,8 @@ private:
    * @return Time stamp.
    */
   inline static std::string get_timestamp() {
-    std::time_t timestamp = std::time(nullptr);
-    std::tm *time = std::localtime(&timestamp);
+    const std::time_t timestamp = std::time(nullptr);
+    const std::tm *time = std::localtime(&timestamp);
     std::stringstream timestream;
     if (time->tm_hour < 10) {
       timestream << "0";
@@ -156,9 +158,9 @@ public:
    * @return std::string containing a representation of the argument.
    */
   template < typename _datatype_ >
-  static std::string get_message(_datatype_ t) {
+  inline static std::string get_message(_datatype_ t) {
     std::stringstream stream;
-    stream << t;
+    stream << Utilities::to_string(t);
     return stream.str();
   }
 
@@ -171,9 +173,9 @@ public:
    * @return std::string containing the arguments one after another.
    */
   template < typename _datatype_, typename... _arguments_ >
-  static std::string get_message(_datatype_ t, _arguments_... args) {
+  inline static std::string get_message(_datatype_ t, _arguments_... args) {
     std::stringstream stream;
-    stream << t << get_message(args...);
+    stream << Utilities::to_string(t) << get_message(args...);
     return stream.str();
   }
 

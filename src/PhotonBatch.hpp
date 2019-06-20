@@ -42,10 +42,10 @@ private:
 
   /*! @brief Indices of the next sub regions in which the photons need to be
    *  propagated. */
-  std::vector< int > _indices;
+  std::vector< int_least32_t > _indices;
 
   /*! @brief Maximum size of the internal arrays. */
-  unsigned int _size;
+  uint_least32_t _size;
 
 public:
   /**
@@ -53,7 +53,7 @@ public:
    *
    * @param size Maximum size of the internal arrays.
    */
-  PhotonBatch(unsigned int size) : _size(size) {
+  PhotonBatch(uint_fast32_t size) : _size(size) {
     _photons.reserve(size);
     _indices.reserve(size);
   }
@@ -83,7 +83,7 @@ public:
     PhotonBatch &_batch;
 
     /*! @brief Index of the element the iterator is currently pointing to. */
-    unsigned int _index;
+    uint_fast32_t _index;
 
   public:
     /// Basic iterator functionality
@@ -94,7 +94,7 @@ public:
      * @param batch Reference to the PhotonBatch over which we loop.
      * @param index Index of the element the iterator should point to.
      */
-    iterator(PhotonBatch &batch, unsigned int index)
+    iterator(PhotonBatch &batch, uint_fast32_t index)
         : _batch(batch), _index(index) {}
 
     /**
@@ -146,7 +146,7 @@ public:
      *
      * @param index New index for the Photon the iterator is pointing to.
      */
-    void set_new_index(int index) { _batch._indices[_index] = index; }
+    void set_new_index(int_fast32_t index) { _batch._indices[_index] = index; }
 
     /**
      * @brief Get the new index for the Photon the iterator is currently
@@ -158,7 +158,7 @@ public:
      *
      * @return New index for the Photon the iterator is pointing to.
      */
-    int get_new_index() const { return _batch._indices[_index]; }
+    int_fast32_t get_new_index() const { return _batch._indices[_index]; }
   };
 
   /**

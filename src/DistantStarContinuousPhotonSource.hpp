@@ -41,23 +41,23 @@
 class DistantStarContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Position of the distant star (in m). */
-  CoordinateVector<> _position;
+  const CoordinateVector<> _position;
 
   /*! @brief Flags that keep track of which sides of the box are exposed to the
    *  distant star, for each coordinate direction. A negative flag value means
    *  the lower end of the box in that direction is exposed, a positive value
    *  means the upper end is exposed, and a zero value means no side is exposed
    *  in that direction. */
-  char _exposed_faces[3];
+  int_fast8_t _exposed_faces[3];
 
   /*! @brief Box containing the simulation grid (in m). */
-  Box _box;
+  const Box<> _box;
 
   /*! @brief Bottom anchor of the box (in m). */
-  CoordinateVector<> &_bottom_anchor;
+  const CoordinateVector<> &_bottom_anchor;
 
   /*! @brief Top anchor of the box (in m). */
-  CoordinateVector<> _top_anchor;
+  const CoordinateVector<> _top_anchor;
 
 public:
   /**
@@ -68,11 +68,13 @@ public:
    * @param log Log to write logging info to.
    */
   DistantStarContinuousPhotonSource(CoordinateVector<> position,
-                                    Box simulation_box, Log *log = nullptr)
+                                    const Box<> &simulation_box,
+                                    Log *log = nullptr)
       : _position(position), _exposed_faces{0}, _box(simulation_box),
         _bottom_anchor(_box.get_anchor()), _top_anchor(_box.get_top_anchor()) {
-    unsigned int num_exposed = 0;
-    for (unsigned int i = 0; i < 3; ++i) {
+
+    uint_fast8_t num_exposed = 0;
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       if (_position[i] < _bottom_anchor[i]) {
         _exposed_faces[i] = -1;
       } else if (_position[i] > _top_anchor[i]) {
@@ -107,18 +109,19 @@ public:
   /**
    * @brief ParameterFile constructor
    *
+   * Parameters are:
+   *  - position: Position of the external stellar source (required)
+   *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  DistantStarContinuousPhotonSource(ParameterFile &params, Log *log = nullptr)
+  DistantStarContinuousPhotonSource(const Box<> &simulation_box,
+                                    ParameterFile &params, Log *log = nullptr)
       : DistantStarContinuousPhotonSource(
             params.get_physical_vector< QUANTITY_LENGTH >(
-                "continuousphotonsource:position"),
-            Box(params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_anchor"),
-                params.get_physical_vector< QUANTITY_LENGTH >(
-                    "densitygrid:box_sides")),
-            log) {}
+                "ContinuousPhotonSource:position"),
+            simulation_box, log) {}
 
   /**
    * @brief Virtual destructor.
@@ -135,9 +138,9 @@ public:
    *
    * @return Number of sides of the simulation box exposed to the star.
    */
-  unsigned int get_num_sides_exposed() const {
-    unsigned int num_exposed = 0;
-    for (unsigned int i = 0; i < 3; ++i) {
+  uint_fast8_t get_num_sides_exposed() const {
+    uint_fast8_t num_exposed = 0;
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       num_exposed += (_exposed_faces[i] != 0);
     }
     return num_exposed;
@@ -154,7 +157,7 @@ public:
    */
   inline bool enters_box(CoordinateVector<> direction,
                          CoordinateVector<> &face_position) const {
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       // the condition below excludes photons moving in a direction away from
       // the box (which should not be tested, as we already exclude them when
       // we generate them)
@@ -170,8 +173,8 @@ public:
         }
         double l = (plane_value - _position[i]) / direction[i];
         face_position = _position + l * direction;
-        unsigned int j1 = (i + 1) % 3;
-        unsigned int j2 = (i + 2) % 3;
+        uint_fast8_t j1 = (i + 1) % 3;
+        uint_fast8_t j2 = (i + 2) % 3;
         if (face_position[j1] >= _bottom_anchor[j1] &&
             face_position[j1] <= _top_anchor[j1] &&
             face_position[j2] >= _bottom_anchor[j2] &&
@@ -207,7 +210,7 @@ public:
     // in an upward direction, since these cannot hit the box. We can turn these
     // photons around without affecting the istropic behaviour of the photons.
     // The same goes for other directions.
-    for (unsigned int i = 0; i < 3; ++i) {
+    for (uint_fast8_t i = 0; i < 3; ++i) {
       if (_exposed_faces[i] * direction[i] > 0.) {
         direction[i] = -direction[i];
       }
