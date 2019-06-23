@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
     for (uint_fast32_t i = 0; i < 1e5; ++i) {
       PhotonPacket photon;
 
+      photon.set_energy(3.288e15);
+
       const double cost =
           2. * random_generator.get_uniform_random_double() - 1.;
       const double phi =

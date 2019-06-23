@@ -592,7 +592,6 @@ protected:
       _ionization_variables[active_cell].increase_mean_intensity(
           ion, dmean_intensity[ion]);
     }
-#ifndef HAVE_HYDROGEN_ONLY
     _ionization_variables[active_cell].increase_heating(
         HEATINGTERM_H,
         dmean_intensity[ION_H_n] * (photon.get_energy() - 3.288e15));
@@ -600,7 +599,6 @@ protected:
     _ionization_variables[active_cell].increase_heating(
         HEATINGTERM_He,
         dmean_intensity[ION_He_n] * (photon.get_energy() - 5.948e15));
-#endif
 #endif
     subgrid_cell_lock_unlock(active_cell);
   }

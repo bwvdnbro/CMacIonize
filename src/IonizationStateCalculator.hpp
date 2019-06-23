@@ -67,7 +67,7 @@ public:
                             const ChargeTransferRates &charge_transfer_rates);
 
   void
-  calculate_ionization_state(const double jfac,
+  calculate_ionization_state(const double jfac, const double hfac,
                              IonizationVariables &ionization_variables) const;
 
   /**
@@ -107,6 +107,10 @@ public:
      */
     const double _jfac;
 
+    /*! @brief Normalization factor used in the IonizationStateCalculator call.
+     */
+    const double _hfac;
+
   public:
     /**
      * @brief Constructor.
@@ -115,10 +119,13 @@ public:
      * calculation.
      * @param jfac Normalization factor used in the IonizationStateCalculator
      * call.
+     * @param hfac Normalization factor used in the IonizationStateCalculator
+     * call.
      */
     IonizationStateCalculatorFunction(
-        const IonizationStateCalculator &calculator, const double jfac)
-        : _calculator(calculator), _jfac(jfac) {}
+        const IonizationStateCalculator &calculator, const double jfac,
+        const double hfac)
+        : _calculator(calculator), _jfac(jfac), _hfac(hfac) {}
 
     /**
      * @brief Do the ionization state calculation for a single cell.
@@ -127,6 +134,7 @@ public:
      */
     inline void operator()(DensityGrid::iterator &cell) {
       _calculator.calculate_ionization_state(_jfac / cell.get_volume(),
+                                             _hfac / cell.get_volume(),
                                              cell.get_ionization_variables());
     }
   };

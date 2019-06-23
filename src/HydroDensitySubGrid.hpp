@@ -218,14 +218,15 @@ public:
    * @brief Add the energy because of photoionization to the hydro variables.
    *
    * @param hydro Hydro instance to use.
+   * @param timestep Integration time step (in s).
    */
-  inline void add_ionization_energy(const Hydro &hydro) {
+  inline void add_ionization_energy(const Hydro &hydro, const double timestep) {
 
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
       hydro.add_ionization_energy(_ionization_variables[i], _hydro_variables[i],
-                                  _inverse_cell_volume);
+                                  _inverse_cell_volume, timestep);
     }
   }
 
