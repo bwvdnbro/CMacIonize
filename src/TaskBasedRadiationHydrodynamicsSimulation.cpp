@@ -30,6 +30,7 @@
 #include "CommandLineParser.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CrossSectionsFactory.hpp"
+#include "DeRijckeRadiativeCooling.hpp"
 #include "DensityFunctionFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DiffuseReemissionHandlerFactory.hpp"
@@ -760,6 +761,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
  *  - turbulent forcing: Enable turbulent forcing? (default: no)
  *  - first snapshot: Index of the first snapshot to write out (default: 0)
  *  - do radiation: Enable radiation? (default: yes)
+ *  - do radiative cooling: Enable radiative cooling? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -943,6 +945,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     } else {
       turbulence_forcing = new AlveliusTurbulenceForcing(*restart_reader);
     }
+  }
+
+  DeRijckeRadiativeCooling *radiative_cooling = nullptr;
+  if (params->get_value< bool >(
+          "TaskBasedRadiationHydrodynamicsSimulation:do radiative cooling",
+          false)) {
+    radiative_cooling = new DeRijckeRadiativeCooling();
   }
 
   // fifth: construct the stellar sources. These should be stored in a
@@ -1431,6 +1440,25 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           }
 
           worktimer.start();
+
+          // reset mean intensity counters
+          {
+            AtomicValue< size_t > igrid(0);
+            start_parallel_timing_block();
+#pragma omp parallel default(shared)
+            while (igrid.value() <
+                   grid_creator->number_of_original_subgrids()) {
+              const size_t this_igrid = igrid.post_increment();
+              if (this_igrid < grid_creator->number_of_original_subgrids()) {
+                auto gridit = grid_creator->get_subgrid(this_igrid);
+                for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+                     ++cellit) {
+                  cellit.get_ionization_variables().reset_mean_intensities();
+                }
+              }
+            }
+            stop_parallel_timing_block();
+          }
 
           // update copies
           grid_creator->update_copy_properties();
@@ -2142,7 +2170,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           const size_t this_igrid = igrid.post_increment();
           if (this_igrid < grid_creator->number_of_original_subgrids()) {
             auto gridit = grid_creator->get_subgrid(this_igrid);
-            (*gridit).add_ionization_energy(hydro);
+            (*gridit).add_ionization_energy(hydro, actual_timestep);
           }
         }
         stop_parallel_timing_block();
@@ -2538,6 +2566,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   }
   if (turbulence_forcing != nullptr) {
     delete turbulence_forcing;
+  }
+  if (radiative_cooling != nullptr) {
+    delete radiative_cooling;
   }
 
   delete params;

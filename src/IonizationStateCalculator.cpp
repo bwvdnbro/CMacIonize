@@ -64,10 +64,12 @@ IonizationStateCalculator::IonizationStateCalculator(
  *
  * @param jfac Normalization factor for the mean intensity integrals in this
  * cell.
+ * @param hfac Normalization factor for the heating integrals in this cell.
  * @param ionization_variables Ionization variables for the cell we operate on.
  */
 void IonizationStateCalculator::calculate_ionization_state(
-    const double jfac, IonizationVariables &ionization_variables) const {
+    const double jfac, const double hfac,
+    IonizationVariables &ionization_variables) const {
 
   // normalize the mean intensity integrals
   const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
@@ -77,6 +79,14 @@ void IonizationStateCalculator::calculate_ionization_state(
 #ifdef HAS_HELIUM
   const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
   cmac_assert(jHe >= 0.);
+#endif
+
+  // normalize the heating integrals (for explicit heating in RHD)
+  const double hH = hfac * ionization_variables.get_heating(HEATINGTERM_H);
+  ionization_variables.set_heating(HEATINGTERM_H, hH);
+#ifdef HAS_HELIUM
+  const double hHe = hfac * ionization_variables.get_heating(HEATINGTERM_He);
+  ionization_variables.set_heating(HEATINGTERM_He, hHe);
 #endif
 
   // get the number density
@@ -502,12 +512,14 @@ void IonizationStateCalculator::calculate_ionization_state(
   // depends on the total weight of all photons, and on the volume of each cell
   // the volume of the cell is taken into account on a cell level, since cells
   // don't necessarily have the same volume
-  double jfac = _luminosity / totweight;
+  const double jfac = _luminosity / totweight;
+  const double hfac =
+      jfac * PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   WorkDistributor<
       DensityGridTraversalJobMarket< IonizationStateCalculatorFunction >,
       DensityGridTraversalJob< IonizationStateCalculatorFunction > >
       workers;
-  IonizationStateCalculatorFunction do_calculation(*this, jfac);
+  IonizationStateCalculatorFunction do_calculation(*this, jfac, hfac);
   DensityGridTraversalJobMarket< IonizationStateCalculatorFunction > jobs(
       grid, do_calculation, block);
   workers.do_in_parallel(jobs);
@@ -523,10 +535,13 @@ void IonizationStateCalculator::calculate_ionization_state(
     const double totweight, DensitySubGrid &subgrid) const {
 
   const double jfac = _luminosity / totweight;
+  const double hfac =
+      jfac * PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   for (auto cellit = subgrid.begin(); cellit != subgrid.end(); ++cellit) {
     calculate_ionization_state(jfac / cellit.get_volume(),
+                               hfac / cellit.get_volume(),
                                cellit.get_ionization_variables());
-    cellit.get_ionization_variables().reset_mean_intensities();
+    //    cellit.get_ionization_variables().reset_mean_intensities();
   }
 }
 

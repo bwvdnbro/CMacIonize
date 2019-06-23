@@ -770,10 +770,29 @@ public:
    * @param ionization_variables IonizationVariables.
    * @param hydro_variables HydroVariables.
    * @param inverse_volume Inverse volume of the cell (in m^-3).
+   * @param timestep Integration timestep (in s).
    */
   inline void add_ionization_energy(IonizationVariables &ionization_variables,
                                     HydroVariables &hydro_variables,
-                                    const double inverse_volume) const {
+                                    const double inverse_volume,
+                                    const double timestep) const {
+
+    const double dE = ionization_variables.get_heating(HEATINGTERM_H) *
+                      timestep / inverse_volume *
+                      ionization_variables.get_number_density();
+    if (dE > 0.) {
+      cmac_status("dE: %g %g", dE, timestep);
+    }
+    hydro_variables.conserved(4) += dE;
+
+    const double pressure =
+        _gamma_minus_one * inverse_volume *
+        (hydro_variables.get_conserved_total_energy() -
+         0.5 * CoordinateVector<>::dot_product(
+                   hydro_variables.get_primitives_velocity(),
+                   hydro_variables.get_conserved_momentum()));
+    hydro_variables.set_primitives_pressure(pressure);
+    return;
 
     if (_gamma == 1.) {
       const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
