@@ -53,6 +53,10 @@ private:
   /*! @brief Assumed temperature for ionised gas (in K). */
   const double _ionised_temperature;
 
+  /*! @brief Velocity limit. Gas velocities higher than this value are capped
+   *  (in m s^-1). */
+  const double _max_velocity;
+
   /*! @brief @f$\gamma{}-1@f$. */
   const double _gamma_minus_one;
 
@@ -151,11 +155,12 @@ public:
    * @param gamma Polytropic index @f$\gamma{}@f$ of the gas.
    * @param neutral_temperature Assumed neutral temperature for the gas (in K).
    * @param ionised_temperature Assumed ionised temperature for the gas (in K).
+   * @param max_velocity Maximum allowed velocity for the gas (in m s^-1).
    */
   inline Hydro(const double gamma, const double neutral_temperature,
-               const double ionised_temperature)
+               const double ionised_temperature, const double max_velocity)
       : _gamma(gamma), _neutral_temperature(neutral_temperature),
-        _ionised_temperature(ionised_temperature),
+        _ionised_temperature(ionised_temperature), _max_velocity(max_velocity),
         _gamma_minus_one(_gamma - 1.),
         _one_over_gamma_minus_one(1. / _gamma_minus_one),
         _density_conversion_factor(PhysicalConstants::get_physical_constant(
@@ -191,6 +196,8 @@ public:
    *    100. K)
    *  - ionised temperature: Assumed ionised temperature for the gas (default:
    *    1.e4 K)
+   *  - maximum velocity: Maximum allowed velocity for the gas. The gas velocity
+   *    is capped at this value (default: 1.e99 m s^-1)
    *
    * @param params ParameterFile to read from.
    */
@@ -199,7 +206,9 @@ public:
               params.get_physical_value< QUANTITY_TEMPERATURE >(
                   "Hydro:neutral temperature", "100. K"),
               params.get_physical_value< QUANTITY_TEMPERATURE >(
-                  "Hydro:ionised temperature", "1.e4 K")) {}
+                  "Hydro:ionised temperature", "1.e4 K"),
+              params.get_physical_value< QUANTITY_VELOCITY >(
+                  "Hydro:maximum velocity", "1.e99 m s^-1")) {}
 
   /**
    * @brief Get the soundspeed for the given hydrodynamic variables.
@@ -255,8 +264,7 @@ public:
     const double inverse_mass = 1. / state.get_conserved_mass();
 
     double density = state.get_conserved_mass() * inverse_volume;
-    const CoordinateVector<> velocity =
-        inverse_mass * state.get_conserved_momentum();
+    CoordinateVector<> velocity = inverse_mass * state.get_conserved_momentum();
     double pressure;
     if (_gamma > 1.) {
       pressure = _gamma_minus_one * inverse_volume *
@@ -282,6 +290,19 @@ public:
     cmac_assert(density >= 0.);
     cmac_assert(_gamma == 1. || pressure >= 0.);
 #endif
+
+    // apply velocity limiter
+    const double vnrm = velocity.norm();
+    if (vnrm > _max_velocity) {
+      velocity *= (_max_velocity / vnrm);
+    }
+    if (density > 0.) {
+      const double cs = std::sqrt(_gamma * pressure / density);
+      if (cs > _max_velocity) {
+        const double factor = _max_velocity / cs;
+        pressure *= factor * factor;
+      }
+    }
 
     state.set_primitives_density(density);
     state.set_primitives_velocity(velocity);
@@ -758,6 +779,15 @@ public:
     cmac_assert(pressure >= 0.);
 #endif
 
+    // apply velocity limiter
+    if (density > 0.) {
+      const double cs = std::sqrt(_gamma * pressure / density);
+      if (cs > _max_velocity) {
+        const double factor = _max_velocity / cs;
+        pressure *= factor * factor;
+      }
+    }
+
     // the velocity is directly set from the initial condition
     hydro_variables.set_primitives_density(density);
     hydro_variables.set_primitives_pressure(pressure);
@@ -845,6 +875,15 @@ public:
                        hydro_variables.get_primitives_velocity(),
                        hydro_variables.get_conserved_momentum()));
         hydro_variables.set_primitives_pressure(pressure);
+      }
+    }
+
+    // apply velocity limiter
+    if (hydro_variables.get_primitives_density() > 0.) {
+      const double cs = get_soundspeed(hydro_variables, ionization_variables);
+      if (cs > _max_velocity) {
+        const double factor = _max_velocity / cs;
+        hydro_variables.primitives(4) *= factor * factor;
       }
     }
   }
