@@ -265,16 +265,23 @@ public:
 
     double density = state.get_conserved_mass() * inverse_volume;
     CoordinateVector<> velocity = inverse_mass * state.get_conserved_momentum();
-    double pressure;
+    double pressure = 0.;
     if (_gamma > 1.) {
       pressure = _gamma_minus_one * inverse_volume *
                  (state.get_conserved_total_energy() -
                   0.5 * CoordinateVector<>::dot_product(
                             velocity, state.get_conserved_momentum()));
     } else {
-      const double CS =
-          state.get_primitives_pressure() / state.get_primitives_density();
-      pressure = CS * density;
+      if (state.get_primitives_density() > 0.) {
+        const double rhoinv = 1. / state.get_primitives_density();
+        if (!std::isinf(rhoinv)) {
+          const double CS =
+              state.get_primitives_pressure() / state.get_primitives_density();
+          cmac_assert(CS == CS);
+          cmac_assert(CS > 0.);
+          pressure = CS * density;
+        }
+      }
     }
 
     // apply velocity limiter

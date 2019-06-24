@@ -167,12 +167,34 @@ public:
       for (int_fast8_t j = 0; j < 5; ++j) {
         _hydro_variables[i].conserved(j) +=
             _hydro_variables[i].delta_conserved(j) * timestep;
+
         // reset hydro variables
         _hydro_variables[i].delta_conserved(j) = 0;
         _hydro_variables[i].primitive_gradients(j) = CoordinateVector<>(0.);
         _primitive_variable_limiters[10 * i + 2 * j] = DBL_MAX;
         _primitive_variable_limiters[10 * i + 2 * j + 1] = -DBL_MAX;
       }
+
+      cmac_assert(_hydro_variables[i].get_conserved_mass() ==
+                  _hydro_variables[i].get_conserved_mass());
+      cmac_assert(_hydro_variables[i].get_conserved_momentum().x() ==
+                  _hydro_variables[i].get_conserved_momentum().x());
+      cmac_assert(_hydro_variables[i].get_conserved_momentum().y() ==
+                  _hydro_variables[i].get_conserved_momentum().y());
+      cmac_assert(_hydro_variables[i].get_conserved_momentum().z() ==
+                  _hydro_variables[i].get_conserved_momentum().z());
+      cmac_assert(_hydro_variables[i].get_conserved_total_energy() ==
+                  _hydro_variables[i].get_conserved_total_energy());
+
+#ifdef SAFE_HYDRO_VARIABLES
+      _hydro_variables[i].conserved(0) =
+          std::max(_hydro_variables[i].get_conserved_mass(), 0.);
+      _hydro_variables[i].conserved(4) =
+          std::max(_hydro_variables[i].get_conserved_total_energy(), 0.);
+#else
+      cmac_assert(_hydro_variables[i].get_conserved_mass() >= 0.);
+      cmac_assert(_hydro_variables[i].get_conserved_total_energy() >= 0.);
+#endif
     }
   }
 
