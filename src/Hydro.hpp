@@ -269,10 +269,8 @@ public:
     if (hydro_state.get_conserved_mass() > 0.) {
       const double inverse_mass = 1. / hydro_state.get_conserved_mass();
       if (!std::isinf(inverse_mass)) {
-        double density = hydro_state.get_conserved_mass() * inverse_volume;
-        CoordinateVector<> velocity =
-            inverse_mass * hydro_state.get_conserved_momentum();
-        double pressure = 0.;
+        density = hydro_state.get_conserved_mass() * inverse_volume;
+        velocity = inverse_mass * hydro_state.get_conserved_momentum();
         if (_gamma > 1.) {
           pressure =
               _gamma_minus_one * inverse_volume *
