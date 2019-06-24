@@ -255,37 +255,36 @@ public:
   /**
    * @brief Set the primitive variables for the given state and inverse volume.
    *
-   * @param state State variables.
+   * @param hydro_state Hydrodynamical state variables.
+   * @param ionization_state Ionization variables.
    * @param inverse_volume Inverse of the volume (in m^-3).
    */
-  inline void set_primitive_variables(HydroVariables &state,
+  inline void set_primitive_variables(HydroVariables &hydro_state,
+                                      IonizationVariables &ionization_state,
                                       const double inverse_volume) const {
 
     double density = 0.;
     CoordinateVector<> velocity;
     double pressure = 0.;
-    if (state.get_conserved_mass() > 0.) {
-      const double inverse_mass = 1. / state.get_conserved_mass();
+    if (hydro_state.get_conserved_mass() > 0.) {
+      const double inverse_mass = 1. / hydro_state.get_conserved_mass();
       if (!std::isinf(inverse_mass)) {
-        double density = state.get_conserved_mass() * inverse_volume;
+        double density = hydro_state.get_conserved_mass() * inverse_volume;
         CoordinateVector<> velocity =
-            inverse_mass * state.get_conserved_momentum();
+            inverse_mass * hydro_state.get_conserved_momentum();
         double pressure = 0.;
         if (_gamma > 1.) {
-          pressure = _gamma_minus_one * inverse_volume *
-                     (state.get_conserved_total_energy() -
-                      0.5 * CoordinateVector<>::dot_product(
-                                velocity, state.get_conserved_momentum()));
+          pressure =
+              _gamma_minus_one * inverse_volume *
+              (hydro_state.get_conserved_total_energy() -
+               0.5 * CoordinateVector<>::dot_product(
+                         velocity, hydro_state.get_conserved_momentum()));
         } else {
-          if (state.get_primitives_density() > 0.) {
-            const double rhoinv = 1. / state.get_primitives_density();
-            if (!std::isinf(rhoinv)) {
-              const double CS = state.get_primitives_pressure() * rhoinv;
-              cmac_assert(CS == CS);
-              cmac_assert(CS >= 0.);
-              pressure = CS * density;
-            }
-          }
+          const double mean_molecular_mass =
+              0.5 * (1. + ionization_state.get_ionic_fraction(ION_H_n));
+          const double temperature = ionization_state.get_temperature();
+          pressure = _P_conversion_factor * density * temperature /
+                     mean_molecular_mass;
         }
 
         // apply velocity limiter
@@ -320,9 +319,9 @@ public:
       }
     }
 
-    state.set_primitives_density(density);
-    state.set_primitives_velocity(velocity);
-    state.set_primitives_pressure(pressure);
+    hydro_state.set_primitives_density(density);
+    hydro_state.set_primitives_velocity(velocity);
+    hydro_state.set_primitives_pressure(pressure);
   }
 
   /**

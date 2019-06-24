@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   Hydro hydro(5. / 3., 100., 1.e4, 1.e99);
 
   HydroVariables variables[100];
+  IonizationVariables ionvariables[100];
   double limiters[1000];
 
   for (uint_fast32_t i = 0; i < 100; ++i) {
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
       limiters[10 * i + 2 * j] = DBL_MAX;
       limiters[10 * i + 2 * j + 1] = -DBL_MAX;
     }
+    ionvariables[i].set_ionic_fraction(ION_H_n, 1.);
   }
 
   for (uint_fast32_t i = 0; i < 100; ++i) {
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
     }
 
     for (uint_fast32_t i = 0; i < 100; ++i) {
-      hydro.set_primitive_variables(variables[i], 100.);
+      hydro.set_primitive_variables(variables[i], ionvariables[i], 100.);
     }
 
     for (uint_fast32_t i = 0; i < 100; ++i) {
