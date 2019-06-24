@@ -277,6 +277,22 @@ public:
       pressure = CS * density;
     }
 
+    // apply velocity limiter
+    const double vnrm = velocity.norm();
+    if (vnrm > _max_velocity) {
+      velocity *= (_max_velocity / vnrm);
+    }
+    if (density > 0.) {
+      const double inverse_density = 1. / density;
+      if (!std::isinf(inverse_density)) {
+        const double cs = std::sqrt(_gamma * pressure * inverse_density);
+        if (cs > _max_velocity) {
+          const double factor = _max_velocity / cs;
+          pressure *= factor * factor;
+        }
+      }
+    }
+
     cmac_assert(density == density);
     cmac_assert(velocity.x() == velocity.x());
     cmac_assert(velocity.y() == velocity.y());
@@ -290,19 +306,6 @@ public:
     cmac_assert(density >= 0.);
     cmac_assert(_gamma == 1. || pressure >= 0.);
 #endif
-
-    // apply velocity limiter
-    const double vnrm = velocity.norm();
-    if (vnrm > _max_velocity) {
-      velocity *= (_max_velocity / vnrm);
-    }
-    if (density > 0.) {
-      const double cs = std::sqrt(_gamma * pressure / density);
-      if (cs > _max_velocity) {
-        const double factor = _max_velocity / cs;
-        pressure *= factor * factor;
-      }
-    }
 
     state.set_primitives_density(density);
     state.set_primitives_velocity(velocity);
@@ -810,6 +813,18 @@ public:
                       ionization_variables.get_temperature() /
                       mean_molecular_mass;
 
+    // apply velocity limiter
+    if (density > 0.) {
+      const double inverse_density = 1. / density;
+      if (!std::isinf(inverse_density)) {
+        const double cs = std::sqrt(_gamma * pressure * inverse_density);
+        if (cs > _max_velocity) {
+          const double factor = _max_velocity / cs;
+          pressure *= factor * factor;
+        }
+      }
+    }
+
     cmac_assert(density == density);
     cmac_assert(pressure == pressure);
 
@@ -820,15 +835,6 @@ public:
     cmac_assert(density >= 0.);
     cmac_assert(pressure >= 0.);
 #endif
-
-    // apply velocity limiter
-    if (density > 0.) {
-      const double cs = std::sqrt(_gamma * pressure / density);
-      if (cs > _max_velocity) {
-        const double factor = _max_velocity / cs;
-        pressure *= factor * factor;
-      }
-    }
 
     // the velocity is directly set from the initial condition
     hydro_variables.set_primitives_density(density);
