@@ -280,8 +280,7 @@ public:
           if (state.get_primitives_density() > 0.) {
             const double rhoinv = 1. / state.get_primitives_density();
             if (!std::isinf(rhoinv)) {
-              const double CS = state.get_primitives_pressure() /
-                                state.get_primitives_density();
+              const double CS = state.get_primitives_pressure() * rhoinv;
               cmac_assert(CS == CS);
               cmac_assert(CS >= 0.);
               pressure = CS * density;
@@ -337,10 +336,13 @@ public:
 
     double mass = state.get_primitives_density() * volume;
     const CoordinateVector<> momentum = mass * state.get_primitives_velocity();
-    double total_energy =
-        _one_over_gamma_minus_one * state.get_primitives_pressure() * volume +
-        0.5 * CoordinateVector<>::dot_product(momentum,
-                                              state.get_primitives_velocity());
+    double total_energy = 0.;
+    if (_gamma > 1.) {
+      total_energy =
+          _one_over_gamma_minus_one * state.get_primitives_pressure() * volume +
+          0.5 * CoordinateVector<>::dot_product(
+                    momentum, state.get_primitives_velocity());
+    }
 
     cmac_assert(mass == mass);
     cmac_assert(momentum.x() == momentum.x());
