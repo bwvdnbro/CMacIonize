@@ -208,7 +208,8 @@ public:
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
-      hydro.set_primitive_variables(_hydro_variables[i], _inverse_cell_volume);
+      hydro.set_primitive_variables(
+          _hydro_variables[i], _ionization_variables[i], _inverse_cell_volume);
     }
   }
 
