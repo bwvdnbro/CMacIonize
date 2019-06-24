@@ -598,10 +598,22 @@ public:
                                       double WRlim[10]) const {
 
     for (int_fast32_t j = 0; j < 5; ++j) {
+      cmac_assert_message(left_state.primitives(j) == left_state.primitives(j),
+                          "j: %" PRIiFAST32, j);
+      cmac_assert_message(right_state.primitives(j) ==
+                              right_state.primitives(j),
+                          "j: %" PRIiFAST32, j);
+
       const double dwdx =
           0.5 * (left_state.primitives(j) + right_state.primitives(j)) * dxinv;
+
+      cmac_assert_message(
+          dwdx == dwdx, "j: %" PRIiFAST32 ", left: %g, right: %g, dxinv: %g", j,
+          left_state.primitives(j), right_state.primitives(j), dxinv);
+
       left_state.primitive_gradients(j)[i] += dwdx;
       right_state.primitive_gradients(j)[i] -= dwdx;
+
       WLlim[2 * j] = std::min(WLlim[2 * j], right_state.primitives(j));
       WLlim[2 * j + 1] = std::max(WLlim[2 * j + 1], right_state.primitives(j));
       WRlim[2 * j] = std::min(WRlim[2 * j], left_state.primitives(j));
@@ -632,8 +644,19 @@ public:
     HydroVariables right_state = boundary.get_right_state_gradient_variables(
         i, orientation, posR, left_state);
     for (int_fast32_t j = 0; j < 5; ++j) {
+      cmac_assert_message(left_state.primitives(j) == left_state.primitives(j),
+                          "j: %" PRIiFAST32, j);
+      cmac_assert_message(right_state.primitives(j) ==
+                              right_state.primitives(j),
+                          "j: %" PRIiFAST32, j);
+
       const double dwdx =
           0.5 * (left_state.primitives(j) + right_state.primitives(j)) * dxinv;
+
+      cmac_assert_message(
+          dwdx == dwdx, "j: %" PRIiFAST32 ", left: %g, right: %g, dxinv: %g", j,
+          left_state.primitives(j), right_state.primitives(j), dxinv);
+
       left_state.primitive_gradients(j)[i] += dwdx;
       WLlim[2 * j] = std::min(WLlim[2 * j], right_state.primitives(j));
       WLlim[2 * j + 1] = std::max(WLlim[2 * j + 1], right_state.primitives(j));
