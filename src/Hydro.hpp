@@ -261,58 +261,65 @@ public:
   inline void set_primitive_variables(HydroVariables &state,
                                       const double inverse_volume) const {
 
-    const double inverse_mass = 1. / state.get_conserved_mass();
-
-    double density = state.get_conserved_mass() * inverse_volume;
-    CoordinateVector<> velocity = inverse_mass * state.get_conserved_momentum();
+    double density = 0.;
+    CoordinateVector<> velocity;
     double pressure = 0.;
-    if (_gamma > 1.) {
-      pressure = _gamma_minus_one * inverse_volume *
-                 (state.get_conserved_total_energy() -
-                  0.5 * CoordinateVector<>::dot_product(
-                            velocity, state.get_conserved_momentum()));
-    } else {
-      if (state.get_primitives_density() > 0.) {
-        const double rhoinv = 1. / state.get_primitives_density();
-        if (!std::isinf(rhoinv)) {
-          const double CS =
-              state.get_primitives_pressure() / state.get_primitives_density();
-          cmac_assert(CS == CS);
-          cmac_assert(CS >= 0.);
-          pressure = CS * density;
+    if (state.get_conserved_mass() > 0.) {
+      const double inverse_mass = 1. / state.get_conserved_mass();
+      if (!std::isinf(inverse_mass)) {
+        double density = state.get_conserved_mass() * inverse_volume;
+        CoordinateVector<> velocity =
+            inverse_mass * state.get_conserved_momentum();
+        double pressure = 0.;
+        if (_gamma > 1.) {
+          pressure = _gamma_minus_one * inverse_volume *
+                     (state.get_conserved_total_energy() -
+                      0.5 * CoordinateVector<>::dot_product(
+                                velocity, state.get_conserved_momentum()));
+        } else {
+          if (state.get_primitives_density() > 0.) {
+            const double rhoinv = 1. / state.get_primitives_density();
+            if (!std::isinf(rhoinv)) {
+              const double CS = state.get_primitives_pressure() /
+                                state.get_primitives_density();
+              cmac_assert(CS == CS);
+              cmac_assert(CS >= 0.);
+              pressure = CS * density;
+            }
+          }
         }
-      }
-    }
 
-    // apply velocity limiter
-    const double vnrm = velocity.norm();
-    if (vnrm > _max_velocity) {
-      velocity *= (_max_velocity / vnrm);
-    }
-    if (density > 0.) {
-      const double inverse_density = 1. / density;
-      if (!std::isinf(inverse_density)) {
-        const double cs = std::sqrt(_gamma * pressure * inverse_density);
-        if (cs > _max_velocity) {
-          const double factor = _max_velocity / cs;
-          pressure *= factor * factor;
+        // apply velocity limiter
+        const double vnrm = velocity.norm();
+        if (vnrm > _max_velocity) {
+          velocity *= (_max_velocity / vnrm);
         }
-      }
-    }
+        if (density > 0.) {
+          const double inverse_density = 1. / density;
+          if (!std::isinf(inverse_density)) {
+            const double cs = std::sqrt(_gamma * pressure * inverse_density);
+            if (cs > _max_velocity) {
+              const double factor = _max_velocity / cs;
+              pressure *= factor * factor;
+            }
+          }
+        }
 
-    cmac_assert(density == density);
-    cmac_assert(velocity.x() == velocity.x());
-    cmac_assert(velocity.y() == velocity.y());
-    cmac_assert(velocity.z() == velocity.z());
-    cmac_assert(_gamma == 1. || pressure == pressure);
+        cmac_assert(density == density);
+        cmac_assert(velocity.x() == velocity.x());
+        cmac_assert(velocity.y() == velocity.y());
+        cmac_assert(velocity.z() == velocity.z());
+        cmac_assert(_gamma == 1. || pressure == pressure);
 
 #ifdef SAFE_HYDRO_VARIABLES
-    density = std::max(density, 0.);
-    pressure = std::max(pressure, 0.);
+        density = std::max(density, 0.);
+        pressure = std::max(pressure, 0.);
 #else
-    cmac_assert(density >= 0.);
-    cmac_assert(_gamma == 1. || pressure >= 0.);
+        cmac_assert(density >= 0.);
+        cmac_assert(_gamma == 1. || pressure >= 0.);
 #endif
+      }
+    }
 
     state.set_primitives_density(density);
     state.set_primitives_velocity(velocity);
