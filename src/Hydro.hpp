@@ -650,6 +650,19 @@ public:
                                   const CoordinateVector<> dx) const {
 
     for (int_fast8_t i = 0; i < 5; ++i) {
+      cmac_assert_message(
+          state.primitive_gradients(i)[0] == state.primitive_gradients(i)[0],
+          "%" PRIiFAST8 ", (%g %g %g)", i, state.primitive_gradients(i)[0],
+          state.primitive_gradients(i)[1], state.primitive_gradients(i)[2]);
+      cmac_assert_message(
+          state.primitive_gradients(i)[1] == state.primitive_gradients(i)[1],
+          "%" PRIiFAST8 ", (%g %g %g)", i, state.primitive_gradients(i)[0],
+          state.primitive_gradients(i)[1], state.primitive_gradients(i)[2]);
+      cmac_assert_message(
+          state.primitive_gradients(i)[2] == state.primitive_gradients(i)[2],
+          "%" PRIiFAST8 ", (%g %g %g)", i, state.primitive_gradients(i)[0],
+          state.primitive_gradients(i)[1], state.primitive_gradients(i)[2]);
+
       const double dwext[3] = {state.primitive_gradients(i)[0] * 0.5 * dx[0],
                                state.primitive_gradients(i)[1] * 0.5 * dx[1],
                                state.primitive_gradients(i)[2] * 0.5 * dx[2]};
@@ -677,6 +690,22 @@ public:
       }
       const double alpha = std::min(1., 0.5 * std::min(maxfac, minfac));
       state.primitive_gradients(i) *= alpha;
+
+      cmac_assert_message(
+          state.primitive_gradients(i)[0] == state.primitive_gradients(i)[0],
+          "%" PRIiFAST8 ", (%g %g %g), alpha: %g", i,
+          state.primitive_gradients(i)[0], state.primitive_gradients(i)[1],
+          state.primitive_gradients(i)[2], alpha);
+      cmac_assert_message(
+          state.primitive_gradients(i)[1] == state.primitive_gradients(i)[1],
+          "%" PRIiFAST8 ", (%g %g %g), alpha: %g", i,
+          state.primitive_gradients(i)[0], state.primitive_gradients(i)[1],
+          state.primitive_gradients(i)[2], alpha);
+      cmac_assert_message(
+          state.primitive_gradients(i)[2] == state.primitive_gradients(i)[2],
+          "%" PRIiFAST8 ", (%g %g %g), alpha: %g", i,
+          state.primitive_gradients(i)[0], state.primitive_gradients(i)[1],
+          state.primitive_gradients(i)[2], alpha);
     }
   }
 
@@ -730,11 +759,24 @@ public:
     double P_new =
         P - dt * (_gamma * P * divv + vx * dPdx + vy * dPdy + vz * dPdz);
 
-    cmac_assert(rho_new == rho_new);
-    cmac_assert(v_new.x() == v_new.x());
-    cmac_assert(v_new.y() == v_new.y());
-    cmac_assert(v_new.z() == v_new.z());
-    cmac_assert(P_new == P_new);
+    cmac_assert_message(rho_new == rho_new,
+                        "rho: %g, divv: %g, v: %g %g %g, drho: %g %g %g", rho,
+                        divv, vx, vy, vz, drhodx, drhody, drhodz);
+    cmac_assert_message(
+        v_new.x() == v_new.x(),
+        "v: %g %g %g, divv: %g, rhoinv: %g, dP: %g %g %g, a: %g %g %g", vx, vy,
+        vz, divv, rhoinv, dPdx, dPdy, dPdz, ax, ay, az);
+    cmac_assert_message(
+        v_new.y() == v_new.y(),
+        "v: %g %g %g, divv: %g, rhoinv: %g, dP: %g %g %g, a: %g %g %g", vx, vy,
+        vz, divv, rhoinv, dPdx, dPdy, dPdz, ax, ay, az);
+    cmac_assert_message(
+        v_new.z() == v_new.z(),
+        "v: %g %g %g, divv: %g, rhoinv: %g, dP: %g %g %g, a: %g %g %g", vx, vy,
+        vz, divv, rhoinv, dPdx, dPdy, dPdz, ax, ay, az);
+    cmac_assert_message(P_new == P_new,
+                        "P: %g, divv: %g, v: %g %g %g, dP: %g %g %g", P, divv,
+                        vx, vy, vz, dPdx, dPdy, dPdz);
 
 #ifdef SAFE_HYDRO_VARIABLES
     rho_new = std::max(rho_new, 0.);
