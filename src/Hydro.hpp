@@ -278,7 +278,7 @@ public:
           const double CS =
               state.get_primitives_pressure() / state.get_primitives_density();
           cmac_assert(CS == CS);
-          cmac_assert(CS > 0.);
+          cmac_assert(CS >= 0.);
           pressure = CS * density;
         }
       }
