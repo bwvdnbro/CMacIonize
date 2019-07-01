@@ -78,10 +78,6 @@ private:
    *  @f$T_{fac} = \frac{m_{\rm{}H}}{k}@f$ (in K s^2 m^-2). */
   const double _T_conversion_factor;
 
-  /*! @brief Conversion factor from temperature to pressure,
-   *  @f$P_{fac} = \frac{k}{m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
-  const double _P_conversion_factor;
-
   /*! @brief Conversion factor from temperature to internal energy,
    *  @f$u_{fac} = \frac{2k}{(\gamma{}-1)m_{\rm{}H}}@f$ (in m^2 K^-1 s^-2). */
   const double _u_conversion_factor;
@@ -175,10 +171,6 @@ public:
                                  PHYSICALCONSTANT_PROTON_MASS) /
                              PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN)),
-        _P_conversion_factor(PhysicalConstants::get_physical_constant(
-                                 PHYSICALCONSTANT_BOLTZMANN) /
-                             PhysicalConstants::get_physical_constant(
-                                 PHYSICALCONSTANT_PROTON_MASS)),
         _u_conversion_factor(2. *
                              PhysicalConstants::get_physical_constant(
                                  PHYSICALCONSTANT_BOLTZMANN) *
@@ -242,8 +234,8 @@ public:
       const double mean_molecular_mass =
           0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
       const double temperature = ionization_variables.get_temperature();
-      const double cs =
-          std::sqrt(_P_conversion_factor * temperature / mean_molecular_mass);
+      const double cs = std::sqrt(_pressure_conversion_factor * temperature /
+                                  mean_molecular_mass);
       cmac_assert(cs == cs);
       cmac_assert_message(cs > 0., "xH: %g, T: %g",
                           ionization_variables.get_ionic_fraction(ION_H_n),
@@ -878,6 +870,41 @@ public:
   }
 
   /**
+   * @brief Update all variables that depend on the energy after a change in
+   * total energy of the given cell by the given amount.
+   *
+   * @param ionization_variables IonizationVariables of the cell.
+   * @param hydro_variables HydroVariables of the cell.
+   * @param inverse_volume Inverse volume of the cell (in m^-3).
+   * @param delta_energy Change in energy (in J).
+   */
+  inline void update_energy_variables(IonizationVariables &ionization_variables,
+                                      HydroVariables &hydro_variables,
+                                      const double inverse_volume,
+                                      const double delta_energy) const {
+
+    const double old_energy = hydro_variables.get_conserved_total_energy();
+    const double kinetic_energy =
+        0.5 * CoordinateVector<>::dot_product(
+                  hydro_variables.get_primitives_velocity(),
+                  hydro_variables.get_conserved_momentum());
+    const double density = hydro_variables.get_primitives_density();
+    const double mean_molecular_mass =
+        0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+
+    const double new_energy = old_energy + delta_energy;
+
+    const double new_pressure =
+        _gamma_minus_one * inverse_volume * (new_energy - kinetic_energy);
+    const double new_temperature =
+        _T_conversion_factor * mean_molecular_mass * new_pressure / density;
+
+    hydro_variables.set_conserved_total_energy(new_energy);
+    hydro_variables.set_primitives_pressure(new_pressure);
+    ionization_variables.set_temperature(new_temperature);
+  }
+
+  /**
    * @brief Add the energy due to ionization to the given hydrodynamic
    * variables.
    *
@@ -892,20 +919,10 @@ public:
                                     const double timestep) const {
 
     const double dE = ionization_variables.get_heating(HEATINGTERM_H) *
-                      timestep / inverse_volume *
-                      ionization_variables.get_number_density();
-    if (dE > 0.) {
-      cmac_status("dE: %g %g", dE, timestep);
-    }
-    hydro_variables.conserved(4) += dE;
-
-    const double pressure =
-        _gamma_minus_one * inverse_volume *
-        (hydro_variables.get_conserved_total_energy() -
-         0.5 * CoordinateVector<>::dot_product(
-                   hydro_variables.get_primitives_velocity(),
-                   hydro_variables.get_conserved_momentum()));
-    hydro_variables.set_primitives_pressure(pressure);
+                      timestep * ionization_variables.get_number_density() /
+                      inverse_volume;
+    update_energy_variables(ionization_variables, hydro_variables,
+                            inverse_volume, dE);
     return;
 
     if (_gamma == 1.) {

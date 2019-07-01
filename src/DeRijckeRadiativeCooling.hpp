@@ -63,7 +63,7 @@ public:
    * @brief Get the cooling rate for the given temperature.
    *
    * @param temperature Temperature (in K).
-   * @return Cooling rate (in J m^-3 s^-1).
+   * @return Cooling rate (in J m^3 s^-1).
    */
   inline double get_cooling_rate(const double temperature) const {
 
