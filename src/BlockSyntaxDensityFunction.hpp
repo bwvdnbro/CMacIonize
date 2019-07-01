@@ -107,6 +107,8 @@ public:
       }
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
+      double neutral_fraction_H = blockfile.get_value< double >(
+          blockname.str() + "neutral fraction H", 1.e-6);
       CoordinateVector<> velocity =
           blockfile.get_physical_vector< QUANTITY_VELOCITY >(
               blockname.str() + "initial velocity",
@@ -120,8 +122,13 @@ public:
                    temperature, i);
       }
       _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
-                                         temperature, velocity));
+                                         temperature, neutral_fraction_H,
+                                         velocity));
     }
+
+    std::ofstream ofile(filename + ".used-values");
+    blockfile.print_contents(ofile, true);
+    ofile.close();
 
     if (log) {
       log->write_status("Created BlockSyntaxDensityFunction with ", numblock,
@@ -159,11 +166,13 @@ public:
 
     double density = -1.;
     double temperature = -1.;
+    double neutral_fraction_H = -1.;
     CoordinateVector<> velocity;
     for (size_t i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
         density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();
+        neutral_fraction_H = _blocks[i].get_neutral_fraction_H();
         velocity = _blocks[i].get_velocity();
       }
     }
@@ -175,10 +184,14 @@ public:
       cmac_error("No block found containing position [%g m, %g m, %g m]!",
                  position.x(), position.y(), position.z());
     }
+    if (neutral_fraction_H < 0.) {
+      cmac_error("No block found containing position [%g m, %g m, %g m]!",
+                 position.x(), position.y(), position.z());
+    }
 
     values.set_number_density(density);
     values.set_temperature(temperature);
-    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, neutral_fraction_H);
 #ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
 #endif

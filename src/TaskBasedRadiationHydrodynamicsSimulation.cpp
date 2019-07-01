@@ -2184,6 +2184,37 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.end("radiation");
     }
 
+    if (radiative_cooling != nullptr) {
+      time_logger.start("cooling");
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          auto gridit = grid_creator->get_subgrid(this_igrid);
+          for (auto cellit = (*gridit).hydro_begin();
+               cellit != (*gridit).hydro_end(); ++cellit) {
+            for (uint_fast8_t i = 0; i < 32; ++i) {
+              const double temperature =
+                  cellit.get_ionization_variables().get_temperature();
+              const double n =
+                  cellit.get_ionization_variables().get_number_density();
+              const double n2 = n * n;
+              const double cooling_rate =
+                  radiative_cooling->get_cooling_rate(temperature) * n2 * 1000.;
+              hydro.update_energy_variables(
+                  cellit.get_ionization_variables(),
+                  cellit.get_hydro_variables(), 1. / cellit.get_volume(),
+                  -cooling_rate * cellit.get_volume() * actual_timestep / 32.);
+            }
+          }
+        }
+      }
+      stop_parallel_timing_block();
+      time_logger.end("cooling");
+    }
+
     time_logger.start("hydro");
 
     if (log) {
