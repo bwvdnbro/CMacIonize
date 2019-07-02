@@ -920,7 +920,8 @@ public:
 
     const double dE = ionization_variables.get_heating(HEATINGTERM_H) *
                       timestep * ionization_variables.get_number_density() /
-                      inverse_volume;
+                      inverse_volume *
+                      ionization_variables.get_ionic_fraction(ION_H_n);
     update_energy_variables(ionization_variables, hydro_variables,
                             inverse_volume, dE);
     return;
