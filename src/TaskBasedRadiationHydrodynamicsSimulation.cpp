@@ -2202,7 +2202,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   cellit.get_ionization_variables().get_number_density();
               const double n2 = n * n;
               const double cooling_rate =
-                  radiative_cooling->get_cooling_rate(temperature) * n2 * 1000.;
+                  radiative_cooling->get_cooling_rate(temperature) * n2;
               hydro.update_energy_variables(
                   cellit.get_ionization_variables(),
                   cellit.get_hydro_variables(), 1. / cellit.get_volume(),
