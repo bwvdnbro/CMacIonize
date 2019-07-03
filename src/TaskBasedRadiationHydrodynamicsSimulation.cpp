@@ -727,6 +727,65 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
 }
 
 /**
+ * @brief Recursive algorithm to subcycle the cooling over the given time step.
+ *
+ * @param ionization_variables Copy of the IonizationVariables to update
+ * (updated with final result).
+ * @param hydro_variables Copy of the HydroVariables to update (updated with
+ * final result).
+ * @param inverse_volume Inverse cell volume (in m^-3).
+ * @param nH2V Hydrogen number density squared times cell volume (in m^-3).
+ * @param total_dt Total time step (in s).
+ * @param radiative_cooling Radiative cooling tables to use.
+ * @param hydro Hydro instance to use.
+ */
+inline static void do_cooling(IonizationVariables &ionization_variables,
+                              HydroVariables &hydro_variables,
+                              const double inverse_volume, const double nH2V,
+                              const double total_dt,
+                              DeRijckeRadiativeCooling &radiative_cooling,
+                              Hydro &hydro) {
+
+  const double temperature = ionization_variables.get_temperature();
+  const double cooling_rate1 =
+      radiative_cooling.get_cooling_rate(temperature) * nH2V;
+
+  IonizationVariables ionization_variables_long_dt = ionization_variables;
+  HydroVariables hydro_variables_long_dt = hydro_variables;
+  hydro.update_energy_variables(ionization_variables_long_dt,
+                                hydro_variables_long_dt, inverse_volume,
+                                -cooling_rate1 * total_dt);
+
+  const double halfdt = 0.5 * total_dt;
+  IonizationVariables ionization_variables_short_dt = ionization_variables;
+  HydroVariables hydro_variables_short_dt = hydro_variables;
+  hydro.update_energy_variables(ionization_variables_short_dt,
+                                hydro_variables_short_dt, inverse_volume,
+                                -cooling_rate1 * halfdt);
+  const double temperature2 = ionization_variables_short_dt.get_temperature();
+  const double cooling_rate2 =
+      radiative_cooling.get_cooling_rate(temperature2) * nH2V;
+  hydro.update_energy_variables(ionization_variables_short_dt,
+                                hydro_variables_short_dt, inverse_volume,
+                                -cooling_rate2 * halfdt);
+
+  const double E_long_dt = hydro_variables_long_dt.get_conserved_total_energy();
+  const double E_short_dt =
+      hydro_variables_short_dt.get_conserved_total_energy();
+  if (std::abs(E_long_dt - E_short_dt) > 1.e-3 * (E_long_dt + E_short_dt)) {
+    ionization_variables_short_dt = ionization_variables;
+    hydro_variables_short_dt = hydro_variables;
+    do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
+               inverse_volume, nH2V, halfdt, radiative_cooling, hydro);
+    do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
+               inverse_volume, nH2V, halfdt, radiative_cooling, hydro);
+  }
+  ionization_variables = ionization_variables_short_dt;
+  hydro_variables = hydro_variables_short_dt;
+  return;
+}
+
+/**
  * @brief Perform an RHD simulation.
  *
  * This method reads the following parameters from the parameter file:
@@ -2195,19 +2254,20 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           auto gridit = grid_creator->get_subgrid(this_igrid);
           for (auto cellit = (*gridit).hydro_begin();
                cellit != (*gridit).hydro_end(); ++cellit) {
-            for (uint_fast8_t i = 0; i < 32; ++i) {
-              const double temperature =
-                  cellit.get_ionization_variables().get_temperature();
-              const double n =
-                  cellit.get_ionization_variables().get_number_density();
-              const double n2 = n * n;
-              const double cooling_rate =
-                  radiative_cooling->get_cooling_rate(temperature) * n2;
-              hydro.update_energy_variables(
-                  cellit.get_ionization_variables(),
-                  cellit.get_hydro_variables(), 1. / cellit.get_volume(),
-                  -cooling_rate * cellit.get_volume() * actual_timestep / 32.);
-            }
+            IonizationVariables ionization_variables =
+                cellit.get_ionization_variables();
+            HydroVariables hydro_variables = cellit.get_hydro_variables();
+            const double nH = ionization_variables.get_number_density();
+            const double nH2 = nH * nH;
+            do_cooling(ionization_variables, hydro_variables,
+                       1. / cellit.get_volume(), nH2 * cellit.get_volume(),
+                       actual_timestep, *radiative_cooling, hydro);
+            cellit.get_ionization_variables().set_temperature(
+                ionization_variables.get_temperature());
+            cellit.get_hydro_variables().set_primitives_pressure(
+                hydro_variables.get_primitives_pressure());
+            cellit.get_hydro_variables().set_conserved_total_energy(
+                hydro_variables.get_conserved_total_energy());
           }
         }
       }
