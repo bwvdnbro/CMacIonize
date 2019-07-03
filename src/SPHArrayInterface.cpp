@@ -26,6 +26,7 @@
 #include "SPHArrayInterface.hpp"
 #include "CubicSplineKernel.hpp"
 #include "DensityGrid.hpp"
+#include "DensityGridTraversalJobMarket.hpp"
 #include <cfloat>
 
 /**
@@ -314,6 +315,41 @@ void SPHArrayInterface::fill_array(float *nH) {
 }
 
 /**
+ * @brief Functor for the inverse mapping.
+ */
+class InverseMappingFunction {
+private:
+  /*! @brief Reference to the Octree. */
+  Octree &_octree;
+
+  /*! @brief Reference to the neutral fraction vector. */
+  std::vector< double > &_neutral_fractions;
+
+public:
+  /**
+   * @brief Constructor.
+   *
+   * @param octree Reference to the Octree.
+   * @param neutral_fractions Reference to the neutral fraction vector.
+   */
+  InverseMappingFunction(Octree &octree,
+                         std::vector< double > &neutral_fractions)
+      : _octree(octree), _neutral_fractions(neutral_fractions) {}
+
+  /**
+   * @brief Do the inverse mapping for a single cell.
+   *
+   * @param cell DensityGrid::iterator pointing to a single cell in the grid.
+   */
+  inline void operator()(DensityGrid::iterator cell) {
+    const CoordinateVector<> p = cell.get_cell_midpoint();
+    uint_fast32_t closest = _octree.get_closest_ngb(p);
+    _neutral_fractions[closest] =
+        cell.get_ionization_variables().get_ionic_fraction(ION_H_n);
+  }
+};
+
+/**
  * @brief Map the state of the grid back to the SPH particle distribution.
  *
  * @param grid DensityGrid to write out.
@@ -326,10 +362,14 @@ void SPHArrayInterface::fill_array(float *nH) {
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                               ParameterFile &params, double time,
                               const InternalHydroUnits *hydro_units) {
-  for (auto it = grid.begin(); it != grid.end(); ++it) {
-    const CoordinateVector<> p = it.get_cell_midpoint();
-    uint_fast32_t closest = _octree->get_closest_ngb(p);
-    _neutral_fractions[closest] =
-        it.get_ionization_variables().get_ionic_fraction(ION_H_n);
-  }
+
+  std::pair< cellsize_t, cellsize_t > block =
+      std::make_pair(0, grid.get_number_of_cells());
+  WorkDistributor< DensityGridTraversalJobMarket< InverseMappingFunction >,
+                   DensityGridTraversalJob< InverseMappingFunction > >
+      workers;
+  InverseMappingFunction do_calculation(*_octree, _neutral_fractions);
+  DensityGridTraversalJobMarket< InverseMappingFunction > jobs(
+      grid, do_calculation, block);
+  workers.do_in_parallel(jobs);
 }
