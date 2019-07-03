@@ -4,9 +4,30 @@ title: Publications
 permalink: /publications/
 
 publications:
+  - doi: 10.1093/mnras/stz1187
+    inpress: false
+    ads: 2019MNRAS.486.5171S
+    title: >-
+      Massive star formation via torus accretion: the effect of 
+      photoionization feedback
+    authors:
+      - name: Sartorio N. S.
+      - name: Vandenbroucke B.
+      - name: Falceta-Gon&ccedil;alves D.
+      - name: Wood K.
+      - name: Keto E.
+    journal: Monthly Notices of the Royal Astronomical Society
+    volume: 486
+    page: 5171
+    month: 7
+    year: 2019
+    description: >-
+      Paper exploring the shape and critical luminosity for HII regions
+      surrounding massive stars embedded in an accretion torus. All simulations
+      in this paper were performed using CMacIonize.
   - doi: 10.1093/mnras/stz357
-    inpress: true
-    ads: false
+    inpress: false
+    ads: 2019MNRAS.485.3771V
     title: >-
       Testing the stability of supersonic ionized Bondi accretion flows 
       with radiation hydrodynamics
@@ -21,9 +42,9 @@ publications:
       - name: Keto E.
       - name: Tootill D.
     journal: Monthly Notices of the Royal Astronomical Society
-    volume: false
-    page: false
-    month: 2
+    volume: 485
+    page: 3771
+    month: 5
     year: 2019
     description: >-
       Paper about the numerical aspects of spherically symmetric Bondi
