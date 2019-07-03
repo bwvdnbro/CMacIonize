@@ -27,6 +27,7 @@
 #include "CubicSplineKernel.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "Lock.hpp"
 #include <cfloat>
 
 /**
@@ -325,16 +326,21 @@ private:
   /*! @brief Reference to the neutral fraction vector. */
   std::vector< double > &_neutral_fractions;
 
+  /*! @brief Locks protecting the neutral fraction vector entries. */
+  std::vector< Lock > &_locks;
+
 public:
   /**
    * @brief Constructor.
    *
    * @param octree Reference to the Octree.
    * @param neutral_fractions Reference to the neutral fraction vector.
+   * @param locks Locks protecting the neutral fraction vector entries.
    */
   InverseMappingFunction(Octree &octree,
-                         std::vector< double > &neutral_fractions)
-      : _octree(octree), _neutral_fractions(neutral_fractions) {}
+                         std::vector< double > &neutral_fractions,
+                         std::vector< Lock > &locks)
+      : _octree(octree), _neutral_fractions(neutral_fractions), _locks(locks) {}
 
   /**
    * @brief Do the inverse mapping for a single cell.
@@ -344,8 +350,10 @@ public:
   inline void operator()(DensityGrid::iterator cell) {
     const CoordinateVector<> p = cell.get_cell_midpoint();
     uint_fast32_t closest = _octree.get_closest_ngb(p);
+    _locks[closest].lock();
     _neutral_fractions[closest] =
         cell.get_ionization_variables().get_ionic_fraction(ION_H_n);
+    _locks[closest].unlock();
   }
 };
 
@@ -363,12 +371,14 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                               ParameterFile &params, double time,
                               const InternalHydroUnits *hydro_units) {
 
+  std::vector< Lock > locks(_neutral_fractions.size());
+
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   WorkDistributor< DensityGridTraversalJobMarket< InverseMappingFunction >,
                    DensityGridTraversalJob< InverseMappingFunction > >
       workers;
-  InverseMappingFunction do_calculation(*_octree, _neutral_fractions);
+  InverseMappingFunction do_calculation(*_octree, _neutral_fractions, locks);
   DensityGridTraversalJobMarket< InverseMappingFunction > jobs(
       grid, do_calculation, block);
   workers.do_in_parallel(jobs);
