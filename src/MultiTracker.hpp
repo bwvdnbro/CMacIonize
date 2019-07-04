@@ -46,11 +46,20 @@ private:
   std::vector< std::string > _output_names;
 
 public:
+  /**
+   * @brief Empty constructor.
+   */
+  MultiTracker() {}
+
   MultiTracker(const std::string name, YAMLDictionary &blocks);
 
   virtual ~MultiTracker();
 
+  virtual Tracker *duplicate();
+  virtual void merge(const Tracker *tracker);
+
   virtual void count_photon(const Photon &photon);
+  virtual void count_photon(const PhotonPacket &photon);
 
   virtual void output_tracker(const std::string filename) const;
 };

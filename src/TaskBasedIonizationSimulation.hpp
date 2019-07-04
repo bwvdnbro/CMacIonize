@@ -52,6 +52,7 @@ class PhotonSourceSpectrum;
 class RecombinationRates;
 class TaskQueue;
 class TemperatureCalculator;
+class TrackerManager;
 
 /**
  * @brief Ionization radiative transfer simulation using a task-based parallel
@@ -82,7 +83,7 @@ private:
 
   /*! @brief Number of photons used in every iteration of the ray tracing
    *  loop. */
-  const uint_fast64_t _number_of_photons;
+  uint_fast64_t _number_of_photons;
 
   /*! @brief Copy level for subgrids that contain a source. */
   const uint_fast8_t _source_copy_level;
@@ -130,6 +131,9 @@ private:
 
   /*! @brief Log to write logging info to. */
   Log *_log;
+
+  /*! @brief Optional spectrum tracker manager. */
+  TrackerManager *_trackers;
 
   /*! @brief Timer for the total simulation time. */
   Timer _total_timer;

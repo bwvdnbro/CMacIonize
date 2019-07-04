@@ -32,6 +32,7 @@
 #include "Configuration.hpp"
 #include "CoordinateVector.hpp"
 #include "ElementNames.hpp"
+#include "PhotonType.hpp"
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -61,6 +62,10 @@ private:
 
   /*! @brief Weight of the photon packet. */
   double _weight;
+
+  /*! @brief Type of the photon. All photons start off as PHOTONTYPE_PRIMARY,
+   *  but their type can change during reemission events. */
+  PhotonType _type;
 
 public:
 #ifdef HAVE_MPI
@@ -259,6 +264,20 @@ public:
    * @param weight New weight for the photon packet.
    */
   inline void set_weight(const double weight) { _weight = weight; }
+
+  /**
+   * @brief Get the type of the photon.
+   *
+   * @return PhotonType type identifier.
+   */
+  inline PhotonType get_type() const { return _type; }
+
+  /**
+   * @brief Set the photon type.
+   *
+   * @param type PhotonType type identifier.
+   */
+  inline void set_type(PhotonType type) { _type = type; }
 };
 
 #endif // PHOTONPACKET_HPP

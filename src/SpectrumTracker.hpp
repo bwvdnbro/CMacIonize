@@ -28,6 +28,7 @@
 #define SPECTRUMTRACKER_HPP
 
 #include "Photon.hpp"
+#include "PhotonPacket.hpp"
 #include "Tracker.hpp"
 #include "YAMLDictionary.hpp"
 
@@ -127,11 +128,70 @@ public:
   virtual ~SpectrumTracker() {}
 
   /**
+   * @brief Make a duplicate of the current tracker.
+   *
+   * @return Pointer to a new duplicate of the tracker.
+   */
+  virtual Tracker *duplicate() {
+    return new SpectrumTracker(_number_counts_primary.size(),
+                               std::acos(_cos_opening_angle),
+                               _reference_direction);
+  }
+
+  /**
+   * @brief Add the contribution from the given duplicate tracker to this
+   * tracker.
+   *
+   * @param tracker Duplicate tracker (created using Tracker::duplicate()).
+   */
+  virtual void merge(const Tracker *tracker) {
+    const SpectrumTracker *other =
+        reinterpret_cast< const SpectrumTracker * >(tracker);
+    for (uint_fast32_t i = 0; i < _number_counts_primary.size(); ++i) {
+      _number_counts_primary[i] += other->_number_counts_primary[i];
+      _number_counts_diffuse_H[i] += other->_number_counts_diffuse_H[i];
+      _number_counts_diffuse_He[i] += other->_number_counts_diffuse_He[i];
+    }
+  }
+
+  /**
    * @brief Add the contribution of the given photon packet to the bins.
    *
    * @param photon Photon to add.
    */
   virtual void count_photon(const Photon &photon) {
+
+    if (_reference_direction.norm2() > 0.) {
+      const double dot_product = CoordinateVector<>::dot_product(
+          photon.get_direction(), _reference_direction);
+      if (dot_product < _cos_opening_angle) {
+        // photon is travelling in the wrong direction
+        return;
+      }
+    }
+
+    const double frequency = photon.get_energy();
+    const uint_fast32_t index =
+        (frequency - _minimum_frequency) * _inverse_frequency_width;
+    if (index < _number_counts_primary.size()) {
+      if (photon.get_type() == PHOTONTYPE_PRIMARY) {
+        ++_number_counts_primary[index];
+      }
+      if (photon.get_type() == PHOTONTYPE_DIFFUSE_HI) {
+        ++_number_counts_diffuse_H[index];
+      }
+      if (photon.get_type() == PHOTONTYPE_DIFFUSE_HeI) {
+        ++_number_counts_diffuse_He[index];
+      }
+    }
+  }
+
+  /**
+   * @brief Add the contribution of the given photon packet to the bins.
+   *
+   * @param photon Photon to add.
+   */
+  virtual void count_photon(const PhotonPacket &photon) {
 
     if (_reference_direction.norm2() > 0.) {
       const double dot_product = CoordinateVector<>::dot_product(

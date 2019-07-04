@@ -85,12 +85,14 @@ public:
    * @param ionization_variables IonizationVariables of the cell that contains
    * the current location of the Photon.
    * @param random_generator RandomGenerator to use.
+   * @param type New type of the reemitted photon.
    * @return New frequency for the photon, or zero if the photon is absorbed.
    */
   virtual double reemit(const PhotonPacket &photon,
                         const double helium_abundance,
                         const IonizationVariables &ionization_variables,
-                        RandomGenerator &random_generator) const = 0;
+                        RandomGenerator &random_generator,
+                        PhotonType &type) const = 0;
 };
 
 #endif // DIFFUSEREEMISSIONHANDLER_HPP

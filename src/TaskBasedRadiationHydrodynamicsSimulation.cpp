@@ -1712,6 +1712,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
                     PhotonPacket &photon = input_buffer[i];
 
+                    photon.set_type(PHOTONTYPE_PRIMARY);
+
                     // initial position: we currently assume a single source at
                     // the origin
                     photon.set_position(source_position);
@@ -1801,11 +1803,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                         subgrid.get_cell(old_photon.get_position())
                             .get_ionization_variables();
                     const double AHe = 0.;
+                    PhotonType new_type;
                     const double new_frequency = reemission_handler->reemit(
                         old_photon, AHe, ionization_variables,
-                        random_generators[thread_id]);
+                        random_generators[thread_id], new_type);
                     if (new_frequency > 0.) {
                       PhotonPacket &new_photon = buffer[index];
+                      new_photon.set_type(new_type);
                       new_photon.set_position(old_photon.get_position());
                       new_photon.set_weight(old_photon.get_weight());
 

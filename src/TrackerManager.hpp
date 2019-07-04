@@ -27,6 +27,7 @@
 #define TRACKERMANAGER_HPP
 
 #include "DensityGrid.hpp"
+#include "DensitySubGridCreator.hpp"
 #include "ParameterFile.hpp"
 #include "TrackerFactory.hpp"
 #include "YAMLDictionary.hpp"
@@ -44,6 +45,12 @@ private:
 
   /*! @brief List of trackers. */
   std::vector< Tracker * > _trackers;
+
+  /*! @brief Indices of the original tracker corresponding to each copy. */
+  std::vector< size_t > _originals;
+
+  /*! @brief Indices of the first copy of each tracker. */
+  std::vector< size_t > _copies;
 
   /*! @brief List of output file names. */
   std::vector< std::string > _output_names;
@@ -75,6 +82,7 @@ public:
         blocks.get_value< uint_fast32_t >("number of trackers");
     _tracker_positions.resize(number_of_trackers);
     _trackers.resize(number_of_trackers, nullptr);
+    _copies.resize(number_of_trackers, 0xffffffff);
     _output_names.resize(number_of_trackers);
     for (uint_fast32_t i = 0; i < number_of_trackers; ++i) {
       std::stringstream blockname;
@@ -143,10 +151,60 @@ public:
   }
 
   /**
+   * @brief Add the trackers to the given distributed grid.
+   *
+   * @param grid Grid to add trackers to.
+   */
+  template < class _subgrid_type_ >
+  inline void add_trackers(DensitySubGridCreator< _subgrid_type_ > &grid) {
+    for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+      if (!grid.get_box().inside(_tracker_positions[i])) {
+        cmac_error("Tracker is not inside grid!");
+      }
+      auto gridit = grid.get_subgrid(_tracker_positions[i]);
+      {
+        auto cellit = (*gridit).get_cell(_tracker_positions[i]);
+        IonizationVariables &ionization_variables =
+            cellit.get_ionization_variables();
+        if (ionization_variables.get_tracker() != nullptr) {
+          cmac_error("Cell already has a tracker!");
+        }
+        ionization_variables.add_tracker(_trackers[i]);
+      }
+      auto copies = gridit.get_copies();
+      bool first = true;
+      for (auto copyit = copies.first; copyit != copies.second; ++copyit) {
+        IonizationVariables &ionization_variables =
+            (*copyit)
+                .get_cell(_tracker_positions[i])
+                .get_ionization_variables();
+        if (ionization_variables.get_tracker() != nullptr) {
+          cmac_error("Cell already has a tracker!");
+        }
+        Tracker *new_tracker = _trackers[i]->duplicate();
+        _trackers.push_back(new_tracker);
+        _originals.push_back(i);
+        if (first) {
+          _copies[i] = _trackers.size() - 1;
+          first = false;
+        }
+        ionization_variables.add_tracker(new_tracker);
+      }
+    }
+  }
+
+  /**
    * @brief Output the tracker information.
    */
   inline void output_trackers() const {
-    for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+    for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+      if (_copies[i] != 0xffffffff) {
+        size_t copy = _copies[i] - _tracker_positions.size();
+        while (copy < _originals.size() && _originals[copy] == i) {
+          _trackers[i]->merge(_trackers[copy + _tracker_positions.size()]);
+          ++copy;
+        }
+      }
       _trackers[i]->output_tracker(_output_names[i]);
     }
   }
