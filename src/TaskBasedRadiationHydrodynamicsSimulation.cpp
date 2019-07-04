@@ -669,16 +669,18 @@ execute_task(const size_t itask,
     subgrid.predict_primitive_variables(hydro, 0.5 * timestep);
     break;
   case TASKTYPE_FLUXSWEEP_INTERNAL:
-    subgrid.inner_flux_sweep(hydro);
+    subgrid.inner_flux_sweep(hydro, timestep);
     break;
   case TASKTYPE_FLUXSWEEP_EXTERNAL_NEIGHBOUR:
     subgrid.outer_flux_sweep(task.get_interaction_direction(), hydro,
-                             *grid_creator.get_subgrid(task.get_buffer()));
+                             *grid_creator.get_subgrid(task.get_buffer()),
+                             timestep);
     break;
   case TASKTYPE_FLUXSWEEP_EXTERNAL_BOUNDARY:
     subgrid.outer_ghost_flux_sweep(task.get_interaction_direction(), hydro,
                                    boundary_manager.get_boundary_condition(
-                                       task.get_interaction_direction()));
+                                       task.get_interaction_direction()),
+                                   timestep);
     break;
   case TASKTYPE_UPDATE_CONSERVED:
     subgrid.update_conserved_variables(timestep);

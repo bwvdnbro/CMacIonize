@@ -288,8 +288,9 @@ public:
    * subgrid.
    *
    * @param hydro Hydro instance to use.
+   * @param dt Current system time step (in s).
    */
-  inline void inner_flux_sweep(const Hydro &hydro) {
+  inline void inner_flux_sweep(const Hydro &hydro, const double dt) {
 
     // we do three separate sweeps: one for every coordinate direction
     for (int_fast32_t ix = 0; ix < _number_of_cells[0] - 1; ++ix) {
@@ -302,7 +303,7 @@ public:
           // x direction
           hydro.do_flux_calculation(0, _hydro_variables[index000],
                                     _hydro_variables[index100], _cell_size[0],
-                                    _cell_areas[0]);
+                                    _cell_areas[0], dt);
         }
       }
     }
@@ -316,7 +317,7 @@ public:
           // y direction
           hydro.do_flux_calculation(1, _hydro_variables[index000],
                                     _hydro_variables[index010], _cell_size[1],
-                                    _cell_areas[1]);
+                                    _cell_areas[1], dt);
         }
       }
     }
@@ -330,7 +331,7 @@ public:
           // z direction
           hydro.do_flux_calculation(2, _hydro_variables[index000],
                                     _hydro_variables[index001], _cell_size[2],
-                                    _cell_areas[2]);
+                                    _cell_areas[2], dt);
         }
       }
     }
@@ -343,9 +344,11 @@ public:
    * @param direction TravelDirection of the neighbour.
    * @param hydro Hydro instance to use.
    * @param neighbour Neighbouring DensitySubGrid.
+   * @param dt Current system time step (in s).
    */
   inline void outer_flux_sweep(const int_fast32_t direction, const Hydro &hydro,
-                               HydroDensitySubGrid &neighbour) {
+                               HydroDensitySubGrid &neighbour,
+                               const double dt) {
 
     int_fast32_t i, start_index_left, start_index_right, row_increment,
         row_length, column_increment, column_length;
@@ -445,7 +448,7 @@ public:
             start_index_right + ic * column_increment + ir * row_increment;
         hydro.do_flux_calculation(i, left_grid->_hydro_variables[index_left],
                                   right_grid->_hydro_variables[index_right], dx,
-                                  A);
+                                  A, dt);
       }
     }
   }
@@ -458,10 +461,12 @@ public:
    * @param hydro Hydro instance to use.
    * @param boundary HydroBoundary that sets the right state primitive
    * variables.
+   * @param dt Current system time step (in s).
    */
   inline void outer_ghost_flux_sweep(const int_fast32_t direction,
                                      const Hydro &hydro,
-                                     const HydroBoundary &boundary) {
+                                     const HydroBoundary &boundary,
+                                     const double dt) {
 
     int_fast32_t i, start_index_left, row_increment, row_length,
         column_increment, column_length;
@@ -547,7 +552,7 @@ public:
             start_index_left + ic * column_increment + ir * row_increment;
         hydro.do_ghost_flux_calculation(
             i, get_cell_midpoint(index_left) + offset,
-            _hydro_variables[index_left], boundary, dx, A);
+            _hydro_variables[index_left], boundary, dx, A, dt);
       }
     }
   }
