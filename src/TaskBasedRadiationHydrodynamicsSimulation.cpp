@@ -1510,10 +1510,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
               const size_t this_igrid = igrid.post_increment();
               if (this_igrid < grid_creator->number_of_original_subgrids()) {
                 auto gridit = grid_creator->get_subgrid(this_igrid);
-                for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
-                     ++cellit) {
-                  cellit.get_ionization_variables().reset_mean_intensities();
-                }
+                (*gridit).reset_intensities();
               }
             }
             stop_parallel_timing_block();

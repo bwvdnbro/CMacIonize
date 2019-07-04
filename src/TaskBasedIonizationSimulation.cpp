@@ -551,6 +551,21 @@ void TaskBasedIonizationSimulation::run(
     // reset the photon source information
     photon_source.reset();
 
+    // reset mean intensity counters
+    {
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+          auto gridit = _grid_creator->get_subgrid(this_igrid);
+          (*gridit).reset_intensities();
+        }
+      }
+      stop_parallel_timing_block();
+    }
+
     _time_log.start("diffuse field variables");
     // reset the diffuse field variables
     if (_reemission_handler != nullptr) {

@@ -37,7 +37,7 @@
  */
 int main(int argc, char **argv) {
 
-  Hydro hydro(5. / 3., 100., 1.e4, 1.e99);
+  Hydro hydro(5. / 3., 100., 1.e4, 1.e99, false);
 
   HydroVariables variables[100];
   IonizationVariables ionvariables[100];

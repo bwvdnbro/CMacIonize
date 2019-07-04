@@ -541,7 +541,6 @@ void IonizationStateCalculator::calculate_ionization_state(
     calculate_ionization_state(jfac / cellit.get_volume(),
                                hfac / cellit.get_volume(),
                                cellit.get_ionization_variables());
-    //    cellit.get_ionization_variables().reset_mean_intensities();
   }
 }
 
