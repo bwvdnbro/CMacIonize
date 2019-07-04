@@ -102,30 +102,31 @@ int main(int argc, char **argv) {
     test_grid2.predict_primitive_variables(hydro, 0.5 * dt);
 
     // flux exchanges
-    test_grid1.inner_flux_sweep(hydro);
-    test_grid2.inner_flux_sweep(hydro);
+    test_grid1.inner_flux_sweep(hydro, dt);
+    test_grid2.inner_flux_sweep(hydro, dt);
     test_grid1.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_X_N, hydro,
-                                      inflow_boundary);
-    test_grid1.outer_flux_sweep(TRAVELDIRECTION_FACE_X_P, hydro, test_grid2);
+                                      inflow_boundary, dt);
+    test_grid1.outer_flux_sweep(TRAVELDIRECTION_FACE_X_P, hydro, test_grid2,
+                                dt);
     test_grid2.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_X_P, hydro,
-                                      reflective_boundary);
+                                      reflective_boundary, dt);
 
     test_grid1.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Y_N, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid1.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Y_P, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid1.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Z_N, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid1.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Z_P, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid2.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Y_N, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid2.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Y_P, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid2.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Z_N, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
     test_grid2.outer_ghost_flux_sweep(TRAVELDIRECTION_FACE_Z_P, hydro,
-                                      inflow_boundary);
+                                      inflow_boundary, dt);
 
     // conserved variable update
     test_grid1.update_conserved_variables(dt);

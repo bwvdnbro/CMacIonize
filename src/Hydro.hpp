@@ -39,6 +39,9 @@
  *  variables. */
 #define SAFE_HYDRO_VARIABLES
 
+/*! @brief Uncomment this to activate the flux limiter. */
+#define FLUX_LIMITER 2.
+
 /**
  * @brief Hydro related functionality.
  */
@@ -367,11 +370,12 @@ public:
    * @param right_state Right state hydro variables.
    * @param dx Distance between left and right state midpoint (in m).
    * @param A Surface area of the interface (in m^2).
+   * @param dt Current system time step, used for flux limiter (in s).
    */
   inline void do_flux_calculation(const uint_fast8_t i,
                                   HydroVariables &left_state,
                                   HydroVariables &right_state, const double dx,
-                                  const double A) const {
+                                  const double A, const double dt) const {
 
     const double halfdx = 0.5 * dx;
     double rhoL = left_state.get_primitives_density() +
@@ -462,6 +466,65 @@ public:
     pflux[2] *= A;
     Eflux *= A;
 
+#ifdef FLUX_LIMITER
+    // limit the flux
+    double fluxfac = 1.;
+    const double absmflux = mflux * dt;
+    if (absmflux > FLUX_LIMITER * left_state.get_conserved_mass()) {
+      fluxfac = FLUX_LIMITER * left_state.get_conserved_mass() / absmflux;
+    }
+    if (-absmflux > FLUX_LIMITER * right_state.get_conserved_mass()) {
+      fluxfac = std::min(
+          fluxfac, -FLUX_LIMITER * right_state.get_conserved_mass() / absmflux);
+    }
+    if (_gamma > 1.) {
+      const double absEflux = Eflux * dt;
+      if (absEflux > FLUX_LIMITER * left_state.get_conserved_total_energy()) {
+        fluxfac = std::min(
+            fluxfac,
+            FLUX_LIMITER * left_state.get_conserved_total_energy() / absEflux);
+      }
+      if (-absEflux > FLUX_LIMITER * right_state.get_conserved_total_energy()) {
+        fluxfac = std::min(
+            fluxfac, -FLUX_LIMITER * right_state.get_conserved_total_energy() /
+                         absEflux);
+      }
+    }
+    // momentum flux limiter
+    // note that we only apply this for cells that have high momentum, i.e.
+    // whose momentum is higher than the thermal momentum of the cell
+    // without this condition, cells with zero momentum would never be able
+    // to gain momentum...
+    const double p2 = left_state.get_conserved_momentum().norm2();
+    const double m2 =
+        left_state.get_conserved_mass() * left_state.get_conserved_mass();
+    if (p2 * left_state.get_primitives_density() >
+        _gamma * m2 * left_state.get_primitives_pressure()) {
+      const double pflux2 = pflux.norm2() * dt * dt;
+      if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
+        fluxfac = std::min(
+            fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * p2 / pflux2));
+      }
+    }
+    {
+      const double pn2 = right_state.get_conserved_momentum().norm2();
+      const double mn2 =
+          right_state.get_conserved_mass() * right_state.get_conserved_mass();
+      if (p2 * right_state.get_primitives_density() >
+          _gamma * mn2 * right_state.get_primitives_pressure()) {
+        const double pflux2 = pflux.norm2() * dt * dt;
+        if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * pn2) {
+          fluxfac = std::min(
+              fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * pn2 / pflux2));
+        }
+      }
+    }
+    cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g", fluxfac);
+    mflux *= fluxfac;
+    pflux *= fluxfac;
+    Eflux *= fluxfac;
+#endif
+
     left_state.delta_conserved(0) -= mflux;
     left_state.delta_conserved(1) -= pflux.x();
     left_state.delta_conserved(2) -= pflux.y();
@@ -484,12 +547,14 @@ public:
    * @param boundary HydroBoundary that sets the right state variables.
    * @param dx Distance between left and right state midpoint (in m).
    * @param A Surface area of the interface (in m^2).
+   * @param dt Current system time step, used for flux limiter (in s).
    */
   inline void do_ghost_flux_calculation(const uint_fast8_t i,
                                         const CoordinateVector<> posR,
                                         HydroVariables &left_state,
                                         const HydroBoundary &boundary,
-                                        const double dx, const double A) const {
+                                        const double dx, const double A,
+                                        const double dt) const {
 
     // the sign bit is set (1) for negative values
     int_fast8_t orientation = 1 - 2 * std::signbit(dx);
@@ -584,6 +649,43 @@ public:
     pflux[1] *= A;
     pflux[2] *= A;
     Eflux *= A;
+
+#ifdef FLUX_LIMITER
+    // limit the flux
+    double fluxfac = 1.;
+    const double absmflux = mflux * dt;
+    if (absmflux > FLUX_LIMITER * left_state.get_conserved_mass()) {
+      fluxfac = FLUX_LIMITER * left_state.get_conserved_mass() / absmflux;
+    }
+    if (_gamma > 1.) {
+      const double absEflux = Eflux * dt;
+      if (absEflux > FLUX_LIMITER * left_state.get_conserved_total_energy()) {
+        fluxfac = std::min(
+            fluxfac,
+            FLUX_LIMITER * left_state.get_conserved_total_energy() / absEflux);
+      }
+    }
+    // momentum flux limiter
+    // note that we only apply this for cells that have high momentum, i.e.
+    // whose momentum is higher than the thermal momentum of the cell
+    // without this condition, cells with zero momentum would never be able
+    // to gain momentum...
+    const double p2 = left_state.get_conserved_momentum().norm2();
+    const double m2 =
+        left_state.get_conserved_mass() * left_state.get_conserved_mass();
+    if (p2 * left_state.get_primitives_density() >
+        _gamma * m2 * left_state.get_primitives_pressure()) {
+      const double pflux2 = pflux.norm2() * dt;
+      if (pflux2 > (FLUX_LIMITER * FLUX_LIMITER) * p2) {
+        fluxfac = std::min(
+            fluxfac, std::sqrt((FLUX_LIMITER * FLUX_LIMITER) * p2 / pflux2));
+      }
+    }
+    cmac_assert_message(fluxfac >= 0. && fluxfac <= 1., "fluxfac: %g", fluxfac);
+    mflux *= fluxfac;
+    pflux *= fluxfac;
+    Eflux *= fluxfac;
+#endif
 
     left_state.delta_conserved(0) -= mflux;
     left_state.delta_conserved(1) -= pflux.x();

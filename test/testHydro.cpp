@@ -78,7 +78,8 @@ int main(int argc, char **argv) {
 
     for (uint_fast32_t i = 0; i < 100; ++i) {
       uint_fast32_t inext = (i + 1) % 100;
-      hydro.do_flux_calculation(0, variables[i], variables[inext], 0.01, 1.);
+      hydro.do_flux_calculation(0, variables[i], variables[inext], 0.01, 1.,
+                                dt);
     }
 
     for (uint_fast32_t i = 0; i < 100; ++i) {
