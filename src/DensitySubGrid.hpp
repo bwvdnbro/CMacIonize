@@ -1073,6 +1073,16 @@ public:
   }
 
   /**
+   * @brief Reset the intensity counters for all cells in the subgrid.
+   */
+  inline void reset_intensities() {
+    const int_fast32_t tot_ncell = _number_of_cells[3] * _number_of_cells[0];
+    for (int_fast32_t i = 0; i < tot_ncell; ++i) {
+      _ionization_variables[i].reset_mean_intensities();
+    }
+  }
+
+  /**
    * @brief Get the box containing the sub grid.
    *
    * @param box Output array (in m).

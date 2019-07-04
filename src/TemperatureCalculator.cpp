@@ -597,6 +597,11 @@ void TemperatureCalculator::calculate_temperature(
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
 #endif
+    // set the heating term values to zero
+    for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+         ++heating_term) {
+      ionization_variables.set_heating(heating_term, 0.);
+    }
 
     return;
   }
@@ -661,6 +666,11 @@ void TemperatureCalculator::calculate_temperature(
       ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
 #endif
+      // set the heating term values to zero
+      for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+           ++heating_term) {
+        ionization_variables.set_heating(heating_term, 0.);
+      }
 
       return;
     }
@@ -963,7 +973,6 @@ void TemperatureCalculator::calculate_temperature(
       calculate_temperature(
           cellit.get_ionization_variables(), jfac / cellit.get_volume(),
           hfac / cellit.get_volume(), cellit.get_cell_midpoint());
-      //      cellit.get_ionization_variables().reset_mean_intensities();
     }
   } else {
     _ionization_state_calculator.calculate_ionization_state(totweight, subgrid);

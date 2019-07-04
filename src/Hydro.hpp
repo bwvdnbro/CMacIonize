@@ -57,6 +57,9 @@ private:
    *  (in m s^-1). */
   const double _max_velocity;
 
+  /*! @brief Enable explicit radiation heating? */
+  const bool _do_explicit_heating;
+
   /*! @brief @f$\gamma{}-1@f$. */
   const double _gamma_minus_one;
 
@@ -152,11 +155,13 @@ public:
    * @param neutral_temperature Assumed neutral temperature for the gas (in K).
    * @param ionised_temperature Assumed ionised temperature for the gas (in K).
    * @param max_velocity Maximum allowed velocity for the gas (in m s^-1).
+   * @param do_explicit_heating Enable explicit radiation heating?
    */
   inline Hydro(const double gamma, const double neutral_temperature,
-               const double ionised_temperature, const double max_velocity)
+               const double ionised_temperature, const double max_velocity, const bool do_explicit_heating)
       : _gamma(gamma), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature), _max_velocity(max_velocity),
+        _do_explicit_heating(do_explicit_heating),
         _gamma_minus_one(_gamma - 1.),
         _one_over_gamma_minus_one(1. / _gamma_minus_one),
         _density_conversion_factor(PhysicalConstants::get_physical_constant(
@@ -190,6 +195,7 @@ public:
    *    1.e4 K)
    *  - maximum velocity: Maximum allowed velocity for the gas. The gas velocity
    *    is capped at this value (default: 1.e99 m s^-1)
+   *  - do explicit heating: Enable explicit radiation heating? (default: false)
    *
    * @param params ParameterFile to read from.
    */
@@ -200,7 +206,8 @@ public:
               params.get_physical_value< QUANTITY_TEMPERATURE >(
                   "Hydro:ionised temperature", "1.e4 K"),
               params.get_physical_value< QUANTITY_VELOCITY >(
-                  "Hydro:maximum velocity", "1.e99 m s^-1")) {}
+                  "Hydro:maximum velocity", "1.e99 m s^-1"),
+              params.get_value< bool >("Hydro:do explicit heating", false)) {}
 
   /**
    * @brief Get the soundspeed for the given hydrodynamic variables.
@@ -273,7 +280,7 @@ public:
           const double mean_molecular_mass =
               0.5 * (1. + ionization_state.get_ionic_fraction(ION_H_n));
           const double temperature = ionization_state.get_temperature();
-          pressure = _P_conversion_factor * density * temperature /
+          pressure = _pressure_conversion_factor * density * temperature /
                      mean_molecular_mass;
         }
 
@@ -918,13 +925,15 @@ public:
                                     const double inverse_volume,
                                     const double timestep) const {
 
-    const double dE = ionization_variables.get_heating(HEATINGTERM_H) *
-                      timestep * ionization_variables.get_number_density() /
-                      inverse_volume *
-                      ionization_variables.get_ionic_fraction(ION_H_n);
-    update_energy_variables(ionization_variables, hydro_variables,
-                            inverse_volume, dE);
-    return;
+    if (_do_explicit_heating) {
+      const double dE = ionization_variables.get_heating(HEATINGTERM_H) *
+                        timestep * ionization_variables.get_number_density() /
+                        inverse_volume *
+                        ionization_variables.get_ionic_fraction(ION_H_n);
+      update_energy_variables(ionization_variables, hydro_variables,
+                              inverse_volume, dE);
+      return;
+    }
 
     if (_gamma == 1.) {
       const double xH = ionization_variables.get_ionic_fraction(ION_H_n);

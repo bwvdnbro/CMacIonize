@@ -56,6 +56,9 @@ int main(int argc, char **argv) {
       PhotonPacket photon;
 
       photon.set_energy(3.288e15);
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        photon.set_photoionization_cross_section(i, 0.);
+      }
 
       const double cost =
           2. * random_generator.get_uniform_random_double() - 1.;
