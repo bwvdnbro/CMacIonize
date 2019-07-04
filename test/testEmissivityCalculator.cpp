@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
       EmissivityValues values = calculator.calculate_emissivities(
           ionization_variables, abundances, lines);
 
-      double tolerance = 1.e-14;
+      double tolerance = 1.e-6;
 
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HAlpha),

@@ -52,7 +52,7 @@
 enum ElementName {
 #ifdef HAS_HELIUM
   /*! @brief Helium. */
-  ELEMENT_He,
+  ELEMENT_He = 0,
 #else
   /*! @brief Hydrogen. */
   ELEMENT_H = 0,
