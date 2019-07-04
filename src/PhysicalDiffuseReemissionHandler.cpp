@@ -46,12 +46,13 @@ PhysicalDiffuseReemissionHandler::PhysicalDiffuseReemissionHandler(
  * @param ionization_variables IonizationVariables of the cell that contains the
  * current location of the Photon.
  * @param random_generator RandomGenerator to use.
+ * @param type New type of the reemitted photon.
  * @return New frequency for the photon, or zero if the photon is absorbed.
  */
 double PhysicalDiffuseReemissionHandler::reemit(
     const PhotonPacket &photon, const double helium_abundance,
     const IonizationVariables &ionization_variables,
-    RandomGenerator &random_generator) const {
+    RandomGenerator &random_generator, PhotonType &type) const {
 
   double new_frequency = 0.;
 
@@ -81,8 +82,13 @@ double PhysicalDiffuseReemissionHandler::reemit(
       // sample new frequency from hydrogen Lyman continuum
       new_frequency = _HLyc_spectrum.get_random_frequency(
           random_generator, ionization_variables.get_temperature());
+      type = PHOTONTYPE_DIFFUSE_HI;
 
-    } // else photon absorbed
+    } else {
+
+      // photon absorbed
+      type = PHOTONTYPE_ABSORBED;
+    }
 
   } else {
 
@@ -100,12 +106,14 @@ double PhysicalDiffuseReemissionHandler::reemit(
       // sample new frequency from He Ly c
       new_frequency = _HeLyc_spectrum.get_random_frequency(
           random_generator, ionization_variables.get_temperature());
+      type = PHOTONTYPE_DIFFUSE_HeI;
 
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_NPEEV)) {
 
       // new frequency is 19.8eV
       new_frequency = 4.788e15;
+      type = PHOTONTYPE_DIFFUSE_HeI;
 
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_TPC)) {
@@ -119,8 +127,13 @@ double PhysicalDiffuseReemissionHandler::reemit(
         // sample new frequency from H-ionizing part of He 2-photon continuum
         new_frequency = _He2pc_spectrum.get_random_frequency(
             random_generator, ionization_variables.get_temperature());
+        type = PHOTONTYPE_DIFFUSE_HeI;
 
-      } // else photon absorbed
+      } else {
+
+        // photon absorbed
+        type = PHOTONTYPE_ABSORBED;
+      }
 
     } else if (x <= ionization_variables.get_reemission_probability(
                         REEMISSIONPROBABILITY_HELIUM_LYA)) {
@@ -152,8 +165,13 @@ double PhysicalDiffuseReemissionHandler::reemit(
           // hydrogen Lyman continuum, like above
           new_frequency = _HLyc_spectrum.get_random_frequency(
               random_generator, ionization_variables.get_temperature());
+          type = PHOTONTYPE_DIFFUSE_HI;
 
-        } // else photon absorbed
+        } else {
+
+          // photon absorbed
+          type = PHOTONTYPE_ABSORBED;
+        }
 
       } else {
 
@@ -164,12 +182,21 @@ double PhysicalDiffuseReemissionHandler::reemit(
           // sample like above
           new_frequency =
               _He2pc_spectrum.get_random_frequency(random_generator);
+          type = PHOTONTYPE_DIFFUSE_HeI;
 
-        } // else photon absorbed
+        } else {
+
+          // photon absorbed
+          type = PHOTONTYPE_ABSORBED;
+        }
       }
 
-    } // else photon absorbed (this code should never be called, as the total
-      // probabilities sum to 1
+    } else {
+
+      // photon absorbed
+      // this code should never be called, as the total probabilities sum to 1
+      type = PHOTONTYPE_ABSORBED;
+    }
   }
 
   return new_frequency;

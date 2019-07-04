@@ -60,11 +60,52 @@ MultiTracker::~MultiTracker() {
 }
 
 /**
+ * @brief Make a duplicate of the current tracker.
+ *
+ * @return Pointer to a new duplicate of the tracker.
+ */
+Tracker *MultiTracker::duplicate() {
+  MultiTracker *copy = new MultiTracker();
+  copy->_trackers.resize(_trackers.size(), nullptr);
+  copy->_output_names.resize(_trackers.size());
+  for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+    copy->_trackers[i] = _trackers[i]->duplicate();
+    copy->_output_names[i] = _output_names[i];
+  }
+  return copy;
+}
+
+/**
+ * @brief Add the contribution from the given duplicate tracker to this
+ * tracker.
+ *
+ * @param tracker Duplicate tracker (created using Tracker::duplicate()).
+ */
+void MultiTracker::merge(const Tracker *tracker) {
+  const MultiTracker *other = reinterpret_cast< const MultiTracker * >(tracker);
+  for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+    _trackers[i]->merge(other->_trackers[i]);
+  }
+}
+
+/**
  * @brief Add the contribution of the given photon packet to the bins.
  *
  * @param photon Photon to add.
  */
 void MultiTracker::count_photon(const Photon &photon) {
+
+  for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+    _trackers[i]->count_photon(photon);
+  }
+}
+
+/**
+ * @brief Add the contribution of the given photon packet to the bins.
+ *
+ * @param photon Photon to add.
+ */
+void MultiTracker::count_photon(const PhotonPacket &photon) {
 
   for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
     _trackers[i]->count_photon(photon);

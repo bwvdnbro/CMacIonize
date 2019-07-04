@@ -231,6 +231,7 @@ set(CMACIONIZE_SOURCES
     PhotonSourceDistributionFactory.hpp
     PhotonSourceSpectrum.hpp
     PhotonSourceSpectrumFactory.hpp
+    PhotonType.hpp
     PhysicalConstants.hpp
     PlanckPhotonSourceSpectrum.hpp
     RadiationHydrodynamicsSimulation.hpp
@@ -322,6 +323,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     LineCoolingData.cpp
     MaskedPhotonSourceSpectrum.cpp
     MemorySpace.hpp
+    MultiTracker.cpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
     PhysicalDiffuseReemissionHandler.cpp

@@ -26,9 +26,10 @@
 #ifndef TRACKER_HPP
 #define TRACKER_HPP
 
-#include "Photon.hpp"
-
 #include <string>
+
+class Photon;
+class PhotonPacket;
 
 /**
  * @brief General interface for trackers that record photon properties.
@@ -41,11 +42,33 @@ public:
   virtual ~Tracker() {}
 
   /**
+   * @brief Make a duplicate of the current tracker.
+   *
+   * @return Pointer to a new duplicate of the tracker.
+   */
+  virtual Tracker *duplicate() = 0;
+
+  /**
+   * @brief Add the contribution from the given duplicate tracker to this
+   * tracker.
+   *
+   * @param tracker Duplicate tracker (created using Tracker::duplicate()).
+   */
+  virtual void merge(const Tracker *tracker) = 0;
+
+  /**
    * @brief Add the contribution of the given photon packet to the tracker.
    *
    * @param photon Photon to add.
    */
   virtual void count_photon(const Photon &photon) = 0;
+
+  /**
+   * @brief Add the contribution of the given photon packet to the tracker.
+   *
+   * @param photon Photon to add.
+   */
+  virtual void count_photon(const PhotonPacket &photon) = 0;
 
   /**
    * @brief Output the tracker data to the file with the given name.

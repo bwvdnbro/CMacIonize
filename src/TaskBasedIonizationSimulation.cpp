@@ -40,6 +40,7 @@
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
+#include "TrackerManager.hpp"
 
 #include <fstream>
 #include <omp.h>
@@ -211,6 +212,8 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *  - diffuse field: Should the diffuse field be tracked? (default: false)
  *  - source copy level: Copy level for subgrids that contain a source (default:
  *    4)
+ *  - enable trackers: Track photon packets travelling through specific
+ *    positions? (default: no)
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
@@ -322,6 +325,13 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     _reemission_handler = nullptr;
   }
 
+  if (_parameter_file.get_value< bool >(
+          "TaskBasedIonizationSimulation:enable trackers", false)) {
+    _trackers = new TrackerManager(_parameter_file);
+  } else {
+    _trackers = nullptr;
+  }
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
@@ -396,6 +406,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _cross_sections;
   delete _recombination_rates;
   delete _reemission_handler;
+  delete _trackers;
 }
 
 /**
@@ -550,6 +561,18 @@ void TaskBasedIonizationSimulation::run(
 
     // reset the photon source information
     photon_source.reset();
+
+    if (_trackers != nullptr && iloop == _number_of_iterations - 1) {
+      if (_log) {
+        _log->write_status("Adding trackers...");
+      }
+      _trackers->add_trackers(*_grid_creator);
+      _number_of_photons =
+          std::max(_number_of_photons, _trackers->get_number_of_photons());
+      if (_log) {
+        _log->write_status("Done adding trackers.");
+      }
+    }
 
     // reset mean intensity counters
     {
@@ -749,6 +772,8 @@ void TaskBasedIonizationSimulation::run(
 
               PhotonPacket &photon = input_buffer[i];
 
+              photon.set_type(PHOTONTYPE_PRIMARY);
+
               // initial position: we currently assume a single source at the
               // origin
               photon.set_position(source_position);
@@ -839,11 +864,13 @@ void TaskBasedIonizationSimulation::run(
 #else
               const double AHe = 0.;
 #endif
+              PhotonType new_type;
               const double new_frequency = _reemission_handler->reemit(
                   old_photon, AHe, ionization_variables,
-                  _random_generators[thread_id]);
+                  _random_generators[thread_id], new_type);
               if (new_frequency > 0.) {
                 PhotonPacket &new_photon = buffer[index];
+                new_photon.set_type(new_type);
                 new_photon.set_position(old_photon.get_position());
                 new_photon.set_weight(old_photon.get_weight());
 
@@ -1203,6 +1230,16 @@ void TaskBasedIonizationSimulation::run(
     _time_log.end(iloopstr.str());
   } // photoionization loop
   _time_log.end("photoionization loop");
+
+  if (_trackers != nullptr) {
+    if (_log) {
+      _log->write_status("Outputting trackers...");
+    }
+    _trackers->output_trackers();
+    if (_log) {
+      _log->write_status("Done outputting trackers.");
+    }
+  }
 
   _time_log.start("snapshot");
   _density_grid_writer->write(*_grid_creator, _number_of_iterations,
