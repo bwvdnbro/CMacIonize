@@ -1505,10 +1505,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             AtomicValue< size_t > igrid(0);
             start_parallel_timing_block();
 #pragma omp parallel default(shared)
-            while (igrid.value() <
-                   grid_creator->number_of_original_subgrids()) {
+            while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
               const size_t this_igrid = igrid.post_increment();
-              if (this_igrid < grid_creator->number_of_original_subgrids()) {
+              if (this_igrid < grid_creator->number_of_actual_subgrids()) {
                 auto gridit = grid_creator->get_subgrid(this_igrid);
                 (*gridit).reset_intensities();
               }
@@ -1527,10 +1526,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             AtomicValue< size_t > igrid(0);
             start_parallel_timing_block();
 #pragma omp parallel default(shared)
-            while (igrid.value() <
-                   grid_creator->number_of_original_subgrids()) {
+            while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
               const size_t this_igrid = igrid.post_increment();
-              if (this_igrid < grid_creator->number_of_original_subgrids()) {
+              if (this_igrid < grid_creator->number_of_actual_subgrids()) {
                 auto gridit = grid_creator->get_subgrid(this_igrid);
                 for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                      ++cellit) {

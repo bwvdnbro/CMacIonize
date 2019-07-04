@@ -556,9 +556,9 @@ void TaskBasedIonizationSimulation::run(
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
-      while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+      while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
-        if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+        if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
           auto gridit = _grid_creator->get_subgrid(this_igrid);
           (*gridit).reset_intensities();
         }
@@ -572,9 +572,9 @@ void TaskBasedIonizationSimulation::run(
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
 #pragma omp parallel default(shared)
-      while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
+      while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
-        if (this_igrid < _grid_creator->number_of_original_subgrids()) {
+        if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
           auto gridit = _grid_creator->get_subgrid(this_igrid);
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                ++cellit) {
@@ -789,7 +789,6 @@ void TaskBasedIonizationSimulation::run(
                 if (ion != ION_H_n) {
                   sigma *= _abundances.get_abundance(get_element(ion));
                 }
-                // this is the fixed cross section we use for the moment
                 photon.set_photoionization_cross_section(ion, sigma);
               }
             }
@@ -855,7 +854,6 @@ void TaskBasedIonizationSimulation::run(
                   if (ion != ION_H_n) {
                     sigma *= _abundances.get_abundance(get_element(ion));
                   }
-                  // this is the fixed cross section we use for the moment
                   new_photon.set_photoionization_cross_section(ion, sigma);
                 }
 
