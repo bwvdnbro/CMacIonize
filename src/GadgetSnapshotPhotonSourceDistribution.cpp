@@ -27,6 +27,7 @@
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "UVLuminosityFunctionFactory.hpp"
 #include "UnitConverter.hpp"
 
 /**
@@ -38,6 +39,8 @@
  * @param formation_time_name Name of the formation time data set in the
  * snapshot file.
  * @param box Dimensions of the simulation box (in m).
+ * @param luminosity_function UVLuminosityFunction to use to assign UV
+ * luminosities to star particles.
  * @param fallback_unit_length_in_SI Length unit to use if the units group is
  * not found in the snapshot file.
  * @param fallback_unit_time_in_SI Time unit to use if the units group is not
@@ -46,8 +49,6 @@
  * found in the snapshot file.
  * @param cutoff_age Upper age limit for stellar populations that emit UV
  * radiation (in s).
- * @param rate_per_mass_unit Ionization rate per mass unit for a stellar
- * population younger than the cut off age (in s^-1 kg^-1).
  * @param use_gas Do the gas particles contain stars?
  * @param SFR_unit Unit used for star formation rate values in the snapshot (if
  * set to 0., mass_unit/time_unit is assumed).
@@ -60,10 +61,11 @@
  */
 GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     std::string filename, std::string formation_time_name, const Box<> box,
+    UVLuminosityFunction *luminosity_function,
     double fallback_unit_length_in_SI, double fallback_unit_time_in_SI,
-    double fallback_unit_mass_in_SI, double cutoff_age,
-    double rate_per_mass_unit, bool use_gas, double SFR_unit,
-    bool comoving_integration, double hubble_parameter, Log *log)
+    double fallback_unit_mass_in_SI, double cutoff_age, bool use_gas,
+    double SFR_unit, bool comoving_integration, double hubble_parameter,
+    Log *log)
     : _log(log) {
 
   // turn off default HDF5 error handling: we catch errors ourselves
@@ -159,13 +161,14 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     for (size_t i = 0; i < positions.size(); ++i) {
       const CoordinateVector<> position = positions[i] * unit_length_in_SI;
       if (sfrs[i] > 0. && box.inside(position)) {
-        _positions.push_back(position);
         // by multiplying the star formation rate with the cutoff age, we get
         // the total mass in stars that is young enough to contain O stars
-        // we multiply by the rate per mass to get the ionization rate of the
-        // star forming population
-        _total_luminosity =
-            sfrs[i] * unit_SFR_in_SI * cutoff_age * rate_per_mass_unit;
+        const double mass = sfrs[i] * unit_SFR_in_SI * cutoff_age;
+        const double UV_luminosity = (*luminosity_function)(0., mass);
+        if (UV_luminosity > 0.) {
+          _positions.push_back(position);
+          _total_luminosity += UV_luminosity;
+        }
       }
     }
   } else {
@@ -187,13 +190,16 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
     // close the file
     HDF5Tools::close_file(file);
 
-    // filter out all stars older than the cutoff age
     for (size_t i = 0; i < formtimes.size(); ++i) {
-      const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
       const CoordinateVector<> position = positions[i] * unit_length_in_SI;
-      if (age <= cutoff_age && box.inside(position)) {
-        _positions.push_back(position);
-        _total_luminosity += masses[i] * unit_mass_in_SI * rate_per_mass_unit;
+      if (box.inside(position)) {
+        const double age = (snaptime - formtimes[i]) * unit_time_in_SI;
+        const double mass = masses[i] * unit_mass_in_SI;
+        const double UV_luminosity = (*luminosity_function)(age, mass);
+        if (UV_luminosity > 0.) {
+          _positions.push_back(position);
+          _total_luminosity += UV_luminosity;
+        }
       }
     }
   }
@@ -208,6 +214,9 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
       _log->write_warning("Total luminosity of sources in snapshot is zero!");
     }
   }
+
+  // we are done with the UVLuminosityFunction, delete it
+  delete luminosity_function;
 }
 
 /**
@@ -225,8 +234,6 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
  *    snapshot file (default: 1. kg, with warning)
  *  - cutoff age: Upper limit for the age of star particles that emit UV
  *    radiation (default: 5. Myr)
- *  - flux per mass unit: Ionizing flux per mass unit for star particles that
- *    emit UV radiation (default: 4.96e46 s^-1 Msol^-1)
  *  - use gas: Do gas particles contain stars (default: false)?
  *  - SFR unit: Unit for SFR values in the snapshot (default: (mass unit)/(time
  *    unit))
@@ -248,6 +255,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
                     "SimulationBox:anchor"),
                 params.get_physical_vector< QUANTITY_LENGTH >(
                     "SimulationBox:sides")),
+          UVLuminosityFunctionFactory::generate(params, log),
           params.get_physical_value< QUANTITY_LENGTH >(
               "PhotonSourceDistribution:fallback unit length", "0. m"),
           params.get_physical_value< QUANTITY_TIME >(
@@ -256,9 +264,6 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
               "PhotonSourceDistribution:fallback unit mass", "0. kg"),
           params.get_physical_value< QUANTITY_TIME >(
               "PhotonSourceDistribution:cutoff age", "5. Myr"),
-          params.get_physical_value< QUANTITY_FREQUENCY_PER_MASS >(
-              "PhotonSourceDistribution:flux per mass unit",
-              "4.96e46 s^-1 Msol^-1"),
           params.get_value< bool >("PhotonSourceDistribution:use gas", false),
           params.get_physical_value< QUANTITY_MASS_RATE >(
               "PhotonSourceDistribution:SFR unit", "0. kg s^-1"),
