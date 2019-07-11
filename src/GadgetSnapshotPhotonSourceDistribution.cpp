@@ -167,6 +167,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
         const double UV_luminosity = (*luminosity_function)(0., mass);
         if (UV_luminosity > 0.) {
           _positions.push_back(position);
+          _luminosities.push_back(UV_luminosity);
           _total_luminosity += UV_luminosity;
         }
       }
@@ -198,6 +199,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
         const double UV_luminosity = (*luminosity_function)(age, mass);
         if (UV_luminosity > 0.) {
           _positions.push_back(position);
+          _luminosities.push_back(UV_luminosity);
           _total_luminosity += UV_luminosity;
         }
       }
@@ -310,7 +312,7 @@ CoordinateVector<> GadgetSnapshotPhotonSourceDistribution::get_position(
  */
 double GadgetSnapshotPhotonSourceDistribution::get_weight(
     photonsourcenumber_t index) const {
-  return 1. / _positions.size();
+  return _luminosities[index] / _total_luminosity;
 }
 
 /**
