@@ -1431,6 +1431,15 @@ set(TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES
 add_unit_test(NAME testRateBasedUVLuminosityFunction
               SOURCES ${TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES})
 
+## Unit test for IMFBasedUVLuminosityFunction
+set(TESTIMFBASEDUVLUMINOSITYFUNCTION_SOURCES
+    testIMFBasedUVLuminosityFunction.cpp
+
+    ../src/IMFBasedUVLuminosityFunction.hpp
+)
+add_unit_test(NAME testIMFBasedUVLuminosityFunction
+              SOURCES ${TESTIMFBASEDUVLUMINOSITYFUNCTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
