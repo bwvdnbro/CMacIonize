@@ -32,6 +32,7 @@
 #include "UVLuminosityFunction.hpp"
 
 // non library dependent implementations
+#include "IMFBasedUVLuminosityFunction.hpp"
 #include "RateBasedUVLuminosityFunction.hpp"
 
 #include <string>
@@ -46,6 +47,7 @@ public:
    * parameter file.
    *
    * Supported types are (default: RateBased):
+   *  - IMFBased: Luminosity based on an IMF and the star particle age and mass.
    *  - RateBased: Luminosity based on a fixed UV luminosity per unit mass.
    *
    * @param params ParameterFile containing the parameters used by the specific
@@ -66,7 +68,9 @@ public:
     // there is some order here: first the non-library dependent
     // implementations, then the library dependent ones (sorted alphabetically
     // on library name). Each group is sorted alphabetically as well.
-    if (type == "RateBased") {
+    if (type == "IMFBased") {
+      return new IMFBasedUVLuminosityFunction(params);
+    } else if (type == "RateBased") {
       return new RateBasedUVLuminosityFunction(params);
     } else {
       cmac_error("Unknown UVLuminosityFunction type: \"%s\".", type.c_str());
