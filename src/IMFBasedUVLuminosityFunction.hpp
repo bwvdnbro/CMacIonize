@@ -35,6 +35,17 @@
 /**
  * @brief UVLuminosityFunction implementation that uses an IMF to determine the
  * UV luminosity for a star particle.
+ *
+ * To make this class independent of a particular choice of IMF, we parametrise
+ * the IMF using the slope and mass fraction of the high mass tail, and a lower
+ * and upper limit for what we consider to be the high mass tail.
+ *
+ * The UV luminosity is then given by explicit analytic integration of a
+ * polynomial fit to the Sternberg et al. (2003) stellar atmosphere models over
+ * the high mass tail, using an upper limit set by the mass of the most massive
+ * stars that survive in a population of that mass. The most massive survivor
+ * is found using a double power-law fit to the Tang et al. (2014) stellar
+ * evolution models.
  */
 class IMFBasedUVLuminosityFunction : public UVLuminosityFunction {
 private:
@@ -61,9 +72,15 @@ private:
    * @brief Integrate the power law tail of the IMF between the given mass
    * limits.
    *
-   * @param M_L_in_Msol Lower mass limit (in Msol).
-   * @param M_U_in_Msol Upper mass limit (in Msol).
-   * @param slope Slope of the IMF.
+   * This function simply computes
+   * @f[
+   *   \int_{M_L}^{M_U} m^{1-\alpha{}} dm =
+   *     \frac{M_U^{2-\alpha{}} - M_L^{2-\alpha{}}}{2-\alpha{}}.
+   * @f]
+   *
+   * @param M_L_in_Msol Lower mass limit, @f$M_L@f$ (in Msol).
+   * @param M_U_in_Msol Upper mass limit, @f$M_U@f$ (in Msol).
+   * @param slope Slope of the IMF, @f$\alpha{}@f$.
    * @return Total (unnormalised) mass contained between the given mass limits.
    */
   inline static double IMF_mass_integral(const double M_L_in_Msol,
@@ -77,6 +94,19 @@ private:
   /**
    * @brief Integrate the power law tail of the IMF UV luminosity function
    * between the given mass limits.
+   *
+   * This function computes
+   * @f[
+   *   \int_{M_L}^{M_U} \left( A m^{3-\alpha{}} + B m^{2-\alpha{}} +
+   *                           C m^{1-\alpha{}} + D m^{-\alpha{}} \right) dm =
+   *     A \frac{M_U^{4-\alpha{}} - M_L^{4-\alpha{}}}{4-\alpha{}} +
+   *     B \frac{M_U^{3-\alpha{}} - M_L^{3-\alpha{}}}{3-\alpha{}} +
+   *     C \frac{M_U^{2-\alpha{}} - M_L^{2-\alpha{}}}{2-\alpha{}} +
+   *     D \frac{M_U^{1-\alpha{}} - M_L^{1-\alpha{}}}{1-\alpha{}},
+   * @f]
+   * where @f$A-D@f$ are the coefficients for a third order polynomial fit (and
+   * extrapolation) to the OB luminosity data from Sternberg et al. (2003)
+   * (OB_LCV.dat).
    *
    * @param M_L_in_Msol Lower mass limit (in Msol).
    * @param M_U_in_Msol Upper mass limit (in Msol).
@@ -135,6 +165,20 @@ private:
   /**
    * @brief Get the mass of the most massive star in a stellar population with
    * the given age.
+   *
+   * We use a double power-law fit to the stellar life time data from Tang et
+   * al. (2014), the Z0.017Y0.279 model for masses in the range
+   * @f$[20, 100]~{\rm{}M}_\odot{}@f$. The life time was computed by taking the
+   * difference between the stellar ages at the start of phase 4 (near the ZAM)
+   * and phase 8 (base of the RGB).
+   *
+   * The fitting function is given by
+   * @f[
+   *   M(\tau{}) = \left( A + B \left(\frac{\tau{}}{{\rm{}Myr}}\right)^C +
+   *                          D \left(\frac{\tau{}}{{\rm{}Myr}}\right)^E\right)
+   *   {\rm{}M}_\odot{},
+   * @f]
+   * with @f$A-E@f$ fit coefficients.
    *
    * @param age Age of the stellar population (in s).
    * @return Mass of the most massive star in the population (in Msol).
