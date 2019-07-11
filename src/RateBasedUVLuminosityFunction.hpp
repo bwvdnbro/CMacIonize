@@ -66,7 +66,7 @@ public:
    */
   inline RateBasedUVLuminosityFunction(ParameterFile &params)
       : RateBasedUVLuminosityFunction(
-            params.get_physical_value< QUANTITY_MASS_RATE >(
+            params.get_physical_value< QUANTITY_FREQUENCY_PER_MASS >(
                 "UVLuminosityFunction:UV rate per mass unit",
                 "2.49428e16 s^-1 kg^-1"),
             params.get_physical_value< QUANTITY_TIME >(
