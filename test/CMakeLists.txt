@@ -1420,6 +1420,17 @@ set(TESTUNIFORMPHOTONSOURCESPECTRUM_SOURCES
 add_unit_test(NAME testUniformPhotonSourceSpectrum
               SOURCES ${TESTUNIFORMPHOTONSOURCESPECTRUM_SOURCES})
 
+## Unit test for RateBasedUVLuminosityFunction
+set(TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES
+    testRateBasedUVLuminosityFunction.cpp
+
+    ../src/RateBasedUVLuminosityFunction.hpp
+    ../src/UVLuminosityFunction.hpp
+    ../src/UVLuminosityFunctionFactory.hpp
+)
+add_unit_test(NAME testRateBasedUVLuminosityFunction
+              SOURCES ${TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
