@@ -45,6 +45,9 @@ private:
   /*! @brief Positions of the sources in the snapshot file (in m). */
   std::vector< CoordinateVector<> > _positions;
 
+  /*! @brief UV luminosities of the sources in the snapshot file (in s^-1). */
+  std::vector< double > _luminosities;
+
   /*! @brief Total luminosity of all sources in the snapshot file (in s^-1). */
   double _total_luminosity;
 
