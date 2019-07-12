@@ -40,6 +40,7 @@
 
 #include <vector>
 
+class ContinuousPhotonSource;
 class CrossSections;
 class DensityFunction;
 class DensityGridWriter;
@@ -106,6 +107,12 @@ private:
 
   /*! @brief Spectrum for the discrete UV sources. */
   PhotonSourceSpectrum *_photon_source_spectrum;
+
+  /*! @brief Continuous source of UV light. */
+  ContinuousPhotonSource *_continuous_photon_source;
+
+  /*! @brief Spectrum for the continuous UV source. */
+  PhotonSourceSpectrum *_continuous_photon_source_spectrum;
 
   /*! @brief Object used to compute the combined ionization and temperature
    *  balance at the end of a ray tracing step. */

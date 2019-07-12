@@ -54,7 +54,8 @@ pl.rcParams["font.size"] = 14
 # name labels and colours for the various task types
 # add extra colours and labels here if new tasks are created
 task_names = [
-    "source photon",
+    "source photon (discrete)",
+    "source photon (continuous)",
     "photon traversal",
     "reemission",
     "temperature/ionization state",

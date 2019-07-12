@@ -1551,7 +1551,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   photon_source.get_photon_batch(isrc, PHOTONBUFFER_SIZE);
               if (number_of_photons_this_batch > 0) {
                 const size_t new_task = tasks->get_free_element();
-                (*tasks)[new_task].set_type(TASKTYPE_SOURCE_PHOTON);
+                (*tasks)[new_task].set_type(TASKTYPE_SOURCE_DISCRETE_PHOTON);
                 (*tasks)[new_task].set_subgrid(isrc);
                 (*tasks)[new_task].set_buffer(number_of_photons_this_batch);
                 shared_queue->add_task(new_task);
@@ -1687,7 +1687,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 uint_fast64_t task_start, task_stop;
                 cpucycle_tick(task_start);
 
-                if (task.get_type() == TASKTYPE_SOURCE_PHOTON) {
+                if (task.get_type() == TASKTYPE_SOURCE_DISCRETE_PHOTON) {
 
                   task.start(thread_id);
                   num_active_buffers.pre_increment();
