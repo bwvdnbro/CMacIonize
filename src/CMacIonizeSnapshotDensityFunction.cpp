@@ -139,8 +139,14 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
   if (parameters.has_value("DensityGrid:type")) {
     type = parameters.get_value< std::string >("DensityGrid:type");
   } else {
-    type = "Cartesian";
+    type = "TaskBased";
   }
+  CoordinateVector< uint_fast32_t > numsubgrid;
+  if (type == "TaskBased") {
+    numsubgrid = parameters.get_value< CoordinateVector< uint_fast32_t > >(
+        "DensitySubGridCreator:number of subgrids");
+  }
+
   HDF5Tools::close_group(group);
 
   if (_log) {
@@ -184,8 +190,11 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
     _log->write_info("Coordinates...");
   }
 
-  std::vector< CoordinateVector<> > cell_midpoints =
-      HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
+  std::vector< CoordinateVector<> > cell_midpoints;
+  if (type != "TaskBased") {
+    cell_midpoints =
+        HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
+  }
 
   if (_log) {
     _log->write_info("Densities...");
@@ -258,10 +267,12 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
   }
 
   // unit conversion
-  for (size_t i = 0; i < cell_midpoints.size(); ++i) {
-    cell_midpoints[i][0] *= unit_length_in_SI;
-    cell_midpoints[i][1] *= unit_length_in_SI;
-    cell_midpoints[i][2] *= unit_length_in_SI;
+  for (size_t i = 0; i < cell_densities.size(); ++i) {
+    if (cell_midpoints.size() > 0) {
+      cell_midpoints[i][0] *= unit_length_in_SI;
+      cell_midpoints[i][1] *= unit_length_in_SI;
+      cell_midpoints[i][2] *= unit_length_in_SI;
+    }
     cell_densities[i] *= unit_density_in_SI;
     cell_temperatures[i] *= unit_temperature_in_SI;
     if (cell_velocities.size() > 0) {
@@ -308,6 +319,68 @@ void CMacIonizeSnapshotDensityFunction::initialize() {
       }
       if (cell_velocities.size() > 0) {
         _cartesian_grid[ix][iy][iz].set_velocity(cell_velocities[i]);
+      }
+    }
+
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
+          if (_cartesian_grid[ix][iy][iz].get_number_density() < 0.) {
+            cmac_error("No values found for cell (%" PRIuFAST32 ", %" PRIuFAST32
+                       ", %" PRIuFAST32 ")!",
+                       ix, iy, iz);
+          }
+        }
+      }
+    }
+  } else if (type == "TaskBased") {
+    _cartesian_grid = new DensityValues **[_ncell.x()];
+    for (uint_fast32_t ix = 0; ix < _ncell.x(); ++ix) {
+      _cartesian_grid[ix] = new DensityValues *[_ncell.y()];
+      for (uint_fast32_t iy = 0; iy < _ncell.y(); ++iy) {
+        _cartesian_grid[ix][iy] = new DensityValues[_ncell.z()];
+        for (uint_fast32_t iz = 0; iz < _ncell.z(); ++iz) {
+          _cartesian_grid[ix][iy][iz].set_number_density(-1.);
+        }
+      }
+    }
+
+    const uint_fast32_t numblockx = _ncell.x() / numsubgrid.x();
+    const uint_fast32_t numblocky = _ncell.y() / numsubgrid.y();
+    const uint_fast32_t numblockz = _ncell.z() / numsubgrid.z();
+    const uint_fast32_t numblocktot = numblockx * numblocky * numblockz;
+
+    for (uint_fast32_t six = 0; six < numsubgrid.x(); ++six) {
+      for (uint_fast32_t siy = 0; siy < numsubgrid.y(); ++siy) {
+        for (uint_fast32_t siz = 0; siz < numsubgrid.z(); ++siz) {
+          const uint_fast32_t subgrid_index =
+              six * numsubgrid.y() * numsubgrid.z() + siy * numsubgrid.z() +
+              siz;
+          for (uint_fast32_t cix = 0; cix < numblockx; ++cix) {
+            for (uint_fast32_t ciy = 0; ciy < numblocky; ++ciy) {
+              for (uint_fast32_t ciz = 0; ciz < numblockz; ++ciz) {
+                const uint_fast32_t cell_index = subgrid_index * numblocktot +
+                                                 cix * numblocky * numblockz +
+                                                 ciy * numblockz + ciz;
+                const uint_fast32_t ix = six * numblockx + cix;
+                const uint_fast32_t iy = siy * numblocky + ciy;
+                const uint_fast32_t iz = siz * numblockz + ciz;
+                _cartesian_grid[ix][iy][iz].set_number_density(
+                    cell_densities[cell_index]);
+                _cartesian_grid[ix][iy][iz].set_temperature(
+                    cell_temperatures[cell_index]);
+                for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+                  _cartesian_grid[ix][iy][iz].set_ionic_fraction(
+                      ion, neutral_fractions[ion][cell_index]);
+                }
+                if (cell_velocities.size() > 0) {
+                  _cartesian_grid[ix][iy][iz].set_velocity(
+                      cell_velocities[cell_index]);
+                }
+              }
+            }
+          }
+        }
       }
     }
 
