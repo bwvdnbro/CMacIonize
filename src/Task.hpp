@@ -39,8 +39,10 @@
  * @brief Types of tasks.
  */
 enum TaskType {
-  /*! @brief Draw random photons from the source. */
-  TASKTYPE_SOURCE_PHOTON = 0,
+  /*! @brief Draw random photons from a discrete source. */
+  TASKTYPE_SOURCE_DISCRETE_PHOTON = 0,
+  /*! @brief Draw random photons from a continuous source. */
+  TASKTYPE_SOURCE_CONTINUOUS_PHOTON,
   /*! @brief Propagate photons through a subgrid. */
   TASKTYPE_PHOTON_TRAVERSAL,
   /*! @brief Reemit photons. */

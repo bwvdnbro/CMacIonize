@@ -46,7 +46,8 @@ args = argparser.parse_args()
 
 # list of all supported tasks
 task_names = [
-    "source photon",
+    "source photon (discrete)",
+    "source photon (continuous)",
     "photon traversal",
     "reemission",
     "temperature/ionization state",
