@@ -157,7 +157,7 @@ GadgetSnapshotPhotonSourceDistribution::GadgetSnapshotPhotonSourceDistribution(
 
     // filter out all particles with zero star formation rate
     for (size_t i = 0; i < positions.size(); ++i) {
-      const CoordinateVector<> position = position[i] * unit_length_in_SI;
+      const CoordinateVector<> position = positions[i] * unit_length_in_SI;
       if (sfrs[i] > 0. && box.inside(position)) {
         _positions.push_back(position);
         // by multiplying the star formation rate with the cutoff age, we get
