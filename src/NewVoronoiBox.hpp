@@ -51,7 +51,7 @@ private:
    * @return Reflective copy of the generator.
    */
   inline CoordinateVector<>
-  get_wall_copy(int_fast32_t index,
+  get_wall_copy(uint_fast32_t index,
                 const CoordinateVector<> &generator_position) const {
 
     switch (index) {
