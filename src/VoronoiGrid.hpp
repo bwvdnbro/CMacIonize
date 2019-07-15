@@ -70,7 +70,7 @@ public:
    * @param wallindex Index of a wall of the simulation box.
    * @return Surface normal of the wall.
    */
-  virtual CoordinateVector<> get_wall_normal(int_fast32_t wallindex) const = 0;
+  virtual CoordinateVector<> get_wall_normal(uint_fast32_t wallindex) const = 0;
 
   /**
    * @brief Get the faces of the Voronoi cell with the given index.

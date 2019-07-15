@@ -268,7 +268,7 @@ CoordinateVector<> OldVoronoiGrid::get_centroid(uint_fast32_t index) const {
  * @return Normal vector to the given wall.
  */
 CoordinateVector<>
-OldVoronoiGrid::get_wall_normal(int_fast32_t wallindex) const {
+OldVoronoiGrid::get_wall_normal(uint_fast32_t wallindex) const {
 
   cmac_assert(wallindex >= OLDVORONOI_MAX_INDEX);
 
