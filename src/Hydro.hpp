@@ -125,7 +125,7 @@ private:
       phiplus = phimax + delta1;
     } else {
       const double absphimax = std::abs(phimax);
-      phiplus = phimax * absphimax / (absphimax + delta1);
+      phiplus = phimax * absphimax / (absphimax + delta1 + DBL_MIN);
     }
 
     // if sign(phimin-delta1) == sign(phimin)
@@ -134,7 +134,7 @@ private:
       phiminus = phimin - delta1;
     } else {
       const double absphimin = std::abs(phimin);
-      phiminus = phimin * absphimin / (absphimin + delta1);
+      phiminus = phimin * absphimin / (absphimin + delta1 + DBL_MIN);
     }
 
     double phimid;
@@ -161,7 +161,8 @@ public:
    * @param do_explicit_heating Enable explicit radiation heating?
    */
   inline Hydro(const double gamma, const double neutral_temperature,
-               const double ionised_temperature, const double max_velocity, const bool do_explicit_heating)
+               const double ionised_temperature, const double max_velocity,
+               const bool do_explicit_heating)
       : _gamma(gamma), _neutral_temperature(neutral_temperature),
         _ionised_temperature(ionised_temperature), _max_velocity(max_velocity),
         _do_explicit_heating(do_explicit_heating),
