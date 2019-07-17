@@ -23,9 +23,12 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+
 #include "Assert.hpp"
 #include "ExactRiemannSolver.hpp"
 #include "HLLCRiemannSolver.hpp"
+#include "RandomGenerator.hpp"
+
 #include <fstream>
 #include <string>
 
@@ -192,6 +195,55 @@ int main(int argc, char **argv) {
     assert_condition(pflux.y() == pflux.y());
     assert_condition(pflux.z() == pflux.z());
     assert_condition(Eflux == Eflux);
+
+    // symmetry test
+    {
+      const uint_fast32_t nrho = 100;
+      const uint_fast32_t nu = 100;
+      const uint_fast32_t nP = 100;
+
+      const double rhoL = 1.;
+      const CoordinateVector<> uL(1.);
+      const double PL = 1.;
+
+      CoordinateVector<> normal(1., 1., 1.);
+      normal /= normal.norm();
+      const CoordinateVector<> vframe;
+
+      const HLLCRiemannSolver solver(5. / 3.);
+
+      double mfluxL, mfluxR, EfluxL, EfluxR;
+      CoordinateVector<> pfluxL, pfluxR;
+      for (uint_fast32_t irho = 0; irho < nrho; ++irho) {
+        for (uint_fast32_t iu = 0; iu < nu; ++iu) {
+          for (uint_fast32_t iP = 0; iP < nP; ++iP) {
+
+            cmac_warning("irho: %" PRIuFAST32 ", iu: %" PRIuFAST32
+                         ", iP: %" PRIuFAST32,
+                         irho, iu, iP);
+
+            const double rhoR = std::pow(10., -10. + 0.2 * (irho + 0.5));
+            const CoordinateVector<> uR(std::pow(10., -10. + 0.4 * (iu + 0.5)) -
+                                        std::pow(10., 10. - 0.4 * (iu + 0.5)));
+            const double PR = std::pow(10., -10. + 0.2 * (iP + 0.5));
+
+            solver.solve_for_flux(rhoL, uL, PL, rhoR, uR, PR, mfluxL, pfluxL,
+                                  EfluxL, normal, vframe);
+            solver.solve_for_flux(rhoR, uR, PR, rhoL, uL, PL, mfluxR, pfluxR,
+                                  EfluxR, -1. * normal, vframe);
+
+            assert_condition_message(mfluxL == -mfluxR, "%.17g %.17g", mfluxL,
+                                     mfluxR);
+            assert_condition_message(pfluxL == -1. * pfluxR,
+                                     "[%.17g %.17g %.17g] [%.17g %.17g %.17g]",
+                                     pfluxL.x(), pfluxL.y(), pfluxL.z(),
+                                     pfluxR.x(), pfluxR.y(), pfluxR.z());
+            assert_condition_message(EfluxL == -EfluxR, "%.17g %.17g", EfluxL,
+                                     EfluxR);
+          }
+        }
+      }
+    }
   }
 
   return 0;
