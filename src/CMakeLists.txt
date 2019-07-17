@@ -155,6 +155,7 @@ set(CMACIONIZE_SOURCES
     DeRijckeRadiativeCooling.cpp
     DustScattering.cpp
     DustSimulation.cpp
+    EmissivityCalculationSimulation.cpp
     EmissivityCalculator.cpp
     RadiationHydrodynamicsSimulation.cpp
 
