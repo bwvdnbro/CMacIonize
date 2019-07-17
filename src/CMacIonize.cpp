@@ -28,6 +28,7 @@
 #include "CompilerInfo.hpp"
 #include "ConfigurationInfo.hpp"
 #include "DustSimulation.hpp"
+#include "EmissivityCalculationSimulation.hpp"
 #include "FileLog.hpp"
 #include "IonizationSimulation.hpp"
 #include "MPICommunicator.hpp"
@@ -155,9 +156,12 @@ int main(int argc, char **argv) {
   parser.add_option("output-statistics", 's',
                     "Output statistical information about the photons.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("emission", 0, "Compute emission for the given snapshot.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
 
   // add simulation type specific parameters
   RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
+  EmissivityCalculationSimulation::add_command_line_parameters(parser);
 
   parser.parse_arguments(argc, argv);
 
@@ -258,6 +262,13 @@ int main(int argc, char **argv) {
     }
     return RadiationHydrodynamicsSimulation::do_simulation(parser, write_output,
                                                            programtimer, log);
+  } else if (parser.get_value< bool >("emission")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI emission calculation is not supported!");
+    }
+    return EmissivityCalculationSimulation::do_simulation(parser, write_output,
+                                                          programtimer, log);
   } else {
 
     IonizationSimulation simulation(

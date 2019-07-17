@@ -1360,6 +1360,28 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_multi_tracker.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_multi_tracker.yml @ONLY)
 
+## Unit test for EmissivityCalculationSimulation
+if(HAVE_HDF5)
+set(TESTEMISSIVITYCALCULATIONSIMULATION_SOURCES
+    testEmissivityCalculationSimulation.cpp
+
+    ../src/CommandLineOption.cpp
+    ../src/CommandLineParser.cpp
+    ../src/EmissivityCalculationSimulation.cpp
+    ../src/EmissivityCalculationSimulation.hpp
+    ../src/EmissivityCalculator.cpp
+    ../src/LineCoolingData.cpp
+    ../src/ParameterFile.cpp
+)
+add_unit_test(NAME testEmissivityCalculationSimulation
+              SOURCES ${TESTEMISSIVITYCALCULATIONSIMULATION_SOURCES}
+              LIBS ${HDF5_LIBRARIES})
+configure_file(
+  ${PROJECT_SOURCE_DIR}/test/test_emissivitycalculationsimulation.param
+  ${PROJECT_BINARY_DIR}/rundir/test/test_emissivitycalculationsimulation.param
+  COPYONLY)
+endif(HAVE_HDF5)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
