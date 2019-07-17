@@ -210,30 +210,36 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
       cmac_assert(size == neutral_fractions[i].size());
     }
 
-    std::vector< IonizationVariables > ionization_variables(size);
-    for (size_t i = 0; i < size; ++i) {
-      ionization_variables[i].set_number_density(number_density[i] *
-                                                 unit_number_density_in_SI);
-      ionization_variables[i].set_temperature(temperature[i] *
-                                              unit_temperature_in_SI);
-      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-        ionization_variables[i].set_ionic_fraction(ion,
-                                                   neutral_fractions[ion][i]);
+    // prepare output arrays
+    std::vector< double > emissivities[NUMBER_OF_EMISSIONLINES];
+    for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
+      if (do_line[line]) {
+        emissivities[line].resize(size);
       }
     }
 
-    std::vector< EmissivityValues > output_emissivities(size);
-    calculator.calculate_emissivities(ionization_variables,
-                                      output_emissivities);
-
-    std::vector< double > output_values(size);
+#pragma omp parallel for default(shared)
+    for (size_t i = 0; i < size; ++i) {
+      IonizationVariables ionization_variables;
+      ionization_variables.set_number_density(number_density[i] *
+                                              unit_number_density_in_SI);
+      ionization_variables.set_temperature(temperature[i] *
+                                           unit_temperature_in_SI);
+      for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+        ionization_variables.set_ionic_fraction(ion, neutral_fractions[ion][i]);
+      }
+      double output[NUMBER_OF_EMISSIONLINES];
+      calculator.calculate_emissivities(ionization_variables, do_line, output);
+      for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
+        if (do_line[line]) {
+          emissivities[line][i] = output[line];
+        }
+      }
+    }
     for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
       if (do_line[line]) {
-        for (size_t i = 0; i < size; ++i) {
-          output_values[i] = output_emissivities[i].get_emissivity(line);
-        }
         HDF5Tools::append_dataset< double >(
-            parttype0, EmissivityValues::get_name(line), 0, output_values);
+            parttype0, EmissivityValues::get_name(line), 0, emissivities[line]);
       }
     }
   }

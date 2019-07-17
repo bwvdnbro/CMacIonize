@@ -472,20 +472,22 @@ EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
 }
 
 /**
- * @brief Get the emissivities for all cells in the given vector.
+ * @brief Get the emissivities for the given cell.
  *
- * @param ionization_variables Vector with cell variables.
- * @param output_emissivities Vector to put the resulting emissivities in.
+ * @param ionization_variables Cell variables.
+ * @param do_line Array telling which lines to output.
+ * @param output Array to store the output in.
  */
 void EmissivityCalculator::calculate_emissivities(
-    std::vector< IonizationVariables > &ionization_variables,
-    std::vector< EmissivityValues > &output_emissivities) const {
+    const IonizationVariables &ionization_variables,
+    const bool do_line[NUMBER_OF_EMISSIONLINES],
+    double output[NUMBER_OF_EMISSIONLINES]) const {
 
-  cmac_assert(ionization_variables.size() == output_emissivities.size());
-
-  const size_t vsize = ionization_variables.size();
-  for (size_t i = 0; i < vsize; ++i) {
-    output_emissivities[i] =
-        calculate_emissivities(ionization_variables[i], _abundances, _lines);
+  EmissivityValues values =
+      calculate_emissivities(ionization_variables, _abundances, _lines);
+  for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
+    if (do_line[line]) {
+      output[line] = values.get_emissivity(line);
+    }
   }
 }
