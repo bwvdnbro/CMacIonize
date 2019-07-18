@@ -197,6 +197,23 @@ public:
   }
 
   /**
+   * @brief Atomically subtract the given value from the variable and return the
+   * new value of the variable.
+   *
+   * @param decrement Value to subtract from the variable.
+   * @return New value of the variable.
+   */
+  inline _type_ pre_subtract(const _type_ decrement) {
+#if defined(CPP_ATOMIC)
+    // std::atomic does not have direct support for add_fetch, so we have to
+    // emulate it
+    return _value.fetch_add(-decrement) - decrement;
+#elif defined(GCC_ATOMIC)
+    return __sync_add_and_fetch(&_value, -decrement);
+#endif
+  }
+
+  /**
    * @brief Atomically update the variable with the maximum of its current value
    * and the given value.
    *
