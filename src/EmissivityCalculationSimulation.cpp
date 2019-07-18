@@ -42,8 +42,8 @@
  */
 void EmissivityCalculationSimulation::add_command_line_parameters(
     CommandLineParser &parser) {
-  parser.add_required_option< std::string >("file", 'f',
-                                            "Name of the input/output file.");
+  parser.add_option< std::string >("file", 'f',
+                                   "Name of the input/output file.", "");
 }
 
 /**
@@ -86,6 +86,9 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
   }
 
   const std::string input_file_name = parser.get_value< std::string >("file");
+  if (input_file_name == "") {
+    cmac_error("No input file name provided (--file)!");
+  }
 
   if (log) {
     log->write_status("Reading file \"", input_file_name, "\"...");
