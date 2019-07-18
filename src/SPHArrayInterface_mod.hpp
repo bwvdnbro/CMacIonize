@@ -30,6 +30,7 @@
 #include "Box.hpp"
 #include "DensityFunction.hpp"
 #include "DensityGridWriter.hpp"
+#include "DensityMapping.hpp"
 #include "Octree.hpp"
 
 /**
@@ -64,14 +65,22 @@ private:
   /*! @brief Neutral fractions on the positions of the SPH particles. */
   std::vector< double > _neutral_fractions;
 
+  /*! @brief Grid of pre-computed cell densities. */
+  //std::vector< std::vector< std::vector< double > > > _density_values;
+
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
-  static double full_integral(double phi, double r0, double R_0, double h);
+  DensityMapping _dens_map;
+  //void gridding();
 
-  static double mass_contribution(const Cell &cell,
+  //double gridded_integral(double phi, double r0_old, double R_0_old, double h_old) const;
+
+  //static double full_integral(double phi, double r0, double R_0, double h);
+
+/*  double mass_contribution(const Cell &cell,
                                   const CoordinateVector<> particle,
-                                  const double h);
+                                  const double h) const;*/
 
 public:
   SPHArrayInterface(const double unit_length_in_SI,
@@ -95,8 +104,14 @@ public:
 
   Octree *get_octree();
 
+  //DensityMapping get_dens_map(){return _dens_map;}
+  
   virtual void initialize();
   virtual DensityValues operator()(const Cell &cell) const;
+
+  //double mass_contribution(const Cell &cell,
+    //                              const CoordinateVector<> particle,
+      //                            const double h) const;
 
   // DensityGridWriter functionality
 
@@ -105,6 +120,8 @@ public:
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
                      ParameterFile &params, double time);
+
+  //virtual double get_gridded_density_value(int i, int j, int k) const;
 };
 
 #endif // SPHARRAYINTERFACE_HPP
