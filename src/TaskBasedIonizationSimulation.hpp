@@ -114,6 +114,9 @@ private:
   /*! @brief Spectrum for the continuous UV source. */
   PhotonSourceSpectrum *_continuous_photon_source_spectrum;
 
+  /*! @brief Total ionizing luminosity of all sources (in s^-1). */
+  double _total_luminosity;
+
   /*! @brief Object used to compute the combined ionization and temperature
    *  balance at the end of a ray tracing step. */
   TemperatureCalculator *_temperature_calculator;
