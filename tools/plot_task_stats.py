@@ -63,6 +63,7 @@ task_names = [
     "fluxsweep boundary",
     "update conserved",
     "update primitives",
+    "flush continuous buffers",
 ]
 
 # load the task data

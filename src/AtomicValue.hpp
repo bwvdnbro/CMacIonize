@@ -207,9 +207,9 @@ public:
 #if defined(CPP_ATOMIC)
     // std::atomic does not have direct support for add_fetch, so we have to
     // emulate it
-    return _value.fetch_add(-decrement) - decrement;
+    return _value.fetch_sub(decrement) - decrement;
 #elif defined(GCC_ATOMIC)
-    return __sync_add_and_fetch(&_value, -decrement);
+    return __sync_sub_and_fetch(&_value, decrement);
 #endif
   }
 

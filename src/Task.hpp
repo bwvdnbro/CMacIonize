@@ -73,6 +73,9 @@ enum TaskType {
   TASKTYPE_UPDATE_CONSERVED,
   /*! @brief Do a primitive variable update sweep. */
   TASKTYPE_UPDATE_PRIMITIVES,
+  /*! @brief Flush the continuous source photon buffers at the end of the photon
+   *  packet creation phase of the iteration. */
+  TASKTYPE_FLUSH_CONTINUOUS_PHOTON_BUFFERS,
   /*! @brief Task type counter. */
   TASKTYPE_NUMBER
 };
