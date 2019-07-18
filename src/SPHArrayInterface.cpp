@@ -889,7 +889,7 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
 
   //time_log.start("Density_mapping");
 
-  const bool _is_old_density_mapping = true;
+  const bool _is_old_density_mapping = false;
   const bool _is_petkova_density_mapping = true;
   DensityValues values;
 
