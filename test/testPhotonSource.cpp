@@ -33,7 +33,6 @@
 #include "PhotonSourceSpectrum.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
 #include "Utilities.hpp"
-using namespace std;
 
 /**
  * @brief Test implementation of CrossSections.
@@ -91,6 +90,7 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   SingleStarPhotonSourceDistribution distribution(
       CoordinateVector<>(0.5, 0.5, 0.5), 1.);
   TestPhotonSourceSpectrum spectrum;
@@ -113,17 +113,17 @@ int main(int argc, char **argv) {
   // check if the spectrum is sampled correctly
   {
     CoordinateVector<> mean_direction;
-    unsigned int numphoton = 1000000;
+    uint_fast32_t numphoton = 1000000;
     double weight = 1. / numphoton;
     double meanenergy = 0.;
-    for (unsigned int i = 0; i < numphoton; ++i) {
+    for (uint_fast32_t i = 0; i < numphoton; ++i) {
       Photon photon = source.get_random_photon(random_generator);
       mean_direction += weight * photon.get_direction();
       meanenergy += weight * photon.get_energy();
     }
-    assert_condition(abs(mean_direction.x()) < 1.e-3);
-    assert_condition(abs(mean_direction.y()) < 1.e-3);
-    assert_condition(abs(mean_direction.z()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.x()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.y()) < 1.e-3);
+    assert_condition(std::abs(mean_direction.z()) < 1.e-3);
     assert_values_equal_tol(meanenergy, 34., 1.e-2);
   }
 

@@ -44,14 +44,17 @@ double get_number_density(double z) { return 1. + z * z; }
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   InterpolatedDensityFunction density_function("test_interpolated_density.txt",
                                                4000.);
+  density_function.initialize();
 
-  for (unsigned int i = 0; i < 1000; ++i) {
-    CoordinateVector<> p(0.5, 0.5, (i + 0.5) * 0.001);
-    assert_values_equal_rel(density_function(p).get_number_density(),
+  for (uint_fast32_t i = 0; i < 1000; ++i) {
+    const CoordinateVector<> p(0.5, 0.5, (i + 0.5) * 0.001);
+    const DummyCell cell(p.x(), p.y(), p.z());
+    assert_values_equal_rel(density_function(cell).get_number_density(),
                             get_number_density(p.z()), 1.e-4);
-    assert_condition(density_function(p).get_temperature() == 4000.);
+    assert_condition(density_function(cell).get_temperature() == 4000.);
   }
 
   return 0;

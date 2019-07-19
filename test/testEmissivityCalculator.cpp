@@ -25,10 +25,8 @@
  */
 #include "Abundances.hpp"
 #include "Assert.hpp"
-#include "CartesianDensityGrid.hpp"
-#include "DensityValues.hpp"
 #include "EmissivityCalculator.hpp"
-#include "HomogeneousDensityFunction.hpp"
+#include "IonizationVariables.hpp"
 #include "LineCoolingData.hpp"
 #include <fstream>
 #include <sstream>
@@ -42,17 +40,12 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
   LineCoolingData lines;
   EmissivityCalculator calculator(abundances);
 
-  HomogeneousDensityFunction function(1.);
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 1, function);
-  std::pair< unsigned long, unsigned long > block =
-      std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
-  DensityGrid::iterator cell = grid.begin();
+  IonizationVariables ionization_variables;
 
   // bjump
   {
@@ -65,7 +58,7 @@ int main(int argc, char **argv) {
 
       lstream >> T >> emhplf >> emhmif >> emheplf >> emhemif;
 
-      calculator.bjump(T, emhpl, emhmi, emhepl, emhemi);
+      calculator.get_balmer_jump_emission(T, emhpl, emhmi, emhepl, emhemi);
 
       assert_values_equal_rel(
           emhpl,
@@ -105,30 +98,30 @@ int main(int argc, char **argv) {
           ifracN >> ifracNp1 >> ifracNp2 >> ifracO >> ifracOp1 >> ifracNe >>
           ifracNep1 >> ifracSp1 >> ifracSp2 >> ifracSp3;
 
-      for (unsigned int i = 0; i < 30; ++i) {
+      for (uint_fast8_t i = 0; i < 30; ++i) {
         lstream >> em[i];
       }
 
-      cell.set_number_density(
+      ionization_variables.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
-      cell.set_temperature(temp);
-      cell.set_ionic_fraction(ION_H_n, nfracH);
-      cell.set_ionic_fraction(ION_He_n, nfracHe);
-      cell.set_ionic_fraction(ION_C_p1, ifracCp1);
-      cell.set_ionic_fraction(ION_C_p2, ifracCp2);
-      cell.set_ionic_fraction(ION_N_n, ifracN);
-      cell.set_ionic_fraction(ION_N_p1, ifracNp1);
-      cell.set_ionic_fraction(ION_N_p2, ifracNp2);
-      cell.set_ionic_fraction(ION_O_n, ifracO);
-      cell.set_ionic_fraction(ION_O_p1, ifracOp1);
-      cell.set_ionic_fraction(ION_Ne_n, ifracNe);
-      cell.set_ionic_fraction(ION_Ne_p1, ifracNep1);
-      cell.set_ionic_fraction(ION_S_p1, ifracSp1);
-      cell.set_ionic_fraction(ION_S_p2, ifracSp2);
-      cell.set_ionic_fraction(ION_S_p3, ifracSp3);
+      ionization_variables.set_temperature(temp);
+      ionization_variables.set_ionic_fraction(ION_H_n, nfracH);
+      ionization_variables.set_ionic_fraction(ION_He_n, nfracHe);
+      ionization_variables.set_ionic_fraction(ION_C_p1, ifracCp1);
+      ionization_variables.set_ionic_fraction(ION_C_p2, ifracCp2);
+      ionization_variables.set_ionic_fraction(ION_N_n, ifracN);
+      ionization_variables.set_ionic_fraction(ION_N_p1, ifracNp1);
+      ionization_variables.set_ionic_fraction(ION_N_p2, ifracNp2);
+      ionization_variables.set_ionic_fraction(ION_O_n, ifracO);
+      ionization_variables.set_ionic_fraction(ION_O_p1, ifracOp1);
+      ionization_variables.set_ionic_fraction(ION_Ne_n, ifracNe);
+      ionization_variables.set_ionic_fraction(ION_Ne_p1, ifracNep1);
+      ionization_variables.set_ionic_fraction(ION_S_p1, ifracSp1);
+      ionization_variables.set_ionic_fraction(ION_S_p2, ifracSp2);
+      ionization_variables.set_ionic_fraction(ION_S_p3, ifracSp3);
 
-      EmissivityValues values =
-          calculator.calculate_emissivities(cell, abundances, lines);
+      EmissivityValues values = calculator.calculate_emissivities(
+          ionization_variables, abundances, lines);
 
       double tolerance = 1.e-14;
 
@@ -260,11 +253,6 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_OII_7325),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[26] * 1.e-20,
-                                                              "erg cm^-3 s^-1"),
-          tolerance);
-      assert_values_equal_rel(
-          values.get_emissivity(EMISSIONLINE_SIV_10mu),
-          UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[27] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
           tolerance);
       assert_values_equal_rel(

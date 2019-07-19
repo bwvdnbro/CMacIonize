@@ -1,0 +1,175 @@
+\documentclass[convert={density=72,outext=.png}]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\usepackage{amsmath}
+
+\tikzstyle{node} = [rectangle, text centered, align=center]
+\tikzstyle{stealthnode} = [rectangle, text centered, align=center, color=gray]
+\tikzstyle{arrow} = [thick,>=stealth]
+\tikzstyle{stealtharrow} = [thick,>=stealth, color=gray, dashed]
+
+\tikzstyle{back1} = [xshift=0.8cm, yshift=1.2cm]
+\tikzstyle{back2} = [xshift=1.6cm, yshift=2.4cm]
+\tikzstyle{back3} = [xshift=2.4cm, yshift=3.6cm]
+\tikzstyle{front1} = [xshift=-1.2cm, yshift=-1.8cm]
+
+\newcommand{\drawLinewithBG}[3]
+{
+    \draw [white,line width=3pt, opacity=1.0]  (#1) -- (#2);
+    \draw [#3] (#1) -- (#2);
+}
+
+\begin{document}
+
+\begin{tikzpicture}[node distance=4.5cm]
+% background
+\node (010100) [node, xshift=0.0cm, yshift=13.5cm] {{\color{gray}010}100};
+\node (010101) [node, xshift=4.5cm, yshift=13.5cm] {{\color{gray}010}101};
+\node (010110) [node, xshift=4.5cm, yshift=9.0cm] {{\color{gray}010}110};
+\node (010111) [node, xshift=0.0cm, yshift=9.0cm] {{\color{gray}010}111};
+\node (011000) [node, xshift=0.0cm, yshift=4.5cm] {{\color{gray}011}000};
+\node (011001) [node, xshift=0.0cm, yshift=0.0cm] {{\color{gray}011}001};
+\node (011110) [node, xshift=4.5cm, yshift=0.0cm] {{\color{gray}011}110};
+\node (011111) [node, xshift=4.5cm, yshift=4.5cm] {{\color{gray}011}111};
+\node (100000) [node, xshift=9.0cm, yshift=4.5cm] {{\color{gray}100}000};
+\node (100001) [node, xshift=9.0cm, yshift=0.0cm] {{\color{gray}100}001};
+\node (100110) [node, xshift=13.5cm, yshift=0.0cm] {{\color{gray}100}110};
+\node (100111) [node, xshift=13.5cm, yshift=4.5cm] {{\color{gray}100}111};
+\node (101000) [node, xshift=13.5cm, yshift=9.0cm] {{\color{gray}101}000};
+\node (101001) [node, xshift=9.0cm, yshift=9.0cm] {{\color{gray}101}001};
+\node (101010) [node, xshift=9.0cm, yshift=13.5cm] {{\color{gray}101}010};
+\node (101011) [node, xshift=13.5cm, yshift=13.5cm] {{\color{gray}101}011};
+\draw [arrow] (010100) -- (010101);
+\draw [arrow] (010101) -- (010110);
+\draw [arrow] (010110) -- (010111);
+\draw [arrow] (010111) -- (011000);
+\draw [arrow] (011000) -- (011001);
+\draw [arrow] (011110) -- (011111);
+\draw [arrow] (011111) -- (100000);
+\draw [arrow] (100000) -- (100001);
+\draw [arrow] (100110) -- (100111);
+\draw [arrow] (100111) -- (101000);
+\draw [arrow] (101000) -- (101001);
+\draw [arrow] (101001) -- (101010);
+\draw [arrow] (101010) -- (101011);
+% front1
+\node (010000) [node, xshift=-1.2cm, yshift=7.2cm] {{\color{gray}010}000};
+\node (010001) [node, xshift=3.3cm, yshift=7.2cm] {{\color{gray}010}001};
+\node (010010) [node, xshift=3.3cm, yshift=11.7cm] {{\color{gray}010}010};
+\node (010011) [node, xshift=-1.2cm, yshift=11.7cm] {{\color{gray}010}011};
+\node (011010) [node, xshift=-1.2cm, yshift=-1.8cm] {{\color{gray}011}010};
+\node (011011) [node, xshift=-1.2cm, yshift=2.7cm] {{\color{gray}011}011};
+\node (011100) [node, xshift=3.3cm, yshift=2.7cm] {{\color{gray}011}100};
+\node (011101) [node, xshift=3.3cm, yshift=-1.8cm] {{\color{gray}011}101};
+\node (100010) [node, xshift=7.8cm, yshift=-1.8cm] {{\color{gray}100}010};
+\node (100011) [node, xshift=7.8cm, yshift=2.7cm] {{\color{gray}100}011};
+\node (100100) [node, xshift=12.3cm, yshift=2.7cm] {{\color{gray}100}100};
+\node (100101) [node, xshift=12.3cm, yshift=-1.8cm] {{\color{gray}100}101};
+\node (101100) [node, xshift=12.3cm, yshift=11.7cm] {{\color{gray}101}100};
+\node (101101) [node, xshift=7.8cm, yshift=11.7cm] {{\color{gray}101}101};
+\node (101110) [node, xshift=7.8cm, yshift=7.2cm] {{\color{gray}101}110};
+\node (101111) [node, xshift=12.3cm, yshift=7.2cm] {{\color{gray}101}111};
+\path (010000) -- (010101) node[stealthnode, midway] (010) {010};
+\path (011000) -- (011101) node[stealthnode, midway] (011) {011};
+\path (100000) -- (100101) node[stealthnode, midway] (100) {100};
+\path (101000) -- (101101) node[stealthnode, midway] (101) {101};
+\drawLinewithBG{010}{011}{stealtharrow};
+\drawLinewithBG{011}{100}{stealtharrow};
+\drawLinewithBG{100}{101}{stealtharrow};
+\drawLinewithBG{010000}{010001}{arrow};
+\drawLinewithBG{010001}{010010}{arrow};
+\drawLinewithBG{010010}{010011}{arrow};
+\drawLinewithBG{011010}{011011}{arrow};
+\drawLinewithBG{011011}{011100}{arrow};
+\drawLinewithBG{011100}{011101}{arrow};
+\drawLinewithBG{100010}{100011}{arrow};
+\drawLinewithBG{100011}{100100}{arrow};
+\drawLinewithBG{100100}{100101}{arrow};
+\drawLinewithBG{101100}{101101}{arrow};
+\drawLinewithBG{101101}{101110}{arrow};
+\drawLinewithBG{101110}{101111}{arrow};
+\drawLinewithBG{010011}{010100}{arrow};
+\drawLinewithBG{011010}{011001}{arrow};
+\drawLinewithBG{011101}{011110}{arrow};
+\drawLinewithBG{100010}{100001}{arrow};
+\drawLinewithBG{100101}{100110}{arrow};
+\drawLinewithBG{101100}{101011}{arrow};
+% front2
+\node (000001) [node, xshift=-2.4cm, yshift=-3.6cm] {{\color{gray}000}001};
+\node (000010) [node, xshift=2.1cm, yshift=-3.6cm] {{\color{gray}000}010};
+\node (000101) [node, xshift=2.1cm, yshift=0.9cm] {{\color{gray}000}101};
+\node (000110) [node, xshift=-2.4cm, yshift=0.9cm] {{\color{gray}000}110};
+\node (001100) [node, xshift=-2.4cm, yshift=9.9cm] {{\color{gray}001}100};
+\node (001101) [node, xshift=2.1cm, yshift=9.9cm] {{\color{gray}001}101};
+\node (001110) [node, xshift=2.1cm, yshift=5.4cm] {{\color{gray}001}110};
+\node (001111) [node, xshift=-2.4cm, yshift=5.4cm] {{\color{gray}001}111};
+\node (110000) [node, xshift=11.1cm, yshift=5.4cm] {{\color{gray}110}000};
+\node (110001) [node, xshift=6.6cm, yshift=5.4cm] {{\color{gray}110}001};
+\node (110010) [node, xshift=6.6cm, yshift=9.9cm] {{\color{gray}110}010};
+\node (110011) [node, xshift=11.1cm, yshift=9.9cm] {{\color{gray}110}011};
+\node (111001) [node, xshift=11.1cm, yshift=0.9cm] {{\color{gray}111}001};
+\node (111010) [node, xshift=6.6cm, yshift=0.9cm] {{\color{gray}111}010};
+\node (111101) [node, xshift=6.6cm, yshift=-3.6cm] {{\color{gray}111}101};
+\node (111110) [node, xshift=11.1cm, yshift=-3.6cm] {{\color{gray}111}110};
+\drawLinewithBG{010000}{001111}{arrow};
+\drawLinewithBG{101111}{110000}{arrow};
+\drawLinewithBG{000001}{000010}{arrow};
+\drawLinewithBG{000101}{000110}{arrow};
+\drawLinewithBG{001100}{001101}{arrow};
+\drawLinewithBG{001101}{001110}{arrow};
+\drawLinewithBG{001110}{001111}{arrow};
+\drawLinewithBG{110000}{110001}{arrow};
+\drawLinewithBG{110001}{110010}{arrow};
+\drawLinewithBG{110010}{110011}{arrow};
+\drawLinewithBG{111001}{111010}{arrow};
+\drawLinewithBG{111101}{111110}{arrow};
+% front3
+\node (000000) [node, xshift=-3.6cm, yshift=-5.4cm] {{\color{gray}000}000};
+\node (000011) [node, xshift=0.9cm, yshift=-5.4cm] {{\color{gray}000}011};
+\node (000100) [node, xshift=0.9cm, yshift=-0.9cm] {{\color{gray}000}100};
+\node (000111) [node, xshift=-3.6cm, yshift=-0.9cm] {{\color{gray}000}111};
+\node (001000) [node, xshift=-3.6cm, yshift=3.6cm] {{\color{gray}001}000};
+\node (001001) [node, xshift=0.9cm, yshift=3.6cm] {{\color{gray}001}001};
+\node (001010) [node, xshift=0.9cm, yshift=8.1cm] {{\color{gray}001}010};
+\node (001011) [node, xshift=-3.6cm, yshift=8.1cm] {{\color{gray}001}011};
+\node (110100) [node, xshift=9.9cm, yshift=8.1cm] {{\color{gray}110}100};
+\node (110101) [node, xshift=5.4cm, yshift=8.1cm] {{\color{gray}110}101};
+\node (110110) [node, xshift=5.4cm, yshift=3.6cm] {{\color{gray}110}110};
+\node (110111) [node, xshift=9.9cm, yshift=3.6cm] {{\color{gray}110}111};
+\node (111000) [node, xshift=9.9cm, yshift=-0.9cm] {{\color{gray}111}000};
+\node (111011) [node, xshift=5.4cm, yshift=-0.9cm] {{\color{gray}111}011};
+\node (111100) [node, xshift=5.4cm, yshift=-5.4cm] {{\color{gray}111}100};
+\node (111111) [node, xshift=9.9cm, yshift=-5.4cm] {{\color{gray}111}111};
+\path (000000) -- (000101) node[stealthnode, midway] (000) {000};
+\path (001000) -- (001101) node[stealthnode, midway] (001) {001};
+\path (110000) -- (110101) node[stealthnode, midway] (110) {110};
+\path (111000) -- (111101) node[stealthnode, midway] (111) {111};
+\drawLinewithBG{001}{010}{stealtharrow};
+\drawLinewithBG{101}{110}{stealtharrow};
+\drawLinewithBG{000}{001}{stealtharrow};
+\drawLinewithBG{110}{111}{stealtharrow};
+\drawLinewithBG{001100}{001101}{arrow};
+\drawLinewithBG{110010}{110011}{arrow};
+\drawLinewithBG{000011}{000100}{arrow};
+\drawLinewithBG{000111}{001000}{arrow};
+\drawLinewithBG{001000}{001001}{arrow};
+\drawLinewithBG{001001}{001010}{arrow};
+\drawLinewithBG{001010}{001011}{arrow};
+\drawLinewithBG{110100}{110101}{arrow};
+\drawLinewithBG{110101}{110110}{arrow};
+\drawLinewithBG{110110}{110111}{arrow};
+\drawLinewithBG{110111}{111000}{arrow};
+\drawLinewithBG{111011}{111100}{arrow};
+\drawLinewithBG{000000}{000001}{arrow};
+\drawLinewithBG{000011}{000010}{arrow};
+\drawLinewithBG{000100}{000101}{arrow};
+\drawLinewithBG{000111}{000110}{arrow};
+\drawLinewithBG{001011}{001100}{arrow};
+\drawLinewithBG{110100}{110011}{arrow};
+\drawLinewithBG{111000}{111001}{arrow};
+\drawLinewithBG{111011}{111010}{arrow};
+\drawLinewithBG{111100}{111101}{arrow};
+\drawLinewithBG{111111}{111110}{arrow};
+\end{tikzpicture}
+
+\end{document}

@@ -40,9 +40,10 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   TerminalLog log(LOGLEVEL_INFO);
   RandomGenerator rg;
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
+  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
 
   /// source illuminates a corner of the box
   {
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
     assert_condition(entrance_point.z() == 1.);
 
     CoordinateVector<> avg_position;
-    for (unsigned int i = 0; i < NUMPOINTS; ++i) {
+    for (uint_fast32_t i = 0; i < NUMPOINTS; ++i) {
       std::pair< CoordinateVector<>, CoordinateVector<> > posdir =
           source.get_random_incoming_direction(rg);
       CoordinateVector<> &pos = posdir.first;

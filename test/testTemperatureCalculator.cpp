@@ -45,19 +45,21 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   LineCoolingData data;
   VernerRecombinationRates rates;
   ChargeTransferRates ctr;
   Abundances abundances(0.1, 2.2e-4, 4.e-5, 3.3e-4, 5.e-5, 9.e-6);
-  TemperatureCalculator calculator(1., abundances, 1., 0., 1., 0., data, rates,
-                                   ctr);
+  TemperatureCalculator calculator(true, 3, 1., abundances, 1.e-3, 100, 1., 0.,
+                                   1., 0., data, rates, ctr);
 
   HomogeneousDensityFunction function(1.);
-  Box box(CoordinateVector<>(), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 1, function);
-  std::pair< unsigned long, unsigned long > block =
+  function.initialize();
+  Box<> box(CoordinateVector<>(), CoordinateVector<>(1.));
+  CartesianDensityGrid grid(box, 1);
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, function);
   DensityGrid::iterator cell = grid.begin();
 
   // test ioneng
@@ -82,47 +84,39 @@ int main(int argc, char **argv) {
           lossf, "erg cm^-3s^-1");
 
       cell.reset_mean_intensities();
-      cell.increase_mean_intensity(ION_H_n, jH);
-      cell.increase_mean_intensity(ION_He_n, jHe);
-      cell.increase_mean_intensity(ION_C_p1, jCp1);
-      cell.increase_mean_intensity(ION_C_p2, jCp2);
-      cell.increase_mean_intensity(ION_N_n, jN);
-      cell.increase_mean_intensity(ION_N_p1, jNp1);
-      cell.increase_mean_intensity(ION_N_p2, jNp2);
-      cell.increase_mean_intensity(ION_O_n, jO);
-      cell.increase_mean_intensity(ION_O_p1, jOp1);
-      cell.increase_mean_intensity(ION_Ne_n, jNe);
-      cell.increase_mean_intensity(ION_Ne_p1, jNep1);
-      cell.increase_mean_intensity(ION_S_p1, jSp1);
-      cell.increase_mean_intensity(ION_S_p2, jSp2);
-      cell.increase_mean_intensity(ION_S_p3, jSp3);
-      cell.increase_heating_H(
-          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"));
-      cell.increase_heating_He(
-          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
-      cell.set_number_density(
+
+      IonizationVariables &ionization_variables =
+          cell.get_ionization_variables();
+
+      const double j[NUMBER_OF_IONNAMES] = {jH,    jHe,  jCp1, jCp2, jN,
+                                            jNp1,  jNp2, jO,   jOp1, jNe,
+                                            jNep1, jSp1, jSp2, jSp3};
+      const double h[NUMBER_OF_HEATINGTERMS] = {
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"),
+          UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1")};
+      ionization_variables.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(n, "cm^-3"));
-      cell.set_temperature(T);
+      ionization_variables.set_temperature(T);
 
       double gain, loss, h0, he0;
-      TemperatureCalculator::ioneng(h0, he0, gain, loss, T, cell, 1.,
-                                    abundances, 1., 1., 0., 0.75, data, rates,
-                                    ctr);
+      TemperatureCalculator::compute_cooling_and_heating_balance(
+          h0, he0, gain, loss, T, cell, j, abundances, h, 1., 0., 0.75, data,
+          rates, ctr);
 
       double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
 
-      Cp1 = cell.get_ionic_fraction(ION_C_p1);
-      Cp2 = cell.get_ionic_fraction(ION_C_p2);
-      N = cell.get_ionic_fraction(ION_N_n);
-      Np1 = cell.get_ionic_fraction(ION_N_p1);
-      Np2 = cell.get_ionic_fraction(ION_N_p2);
-      O = cell.get_ionic_fraction(ION_O_n);
-      Op1 = cell.get_ionic_fraction(ION_O_p1);
-      Ne = cell.get_ionic_fraction(ION_Ne_n);
-      Nep1 = cell.get_ionic_fraction(ION_Ne_p1);
-      Sp1 = cell.get_ionic_fraction(ION_S_p1);
-      Sp2 = cell.get_ionic_fraction(ION_S_p2);
-      Sp3 = cell.get_ionic_fraction(ION_S_p3);
+      Cp1 = ionization_variables.get_ionic_fraction(ION_C_p1);
+      Cp2 = ionization_variables.get_ionic_fraction(ION_C_p2);
+      N = ionization_variables.get_ionic_fraction(ION_N_n);
+      Np1 = ionization_variables.get_ionic_fraction(ION_N_p1);
+      Np2 = ionization_variables.get_ionic_fraction(ION_N_p2);
+      O = ionization_variables.get_ionic_fraction(ION_O_n);
+      Op1 = ionization_variables.get_ionic_fraction(ION_O_p1);
+      Ne = ionization_variables.get_ionic_fraction(ION_Ne_n);
+      Nep1 = ionization_variables.get_ionic_fraction(ION_Ne_p1);
+      Sp1 = ionization_variables.get_ionic_fraction(ION_S_p1);
+      Sp2 = ionization_variables.get_ionic_fraction(ION_S_p2);
+      Sp3 = ionization_variables.get_ionic_fraction(ION_S_p3);
 
       // Kenny's gain and loss values are multiplied with 1.e20 to fit in single
       // precision. We always use double precision and prefer to stick to SI
@@ -168,113 +162,95 @@ int main(int argc, char **argv) {
       // corrections:
 
       // if the initial temperature is more than 25,000 K, don't test this line
-      if (T > 25000.) {
+      if (T > 30000.) {
         continue;
       }
 
-      // if the final temperature is more than 25,000 K, we just set it to
-      // 25,000 K and assume the gas is completely ionized
-      if (Tnewf > 25000.) {
-        h0f = 0.;
-        he0f = 0.;
-        cp1f = 0.;
-        cp2f = 0.;
-        nf = 0.;
-        np1f = 0.;
-        np2f = 0.;
-        of = 0.;
-        op1f = 0.;
-        nef = 0.;
-        nep1f = 0.;
-        sp1f = 0.;
-        sp2f = 0.;
-        sp3f = 0.;
-        Tnewf = 25000.;
-      }
+      // if the final temperature is more than 30,000 K, we just set it to
+      // 30,000 K
+      Tnewf = std::min(30000., Tnewf);
 
       // in Kenny's code, neutral fractions could sometimes be larger than 1
       // we have introduced a maximum
       h0f = std::min(1., h0f);
 
-      // if the gas is neutral, the neutral fractions of ground state ions are 1
-      if (h0f == 1.) {
-        nf = 1.;
-        of = 1.;
-        nef = 1.;
-      }
-
       // set the cell values
       cell.reset_mean_intensities();
 
-      cell.increase_mean_intensity(
+      IonizationVariables &ionization_variables =
+          cell.get_ionization_variables();
+
+      ionization_variables.increase_mean_intensity(
           ION_H_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jH, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_He_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jHe, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_C_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jCp1, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_C_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jCp2, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_N_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jN, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_N_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNp1, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_N_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNp2, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_O_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jO, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_O_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jOp1, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_Ne_n, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNe, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_Ne_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jNep1, "s^-1"));
 
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_S_p1, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp1, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_S_p2, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp2, "s^-1"));
-      cell.increase_mean_intensity(
+      ionization_variables.increase_mean_intensity(
           ION_S_p3, UnitConverter::to_SI< QUANTITY_FREQUENCY >(jSp3, "s^-1"));
 
-      cell.increase_heating_H(
+      ionization_variables.increase_heating(
+          HEATINGTERM_H,
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hH, "erg s^-1"));
-      cell.increase_heating_He(
+      ionization_variables.increase_heating(
+          HEATINGTERM_He,
           UnitConverter::to_SI< QUANTITY_ENERGY_RATE >(hHe, "erg s^-1"));
 
-      cell.set_number_density(
+      ionization_variables.set_number_density(
           UnitConverter::to_SI< QUANTITY_NUMBER_DENSITY >(ntot, "cm^-3"));
-      cell.set_temperature(T);
+      ionization_variables.set_temperature(T);
 
       // calculate the ionization state of the cell
       calculator.calculate_temperature(1., 1., cell);
 
-      h0 = cell.get_ionic_fraction(ION_H_n);
+      h0 = ionization_variables.get_ionic_fraction(ION_H_n);
 
-      he0 = cell.get_ionic_fraction(ION_He_n);
+      he0 = ionization_variables.get_ionic_fraction(ION_He_n);
 
-      cp1 = cell.get_ionic_fraction(ION_C_p1);
-      cp2 = cell.get_ionic_fraction(ION_C_p2);
+      cp1 = ionization_variables.get_ionic_fraction(ION_C_p1);
+      cp2 = ionization_variables.get_ionic_fraction(ION_C_p2);
 
-      n = cell.get_ionic_fraction(ION_N_n);
-      np1 = cell.get_ionic_fraction(ION_N_p1);
-      np2 = cell.get_ionic_fraction(ION_N_p2);
+      n = ionization_variables.get_ionic_fraction(ION_N_n);
+      np1 = ionization_variables.get_ionic_fraction(ION_N_p1);
+      np2 = ionization_variables.get_ionic_fraction(ION_N_p2);
 
-      o = cell.get_ionic_fraction(ION_O_n);
-      op1 = cell.get_ionic_fraction(ION_O_p1);
+      o = ionization_variables.get_ionic_fraction(ION_O_n);
+      op1 = ionization_variables.get_ionic_fraction(ION_O_p1);
 
-      ne = cell.get_ionic_fraction(ION_Ne_n);
-      nep1 = cell.get_ionic_fraction(ION_Ne_p1);
+      ne = ionization_variables.get_ionic_fraction(ION_Ne_n);
+      nep1 = ionization_variables.get_ionic_fraction(ION_Ne_p1);
 
-      sp1 = cell.get_ionic_fraction(ION_S_p1);
-      sp2 = cell.get_ionic_fraction(ION_S_p2);
-      sp3 = cell.get_ionic_fraction(ION_S_p3);
+      sp1 = ionization_variables.get_ionic_fraction(ION_S_p1);
+      sp2 = ionization_variables.get_ionic_fraction(ION_S_p2);
+      sp3 = ionization_variables.get_ionic_fraction(ION_S_p3);
 
-      Tnew = cell.get_temperature();
+      Tnew = ionization_variables.get_temperature();
 
       // check if the values match the expected values
       // since TemperatureCalculator::calculate_temperature() uses an iterative

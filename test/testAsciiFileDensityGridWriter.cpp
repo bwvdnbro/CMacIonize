@@ -46,17 +46,18 @@ int main(int argc, char **argv) {
     // translated to a box with origin 0.
     CoordinateVector<> origin(-0.5);
     CoordinateVector<> side(1.);
-    Box box(origin, side);
-    CoordinateVector< int > ncell(8);
+    Box<> box(origin, side);
+    CoordinateVector< int_fast32_t > ncell(8);
     HomogeneousDensityFunction density_function;
-    CartesianDensityGrid grid(box, ncell, density_function);
-    std::pair< unsigned long, unsigned long > block =
+    density_function.initialize();
+    CartesianDensityGrid grid(box, ncell);
+    std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
-    grid.initialize(block);
+    grid.initialize(block, density_function);
 
     ParameterFile params("test.param");
-    AsciiFileDensityGridWriter writer("testgrid", grid, ".");
-    writer.write(0, params);
+    AsciiFileDensityGridWriter writer("testgrid", ".");
+    writer.write(grid, 0, params);
   }
 
   // read file and check contents
@@ -67,9 +68,9 @@ int main(int argc, char **argv) {
     // skip first line
     std::getline(file, line);
 
-    for (unsigned int i = 0; i < 8; ++i) {
-      for (unsigned int j = 0; j < 8; ++j) {
-        for (unsigned int k = 0; k < 8; ++k) {
+    for (uint_fast8_t i = 0; i < 8; ++i) {
+      for (uint_fast8_t j = 0; j < 8; ++j) {
+        for (uint_fast8_t k = 0; k < 8; ++k) {
           CoordinateVector<> x;
           double n;
 

@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 /**
  * @brief 3 element array that can be manipulated as an algebraic vector.

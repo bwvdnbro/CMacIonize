@@ -33,13 +33,15 @@
 class TestDensityFunction : public DensityFunction {
 public:
   /**
-   * @brief Get the density at the given position.
+   * @brief Function that gives the density for a given cell.
    *
-   * @param position CoordinateVector specifying a position.
-   * @return Density at that position.
+   * @param cell Geometrical information about the cell.
+   * @return Initial physical field values for that cell.
    */
-  DensityValues operator()(CoordinateVector<> position) const {
-    DensityValues cell;
+  DensityValues operator()(const Cell &cell) const {
+    DensityValues values;
+
+    const CoordinateVector<> position = cell.get_cell_midpoint();
 
     double density;
     if (position.z() < 0.5) {
@@ -48,9 +50,9 @@ public:
       density = 2.;
     }
 
-    cell.set_number_density(density);
-    cell.set_temperature(4000.);
-    return cell;
+    values.set_number_density(density);
+    values.set_temperature(4000.);
+    return values;
   }
 };
 
@@ -66,8 +68,9 @@ public:
    * @param cell DensityGrid::iterator pointing to a cell.
    * @return True if the density is larger than 1.
    */
-  virtual bool refine(unsigned char level, DensityGrid::iterator &cell) const {
-    return cell.get_number_density() > 1. && level < 6;
+  virtual bool refine(uint_fast8_t level, DensityGrid::iterator &cell) const {
+    return cell.get_ionization_variables().get_number_density() > 1. &&
+           level < 6;
   }
 
   /**
@@ -79,11 +82,11 @@ public:
    * @return True if the cells can be replaced by a single cell on a coarser
    * level.
    */
-  virtual bool coarsen(unsigned char level,
+  virtual bool coarsen(uint_fast8_t level,
                        const DensityGrid::iterator *cells) const {
     double avg_density = 0.;
-    for (unsigned int i = 0; i < 8; ++i) {
-      avg_density += cells->get_number_density();
+    for (uint_fast8_t i = 0; i < 8; ++i) {
+      avg_density += cells[i].get_ionization_variables().get_number_density();
     }
     avg_density *= 0.125;
     return avg_density < 1.;
@@ -98,14 +101,16 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   TestDensityFunction density_function;
+  density_function.initialize();
   AMRRefinementScheme *scheme = new TestAMRRefinementScheme();
   TerminalLog log(LOGLEVEL_INFO);
-  AMRDensityGrid grid(Box(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
-                      density_function, scheme, false, false, &log);
-  std::pair< unsigned long, unsigned long > block =
+  AMRDensityGrid grid(Box<>(CoordinateVector<>(0.), CoordinateVector<>(1.)), 32,
+                      scheme, 5, false, false, &log);
+  std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
-  grid.initialize(block);
+  grid.initialize(block, density_function);
 
   assert_values_equal(1.5, grid.get_total_hydrogen_number());
   assert_values_equal(4000., grid.get_average_temperature());
@@ -114,8 +119,8 @@ int main(int argc, char **argv) {
   // 32768 is the grid in the lower left front corner, which has indices 000 on
   // all levels
   // the 32768 bit is set to indicate its level: 5
-  unsigned long key = grid.get_cell_index(CoordinateVector<>(0.01));
-  assert_condition(key == 32768);
+  amrkey_t key = grid.get_cell_index(CoordinateVector<>(0.01));
+  assert_condition(key == 0);
 
   // pick the first cell to check the volume and midpoint calculation
   // due to the order in which the cell list is constructed, this should be the
@@ -127,7 +132,7 @@ int main(int argc, char **argv) {
   assert_condition(midpoint.y() == 0.015625);
   assert_condition(midpoint.z() == 0.015625);
 
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     ++ncell;
   }

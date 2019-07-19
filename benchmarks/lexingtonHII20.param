@@ -1,4 +1,4 @@
-abundances:
+Abundances:
   helium: 0.1
   carbon: 2.2e-4
   nitrogen: 4.e-5
@@ -6,45 +6,42 @@ abundances:
   neon: 5.e-5
   sulphur: 9.e-6
 
-continuousphotonsource:
+ContinuousPhotonSource:
   type: None
 
-densityfunction:
+DensityFunction:
   type: BlockSyntax
   filename: lexingtonHII20.yml
 
-densitygrid:
-  type: Cartesian
-  box_anchor: [-3. pc, -3. pc, -3. pc]
-  box_sides: [6. pc, 6. pc, 6. pc]
-  ncell: [64, 64, 64]
+SimulationBox:
+  anchor: [-3. pc, -3. pc, -3. pc]
+  sides: [6. pc, 6. pc, 6. pc]
   periodicity: [false, false, false]
 
-densitygridwriter:
+DensityGrid:
+  type: Cartesian
+  number of cells: [64, 64, 64]
+
+DensityGridWriter:
   type: Gadget
-  folder: .
   prefix: lexingtonHII20_
   padding: 3
-  
-iterationconvergencechecker:
-  type: Passive
 
-max_number_iterations: 20
+IonizationSimulation:
+  output folder: .
+  number of iterations: 20
+  number of photons: 1e8
+  random seed: 42
 
-number of photons: 1000000
+TemperatureCalculator:
+  do temperature calculation: true
+  PAH heating factor: 0.
 
-pahfac: 0.
-
-photonnumberconvergencechecker:
-  type: Passive
-
-photonsourcedistribution:
+PhotonSourceDistribution:
   type: SingleStar
   position: [0. pc, 0. pc, 0. pc]
   luminosity: 1.e49 s^-1
 
-photonsourcespectrum:
+PhotonSourceSpectrum:
   type: Planck
   temperature: 20000. K
-
-random_seed: 42

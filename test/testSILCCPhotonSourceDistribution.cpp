@@ -34,6 +34,7 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   SILCCPhotonSourceDistribution distribution(10000000, 0., 1., 0., 1., 0., 0.2,
                                              4.26e49);
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
   CoordinateVector<> mean_x;
   double std_z = 0.;
   double tot_weight = 0.;
-  for (unsigned int i = 0; i < distribution.get_number_of_sources(); ++i) {
+  for (uint_fast32_t i = 0; i < distribution.get_number_of_sources(); ++i) {
     CoordinateVector<> pos = distribution.get_position(i);
     mean_x += pos;
     // we assume here that the mean is 0 (as it should be).
@@ -52,11 +53,11 @@ int main(int argc, char **argv) {
   }
   mean_x /= distribution.get_number_of_sources();
   std_z = std::sqrt(std_z / distribution.get_number_of_sources());
-  assert_values_equal(mean_x.x(), 0.5);
-  assert_values_equal(mean_x.y(), 0.5);
+  assert_values_equal_rel(mean_x.x(), 0.5, 2.e-4);
+  assert_values_equal_rel(mean_x.y(), 0.5, 2.e-4);
   assert_values_equal(mean_x.z(), 0.);
-  assert_values_equal(std_z, 0.2);
-  assert_values_equal(tot_weight, 1.);
+  assert_values_equal_rel(std_z, 0.2, 2.e-4);
+  assert_values_equal_rel(tot_weight, 1., 2.e-4);
 
   return 0;
 }

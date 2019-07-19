@@ -24,6 +24,7 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
+#include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
 #include "WMBasicDataLocation.hpp"
@@ -40,7 +41,8 @@
  * @return Energy at that frequency (in erg s^-1 cm^-2 Hz^-1 sr^-1).
  */
 double WMBasicspectrum(double *nuarr, double *earr, double nu) {
-  unsigned int inu = 0;
+
+  uint_fast32_t inu = 0;
   while (nu > nuarr[inu]) {
     ++inu;
   }
@@ -57,6 +59,7 @@ double WMBasicspectrum(double *nuarr, double *earr, double nu) {
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   /// test the log g name conversion function
   {
     cmac_assert(WMBasicPhotonSourceSpectrum::get_log_g_name(10.) == "300");
@@ -92,27 +95,29 @@ int main(int argc, char **argv) {
     getline(ifile, line);
     getline(ifile, line);
     double nuarr[2840], earr[2840];
-    for (unsigned int i = 0; i < 2840; ++i) {
+    for (uint_fast32_t i = 0; i < 2840; ++i) {
       getline(ifile, line);
       std::istringstream lstream(line);
       lstream >> nuarr[i] >> earr[i];
       // convert from Angstrom to Rydberg
-      nuarr[i] = 299792458. * 1.e10 / nuarr[i] / 3.288465385e15;
+      nuarr[i] = PhysicalConstants::get_physical_constant(
+                     PHYSICALCONSTANT_LIGHTSPEED) *
+                 1.e10 / nuarr[i] / 3.288465385e15;
     }
 
     std::ofstream file("wmbasic.txt");
     WMBasicPhotonSourceSpectrum spectrum(40000., 25.);
 
-    unsigned int counts[1001];
-    for (unsigned int i = 0; i < 1001; ++i) {
+    uint_fast32_t counts[1001];
+    for (uint_fast32_t i = 0; i < 1001; ++i) {
       counts[i] = 0;
     }
-    unsigned int numsample = 1000000;
-    for (unsigned int i = 0; i < numsample; ++i) {
+    uint_fast32_t numsample = 1000000;
+    for (uint_fast32_t i = 0; i < numsample; ++i) {
       // we manually convert from Hz to 13.6 eV for efficiency reasons
       double rand_freq =
           spectrum.get_random_frequency(random_generator) / 3.288465385e15;
-      unsigned int index = (rand_freq - 1.) * 1000. / 3.;
+      uint_fast32_t index = (rand_freq - 1.) * 1000. / 3.;
       // we dump frequencies outside the range in the last bin and ignore it
       if (index > 1000) {
         index = 1000;
@@ -121,7 +126,7 @@ int main(int argc, char **argv) {
     }
 
     double enorm = WMBasicspectrum(nuarr, earr, 1.015) / counts[0];
-    for (unsigned int i = 0; i < 1000; ++i) {
+    for (uint_fast32_t i = 0; i < 1000; ++i) {
       double nu = 1. + (i + 0.5) * 0.003;
       double tval = WMBasicspectrum(nuarr, earr, nu);
       double bval = counts[i] * enorm;

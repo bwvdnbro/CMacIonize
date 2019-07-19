@@ -16,9 +16,40 @@
 # along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-cmake_minimum_required(VERSION 2.6)
+#SET(CMAKE_C_COMPILER /home/map32/gcc-5.4.0/bin/gcc)
+#SET(CMAKE_CXX_COMPILER /home/map32/gcc-5.4.0/bin/g++)
+#INCLUDE_DIRECTORIES(/home/map32/local/include)
+#LINK_DIRECTORIES(/home/map32/local/include/boost /home/map32/local/lib /home/map32/gcc-5.4.0/lib)
+
+## Project initialization ######################################################
+
+# the most advanced feature we use is the ProcessorCount module, which is only
+# available since CMake 2.8.5
+cmake_minimum_required(VERSION 2.8.5)
+
+# Set the default CMAKE_BUILD_TYPE
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE INTERNAL
+        "Set the default CMake build type to Release" FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 project(CMacIonize)
 
+# Enable unit testing using CTest
+enable_testing()
+
+## Macro definitions ###########################################################
+
+# Add minimal cpp file for flag testing
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo
+                "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
+# Macro used to safely add compiler flags (to the C/CXX compiler):
+# we try to add the compiler flag and then compile a minimal cpp file
+# if this succeeds, we keep the flag
+# if it fails, we reset the flags, and throw an error/warning depending on the
+# value of the FATAL parameter
 macro(add_compiler_flag FLAG FATAL)
   set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
@@ -34,24 +65,67 @@ macro(add_compiler_flag FLAG FATAL)
   endif(NOT FLAG_WORKS)
 endmacro(add_compiler_flag)
 
+# Variable used to count the number of configuration options (CMake does not
+# actually define counters, so instead we just add +1 to a variable and let the
+# CXX preprocessor do the actual addition)
+set(CONFIGURATION_OPTIONS_NUMBER "0")
+
+# Macro used to add a configuration option
+# We set the given variable name to the given value (as a CMake variable), and
+# also add the name and value to two separate lists that will be configured in
+# a cpp file. We count the number of configuration variables by increasing the
+# counter by 1.
+macro(add_configuration_option NAME VALUE)
+  set(${NAME} ${VALUE})
+  set(CONFIGURATION_OPTIONS_NUMBER "${CONFIGURATION_OPTIONS_NUMBER}+1")
+  set(CONFIGURATION_OPTIONS_KEYS "${CONFIGURATION_OPTIONS_KEYS}\"${NAME}\",")
+  set(CONFIGURATION_OPTIONS_VALUES
+      "${CONFIGURATION_OPTIONS_VALUES}\"${VALUE}\",")
+endmacro(add_configuration_option)
+
+## System configuration checks #################################################
+
+# Check if we are compiling on Windows
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS True)
+else(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_configuration_option(HAVE_WINDOWS False)
+endif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+
+# If we are on Windows, make sure to add the _USE_MATH_DEFINES define to the
+# compilation command
+# And the NOMINMAX define to disable use of the min and max macros defined
+# by windows.h
+# And the _CRT_SECURE_NO_WARNINGS define to disable warnings about unsafe
+# sprintf usages
+if(HAVE_WINDOWS)
+  add_compiler_flag("-D_USE_MATH_DEFINES" REQUIRED)
+  add_compiler_flag("-DNOMINMAX" REQUIRED)
+  add_compiler_flag("-D_CRT_SECURE_NO_WARNINGS" REQUIRED)
+endif(HAVE_WINDOWS)
+
 # Check if we are on a POSIX system. If not, some functionality will not work
 # and we abort the configuration
 execute_process(COMMAND ${CMAKE_COMMAND} -E echo
                 "#include <unistd.h>\nint main(int, char**){ return 0; }"
                 OUTPUT_FILE ${PROJECT_BINARY_DIR}/posixtest.cpp)
-try_compile(HAVE_POSIX ${PROJECT_BINARY_DIR}
+try_compile(DETECT_POSIX ${PROJECT_BINARY_DIR}
                        ${PROJECT_BINARY_DIR}/posixtest.cpp)
-if(NOT HAVE_POSIX)
-  message(FATAL_ERROR "This is not a POSIX system! Compilation will not work!")
-endif(NOT HAVE_POSIX)
+if(NOT DETECT_POSIX)
+  add_configuration_option(HAVE_POSIX False)
+  message(WARNING "This is not a POSIX system! Some features will not work!")
+else(NOT DETECT_POSIX)
+  add_configuration_option(HAVE_POSIX True)
+endif(NOT DETECT_POSIX)
 
 # Find Git
 find_package(Git)
 
 # The version number.
-execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
                 OUTPUT_VARIABLE GIT_BUILD_STRING
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 string(REGEX REPLACE "v([0-9]*).*" "\\1" GIT_VERSION_MAJOR ${GIT_BUILD_STRING})
 string(REGEX REPLACE "v[0-9]*.([0-9]*).*" "\\1" GIT_VERSION_MINOR
        ${GIT_BUILD_STRING})
@@ -60,16 +134,48 @@ message(STATUS
 set(CMACIONIZE_VERSION_MAJOR ${GIT_VERSION_MAJOR})
 set(CMACIONIZE_VERSION_MINOR ${GIT_VERSION_MINOR})
 
-# Enable unit testing using CTest
-enable_testing()
-
-# Add minimal cpp file for flag testing
-execute_process(COMMAND ${CMAKE_COMMAND} -E echo
-                "int main(int argc, char **argv){ return 0; }"
-                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
-
 # Enable C++11, since we need this for delegating constructors
 add_compiler_flag("-std=c++11" REQUIRED)
+
+# Check if the compiler supports atomic floating point operations (it should if
+# it truly supports C++11, but e.g. the Intel compiler does actually not)
+set(ATOMIC_COMPILER_TEST_SOURCE
+    "#include <atomic>\n"
+    "#include <new>\n"
+    "int main(int, char**){\n"
+    "double a = 1.\;\n"
+    "std::atomic<double> *atom = new(&a) std::atomic<double>\;\n"
+    "double old = *atom\;\n"
+    "while (!atom->compare_exchange_weak(old, old + 1.)) {}\n"
+    "return 0\;}")
+execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${ATOMIC_COMPILER_TEST_SOURCE}
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/atomictest.cpp)
+try_compile(HAVE_ATOMIC ${PROJECT_BINARY_DIR}
+                        ${PROJECT_BINARY_DIR}/atomictest.cpp)
+if(NOT HAVE_ATOMIC)
+  message(WARNING
+          "This system does not support atomic floating point operations! "
+          "Lock-free data access will not work.")
+endif(NOT HAVE_ATOMIC)
+
+# Check if we want to use atomic operations to get lock free cell access
+# Our current tests show that this is in fact slower than just locking the cell,
+# so this is disabled by default
+if(LOCKFREE)
+  message(STATUS "Enabling lock free cell operations.")
+  add_configuration_option(USE_LOCKFREE True)
+else(LOCKFREE)
+  message(STATUS "Lock free cell operations disabled.")
+  add_configuration_option(USE_LOCKFREE False)
+endif(LOCKFREE)
+
+if(OUTPUT_COOLING)
+  message(STATUS "Enabling output of cooling rates.")
+  add_configuration_option(DO_OUTPUT_COOLING True)
+else(OUTPUT_COOLING)
+  message(STATUS "Cooling rate output disabled.")
+  add_configuration_option(DO_OUTPUT_COOLING False)
+endif(OUTPUT_COOLING)
 
 # Enable all standard compiler warnings and enforce them
 add_compiler_flag("-Wall -Werror" OPTIONAL)
@@ -86,14 +192,11 @@ endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 # Add a Profile CMAKE_BUILD_TYPE
 set(CMAKE_CXX_FLAGS_PROFILE "-pg -g")
 
-# Tell CMake that headers are in one of the src folders.
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_BINARY_DIR}/src)
-
 # Find HDF5.
 find_package(HDF5)
 if(HDF5_FOUND)
-  set(HAVE_HDF5 True)
+  add_configuration_option(HAVE_HDF5 True)
+
   message(STATUS "HDF5 found: ${HDF5_VERSION}")
   # Link the appropriate headers and libraries.
   include_directories(${HDF5_INCLUDE_DIRS})
@@ -118,32 +221,55 @@ if(HDF5_FOUND)
     add_definitions(-DHDF5_OLD_API)
   endif(NOT ${HDF5_VERSION} VERSION_GREATER "1.6")
 else(HDF5_FOUND)
-  set(HAVE_HDF5 False)
+  add_configuration_option(HAVE_HDF5 False)
   message(WARNING "HDF5 not found, some modules will not be build!")
 endif(HDF5_FOUND)
 
-# Find OpenMP.
-find_package(OpenMP)
-if(OPENMP_FOUND)
-  set(HAVE_OPENMP True)
-  message(STATUS "OpenMP found. Shared memory parallelization will work.")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-else(OPENMP_FOUND)
-  set(HAVE_OPENMP False)
-  message(WARNING
-          "OpenMP not found. Shared memory parallelization will not work.")
-endif(OPENMP_FOUND)
+# If not explicitly set, try to find the number of cores on the system
+if(MAX_NUMBER_OF_THREADS)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+else(MAX_NUMBER_OF_THREADS)
+  include(ProcessorCount)
+  ProcessorCount(MAX_NUMBER_OF_THREADS)
+  if(MAX_NUMBER_OF_THREADS EQUAL 0)
+    # If we cannot determine the number of cores, we set it to a safe large
+    # value
+    message(WARNING
+            "Cannot determine core count on this system, using value 128")
+    set(MAX_NUMBER_OF_THREADS 128)
+  endif(MAX_NUMBER_OF_THREADS EQUAL 0)
+  add_configuration_option(MAX_NUM_THREADS ${MAX_NUMBER_OF_THREADS})
+endif(MAX_NUMBER_OF_THREADS)
+
+# If we have multiple cores available: find OpenMP.
+if(MAX_NUM_THREADS GREATER 1)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    add_configuration_option(HAVE_OPENMP True)
+    message(STATUS "OpenMP found. Shared memory parallelization will work.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  else(OPENMP_FOUND)
+    add_configuration_option(HAVE_OPENMP False)
+    message(WARNING
+            "OpenMP not found. Shared memory parallelization will not work.")
+  endif(OPENMP_FOUND)
+else(MAX_NUM_THREADS GREATER 1)
+  add_configuration_option(HAVE_OPENMP False)
+  message(WARNING "Only 1 core available, so not enabling OpenMP support.")
+endif(MAX_NUM_THREADS GREATER 1)
 
 # Find MPI
 find_package(MPI)
+SET(MPI_CXX_FOUND False)
 if(MPI_CXX_FOUND)
-  set(HAVE_MPI True)
+  add_configuration_option(HAVE_MPI True)
   message(STATUS "MPI found. Distributed memory parallelization will work.")
   message(STATUS "MPI exec: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS"
                  "${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
   include_directories(${MPI_C_INCLUDE_PATH})
   include_directories(${MPI_CXX_INCLUDE_PATH})
 else(MPI_CXX_FOUND)
+  add_configuration_option(HAVE_MPI False)
   message(WARNING
           "MPI not found. Distributed memory parallelization will not work.")
 endif(MPI_CXX_FOUND)
@@ -165,44 +291,125 @@ if(Boost_FOUND)
       include_directories(${Boost_INCLUDE_DIRS})
       include_directories(${PYTHON_INCLUDE_PATH})
       include_directories(${NUMPY_OUTPUT})
-      set(HAVE_PYTHON True)
+      set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
+      add_configuration_option(HAVE_PYTHON True)
     else(NUMPY_RESULT STREQUAL "0")
       message(WARNING
               "NumPy not found: ${NUMPY_ERROR}. Not building Python modules.")
-      set(HAVE_PYTHON False)
+      add_configuration_option(HAVE_PYTHON False)
     endif(NUMPY_RESULT STREQUAL "0")
   else(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
     message(WARNING "Python not found. Not building Python modules.")
-    set(HAVE_PYTHON False)
+    add_configuration_option(HAVE_PYTHON False)
   endif(PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
 else(Boost_FOUND)
   message(WARNING "Boost Python not found. Not building Python modules.")
-  set(HAVE_PYTHON False)
+  add_configuration_option(HAVE_PYTHON False)
+endif(Boost_FOUND)
+
+# Find Boost multiprecision (available since Boost 1.53.0)
+find_package(Boost 1.65.1)
+if(Boost_FOUND)
+  message(STATUS "Found Boost multiprecision.")
+  include_directories(${Boost_INCLUDE_DIRS})
+  add_configuration_option(HAVE_MULTIPRECISION True)
+else(Boost_FOUND)
+  message(WARNING
+          "Boost multiprecision not found. Exact arithmetics will not work!")
+  add_configuration_option(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
 
 # Check if we need to activate fast math
 if(ACTIVATE_FAST_MATH)
   message(STATUS "Activating Fast Math...")
   add_compiler_flag("-ffast-math" OPTIONAL)
+  add_configuration_option(HAVE_FAST_MATH True)
+else(ACTIVATE_FAST_MATH)
+  add_configuration_option(HAVE_FAST_MATH False)
 endif(ACTIVATE_FAST_MATH)
 
 # Check if we need to activate vectorization
 if(ACTIVATE_VECTORIZATION)
   message(STATUS "Activating vectorization...")
   add_compiler_flag("-ftree-vectorize" OPTIONAL)
+  add_configuration_option(HAVE_VECTORIZATION True)
+else(ACTIVATE_VECTORIZATION)
+  add_configuration_option(HAVE_VECTORIZATION False)
 endif(ACTIVATE_VECTORIZATION)
 
 # Check if we need to activate assertions
 if(ACTIVATE_ASSERTIONS)
-  set(HAVE_ASSERTIONS True)
+  add_configuration_option(HAVE_ASSERTIONS True)
   message(STATUS "Assertions are activated.")
 else(ACTIVATE_ASSERTIONS)
-  set(HAVE_ASSERTIONS False)
+  add_configuration_option(HAVE_ASSERTIONS False)
   message(STATUS "Assertions not activated.")
 endif(ACTIVATE_ASSERTIONS)
 
+# Check if we need to output information about the jobs being executed on
+# different threads
+if(ACTIVATE_OUTPUT_CYCLES)
+  add_configuration_option(HAVE_OUTPUT_CYCLES True)
+  message(STATUS "Each thread will output a job statistics file (slow!).")
+else(ACTIVATE_OUTPUT_CYCLES)
+  add_configuration_option(HAVE_OUTPUT_CYCLES False)
+endif(ACTIVATE_OUTPUT_CYCLES)
+
+# Try to enable Fortran
+enable_language(Fortran OPTIONAL)
+if(CMAKE_Fortran_COMPILER_WORKS)
+  add_configuration_option(HAVE_FORTRAN True)
+  message(STATUS "Fortran compiler found!")
+else(CMAKE_Fortran_COMPILER_WORKS)
+  add_configuration_option(HAVE_FORTRAN False)
+  message(STATUS "Fortran compiler not found!")
+endif(CMAKE_Fortran_COMPILER_WORKS)
+
+## Code configuration ##########################################################
+
+# Tell CMake that headers are in one of the src folders.
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_BINARY_DIR}/src)
+
+# Tell CMake that C header files are in the includes folder.
+include_directories(${PROJECT_BINARY_DIR}/include)
+
+# Tell CMake that Fortran module files are in the includes folder.
+if(HAVE_FORTRAN)
+  include_directories(${PROJECT_BINARY_DIR}/include)
+endif(HAVE_FORTRAN)
+
 # Set the path where the generated executables are stored.
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/rundir)
+
+# Set the path where the generated libraries are stored
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
+# Set the path where the generated Fortran module files are stored.
+if(HAVE_FORTRAN)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
+endif(HAVE_FORTRAN)
+
+# Add the command and target that creates the CompilerInfo.cpp file
+# Note that we need to add the 'dummy_file_that_is_not_created' to the outputs
+# to force rerunnning this command every time the code is compiled
+add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                          dummy_file_that_is_not_created
+                   COMMENT "Generating CompilerInfo.cpp"
+                   COMMAND ${CMAKE_COMMAND}
+                           -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                           -DCOMPILER_NAME=${CMAKE_CXX_COMPILER_ID}
+                           -DCOMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
+                           -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                           -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
+                           -DHAVE_WINDOWS=${HAVE_WINDOWS}
+                           -P ${PROJECT_SOURCE_DIR}/write_compiler_info.cmake
+                   DEPENDS ${PROJECT_SOURCE_DIR}/.git/HEAD
+                           ${PROJECT_SOURCE_DIR}/src/CompilerInfo.cpp.in
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+add_custom_target(CompilerInfo
+                  DEPENDS ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp)
 
 # Enter the folder containing the source files and configure the executables.
 add_subdirectory(src)
@@ -210,10 +417,23 @@ add_subdirectory(src)
 # Enter the folder containing the unit tests
 add_subdirectory(test)
 
+# Enter the folder containing the timing tests
+add_subdirectory(timing)
+
+# Enter the folder containing the c library wrapper
+add_subdirectory(c)
+
 # If we have Python, enter the folder containing the Python modules
 if(HAVE_PYTHON)
   add_subdirectory(python)
 endif(HAVE_PYTHON)
+
+# If we have Fortran, enter the folder containing the Fortran library wrapper
+if(HAVE_FORTRAN)
+  add_subdirectory(fortran)
+endif(HAVE_FORTRAN)
+
+## Benchmark configuration #####################################################
 
 # Copy the benchmark problems
 # Every benchmark has a description file NAME.txt.
@@ -245,6 +465,8 @@ foreach(BENCHMARK ${BENCHMARKS})
   # Copy the description file
   configure_file(${BENCHMARK} ${BENCHMARK_DIR}/${BENCHMARK_NAME}.txt COPYONLY)
 endforeach(BENCHMARK ${BENCHMARKS})
+
+## Documentation configuration #################################################
 
 # Generate documentation
 find_package(Doxygen)

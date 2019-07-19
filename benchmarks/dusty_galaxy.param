@@ -1,0 +1,63 @@
+# image parameters
+CCDImage:
+  # resolution of the image
+  image height: 200
+  image width: 200
+  # lower left box of the image
+  anchor x: -12.1 kpc
+  anchor y: -12.1 kpc
+  # side lengths of the image
+  sides x: 24.2 kpc
+  sides y: 24.2 kpc
+  # output file name
+  filename: galaxy_image
+  # type of output file: a binary array dump
+  type: BinaryArray
+  # view angles
+  view phi: 0 degrees
+  view theta: 89.7 degrees
+
+# parameters for the bulge + disc source model
+ContinuousPhotonSource:
+  # bulge to total luminosity ratio
+  bulge over total ratio: 0.2
+  # scale height of the stellar disc
+  scale height stars: 0.6 kpc
+  # scale length of the stellar disc
+  scale length stars: 5. kpc
+
+# parameters for the dusty disc
+DensityFunction:
+  # scale height of the dusty disc
+  scale height ISM: 0.22 kpc
+  # central number density of the dusty disc
+  central density: 1. cm^-3
+  # scale lenght of the dusty disc
+  scale length ISM: 6.0 kpc
+
+# simulation box dimensions
+SimulationBox:
+  anchor: [-12. kpc, -12. kpc, -12. kpc]
+  sides: [24. kpc, 24. kpc, 24. kpc]
+  # periodicity flags
+  periodicity: [false, false, false]
+
+# grid parameters: we always use a Cartesian grid
+DensityGrid:
+  # number of cells in each dimension
+  number of cells: [201, 201, 201]
+
+# dust parameters: they all depend on a single parameter: the sampled band
+dust:
+  # band to which the emitted photons belong
+  band: V
+
+DustSimulation:
+  # number of photons to use
+  number of photons: 500000
+
+  # folder where output files are stored
+  output folder: .
+
+  # seed for the random number generator
+  random seed: 42

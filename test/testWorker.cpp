@@ -29,6 +29,7 @@
 #include "Utilities.hpp"
 #include "WorkDistributor.hpp"
 #include "Worker.hpp"
+#include <cinttypes>
 #include <cmath>
 
 /*! @brief Length of the array used to test the routines. */
@@ -57,7 +58,7 @@ private:
   double *_array;
 
   /*! @brief Size of the array to work on. */
-  unsigned int _size;
+  uint_fast32_t _size;
 
 public:
   /**
@@ -66,7 +67,7 @@ public:
    * @param array Pointer to part of an array to operate on.
    * @param size Size of the array to work on.
    */
-  inline TestJob(double *array, unsigned int size)
+  inline TestJob(double *array, uint_fast32_t size)
       : _array(array), _size(size) {}
 
   /**
@@ -86,6 +87,13 @@ public:
       --_size;
     }
   }
+
+  /**
+   * @brief Get a name tag for this job.
+   *
+   * @return "testjob".
+   */
+  inline std::string get_tag() const { return "testjob"; }
 };
 
 /**
@@ -98,10 +106,10 @@ private:
   double *_array;
 
   /*! @brief Size of the entire array. */
-  unsigned int _size;
+  uint_fast32_t _size;
 
   /*! @brief Size of each job. */
-  unsigned int _jobsize;
+  uint_fast32_t _jobsize;
 
   /*! @brief Lock needed to ensure secure access to the internal variables. */
   Lock _lock;
@@ -114,9 +122,17 @@ public:
    * @param size Size of the array.
    * @param jobsize Size to be done by each job.
    */
-  inline TestJobMarket(double *array, unsigned int size,
-                       unsigned int jobsize = 100)
+  inline TestJobMarket(double *array, uint_fast32_t size,
+                       uint_fast32_t jobsize = 100)
       : _array(array), _size(size), _jobsize(jobsize) {}
+
+  /**
+   * @brief Set the number of parallel threads that will be used to execute
+   * the jobs.
+   *
+   * @param worksize Number of parallel threads that will be used.
+   */
+  inline void set_worksize(int_fast32_t worksize) {}
 
   /**
    * @brief Get a job.
@@ -125,13 +141,13 @@ public:
    * context).
    * @return Job.
    */
-  inline TestJob *get_job(int thread_id = 0) {
+  inline TestJob *get_job(int_fast32_t thread_id = 0) {
     if (_size == 0) {
       // no more jobs!
       return nullptr;
     }
     _lock.lock();
-    unsigned int size = std::min(_size, _jobsize);
+    uint_fast32_t size = std::min(_size, _jobsize);
     TestJob *job = new TestJob(_array, size);
     _array += size;
     if (_size >= size) {
@@ -152,6 +168,7 @@ public:
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // we create 3 identical arrays:
   //  - 1 for serial running without Worker (for reference)
   //  - 1 for serial running with Worker
@@ -159,7 +176,7 @@ int main(int argc, char **argv) {
   double *A_serial = new double[ARRAY_LENGTH];
   double *A_parallel = new double[ARRAY_LENGTH];
   double *A_ref = new double[ARRAY_LENGTH];
-  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+  for (uint_fast32_t i = 0; i < ARRAY_LENGTH; ++i) {
     double aval = Utilities::random_double();
     A_serial[i] = aval;
     A_parallel[i] = aval;
@@ -169,7 +186,7 @@ int main(int argc, char **argv) {
   // we have to initialize the reference array after having filled it with
   // random values, since the Intel compiler otherwise does stupid optimizations
   // that make it impossible to compare values afterwards.
-  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+  for (uint_fast32_t i = 0; i < ARRAY_LENGTH; ++i) {
     A_ref[i] = test_function(A_ref[i]);
   }
 
@@ -184,11 +201,11 @@ int main(int argc, char **argv) {
     time_serial = timer.stop();
   }
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A_serial[i] == A_ref[i]);
+  for (uint_fast32_t i = 0; i < ARRAY_LENGTH; ++i) {
+    assert_values_equal_rel(A_serial[i], A_ref[i], 1.e-15);
   }
 
-  int worksize;
+  int_fast32_t worksize;
   double time_parallel;
   {
     Timer timer;
@@ -199,14 +216,14 @@ int main(int argc, char **argv) {
     worksize = workdistributor.get_worksize();
   }
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-    assert_condition(A_parallel[i] == A_ref[i]);
+  for (uint_fast32_t i = 0; i < ARRAY_LENGTH; ++i) {
+    assert_values_equal_rel(A_parallel[i], A_ref[i], 1.e-15);
   }
 
   cmac_status("Serial time: %s, parallel time: %s.",
               Utilities::human_readable_time(time_serial).c_str(),
               Utilities::human_readable_time(time_parallel).c_str());
-  cmac_status("Used %i threads.", worksize);
+  cmac_status("Used %" PRIiFAST32 " threads.", worksize);
   if (worksize > 1) {
     // check that using more threads speeds things up
     assert_condition(time_serial > time_parallel);

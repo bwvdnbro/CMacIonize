@@ -1,0 +1,17 @@
+STARBENCH benchmark
+
+This benchmark consists of a homogeneous density field with a single stellar
+source at the centre. The radiation from the star will ionize a spherical region
+surrounding the star, that will grow over time as the hydrodynamics reacts to
+the energy input from the source.
+
+There are several approximate analytic expressions for the radius of the ionized
+region as a function of time.
+
+The test can be run using the provided parameter file (starbench.param). To
+analyze the results, use the Python script (starbench.py).
+
+List of files necessary for this benchmark test:
+input:starbench.param
+input:starbench.yml
+input:starbench.py

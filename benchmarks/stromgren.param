@@ -1,18 +1,21 @@
-# density grid
-densitygrid:
-  # type: a cartesian density grid
-  type: Cartesian
+# simulation box
+SimulationBox:
   # anchor of the box: corner with the smallest coordinates
-  box_anchor: [-5. pc, -5. pc, -5. pc]
+  anchor: [-5. pc, -5. pc, -5. pc]
   # side lengths of the box
-  box_sides: [10. pc, 10. pc, 10. pc]
+  sides: [10. pc, 10. pc, 10. pc]  
   # periodicity of the box
   periodicity: [false, false, false]
+
+# density grid
+DensityGrid:
+  # type: a cartesian density grid
+  type: Cartesian
   # number of cells in each dimension
-  ncell: [64, 64, 64]
+  number of cells: [64, 64, 64]
 
 # density function that sets up the density field in the box
-densityfunction:
+DensityFunction:
   # type of densityfunction: a constant density throughout the box
   type: Homogeneous
   # value for the constant density
@@ -21,14 +24,25 @@ densityfunction:
   temperature: 8000. K
 
 # assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
-abundances:
+Abundances:
+  # set all abundances to zero
   helium: 0.
+  carbon: 0.
+  nitrogen: 0.
+  oxygen: 0.
+  neon: 0.
+  sulphur: 0.
 
 # disable temperature calculation
-calculate_temperature: false
+TemperatureCalculator:
+  do temperature calculation: false
+
+# disable diffuse reemission
+PhotonSource:
+  diffuse field: false
 
 # distribution of photon sources in the box
-photonsourcedistribution:
+PhotonSourceDistribution:
   # type of distribution: a single stellar source
   type: SingleStar
   # position of the single stellar source
@@ -37,56 +51,65 @@ photonsourcedistribution:
   luminosity: 4.26e49 s^-1
 
 # spectrum of the photon sources
-photonsourcespectrum:
-  # type: a Planck black body spectrum
-  type: Planck
-  # temperature of the black body spectrum
-  temperature: 40000. K
+PhotonSourceSpectrum:
+  # type: a monochromatic spectrum
+  type: Monochromatic
+  # frequency of the spectrum
+  frequency: 13.6 eV
 
-# number of photons to use during the first iteration (number is automatically
-# adapted to the desired tolerance)
-number of photons: 100
+# Control the Monte Carlo parameters
+IonizationSimulation:
+  # number of photons to use
+  number of photons: 1e6
 
-# maximum number of iterations. The code will stop after this number of
-# iterations, irrespective of whether the result is converged or not.
-max_number_iterations: 20
-
-# iteration convergence: used to control convergence of the neutral fraction
-# calculation
-iterationconvergencechecker:
-  # type of IterationConvergenceChecker: a ChiSquaredIterationConvergenceChecker
-  type: ChiSquared
-  # desired tolerance. The algorithm will stop if the average squared relative
-  # difference between the hydrogen neutral fraction after two successive
-  # iterations falls below this value
-  tolerance: 0.01
-  # correction factor to apply to the photon number after an iteration, if the
-  # chi2 value after that iteration was detected to be larger than a previous
-  # chi2 value (which hints at a serious undersampling of the integrals)
-  photon_number_correction: 10.
-
-# photon number convergence: used to control convergence of the photon shooting
-# sub steps during a single iteration of the algorithm
-photonnumberconvergencechecker:
-  # Type of PhotonNumberConvergenceChecker: a
-  # ChiSquaredPhotonNumberConvergenceChecker
-  type: ChiSquared
-  # desired tolerance for the mean intensity integrals. Photon shooting will
-  # stop if the average squared relative difference between the hydrogen
-  # mean intensity after two successive substeps falls below this value
-  tolerance: 0.01
-  # number of photons to use for the initial sub step of the next iteration, as
-  # a fraction of the number used during the last iteration.
-  photon_fraction: 0.1
-  # minimum number of photons to use for a single sub step as a fraction of the
-  # total number of photons that has already been used during that iteration
-  minimum_photon_ratio: 0.1
+  # maximum number of iterations
+  number of iterations: 20
 
 # output options
-densitygridwriter:
+DensityGridWriter:
   # type of output files to write
   type: Gadget
   # prefix to add to output files
-  prefix: snapshot
+  prefix: stromgren_
   # number of digits to be used in the filename counter
   padding: 3
+
+# tell the code we want to use our own cross section values
+CrossSections:
+  type: FixedValue
+  # set the photoionization cross section for neutral hydrogen
+  hydrogen_0: 6.3e-18 cm^2
+  # all other cross sections are set to zero
+  helium_0: 0. m^2
+  carbon_1: 0. m^2
+  carbon_2: 0. m^2
+  nitrogen_0: 0. m^2
+  nitrogen_1: 0. m^2
+  nitrogen_2: 0. m^2
+  oxygen_0: 0. m^2
+  oxygen_1: 0. m^2
+  neon_0: 0. m^2
+  neon_1: 0. m^2
+  sulphur_1: 0. m^2
+  sulphur_2: 0. m^2
+  sulphur_3: 0. m^2
+
+# tell the code we want to use our own recombination rate values
+RecombinationRates:
+  type: FixedValue
+  # set the recombination rate for ionized hydrogen
+  hydrogen_1: 4.e-13 cm^3 s^-1
+  # all other values are set to zero
+  helium_1: 0. m^3 s^-1
+  carbon_2: 0. m^3 s^-1
+  carbon_3: 0. m^3 s^-1
+  nitrogen_1: 0. m^3 s^-1
+  nitrogen_2: 0. m^3 s^-1
+  nitrogen_3: 0. m^3 s^-1
+  oxygen_1: 0. m^3 s^-1
+  oxygen_2: 0. m^3 s^-1
+  neon_1: 0. m^3 s^-1
+  neon_2: 0. m^3 s^-1
+  sulphur_2: 0. m^3 s^-1
+  sulphur_3: 0. m^3 s^-1
+  sulphur_4: 0. m^3 s^-1

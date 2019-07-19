@@ -36,23 +36,25 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // this is shorthand for box(CoordinateVector<>(0.), CoordinateVector<>(1.))
   // and only works because we have defined the single value constructor for
   // CoordinateVector<>
-  Box box(0., 1.);
-  CoordinateVector< int > numcell(32, 32, 32);
-  unsigned int numdomain = 64;
-  std::pair< int, int > domain = std::make_pair(0, 64);
+  Box<> box(0., 1.);
+  CoordinateVector< int_fast32_t > numcell(32, 32, 32);
+  uint_fast32_t numdomain = 64;
+  std::pair< int_fast32_t, int_fast32_t > domain = std::make_pair(0, 64);
 
   ParallelCartesianDensityGrid grid(box, numcell, numdomain, domain);
 
   BlockSyntaxDensityFunction density_function("blocksyntaxtest.yml");
+  density_function.initialize();
 
   for (auto it = grid.begin(); it != grid.end(); ++it) {
     (*it).initialize(density_function);
   }
 
-  unsigned int totnumcell = grid.get_number_of_cells();
+  uint_fast32_t totnumcell = grid.get_number_of_cells();
 
   HDF5Tools::HDF5File file =
       HDF5Tools::open_file("paralleltest.hdf5", HDF5Tools::HDF5FILEMODE_WRITE);
@@ -61,24 +63,24 @@ int main(int argc, char **argv) {
   HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "Header");
   CoordinateVector<> boxsize = box.get_sides();
   HDF5Tools::write_attribute< CoordinateVector<> >(group, "BoxSize", boxsize);
-  int dimension = 3;
-  HDF5Tools::write_attribute< int >(group, "Dimension", dimension);
-  std::vector< unsigned int > flag_entropy(6, 0);
-  HDF5Tools::write_attribute< std::vector< unsigned int > >(
+  int32_t dimension = 3;
+  HDF5Tools::write_attribute< int32_t >(group, "Dimension", dimension);
+  std::vector< uint32_t > flag_entropy(6, 0);
+  HDF5Tools::write_attribute< std::vector< uint32_t > >(
       group, "Flag_Entropy_ICs", flag_entropy);
   std::vector< double > masstable(6, 0.);
   HDF5Tools::write_attribute< std::vector< double > >(group, "MassTable",
                                                       masstable);
-  int numfiles = 1;
-  HDF5Tools::write_attribute< int >(group, "NumFilesPerSnapshot", numfiles);
-  std::vector< unsigned int > numpart(6, 0);
+  int32_t numfiles = 1;
+  HDF5Tools::write_attribute< int32_t >(group, "NumFilesPerSnapshot", numfiles);
+  std::vector< uint32_t > numpart(6, 0);
   numpart[0] = totnumcell;
-  std::vector< unsigned int > numpart_high(6, 0);
-  HDF5Tools::write_attribute< std::vector< unsigned int > >(
+  std::vector< uint32_t > numpart_high(6, 0);
+  HDF5Tools::write_attribute< std::vector< uint32_t > >(
       group, "NumPart_ThisFile", numpart);
-  HDF5Tools::write_attribute< std::vector< unsigned int > >(
-      group, "NumPart_Total", numpart);
-  HDF5Tools::write_attribute< std::vector< unsigned int > >(
+  HDF5Tools::write_attribute< std::vector< uint32_t > >(group, "NumPart_Total",
+                                                        numpart);
+  HDF5Tools::write_attribute< std::vector< uint32_t > >(
       group, "NumPart_Total_HighWord", numpart_high);
   double time = 0.;
   HDF5Tools::write_attribute< double >(group, "Time", time);

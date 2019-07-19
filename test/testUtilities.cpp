@@ -34,12 +34,13 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   double time = 232354353.1233;
   std::string timestr = Utilities::human_readable_time(time);
 
   assert_condition(timestr == "7y 134d 6h 52m 33.1233s");
 
-  unsigned long bytes = 125;
+  size_t bytes = 125;
   assert_condition(Utilities::human_readable_bytes(bytes) == "125 bytes");
   bytes = 1253626623;
   assert_condition(Utilities::human_readable_bytes(bytes) == "1.17 GB");
@@ -59,10 +60,10 @@ int main(int argc, char **argv) {
   haystack = "dirty-adef22f";
   assert_condition(Utilities::string_ends_with(haystack, needle) == false);
 
-  int number = 32768;
-  std::vector< int > components = Utilities::decompose(number);
-  int check = 1;
-  for (unsigned int i = 0; i < components.size(); ++i) {
+  int_fast32_t number = 32768;
+  std::vector< int_fast32_t > components = Utilities::decompose(number);
+  int_fast32_t check = 1;
+  for (size_t i = 0; i < components.size(); ++i) {
     check *= components[i];
   }
   assert_condition(check == number);
@@ -70,7 +71,7 @@ int main(int argc, char **argv) {
   number = 32769;
   components = Utilities::decompose(number);
   check = 1;
-  for (unsigned int i = 0; i < components.size(); ++i) {
+  for (size_t i = 0; i < components.size(); ++i) {
     check *= components[i];
   }
   assert_condition(check == number);
@@ -78,38 +79,39 @@ int main(int argc, char **argv) {
   number = 37;
   components = Utilities::decompose(number);
   check = 1;
-  for (unsigned int i = 0; i < components.size(); ++i) {
+  for (size_t i = 0; i < components.size(); ++i) {
     check *= components[i];
   }
   assert_condition(check == number);
 
-  CoordinateVector< int > ncell(32);
-  unsigned int numblock = 64;
-  CoordinateVector< int > block = Utilities::subdivide(ncell, numblock);
+  CoordinateVector< int_fast32_t > ncell(32);
+  uint_fast32_t numblock = 64;
+  CoordinateVector< int_fast32_t > block =
+      Utilities::subdivide(ncell, numblock);
   assert_condition(block.x() == 8);
   assert_condition(block.y() == 8);
   assert_condition(block.z() == 8);
 
-  ncell = CoordinateVector< int >(33, 50, 100);
+  ncell = CoordinateVector< int_fast32_t >(33, 50, 100);
   numblock = 100;
   block = Utilities::subdivide(ncell, numblock);
   assert_condition(block.x() == 3);
   assert_condition(block.y() == 10);
   assert_condition(block.z() == 20);
 
-  unsigned long test_value = 0xf300;
+  uint64_t test_value = 0xf300;
   assert_condition(Utilities::as_binary_sequence(test_value) ==
                    "0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 "
-                   "0000 1111 0011 0000 0000")
+                   "0000 1111 0011 0000 0000");
 
-      std::vector< unsigned int >
-          test_vector(5);
+  std::vector< uint_fast32_t > test_vector(5);
   test_vector[0] = 3;
   test_vector[1] = 2;
   test_vector[2] = 4;
   test_vector[3] = 0;
   test_vector[4] = 1;
-  std::vector< unsigned int > idx_test_vector = Utilities::argsort(test_vector);
+  std::vector< uint_fast32_t > idx_test_vector =
+      Utilities::argsort(test_vector);
   assert_condition(idx_test_vector[0] == 3);
   assert_condition(idx_test_vector[1] == 4);
   assert_condition(idx_test_vector[2] == 1);

@@ -111,8 +111,8 @@ public:
           cmac_warning(
               "Particles have exactly the same position (indices: %" PRIuLEAST32
               " "
-              "%" PRIuFAST32 ", %" PRIuFAST32 " occurences positions (%g %g %g) (%g %g %g))!",
-              _index, index, numpairs, p.x(), p.y(), p.z(), np.x(), np.y(), np.z());
+              "%" PRIuFAST32 ", %" PRIuFAST32 " occurences)!",
+              _index, index, numpairs);
           // move the particle in the direction of the centre of the node over
           // a small distance
           np[0] += (ix - 0.5) * 1.e-5 * box.get_sides().x();

@@ -31,7 +31,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-using namespace std;
 
 /**
  * @brief Convert a given string of command line options to the argc and argv
@@ -45,18 +44,19 @@ using namespace std;
  * @param argv Command line arguments.
  * @param command_line String to parse.
  */
-void generate_arguments(int &argc, char **&argv, string command_line) {
+void generate_arguments(int &argc, char **&argv, std::string command_line) {
+
   // parse the arguments and store them in a vector
-  istringstream command_stream(command_line);
-  string argument;
-  vector< string > commands;
+  std::istringstream command_stream(command_line);
+  std::string argument;
+  std::vector< std::string > commands;
   while (command_stream >> argument) {
     if (argument.c_str()[0] == '"') {
       argument = argument.substr(1, argument.size());
       while (argument.c_str()[argument.size() - 1] != '"') {
-        string argument2;
+        std::string argument2;
         command_stream >> argument2;
-        argument += string(" ") + argument2;
+        argument += std::string(" ") + argument2;
       }
       argument = argument.substr(0, argument.size() - 1);
     }
@@ -68,7 +68,7 @@ void generate_arguments(int &argc, char **&argv, string command_line) {
   argc = commands.size() + 1;
   argv = new char *[argc];
   argv[0] = new char[1];
-  for (int i = 0; i < argc - 1; ++i) {
+  for (int_fast32_t i = 0; i < argc - 1; ++i) {
     argv[i + 1] = new char[commands[i].size() + 1];
     strcpy(argv[i + 1], commands[i].c_str());
   }
@@ -81,7 +81,8 @@ void generate_arguments(int &argc, char **&argv, string command_line) {
  * @param argv Command line arguments.
  */
 void delete_arguments(int &argc, char **&argv) {
-  for (int i = 0; i < argc; ++i) {
+
+  for (int_fast32_t i = 0; i < argc; ++i) {
     delete[] argv[i];
   }
   delete[] argv;
@@ -96,6 +97,7 @@ void delete_arguments(int &argc, char **&argv) {
  * @return Exit code: 0 on success
  */
 int main(int argc, char **argv) {
+
   // generate command line arguments
   int test_argc;
   char **test_argv;
@@ -106,13 +108,13 @@ int main(int argc, char **argv) {
 
   CommandLineParser parser("testCommandLineParser");
 
-  parser.add_option< int >("test", 't',
-                           "A parameter to test the CommandLineParser.", 42);
-  parser.add_required_option< string >("more", 'm',
-                                       "A parameter taking a string argument.");
+  parser.add_option< int_fast32_t >(
+      "test", 't', "A parameter to test the CommandLineParser.", 42);
+  parser.add_required_option< std::string >(
+      "more", 'm', "A parameter taking a string argument.");
   parser.add_option< double >(
       "less", 'l', "A parameter taking a floating point argument.", 3.14);
-  parser.add_option< string >(
+  parser.add_option< std::string >(
       "complicated", 'c',
       "A parameter taking a string containing a whitespace character.", "42");
   parser.add_option< double >(
@@ -122,18 +124,19 @@ int main(int argc, char **argv) {
       "bool_default", 'b', "A boolean parameter for which the default is used.",
       false);
 
-  parser.print_description(cout);
+  parser.print_description(std::cout);
 
   parser.parse_arguments(test_argc, test_argv);
 
-  assert_condition(parser.get_value< int >("test") == 42);
-  assert_condition(parser.get_value< string >("more") == "andmore");
+  assert_condition(parser.get_value< int_fast32_t >("test") == 42);
+  assert_condition(parser.get_value< std::string >("more") == "andmore");
   assert_condition(parser.get_value< double >("less") == 2.1);
-  assert_condition(parser.get_value< string >("complicated") == "and this?");
+  assert_condition(parser.get_value< std::string >("complicated") ==
+                   "and this?");
   assert_condition(parser.get_value< double >("double_default") == 3.14);
   assert_condition(parser.get_value< bool >("bool_default") == false);
 
-  parser.print_contents(cout);
+  parser.print_contents(std::cout);
 
   delete_arguments(test_argc, test_argv);
 

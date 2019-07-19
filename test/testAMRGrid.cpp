@@ -27,6 +27,7 @@
 #include "Assert.hpp"
 #include "Box.hpp"
 #include "CoordinateVector.hpp"
+#include <cinttypes>
 #include <fstream>
 
 /**
@@ -37,10 +38,11 @@
  * @return Exit code: 0 on success.
  */
 int main(int argc, char **argv) {
+
   // create an empty grid
   AMRGrid< double > grid(
-      Box(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
-      CoordinateVector< int >(2, 1, 1));
+      Box<>(CoordinateVector<>(), CoordinateVector<>(2., 1., 1.)),
+      CoordinateVector< uint_fast32_t >(2, 1, 1));
 
   /// basic functionality
 
@@ -53,7 +55,7 @@ int main(int argc, char **argv) {
   grid.print(gfile);
 
   // test the methods to generate a key from a level and a position
-  unsigned long key = grid.get_key(2, CoordinateVector<>(0.1));
+  uint64_t key = grid.get_key(2, CoordinateVector<>(0.1));
   assert_condition(key == 64);
   key = grid.get_key(2, CoordinateVector<>(1.1, 0.1, 0.1));
   assert_condition(key == 0x0010000000000040);
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
   assert_condition(midpoint.x() == 0.125);
   assert_condition(midpoint.y() == 0.125);
   assert_condition(midpoint.z() == 0.125);
-  Box geometry = grid[64].get_geometry();
+  Box<> geometry = grid[64].get_geometry();
   assert_condition(geometry.get_anchor().x() == 0.);
   assert_condition(geometry.get_anchor().y() == 0.);
   assert_condition(geometry.get_anchor().z() == 0.);
@@ -112,7 +114,7 @@ int main(int argc, char **argv) {
 
   // basic indexing: check first key and next key routines
   assert_condition(grid.get_first_key() == 512);
-  unsigned long next_key = grid.get_next_key(512);
+  uint64_t next_key = grid.get_next_key(512);
   // 576: 1*512 + (0*256 + 0*128 + 1*64) + (0*32 + 0*16 + 0*8) +
   //              (0*4 + 0*2 + 0*1)
   assert_condition(next_key == 576);
@@ -126,10 +128,10 @@ int main(int argc, char **argv) {
 
   // check Morton iteration
   key = grid.get_first_key();
-  unsigned int ncell = 0;
+  uint_fast32_t ncell = 0;
   // we need a way to make sure all cells are traversed (exactly once)
   // to this end, we calculate the sum of all keys
-  unsigned long keysum = 0;
+  uint64_t keysum = 0;
   while (key != grid.get_max_key()) {
     keysum += key;
     key = grid.get_next_key(key);
@@ -138,14 +140,14 @@ int main(int argc, char **argv) {
   assert_condition(ncell == grid.get_number_of_cells());
   // the sum should be the sum of all numbers between 512 and 1023
   // + all numbers between 0x0010000000000200 and 0x00100000000003ff
-  unsigned long refsum =
+  uint64_t refsum =
       256 * (512 + 1023) + 256 * (0x0010000000000200 + 0x00100000000003ff);
   assert_condition(keysum == refsum);
 
   /// mesh refinement
 
   // refine a single cell
-  unsigned long refined_key = grid.refine_cell(703);
+  uint64_t refined_key = grid.refine_cell(703);
   assert_condition(refined_key == 4287);
   // repeat the Morton iteration test
   assert_condition(grid.get_number_of_cells() == 2 * 8 * 8 * 8 + 7);
@@ -185,7 +187,7 @@ int main(int argc, char **argv) {
   assert_condition(grid[512].get_ngb(AMRNGBPOSITION_TOP)->value() == 576.);
 
   // now a couple arbitrary ones in the middle of the first block
-  unsigned long tests[8][7] = {// 568 = 1 000 111 000
+  uint_fast64_t tests[8][7] = {// 568 = 1 000 111 000
                                // 792 = 1 100 011 000
                                // 824 = 1 100 111 000
                                // 680 = 1 010 101 000
@@ -234,13 +236,13 @@ int main(int argc, char **argv) {
                                // 817 = 1 100 110 001
                                {888, 632, 604, 1000, 1016, 824, 817},
                                // 952 = 1 110 111 000
-                               // 969 = 1 010 111 000
+                               // 696 = 1 010 111 000
                                // 668 = 1 010 011 100
                                // 824 = 1 100 111 000
                                // 810 = 1 100 101 010
                                // 1008 = 1 111 110 000
                                // 1016 = 1 111 111 000
-                               {952, 969, 668, 824, 810, 1008, 1016},
+                               {952, 696, 668, 824, 810, 1008, 1016},
                                // 1016 = 1 111 111 000
                                // 760 = 1 011 111 000
                                // 732 = 1 011 011 100
@@ -249,39 +251,73 @@ int main(int argc, char **argv) {
                                // 952 = 1 110 111 000
                                // 945 = 1 110 110 001
                                {1016, 760, 732, 888, 874, 952, 945}};
-  for (unsigned int i = 0; i < 1; ++i) {
-    cmac_status("Testing cell %lu", tests[i][0]);
+  for (uint_fast8_t i = 0; i < 8; ++i) {
+    cmac_status("Testing cell %" PRIuFAST64, tests[i][0]);
+
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
+                tests[i][1]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][1]);
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][1]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value(),
+                tests[i][2]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_RIGHT)->value() ==
                      tests[i][2]);
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][2]].get_ngb(AMRNGBPOSITION_LEFT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
+                tests[i][3]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][3]);
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][3]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value(),
+                tests[i][4]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BACK)->value() ==
                      tests[i][4]);
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value(),
+                tests[i][0]);
     assert_condition(grid[tests[i][4]].get_ngb(AMRNGBPOSITION_FRONT)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
+                tests[i][5]);
     assert_condition(
         grid[tests[i][0]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][5]);
-    cmac_status("%g should be %lu",
+    cmac_status("%g should be %" PRIuFAST64,
                 grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value(),
                 tests[i][0]);
     assert_condition(grid[tests[i][5]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][0]);
 
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value(),
+                tests[i][6]);
     assert_condition(grid[tests[i][0]].get_ngb(AMRNGBPOSITION_TOP)->value() ==
                      tests[i][6]);
+    cmac_status("%g should be %" PRIuFAST64,
+                grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value(),
+                tests[i][0]);
     assert_condition(
         grid[tests[i][6]].get_ngb(AMRNGBPOSITION_BOTTOM)->value() ==
         tests[i][0]);
@@ -302,7 +338,7 @@ int main(int argc, char **argv) {
   assert_condition(grid[1023].get_ngb(AMRNGBPOSITION_TOP) == nullptr);
 
   // check a random cell
-  Box testbox = grid[696].get_geometry();
+  Box<> testbox = grid[696].get_geometry();
   // 696 = 1 010 111 000
   // anchor_x = 0. + 0.25 + 0. = 0.25
   // anchor_y = 0. + 0.25 + 0.125 = 0.375
