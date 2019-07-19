@@ -33,12 +33,42 @@
  */
 namespace Signals {
 
+/*! @brief Should signals cause an immediate crash or be dealt with later? */
+extern bool _crash_immediately;
+
+/*! @brief Flag keeping track of SIGINT signals. */
+extern volatile bool _signal_interrupt;
+
+/**
+ * @brief Initialize the signal handler flags.
+ *
+ * @param crash_immediately Should signals cause an immediate crash or be dealt
+ * with later?
+ */
+inline void initialize(const bool crash_immediately) {
+  _crash_immediately = crash_immediately;
+  _signal_interrupt = false;
+}
+
 /**
  * @brief Signal handler for SIGINT (interrupt signal).
  */
 inline void signal_interrupt_handler() {
-  cmac_error("\nCTRL+C interrupt detected!");
+  if (_crash_immediately || _signal_interrupt) {
+    cmac_error("\nCTRL+C interrupt detected! Crashing...");
+  } else {
+    cmac_warning("\nCTRL+C interrupt detected! Will stop as soon as "
+                 "convenient. Hit CTRL+C again to stop immediately.");
+    _signal_interrupt = true;
+  }
 }
+
+/**
+ * @brief Check if we want to interrupt the simulation.
+ *
+ * @return True if SIGINT was raised.
+ */
+inline bool interrupt() { return _signal_interrupt; }
 } // namespace Signals
 
 #endif // SIGNALS_HPP

@@ -159,6 +159,8 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   Timer serial_timer;
   Timer parallel_timer;
 
+  OperatingSystem::install_signal_handlers(false);
+
   RestartReader *restart_reader = nullptr;
   if (parser.was_found("restart")) {
     restart_reader = RestartManager::get_restart_reader(
@@ -667,7 +669,7 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     }
 
     random_seed = restart_seed_generator.get_random_integer();
-    stop_simulation = restart_manager.stop_simulation();
+    stop_simulation = restart_manager.stop_simulation() || Signals::interrupt();
     if (restart_manager.write_restart_file() || stop_simulation) {
       RestartWriter *restart_writer = restart_manager.get_restart_writer(log);
 

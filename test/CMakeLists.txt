@@ -1553,6 +1553,7 @@ set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     ../src/AsciiFileDensityGridWriter.cpp
     ../src/GadgetDensityGridWriter.cpp
     ../src/ParameterFile.cpp
+    ../src/Signals.cpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
     ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp

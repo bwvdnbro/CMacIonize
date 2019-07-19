@@ -109,8 +109,11 @@ static size_t get_peak_memory_usage();
 /**
  * @brief Install signal handlers that are called when specific signal
  * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ *
+ * @param crash_immediately Should signals cause an immediate crash or be dealt
+ * with later?
  */
-static void install_signal_handlers();
+static void install_signal_handlers(const bool crash_immediately);
 } // namespace OperatingSystem
 
 // ...then include the correct implementation

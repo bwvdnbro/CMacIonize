@@ -38,6 +38,7 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
+#include "Signals.hpp"
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
@@ -237,6 +238,9 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _log(log) {
 
   omp_set_num_threads(num_thread);
+
+  // install signal handlers
+  OperatingSystem::install_signal_handlers(true);
 
   cpucycle_tick(_program_start);
   _total_timer.start();
@@ -1516,6 +1520,7 @@ void TaskBasedIonizationSimulation::run(
     _time_log.end("task reset");
 
     _time_log.end(iloopstr.str());
+
   } // photoionization loop
   _time_log.end("photoionization loop");
 

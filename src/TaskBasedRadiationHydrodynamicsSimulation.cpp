@@ -840,6 +840,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   Timer parallel_timer;
   Timer worktimer;
 
+  OperatingSystem::install_signal_handlers(false);
+
   RestartReader *restart_reader = nullptr;
   if (parser.was_found("restart")) {
     restart_reader = RestartManager::get_restart_reader(
@@ -2519,7 +2521,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     time_logger.end("time step");
 
     random_seed = restart_generator.get_random_integer();
-    stop_simulation = restart_manager.stop_simulation();
+    stop_simulation = restart_manager.stop_simulation() || Signals::interrupt();
     if (restart_manager.write_restart_file() || stop_simulation) {
       time_logger.start("restart file");
       RestartWriter *restart_writer = restart_manager.get_restart_writer(log);

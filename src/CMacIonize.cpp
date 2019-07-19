@@ -103,9 +103,6 @@ int main(int argc, char **argv) {
   bool write_log = (comm.get_rank() == 0);
   bool write_output = (comm.get_rank() == 0);
 
-  // install signal handlers
-  OperatingSystem::install_signal_handlers();
-
   Timer programtimer;
 
   // first thing we should do: parse the command line arguments

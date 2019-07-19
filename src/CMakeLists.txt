@@ -129,6 +129,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     PhotonSource.cpp
     PhysicalDiffuseReemissionHandler.cpp
     PlanckPhotonSourceSpectrum.cpp
+    Signals.cpp
     SPHNGSnapshotDensityFunction.cpp
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
@@ -162,6 +163,7 @@ set(CMACIONIZE_SOURCES
     EmissivityCalculationSimulation.cpp
     EmissivityCalculator.cpp
     RadiationHydrodynamicsSimulation.cpp
+    Signals.cpp
     TaskBasedRadiationHydrodynamicsSimulation.cpp
 
     Abundances.hpp
