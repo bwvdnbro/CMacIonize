@@ -66,7 +66,7 @@ data = np.loadtxt(
     delimiter="\t",
     dtype={
         "names": ("id", "pid", "depth", "tic", "toc", "start", "end", "label"),
-        "formats": ("u4", "u4", "u4", "u8", "u8", "f8", "f8", "S100"),
+        "formats": ("u4", "u4", "u4", "u8", "u8", "f8", "f8", ("U", 100)),
     },
 )
 
