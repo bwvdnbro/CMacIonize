@@ -123,8 +123,14 @@ inline void unix_signal_interrupt_handler(int signal) {
 /**
  * @brief Install signal handlers that are called when specific signal
  * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ *
+ * @param crash_immediately Should signals cause an immediate crash or be dealt
+ * with later?
  */
-inline void OperatingSystem::install_signal_handlers() {
+inline void
+OperatingSystem::install_signal_handlers(const bool crash_immediately) {
+
+  Signals::initialize(crash_immediately);
 
   struct sigaction signal_handler;
   signal_handler.sa_handler = unix_signal_interrupt_handler;

@@ -118,6 +118,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
 
   function_start_timers();
 
+  OperatingSystem::install_signal_handlers(true);
+
   if (_log) {
     if (_num_thread == 1) {
       _log->write_status("IonizationSimulation will use 1 thread.");

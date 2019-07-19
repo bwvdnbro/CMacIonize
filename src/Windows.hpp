@@ -141,8 +141,14 @@ inline BOOL WINAPI windows_signal_interrupt_handler(DWORD signal) {
 /**
  * @brief Install signal handlers that are called when specific signal
  * interrupts are sent by the operating system (e.g. CTRL+C from the terminal).
+ *
+ * @param crash_immediately Should signals cause an immediate crash or be dealt
+ * with later?
  */
-inline void OperatingSystem::install_signal_handlers() {
+inline void
+OperatingSystem::install_signal_handlers(const bool crash_immediately) {
+
+  Signals::initialize(crash_immediately);
 
   SetConsoleCtrlHandler((PHANDLER_ROUTINE)windows_signal_interrupt_handler,
                         TRUE);

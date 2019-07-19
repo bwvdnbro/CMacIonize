@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2019 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,32 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file testIonizationSimulation.cpp
+ * @file Signals.cpp
  *
- * @brief Unit test for the IonizationSimulation class.
+ * @brief Operating system independent signal handlers: variables.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 
-#include "IonizationSimulation.hpp"
-#include "MPICommunicator.hpp"
-#include "TerminalLog.hpp"
-
-/**
- * @brief Unit test for the IonizationSimulation class.
- *
- * @param argc Number of command line arguments.
- * @param argv Command line arguments.
- * @return Exit code: 0 on success.
- */
-int main(int argc, char **argv) {
-
-  MPICommunicator comm(argc, argv);
-  TerminalLog log(LOGLEVEL_STATUS);
-  IonizationSimulation simulation(
-      true, false, false, -1, "test_ionizationsimulation.param", &comm, &log);
-  simulation.initialize();
-  simulation.run();
-
-  return 0;
-}
+namespace Signals {
+bool _crash_immediately;
+volatile bool _signal_interrupt;
+} // namespace Signals
