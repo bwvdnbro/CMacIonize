@@ -44,13 +44,24 @@ pl.rcParams["text.usetex"] = True
 alphaH = 4.0e-19  # m^3 s^-1
 nH = 1.0e8  # m^-3
 Q = 4.26e49  # s^-1
+sigmaH = 6.3e-22  # m^2
 
 # compute the Stromgren radius
 Rs = (0.75 * Q / (np.pi * nH ** 2 * alphaH)) ** (1.0 / 3.0)
 
+# compute the reference neutral fraction profile
+rref = np.linspace(0.0, 1.2 * Rs, 1200)
+xref = np.zeros(rref.shape)
+integral = 0.0
+factor = 0.125 * Q * sigmaH / (np.pi * nH * alphaH)
+intfac = 0.0005 * Rs * nH * sigmaH
+for i in range(1, len(rref)):
+    A = factor * np.exp(-integral) / rref[i] ** 2
+    xref[i] = 1.0 + A - np.sqrt(2.0 * A + A ** 2)
+    integral += intfac * (xref[i - 1] + xref[i])
+
 # output distances in pc
 pc = 3.086e16  # m
-
 Rs /= pc
 
 # loop over all snapshot files in the directory
@@ -89,9 +100,13 @@ for fname in sorted(glob.glob("stromgren_*.hdf5")):
     nfracH_sigma_bin = np.sqrt(nfracH2_bin - nfracH_bin ** 2)
 
     # plot the stromgren radius for reference
-    pl.plot([Rs, Rs], [1.0e-7, 1.0], "r--", label=r"Str\"{o}mgren radius")
+    pl.gca().axvline(
+        x=Rs, color="r", linestyle="--", label=r"Str\"{o}mgren radius"
+    )
     # plot neutral fraction as a function of radius
     pl.semilogy(radius, nfracH, ".", color="grey", markersize=0.5, alpha=0.5)
+    # plot the reference curve
+    pl.plot(rref / pc, xref, "r-", label="Reference profile")
     # plot the binned neutral fractions with error bar
     # we need to set the zorder to make sure the error bars are on top of the data
     # points
