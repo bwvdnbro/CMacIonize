@@ -81,7 +81,7 @@ public:
    * Only provided so that the compiler does not complain, should never be
    * actually used.
    */
-  inline TimeLogEntry() { cmac_error("Should not be used!"); }
+  inline TimeLogEntry() {}
 
   /**
    * @brief Get the ID of the entry.
