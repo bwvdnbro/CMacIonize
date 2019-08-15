@@ -889,7 +889,7 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
 
   //time_log.start("Density_mapping");
 
-  const bool _is_old_density_mapping = true;
+  const bool _is_old_density_mapping = false;
   const bool _is_petkova_density_mapping = true;
   DensityValues values;
 
@@ -920,8 +920,6 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
       std::vector< uint_fast32_t > ngbs =
           _octree->get_ngbs_sphere(position, radius);
       const unsigned int numngbs = ngbs.size();
-
-      //printf("ngbs: %u, faces: %lu, radius: %g\n", numngbs, face_vector.size(), radius);
 
       // Loop over all the neighbouring particles and calculate their mass
       // contributions.
