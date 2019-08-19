@@ -27,9 +27,9 @@
 #define ASCIIFILEPHOTONSOURCEDISTRIBUTION_HPP
 
 #include "CoordinateVector.hpp"
-#include "PhotonSourceDistribution.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "PhotonSourceDistribution.hpp"
 
 #include <string>
 #include <vector>
