@@ -40,70 +40,70 @@
  */
 AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
     std::string filename, Log *log)
-      : _log(log) {
+    : _log(log) {
 
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-      cmac_error("Could not open file \"%s\"!", filename.c_str());
-    }
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    cmac_error("Could not open file \"%s\"!", filename.c_str());
+  }
 
-    uint_fast32_t index_i = 0;
-    std::string line;
-    photonsourcenumber_t number_of_positions;
+  uint_fast32_t index_i = 0;
+  std::string line;
+  photonsourcenumber_t number_of_positions;
 
-    while (getline(file, line)) {
-      if (line[0] != '#') {
-        std::stringstream linestream(line);
-        linestream >> number_of_positions;
-        _positions.resize(number_of_positions);
-        _weights.resize(number_of_positions);
-        break;
-      }
-    }
-
-    while (getline(file, line)) {
-      if (line[0] != '#') {
-        double total_luminosity;
-        std::stringstream linestream1(line);
-        linestream1 >> total_luminosity;
-        _total_luminosity = total_luminosity;
-        break;
-      }
-    }
-
-    while (getline(file, line)) {
-      if (index_i == number_of_positions) {
-        cmac_warning(
-            "The file %s exceeds the number of number of sources provided.\n",
-            filename.c_str());
-        break;
-      }
-      if (line[0] != '#') {
-        double sx, sy, sz, w;
-        std::stringstream linestream2(line);
-        // read source coordinates and luminosity weight
-        linestream2 >> sx >> sy >> sz >> w;
-        _positions[index_i][0] = sx;
-        _positions[index_i][1] = sy;
-        _positions[index_i][2] = sz;
-        _weights[index_i] = w;
-        index_i++;
-      }
-    }
-
-    if (index_i < number_of_positions) {
-      cmac_error("The file %s has fewer sources (%" PRIuFAST32
-                 ") than needed (%" PRIuFAST32 ").\n",
-                 filename.c_str(), index_i, number_of_positions);
-    }
-
-    file.close();
-
-    if (log) {
-      log->write_status("AsciiFilePhotonSourceDistribution with ",
-                        number_of_positions, ".");
+  while (getline(file, line)) {
+    if (line[0] != '#') {
+      std::stringstream linestream(line);
+      linestream >> number_of_positions;
+      _positions.resize(number_of_positions);
+      _weights.resize(number_of_positions);
+      break;
     }
   }
+
+  while (getline(file, line)) {
+    if (line[0] != '#') {
+      double total_luminosity;
+      std::stringstream linestream1(line);
+      linestream1 >> total_luminosity;
+      _total_luminosity = total_luminosity;
+      break;
+    }
+  }
+
+  while (getline(file, line)) {
+    if (index_i == number_of_positions) {
+      cmac_warning(
+          "The file %s exceeds the number of number of sources provided.\n",
+          filename.c_str());
+      break;
+    }
+    if (line[0] != '#') {
+      double sx, sy, sz, w;
+      std::stringstream linestream2(line);
+      // read source coordinates and luminosity weight
+      linestream2 >> sx >> sy >> sz >> w;
+      _positions[index_i][0] = sx;
+      _positions[index_i][1] = sy;
+      _positions[index_i][2] = sz;
+      _weights[index_i] = w;
+      index_i++;
+    }
+  }
+
+  if (index_i < number_of_positions) {
+    cmac_error("The file %s has fewer sources (%" PRIuFAST32
+               ") than needed (%" PRIuFAST32 ").\n",
+               filename.c_str(), index_i, number_of_positions);
+  }
+
+  file.close();
+
+  if (_log) {
+    _log->write_status("AsciiFilePhotonSourceDistribution with ",
+                       number_of_positions, ".");
+  }
+}
 
 /**
  * @brief ParameterFile constructor.
@@ -116,10 +116,10 @@ AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
  */
 AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
     ParameterFile &params, Log *log)
-      : AsciiFilePhotonSourceDistribution(
-            params.get_value< std::string >(
-                "PhotonSourceDistribution:filename", "sinks.txt"),
-            log) {}
+    : AsciiFilePhotonSourceDistribution(
+          params.get_value< std::string >("PhotonSourceDistribution:filename",
+                                          "sinks.txt"),
+          log) {}
 
 /**
  * @brief Get the number of sources in the ASCII file.
@@ -142,8 +142,8 @@ AsciiFilePhotonSourceDistribution::get_number_of_sources() const {
  * get_number_of_sources().
  * @return Position of the given source (in m).
  */
-CoordinateVector<> AsciiFilePhotonSourceDistribution::get_position(
-    photonsourcenumber_t index) {
+CoordinateVector<>
+AsciiFilePhotonSourceDistribution::get_position(photonsourcenumber_t index) {
   return _positions[index];
 }
 

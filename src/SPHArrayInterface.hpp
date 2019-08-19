@@ -96,21 +96,20 @@ public:
 
   Octree *get_octree();
 
-  //DensityMapping get_dens_map(){return _dens_map;}
-  
+  // DensityMapping get_dens_map(){return _dens_map;}
+
   virtual void initialize();
   virtual DensityValues operator()(const Cell &cell) const;
 
-
   void gridding();
 
-  double gridded_integral(double phi, double r0_old, double R_0_old, double h_old) const;
+  double gridded_integral(double phi, double r0_old, double R_0_old,
+                          double h_old) const;
 
   static double full_integral(double phi, double r0, double R_0, double h);
 
-  double mass_contribution(const Cell &cell,
-                                  const CoordinateVector<> particle,
-                                  const double h) const;
+  double mass_contribution(const Cell &cell, const CoordinateVector<> particle,
+                           const double h) const;
 
   // DensityGridWriter functionality
 

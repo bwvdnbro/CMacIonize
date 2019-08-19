@@ -33,8 +33,8 @@
 #include "Timer.hpp"
 
 #include <cinttypes>
-#include <vector>
 #include <fstream>
+#include <vector>
 
 /**
  * @brief Single entry in the time log.

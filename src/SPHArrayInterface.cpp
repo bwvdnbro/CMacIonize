@@ -112,7 +112,10 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
  *
  * Frees up memory used by the internal Octree.
  */
-SPHArrayInterface::~SPHArrayInterface() { delete _octree;  time_log.output("filename", true);}
+SPHArrayInterface::~SPHArrayInterface() {
+  delete _octree;
+  time_log.output("filename", true);
+}
 
 /**
  * @brief Reset the internal data values.
@@ -270,95 +273,94 @@ void SPHArrayInterface::gridding() {
 
   time_log.start("Gridding");
 
-  h=1.0;
-  n=150;
-  nr1=50;
-  nr2=199;
+  h = 1.0;
+  n = 150;
+  nr1 = 50;
+  nr2 = 199;
   rl = 0.1;
   mul = 0.98;
   cphil = 0.98;
 
-  _density_values.resize(nr1+nr2+2);
-  for(i=0;i<=nr1+nr2+1;i++) {
-    _density_values[i].resize(2*n+1);
-    for(j=0;j<=2*n;j++) {
-      _density_values[i][j].resize(2*n+1, 0.);
+  _density_values.resize(nr1 + nr2 + 2);
+  for (i = 0; i <= nr1 + nr2 + 1; i++) {
+    _density_values[i].resize(2 * n + 1);
+    for (j = 0; j <= 2 * n; j++) {
+      _density_values[i][j].resize(2 * n + 1, 0.);
     }
   }
 
-  for(i=0;i<nr1;i++) {
-    r0 = (rl/nr1)*(i+1)*h;
-    for(j=0;j<n;j++) {
-      mu0 = (mul/(n-1))*j;
-      R_0 = r0 * (sqrt(1.0-mu0*mu0))/mu0;
-      for(k=0;k<n;k++) {
-	phi = acos((cphil/(n-1))*k);
-        _density_values[i+1][j][k] = full_integral(phi, r0, R_0, h);
+  for (i = 0; i < nr1; i++) {
+    r0 = (rl / nr1) * (i + 1) * h;
+    for (j = 0; j < n; j++) {
+      mu0 = (mul / (n - 1)) * j;
+      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+      for (k = 0; k < n; k++) {
+        phi = acos((cphil / (n - 1)) * k);
+        _density_values[i + 1][j][k] = full_integral(phi, r0, R_0, h);
       }
 
-      for(k=1;k<=n;k++) {
-	phi = acos(cphil+((1.0-cphil)/n)*k);
-	_density_values[i+1][j][n+k-1] = full_integral(phi, r0, R_0, h);
-      }
-    }
-
-    for(j=1;j<=n;j++) {
-      mu0 = mul + ((1.0-mul)/n)*j;
-      R_0 = r0 * (sqrt(1.0-mu0*mu0))/mu0;
-      for(k=0;k<n;k++) {
-	phi = acos((cphil/(n-1))*k);
-        _density_values[i+1][n+j-1][k] = full_integral(phi, r0, R_0, h); 
-      }
-
-      for(k=1;k<=n;k++) {
-	phi = acos(cphil+((1.0-cphil)/n)*k);
-        _density_values[i+1][n+j-1][n+k-1] = full_integral(phi, r0, R_0, h);
+      for (k = 1; k <= n; k++) {
+        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+        _density_values[i + 1][j][n + k - 1] = full_integral(phi, r0, R_0, h);
       }
     }
 
-  }
-
-
-  for(i=1;i<=nr2;i++) {
-    r0 = rl + ((2.0-rl)/nr2)*i*h;
-    for(j=0;j<n;j++) {
-      mu0 = (mul/(n-1))*j;
-      R_0 = r0 * (sqrt(1.0-mu0*mu0))/mu0;
-
-      for(k=0;k<n;k++) {
-	phi = acos((cphil/(n-1))*k);
-	_density_values[nr1+i][j][k] = full_integral(phi, r0, R_0, h);
+    for (j = 1; j <= n; j++) {
+      mu0 = mul + ((1.0 - mul) / n) * j;
+      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+      for (k = 0; k < n; k++) {
+        phi = acos((cphil / (n - 1)) * k);
+        _density_values[i + 1][n + j - 1][k] = full_integral(phi, r0, R_0, h);
       }
 
-      for(k=1;k<=n;k++) {
-	phi = acos(cphil+((1.0-cphil)/n)*k);
-        _density_values[nr1+i][j][n+k-1] = full_integral(phi, r0, R_0, h);
-      }
-    }
-
-    for(j=1;j<=n;j++) {
-      mu0 = mul + ((1.0-mul)/n)*j;
-      R_0 = r0 * (sqrt(1.0-mu0*mu0))/mu0;
-
-      for(k=0;k<n;k++) {
-	phi = acos((cphil/(n-1))*k);
-        _density_values[nr1+i][n+j-1][k] = full_integral(phi, r0, R_0, h); 
-      }
-
-      for(k=1;k<=n;k++) {
-	phi = acos(cphil+((1.0-cphil)/n)*k);
-        _density_values[nr1+i][n+j-1][n+k-1] = full_integral(phi, r0, R_0, h);
+      for (k = 1; k <= n; k++) {
+        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+        _density_values[i + 1][n + j - 1][n + k - 1] =
+            full_integral(phi, r0, R_0, h);
       }
     }
   }
 
-  i = nr1+nr2;
-  for(j=0;j<2*n;j++) {
-    for(k=0;k<2*n;k++) {
-      _density_values[i+1][j][k] = _density_values[i][j][k];
+  for (i = 1; i <= nr2; i++) {
+    r0 = rl + ((2.0 - rl) / nr2) * i * h;
+    for (j = 0; j < n; j++) {
+      mu0 = (mul / (n - 1)) * j;
+      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+
+      for (k = 0; k < n; k++) {
+        phi = acos((cphil / (n - 1)) * k);
+        _density_values[nr1 + i][j][k] = full_integral(phi, r0, R_0, h);
+      }
+
+      for (k = 1; k <= n; k++) {
+        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+        _density_values[nr1 + i][j][n + k - 1] = full_integral(phi, r0, R_0, h);
+      }
+    }
+
+    for (j = 1; j <= n; j++) {
+      mu0 = mul + ((1.0 - mul) / n) * j;
+      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+
+      for (k = 0; k < n; k++) {
+        phi = acos((cphil / (n - 1)) * k);
+        _density_values[nr1 + i][n + j - 1][k] = full_integral(phi, r0, R_0, h);
+      }
+
+      for (k = 1; k <= n; k++) {
+        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+        _density_values[nr1 + i][n + j - 1][n + k - 1] =
+            full_integral(phi, r0, R_0, h);
+      }
     }
   }
 
+  i = nr1 + nr2;
+  for (j = 0; j < 2 * n; j++) {
+    for (k = 0; k < 2 * n; k++) {
+      _density_values[i + 1][j][k] = _density_values[i][j][k];
+    }
+  }
 
   /*  for(i=0;i<10;i++) {
     for(j=0;j<10;j++) {
@@ -387,16 +389,16 @@ void SPHArrayInterface::gridding() {
  */
 
 double SPHArrayInterface::gridded_integral(double phi, double r0_old,
-                                                   double R_0_old, double h_old) const{
+                                           double R_0_old, double h_old) const {
   double r0, R_0, cphi, mu0, h;
   int i, j, k;
   double fx1, fx2, fx3, fx4, fy1, fy2, fz, frac;
-  const int nr01=50;
-  const int nr02=199;
-  const int nR_01=150;
-  const int nR_02=150;
-  const int nphi1=150;
-  const int nphi2=150;
+  const int nr01 = 50;
+  const int nr02 = 199;
+  const int nR_01 = 150;
+  const int nR_02 = 150;
+  const int nphi1 = 150;
+  const int nphi2 = 150;
   const double rl = 0.1;
   const double mul = 0.98;
   const double cphil = 0.98;
@@ -406,12 +408,12 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
   R_0 = R_0_old / h_old;
   cphi = cos(phi);
 
-  if(r0 < 0.0) {
+  if (r0 < 0.0) {
     printf("Error: r0 < 0: %g %g\n", r0, r0_old);
     r0 = 0.0;
   }
 
-  if(R_0 < 0.0) {
+  if (R_0 < 0.0) {
     printf("Error: R_0 < 0: %g %g\n", R_0, R_0_old);
     R_0 = 0.0;
   }
@@ -423,74 +425,83 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
   if (phi == 0.0)
     return 0.0;
 
-  mu0 = r0 / sqrt(r0*r0 + R_0*R_0);
+  mu0 = r0 / sqrt(r0 * r0 + R_0 * R_0);
 
-  if(r0 > 2.0) r0 = 2.0;
-        
-  if(r0 < rl) {
-    i = int(r0/(rl/nr01));
+  if (r0 > 2.0)
+    r0 = 2.0;
+
+  if (r0 < rl) {
+    i = int(r0 / (rl / nr01));
   } else {
-    i = nr01 + int((r0-rl)/((2.0-rl)*h/nr02));
+    i = nr01 + int((r0 - rl) / ((2.0 - rl) * h / nr02));
   }
 
-  if(mu0 < mul) {
-    j = int(mu0/(mul/(nR_01-1)));
+  if (mu0 < mul) {
+    j = int(mu0 / (mul / (nR_01 - 1)));
   } else {
-    j = nR_01-1 + int((mu0-mul)/((1.0-mul)/nR_02));
-  }
-      
-  if(cphi < cphil) {
-    k = int(cphi/(cphil/(nphi1-1)));
-  } else {
-    k = nphi1-1 + int((cphi-cphil)/((1.0-cphil)/nphi2));
+    j = nR_01 - 1 + int((mu0 - mul) / ((1.0 - mul) / nR_02));
   }
 
-  if(i<0 || i>nr01+nr02 ||j<0 || j>nR_01+nR_02-1 || k<0 || k>nphi1+nphi2) 
-          printf("i, j, k: %d %d %d \n",i,j,k);
-
-  if(r0 < rl) {
-    frac = (r0 - (rl/nr01)*i*h)/(rl/nr01*h);
+  if (cphi < cphil) {
+    k = int(cphi / (cphil / (nphi1 - 1)));
   } else {
-    frac = (r0 - rl - ((2.0-rl)/nr02)*(i-nr01)*h)/((2.0-rl)/nr02*h);
+    k = nphi1 - 1 + int((cphi - cphil) / ((1.0 - cphil) / nphi2));
   }
-  fx1 = frac*SPHArrayInterface::get_gridded_density_value(i+1,j,k) + 
-        (1-frac)*SPHArrayInterface::get_gridded_density_value(i,j,k);
-  fx2 = frac*SPHArrayInterface::get_gridded_density_value(i+1,j+1,k) + 
-        (1-frac)*SPHArrayInterface::get_gridded_density_value(i,j+1,k);
-  fx3 = frac*SPHArrayInterface::get_gridded_density_value(i+1,j,k+1) + 
-        (1-frac)*SPHArrayInterface::get_gridded_density_value(i,j,k+1);
-  fx4 = frac*SPHArrayInterface::get_gridded_density_value(i+1,j+1,k+1) + 
-        (1-frac)*SPHArrayInterface::get_gridded_density_value(i,j+1,k+1);
 
-      /*if(j < nR_0/2-1) {
-        frac = (mu0 - (1.0/(nR_0/2))*j)/(1.0/(nR_0/2));
-      } else {
-        frac = (mu0 - (nR_0/2-1)*(1.0/(nR_0/2)) - (1.0/(nR_0/2)/(nR_0/2))*(j-(nR_0/2-1)))/(1.0/(nR_0/2)/(nR_0/2));
-	}*/
+  if (i < 0 || i > nr01 + nr02 || j < 0 || j > nR_01 + nR_02 - 1 || k < 0 ||
+      k > nphi1 + nphi2)
+    printf("i, j, k: %d %d %d \n", i, j, k);
 
-  if(mu0 < mul) {
-    frac = (mu0 - mul/(nR_01-1)*j) / (mul/(nR_01-1));
+  if (r0 < rl) {
+    frac = (r0 - (rl / nr01) * i * h) / (rl / nr01 * h);
   } else {
-    frac = (mu0 - mul - (1.0-mul)/nR_02*(j-nR_01+1)) / ((1.0-mul)/nR_02);
+    frac = (r0 - rl - ((2.0 - rl) / nr02) * (i - nr01) * h) /
+           ((2.0 - rl) / nr02 * h);
   }
-  fy1 = frac*fx2 + (1-frac)*fx1;
-  fy2 = frac*fx4 + (1-frac)*fx3;
+  fx1 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j, k) +
+        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k);
+  fx2 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j + 1, k) +
+        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j + 1, k);
+  fx3 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j, k + 1) +
+        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k + 1);
+  fx4 =
+      frac * SPHArrayInterface::get_gridded_density_value(i + 1, j + 1, k + 1) +
+      (1 - frac) *
+          SPHArrayInterface::get_gridded_density_value(i, j + 1, k + 1);
 
-      /*if(k < nphi/2-1) {
-        frac = (cphi - (1.0/(nphi/2))*k)/(1.0/(nphi/2));
-      } else {
-        frac = (cphi - (nphi/2-1)*(1.0/(nphi/2)) - (1.0/(nphi/2)/(nphi/2))*(k-(nphi/2-1)))/(1.0/(nphi/2)/(nphi/2));
-	}*/
-
-
-  if(cphi < cphil) {
-    frac = (cphi - cphil/(nphi1-1)*k) / (cphil/(nphi1-1));
+  /*if(j < nR_0/2-1) {
+    frac = (mu0 - (1.0/(nR_0/2))*j)/(1.0/(nR_0/2));
   } else {
-    frac = (cphi - cphil - (1.0-cphil)/nphi2*(k-nphi1+1)) / ((1.0-cphil)/nphi2);
-  }
-  fz = frac*fy2 + (1-frac)*fy1;
+    frac = (mu0 - (nR_0/2-1)*(1.0/(nR_0/2)) -
+  (1.0/(nR_0/2)/(nR_0/2))*(j-(nR_0/2-1)))/(1.0/(nR_0/2)/(nR_0/2));
+    }*/
 
-  if((j==(nR_01+nR_02-1)) || (k==(nphi1+nphi2-1))) fz = 0.0;
+  if (mu0 < mul) {
+    frac = (mu0 - mul / (nR_01 - 1) * j) / (mul / (nR_01 - 1));
+  } else {
+    frac = (mu0 - mul - (1.0 - mul) / nR_02 * (j - nR_01 + 1)) /
+           ((1.0 - mul) / nR_02);
+  }
+  fy1 = frac * fx2 + (1 - frac) * fx1;
+  fy2 = frac * fx4 + (1 - frac) * fx3;
+
+  /*if(k < nphi/2-1) {
+    frac = (cphi - (1.0/(nphi/2))*k)/(1.0/(nphi/2));
+  } else {
+    frac = (cphi - (nphi/2-1)*(1.0/(nphi/2)) -
+  (1.0/(nphi/2)/(nphi/2))*(k-(nphi/2-1)))/(1.0/(nphi/2)/(nphi/2));
+    }*/
+
+  if (cphi < cphil) {
+    frac = (cphi - cphil / (nphi1 - 1) * k) / (cphil / (nphi1 - 1));
+  } else {
+    frac = (cphi - cphil - (1.0 - cphil) / nphi2 * (k - nphi1 + 1)) /
+           ((1.0 - cphil) / nphi2);
+  }
+  fz = frac * fy2 + (1 - frac) * fy1;
+
+  if ((j == (nR_01 + nR_02 - 1)) || (k == (nphi1 + nphi2 - 1)))
+    fz = 0.0;
 
   return fz;
 }
@@ -507,8 +518,8 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
  * @return The integral of the kernel for the given vertex.
  */
 
-double SPHArrayInterface::full_integral(double phi, double r0,
-                          double R_0, double h) {
+double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
+                                        double h) {
 
   double B1, B2, B3, mu, a, logs, u;
   double full_int;
@@ -540,10 +551,12 @@ double SPHArrayInterface::full_integral(double phi, double r0,
   if (r0 >= 2.0 * h) {
     B3 = h2 * h / 4.;
   } else if (r0 > h) {
-    B3 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3 + 8. / 5. * r0h_2);
-    B2 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3);
+    B3 = r03 / 4. *
+         (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
+          1. / 15. * r0h_3 + 8. / 5. * r0h_2);
+    B2 =
+        r03 / 4. *
+        (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
   } else {
     B3 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
     B2 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
@@ -581,10 +594,9 @@ double SPHArrayInterface::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D2 = -1. / 6. * I_2 + 0.25 * (r0 / h) * I_3 - 0.15 * r0h2 * I_4 +
          1. / 30. * r0h3 * I_5 - 1. / 60. * r0h_3 * I1 + (B1 - B2) / r03 * I0;
@@ -608,10 +620,9 @@ double SPHArrayInterface::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -636,10 +647,9 @@ double SPHArrayInterface::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -673,8 +683,9 @@ double SPHArrayInterface::full_integral(double phi, double r0,
   // Calculating the integral expression.
 
   if (r2 < h2) {
-    full_int = r0h3 / M_PI * (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 +
-                              1. / 40. * r0h3 * I_5 + B1 / r03 * I0);
+    full_int = r0h3 / M_PI *
+               (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 + 1. / 40. * r0h3 * I_5 +
+                B1 / r03 * I0);
   } else if (r2 < 4.0 * h2) {
     full_int = r0h3 / M_PI *
                (0.25 * (4. / 3. * I_2 - (r0 / h) * I_3 + 0.3 * r0h2 * I_4 -
@@ -697,7 +708,9 @@ double SPHArrayInterface::full_integral(double phi, double r0,
  * @return The mass contribution of the particle to the cell.
  */
 
-double SPHArrayInterface::mass_contribution(const Cell &cell,  CoordinateVector<> particle, double h) const {
+double SPHArrayInterface::mass_contribution(const Cell &cell,
+                                            CoordinateVector<> particle,
+                                            double h) const {
 
   double M, Msum;
 
@@ -832,52 +845,54 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,  CoordinateVector<
         M = 1.;
       }
 
-      if(ar0 < 0.0) printf("Wrong from mass_contribution: r0 = %g \n",ar0);
-      if(R_0 < 0.0) printf("Wrong from mass_contribution: R_0 = %g \n",R_0);
+      if (ar0 < 0.0)
+        printf("Wrong from mass_contribution: r0 = %g \n", ar0);
+      if (R_0 < 0.0)
+        printf("Wrong from mass_contribution: R_0 = %g \n", R_0);
 
       // Calculate the vertex integral.
       const bool is_pre_computed = true;
       if ((r12 * sin(phi1) >= r23) || (r13 * sin(phi2) >= r23)) {
         if (phi1 >= phi2) {
-          if(is_pre_computed) {
+          if (is_pre_computed) {
             M = M * (gridded_integral(phi1, ar0, R_0, h) -
                      gridded_integral(phi2, ar0, R_0, h));
-	  } else {
+          } else {
             M = M * (full_integral(phi1, ar0, R_0, h) -
-	           full_integral(phi2, ar0, R_0, h));
-	  }
+                     full_integral(phi2, ar0, R_0, h));
+          }
         } else {
-          if(is_pre_computed) {
+          if (is_pre_computed) {
             M = M * (gridded_integral(phi2, ar0, R_0, h) -
                      gridded_integral(phi1, ar0, R_0, h));
-	  } else {
-	    M = M * (full_integral(phi2, ar0, R_0, h) -
-	           full_integral(phi1, ar0, R_0, h));
-	  }
+          } else {
+            M = M * (full_integral(phi2, ar0, R_0, h) -
+                     full_integral(phi1, ar0, R_0, h));
+          }
         }
       } else {
-        if(is_pre_computed) {
+        if (is_pre_computed) {
           M = M * (gridded_integral(phi1, ar0, R_0, h) +
                    gridded_integral(phi2, ar0, R_0, h));
-	} else {
+        } else {
           M = M * (full_integral(phi1, ar0, R_0, h) +
-	         full_integral(phi2, ar0, R_0, h));
-	}
+                   full_integral(phi2, ar0, R_0, h));
+        }
       }
       Msum = Msum + M;
     }
   }
 
   // Ensure there is no negative mass
-  if(Msum < 1e-6) Msum=1e-6;
-  
+  if (Msum < 1e-6)
+    Msum = 1e-6;
+
   return Msum;
 }
 
-double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const{
+double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const {
   return _density_values[i][j][k];
 }
-
 
 /**
  * @brief Function that gives the density for a given cell.
@@ -887,7 +902,7 @@ double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const{
  */
 DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
 
-  //time_log.start("Density_mapping");
+  // time_log.start("Density_mapping");
 
   const bool _is_old_density_mapping = false;
   const bool _is_petkova_density_mapping = true;
@@ -896,10 +911,10 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
   const CoordinateVector<> position = cell.get_cell_midpoint();
   double density = 0.;
 
-  if(_is_old_density_mapping) {
+  if (_is_old_density_mapping) {
     density = _masses[0] / cell.get_volume();
   } else {
-    if(_is_petkova_density_mapping) {
+    if (_is_petkova_density_mapping) {
       CoordinateVector<> position = cell.get_cell_midpoint();
 
       // Find the vertex that is furthest away from the cell midpoint.
@@ -908,7 +923,7 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
       for (unsigned int i = 0; i < face_vector.size(); i++) {
         for (Face::Vertices j = face_vector[i].first_vertex();
              j != face_vector[i].last_vertex(); ++j) {
-          double distance = (j.get_position()-position).norm();
+          double distance = (j.get_position() - position).norm();
           if (distance > radius)
             radius = distance;
         }
@@ -927,8 +942,10 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
         const unsigned int index = ngbs[i];
         const double h = _smoothing_lengths[index] / 2.0;
         const CoordinateVector<> particle = _positions[index];
-        if(h < 0) printf("h < 0: %g, %u", h, index);
-        density += SPHArrayInterface::mass_contribution(cell, particle, h) * _masses[index];
+        if (h < 0)
+          printf("h < 0: %g, %u", h, index);
+        density += SPHArrayInterface::mass_contribution(cell, particle, h) *
+                   _masses[index];
       }
 
       // Divide the cell mass by the cell volume to get density.
@@ -955,15 +972,16 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
   }
 
   // Ensure that the density > 0
-  if(density <= 0.0) density = _masses[0] / cell.get_volume() * 1e-6;
+  if (density <= 0.0)
+    density = _masses[0] / cell.get_volume() * 1e-6;
 
   values.set_number_density(density / 1.6737236e-27);
   values.set_temperature(8000.);
   values.set_ionic_fraction(ION_H_n, 1.e-6);
   values.set_ionic_fraction(ION_He_n, 1.e-6);
 
-  //time_log.end("Density_mapping");
-  
+  // time_log.end("Density_mapping");
+
   return values;
 }
 
@@ -1034,15 +1052,17 @@ public:
    * @param box Reference to the simulation box.
    * @param locks Locks protecting the neutral fraction vector entries.
    */
-  InverseMappingFunction(Octree &octree,    
-		  	 const SPHArrayInterface &array_interface,
-			 std::vector< double > &neutral_fractions,
-			 std::vector< CoordinateVector<> > &positions,
-			 std::vector< double > &smoothing_lengths,
-			 std::vector< double > &masses,
-			 Box<> &box,
+  InverseMappingFunction(Octree &octree,
+                         const SPHArrayInterface &array_interface,
+                         std::vector< double > &neutral_fractions,
+                         std::vector< CoordinateVector<> > &positions,
+                         std::vector< double > &smoothing_lengths,
+                         std::vector< double > &masses, Box<> &box,
                          std::vector< Lock > &locks)
-      : _octree(octree), _array_interface(array_interface), _neutral_fractions(neutral_fractions), _positions(positions), _smoothing_lengths(smoothing_lengths), _masses(masses), _box(box),_locks(locks) {}
+      : _octree(octree), _array_interface(array_interface),
+        _neutral_fractions(neutral_fractions), _positions(positions),
+        _smoothing_lengths(smoothing_lengths), _masses(masses), _box(box),
+        _locks(locks) {}
   /**
    * @brief Do the inverse mapping for a single cell.
    *
@@ -1053,103 +1073,111 @@ public:
     const bool _is_old_density_mapping = false;
     const bool _is_petkova_density_mapping = true;
 
-    if(_is_old_density_mapping) {
+    if (_is_old_density_mapping) {
       const CoordinateVector<> p = cell.get_cell_midpoint();
       uint_fast32_t closest = _octree.get_closest_ngb(p);
       _locks[closest].lock();
       _neutral_fractions[closest] =
-        cell.get_ionization_variables().get_ionic_fraction(ION_H_n);
+          cell.get_ionization_variables().get_ionic_fraction(ION_H_n);
       _locks[closest].unlock();
     } else {
-      if(_is_petkova_density_mapping) {
-	const CoordinateVector<> position = cell.get_cell_midpoint();
-      	// Find the vertex that is furthest away from the cell midpoint.
-      	std::vector< Face > face_vector = cell.get_faces();
-      	double radius = 0.0;
-      	for (unsigned int i = 0; i < face_vector.size(); i++) {
+      if (_is_petkova_density_mapping) {
+        const CoordinateVector<> position = cell.get_cell_midpoint();
+        // Find the vertex that is furthest away from the cell midpoint.
+        std::vector< Face > face_vector = cell.get_faces();
+        double radius = 0.0;
+        for (unsigned int i = 0; i < face_vector.size(); i++) {
           for (Face::Vertices j = face_vector[i].first_vertex();
-            	j != face_vector[i].last_vertex(); ++j) {
-            double distance = (j.get_position()-position).norm();
+               j != face_vector[i].last_vertex(); ++j) {
+            double distance = (j.get_position() - position).norm();
             if (distance > radius)
-            	radius = distance;
-           }
-       	 }
+              radius = distance;
+          }
+        }
 
-      	 // Find the neighbours that are contained inside of a sphere of centre the
-      	 // cell midpoint
-      	 // and radius given by the distance to the furthest vertex.
-      	 std::vector< uint_fast32_t > ngbs =
-          	_octree.get_ngbs_sphere(position, radius);
-      	 const unsigned int numngbs = ngbs.size();
+        // Find the neighbours that are contained inside of a sphere of centre
+        // the cell midpoint and radius given by the distance to the furthest
+        // vertex.
+        std::vector< uint_fast32_t > ngbs =
+            _octree.get_ngbs_sphere(position, radius);
+        const unsigned int numngbs = ngbs.size();
 
-      	 double cell_mass = 0.;
-      	 std::vector< double > denseval;
+        double cell_mass = 0.;
+        std::vector< double > denseval;
 
-      	 // Loop over all the neighbouring particles and calculate their mass
-      	 // contributions.
-      	 for (unsigned int i = 0; i < numngbs; i++) {
-           const unsigned int index = ngbs[i];
-           const double h = _smoothing_lengths[index] / 2.0;
-           const CoordinateVector<> particle = _positions[index];
-           denseval.push_back(_array_interface.mass_contribution(cell, particle, h) * _masses[index]);
-           //denseval.push_back(CubicSplineKernel::kernel_evaluate(0.5, h) * _masses[index]);
-	   cell_mass += denseval[i];
-      	 }
+        // Loop over all the neighbouring particles and calculate their mass
+        // contributions.
+        for (unsigned int i = 0; i < numngbs; i++) {
+          const unsigned int index = ngbs[i];
+          const double h = _smoothing_lengths[index] / 2.0;
+          const CoordinateVector<> particle = _positions[index];
+          denseval.push_back(
+              _array_interface.mass_contribution(cell, particle, h) *
+              _masses[index]);
+          // denseval.push_back(CubicSplineKernel::kernel_evaluate(0.5, h) *
+          // _masses[index]);
+          cell_mass += denseval[i];
+        }
 
-      	 for (unsigned int i = 0; i < numngbs; i++) {
-           const unsigned int index = ngbs[i];
-	   _locks[index].lock();
-           _neutral_fractions[index] -= denseval[i]/cell_mass * (1. - cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
-	   _locks[index].unlock();
-      	 }
-	} else {
-      	  const CoordinateVector<> p = cell.get_cell_midpoint();
-      	  const std::vector< uint_fast32_t > ngbs = _octree.get_ngbs(p);
-      	  const unsigned int numngbs = ngbs.size();
-      	  double cell_mass = 0.;
-      	  for (unsigned int i = 0; i < numngbs; ++i) {
-            const unsigned int index = ngbs[i];
-	    double r;
-            if (!_box.get_sides().x()) {
-              r = (p - _positions[index]).norm();
-            } else {
-              r = _box.periodic_distance(p, _positions[index]).norm();
-            }
-            const double h = _smoothing_lengths[index];
-            const double u = r / h;
-            const double m = _masses[index];
-            const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
-            cell_mass += splineval;
-      	  }
+        for (unsigned int i = 0; i < numngbs; i++) {
+          const unsigned int index = ngbs[i];
+          _locks[index].lock();
+          _neutral_fractions[index] -=
+              denseval[i] / cell_mass *
+              (1. -
+               cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
+          _locks[index].unlock();
+        }
+      } else {
+        const CoordinateVector<> p = cell.get_cell_midpoint();
+        const std::vector< uint_fast32_t > ngbs = _octree.get_ngbs(p);
+        const unsigned int numngbs = ngbs.size();
+        double cell_mass = 0.;
+        for (unsigned int i = 0; i < numngbs; ++i) {
+          const unsigned int index = ngbs[i];
+          double r;
+          if (!_box.get_sides().x()) {
+            r = (p - _positions[index]).norm();
+          } else {
+            r = _box.periodic_distance(p, _positions[index]).norm();
+          }
+          const double h = _smoothing_lengths[index];
+          const double u = r / h;
+          const double m = _masses[index];
+          const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
+          cell_mass += splineval;
+        }
 
-      	  for (unsigned int i = 0; i < numngbs; ++i) {
-            const unsigned int index = ngbs[i];
-            double r;
-            if (!_box.get_sides().x()) {
-              r = (p - _positions[index]).norm();
-            } else {
-              r = _box.periodic_distance(p, _positions[index]).norm();
-            }
-            const double h = _smoothing_lengths[index];
-            const double u = r / h;
-            const double m = _masses[index];
-            const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
-	    _locks[index].lock();
-            _neutral_fractions[index] -= splineval/cell_mass * (1. - cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
-	    _locks[index].unlock();
-      	  }
-
-	}
+        for (unsigned int i = 0; i < numngbs; ++i) {
+          const unsigned int index = ngbs[i];
+          double r;
+          if (!_box.get_sides().x()) {
+            r = (p - _positions[index]).norm();
+          } else {
+            r = _box.periodic_distance(p, _positions[index]).norm();
+          }
+          const double h = _smoothing_lengths[index];
+          const double u = r / h;
+          const double m = _masses[index];
+          const double splineval = m * CubicSplineKernel::kernel_evaluate(u, h);
+          _locks[index].lock();
+          _neutral_fractions[index] -=
+              splineval / cell_mass *
+              (1. -
+               cell.get_ionization_variables().get_ionic_fraction(ION_H_n));
+          _locks[index].unlock();
+        }
+      }
     }
   }
 };
 
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                               ParameterFile &params, double time) {
-			      
+
   time_log.start("Inverse_mapping");
 
-  for (unsigned int i =0; i < _neutral_fractions.size(); ++i) {
+  for (unsigned int i = 0; i < _neutral_fractions.size(); ++i) {
     _neutral_fractions[i] = 1.0;
   }
 
@@ -1161,8 +1189,10 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                    DensityGridTraversalJob< InverseMappingFunction > >
       workers;
 
-  //const SPHArrayInterface &_array_interface;
-  InverseMappingFunction do_calculation(*_octree,*this,_neutral_fractions,_positions,_smoothing_lengths,_masses,_box,locks);
+  // const SPHArrayInterface &_array_interface;
+  InverseMappingFunction do_calculation(*_octree, *this, _neutral_fractions,
+                                        _positions, _smoothing_lengths, _masses,
+                                        _box, locks);
 
   DensityGridTraversalJobMarket< InverseMappingFunction > jobs(
       grid, do_calculation, block);
@@ -1171,4 +1201,3 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
   time_log.end("Inverse_mapping");
   time_log.output("time-log-file.txt", true);
 }
-
