@@ -164,6 +164,8 @@ public:
       _hydro_variables[i].conserved(3) += mdt * a.z();
       _hydro_variables[i].conserved(4) +=
           timestep * CoordinateVector<>::dot_product(p, a);
+      _hydro_variables[i].conserved(4) += _hydro_variables[i].get_energy_term();
+      _hydro_variables[i].set_energy_term(0.);
       for (int_fast8_t j = 0; j < 5; ++j) {
         _hydro_variables[i].conserved(j) +=
             _hydro_variables[i].delta_conserved(j) * timestep;

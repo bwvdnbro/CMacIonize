@@ -321,7 +321,7 @@ public:
    * @brief Evolve the stellar population to the given time.
    *
    * @param time Time to evolve to (in s).
-   * @return std::vector<> containing all the positions were stars exploded.
+   * @return std::vector<> containing all the positions where stars exploded.
    */
   inline std::vector< CoordinateVector<> >
   evolve_stellar_population(const double time) {

@@ -196,6 +196,37 @@ public:
   }
 
   /**
+   * @brief Will the distribution do stellar feedback at the given time?
+   *
+   * @param current_time Current simulation time (in s).
+   * @return True if the star has not exploded yet and its lifetime has been
+   * exceeded.
+   */
+  virtual bool do_stellar_feedback(const double current_time) const {
+    return (!_has_exploded && current_time >= _lifetime);
+  }
+
+  /**
+   * @brief Add stellar feedback to the given subgrid.
+   *
+   * Should only be called if add_stellar_feedback is called first.
+   *
+   * @param subgrid DensitySubGrid to operate on.
+   */
+  virtual void add_stellar_feedback(HydroDensitySubGrid &subgrid) {
+    if (subgrid.is_in_box(_position)) {
+      HydroDensitySubGrid::hydroiterator cell =
+          subgrid.get_hydro_cell(_position);
+      cell.get_hydro_variables().set_energy_term(_energy);
+    }
+  }
+
+  /**
+   * @brief Finalise adding stellar feedback to a distributed grid.
+   */
+  virtual void done_stellar_feedback() { _has_exploded = true; }
+
+  /**
    * @brief Write the distribution to the given restart file.
    *
    * @param restart_writer RestartWriter to use.
