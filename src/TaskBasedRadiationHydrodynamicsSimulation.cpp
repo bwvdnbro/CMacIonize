@@ -752,6 +752,8 @@ inline static void do_cooling(IonizationVariables &ionization_variables,
   const double cooling_rate1 =
       radiative_cooling.get_cooling_rate(temperature) * nH2V;
 
+  const double old_energy = hydro_variables.get_conserved_total_energy();
+
   IonizationVariables ionization_variables_long_dt = ionization_variables;
   HydroVariables hydro_variables_long_dt = hydro_variables;
   hydro.update_energy_variables(ionization_variables_long_dt,
@@ -774,7 +776,10 @@ inline static void do_cooling(IonizationVariables &ionization_variables,
   const double E_long_dt = hydro_variables_long_dt.get_conserved_total_energy();
   const double E_short_dt =
       hydro_variables_short_dt.get_conserved_total_energy();
-  if (std::abs(E_long_dt - E_short_dt) > 1.e-3 * (E_long_dt + E_short_dt)) {
+  // the gas is not allowed to cool more than 50% of its energy away in a single
+  // cooling time step
+  if (E_short_dt < 0.5 * old_energy ||
+      std::abs(E_long_dt - E_short_dt) > 1.e-3 * (E_long_dt + E_short_dt)) {
     ionization_variables_short_dt = ionization_variables;
     hydro_variables_short_dt = hydro_variables;
     do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
@@ -823,6 +828,7 @@ inline static void do_cooling(IonizationVariables &ionization_variables,
  *  - first snapshot: Index of the first snapshot to write out (default: 0)
  *  - do radiation: Enable radiation? (default: yes)
  *  - do radiative cooling: Enable radiative cooling? (default: no)
+ *  - do stellar feedback: Enable stellar feedback? (default: no)
  *
  * @param parser CommandLineParser that contains the parsed command line
  * arguments.
@@ -1016,6 +1022,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           false)) {
     radiative_cooling = new DeRijckeRadiativeCooling();
   }
+
+  const bool do_stellar_feedback = params->get_value< bool >(
+      "TaskBasedRadiationHydrodynamicsSimulation:do stellar feedback", false);
 
   // fifth: construct the stellar sources. These should be stored in a
   // separate StellarSources object with geometrical and physical properties.
@@ -1383,6 +1392,31 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                         UnitConverter::to_unit_string< QUANTITY_TIME >(
                             actual_timestep, output_time_unit),
                         ".");
+    }
+
+    if (do_stellar_feedback &&
+        sourcedistribution->do_stellar_feedback(current_time)) {
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          sourcedistribution->add_stellar_feedback(subgrid);
+          auto gridit = grid_creator->get_subgrid(this_igrid);
+          for (auto cellit = (*gridit).hydro_begin();
+               cellit != (*gridit).hydro_end(); ++cellit) {
+            const double dE = cellit.get_hydro_variables().get_energy_term();
+            hydro.update_energy_variables(cellit.get_ionization_variables(),
+                                          cellit.get_hydro_variables(),
+                                          1. / cellit.get_volume(), dE);
+            cellit.get_hydro_variables().set_energy_term(0.);
+          }
+        }
+      }
+      stop_parallel_timing_block();
+      sourcedistribution->done_stellar_feedback();
     }
 
     // decide whether or not to do the radiation step

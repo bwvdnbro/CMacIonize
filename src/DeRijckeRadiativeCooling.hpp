@@ -28,6 +28,7 @@
 
 #include "Error.hpp"
 
+#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 
@@ -112,7 +113,12 @@ public:
     // we now have the appropriate interval for linear inter/extrapolation
     const double fac = (temperature - _temperatures[ilow]) /
                        (_temperatures[ihigh] - _temperatures[ilow]);
-    return (1. - fac) * _cooling_rates[ilow] + fac * _cooling_rates[ihigh];
+    const double cooling_rate =
+        (1. - fac) * _cooling_rates[ilow] + fac * _cooling_rates[ihigh];
+
+    cmac_assert(cooling_rate == cooling_rate);
+
+    return std::max(cooling_rate, 0.);
   }
 };
 

@@ -993,21 +993,49 @@ public:
                                       const double inverse_volume,
                                       const double delta_energy) const {
 
+    const double density = hydro_variables.get_primitives_density();
+    if (density == 0.) {
+      return;
+    }
+    const double inverse_density = 1. / density;
+    if (std::isinf(inverse_density)) {
+      return;
+    }
+
     const double old_energy = hydro_variables.get_conserved_total_energy();
     const double kinetic_energy =
         0.5 * CoordinateVector<>::dot_product(
                   hydro_variables.get_primitives_velocity(),
                   hydro_variables.get_conserved_momentum());
-    const double density = hydro_variables.get_primitives_density();
     const double mean_molecular_mass =
         0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
 
-    const double new_energy = old_energy + delta_energy;
+    double new_energy = old_energy + delta_energy;
 
-    const double new_pressure =
+    double new_pressure =
         _gamma_minus_one * inverse_volume * (new_energy - kinetic_energy);
-    const double new_temperature =
-        _T_conversion_factor * mean_molecular_mass * new_pressure / density;
+    double new_temperature = _T_conversion_factor * mean_molecular_mass *
+                             new_pressure * inverse_density;
+
+    cmac_assert_message(new_pressure == new_pressure,
+                        "old_energy: %g, delta_energy: %g, new_energy: %g",
+                        old_energy, delta_energy, new_energy);
+    cmac_assert_message(new_energy == new_energy,
+                        "old_energy: %g, delta_energy: %g, new_energy: %g",
+                        old_energy, delta_energy, new_energy);
+    cmac_assert_message(new_temperature == new_temperature,
+                        "old_energy: %g, delta_energy: %g, new_energy: %g",
+                        old_energy, delta_energy, new_energy);
+
+#ifdef SAFE_HYDRO_VARIABLES
+    new_pressure = std::max(new_pressure, 0.);
+    new_energy = std::max(new_energy, 0.);
+    new_temperature = std::max(new_temperature, 0.);
+#else
+    cmac_assert(new_pressure > 0.);
+    cmac_assert(new_energy > 0.);
+    cmac_assert(new_temperature > 0.);
+#endif
 
     hydro_variables.set_conserved_total_energy(new_energy);
     hydro_variables.set_primitives_pressure(new_pressure);
