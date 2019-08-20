@@ -36,7 +36,6 @@
 /**
  * @brief DensityFunction and DensityGridWriter implementations that are coupled
  * to an underlying SPH simulation.
- *
  */
 class SPHArrayInterface : public DensityFunction, public DensityGridWriter {
 private:
@@ -117,7 +116,8 @@ public:
   void fill_array(float *nH);
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time);
+                     ParameterFile &params, double time,
+                     const InternalHydroUnits *hydro_units = nullptr);
 
   virtual double get_gridded_density_value(int i, int j, int k) const;
 };

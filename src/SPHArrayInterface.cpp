@@ -40,8 +40,9 @@
  */
 SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(false), _octree(nullptr) {
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(false), _octree(nullptr) {
 
   gridding();
   time_log.output("time-log-file.txt", true);
@@ -63,8 +64,9 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI,
                                      const double *box_anchor,
                                      const double *box_sides)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -93,8 +95,9 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
                                      const double unit_mass_in_SI,
                                      const float *box_anchor,
                                      const float *box_sides)
-    : DensityGridWriter("", nullptr), _unit_length_in_SI(unit_length_in_SI),
-      _unit_mass_in_SI(unit_mass_in_SI), _is_periodic(true), _octree(nullptr) {
+    : DensityGridWriter("", false, DensityGridWriterFields(false), nullptr),
+      _unit_length_in_SI(unit_length_in_SI), _unit_mass_in_SI(unit_mass_in_SI),
+      _is_periodic(true), _octree(nullptr) {
 
   _box.get_anchor()[0] = box_anchor[0] * _unit_length_in_SI;
   _box.get_anchor()[1] = box_anchor[1] * _unit_length_in_SI;
@@ -381,10 +384,10 @@ void SPHArrayInterface::gridding() {
  * pre-computed grid.
  *
  * @param phi Azimuthal angle of the vertex.
- * @param r0 Distance from the particle to the face of the cell.
- * @param R_0 Distance from the orthogonal projection of the particle
+ * @param r0_old Distance from the particle to the face of the cell.
+ * @param R_0_old Distance from the orthogonal projection of the particle
  * onto the face of the cell to a side of the face (containing the vertex).
- * @param h The kernel smoothing length of the particle.
+ * @param h_old The kernel smoothing length of the particle.
  * @return The integral of the kernel for the given vertex.
  */
 
@@ -707,7 +710,6 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
  * @param h The kernel smoothing length of the particle.
  * @return The mass contribution of the particle to the cell.
  */
-
 double SPHArrayInterface::mass_contribution(const Cell &cell,
                                             CoordinateVector<> particle,
                                             double h) const {
@@ -890,6 +892,14 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
   return Msum;
 }
 
+/**
+ * @brief Get the gridded density value for the given indices.
+ *
+ * @param i First index.
+ * @param j Second index.
+ * @param k Third index.
+ * @return Corresponding gridded density value.
+ */
 double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const {
   return _density_values[i][j][k];
 }
@@ -1045,6 +1055,7 @@ public:
    * @brief Constructor.
    *
    * @param octree Reference to the Octree.
+   * @param array_interface Reference to the SPHArrayInterface.
    * @param neutral_fractions Reference to the neutral fraction vector.
    * @param positions Reference to the positions vector.
    * @param smoothing_lengths Reference to the smoothing_lengths vector.
@@ -1172,8 +1183,19 @@ public:
   }
 };
 
+/**
+ * @brief Write a snapshot.
+ *
+ * @param grid DensityGrid to write.
+ * @param iteration Iteration number to use in the snapshot file name(s).
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
+ * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
+ */
 void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
-                              ParameterFile &params, double time) {
+                              ParameterFile &params, double time,
+                              const InternalHydroUnits *hydro_units) {
 
   time_log.start("Inverse_mapping");
 

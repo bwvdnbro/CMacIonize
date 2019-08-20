@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright (C) 2017 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2018 Maya Petkova (maya.petkova@uni-heidelberg.de)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,6 +28,8 @@
 #ifndef DENSITYMAPPING_HPP
 #define DENSITYMAPPING_HPP
 
+#include <vector>
+
 /**
  * @brief Density mapping functions.
  *
@@ -38,13 +41,6 @@ private:
   std::vector< std::vector< std::vector< double > > > _density_values;
 
 public:
-  /**
-   * @brief Density mapping constructor.
-   */
-  /*DensityMapping(){
-          gridding();
-  }*/
-
   /**
    * @brief Initialize the pre-computed array of density values.
    */
@@ -161,15 +157,17 @@ public:
    * pre-computed grid.
    *
    * @param phi Azimuthal angle of the vertex.
-   * @param r0 Distance from the particle to the face of the cell.
-   * @param R_0 Distance from the orthogonal projection of the particle
-   * onto the face of the cell to a side of the face (containing the vertex).
-   * @param h The kernel smoothing length of the particle.
+   * @param r0_old Distance from the particle to the face of the cell (in m).
+   * @param R_0_old Distance from the orthogonal projection of the particle
+   * onto the face of the cell to a side of the face (containing the vertex; in
+   * m).
+   * @param h_old The kernel smoothing length of the particle (in m).
    * @return The integral of the kernel for the given vertex.
    */
 
   double gridded_integral(double phi, double r0_old, double R_0_old,
                           double h_old) const {
+
     double r0, R_0, cphi, mu0, h;
     int i, j, k;
     double fx1, fx2, fx3, fx4, fy1, fy2, fz, frac;
@@ -290,10 +288,11 @@ public:
    * a particle for a given vertex of a cell face.
    *
    * @param phi Azimuthal angle of the vertex.
-   * @param r0 Distance from the particle to the face of the cell.
+   * @param r0 Distance from the particle to the face of the cell (in m).
    * @param R_0 Distance from the orthogonal projection of the particle
-   * onto the face of the cell to a side of the face (containing the vertex).
-   * @param h The kernel smoothing length of the particle.
+   * onto the face of the cell to a side of the face (containing the vertex; in
+   * m).
+   * @param h The kernel smoothing length of the particle (in m).
    * @return The integral of the kernel for the given vertex.
    */
 
@@ -481,8 +480,8 @@ public:
    * towards the total mass of a cell.
    *
    * @param cell Geometrical information about the cell.
-   * @param particle The particle position.
-   * @param h The kernel smoothing length of the particle.
+   * @param particle The particle position (in m).
+   * @param h The kernel smoothing length of the particle (in m).
    * @return The mass contribution of the particle to the cell.
    */
 
@@ -663,6 +662,14 @@ public:
     return Msum;
   }
 
+  /**
+   * @brief Get the gridded density value for the given indices.
+   *
+   * @param i First index.
+   * @param j Second index.
+   * @param k Third index.
+   * @return Corresponding density value.
+   */
   double get_gridded_density_value(int i, int j, int k) const {
     return _density_values[i][j][k];
   }
