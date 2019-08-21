@@ -1742,5 +1742,7 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                                  --parallel ${MAX_NUMBER_OF_THREADS}
+                                  --output-on-failure
                         DEPENDS ${TESTNAMES})

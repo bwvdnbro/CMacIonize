@@ -308,6 +308,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
     AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
+    AsciiFileTablePhotonSourceDistribution.cpp
     AtomicValue.hpp
     ChargeTransferRates.cpp
     CMacIonizeSnapshotDensityFunction.cpp
