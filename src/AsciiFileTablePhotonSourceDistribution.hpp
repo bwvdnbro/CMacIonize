@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file AsciiFilePhotonSourceDistribution.hpp
+ * @file AsciiFileTablePhotonSourceDistribution.hpp
  *
  * @brief PhotonSourceDistribution that reads photon sources from an Ascii file.
  *
  * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
-#ifndef ASCIIFILEPHOTONSOURCEDISTRIBUTION_HPP
-#define ASCIIFILEPHOTONSOURCEDISTRIBUTION_HPP
+#ifndef ASCIIFILETABLEPHOTONSOURCEDISTRIBUTION_HPP
+#define ASCIIFILETABLEPHOTONSOURCEDISTRIBUTION_HPP
 
 #include "CoordinateVector.hpp"
 #include "Log.hpp"
@@ -40,7 +40,7 @@ class ParameterFile;
 /**
  * @brief PhotonSourceDistribution that reads photon sources from an Ascii file.
  */
-class AsciiFilePhotonSourceDistribution : public PhotonSourceDistribution {
+class AsciiFileTablePhotonSourceDistribution : public PhotonSourceDistribution {
 private:
   /*! @brief Positions of the sources in the ASCII file (in m). */
   std::vector< CoordinateVector<> > _positions;
@@ -55,8 +55,8 @@ private:
   Log *_log;
 
 public:
-  AsciiFilePhotonSourceDistribution(std::string filename, Log *log);
-  AsciiFilePhotonSourceDistribution(ParameterFile &params, Log *log);
+  AsciiFileTablePhotonSourceDistribution(std::string filename, Log *log);
+  AsciiFileTablePhotonSourceDistribution(ParameterFile &params, Log *log);
 
   virtual photonsourcenumber_t get_number_of_sources() const;
   virtual CoordinateVector<> get_position(photonsourcenumber_t index);
@@ -64,4 +64,4 @@ public:
   virtual double get_total_luminosity() const;
 };
 
-#endif // ASCIIFILEPHOTONSOURCEDISTRIBUTION_HPP
+#endif // ASCIIFILETABLEPHOTONSOURCEDISTRIBUTION_HPP
