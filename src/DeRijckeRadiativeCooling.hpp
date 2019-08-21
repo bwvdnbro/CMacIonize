@@ -120,6 +120,13 @@ public:
 
     return std::max(cooling_rate, 0.);
   }
+
+  /**
+   * @brief Get the lowest tabulated temperature value.
+   *
+   * @return Lowest tabulated temperature value (in K).
+   */
+  double get_minimum_temperature() const { return _temperatures[0]; }
 };
 
 #endif // DERIJCKERADIATIVECOOLING_HPP

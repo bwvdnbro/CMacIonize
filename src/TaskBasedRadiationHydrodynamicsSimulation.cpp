@@ -778,8 +778,9 @@ inline static void do_cooling(IonizationVariables &ionization_variables,
       hydro_variables_short_dt.get_conserved_total_energy();
   // the gas is not allowed to cool more than 50% of its energy away in a single
   // cooling time step
-  if (E_short_dt < 0.5 * old_energy ||
-      std::abs(E_long_dt - E_short_dt) > 1.e-3 * (E_long_dt + E_short_dt)) {
+  if (E_short_dt < 0.9 * old_energy ||
+      std::abs(std::log10(E_long_dt) - std::log10(E_short_dt)) > 1. ||
+      std::abs(E_long_dt - E_short_dt) > 1.e-5 * (E_long_dt + E_short_dt)) {
     ionization_variables_short_dt = ionization_variables;
     hydro_variables_short_dt = hydro_variables;
     do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
@@ -1276,6 +1277,32 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     stop_parallel_timing_block();
   }
 
+  // do the initial stellar feedback
+  if (restart_reader == nullptr && do_stellar_feedback &&
+      sourcedistribution->do_stellar_feedback(0.)) {
+    AtomicValue< size_t > igrid(0);
+    start_parallel_timing_block();
+#pragma omp parallel default(shared)
+    while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+      const size_t this_igrid = igrid.post_increment();
+      if (this_igrid < grid_creator->number_of_original_subgrids()) {
+        HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+        sourcedistribution->add_stellar_feedback(subgrid);
+        auto gridit = grid_creator->get_subgrid(this_igrid);
+        for (auto cellit = (*gridit).hydro_begin();
+             cellit != (*gridit).hydro_end(); ++cellit) {
+          const double dE = cellit.get_hydro_variables().get_energy_term();
+          hydro.update_energy_variables(cellit.get_ionization_variables(),
+                                        cellit.get_hydro_variables(),
+                                        1. / cellit.get_volume(), dE);
+          cellit.get_hydro_variables().set_energy_term(0.);
+        }
+      }
+    }
+    stop_parallel_timing_block();
+    sourcedistribution->done_stellar_feedback();
+  }
+
   if (write_output && restart_reader == nullptr && hydro_firstsnap == 0) {
     time_logger.start("snapshot");
     writer->write(*grid_creator, 0, *params, 0.);
@@ -1287,6 +1314,40 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     // make sure the system is evolved hydrodynamically in between successive
     // ionization steps
     maximum_timestep = std::min(maximum_timestep, hydro_radtime);
+  }
+
+  if (restart_reader == nullptr) {
+    time_logger.start("first time step");
+    requested_timestep = DBL_MAX;
+    {
+      // first figure out the time step for each subgrid, then do the global
+      // time step
+      std::vector< double > requested_timestep_list(
+          grid_creator->number_of_original_subgrids(), DBL_MAX);
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          for (auto cellit = subgrid.hydro_begin();
+               cellit != subgrid.hydro_end(); ++cellit) {
+            requested_timestep_list[this_igrid] =
+                std::min(requested_timestep_list[this_igrid],
+                         hydro.get_timestep(cellit.get_hydro_variables(),
+                                            cellit.get_ionization_variables(),
+                                            cellit.get_volume()));
+          }
+        }
+      }
+      stop_parallel_timing_block();
+      for (uint_fast32_t i = 0; i < requested_timestep_list.size(); ++i) {
+        requested_timestep =
+            std::min(requested_timestep, requested_timestep_list[i]);
+      }
+    }
+    time_logger.end("first time step");
   }
 
   /// RADIATION
@@ -1392,31 +1453,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                         UnitConverter::to_unit_string< QUANTITY_TIME >(
                             actual_timestep, output_time_unit),
                         ".");
-    }
-
-    if (do_stellar_feedback &&
-        sourcedistribution->do_stellar_feedback(current_time)) {
-      AtomicValue< size_t > igrid(0);
-      start_parallel_timing_block();
-#pragma omp parallel default(shared)
-      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
-        const size_t this_igrid = igrid.post_increment();
-        if (this_igrid < grid_creator->number_of_original_subgrids()) {
-          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
-          sourcedistribution->add_stellar_feedback(subgrid);
-          auto gridit = grid_creator->get_subgrid(this_igrid);
-          for (auto cellit = (*gridit).hydro_begin();
-               cellit != (*gridit).hydro_end(); ++cellit) {
-            const double dE = cellit.get_hydro_variables().get_energy_term();
-            hydro.update_energy_variables(cellit.get_ionization_variables(),
-                                          cellit.get_hydro_variables(),
-                                          1. / cellit.get_volume(), dE);
-            cellit.get_hydro_variables().set_energy_term(0.);
-          }
-        }
-      }
-      stop_parallel_timing_block();
-      sourcedistribution->done_stellar_feedback();
     }
 
     // decide whether or not to do the radiation step
@@ -2305,6 +2341,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 hydro_variables.get_primitives_pressure());
             cellit.get_hydro_variables().set_conserved_total_energy(
                 hydro_variables.get_conserved_total_energy());
+            if (ionization_variables.get_temperature() <
+                radiative_cooling->get_minimum_temperature()) {
+              hydro.set_temperature(
+                  cellit.get_ionization_variables(),
+                  cellit.get_hydro_variables(), cellit.get_volume(),
+                  radiative_cooling->get_minimum_temperature());
+            }
           }
         }
       }
@@ -2518,6 +2561,31 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     time_logger.start("task cleanup");
     tasks->clear_after(radiation_task_offset);
     time_logger.end("task cleanup");
+
+    if (do_stellar_feedback &&
+        sourcedistribution->do_stellar_feedback(current_time)) {
+      AtomicValue< size_t > igrid(0);
+      start_parallel_timing_block();
+#pragma omp parallel default(shared)
+      while (igrid.value() < grid_creator->number_of_original_subgrids()) {
+        const size_t this_igrid = igrid.post_increment();
+        if (this_igrid < grid_creator->number_of_original_subgrids()) {
+          HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
+          sourcedistribution->add_stellar_feedback(subgrid);
+          auto gridit = grid_creator->get_subgrid(this_igrid);
+          for (auto cellit = (*gridit).hydro_begin();
+               cellit != (*gridit).hydro_end(); ++cellit) {
+            const double dE = cellit.get_hydro_variables().get_energy_term();
+            hydro.update_energy_variables(cellit.get_ionization_variables(),
+                                          cellit.get_hydro_variables(),
+                                          1. / cellit.get_volume(), dE);
+            cellit.get_hydro_variables().set_energy_term(0.);
+          }
+        }
+      }
+      stop_parallel_timing_block();
+      sourcedistribution->done_stellar_feedback();
+    }
 
     time_logger.start("time step");
     requested_timestep = DBL_MAX;
