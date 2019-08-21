@@ -980,6 +980,38 @@ public:
   }
 
   /**
+   * @brief Set all temperature related variables to the given temperature.
+   *
+   * @param ionization_variables IonizationVariables of the cell.
+   * @param hydro_variables HydroVariables of the cell.
+   * @param volume Volume of the cell (in m^3).
+   * @param temperature Temperature value to enforce (in K).
+   */
+  inline void set_temperature(IonizationVariables &ionization_variables,
+                              HydroVariables &hydro_variables,
+                              const double volume,
+                              const double temperature) const {
+
+    const double density = hydro_variables.get_primitives_density();
+    if (density > 0.) {
+      const double xH = ionization_variables.get_ionic_fraction(ION_H_n);
+      const double thermal_energy =
+          _u_conversion_factor * temperature / (1. + xH);
+      const double kinetic_energy =
+          0.5 * CoordinateVector<>::dot_product(
+                    hydro_variables.get_primitives_velocity(),
+                    hydro_variables.get_conserved_momentum());
+      const double total_energy =
+          volume * density * thermal_energy + kinetic_energy;
+      const double pressure = _gamma_minus_one * density * thermal_energy;
+
+      ionization_variables.set_temperature(temperature);
+      hydro_variables.set_primitives_pressure(pressure);
+      hydro_variables.set_conserved_total_energy(total_energy);
+    }
+  }
+
+  /**
    * @brief Update all variables that depend on the energy after a change in
    * total energy of the given cell by the given amount.
    *
