@@ -33,7 +33,7 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
-#include "AsciiFilePhotonSourceDistribution.hpp"
+#include "AsciiFileTablePhotonSourceDistribution.hpp"
 #include "CaproniPhotonSourceDistribution.hpp"
 #include "DiscPatchPhotonSourceDistribution.hpp"
 #include "DwarfGalaxyPhotonSourceDistribution.hpp"
@@ -104,7 +104,7 @@ public:
     if (type == "None") {
       return nullptr;
     } else if (type == "AsciiFile") {
-      return new AsciiFilePhotonSourceDistribution(params, log);
+      return new AsciiFileTablePhotonSourceDistribution(params, log);
     } else if (type == "Caproni") {
       return new CaproniPhotonSourceDistribution(params, log);
     } else if (type == "DiscPatch") {

@@ -17,13 +17,13 @@
  ******************************************************************************/
 
 /**
- * @file AsciiFilePhotonSourceDistribution.cpp
+ * @file AsciiFileTablePhotonSourceDistribution.cpp
  *
- * @brief AsciiFilePhotonSourceDistribution implementation.
+ * @brief AsciiFileTablePhotonSourceDistribution implementation.
  *
  * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
-#include "AsciiFilePhotonSourceDistribution.hpp"
+#include "AsciiFileTablePhotonSourceDistribution.hpp"
 #include "CoordinateVector.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
@@ -38,7 +38,7 @@
  * @param filename Name of the ASCII text file to read.
  * @param log Log to write logging info to.
  */
-AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
+AsciiFileTablePhotonSourceDistribution::AsciiFileTablePhotonSourceDistribution(
     std::string filename, Log *log)
     : _log(log) {
 
@@ -114,9 +114,9 @@ AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
+AsciiFileTablePhotonSourceDistribution::AsciiFileTablePhotonSourceDistribution(
     ParameterFile &params, Log *log)
-    : AsciiFilePhotonSourceDistribution(
+    : AsciiFileTablePhotonSourceDistribution(
           params.get_value< std::string >("PhotonSourceDistribution:filename",
                                           "sinks.txt"),
           log) {}
@@ -127,7 +127,7 @@ AsciiFilePhotonSourceDistribution::AsciiFilePhotonSourceDistribution(
  * @return Number of sources.
  */
 photonsourcenumber_t
-AsciiFilePhotonSourceDistribution::get_number_of_sources() const {
+AsciiFileTablePhotonSourceDistribution::get_number_of_sources() const {
   return _positions.size();
 }
 
@@ -142,8 +142,8 @@ AsciiFilePhotonSourceDistribution::get_number_of_sources() const {
  * get_number_of_sources().
  * @return Position of the given source (in m).
  */
-CoordinateVector<>
-AsciiFilePhotonSourceDistribution::get_position(photonsourcenumber_t index) {
+CoordinateVector<> AsciiFileTablePhotonSourceDistribution::get_position(
+    photonsourcenumber_t index) {
   return _positions[index];
 }
 
@@ -154,7 +154,7 @@ AsciiFilePhotonSourceDistribution::get_position(photonsourcenumber_t index) {
  * get_number_of_sources().
  * @return Weight of the given source.
  */
-double AsciiFilePhotonSourceDistribution::get_weight(
+double AsciiFileTablePhotonSourceDistribution::get_weight(
     photonsourcenumber_t index) const {
   return _weights[index];
 }
@@ -164,6 +164,6 @@ double AsciiFilePhotonSourceDistribution::get_weight(
  *
  * @return Total luminosity (in s^-1).
  */
-double AsciiFilePhotonSourceDistribution::get_total_luminosity() const {
+double AsciiFileTablePhotonSourceDistribution::get_total_luminosity() const {
   return _total_luminosity;
 }
