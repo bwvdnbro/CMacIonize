@@ -1012,6 +1012,40 @@ public:
   }
 
   /**
+   * @brief Get the temperature difference corresponding to the given change in
+   * total energy.
+   *
+   * We assume that the change in total energy is entirely due to a change in
+   * thermal energy.
+   *
+   * @param ionization_variables IonizationVariables of the cell.
+   * @param hydro_variables HydroVariables of the cell.
+   * @param inverse_volume Inverse volume of the cell (in m^-3).
+   * @param delta_energy Change in energy (in J).
+   * @return Corresponding temperature difference (in K).
+   */
+  inline double
+  get_temperature_difference(const IonizationVariables &ionization_variables,
+                             const HydroVariables &hydro_variables,
+                             const double inverse_volume,
+                             const double delta_energy) const {
+
+    const double density = hydro_variables.get_primitives_density();
+    if (density == 0.) {
+      return 0.;
+    }
+    const double inverse_density = 1. / density;
+    if (std::isinf(inverse_density)) {
+      return 0.;
+    }
+
+    const double mean_molecular_weight =
+        0.5 * (1. + ionization_variables.get_ionic_fraction(ION_H_n));
+    return _T_conversion_factor * mean_molecular_weight * _gamma_minus_one *
+           inverse_density * inverse_volume * delta_energy;
+  }
+
+  /**
    * @brief Update all variables that depend on the energy after a change in
    * total energy of the given cell by the given amount.
    *
