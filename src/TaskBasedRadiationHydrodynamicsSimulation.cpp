@@ -729,7 +729,18 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
 }
 
 /**
- * @brief Recursive algorithm to subcycle the cooling over the given time step.
+ * @brief Apply the cooling to the given cell over the given time step.
+ *
+ * We need to solve the implicit equation
+ * @f[
+ *   E_t(t + \Delta{}t) = E_t(t) - \Delta{}t \Lambda{}(E_t(t + \Delta{}t)),
+ * @f]
+ * where @f$E_t(t)@f$ is the thermal energy at time @f$t@f$, @f$\Delta{}t@f$
+ * is the time step, and @f$\Lambda{}(E_t)@f$ is the cooling function for a
+ * given thermal energy.
+ *
+ * This is essentially a root finding problem that we solve using a bisection
+ * method.
  *
  * @param ionization_variables Copy of the IonizationVariables to update
  * (updated with final result).
@@ -748,49 +759,86 @@ inline static void do_cooling(IonizationVariables &ionization_variables,
                               DeRijckeRadiativeCooling &radiative_cooling,
                               Hydro &hydro) {
 
-  const double temperature = ionization_variables.get_temperature();
-  const double cooling_rate1 =
-      radiative_cooling.get_cooling_rate(temperature) * nH2V;
+  const double energy_start =
+      hydro_variables.get_conserved_total_energy() -
+      0.5 * CoordinateVector<>::dot_product(
+                hydro_variables.get_primitives_velocity(),
+                hydro_variables.get_conserved_momentum());
 
-  const double old_energy = hydro_variables.get_conserved_total_energy();
-
-  IonizationVariables ionization_variables_long_dt = ionization_variables;
-  HydroVariables hydro_variables_long_dt = hydro_variables;
-  hydro.update_energy_variables(ionization_variables_long_dt,
-                                hydro_variables_long_dt, inverse_volume,
-                                -cooling_rate1 * total_dt);
-
-  const double halfdt = 0.5 * total_dt;
-  IonizationVariables ionization_variables_short_dt = ionization_variables;
-  HydroVariables hydro_variables_short_dt = hydro_variables;
-  hydro.update_energy_variables(ionization_variables_short_dt,
-                                hydro_variables_short_dt, inverse_volume,
-                                -cooling_rate1 * halfdt);
-  const double temperature2 = ionization_variables_short_dt.get_temperature();
-  const double cooling_rate2 =
-      radiative_cooling.get_cooling_rate(temperature2) * nH2V;
-  hydro.update_energy_variables(ionization_variables_short_dt,
-                                hydro_variables_short_dt, inverse_volume,
-                                -cooling_rate2 * halfdt);
-
-  const double E_long_dt = hydro_variables_long_dt.get_conserved_total_energy();
-  const double E_short_dt =
-      hydro_variables_short_dt.get_conserved_total_energy();
-  // the gas is not allowed to cool more than 50% of its energy away in a single
-  // cooling time step
-  if (E_short_dt < 0.9 * old_energy ||
-      std::abs(std::log10(E_long_dt) - std::log10(E_short_dt)) > 1. ||
-      std::abs(E_long_dt - E_short_dt) > 1.e-5 * (E_long_dt + E_short_dt)) {
-    ionization_variables_short_dt = ionization_variables;
-    hydro_variables_short_dt = hydro_variables;
-    do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
-               inverse_volume, nH2V, halfdt, radiative_cooling, hydro);
-    do_cooling(ionization_variables_short_dt, hydro_variables_short_dt,
-               inverse_volume, nH2V, halfdt, radiative_cooling, hydro);
+  if (energy_start == 0.) {
+    // don't cool gas that has no thermal energy
+    return;
   }
-  ionization_variables = ionization_variables_short_dt;
-  hydro_variables = hydro_variables_short_dt;
-  return;
+
+  const double temperature_start = ionization_variables.get_temperature();
+
+  double energy_low = energy_start;
+  double energy_high = energy_start;
+
+  double temperature = temperature_start;
+  double cooling = radiative_cooling.get_cooling_rate(temperature) * nH2V;
+
+  cmac_assert(energy_high - energy_start + total_dt * cooling > 0.);
+  cmac_assert(energy_low - energy_start + total_dt * cooling > 0.);
+
+  uint_fast32_t loopcount = 0;
+  while (loopcount < 1e6 &&
+         energy_low - energy_start + total_dt * cooling > 0.) {
+
+    ++loopcount;
+
+    if (energy_low == 0.) {
+      hydro.update_energy_variables(ionization_variables, hydro_variables,
+                                    inverse_volume, -energy_start);
+      return;
+    }
+
+    energy_high = energy_low;
+    energy_low *= 0.5;
+
+    cmac_assert(energy_high - energy_start + total_dt * cooling > 0.);
+
+    temperature =
+        temperature_start + hydro.get_temperature_difference(
+                                ionization_variables, hydro_variables,
+                                inverse_volume, energy_start - energy_low);
+    cooling = radiative_cooling.get_cooling_rate(temperature) * nH2V;
+  }
+  cmac_assert_message(
+      loopcount < 1e6,
+      "energy_low: %g, energy_start: %g, total_dt: %g, cooling: %g", energy_low,
+      energy_start, total_dt, cooling);
+
+  double energy_next = 0.5 * (energy_low + energy_high);
+  temperature =
+      temperature_start + hydro.get_temperature_difference(
+                              ionization_variables, hydro_variables,
+                              inverse_volume, energy_start - energy_next);
+  cooling = radiative_cooling.get_cooling_rate(temperature) * nH2V;
+  loopcount = 0;
+  while (loopcount < 1e6 &&
+         std::abs(energy_low - energy_high) > 1.e-5 * energy_next) {
+
+    ++loopcount;
+
+    if (energy_next - energy_start + total_dt * cooling > 0.) {
+      energy_high = energy_next;
+    } else {
+      energy_low = energy_next;
+    }
+    energy_next = 0.5 * (energy_low + energy_high);
+    temperature =
+        temperature_start + hydro.get_temperature_difference(
+                                ionization_variables, hydro_variables,
+                                inverse_volume, energy_start - energy_next);
+    cooling = radiative_cooling.get_cooling_rate(temperature) * nH2V;
+  }
+  cmac_assert(loopcount < 1e6);
+
+  double dE = energy_next - energy_start;
+  dE = std::max(dE, -0.5 * energy_start);
+  hydro.update_energy_variables(ionization_variables, hydro_variables,
+                                inverse_volume, dE);
 }
 
 /**
