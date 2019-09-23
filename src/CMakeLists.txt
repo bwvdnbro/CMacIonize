@@ -126,6 +126,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     OldVoronoiCell.cpp
     OldVoronoiGrid.cpp
     ParameterFile.cpp
+    PhantomSnapshotDensityFunction.cpp
     PhotonSource.cpp
     PhysicalDiffuseReemissionHandler.cpp
     PlanckPhotonSourceSpectrum.cpp
@@ -327,6 +328,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     MaskedPhotonSourceSpectrum.cpp
     MemorySpace.hpp
     MultiTracker.cpp
+    PhantomSnapshotDensityFunction.cpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
     PhysicalDiffuseReemissionHandler.cpp

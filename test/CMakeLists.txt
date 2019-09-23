@@ -1689,6 +1689,16 @@ set(TESTTIMELOGGER_SOURCES
 add_unit_test(NAME testTimeLogger
               SOURCES ${TESTTIMELOGGER_SOURCES})
 
+## Unit test for PhantomSnapshotDensityFunction
+set(TESTPHANTOMSNAPSHOTDENSITYFUNCTION_SOURCES
+    testPhantomSnapshotDensityFunction.cpp
+
+    ../src/PhantomSnapshotDensityFunction.cpp
+    ../src/PhantomSnapshotDensityFunction.hpp
+)
+add_unit_test(NAME testPhantomSnapshotDensityFunction
+              SOURCES ${TESTPHANTOMSNAPSHOTDENSITYFUNCTION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
