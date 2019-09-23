@@ -41,6 +41,7 @@
 #include "DiscPatchDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
+#include "PhantomSnapshotDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "SpiralGalaxyDensityFunction.hpp"
 
@@ -111,6 +112,8 @@ public:
    *    file format of the SPH simulation code Gadget2 (also supported by SWIFT,
    *    AREPO, GIZMO and Shadowfax; the CMacIonize snapshot format is a variant
    *    of this format)
+   *  - PhantomSnapshot: Implementation that reads a density field from the
+   *    binary file format used by the SPH simulation code Phantom
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
@@ -146,6 +149,8 @@ public:
       return new HomogeneousDensityFunction(params, log);
     } else if (type == "Interpolated") {
       return new InterpolatedDensityFunction(params, log);
+    } else if (type == "PhantomSnapshot") {
+      return new PhantomSnapshotDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
     } else if (type == "SpiralGalaxy") {
