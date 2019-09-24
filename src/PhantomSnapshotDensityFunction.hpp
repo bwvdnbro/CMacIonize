@@ -64,18 +64,6 @@ private:
   /*! @brief Initial temperature of the gas (in K). */
   double _initial_temperature;
 
-  /*! @brief Number of bins to use when writing particle statistics. */
-  uint_fast32_t _stats_numbin;
-
-  /*! @brief Minimum distance to use for particle statistics. */
-  double _stats_mindist;
-
-  /*! @brief Maximum distance to use for particle statistics. */
-  double _stats_maxdist;
-
-  /*! @brief Name of the file with particle statistics. */
-  std::string _stats_filename;
-
   /*! @brief Log to write logging info to. */
   Log *_log;
 
@@ -198,6 +186,7 @@ private:
                                                        bool tagged = true) {
     uint32_t size;
     read_block(ifile, size);
+
     std::map< std::string, _datatype_ > dict;
     if (size > 0) {
       std::vector< std::string > tags(size);
@@ -208,6 +197,7 @@ private:
           tags[i] = "tag";
         }
       }
+
       std::vector< _datatype_ > vals(size);
       read_block(ifile, vals);
       for (uint_fast32_t i = 0; i < size; ++i) {
@@ -231,10 +221,7 @@ private:
 
 public:
   PhantomSnapshotDensityFunction(std::string filename,
-                                 double initial_temperature, bool write_stats,
-                                 uint_fast32_t stats_numbin,
-                                 double stats_mindist, double stats_maxdist,
-                                 std::string stats_filename,
+                                 double initial_temperature,
                                  Log *log = nullptr);
 
   PhantomSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
@@ -331,6 +318,23 @@ template <>
 inline void PhantomSnapshotDensityFunction::read_value< std::vector< int8_t > >(
     std::ifstream &ifile, std::vector< int8_t > &value) {
   ifile.read(reinterpret_cast< char * >(&value[0]), value.size());
+}
+
+/**
+ * @brief Fill the given referenced parameter by reading from the given
+ * Fortran unformatted binary file.
+ *
+ * Template specialization for a std::vector of shorts.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Next (and last) value to read from the file.
+ */
+template <>
+inline void
+PhantomSnapshotDensityFunction::read_value< std::vector< int16_t > >(
+    std::ifstream &ifile, std::vector< int16_t > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]),
+             value.size() * sizeof(int16_t));
 }
 
 /**
@@ -441,6 +445,21 @@ inline uint_fast32_t
 PhantomSnapshotDensityFunction::get_size< std::vector< int8_t > >(
     std::vector< int8_t > &value) {
   return value.size() * sizeof(int8_t);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing signed shorts.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline uint_fast32_t
+PhantomSnapshotDensityFunction::get_size< std::vector< int16_t > >(
+    std::vector< int16_t > &value) {
+  return value.size() * sizeof(int16_t);
 }
 
 /**
