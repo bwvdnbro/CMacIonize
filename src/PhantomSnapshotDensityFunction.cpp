@@ -556,6 +556,8 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
   if (_log) {
     _log->write_status("Snapshot contains ", _positions.size(),
                        " gas particles.");
+    _log->write_status("Total particle mass is ", pmass * _masses.size(),
+                       "kg.");
     _log->write_status(
         "Will create octree in box with anchor [", _partbox.get_anchor().x(),
         " m, ", _partbox.get_anchor().y(), " m, ", _partbox.get_anchor().z(),
