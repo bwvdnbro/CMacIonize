@@ -64,10 +64,19 @@ private:
   /*! @brief Initial temperature of the gas (in K). */
   double _initial_temperature;
 
+  /*! @brief Use the new mapping algorithm? */
+  const bool _use_new_algorithm;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
   static double kernel(const double q, const double h);
+
+  static double full_integral(double phi, double r0, double R_0, double h);
+
+  static double mass_contribution(const Cell &cell,
+                                  const CoordinateVector<> particle,
+                                  const double h);
 
   /**
    * @brief Skip a block from the given Fortran unformatted binary file.
@@ -222,6 +231,7 @@ private:
 public:
   PhantomSnapshotDensityFunction(std::string filename,
                                  double initial_temperature,
+                                 const bool use_new_algorithm,
                                  Log *log = nullptr);
 
   PhantomSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
