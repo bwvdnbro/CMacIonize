@@ -50,13 +50,13 @@ double PhantomSnapshotDensityFunction::kernel(const double q, const double h) {
     double q2 = q * q;
     double h2 = h * h;
     double h3 = h2 * h;
-    return (1. - 1.5 * q2 + 0.75 * q2 * q) / M_PI / h3;
+    return (1. - 1.5 * q2 + 0.75 * q2 * q) / (M_PI * h3);
   } else if (q < 2.) {
     double c = 2. - q;
     double c2 = c * c;
     double h2 = h * h;
     double h3 = h * h2;
-    return 0.25 * c2 * c / M_PI / h3;
+    return 0.25 * c2 * c / (M_PI * h3);
   } else {
     return 0.;
   }
@@ -469,6 +469,34 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
   std::map< std::string, double > reals = read_dict< double >(file, tagged);
   std::map< std::string, float > real4s = read_dict< float >(file, tagged);
   std::map< std::string, double > real8s = read_dict< double >(file, tagged);
+
+  if (_log) {
+    _log->write_info("Phantom header:");
+    for (auto it = ints.begin(); it != ints.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = int8s.begin(); it != int8s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = int16s.begin(); it != int16s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = int32s.begin(); it != int32s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = int64s.begin(); it != int64s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = reals.begin(); it != reals.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = real4s.begin(); it != real4s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+    for (auto it = real8s.begin(); it != real8s.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+  }
 
   int_fast32_t numblocks = ints["nblocks"];
   // for now, we assume all data is stored in a single block
