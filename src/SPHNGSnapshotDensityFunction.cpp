@@ -55,13 +55,13 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
     double q2 = q * q;
     double h2 = h * h;
     double h3 = h2 * h;
-    return (1. - 1.5 * q2 + 0.75 * q2 * q) / M_PI / h3;
+    return (1. - 1.5 * q2 + 0.75 * q2 * q) / (M_PI * h3);
   } else if (q < 2.) {
     double c = 2. - q;
     double c2 = c * c;
     double h2 = h * h;
     double h3 = h * h2;
-    return 0.25 * c2 * c / M_PI / h3;
+    return 0.25 * c2 * c / (M_PI * h3);
   } else {
     return 0.;
   }
@@ -436,7 +436,11 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
 void SPHNGSnapshotDensityFunction::initialize() {
 
   _octree = new Octree(_positions, _partbox, false);
-  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+  std::vector< double > h2s = _smoothing_lengths;
+  for (uint_fast32_t i = 0; i < _smoothing_lengths.size(); ++i) {
+    h2s[i] *= 2.;
+  }
+  _octree->set_auxiliaries(h2s, Octree::max< double >);
 
   if (_stats_numbin > 0) {
     if (_log) {

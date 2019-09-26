@@ -630,7 +630,11 @@ PhantomSnapshotDensityFunction::~PhantomSnapshotDensityFunction() {
 void PhantomSnapshotDensityFunction::initialize() {
 
   _octree = new Octree(_positions, _partbox, false);
-  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+  std::vector< double > h2s = _smoothing_lengths;
+  for (uint_fast32_t i = 0; i < _smoothing_lengths.size(); ++i) {
+    h2s[i] *= 2.;
+  }
+  _octree->set_auxiliaries(h2s, Octree::max< double >);
 }
 
 /**
