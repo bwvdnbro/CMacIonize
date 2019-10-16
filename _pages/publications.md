@@ -4,6 +4,25 @@ title: Publications
 permalink: /publications/
 
 publications:
+  - doi: 10.1093/mnras/stz1841
+    inpress: false
+    ads: 2019MNRAS.488.1977V
+    title: >-
+      Radiation hydrodynamics simulations of the evolution of the 
+      diffuse ionized gas in disc galaxies
+    authors:
+      - name: Vandenbroucke B.
+      - name: Wood K.
+    journal: Monthly Notices of the Royal Astronomical Society
+    volume: 488
+    page: 1977
+    month: 9
+    year: 2019
+    description: >-
+      Paper that explores the dynamic equilibrium between the vertical 
+      structure of a galactic disc (patch) and the photoionizing radiation
+      from UV luminous sources in the plane of the disc. All simulations
+      in this work were performed using CMacIonize.
   - doi: 10.1093/mnras/stz1187
     inpress: false
     ads: 2019MNRAS.486.5171S
