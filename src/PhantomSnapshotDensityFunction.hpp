@@ -67,6 +67,9 @@ private:
   /*! @brief Use the new mapping algorithm? */
   const bool _use_new_algorithm;
 
+  /*! @brief Use a periodic box for the density mapping? */
+  const bool _use_periodic_box;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
@@ -232,6 +235,7 @@ public:
   PhantomSnapshotDensityFunction(std::string filename,
                                  double initial_temperature,
                                  const bool use_new_algorithm,
+                                 const bool use_periodic_box,
                                  Log *log = nullptr);
 
   PhantomSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);

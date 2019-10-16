@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   {
     cmac_status("Start testing old mapping algorithm...");
     PhantomSnapshotDensityFunction density_function("Phantomtest.dat", 8000.,
-                                                    false, nullptr);
+                                                    false, false, nullptr);
     density_function.initialize();
 
     std::ifstream file("Phantom_data.txt");
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   {
     cmac_status("Start testing new mapping algorithm...");
     PhantomSnapshotDensityFunction density_function("Phantomtest.dat", 8000.,
-                                                    true, nullptr);
+                                                    true, false, nullptr);
     density_function.initialize();
     cmac_status("Done testing new mapping algorithm.");
   }

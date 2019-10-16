@@ -429,13 +429,15 @@ double PhantomSnapshotDensityFunction::mass_contribution(
  * @param filename Name of the file to read.
  * @param initial_temperature Initial temperature of the gas (in K).
  * @param use_new_algorithm Use the new mapping algorithm?
+ * @param use_periodic_box Use a periodic box for the density mapping?
  * @param log Log to write logging info to.
  */
 PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
     std::string filename, double initial_temperature,
-    const bool use_new_algorithm, Log *log)
+    const bool use_new_algorithm, const bool use_periodic_box, Log *log)
     : _octree(nullptr), _initial_temperature(initial_temperature),
-      _use_new_algorithm(use_new_algorithm), _log(log) {
+      _use_new_algorithm(use_new_algorithm),
+      _use_periodic_box(use_periodic_box), _log(log) {
 
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
@@ -472,27 +474,35 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
 
   if (_log) {
     _log->write_info("Phantom header:");
+    _log->write_info("ints:");
     for (auto it = ints.begin(); it != ints.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("int8s:");
     for (auto it = int8s.begin(); it != int8s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("int16s:");
     for (auto it = int16s.begin(); it != int16s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("int32s:");
     for (auto it = int32s.begin(); it != int32s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("int64s:");
     for (auto it = int64s.begin(); it != int64s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("reals:");
     for (auto it = reals.begin(); it != reals.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("real4s:");
     for (auto it = real4s.begin(); it != real4s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
+    _log->write_info("real8s:");
     for (auto it = real8s.begin(); it != real8s.end(); ++it) {
       _log->write_info(it->first, ": ", it->second);
     }
@@ -581,16 +591,30 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
   _partbox.get_anchor() -= 0.01 * _partbox.get_sides();
   _partbox.get_sides() *= 1.02;
 
+  if (_use_periodic_box) {
+    _partbox.get_anchor()[0] = reals["xmin"] * unit_length_in_SI;
+    _partbox.get_anchor()[1] = reals["ymin"] * unit_length_in_SI;
+    _partbox.get_anchor()[2] = reals["zmin"] * unit_length_in_SI;
+    _partbox.get_sides()[0] =
+        (reals["xmax"] - reals["xmin"]) * unit_length_in_SI;
+    _partbox.get_sides()[1] =
+        (reals["ymax"] - reals["ymin"]) * unit_length_in_SI;
+    _partbox.get_sides()[2] =
+        (reals["zmax"] - reals["zmin"]) * unit_length_in_SI;
+  }
+
   if (_log) {
     _log->write_status("Snapshot contains ", _positions.size(),
                        " gas particles.");
     _log->write_status("Total particle mass is ", pmass * _masses.size(),
                        "kg.");
+    const std::string periodic = (_use_periodic_box) ? " periodic" : "";
     _log->write_status(
-        "Will create octree in box with anchor [", _partbox.get_anchor().x(),
-        " m, ", _partbox.get_anchor().y(), " m, ", _partbox.get_anchor().z(),
-        " m] and sides [", _partbox.get_sides().x(), " m, ",
-        _partbox.get_sides().y(), " m, ", _partbox.get_sides().z(), " m]...");
+        "Will create octree in", periodic, " box with anchor [",
+        _partbox.get_anchor().x(), " m, ", _partbox.get_anchor().y(), " m, ",
+        _partbox.get_anchor().z(), " m] and sides [", _partbox.get_sides().x(),
+        " m, ", _partbox.get_sides().y(), " m, ", _partbox.get_sides().z(),
+        " m]...");
   }
 }
 
@@ -601,6 +625,8 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
  *  - filename: Name fo the snapshot file (required)
  *  - initial temperature: Initial temperature of the gas (default: 8000. K)
  *  - use new algorithm: Use the new algorithm of Maya Petkova? (default: false)
+ *  - use periodic box: Use a periodic box for the density mapping? (default:
+ *    false)
  *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
@@ -612,6 +638,7 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:use new algorithm", false),
+          params.get_value< bool >("DensityFunction:use periodic box", false),
           log) {}
 
 /**
@@ -629,7 +656,7 @@ PhantomSnapshotDensityFunction::~PhantomSnapshotDensityFunction() {
  */
 void PhantomSnapshotDensityFunction::initialize() {
 
-  _octree = new Octree(_positions, _partbox, false);
+  _octree = new Octree(_positions, _partbox, _use_periodic_box);
   std::vector< double > h2s = _smoothing_lengths;
   for (uint_fast32_t i = 0; i < _smoothing_lengths.size(); ++i) {
     h2s[i] *= 2.;
@@ -735,7 +762,12 @@ operator()(const Cell &cell) const {
     const size_t numngbs = ngbs.size();
     for (size_t i = 0; i < numngbs; ++i) {
       const uint_fast32_t index = ngbs[i];
-      const double r = (position - _positions[index]).norm();
+      double r;
+      if (_use_periodic_box) {
+        r = _partbox.periodic_distance(position, _positions[index]).norm();
+      } else {
+        r = (position - _positions[index]).norm();
+      }
       const double h = _smoothing_lengths[index];
       const double q = r / h;
       const double m = _masses[index];
