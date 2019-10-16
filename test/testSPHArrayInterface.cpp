@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   ParameterFile params;
-  SPHArrayInterface interface(1., 1.);
+  SPHArrayInterface interface(1., 1., "Petkova");
 
   /// DensityFunction functionality
 

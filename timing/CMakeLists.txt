@@ -89,6 +89,13 @@ set(TIMENEWVORONOIGRID_SOURCES
 add_timing_test(NAME timeNewVoronoiGrid
                 SOURCES ${TIMENEWVORONOIGRID_SOURCES})
 
+## SPHArrayInterface mapping timings
+set(TIMESPHARRAYINTERFACE_SOURCES
+    timeSPHArrayInterface.cpp
+)
+add_timing_test(NAME timeSPHArrayInterface
+                SOURCES ${TIMESPHARRAYINTERFACE_SOURCES})
+
 ### Done adding timing tests. Create the 'make timing' target ##################
 ### Do not touch these lines unless you know what you're doing! ################
 add_custom_target(timing DEPENDS ${TIMINGNAMES})

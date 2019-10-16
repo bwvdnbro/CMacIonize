@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 
   /* initialize the library */
   cmi_init_periodic_dp("test_CMI_library.param", 1, 1., 1., box_anchor,
-                       box_sides);
+                       box_sides, "Petkova");
 
   /* run the simulation */
   cmi_compute_neutral_fraction_dp(x, y, z, h, m, nH, TEST_CMICLIBRARY_NPART3D);

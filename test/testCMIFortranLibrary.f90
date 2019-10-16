@@ -65,7 +65,7 @@ program testCMIFortranLibrary
 
   ! initialize the library
   call cmi_init_periodic_dp("test_CMI_library.param", 1, 1.d0, 1.d0, box_anchor, &
-                            box_sides)
+                            box_sides, "Petkova")
 
   ! run the simulation
   call cmi_compute_neutral_fraction_dp(x, y, z, h, m, nH, int8(1000))

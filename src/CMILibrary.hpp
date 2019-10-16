@@ -50,15 +50,17 @@ extern Log *global_log;
 
 extern "C" {
 void cmi_init(const char *parameter_file, const int num_thread,
-              const double unit_length_in_SI, const double unit_mass_in_SI);
+              const double unit_length_in_SI, const double unit_mass_in_SI,
+              const char *mapping_type);
 void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI,
-                          const double *box_anchor, const double *box_sides);
+                          const double *box_anchor, const double *box_sides,
+                          const char *mapping_type);
 void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI, const float *box_anchor,
-                          const float *box_sides);
+                          const float *box_sides, const char *mapping_type);
 void cmi_destroy();
 
 void cmi_compute_neutral_fraction_dp(const double *x, const double *y,
