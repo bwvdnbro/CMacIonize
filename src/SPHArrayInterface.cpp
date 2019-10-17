@@ -398,6 +398,7 @@ void SPHArrayInterface::gridding() {
  * pre-computed grid.
  *
  * @param phi Azimuthal angle of the vertex.
+ * @param cosphi Cosine of the azimuthal angle.
  * @param r0_old Distance from the particle to the face of the cell.
  * @param R_0_old Distance from the orthogonal projection of the particle
  * onto the face of the cell to a side of the face (containing the vertex).
@@ -405,8 +406,12 @@ void SPHArrayInterface::gridding() {
  * @return The integral of the kernel for the given vertex.
  */
 
-double SPHArrayInterface::gridded_integral(double phi, double r0_old,
-                                           double R_0_old, double h_old) const {
+double SPHArrayInterface::gridded_integral(const double phi,
+                                           const double cosphi,
+                                           const double r0_old,
+                                           const double R_0_old,
+                                           const double h_old) const {
+
   double r0, R_0, cphi, mu0, h;
   int i, j, k;
   double fx1, fx2, fx3, fx4, fy1, fy2, fz, frac;
@@ -420,10 +425,11 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
   const double mul = 0.98;
   const double cphil = 0.98;
 
+  const double h_old_inverse = 1. / h_old;
   h = 1.0;
-  r0 = r0_old / h_old;
-  R_0 = R_0_old / h_old;
-  cphi = cos(phi);
+  r0 = r0_old * h_old_inverse;
+  R_0 = R_0_old * h_old_inverse;
+  cphi = cosphi;
 
   if (r0 < 0.0) {
     printf("Error: r0 < 0: %g %g\n", r0, r0_old);
@@ -448,21 +454,21 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
     r0 = 2.0;
 
   if (r0 < rl) {
-    i = int(r0 / (rl / nr01));
+    i = int(r0 * nr01 / rl);
   } else {
-    i = nr01 + int((r0 - rl) / ((2.0 - rl) * h / nr02));
+    i = nr01 + int((r0 - rl) * nr02 / ((2.0 - rl) * h));
   }
 
   if (mu0 < mul) {
-    j = int(mu0 / (mul / (nR_01 - 1)));
+    j = int(mu0 * (nR_01 - 1) / mul);
   } else {
-    j = nR_01 - 1 + int((mu0 - mul) / ((1.0 - mul) / nR_02));
+    j = nR_01 - 1 + int((mu0 - mul) * nR_02 / ((1.0 - mul)));
   }
 
   if (cphi < cphil) {
-    k = int(cphi / (cphil / (nphi1 - 1)));
+    k = int(cphi * (nphi1 - 1) / cphil);
   } else {
-    k = nphi1 - 1 + int((cphi - cphil) / ((1.0 - cphil) / nphi2));
+    k = nphi1 - 1 + int((cphi - cphil) * nphi2 / ((1.0 - cphil)));
   }
 
   if (i < 0 || i > nr01 + nr02 || j < 0 || j > nR_01 + nR_02 - 1 || k < 0 ||
@@ -470,20 +476,20 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
     printf("i, j, k: %d %d %d \n", i, j, k);
 
   if (r0 < rl) {
-    frac = (r0 - (rl / nr01) * i * h) / (rl / nr01 * h);
+    frac = (r0 * nr01 - rl * i * h) / (rl * h);
   } else {
-    frac = (r0 - rl - ((2.0 - rl) / nr02) * (i - nr01) * h) /
-           ((2.0 - rl) / nr02 * h);
+    frac = (r0 * nr02 - rl * nr02 - (2.0 - rl) * (i - nr01) * h) /
+           ((2.0 - rl) * h);
   }
   fx1 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j, k) +
-        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k);
+        (1. - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k);
   fx2 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j + 1, k) +
-        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j + 1, k);
+        (1. - frac) * SPHArrayInterface::get_gridded_density_value(i, j + 1, k);
   fx3 = frac * SPHArrayInterface::get_gridded_density_value(i + 1, j, k + 1) +
-        (1 - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k + 1);
+        (1. - frac) * SPHArrayInterface::get_gridded_density_value(i, j, k + 1);
   fx4 =
       frac * SPHArrayInterface::get_gridded_density_value(i + 1, j + 1, k + 1) +
-      (1 - frac) *
+      (1. - frac) *
           SPHArrayInterface::get_gridded_density_value(i, j + 1, k + 1);
 
   /*if(j < nR_0/2-1) {
@@ -494,13 +500,13 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
     }*/
 
   if (mu0 < mul) {
-    frac = (mu0 - mul / (nR_01 - 1) * j) / (mul / (nR_01 - 1));
+    frac = (mu0 * (nR_01 - 1) - mul * j) / mul;
   } else {
-    frac = (mu0 - mul - (1.0 - mul) / nR_02 * (j - nR_01 + 1)) /
-           ((1.0 - mul) / nR_02);
+    frac = (mu0 * nR_02 - mul * nR_02 - (1.0 - mul) * (j - nR_01 + 1)) /
+           (1.0 - mul);
   }
-  fy1 = frac * fx2 + (1 - frac) * fx1;
-  fy2 = frac * fx4 + (1 - frac) * fx3;
+  fy1 = frac * fx2 + (1. - frac) * fx1;
+  fy2 = frac * fx4 + (1. - frac) * fx3;
 
   /*if(k < nphi/2-1) {
     frac = (cphi - (1.0/(nphi/2))*k)/(1.0/(nphi/2));
@@ -510,15 +516,16 @@ double SPHArrayInterface::gridded_integral(double phi, double r0_old,
     }*/
 
   if (cphi < cphil) {
-    frac = (cphi - cphil / (nphi1 - 1) * k) / (cphil / (nphi1 - 1));
+    frac = (cphi * (nphi1 - 1) - cphil * k) / cphil;
   } else {
-    frac = (cphi - cphil - (1.0 - cphil) / nphi2 * (k - nphi1 + 1)) /
-           ((1.0 - cphil) / nphi2);
+    frac = (cphi * nphi2 - cphil * nphi2 - (1.0 - cphil) * (k - nphi1 + 1)) /
+           (1.0 - cphil);
   }
   fz = frac * fy2 + (1 - frac) * fy1;
 
-  if ((j == (nR_01 + nR_02 - 1)) || (k == (nphi1 + nphi2 - 1)))
+  if ((j == (nR_01 + nR_02 - 1)) || (k == (nphi1 + nphi2 - 1))) {
     fz = 0.0;
+  }
 
   return fz;
 }
@@ -556,35 +563,37 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
   if (phi == 0.0)
     return 0.0;
 
+  const double h_inv = 1. / h;
+  const double r0_inv = 1. / r0;
   h2 = h * h;
   r03 = r0 * r0 * r0;
-  r0h2 = r0 / h * r0 / h;
-  r0h3 = r0h2 * r0 / h;
-  r0h_2 = h / r0 * h / r0;
-  r0h_3 = r0h_2 * h / r0;
+  r0h2 = r0 * h_inv * r0 * h_inv;
+  r0h3 = r0h2 * r0 * h_inv;
+  r0h_2 = h * r0_inv * h * r0_inv;
+  r0h_3 = r0h_2 * h * r0_inv;
 
   // Setting up the B1, B2, B3 constants of integration.
 
   if (r0 >= 2.0 * h) {
-    B3 = h2 * h / 4.;
+    B3 = 0.25 * h2 * h;
   } else if (r0 > h) {
-    B3 = r03 / 4. *
+    B3 = 0.25 * r03 *
          (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
           1. / 15. * r0h_3 + 8. / 5. * r0h_2);
     B2 =
-        r03 / 4. *
+        0.25 * r03 *
         (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
   } else {
-    B3 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
-    B2 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
-    B1 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3);
+    B3 = 0.25 * r03 * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
+    B2 = 0.25 * r03 * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
+    B1 = 0.25 * r03 * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3);
   }
 
-  a = R_0 / r0;
+  a = R_0 * r0_inv;
   a2 = a * a;
 
   linedist2 = r0 * r0 + R_0 * R_0;
-  R = R_0 / cos(phi);
+  R = R_0 / std::cos(phi);
   r2 = r0 * r0 + R * R;
 
   full_int = 0.0;
@@ -725,8 +734,8 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
  * @return The mass contribution of the particle to the cell.
  */
 double SPHArrayInterface::mass_contribution(const Cell &cell,
-                                            CoordinateVector<> particle,
-                                            double h) const {
+                                            const CoordinateVector<> particle,
+                                            const double h) const {
 
   double M, Msum;
 
@@ -754,8 +763,8 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         // http://mathinsight.org/forming_planes
         Face::Vertices j_twin = j;
         vert_position1 = j_twin.get_position();
-        CoordinateVector<> vert_position2 = (++j_twin).get_position();
-        CoordinateVector<> vert_position3 = (++j_twin).get_position();
+        const CoordinateVector<> vert_position2 = (++j_twin).get_position();
+        const CoordinateVector<> vert_position3 = (++j_twin).get_position();
 
         const double A = (vert_position2[1] - vert_position1[1]) *
                              (vert_position3[2] - vert_position1[2]) -
@@ -772,15 +781,17 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         const double D = -A * vert_position1[0] - B * vert_position1[1] -
                          C * vert_position1[2];
 
-        const double norm = sqrt(A * A + B * B + C * C);
-        r0 = (A * particle[0] + B * particle[1] + C * particle[2] + D) / norm;
-        ar0 = fabs(r0);
+        const double norm = std::sqrt(A * A + B * B + C * C);
+        const double inverse_norm = 1. / norm;
+        r0 = (A * particle[0] + B * particle[1] + C * particle[2] + D) *
+             inverse_norm;
+        ar0 = std::fabs(r0);
 
         // Calculate of the orthogonal projection of the particle position onto
         // the face.
-        projected_particle[0] = particle[0] - r0 * A / norm;
-        projected_particle[1] = particle[1] - r0 * B / norm;
-        projected_particle[2] = particle[2] - r0 * C / norm;
+        projected_particle[0] = particle[0] - r0 * A * inverse_norm;
+        projected_particle[1] = particle[1] - r0 * B * inverse_norm;
+        projected_particle[2] = particle[2] - r0 * C * inverse_norm;
 
         // s2 contains information about the orientation of the face vertices.
         s2 = vert_position1[0] * (vert_position2[1] * vert_position3[2] -
@@ -810,21 +821,23 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
                                (projected_particle[1] - vert_position2[1]) +
                            (vert_position3[2] - vert_position2[2]) *
                                (projected_particle[2] - vert_position2[2])) /
-                          r12 / r23;
+                          (r12 * r23);
 
-      double R_0 = 0.;
+      double cosphi1 = 0.;
       double phi1 = 0.;
       double phi2 = 0.;
 
-      if (fabs(cosa) < 1.0) {
-        R_0 = r12 * sqrt(1 - cosa * cosa);
+      if (std::fabs(cosa) < 1.0) {
+        cosphi1 = std::sqrt((1. - cosa) * (1. + cosa));
       } else {
-        if (fabs(cosa) - 1.0 < 0.00001) {
-          R_0 = 0.0;
+        if (std::fabs(cosa) - 1.0 < 0.00001) {
+          cosphi1 = 0.0;
         } else {
           printf("Error: cosa > 1: %g\n", cosa);
         }
       }
+      const double R_0 = r12 * cosphi1;
+      const double cosphi2 = R_0 / r13;
 
       const double s1 =
           projected_particle[0] * (vert_position2[1] * vert_position3[2] -
@@ -835,18 +848,18 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
                                    vert_position2[1] * vert_position3[0]);
 
       if (R_0 < r12) {
-        phi1 = acos(R_0 / r12);
+        phi1 = std::acos(cosphi1);
       } else {
-        if ((R_0 - r12) / h < 0.00001) {
+        if ((R_0 - r12) < 0.00001 * h) {
           phi1 = 0.0;
         } else {
           printf("Error: R0 > r12: %g\n", R_0 - r12);
         }
       }
       if (R_0 < r13) {
-        phi2 = acos(R_0 / r13);
+        phi2 = std::acos(cosphi2);
       } else {
-        if ((R_0 - r13) / h < 0.00001) {
+        if ((R_0 - r13) < 0.00001 * h) {
           phi2 = 0.0;
         } else {
           printf("Error: R0 > r13: %g\n", R_0 - r13);
@@ -861,26 +874,28 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         M = 1.;
       }
 
-      if (ar0 < 0.0)
-        printf("Wrong from mass_contribution: r0 = %g \n", ar0);
-      if (R_0 < 0.0)
-        printf("Wrong from mass_contribution: R_0 = %g \n", R_0);
+      cmac_assert_message(ar0 >= 0., "Wrong from mass_contribution: r0 = %g",
+                          ar0);
+      cmac_assert_message(R_0 >= 0., "Wrong from mass_contribution: R_0 = %g",
+                          R_0);
 
       // Calculate the vertex integral.
       const bool is_pre_computed = true;
-      if ((r12 * sin(phi1) >= r23) || (r13 * sin(phi2) >= r23)) {
+      const double sinphi1 = std::sqrt((1. - cosphi1) * (1. + cosphi1));
+      const double sinphi2 = std::sqrt((1. - cosphi2) * (1. + cosphi2));
+      if ((r12 * sinphi1 >= r23) || (r13 * sinphi2 >= r23)) {
         if (phi1 >= phi2) {
           if (is_pre_computed) {
-            M = M * (gridded_integral(phi1, ar0, R_0, h) -
-                     gridded_integral(phi2, ar0, R_0, h));
+            M = M * (gridded_integral(phi1, cosphi1, ar0, R_0, h) -
+                     gridded_integral(phi2, cosphi2, ar0, R_0, h));
           } else {
             M = M * (full_integral(phi1, ar0, R_0, h) -
                      full_integral(phi2, ar0, R_0, h));
           }
         } else {
           if (is_pre_computed) {
-            M = M * (gridded_integral(phi2, ar0, R_0, h) -
-                     gridded_integral(phi1, ar0, R_0, h));
+            M = M * (gridded_integral(phi2, cosphi2, ar0, R_0, h) -
+                     gridded_integral(phi1, cosphi1, ar0, R_0, h));
           } else {
             M = M * (full_integral(phi2, ar0, R_0, h) -
                      full_integral(phi1, ar0, R_0, h));
@@ -888,8 +903,8 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         }
       } else {
         if (is_pre_computed) {
-          M = M * (gridded_integral(phi1, ar0, R_0, h) +
-                   gridded_integral(phi2, ar0, R_0, h));
+          M = M * (gridded_integral(phi1, cosphi1, ar0, R_0, h) +
+                   gridded_integral(phi2, cosphi2, ar0, R_0, h));
         } else {
           M = M * (full_integral(phi1, ar0, R_0, h) +
                    full_integral(phi2, ar0, R_0, h));
@@ -900,22 +915,9 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
   }
 
   // Ensure there is no negative mass
-  if (Msum < 1e-6)
-    Msum = 1e-6;
+  Msum = std::max(Msum, 1.e-6);
 
   return Msum;
-}
-
-/**
- * @brief Get the gridded density value for the given indices.
- *
- * @param i First index.
- * @param j Second index.
- * @param k Third index.
- * @return Corresponding gridded density value.
- */
-double SPHArrayInterface::get_gridded_density_value(int i, int j, int k) const {
-  return _density_values[i][j][k];
 }
 
 /**

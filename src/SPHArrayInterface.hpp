@@ -279,8 +279,9 @@ public:
 
   void gridding();
 
-  double gridded_integral(double phi, double r0_old, double R_0_old,
-                          double h_old) const;
+  double gridded_integral(const double phi, const double cosphi,
+                          const double r0_old, const double R_0_old,
+                          const double h_old) const;
 
   static double full_integral(double phi, double r0, double R_0, double h);
 
@@ -296,7 +297,19 @@ public:
                      ParameterFile &params, double time,
                      const InternalHydroUnits *hydro_units = nullptr);
 
-  virtual double get_gridded_density_value(int i, int j, int k) const;
+  /**
+   * @brief Get the gridded density value for the given indices.
+   *
+   * @param i First index.
+   * @param j Second index.
+   * @param k Third index.
+   * @return Corresponding gridded density value.
+   */
+  inline double get_gridded_density_value(const uint_fast32_t i,
+                                          const uint_fast32_t j,
+                                          const uint_fast32_t k) const {
+    return _density_values[i][j][k];
+  }
 
   virtual void write(DensitySubGridCreator< DensitySubGrid > &grid_creator,
                      const uint_fast32_t counter, ParameterFile &params,
