@@ -41,6 +41,7 @@
 #include "Photon.hpp"
 #include "RestartReader.hpp"
 #include "RestartWriter.hpp"
+#include "TimeLogger.hpp"
 #include "Timer.hpp"
 #include "UnitConverter.hpp"
 #include "WorkDistributor.hpp"
@@ -252,9 +253,14 @@ public:
    *
    * @param block Block that should be initialized by this MPI process.
    * @param density_function DensityFunction to use.
+   * @param time_log TimeLogger.
    */
   virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
-                          DensityFunction &density_function) {
+                          DensityFunction &density_function,
+                          TimeLogger *time_log = nullptr) {
+    if (time_log) {
+      time_log->start("DensityGrid::initialize()");
+    }
     if (_has_hydro) {
       if (_log) {
         _log->write_status("Initializing hydro arrays...");
@@ -264,6 +270,9 @@ public:
       if (_log) {
         _log->write_status("Done.");
       }
+    }
+    if (time_log) {
+      time_log->end("DensityGrid::initialize()");
     }
   }
 

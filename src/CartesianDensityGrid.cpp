@@ -118,12 +118,19 @@ CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
  *
  * @param block Block that should be initialized by this MPI process.
  * @param density_function DensityFunction to use.
+ * @param time_log TimeLogger.
  */
 void CartesianDensityGrid::initialize(
     std::pair< cellsize_t, cellsize_t > &block,
-    DensityFunction &density_function) {
+    DensityFunction &density_function, TimeLogger *time_log) {
   DensityGrid::initialize(block, density_function);
+  if (time_log) {
+    time_log->start("Forward density mapping");
+  }
   DensityGrid::set_densities(block, density_function);
+  if (time_log) {
+    time_log->end("Forward density mapping");
+  }
 }
 
 /**

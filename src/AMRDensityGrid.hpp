@@ -310,12 +310,24 @@ public:
    *
    * @param block Block that should be initialized by this MPI process.
    * @param density_function DensityFunction to use.
+   * @param time_log TimeLogger.
    */
   virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
-                          DensityFunction &density_function) {
+                          DensityFunction &density_function,
+                          TimeLogger *time_log = nullptr) {
     DensityGrid::initialize(block, density_function);
-    DensityGrid::set_densities(block, density_function);
 
+    if (time_log) {
+      time_log->start("Forward density mapping");
+    }
+    DensityGrid::set_densities(block, density_function);
+    if (time_log) {
+      time_log->end("Forward density mapping");
+    }
+
+    if (time_log) {
+      time_log->start("Mesh refinement");
+    }
     // apply mesh refinement
     if (_refinement_scheme) {
       if (_log) {
@@ -336,6 +348,9 @@ public:
                            _grid.get_number_of_cells());
       }
     }
+    if (time_log) {
+      time_log->end("Mesh refinement");
+    }
 
     // finalize grid: set neighbour relations
     _grid.set_ngbs(_periodicity_flags);
@@ -345,7 +360,13 @@ public:
     // function, as it is also used in reset_grid()
     // at this point, we want to read all values from the density function,
     // since it also contains the initial temperature etc.
+    if (time_log) {
+      time_log->start("Forward density mapping bis");
+    }
     DensityGrid::set_densities(block, density_function);
+    if (time_log) {
+      time_log->end("Forward density mapping bis");
+    }
   }
 
   /**

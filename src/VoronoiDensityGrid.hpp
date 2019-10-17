@@ -81,7 +81,8 @@ public:
   virtual ~VoronoiDensityGrid();
 
   virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
-                          DensityFunction &density_function);
+                          DensityFunction &density_function,
+                          TimeLogger *time_log = nullptr);
   virtual void evolve(double timestep);
   virtual void set_grid_velocity(const double gamma,
                                  const double velocity_unit_in_SI);

@@ -162,10 +162,19 @@ VoronoiDensityGrid::~VoronoiDensityGrid() {
  *
  * @param block Block that should be initialized by this MPI process.
  * @param density_function DensityFunction to use.
+ * @param time_log TimeLogger.
  */
 void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
-                                    DensityFunction &density_function) {
+                                    DensityFunction &density_function,
+                                    TimeLogger *time_log) {
 
+  if (time_log) {
+    time_log->start("VoronoiDensityGrid::initialize()");
+  }
+
+  if (time_log) {
+    time_log->start("Grid initialization");
+  }
   // set up the cells
   if (_log) {
     _log->write_status("Initializing Voronoi grid...");
@@ -187,7 +196,13 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
   if (_log) {
     _log->write_status("Done initializing Voronoi grid.");
   }
+  if (time_log) {
+    time_log->end("Grid initialization");
+  }
 
+  if (time_log) {
+    time_log->start("Lloyd iterations");
+  }
   if (_num_lloyd > 0) {
     if (_log) {
       _log->write_status("Applying ", _num_lloyd, " Lloyd iterations...");
@@ -207,9 +222,23 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
       _log->write_status("Done.");
     }
   }
+  if (time_log) {
+    time_log->end("Lloyd iterations");
+  }
 
   DensityGrid::initialize(block, density_function);
+
+  if (time_log) {
+    time_log->start("Forward density mapping");
+  }
   DensityGrid::set_densities(block, density_function);
+  if (time_log) {
+    time_log->end("Forward density mapping");
+  }
+
+  if (time_log) {
+    time_log->end("VoronoiDensityGrid::initialize()");
+  }
 }
 
 /**

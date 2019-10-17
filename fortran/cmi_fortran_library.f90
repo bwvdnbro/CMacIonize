@@ -46,9 +46,10 @@ module cmi_fortran_library
     !> @param unit_length_in_SI Internal length unit (in m).
     !> @param unit_mass_in_SI Internal mass unit (in kg).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init_c(parameter_file, num_thread, unit_length_in_SI, &
-                          unit_mass_in_SI, mapping_type) &
+                          unit_mass_in_SI, mapping_type, talk) &
       bind(C, name = "cmi_init")
 
       use iso_c_binding
@@ -59,6 +60,7 @@ module cmi_fortran_library
       real (kind = c_double), intent(in), value :: unit_length_in_SI
       real (kind = c_double), intent(in), value :: unit_mass_in_SI
       character (kind = c_char), intent(in) :: mapping_type
+      integer (kind = c_int), intent(in), value :: talk
 
     end subroutine cmi_init_c
 
@@ -76,10 +78,12 @@ module cmi_fortran_library
     !> @param box_sides Side lengths of the simulation box (in internal length
     !> units).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init_periodic_dp_c(parameter_file, num_thread, &
                                       unit_length_in_SI, unit_mass_in_SI, &
-                                      box_anchor, box_sides, mapping_type) &
+                                      box_anchor, box_sides, mapping_type, &
+                                      talk) &
       bind(C, name = "cmi_init_periodic_dp")
 
       use iso_c_binding
@@ -92,6 +96,7 @@ module cmi_fortran_library
       real (kind = c_double), intent(in) :: box_anchor(3)
       real (kind = c_double), intent(in) :: box_sides(3)
       character (kind = c_char), intent(in) :: mapping_type
+      integer (kind = c_int), intent(in), value :: talk
 
     end subroutine cmi_init_periodic_dp_c
 
@@ -109,10 +114,12 @@ module cmi_fortran_library
     !> @param box_sides Side lengths of the simulation box (in internal length
     !> units).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init_periodic_sp_c(parameter_file, num_thread, &
                                       unit_length_in_SI, unit_mass_in_SI, &
-                                      box_anchor, box_sides, mapping_type) &
+                                      box_anchor, box_sides, mapping_type, &
+                                      talk) &
       bind(C, name = "cmi_init_periodic_sp")
 
       use iso_c_binding
@@ -125,6 +132,7 @@ module cmi_fortran_library
       real (kind = c_float), intent(in) :: box_anchor(3)
       real (kind = c_float), intent(in) :: box_sides(3)
       character (kind = c_char), intent(in) :: mapping_type
+      integer (kind = c_int), intent(in), value :: talk
 
     end subroutine cmi_init_periodic_sp_c
 
@@ -233,9 +241,10 @@ module cmi_fortran_library
     !> @param unit_length_in_SI Internal length unit (in m).
     !> @param unit_mass_in_SI Internal mass unit (in kg).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init(parameter_file, num_thread, unit_length_in_SI, &
-                        unit_mass_in_SI, mapping_type)
+                        unit_mass_in_SI, mapping_type, talk)
 
       use iso_c_binding
       implicit none
@@ -245,10 +254,11 @@ module cmi_fortran_library
       real*8, intent(in) :: unit_length_in_SI
       real*8, intent(in) :: unit_mass_in_SI
       character (len = *), intent(in) :: mapping_type
+      integer, intent(in) :: talk
 
       call cmi_init_c(trim(parameter_file)//C_NULL_CHAR, num_thread, &
                       unit_length_in_SI, unit_mass_in_SI, &
-                      trim(mapping_type)//C_NULL_CHAR)
+                      trim(mapping_type)//C_NULL_CHAR, talk)
 
     end subroutine cmi_init
 
@@ -267,10 +277,12 @@ module cmi_fortran_library
     !> @param box_sides Side lengths of the simulation box (in internal length
     !> units).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init_periodic_dp(parameter_file, num_thread, &
                                     unit_length_in_SI, unit_mass_in_SI, &
-                                    box_anchor, box_sides, mapping_type)
+                                    box_anchor, box_sides, mapping_type, &
+                                    talk)
 
       use iso_c_binding
       implicit none
@@ -282,11 +294,12 @@ module cmi_fortran_library
       real*8, intent(in) :: box_anchor(3)
       real*8, intent(in) :: box_sides(3)
       character (len = *), intent(in) :: mapping_type
+      integer, intent(in) :: talk
 
       call cmi_init_periodic_dp_c(trim(parameter_file)//C_NULL_CHAR, &
                                   num_thread, unit_length_in_SI, &
                                   unit_mass_in_SI, box_anchor, box_sides, &
-                                  trim(mapping_type)//C_NULL_CHAR)
+                                  trim(mapping_type)//C_NULL_CHAR, talk)
 
     end subroutine cmi_init_periodic_dp
 
@@ -305,10 +318,12 @@ module cmi_fortran_library
     !> @param box_sides Side lengths of the simulation box (in internal length
     !> units).
     !> @param mapping_type Type of density mapping to use.
+    !> @param talk Print output to the terminal window?
     !-
     subroutine cmi_init_periodic_sp(parameter_file, num_thread, &
                                     unit_length_in_SI, unit_mass_in_SI, &
-                                    box_anchor, box_sides, mapping_type)
+                                    box_anchor, box_sides, mapping_type, &
+                                    talk)
 
       use iso_c_binding
       implicit none
@@ -320,11 +335,12 @@ module cmi_fortran_library
       real*4, intent(in) :: box_anchor(3)
       real*4, intent(in) :: box_sides(3)
       character (len = *), intent(in) :: mapping_type
+      integer, intent(in) :: talk
 
       call cmi_init_periodic_sp_c(trim(parameter_file)//C_NULL_CHAR, &
                                   num_thread, unit_length_in_SI, &
                                   unit_mass_in_SI, box_anchor, box_sides, &
-                                  trim(mapping_type)//C_NULL_CHAR)
+                                  trim(mapping_type)//C_NULL_CHAR, talk)
 
     end subroutine cmi_init_periodic_sp
 

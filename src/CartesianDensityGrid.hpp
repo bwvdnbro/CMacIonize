@@ -123,7 +123,8 @@ public:
   virtual ~CartesianDensityGrid() {}
 
   virtual void initialize(std::pair< cellsize_t, cellsize_t > &block,
-                          DensityFunction &density_function);
+                          DensityFunction &density_function,
+                          TimeLogger *time_log = nullptr);
 
   virtual cellsize_t get_number_of_cells() const;
 

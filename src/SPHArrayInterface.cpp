@@ -49,7 +49,7 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
   if (_mapping_type == SPHARRAY_MAPPING_PETKOVA) {
     gridding();
   }
-  time_log.output("time-log-file.txt", true);
+  _time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -85,7 +85,7 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
   if (_mapping_type == SPHARRAY_MAPPING_PETKOVA) {
     gridding();
   }
-  time_log.output("time-log-file.txt", true);
+  _time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -121,7 +121,7 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
   if (_mapping_type == SPHARRAY_MAPPING_PETKOVA) {
     gridding();
   }
-  time_log.output("time-log-file.txt", true);
+  _time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -131,7 +131,7 @@ SPHArrayInterface::SPHArrayInterface(const double unit_length_in_SI,
  */
 SPHArrayInterface::~SPHArrayInterface() {
   delete _octree;
-  time_log.output("filename", true);
+  _time_log.output("time-log-file.txt", true);
 }
 
 /**
@@ -288,7 +288,7 @@ void SPHArrayInterface::gridding() {
   int i, j, k, n, nr1, nr2;
   double rl, mul, cphil;
 
-  time_log.start("Gridding");
+  _time_log.start("Gridding");
 
   h = 1.0;
   n = 150;
@@ -389,7 +389,7 @@ void SPHArrayInterface::gridding() {
     printf("\n");
     }*/
 
-  time_log.end("Gridding");
+  _time_log.end("Gridding");
 }
 
 /**
@@ -1044,7 +1044,7 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
                               ParameterFile &params, double time,
                               const InternalHydroUnits *hydro_units) {
 
-  time_log.start("Inverse_mapping");
+  _time_log.start("Inverse_mapping");
 
   for (unsigned int i = 0; i < _neutral_fractions.size(); ++i) {
     _neutral_fractions[i] = 1.0;
@@ -1064,8 +1064,8 @@ void SPHArrayInterface::write(DensityGrid &grid, uint_fast32_t iteration,
       grid, do_calculation, block);
   workers.do_in_parallel(jobs);
 
-  time_log.end("Inverse_mapping");
-  time_log.output("time-log-file.txt", true);
+  _time_log.end("Inverse_mapping");
+  _time_log.output("time-log-file.txt", true);
 }
 
 /**

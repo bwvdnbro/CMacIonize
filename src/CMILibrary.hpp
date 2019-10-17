@@ -26,9 +26,6 @@
 #ifndef CMILIBRARY_HPP
 #define CMILIBRARY_HPP
 
-/*! @brief Allow the CMI library to print messsages to the terminal. */
-#define CMILIBRARY_TALK
-
 #include <cstddef>
 #include <cstdint>
 
@@ -41,26 +38,25 @@ extern IonizationSimulation *global_ionization_simulation;
 /*! @brief Global SPHArrayInterface object used by the library. */
 extern SPHArrayInterface *global_interface;
 
-#ifdef CMILIBRARY_TALK
 class Log;
 
 /*! @brief Global Log object used by the library. */
 extern Log *global_log;
-#endif
 
 extern "C" {
 void cmi_init(const char *parameter_file, const int num_thread,
               const double unit_length_in_SI, const double unit_mass_in_SI,
-              const char *mapping_type);
+              const char *mapping_type, const int talk);
 void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI,
                           const double *box_anchor, const double *box_sides,
-                          const char *mapping_type);
+                          const char *mapping_type, const int talk);
 void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI, const float *box_anchor,
-                          const float *box_sides, const char *mapping_type);
+                          const float *box_sides, const char *mapping_type,
+                          const int talk);
 void cmi_destroy();
 
 void cmi_compute_neutral_fraction_dp(const double *x, const double *y,

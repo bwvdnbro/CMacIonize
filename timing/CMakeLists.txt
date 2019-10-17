@@ -94,7 +94,8 @@ set(TIMESPHARRAYINTERFACE_SOURCES
     timeSPHArrayInterface.cpp
 )
 add_timing_test(NAME timeSPHArrayInterface
-                SOURCES ${TIMESPHARRAYINTERFACE_SOURCES})
+                SOURCES ${TIMESPHARRAYINTERFACE_SOURCES}
+                LIBS CMILibrary)
 
 ### Done adding timing tests. Create the 'make timing' target ##################
 ### Do not touch these lines unless you know what you're doing! ################

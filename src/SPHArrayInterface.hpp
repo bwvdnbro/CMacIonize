@@ -90,8 +90,9 @@ private:
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
-  /*! @brief Octree used to speed up neighbour searching. */
-  TimeLogger time_log;
+  /*! @brief Time log used to register time consumption in various parts of the
+   *  algorithm. */
+  TimeLogger _time_log;
 
   /**
    * @brief Get the SPHArrayMappingType corresponding to the given type name

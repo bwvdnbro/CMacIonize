@@ -26,34 +26,12 @@
 #include "CMILibrary.hpp"
 #include "IonizationSimulation.hpp"
 #include "SPHArrayInterface.hpp"
+#include "TerminalLog.hpp"
 
 IonizationSimulation *global_ionization_simulation = nullptr;
 SPHArrayInterface *global_interface = nullptr;
 
-#ifdef CMILIBRARY_TALK
-#include "TerminalLog.hpp"
-
 Log *global_log = nullptr;
-#endif
-
-/**
- * @brief Initialize the terminal log object.
- */
-#ifdef CMILIBRARY_TALK
-#define log_initialize()                                                       \
-  global_log = new TerminalLog(LOGLEVEL_STATUS, "CMILibrary")
-#else
-#define log_initialize() nullptr
-#endif
-
-/**
- * @brief Delete the terminal log object.
- */
-#ifdef CMILIBRARY_TALK
-#define log_destroy() delete global_log
-#else
-#define log_destroy()
-#endif
 
 /**
  * @brief Initialize the CMI library.
@@ -65,14 +43,18 @@ Log *global_log = nullptr;
  * @param unit_length_in_SI Length unit used internally (in m).
  * @param unit_mass_in_SI Mass unit used internally (in kg).
  * @param mapping_type Type of density mapping to use.
+ * @param talk Output to the terminal?
  */
 void cmi_init(const char *parameter_file, const int num_thread,
               const double unit_length_in_SI, const double unit_mass_in_SI,
-              const char *mapping_type) {
+              const char *mapping_type, const int talk) {
 
-  global_ionization_simulation =
-      new IonizationSimulation(true, false, false, num_thread, parameter_file,
-                               nullptr, log_initialize());
+  if (talk) {
+    global_log = new TerminalLog(LOGLEVEL_STATUS, "CMILibrary");
+  }
+
+  global_ionization_simulation = new IonizationSimulation(
+      true, false, false, num_thread, parameter_file, nullptr, global_log);
   global_interface =
       new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI, mapping_type);
 }
@@ -91,16 +73,20 @@ void cmi_init(const char *parameter_file, const int num_thread,
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  * @param mapping_type Type of density mapping to use.
+ * @param talk Output to the terminal?
  */
 void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI,
                           const double *box_anchor, const double *box_sides,
-                          const char *mapping_type) {
+                          const char *mapping_type, const int talk) {
 
-  global_ionization_simulation =
-      new IonizationSimulation(true, false, false, num_thread, parameter_file,
-                               nullptr, log_initialize());
+  if (talk) {
+    global_log = new TerminalLog(LOGLEVEL_STATUS, "CMILibrary");
+  }
+
+  global_ionization_simulation = new IonizationSimulation(
+      true, false, false, num_thread, parameter_file, nullptr, global_log);
   global_interface = new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI,
                                            box_anchor, box_sides, mapping_type);
 }
@@ -119,15 +105,20 @@ void cmi_init_periodic_dp(const char *parameter_file, const int num_thread,
  * @param box_sides Side lengths of the simulation box (in the given length
  * unit).
  * @param mapping_type Type of density mapping to use.
+ * @param talk Output to the terminal?
  */
 void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
                           const double unit_length_in_SI,
                           const double unit_mass_in_SI, const float *box_anchor,
-                          const float *box_sides, const char *mapping_type) {
+                          const float *box_sides, const char *mapping_type,
+                          const int talk) {
 
-  global_ionization_simulation =
-      new IonizationSimulation(true, false, false, num_thread, parameter_file,
-                               nullptr, log_initialize());
+  if (talk) {
+    global_log = new TerminalLog(LOGLEVEL_STATUS, "CMILibrary");
+  }
+
+  global_ionization_simulation = new IonizationSimulation(
+      true, false, false, num_thread, parameter_file, nullptr, global_log);
   global_interface = new SPHArrayInterface(unit_length_in_SI, unit_mass_in_SI,
                                            box_anchor, box_sides, mapping_type);
 }
@@ -138,7 +129,7 @@ void cmi_init_periodic_sp(const char *parameter_file, const int num_thread,
 void cmi_destroy() {
   delete global_ionization_simulation;
   delete global_interface;
-  log_destroy();
+  delete global_log;
 }
 
 /**

@@ -31,6 +31,7 @@
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
+#include "TimeLogger.hpp"
 #include "Timer.hpp"
 
 #include <string>
@@ -180,6 +181,9 @@ private:
 
   /*! @brief Timer to quantity total time spent in the ionization code .*/
   Timer _total_timer;
+
+  /*! @brief Time log. */
+  TimeLogger _time_log;
 
 public:
   IonizationSimulation(const bool write_output,
