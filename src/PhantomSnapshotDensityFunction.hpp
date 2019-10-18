@@ -244,9 +244,10 @@ public:
 
   virtual void initialize();
 
-  CoordinateVector<> get_position(uint_fast32_t index);
-  double get_mass(uint_fast32_t index);
-  double get_smoothing_length(uint_fast32_t index);
+  uint_fast32_t get_number_of_particles() const;
+  CoordinateVector<> get_position(const uint_fast32_t index) const;
+  double get_mass(const uint_fast32_t index) const;
+  double get_smoothing_length(const uint_fast32_t index) const;
 
   virtual DensityValues operator()(const Cell &cell) const;
 };

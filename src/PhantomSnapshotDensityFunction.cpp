@@ -665,13 +665,22 @@ void PhantomSnapshotDensityFunction::initialize() {
 }
 
 /**
+ * @brief Get the number of particles in the snapshot.
+ *
+ * @return Number of particles in the snapshot.
+ */
+uint_fast32_t PhantomSnapshotDensityFunction::get_number_of_particles() const {
+  return _positions.size();
+}
+
+/**
  * @brief Get the position of the particle with the given index.
  *
  * @param index Index of a particle.
  * @return CoordinateVector<> containing the position of that particle (in m).
  */
 CoordinateVector<>
-PhantomSnapshotDensityFunction::get_position(uint_fast32_t index) {
+PhantomSnapshotDensityFunction::get_position(const uint_fast32_t index) const {
   return _positions[index];
 }
 
@@ -681,7 +690,8 @@ PhantomSnapshotDensityFunction::get_position(uint_fast32_t index) {
  * @param index Index of a particle.
  * @return Mass of the particle (in kg).
  */
-double PhantomSnapshotDensityFunction::get_mass(uint_fast32_t index) {
+double
+PhantomSnapshotDensityFunction::get_mass(const uint_fast32_t index) const {
   return _masses[index];
 }
 
@@ -691,8 +701,8 @@ double PhantomSnapshotDensityFunction::get_mass(uint_fast32_t index) {
  * @param index Index of a particle.
  * @return Smoothing length of the particle (in m).
  */
-double
-PhantomSnapshotDensityFunction::get_smoothing_length(uint_fast32_t index) {
+double PhantomSnapshotDensityFunction::get_smoothing_length(
+    const uint_fast32_t index) const {
   return _smoothing_lengths[index];
 }
 

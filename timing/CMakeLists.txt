@@ -92,6 +92,8 @@ add_timing_test(NAME timeNewVoronoiGrid
 ## SPHArrayInterface mapping timings
 set(TIMESPHARRAYINTERFACE_SOURCES
     timeSPHArrayInterface.cpp
+
+    ../src/PhantomSnapshotDensityFunction.cpp
 )
 add_timing_test(NAME timeSPHArrayInterface
                 SOURCES ${TIMESPHARRAYINTERFACE_SOURCES}

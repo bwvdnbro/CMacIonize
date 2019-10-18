@@ -25,6 +25,7 @@
  */
 
 #include "CMILibrary.hpp"
+#include "PhantomSnapshotDensityFunction.hpp"
 #include "TimingTools.hpp"
 #include "YAMLDictionary.hpp"
 
@@ -58,8 +59,8 @@ inline void add_parameters(const bool do_lloyd, const uint_fast32_t npart,
   // PhotonSource
   parameters.add_value("PhotonSource:diffuse field", "false");
   // SimulationBox
-  parameters.add_value("SimulationBox:anchor", "[0. m, 0. m, 0. m]");
-  parameters.add_value("SimulationBox:sides", "[1. m, 1. m, 1. m]");
+  parameters.add_value("SimulationBox:anchor", "[-3. pc, -3. pc, -3. pc]");
+  parameters.add_value("SimulationBox:sides", "[6. pc, 6. pc, 6. pc]");
   // DensityGrid
   parameters.add_value("DensityGrid:type", "Voronoi");
   parameters.add_value("DensityGrid:grid type", "Old");
@@ -80,14 +81,14 @@ inline void add_parameters(const bool do_lloyd, const uint_fast32_t npart,
   // PhotonSourceDistribution
   parameters.add_value("PhotonSourceDistribution:type", "SingleStar");
   parameters.add_value("PhotonSourceDistribution:position",
-                       "[0.5 m, 0.5 m, 0.5 m]");
-  parameters.add_value("PhotonSourceDistribution:luminosity", "1.e19 s^-1");
+                       "[0. m, 0. m, 0. m]");
+  parameters.add_value("PhotonSourceDistribution:luminosity", "5.e50 s^-1");
   // PhotonSourceSpectrum
   parameters.add_value("PhotonSourceSpectrum:type", "Monochromatic");
   parameters.add_value("PhotonSourceSpectrum:frequency", "13.6 eV");
   // IonizationSimulation
   parameters.add_value("IonizationSimulation:number of iterations", "10");
-  parameters.add_value("IonizationSimulation:number of photons", "1e5");
+  parameters.add_value("IonizationSimulation:number of photons", "1e6");
   // DensityGridWriter
   parameters.add_value("DensityGridWriter:type", "AsciiFile");
   parameters.add_value("DensityGridWriter:prefix", "output");
@@ -137,21 +138,59 @@ int main(int argc, char **argv) {
 
   timingtools_init("timeSPHArrayInterface", argc, argv);
 
-  const uint_fast32_t numpart = 1000;
+  const std::string brickname = "cmi-test_00000";
+  std::ifstream brickfile(brickname);
+  const bool use_brick = brickfile.good();
+
+  uint_fast32_t numpart;
   // create input arrays
-  std::vector< double > x(numpart, 0.);
-  std::vector< double > y(numpart, 0.);
-  std::vector< double > z(numpart, 0.);
-  std::vector< double > h(numpart, 0.);
-  std::vector< double > m(numpart, 0.);
-  std::vector< double > xH(numpart, 0.);
-  for (size_t i = 0; i < numpart; ++i) {
-    x[i] = Utilities::random_double();
-    y[i] = Utilities::random_double();
-    z[i] = Utilities::random_double();
-    h[i] = 0.2;
-    m[i] = 0.001;
+  std::vector< double > x;
+  std::vector< double > y;
+  std::vector< double > z;
+  std::vector< double > h;
+  std::vector< double > m;
+  if (use_brick) {
+    brickfile.close();
+    PhantomSnapshotDensityFunction snapshot(brickname, 8000., false, true);
+    numpart = snapshot.get_number_of_particles();
+    x.resize(numpart, 0.);
+    y.resize(numpart, 0.);
+    z.resize(numpart, 0.);
+    h.resize(numpart, 0.);
+    m.resize(numpart, 0.);
+    for (uint_fast32_t i = 0; i < numpart; ++i) {
+      const CoordinateVector<> p = snapshot.get_position(i);
+      x[i] = p.x();
+      y[i] = p.y();
+      z[i] = p.z();
+      h[i] = snapshot.get_smoothing_length(i);
+      m[i] = snapshot.get_mass(i);
+    }
+  } else {
+    numpart = 10000;
+    // create input arrays
+    x.resize(numpart, 0.);
+    y.resize(numpart, 0.);
+    z.resize(numpart, 0.);
+    h.resize(numpart, 0.);
+    m.resize(numpart, 0.);
+
+    const double pc = 3.086e16;
+    const double mp = 1.67e-27;
+    const double nH = 1.e9;
+    const double box_anchor = -3. * pc;
+    const double box_side = 6. * pc;
+    const double mpart = mp * nH * box_side * box_side * box_side / numpart;
+    for (size_t i = 0; i < numpart; ++i) {
+      x[i] = box_anchor + Utilities::random_double() * box_side;
+      y[i] = box_anchor + Utilities::random_double() * box_side;
+      z[i] = box_anchor + Utilities::random_double() * box_side;
+      h[i] = 0.2 * box_side;
+      m[i] = mpart;
+    }
   }
+
+  std::vector< double > xH(numpart, 0.);
 
   // create text file with cell generator positions
   std::ofstream posfile("generator_positions.txt");
